@@ -357,7 +357,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
 
 class HistFactoryImporter : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       RooWorkspace &ws = *tool->workspace();
 
@@ -514,7 +514,7 @@ public:
 
 class PiecewiseInterpolationFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -540,7 +540,7 @@ public:
 
 class FlexibleInterpVarFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("high")) {

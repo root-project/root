@@ -90,7 +90,7 @@ std::vector<std::string> extract_arguments(const std::string &expression)
 template <class RooArg_t>
 class RooFormulaArgFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("expression")) {
@@ -108,7 +108,7 @@ public:
 
 class RooAddPdfFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
@@ -119,7 +119,7 @@ public:
 
 class RooBinWidthFunctionFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooHistFunc *hf = static_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
@@ -130,7 +130,7 @@ public:
 
 class RooBinSamplingPdfFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -157,7 +157,7 @@ public:
 
 class RooRealSumPdfFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -173,7 +173,7 @@ public:
 
 class RooRealSumFuncFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       tool->wsEmplace<RooRealSumFunc>(name, tool->requestArgList<RooAbsReal>(p, "samples"),
@@ -184,7 +184,7 @@ public:
 
 class RooPolynomialFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("coefficients")) {
@@ -215,7 +215,7 @@ public:
 
 class RooExpPolyFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("coefficients")) {
@@ -246,7 +246,7 @@ public:
 
 class RooMultiVarGaussianFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       bool has_cov = p.has_child("covariances");
@@ -337,7 +337,7 @@ public:
 
 class RooHistFuncFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("data")) {
@@ -364,7 +364,7 @@ public:
 
 class RooHistPdfFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("data")) {
