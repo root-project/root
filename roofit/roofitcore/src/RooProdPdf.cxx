@@ -2401,6 +2401,13 @@ private:
 std::unique_ptr<RooAbsArg>
 RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
+   if (ctx.likelihoodMode()) {
+      auto binnedInfo = RooHelpers::getBinnedL(*this);
+      if (binnedInfo.binnedPdf && binnedInfo.binnedPdf != this) {
+         return binnedInfo.binnedPdf->compileForNormSet(normSet, ctx);
+      }
+   }
+
    std::unique_ptr<RooProdPdf> prodPdfClone{static_cast<RooProdPdf *>(this->Clone())};
    ctx.markAsCompiled(*prodPdfClone);
 
