@@ -883,15 +883,13 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDependants)
 {
    auto const &importers = RooFit::JSONIO::importers();
-   auto const &pdfFactoryExpressions = RooFit::JSONIO::pdfImportExpressions();
-   auto const &funcFactoryExpressions = RooFit::JSONIO::functionImportExpressions();
+   auto const &factoryExpressions = RooFit::JSONIO::importExpressions();
 
    // some preparations: what type of function are we dealing with here?
    std::string name(RooJSONFactoryWSTool::name(p));
-   bool isPdf = endsWith(p["type"].val(), "_dist");
 
-   // if the function already exists, we don't need to do anything
-   if ((isPdf && _workspace.pdf(name)) || _workspace.function(name)) {
+   // if the RooAbsArg already exists, we don't need to do anything
+   if (_workspace.arg(name)) {
       return;
    }
    // if the key we found is not a map, it's an error
@@ -929,8 +927,8 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
       }
    }
    if (!ok) { // generic import using the factory expressions
-      auto expr = isPdf ? pdfFactoryExpressions.find(functype) : funcFactoryExpressions.find(functype);
-      if (expr != (isPdf ? pdfFactoryExpressions.end() : funcFactoryExpressions.end())) {
+      auto expr = factoryExpressions.find(functype);
+      if (expr != factoryExpressions.end()) {
          std::string expression = ::generate(expr->second, p, this);
          if (!_workspace.factory(expression)) {
             std::stringstream ss;

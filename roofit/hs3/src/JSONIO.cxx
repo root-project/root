@@ -51,18 +51,11 @@ ExportMap &exporters()
    return _exporters;
 }
 
-ImportExpressionMap &pdfImportExpressions()
+ImportExpressionMap &importExpressions()
 {
    setupKeys();
-   static ImportExpressionMap _pdfFactoryExpressions;
-   return _pdfFactoryExpressions;
-}
-
-ImportExpressionMap &functionImportExpressions()
-{
-   setupKeys();
-   static ImportExpressionMap _funcFactoryExpressions;
-   return _funcFactoryExpressions;
+   static ImportExpressionMap _factoryExpressions;
+   return _factoryExpressions;
 }
 
 ExportKeysMap &exportKeys()
@@ -141,8 +134,7 @@ void printExporters()
 
 void loadFactoryExpressions(const std::string &fname)
 {
-   auto &pdfFactoryExpressions = RooFit::JSONIO::pdfImportExpressions();
-   auto &funcFactoryExpressions = RooFit::JSONIO::functionImportExpressions();
+   auto &factoryExpressions = RooFit::JSONIO::importExpressions();
 
    // load a yml file defining the factory expressions
    std::ifstream infile(fname);
@@ -175,35 +167,20 @@ void loadFactoryExpressions(const std::string &fname)
       for (const auto &arg : cl["arguments"].children()) {
          ex.arguments.push_back(arg.val());
       }
-      if (c->InheritsFrom(RooAbsPdf::Class())) {
-         pdfFactoryExpressions[key] = ex;
-      } else if (c->InheritsFrom(RooAbsReal::Class())) {
-         funcFactoryExpressions[key] = ex;
-      } else {
-         std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping" << std::endl;
-      }
+      factoryExpressions[key] = ex;
    }
 }
 
 void clearFactoryExpressions()
 {
    // clear all factory expressions
-   RooFit::JSONIO::pdfImportExpressions().clear();
-   RooFit::JSONIO::functionImportExpressions().clear();
+   RooFit::JSONIO::importExpressions().clear();
 }
 
 void printFactoryExpressions()
 {
    // print all factory expressions
-   for (auto it : RooFit::JSONIO::pdfImportExpressions()) {
-      std::cout << it.first;
-      std::cout << " " << it.second.tclass->GetName();
-      for (auto v : it.second.arguments) {
-         std::cout << " " << v;
-      }
-      std::cout << std::endl;
-   }
-   for (auto it : RooFit::JSONIO::functionImportExpressions()) {
+   for (auto it : RooFit::JSONIO::importExpressions()) {
       std::cout << it.first;
       std::cout << " " << it.second.tclass->GetName();
       for (auto v : it.second.arguments) {

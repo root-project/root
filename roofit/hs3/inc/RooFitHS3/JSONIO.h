@@ -79,8 +79,7 @@ using ImportExpressionMap = std::map<const std::string, ImportExpression>;
 void setupKeys();
 ImportMap &importers();
 ExportMap &exporters();
-ImportExpressionMap &pdfImportExpressions();
-ImportExpressionMap &functionImportExpressions();
+ImportExpressionMap &importExpressions();
 ExportKeysMap &exportKeys();
 
 template <class T>
