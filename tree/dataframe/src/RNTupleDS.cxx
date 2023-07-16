@@ -87,10 +87,7 @@ public:
          ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
    }
 
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
-   {
-      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<std::size_t *>(where));
-   }
+   void GenerateValue(void *where) final { *static_cast<std::size_t *>(where) = 0; }
    ROOT::Experimental::Detail::RFieldValue CaptureValue(void *where) final
    {
       return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
@@ -124,7 +121,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
-   RFieldValue fValue;                 ///< The memory location used to read from fField
+   RFieldBase::RValue fValue;          ///< The memory location used to read from fField
    Long64_t fLastEntry;                ///< Last entry number that was read
 
 public:
@@ -132,7 +129,7 @@ public:
       : fField(std::move(f)), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
    }
-   ~RNTupleColumnReader() { fField->DestroyValue(fValue.GetRawPtr()); }
+   ~RNTupleColumnReader() = default;
 
    /// Column readers are created as prototype and then cloned for every slot
    std::unique_ptr<RNTupleColumnReader> Clone()
@@ -151,7 +148,7 @@ public:
    void *GetImpl(Long64_t entry) final
    {
       if (entry != fLastEntry) {
-         fField->Read(entry, fValue.GetRawPtr());
+         fValue.Read(entry);
          fLastEntry = entry;
       }
       return fValue.GetRawPtr();
