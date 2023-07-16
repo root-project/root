@@ -154,7 +154,7 @@ public:
 
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
-        fValue(fField.GenerateValue(), true /* owns object */)
+        fValue(fField.GenerateValue())
    {
       fField.SetOnDiskId(fieldId);
       fField.ConnectPageSource(*pageSource);
