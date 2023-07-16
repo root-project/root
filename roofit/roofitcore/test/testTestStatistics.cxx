@@ -4,15 +4,19 @@
 
 #include <RooAddPdf.h>
 #include <RooBinning.h>
+#include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooHelpers.h>
+#include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooNLLVar.h>
 #include <RooRandom.h>
 #include <RooPlot.h>
 #include <RooPolyVar.h>
+#include <RooProdPdf.h>
+#include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
@@ -475,6 +479,65 @@ TEST_P(OffsetBinTest, CrossCheck)
    // For all configurations, the bin offset should have the effect of bringing
    // the NLL to zero, modulo some numerical imprecisions:
    EXPECT_NEAR(nllVal1, 0.0, 1e-8) << "NLL with bin offsetting is " << nllVal1 << ", and " << nllVal0 << " without it.";
+}
+
+// Verify that the binned likelihood optimization works also when fitting a
+// single-channel RooRealSumPdf or RooProdPdf.
+TEST_P(TestStatisticTest, BinnedLikelihood)
+{
+   using namespace RooFit;
+
+   int nEvents = 1000;
+   int numBins = 5;
+
+   RooWorkspace ws;
+
+   ws.factory("x[0, 0, " + std::to_string(numBins) + "]");
+
+   auto &x = *ws.var("x");
+   x.setBins(numBins);
+
+   {
+      // Uniform RooDataHist
+      RooDataHist dataHist{"data_hist", "data_hist", x};
+      for (int iBin = 0; iBin < numBins; ++iBin) {
+         dataHist.set(iBin, nEvents / numBins, -1);
+      }
+
+      RooHistFunc histFunc{"hist_func", "hist_func", x, dataHist};
+      RooRealSumPdf pdf{"pdf", "pdf", histFunc, RooArgList{1.0}};
+
+      // Enable the binned likelihood optimization to avoid integrals
+      // (like in HistFactory).
+      pdf.setAttribute("BinnedLikelihood");
+
+      // Wrap the channel pdf in a RooProdPdf to mimic HistFactory
+      RooProdPdf prodPdf{"prod_pdf", "prod_pdf", pdf};
+
+      ws.import(prodPdf);
+   }
+
+   ws.factory("SIMUL::simPdf( cat[A=0], A=pdf)");
+   auto &realSumPdf = *ws.pdf("pdf");
+   auto &prodPdf = *ws.pdf("prod_pdf");
+   auto &simPdf = *ws.pdf("simPdf");
+   auto &cat = *ws.cat("cat");
+
+   std::unique_ptr<RooDataHist> data{simPdf.generateBinned({x, cat}, nEvents)};
+
+   std::unique_ptr<RooAbsReal> realSumNll{realSumPdf.createNLL(*data, BatchMode(_batchMode))};
+   std::unique_ptr<RooAbsReal> prodNll{prodPdf.createNLL(*data, BatchMode(_batchMode))};
+   std::unique_ptr<RooAbsReal> simNll{simPdf.createNLL(*data, BatchMode(_batchMode))};
+
+   double realSumNllVal = realSumNll->getVal();
+   double prodNllVal = prodNll->getVal();
+   double simNllVal = simNll->getVal();
+
+   // If using the RooRealSumPdf or RooProdPdf directly is successfully hitting
+   // the binned likelihood code path, the likelihood values will be identical
+   // with the one of the RooSimultaneous.
+   EXPECT_DOUBLE_EQ(realSumNllVal, simNllVal);
+   EXPECT_DOUBLE_EQ(prodNllVal, simNllVal);
 }
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values("Off", "Cpu"),
