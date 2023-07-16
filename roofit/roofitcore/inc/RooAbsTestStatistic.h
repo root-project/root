@@ -54,7 +54,6 @@ public:
   };
 
   // Constructors, assignment etc
-  RooAbsTestStatistic() {}
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                       const RooArgSet& projDeps, Configuration const& cfg);
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=nullptr);
