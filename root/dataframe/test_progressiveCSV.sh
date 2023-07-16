@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 TESTNAME=test_progressiveCSV
 
