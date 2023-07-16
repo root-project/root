@@ -23,10 +23,6 @@ class RooDataWeightedAverage : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooDataWeightedAverage() {
-    // Default constructor
-  } ;
-
   RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& real, RooAbsData& data, const RooArgSet& projDeps,
                          RooAbsTestStatistic::Configuration const& cfg, bool showProgress=false) ;
 

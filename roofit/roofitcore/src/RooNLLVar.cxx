@@ -70,7 +70,6 @@ namespace {
 
 ClassImp(RooNLLVar)
 
-RooNLLVar::RooNLLVar() {}
 RooNLLVar::~RooNLLVar() {}
 
 RooArgSet RooNLLVar::_emptySet ;

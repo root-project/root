@@ -47,7 +47,7 @@
 using namespace std;
 
 ClassImp(RooXYChi2Var);
-;
+
 
 namespace {
   RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg() {
@@ -55,14 +55,6 @@ namespace {
     cfg.verbose = false;
     return cfg;
   }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
-
-RooXYChi2Var::RooXYChi2Var()
-{
 }
 
 

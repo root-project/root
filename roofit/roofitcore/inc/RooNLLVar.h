@@ -31,7 +31,6 @@ class RooNLLVar : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooNLLVar();
   RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
        const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={},
        const RooCmdArg& arg4={}, const RooCmdArg& arg5={},const RooCmdArg& arg6={},
