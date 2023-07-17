@@ -20,7 +20,7 @@
 
 void writeTree()
 {
-   std::unique_ptr<TFile> ofile = std::make_unique<TFile>("testFile.root", "recreate");
+   std::unique_ptr<TFile> ofile { TFile::Open("testFile.root", "recreate") };
    if ( nullptr == ofile ) {
       std::cerr << " File not open." << std::endl;
       return;
