@@ -256,7 +256,7 @@ protected:
    /// Releases the resources acquired during GenerateValue (memory and constructor)
    /// This implementation works for simple types but needs to be overwritten for complex ones
    virtual void DestroyValue(void *objPtr, bool dtorOnly = false);
-   static void GenerateValue(RFieldBase &other, void *where) { other.GenerateValue(where); }
+   static void GenerateValueBy(RFieldBase &other, void *where) { other.GenerateValue(where); }
    static void DestroyValueBy(RFieldBase &other, void *objPtr, bool dtorOnly = false)
    {
       other.DestroyValue(objPtr, dtorOnly);
@@ -547,7 +547,9 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor & /* desc */) final {}
-   void GenerateValue(void *where) final { GenerateValue(*fSubFields[0], where); }
+
+   void GenerateValue(void *where) final { GenerateValueBy(*fSubFields[0], where); }
+
    std::size_t AppendImpl(const void *from) final { return fSubFields[0]->Append(from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { fSubFields[0]->Read(globalIndex, to); }
 
