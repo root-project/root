@@ -21,9 +21,9 @@
 void readTree()
 {
 
-   std::unique_ptr<TFile> ifile = std::make_unique<TFile>("testFile.root", "read");
-   if ( nullptr == ifile ) {
-      std::cerr << " File not found " << std::endl;
+   std::unique_ptr<TFile> ifile { TFile::Open("testFile.root", "read") };
+   if ( !ifile || ifile->IsZombie() )  {
+      std::cerr << "Problem opening the file testFile.root" << std::endl;
       return;
    }
    if (!TClass::GetClass(typeid(myDetectorData))->IsLoaded()) {
