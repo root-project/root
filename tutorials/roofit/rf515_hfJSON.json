@@ -133,5 +133,8 @@
             "contents": [122, 112],
             "type": "binned"
         }
-    ]
+    ],
+    "metadata": {
+        "hs3_version" : "0.1.90"
+    }
 }
