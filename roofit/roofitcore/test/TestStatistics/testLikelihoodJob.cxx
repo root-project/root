@@ -173,7 +173,7 @@ TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1.Sum());
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobBinnedDatasetTest, BinnedManualNLL)
@@ -247,7 +247,7 @@ TEST_F(LikelihoodJobTest, SimBinned)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1.Sum());
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, BinnedConstrained)
