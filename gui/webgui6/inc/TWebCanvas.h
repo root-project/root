@@ -100,6 +100,7 @@ protected:
    Long64_t fColorsVersion{0};     ///<! current colors/palette version, checked every time when new snapshot created
    UInt_t fColorsHash{0};          ///<! last hash of colors/palette
    Bool_t fTF1UseSave{kFALSE};     ///<! use save buffer for TF1/TF2, need when evaluation failed on client side
+   std::vector<int> fWindowGeometry; ///<! last received window geometry
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
