@@ -29,7 +29,6 @@
 #include <RooPoisson.h>
 #include <RooLognormal.h>
 #include <RooGaussian.h>
-#include <RooBinning.h>
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 
@@ -358,8 +357,6 @@ class HistFactoryImporter : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
-      RooWorkspace &ws = *tool->workspace();
-
       std::string name = RooJSONFactoryWSTool::name(p);
       if (!p.has_child("samples")) {
          RooJSONFactoryWSTool::error("no samples in '" + name + "', skipping.");
@@ -375,28 +372,7 @@ public:
       }
       std::vector<double> sumW;
       std::vector<double> sumW2;
-      RooArgSet observables;
-      for (auto const &obsNode : p["axes"].children()) {
-         if (obsNode.has_child("bounds")) {
-            std::vector<double> bounds;
-            for (auto const &bound : obsNode["bounds"].children()) {
-               bounds.push_back(bound.val_double());
-            }
-            RooRealVar &obs = getOrCreate<RooRealVar>(ws, obsNode["name"].val(), bounds[0], bounds[bounds.size() - 1]);
-            RooBinning bins(obs.getMin(), obs.getMax());
-            ;
-            for (auto b : bounds) {
-               bins.addBoundary(b);
-            }
-            obs.setBinning(bins);
-            observables.add(obs);
-         } else {
-            RooRealVar &obs = getOrCreate<RooRealVar>(ws, obsNode["name"].val(), obsNode["min"].val_double(),
-                                                      obsNode["max"].val_double());
-            obs.setBins(obsNode["nbins"].val_int());
-            observables.add(obs);
-         }
-      }
+      RooArgSet observables = RooJSONFactoryWSTool::readAxes(p);
 
       std::string fprefix = name;
 
