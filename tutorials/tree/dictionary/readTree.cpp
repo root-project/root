@@ -26,9 +26,6 @@ void readTree()
       std::cout << "Problem opening the file testFile.root" << std::endl;
       return;
    }
-   if (!TClass::GetClass(typeid(myDetectorData))->IsLoaded()) {
-      std::cout << " TClass::GetClass(typeid(myDetectorData))->IsLoaded() == false " << std::endl;
-   }
 
    // Create a TTreeReader to read the tree named "myTree"
    TTreeReader aReader("myTree", ifile.get() );
