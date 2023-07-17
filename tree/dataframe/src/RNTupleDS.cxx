@@ -62,6 +62,7 @@ protected:
    {
       return std::make_unique<RRDFCardinalityField>();
    }
+   void GenerateValue(void *where) final { *static_cast<std::size_t *>(where) = 0; }
 
 public:
    static std::string TypeName() { return "std::size_t"; }
@@ -87,11 +88,6 @@ public:
          ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
    }
 
-   void GenerateValue(void *where) final { *static_cast<std::size_t *>(where) = 0; }
-   ROOT::Experimental::Detail::RFieldValue CaptureValue(void *where) final
-   {
-      return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::size_t); }
    size_t GetAlignment() const final { return alignof(std::size_t); }
 
