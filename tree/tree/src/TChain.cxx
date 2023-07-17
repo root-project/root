@@ -25,6 +25,7 @@ the trees in the chain.
 */
 
 #include "TChain.h"
+#include "ROOT/InternalTreeUtils.hxx"
 
 #include <iostream>
 #include <cfloat>
@@ -359,7 +360,7 @@ Int_t TChain::Add(TChain* chain)
 /// \note To add all the files of a another \p TChain to this one, use
 ///       TChain::Add(TChain* chain).
 
-Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */)
+Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */)
 {
    TString basename, treename, query, suffix;
    ParseTreeFilename(name, basename, treename, query, suffix);
@@ -371,54 +372,32 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */
 
    // wildcarding used in name
    Int_t nf = 0;
-
-   Int_t slashpos = basename.Last('/');
-   TString directory;
-   if (slashpos>=0) {
-      directory = basename(0,slashpos); // Copy the directory name
-      basename.Remove(0,slashpos+1);      // and remove it from basename
-   } else {
-      directory = gSystem->UnixPathName(gSystem->WorkingDirectory());
+   std::vector<std::string> expanded_glob;
+   try {
+      expanded_glob = ROOT::Internal::TreeUtils::ExpandGlob(std::string(basename));
+   } catch (const std::runtime_error &) {
+      // The 'ExpandGlob' function may throw in case the directory from the glob
+      // cannot be opened. We return 0 to signify no files were added.
+      return nf;
    }
 
-   const char *file;
-   const char *epath = gSystem->ExpandPathName(directory.Data());
-   void *dir = gSystem->OpenDirectory(epath);
-   delete [] epath;
-   if (dir) {
-      //create a TList to store the file names (not yet sorted)
-      TList l;
-      TRegexp re(basename,kTRUE);
-      while ((file = gSystem->GetDirEntry(dir))) {
-         if (!strcmp(file,".") || !strcmp(file,"..")) continue;
-         TString s = file;
-         if ( (basename!=file) && s.Index(re) == kNPOS) continue;
-         l.Add(new TObjString(file));
+   const TString hashMarkTreeName{"#" + treename};
+   for (const auto &path : expanded_glob) {
+      if (suffix == hashMarkTreeName) {
+         // See https://github.com/root-project/root/issues/11483
+         // In case the input parameter 'name' contains both a glob and the
+         // '?#' token to identify the tree name, the call to
+         // `ParseTreeFileName` will produce a 'suffix' string of the form
+         // '#treename'. Passing this to the `AddFile` call produces a bogus
+         // file name that TChain won't be able to open afterwards. Thus,
+         // we do not pass the 'suffix' as part of the file name, instead we
+         // directly pass 'treename' to `AddFile`.
+         nf += AddFile(path.c_str(), nentries, treename);
+      } else {
+         nf += AddFile(TString::Format("%s%s", path.c_str(), suffix.Data()), nentries);
       }
-      gSystem->FreeDirectory(dir);
-      //sort the files in alphanumeric order
-      l.Sort();
-      TIter next(&l);
-      TObjString *obj;
-      const TString hashMarkTreeName{"#" + treename};
-      while ((obj = (TObjString*)next())) {
-         file = obj->GetName();
-         if (suffix == hashMarkTreeName) {
-            // See https://github.com/root-project/root/issues/11483
-            // In case the input parameter 'name' contains both a glob and the
-            // '?#' token to identify the tree name, the call to
-            // `ParseTreeFileName` will produce a 'suffix' string of the form
-            // '#treename'. Passing this to the `AddFile` call produces a bogus
-            // file name that TChain won't be able to open afterwards. Thus,
-            // we do not pass the 'suffix' as part of the file name, instead we
-            // directly pass 'treename' to `AddFile`.
-            nf += AddFile(TString::Format("%s/%s", directory.Data(), file), nentries, treename);
-         } else {
-            nf += AddFile(TString::Format("%s/%s%s", directory.Data(), file, suffix.Data()), nentries);
-         }
-      }
-      l.Delete();
    }
+
    if (fProofChain)
       // This updates the proxy chain when we will really use PROOF
       ResetBit(kProofUptodate);

@@ -16,7 +16,6 @@
 #include "RooWorkspace.h"
 #include "RooMinimizer.h"
 #include "RooFitResult.h"
-#include "RooNLLVar.h"
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
 #include "RooFit/TestStatistics/RooUnbinnedL.h"
@@ -29,12 +28,7 @@
 
 #include <stdexcept> // runtime_error
 
-#include "gtest/gtest.h"
-
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "../gtest_wrapper.h"
 
 #include "../test_lib.h" // generate_1D_gaussian_pdf_nll
 
@@ -173,28 +167,21 @@ TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1.Sum());
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
-TEST_F(LikelihoodJobBinnedDatasetTest, BinnedManualNLL)
+TEST_F(LikelihoodJobBinnedDatasetTest, BinnedNLL)
 {
    pdf->setAttribute("BinnedLikelihood");
    data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
 
-   // manually create NLL, ripping all relevant parts from RooAbsPdf::createNLL, except here we also set binnedL = true
-   RooArgSet projDeps;
-   RooAbsTestStatistic::Configuration nll_config;
-   nll_config.verbose = false;
-   nll_config.cloneInputData = false;
-   nll_config.binnedL = true;
-   int extended = 2;
-   RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, extended, nll_config);
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
-   auto nll0 = nll_manual.getVal();
+   auto nll0 = nll->getVal();
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -247,7 +234,7 @@ TEST_F(LikelihoodJobTest, SimBinned)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1.Sum());
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, BinnedConstrained)

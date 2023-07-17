@@ -838,6 +838,9 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          std::swap(buf, conn.fSend.front());
          conn.fSend.pop();
 
+      } else if ((conn.fConnId == fWebConn[0].fConnId) && !fCtrlMsgs.empty()) {
+         buf = "CTRL:"s + TBufferJSON::ToJSON(&fCtrlMsgs, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+         fCtrlMsgs.clear();
       }
 
       if (!buf.empty())
@@ -970,6 +973,44 @@ Bool_t TWebCanvas::HasStatusBar() const
 Bool_t TWebCanvas::HasToolTips() const
 {
    return (fClientBits & TCanvas::kShowToolTips) != 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window position of web canvas
+
+void TWebCanvas::SetWindowPosition(Int_t x, Int_t y)
+{
+   if (IsFirstDrawn()) {
+      fCtrlMsgs["x"s] = std::to_string(x);
+      fCtrlMsgs["y"s] = std::to_string(y);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window size of web canvas
+
+void TWebCanvas::SetWindowSize(UInt_t w, UInt_t h)
+{
+   if (IsFirstDrawn()) {
+      fCtrlMsgs["w"s] = std::to_string(w);
+      fCtrlMsgs["h"s] = std::to_string(h);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window title of web canvas
+
+void TWebCanvas::SetWindowTitle(const char *newTitle)
+{
+   if (IsFirstDrawn())
+      fCtrlMsgs["title"s] = newTitle;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set canvas size of web canvas
+
+void TWebCanvas::SetCanvasSize(UInt_t, UInt_t)
+{
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1904,6 +1945,46 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
 
    return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create images for several pads using batch (headless) capability of Chrome or Firefox browsers
+/// Supported png, jpeg, svg, pdf formats
+/// For png/jpeg/svg filename can include % symbol which will be replaced by image index.
+/// For pdf format all images will be stored in single PDF file
+
+bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width, Int_t height)
+{
+   if (pads.empty())
+      return false;
+
+   std::vector<std::string> jsons;
+   std::vector<Int_t> widths, heights;
+
+   for (auto pad: pads) {
+      auto json = CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE);
+      if (!json.Length())
+         continue;
+
+      Int_t w = width, h = height;
+
+      if (!w && !h) {
+         if ((pad->GetCanvas() == pad) || (pad->IsA() == TCanvas::Class())) {
+            w = pad->GetWw();
+            h = pad->GetWh();
+         } else {
+            w = (Int_t) (pad->GetAbsWNDC() * pad->GetCanvas()->GetWw());
+            h = (Int_t) (pad->GetAbsHNDC() * pad->GetCanvas()->GetWh());
+         }
+      }
+
+      jsons.emplace_back(json.Data());
+      widths.emplace_back(w);
+      heights.emplace_back(h);
+   }
+
+   return ROOT::Experimental::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Process data for single primitive

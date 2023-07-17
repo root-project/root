@@ -187,8 +187,6 @@ class HeadNode(Node, ABC):
         filled with the values that were computed distributedly so that they
         can be accessed in the application like with local RDataFrame.
         """
-        # Check if the workflow must be generated in optimized mode
-        optimized = ROOT.RDF.Experimental.Distributed.optimized
 
         # Updates the number of partitions for this dataframe if the user did
         # not specify one initially. This is done each time the computations are
@@ -198,16 +196,13 @@ class HeadNode(Node, ABC):
 
         self.exec_id = _graph_cache.ExecutionIdentifier(self.rdf_uuid, uuid.uuid4())
 
-        if optimized:
-            computation_graph_callable = partial(ComputationGraphGenerator.run_with_cppworkflow, self._generate_graph_dict())
-        else:
-            computation_graph_callable = partial(ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
+
+        computation_graph_callable = partial(ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
 
         mapper = partial(distrdf_mapper,
                          build_rdf_from_range=self._generate_rdf_creator(),
                          computation_graph_callable=computation_graph_callable,
-                         initialization_fn=self.backend.initialization,
-                         optimized=optimized)
+                         initialization_fn=self.backend.initialization)
 
         # Execute graph distributedly and return the aggregated results from all
         # tasks

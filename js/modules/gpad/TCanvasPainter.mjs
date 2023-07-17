@@ -177,6 +177,8 @@ class TCanvasPainter extends TPadPainter {
 
       if (!this.proj_painter[kind]) {
 
+         this.proj_painter[kind] = 'init';
+
          let canv = create(clTCanvas),
              pad = this.pad,
              main = this.getFramePainter(), drawopt;
@@ -199,11 +201,14 @@ class TCanvasPainter extends TPadPainter {
 
          canv.fPrimitives.Add(hist, hopt);
 
-         let promise = this.drawInUI5ProjectionArea
+         let promise = isFunc(this.drawInUI5ProjectionArea)
                        ? this.drawInUI5ProjectionArea(canv, drawopt, kind)
                        : this.drawInSidePanel(canv, drawopt, kind);
 
          return promise.then(painter => { this.proj_painter[kind] = painter; return painter; });
+      } else if (isStr(this.proj_painter[kind])) {
+         console.log('Not ready with first painting', kind);
+         return true;
       }
 
       this.proj_painter[kind].getMainPainter()?.updateObject(hist, hopt);
@@ -387,6 +392,14 @@ class TCanvasPainter extends TPadPainter {
          let that = msg.slice(5),
              on = (that[that.length-1] == '1');
          this.showSection(that.slice(0,that.length-2), on);
+      } else if (msg.slice(0,5) == 'CTRL:') {
+         let obj = parse(msg.slice(5));
+         if ((obj?.title !== undefined) && (typeof document !== 'undefined'))
+            document.title = obj.title;
+         if (obj.x && obj.y && typeof window !== 'undefined')
+            window.moveTo(obj.x, obj.y);
+         if (obj.w && obj.h && typeof window !== 'undefined')
+            window.resizeTo(obj.w, obj.h);
       } else if (msg.slice(0,5) == 'EDIT:') {
          let obj_painter = this.findSnap(msg.slice(5));
          console.log(`GET EDIT ${msg.slice(5)} found ${!!obj_painter}`);

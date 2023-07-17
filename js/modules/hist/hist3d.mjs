@@ -9,6 +9,7 @@ import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
          cleanupRender3D, HelveticerRegularFont, createSVGRenderer, create3DLineMaterial } from '../base/base3d.mjs';
 import { translateLaTeX } from '../base/latex.mjs';
+import { kCARTESIAN, kPOLAR, kCYLINDRICAL, kSPHERICAL, kRAPIDITY } from '../hist2d/THistPainter.mjs';
 import { buildHist2dContour, buildSurf3D } from '../hist2d/TH2Painter.mjs';
 
 
@@ -16,7 +17,7 @@ import { buildHist2dContour, buildSurf3D } from '../hist2d/TH2Painter.mjs';
   * @private */
 function testAxisVisibility(camera, toplevel, fb, bb) {
    let top;
-   if (toplevel && toplevel.children)
+   if (toplevel?.children)
       for (let n = 0; n < toplevel.children.length; ++n) {
          top = toplevel.children[n];
          if (top.axis_draw) break;
@@ -66,6 +67,77 @@ function testAxisVisibility(camera, toplevel, fb, bb) {
       }
    }
 }
+
+
+function convertLegoBuf(painter, pos, binsx, binsy) {
+   if (painter.options.System === kCARTESIAN)
+      return pos;
+   let fp = painter.getFramePainter(), kx = 1/fp.size_x3d, ky = 1/fp.size_y3d;
+   if (binsx && binsy) {
+      kx *= binsx/(binsx-1);
+      ky *= binsy/(binsy-1);
+   }
+
+   if (painter.options.System === kPOLAR)
+      for (let i = 0; i < pos.length; i += 3) {
+         let angle = (1 - pos[i] * kx) * Math.PI,
+             radius = 0.5 + 0.5 * pos[i + 1] * ky;
+
+         pos[i] = Math.cos(angle) * radius * fp.size_x3d;
+         pos[i+1] = Math.sin(angle) * radius * fp.size_y3d;
+      }
+
+   else if (painter.options.System === kCYLINDRICAL)
+      for (let i = 0; i < pos.length; i += 3) {
+         let angle = (1 - pos[i] * kx) * Math.PI,
+             radius = 0.5 + pos[i + 2]/fp.size_z3d/4;
+
+         pos[i] = Math.cos(angle) * radius * fp.size_x3d;
+         pos[i+2] = (1 + Math.sin(angle) * radius) * fp.size_z3d;
+      }
+
+   else if (painter.options.System === kSPHERICAL)
+      for (let i = 0; i < pos.length; i += 3) {
+         let phi = (1 + pos[i] * kx) * Math.PI,
+             theta = pos[i+1] * ky * Math.PI,
+             radius = 0.5 + pos[i+2]/fp.size_z3d/4;
+
+         pos[i] = radius * Math.cos(theta) * Math.cos(phi) * fp.size_x3d;
+         pos[i+1] = radius * Math.cos(theta) * Math.sin(phi) * fp.size_y3d;
+         pos[i+2] = (1 + radius * Math.sin(theta)) * fp.size_z3d;
+      }
+
+   else if (painter.options.System === kRAPIDITY)
+      for (let i = 0; i < pos.length; i += 3) {
+         let phi = (1 - pos[i] * kx) * Math.PI,
+             theta = pos[i+1] * ky * Math.PI,
+             radius = 0.5 + pos[i+2]/fp.size_z3d/4;
+
+         pos[i] = radius * Math.cos(phi) * fp.size_x3d;
+         pos[i+1] = radius * Math.sin(theta) / Math.cos(theta) * fp.size_y3d / 2;
+         pos[i+2] = (1 + radius * Math.sin(phi)) * fp.size_z3d;
+      }
+
+   return pos;
+}
+
+function createLegoGeom(painter, positions, normals, binsx, binsy) {
+   let geometry = new BufferGeometry();
+   if (painter.options.System === kCARTESIAN) {
+      geometry.setAttribute('position', new BufferAttribute(positions, 3));
+      if (normals)
+         geometry.setAttribute('normal', new BufferAttribute(normals, 3));
+      else
+         geometry.computeVertexNormals();
+   } else {
+      convertLegoBuf(painter, positions, binsx, binsy);
+      geometry.setAttribute('position', new BufferAttribute(positions, 3));
+      geometry.computeVertexNormals();
+   }
+
+   return geometry;
+}
+
 
 /** @summary Set default camera position
   * @private */
@@ -341,7 +413,8 @@ function render3D(tmout) {
    if (this.first_render_tm === 0) {
       this.first_render_tm = tm2.getTime() - tm1.getTime();
       this.enable_highlight = (this.first_render_tm < 1200) && this.isTooltipAllowed();
-      console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
+      if (this.first_render_tm > 500)
+         console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
    }
 
    if (this.processRender3D)
@@ -426,7 +499,7 @@ function highlightBin3D(tip, selfmesh) {
          const geom = new BufferGeometry();
          geom.setAttribute('position', new BufferAttribute(pos, 3));
          geom.setAttribute('normal', new BufferAttribute(norm, 3));
-         const material = new MeshBasicMaterial({ color: color, opacity: opacity, vertexColors: false });
+         const material = new MeshBasicMaterial({ color, opacity, vertexColors: false });
          tooltip_mesh = new Mesh(geom, material);
       } else {
          pos = tooltip_mesh.geometry.attributes.position.array;
@@ -454,11 +527,16 @@ function highlightBin3D(tip, selfmesh) {
       }
       this.tooltip_mesh = tooltip_mesh;
       this.toplevel.add(tooltip_mesh);
+
+      if (tip.$painter && tip.$painter.options.System !== kCARTESIAN) {
+         convertLegoBuf(tip.$painter, pos);
+         tooltip_mesh.geometry.computeVertexNormals();
+      }
    }
 
    if (changed) this.render3D();
 
-   if (changed && isFunc(tip.$painter?.redrawProjection))
+   if (changed && tip.$projection && isFunc(tip.$painter?.redrawProjection))
       tip.$painter.redrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
    if (changed && mainp?.getObject())
@@ -478,6 +556,11 @@ function set3DOptions(hopt) {
   * @private */
 function drawXYZ(toplevel, AxisPainter, opts) {
    if (!opts) opts = {};
+
+   if (opts.drawany === false)
+      opts.draw = false;
+   else
+      opts.drawany = true;
 
    let grminx = -this.size_x3d, grmaxx = this.size_x3d,
        grminy = -this.size_y3d, grmaxy = this.size_y3d,
@@ -770,7 +853,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(mesh);
    });
 
-   if (opts.zoom) xcont.add(createZoomMesh('x', this.size_x3d));
+   if (opts.zoom && opts.anydraw)
+      xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
    xcont = new Object3D();
@@ -796,7 +880,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    });
 
    xcont.xyid = 4;
-   if (opts.zoom) xcont.add(createZoomMesh('x', this.size_x3d));
+   if (opts.zoom && opts.drawany)
+      xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
    lbls = []; text_scale = 1; maxtextheight = 0; ticks = [];
@@ -880,7 +965,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       });
 
       ycont.xyid = 3;
-      if (opts.zoom) ycont.add(createZoomMesh('y', this.size_y3d));
+      if (opts.zoom && opts.drawany)
+         ycont.add(createZoomMesh('y', this.size_y3d));
       top.add(ycont);
 
       ycont = new Object3D();
@@ -903,7 +989,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          ycont.add(mesh);
       });
       ycont.xyid = 1;
-      if (opts.zoom) ycont.add(createZoomMesh('y', this.size_y3d));
+      if (opts.zoom && opts.anydraw)
+         ycont.add(createZoomMesh('y', this.size_y3d));
       top.add(ycont);
    }
 
@@ -911,7 +998,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    let zgridx = null, zgridy = null, lastmajorz = null, maxzlblwidth = 0;
 
-   if (this.size_z3d) {
+   if (this.size_z3d && opts.drawany) {
       zgridx = []; zgridy = [];
    }
 
@@ -1030,7 +1117,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (opts.draw && zticksline)
          zcont[n].add(n == 0 ? zticksline : new LineSegments(zticksline.geometry, zticksline.material));
-      if (opts.zoom)
+      if (opts.zoom && opts.drawany)
          zcont[n].add(createZoomMesh('z', this.size_z3d, opts.use_y_for_z));
 
       zcont[n].zid = n + 2;
@@ -1048,6 +1135,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    zcont[3].position.set(grminx,grminy,0);
    zcont[3].rotation.z = -3/4*Math.PI;
+
+   if (!opts.drawany)
+      return;
 
    let linex_material = getLineMaterial(this.x_handle),
        linex_geom = createLineSegments([grminx,0,0, grmaxx,0,0], linex_material, null, true);
@@ -1121,7 +1211,6 @@ function convert3DtoPadNDC(x, y, z) {
 function assignFrame3DMethods(fpainter) {
    Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
-
 
 /** @summary Draw histograms in 3D mode
   * @private */
@@ -1313,12 +1402,8 @@ function drawBinsLego(painter, is_v7 = false) {
          }
       }
 
-      let geometry = new BufferGeometry();
-      geometry.setAttribute('position', new BufferAttribute(positions, 3));
-      geometry.setAttribute('normal', new BufferAttribute(normals, 3));
-      // geometry.computeVertexNormals();
-
-      let rootcolor = is_v7 ? 3 : histo.fFillColor,
+      let geometry = createLegoGeom(painter, positions, normals),
+          rootcolor = is_v7 ? 3 : histo.fFillColor,
           fcolor = painter.getColor(rootcolor);
 
       if (palette) {
@@ -1340,11 +1425,6 @@ function drawBinsLego(painter, is_v7 = false) {
       mesh.handle = handle;
 
       mesh.tooltip = function(intersect) {
-         if (!Number.isInteger(intersect.faceIndex)) {
-            console.error(`faceIndex not provided, three.js version ${REVISION}`);
-            return null;
-         }
-
          if ((intersect.faceIndex < 0) || (intersect.faceIndex >= this.face_to_bins_index.length)) return null;
 
          const p = this.painter,
@@ -1370,8 +1450,8 @@ function drawBinsLego(painter, is_v7 = false) {
          tip.z2 = main.grz(Math.min(this.zmax, binz2));
 
          tip.color = this.tip_color;
-
-         if (p.is_projection && (p.getDimension() == 2)) tip.$painter = p; // used only for projections
+         tip.$painter = p;
+         tip.$projection = p.is_projection && (p.getDimension() == 2);
 
          return tip;
       };
@@ -1379,12 +1459,8 @@ function drawBinsLego(painter, is_v7 = false) {
       main.toplevel.add(mesh);
 
       if (num2vertices > 0) {
-         const geom2 = new BufferGeometry();
-         geom2.setAttribute('position', new BufferAttribute(pos2, 3));
-         geom2.setAttribute('normal', new BufferAttribute(norm2, 3));
-         //geom2.computeVertexNormals();
-
-         const color2 = (rootcolor < 2) ? new Color(0xFF0000) : new Color(d3_rgb(fcolor).darker(0.5).toString()),
+         const geom2 = createLegoGeom(painter, pos2, norm2),
+               color2 = (rootcolor < 2) ? new Color(0xFF0000) : new Color(d3_rgb(fcolor).darker(0.5).toString()),
                material2 = new MeshBasicMaterial({ color: color2, vertexColors: false }),
                mesh2 = new Mesh(geom2, material2);
          mesh2.face_to_bins_index = face_to_bins_indx2;
@@ -1478,7 +1554,7 @@ function drawBinsLego(painter, is_v7 = false) {
    // create boxes
    const lcolor = is_v7 ? painter.v7EvalColor('line_color', 'lightblue') : painter.getColor(histo.fLineColor),
          material = new LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
-         line = createLineSegments(lpositions, material, uselineindx ? lindicies : null );
+         line = createLineSegments(convertLegoBuf(painter, lpositions), material, uselineindx ? lindicies : null);
 
    /*
    line.painter = painter;
@@ -1573,11 +1649,6 @@ function drawBinsError3D(painter, is_v7 = false) {
     line.tip_color = (histo.fLineColor === 3) ? 0xFF0000 : 0x00FF00;
 
     line.tooltip = function(intersect) {
-       if (!Number.isInteger(intersect.index)) {
-          console.error(`segment index not provided, three.js version ${REVISION}`);
-          return null;
-       }
-
        let pos = Math.floor(intersect.index / 6);
        if ((pos < 0) || (pos >= this.intersect_index.length)) return null;
        let p = this.painter,
@@ -1697,46 +1768,43 @@ function drawBinsSurf3D(painter, is_v7 = false) {
       levels = [main_grz_min, main_grz_max]; // just cut top/bottom parts
    }
 
-   function RecalculateNormals(arr, normindx) {
-      for (let ii = handle.i1; ii < handle.i2; ++ii) {
-         for (let jj = handle.j1; jj < handle.j2; ++jj) {
-            let bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1)) * 8;
-
-            if (normindx[bin] === -1) continue; // nothing there
-
-            let beg = (normindx[bin]  >= 0) ? bin : bin+9+normindx[bin],
-                end = bin+8, sumx=0, sumy = 0, sumz = 0;
-
-            for (let kk=beg;kk<end;++kk) {
-               let indx = normindx[kk];
-               if (indx < 0) return console.error('FAILURE in NORMALS RECALCULATIONS');
-               sumx+=arr[indx];
-               sumy+=arr[indx+1];
-               sumz+=arr[indx+2];
-            }
-
-            sumx = sumx/(end-beg); sumy = sumy/(end-beg); sumz = sumz/(end-beg);
-
-            for (let kk=beg;kk<end;++kk) {
-               let indx = normindx[kk];
-               arr[indx] = sumx;
-               arr[indx+1] = sumy;
-               arr[indx+2] = sumz;
-            }
-         }
-      }
-   }
-
    handle.grz = main_grz;
    handle.grz_min = main_grz_min;
    handle.grz_max = main_grz_max;
 
    buildSurf3D(histo, handle, ilevels, (lvl, pos, normindx) => {
-      let geometry = new BufferGeometry();
-      geometry.setAttribute('position', new BufferAttribute(pos, 3));
-      geometry.computeVertexNormals();
+      let geometry = createLegoGeom(painter, pos, null, handle.i2 - handle.i1, handle.j2 - handle.j1),
+          normals = geometry.getAttribute('normal').array;
+
+      // recalculate normals
       if (handle.donormals && (lvl === 1))
-         RecalculateNormals(geometry.getAttribute('normal').array, normindx);
+         for (let ii = handle.i1; ii < handle.i2; ++ii) {
+            for (let jj = handle.j1; jj < handle.j2; ++jj) {
+               let bin = ((ii-handle.i1) * (handle.j2 - handle.j1) + (jj - handle.j1)) * 8;
+
+               if (normindx[bin] === -1) continue; // nothing there
+
+               let beg = (normindx[bin]  >= 0) ? bin : bin+9+normindx[bin],
+                   end = bin+8, sumx = 0, sumy = 0, sumz = 0;
+
+               for (let kk = beg; kk < end; ++kk) {
+                  let indx = normindx[kk];
+                  if (indx < 0) return console.error('FAILURE in NORMALS RECALCULATIONS');
+                  sumx += normals[indx];
+                  sumy += normals[indx+1];
+                  sumz += normals[indx+2];
+               }
+
+               sumx = sumx/(end-beg); sumy = sumy/(end-beg); sumz = sumz/(end-beg);
+
+               for (let kk = beg; kk < end; ++kk) {
+                  let indx = normindx[kk];
+                  normals[indx] = sumx;
+                  normals[indx+1] = sumy;
+                  normals[indx+2] = sumz;
+               }
+            }
+         }
 
       let color, material;
       if (is_v7) {
@@ -1770,7 +1838,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
          material = new LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth }));
       }
 
-      let line = createLineSegments(lpos, material);
+      let line = createLineSegments(convertLegoBuf(painter, lpos, handle.i2 - handle.i1, handle.j2 - handle.j1), material);
       line.painter = painter;
       main.toplevel.add(line);
    });
@@ -1831,11 +1899,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
                 }
              }
 
-             const geometry = new BufferGeometry();
-             geometry.setAttribute('position', new BufferAttribute(pos, 3));
-             geometry.setAttribute('normal', new BufferAttribute(norm, 3));
-
-             const material = new MeshBasicMaterial(getMaterialArgs(palette.getColor(colindx), { side: DoubleSide, opacity: 0.5, vertexColors: false })),
+             const geometry = createLegoGeom(painter, pos, norm, handle.i2 - handle.i1, handle.j2 - handle.j1),
+                   material = new MeshBasicMaterial(getMaterialArgs(palette.getColor(colindx), { side: DoubleSide, opacity: 0.5, vertexColors: false })),
                    mesh = new Mesh(geometry, material);
              mesh.painter = painter;
              main.toplevel.add(mesh);

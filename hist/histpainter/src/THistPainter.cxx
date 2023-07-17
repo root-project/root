@@ -319,6 +319,7 @@ using `TH1::GetOption`:
 | "MERCATOR"   | Draw a contour via an Mercator projection.|
 | "SINUSOIDAL" | Draw a contour via an Sinusoidal projection.|
 | "PARABOLIC"  | Draw a contour via an Parabolic projection.|
+| "MOLLWEIDE"  | Draw a contour via an Mollweide projection.|
 | "LEGO9"      | Draw the 3D axis only. Mainly needed for internal use |
 | "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
@@ -3202,6 +3203,7 @@ THistPainter::THistPainter()
    fNcuts = 0;
    fStack = 0;
    fShowProjection = 0;
+   fShowProjection2 = 0;
    fShowOption = "";
    for (int i=0; i<kMaxCuts; i++) {
       fCuts[i] = nullptr;
@@ -4338,6 +4340,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"PARABOLIC");
    if (l) {
       Hoption.Proj = 4; memcpy(l,"        ",9);    //Parabolic projection
+   }
+   l = strstr(chopt,"MOLLWEIDE");
+   if (l) {
+      Hoption.Proj = 5; memcpy(l,"        ",9);    //Mollweide projection
    }
    if (Hoption.Proj > 0) {
       Hoption.Color = 0;
@@ -10356,7 +10362,9 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function code from  Ernst-Jan Buis
+/// Static function code for sinusoidal projection
+/// from  Ernst-Jan Buis
+/// Source https://en.wikipedia.org/wiki/Sinusoidal_projection
 
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
@@ -10367,13 +10375,51 @@ Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function code from  Ernst-Jan Buis
+/// Static function code for parabolic projection
+/// from  Ernst-Jan Buis
 
 Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
 
    Al = l*(2.*TMath::Cos(2*b*TMath::DegToRad()/3) - 1);
    Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function.
+///
+/// Convert Right Ascension, Declination to X,Y using an MOLLWEIDE projection.
+/// This procedure can be used to create an all-sky map in Galactic
+/// coordinates with an equal-area Mollweide projection.  Output map
+/// coordinates are zero longitude centered.
+/// It is also known as the Babinet projection, homalographic projection, homolographic projection, and elliptical projection.
+/// Source: https://en.wikipedia.org/wiki/Mollweide_projection
+///
+/// code from  Marco Meyer-Conde
+
+Int_t THistPainter::ProjectMollweide2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
+{
+
+   Double_t theta0 = b * TMath::DegToRad(), theta = theta0;
+
+   for (int i = 0; i < 100; i++) {
+      Double_t num = 2 * theta + TMath::Sin(2 * theta) - TMath::Pi() * TMath::Sin(theta0);
+      Double_t den = 4 * TMath::Power(TMath::Cos(theta), 2);
+
+      if (den < 1e-20) {
+         theta = theta0;
+         break;
+      }
+
+      theta -= num / den;
+
+      if (TMath::Abs(num / den) < 1e-4) break;
+   }
+
+   Al = l * TMath::Cos(theta);
+   Ab = 90 * TMath::Sin(theta);
+
    return 0;
 }
 
@@ -10386,93 +10432,64 @@ void THistPainter::RecalculateRange()
    if (Hoption.Same) return;
 
    //     Compute x,y range
-   Double_t xmin = Hparam.xmin;
-   Double_t xmax = Hparam.xmax;
-   Double_t ymin = Hparam.ymin;
-   Double_t ymax = Hparam.ymax;
+   Double_t xmin = Hparam.xmin,
+            xmax = Hparam.xmax,
+            ymin = Hparam.ymin,
+            ymax = Hparam.ymax,
+            xscale = 1;
 
-   Double_t xmin_aid, ymin_aid, xmax_aid, ymax_aid;
-   if (Hoption.Proj ==1) {
-      // TODO : check x range not lower than -180 and not higher than 180
-      THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-      THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-      THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-      THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+   std::function<Int_t(Double_t,Double_t,Double_t&,Double_t&)> func;
 
-      if (xmin > xmin_aid) xmin = xmin_aid;
-      if (ymin > ymin_aid) ymin = ymin_aid;
-      if (xmax < xmax_aid) xmax = xmax_aid;
-      if (ymax < ymax_aid) ymax = ymax_aid;
-      if (Hparam.ymin<0 && Hparam.ymax>0) {
-         // there is an  'equator', check its range in the plot..
-         THistPainter::ProjectAitoff2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectAitoff2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
-         if (xmin >xmin_aid) xmin = xmin_aid;
-         if (xmax <xmax_aid) xmax = xmax_aid;
-      }
-      if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectAitoff2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectAitoff2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
-         if (ymin >ymin_aid) ymin = ymin_aid;
-         if (ymax <ymax_aid) ymax = ymax_aid;
-      }
-   } else if ( Hoption.Proj ==2) {
-      if (Hparam.ymin <= -90 || Hparam.ymax >=90) {
+   if (Hoption.Proj == 1) {
+      func = ProjectAitoff2xy;
+      xscale = 0.9999;
+   } else if (Hoption.Proj == 2) {
+      if (Hparam.ymin <= -90 || Hparam.ymax >= 90) {
          Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
          Hoption.Proj = 0;
       } else {
-         THistPainter::ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
-         THistPainter::ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
+         ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
+         ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
       }
    } else if (Hoption.Proj == 3) {
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
-
-      if (xmin > xmin_aid) xmin = xmin_aid;
-      if (ymin > ymin_aid) ymin = ymin_aid;
-      if (xmax < xmax_aid) xmax = xmax_aid;
-      if (ymax < ymax_aid) ymax = ymax_aid;
-      if (Hparam.ymin<0 && Hparam.ymax>0) {
-         THistPainter::ProjectSinusoidal2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectSinusoidal2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-         if (xmin >xmin_aid) xmin = xmin_aid;
-         if (xmax <xmax_aid) xmax = xmax_aid;
-      }
-      if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectSinusoidal2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectSinusoidal2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-         if (ymin >ymin_aid) ymin = ymin_aid;
-         if (ymax <ymax_aid) ymax = ymax_aid;
-      }
+      func = ProjectSinusoidal2xy;
    } else if (Hoption.Proj == 4) {
-      THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-      THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-      THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-      THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+      func = ProjectParabolic2xy;
+   } else if (Hoption.Proj == 5) {
+      func = ProjectMollweide2xy;
+   }
+
+   if (func) {
+      Double_t xmin_aid, ymin_aid, xmax_aid, ymax_aid;
+
+      func(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+      func(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+      func(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+      func(Hparam.xmax, Hparam.ymin, xmax,     ymin);
 
       if (xmin > xmin_aid) xmin = xmin_aid;
       if (ymin > ymin_aid) ymin = ymin_aid;
       if (xmax < xmax_aid) xmax = xmax_aid;
       if (ymax < ymax_aid) ymax = ymax_aid;
-      if (Hparam.ymin<0 && Hparam.ymax>0) {
-         THistPainter::ProjectParabolic2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectParabolic2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-         if (xmin >xmin_aid) xmin = xmin_aid;
-         if (xmax <xmax_aid) xmax = xmax_aid;
+      if (Hparam.ymin < 0 && Hparam.ymax > 0) {
+         // there is an  'equator', check its range in the plot..
+         func(Hparam.xmin*xscale, 0, xmin_aid, ymin_aid);
+         func(Hparam.xmax*xscale, 0, xmax_aid, ymin_aid);
+         if (xmin > xmin_aid) xmin = xmin_aid;
+         if (xmax < xmax_aid) xmax = xmax_aid;
       }
-      if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-         if (ymin >ymin_aid) ymin = ymin_aid;
-         if (ymax <ymax_aid) ymax = ymax_aid;
+      if (Hparam.xmin < 0 && Hparam.xmax > 0) {
+         func(0, Hparam.ymin, xmin_aid, ymin_aid);
+         func(0, Hparam.ymax, xmax_aid, ymax_aid);
+         if (ymin > ymin_aid) ymin = ymin_aid;
+         if (ymax < ymax_aid) ymax = ymax_aid;
       }
    }
-   Hparam.xmin= xmin;
-   Hparam.xmax= xmax;
-   Hparam.ymin= ymin;
-   Hparam.ymax= ymax;
+
+   Hparam.xmin = xmin;
+   Hparam.xmax = xmax;
+   Hparam.ymin = ymin;
+   Hparam.ymax = ymax;
 
    Double_t dx   = xmax-xmin;
    Double_t dy   = ymax-ymin;
@@ -10482,9 +10499,9 @@ void THistPainter::RecalculateRange()
    // Range() could change the size of the pad pixmap and therefore should
    // be called before the other paint routines
    gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                      ymin - dyr*gPad->GetBottomMargin(),
-                      xmax + dxr*gPad->GetRightMargin(),
-                      ymax + dyr*gPad->GetTopMargin());
+               ymin - dyr*gPad->GetBottomMargin(),
+               xmax + dxr*gPad->GetRightMargin(),
+               ymax + dyr*gPad->GetTopMargin());
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
 }
 
@@ -10737,8 +10754,21 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 
 void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 {
+   if (fShowProjection2) {
+      auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
+      auto c2 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name2.Data()));
+      if (c2) c2->Close();
+      fShowProjection2 = 0;
+   }
+   if (fShowProjection) {
+      auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+      auto c1 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name1.Data()));
+      if (c1) c1->Close();
+      fShowProjection = 0;
+   }
 
-   if (fShowProjection) return;
+   if (nbins <= 0) return;
+
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
@@ -10754,10 +10784,54 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    if (projection < 4) fShowOption = option+1;
    else                fShowOption = option+2;
    fShowProjection = projection+100*nbins;
+   fShowProjection2 = 0;
    gROOT->MakeDefCanvas();
    gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
    gPad->SetGrid();
 }
+
+void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbinsX)
+{
+   if (fShowProjection2) {
+      auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
+      auto c2 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name2.Data()));
+      if (c2) c2->Close();
+      fShowProjection2 = 0;
+   }
+   if (fShowProjection) {
+      auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+      auto c1 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name1.Data()));
+      if (c1) c1->Close();
+      fShowProjection = 0;
+   }
+
+   if ((nbinsX <= 0) || (nbinsY <= 0)) return;
+
+
+   TString opt = option;
+   opt.ToLower();
+   Int_t projection = 0;
+   if (opt.Contains("x"))  projection = 1;
+   if (opt.Contains("y"))  projection = 2;
+   if (opt.Contains("z"))  projection = 3;
+   if (opt.Contains("xy")) projection = 4;
+   if (opt.Contains("yx")) projection = 5;
+   if (opt.Contains("xz")) projection = 6;
+   if (opt.Contains("zx")) projection = 7;
+   if (opt.Contains("yz")) projection = 8;
+   if (opt.Contains("zy")) projection = 9;
+   if (projection < 4) fShowOption = option+1;
+   else                fShowOption = option+2;
+   fShowProjection = projection+100*nbinsY;
+   fShowProjection2 = projection+100*nbinsX;
+   gROOT->MakeDefCanvas();
+   gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
+   gPad->SetGrid();
+   gROOT->MakeDefCanvas();
+   gPad->SetName(TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2).Data());
+   gPad->SetGrid();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show projection onto X.
@@ -10790,12 +10864,13 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad::TContext ctxt(true);
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection).Data());
+   auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name1.Data());
    if (c) {
       c->Clear();
    } else {
       fShowProjection = 0;
+      fShowProjection2 = 0;
       pyold1 = 0;
       pyold2 = 0;
       return;
@@ -10835,7 +10910,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
          }
       }
       hp->SetXTitle(fH->GetXaxis()->GetTitle());
-      hp->SetYTitle("Number of Entries");
+      hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
       hp->Draw();
       c->Update();
    }
@@ -10848,6 +10923,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
 
    Int_t nbins = (Int_t)fShowProjection/100;
+   if (fShowProjection2)
+       nbins = (Int_t)fShowProjection2/100;
    gPad->SetDoubleBuffer(0);             // turn off double buffer mode
    gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
 
@@ -10873,12 +10950,15 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    // Create or set the new canvas proj y
    TVirtualPad::TContext ctxt(true);
 
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection).Data());
+   TString name2 = fShowProjection2 ? TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2)
+                                    : TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name2.Data());
    if (c) {
       c->Clear();
    } else {
       fShowProjection = 0;
+      fShowProjection2 = 0;
       pxold1 = 0;
       pxold2 = 0;
       return;
@@ -10918,8 +10998,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          }
       }
       hp->SetXTitle(fH->GetYaxis()->GetTitle());
-      hp->SetYTitle("Number of Entries");
-      hp->Draw();
+      hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
+      hp->Draw(fShowProjection2 ? "hbar" : "");
       c->Update();
    }
 }
@@ -10937,8 +11017,17 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
    Int_t nbins=(Int_t)fShowProjection/100; //decode nbins
    if (fH->GetDimension() < 3) {
-      if (fShowProjection%100 == 1) {ShowProjectionX(px,py); return;}
-      if (fShowProjection%100 == 2) {ShowProjectionY(px,py); return;}
+      if (fShowProjection2 % 100 == 1) {
+         ShowProjectionY(px, py);
+      }
+      if (fShowProjection % 100 == 1) {
+         ShowProjectionX(px, py);
+         return;
+      }
+      if (fShowProjection % 100 == 2) {
+         ShowProjectionY(px, py);
+         return;
+      }
    }
 
    gPad->SetDoubleBuffer(0);             // turn off double buffer mode

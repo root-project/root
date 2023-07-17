@@ -883,15 +883,13 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDependants)
 {
    auto const &importers = RooFit::JSONIO::importers();
-   auto const &pdfFactoryExpressions = RooFit::JSONIO::pdfImportExpressions();
-   auto const &funcFactoryExpressions = RooFit::JSONIO::functionImportExpressions();
+   auto const &factoryExpressions = RooFit::JSONIO::importExpressions();
 
    // some preparations: what type of function are we dealing with here?
    std::string name(RooJSONFactoryWSTool::name(p));
-   bool isPdf = endsWith(p["type"].val(), "_dist");
 
-   // if the function already exists, we don't need to do anything
-   if ((isPdf && _workspace.pdf(name)) || _workspace.function(name)) {
+   // if the RooAbsArg already exists, we don't need to do anything
+   if (_workspace.arg(name)) {
       return;
    }
    // if the key we found is not a map, it's an error
@@ -923,14 +921,14 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    bool ok = false;
    if (it != importers.end()) {
       for (auto &imp : it->second) {
-         ok = isPdf ? imp->importPdf(this, p) : imp->importFunction(this, p);
+         ok = imp->importArg(this, p);
          if (ok)
             break;
       }
    }
    if (!ok) { // generic import using the factory expressions
-      auto expr = isPdf ? pdfFactoryExpressions.find(functype) : funcFactoryExpressions.find(functype);
-      if (expr != (isPdf ? pdfFactoryExpressions.end() : funcFactoryExpressions.end())) {
+      auto expr = factoryExpressions.find(functype);
+      if (expr != factoryExpressions.end()) {
          std::string expression = ::generate(expr->second, p, this);
          if (!_workspace.factory(expression)) {
             std::stringstream ss;
@@ -1220,12 +1218,6 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       RooJSONFactoryWSTool::error(errMsg.str());
    }
    auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), varlist);
-   // temporarily disable dirty flag propagation when filling the RDH
-   std::vector<double> initVals;
-   for (auto &v : varlist) {
-      v->setDirtyInhibit(true);
-      initVals.push_back(static_cast<RooAbsReal const *>(v)->getVal());
-   }
    std::vector<double> contentVals;
    contentVals.reserve(contents.num_children());
    for (auto const &cont : contents.children()) {
@@ -1239,17 +1231,8 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       }
    }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
-      for (size_t i = 0; i < bins[ibin].size(); ++i) {
-         static_cast<RooRealVar *>(varlist.at(i))->setBin(bins[ibin][i]);
-      }
       const double err = errors ? errorVals[ibin] : -1;
-      dh->add(varlist, contentVals[ibin], err > 0 ? err * err : -1);
-   }
-   // re-enable dirty flag propagation
-   for (size_t i = 0; i < varlist.size(); ++i) {
-      auto v = static_cast<RooRealVar *>(varlist.at(i));
-      v->setVal(initVals[i]);
-      v->setDirtyInhibit(false);
+      dh->set(ibin, contentVals[ibin], err);
    }
    return dh;
 }

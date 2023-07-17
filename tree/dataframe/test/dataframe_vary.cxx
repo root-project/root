@@ -429,6 +429,27 @@ TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-t
       std::logic_error);
 }
 
+// Make sure we can pass RResultMaps to RunGraphs (after converting them to RResultHandle).
+TEST(RDFVary, ResultMapAndRunGraphs)
+{
+   auto m = ROOT::RDataFrame(1)
+               .Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{-1, 1};
+                  },
+                  {}, 2)
+               .Max<int>("x");
+   auto mv = ROOT::RDF::Experimental::VariationsFor(m);
+   auto rh = ROOT::RDF::RResultHandle(mv);
+   ROOT::RDF::RunGraphs({rh});
+   EXPECT_EQ(rh.GetValue<int>(), 0);
+   EXPECT_EQ(mv["nominal"], 0);
+   EXPECT_EQ(&mv["nominal"], &rh.GetValue<int>());
+   EXPECT_EQ(mv["x:0"], -1);
+   EXPECT_EQ(mv["x:1"], 1);
+}
 
 /************ These tests are run in single- and multi-thread mode (they use TEST_P instead of TEST) ************/
 TEST_P(RDFVary, SimpleSum)

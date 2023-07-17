@@ -83,10 +83,7 @@ public:
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
-      auto pageBuffer = RPageSource::UnsealPage(fPages[i], fElement);
-      RPage newPage(columnHandle.fPhysicalId, pageBuffer.release(), fElement.GetSize(), fPages[i].fNElements);
-      newPage.GrowUnchecked(fPages[i].fNElements);
-      return newPage;
+      return RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId);
    }
    RPage PopulatePage(ColumnHandle_t, const ROOT::Experimental::RClusterIndex &) final { return RPage(); }
    void ReleasePage(RPage &) final {}
@@ -100,7 +97,7 @@ public:
 
 TEST(RColumnElementEndian, ByteCopy)
 {
-   ROOT::Experimental::Detail::RColumnElement<float, EColumnType::kReal32> element(nullptr);
+   ROOT::Experimental::Detail::RColumnElement<float, EColumnType::kReal32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -121,7 +118,7 @@ TEST(RColumnElementEndian, ByteCopy)
 
 TEST(RColumnElementEndian, Cast)
 {
-   ROOT::Experimental::Detail::RColumnElement<std::int64_t, EColumnType::kInt32> element(nullptr);
+   ROOT::Experimental::Detail::RColumnElement<std::int64_t, EColumnType::kInt32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -146,7 +143,7 @@ TEST(RColumnElementEndian, Cast)
 
 TEST(RColumnElementEndian, Split)
 {
-   ROOT::Experimental::Detail::RColumnElement<double, EColumnType::kSplitReal64> splitElement(nullptr);
+   ROOT::Experimental::Detail::RColumnElement<double, EColumnType::kSplitReal64> splitElement;
 
    RPageSinkMock sink1(splitElement);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -168,7 +165,7 @@ TEST(RColumnElementEndian, DeltaSplit)
 {
    using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 
-   ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element(nullptr);
+   ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);

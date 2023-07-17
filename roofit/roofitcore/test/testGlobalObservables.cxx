@@ -97,10 +97,9 @@ public:
    RooAbsPdf &model() { return *ws().pdf("model"); }
    RooAbsPdf &modelc() { return *ws().pdf("modelc"); }
 
-   std::unique_ptr<RooFitResult> doFit(RooAbsPdf &model, RooAbsData &data, RooCmdArg const &arg1 = RooCmdArg::none(),
-                                       RooCmdArg const &arg2 = RooCmdArg::none(),
-                                       RooCmdArg const &arg3 = RooCmdArg::none(),
-                                       RooCmdArg const &arg4 = RooCmdArg::none())
+   std::unique_ptr<RooFitResult> doFit(RooAbsPdf &model, RooAbsData &data, RooCmdArg const &arg1 = {},
+                                       RooCmdArg const &arg2 = {}, RooCmdArg const &arg3 = {},
+                                       RooCmdArg const &arg4 = {})
    {
       using namespace RooFit;
       return std::unique_ptr<RooFitResult>(

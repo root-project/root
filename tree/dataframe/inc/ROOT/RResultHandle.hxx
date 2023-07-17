@@ -24,12 +24,21 @@
 namespace ROOT {
 namespace RDF {
 
+/// \brief A type-erased version of RResultPtr and RResultMap.
+/// RResultHandles are used to invoke ROOT::RDF::RunGraphs() and can also be useful
+/// to store result pointers of different types in the same collection. Knowledge
+/// about the actual result type will still be needed to access it.
+/// \note Varied results are stripped away when a RResultMap is converted to a RResultHandle:
+///       Only the nominal result will be accessible from the RResultHandle.
 class RResultHandle {
    ROOT::Detail::RDF::RLoopManager *fLoopManager = nullptr; //< Pointer to the loop manager
    /// Owning pointer to the action that will produce this result.
    /// Ownership is shared with RResultPtrs and RResultHandles that refer to the same result.
    std::shared_ptr<ROOT::Internal::RDF::RActionBase> fActionPtr;
    std::shared_ptr<void> fObjPtr; ///< Type erased shared pointer encapsulating the wrapped result
+   /// Owning pointer to the varied action that will produce these results if any.
+   /// Null if the RResultHandle was created from a RResultPtr, so no variations were present.
+   std::shared_ptr<ROOT::Internal::RDF::RActionBase> fVariedActionPtr;
    const std::type_info *fType = nullptr; ///< Type of the wrapped result
 
    // The ROOT::RDF::RunGraphs helper has to access the loop manager to check whether two RResultHandles belong to the same computation graph
@@ -66,6 +75,15 @@ class RResultHandle {
 public:
    template <class T>
    RResultHandle(const RResultPtr<T> &resultPtr) : fLoopManager(resultPtr.fLoopManager), fActionPtr(resultPtr.fActionPtr), fObjPtr(resultPtr.fObjPtr), fType(&typeid(T)) {}
+   template <class T>
+   RResultHandle(const Experimental::RResultMap<T> &resultMap)
+      : fLoopManager(resultMap.fLoopManager),
+        fActionPtr(resultMap.fNominalAction),
+        fObjPtr(resultMap.fMap.at("nominal")),
+        fVariedActionPtr(resultMap.fVariedAction),
+        fType(&typeid(T))
+   {
+   }
 
    RResultHandle(const RResultHandle&) = default;
    RResultHandle(RResultHandle&&) = default;
@@ -73,6 +91,7 @@ public:
 
    /// Get the pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
+   /// If the RResultHandle was created from a RResultMap, this returns a pointer to the nominal value.
    /// \tparam T Type of the action result
    template <class T>
    T* GetPtr()
@@ -84,6 +103,7 @@ public:
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
+   /// If the RResultHandle was created from a RResultMap, this returns a pointer to the nominal value.
    /// \tparam T Type of the action result
    template <class T>
    const T& GetValue()
@@ -96,6 +116,7 @@ public:
    /// Get an RResultPtr to the encapsulated object.
    /// \tparam T Type of the action result
    template <class T>
+   R__DEPRECATED(6, 32, "Please use RResultPtr directly and only cast to RResultHandle in order to call RunGraphs.")
    RResultPtr<T> GetResultPtr()
    {
       CheckType(typeid(T));
@@ -119,12 +140,12 @@ public:
 
    bool operator==(const RResultHandle &rhs) const
    {
-      return fObjPtr == rhs.fObjPtr;
+      return fObjPtr == rhs.fObjPtr && fVariedActionPtr == rhs.fVariedActionPtr;
    }
 
    bool operator!=(const RResultHandle &rhs) const
    {
-      return !(fObjPtr == rhs.fObjPtr);
+      return !(fObjPtr == rhs.fObjPtr) && fVariedActionPtr == rhs.fVariedActionPtr;
    }
 };
 

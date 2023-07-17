@@ -29,7 +29,6 @@ class RooAbsOptTestStatistic : public RooAbsTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooAbsOptTestStatistic() ;
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                          const RooArgSet& projDeps,
                          RooAbsTestStatistic::Configuration const& cfg);
@@ -75,20 +74,20 @@ protected:
   void optimizeCaching() ;
   void optimizeConstantTerms(bool,bool=true) ;
 
-  RooArgSet*  _normSet ;           ///< Pointer to set with observables used for normalization
-  RooArgSet*  _funcCloneSet ;      ///< Set owning all components of internal clone of input function
-  RooAbsData* _dataClone{nullptr}; ///< Pointer to internal clone if input data
-  RooAbsReal* _funcClone ;   ///< Pointer to internal clone of input function
-  RooArgSet*  _projDeps ;    ///< Set of projected observable
-  bool      _ownData  ;    ///< Do we own the dataset
-  bool      _sealed ;      ///< Is test statistic sealed -- i.e. no access to data
+  RooArgSet*  _normSet = nullptr;           ///< Pointer to set with observables used for normalization
+  RooArgSet*  _funcCloneSet = nullptr;      ///< Set owning all components of internal clone of input function
+  RooAbsData* _dataClone = nullptr; ///< Pointer to internal clone if input data
+  RooAbsReal* _funcClone = nullptr;   ///< Pointer to internal clone of input function
+  RooArgSet*  _projDeps = nullptr;    ///< Set of projected observable
+  bool      _ownData = false;    ///< Do we own the dataset
+  bool      _sealed = false;      ///< Is test statistic sealed -- i.e. no access to data
   TString     _sealNotice ;  ///< User-defined notice shown when reading a sealed likelihood
-  RooArgSet*  _funcObsSet ;  ///< List of observables in the pdf expression
+  RooArgSet*  _funcObsSet = nullptr;  ///< List of observables in the pdf expression
   RooArgSet   _cachedNodes ; ///<! List of nodes that are cached as constant expressions
 
-  RooAbsReal* _origFunc ;  ///< Original function
-  RooAbsData* _origData ;  ///< Original data
-  bool      _optimized ; ///<!
+  RooAbsReal* _origFunc = nullptr;  ///< Original function
+  RooAbsData* _origData = nullptr;  ///< Original data
+  bool      _optimized = false; ///<!
   double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
 
   ClassDefOverride(RooAbsOptTestStatistic,0) // Abstract base class for optimized test statistics

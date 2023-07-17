@@ -77,6 +77,8 @@ protected:
 
    std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
 
+   std::map<std::string, std::string> fCtrlMsgs; ///<! different ctrl messages which can be send with next update
+
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
    Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
@@ -131,7 +133,9 @@ protected:
 
    virtual Bool_t IsJSSupportedClass(TObject *obj, Bool_t many_primitives = kFALSE);
 
-   Bool_t IsFirstConn(unsigned connid) const { return (connid!=0) && (fWebConn.size()>0) && (fWebConn[0].fConnId == connid) ;}
+   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 0) && (fWebConn[0].fConnId == connid); }
+
+   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 0) && (fWebConn[0].fDrawVersion > 0); }
 
    void ShowCmd(const std::string &arg, Bool_t show);
 
@@ -179,14 +183,14 @@ public:
 
    void ForceUpdate() override;
 
+   void   SetWindowPosition(Int_t x, Int_t y) override;
+   void   SetWindowSize(UInt_t w, UInt_t h) override;
+   void   SetWindowTitle(const char *newTitle) override;
+   void   SetCanvasSize(UInt_t w, UInt_t h) override;
 
    /*
       virtual void   Iconify() { }
       virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
-      virtual void   SetWindowPosition(Int_t x, Int_t y);
-      virtual void   SetWindowSize(UInt_t w, UInt_t h);
-      virtual void   SetWindowTitle(const char *newTitle);
-      virtual void   SetCanvasSize(UInt_t w, UInt_t h);
       virtual void   RaiseWindow();
       virtual void   ReallyDelete();
     */
@@ -231,6 +235,8 @@ public:
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
    static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);
+
+   static bool ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width = 0, Int_t height = 0);
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 

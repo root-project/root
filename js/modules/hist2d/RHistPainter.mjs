@@ -199,7 +199,7 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Decode options */
    decodeOptions(/*opt*/) {
-      if (!this.options) this.options = { Hist : 1 };
+      if (!this.options) this.options = { Hist: 1, System: 1 };
    }
 
    /** @summary Copy draw options from other painter */
@@ -640,7 +640,8 @@ class RHistPainter extends RObjectPainter {
 
          menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
-            if (!fp.enable_highlight && main.highlightBin3D && main.mode3d) main.highlightBin3D(null);
+            if (!fp.enable_highlight && main.mode3d && isFunc(main.highlightBin3D))
+               main.highlightBin3D(null);
          });
 
          if (isFunc(fp?.render3D)) {

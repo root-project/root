@@ -4308,7 +4308,8 @@ class TGeoPainter extends ObjectPainter {
 
       if ((this.first_render_tm === 0) && (measure === true)) {
          this.first_render_tm = tm2.getTime() - tm1.getTime();
-         console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
+         if (this.first_render_tm > 500)
+            console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
       }
 
       afterRender3D(this._renderer);

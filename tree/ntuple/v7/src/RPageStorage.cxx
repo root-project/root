@@ -141,34 +141,39 @@ void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
       UnzipClusterImpl(cluster);
 }
 
-
-std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::UnsealPage(
-   const RSealedPage &sealedPage, const RColumnElementBase &element)
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSource::UnsealPage(const RSealedPage &sealedPage,
+                                                                                      const RColumnElementBase &element,
+                                                                                      DescriptorId_t physicalColumnId)
 {
-   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
-   const auto pageSize = element.GetSize() * sealedPage.fNElements;
+   // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
+   // large enough to hold `sealedPage.fNElements`
+   if (sealedPage.fBuffer == RPage::GetPageZeroBuffer()) {
+      auto page = RPage::MakePageZero(physicalColumnId, element.GetSize());
+      page.GrowUnchecked(sealedPage.fNElements);
+      return page;
+   }
 
-   // TODO(jblomer): We might be able to do better memory handling for unsealing pages than a new malloc for every
-   // new page.
-   auto pageBuffer = std::make_unique<unsigned char[]>(bytesPacked);
+   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
+   using Allocator_t = RPageAllocatorHeap;
+   auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
    if (sealedPage.fSize != bytesPacked) {
-      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, pageBuffer.get());
+      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, page.GetBuffer());
    } else {
       // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
       // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
       // Note that usually pages are compressed.
-      // TODO(jalopezg): unsealing a page zero should be a no-op (i.e., no additional memcpy), but the current prototype
-      // of `UnsealPage()` prevents that
-      memcpy(pageBuffer.get(), sealedPage.fBuffer, bytesPacked);
+      memcpy(page.GetBuffer(), sealedPage.fBuffer, bytesPacked);
    }
 
    if (!element.IsMappable()) {
-      auto unpackedBuffer = new unsigned char[pageSize];
-      element.Unpack(unpackedBuffer, pageBuffer.get(), sealedPage.fNElements);
-      pageBuffer = std::unique_ptr<unsigned char []>(unpackedBuffer);
+      auto tmp = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
+      element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.fNElements);
+      Allocator_t::DeletePage(page);
+      page = tmp;
    }
 
-   return pageBuffer;
+   page.GrowUnchecked(sealedPage.fNElements);
+   return page;
 }
 
 void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)

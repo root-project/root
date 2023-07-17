@@ -1201,37 +1201,16 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       prefixArgs(pdfClone.get(), prefix, normSet);
 
-      auto binnedInfo = RooHelpers::getBinnedL(*pdfClone);
-
-      RooAbsPdf &pdf = binnedInfo.binnedPdf ? *binnedInfo.binnedPdf : *pdfClone;
-
-      if (binnedInfo.isBinnedL) {
-         pdf.setAttribute("BinnedLikelihoodActive");
-      }
-
       std::unique_ptr<RooArgSet> pdfNormSet(
-         static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdf.getVariables())->selectByAttrib("__obs__", true)));
+         static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)));
 
       if (rangeName) {
-         pdf.setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
+         pdfClone->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
       }
 
-      // If this is a binned likelihood, we're flagging it in the context.
-      // Then, the RooBinWidthFunctions know that they should not put
-      // themselves in the computation graph. Like this, the pdf values can
-      // directly be interpreted as yields, without multiplying them with the
-      // bin widths again in the NLL. However, the NLL class has to be careful
-      // to only skip the bin with multiplication when there actually were
-      // RooBinWidthFunctions! This is not the case for old workspace before
-      // ROOT 6.26. Therefore, we use the "BinnedLikelihoodActiveYields"
-      // attribute to let the NLL know what it should do.
       RooFit::Detail::CompileContext pdfContext{*pdfNormSet};
       pdfContext.setLikelihoodMode(ctx.likelihoodMode());
-      pdfContext.setBinnedLikelihoodMode(ctx.likelihoodMode() && binnedInfo.isBinnedL);
-      auto *pdfFinal = pdfContext.compile(pdf, *newSimPdf, *pdfNormSet);
-      if(pdfContext.binWidthFuncFlag()) {
-         pdfFinal->setAttribute("BinnedLikelihoodActiveYields");
-      }
+      auto *pdfFinal = pdfContext.compile(*pdfClone, *newSimPdf, *pdfNormSet);
 
       pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
 

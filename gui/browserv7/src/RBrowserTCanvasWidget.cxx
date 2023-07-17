@@ -142,6 +142,11 @@ public:
 
       gROOT->GetListOfCanvases()->Remove(fCanvas.get());
 
+      if ((fCanvas->GetCanvasID() == -1) && (fCanvas->GetCanvasImp() == fWebCanvas)) {
+         fCanvas->SetCanvasImp(nullptr);
+         delete fWebCanvas;
+      }
+
       fCanvas->Close();
    }
 
@@ -175,6 +180,8 @@ public:
       std::unique_ptr<Browsable::RHolder> obj = elem->GetObject();
       if (!obj)
          return false;
+
+      Browsable::RProvider::ExtendProgressHandle(elem.get(), obj.get());
 
       std::string drawopt = opt;
 
