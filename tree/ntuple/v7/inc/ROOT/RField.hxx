@@ -250,9 +250,9 @@ protected:
    virtual void GenerateValue(void *where) = 0;
    /// Releases the resources acquired during GenerateValue (memory and constructor)
    /// This implementation works for simple types but needs to be overwritten for complex ones
-   virtual void DestroyValue(void *objPtr, bool dtorOnly = false);
+   virtual void DestroyValue(void *objPtr, bool dtorOnly = false) const;
    static void GenerateValueBy(RFieldBase &other, void *where) { other.GenerateValue(where); }
-   static void DestroyValueBy(RFieldBase &other, void *objPtr, bool dtorOnly = false)
+   static void DestroyValueBy(const RFieldBase &other, void *objPtr, bool dtorOnly = false)
    {
       other.DestroyValue(objPtr, dtorOnly);
    }
@@ -510,7 +510,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -655,7 +655,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -698,7 +698,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -750,7 +750,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
    void GenerateValue(void *where) override { new (where) std::vector<char>(); }
 
    std::size_t AppendImpl(const void *from) final;
@@ -794,7 +794,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    std::size_t AppendImpl(const void *from) override;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
@@ -836,7 +836,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -916,7 +916,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -981,7 +981,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void GenerateValue(void *where) final { new (where) std::unique_ptr<char>(); }
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -1155,7 +1155,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<Detail::RFieldBase>, 2> &&itemFields,
               const std::array<std::size_t, 2> &offsets);
@@ -1179,7 +1179,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
 
    void GenerateValue(void *where) override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
                const std::vector<std::size_t> &offsets);
@@ -1836,7 +1836,7 @@ private:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void GenerateValue(void *where) final { new (where) std::string(); }
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
@@ -1962,7 +1962,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void GenerateValue(void *where) final { new (where) std::vector<bool>(); }
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -2000,7 +2000,7 @@ protected:
    }
 
    void GenerateValue(void *where) final { new (where) ContainerT(); }
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
       Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
@@ -2070,7 +2070,7 @@ protected:
    }
 
    void GenerateValue(void *where) final { new (where) ContainerT(); }
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
       Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
@@ -2149,7 +2149,7 @@ protected:
    }
 
    void GenerateValue(void *where) final { new (where) ContainerT(); }
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
       Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
