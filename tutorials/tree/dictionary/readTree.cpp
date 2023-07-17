@@ -23,11 +23,11 @@ void readTree()
 
    std::unique_ptr<TFile> ifile { TFile::Open("testFile.root", "read") };
    if ( !ifile || ifile->IsZombie() )  {
-      std::cerr << "Problem opening the file testFile.root" << std::endl;
+      std::cout << "Problem opening the file testFile.root" << std::endl;
       return;
    }
    if (!TClass::GetClass(typeid(myDetectorData))->IsLoaded()) {
-      std::cerr << " TClass::GetClass(typeid(myDetectorData))->IsLoaded() == false " << std::endl;
+      std::cout << " TClass::GetClass(typeid(myDetectorData))->IsLoaded() == false " << std::endl;
    }
 
    // Create a TTreeReader to read the tree named "myTree"
@@ -40,11 +40,11 @@ void readTree()
    // Loop over the entries of the tree
    while (aReader.Next()) {
       if (branch1->time != 0)
-         std::cerr << " -Branch1 : time: " << branch1->time << "\t energy: " << branch1->energy << std::endl;
+         std::cout << " -Branch1 : time: " << branch1->time << "\t energy: " << branch1->energy << std::endl;
       else if (branch2->time != 0)
-         std::cerr << " +Branch2 : time: " << branch2->time << "\t energy: " << branch2->energy << std::endl;
+         std::cout << " +Branch2 : time: " << branch2->time << "\t energy: " << branch2->energy << std::endl;
       else
-         std::cerr << "WARNING: entry " << aReader.GetCurrentEntry() << " is empty! " << std::endl;
+         std::cout << "WARNING: entry " << aReader.GetCurrentEntry() << " is empty! " << std::endl;
    }
 
 }
