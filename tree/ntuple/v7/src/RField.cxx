@@ -443,7 +443,7 @@ ROOT::Experimental::Detail::RFieldBase::RValue ROOT::Experimental::Detail::RFiel
    return RValue(this, where, true /* isOwning */);
 }
 
-void ROOT::Experimental::Detail::RFieldBase::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::Detail::RFieldBase::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    if (!dtorOnly)
       free(objPtr);
@@ -1099,7 +1099,7 @@ void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleD
    fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(onDiskTypes[1]), 1));
 }
 
-void ROOT::Experimental::RField<std::string>::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RField<std::string>::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    std::destroy_at(static_cast<std::string *>(objPtr));
    Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
@@ -1290,7 +1290,7 @@ void ROOT::Experimental::RClassField::GenerateValue(void *where)
    fClass->New(where);
 }
 
-void ROOT::Experimental::RClassField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RClassField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
    Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
@@ -1515,7 +1515,7 @@ void ROOT::Experimental::RCollectionClassField::GenerateValue(void *where)
    fProxy->New(where);
 }
 
-void ROOT::Experimental::RCollectionClassField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RCollectionClassField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
       TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), objPtr);
@@ -1640,7 +1640,7 @@ void ROOT::Experimental::RRecordField::GenerateValue(void *where)
    }
 }
 
-void ROOT::Experimental::RRecordField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RRecordField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
       DestroyValueBy(*fSubFields[i], static_cast<unsigned char *>(objPtr) + fOffsets[i], true /* dtorOnly */);
@@ -1751,7 +1751,7 @@ void ROOT::Experimental::RVectorField::GenerateColumnsImpl(const RNTupleDescript
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RVectorField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RVectorField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
    R__ASSERT((vecPtr->size() % fItemSize) == 0);
@@ -1917,7 +1917,7 @@ void ROOT::Experimental::RRVecField::GenerateValue(void *where)
    new (sizePtr + 1) std::int32_t(0);
 }
 
-void ROOT::Experimental::RRVecField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RRVecField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
 
@@ -2104,7 +2104,7 @@ ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) c
    return result;
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    std::destroy_at(static_cast<std::vector<bool> *>(objPtr));
    Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
@@ -2175,7 +2175,7 @@ void ROOT::Experimental::RArrayField::GenerateValue(void *where)
    }
 }
 
-void ROOT::Experimental::RArrayField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RArrayField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    auto arrayPtr = static_cast<unsigned char *>(objPtr);
    if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
@@ -2373,7 +2373,7 @@ void ROOT::Experimental::RVariantField::GenerateValue(void *where)
    SetTag(where, 1);
 }
 
-void ROOT::Experimental::RVariantField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RVariantField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    auto tag = GetTag(objPtr);
    if (tag > 0) {
@@ -2535,7 +2535,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
    fSubFields[0]->Read(itemIndex, valuePtr);
 }
 
-void ROOT::Experimental::RUniquePtrField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RUniquePtrField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    auto typedPtr = static_cast<std::unique_ptr<char> *>(objPtr);
    if (*typedPtr) {
@@ -2602,7 +2602,7 @@ void ROOT::Experimental::RPairField::GenerateValue(void *where)
    fClass->New(where);
 }
 
-void ROOT::Experimental::RPairField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RPairField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
    Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
@@ -2672,7 +2672,7 @@ void ROOT::Experimental::RTupleField::GenerateValue(void *where)
    fClass->New(where);
 }
 
-void ROOT::Experimental::RTupleField::DestroyValue(void *objPtr, bool dtorOnly)
+void ROOT::Experimental::RTupleField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
    Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
