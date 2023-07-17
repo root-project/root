@@ -123,15 +123,17 @@ public:
       TypesList_t fDeserializationTypes;
    };
 
-   // Keeps the relationship between an object created by a field and said field.
-   // Only fields can create RValue objects through generation or splitting.
+   // Points to an object with RNTuple I/O support and keeps a pointer to the corresponding field.
+   // Only fields can create RValue objects through generation, binding or splitting.
+   // An RValue object can be owning or non-owning. Only RField::GenerateValue creates owning RValues.
+   // Owning RValues destroy and free the object upon destruction.
    class RValue {
       friend class RFieldBase;
 
    private:
-      RFieldBase *fField = nullptr;
-      void *fObjPtr = nullptr;
-      bool fIsOwning = false;
+      RFieldBase *fField = nullptr; ///< The field that created the RValue
+      void *fObjPtr = nullptr;      ///< Created by GenerateValue or a non-owning pointer from SplitValue or BindValue
+      bool fIsOwning = false;       ///< If true, fObjPtr is destroyed in the destructor
 
       RValue(RFieldBase *field, void *objPtr, bool isOwning) : fField(field), fObjPtr(objPtr), fIsOwning(isOwning) {}
 
@@ -247,8 +249,10 @@ protected:
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' GenerateValue().
    virtual void GenerateValue(void *where) = 0;
    /// Releases the resources acquired during GenerateValue (memory and constructor)
-   /// This implementation works for simple types but needs to be overwritten for complex ones
+   /// This implementation works for types with a trivial destructor and should be overwritten otherwise.
    virtual void DestroyValue(void *objPtr, bool dtorOnly = false) const;
+
+   /// Allow derived classes to call GenerateValue(void *) and DestroyValue on other (sub) fields.
    static void GenerateValueBy(RFieldBase &other, void *where) { other.GenerateValue(where); }
    static void DestroyValueBy(const RFieldBase &other, void *objPtr, bool dtorOnly = false)
    {
