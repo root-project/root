@@ -95,6 +95,8 @@ tool.writedoc("hs3.tex")
 
 */
 
+constexpr auto hs3VersionTag = "0.1.90";
+
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
 
@@ -152,11 +154,6 @@ JSONNode const *getVariablesNode(JSONNode const &rootNode)
    if (out == nullptr)
       return nullptr;
    return &((*out)["parameters"]);
-}
-
-void logInputArgumentsError(std::stringstream &&ss)
-{
-   oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
 }
 
 Var::Var(const JSONNode &val)
@@ -407,7 +404,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
 
    std::stringstream ss;
    ss << "RooJSONFactoryWSTool() failed to create dataset " << name << std::endl;
-   logInputArgumentsError(std::move(ss));
+   RooJSONFactoryWSTool::error(ss.str());
    return nullptr;
 }
 
@@ -915,7 +912,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    if (!p.is_map()) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() function node " + name + " is not a map!";
-      logInputArgumentsError(std::move(ss));
+      RooJSONFactoryWSTool::error(ss.str());
       return;
    }
    std::string prefix = genPrefix(p, true);
@@ -924,7 +921,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    if (!p.has_child("type")) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() no type given for function '" << name << "', skipping." << std::endl;
-      logInputArgumentsError(std::move(ss));
+      RooJSONFactoryWSTool::error(ss.str());
       return;
    }
 
@@ -954,7 +951,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
             ss << "RooJSONFactoryWSTool() failed to create " << expr->second.tclass->GetName() << " '" << name
                << "', skipping. expression was\n"
                << expression << std::endl;
-            logInputArgumentsError(std::move(ss));
+            RooJSONFactoryWSTool::error(ss.str());
          }
       } else {
          std::stringstream ss;
@@ -975,7 +972,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
                "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
                "how to do this!"
             << std::endl;
-         logInputArgumentsError(std::move(ss));
+         RooJSONFactoryWSTool::error(ss.str());
          return;
       }
    }
@@ -1309,8 +1306,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
 {
    auto pdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf());
    if (pdf == nullptr) {
-      RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::IO)
-         << "RooFitHS3 only supports ModelConfigs with RooSimultaneous! Skipping ModelConfig.\n";
+      warning("RooFitHS3 only supports ModelConfigs with RooSimultaneous! Skipping ModelConfig.");
       return;
    }
 
@@ -1486,11 +1482,10 @@ std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
    std::unique_ptr<JSONTree> tree = JSONTree::create();
    JSONNode &n = tree->rootnode();
    n.set_map();
-   auto &metadata = n["metadata"];
-   metadata.set_map();
+   auto &metadata = n["metadata"].set_map();
 
    // Bump to 0.2.0 once the HS3 v2 standard is final
-   metadata["hs3_version"] << "0.1.90";
+   metadata["hs3_version"] << hs3VersionTag;
 
    // Add information about the ROOT version that was used to generate this file
    auto &rootInfo = appendNamedChild(metadata["packages"], "ROOT");
@@ -1519,7 +1514,7 @@ bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
    if (!out.is_open()) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() invalid output file '" << filename << "'." << std::endl;
-      logInputArgumentsError(std::move(ss));
+      RooJSONFactoryWSTool::error(ss.str());
       return false;
    }
    return this->exportJSON(out);
@@ -1541,7 +1536,7 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
    if (!out.is_open()) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() invalid output file '" << filename << "'." << std::endl;
-      logInputArgumentsError(std::move(ss));
+      RooJSONFactoryWSTool::error(ss.str());
       return false;
    }
    return this->exportYML(out);
@@ -1549,9 +1544,27 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
 
 void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 {
+   // Per HS3 standard, the hs3_version in the metadata is required. So we
+   // error out if it is missing. TODO: now we are only checking if the
+   // hs3_version tag exists, but in the future when the HS3 specification
+   // versions are actually frozen, we should also check if the hs3_version is
+   // one that RooFit can actually read.
+   auto metadata = n.find("metadata");
+   if (!metadata || !metadata->find("hs3_version")) {
+      std::stringstream ss;
+      ss << "The HS3 version is missing in the JSON!\n"
+         << "Please include the HS3 version in the metadata field, e.g.:\n"
+         << "    \"metadata\" :\n"
+         << "    {\n"
+         << "        \"hs3_version\" : \"" << hs3VersionTag << "\"\n"
+         << "    }";
+      error(ss.str());
+   }
+
    _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
-   if (auto domains = n.find("domains"))
+   if (auto domains = n.find("domains")) {
       _domains->readJSON(*domains);
+   }
 
    _rootnodeInput = &n;
 
@@ -1630,7 +1643,7 @@ bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
    if (!infile.is_open()) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() invalid input file '" << filename << "'." << std::endl;
-      logInputArgumentsError(std::move(ss));
+      RooJSONFactoryWSTool::error(ss.str());
       return false;
    }
    return this->importJSON(infile);
@@ -1650,7 +1663,7 @@ bool RooJSONFactoryWSTool::importYML(std::string const &filename)
    if (!infile.is_open()) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() invalid input file '" << filename << "'." << std::endl;
-      logInputArgumentsError(std::move(ss));
+      RooJSONFactoryWSTool::error(ss.str());
       return false;
    }
    return this->importYML(infile);
@@ -1712,9 +1725,9 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    _domains.reset();
 }
 
-std::ostream &RooJSONFactoryWSTool::log(int level)
+std::ostream &RooJSONFactoryWSTool::warning(std::string const &str)
 {
-   return RooMsgService::instance().log(nullptr, static_cast<RooFit::MsgLevel>(level), RooFit::IO);
+   return RooMsgService::instance().log(nullptr, RooFit::MsgLevel::ERROR, RooFit::IO) << str << std::endl;
 }
 
 void RooJSONFactoryWSTool::error(const char *s)
