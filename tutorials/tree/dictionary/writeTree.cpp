@@ -40,8 +40,6 @@ void writeTree()
          obj_for_branch2.time = i + 5;
          obj_for_branch2.energy = 2 * i + 5;
          obj_for_branch2.detectorID = 3 * i + 5;
-         myTree->Fill();
-
       }
       //-- if i is odd, we do the opposite
       else {
@@ -49,8 +47,8 @@ void writeTree()
          obj_for_branch1.time = i + 1;
          obj_for_branch1.energy = 2 * i + 1;
          obj_for_branch1.detectorID = 3 * i + 1;
-         myTree->Fill();
       }
+      myTree->Fill();
    }
 
    myTree->Print();
