@@ -253,7 +253,14 @@ protected:
 
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' GenerateValue().
    virtual void GenerateValue(void *where) = 0;
-   static void GenerateValue(RFieldBase &otherField, void *where) { otherField.GenerateValue(where); }
+   /// Releases the resources acquired during GenerateValue (memory and constructor)
+   /// This implementation works for simple types but needs to be overwritten for complex ones
+   virtual void DestroyValue(void *objPtr, bool dtorOnly = false);
+   static void GenerateValue(RFieldBase &other, void *where) { other.GenerateValue(where); }
+   static void DestroyValueBy(RFieldBase &other, void *objPtr, bool dtorOnly = false)
+   {
+      other.DestroyValue(objPtr, dtorOnly);
+   }
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
@@ -345,9 +352,6 @@ public:
 
    /// Generates an object of the field type and allocates new initialized memory according to the type.
    RValue GenerateValue();
-   /// Releases the resources acquired during GenerateValue (memory and constructor)
-   /// This implementation works for simple types but needs to be overwritten for complex ones
-   virtual void DestroyValue(void *objPtr, bool dtorOnly = false);
    /// Creates a value from a memory location with an already constructed object
    virtual RFieldValue CaptureValue(void *where) = 0;
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
@@ -510,7 +514,10 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
@@ -523,7 +530,6 @@ public:
    ~RClassField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
@@ -656,7 +662,10 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
@@ -667,7 +676,6 @@ public:
    ~RCollectionClassField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
@@ -695,9 +703,13 @@ protected:
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
@@ -729,7 +741,6 @@ public:
    ~RRecordField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSize; }
@@ -745,10 +756,14 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    void GenerateValue(void *where) override { new (where) std::vector<char>(); }
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
@@ -759,7 +774,6 @@ public:
    ~RVectorField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
@@ -790,7 +804,10 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+
    std::size_t AppendImpl(const void *from) override;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
@@ -803,7 +820,6 @@ public:
    ~RRVecField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
    Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
@@ -828,9 +844,13 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
@@ -842,7 +862,6 @@ public:
    ~RArrayField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetLength() const { return fArrayLength; }
@@ -909,10 +928,14 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
@@ -924,7 +947,6 @@ public:
    ~RVariantField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
@@ -976,7 +998,10 @@ public:
 class RUniquePtrField : public RNullableField {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+
    void GenerateValue(void *where) final { new (where) std::unique_ptr<char>(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
@@ -988,7 +1013,6 @@ public:
    ~RUniquePtrField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
@@ -1152,7 +1176,9 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
 
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<Detail::RFieldBase>, 2> &&itemFields,
               const std::array<std::size_t, 2> &offsets);
@@ -1164,7 +1190,6 @@ public:
    ~RPairField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
 };
 
 /// The generic field for `std::tuple<Ts...>` types
@@ -1175,7 +1200,9 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+
    void GenerateValue(void *where) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
 
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
                const std::vector<std::size_t> &offsets);
@@ -1187,7 +1214,6 @@ public:
    ~RTupleField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
@@ -1870,10 +1896,14 @@ private:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       return std::make_unique<RField>(newName);
    }
+
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
    void GenerateValue(void *where) final { new (where) std::string(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
+
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
 
@@ -1888,11 +1918,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) override
-   {
-      std::destroy_at(static_cast<std::string *>(objPtr));
-      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
-   }
    Detail::RFieldValue CaptureValue(void *where) override {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -2003,13 +2028,16 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       return std::make_unique<RField>(newName);
    }
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
    void GenerateValue(void *where) final { new (where) std::vector<bool>(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    static std::string TypeName() { return "std::vector<bool>"; }
@@ -2023,7 +2051,6 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
@@ -2046,7 +2073,14 @@ protected:
       auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
       return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
    }
+
    void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   }
+
    std::size_t AppendImpl(const void *from) final
    {
       auto typedValue = static_cast<const ContainerT *>(from);
@@ -2085,12 +2119,6 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final
-   {
-      std::destroy_at(static_cast<ContainerT *>(objPtr));
-      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
-   }
-
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
 
    using Detail::RFieldBase::GenerateValue;
@@ -2118,7 +2146,13 @@ protected:
                                                                fSubFields[1]->Clone(fSubFields[1]->GetName())};
       return std::make_unique<RField<std::pair<T1, T2>>>(newName, std::move(items));
    }
+
    void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   }
 
 public:
    static std::string TypeName() {
@@ -2136,11 +2170,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final
-   {
-      std::destroy_at(static_cast<ContainerT *>(objPtr));
-      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
-   }
 };
 
 template <typename... ItemTs>
@@ -2196,7 +2225,13 @@ protected:
          items.push_back(item->Clone(item->GetName()));
       return std::make_unique<RField<std::tuple<ItemTs...>>>(newName, std::move(items));
    }
+
    void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   }
 
 public:
    static std::string TypeName() { return "std::tuple<" + BuildItemTypes<ItemTs...>() + ">"; }
@@ -2212,11 +2247,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) final
-   {
-      std::destroy_at(static_cast<ContainerT *>(objPtr));
-      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
-   }
 };
 
 template <std::size_t N>
