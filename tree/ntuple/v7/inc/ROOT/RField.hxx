@@ -159,8 +159,6 @@ public:
       }
       ~RValue() { DestroyIfOwning(); }
 
-      RValue GetNonOwningCopy() {}
-
       RValue GetNonOwningCopy() { return RValue(fField, fObjPtr, false); }
 
       std::size_t Append() { return fField->Append(fObjPtr); }
