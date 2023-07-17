@@ -19,7 +19,6 @@
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RColumnElement.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
@@ -160,11 +159,7 @@ public:
       }
       ~RValue() { DestroyIfOwning(); }
 
-      // Transitional constructor
-      explicit RValue(const RFieldValue &from, bool isOwning = false)
-         : fField(from.GetField()), fObjPtr(from.GetRawPtr()), fIsOwning(isOwning)
-      {
-      }
+      RValue GetNonOwningCopy() {}
 
       RValue GetNonOwningCopy() { return RValue(fField, fObjPtr, false); }
 

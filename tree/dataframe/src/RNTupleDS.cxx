@@ -16,7 +16,6 @@
 
 #include <ROOT/RDF/RColumnReaderBase.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
@@ -113,7 +112,6 @@ public:
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
-   using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
