@@ -251,7 +251,6 @@ protected:
    /// Called by Clone(), which additionally copies the on-disk ID
    virtual std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const = 0;
 
-   RValue GetNonOwningValue(void *where) { return RValue(this, where, false /* isOwning */); }
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' GenerateValue().
    virtual void GenerateValue(void *where) = 0;
    static void GenerateValue(RFieldBase &otherField, void *where) { otherField.GenerateValue(where); }
@@ -1020,12 +1019,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) T(std::forward<ArgsT>(args)...);
-      return RValue(this, where, false /* isOwning */);
-   }
 };
 
 template <typename T>
@@ -1036,13 +1029,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
-
-   using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      return Detail::RFieldValue(this, static_cast<T *>(where), std::forward<ArgsT>(args)...);
-   }
 };
 
 template <typename T, typename = void>
@@ -1273,12 +1259,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) ClusterSize_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1312,12 +1292,6 @@ public:
    ~RField() = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) RNTupleCardinality<SizeT>(std::forward<ArgsT>(args)...);
-      return RValue(this, where, false /* isOwning */);
-   }
    Detail::RFieldValue CaptureValue(void *where) override
    {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
@@ -1381,12 +1355,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) bool(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1432,12 +1400,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) float(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1484,12 +1446,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) double(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1538,12 +1494,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) char(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1589,12 +1539,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) int8_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1640,12 +1584,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) uint8_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1691,12 +1629,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) int16_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1742,12 +1674,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) uint16_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1793,12 +1719,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) int32_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1844,12 +1764,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) uint32_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1895,12 +1809,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) uint64_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1946,12 +1854,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) int64_t(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -1986,12 +1888,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) std::string(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    void DestroyValue(void *objPtr, bool dtorOnly = false) override
    {
       std::destroy_at(static_cast<std::string *>(objPtr));
@@ -2025,12 +1921,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) ContainerT(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
 };
 
 template <typename ItemT, std::size_t N>
@@ -2078,12 +1968,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) ContainerT(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
 };
 
 template <typename ItemT>
@@ -2103,12 +1987,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) ContainerT(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -2141,12 +2019,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) std::vector<bool>(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
@@ -2222,12 +2094,6 @@ public:
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) ContainerT(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT*>(where));
    }
@@ -2270,12 +2136,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) ContainerT(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    void DestroyValue(void *objPtr, bool dtorOnly = false) final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
@@ -2352,12 +2212,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) ContainerT(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
    void DestroyValue(void *objPtr, bool dtorOnly = false) final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
@@ -2375,12 +2229,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) std::bitset<N>(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
 };
 
 template <typename ItemT>
@@ -2393,12 +2241,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   RValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      new (where) std::unique_ptr<ItemT>(std::forward<ArgsT>(args)...);
-      return GetNonOwningValue(where);
-   }
 };
 
 } // namespace Experimental
