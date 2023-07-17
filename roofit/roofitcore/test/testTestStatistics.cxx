@@ -20,12 +20,7 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
-#include <gtest/gtest.h>
-
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "gtest_wrapper.h"
 
 #include <memory>
 #include <cmath>
