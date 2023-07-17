@@ -1647,7 +1647,7 @@ void ROOT::Experimental::RRecordField::ReadInClusterImpl(const RClusterIndex &cl
 void ROOT::Experimental::RRecordField::GenerateValue(void *where)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      GenerateValue(*fSubFields[i], static_cast<unsigned char *>(where) + fOffsets[i]);
+      GenerateValueBy(*fSubFields[i], static_cast<unsigned char *>(where) + fOffsets[i]);
    }
 }
 
@@ -1737,7 +1737,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
       typedValue->resize(nItems * fItemSize);
       if (!(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)) {
          for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
-            GenerateValue(*fSubFields[0], typedValue->data() + (i * fItemSize));
+            GenerateValueBy(*fSubFields[0], typedValue->data() + (i * fItemSize));
          }
       }
    }
@@ -1892,7 +1892,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
       // Placement new for elements that were already there before the resize
       if (needsConstruct) {
          for (std::size_t i = 0u; i < oldSize; ++i)
-            GenerateValue(*fSubFields[0], begin + (i * fItemSize));
+            GenerateValueBy(*fSubFields[0], begin + (i * fItemSize));
       }
    }
    *sizePtr = nItems;
@@ -1900,7 +1900,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    // Placement new for new elements, if any
    if (needsConstruct) {
       for (std::size_t i = oldSize; i < nItems; ++i)
-         GenerateValue(*fSubFields[0], begin + (i * fItemSize));
+         GenerateValueBy(*fSubFields[0], begin + (i * fItemSize));
    }
 
    // Read the new values into the collection elements
@@ -2197,7 +2197,7 @@ void ROOT::Experimental::RArrayField::GenerateValue(void *where)
 
    auto arrayPtr = reinterpret_cast<unsigned char *>(where);
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      GenerateValue(*fSubFields[0], arrayPtr + (i * fItemSize));
+      GenerateValueBy(*fSubFields[0], arrayPtr + (i * fItemSize));
    }
 }
 
@@ -2373,7 +2373,7 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes
    // any `std::holds_alternative<T>` check fail later.
    if (R__likely(tag > 0)) {
-      GenerateValue(*fSubFields[tag - 1], to);
+      GenerateValueBy(*fSubFields[tag - 1], to);
       fSubFields[tag - 1]->Read(variantIndex, to);
    }
    SetTag(to, tag);
@@ -2400,7 +2400,7 @@ void ROOT::Experimental::RVariantField::GenerateColumnsImpl(const RNTupleDescrip
 void ROOT::Experimental::RVariantField::GenerateValue(void *where)
 {
    memset(where, 0, GetValueSize());
-   GenerateValue(*fSubFields[0], where);
+   GenerateValueBy(*fSubFields[0], where);
    SetTag(where, 1);
 }
 
@@ -2564,7 +2564,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
 
    if (!isValidValue) {
       valuePtr = malloc(fSubFields[0]->GetValueSize());
-      GenerateValue(*fSubFields[0], valuePtr);
+      GenerateValueBy(*fSubFields[0], valuePtr);
       ptr->reset(reinterpret_cast<char *>(valuePtr));
    }
 
