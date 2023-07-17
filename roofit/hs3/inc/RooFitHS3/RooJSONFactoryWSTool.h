@@ -124,9 +124,9 @@ public:
    static void error(const char *s);
    inline static void error(const std::string &s) { error(s.c_str()); }
 
-   static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
+   static RooArgSet readAxes(const RooFit::Detail::JSONNode &node);
    static std::unique_ptr<RooDataHist>
-   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList const &varlist);
+   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgSet const &vars);
 
    bool importJSON(std::string const &filename);
    bool importYML(std::string const &filename);

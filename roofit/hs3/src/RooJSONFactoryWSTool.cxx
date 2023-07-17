@@ -264,7 +264,7 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
    return expression.str();
 }
 
-std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars)
+std::vector<std::vector<int>> generateBinIndices(const RooArgSet &vars)
 {
    std::vector<std::vector<int>> combinations;
    std::vector<int> vars_numbins;
@@ -364,7 +364,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
    std::string const &type = p["type"].val();
    if (type == "binned") {
       // binned
-      return RooJSONFactoryWSTool::readBinnedData(p, name);
+      return RooJSONFactoryWSTool::readBinnedData(p, name, RooJSONFactoryWSTool::readAxes(p));
    } else if (type == "unbinned") {
       // unbinned
       RooArgSet vars;
@@ -1180,11 +1180,11 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    }
 }
 
-std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name)
+RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
 {
-   RooArgList varlist;
+   RooArgSet vars;
 
-   for (JSONNode const &nd : n["axes"].children()) {
+   for (JSONNode const &nd : node["axes"].children()) {
       if (nd.has_child("bounds")) {
          std::vector<double> bounds;
          for (auto const &bound : nd["bounds"].children()) {
@@ -1198,22 +1198,22 @@ std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode
             bins.addBoundary(b);
          }
          obs->setBinning(bins);
-         varlist.addOwned(std::move(obs));
+         vars.addOwned(std::move(obs));
       } else {
          auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(),
                                                  nd["min"].val_double(), nd["max"].val_double());
          obs->setBins(nd["nbins"].val_int());
-         varlist.addOwned(std::move(obs));
+         vars.addOwned(std::move(obs));
       }
    }
 
-   return readBinnedData(n, name, varlist);
+   return vars;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // reading binned data
 std::unique_ptr<RooDataHist>
-RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name, RooArgList const &varlist)
+RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name, RooArgSet const &vars)
 {
    if (!n.has_child("contents"))
       RooJSONFactoryWSTool::error("no contents given");
@@ -1230,13 +1230,13 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
          RooJSONFactoryWSTool::error("errors are not in list form");
    }
 
-   auto bins = generateBinIndices(varlist);
+   auto bins = generateBinIndices(vars);
    if (contents.num_children() != bins.size()) {
       std::stringstream errMsg;
       errMsg << "inconsistent bin numbers: contents=" << contents.num_children() << ", bins=" << bins.size();
       RooJSONFactoryWSTool::error(errMsg.str());
    }
-   auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), varlist);
+   auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), vars);
    std::vector<double> contentVals;
    contentVals.reserve(contents.num_children());
    for (auto const &cont : contents.children()) {
