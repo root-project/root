@@ -89,6 +89,16 @@ public:
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
 
+   void *GetRawPtr(std::string_view fieldName) const
+   {
+      for (auto& v : fValues) {
+         if (v.GetField()->GetName() == fieldName) {
+            return v.GetRawPtr();
+         }
+      }
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+   }
+
    std::uint64_t GetModelId() const { return fModelId; }
 
    Iterator_t begin() { return fValues.begin(); }
