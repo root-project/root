@@ -281,7 +281,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    auto collectionNTuple = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
    if (fDefaultEntry)
-      fDefaultEntry->AddValue(Detail::RFieldBase::RValue(field->CaptureValue(collectionNTuple->GetOffsetPtr())));
+      fDefaultEntry->AddValue(field->BindValue(collectionNTuple->GetOffsetPtr()));
    fFieldZero->Attach(std::move(field));
    return collectionNTuple;
 }
@@ -335,7 +335,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
    for (const auto &f : fFieldZero->GetSubFields()) {
-      entry->AddValue(Detail::RFieldBase::RValue(f->CaptureValue(nullptr)));
+      entry->AddValue(f->BindValue(nullptr));
    }
    return entry;
 }

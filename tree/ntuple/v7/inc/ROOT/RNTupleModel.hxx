@@ -281,7 +281,7 @@ public:
 
       auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
       field->SetDescription(fieldNameDesc.fDescription);
-      fDefaultEntry->AddValue(Detail::RFieldBase::RValue(field->CaptureValue(fromWhere)));
+      fDefaultEntry->AddValue(field->BindValue(fromWhere));
       fFieldZero->Attach(std::move(field));
    }
 

@@ -61,7 +61,7 @@ class REntry {
    template<typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fValues.emplace_back(Detail::RFieldBase::RValue(field->CaptureValue(ptr.get())));
+      fValues.emplace_back(field->BindValue(ptr.get()));
       fValuePtrs.emplace_back(ptr);
       return ptr;
    }

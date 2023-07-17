@@ -353,7 +353,7 @@ public:
    /// Generates an object of the field type and allocates new initialized memory according to the type.
    RValue GenerateValue();
    /// Creates a value from a memory location with an already constructed object
-   virtual RFieldValue CaptureValue(void *where) = 0;
+   RValue BindValue(void *where) { return RValue(this, where, false /* isOwning */); }
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
    /// correct variant or all the elements of a collection.  The default implementation assumes no sub values
    /// and returns an empty vector.
@@ -477,7 +477,6 @@ public:
    RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void*) final { return Detail::RFieldValue(); }
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
 
@@ -530,7 +529,6 @@ public:
    ~RClassField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
@@ -560,10 +558,6 @@ public:
    ~REnumField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final
-   {
-      return Detail::RFieldValue(true /* captureTag */, this, where);
-   }
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
@@ -680,7 +674,6 @@ public:
    ~RCollectionClassField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
    size_t GetAlignment() const final { return alignof(std::max_align_t); }
@@ -745,7 +738,6 @@ public:
    ~RRecordField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSize; }
    size_t GetAlignment() const final { return fMaxAlignment; }
@@ -778,7 +770,6 @@ public:
    ~RVectorField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
@@ -824,7 +815,6 @@ public:
    ~RRVecField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const override;
@@ -866,7 +856,6 @@ public:
    ~RArrayField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
@@ -904,10 +893,6 @@ public:
    ~RBitsetField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final
-   {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return kWordSize * ((fN + kBitsPerWord - 1) / kBitsPerWord); }
    size_t GetAlignment() const final { return alignof(Word_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -951,7 +936,6 @@ public:
    ~RVariantField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
    void CommitCluster() final;
@@ -1017,7 +1001,6 @@ public:
    ~RUniquePtrField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
    size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
@@ -1164,9 +1147,6 @@ public:
    ~RCollectionField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void* where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
    size_t GetAlignment() const final { return alignof(ClusterSize_t); }
    void CommitCluster() final;
@@ -1289,9 +1269,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
    size_t GetAlignment() const final { return alignof(ClusterSize_t); }
 
@@ -1322,10 +1299,6 @@ public:
    ~RField() = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) override
-   {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
    size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
 
@@ -1385,9 +1358,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(bool); }
    size_t GetAlignment() const final { return alignof(bool); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1430,9 +1400,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(float); }
    size_t GetAlignment() const final { return alignof(float); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1476,9 +1443,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(double); }
    size_t GetAlignment() const final { return alignof(double); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1524,9 +1488,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(char); }
    size_t GetAlignment() const final { return alignof(char); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1569,9 +1530,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::int8_t); }
    size_t GetAlignment() const final { return alignof(std::int8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1614,9 +1572,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::uint8_t); }
    size_t GetAlignment() const final { return alignof(std::uint8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1659,9 +1614,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::int16_t); }
    size_t GetAlignment() const final { return alignof(std::int16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1704,9 +1656,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::uint16_t); }
    size_t GetAlignment() const final { return alignof(std::uint16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1749,9 +1698,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
    size_t GetAlignment() const final { return alignof(std::int32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1794,9 +1740,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
    size_t GetAlignment() const final { return alignof(std::uint32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1839,9 +1782,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
    size_t GetAlignment() const final { return alignof(std::uint64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1884,9 +1824,6 @@ public:
    }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::int64_t); }
    size_t GetAlignment() const final { return alignof(std::int64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -1922,9 +1859,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) override {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
    void CommitCluster() final;
@@ -2016,9 +1950,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
 };
 
@@ -2051,9 +1982,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    std::vector<RValue> SplitValue(const RValue &value) const final;
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
@@ -2126,9 +2054,6 @@ public:
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
 
    using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue CaptureValue(void *where) final {
-      return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT*>(where));
-   }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
