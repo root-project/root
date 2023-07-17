@@ -48,8 +48,6 @@ public:
 
    ~RooJSONFactoryWSTool();
 
-   static std::ostream &log(int level);
-
    static std::string name(const RooFit::Detail::JSONNode &n);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
@@ -123,6 +121,7 @@ public:
 
    static void error(const char *s);
    inline static void error(const std::string &s) { error(s.c_str()); }
+   static std::ostream &warning(const std::string &s);
 
    static RooArgSet readAxes(const RooFit::Detail::JSONNode &node);
    static std::unique_ptr<RooDataHist>
