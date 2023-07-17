@@ -26,7 +26,7 @@ void writeTree()
       return;
    }
 
-    std::unique_ptr<TTree> myTree = std::make_unique<TTree>("myTree", "");
+   std::unique_ptr<TTree> myTree = std::make_unique<TTree>("myTree", "");
    myDetectorData obj_for_branch1;
    myTree->Branch("branch1.", &obj_for_branch1);
 
