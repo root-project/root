@@ -697,6 +697,9 @@ std::list<double>* RooRealSumPdf::plotSamplingHint(RooArgList const& funcList, R
 
    auto* newSumHint = new std::list<double>(sumHint->size()+funcHint->size()) ;
 
+   // the lists must be sorted before merging them
+   funcHint->sort();
+   sumHint->sort();
    // Merge hints into temporary array
    merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
 
