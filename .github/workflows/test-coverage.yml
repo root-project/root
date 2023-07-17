@@ -325,6 +325,13 @@ jobs:
         # When debugging increase to a suitable value!
         timeout-minutes: ${{ github.event.pull_request && 40 || 20 }}
 
+      - name: List Files
+        run: |
+          pwd
+          ls -R /tmp/workspace/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage
+          echo "---------"
+          ls
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
@@ -335,7 +342,8 @@ jobs:
           files: ./XMLCoverage.xml
           flags: unittests
           name: codecov-umbrella
-          verbose: true     
+          verbose: true   
+  
 
 
   event_file:
