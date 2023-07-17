@@ -606,7 +606,7 @@ TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)
                                              "------          ----            ------\n"
                                              "friendTree1.z   ULong64_t       Dataset\n"
                                              "friendTree2.z   ULong64_t       Dataset\n"
-                                             "z               ULong64_t       Dataset");
+                                             "z               ULong64_t       Dataset\n");
    EXPECT_EQ(expectedDescribe, rdf_1.Describe().AsString());
 
    for (auto i = 1u; i < 5; ++i)
