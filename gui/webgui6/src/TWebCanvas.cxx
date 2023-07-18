@@ -894,12 +894,8 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
          });
    }
 
-   auto w = Canvas()->GetWw(), h = Canvas()->GetWh();
-   if (Canvas()->TestBit(TCanvas::kMenuBar)) h += 40;
-   if (Canvas()->TestBit(TCanvas::kShowEventStatus)) h += 40;
-   if (Canvas()->TestBit(TCanvas::kShowEditor)) w += 200;
-
-   if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
+   auto w = Canvas()->GetWindowWidth(), h = Canvas()->GetWindowHeight();
+   if ((w > 0) && (w < 50000) && (h > 0) && (h < 30000))
       fWindow->SetGeometry(w, h);
 
    if ((args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt5) ||
@@ -920,6 +916,9 @@ void TWebCanvas::Show()
 
    ROOT::Experimental::RWebDisplayArgs args;
    args.SetWidgetKind("TCanvas");
+   args.SetSize(Canvas()->GetWindowWidth(), Canvas()->GetWindowHeight());
+   args.SetPos(Canvas()->GetWindowTopX(), Canvas()->GetWindowTopY());
+
    ShowWebWindow(args);
 }
 
