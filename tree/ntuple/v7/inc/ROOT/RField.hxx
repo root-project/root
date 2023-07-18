@@ -220,6 +220,8 @@ protected:
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias
+   /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
+   /// single type name
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias);
 
