@@ -23,7 +23,7 @@ void readTree()
 
    std::unique_ptr<TFile> ifile { TFile::Open("testFile.root", "read") };
    if ( !ifile || ifile->IsZombie() )  {
-      std::cout << "Problem opening the file testFile.root" << std::endl;
+      std::cerr << "Problem opening the file testFile.root" << std::endl;
       return;
    }
 
@@ -41,7 +41,7 @@ void readTree()
       else if (branch2->time != 0)
          std::cout << " +Branch2 : time: " << branch2->time << "\t energy: " << branch2->energy << std::endl;
       else
-         std::cout << "WARNING: entry " << aReader.GetCurrentEntry() << " is empty! " << std::endl;
+         std::cerr << "WARNING: entry " << aReader.GetCurrentEntry() << " is empty! " << std::endl;
    }
 
 }
