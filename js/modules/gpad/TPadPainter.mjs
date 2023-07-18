@@ -74,7 +74,7 @@ let PadButtonsHandler = {
          btns_y = height - sz0;
       }
 
-      btns.attr('transform', makeTranslate(btns_x,btns_y));
+      makeTranslate(btns, btns_x, btns_y);
    },
 
    findPadButton(keyname) {
@@ -572,9 +572,9 @@ class TPadPainter extends ObjectPainter {
              posy = Math.round(rect.height * (1 - gStyle.fDateY));
          if (!is_batch && (posx < 25)) posx = 25;
          if (gStyle.fOptDate > 1) date.setTime(gStyle.fOptDate*1000);
-         dt.attr('transform', makeTranslate(posx, posy))
-           .style('text-anchor', 'start')
-           .text(date.toLocaleString('en-GB'));
+         makeTranslate(dt, posx, posy)
+            .style('text-anchor', 'start')
+            .text(date.toLocaleString('en-GB'));
       }
 
       if (!gStyle.fOptFile || !this.getItemName())
@@ -594,12 +594,10 @@ class TPadPainter extends ObjectPainter {
          df.remove();
       } else {
          if (df.empty()) df = info.append('text').attr('class', 'canvas_item');
-         let rect = this.getPadRect(),
-             posx = Math.round(rect.width * (1 - gStyle.fDateX)),
-             posy = Math.round(rect.height * (1 - gStyle.fDateY));
-         df.attr('transform', makeTranslate(posx, posy))
-           .style('text-anchor', 'end')
-           .text(item_name);
+         let rect = this.getPadRect();
+         makeTranslate(df, Math.round(rect.width * (1 - gStyle.fDateX)), Math.round(rect.height * (1 - gStyle.fDateY)))
+            .style('text-anchor', 'end')
+            .text(item_name);
       }
    }
 
@@ -978,7 +976,7 @@ class TPadPainter extends ObjectPainter {
          return this.syncDraw(true).then(() => this.drawPrimitives(0));
       }
 
-      if (indx >= this._num_primitives) {
+      if (!this.pad || (indx >= this._num_primitives)) {
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
             if (spenttm > 1000) console.log(`Canvas ${this.pad?.fName || '---'} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
@@ -1246,26 +1244,6 @@ class TPadPainter extends ObjectPainter {
       if (this._ignore_resize)
          return false;
 
-      if (this._dbr) {
-         // special case of invoked intentially web browser resize to keep layout of canvas the same
-         clearTimeout(this._dbr.handle);
-
-         let rect = getElementRect(this.selectDom('origin'));
-
-         // chrome browser first changes width, then height, producing two different resize events
-         // therefore at least one dimension should match to wait for next resize
-         // if none of dimension matches - cancel direct browser resize
-         if ((rect.width == this._dbr.width) === (rect.height == this._dbr.height)) {
-            let func = this._dbr.func;
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            func(true);
-         } else {
-            this._dbr.setTimer(200); // check for next resize
-         }
-         return false;
-      }
-
       if (!this.iscan && this.has_canvas) return false;
 
       let sync_promise = this.syncDraw('canvas_resize');
@@ -1286,7 +1264,9 @@ class TPadPainter extends ObjectPainter {
              return getPromise(this.painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
           };
 
-      return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fCw, this.pad?.fCh)).then(() => {
+      // return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fCw, this.pad?.fCh)).then(() => {
+
+      return sync_promise.then(() => {
 
          changed = this.createCanvasSvg(force ? 2 : 1, size);
 
@@ -1295,14 +1275,8 @@ class TPadPainter extends ObjectPainter {
                clearTimeout(this._resize_tmout);
             this._resize_tmout = setTimeout(() => {
                delete this._resize_tmout;
-               if (!this.pad) return;
-               let cw = this.getPadWidth(), ch = this.getPadHeight();
-               if ((cw > 0) && (ch > 0) && ((this.pad.fCw != cw) || (this.pad.fCh != ch))) {
-                  this.pad.fCw = cw;
-                  this.pad.fCh = ch;
-                  console.log(`RESIZED:[${cw},${ch}]`);
-                  this.sendWebsocket(`RESIZED:[${cw},${ch}]`);
-               }
+               if (isFunc(this.sendResized))
+                  this.sendResized();
             }, 1000); // long enough delay to prevent multiple occurence
          }
 
@@ -1550,36 +1524,6 @@ class TPadPainter extends ObjectPainter {
       return null;
    }
 
-   /** @summary Ensure that browser window size match to requested canvas size
-     * @desc Actively used for the first canvas drawing or after intentional layout resize when browser should be adjusted
-     * @private */
-   ensureBrowserSize(canvW, canvH, condition) {
-      if (this.enforceCanvasSize)
-         condition = true;
-
-      if (!condition || this._dbr || !canvW || !canvH || !isFunc(this.resizeBrowser) || !this.online_canvas || this.isBatchMode() || !this.use_openui || this.embed_canvas)
-         return true;
-
-      return new Promise(resolveFunc => {
-         this._dbr = { func: resolveFunc, width: canvW, height: canvH, setTimer: tmout => {
-            this._dbr.handle = setTimeout(() => {
-               if (this._dbr) {
-                  delete this._dbr;
-                  delete this.enforceCanvasSize;
-                  resolveFunc(true);
-               }
-            }, tmout);
-         }};
-
-         if (!this.resizeBrowser(canvW, canvH)) {
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            resolveFunc(true);
-         } else if (this._dbr) {
-            this._dbr.setTimer(200); // set short timer
-         }
-      });
-   }
 
    /** @summary Redraw pad snap
      * @desc Online version of drawing pad primitives
@@ -1809,7 +1753,7 @@ class TPadPainter extends ObjectPainter {
       if (this.snapid) {
          elem = { _typename: 'TWebPadOptions', snapid: this.snapid.toString(),
                   active: !!this.is_active_pad,
-                  cw: 0, ch: 0,
+                  cw: 0, ch: 0, w: [],
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
                   gridx: this.pad.fGridx, gridy: this.pad.fGridy,
@@ -1823,6 +1767,7 @@ class TPadPainter extends ObjectPainter {
             elem.bits = this.getStatusBits();
             elem.cw = this.getPadWidth();
             elem.ch = this.getPadHeight();
+            elem.w = [ window.screenLeft, window.screenTop, window.outerWidth, window.outerHeight ];
          } else if (cp) {
             let cw = cp.getPadWidth(), ch = cp.getPadHeight(), rect = this.getPadRect();
             elem.cw = cw;

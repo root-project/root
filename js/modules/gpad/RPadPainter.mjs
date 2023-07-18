@@ -791,26 +791,6 @@ class RPadPainter extends RObjectPainter {
       if (this._ignore_resize)
          return false;
 
-      if (this._dbr) {
-         // special case of invoked intentially web browser resize to keep layout of canvas the same
-         clearTimeout(this._dbr.handle);
-
-         let rect = getElementRect(this.selectDom('origin'));
-
-         // chrome browser first changes width, then height, producing two different resize events
-         // therefore at least one dimension should match to wait for next resize
-         // if none of dimension matches - cancel direct browser resize
-         if ((rect.width == this._dbr.width) === (rect.height == this._dbr.height)) {
-            let func = this._dbr.func;
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            func(true);
-         } else {
-            this._dbr.setTimer(200); // check for next resize
-         }
-         return false;
-      }
-
       if (!this.iscan && this.has_canvas) return false;
 
       let sync_promise = this.syncDraw('canvas_resize');
@@ -832,7 +812,7 @@ class RPadPainter extends RObjectPainter {
           };
 
 
-      return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fWinSize[0], this.pad?.fWinSize[1])).then(() => {
+      return sync_promise.then(() => {
          changed = this.createCanvasSvg(force ? 2 : 1, size);
 
          if (changed && this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.isBatchMode()) {
@@ -1099,39 +1079,6 @@ class RPadPainter extends RObjectPainter {
       }
 
       return null;
-   }
-
-   /** @summary Ensure that browser window size match to requested canvas size
-     * @desc Actively used for the first canvas drawing or after intentional layout resize when browser should be adjusted
-     * @private */
-   ensureBrowserSize(canvW, canvH, condition) {
-      if (this.enforceCanvasSize)
-         condition = true;
-
-      if (!condition || this._dbr || !canvW || !canvH || !isFunc(this.resizeBrowser) || !this.online_canvas || this.isBatchMode() || !this.use_openui || this.embed_canvas)
-         return true;
-
-      return new Promise(resolveFunc => {
-         this._dbr = {
-            func: resolveFunc, width: canvW, height: canvH, setTimer: tmout => {
-               this._dbr.handle = setTimeout(() => {
-                  if (this._dbr) {
-                     delete this._dbr;
-                     delete this.enforceCanvasSize;
-                     resolveFunc(true);
-                  }
-               }, tmout);
-            }
-         };
-
-         if (!this.resizeBrowser(canvW, canvH)) {
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            resolveFunc(true);
-         } else if (this._dbr) {
-            this._dbr.setTimer(200); // set short timer
-         }
-      });
    }
 
    /** @summary Redraw pad snap

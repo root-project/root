@@ -488,7 +488,7 @@ class RAxisPainter extends RObjectPainter {
                }
 
                new_x = set_x; new_y = set_y; curr_indx = besti;
-               title_g.attr('transform', makeTranslate(new_x, new_y));
+               makeTranslate(title_g, new_x, new_y);
 
           }).on('end', evnt => {
                if (!drag_rect) return;
@@ -718,7 +718,7 @@ class RAxisPainter extends RObjectPainter {
       return this.finishTextDrawing(label_g).then(() => {
 
         if (lbls_tilt)
-           label_g.selectAll('text').each(function () {
+           label_g.selectAll('text').each(function() {
                let txt = d3_select(this), tr = txt.attr('transform');
                txt.attr('transform', tr + ' rotate(25)').style('text-anchor', 'start');
            });
@@ -782,10 +782,10 @@ class RAxisPainter extends RObjectPainter {
                          text: this.fTitle, draw_g: title_g });
       }
 
-      title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
-             .property('basepos', title_basepos)
-             .property('shift_x', title_shift_x)
-             .property('shift_y', title_shift_y);
+      makeTranslate(title_g, title_shift_x, title_shift_y)
+                   .property('basepos', title_basepos)
+                   .property('shift_x', title_shift_x)
+                   .property('shift_y', title_shift_y);
 
       this.addTitleDrag(title_g, side);
 

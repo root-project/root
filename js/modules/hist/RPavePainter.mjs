@@ -66,7 +66,7 @@ class RPavePainter extends RObjectPainter {
             pave_y = fr.y + offsety;
       }
 
-      this.draw_g.attr('transform', makeTranslate(pave_x,pave_y));
+      makeTranslate(this.draw_g, pave_x, pave_y);
 
       this.draw_g.append('svg:rect')
                  .attr('x', 0)

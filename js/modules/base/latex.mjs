@@ -1,5 +1,5 @@
 import { loadScript, settings, isNodeJs, isStr, source_dir, browser } from '../core.mjs';
-import { getElementRect, _loadJSDOM, makeTranslate } from './BasePainter.mjs';
+import { getElementRect, _loadJSDOM, makeTranslate  } from './BasePainter.mjs';
 import { FontHandler } from './FontHandler.mjs';
 
 
@@ -334,7 +334,7 @@ function parseLatex(node, arg, label, curr) {
       x = Math.round(x);
       y = Math.round(y);
 
-      pos.g.attr('transform', makeTranslate(x, y));
+      makeTranslate(pos.g, x, y);
       pos.rect.x1 += x;
       pos.rect.x2 += x;
       pos.rect.y1 += y;
@@ -354,9 +354,7 @@ function parseLatex(node, arg, label, curr) {
       if ((nelements == 1) && !label && !curr.x && !curr.y)
          return gg;
 
-      gg = gg.append('svg:g');
-
-      return gg.attr('transform', makeTranslate(curr.x, curr.y));
+      return makeTranslate(gg.append('svg:g'), curr.x, curr.y);
    };
 
    const extractSubLabel = (check_first, lbrace, rbrace) => {
@@ -403,11 +401,12 @@ function parseLatex(node, arg, label, curr) {
       return sublabel;
    };
 
-   const createPath = (gg, dofill) => {
+   const createPath = (gg, d, dofill) => {
       return gg.append('svg:path')
                .style('stroke', dofill ? 'none' : (curr.color || arg.color))
                .style('stroke-width', dofill ? null : Math.max(1, Math.round(curr.fsize*(curr.font.weight ? 0.1 : 0.07))))
-               .style('fill', dofill ? (curr.color || arg.color) : 'none');
+               .style('fill', dofill ? (curr.color || arg.color) : 'none')
+               .attr('d', d ?? null);
    };
 
    const createSubPos = fscale => {
@@ -529,15 +528,15 @@ function parseLatex(node, arg, label, curr) {
          positionGNode(subpos, xpos, 0, true);
 
          switch(found.name) {
-            case '#check{': createPath(gg).attr('d',`M${w2},${y1-dy}L${w5},${y1}L${w8},${y1-dy}`); break;
-            case '#acute{': createPath(gg).attr('d',`M${w5},${y1}l${dy},${-dy}`); break;
-            case '#grave{': createPath(gg).attr('d',`M${w5},${y1}l${-dy},${-dy}`); break;
-            case '#dot{': createPath(gg, true).attr('d',`M${w5-dy2},${y1}${dot}`); break;
-            case '#ddot{': createPath(gg, true).attr('d',`M${w5-3*dy2},${y1}${dot} M${w5+dy2},${y1}${dot}`); break;
-            case '#tilde{': createPath(gg).attr('d',`M${w2},${y1} a${w3},${dy},0,0,1,${w3},0 a${w3},${dy},0,0,0,${w3},0`); break;
-            case '#slash{': createPath(gg).attr('d',`M${w},${y1}L0,${Math.round(subpos.rect.y2)}`); break;
-            case '#vec{': createPath(gg).attr('d',`M${w2},${y1}H${w8}M${w8-dy},${y1-dy}l${dy},${dy}l${-dy},${dy}`); break;
-            default: createPath(gg).attr('d',`M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
+            case '#check{': createPath(gg, `M${w2},${y1-dy}L${w5},${y1}L${w8},${y1-dy}`); break;
+            case '#acute{': createPath(gg, `M${w5},${y1}l${dy},${-dy}`); break;
+            case '#grave{': createPath(gg, `M${w5},${y1}l${-dy},${-dy}`); break;
+            case '#dot{': createPath(gg, `M${w5-dy2},${y1}${dot}`, true); break;
+            case '#ddot{': createPath(gg, `M${w5-3*dy2},${y1}${dot} M${w5+dy2},${y1}${dot}`, true); break;
+            case '#tilde{': createPath(gg, `M${w2},${y1} a${w3},${dy},0,0,1,${w3},0 a${w3},${dy},0,0,0,${w3},0`); break;
+            case '#slash{': createPath(gg, `M${w},${y1}L0,${Math.round(subpos.rect.y2)}`); break;
+            case '#vec{': createPath(gg, `M${w2},${y1}H${w8}M${w8-dy},${y1-dy}l${dy},${dy}l${-dy},${dy}`); break;
+            default: createPath(gg, `M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
          }
 
          shiftX(subpos.rect.width);

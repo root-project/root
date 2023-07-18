@@ -164,7 +164,7 @@ class RPalettePainter extends RObjectPainter {
           }
 
           // x,y,width,height attributes used for drag functionality
-          this.draw_g.attr('transform', makeTranslate(palette_x, palette_y));
+          makeTranslate(this.draw_g, palette_x, palette_y);
       }
 
       let g_btns = this.draw_g.selectChild('.colbtns');
