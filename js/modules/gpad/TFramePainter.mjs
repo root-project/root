@@ -143,7 +143,7 @@ function addDragHandler(_painter, arg) {
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
       if (!arg.no_transform)
-         draw_g.attr('transform', makeTranslate(newx, newy));
+         makeTranslate(draw_g, newx, newy);
 
       setPainterTooltipEnabled(painter, true);
 

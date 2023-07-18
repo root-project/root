@@ -807,7 +807,7 @@ class TAxisPainter extends ObjectPainter {
 
          if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
             new_x = set_x; new_y = set_y; curr_indx = besti;
-            title_g.attr('transform', makeTranslate(new_x, new_y));
+            makeTranslate(title_g, new_x, new_y);
          }
 
       }).on('end', evnt => {
@@ -1279,10 +1279,9 @@ class TAxisPainter extends ObjectPainter {
 
          if (title_g) {
             if (!this.titleOffset && this.vertical && labelsMaxWidth)
-              title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
-
-            title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
-                   .property('shift_x', title_shift_x)
+               title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
+            makeTranslate(title_g, title_shift_x, title_shift_y);
+            title_g.property('shift_x', title_shift_x)
                    .property('shift_y', title_shift_y);
          }
 

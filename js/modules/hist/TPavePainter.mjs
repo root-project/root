@@ -216,7 +216,7 @@ class TPavePainter extends ObjectPainter {
          width = Math.round((pt.fX2NDC - pt.fX1NDC) * pad_rect.width);
          height = Math.round((pt.fY2NDC - pt.fY1NDC) * pad_rect.height);
 
-         this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
+         makeTranslate(this.draw_g, this._pave_x, this._pave_y);
 
          this.createAttLine({ attr: pt, width: (brd > 0) ? pt.fLineWidth : 0 });
 
@@ -238,8 +238,8 @@ class TPavePainter extends ObjectPainter {
                                       .call(this.fillatt.func)
                                       .call(this.lineatt.func);
 
-            let text_g = this.draw_g.append('svg:g')
-                                    .attr('transform', makeTranslate(Math.round(width/4), Math.round(height/4)));
+            let text_g = this.draw_g.append('svg:g');
+            makeTranslate(text_g, Math.round(width/4), Math.round(height/4));
 
             return this.drawPaveText(w2, h2, arg, text_g);
          } else {
@@ -878,7 +878,7 @@ class TPavePainter extends ObjectPainter {
 
                if (shift > 0) {
                   this._pave_x -= shift;
-                  this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
+                  makeTranslate(this.draw_g, this._pave_x, this._pave_y);
                   palette.fX1NDC -= shift/width;
                   palette.fX2NDC -= shift/width;
                }
@@ -886,7 +886,7 @@ class TPavePainter extends ObjectPainter {
                let shift = Math.round((1.05 - gStyle.fTitleY)*height) - rect.y;
                if (shift > 0) {
                   this._pave_y += shift;
-                  this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
+                  makeTranslate(this.draw_g, this._pave_x, this._pave_y);
                   palette.fY1NDC -= shift/height;
                   palette.fY2NDC -= shift/height;
                }

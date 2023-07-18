@@ -1,4 +1,4 @@
-import { constants, isFunc, getDocument } from '../core.mjs';
+import { constants, isFunc, isStr, getDocument } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { REVISION, DoubleSide, Object3D, Color, Vector2, Vector3, Matrix4, Line3,
          BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
@@ -8,10 +8,167 @@ import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createLineSegments, Box3D, getMaterialArgs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
          cleanupRender3D, HelveticerRegularFont, createSVGRenderer, create3DLineMaterial } from '../base/base3d.mjs';
-import { translateLaTeX } from '../base/latex.mjs';
+import { isPlainText, translateLaTeX, produceLatex } from '../base/latex.mjs';
 import { kCARTESIAN, kPOLAR, kCYLINDRICAL, kSPHERICAL, kRAPIDITY } from '../hist2d/THistPainter.mjs';
 import { buildHist2dContour, buildSurf3D } from '../hist2d/TH2Painter.mjs';
 
+
+function createTextGeometry(painter, lbl, size) {
+   if (isPlainText(lbl))
+      return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
+
+   let font_size = size * 100, geoms = [], stroke_width = 5;
+
+   class TextParseWrapper {
+
+      constructor(kind, parent) {
+         this.kind = kind ?? 'g';
+         this.childs = [];
+         this.x = 0;
+         this.y = 0;
+         this.font_size = parent?.font_size ?? font_size;
+         parent?.childs.push(this);
+      }
+
+      append(kind) {
+         if (kind == 'svg:g')
+            return new TextParseWrapper('g', this);
+         if (kind == 'svg:text')
+            return new TextParseWrapper('text', this);
+         if (kind == 'svg:path')
+            return new TextParseWrapper('path', this);
+         console.log('should create', kind);
+      }
+
+      style(name, value) {
+         // console.log(`style ${name} = ${value}`);
+         if ((name == 'stroke-width') && value)
+            stroke_width = Number.parseInt(value);
+         return this;
+      }
+
+      translate() {
+         if (this.geom) {
+            // special workaround for path elements, while 3d font is exact height, keep some space on the top
+            // let dy = this.kind == 'path' ? this.font_size*0.002 : 0;
+            this.geom.translate(this.x, this.y, 0);
+         }
+         this.childs.forEach(chld => {
+            chld.x += this.x;
+            chld.y += this.y;
+            chld.translate();
+         });
+      }
+
+      attr(name, value) {
+         // console.log(`attr ${name} = ${value}`);
+
+         const get = () => {
+                  if (!value) return '';
+                  let res = value[0];
+                  value = value.slice(1);
+                  return res;
+               }, getN = (skip) => {
+                  let p = 0;
+                  while (((value[p] >= '0') && (value[p] <= '9')) || (value[p] == '-')) p++;
+                  let res = Number.parseInt(value.slice(0, p));
+                  value = value.slice(p);
+                  if (skip) get();
+                  return res;
+               };
+
+         if ((name == 'font-size') && value) {
+            this.font_size = Number.parseInt(value);
+         } else if ((name == 'transform') && isStr(value) && (value.indexOf('translate') == 0)) {
+            let arr = value.slice(value.indexOf('(')+1, value.lastIndexOf(')')).split(',');
+            this.x += arr[0] ? Number.parseInt(arr[0])*0.01 : 0;
+            this.y -= arr[1] ? Number.parseInt(arr[1])*0.01 : 0;
+         } else if ((name == 'x') && (this.kind == 'text')) {
+            this.x += Number.parseInt(value)*0.01;
+         } else if ((name == 'y') && (this.kind == 'text')) {
+            this.y -= Number.parseInt(value)*0.01;
+         } else if ((name == 'd') && (this.kind == 'path')) {
+            if (get() != 'M') return console.error('Not starts with M');
+            let x1 = getN(true), y1 = getN(), next, pnts = [];
+
+            while (next = get()) {
+               let x2 = x1, y2 = y1;
+               switch(next) {
+                   case 'L': x2 = getN(true); y2 = getN(); break;
+                   case 'l': x2 += getN(true); y2 += getN(); break;
+                   case 'H': x2 = getN(); break;
+                   case 'h': x2 += getN(); break;
+                   case 'V': y2 = getN(); break;
+                   case 'v': y2 += getN(); break;
+                   default: console.log('not supported operator', next);
+               }
+
+               let angle = Math.atan2(y2-y1, x2-x1),
+                   dx = 0.5 * stroke_width * Math.sin(angle),
+                   dy = -0.5 * stroke_width * Math.cos(angle);
+
+               pnts.push(x1-dx, y1-dy, 0, x2-dx, y2-dy, 0, x2+dx, y2+dy, 0, x1-dx, y1-dy, 0, x2+dx, y2+dy, 0, x1+dx, y1+dy, 0);
+
+               x1 = x2; y1 = y2;
+            }
+
+            let pos = new Float32Array(pnts);
+
+            this.geom = new BufferGeometry();
+            this.geom.setAttribute('position', new BufferAttribute(pos, 3));
+            this.geom.scale(0.01, -0.01, 0.01);
+            this.geom.computeVertexNormals();
+
+            geoms.push(this.geom);
+         }
+         return this;
+      }
+
+      text(v) {
+         if (this.kind == 'text') {
+            this.geom = new TextGeometry(v, { font: HelveticerRegularFont, size: Math.round(0.01*this.font_size), height: 0, curveSegments: 5 });
+            geoms.push(this.geom);
+         };
+      }
+
+   };
+
+   let node = new TextParseWrapper,
+       arg = { font_size, latex: 1, x: 0, y: 0, text: lbl, align: [ 'start', 'top'], fast: true, font: { size: font_size, isMonospace: () => false, aver_width: 0.9 } };
+
+   produceLatex(painter, node, arg);
+
+   if (!geoms)
+      return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
+
+   node.translate(); // apply translate attributes
+
+   if (geoms.length == 1)
+      return geoms[0];
+
+   let total_size = 0;
+   geoms.forEach(geom => {
+      total_size += geom.getAttribute('position').array.length;
+   });
+
+   let pos = new Float32Array(total_size),
+       norm = new Float32Array(total_size),
+       indx = 0;
+
+   geoms.forEach(geom => {
+      let p1 = geom.getAttribute('position').array,
+          n1 = geom.getAttribute('normal').array;
+      for (let i = 0; i < p1.length; ++i, ++indx) {
+         pos[indx] = p1[i];
+         norm[indx] = n1[i];
+      }
+   });
+
+   let fullgeom = new BufferGeometry();
+   fullgeom.setAttribute('position', new BufferAttribute(pos, 3));
+   fullgeom.setAttribute('normal', new BufferAttribute(norm, 3));
+   return fullgeom;
+}
 
 /** @summary Text 3d axis visibility
   * @private */
@@ -678,7 +835,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let mod = xticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: this.x_handle.labelsFont.size, height: 0, curveSegments: 5 });
+         let text3d = createTextGeometry(this, lbl, this.x_handle.labelsFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -709,7 +866,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    if (this.x_handle.fTitle && opts.draw) {
-      const text3d = new TextGeometry(translateLaTeX(this.x_handle.fTitle), { font: HelveticerRegularFont, size: this.x_handle.titleFont.size, height: 0, curveSegments: 5 });
+      const text3d = createTextGeometry(this, this.x_handle.fTitle, this.x_handle.titleFont.size);
       text3d.computeBoundingBox();
       text3d.center = this.x_handle.titleCenter;
       text3d.opposite = this.x_handle.titleOpposite;
@@ -853,7 +1010,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(mesh);
    });
 
-   if (opts.zoom && opts.anydraw)
+   if (opts.zoom && opts.drawany)
       xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
@@ -901,7 +1058,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let mod = yticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         const text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: this.y_handle.labelsFont.size, height: 0, curveSegments: 5 });
+         const text3d = createTextGeometry(this, lbl, this.y_handle.labelsFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -929,7 +1086,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    if (this.y_handle.fTitle && opts.draw) {
-      const text3d = new TextGeometry(translateLaTeX(this.y_handle.fTitle), { font: HelveticerRegularFont, size: this.y_handle.titleFont.size, height: 0, curveSegments: 5 });
+      const text3d = createTextGeometry(this, this.y_handle.fTitle, this.y_handle.titleFont.size);
       text3d.computeBoundingBox();
       text3d.center = this.y_handle.titleCenter;
       text3d.opposite = this.y_handle.titleOpposite;
@@ -989,7 +1146,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          ycont.add(mesh);
       });
       ycont.xyid = 1;
-      if (opts.zoom && opts.anydraw)
+      if (opts.zoom && opts.drawany)
          ycont.add(createZoomMesh('y', this.size_y3d));
       top.add(ycont);
    }
@@ -1013,7 +1170,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let mod = zticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: this.z_handle.labelsFont.size, height: 0, curveSegments: 5 });
+         let text3d = createTextGeometry(this, lbl, this.z_handle.labelsFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -1099,7 +1256,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       });
 
       if (this.z_handle.fTitle && opts.draw) {
-         let text3d = new TextGeometry(translateLaTeX(this.z_handle.fTitle), { font: HelveticerRegularFont, size: this.z_handle.titleFont.size, height: 0, curveSegments: 5 });
+         let text3d = createTextGeometry(this, this.z_handle.fTitle, this.z_handle.titleFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              posz = this.z_handle.titleCenter ? (grmaxz + grminz - draw_width)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - draw_width);

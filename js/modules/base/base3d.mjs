@@ -104,7 +104,7 @@ function createSVGRenderer(as_is, precision, doc) {
 
    rndr.originalRender = rndr.render;
 
-   rndr.render = function (scene, camera) {
+   rndr.render = function(scene, camera) {
       let originalDocument = globalThis.document;
       if (isNodeJs())
          globalThis.document = this.doc_wrapper;
@@ -370,7 +370,7 @@ let Handling3DDrawings = {
             if (elem.empty())
                elem = svg.insert('g', '.primitives_layer').attr('class', size.clname);
 
-            elem.attr('transform', makeTranslate(size.x, size.y));
+            makeTranslate(elem, size.x, size.y);
 
          } else {
 

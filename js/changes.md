@@ -14,6 +14,7 @@
 10. Support "pol", "cyl", "sph" and "psr" coordinates systems with lego and surf plots
 11. Use "col" as default draw option for TH2, "box2" for TH3
 12. Support "mollweide" projection for TH2
+13. Basic latex support when drawing axes labels and titles in 3D
 
 
 ## Changes in 7.4.1
