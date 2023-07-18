@@ -102,6 +102,7 @@ class TCanvasWebSnapshot : public TPadWebSnapshot {
 protected:
    std::string fScripts;           ///< custom scripts to load
    bool fHighlightConnect{false};  ///< does HighlightConnect has connection
+   bool fFixedSize{false};         ///< if canvas draw size is fixed
 public:
    TCanvasWebSnapshot(bool readonly = true, bool setids = true, bool batchmode = false) : TPadWebSnapshot(readonly, setids, batchmode) {}
 
@@ -111,7 +112,10 @@ public:
    void SetHighlightConnect(bool on = true) { fHighlightConnect = on; }
    bool GetHighlightConnect() const { return fHighlightConnect; }
 
-   ClassDefOverride(TCanvasWebSnapshot, 3) // Canvas painting snapshot, used for JSROOT
+   void SetFixedSize(bool on = true) { fFixedSize = on; }
+   bool IsFixedSize() const { return fFixedSize; }
+
+   ClassDefOverride(TCanvasWebSnapshot, 4) // Canvas painting snapshot, used for JSROOT
 };
 
 

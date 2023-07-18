@@ -101,6 +101,7 @@ protected:
    UInt_t fColorsHash{0};          ///<! last hash of colors/palette
    Bool_t fTF1UseSave{kFALSE};     ///<! use save buffer for TF1/TF2, need when evaluation failed on client side
    std::vector<int> fWindowGeometry; ///<! last received window geometry
+   Bool_t fFixedSize{kFALSE};      ///<! is canvas size fixed
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
@@ -230,6 +231,8 @@ public:
 
    void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
    Bool_t IsAsyncMode() const { return fAsyncMode; }
+
+   Bool_t IsFixedSize() const { return fFixedSize; }
 
    static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0, Bool_t batchmode = kFALSE);
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0, Bool_t batchmode = kFALSE);

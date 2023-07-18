@@ -808,6 +808,8 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 
          TCanvasWebSnapshot holder(IsReadOnly(), true, false); // readonly, set ids, batchmode
 
+         holder.SetFixedSize(fFixedSize); // set fixed size flag
+
          // scripts send only when canvas drawn for the first time
          if (!conn.fSendVersion)
             holder.SetScripts(fCustomScripts);
@@ -1009,8 +1011,22 @@ void TWebCanvas::SetWindowTitle(const char *newTitle)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Set canvas size of web canvas
 
-void TWebCanvas::SetCanvasSize(UInt_t, UInt_t)
+void TWebCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
 {
+   fFixedSize = kTRUE;
+   if (IsFirstDrawn()) {
+      fCtrlMsgs["cw"s] = std::to_string(cw);
+      fCtrlMsgs["ch"s] = std::to_string(ch);
+      fCtrlMsgs["fixed_size"s] = "true"s;
+   }
+   if ((cw > 0) && (ch > 0)) {
+      Canvas()->fCw = cw;
+      Canvas()->fCh = ch;
+   } else {
+      // temporary value, will be reported back from client
+      Canvas()->fCw = Canvas()->fWindowWidth;
+      Canvas()->fCh = Canvas()->fWindowHeight;
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1665,11 +1681,12 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
    } else if (arg.compare(0, 8, "RESIZED:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(8));
-      if (arr && arr->size() == 6) {
+      if (arr && arr->size() == 7) {
          // set members directly to avoid redrawing of the client again
-         Canvas()->fCw = arr->at(0);
-         Canvas()->fCh = arr->at(1);
-         arr->erase(arr->begin(), arr->begin() + 2);
+         Canvas()->fCw = arr->at(4);
+         Canvas()->fCh = arr->at(5);
+         fFixedSize = arr->at(6) > 0;
+         arr->resize(4);
          fWindowGeometry = *arr;
          Canvas()->fWindowTopX = fWindowGeometry[0];
          Canvas()->fWindowTopY = fWindowGeometry[1];
@@ -2262,7 +2279,7 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
       c->fWindowTopY = y;
       c->fWindowWidth = width;
       c->fWindowHeight = height;
-      c->fCw = width > 2 ? width - 2 : 0;
+      c->fCw = width;
       c->fCh = height > 25 ? height - 25 : 0;
    }
 
