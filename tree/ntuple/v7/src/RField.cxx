@@ -146,7 +146,8 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
    return std::make_tuple(std::string{typeName}, sizeVec);
 }
 
-/// Return the canonical name of a type, resolving typedefs to their underlying types if needed
+/// Return the canonical name of a type, resolving typedefs to their underlying types if needed.  A canonical type has
+/// typedefs stripped out from the type name.
 std::string GetCanonicalTypeName(const std::string &typeName)
 {
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
@@ -158,7 +159,9 @@ std::string GetCanonicalTypeName(const std::string &typeName)
 }
 
 /// Applies type name normalization rules that lead to the final name used to create a RField, e.g. transforms
-/// `unsigned int` to `std::uint32_t` or `const vector<T>` to `std::vector<T>`
+/// `unsigned int` to `std::uint32_t` or `const vector<T>` to `std::vector<T>`.  Specifically, `const` / `volatile`
+/// qualifiers are removed, integral types such as `unsigned int` or `long` are translated to fixed-length integer types
+/// (e.g. `std::uint32_t`), and `std::` is added to fully qualify known types in the `std` namespace.
 std::string GetNormalizedTypeName(const std::string &typeName)
 {
    std::string normalizedType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
