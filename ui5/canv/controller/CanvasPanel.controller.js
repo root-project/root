@@ -11,7 +11,7 @@ sap.ui.define([
          // workaround, openui5 does not preserve DOM elements when calling onBeforeRendering
          let dom = this.getView().getDomRef();
          if (this.canvas_painter && dom?.children.length && !this._mainChild) {
-            this._mainChild = dom.children[0];
+            this._mainChild = dom.lastChild;
             dom.removeChild(this._mainChild);
          }
       },
@@ -52,6 +52,23 @@ sap.ui.define([
            this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), tmout);
       },
 
+      /** @summary Set fixed size for canvas container */
+      setFixedSize(w, h, on) {
+         let dom = this.getView().getDomRef();
+         if (!dom?.lastChild) return false;
+
+         if (!this.isFixedSize && !on) return false;
+
+         this.isFixedSize = w && h && on;
+
+         if (this.isFixedSize)
+            dom.lastChild.style = `position:relative;left:0px;top:0px;width:${w}px;height:${h}px`;
+         else
+            dom.lastChild.style = 'position:relative;inset:0px;height:100%;width:100%';
+
+         return this.isFixedSize;
+      },
+
       /** @summary Handle openui5 resize glitch
         * @desc onAfterRendering method does not provide valid dimension of the HTML element
         * One should wait either resize event or timeout and check if valid size is there
@@ -79,9 +96,10 @@ sap.ui.define([
             }
 
             if (dom && !dom.children.length) {
-               let d = document.createElement("div");
-               d.style = "position:relative;left:0;right:0;top:0;bottom:0;height:100%;width:100%";
+               let d = document.createElement('div');
+               d.style = 'position:relative;inset:0px;height:100%;width:100%';
                dom.appendChild(d);
+               this.isFixedSize = false;
             }
 
             if (this.canvas_painter) {
