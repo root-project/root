@@ -1179,17 +1179,20 @@ void TDirectoryFile::ls(Option_t *option) const
    TString opt  = opta.Strip(TString::kBoth);
    Bool_t memobj  = kTRUE;
    Bool_t diskobj = kTRUE;
-   TString reg = "*";
+   TString reg;
    if (opt.BeginsWith("-m")) {
       diskobj = kFALSE;
-      if (opt.Length() > 2)
+      if (opt.Length() > 2) {
          reg = opt(2,opt.Length());
+      }
    } else if (opt.BeginsWith("-d")) {
       memobj  = kFALSE;
-      if (opt.Length() > 2)
+      if (opt.Length() > 2) {
          reg = opt(2,opt.Length());
-   } else if (!opt.IsNull())
+      }
+   } else if (!opt.IsNull()) {
       reg = opt;
+   }
 
    TRegexp re(reg, kTRUE);
 
@@ -1198,7 +1201,8 @@ void TDirectoryFile::ls(Option_t *option) const
       TIter nextobj(fList);
       while ((obj = (TObject *) nextobj())) {
          TString s = obj->GetName();
-         if (s.Index(re) == kNPOS) continue;
+         if (!reg.IsNull() && s.Index(re) == kNPOS)
+            continue;
          obj->ls(option);            //*-* Loop on all the objects in memory
       }
    }
@@ -1208,7 +1212,8 @@ void TDirectoryFile::ls(Option_t *option) const
       for (TObjLink *lnk = fKeys->FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
          TKey *key = (TKey*)lnk->GetObject();
          TString s = key->GetName();
-         if (s.Index(re) == kNPOS) continue;
+         if (!reg.IsNull() && s.Index(re) == kNPOS)
+            continue;
          bool first = (lnk->Prev() == nullptr) || (s != lnk->Prev()->GetObject()->GetName());
          bool hasbackup = (lnk->Next() != nullptr) && (s == lnk->Next()->GetObject()->GetName());
          if (first)
