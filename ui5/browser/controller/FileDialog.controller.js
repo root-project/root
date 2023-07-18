@@ -134,10 +134,10 @@ sap.ui.define(['rootui5/panel/Controller',
 
          let tm = new Date().getTime();
 
-         if ((this._last_item === item) && ((tm - this._last_tm) < 300)) {
+         if ((this._last_item === item) && ((tm - this._last_tm) < 400)) {
             // handle double click
             delete this._last_item;
-            if ((this.kind == 'OpenFile') && !is_folder)
+            if (((this.kind == 'OpenFile') || (this.kind == 'SaveAs')) && !is_folder)
                return this.onOkPress();
             else
                return;
