@@ -1789,10 +1789,10 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
       w = fWindowGeometry[2];
       h = fWindowGeometry[3];
    } else {
-      x = 0;
-      y = 0;
-      w = Canvas()->GetWw() + 2;
-      h = Canvas()->GetWh() + 25;
+      x = Canvas()->fWindowTopX;
+      y = Canvas()->fWindowTopY;
+      w = Canvas()->fWindowWidth;
+      h = Canvas()->fWindowHeight;
    }
    return 0;
 }
@@ -2273,14 +2273,14 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    auto imp = new TWebCanvas(c, name, x, y, width, height, readonly);
 
-   if (!gROOT->IsBatch()) {
-      c->fWindowTopX = x;
-      c->fWindowTopY = y;
-      c->fWindowWidth = width;
-      c->fWindowHeight = height;
-      c->fCw = width;
-      c->fCh = height > 25 ? height - 25 : 0;
-   }
+   c->fWindowTopX = x;
+   c->fWindowTopY = y;
+   c->fWindowWidth = width;
+   c->fWindowHeight = height;
+   if (!gROOT->IsBatch() && (height > 25))
+      height -= 25;
+   c->fCw = width;
+   c->fCh = height;
 
    return imp;
 }
