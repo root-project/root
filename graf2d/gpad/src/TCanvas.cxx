@@ -1964,13 +1964,15 @@ void TCanvas::SetBatch(Bool_t batch)
 /// the scroll bars. The Width and Height in this method are different from those
 /// given in the TCanvas constructors where these two dimension include the size
 /// of the window decoration whereas they do not in this method.
+/// When both ww==0 and wh==0, auto resize mode will be enabled again and
+/// canvas drawing area will automatically fit available window size
 
 void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 {
    if (fCanvasImp) {
-      fCanvasImp->SetCanvasSize(ww, wh);
       fCw = ww;
       fCh = wh;
+      fCanvasImp->SetCanvasSize(ww, wh);
       TContext ctxt(this, kTRUE);
       ResizePad();
    }
