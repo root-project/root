@@ -375,7 +375,7 @@ def create_coverage_xml(shell_log: str) -> str:
     #directory = f"../root-ci-config"
     result, shell_log = subprocess_with_log(f"""
         pwd
-        gcovr --cobertura-pretty -r {WORKDIR}/src {coverage_directory} -o XMLCoverage.xml
+        gcovr --cobertura-pretty -r {WORKDIR}/src {WORKDIR}/build -o XMLCoverage.xml
         pwd
         ls
         cat XMLCoverage.xml
