@@ -14,7 +14,7 @@
 
 #include "TBranchProxyDirector.h"
 #include "TTree.h"
-#include "TBranch.h"
+#include "TBranchElement.h"
 #include "TLeaf.h"
 #include "TClonesArray.h"
 #include "TString.h"
@@ -96,8 +96,8 @@ namespace Detail {
 
       TBranch *fBranch;       // branch to read
       union {
-         TBranch *fBranchCount;  // eventual auxiliary branch (for example holding the size)
-         TLeaf   *fLeafCount;    // eventual auxiliary leaf (for example holding the size)
+         TBranchElement *fBranchCount;  // eventual auxiliary branch (for example holding the size)
+         TLeaf          *fLeafCount;    // eventual auxiliary leaf (for example holding the size)
       };
 
       TNotifyLink<TBranchProxy> fNotify; // Callback object used by the TChain to update this proxy
@@ -154,7 +154,10 @@ namespace Detail {
             if (fParent) {
                result = fParent->Read();
             } else {
-               if (fBranchCount) {
+               if (fHasLeafCount) {
+                  if (fBranch != fLeafCount->GetBranch())
+                     result &= (-1 != fLeafCount->GetBranch()->GetEntry(treeEntry));
+               } else if (fBranchCount) {
                   result &= (-1 != fBranchCount->GetEntry(treeEntry));
                }
                result &= (-1 != fBranch->GetEntry(treeEntry));
@@ -202,6 +205,8 @@ private:
                   return EReadType::kReadParentCollectionNoPointer;
                }
             }
+         } if (fHasLeafCount) {
+            return EReadType::kDefault;
          } else {
             if (fBranchCount) {
                if (fCollection) {
@@ -375,8 +380,10 @@ public:
 
       virtual Int_t GetEntries() {
          if (!ReadEntries()) return 0;
-         if (!fHasLeafCount) {
+         if (fHasLeafCount) {
             return *(Int_t*)fLeafCount->GetValuePointer();
+         } else if (fBranchCount) {
+            return fBranchCount->GetNdata();
          } else {
             return 1;
          }
