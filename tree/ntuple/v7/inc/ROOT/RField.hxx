@@ -691,14 +691,14 @@ protected:
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() override;
+   void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
-   std::size_t AppendImpl(const void *from) override;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    RProxiedCollectionField(std::string_view fieldName, std::string_view className);
