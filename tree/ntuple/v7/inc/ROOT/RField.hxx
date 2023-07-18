@@ -997,7 +997,6 @@ public:
 class RSetField : public RProxiedCollectionField {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
 public:
    RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);

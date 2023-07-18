@@ -2424,31 +2424,6 @@ ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
    return std::make_unique<RSetField>(newName, std::move(newItemField));
 }
 
-void ROOT::Experimental::RSetField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
-{
-   ClusterSize_t nItems;
-   RClusterIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
-
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
-   fProxy->Clear();
-   void *item;
-   if (fProxy->GetType())
-      item = malloc(fItemSize);
-   else
-      item = fProxy->GetValueClass()->New();
-
-   for (unsigned i = 0; i < nItems; ++i) {
-      fSubFields[0]->Read(collectionStart + i, &item);
-      fProxy->Insert(item, to, 1);
-   }
-
-   if (fProxy->GetType())
-      free(item);
-   else
-      fProxy->GetValueClass()->Destructor(item);
-}
-
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
