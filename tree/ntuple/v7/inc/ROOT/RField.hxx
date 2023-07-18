@@ -221,7 +221,7 @@ protected:
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias
    static RResult<std::unique_ptr<RFieldBase>>
-   Create(const std::string &fieldName, const std::string &normalizedType, const std::string &typeAlias);
+   Create(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias);
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
