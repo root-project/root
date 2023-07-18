@@ -240,8 +240,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          auto field = fieldOrError.Unwrap();
          if (isCString) {
             branchBufferSize = l->GetMaximum();
-            f.fFieldBuffer = field->GenerateValue().GetRawPtr();
-            f.fOwnsFieldBuffer = true;
+            f.fValue = std::make_unique<Detail::RFieldBase::RValue>(field->GenerateValue());
+            f.fFieldBuffer = f.fValue->GetRawPtr();
             fImportTransformations.emplace_back(
                std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
          } else {
@@ -260,8 +260,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          if (isLeafList) {
             recordItems.emplace_back(std::move(field));
          } else if (isLeafCountArray) {
-            f.fFieldBuffer = field->GenerateValue().GetRawPtr();
-            f.fOwnsFieldBuffer = true;
+            f.fValue = std::make_unique<Detail::RFieldBase::RValue>(field->GenerateValue());
+            f.fFieldBuffer = f.fValue->GetRawPtr();
             f.fIsInUntypedCollection = true;
             const std::string countleafName = countleaf->GetName();
             fLeafCountCollections[countleafName].fCollectionModel->AddField(std::move(field));
@@ -369,7 +369,6 @@ void ROOT::Experimental::RNTupleImporter::Import()
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
 
    auto ntplWriter = std::make_unique<RNTupleWriter>(std::move(fModel), std::move(sink));
-   fModel = nullptr;
 
    fProgressCallback = fIsQuiet ? nullptr : std::make_unique<RDefaultProgressCallback>();
 
@@ -409,4 +408,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
    }
    if (fProgressCallback)
       fProgressCallback->Finish(ctrZippedBytes->GetValueAsInt(), nEntries);
+
+   // Destruct helper objects derived from the model before the writer is destructed
+   ResetSchema();
 }
