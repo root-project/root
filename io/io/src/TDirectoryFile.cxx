@@ -1209,16 +1209,17 @@ void TDirectoryFile::ls(Option_t *option) const
       while (lnk) {
          TKey *key = (TKey*)lnk->GetObject();
          TString s = key->GetName();
-         if (s.Index(re) == kNPOS) continue;
-         bool first = (lnk->Prev() == nullptr) || (s != lnk->Prev()->GetObject()->GetName());
-         bool hasbackup = (lnk->Next() != nullptr) && (s == lnk->Next()->GetObject()->GetName());
-         if (first)
-            if (hasbackup)
-               key->ls(true);
+         if (s.Index(re) != kNPOS) {
+            bool first = (lnk->Prev() == nullptr) || (s != lnk->Prev()->GetObject()->GetName());
+            bool hasbackup = (lnk->Next() != nullptr) && (s == lnk->Next()->GetObject()->GetName());
+            if (first)
+               if (hasbackup)
+                  key->ls(true);
+               else
+                  key->ls();
             else
-               key->ls();
-         else
-            key->ls(false);
+               key->ls(false);
+         }
          lnk = lnk->Next();
       }
    }
