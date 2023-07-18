@@ -4,7 +4,7 @@ function initEVE(source_dir) {
    if (globalThis.EVE)
       return Promise.resolve(globalThis.EVE);
 
-   let mpath = source_dir + "modules/";
+   let mpath = source_dir + 'modules/';
 
    return Promise.all([import(mpath+'three.mjs'),
                        import(mpath+'core.mjs'),
@@ -14,7 +14,6 @@ function initEVE(source_dir) {
                        import(mpath+'base/colors.mjs'),
                        import(mpath+'base/base3d.mjs'),
                        import(mpath+'geom/geobase.mjs'),
-                       import(mpath+'gui/dat.gui.mjs'),
                        import(mpath+'geom/TGeoPainter.mjs')])
     .then(arr => {
        globalThis.THREE = Object.assign({}, arr.shift());
