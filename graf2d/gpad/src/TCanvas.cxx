@@ -600,7 +600,7 @@ void TCanvas::Build()
       fCw -= 4;
       fCh -= 28;
    } else if (IsWeb()) {
-      // mark canvas as batch - avoid virtualx in many places
+      // mark canvas as batch - avoid gVirtualX in many places
       SetBatch(kTRUE);
    } else {
       //normal mode with a screen window
@@ -717,10 +717,9 @@ TVirtualPad *TCanvas::cd(Int_t subpadnumber)
    TPad::cd(subpadnumber);
 
    // in case doublebuffer is off, draw directly onto display window
-   if (!IsBatch()) {
-      if (!fDoubleBuffer)
-         gVirtualX->SelectWindow(fCanvasID);//Ok, does not matter for glpad.
-   }
+   if (!IsBatch() && !IsWeb() && !fDoubleBuffer)
+      gVirtualX->SelectWindow(fCanvasID);//Ok, does not matter for glpad.
+
    return gPad;
 }
 
@@ -787,7 +786,7 @@ void TCanvas::Close(Option_t *option)
 
    if (fCanvasID != -1) {
 
-      if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+      if (!gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
          gInterpreter->Execute(this, IsA(), "Close", option);
          return;
       }
@@ -799,7 +798,7 @@ void TCanvas::Close(Option_t *option)
       cd();
       TPad::Close(option);
 
-      if (!IsBatch()) {
+      if (!IsBatch() && !IsWeb()) {
          gVirtualX->SelectWindow(fCanvasID);    //select current canvas
 
          DeleteCanvasPainter();
@@ -1118,6 +1117,9 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TCanvas::FeedbackMode(Bool_t set)
 {
+   if (IsWeb())
+      return;
+
    if (set) {
       SetDoubleBuffer(0);             // turn off double buffer mode
       gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
@@ -1172,7 +1174,7 @@ void TCanvas::ForceUpdate()
 
 void TCanvas::UseCurrentStyle()
 {
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+   if (!gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "UseCurrentStyle", "");
       return;
    }
@@ -1301,7 +1303,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          gPad = fSelectedPad;
 
          fSelected->ExecuteEvent(event, px, py);
-         gVirtualX->Update();
+         if (!IsWeb())
+            gVirtualX->Update();
          if (fSelected && !fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
@@ -1656,7 +1659,7 @@ void TCanvas::Resize(Option_t *)
 {
    if (fCanvasID == -1) return;
 
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+   if (!gROOT->IsLineProcessing() && !gVirtualX->IsCmdThread()) {
       gInterpreter->Execute(this, IsA(), "Resize", "");
       return;
    }
@@ -1665,7 +1668,7 @@ void TCanvas::Resize(Option_t *)
 
    TContext ctxt(this, kTRUE);
 
-   if (!IsBatch()) {
+   if (!IsBatch() && !IsWeb()) {
       gVirtualX->SelectWindow(fCanvasID);      //select current canvas
       gVirtualX->ResizeWindow(fCanvasID);      //resize canvas and off-screen buffer
 
@@ -1983,8 +1986,8 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 
 void TCanvas::SetCursor(ECursor cursor)
 {
-   if (IsBatch()) return;
-   gVirtualX->SetCursor(fCanvasID, cursor);
+   if (!IsBatch() && !IsWeb())
+      gVirtualX->SetCursor(fCanvasID, cursor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1992,7 +1995,8 @@ void TCanvas::SetCursor(ECursor cursor)
 
 void TCanvas::SetDoubleBuffer(Int_t mode)
 {
-   if (IsBatch()) return;
+   if (IsBatch() || IsWeb())
+      return;
    fDoubleBuffer = mode;
    gVirtualX->SetDoubleBuffer(fCanvasID, mode);
 
@@ -2460,7 +2464,7 @@ void TCanvas::ToggleToolTips()
 Bool_t TCanvas::SupportAlpha()
 {
    return gPad && (gVirtualX->InheritsFrom("TGQuartz") ||
-                   gPad->GetGLDevice() != -1);
+                   (gPad->GetGLDevice() != -1) || (gPad->GetCanvas() && gPad->GetCanvas()->IsWeb()));
 }
 
 extern "C" void ROOT_TCanvas_Update(void* TheCanvas) {
