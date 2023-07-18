@@ -5,7 +5,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '11/07/2023';
+let version_date = '18/07/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1443,8 +1443,8 @@ function getMethods(typename, obj) {
    // Therefore when methods requested for given object, check also that basic methods are there
    if ((typename == clTObject) || (typename == clTNamed) || (obj?.fBits !== undefined))
       if (typeof m.TestBit === 'undefined') {
-         m.TestBit = function (f) { return (this.fBits & f) != 0; };
-         m.InvertBit = function (f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         m.TestBit = function(f) { return (this.fBits & f) != 0; };
+         m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
       }
 
    if (has_methods) return m;

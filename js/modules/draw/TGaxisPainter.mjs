@@ -43,7 +43,7 @@ class TGaxisPainter extends TAxisPainter {
    moveDrag(dx, dy) {
       this.gaxis_x += dx;
       this.gaxis_y += dy;
-      this.getG().attr('transform', makeTranslate(this.gaxis_x, this.gaxis_y));
+      makeTranslate(this.getG(), this.gaxis_x, this.gaxis_y);
    }
 
    /** @summary Drag end handle */

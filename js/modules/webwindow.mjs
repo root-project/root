@@ -449,7 +449,7 @@ class WebWindowHandle {
    resizeWindow(w, h) {
       if (browser.qt5 || browser.cef3)
          this.send(`RESIZE=${w},${h}`, 0);
-      else if (isFunc(window?.resizeTo))
+      else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
          window.resizeTo(w, h);
    }
 
