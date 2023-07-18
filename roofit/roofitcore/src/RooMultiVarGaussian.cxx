@@ -38,19 +38,29 @@ Multivariate Gaussian p.d.f. with correlations
 using namespace std;
 
 ClassImp(RooMultiVarGaussian);
-  ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-                const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& cov) :
+                const RooArgList& xvec, const RooArgList& mu, const TMatrixDBase& cov) :
   RooAbsPdf(name,title),
   _x("x","Observables",this,true,false),
   _mu("mu","Offset vector",this,true,false),
-  _cov(cov),
-  _covI(cov),
+  _cov{cov.GetNrows()},
+  _covI{cov.GetNrows()},
   _z(4)
 {
+ if(!cov.IsSymmetric()) {
+      std::stringstream errorMsg;
+      errorMsg << "RooMultiVarGaussian::RooMultiVarGaussian(" << GetName()
+               << ") input covariance matrix is not symmetric!";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
+      throw std::invalid_argument(errorMsg.str().c_str());
+ }
+
+ _cov.SetSub(0, cov);
+ _covI.SetSub(0, cov);
+
  _x.add(xvec) ;
 
  _mu.add(mu) ;
@@ -98,53 +108,44 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 
 }
 
+namespace {
+
+RooArgList muFromVector(TVectorD const &mu)
+{
+   RooArgList out;
+   for (int i = 0; i < mu.GetNrows(); i++) {
+      out.add(RooFit::RooConst(mu(i)));
+   }
+   return out;
+}
+
+RooArgList muConstants(std::size_t n)
+{
+   RooArgList out;
+   for (std::size_t i = 0; i < n; i++) {
+      out.add(RooFit::RooConst(0));
+   }
+   return out;
+}
+
+} // namespace
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-                const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& cov) :
-  RooAbsPdf(name,title),
-  _x("x","Observables",this,true,false),
-  _mu("mu","Offset vector",this,true,false),
-  _cov(cov),
-  _covI(cov),
-  _z(4)
+RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title, const RooArgList &xvec,
+                                         const TVectorD &mu, const TMatrixDBase &cov)
+   : RooMultiVarGaussian{name, title, xvec, muFromVector(mu), cov}
 {
- _x.add(xvec) ;
-
- for (Int_t i=0 ; i<mu.GetNrows() ; i++) {
-   _mu.add(RooFit::RooConst(mu(i))) ;
- }
-
- _det = _cov.Determinant() ;
-
- // Invert covariance matrix
- _covI.Invert() ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-                const RooArgList& xvec, const TMatrixDSym& cov) :
-  RooAbsPdf(name,title),
-  _x("x","Observables",this,true,false),
-  _mu("mu","Offset vector",this,true,false),
-  _cov(cov),
-  _covI(cov),
-  _z(4)
+RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title, const RooArgList &xvec,
+                                         const TMatrixDBase &cov)
+   : RooMultiVarGaussian{name, title, xvec, muConstants(xvec.size()), cov}
 {
- _x.add(xvec) ;
-
-  for (Int_t i=0 ; i<xvec.getSize() ; i++) {
-    _mu.add(RooFit::RooConst(0)) ;
-  }
-
- _det = _cov.Determinant() ;
-
- // Invert covariance matrix
- _covI.Invert() ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -32,10 +32,10 @@ class RooMultiVarGaussian : public RooAbsPdf {
 public:
 
   RooMultiVarGaussian() {} ;
-  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& covMatrix) ;
+  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooArgList& mu, const TMatrixDBase& covMatrix) ;
   RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const RooFitResult& fr, bool reduceToConditional=true) ;
-  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& covMatrix) ;
-  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec,const TMatrixDSym& covMatrix) ;
+  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec, const TVectorD& mu, const TMatrixDBase& covMatrix) ;
+  RooMultiVarGaussian(const char *name, const char *title, const RooArgList& xvec,const TMatrixDBase& covMatrix) ;
   void setAnaIntZ(double z) { _z = z ; }
 
   RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=nullptr) ;
