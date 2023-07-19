@@ -516,7 +516,7 @@ function drawJSImage(dom, obj, opt) {
       img.style('width','100%').style('height','100%');
    } else if (opt && opt.indexOf('center') >= 0) {
       main.style('position', 'relative');
-      img.attr('style', 'margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);');
+      img.attr('style', 'margin: 0; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);');
    }
 
    painter.setTopPainter();

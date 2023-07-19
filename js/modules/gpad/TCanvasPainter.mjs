@@ -2,7 +2,6 @@ import { BIT, settings, create, parse, toJSON, loadScript, isFunc, isStr, clTCan
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-import { getElementRect } from '../base/BasePainter.mjs';
 import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
 import { TPadPainter, clTButton } from './TPadPainter.mjs';
@@ -418,7 +417,6 @@ class TCanvasPainter extends TPadPainter {
             this.sendResized(true);
       } else if (msg.slice(0,5) == 'EDIT:') {
          let obj_painter = this.findSnap(msg.slice(5));
-         console.log(`GET EDIT ${msg.slice(5)} found ${!!obj_painter}`);
          if (obj_painter)
             this.showSection('Editor', true)
                 .then(() => this.producePadEvent('select', obj_painter.getPadPainter(), obj_painter));
@@ -431,7 +429,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Send RESIZED message to client to inform about changes in canvas/window geometry
      * @private */
    sendResized(force) {
-      if (!this.pad)
+      if (!this.pad || (typeof window === 'undefined'))
          return;
       let cw = this.getPadWidth(), ch = this.getPadHeight(),
           wx = window.screenLeft, wy = window.screenTop,
