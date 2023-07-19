@@ -30,8 +30,11 @@ class TPadWebSnapshot;
 class TWebPS;
 class TObjLink;
 class TExec;
+class TWebCanvasTimer;
 
 class TWebCanvas : public TCanvasImp {
+
+friend class TWebCanvasTimer;
 
 public:
    /// Function type for signals, invoked when canvas drawing or update is completed
@@ -76,6 +79,7 @@ protected:
    };
 
    std::vector<WebConn> fWebConn;  ///<! connections
+   TWebCanvasTimer *fTimer{nullptr}; ///<! timer to submit control messages
 
    std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
 
@@ -131,7 +135,7 @@ protected:
 
    void AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value, Bool_t send_immediately = kFALSE);
 
-   void CheckDataToSend(unsigned connid = 0);
+   void CheckDataToSend(unsigned connid, Bool_t only_ctrl);
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
@@ -161,7 +165,7 @@ protected:
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
-   ~TWebCanvas() override = default;
+   ~TWebCanvas() override;
 
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 

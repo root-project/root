@@ -49,6 +49,7 @@
 #include "TExec.h"
 #include "TVirtualX.h"
 #include "TMath.h"
+#include "TTimer.h"
 
 #include <cstdio>
 #include <cstring>
@@ -56,6 +57,23 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+
+class TWebCanvasTimer : public TTimer {
+   TWebCanvas &fCanv;
+   Bool_t fProcessing{kFALSE};
+public:
+   TWebCanvasTimer(TWebCanvas &canv) : TTimer(10, kTRUE), fCanv(canv) {}
+
+   /// used to send control messages to clients
+   void Timeout() override
+   {
+      if (fProcessing || fCanv.fProcessingData) return;
+      fProcessing = kTRUE;
+      fCanv.CheckDataToSend(0, kTRUE);
+      fProcessing = kFALSE;
+   }
+};
+
 
 /** \class TWebCanvas
 \ingroup webgui6
@@ -88,12 +106,23 @@ using namespace std::string_literals;
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly)
    : TCanvasImp(c, name, x, y, width, height)
 {
+   fTimer = new TWebCanvasTimer(*this);
+
    fReadOnly = readonly;
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 1);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
    fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 0) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
+TWebCanvas::~TWebCanvas()
+{
+   delete fTimer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -774,12 +803,19 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
 void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value, Bool_t send_immediately)
 {
+   Bool_t was_empty = kFALSE;
+
    for (auto &conn : fWebConn)
-      if ((conn.fConnId == connid) || (connid == 0))
+      if ((conn.fConnId == connid) || (connid == 0)) {
+         if (conn.fCtrl.empty())
+            was_empty = kTRUE;
          conn.fCtrl[key] = value;
+      }
 
    if (send_immediately)
-      CheckDataToSend(connid);
+      CheckDataToSend(connid, kTRUE);
+   else if (was_empty)
+      fTimer->TurnOn();
 }
 
 
@@ -805,22 +841,24 @@ Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
 /// Check if any data should be send to client
 /// If connid != 0, only selected connection will be checked
 
-void TWebCanvas::CheckDataToSend(unsigned connid)
+void TWebCanvas::CheckDataToSend(unsigned connid, Bool_t only_ctrl)
 {
    if (!Canvas() || !fWindow)
       return;
 
-   for (auto &conn : fWebConn) {
-      if (connid && (conn.fConnId != connid))
-         continue;
+   Bool_t isAnyCtrl = kFALSE;
 
-      // check if direct data sending is possible
-      if (!fWindow->CanSend(conn.fConnId, true))
+   for (auto &conn : fWebConn) {
+      if ((connid && (conn.fConnId != connid)) || !fWindow->CanSend(conn.fConnId, true)) {
+         // check if any control messages still there to keep timer running
+         if (!conn.fCtrl.empty())
+            isAnyCtrl = kTRUE;
          continue;
+      }
 
       std::string buf;
 
-      if ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion)) {
+      if ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion) && !only_ctrl) {
 
          buf = "SNAP6:"s + std::to_string(fCanvVersion) + ":"s;
 
@@ -853,19 +891,23 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          if (buf.empty())
             conn.fDrawVersion = fCanvVersion;
 
+      } else if (!conn.fCtrl.empty()) {
+
+         buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+         conn.fCtrl.clear();
+
       } else if (!conn.fSend.empty()) {
 
          std::swap(buf, conn.fSend.front());
          conn.fSend.pop();
-
-      } else if (!conn.fCtrl.empty()) {
-         buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
-         conn.fCtrl.clear();
       }
 
       if (!buf.empty())
          fWindow->Send(conn.fConnId, buf);
    }
+
+   if (only_ctrl && !isAnyCtrl)
+      fTimer->TurnOff();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -892,12 +934,12 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
          // connection
          [this](unsigned connid) {
             fWebConn.emplace_back(connid);
-            CheckDataToSend(connid);
+            CheckDataToSend(connid, kFALSE);
          },
          // data
          [this](unsigned connid, const std::string &arg) {
             ProcessData(connid, arg);
-            CheckDataToSend(connid);
+            CheckDataToSend(connid, kTRUE);
          },
          // disconnect
          [this](unsigned connid) {
@@ -946,7 +988,7 @@ void TWebCanvas::Show()
 void TWebCanvas::ShowCmd(const std::string &arg, Bool_t show)
 {
    if (AddToSendQueue(0, "SHOW:"s + arg + (show ? ":1"s : ":0"s)))
-      CheckDataToSend();
+      CheckDataToSend(0, kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -959,7 +1001,7 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
    UInt_t hash = TString::Hash(&obj, sizeof(obj));
 
    if (AddToSendQueue(0, "EDIT:"s + std::to_string(hash)))
-      CheckDataToSend();
+      CheckDataToSend(0, kTRUE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1395,7 +1437,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if ((indx == 0) && !IsReadOnly())
             if (DecodePadOptions(separ+1, false)) {
                CheckCanvasModified();
-               CheckDataToSend();
+               CheckDataToSend(0, kFALSE);
             }
       }
 
@@ -1439,7 +1481,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (DecodePadOptions(arg.substr(9), true)) {
 
             CheckCanvasModified();
-            CheckDataToSend();
+            CheckDataToSend(0, kFALSE);
          }
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
@@ -1649,7 +1691,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          pad->Modified();
          PerformUpdate();
       } else {
-         printf("Not found pad with id %s\n", snapid.c_str());
+         Error("ProcessData", "Not found pad with id %s to clear\n", snapid.c_str());
       }
    } else if (arg.compare(0, 7, "DIVIDE:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
@@ -1821,7 +1863,7 @@ Bool_t TWebCanvas::PerformUpdate()
 
    CheckCanvasModified();
 
-   CheckDataToSend();
+   CheckDataToSend(0, kFALSE);
 
    if (!fProcessingData && !IsAsyncMode())
       WaitWhenCanvasPainted(fCanvVersion);
@@ -1839,7 +1881,7 @@ void TWebCanvas::ForceUpdate()
 
    CheckCanvasModified(true);
 
-   CheckDataToSend();
+   CheckDataToSend(0, kFALSE);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
