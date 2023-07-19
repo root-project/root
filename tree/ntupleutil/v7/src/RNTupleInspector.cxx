@@ -41,8 +41,8 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
    fOnDiskSize = 0;
    fInMemorySize = 0;
 
-   for (DescriptorId_t colId = 0; colId < fDescriptor->GetNPhysicalColumns(); ++colId) {
-      const RColumnDescriptor &colDesc = fDescriptor->GetColumnDescriptor(colId);
+   for (const auto &colDesc : fDescriptor->GetColumnIterable()) {
+      auto colId = colDesc.GetPhysicalId();
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements.
