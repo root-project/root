@@ -360,7 +360,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple);
 
-   auto topFieldInfo = inspector->GetFieldInfo("object");
+   auto topFieldInfo = inspector->GetFieldTreeInfo("object");
 
    EXPECT_GT(topFieldInfo.GetOnDiskSize(), 0);
    EXPECT_EQ(topFieldInfo.GetInMemorySize(), inspector->GetInMemorySize());
@@ -370,7 +370,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
-      auto subFieldInfo = inspector->GetFieldInfo(subField.GetId());
+      auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetOnDiskSize();
       subFieldInMemorySize += subFieldInfo.GetInMemorySize();
    }
@@ -378,8 +378,8 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    EXPECT_EQ(topFieldInfo.GetOnDiskSize(), subFieldOnDiskSize);
    EXPECT_EQ(topFieldInfo.GetInMemorySize(), subFieldInMemorySize);
 
-   EXPECT_THROW(inspector->GetFieldInfo("invalid_field"), ROOT::Experimental::RException);
-   EXPECT_THROW(inspector->GetFieldInfo(inspector->GetDescriptor()->GetNFields()), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInfo("invalid_field"), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInfo(inspector->GetDescriptor()->GetNFields()), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, FieldInfoUncompressed)
@@ -407,7 +407,7 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple);
 
-   auto topFieldInfo = inspector->GetFieldInfo("object");
+   auto topFieldInfo = inspector->GetFieldTreeInfo("object");
 
    EXPECT_EQ(topFieldInfo.GetOnDiskSize(), topFieldInfo.GetInMemorySize());
 
@@ -415,7 +415,7 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
-      auto subFieldInfo = inspector->GetFieldInfo(subField.GetId());
+      auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetOnDiskSize();
       subFieldInMemorySize += subFieldInfo.GetInMemorySize();
    }
