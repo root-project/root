@@ -22,7 +22,7 @@ void macro1(){
 
     // Instance of the graph
     TGraphErrors graph(n_points,x_vals,y_vals,nullptr,y_errs);
-    graph.SetTitle("Measurement XYZ;lenght [cm];Arb.Units");
+    graph.SetTitle("Measurement XYZ;length [cm];Arb.Units");
 
     // Make the plot estetically better
     graph.SetMarkerStyle(kOpenCircle);
