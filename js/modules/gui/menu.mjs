@@ -1314,7 +1314,7 @@ class StandaloneMenu extends JSRootMenu {
           block = d3_select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white'),
+                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
           element = d3_select('body')
                       .append('div')
                       .attr('id', dlg_id)
