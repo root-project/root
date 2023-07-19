@@ -766,13 +766,31 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add control message for specified connection
+/// Same control message can be overwritten many time before it really sends to the client
+/// If connid == 0, message will be add to all connections
+/// If parameter send_immediately specified, tries to submit message immediately
+/// Otherwise short timer is activated and message send afterwards
+
+void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value, Bool_t send_immediately)
+{
+   for (auto &conn : fWebConn)
+      if ((conn.fConnId == connid) || (connid == 0))
+         conn.fCtrl[key] = value;
+
+   if (send_immediately)
+      CheckDataToSend(connid);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add message to send queue for specified connection
 /// If connid == 0, message will be add to all connections
 /// Return kFALSE if queue is full or connection is not exists
 
 Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
 {
-   Bool_t res = false;
+   Bool_t res = kFALSE;
    for (auto &conn : fWebConn) {
       if ((conn.fConnId == connid) || (connid == 0)) {
          conn.fSend.emplace(msg);
@@ -840,9 +858,9 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          std::swap(buf, conn.fSend.front());
          conn.fSend.pop();
 
-      } else if ((conn.fConnId == fWebConn[0].fConnId) && !fCtrlMsgs.empty()) {
-         buf = "CTRL:"s + TBufferJSON::ToJSON(&fCtrlMsgs, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
-         fCtrlMsgs.clear();
+      } else if (!conn.fCtrl.empty()) {
+         buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+         conn.fCtrl.clear();
       }
 
       if (!buf.empty())
@@ -981,10 +999,8 @@ Bool_t TWebCanvas::HasToolTips() const
 
 void TWebCanvas::SetWindowPosition(Int_t x, Int_t y)
 {
-   if (IsFirstDrawn()) {
-      fCtrlMsgs["x"s] = std::to_string(x);
-      fCtrlMsgs["y"s] = std::to_string(y);
-   }
+   AddCtrlMsg(0, "x"s, std::to_string(x));
+   AddCtrlMsg(0, "y"s, std::to_string(y));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -992,10 +1008,8 @@ void TWebCanvas::SetWindowPosition(Int_t x, Int_t y)
 
 void TWebCanvas::SetWindowSize(UInt_t w, UInt_t h)
 {
-   if (IsFirstDrawn()) {
-      fCtrlMsgs["w"s] = std::to_string(w);
-      fCtrlMsgs["h"s] = std::to_string(h);
-   }
+   AddCtrlMsg(0, "w"s, std::to_string(w));
+   AddCtrlMsg(0, "h"s, std::to_string(h));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1003,8 +1017,7 @@ void TWebCanvas::SetWindowSize(UInt_t w, UInt_t h)
 
 void TWebCanvas::SetWindowTitle(const char *newTitle)
 {
-   if (IsFirstDrawn())
-      fCtrlMsgs["title"s] = newTitle;
+   AddCtrlMsg(0, "title"s, newTitle);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1013,11 +1026,9 @@ void TWebCanvas::SetWindowTitle(const char *newTitle)
 void TWebCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
 {
    fFixedSize = kTRUE;
-   if (IsFirstDrawn()) {
-      fCtrlMsgs["cw"s] = std::to_string(cw);
-      fCtrlMsgs["ch"s] = std::to_string(ch);
-      fCtrlMsgs["fixed_size"s] = "true"s;
-   }
+   AddCtrlMsg(0, "cw"s, std::to_string(cw));
+   AddCtrlMsg(0, "ch"s, std::to_string(ch));
+   AddCtrlMsg(0, "fixed_size"s, "true"s);
    if ((cw > 0) && (ch > 0)) {
       Canvas()->fCw = cw;
       Canvas()->fCh = ch;

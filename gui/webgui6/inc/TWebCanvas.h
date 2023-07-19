@@ -57,7 +57,9 @@ protected:
       Long64_t fSendVersion{0};        ///<! canvas version send to the client
       Long64_t fDrawVersion{0};        ///<! canvas version drawn (confirmed) by client
       UInt_t fLastSendHash{0};         ///<! hash of last send draw message, avoid looping
+      std::map<std::string, std::string> fCtrl; ///<! different ctrl parameters which can be send at once
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
+
       WebConn(unsigned id) : fConnId(id) {}
       void reset()
       {
@@ -76,8 +78,6 @@ protected:
    std::vector<WebConn> fWebConn;  ///<! connections
 
    std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
-
-   std::map<std::string, std::string> fCtrlMsgs; ///<! different ctrl messages which can be send with next update
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
@@ -128,6 +128,8 @@ protected:
    void CheckCanvasModified(bool force_modified = false);
 
    Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
+
+   void AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value, Bool_t send_immediately = kFALSE);
 
    void CheckDataToSend(unsigned connid = 0);
 
