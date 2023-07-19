@@ -987,8 +987,7 @@ void TWebCanvas::Show()
 
 void TWebCanvas::ShowCmd(const std::string &arg, Bool_t show)
 {
-   if (AddToSendQueue(0, "SHOW:"s + arg + (show ? ":1"s : ":0"s)))
-      CheckDataToSend(0, kTRUE);
+   AddCtrlMsg(0, arg, show ? "1"s : "0"s);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1000,8 +999,7 @@ void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
 
    UInt_t hash = TString::Hash(&obj, sizeof(obj));
 
-   if (AddToSendQueue(0, "EDIT:"s + std::to_string(hash)))
-      CheckDataToSend(0, kTRUE);
+   AddCtrlMsg(0, "edit"s, std::to_string(hash));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
