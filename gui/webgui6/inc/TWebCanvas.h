@@ -195,11 +195,11 @@ public:
    void   SetWindowSize(UInt_t w, UInt_t h) override;
    void   SetWindowTitle(const char *newTitle) override;
    void   SetCanvasSize(UInt_t w, UInt_t h) override;
+   void   Iconify() override;
+   void   RaiseWindow() override;
 
    /*
-      virtual void   Iconify() { }
       virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
-      virtual void   RaiseWindow();
       virtual void   ReallyDelete();
     */
 
