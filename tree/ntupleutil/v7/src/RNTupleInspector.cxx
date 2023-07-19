@@ -50,7 +50,6 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
       std::uint32_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(colType)->GetSize();
       std::uint64_t nElems = 0;
       std::uint64_t onDiskSize = 0;
-      std::uint64_t inMemSize = 0;
 
       for (const auto &clusterDescriptor : fDescriptor->GetClusterIterable()) {
          if (!clusterDescriptor.ContainsColumn(colId)) {
@@ -70,13 +69,12 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 
          for (const auto &page : pageRange.fPageInfos) {
             onDiskSize += page.fLocator.fBytesOnStorage;
-            inMemSize += page.fNElements * elemSize;
             fOnDiskSize += page.fLocator.fBytesOnStorage;
             fInMemorySize += page.fNElements * elemSize;
          }
       }
 
-      fColumnInfo.emplace(colId, RColumnInfo(colDesc, onDiskSize, inMemSize, elemSize, nElems));
+      fColumnInfo.emplace(colId, RColumnInfo(colDesc, onDiskSize, elemSize, nElems));
    }
 }
 

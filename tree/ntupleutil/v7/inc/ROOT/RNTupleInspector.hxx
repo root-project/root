@@ -63,23 +63,18 @@ public:
    private:
       const RColumnDescriptor &fColumnDescriptor;
       std::uint64_t fOnDiskSize = 0;
-      std::uint64_t fInMemorySize = 0;
       std::uint32_t fElementSize = 0;
       std::uint64_t fNElements = 0;
 
    public:
-      RColumnInfo(const RColumnDescriptor &colDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize,
-                  std::uint32_t elemSize, std::uint64_t nElems)
-         : fColumnDescriptor(colDesc),
-           fOnDiskSize(onDiskSize),
-           fInMemorySize(inMemSize),
-           fElementSize(elemSize),
-           fNElements(nElems){};
+      RColumnInfo(const RColumnDescriptor &colDesc, std::uint64_t onDiskSize, std::uint32_t elemSize,
+                  std::uint64_t nElems)
+         : fColumnDescriptor(colDesc), fOnDiskSize(onDiskSize), fElementSize(elemSize), fNElements(nElems){};
       ~RColumnInfo() = default;
 
       const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
       std::uint64_t GetOnDiskSize() const { return fOnDiskSize; }
-      std::uint64_t GetInMemorySize() const { return fInMemorySize; }
+      std::uint64_t GetInMemorySize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
       EColumnType GetType() const { return fColumnDescriptor.GetModel().GetType(); }
