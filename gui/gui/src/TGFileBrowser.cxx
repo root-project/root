@@ -1320,9 +1320,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // avoid potential crash when drawing a canvas with the same name
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
-         }
-         else if (fBrowser && !obj->InheritsFrom("TFormula") &&
-                  !obj->InheritsFrom("TMethodBrowsable"))
+         } else if (fBrowser && !obj->InheritsFrom("TFormula"))
             obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;
