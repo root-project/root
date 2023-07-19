@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '18/07/2023';
+let version_date = '19/07/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -8440,7 +8440,7 @@ class BasePainter {
          enlarge = select(document.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; right: 1px; top: 1px; bottom: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          let rect1 = getElementRect(main),
              rect2 = getElementRect(enlarge);
@@ -59264,7 +59264,7 @@ class StandaloneMenu extends JSRootMenu {
           block = select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white'),
+                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
           element = select('body')
                       .append('div')
                       .attr('id', dlg_id)
@@ -64286,7 +64286,7 @@ class TabsDisplay extends MDIDisplay {
       let draw_frame = main.append('div')
                            .attr('frame_title', title)
                            .attr('class', 'jsroot_tabs_draw')
-                           .attr('style', `overflow: hidden; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px`)
+                           .attr('style', `overflow: hidden; position: absolute; inset: 0px`)
                            .property('frame_id', frame_id);
 
       this.modifyTabsFrame(frame_id, 'activate');
@@ -64847,8 +64847,8 @@ class BrowserLayout {
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
       injectStyle(
-         `.jsroot_browser { pointer-events: none; position: absolute; left: 0; top: 0; bottom: 0; right:0; margin: 0; border: 0; overflow: hidden; }`+
-         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0; border: 0; }`+
+         `.jsroot_browser { pointer-events: none; position: absolute; inset: 0px; margin: 0px; border: 0px; overflow: hidden; }`+
+         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }`+
          `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }`+
          `.jsroot_browser_area input { ${input_style} }`+
          `.jsroot_browser_area select { ${input_style} }`+
@@ -68006,7 +68006,6 @@ class TCanvasPainter extends TPadPainter {
             this.sendResized(true);
       } else if (msg.slice(0,5) == 'EDIT:') {
          let obj_painter = this.findSnap(msg.slice(5));
-         console.log(`GET EDIT ${msg.slice(5)} found ${!!obj_painter}`);
          if (obj_painter)
             this.showSection('Editor', true)
                 .then(() => this.producePadEvent('select', obj_painter.getPadPainter(), obj_painter));
@@ -68019,7 +68018,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Send RESIZED message to client to inform about changes in canvas/window geometry
      * @private */
    sendResized(force) {
-      if (!this.pad)
+      if (!this.pad || (typeof window === 'undefined'))
          return;
       let cw = this.getPadWidth(), ch = this.getPadHeight(),
           wx = window.screenLeft, wy = window.screenTop,
@@ -104671,7 +104670,7 @@ function drawJSImage(dom, obj, opt) {
       img.style('width','100%').style('height','100%');
    } else if (opt && opt.indexOf('center') >= 0) {
       main.style('position', 'relative');
-      img.attr('style', 'margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);');
+      img.attr('style', 'margin: 0; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);');
    }
 
    painter.setTopPainter();
