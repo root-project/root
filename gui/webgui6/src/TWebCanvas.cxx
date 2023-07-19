@@ -69,7 +69,7 @@ public:
    {
       if (fProcessing || fCanv.fProcessingData) return;
       fProcessing = kTRUE;
-      fCanv.CheckDataToSend(0, kTRUE);
+      fCanv.CheckDataToSend();
       fProcessing = kFALSE;
    }
 };
@@ -801,20 +801,13 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 /// If parameter send_immediately specified, tries to submit message immediately
 /// Otherwise short timer is activated and message send afterwards
 
-void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value, Bool_t send_immediately)
+void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value)
 {
-   Bool_t was_empty = kFALSE;
-
    for (auto &conn : fWebConn)
-      if ((conn.fConnId == connid) || (connid == 0)) {
-         if (conn.fCtrl.empty())
-            was_empty = kTRUE;
+      if ((conn.fConnId == connid) || (connid == 0))
          conn.fCtrl[key] = value;
-      }
 
-   if (send_immediately)
-      CheckDataToSend(connid, kTRUE);
-   else if (was_empty)
+   if (!fTimer->IsRunning())
       fTimer->TurnOn();
 }
 
@@ -824,16 +817,12 @@ void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::
 /// If connid == 0, message will be add to all connections
 /// Return kFALSE if queue is full or connection is not exists
 
-Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
+void TWebCanvas::AddSendQueue(unsigned connid, const std::string &msg)
 {
-   Bool_t res = kFALSE;
    for (auto &conn : fWebConn) {
-      if ((conn.fConnId == connid) || (connid == 0)) {
+      if ((conn.fConnId == connid) || (connid == 0))
          conn.fSend.emplace(msg);
-         res = kTRUE;
-      }
    }
-   return res;
 }
 
 
@@ -841,73 +830,80 @@ Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
 /// Check if any data should be send to client
 /// If connid != 0, only selected connection will be checked
 
-void TWebCanvas::CheckDataToSend(unsigned connid, Bool_t only_ctrl)
+void TWebCanvas::CheckDataToSend(unsigned connid)
 {
    if (!Canvas() || !fWindow)
       return;
 
-   Bool_t isAnyCtrl = kFALSE;
+   bool isMoreData = false;
 
    for (auto &conn : fWebConn) {
-      if ((connid && (conn.fConnId != connid)) || !fWindow->CanSend(conn.fConnId, true)) {
+
+      bool isConnData = !conn.fCtrl.empty() || !conn.fSend.empty() ||
+                        ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion));
+
+      while ((!connid || (conn.fConnId == connid)) && fWindow->CanSend(conn.fConnId, true)) {
          // check if any control messages still there to keep timer running
-         if (!conn.fCtrl.empty())
-            isAnyCtrl = kTRUE;
-         continue;
+
+         std::string buf;
+
+         if (!conn.fCtrl.empty()) {
+              buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+              conn.fCtrl.clear();
+         } else if (!conn.fSend.empty()) {
+            std::swap(buf, conn.fSend.front());
+            conn.fSend.pop();
+         } else if ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion)) {
+
+            buf = "SNAP6:"s + std::to_string(fCanvVersion) + ":"s;
+
+            TCanvasWebSnapshot holder(IsReadOnly(), true, false); // readonly, set ids, batchmode
+
+            holder.SetFixedSize(fFixedSize); // set fixed size flag
+
+            // scripts send only when canvas drawn for the first time
+            if (!conn.fSendVersion)
+               holder.SetScripts(fCustomScripts);
+
+            holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
+
+            CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf, &conn, this](TPadWebSnapshot *snap) {
+               auto json = TBufferJSON::ToJSON(snap, fJsonComp);
+               auto hash = json.Hash();
+               if (conn.fLastSendHash && (conn.fLastSendHash == hash) && conn.fSendVersion) {
+                  // prevent looping when same data send many times
+                  buf.clear();
+               } else {
+                  buf.append(json.Data());
+                  conn.fLastSendHash = hash;
+               }
+            });
+
+            conn.fCheckedVersion = fCanvVersion;
+
+            conn.fSendVersion = fCanvVersion;
+
+            if (buf.empty())
+               conn.fDrawVersion = fCanvVersion;
+         } else {
+            isConnData = false;
+            break;
+         }
+
+         if (!buf.empty())
+            fWindow->Send(conn.fConnId, buf);
       }
 
-      std::string buf;
-
-      if ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion) && !only_ctrl) {
-
-         buf = "SNAP6:"s + std::to_string(fCanvVersion) + ":"s;
-
-         TCanvasWebSnapshot holder(IsReadOnly(), true, false); // readonly, set ids, batchmode
-
-         holder.SetFixedSize(fFixedSize); // set fixed size flag
-
-         // scripts send only when canvas drawn for the first time
-         if (!conn.fSendVersion)
-            holder.SetScripts(fCustomScripts);
-
-         holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
-
-         CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf, &conn, this](TPadWebSnapshot *snap) {
-            auto json = TBufferJSON::ToJSON(snap, fJsonComp);
-            auto hash = json.Hash();
-            if (conn.fLastSendHash && (conn.fLastSendHash == hash) && conn.fSendVersion) {
-               // prevent looping when same data send many times
-               buf.clear();
-            } else {
-               buf.append(json.Data());
-               conn.fLastSendHash = hash;
-            }
-         });
-
-         conn.fCheckedVersion = fCanvVersion;
-
-         conn.fSendVersion = fCanvVersion;
-
-         if (buf.empty())
-            conn.fDrawVersion = fCanvVersion;
-
-      } else if (!conn.fCtrl.empty()) {
-
-         buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
-         conn.fCtrl.clear();
-
-      } else if (!conn.fSend.empty()) {
-
-         std::swap(buf, conn.fSend.front());
-         conn.fSend.pop();
-      }
-
-      if (!buf.empty())
-         fWindow->Send(conn.fConnId, buf);
+      if (isConnData)
+         isMoreData = true;
    }
 
-   if (only_ctrl && !isAnyCtrl)
+   bool is_running = fTimer->IsRunning();
+   if (is_running && !isMoreData)
       fTimer->TurnOff();
+   else if (!is_running && isMoreData)
+      fTimer->TurnOn();
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -934,12 +930,12 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
          // connection
          [this](unsigned connid) {
             fWebConn.emplace_back(connid);
-            CheckDataToSend(connid, kFALSE);
+            CheckDataToSend(connid);
          },
          // data
          [this](unsigned connid, const std::string &arg) {
             ProcessData(connid, arg);
-            CheckDataToSend(connid, kTRUE);
+            CheckDataToSend();
          },
          // disconnect
          [this](unsigned connid) {
@@ -1433,10 +1429,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       } else {
          fWebConn[indx].fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
          if ((indx == 0) && !IsReadOnly())
-            if (DecodePadOptions(separ+1, false)) {
+            if (DecodePadOptions(separ+1, false))
                CheckCanvasModified();
-               CheckDataToSend(0, kFALSE);
-            }
       }
 
    } else if (arg == "RELOAD") {
@@ -1476,11 +1470,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
       if ((indx == 0) && !IsReadOnly())
-         if (DecodePadOptions(arg.substr(9), true)) {
-
+         if (DecodePadOptions(arg.substr(9), true))
             CheckCanvasModified();
-            CheckDataToSend(0, kFALSE);
-         }
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
@@ -1548,7 +1539,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       std::string buf = "MENU:";
       buf.append(TBufferJSON::ToJSON(&items, 103).Data());
 
-      AddToSendQueue(connid, buf);
+      AddSendQueue(connid, buf);
 
    } else if (arg.compare(0, 8, "PRIMIT6:") == 0) {
 
@@ -1673,7 +1664,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             std::string send = reply;
             send.append(":");
             send.append(TBufferJSON::ToJSON(resobj, 23).Data());
-            AddToSendQueue(connid, send);
+            AddSendQueue(connid, send);
             if (reply[0] == 'D')
                delete resobj; // delete object if first symbol in reply is D
          }
@@ -1687,7 +1678,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       if (pad) {
          pad->Clear();
          pad->Modified();
-         PerformUpdate();
+         CheckCanvasModified();
       } else {
          Error("ProcessData", "Not found pad with id %s to clear\n", snapid.c_str());
       }
@@ -1717,7 +1708,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             else
                pad->Divide(n1, n2);
             pad->cd(1);
-            PerformUpdate();
+            CheckCanvasModified();
          }
       }
 
@@ -1861,7 +1852,7 @@ Bool_t TWebCanvas::PerformUpdate()
 
    CheckCanvasModified();
 
-   CheckDataToSend(0, kFALSE);
+   CheckDataToSend();
 
    if (!fProcessingData && !IsAsyncMode())
       WaitWhenCanvasPainted(fCanvVersion);
@@ -1879,7 +1870,7 @@ void TWebCanvas::ForceUpdate()
 
    CheckCanvasModified(true);
 
-   CheckDataToSend(0, kFALSE);
+   CheckDataToSend();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

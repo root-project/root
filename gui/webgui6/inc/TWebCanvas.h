@@ -131,11 +131,11 @@ protected:
 
    void CheckCanvasModified(bool force_modified = false);
 
-   Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
+   void AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value);
 
-   void AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value, Bool_t send_immediately = kFALSE);
+   void AddSendQueue(unsigned connid, const std::string &msg);
 
-   void CheckDataToSend(unsigned connid, Bool_t only_ctrl);
+   void CheckDataToSend(unsigned connid = 0);
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
