@@ -1064,7 +1064,6 @@ void TWebCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
    fFixedSize = kTRUE;
    AddCtrlMsg(0, "cw"s, std::to_string(cw));
    AddCtrlMsg(0, "ch"s, std::to_string(ch));
-   AddCtrlMsg(0, "fixed_size"s, "true"s);
    if ((cw > 0) && (ch > 0)) {
       Canvas()->fCw = cw;
       Canvas()->fCh = ch;
@@ -1073,6 +1072,22 @@ void TWebCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
       Canvas()->fCw = Canvas()->fWindowWidth;
       Canvas()->fCh = Canvas()->fWindowHeight;
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Iconify browser window
+
+void TWebCanvas::Iconify()
+{
+   AddCtrlMsg(0, "winstate"s, "iconify"s);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Raise browser window
+
+void TWebCanvas::RaiseWindow()
+{
+   AddCtrlMsg(0, "winstate"s, "raise"s);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
