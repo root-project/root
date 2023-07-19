@@ -106,7 +106,7 @@ private:
    std::uint64_t fInMemorySize = 0;
 
    std::map<int, RColumnInfo> fColumnInfo;
-   std::map<int, RFieldTreeInfo> fFieldInfo;
+   std::map<int, RFieldTreeInfo> fFieldTreeInfo;
 
    RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
 
@@ -156,8 +156,8 @@ public:
 
    const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
 
-   const RFieldTreeInfo &GetFieldInfo(DescriptorId_t fieldId) const;
-   const RFieldTreeInfo &GetFieldInfo(std::string_view fieldName) const;
+   const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
+   const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
 
    /// Get the number of fields of a given type or class present in the RNTuple.
    /// TODO: Add regex support.
