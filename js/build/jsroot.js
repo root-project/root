@@ -67981,35 +67981,44 @@ class TCanvasPainter extends TPadPainter {
              hist = parse(msg.slice(7));
          this.websocketTimeout(`proj${kind}`, 'reset');
          this.drawProjection(kind, hist);
-      } else if (msg.slice(0,5) == 'SHOW:') {
-         let that = msg.slice(5),
-             on = (that[that.length-1] == '1');
-         this.showSection(that.slice(0,that.length-2), on);
       } else if (msg.slice(0,5) == 'CTRL:') {
-         let obj = parse(msg.slice(5)), resized = false;
-         if ((obj?.title !== undefined) && (typeof document !== 'undefined'))
-            document.title = obj.title;
-         if (obj.x && obj.y && typeof window !== 'undefined') {
-            window.moveTo(obj.x, obj.y);
+         let ctrl = parse(msg.slice(5)), resized = false;
+         if ((ctrl?.title !== undefined) && (typeof document !== 'undefined'))
+            document.title = ctrl.title;
+         if (ctrl.x && ctrl.y && typeof window !== 'undefined') {
+            window.moveTo(ctrl.x, ctrl.y);
             resized = true;
          }
-         if (obj.w && obj.h) {
-            this.resizeBrowser(Number.parseInt(obj.w), Number.parseInt(obj.h));
+         if (ctrl.w && ctrl.h) {
+            this.resizeBrowser(Number.parseInt(ctrl.w), Number.parseInt(ctrl.h));
             resized = true;
          }
-         if (obj.cw && obj.ch && obj.fixed_size && isFunc(this.setFixedCanvasSize)) {
-            this._online_fixed_size = this.setFixedCanvasSize(Number.parseInt(obj.cw), Number.parseInt(obj.ch), true);
+         if (ctrl.cw && ctrl.ch && isFunc(this.setFixedCanvasSize)) {
+            this._online_fixed_size = this.setFixedCanvasSize(Number.parseInt(ctrl.cw), Number.parseInt(ctrl.ch), true);
             resized = true;
+         }
+         let kinds = ['Menu', 'StatusBar', 'Editor', 'ToolBar', 'ToolTips'];
+         kinds.forEach(kind => {
+            if (ctrl[kind] !== undefined)
+               this.showSection(kind, ctrl[kind] == '1');
+         });
+
+         if (ctrl.edit) {
+            let obj_painter = this.findSnap(ctrl.edit);
+            if (obj_painter)
+               this.showSection('Editor', true)
+                   .then(() => this.producePadEvent('select', obj_painter.getPadPainter(), obj_painter));
+         }
+
+         if (ctrl.winstate && typeof window !== 'undefined') {
+            if (ctrl.winstate == 'iconify')
+               window.blur();
+            else
+               window.focus();
          }
 
          if (resized)
             this.sendResized(true);
-      } else if (msg.slice(0,5) == 'EDIT:') {
-         let obj_painter = this.findSnap(msg.slice(5));
-         if (obj_painter)
-            this.showSection('Editor', true)
-                .then(() => this.producePadEvent('select', obj_painter.getPadPainter(), obj_painter));
-
       } else {
          console.log(`unrecognized msg ${msg}`);
       }
@@ -68290,7 +68299,7 @@ class TCanvasPainter extends TPadPainter {
       }
 
       if (msg) {
-         console.log(`Sending ${msg.length} ${msg.slice(0,40)}`);
+         // console.log(`Sending ${msg.length} ${msg.slice(0,40)}`);
          this._websocket.send(msg);
       } else {
          console.log(`Unprocessed changes ${kind} for painter of ${painter?.getObject()?._typename} subelem ${subelem}`);
