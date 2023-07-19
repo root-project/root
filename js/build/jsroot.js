@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '11/07/2023';
+let version_date = '19/07/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1448,8 +1448,8 @@ function getMethods(typename, obj) {
    // Therefore when methods requested for given object, check also that basic methods are there
    if ((typename == clTObject) || (typename == clTNamed) || (obj?.fBits !== undefined))
       if (typeof m.TestBit === 'undefined') {
-         m.TestBit = function (f) { return (this.fBits & f) != 0; };
-         m.InvertBit = function (f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         m.TestBit = function(f) { return (this.fBits & f) != 0; };
+         m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
       }
 
    if (has_methods) return m;
@@ -8440,7 +8440,7 @@ class BasePainter {
          enlarge = select(document.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; right: 1px; top: 1px; bottom: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          let rect1 = getElementRect(main),
              rect2 = getElementRect(enlarge);
@@ -8519,11 +8519,14 @@ async function _loadJSDOM() {
 /** @summary Return translate string for transform attribute of some svg element
   * @return string or null if x and y are zeros
   * @private */
-function makeTranslate(x,y) {
-   if (y) return `translate(${x},${y})`;
-   if (x) return `translate(${x})`;
-   return null;
+function makeTranslate(g, x, y) {
+   if (!isObject(g)) {
+      y = x; x = g; g = null;
+   }
+   let res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   return g ? g.attr('transform', res) : res;
 }
+
 
 /** @summary Configure special style used for highlight or dragging elements
   * @private */
@@ -9069,7 +9072,7 @@ function parseLatex(node, arg, label, curr) {
       x = Math.round(x);
       y = Math.round(y);
 
-      pos.g.attr('transform', makeTranslate(x, y));
+      makeTranslate(pos.g, x, y);
       pos.rect.x1 += x;
       pos.rect.x2 += x;
       pos.rect.y1 += y;
@@ -9089,9 +9092,7 @@ function parseLatex(node, arg, label, curr) {
       if ((nelements == 1) && !label && !curr.x && !curr.y)
          return gg;
 
-      gg = gg.append('svg:g');
-
-      return gg.attr('transform', makeTranslate(curr.x, curr.y));
+      return makeTranslate(gg.append('svg:g'), curr.x, curr.y);
    };
 
    const extractSubLabel = (check_first, lbrace, rbrace) => {
@@ -9138,11 +9139,12 @@ function parseLatex(node, arg, label, curr) {
       return sublabel;
    };
 
-   const createPath = (gg, dofill) => {
+   const createPath = (gg, d, dofill) => {
       return gg.append('svg:path')
                .style('stroke', dofill ? 'none' : (curr.color || arg.color))
                .style('stroke-width', dofill ? null : Math.max(1, Math.round(curr.fsize*(curr.font.weight ? 0.1 : 0.07))))
-               .style('fill', dofill ? (curr.color || arg.color) : 'none');
+               .style('fill', dofill ? (curr.color || arg.color) : 'none')
+               .attr('d', d ?? null);
    };
 
    const createSubPos = fscale => {
@@ -9264,15 +9266,15 @@ function parseLatex(node, arg, label, curr) {
          positionGNode(subpos, xpos, 0, true);
 
          switch(found.name) {
-            case '#check{': createPath(gg).attr('d',`M${w2},${y1-dy}L${w5},${y1}L${w8},${y1-dy}`); break;
-            case '#acute{': createPath(gg).attr('d',`M${w5},${y1}l${dy},${-dy}`); break;
-            case '#grave{': createPath(gg).attr('d',`M${w5},${y1}l${-dy},${-dy}`); break;
-            case '#dot{': createPath(gg, true).attr('d',`M${w5-dy2},${y1}${dot}`); break;
-            case '#ddot{': createPath(gg, true).attr('d',`M${w5-3*dy2},${y1}${dot} M${w5+dy2},${y1}${dot}`); break;
-            case '#tilde{': createPath(gg).attr('d',`M${w2},${y1} a${w3},${dy},0,0,1,${w3},0 a${w3},${dy},0,0,0,${w3},0`); break;
-            case '#slash{': createPath(gg).attr('d',`M${w},${y1}L0,${Math.round(subpos.rect.y2)}`); break;
-            case '#vec{': createPath(gg).attr('d',`M${w2},${y1}H${w8}M${w8-dy},${y1-dy}l${dy},${dy}l${-dy},${dy}`); break;
-            default: createPath(gg).attr('d',`M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
+            case '#check{': createPath(gg, `M${w2},${y1-dy}L${w5},${y1}L${w8},${y1-dy}`); break;
+            case '#acute{': createPath(gg, `M${w5},${y1}l${dy},${-dy}`); break;
+            case '#grave{': createPath(gg, `M${w5},${y1}l${-dy},${-dy}`); break;
+            case '#dot{': createPath(gg, `M${w5-dy2},${y1}${dot}`, true); break;
+            case '#ddot{': createPath(gg, `M${w5-3*dy2},${y1}${dot} M${w5+dy2},${y1}${dot}`, true); break;
+            case '#tilde{': createPath(gg, `M${w2},${y1} a${w3},${dy},0,0,1,${w3},0 a${w3},${dy},0,0,0,${w3},0`); break;
+            case '#slash{': createPath(gg, `M${w},${y1}L0,${Math.round(subpos.rect.y2)}`); break;
+            case '#vec{': createPath(gg, `M${w2},${y1}H${w8}M${w8-dy},${y1-dy}l${dy},${dy}l${-dy},${dy}`); break;
+            default: createPath(gg, `M${w2},${y1}L${w5},${y1-dy}L${w8},${y1}`); // #hat{
          }
 
          shiftX(subpos.rect.width);
@@ -53868,7 +53870,7 @@ function createSVGRenderer(as_is, precision, doc) {
 
    rndr.originalRender = rndr.render;
 
-   rndr.render = function (scene, camera) {
+   rndr.render = function(scene, camera) {
       let originalDocument = globalThis.document;
       if (isNodeJs())
          globalThis.document = this.doc_wrapper;
@@ -54134,7 +54136,7 @@ let Handling3DDrawings = {
             if (elem.empty())
                elem = svg.insert('g', '.primitives_layer').attr('class', size.clname);
 
-            elem.attr('transform', makeTranslate(size.x, size.y));
+            makeTranslate(elem, size.x, size.y);
 
          } else {
 
@@ -59262,7 +59264,7 @@ class StandaloneMenu extends JSRootMenu {
           block = select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white'),
+                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
           element = select('body')
                       .append('div')
                       .attr('id', dlg_id)
@@ -60162,7 +60164,7 @@ class TAxisPainter extends ObjectPainter {
 
          if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
             new_x = set_x; new_y = set_y; curr_indx = besti;
-            title_g.attr('transform', makeTranslate(new_x, new_y));
+            makeTranslate(title_g, new_x, new_y);
          }
 
       }).on('end', evnt => {
@@ -60634,10 +60636,9 @@ class TAxisPainter extends ObjectPainter {
 
          if (title_g) {
             if (!this.titleOffset && this.vertical && labelsMaxWidth)
-              title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
-
-            title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
-                   .property('shift_x', title_shift_x)
+               title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
+            makeTranslate(title_g, title_shift_x, title_shift_y);
+            title_g.property('shift_x', title_shift_x)
                    .property('shift_y', title_shift_y);
          }
 
@@ -60781,7 +60782,7 @@ function addDragHandler(_painter, arg) {
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
       if (!arg.no_transform)
-         draw_g.attr('transform', makeTranslate(newx, newy));
+         makeTranslate(draw_g, newx, newy);
 
       setPainterTooltipEnabled(painter, true);
 
@@ -64285,7 +64286,7 @@ class TabsDisplay extends MDIDisplay {
       let draw_frame = main.append('div')
                            .attr('frame_title', title)
                            .attr('class', 'jsroot_tabs_draw')
-                           .attr('style', `overflow: hidden; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px`)
+                           .attr('style', `overflow: hidden; position: absolute; inset: 0px`)
                            .property('frame_id', frame_id);
 
       this.modifyTabsFrame(frame_id, 'activate');
@@ -64846,8 +64847,8 @@ class BrowserLayout {
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
       injectStyle(
-         `.jsroot_browser { pointer-events: none; position: absolute; left: 0; top: 0; bottom: 0; right:0; margin: 0; border: 0; overflow: hidden; }`+
-         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0; border: 0; }`+
+         `.jsroot_browser { pointer-events: none; position: absolute; inset: 0px; margin: 0px; border: 0px; overflow: hidden; }`+
+         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }`+
          `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }`+
          `.jsroot_browser_area input { ${input_style} }`+
          `.jsroot_browser_area select { ${input_style} }`+
@@ -65412,7 +65413,7 @@ let PadButtonsHandler = {
          btns_y = height - sz0;
       }
 
-      btns.attr('transform', makeTranslate(btns_x,btns_y));
+      makeTranslate(btns, btns_x, btns_y);
    },
 
    findPadButton(keyname) {
@@ -65910,9 +65911,9 @@ class TPadPainter extends ObjectPainter {
              posy = Math.round(rect.height * (1 - gStyle.fDateY));
          if (!is_batch && (posx < 25)) posx = 25;
          if (gStyle.fOptDate > 1) date.setTime(gStyle.fOptDate*1000);
-         dt.attr('transform', makeTranslate(posx, posy))
-           .style('text-anchor', 'start')
-           .text(date.toLocaleString('en-GB'));
+         makeTranslate(dt, posx, posy)
+            .style('text-anchor', 'start')
+            .text(date.toLocaleString('en-GB'));
       }
 
       if (!gStyle.fOptFile || !this.getItemName())
@@ -65932,12 +65933,10 @@ class TPadPainter extends ObjectPainter {
          df.remove();
       } else {
          if (df.empty()) df = info.append('text').attr('class', 'canvas_item');
-         let rect = this.getPadRect(),
-             posx = Math.round(rect.width * (1 - gStyle.fDateX)),
-             posy = Math.round(rect.height * (1 - gStyle.fDateY));
-         df.attr('transform', makeTranslate(posx, posy))
-           .style('text-anchor', 'end')
-           .text(item_name);
+         let rect = this.getPadRect();
+         makeTranslate(df, Math.round(rect.width * (1 - gStyle.fDateX)), Math.round(rect.height * (1 - gStyle.fDateY)))
+            .style('text-anchor', 'end')
+            .text(item_name);
       }
    }
 
@@ -66316,7 +66315,7 @@ class TPadPainter extends ObjectPainter {
          return this.syncDraw(true).then(() => this.drawPrimitives(0));
       }
 
-      if (indx >= this._num_primitives) {
+      if (!this.pad || (indx >= this._num_primitives)) {
          if (this._start_tm) {
             let spenttm = new Date().getTime() - this._start_tm;
             if (spenttm > 1000) console.log(`Canvas ${this.pad?.fName || '---'} drawing took ${(spenttm*1e-3).toFixed(2)}s`);
@@ -66584,26 +66583,6 @@ class TPadPainter extends ObjectPainter {
       if (this._ignore_resize)
          return false;
 
-      if (this._dbr) {
-         // special case of invoked intentially web browser resize to keep layout of canvas the same
-         clearTimeout(this._dbr.handle);
-
-         let rect = getElementRect(this.selectDom('origin'));
-
-         // chrome browser first changes width, then height, producing two different resize events
-         // therefore at least one dimension should match to wait for next resize
-         // if none of dimension matches - cancel direct browser resize
-         if ((rect.width == this._dbr.width) === (rect.height == this._dbr.height)) {
-            let func = this._dbr.func;
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            func(true);
-         } else {
-            this._dbr.setTimer(200); // check for next resize
-         }
-         return false;
-      }
-
       if (!this.iscan && this.has_canvas) return false;
 
       let sync_promise = this.syncDraw('canvas_resize');
@@ -66624,7 +66603,9 @@ class TPadPainter extends ObjectPainter {
              return getPromise(this.painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
           };
 
-      return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fCw, this.pad?.fCh)).then(() => {
+      // return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fCw, this.pad?.fCh)).then(() => {
+
+      return sync_promise.then(() => {
 
          changed = this.createCanvasSvg(force ? 2 : 1, size);
 
@@ -66633,14 +66614,8 @@ class TPadPainter extends ObjectPainter {
                clearTimeout(this._resize_tmout);
             this._resize_tmout = setTimeout(() => {
                delete this._resize_tmout;
-               if (!this.pad) return;
-               let cw = this.getPadWidth(), ch = this.getPadHeight();
-               if ((cw > 0) && (ch > 0) && ((this.pad.fCw != cw) || (this.pad.fCh != ch))) {
-                  this.pad.fCw = cw;
-                  this.pad.fCh = ch;
-                  console.log(`RESIZED:[${cw},${ch}]`);
-                  this.sendWebsocket(`RESIZED:[${cw},${ch}]`);
-               }
+               if (isFunc(this.sendResized))
+                  this.sendResized();
             }, 1000); // long enough delay to prevent multiple occurence
          }
 
@@ -66888,36 +66863,6 @@ class TPadPainter extends ObjectPainter {
       return null;
    }
 
-   /** @summary Ensure that browser window size match to requested canvas size
-     * @desc Actively used for the first canvas drawing or after intentional layout resize when browser should be adjusted
-     * @private */
-   ensureBrowserSize(canvW, canvH, condition) {
-      if (this.enforceCanvasSize)
-         condition = true;
-
-      if (!condition || this._dbr || !canvW || !canvH || !isFunc(this.resizeBrowser) || !this.online_canvas || this.isBatchMode() || !this.use_openui || this.embed_canvas)
-         return true;
-
-      return new Promise(resolveFunc => {
-         this._dbr = { func: resolveFunc, width: canvW, height: canvH, setTimer: tmout => {
-            this._dbr.handle = setTimeout(() => {
-               if (this._dbr) {
-                  delete this._dbr;
-                  delete this.enforceCanvasSize;
-                  resolveFunc(true);
-               }
-            }, tmout);
-         }};
-
-         if (!this.resizeBrowser(canvW, canvH)) {
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            resolveFunc(true);
-         } else if (this._dbr) {
-            this._dbr.setTimer(200); // set short timer
-         }
-      });
-   }
 
    /** @summary Redraw pad snap
      * @desc Online version of drawing pad primitives
@@ -67147,7 +67092,7 @@ class TPadPainter extends ObjectPainter {
       if (this.snapid) {
          elem = { _typename: 'TWebPadOptions', snapid: this.snapid.toString(),
                   active: !!this.is_active_pad,
-                  cw: 0, ch: 0,
+                  cw: 0, ch: 0, w: [],
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
                   gridx: this.pad.fGridx, gridy: this.pad.fGridy,
@@ -67161,6 +67106,7 @@ class TPadPainter extends ObjectPainter {
             elem.bits = this.getStatusBits();
             elem.cw = this.getPadWidth();
             elem.ch = this.getPadHeight();
+            elem.w = [ window.screenLeft, window.screenTop, window.outerWidth, window.outerHeight ];
          } else if (cp) {
             let cw = cp.getPadWidth(), ch = cp.getPadHeight(), rect = this.getPadRect();
             elem.cw = cw;
@@ -67996,7 +67942,12 @@ class TCanvasPainter extends TPadPainter {
              snap = parse(msg.slice(p1+1));
 
          this.syncDraw(true)
-             .then(() => this.ensureBrowserSize(snap.fSnapshot.fCw, snap.fSnapshot.fCh, !this.snapid))
+             .then(() => {
+                if (!this.snapid)
+                   this.resizeBrowser(snap.fSnapshot.fWindowWidth, snap.fSnapshot.fWindowHeight);
+                if (!this.snapid && isFunc(this.setFixedCanvasSize))
+                   this._online_fixed_size = this.setFixedCanvasSize(snap.fSnapshot.fCw, snap.fSnapshot.fCh, snap.fFixedSize);
+             })
              .then(() => this.redrawPadSnap(snap))
              .then(() => {
                 this.completeCanvasSnapDrawing();
@@ -68035,16 +67986,26 @@ class TCanvasPainter extends TPadPainter {
              on = (that[that.length-1] == '1');
          this.showSection(that.slice(0,that.length-2), on);
       } else if (msg.slice(0,5) == 'CTRL:') {
-         let obj = parse(msg.slice(5));
+         let obj = parse(msg.slice(5)), resized = false;
          if ((obj?.title !== undefined) && (typeof document !== 'undefined'))
             document.title = obj.title;
-         if (obj.x && obj.y && typeof window !== 'undefined')
+         if (obj.x && obj.y && typeof window !== 'undefined') {
             window.moveTo(obj.x, obj.y);
-         if (obj.w && obj.h && typeof window !== 'undefined')
-            window.resizeTo(obj.w, obj.h);
+            resized = true;
+         }
+         if (obj.w && obj.h) {
+            this.resizeBrowser(Number.parseInt(obj.w), Number.parseInt(obj.h));
+            resized = true;
+         }
+         if (obj.cw && obj.ch && obj.fixed_size && isFunc(this.setFixedCanvasSize)) {
+            this._online_fixed_size = this.setFixedCanvasSize(Number.parseInt(obj.cw), Number.parseInt(obj.ch), true);
+            resized = true;
+         }
+
+         if (resized)
+            this.sendResized(true);
       } else if (msg.slice(0,5) == 'EDIT:') {
          let obj_painter = this.findSnap(msg.slice(5));
-         console.log(`GET EDIT ${msg.slice(5)} found ${!!obj_painter}`);
          if (obj_painter)
             this.showSection('Editor', true)
                 .then(() => this.producePadEvent('select', obj_painter.getPadPainter(), obj_painter));
@@ -68052,6 +68013,26 @@ class TCanvasPainter extends TPadPainter {
       } else {
          console.log(`unrecognized msg ${msg}`);
       }
+   }
+
+   /** @summary Send RESIZED message to client to inform about changes in canvas/window geometry
+     * @private */
+   sendResized(force) {
+      if (!this.pad || (typeof window === 'undefined'))
+         return;
+      let cw = this.getPadWidth(), ch = this.getPadHeight(),
+          wx = window.screenLeft, wy = window.screenTop,
+          ww = window.outerWidth, wh = window.outerHeight,
+          fixed = this._online_fixed_size ? 1 : 0;
+      if (!force) {
+         force = (cw > 0) && (ch > 0) && ((this.pad.fCw != cw) || (this.pad.fCh != ch));
+         if (force) {
+            this.pad.fCw = cw;
+            this.pad.fCh = ch;
+         }
+      }
+      if (force)
+         this.sendWebsocket(`RESIZED:${JSON.stringify([wx,wy,ww,wh,cw,ch,fixed])}`);
    }
 
    /** @summary Handle pad button click event */
@@ -68386,24 +68367,12 @@ class TCanvasPainter extends TPadPainter {
       return res;
    }
 
-   /** @summary resize browser window to get requested canvas sizes */
-   resizeBrowser(canvW, canvH) {
-      if (!canvW || !canvH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
+   /** @summary resize browser window */
+   resizeBrowser(fullW, fullH) {
+      if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
 
-      let rect = getElementRect(this.selectDom('origin'));
-      if (!rect.width || !rect.height) return;
-
-      let fullW = window.innerWidth - rect.width + canvW,
-          fullH = window.innerHeight - rect.height + canvH;
-
-      if ((fullW > 0) && (fullH > 0) && ((rect.width != canvW) || (rect.height != canvH))) {
-         if (this._websocket)
-            this._websocket.resizeWindow(fullW, fullH);
-         else if (isFunc(window?.resizeTo))
-            window.resizeTo(fullW, fullH);
-         return true;
-      }
+      this._websocket?.resizeWindow(fullW, fullH);
    }
 
    /** @summary draw TCanvas */
@@ -68704,7 +68673,7 @@ class TPavePainter extends ObjectPainter {
          width = Math.round((pt.fX2NDC - pt.fX1NDC) * pad_rect.width);
          height = Math.round((pt.fY2NDC - pt.fY1NDC) * pad_rect.height);
 
-         this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
+         makeTranslate(this.draw_g, this._pave_x, this._pave_y);
 
          this.createAttLine({ attr: pt, width: (brd > 0) ? pt.fLineWidth : 0 });
 
@@ -68726,8 +68695,8 @@ class TPavePainter extends ObjectPainter {
                                       .call(this.fillatt.func)
                                       .call(this.lineatt.func);
 
-            let text_g = this.draw_g.append('svg:g')
-                                    .attr('transform', makeTranslate(Math.round(width/4), Math.round(height/4)));
+            let text_g = this.draw_g.append('svg:g');
+            makeTranslate(text_g, Math.round(width/4), Math.round(height/4));
 
             return this.drawPaveText(w2, h2, arg, text_g);
          } else {
@@ -69366,7 +69335,7 @@ class TPavePainter extends ObjectPainter {
 
                if (shift > 0) {
                   this._pave_x -= shift;
-                  this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
+                  makeTranslate(this.draw_g, this._pave_x, this._pave_y);
                   palette.fX1NDC -= shift/width;
                   palette.fX2NDC -= shift/width;
                }
@@ -69374,7 +69343,7 @@ class TPavePainter extends ObjectPainter {
                let shift = Math.round((1.05 - gStyle.fTitleY)*height) - rect.y;
                if (shift > 0) {
                   this._pave_y += shift;
-                  this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
+                  makeTranslate(this.draw_g, this._pave_x, this._pave_y);
                   palette.fY1NDC -= shift/height;
                   palette.fY2NDC -= shift/height;
                }
@@ -74629,7 +74598,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       this.createG();
 
-      this.draw_g.attr('transform', makeTranslate(Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2)));
+      makeTranslate(this.draw_g, Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2));
 
       let nbins = Math.min(this.nbinsx, this.nbinsy);
 
@@ -74765,7 +74734,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       this.createG();
 
-      this.draw_g.attr('transform', makeTranslate(Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2)));
+      makeTranslate(this.draw_g, Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2));
 
       const chord$1 = chord()
          .padAngle(10 / innerRadius)
@@ -75270,6 +75239,161 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    }
 
 }; // class TH2Painter
+
+function createTextGeometry(painter, lbl, size) {
+   if (isPlainText(lbl))
+      return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
+
+   let font_size = size * 100, geoms = [], stroke_width = 5;
+
+   class TextParseWrapper {
+
+      constructor(kind, parent) {
+         this.kind = kind ?? 'g';
+         this.childs = [];
+         this.x = 0;
+         this.y = 0;
+         this.font_size = parent?.font_size ?? font_size;
+         parent?.childs.push(this);
+      }
+
+      append(kind) {
+         if (kind == 'svg:g')
+            return new TextParseWrapper('g', this);
+         if (kind == 'svg:text')
+            return new TextParseWrapper('text', this);
+         if (kind == 'svg:path')
+            return new TextParseWrapper('path', this);
+         console.log('should create', kind);
+      }
+
+      style(name, value) {
+         // console.log(`style ${name} = ${value}`);
+         if ((name == 'stroke-width') && value)
+            stroke_width = Number.parseInt(value);
+         return this;
+      }
+
+      translate() {
+         if (this.geom) {
+            // special workaround for path elements, while 3d font is exact height, keep some space on the top
+            // let dy = this.kind == 'path' ? this.font_size*0.002 : 0;
+            this.geom.translate(this.x, this.y, 0);
+         }
+         this.childs.forEach(chld => {
+            chld.x += this.x;
+            chld.y += this.y;
+            chld.translate();
+         });
+      }
+
+      attr(name, value) {
+         // console.log(`attr ${name} = ${value}`);
+
+         const get = () => {
+                  if (!value) return '';
+                  let res = value[0];
+                  value = value.slice(1);
+                  return res;
+               }, getN = (skip) => {
+                  let p = 0;
+                  while (((value[p] >= '0') && (value[p] <= '9')) || (value[p] == '-')) p++;
+                  let res = Number.parseInt(value.slice(0, p));
+                  value = value.slice(p);
+                  if (skip) get();
+                  return res;
+               };
+
+         if ((name == 'font-size') && value) {
+            this.font_size = Number.parseInt(value);
+         } else if ((name == 'transform') && isStr(value) && (value.indexOf('translate') == 0)) {
+            let arr = value.slice(value.indexOf('(')+1, value.lastIndexOf(')')).split(',');
+            this.x += arr[0] ? Number.parseInt(arr[0])*0.01 : 0;
+            this.y -= arr[1] ? Number.parseInt(arr[1])*0.01 : 0;
+         } else if ((name == 'x') && (this.kind == 'text')) {
+            this.x += Number.parseInt(value)*0.01;
+         } else if ((name == 'y') && (this.kind == 'text')) {
+            this.y -= Number.parseInt(value)*0.01;
+         } else if ((name == 'd') && (this.kind == 'path')) {
+            if (get() != 'M') return console.error('Not starts with M');
+            let x1 = getN(true), y1 = getN(), next, pnts = [];
+
+            while (next = get()) {
+               let x2 = x1, y2 = y1;
+               switch(next) {
+                   case 'L': x2 = getN(true); y2 = getN(); break;
+                   case 'l': x2 += getN(true); y2 += getN(); break;
+                   case 'H': x2 = getN(); break;
+                   case 'h': x2 += getN(); break;
+                   case 'V': y2 = getN(); break;
+                   case 'v': y2 += getN(); break;
+                   default: console.log('not supported operator', next);
+               }
+
+               let angle = Math.atan2(y2-y1, x2-x1),
+                   dx = 0.5 * stroke_width * Math.sin(angle),
+                   dy = -0.5 * stroke_width * Math.cos(angle);
+
+               pnts.push(x1-dx, y1-dy, 0, x2-dx, y2-dy, 0, x2+dx, y2+dy, 0, x1-dx, y1-dy, 0, x2+dx, y2+dy, 0, x1+dx, y1+dy, 0);
+
+               x1 = x2; y1 = y2;
+            }
+
+            let pos = new Float32Array(pnts);
+
+            this.geom = new BufferGeometry();
+            this.geom.setAttribute('position', new BufferAttribute(pos, 3));
+            this.geom.scale(0.01, -0.01, 0.01);
+            this.geom.computeVertexNormals();
+
+            geoms.push(this.geom);
+         }
+         return this;
+      }
+
+      text(v) {
+         if (this.kind == 'text') {
+            this.geom = new TextGeometry(v, { font: HelveticerRegularFont, size: Math.round(0.01*this.font_size), height: 0, curveSegments: 5 });
+            geoms.push(this.geom);
+         }      }
+
+   }
+   let node = new TextParseWrapper,
+       arg = { font_size, latex: 1, x: 0, y: 0, text: lbl, align: [ 'start', 'top'], fast: true, font: { size: font_size, isMonospace: () => false, aver_width: 0.9 } };
+
+   produceLatex(painter, node, arg);
+
+   if (!geoms)
+      return new TextGeometry(translateLaTeX(lbl), { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
+
+   node.translate(); // apply translate attributes
+
+   if (geoms.length == 1)
+      return geoms[0];
+
+   let total_size = 0;
+   geoms.forEach(geom => {
+      total_size += geom.getAttribute('position').array.length;
+   });
+
+   let pos = new Float32Array(total_size),
+       norm = new Float32Array(total_size),
+       indx = 0;
+
+   geoms.forEach(geom => {
+      let p1 = geom.getAttribute('position').array,
+          n1 = geom.getAttribute('normal').array;
+      for (let i = 0; i < p1.length; ++i, ++indx) {
+         pos[indx] = p1[i];
+         norm[indx] = n1[i];
+      }
+   });
+
+   let fullgeom = new BufferGeometry();
+   fullgeom.setAttribute('position', new BufferAttribute(pos, 3));
+   fullgeom.setAttribute('normal', new BufferAttribute(norm, 3));
+   return fullgeom;
+}
 
 /** @summary Text 3d axis visibility
   * @private */
@@ -75936,7 +76060,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let mod = xticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: this.x_handle.labelsFont.size, height: 0, curveSegments: 5 });
+         let text3d = createTextGeometry(this, lbl, this.x_handle.labelsFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -75967,7 +76091,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    if (this.x_handle.fTitle && opts.draw) {
-      const text3d = new TextGeometry(translateLaTeX(this.x_handle.fTitle), { font: HelveticerRegularFont, size: this.x_handle.titleFont.size, height: 0, curveSegments: 5 });
+      const text3d = createTextGeometry(this, this.x_handle.fTitle, this.x_handle.titleFont.size);
       text3d.computeBoundingBox();
       text3d.center = this.x_handle.titleCenter;
       text3d.opposite = this.x_handle.titleOpposite;
@@ -76111,7 +76235,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(mesh);
    });
 
-   if (opts.zoom && opts.anydraw)
+   if (opts.zoom && opts.drawany)
       xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
@@ -76159,7 +76283,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let mod = yticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         const text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: this.y_handle.labelsFont.size, height: 0, curveSegments: 5 });
+         const text3d = createTextGeometry(this, lbl, this.y_handle.labelsFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -76187,7 +76311,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 
    if (this.y_handle.fTitle && opts.draw) {
-      const text3d = new TextGeometry(translateLaTeX(this.y_handle.fTitle), { font: HelveticerRegularFont, size: this.y_handle.titleFont.size, height: 0, curveSegments: 5 });
+      const text3d = createTextGeometry(this, this.y_handle.fTitle, this.y_handle.titleFont.size);
       text3d.computeBoundingBox();
       text3d.center = this.y_handle.titleCenter;
       text3d.opposite = this.y_handle.titleOpposite;
@@ -76247,7 +76371,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          ycont.add(mesh);
       });
       ycont.xyid = 1;
-      if (opts.zoom && opts.anydraw)
+      if (opts.zoom && opts.drawany)
          ycont.add(createZoomMesh('y', this.size_y3d));
       top.add(ycont);
    }
@@ -76271,7 +76395,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let mod = zticks.get_modifier();
          if (mod?.fLabText) lbl = mod.fLabText;
 
-         let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: this.z_handle.labelsFont.size, height: 0, curveSegments: 5 });
+         let text3d = createTextGeometry(this, lbl, this.z_handle.labelsFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -76357,7 +76481,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       });
 
       if (this.z_handle.fTitle && opts.draw) {
-         let text3d = new TextGeometry(translateLaTeX(this.z_handle.fTitle), { font: HelveticerRegularFont, size: this.z_handle.titleFont.size, height: 0, curveSegments: 5 });
+         let text3d = createTextGeometry(this, this.z_handle.fTitle, this.z_handle.titleFont.size);
          text3d.computeBoundingBox();
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              posz = this.z_handle.titleCenter ? (grmaxz + grminz - draw_width)/2 : (this.z_handle.titleOpposite ? grminz : grmaxz - draw_width);
@@ -77461,10 +77585,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    }
 
    /** @summary Draw histogram as bars */
-   drawBars(height, pmain, funcs) {
-
-      this.createG(true);
-
+   async drawBars(funcs, height) {
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 1),
           histo = this.getHisto(), xaxis = histo.fXaxis,
@@ -77474,7 +77595,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
           side = (this.options.BarStyle > 10) ? this.options.BarStyle % 10 : 0;
 
       if (side > 4) side = 4;
-      gry2 = pmain.swap_xy ? 0 : height;
+      gry2 = funcs.swap_xy ? 0 : height;
       if (Number.isFinite(this.options.BaseLine))
          if (this.options.BaseLine >= funcs.scale_ymin)
             gry2 = Math.round(funcs.gry(this.options.BaseLine));
@@ -77494,7 +77615,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          x1 = xaxis.GetBinLowEdge(i+1);
          x2 = xaxis.GetBinLowEdge(i+2);
 
-         if (pmain.logx && (x2 <= 0)) continue;
+         if (funcs.logx && (x2 <= 0)) continue;
 
          grx1 = Math.round(funcs.grx(x1));
          grx2 = Math.round(funcs.grx(x2));
@@ -77507,7 +77628,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          grx1 += Math.round(histo.fBarOffset/1000*w);
          w = Math.round(histo.fBarWidth/1000*w);
 
-         if (pmain.swap_xy)
+         if (funcs.swap_xy)
             bars += `M${gry2},${grx1}h${gry1-gry2}v${w}h${gry2-gry1}z`;
          else
             bars += `M${grx1},${gry1}h${w}v${gry2-gry1}h${-w}z`;
@@ -77515,7 +77636,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          if (side > 0) {
             grx2 = grx1 + w;
             w = Math.round(w * side / 10);
-            if (pmain.swap_xy) {
+            if (funcs.swap_xy) {
                barsl += `M${gry2},${grx1}h${gry1-gry2}v${w}h${gry2-gry1}z`;
                barsr += `M${gry2},${grx2}h${gry1-gry2}v${-w}h${gry2-gry1}z`;
             } else {
@@ -77527,7 +77648,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          if (show_text && y) {
             let text = (y === Math.round(y)) ? y.toString() : floatToString(y, gStyle.fPaintTextFormat);
 
-            if (pmain.swap_xy)
+            if (funcs.swap_xy)
                this.drawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text, color: text_col, latex: 0 });
             else if (text_angle)
                this.drawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text, color: text_col, latex: 0 });
@@ -77559,8 +77680,6 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
    /** @summary Draw histogram as filled errors */
    drawFilledErrors(funcs) {
-      this.createG(true);
-
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 1),
           histo = this.getHisto(), xaxis = histo.fXaxis,
@@ -77587,25 +77706,9 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                  .call(this.fillatt.func);
    }
 
-   /** @summary Draw TH1 bins in SVG element
+   /** @summary Draw TH1 as hist/line/curve
      * @return Promise or scalar value */
-   draw1DBins() {
-
-      this.createHistDrawAttributes();
-
-      let pmain = this.getFramePainter(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          width = pmain.getFrameWidth(), height = pmain.getFrameHeight();
-
-      if (!this.draw_content || (width <= 0) || (height <= 0))
-          return this.removeG();
-
-      if (this.options.Bar)
-         return this.drawBars(height, pmain, funcs);
-
-      if ((this.options.ErrorKind === 3) || (this.options.ErrorKind === 4))
-         return this.drawFilledErrors(pmain, funcs);
-
+   drawNormal(funcs, width, height) {
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 2),
           histo = this.getHisto(),
@@ -77665,8 +77768,6 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       if (!draw_hist && !draw_any_but_hist)
          return this.removeG();
-
-      this.createG(true);
 
       if (show_text) {
          text_col = this.getColor(histo.fMarkerColor);
@@ -77942,6 +78043,32 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       if (show_text)
          return this.finishTextDrawing();
+   }
+
+   /** @summary Draw TH1 bins in SVG element
+     * @return Promise or scalar value */
+   draw1DBins() {
+      this.createHistDrawAttributes();
+
+      let pmain = this.getFramePainter(),
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+          width = pmain.getFrameWidth(), height = pmain.getFrameHeight();
+
+      if (!this.draw_content || (width <= 0) || (height <= 0))
+          return this.removeG();
+
+      this.createG(true);
+
+      if (this.options.Bar)
+         return this.drawBars(funcs, height).then(() => {
+            if (this.options.ErrorKind === 1)
+               return this.drawNormal(funcs, width, height);
+         });
+
+      if ((this.options.ErrorKind === 3) || (this.options.ErrorKind === 4))
+         return this.drawFilledErrors(funcs);
+
+      return this.drawNormal(funcs, width, height);
    }
 
    /** @summary Provide text information (tooltips) for histogram bin */
@@ -104099,7 +104226,7 @@ async function drawText$1() {
          this.moveDrag = function(dx, dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
-            this.draw_g.attr('transform', makeTranslate(this.pos_dx, this.pos_dy));
+            makeTranslate(this.draw_g, this.pos_dx, this.pos_dy);
         };
 
       if (!this.moveEnd)
@@ -104119,7 +104246,7 @@ async function drawText$1() {
             let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
                 new_x = this.axisToSvg('x', pos.x, true),
                 new_y = this.axisToSvg('y', pos.y, true);
-            this.draw_g.attr('transform', makeTranslate(new_x - this.pos_x, new_y - this.pos_y));
+            makeTranslate(this.draw_g, new_x - this.pos_x, new_y - this.pos_y);
          };
       }
 
@@ -104164,14 +104291,13 @@ function drawPolyLine() {
 
    addMoveHandler(this);
 
-   this.dx = 0;
-   this.dy = 0;
+   this.dx = this.dy = 0;
    this.isndc = isndc;
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.dx += dx;
       this.dy += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
    };
 
    this.moveEnd = function(not_changed) {
@@ -104275,9 +104401,7 @@ function drawEllipse() {
    this.x = x;
    this.y = y;
 
-   this.draw_g
-      .append('svg:path')
-      .attr('transform', makeTranslate(x, y))
+   makeTranslate(this.draw_g.append('svg:path'), x, y)
       .attr('d', path)
       .call(this.lineatt.func)
       .call(this.fillatt.func);
@@ -104286,13 +104410,13 @@ function drawEllipse() {
 
    addMoveHandler(this);
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.x += dx;
       this.y += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.x, this.y));
+      makeTranslate(this.draw_g.select('path'), this.x, this.y);
    };
 
-   this.moveEnd = function (not_changed) {
+   this.moveEnd = function(not_changed) {
       if (not_changed) return;
       let ellipse = this.getObject();
       ellipse.fX1 = this.svgToAxis('x', this.x);
@@ -104314,7 +104438,7 @@ function drawPie() {
        rx = this.axisToSvg('x', pie.fX + pie.fRadius) - xc,
        ry = this.axisToSvg('y', pie.fY + pie.fRadius) - yc;
 
-   this.draw_g.attr('transform', makeTranslate(xc, yc));
+   makeTranslate(this.draw_g, xc, yc);
 
    // Draw the slices
    let nb = pie.fPieSlices.length, total = 0,
@@ -104404,7 +104528,7 @@ function drawBox$1() {
 
    addMoveHandler(this);
 
-   this.moveStart = function (x,y) {
+   this.moveStart = function(x,y) {
       let ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
 
       this.c_x1 = Math.abs(x - this.x2) > ww*0.1;
@@ -104417,7 +104541,7 @@ function drawBox$1() {
          this.c_x1 = this.c_x2 = false;
    };
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       if (this.c_x1) this.x1 += dx;
       if (this.c_x2) this.x2 += dx;
       if (this.c_y1) this.y1 += dy;
@@ -104429,7 +104553,7 @@ function drawBox$1() {
       pathes.forEach((path, i) => select(nodes[i]).attr('d', path));
    };
 
-   this.moveEnd = function (not_changed) {
+   this.moveEnd = function(not_changed) {
       if (not_changed) return;
       let box = this.getObject(), exec = '';
       if (this.c_x1) { box.fX1 = this.svgToAxis('x', this.x1); exec += `SetX1(${box.fX1});;`; }
@@ -104466,13 +104590,12 @@ function drawMarker$1() {
 
    addMoveHandler(this);
 
-   this.dx = 0;
-   this.dy = 0;
+   this.dx = this.dy = 0;
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.dx += dx;
       this.dy += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
    };
 
    this.moveEnd = function(not_changed) {
@@ -104509,13 +104632,12 @@ function drawPolyMarker() {
 
    addMoveHandler(this);
 
-   this.dx = 0;
-   this.dy = 0;
+   this.dx = this.dy = 0;
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.dx += dx;
       this.dy += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
    };
 
    this.moveEnd = function(not_changed) {
@@ -104548,7 +104670,7 @@ function drawJSImage(dom, obj, opt) {
       img.style('width','100%').style('height','100%');
    } else if (opt && opt.indexOf('center') >= 0) {
       main.style('position', 'relative');
-      img.attr('style', 'margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);');
+      img.attr('style', 'margin: 0; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);');
    }
 
    painter.setTopPainter();
@@ -105853,7 +105975,7 @@ class TGraphPolargramPainter extends ObjectPainter {
 
       this.createG();
 
-      this.draw_g.attr('transform', makeTranslate(Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2)));
+      makeTranslate(this.draw_g, Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2));
       this.szx = rect.szx;
       this.szy = rect.szy;
 
@@ -106880,7 +107002,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                        .enter()
                        .append('svg:g')
                        .attr('class', 'grpoint')
-                       .attr('transform', d => makeTranslate(d.grx1,d.gry1));
+                       .attr('transform', d => makeTranslate(d.grx1, d.gry1));
       }
 
       if (options.Bar) {
@@ -107503,7 +107625,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       this.pos_dy += dy;
 
       if (this.move_binindx === undefined) {
-         this.draw_g.attr('transform', makeTranslate(this.pos_dx,this.pos_dy));
+         makeTranslate(this.draw_g, this.pos_dx, this.pos_dy);
       } else if (this.move_funcs && this.move_bin) {
          this.move_bin.x = this.move_funcs.revertAxis('x', this.move_x0 + this.pos_dx);
          this.move_bin.y = this.move_funcs.revertAxis('y', this.move_y0 + this.pos_dy);
@@ -110085,7 +110207,7 @@ class TGaxisPainter extends TAxisPainter {
    moveDrag(dx, dy) {
       this.gaxis_x += dx;
       this.gaxis_y += dy;
-      this.getG().attr('transform', makeTranslate(this.gaxis_x, this.gaxis_y));
+      makeTranslate(this.getG(), this.gaxis_x, this.gaxis_y);
    }
 
    /** @summary Drag end handle */
@@ -111996,7 +112118,7 @@ class RAxisPainter extends RObjectPainter {
                }
 
                new_x = set_x; new_y = set_y; curr_indx = besti;
-               title_g.attr('transform', makeTranslate(new_x, new_y));
+               makeTranslate(title_g, new_x, new_y);
 
           }).on('end', evnt => {
                if (!drag_rect) return;
@@ -112226,7 +112348,7 @@ class RAxisPainter extends RObjectPainter {
       return this.finishTextDrawing(label_g).then(() => {
 
         if (lbls_tilt)
-           label_g.selectAll('text').each(function () {
+           label_g.selectAll('text').each(function() {
                let txt = select(this), tr = txt.attr('transform');
                txt.attr('transform', tr + ' rotate(25)').style('text-anchor', 'start');
            });
@@ -112290,10 +112412,10 @@ class RAxisPainter extends RObjectPainter {
                          text: this.fTitle, draw_g: title_g });
       }
 
-      title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
-             .property('basepos', title_basepos)
-             .property('shift_x', title_shift_x)
-             .property('shift_y', title_shift_y);
+      makeTranslate(title_g, title_shift_x, title_shift_y)
+                   .property('basepos', title_basepos)
+                   .property('shift_x', title_shift_x)
+                   .property('shift_y', title_shift_y);
 
       this.addTitleDrag(title_g, side);
 
@@ -114558,26 +114680,6 @@ class RPadPainter extends RObjectPainter {
       if (this._ignore_resize)
          return false;
 
-      if (this._dbr) {
-         // special case of invoked intentially web browser resize to keep layout of canvas the same
-         clearTimeout(this._dbr.handle);
-
-         let rect = getElementRect(this.selectDom('origin'));
-
-         // chrome browser first changes width, then height, producing two different resize events
-         // therefore at least one dimension should match to wait for next resize
-         // if none of dimension matches - cancel direct browser resize
-         if ((rect.width == this._dbr.width) === (rect.height == this._dbr.height)) {
-            let func = this._dbr.func;
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            func(true);
-         } else {
-            this._dbr.setTimer(200); // check for next resize
-         }
-         return false;
-      }
-
       if (!this.iscan && this.has_canvas) return false;
 
       let sync_promise = this.syncDraw('canvas_resize');
@@ -114599,7 +114701,7 @@ class RPadPainter extends RObjectPainter {
           };
 
 
-      return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fWinSize[0], this.pad?.fWinSize[1])).then(() => {
+      return sync_promise.then(() => {
          changed = this.createCanvasSvg(force ? 2 : 1, size);
 
          if (changed && this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.isBatchMode()) {
@@ -114866,39 +114968,6 @@ class RPadPainter extends RObjectPainter {
       }
 
       return null;
-   }
-
-   /** @summary Ensure that browser window size match to requested canvas size
-     * @desc Actively used for the first canvas drawing or after intentional layout resize when browser should be adjusted
-     * @private */
-   ensureBrowserSize(canvW, canvH, condition) {
-      if (this.enforceCanvasSize)
-         condition = true;
-
-      if (!condition || this._dbr || !canvW || !canvH || !isFunc(this.resizeBrowser) || !this.online_canvas || this.isBatchMode() || !this.use_openui || this.embed_canvas)
-         return true;
-
-      return new Promise(resolveFunc => {
-         this._dbr = {
-            func: resolveFunc, width: canvW, height: canvH, setTimer: tmout => {
-               this._dbr.handle = setTimeout(() => {
-                  if (this._dbr) {
-                     delete this._dbr;
-                     delete this.enforceCanvasSize;
-                     resolveFunc(true);
-                  }
-               }, tmout);
-            }
-         };
-
-         if (!this.resizeBrowser(canvW, canvH)) {
-            delete this._dbr;
-            delete this.enforceCanvasSize;
-            resolveFunc(true);
-         } else if (this._dbr) {
-            this._dbr.setTimer(200); // set short timer
-         }
-      });
    }
 
    /** @summary Redraw pad snap
@@ -115855,7 +115924,7 @@ class WebWindowHandle {
    resizeWindow(w, h) {
       if (browser$1.qt5 || browser$1.cef3)
          this.send(`RESIZE=${w},${h}`, 0);
-      else if (isFunc(window?.resizeTo))
+      else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
          window.resizeTo(w, h);
    }
 
@@ -116351,8 +116420,10 @@ class RCanvasPainter extends RPadPainter {
              snapid = msg.slice(0,p1),
              snap = parse(msg.slice(p1+1));
          this.syncDraw(true)
-             .then(() => this.ensureBrowserSize(snap.fWinSize[0], snap.fWinSize[1], !this.snapid && snap?.fWinSize))
-             .then(() => this.redrawPadSnap(snap))
+             .then(() => {
+                if (!this.snapid && snap?.fWinSize)
+                   this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
+             }).then(() => this.redrawPadSnap(snap))
              .then(() => {
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
@@ -116725,23 +116796,10 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary resize browser window to get requested canvas sizes */
-   resizeBrowser(canvW, canvH) {
-      if (!canvW || !canvH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
+   resizeBrowser(fullW, fullH) {
+      if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
-
-      let rect = getElementRect(this.selectDom('origin'));
-      if (!rect.width || !rect.height) return;
-
-      let fullW = window.innerWidth - rect.width + canvW,
-          fullH = window.innerHeight - rect.height + canvH;
-
-      if ((fullW > 0) && (fullH > 0) && ((rect.width != canvW) || (rect.height != canvH))) {
-         if (this._websocket)
-            this._websocket.resizeWindow(fullW, fullH);
-         else if (isFunc(window?.resizeTo))
-            window.resizeTo(fullW, fullH);
-         return true;
-      }
+      this._websocket?.resizeWindow(fullW, fullH);
    }
 
    /** @summary draw RCanvas object */
@@ -116832,7 +116890,7 @@ function drawRFrameTitle(reason, drag) {
 
    this.createG();
 
-   this.draw_g.attr('transform', makeTranslate(fx, Math.round(fy-title_margin-title_height)));
+   makeTranslate(this.draw_g, fx, Math.round(fy-title_margin-title_height));
 
    let arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
 
@@ -117212,7 +117270,7 @@ class RPalettePainter extends RObjectPainter {
           }
 
           // x,y,width,height attributes used for drag functionality
-          this.draw_g.attr('transform', makeTranslate(palette_x, palette_y));
+          makeTranslate(this.draw_g, palette_x, palette_y);
       }
 
       let g_btns = this.draw_g.selectChild('.colbtns');
@@ -117463,7 +117521,7 @@ class RPavePainter extends RObjectPainter {
             pave_y = fr.y + offsety;
       }
 
-      this.draw_g.attr('transform', makeTranslate(pave_x,pave_y));
+      makeTranslate(this.draw_g, pave_x, pave_y);
 
       this.draw_g.append('svg:rect')
                  .attr('x', 0)

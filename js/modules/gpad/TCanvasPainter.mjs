@@ -2,7 +2,6 @@ import { BIT, settings, create, parse, toJSON, loadScript, isFunc, isStr, clTCan
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-import { getElementRect } from '../base/BasePainter.mjs';
 import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
 import { TPadPainter, clTButton } from './TPadPainter.mjs';
@@ -354,7 +353,12 @@ class TCanvasPainter extends TPadPainter {
              snap = parse(msg.slice(p1+1));
 
          this.syncDraw(true)
-             .then(() => this.ensureBrowserSize(snap.fSnapshot.fCw, snap.fSnapshot.fCh, !this.snapid))
+             .then(() => {
+                if (!this.snapid)
+                   this.resizeBrowser(snap.fSnapshot.fWindowWidth, snap.fSnapshot.fWindowHeight);
+                if (!this.snapid && isFunc(this.setFixedCanvasSize))
+                   this._online_fixed_size = this.setFixedCanvasSize(snap.fSnapshot.fCw, snap.fSnapshot.fCh, snap.fFixedSize);
+             })
              .then(() => this.redrawPadSnap(snap))
              .then(() => {
                 this.completeCanvasSnapDrawing();
@@ -393,16 +397,26 @@ class TCanvasPainter extends TPadPainter {
              on = (that[that.length-1] == '1');
          this.showSection(that.slice(0,that.length-2), on);
       } else if (msg.slice(0,5) == 'CTRL:') {
-         let obj = parse(msg.slice(5));
+         let obj = parse(msg.slice(5)), resized = false;
          if ((obj?.title !== undefined) && (typeof document !== 'undefined'))
             document.title = obj.title;
-         if (obj.x && obj.y && typeof window !== 'undefined')
+         if (obj.x && obj.y && typeof window !== 'undefined') {
             window.moveTo(obj.x, obj.y);
-         if (obj.w && obj.h && typeof window !== 'undefined')
-            window.resizeTo(obj.w, obj.h);
+            resized = true;
+         }
+         if (obj.w && obj.h) {
+            this.resizeBrowser(Number.parseInt(obj.w), Number.parseInt(obj.h));
+            resized = true;
+         }
+         if (obj.cw && obj.ch && obj.fixed_size && isFunc(this.setFixedCanvasSize)) {
+            this._online_fixed_size = this.setFixedCanvasSize(Number.parseInt(obj.cw), Number.parseInt(obj.ch), true);
+            resized = true;
+         }
+
+         if (resized)
+            this.sendResized(true);
       } else if (msg.slice(0,5) == 'EDIT:') {
          let obj_painter = this.findSnap(msg.slice(5));
-         console.log(`GET EDIT ${msg.slice(5)} found ${!!obj_painter}`);
          if (obj_painter)
             this.showSection('Editor', true)
                 .then(() => this.producePadEvent('select', obj_painter.getPadPainter(), obj_painter));
@@ -410,6 +424,26 @@ class TCanvasPainter extends TPadPainter {
       } else {
          console.log(`unrecognized msg ${msg}`);
       }
+   }
+
+   /** @summary Send RESIZED message to client to inform about changes in canvas/window geometry
+     * @private */
+   sendResized(force) {
+      if (!this.pad || (typeof window === 'undefined'))
+         return;
+      let cw = this.getPadWidth(), ch = this.getPadHeight(),
+          wx = window.screenLeft, wy = window.screenTop,
+          ww = window.outerWidth, wh = window.outerHeight,
+          fixed = this._online_fixed_size ? 1 : 0;
+      if (!force) {
+         force = (cw > 0) && (ch > 0) && ((this.pad.fCw != cw) || (this.pad.fCh != ch));
+         if (force) {
+            this.pad.fCw = cw;
+            this.pad.fCh = ch;
+         }
+      }
+      if (force)
+         this.sendWebsocket(`RESIZED:${JSON.stringify([wx,wy,ww,wh,cw,ch,fixed])}`);
    }
 
    /** @summary Handle pad button click event */
@@ -744,24 +778,12 @@ class TCanvasPainter extends TPadPainter {
       return res;
    }
 
-   /** @summary resize browser window to get requested canvas sizes */
-   resizeBrowser(canvW, canvH) {
-      if (!canvW || !canvH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
+   /** @summary resize browser window */
+   resizeBrowser(fullW, fullH) {
+      if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
 
-      let rect = getElementRect(this.selectDom('origin'));
-      if (!rect.width || !rect.height) return;
-
-      let fullW = window.innerWidth - rect.width + canvW,
-          fullH = window.innerHeight - rect.height + canvH;
-
-      if ((fullW > 0) && (fullH > 0) && ((rect.width != canvW) || (rect.height != canvH))) {
-         if (this._websocket)
-            this._websocket.resizeWindow(fullW, fullH);
-         else if (isFunc(window?.resizeTo))
-            window.resizeTo(fullW, fullH);
-         return true;
-      }
+      this._websocket?.resizeWindow(fullW, fullH);
    }
 
    /** @summary draw TCanvas */

@@ -1,5 +1,5 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs, isFunc, isStr, btoa_func } from '../core.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func } from '../core.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -614,7 +614,7 @@ class BasePainter {
          enlarge = d3_select(document.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; right: 1px; top: 1px; bottom: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          let rect1 = getElementRect(main),
              rect2 = getElementRect(enlarge);
@@ -693,11 +693,14 @@ async function _loadJSDOM() {
 /** @summary Return translate string for transform attribute of some svg element
   * @return string or null if x and y are zeros
   * @private */
-function makeTranslate(x,y) {
-   if (y) return `translate(${x},${y})`;
-   if (x) return `translate(${x})`;
-   return null;
+function makeTranslate(g, x, y) {
+   if (!isObject(g)) {
+      y = x; x = g; g = null;
+   }
+   let res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   return g ? g.attr('transform', res) : res;
 }
+
 
 /** @summary Configure special style used for highlight or dragging elements
   * @private */

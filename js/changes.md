@@ -5,7 +5,7 @@
 1. Correctly implement TH2 projections like MERCATOR or PARABOLIC
 2. Use https://github.com/georgealways/lil-gui/ instead of dat.GUI
 3. Let configure material and scene properties in geom control gui
-4. Upgrade three.js r151 -> r153
+4. Upgrade three.js r151 -> r153, replace dat.gui by lil.gui
 5. Let toggle vertical/horizontal flag for color palette via context menu
 6. Provide "Bring to front" menu command for different objects like pave, box, marker, ...
 7. Handle "dark mode" in geom painter - automatically adjust background
@@ -14,6 +14,7 @@
 10. Support "pol", "cyl", "sph" and "psr" coordinates systems with lego and surf plots
 11. Use "col" as default draw option for TH2, "box2" for TH3
 12. Support "mollweide" projection for TH2
+13. Basic latex support when drawing axes labels and titles in 3D
 
 
 ## Changes in 7.4.1

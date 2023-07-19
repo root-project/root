@@ -808,6 +808,8 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 
          TCanvasWebSnapshot holder(IsReadOnly(), true, false); // readonly, set ids, batchmode
 
+         holder.SetFixedSize(fFixedSize); // set fixed size flag
+
          // scripts send only when canvas drawn for the first time
          if (!conn.fSendVersion)
             holder.SetScripts(fCustomScripts);
@@ -892,12 +894,8 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
          });
    }
 
-   auto w = Canvas()->GetWw(), h = Canvas()->GetWh();
-   if (Canvas()->TestBit(TCanvas::kMenuBar)) h += 40;
-   if (Canvas()->TestBit(TCanvas::kShowEventStatus)) h += 40;
-   if (Canvas()->TestBit(TCanvas::kShowEditor)) w += 200;
-
-   if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
+   auto w = Canvas()->GetWindowWidth(), h = Canvas()->GetWindowHeight();
+   if ((w > 0) && (w < 50000) && (h > 0) && (h < 30000))
       fWindow->SetGeometry(w, h);
 
    if ((args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt5) ||
@@ -918,6 +916,9 @@ void TWebCanvas::Show()
 
    ROOT::Experimental::RWebDisplayArgs args;
    args.SetWidgetKind("TCanvas");
+   args.SetSize(Canvas()->GetWindowWidth(), Canvas()->GetWindowHeight());
+   args.SetPos(Canvas()->GetWindowTopX(), Canvas()->GetWindowTopY());
+
    ShowWebWindow(args);
 }
 
@@ -1009,8 +1010,22 @@ void TWebCanvas::SetWindowTitle(const char *newTitle)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Set canvas size of web canvas
 
-void TWebCanvas::SetCanvasSize(UInt_t, UInt_t)
+void TWebCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
 {
+   fFixedSize = kTRUE;
+   if (IsFirstDrawn()) {
+      fCtrlMsgs["cw"s] = std::to_string(cw);
+      fCtrlMsgs["ch"s] = std::to_string(ch);
+      fCtrlMsgs["fixed_size"s] = "true"s;
+   }
+   if ((cw > 0) && (ch > 0)) {
+      Canvas()->fCw = cw;
+      Canvas()->fCh = ch;
+   } else {
+      // temporary value, will be reported back from client
+      Canvas()->fCw = Canvas()->fWindowWidth;
+      Canvas()->fCh = Canvas()->fWindowHeight;
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1054,8 +1069,13 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          AssignStatusBits(r.bits);
          Canvas()->fCw = r.cw;
          Canvas()->fCh = r.ch;
-         Canvas()->fWindowWidth = r.cw + 2;
-         Canvas()->fWindowHeight = r.ch + 25;
+         if (r.w.size() == 4) {
+            fWindowGeometry = r.w;
+            Canvas()->fWindowTopX = fWindowGeometry[0];
+            Canvas()->fWindowTopY = fWindowGeometry[1];
+            Canvas()->fWindowWidth = fWindowGeometry[2];
+            Canvas()->fWindowHeight = fWindowGeometry[3];
+         }
       }
 
       if (r.active && (pad != gPad)) gPad = pad;
@@ -1660,12 +1680,17 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
    } else if (arg.compare(0, 8, "RESIZED:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(8));
-      if (arr && arr->size() == 2) {
+      if (arr && arr->size() == 7) {
          // set members directly to avoid redrawing of the client again
-         Canvas()->fCw = arr->at(0);
-         Canvas()->fCh = arr->at(1);
-         Canvas()->fWindowWidth = arr->at(0) + 2;
-         Canvas()->fWindowHeight = arr->at(1) + 25;
+         Canvas()->fCw = arr->at(4);
+         Canvas()->fCh = arr->at(5);
+         fFixedSize = arr->at(6) > 0;
+         arr->resize(4);
+         fWindowGeometry = *arr;
+         Canvas()->fWindowTopX = fWindowGeometry[0];
+         Canvas()->fWindowTopY = fWindowGeometry[1];
+         Canvas()->fWindowWidth = fWindowGeometry[2];
+         Canvas()->fWindowHeight = fWindowGeometry[3];
       }
    } else if (arg.compare(0, 7, "POPOBJ:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
@@ -1758,10 +1783,17 @@ void TWebCanvas::CheckCanvasModified(bool force_modified)
 
 UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
-   x = 0;
-   y = 0;
-   w = Canvas()->GetWw() + 4;
-   h = Canvas()->GetWh() + 28;
+   if (fWindowGeometry.size() == 4) {
+      x = fWindowGeometry[0];
+      y = fWindowGeometry[1];
+      w = fWindowGeometry[2];
+      h = fWindowGeometry[3];
+   } else {
+      x = Canvas()->fWindowTopX;
+      y = Canvas()->fWindowTopY;
+      w = Canvas()->fWindowWidth;
+      h = Canvas()->fWindowHeight;
+   }
    return 0;
 }
 
@@ -2241,12 +2273,14 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 
    auto imp = new TWebCanvas(c, name, x, y, width, height, readonly);
 
-   if (!gROOT->IsBatch()) {
-      c->fWindowWidth = width;
-      c->fWindowHeight = height;
-      c->fCw = width > 2 ? width - 2 : 0;
-      c->fCh = height > 25 ? height - 25 : 0;
-   }
+   c->fWindowTopX = x;
+   c->fWindowTopY = y;
+   c->fWindowWidth = width;
+   c->fWindowHeight = height;
+   if (!gROOT->IsBatch() && (height > 25))
+      height -= 25;
+   c->fCw = width;
+   c->fCh = height;
 
    return imp;
 }

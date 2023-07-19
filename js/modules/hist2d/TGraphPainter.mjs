@@ -644,7 +644,7 @@ class TGraphPainter extends ObjectPainter {
                        .enter()
                        .append('svg:g')
                        .attr('class', 'grpoint')
-                       .attr('transform', d => makeTranslate(d.grx1,d.gry1));
+                       .attr('transform', d => makeTranslate(d.grx1, d.gry1));
       }
 
       if (options.Bar) {
@@ -1267,7 +1267,7 @@ class TGraphPainter extends ObjectPainter {
       this.pos_dy += dy;
 
       if (this.move_binindx === undefined) {
-         this.draw_g.attr('transform', makeTranslate(this.pos_dx,this.pos_dy));
+         makeTranslate(this.draw_g, this.pos_dx, this.pos_dy);
       } else if (this.move_funcs && this.move_bin) {
          this.move_bin.x = this.move_funcs.revertAxis('x', this.move_x0 + this.pos_dx);
          this.move_bin.y = this.move_funcs.revertAxis('y', this.move_y0 + this.pos_dy);

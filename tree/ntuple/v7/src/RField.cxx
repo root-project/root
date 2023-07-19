@@ -146,40 +146,45 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
    return std::make_tuple(std::string{typeName}, sizeVec);
 }
 
-/// Returns the normalized resolved type and the normalized typedef before typedef resolution. If the given type
-/// is not a typedef, the second element of the returned pair is the empty string.
-std::pair<std::string, std::string> GetNormalizedType(const std::string &typeName) {
-   std::string normalizedType(TClassEdit::CleanType(typeName.c_str(), /*mode=*/2));
+/// Return the canonical name of a type, resolving typedefs to their underlying types if needed.  A canonical type has
+/// typedefs stripped out from the type name.
+std::string GetCanonicalTypeName(const std::string &typeName)
+{
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
-   if (normalizedType == "ROOT::Experimental::ClusterSize_t")
-      return std::make_pair(normalizedType, "");
-   // We want the template parameter to stay in "std::uint32_t" / "std::uint64_t" form
-   if (normalizedType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
-      return std::make_pair(normalizedType, "");
+   if (typeName == "ROOT::Experimental::ClusterSize_t" || typeName.substr(0, 5) == "std::" ||
+       typeName.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
+      return typeName;
 
-   std::string resolvedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
-   if (resolvedType == normalizedType)
-      normalizedType = "";
-   auto translatedType = typeTranslationMap.find(resolvedType);
-   if (translatedType != typeTranslationMap.end())
-      resolvedType = translatedType->second;
+   return TClassEdit::ResolveTypedef(typeName.c_str());
+}
 
-   if (resolvedType.substr(0, 7) == "vector<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 6) == "array<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 8) == "variant<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 5) == "pair<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 6) == "tuple<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 7) == "bitset<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 11) == "unique_ptr<")
-      resolvedType = "std::" + resolvedType;
+/// Applies type name normalization rules that lead to the final name used to create a RField, e.g. transforms
+/// `unsigned int` to `std::uint32_t` or `const vector<T>` to `std::vector<T>`.  Specifically, `const` / `volatile`
+/// qualifiers are removed, integral types such as `unsigned int` or `long` are translated to fixed-length integer types
+/// (e.g. `std::uint32_t`), and `std::` is added to fully qualify known types in the `std` namespace.
+std::string GetNormalizedTypeName(const std::string &typeName)
+{
+   std::string normalizedType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
 
-   return std::make_pair(resolvedType, normalizedType);
+   if (auto it = typeTranslationMap.find(normalizedType); it != typeTranslationMap.end())
+      normalizedType = it->second;
+
+   if (normalizedType.substr(0, 7) == "vector<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "array<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 8) == "variant<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 5) == "pair<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "tuple<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 7) == "bitset<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 11) == "unique_ptr<")
+      normalizedType = "std::" + normalizedType;
+
+   return normalizedType;
 }
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
@@ -247,130 +252,139 @@ std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() cons
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   auto [normalizedType, typeAlias] = GetNormalizedType(typeName);
-   if (normalizedType.empty())
+   auto typeAlias = GetNormalizedTypeName(typeName);
+   auto canonicalType = GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
+   return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias));
+}
+
+ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
+ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
+                                               const std::string &typeAlias)
+{
+   if (canonicalType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
 
-   if (auto [arrayBaseType, arraySize] = ParseArrayType(normalizedType); !arraySize.empty()) {
+   if (auto [arrayBaseType, arraySize] = ParseArrayType(canonicalType); !arraySize.empty()) {
       // TODO(jalopezg): support multi-dimensional row-major (C order) arrays in RArrayField
       if (arraySize.size() > 1)
-         return R__FAIL("multi-dimensional array type not supported " + normalizedType);
+         return R__FAIL("multi-dimensional array type not supported " + canonicalType);
       auto itemField = Create("_0", arrayBaseType).Unwrap();
       return {std::make_unique<RArrayField>(fieldName, std::move(itemField), arraySize[0])};
    }
 
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
 
-   if (normalizedType == "ROOT::Experimental::ClusterSize_t") {
+   if (canonicalType == "ROOT::Experimental::ClusterSize_t") {
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
-   } else if (normalizedType == "bool") {
+   } else if (canonicalType == "bool") {
       result = std::make_unique<RField<bool>>(fieldName);
-   } else if (normalizedType == "char") {
+   } else if (canonicalType == "char") {
       result = std::make_unique<RField<char>>(fieldName);
-   } else if (normalizedType == "std::int8_t") {
+   } else if (canonicalType == "std::int8_t") {
       result = std::make_unique<RField<std::int8_t>>(fieldName);
-   } else if (normalizedType == "std::uint8_t") {
+   } else if (canonicalType == "std::uint8_t") {
       result = std::make_unique<RField<std::uint8_t>>(fieldName);
-   } else if (normalizedType == "std::int16_t") {
+   } else if (canonicalType == "std::int16_t") {
       result = std::make_unique<RField<std::int16_t>>(fieldName);
-   } else if (normalizedType == "std::uint16_t") {
+   } else if (canonicalType == "std::uint16_t") {
       result = std::make_unique<RField<std::uint16_t>>(fieldName);
-   } else if (normalizedType == "std::int32_t") {
+   } else if (canonicalType == "std::int32_t") {
       result = std::make_unique<RField<std::int32_t>>(fieldName);
-   } else if (normalizedType == "std::uint32_t") {
+   } else if (canonicalType == "std::uint32_t") {
       result = std::make_unique<RField<std::uint32_t>>(fieldName);
-   } else if (normalizedType == "std::int64_t") {
+   } else if (canonicalType == "std::int64_t") {
       result = std::make_unique<RField<std::int64_t>>(fieldName);
-   } else if (normalizedType == "std::uint64_t") {
+   } else if (canonicalType == "std::uint64_t") {
       result = std::make_unique<RField<std::uint64_t>>(fieldName);
-   } else if (normalizedType == "float") {
+   } else if (canonicalType == "float") {
       result = std::make_unique<RField<float>>(fieldName);
-   } else if (normalizedType == "double") {
+   } else if (canonicalType == "double") {
       result = std::make_unique<RField<double>>(fieldName);
-   } else if (normalizedType == "Double32_t") {
+   } else if (canonicalType == "Double32_t") {
       result = std::make_unique<RField<double>>(fieldName);
       static_cast<RField<double> *>(result.get())->SetDouble32();
       // Prevent the type alias from being reset by returning early
       return result;
-   } else if (normalizedType == "std::string") {
+   } else if (canonicalType == "std::string") {
       result = std::make_unique<RField<std::string>>(fieldName);
-   } else if (normalizedType == "std::vector<bool>") {
+   } else if (canonicalType == "std::vector<bool>") {
       result = std::make_unique<RField<std::vector<bool>>>(fieldName);
-   } else if (normalizedType.substr(0, 12) == "std::vector<") {
-      std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
+   } else if (canonicalType.substr(0, 12) == "std::vector<") {
+      std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
       auto itemField = Create("_0", itemTypeName);
       result = std::make_unique<RVectorField>(fieldName, itemField.Unwrap());
-   } else if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
-      std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
+   } else if (canonicalType.substr(0, 19) == "ROOT::VecOps::RVec<") {
+      std::string itemTypeName = canonicalType.substr(19, canonicalType.length() - 20);
       auto itemField = Create("_0", itemTypeName);
       result = std::make_unique<RRVecField>(fieldName, itemField.Unwrap());
-   } else if (normalizedType.substr(0, 11) == "std::array<") {
-      auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
+   } else if (canonicalType.substr(0, 11) == "std::array<") {
+      auto arrayDef = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
       R__ASSERT(arrayDef.size() == 2);
       auto arrayLength = std::stoi(arrayDef[1]);
       auto itemField = Create("_0", arrayDef[0]);
       result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
-   } else if (normalizedType.substr(0, 13) == "std::variant<") {
-      auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
+   } else if (canonicalType.substr(0, 13) == "std::variant<") {
+      auto innerTypes = TokenizeTypeList(canonicalType.substr(13, canonicalType.length() - 14));
       std::vector<RFieldBase *> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
       }
       result = std::make_unique<RVariantField>(fieldName, items);
-   } else if (normalizedType.substr(0, 10) == "std::pair<") {
-      auto innerTypes = TokenizeTypeList(normalizedType.substr(10, normalizedType.length() - 11));
+   } else if (canonicalType.substr(0, 10) == "std::pair<") {
+      auto innerTypes = TokenizeTypeList(canonicalType.substr(10, canonicalType.length() - 11));
       if (innerTypes.size() != 2)
          return R__FAIL("the type list for std::pair must have exactly two elements");
       std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
                                                        Create("_1", innerTypes[1]).Unwrap()};
       result = std::make_unique<RPairField>(fieldName, items);
-   } else if (normalizedType.substr(0, 11) == "std::tuple<") {
-      auto innerTypes = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
+   } else if (canonicalType.substr(0, 11) == "std::tuple<") {
+      auto innerTypes = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
       std::vector<std::unique_ptr<RFieldBase>> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
       }
       result = std::make_unique<RTupleField>(fieldName, items);
-   } else if (normalizedType.substr(0, 12) == "std::bitset<") {
-      auto size = std::stoull(normalizedType.substr(12, normalizedType.length() - 13));
+   } else if (canonicalType.substr(0, 12) == "std::bitset<") {
+      auto size = std::stoull(canonicalType.substr(12, canonicalType.length() - 13));
       result = std::make_unique<RBitsetField>(fieldName, size);
-   } else if (normalizedType.substr(0, 16) == "std::unique_ptr<") {
-      std::string itemTypeName = normalizedType.substr(16, normalizedType.length() - 17);
+   } else if (canonicalType.substr(0, 16) == "std::unique_ptr<") {
+      std::string itemTypeName = canonicalType.substr(16, canonicalType.length() - 17);
       auto itemField = Create("_0", itemTypeName).Unwrap();
       auto normalizedInnerTypeName = itemField->GetType();
       result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
                                                  std::move(itemField));
-   } else if (normalizedType == ":Collection:") {
+   } else if (canonicalType == ":Collection:") {
       // TODO: create an RCollectionField?
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
-   } else if (normalizedType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
-      auto innerTypes = TokenizeTypeList(normalizedType.substr(39, normalizedType.length() - 40));
+   } else if (canonicalType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
+      auto innerTypes = TokenizeTypeList(canonicalType.substr(39, canonicalType.length() - 40));
       if (innerTypes.size() != 1)
-         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + normalizedType);
+         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + canonicalType);
       if (innerTypes[0] == "std::uint32_t") {
          result = std::make_unique<RField<RNTupleCardinality<std::uint32_t>>>(fieldName);
       } else if (innerTypes[0] == "std::uint64_t") {
          result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
       } else {
-         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + normalizedType);
+         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + canonicalType);
       }
    }
 
    if (!result) {
-      auto cl = TClass::GetClass(normalizedType.c_str());
+      auto cl = TClass::GetClass(canonicalType.c_str());
       if (cl != nullptr) {
          if (cl->GetCollectionProxy())
-            result = std::make_unique<RCollectionClassField>(fieldName, normalizedType);
+            result = std::make_unique<RCollectionClassField>(fieldName, canonicalType);
          else
-            result = std::make_unique<RClassField>(fieldName, normalizedType);
+            result = std::make_unique<RClassField>(fieldName, canonicalType);
       }
    }
 
    if (result) {
-      result->fTypeAlias = typeAlias;
+      if (typeAlias != canonicalType)
+         result->fTypeAlias = typeAlias;
       return result;
    }
-   return R__FAIL(std::string("Field ") + fieldName + " has unknown type " + normalizedType);
+   return R__FAIL(std::string("Field ") + fieldName + " has unknown type " + canonicalType);
 }
 
 ROOT::Experimental::RResult<void>
@@ -1161,13 +1175,14 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          continue;
       }
 
-      std::string typeName{dataMember->GetFullTypeName()};
+      std::string typeName{GetNormalizedTypeName(dataMember->GetTrueTypeName())};
+      std::string typeAlias{GetNormalizedTypeName(dataMember->GetFullTypeName())};
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
          for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
             typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
       }
-      auto subField = Detail::RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
+      auto subField = Detail::RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
       fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});

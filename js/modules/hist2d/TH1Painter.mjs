@@ -298,10 +298,7 @@ class TH1Painter extends THistPainter {
    }
 
    /** @summary Draw histogram as bars */
-   drawBars(height, pmain, funcs) {
-
-      this.createG(true);
-
+   async drawBars(funcs, height) {
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 1),
           histo = this.getHisto(), xaxis = histo.fXaxis,
@@ -311,7 +308,7 @@ class TH1Painter extends THistPainter {
           side = (this.options.BarStyle > 10) ? this.options.BarStyle % 10 : 0;
 
       if (side > 4) side = 4;
-      gry2 = pmain.swap_xy ? 0 : height;
+      gry2 = funcs.swap_xy ? 0 : height;
       if (Number.isFinite(this.options.BaseLine))
          if (this.options.BaseLine >= funcs.scale_ymin)
             gry2 = Math.round(funcs.gry(this.options.BaseLine));
@@ -331,7 +328,7 @@ class TH1Painter extends THistPainter {
          x1 = xaxis.GetBinLowEdge(i+1);
          x2 = xaxis.GetBinLowEdge(i+2);
 
-         if (pmain.logx && (x2 <= 0)) continue;
+         if (funcs.logx && (x2 <= 0)) continue;
 
          grx1 = Math.round(funcs.grx(x1));
          grx2 = Math.round(funcs.grx(x2));
@@ -344,7 +341,7 @@ class TH1Painter extends THistPainter {
          grx1 += Math.round(histo.fBarOffset/1000*w);
          w = Math.round(histo.fBarWidth/1000*w);
 
-         if (pmain.swap_xy)
+         if (funcs.swap_xy)
             bars += `M${gry2},${grx1}h${gry1-gry2}v${w}h${gry2-gry1}z`;
          else
             bars += `M${grx1},${gry1}h${w}v${gry2-gry1}h${-w}z`;
@@ -352,7 +349,7 @@ class TH1Painter extends THistPainter {
          if (side > 0) {
             grx2 = grx1 + w;
             w = Math.round(w * side / 10);
-            if (pmain.swap_xy) {
+            if (funcs.swap_xy) {
                barsl += `M${gry2},${grx1}h${gry1-gry2}v${w}h${gry2-gry1}z`;
                barsr += `M${gry2},${grx2}h${gry1-gry2}v${-w}h${gry2-gry1}z`;
             } else {
@@ -364,7 +361,7 @@ class TH1Painter extends THistPainter {
          if (show_text && y) {
             let text = (y === Math.round(y)) ? y.toString() : floatToString(y, gStyle.fPaintTextFormat);
 
-            if (pmain.swap_xy)
+            if (funcs.swap_xy)
                this.drawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text, color: text_col, latex: 0 });
             else if (text_angle)
                this.drawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text, color: text_col, latex: 0 });
@@ -396,8 +393,6 @@ class TH1Painter extends THistPainter {
 
    /** @summary Draw histogram as filled errors */
    drawFilledErrors(funcs) {
-      this.createG(true);
-
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 1),
           histo = this.getHisto(), xaxis = histo.fXaxis,
@@ -424,25 +419,9 @@ class TH1Painter extends THistPainter {
                  .call(this.fillatt.func);
    }
 
-   /** @summary Draw TH1 bins in SVG element
+   /** @summary Draw TH1 as hist/line/curve
      * @return Promise or scalar value */
-   draw1DBins() {
-
-      this.createHistDrawAttributes();
-
-      let pmain = this.getFramePainter(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          width = pmain.getFrameWidth(), height = pmain.getFrameHeight();
-
-      if (!this.draw_content || (width <= 0) || (height <= 0))
-          return this.removeG();
-
-      if (this.options.Bar)
-         return this.drawBars(height, pmain, funcs);
-
-      if ((this.options.ErrorKind === 3) || (this.options.ErrorKind === 4))
-         return this.drawFilledErrors(pmain, funcs);
-
+   drawNormal(funcs, width, height) {
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 2),
           histo = this.getHisto(),
@@ -502,8 +481,6 @@ class TH1Painter extends THistPainter {
 
       if (!draw_hist && !draw_any_but_hist)
          return this.removeG();
-
-      this.createG(true);
 
       if (show_text) {
          text_col = this.getColor(histo.fMarkerColor);
@@ -779,6 +756,32 @@ class TH1Painter extends THistPainter {
 
       if (show_text)
          return this.finishTextDrawing();
+   }
+
+   /** @summary Draw TH1 bins in SVG element
+     * @return Promise or scalar value */
+   draw1DBins() {
+      this.createHistDrawAttributes();
+
+      let pmain = this.getFramePainter(),
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+          width = pmain.getFrameWidth(), height = pmain.getFrameHeight();
+
+      if (!this.draw_content || (width <= 0) || (height <= 0))
+          return this.removeG();
+
+      this.createG(true);
+
+      if (this.options.Bar)
+         return this.drawBars(funcs, height).then(() => {
+            if (this.options.ErrorKind === 1)
+               return this.drawNormal(funcs, width, height);
+         });
+
+      if ((this.options.ErrorKind === 3) || (this.options.ErrorKind === 4))
+         return this.drawFilledErrors(funcs);
+
+      return this.drawNormal(funcs, width, height);
    }
 
    /** @summary Provide text information (tooltips) for histogram bin */

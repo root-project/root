@@ -82,7 +82,7 @@
                <menu>
                   <Menu itemSelected="onOptionsMenuAction">
                      <items>
-                        <MenuItem text="Interrupt"/>
+                        <MenuItem text="Auto resize" icon="{/AutoResizeIcon}" tooltip="Canvas automatically resized with web browser"/>
                      </items>
                   </Menu>
                </menu>

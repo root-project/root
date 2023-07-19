@@ -2453,7 +2453,7 @@ class TH2Painter extends THistPainter {
 
       this.createG();
 
-      this.draw_g.attr('transform', makeTranslate(Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2)));
+      makeTranslate(this.draw_g, Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2));
 
       let nbins = Math.min(this.nbinsx, this.nbinsy);
 
@@ -2589,7 +2589,7 @@ class TH2Painter extends THistPainter {
 
       this.createG();
 
-      this.draw_g.attr('transform', makeTranslate(Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2)));
+      makeTranslate(this.draw_g, Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2));
 
       const chord = d3_chord()
          .padAngle(10 / innerRadius)
