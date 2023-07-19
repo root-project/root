@@ -93,7 +93,7 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    }
 
    template <std::size_t... S>
-   void ColLenghtChecker(std::index_sequence<S...>)
+   void ColLengthChecker(std::index_sequence<S...>)
    {
       if (sizeof...(S) < 2)
          return;
@@ -181,7 +181,7 @@ public:
 
    void Initialize() final
    {
-      ColLenghtChecker(std::index_sequence_for<ColumnTypes...>());
+      ColLengthChecker(std::index_sequence_for<ColumnTypes...>());
       const auto nEntries = GetEntriesNumber();
       const auto nEntriesInRange = nEntries / fNSlots; // between integers. Should make smaller?
       auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;
