@@ -567,10 +567,6 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
           !strncmp(baseName, "get", 3))
          baseName+=3;
       if (!baseName[0]) return kTRUE;
-      // if the return type of the method is the class itself,
-      // return false, to prevent recursion
-      if (!strcmp(m->GetReturnTypeName(), cl->GetName()))
-         return kFALSE;
 
       TObject* mem=0;
       const char* arrMemberNames[3]={"f%s","_%s","m%s"};
