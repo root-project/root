@@ -77,7 +77,7 @@ if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
 endif()
 
-if (${PYTHON_VERSION_STRING_Development_Main} VERSION_LESS 3.8)
+if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8)
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
