@@ -24,6 +24,7 @@
 #include <ROOT/RStringView.hxx>
 
 #include <TBranch.h>
+#include <TChain.h>
 #include <TClass.h>
 #include <TDataType.h>
 #include <TLeaf.h>
@@ -110,7 +111,15 @@ std::unique_ptr<ROOT::Experimental::RNTupleImporter>
 ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view destFileName)
 {
    auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
-   importer->fNTupleName = sourceTree->GetName();
+
+   if (sourceTree->IsA() == TChain::Class() && std::strcmp(sourceTree->GetName(), "") == 0) {
+      if (sourceTree->LoadTree(0) != 0)
+         throw RException(R__FAIL("failure retrieving first tree from provided chain"));
+      importer->fNTupleName = sourceTree->GetTree()->GetName();
+   } else {
+      importer->fNTupleName = sourceTree->GetName();
+   }
+
    importer->fSourceTree = sourceTree;
 
    // If we have IMT enabled, its best use is for parallel page compression
