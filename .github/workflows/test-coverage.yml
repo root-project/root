@@ -325,7 +325,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: OS,PYTHON
           fail_ci_if_error: true
-          files: /tmp/workspace/XMLCoverage.xml
+          files: /tmp/workspace/CoverageXML.xml
           flags: unittests
           name: codecov-umbrella
           verbose: true   
