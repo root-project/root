@@ -129,7 +129,7 @@ protected:
 
    void CheckPadModified(TPad *pad);
 
-   void CheckCanvasModified(bool force_modified = false);
+   Bool_t CheckCanvasModified(bool force_modified = false);
 
    void AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value);
 
