@@ -375,7 +375,7 @@ def create_coverage_xml(shell_log: str) -> str:
     #directory = f"../root-ci-config"
     result, shell_log = subprocess_with_log(f"""
         pwd
-        gcovr --gcov-ignore-errors=no_working_dir_found --cobertura-pretty -r {WORKDIR}/src {WORKDIR}/build -o XMLCoverage.xml
+        gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=MERGE_MODE -r /tmp/workspace/src /tmp/workspace/build -o XMLCoverage.xml
         pwd
         ls
         cat XMLCoverage.xml
