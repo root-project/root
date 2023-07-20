@@ -60,8 +60,30 @@ public:
       return out.str();
    }
 
-   std::string GenerateGPU(std::string OpName)  {
-      return std::string();
+   std::string GenerateGPU(std::string OpName) {
+      OpName = "op_" + OpName;
+      if (fShape.empty()) {
+         throw std::runtime_error("TMVA SOFIE Tanh operator called to Generate without being initialized first");
+      }
+      std::stringstream out;
+      int length = 1;
+      for(auto& i: fShape){
+         length *= i;
+      }
+
+      out << "\n" << SP*3 << "//------ TANH\n";
+      out << SP*3 << "q.submit([&](cl::sycl::handler &cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n\n";
+      out << SP*4 << "q.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << std::to_string(length);
+      out << ")[=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "acc_tensor_" << fNY << "[id] = cl::sycl::tanh(acc_tensor_" << fNX << "[id]);\n";
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+
+      return out.str();
    }
 
    std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
