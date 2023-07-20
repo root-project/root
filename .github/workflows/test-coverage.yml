@@ -286,20 +286,7 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
             
-      # - uses: actions/checkout@v3
-      # - uses: actions/setup-python@v4
-      #   with:
-      #     python-version: '3.10'
-      # - run: python my_script.py
 
-      
-      # - name: Install pip
-      #   run: |
-      #     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-      #     python3 get-pip.py
-      
-
-      
 
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
