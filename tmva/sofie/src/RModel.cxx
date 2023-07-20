@@ -1,6 +1,7 @@
 #include <limits>
 #include <algorithm>
 #include <cctype>
+#include <utility>
 
 #include "TMVA/RModel.hxx"
 #include "TMVA/SOFIE_common.hxx"
@@ -17,6 +18,24 @@ namespace SOFIE{
    }
    std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB) {
       return opA | static_cast<std::underlying_type_t<Options>>(opB);
+   }
+
+   // overload operator * for concatenating SP
+   const std::string operator*(const std::string str, std::size_t n) {
+      std::string res(str);
+
+      if (n == 0 || str.empty()) return {};
+      if (n == 1) return str;
+
+      const auto period = str.size();
+
+      if (period == 1) return std::string(n, str.front());
+
+      res.reserve(period * n);
+      std::size_t m{2};
+      for (; m < n; m *= 2) res += res;
+      res.append(res.c_str(), (n - (m / 2)) * period);
+      return res;
    }
 
    RModel::RModel(RModel&& other){
@@ -634,9 +653,26 @@ namespace SOFIE{
       fGC.pop_back(); //remove last ","
       fGC += "){\n\n";
 
-      fGC += "// Create SYCL buffers for inputs, outputs and intermediate tensors\n";
+      fGC += SP + "try {\n"; //beginning of try-catch block
 
+      fGC += SP + "// Intel GPU Device Selector\n";
       
+      // Lambda device selector
+      fGC += SP*2 + "auto intel_gpu_selector = [](const cl::sycl::device& dev) {\n";
+      fGC += SP*3 + "if (dev.has(cl::sycl::aspect::gpu)) {\n";
+      fGC += SP*4 + "auto vendorName = dev.get_info<cl::sycl::info::device::vendor>();\n";
+      fGC += SP*4 + "vendorName.find(\"Intel\") != std::string::npos) {\n";
+      fGC += SP*5 + "return 1;\n";
+      fGC += SP*4 + "}\n";
+      fGC += SP*3 + "}\n";
+      fGC += SP*3 + "return -1;\n" + SP*2 + "};\n";
+      
+      fGC += SP + "}\n"; // end of try clause
+
+      fGC += SP + "catch (const cl::sycl::exception& e) {\n"; //beginning of catch clause
+      fGC += SP*2 + "std::cout << \"Exception caught: \" << e.what() << ";
+      fGC += "\"with OpenCL error code: \" << e.get_cl_code() << std::endl;\n";
+      fGC += SP + "}\n"; //end of catch clause
 
       fGC_GPU = fGC;
    }
