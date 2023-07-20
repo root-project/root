@@ -718,10 +718,9 @@ namespace SOFIE{
          fGC+= (fOperators[id]->GenerateGPU(std::to_string(id)));
       }
 
+      fGC += "\n";
+      fGC += SP*3 + "q.wait_and_throw();\n"; // call wait to enforce in order
       fGC += SP*2 + "}\n"; // buffer destruction
-
-
-
 
       fGC += SP + "}\n"; // end of try clause
    
@@ -729,6 +728,14 @@ namespace SOFIE{
       fGC += SP*2 + "std::cout << \"Exception caught: \" << e.what() << ";
       fGC += "\"with OpenCL error code: \" << e.get_cl_code() << std::endl;\n";
       fGC += SP + "}\n"; //end of catch clause
+
+      fGC += SP + "return ret;\n";
+      fGC += "}\n";
+      if (fUseSession) {
+         fGC += "};\n";
+      }
+      fGC += ("} //TMVA_SOFIE_" + fName + "\n");
+      fGC += "\n#endif  // " + hgname + "\n";
 
       fGC_GPU = fGC;
    }
