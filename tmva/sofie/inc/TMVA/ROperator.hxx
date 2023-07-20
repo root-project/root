@@ -11,6 +11,25 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+
+// overload operator * for concatenating SP
+inline const std::string operator*(const std::string str, std::size_t n) {
+   std::string res(str);
+
+   if (n == 0 || str.empty()) return {};
+   if (n == 1) return str;
+
+   const auto period = str.size();
+
+   if (period == 1) return std::string(n, str.front());
+
+   res.reserve(period * n);
+   std::size_t m{2};
+   for (; m < n; m *= 2) res += res;
+   res.append(res.c_str(), (n - (m / 2)) * period);
+   return res;
+}
+
 class RModel;
 
 class ROperator{
