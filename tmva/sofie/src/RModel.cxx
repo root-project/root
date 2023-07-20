@@ -455,6 +455,190 @@ namespace SOFIE{
       }
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
       fGC += "\n#endif  // " + hgname + "\n";
+      fGC_CPU = fGC;
+   }
+
+   void RModel::GenerateGPU(std::underlying_type_t<Options> options, int batchSize){
+      if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options)
+         fUseSession = false;
+      if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options)
+         fUseWeightFile = false;
+      if (fUseWeightFile && !fUseSession) {
+         throw std::runtime_error("TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
+      }
+      fGC.clear();
+      Initialize(batchSize);
+
+      fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
+      // add header guards
+      std::string hgname = fName;
+      std::transform(hgname.begin(), hgname.end(), hgname.begin(), [](unsigned char c){ return std::toupper(c);} );
+      hgname = "TMVA_SOFIE_" + hgname;
+      fGC += "\n#ifndef " + hgname + "\n";
+      fGC += "#define " + hgname + "\n\n";
+      for (auto& i: fNeededStdLib) {
+         fGC += "#include<" + i + ">\n";
+      }
+      for (auto& i: fCustomOpHeaders) {
+         fGC += "#include \"" + i + "\"\n";
+      }
+
+      // include SYCL libraries
+      fGC += "#include <CL/sycl.hpp>\n";
+
+      // include BLAS libraries, if needed
+      if (!fNeededBlasRoutines.empty()) {
+         fGC += "#include \"oneapi/mkl/blas.hpp\"\n";
+         fGC += "#include \"mkl.h\"\n";
+      }
+
+      // for the session we need to include SOFIE_Common functions
+      //needed for convolution operator (need to add a flag)
+      fGC += "#include \"TMVA/SOFIE_common.hxx\"\n";
+      if (fUseWeightFile)
+         fGC += "#include <fstream>\n";
+
+      fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
+      if (fUseSession) {
+         fGC += "struct Session {\n";
+      }
+
+      const std::string SP = "    "; //tab
+      for (auto& i: fInitializedTensors){
+         if (i.second.fType == ETensorType::FLOAT){
+            size_t length = 1;
+            for (auto & dim: i.second.fShape){
+               length *= dim;
+            }
+            if (!fUseWeightFile) {
+               fGC += SP + "float tensor_" + i.first + "[" + std::to_string(length) + "] = {";
+               std::shared_ptr<float> data = std::static_pointer_cast<float>(i.second.fData);
+               std::stringstream floats;
+               for (size_t idx = 0; idx < length-1; idx++){
+                  floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[idx] << ", ";
+               }
+               floats << std::setprecision(std::numeric_limits<float>::max_digits10) << data.get()[length-1];
+               fGC += floats.str();
+               fGC += "};\n";
+               fGC += SP + "std::vector<float> fTensor_" + i.first + "(tensor_" + i.first + ", ";
+               fGC += "tensor_" + i.first + " + sizeof(tensor_" + i.first + ") / sizeof(";
+               fGC += "tensor_" + i.first + "[0]));\n";
+            }
+            else {
+               fGC += SP + "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
+               fGC += SP + "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            }
+            fGC += "\n";
+         }
+      }
+
+      for (auto&i: fIntermediateTensorInfos){
+         size_t length = ConvertShapeToLength(i.second.shape);
+         if (i.second.type == ETensorType::FLOAT){
+            fGC += SP + "std::vector<float> fTensor_" + i.first  + " = std::vector<float>(" + std::to_string(length) + ");\n";
+            fGC += SP + "float * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
+         }
+         if (i.second.type == ETensorType::DOUBLE){
+            fGC += SP + "std::vector<double> fTensor_" + i.first  + " = std::vector<double>(" + std::to_string(length) + ");\n";
+            fGC += SP + "double * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
+         }
+         if (i.second.type == ETensorType::INT64){
+            fGC += SP + "std::vector<int64_t> fTensor_" + i.first  + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
+            fGC += SP + "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
+         }
+         fGC += "\n";
+      }
+
+      if (fUseSession) {
+         // add here specific operator code that needs to define session data members
+         fGC += "\n";
+         for (size_t id = 0; id < fOperators.size(); id++) {
+            std::string opName = std::to_string(id);
+            fGC += fOperators[id]->GenerateSessionMembersCode(opName);
+         }
+         fGC += "\n";
+         // here add initialization and reading of weight tensors
+         if (fUseWeightFile) {
+            fGC += "Session(std::string filename =\"\") {\n";
+            fGC += "   if (filename.empty()) filename = \"" + fName + ".dat\";\n";
+            ReadInitializedTensorsFromFile();
+            //fUseWeightFile = fUseWeightFile;
+         } else {
+            // no need to pass weight file since it is not used
+            // keep passing a string for compatibility
+            fGC += "Session(std::string = \"\") {\n";
+         }
+         // add here initialization code
+         for (size_t id = 0; id < fOperators.size() ; id++){
+            fGC += fOperators[id]->GenerateInitCode();
+         }
+         fGC += "}\n\n";
+      }
+
+      size_t outputSize = fOutputTensorNames.size();
+      // assume output types are all the same
+      std::string outputType;
+      if (outputSize == 1) {
+         auto f = fIntermediateTensorInfos.find(fOutputTensorNames[0]);
+         if (f == fIntermediateTensorInfos.end()){
+            throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[0] + " not found when trying to get its info");
+         }else{
+            outputType = ConvertTypeToString(f->second.type);
+            fGC += "std::vector<" + outputType + "> ";
+         }
+      } else {
+         std::vector<ETensorType> outputTensorsTypes(outputSize);
+         for (size_t i = 0; i < outputSize; i++) {
+            auto f = fIntermediateTensorInfos.find(fOutputTensorNames[i]);
+            if (f == fIntermediateTensorInfos.end()) {
+               throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i]
+                  + " not found when trying to get its info");
+            } else {
+               outputTensorsTypes[i] = f->second.type;
+            }
+         }
+         // assume all output types are the same
+         outputType = ConvertTypeToString(outputTensorsTypes[0]);
+         for (size_t i = 0; i < outputSize; i++) {
+            if (outputTensorsTypes[i] != outputTensorsTypes[0]) {
+               throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i] + " is of different type.");
+            }
+         }
+         fGC += "std::vector<std::vector<" + outputType + ">> ";
+      }
+
+      fGC += "infer(";
+       for(size_t i = 0; i<fInputTensorNames.size(); ++i){
+         switch((fReadyInputTensorInfos[fInputTensorNames[i]]).type){
+            case  ETensorType::FLOAT :{
+               fGC += "std::vector<float> fTensor_" + fInputTensorNames[i] + ",";
+               break;
+            }
+            case  ETensorType::INT32 :{
+               fGC += "std::vector<int32_t> fTensor_" + fInputTensorNames[i] + ",";
+               break;
+            }
+            case  ETensorType::INT64 :{
+               fGC += "std::vector<int64_t> fTensor_" + fInputTensorNames[i] + ",";
+               break;
+            }
+            case  ETensorType::DOUBLE :{
+               fGC += "std::vector<double> fTensor_" + fInputTensorNames[i] + ",";
+               break;
+            }
+            default: {
+               throw std::runtime_error("TMVA-SOFIE: input tensor " + fInputTensorNames[i] + " is of a data type which is not yet supported.");
+            }
+         }
+      }
+      fGC.pop_back(); //remove last ","
+      fGC += "){\n\n";
+
+      fGC += "// Create SYCL buffers for inputs, outputs and intermediate tensors\n";
+
+      
+
+      fGC_GPU = fGC;
    }
 
    void RModel::ReadInitializedTensorsFromFile() {
@@ -633,7 +817,25 @@ namespace SOFIE{
       if (!f.is_open()){
          throw std::runtime_error("tmva-sofie failed to open file for output generated inference code");
       }
-      f << fGC;
+      f << fGC_CPU;
+      f.close();
+
+      // write weights in a text file
+      size_t pos = filename.find(".hxx");
+      filename.replace(pos,4,".dat");
+      if (fUseWeightFile) WriteInitializedTensorsToFile(filename);
+   }
+
+   void RModel::OutputGeneratedGPU(std::string filename){
+      if (filename == ""){
+         filename = fName + ".hxx";
+      }
+      std::ofstream f;
+      f.open(filename);
+      if (!f.is_open()){
+         throw std::runtime_error("tmva-sofie failed to open file for output generated inference code");
+      }
+      f << fGC_GPU;
       f.close();
 
       // write weights in a text file

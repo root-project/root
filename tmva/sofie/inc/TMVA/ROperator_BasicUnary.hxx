@@ -81,6 +81,10 @@ public:
       out << SP << "}\n";
       return out.str();
    }
+
+   std::string GenerateGPU(std::string OpName) override {
+      return std::string();
+   }
 };
 
 } // namespace SOFIE

@@ -612,6 +612,11 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
    return out.str();
 }
 
+template<typename T>
+auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
+-> std::string {
+   return std::string();
+}
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA

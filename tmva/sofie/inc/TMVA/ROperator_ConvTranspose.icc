@@ -494,6 +494,11 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
    return out.str();
 }
 
+template <typename T>
+std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName)
+{
+   return std::string();
+}
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA

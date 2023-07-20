@@ -227,6 +227,10 @@ namespace SOFIE{
 
          }
 
+         std::string GenerateGPU(std::string OpName) {
+            return std::string();
+         }
+
          std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
 
    };

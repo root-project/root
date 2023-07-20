@@ -210,6 +210,10 @@ public:
           << ".begin() );\n";
       return out.str();
    }
+
+   std::string GenerateGPU(std::string OpName) {
+      return std::string();
+   }
 };
 
 }//SOFIE

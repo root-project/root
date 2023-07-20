@@ -47,6 +47,8 @@ private:
 
 
    std::string fGC; //generated code
+   std::string fGC_CPU; //generated code for CPU
+   std::string fGC_GPU; //generated code for GPU
    std::unordered_set<std::string> fNeededBlasRoutines;
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
@@ -106,14 +108,25 @@ public:
       Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize);
    }
 
+   void GenerateGPU(std::underlying_type_t<Options> options, int batchSize = 1);
+   void GenerateGPU(Options options = Options::kDefault, int batchSize = 1) {
+      GenerateGPU(static_cast<std::underlying_type_t<Options>>(options), batchSize);
+   }
+
    void ReadInitializedTensorsFromFile();
    void WriteInitializedTensorsToFile(std::string filename = "");
 
    void PrintGenerated(){
-      std::cout << fGC;
+      std::cout << fGC_CPU;
    }
+
+   void PrintGeneratedGPU(){
+      std::cout << fGC_GPU;
+   }
+
    void PrintIntermediateTensors();
    void OutputGenerated(std::string filename = "");
+   void OutputGeneratedGPU(std::string filename = "");
    std::vector<std::string> GetOutputTensorNames(){
       return fOutputTensorNames;
    }

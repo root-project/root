@@ -536,6 +536,10 @@ public:
       return out.str();
       }
 
+      std::string GenerateGPU(std::string OpName) {
+         return std::string();
+      }
+
    /*! \brief Returns the blas routines needed to compile the generated code
     */
    std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }

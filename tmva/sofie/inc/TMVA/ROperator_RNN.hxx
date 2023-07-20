@@ -120,6 +120,8 @@ template <typename T> class ROperator_RNN final : public ROperator {
     * \param OpName name of the operator
     */
    std::string Generate(std::string OpName);
+   
+   std::string GenerateGPU(std::string OpName);
 
    // generate code for Session data members (e.g. internal vectors)
    std::string GenerateSessionMembersCode(std::string opName);

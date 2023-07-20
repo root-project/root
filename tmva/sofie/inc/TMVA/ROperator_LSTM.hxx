@@ -136,6 +136,8 @@ template <typename T> class ROperator_LSTM final : public ROperator {
     */
    std::string Generate(std::string OpName);
 
+   std::string GenerateGPU(std::string OpName);
+
    /*! \brief Generate the code for the Session internal data vectors
     *
     * \param opName name of the operator

@@ -171,6 +171,10 @@ public:
       return out.str();
    }
 
+   std::string GenerateGPU(std::string OpName) override {
+      return std::string();
+   }
+
    std::vector<std::string> GetStdLibs() override {
       if (Op == EBasicBinaryOperator::Pow) {
          return { std::string("cmath") };

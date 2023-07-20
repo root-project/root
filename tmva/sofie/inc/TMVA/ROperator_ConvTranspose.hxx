@@ -117,6 +117,8 @@ public:
     */
    std::string Generate(std::string opName) override;
 
+   std::string GenerateGPU(std::string opName) override;
+
    /*! \brief Returns the blas routines needed to compile the generated code
     */
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
