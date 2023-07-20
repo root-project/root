@@ -1802,8 +1802,9 @@ void TWebCanvas::CheckPadModified(TPad *pad)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Check if any pad on the canvas was modified
 /// If yes, increment version of correspondent pad
+/// Returns true when canvas really modified
 
-void TWebCanvas::CheckCanvasModified(bool force_modified)
+Bool_t TWebCanvas::CheckCanvasModified(bool force_modified)
 {
    // clear temporary flags
    for (auto &entry : fPadsStatus) {
@@ -1832,6 +1833,8 @@ void TWebCanvas::CheckCanvasModified(bool force_modified)
          if (entry.second._modified)
             entry.second.fVersion = fCanvVersion;
    }
+
+   return is_any_modified;
 }
 
 
@@ -1862,15 +1865,19 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate()
 {
-   if (!fWindow)
-      return kTRUE;
+   Bool_t modified = CheckCanvasModified();
 
-   CheckCanvasModified();
+   if (!fWindow) {
+      if (modified) {
+         TCanvasWebSnapshot holder(IsReadOnly(), false, true); // readonly, set ids, batchmode
+         CreatePadSnapshot(holder, Canvas(), 0, nullptr);
+      }
+   } else {
+      CheckDataToSend();
 
-   CheckDataToSend();
-
-   if (!fProcessingData && !IsAsyncMode())
-      WaitWhenCanvasPainted(fCanvVersion);
+      if (!fProcessingData && !IsAsyncMode())
+         WaitWhenCanvasPainted(fCanvVersion);
+   }
 
    return kTRUE;
 }
@@ -1880,12 +1887,14 @@ Bool_t TWebCanvas::PerformUpdate()
 
 void TWebCanvas::ForceUpdate()
 {
-   if (!fWindow)
-      return;
-
    CheckCanvasModified(true);
 
-   CheckDataToSend();
+   if (!fWindow) {
+      TCanvasWebSnapshot holder(IsReadOnly(), false, true); // readonly, set ids, batchmode
+      CreatePadSnapshot(holder, Canvas(), 0, nullptr);
+   } else {
+      CheckDataToSend();
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
