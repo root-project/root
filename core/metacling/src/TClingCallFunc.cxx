@@ -355,8 +355,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
    callbuf << "new " << class_name << "(";
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl *PVD = FD->getParamDecl(i);
-      QualType Ty = PVD->getType();
-      QualType QT = Ty.getCanonicalType();
+      QualType QT = PVD->getType();
       string type_name;
       EReferenceType refType = kNotReference;
       bool isPointer = false;
@@ -468,8 +467,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
    callbuf << "(";
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl *PVD = FD->getParamDecl(i);
-      QualType Ty = PVD->getType();
-      QualType QT = Ty.getCanonicalType();
+      QualType QT = PVD->getType();
       string type_name;
       EReferenceType refType = kNotReference;
       bool isPointer = false;
@@ -1037,7 +1035,8 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
             callbuf << kIndentString;
          }
          callbuf << "new (ret) ";
-         collect_type_info(QT, typedefbuf, callbuf, type_name,
+         QualType retQT = FD->getReturnType();
+         collect_type_info(retQT, typedefbuf, callbuf, type_name,
                            refType, isPointer, indent_level, false);
          //
          //  Write the type part of the placement new.
