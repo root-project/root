@@ -7,8 +7,6 @@
 #include "TMVA/SOFIE_common.hxx"
 //#include "RModel.hxx"
 
-
-
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
@@ -35,12 +33,13 @@ public:
 
    //virtual void Forward_reference() = 0;
    //irtual void Forward_blas() = 0;
-   virtual ~ROperator(){}
+   virtual ~ROperator(){};
 
 protected:
 
-   const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
+   const std::string SP = "    ";    ///< space used to correctly indent the generated C++ code
    bool fUseSession = false;        ///< flag to identify if using the session class
+
 };
 
 

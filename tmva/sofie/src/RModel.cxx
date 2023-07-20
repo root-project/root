@@ -6,9 +6,6 @@
 #include "TMVA/RModel.hxx"
 #include "TMVA/SOFIE_common.hxx"
 
-
-
-
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
@@ -20,23 +17,6 @@ namespace SOFIE{
       return opA | static_cast<std::underlying_type_t<Options>>(opB);
    }
 
-   // overload operator * for concatenating SP
-   const std::string operator*(const std::string str, std::size_t n) {
-      std::string res(str);
-
-      if (n == 0 || str.empty()) return {};
-      if (n == 1) return str;
-
-      const auto period = str.size();
-
-      if (period == 1) return std::string(n, str.front());
-
-      res.reserve(period * n);
-      std::size_t m{2};
-      for (; m < n; m *= 2) res += res;
-      res.append(res.c_str(), (n - (m / 2)) * period);
-      return res;
-   }
 
    RModel::RModel(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
@@ -653,6 +633,36 @@ namespace SOFIE{
       fGC.pop_back(); //remove last ","
       fGC += "){\n\n";
 
+      // Create output vectors
+      if (outputSize == 1) {
+         size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
+         fGC += SP + "std::vector<" + outputType + "> ret(" + std::to_string(outputLength) + ");\n";
+      }
+      else {
+         for (size_t i=0; i<outputSize; i++) {
+            if (!fOutputTensorNames[i].empty()) {
+               size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[i]));
+               fGC += SP + "std::vector<" + outputType + "> ret_";
+               fGC += std::to_string(i);
+               fGC += "(" + std::to_string(outputLength) + ");\n";
+            }
+         }
+         fGC += SP + "std::vector<std::vector<" + outputType + ">> ret({";
+         for (size_t i=0; i<outputSize; i++) {
+            if (fOutputTensorNames[i].empty()) {
+               fGC += "{}";
+            }
+            else {
+               fGC += "ret_";
+               fGC += std::to_string(i);
+            }
+            if (i<outputSize - 1) {
+               fGC += ", ";
+            }
+         }
+         fGC += "});\n";
+      }
+
       fGC += SP + "try {\n"; //beginning of try-catch block
 
       fGC += SP + "// Intel GPU Device Selector\n";
@@ -665,10 +675,56 @@ namespace SOFIE{
       fGC += SP*5 + "return 1;\n";
       fGC += SP*4 + "}\n";
       fGC += SP*3 + "}\n";
-      fGC += SP*3 + "return -1;\n" + SP*2 + "};\n";
-      
-      fGC += SP + "}\n"; // end of try clause
+      fGC += SP*3 + "return -1;\n" + SP*2 + "};\n\n";
 
+      // Create queue
+      fGC += SP + "// Create In-order Queue\n";
+      fGC += SP*2 + "auto q = cl::sycl::queue{intel_gpu_selector, [=](cl::sycl::exception_list eL){\n";
+      fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}, cl::sycl::property::queue::in_order{}};\n";
+
+      // Buffer Creation
+      fGC += SP*2 + "{\n"; // start of buffer creation
+
+      // Create buffers for initialized tensors
+      for (auto& i : fInitializedTensors) {
+         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), fTensor_" + i.first + ".size()};\n";
+         fGC += SP*3 + "buf_tensor_" + i.first + ".set_final_data(nullptr);\n";
+      }
+
+      fGC += "\n";
+
+      // Create buffers for intermediate tensors
+      for (auto& i : fIntermediateTensorInfos) {
+         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), fTensor_" + i.first + ".size()};\n";
+         
+         // if the intermediate tensor is not an output
+         if (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end()) {
+            fGC += SP*3 + "buf_tensor_" + i.first + ".set_final_data(nullptr);\n";
+         }
+      }
+
+      if (outputSize == 1) {
+         fGC += SP*3 + "buf_tensor_" + fOutputTensorNames[0] + ".set_final_data(ret.data());\n";
+      }
+      else {
+         for (size_t i=0; i<outputSize; i++) {
+            if (!fOutputTensorNames[i].empty()) {
+               fGC += SP*3 + "buf_tensor_" + fOutputTensorNames[0] + ".set_final_data(ret_" + std::to_string(i) + ".data());\n";
+            }
+         }
+      }
+
+      for (size_t id = 0; id < fOperators.size() ; id++){
+         fGC+= (fOperators[id]->GenerateGPU(std::to_string(id)));
+      }
+
+      fGC += SP*2 + "}\n"; // buffer destruction
+
+
+
+
+      fGC += SP + "}\n"; // end of try clause
+   
       fGC += SP + "catch (const cl::sycl::exception& e) {\n"; //beginning of catch clause
       fGC += SP*2 + "std::cout << \"Exception caught: \" << e.what() << ";
       fGC += "\"with OpenCL error code: \" << e.get_cl_code() << std::endl;\n";

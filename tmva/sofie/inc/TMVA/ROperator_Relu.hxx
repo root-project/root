@@ -62,7 +62,18 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName) {
-      return std::string();
+      OpName = "op_" + OpName;
+      if (fShape.empty()) {
+         throw std::runtime_error("TMVA SOFIE Operator Relu called to Generate without being initialized first");
+      }
+      std::stringstream out;
+      int length = 1;
+      for(auto& i: fShape){
+         length *= i;
+      }
+
+      out << "\n" << SP*3 ;
+      return out.str();
    }
 
 };
