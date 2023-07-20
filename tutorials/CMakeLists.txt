@@ -472,6 +472,13 @@ set(all_veto hsimple.C
              ${clad_veto}
              )
 
+# These tutorials seem to trigger segfaults related to TClass* and RDataFrame
+# JITting on many platforms. Disable for now and revert once the issue is fixed
+list(APPEND all_veto tmva/RBatchGenerator_NumPy.py)
+list(APPEND all_veto tmva/RBatchGenerator_TensorFlow.py)
+list(APPEND all_veto tmva/RBatchGenerator_PyTorch.py)
+list(APPEND all_veto tmva/RBatchGenerator_filters_vectors.py)
+
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(root7 AND webgui)
   file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
