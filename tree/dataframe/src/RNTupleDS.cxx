@@ -227,11 +227,14 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
    // The fieldID could be the root field or the class of fieldId might not be loaded.
    // In these cases, only the inner fields are exposed as RDF columns.
-   auto fieldOrException = Detail::RFieldBase::Create("", fieldDesc.GetTypeName());
+   auto fieldOrException = Detail::RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
    valueField->SetOnDiskId(fieldId);
+   for (auto &f : *valueField) {
+      f.SetOnDiskId(desc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));
+   }
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
    if (!skeinIDs.empty()) {
