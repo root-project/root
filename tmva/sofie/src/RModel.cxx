@@ -671,7 +671,7 @@ namespace SOFIE{
       fGC += SP*2 + "auto intel_gpu_selector = [](const cl::sycl::device& dev) {\n";
       fGC += SP*3 + "if (dev.has(cl::sycl::aspect::gpu)) {\n";
       fGC += SP*4 + "auto vendorName = dev.get_info<cl::sycl::info::device::vendor>();\n";
-      fGC += SP*4 + "vendorName.find(\"Intel\") != std::string::npos) {\n";
+      fGC += SP*4 + "if (vendorName.find(\"Intel\") != std::string::npos) {\n";
       fGC += SP*5 + "return 1;\n";
       fGC += SP*4 + "}\n";
       fGC += SP*3 + "}\n";
@@ -685,9 +685,16 @@ namespace SOFIE{
       // Buffer Creation
       fGC += SP*2 + "{\n"; // start of buffer creation
 
+      // Create buffers for inputs
+      for (size_t i=0; i<fInputTensorNames.size(); ++i) {
+         fGC += SP*3 + "auto buf_tensor_" + fInputTensorNames[i] + " = cl::sycl::buffer{fTensor_" + fInputTensorNames[i];
+         fGC += ".data(), cl::sycl::range{fTensor_" + fInputTensorNames[i] + ".size()}};\n";
+         fGC += SP*3 + "buf_tensor_" + fInputTensorNames[i] + ".set_final_data(nullptr);\n";
+      }
+
       // Create buffers for initialized tensors
       for (auto& i : fInitializedTensors) {
-         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), fTensor_" + i.first + ".size()};\n";
+         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}};\n";
          fGC += SP*3 + "buf_tensor_" + i.first + ".set_final_data(nullptr);\n";
       }
 
@@ -695,7 +702,7 @@ namespace SOFIE{
 
       // Create buffers for intermediate tensors
       for (auto& i : fIntermediateTensorInfos) {
-         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), fTensor_" + i.first + ".size()};\n";
+         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}};\n";
          
          // if the intermediate tensor is not an output
          if (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end()) {
@@ -726,7 +733,7 @@ namespace SOFIE{
    
       fGC += SP + "catch (const cl::sycl::exception& e) {\n"; //beginning of catch clause
       fGC += SP*2 + "std::cout << \"Exception caught: \" << e.what() << ";
-      fGC += "\"with OpenCL error code: \" << e.get_cl_code() << std::endl;\n";
+      fGC += "\"with OpenCL error code: \" << e.code() << std::endl;\n";
       fGC += SP + "}\n"; //end of catch clause
 
       fGC += SP + "return ret;\n";

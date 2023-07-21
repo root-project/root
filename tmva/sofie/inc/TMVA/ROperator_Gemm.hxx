@@ -255,7 +255,7 @@ namespace SOFIE{
                   assert(length == ConvertShapeToLength(fShapeC));
                out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
                out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
-               out << ", cgh, cl::sycl::discard_write};\n";
+               out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
                out << SP*4 << "cgh.copy(tensor_" << fNC2 << ", acc_tensor_" << fNY << ");\n";
                out << SP*3 << "});\n";
             } else {
