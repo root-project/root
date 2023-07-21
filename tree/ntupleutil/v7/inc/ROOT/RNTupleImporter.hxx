@@ -151,6 +151,19 @@ private:
       virtual void ResetEntry() = 0; // called at the end of an entry
    };
 
+   /// When the schema is set up and the import started, it needs to be reset before the next Import() call
+   /// can start.  This RAII guard ensures that ResetSchema is called.
+   struct RImportGuard {
+      RNTupleImporter &fImporter;
+
+      explicit RImportGuard(RNTupleImporter &importer) : fImporter(importer) {}
+      RImportGuard(const RImportGuard &) = delete;
+      RImportGuard &operator=(const RImportGuard &) = delete;
+      RImportGuard(RImportGuard &&) = delete;
+      RImportGuard &operator=(RImportGuard &&) = delete;
+      ~RImportGuard() { fImporter.ResetSchema(); }
+   };
+
    /// Leaf count arrays require special treatment. They are translated into RNTuple untyped collections.
    /// This class does the bookkeeping of the sub-schema for these collections.
    struct RImportLeafCountCollection {
