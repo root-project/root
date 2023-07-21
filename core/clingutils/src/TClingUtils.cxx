@@ -2392,7 +2392,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
          finalString << args;
          finalString << " : ";
       } else {
-         finalString << "::new((::ROOT::Internal::TOperatorNewHelper*)p) ";
+         finalString << "::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) ";
          finalString << classname.c_str();
          finalString << args;
          finalString << " : ";
@@ -2412,7 +2412,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
             finalString << classname.c_str();
             finalString << "[nElements] : ";
          } else {
-            finalString << "::new((::ROOT::Internal::TOperatorNewHelper*)p) ";
+            finalString << "::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) ";
             finalString << classname.c_str();
             finalString << "[nElements] : ";
          }
