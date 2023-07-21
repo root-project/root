@@ -67,7 +67,27 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName) {
-      return std::string();
+      OpName = "op_" + OpName;
+      if (fShape.empty()) {
+         throw std::runtime_error("TMVA SOFIE Cast called to Generate without being initialized first");
+      }
+      std::stringstream out;
+      size_t length = ConvertShapeToLength(fShape);
+
+      out << "\n" << SP*3 << "//------ CAST\n";
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::write_only};\n";
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
+      out << "), [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "acc_tensor_" << fNY << "[id] = static_cast<" << fAttrType << ">(acc_tensor_";
+      out << fNX << "[id]);\n";
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+      
+      return out.str();
    }
 
 };
