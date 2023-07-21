@@ -369,8 +369,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
                                                  std::move(itemField));
    } else if (canonicalType.substr(0, 9) == "std::set<") {
       std::string itemTypeName = canonicalType.substr(9, canonicalType.length() - 10);
-      auto itemField = Create("_0", itemTypeName);
-      result = std::make_unique<RSetField>(fieldName, itemField.Unwrap());
+      auto itemField = Create("_0", itemTypeName).Unwrap();
+      auto normalizedInnerTypeName = itemField->GetType();
+      result =
+         std::make_unique<RSetField>(fieldName, "std::set<" + normalizedInnerTypeName + ">", std::move(itemField));
    } else if (canonicalType == ":Collection:") {
       // TODO: create an RCollectionField?
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
@@ -398,7 +400,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto cl = TClass::GetClass(canonicalType.c_str());
       if (cl != nullptr) {
          if (cl->GetCollectionProxy())
-            result = std::make_unique<RCollectionClassField>(fieldName, canonicalType);
+            result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
          else
             result = std::make_unique<RClassField>(fieldName, canonicalType);
       }
@@ -1137,7 +1139,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    }
    if (fClass->GetCollectionProxy()) {
       throw RException(
-         R__FAIL(std::string(className) + " has an associated collection proxy; use RCollectionClassField instead"));
+         R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
    }
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
@@ -1379,20 +1381,14 @@ ROOT::Experimental::RProxiedCollectionField::RCollectionIterableOnce::GetIterato
    return ifuncs;
 }
 
-ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view className)
-   : RProxiedCollectionField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
-{
-}
-
-ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view className,
-                                                                     TClass *classp)
-   : ROOT::Experimental::Detail::RFieldBase(fieldName, className, ENTupleStructure::kCollection, false /* isSimple */),
-     fNWritten(0)
+ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
+                                                                     std::string_view typeName, TClass *classp)
+   : Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kCollection, false /* isSimple */), fNWritten(0)
 {
    if (classp == nullptr)
-      throw RException(R__FAIL("RField: no I/O support for collection proxy type " + std::string(className)));
+      throw RException(R__FAIL("RField: no I/O support for collection proxy type " + std::string(typeName)));
    if (!classp->GetCollectionProxy())
-      throw RException(R__FAIL(std::string(className) + " has no associated collection proxy"));
+      throw RException(R__FAIL(std::string(typeName) + " has no associated collection proxy"));
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
@@ -1402,6 +1398,62 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
+}
+
+ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
+                                                                     std::string_view typeName,
+                                                                     std::unique_ptr<Detail::RFieldBase> itemField)
+   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+{
+   if (!fProxy->GetCollectionClass()->HasDictionary()) {
+      throw RException(R__FAIL("dictionary not available for type " +
+                               GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
+   }
+
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
+}
+
+ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
+                                                                     std::string_view typeName)
+   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+{
+   // TODO(jalopezg, fdegeus) Full support for associative collections (both custom and STL) will be handled in a
+   // follow-up PR.
+   if (fProperties & TVirtualCollectionProxy::kIsAssociative)
+      throw RException(R__FAIL("custom associative collection proxies not supported"));
+
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
+
+   if (auto valueClass = fProxy->GetValueClass()) {
+      // Element type is a class
+      itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
+   } else {
+      switch (fProxy->GetType()) {
+      case EDataType::kChar_t:    itemField = std::make_unique<RField<char>>("_0"); break;
+      case EDataType::kUChar_t:   itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
+      case EDataType::kShort_t:   itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
+      case EDataType::kUShort_t:  itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
+      case EDataType::kInt_t:     itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
+      case EDataType::kUInt_t:    itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
+      case EDataType::kLong_t:
+      case EDataType::kLong64_t:
+         itemField = std::make_unique<RField<std::int64_t>>("_0");
+         break;
+      case EDataType::kULong_t:
+      case EDataType::kULong64_t:
+         itemField = std::make_unique<RField<std::uint64_t>>("_0");
+         break;
+      case EDataType::kFloat_t:   itemField = std::make_unique<RField<float>>("_0"); break;
+      case EDataType::kDouble_t:  itemField = std::make_unique<RField<double>>("_0"); break;
+      case EDataType::kBool_t:    itemField = std::make_unique<RField<bool>>("_0"); break;
+      default:
+         throw RException(R__FAIL("unsupported value type"));
+      }
+   }
+
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -1506,59 +1558,6 @@ void ROOT::Experimental::RProxiedCollectionField::CommitCluster()
 void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitProxiedCollectionField(*this);
-}
-
-//------------------------------------------------------------------------------
-
-ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className)
-   : RCollectionClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
-{
-}
-
-ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className,
-                                                                 TClass *classp)
-   : ROOT::Experimental::RProxiedCollectionField(fieldName, className, classp)
-{
-   if (fProperties & TVirtualCollectionProxy::kIsAssociative)
-      throw RException(R__FAIL("custom associative collection proxies not supported"));
-
-   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
-
-   if (auto valueClass = fProxy->GetValueClass()) {
-      // Element type is a class
-      itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
-   } else {
-      switch (fProxy->GetType()) {
-      case EDataType::kChar_t:   itemField = std::make_unique<RField<char>>("_0"); break;
-      case EDataType::kUChar_t:  itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
-      case EDataType::kShort_t:  itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
-      case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
-      case EDataType::kInt_t:    itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
-      case EDataType::kUInt_t:   itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
-      case EDataType::kLong_t:
-      case EDataType::kLong64_t:
-         itemField = std::make_unique<RField<std::int64_t>>("_0");
-         break;
-      case EDataType::kULong_t:
-      case EDataType::kULong64_t:
-         itemField = std::make_unique<RField<std::uint64_t>>("_0");
-         break;
-      case EDataType::kFloat_t:  itemField = std::make_unique<RField<float>>("_0"); break;
-      case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
-      case EDataType::kBool_t:   itemField = std::make_unique<RField<bool>>("_0"); break;
-      default:
-         throw RException(R__FAIL("unsupported value type"));
-      }
-   }
-   fItemSize = itemField->GetValueSize();
-   Attach(std::move(itemField));
-}
-
-std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
-ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) const
-{
-   return std::unique_ptr<RCollectionClassField>(
-      new RCollectionClassField(newName, GetType(), fProxy->GetCollectionClass()));
 }
 
 //------------------------------------------------------------------------------
@@ -2405,23 +2404,17 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
-   : ROOT::Experimental::RProxiedCollectionField(fieldName, "std::set<" + itemField->GetType() + ">")
+ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::string_view typeName,
+                                         std::unique_ptr<Detail::RFieldBase> itemField)
+   : ROOT::Experimental::RProxiedCollectionField(fieldName, typeName, std::move(itemField))
 {
-   if (!fProxy->GetCollectionClass()->HasDictionary()) {
-      throw RException(R__FAIL("RField: no dictionary loaded for collection type " +
-                               GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
-   }
-
-   fItemSize = itemField->GetValueSize();
-   Attach(std::move(itemField));
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::make_unique<RSetField>(newName, std::move(newItemField));
+   return std::make_unique<RSetField>(newName, GetType(), std::move(newItemField));
 }
 
 //------------------------------------------------------------------------------

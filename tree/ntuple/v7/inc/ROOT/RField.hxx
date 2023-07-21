@@ -602,7 +602,10 @@ public:
 /// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
 /// `TVirtualCollectionProxy`. For STL collections, these proxies are provided. Custom classes need to implement the
-/// corresponding member functions in `TVirtualCollectionProxy`.
+/// corresponding member functions in `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an
+/// implementation for the following functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`,
+/// `GetValueClass()`, `GetType()`, `PushProxy()`, `PopProxy()`, `GetFunctionCreateIterators()`, `GetFunctionNext()`,
+/// and `GetFunctionDeleteTwoIterators()`.
 ///
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
 class RProxiedCollectionField : public Detail::RFieldBase {
@@ -686,7 +689,9 @@ protected:
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
 
-   RProxiedCollectionField(std::string_view fieldName, std::string_view className, TClass *classp);
+   RProxiedCollectionField(std::string_view fieldName, std::string_view typeName, TClass *classp);
+   RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
+                           std::unique_ptr<Detail::RFieldBase> itemField);
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
@@ -701,7 +706,7 @@ protected:
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
-   RProxiedCollectionField(std::string_view fieldName, std::string_view className);
+   RProxiedCollectionField(std::string_view fieldName, std::string_view typeName);
    RProxiedCollectionField(RProxiedCollectionField &&other) = default;
    RProxiedCollectionField &operator=(RProxiedCollectionField &&other) = default;
    ~RProxiedCollectionField() override = default;
@@ -720,25 +725,6 @@ public:
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
-};
-
-/// The field for a class representing a custom collections of elements via `TVirtualCollectionProxy`. At a bare
-/// minimum, the user is required to provide an implementation for the following functions in `TVirtualCollectionProxy`:
-/// `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`, `PushProxy()`, `PopProxy()`,
-/// `GetFunctionCreateIterators()`, `GetFunctionNext()`, and `GetFunctionDeleteTwoIterators()`.
-///
-/// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
-class RCollectionClassField : public RProxiedCollectionField {
-protected:
-   RCollectionClassField(std::string_view fieldName, std::string_view className, TClass *classp);
-
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-
-public:
-   RCollectionClassField(std::string_view fieldName, std::string_view className);
-   RCollectionClassField(RCollectionClassField &&other) = default;
-   RCollectionClassField &operator=(RCollectionClassField &&other) = default;
-   ~RCollectionClassField() override = default;
 };
 
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
@@ -999,7 +985,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
 
 public:
-   RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
+   RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<Detail::RFieldBase> itemField);
    RSetField(RSetField &&other) = default;
    RSetField &operator=(RSetField &&other) = default;
    ~RSetField() override = default;
@@ -1120,7 +1106,7 @@ struct HasCollectionProxyMemberType<
 /// The point here is that we can only tell at run time if a class has an associated collection proxy.
 /// For compile time, in the first iteration of this PR we had an extra template argument that acted as a "tag" to
 /// differentiate the RField specialization for classes with an associated collection proxy (inherits
-/// `RCollectionClassField`) from the RField primary template definition (`RClassField`-derived), as in:
+/// `RProxiedCollectionField`) from the RField primary template definition (`RClassField`-derived), as in:
 /// ```
 /// auto field = std::make_unique<RField<MyClass>>("klass");
 /// // vs
@@ -1173,13 +1159,13 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 /// };
 /// ```
 template <typename T>
-class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> : public RCollectionClassField {
+class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> : public RProxiedCollectionField {
 protected:
    void GenerateValue(void *where) const final { new (where) T(); }
 
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
-   RField(std::string_view name) : RCollectionClassField(name, TypeName())
+   RField(std::string_view name) : RProxiedCollectionField(name, TypeName())
    {
       static_assert(std::is_class<T>::value, "collection proxy unsupported for fundamental types");
    }
@@ -1976,7 +1962,7 @@ protected:
 public:
    static std::string TypeName() { return "std::set<" + RField<ItemT>::TypeName() + ">"; }
 
-   explicit RField(std::string_view name) : RSetField(name, std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
