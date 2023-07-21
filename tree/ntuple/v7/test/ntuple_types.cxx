@@ -1212,7 +1212,7 @@ TEST(RNTuple, TVirtualCollectionProxy)
    SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
    SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
 
-   // `RCollectionClassField` instantiated but no collection proxy set (yet)
+   // `RProxiedCollectionField` instantiated but no collection proxy set (yet)
    EXPECT_THROW(RField<StructUsingCollectionProxy<float>>("hasTraitButNoCollectionProxySet"),
                 ROOT::Experimental::RException);
 
