@@ -74,7 +74,32 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName) {
-      return std::string();
+      OpName = "op_" + OpName;
+      if (fShape.empty()) {
+         throw std::runtime_error("TMVA SOFIE Operator Relu called to Generate without being initialized first");
+      }
+      std::stringstream out;
+      int length = 1;
+      for(auto& i: fShape){
+         length *= i;
+      }
+
+      out << "\n" << SP*3 << "//------ LEAKY RELU\n";
+      out << SP*3 << "float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << falpha << ";\n";
+      
+      out << SP*3 << "q.submit([&](cl::sycl::handler &cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n\n";
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << std::to_string(length);
+      out << "), [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "acc_tensor_" << fNY << "[id] = cl::sycl::max(acc_tensor_" << fNX << "[id], ";
+      out << OpName << "_alpha * acc_tensor_" << fNX << "[id]);\n";
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+
+      return out.str();
    }
 
 };
