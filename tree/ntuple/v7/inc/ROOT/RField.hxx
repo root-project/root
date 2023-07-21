@@ -132,8 +132,8 @@ public:
 
    private:
       RFieldBase *fField = nullptr; ///< The field that created the RValue
-      void *fObjPtr =
-         nullptr; ///< Created by RFieldBase::GenerateValue() or a non-owning pointer from SplitValue() or BindValue()
+      /// Created by RFieldBase::GenerateValue() or a non-owning pointer from SplitValue() or BindValue()
+      void *fObjPtr = nullptr;
       bool fIsOwning = false; ///< If true, fObjPtr is destroyed in the destructor
 
       RValue(RFieldBase *field, void *objPtr, bool isOwning) : fField(field), fObjPtr(objPtr), fIsOwning(isOwning) {}
