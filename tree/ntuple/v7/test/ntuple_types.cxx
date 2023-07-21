@@ -362,13 +362,8 @@ TEST(RNTuple, StdSet)
       EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet4(i));
    }
 
-   auto model = RNTupleModel::Create();
-   model->AddField(RFieldBase::Create("mySet2", "std::set<std::pair<int, CustomStruct>>").Unwrap());
-
-   auto ntuple2 = RNTupleReader::Open(std::move(model), "set_ntuple", fileGuard.GetPath());
-
-   ntuple2->LoadEntry(0);
-   auto mySet2 = ntuple2->GetModel()->GetDefaultEntry()->Get<std::set<std::pair<int, CustomStruct>>>("mySet2");
+   ntuple->LoadEntry(0);
+   auto mySet2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::pair<int, CustomStruct>>>("mySet2");
    auto pairSet =
       std::set<std::pair<int, CustomStruct>>({std::make_pair(0, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
                                               std::make_pair(1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
