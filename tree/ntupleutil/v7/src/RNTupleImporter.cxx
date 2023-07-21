@@ -378,6 +378,8 @@ void ROOT::Experimental::RNTupleImporter::Import()
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
 
    auto ntplWriter = std::make_unique<RNTupleWriter>(std::move(fModel), std::move(sink));
+   // The guard needs to be destructed before the writer goes out of scope
+   RImportGuard importGuard(*this);
 
    fProgressCallback = fIsQuiet ? nullptr : std::make_unique<RDefaultProgressCallback>();
 
@@ -417,7 +419,4 @@ void ROOT::Experimental::RNTupleImporter::Import()
    }
    if (fProgressCallback)
       fProgressCallback->Finish(ctrZippedBytes->GetValueAsInt(), nEntries);
-
-   // Destruct helper objects derived from the model before the writer is destructed
-   ResetSchema();
 }
