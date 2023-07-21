@@ -135,20 +135,34 @@ def main():
         if not pull_request and not args.incremental:
             archive_and_upload(yyyy_mm_dd, obj_prefix)
     except:
+        upload_failed = True
+
+    try:
         testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
         if testing:
             extra_ctest_flags = ""
+            result = ""
 
             if WINDOWS:
                 extra_ctest_flags += "--repeat until-pass:3 "
                 extra_ctest_flags += "--build-config " + args.buildtype
 
             shell_log = run_ctest(shell_log, extra_ctest_flags)
-        shell_log = create_coverage_html(shell_log)
-        shell_log = create_coverage_xml(shell_log)
+            print("---*****----")
+            print(result)
+    except:
+        testing_failed = True
+    
+    shell_log = create_coverage_html(shell_log)
+    shell_log = create_coverage_xml(shell_log)
+    
 
-        print_shell_log(shell_log)
+    if testing_failed or upload_failed:
+        die(result, "Some tests failed", shell_log)
+
+
+    print_shell_log(shell_log)
 
 
 @github_log_group("Clean up from previous runs")
@@ -256,7 +270,7 @@ def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
 
     # if result != 0:
     #     die(result, "Some tests failed", shell_log)
-    print(result)
+    #print(result)
 
     return shell_log
 
