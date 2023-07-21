@@ -207,6 +207,32 @@ std::tuple<const void *const *, const std::int32_t *, const std::int32_t *> GetR
    return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
 }
 
+/// Applies the field IDs from 'from' to 'to', where from and to are expected to be each other's clones.
+/// Used in RClassField and RCollectionClassField cloning. In these classes, we don't clone the subfields
+/// but we recreate them. Therefore, the on-disk IDs need to be fixed up.
+void SyncFieldIDs(const ROOT::Experimental::Detail::RFieldBase &from, ROOT::Experimental::Detail::RFieldBase &to)
+{
+   using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
+   std::deque<const RFieldBase *> fromSubfields;
+   std::deque<RFieldBase *> toSubfields;
+
+   fromSubfields.emplace_back(&from);
+   toSubfields.emplace_back(&to);
+
+   while (!fromSubfields.empty()) {
+      auto sFrom = fromSubfields.front();
+      fromSubfields.pop_front();
+      auto sTo = toSubfields.front();
+      toSubfields.pop_front();
+      sTo->SetOnDiskId(sFrom->GetOnDiskId());
+
+      for (const auto f : sFrom->GetSubFields())
+         fromSubfields.emplace_back(f);
+      for (auto f : sTo->GetSubFields())
+         toSubfields.emplace_back(f);
+   }
+}
+
 } // anonymous namespace
 
 //------------------------------------------------------------------------------
@@ -1227,7 +1253,9 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORules(const std::spa
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RClassField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<RClassField>(new RClassField(newName, GetType(), fClass));
+   auto result = std::unique_ptr<RClassField>(new RClassField(newName, GetType(), fClass));
+   SyncFieldIDs(*this, *result);
+   return result;
 }
 
 std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
@@ -1359,10 +1387,19 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 }
 
+ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName,
+                                           std::unique_ptr<RFieldBase> intField)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, enumName, ENTupleStructure::kLeaf, false /* isSimple */)
+{
+   Attach(std::move(intField));
+   fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+}
+
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::REnumField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<REnumField>(new REnumField(newName, GetType()));
+   auto newIntField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return std::unique_ptr<REnumField>(new REnumField(newName, GetType(), std::move(newIntField)));
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::REnumField::GenerateValue(void *where)
@@ -1458,8 +1495,10 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<RCollectionClassField>(
+   auto result = std::unique_ptr<RCollectionClassField>(
       new RCollectionClassField(newName, GetType(), fProxy->GetCollectionClass()));
+   SyncFieldIDs(*this, *result);
+   return result;
 }
 
 std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const void *from)

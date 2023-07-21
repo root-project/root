@@ -6,6 +6,8 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageStorage.hxx>
 
+#include <NTupleStruct.hxx>
+
 #include <gtest/gtest.h>
 
 using ROOT::Experimental::RNTupleDS;
@@ -20,18 +22,23 @@ protected:
    std::unique_ptr<RPageSource> fPageSource;
 
    void SetUp() override {
-      auto modelWrite = RNTupleModel::Create();
-      auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-      auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
-      auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
-      auto wrJets = modelWrite->MakeField<std::vector<float>>("jets", std::vector<float>{1.f, 2.f});
-      auto wrNnlo = modelWrite->MakeField<std::vector<std::vector<float>>>("nnlo");
-      wrNnlo->push_back(std::vector<float>());
-      wrNnlo->push_back(std::vector<float>{1.0});
-      wrNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
-      auto rvecI = modelWrite->MakeField<ROOT::RVecI>("rvec", ROOT::RVecI{1, 2, 3});
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("pt", 42.0);
+      model->MakeField<float>("energy", 7.0);
+      model->MakeField<std::string>("tag", "xyz");
+      model->MakeField<std::vector<float>>("jets", std::vector<float>{1.f, 2.f});
+      auto fldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
+      fldNnlo->push_back(std::vector<float>());
+      fldNnlo->push_back(std::vector<float>{1.0});
+      fldNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
+      model->MakeField<ROOT::RVecI>("rvec", ROOT::RVecI{1, 2, 3});
+      auto fldElectron = model->MakeField<Electron>("electron");
+      fldElectron->pt = 137.0;
+      auto fldVecElectron = model->MakeField<std::vector<Electron>>("VecElectron");
+      fldVecElectron->push_back(*fldElectron);
+      fldVecElectron->push_back(*fldElectron);
       {
-         auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), fNtplName, fFileName);
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), fNtplName, fFileName);
          ntuple->Fill();
       }
       fPageSource = RPageSource::Create(fNtplName, fFileName);
@@ -47,12 +54,18 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    RNTupleDS tds(std::move(fPageSource));
 
    auto colNames = tds.GetColumnNames();
-   ASSERT_EQ(9, colNames.size());
+   ASSERT_EQ(15, colNames.size());
 
    EXPECT_TRUE(tds.HasColumn("pt"));
    EXPECT_TRUE(tds.HasColumn("energy"));
    EXPECT_TRUE(tds.HasColumn("rvec"));
    EXPECT_TRUE(tds.HasColumn("R_rdf_sizeof_nnlo"));
+   EXPECT_TRUE(tds.HasColumn("electron"));
+   EXPECT_TRUE(tds.HasColumn("electron.pt"));
+   EXPECT_TRUE(tds.HasColumn("VecElectron"));
+   EXPECT_TRUE(tds.HasColumn("R_rdf_sizeof_VecElectron"));
+   EXPECT_TRUE(tds.HasColumn("VecElectron.pt"));
+   EXPECT_TRUE(tds.HasColumn("R_rdf_sizeof_VecElectron.pt"));
    EXPECT_FALSE(tds.HasColumn("Address"));
 
    EXPECT_STREQ("std::string", tds.GetTypeName("tag").c_str());
@@ -105,6 +118,14 @@ void ReadTest(const std::string &name, const std::string &fname) {
    auto sumnnlo = df.Aggregate(sumvec, std::plus<float>{}, "nnlo", 0.f);
    auto rvec = df.Take<ROOT::RVecI>("rvec");
    auto vectorasrvec = df.Take<ROOT::RVecF>("jets");
+   auto sumElectronPt = df.Aggregate([](float &acc, const Electron &e) { acc += e.pt; },
+                                     [](float a, float b) { return a + b; }, "electron");
+   auto sumVecElectronPt = df.Aggregate(
+      [](float &acc, const ROOT::RVec<Electron> &ve) {
+         for (const auto &e : ve)
+            acc += e.pt;
+      },
+      [](float a, float b) { return a + b; }, "VecElectron");
 
    EXPECT_EQ(1ull, count.GetValue());
    EXPECT_DOUBLE_EQ(42.f, sumpt.GetValue());
@@ -117,6 +138,8 @@ void ReadTest(const std::string &name, const std::string &fname) {
    EXPECT_EQ(5u, sumnnlosize.GetValue());
    EXPECT_TRUE(All(rvec->at(0) == ROOT::RVecI{1, 2, 3}));
    EXPECT_TRUE(All(vectorasrvec->at(0) == ROOT::RVecF{1.f, 2.f}));
+   EXPECT_FLOAT_EQ(137.0, sumElectronPt.GetValue());
+   EXPECT_FLOAT_EQ(2. * 137.0, sumVecElectronPt.GetValue());
 }
 
 TEST_F(RNTupleDSTest, Read)

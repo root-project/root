@@ -477,6 +477,7 @@ public:
 class REnumField : public Detail::RFieldBase {
 private:
    REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump);
+   REnumField(std::string_view fieldName, std::string_view enumName, std::unique_ptr<RFieldBase> intField);
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
