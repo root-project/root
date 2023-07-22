@@ -147,17 +147,14 @@ public:
    public:
       RValue(const RValue &) = delete;
       RValue &operator=(const RValue &) = delete;
-      RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr), fIsOwning(other.fIsOwning)
-      {
-         other.fIsOwning = false;
-      }
+      RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr) { std::swap(fIsOwning, other.fIsOwning); }
       RValue &operator=(RValue &&other)
       {
          DestroyIfOwning();
-         fField = other.fField;
-         fObjPtr = other.fObjPtr;
-         fIsOwning = other.fIsOwning;
-         other.fIsOwning = false;
+         fIsOwning = false;
+         std::swap(fField, other.fField);
+         std::swap(fObjPtr, other.fObjPtr);
+         std::swap(fIsOwning, other.fIsOwning);
          return *this;
       }
       ~RValue() { DestroyIfOwning(); }
