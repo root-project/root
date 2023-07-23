@@ -1375,7 +1375,7 @@ std::vector<ROOT::Experimental::Detail::RFieldValue>
 ROOT::Experimental::REnumField::SplitValue(const Detail::RFieldValue &value) const
 {
    auto result = Detail::RFieldValue(true /* captureTag */, fSubFields[0].get(), value.GetRawPtr());
-   return std::vector<Detail::RFieldValue>(1, result);
+   return std::vector<Detail::RFieldValue>{result};
 }
 
 void ROOT::Experimental::REnumField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
