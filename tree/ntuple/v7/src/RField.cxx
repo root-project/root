@@ -1356,7 +1356,7 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
    default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + std::string(enumName)));
    }
 
-   fTraits |= kTraitTriviallyDestructible;
+   fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
