@@ -14,7 +14,7 @@
  */
 
 enum CustomEnum { kCustomEnumVal = 7 };
-// TODO(jblomer): use standard integer types for specyfing the underying width; requires TEnum fix.
+// TODO(jblomer): use standard integer types for specifying the underlying width; requires TEnum fix.
 enum class CustomEnumInt8 : char {};
 enum class CustomEnumUInt8 : unsigned char {};
 enum class CustomEnumInt16 : short int {};
