@@ -476,7 +476,6 @@ public:
 /// The field for an unscoped or scoped enum with dictionary
 class REnumField : public Detail::RFieldBase {
 private:
-   EColumnType fColumnType;
    REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump);
 
 protected:
