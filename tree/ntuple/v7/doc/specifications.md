@@ -725,8 +725,7 @@ In this second case, a default-constructed `T` (or, if applicable, a `T` constru
 User-defined enums are stored as a leaf field with a single subfield named `_0`.
 The mother field has no attached columns.
 The subfield corresponds to the integer type the underlies the enum.
-The enum needs to have a dictionary.
-Unscoped and scoped enums are supported.
+Unscoped and scoped enums are supported as long as the enum has a dictionary.
 
 ### User-defined classes
 
