@@ -533,7 +533,9 @@ private:
          void Advance()
          {
             auto fnNext_Contig = [&]() {
-               auto &iter = *static_cast<unsigned char **>(fIterator), p = iter;
+               // Array-backed collections (e.g. kSTLvector) directly use the pointer-to-iterator-data as a
+               // pointer-to-element, thus saving an indirection level (see documentation for TVirtualCollectionProxy)
+               auto &iter = reinterpret_cast<unsigned char *&>(fIterator), p = iter;
                iter += fOwner.fStride;
                return p;
             };
