@@ -1747,10 +1747,10 @@ RooDataSet* makeFakeDataXY()
   // ---------------------------------------------------------------------------------------------
 
   // Make subset of experimental data with only y values
-  std::unique_ptr<RooDataSet> expDataY{static_cast<RooDataSet*>(expDataXY->reduce(y))};
+  std::unique_ptr<RooAbsData> expDataY{expDataXY->reduce(y)};
 
   // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
-  std::unique_ptr<RooDataSet> data{model.generate(x,ProtoData(*expDataY))};
+  std::unique_ptr<RooDataSet> data{model.generate(x,ProtoData(static_cast<RooDataSet&>(*expDataY)))};
 
 
 
@@ -1771,13 +1771,13 @@ RooDataSet* makeFakeDataXY()
 
 
   // Speed up (and approximate) projection by using binned clone of data for projection
-  std::unique_ptr<RooAbsData> binnedDataY{expDataY->binnedClone()};
+  std::unique_ptr<RooAbsData> binnedDataY{static_cast<RooDataSet&>(*expDataY).binnedClone()};
   model.plotOn(xframe,ProjWData(*binnedDataY),LineColor(kCyan),LineStyle(kDotted),Name("Alt1")) ;
 
 
   // Show effect of projection with too coarse binning
-  ((RooRealVar*)expDataY->get()->find("y"))->setBins(5) ;
-  std::unique_ptr<RooAbsData> binnedDataY2{expDataY->binnedClone()};
+  static_cast<RooRealVar*>(expDataY->get()->find("y"))->setBins(5) ;
+  std::unique_ptr<RooAbsData> binnedDataY2{static_cast<RooDataSet&>(*expDataY).binnedClone()};
   model.plotOn(xframe,ProjWData(*binnedDataY2),LineColor(kRed),Name("Alt2")) ;
 
 
@@ -2822,7 +2822,7 @@ public:
   data->addColumn(llratio_func) ;
 
   // Extract the subset of data with large signal likelihood
-  std::unique_ptr<RooDataSet> dataSel{static_cast<RooDataSet*>(data->reduce(Cut("llratio>0.7")))};
+  std::unique_ptr<RooAbsData> dataSel{data->reduce(Cut("llratio>0.7"))};
 
   // Make plot frame
   RooPlot* frame2 = x.frame(Title("Same projection on X with LLratio(y,z)>0.7"),Bins(40)) ;
@@ -2840,11 +2840,11 @@ public:
 
   // Calculate LL ratio for each generated event and select MC events with llratio)0.7
   mcprojData->addColumn(llratio_func) ;
-  std::unique_ptr<RooDataSet> mcprojDataSel{static_cast<RooDataSet*>(mcprojData->reduce(Cut("llratio>0.7")))};
+  std::unique_ptr<RooAbsData> mcprojDataSel{mcprojData->reduce(Cut("llratio>0.7"))};
 
   // Project model on x, integrating projected observables (y,z) with Monte Carlo technique
   // on set of events with the same llratio cut as was applied to data
-  model.plotOn(frame2,ProjWData(*mcprojDataSel)) ;
+  model.plotOn(frame2,ProjWData(static_cast<RooDataSet&>(*mcprojDataSel)));
 
 
   regPlot(frame,"rf316_plot1") ;
@@ -2912,19 +2912,19 @@ public:
   // -------------------------------------------------------------
 
   // The reduce() function returns a new dataset which is a subset of the original
-  std::unique_ptr<RooDataSet> d1{static_cast<RooDataSet*>(d.reduce(RooArgSet(x,c)))};
-  std::unique_ptr<RooDataSet> d2{static_cast<RooDataSet*>(d.reduce(RooArgSet(y)))};
-  std::unique_ptr<RooDataSet> d3{static_cast<RooDataSet*>(d.reduce("y>5.17"))};
-  std::unique_ptr<RooDataSet> d4{static_cast<RooDataSet*>(d.reduce(RooArgSet(x,c),"y>5.17"))};
+  std::unique_ptr<RooAbsData> d1{d.reduce(RooArgSet(x,c))};
+  std::unique_ptr<RooAbsData> d2{d.reduce(RooArgSet(y))};
+  std::unique_ptr<RooAbsData> d3{d.reduce("y>5.17")};
+  std::unique_ptr<RooAbsData> d4{d.reduce(RooArgSet(x,c),"y>5.17")};
 
   regValue(d3->numEntries(),"rf403_nd3") ;
   regValue(d4->numEntries(),"rf403_nd4") ;
 
   // The merge() function adds two data set column-wise
-  d1->merge(d2.get()) ;
+  static_cast<RooDataSet&>(*d1).merge(static_cast<RooDataSet*>(d2.get()));
 
   // The append() function addes two datasets row-wise
-  d1->append(*d3) ;
+  static_cast<RooDataSet&>(*d1).append(static_cast<RooDataSet&>(*d3));
 
   regValue(d1->numEntries(),"rf403_nd1") ;
 
@@ -2951,7 +2951,7 @@ public:
   //
   // All reduce() methods are interfaced in RooAbsData. All reduction techniques
   // demonstrated on unbinned datasets can be applied to binned datasets as well.
-  std::unique_ptr<RooDataHist> dh2{static_cast<RooDataHist*>(dh.reduce(y,"x>0"))};
+  std::unique_ptr<RooAbsData> dh2{dh.reduce(y,"x>0")};
 
   // Add dh2 to yframe and redraw
   dh2->plotOn(yframe,LineColor(kRed),MarkerColor(kRed),Name("dh2")) ;
@@ -3181,7 +3181,7 @@ public:
   tagCat.addToRange("soso","NetTagger-2") ;
 
   // Use category range in dataset reduction specification
-  std::unique_ptr<RooDataSet> goodData{static_cast<RooDataSet*>(data->reduce(CutRange("good")))};
+  std::unique_ptr<RooAbsData> goodData{data->reduce(CutRange("good"))};
   Roo1DTable* gtable = goodData->table(tagCat) ;
 
 
@@ -3294,7 +3294,7 @@ public:
   xb->setRange("alt","x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9") ;
 
   // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the fram
-  std::unique_ptr<RooDataSet> dataSel{static_cast<RooDataSet*>(data->reduce(CutRange("alt"),EventRange(0,5000)))};
+  std::unique_ptr<RooAbsData> dataSel{data->reduce(CutRange("alt"),EventRange(0,5000))};
 //   dataSel->plotOn(xframe,MarkerColor(kGreen),LineColor(kGreen),Name("data_sel")) ;
 
 

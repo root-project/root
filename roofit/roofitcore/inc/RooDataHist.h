@@ -58,8 +58,8 @@ public:
   ~RooDataHist() override ;
 
   /// Return empty clone of this RooDataHist.
-  RooAbsData* emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet*vars=nullptr, const char* /*wgtVarName*/=nullptr) const override {
-    return new RooDataHist(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()) ;
+  RooFit::OwningPtr<RooAbsData> emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet*vars=nullptr, const char* /*wgtVarName*/=nullptr) const override {
+    return RooFit::Detail::owningPtr(std::make_unique<RooDataHist>(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()));
   }
 
   /// Add `wgt` to the bin content enclosed by the coordinates passed in `row`.
@@ -224,7 +224,7 @@ public:
   Int_t calcTreeIndex() const { return static_cast<Int_t>(calcTreeIndex(_vars, true)); }
 
   void initialize(const char* binningName=nullptr,bool fillTree=true) ;
-  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
+  std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                   std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) override;
   double interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) ;
   const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;

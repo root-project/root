@@ -15,7 +15,7 @@
 
 // Define ROOFIT_MEMORY_SAFE_INTERFACES to change RooFit interfaces to be
 // memory safe.
-//#define ROOFIT_MEMORY_SAFE_INTERFACES
+// #define ROOFIT_MEMORY_SAFE_INTERFACES
 
 // The memory safe interfaces mode implies that all RooFit::OwningPtr<T> are
 // std::unique_ptr<T>.
@@ -53,6 +53,17 @@ OwningPtr<T> owningPtr(std::unique_ptr<T> &&ptr)
    return std::move(ptr);
 #else
    return ptr.release();
+#endif
+}
+
+/// internal helper to turn a std::unique_ptr<t> into an owningptr.
+template <typename T, typename U>
+OwningPtr<T> owningPtr(std::unique_ptr<U> &&ptr)
+{
+#ifdef ROOFIT_OWNING_PTR_IS_UNIQUE_PTR
+   return std::unique_ptr<T>{static_cast<T *>(ptr.release())};
+#else
+   return static_cast<T *>(ptr.release());
 #endif
 }
 
