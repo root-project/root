@@ -120,7 +120,7 @@ private:
    std::size_t fNumColumns;
 
    std::vector<std::string> fCols;
-   std::vector<std::string> fFilters;
+   std::string fFilters;
 
    std::vector<std::size_t> fVecSizes;
    std::size_t fVecPadding;
@@ -135,7 +135,7 @@ public:
    /// \param vecSizes
    /// \param vecPadding
    RChunkLoader(const std::string &treeName, const std::string &fileName, const std::size_t chunkSize,
-                const std::vector<std::string> &cols, const std::vector<std::string> &filters = {},
+                const std::vector<std::string> &cols, const std::string &filters = "",
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
       : fTreeName(treeName),
         fFileName(fileName),
@@ -184,11 +184,7 @@ private:
    std::pair<std::size_t, std::size_t> loadFiltered(ROOT::RDataFrame &x_rdf, RChunkLoaderFunctor<Args...> &func)
    {
       // Add the given filters to the RDataFrame
-      auto x_filter = x_rdf.Filter(fFilters[0], "RBatchGenerator_Filter_0");
-      for (auto i = 1; i < fFilters.size(); i++) {
-         auto name = "RBatchGenerator_Filter_" + std::to_string(i);
-         x_filter = x_filter.Filter(fFilters[i], name);
-      }
+      auto x_filter = x_rdf.Filter(fFilters, "RBatchGenerator_Filter");
 
       // add range to the DataFrame
       auto x_ranged = x_filter.Range(fChunkSize);
