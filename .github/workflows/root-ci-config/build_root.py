@@ -70,6 +70,9 @@ def main():
                         help="url to repository")
 
     args = parser.parse_args()
+    platform = args.platform
+
+    print(platform)
 
     args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
 
