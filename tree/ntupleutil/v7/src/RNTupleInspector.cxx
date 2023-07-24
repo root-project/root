@@ -78,7 +78,9 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
    }
 }
 
-ROOT::Experimental::RNTupleInspector::RFieldTreeInfo ROOT::Experimental::RNTupleInspector::CollectFieldInfo(DescriptorId_t fieldId) {
+ROOT::Experimental::RNTupleInspector::RFieldTreeInfo
+ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldId)
+{
    std::uint64_t onDiskSize = 0;
    std::uint64_t inMemSize = 0;
 
@@ -91,7 +93,7 @@ ROOT::Experimental::RNTupleInspector::RFieldTreeInfo ROOT::Experimental::RNTuple
    for (const auto &subFieldDescriptor : fDescriptor->GetFieldIterable(fieldId)) {
       DescriptorId_t subFieldId = subFieldDescriptor.GetId();
 
-      auto subFieldInfo = CollectFieldInfo(subFieldId);
+      auto subFieldInfo = CollectFieldTreeInfo(subFieldId);
 
       onDiskSize += subFieldInfo.GetOnDiskSize();
       inMemSize += subFieldInfo.GetInMemorySize();
@@ -134,7 +136,7 @@ ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<ROOT::Experimental:
    auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 
    inspector->CollectColumnInfo();
-   inspector->CollectFieldInfo(inspector->GetDescriptor()->GetFieldZeroId());
+   inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());
 
    return inspector;
 }
@@ -169,7 +171,7 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
    inspector->fSourceFile = std::move(sourceFile);
 
    inspector->CollectColumnInfo();
-   inspector->CollectFieldInfo(inspector->GetDescriptor()->GetFieldZeroId());
+   inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());
 
    return inspector;
 }
