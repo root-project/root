@@ -72,7 +72,6 @@ def main():
     args = parser.parse_args()
     platform = args.platform
 
-    print(platform)
 
     args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
 
@@ -157,8 +156,9 @@ def main():
     except:
         testing_failed = True
     
-    # shell_log = create_coverage_html(shell_log)
-    shell_log = create_coverage_xml(shell_log)
+    if(platform == "fedora38-cov"):
+        shell_log = create_coverage_xml(shell_log)
+        # shell_log = create_coverage_html(shell_log)
     
 
     if testing_failed or upload_failed:

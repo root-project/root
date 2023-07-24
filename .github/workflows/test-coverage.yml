@@ -160,9 +160,15 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora38-cov
+          # - image: fedora38-cov
+          #   config: Debug
+          #   overrides: ["coverage=On"]
+
+          - image: fedora38
             config: Debug
             overrides: ["coverage=On"]
+
+
 
           # - image: fedora37
           #   config: Debug
@@ -320,7 +326,7 @@ jobs:
           ls
 
       - name: Upload coverage to Codecov
-        if:   ${{ !cancelled() }}
+        if: ${{ matrix.image == 'fedora38-cov' && !cancelled() }}
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
