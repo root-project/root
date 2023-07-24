@@ -28,7 +28,6 @@ jobs:
             find . -name $d -prune -exec rm -r "{}" \;
           done
           rm -r llvm/utils/vscode
-          rm llvm/.git*
       - name: Compare
         run: |
           for d in clang llvm; do
