@@ -120,7 +120,7 @@ private:
    /// Recursively gather field-level information and store it in `fFieldTreeInfo`.
    ///
    /// This method is called when the `RNTupleInspector` is initially created.
-   RFieldTreeInfo CollectFieldInfo(DescriptorId_t fieldId);
+   RFieldTreeInfo CollectFieldTreeInfo(DescriptorId_t fieldId);
 
    /// Get the IDs of the columns that make up the given field, including its sub-fields.
    std::vector<DescriptorId_t> GetColumnsForFieldTree(DescriptorId_t fieldId) const;
