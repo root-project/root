@@ -128,6 +128,7 @@ def main():
         shell_log = show_node_state(shell_log, options)
 
     shell_log = build(options, args.buildtype, shell_log)
+    print(platform)
 
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request

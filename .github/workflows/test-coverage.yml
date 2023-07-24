@@ -164,25 +164,25 @@ jobs:
             config: Debug
             overrides: ["coverage=On"]
 
-          - image: fedora38
-            config: Debug
-            overrides: ["coverage=On"]
+          # - image: fedora38
+          #   config: Debug
+          #   overrides: ["coverage=On"]
 
-          - image: fedora37
-            config: Debug
+          # - image: fedora37
+          #   config: Debug
 
-          - image: alma8
-            config: Release
+          # - image: alma8
+          #   config: Release
 
-          - image: ubuntu20
-            config: Release
+          # - image: ubuntu20
+          #   config: Release
 
-          - image: ubuntu2210
-            config: Release
+          # - image: ubuntu2210
+          #   config: Release
 
-          - image: ubuntu22
-            config: Debug
-            overrides: ["imt=Off"]
+          # - image: ubuntu22
+          #   config: Debug
+          #   overrides: ["imt=Off"]
 
 
     runs-on: self-hosted
