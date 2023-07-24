@@ -154,7 +154,7 @@ def main():
     except:
         testing_failed = True
     
-    shell_log = create_coverage_html(shell_log)
+    # shell_log = create_coverage_html(shell_log)
     shell_log = create_coverage_xml(shell_log)
     
 
@@ -358,27 +358,27 @@ def rebase(base_ref, head_ref, shell_log) -> str:
     return shell_log
 
 
-@github_log_group("Create Test Coverage in HTML")
-def create_coverage_html(shell_log: str) -> str:
-    directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
-    #
-    #directory = f"../root-ci-config/"
-    #directory = f"builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
-    result, shell_log = subprocess_with_log(f"""
-        cd '{directory}'
-        ls
-        lcov --directory . --capture --output-file coverage.info
-        genhtml coverage.info --output-directory coverage_report
-        cd coverage_report
-        firefox index.html
-    """, shell_log)
-    if directory == "":
-        print("No content")
-    #contents = os.listdir(directory)
-    print(result)
-    print("---------")
-    print(shell_log)
-    return shell_log
+# @github_log_group("Create Test Coverage in HTML")
+# def create_coverage_html(shell_log: str) -> str:
+#     directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
+#     #
+#     #directory = f"../root-ci-config/"
+#     #directory = f"builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
+#     result, shell_log = subprocess_with_log(f"""
+#         cd '{directory}'
+#         ls
+#         lcov --directory . --capture --output-file coverage.info
+#         genhtml coverage.info --output-directory coverage_report
+#         cd coverage_report
+#         firefox index.html
+#     """, shell_log)
+#     if directory == "":
+#         print("No content")
+#     #contents = os.listdir(directory)
+#     print(result)
+#     print("---------")
+#     print(shell_log)
+#     return shell_log
 
 
 
@@ -392,7 +392,7 @@ def create_coverage_xml(shell_log: str) -> str:
         gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
         pwd
         ls
-        cat XMLCoverage.xml
+        cat CoverageXML.xml
     """, shell_log)
     print(result)
     print("---------")
