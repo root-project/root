@@ -44,7 +44,7 @@ except:
     CONNECTION = None
 
 WINDOWS = (os.name == 'nt')
-WORKDIR = '/tmp/workspace' if not WINDOWS else 'C:/ROOT-CI'
+WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
 COMPRESSIONLEVEL = 6 if not WINDOWS else 1
 
 

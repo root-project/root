@@ -136,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name:  Test Results ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
-          path: /tmp/workspace/build/TestResults.xml
+          path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
 
   build-windows:
@@ -331,7 +331,7 @@ jobs:
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
-          build-directory: /tmp/workspace/src/
+          build-directory: /github/home/ROOT-CI/src/
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -383,7 +383,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
-          path: /tmp/workspace/build/TestResults.xml
+          path: /github/home/ROOT-CI/build/TestResults.xml
 
   event_file:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
