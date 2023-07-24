@@ -1,5 +1,5 @@
 
-name: 'ROOT CI'
+name: 'ROOT CI TEST'
 
 on:
   schedule:
