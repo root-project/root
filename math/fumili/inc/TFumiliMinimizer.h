@@ -173,9 +173,6 @@ private:
    static ROOT::Math::FitMethodGradFunction * fgGradFunc;
 
    static TFumili * fgFumili; // static instance (used by fcn function)
-
-   ClassDef(TFumiliMinimizer,1)  //Implementation of Minimizer interface using TFumili
-
 };
 
 

@@ -740,6 +740,9 @@ void SetPathsForRelocatability(std::vector<std::string>& clingArgs);
 //______________________________________________________________________________
 void ReplaceAll(std::string& str, const std::string& from, const std::string& to, bool recurse=false);
 
+//______________________________________________________________________________
+std::string GetInjectedUsingDecls();
+
 // Functions for the printouts -------------------------------------------------
 
 //______________________________________________________________________________

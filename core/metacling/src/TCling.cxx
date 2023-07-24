@@ -1330,7 +1330,8 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 #ifndef R__WIN32
    PreIncludes += "#include <cassert>\n";
 #endif
-   PreIncludes += "using namespace std;\n";
+   PreIncludes += ROOT::TMetaUtils::GetInjectedUsingDecls();
+
    clingInterp.declare(PreIncludes);
 }
 
@@ -2665,16 +2666,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
-   static const TClassRef clRefString("std::string");
-   if (clRefString == cl) {
-      // We stream std::string without going through members..
+   if (cl->IsInStdLib() && strncmp(cl->GetName(), "unique_ptr<", 11) != 0)
+      // We stream std::string and friends without going through members.
+      // `CloseStreamerInfoROOTFile()` needs to know the internal structure
+      // of std::unique_ptr.
       return;
-   }
-
-   if (TClassEdit::IsStdArray(cl->GetName())) {
-      // We treat std arrays as C arrays
-      return;
-   }
 
    const char* cobj = (const char*) obj; // for ptr arithmetics
 

@@ -1706,13 +1706,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    std::string csymbol = classname;
    std::string args;
 
-   if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
+   csymbol = TClassEdit::InsertStd(csymbol.c_str());
 
-      // Prefix the full class name with '::' except for the STL
-      // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
-      csymbol.insert(0,"::");
-   }
+   // Prefix the full class name with '::', to refert to the
+   // real class instead of the class in the namespace ROOT::Shadow
+   csymbol.insert(0,"::");
 
    int stl = TClassEdit::IsSTLCont(classname);
    bool bset = TClassEdit::IsSTLBitset(classname.c_str());
@@ -1979,7 +1977,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs since
       // they imply copies and therefore do not compile.
       auto classNameForIO = TClassEdit::GetNameForIO(classname);
-      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
+      classNameForIO = TClassEdit::InsertStd(classNameForIO.c_str());
+      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO << " >()));" << "\n";
 
       needCollectionProxy = true;
    }
@@ -2369,15 +2368,12 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
    //    operator delete
    //    operator delete[]
 
-   ROOT::TMetaUtils::GetCppName(mappedname,classname.c_str());
+   classname = TClassEdit::InsertStd(classname.c_str());
 
-   if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
-
-      // Prefix the full class name with '::' except for the STL
-      // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
-      classname.insert(0,"::");
-   }
+   // Prefix the full class name with '::' except for the STL
+   // containers and std::string.  This is to request the
+   // real class instead of the class in the namespace ROOT::Shadow
+   classname.insert(0,"::");
 
    finalString << "namespace ROOT {" << "\n";
 
@@ -5090,6 +5086,49 @@ bool ROOT::TMetaUtils::IsHeaderName(const std::string &filename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the using decls (and corresponding `#includes`) injected into cling for
+/// backward compatibility with the earlier `using namespace std`.
+std::string ROOT::TMetaUtils::GetInjectedUsingDecls() {
+   return R"CODE(#include <array>
+#include <bitset>
+#include <cmath>
+#include <iostream>
+#include <list>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+using std::abs;
+using std::fabs;
+using std::array;
+using std::bitset;
+using std::cerr;
+using std::cos;
+using std::cout;
+using std::endl;
+using std::list;
+using std::map;
+using std::multimap;
+using std::multiset;
+using std::pair;
+using std::round;
+using std::set;
+using std::sin;
+using std::shared_ptr;
+using std::string;
+using std::tan;
+using std::unique_ptr;
+using std::unordered_map;
+using std::unordered_set;
+using std::vector;
+)CODE";
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
                                                                     cling::Interpreter::IgnoreFilesFunc_t ignoreFiles,
@@ -5356,7 +5395,8 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(const clang::RecordDecl
             }
             defString += argFwdDecl + '\n';
          }
-         defString += "template <> class " + normalizedName + ';';
+         std::string normalizedNameWithStd = TClassEdit::InsertStd(normalizedName.c_str());
+         defString += "template <> class " + normalizedNameWithStd + ';';
          return 0;
       }
    }

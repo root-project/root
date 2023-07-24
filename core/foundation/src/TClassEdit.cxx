@@ -1744,14 +1744,13 @@ static void ResolveTypedefImpl(const char *tname,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the name of type 'tname' with all its typedef components replaced
+/// by the actual type its points to
+/// For example for `typedef MyObj MyObjTypedef;`
+/// `vector<MyObjTypedef>` return `vector<MyObj>`
 
 string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 {
-   // Return the name of type 'tname' with all its typedef components replaced
-   // by the actual type its points to
-   // For example for "typedef MyObj MyObjTypedef;"
-   //    vector<MyObjTypedef> return vector<MyObj>
-   //
 
    if (!tname || *tname == 0)
       return "";
@@ -1780,17 +1779,15 @@ string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the name of type 'tname' with all STL classes prepended by "std::".
+/// For example for `vector<set<auto_ptr<int*> > >` return
+/// std::vector<std::set<std::auto_ptr<int*> > >`
 
 string TClassEdit::InsertStd(const char *tname)
 {
-   // Return the name of type 'tname' with all STL classes prepended by "std::".
-   // For example for "vector<set<auto_ptr<int*> > >" it returns
-   //    "std::vector<std::set<std::auto_ptr<int*> > >"
-   //
-
-   static const char* sSTLtypes[] = {
+   static const char *sSTLtypes[] = {
       "allocator",
-      "auto_ptr",
+      "any",
       "bad_alloc",
       "bad_cast",
       "bad_exception",
@@ -1821,7 +1818,9 @@ string TClassEdit::InsertStd(const char *tname)
       "complex",
       "ctype_byname",
       "ctype",
+      "default_delete",
       "deque",
+      "discard_block_engine",
       "divides",
       "domain_error",
       "equal_to",
@@ -1856,6 +1855,7 @@ string TClassEdit::InsertStd(const char *tname)
       "mask_array",
       "mem_fun",
       "mem_fun_ref",
+      "mersenne_twister_engine",
       "messages",
       "messages_byname",
       "minus",
@@ -1890,19 +1890,23 @@ string TClassEdit::InsertStd(const char *tname)
       "reverse_iterator",
       "runtime_error",
       "set",
+      "shared_ptr",
       "slice_array",
       "slice",
       "stack",
       "string",
       "strstream",
       "strstreambuf",
+      "subtract_with_carry_engine",
+      "thread",
       "time_get_byname",
       "time_get",
       "time_put_byname",
       "time_put",
+      "tuple",
       "unary_function",
       "unary_negate",
-      "unique_pointer",
+      "unique_ptr",
       "underflow_error",
       "unordered_map",
       "unordered_multimap",
@@ -1910,6 +1914,7 @@ string TClassEdit::InsertStd(const char *tname)
       "unordered_set",
       "valarray",
       "vector",
+      "weak_ptr",
       "wstring"
    };
 
@@ -1963,7 +1968,7 @@ string TClassEdit::InsertStd(const char *tname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// An helper class to dismount the name and remount it changed whenever
+/// A helper class to dismount the name and remount it changed whenever
 /// necessary
 
 class NameCleanerForIO {

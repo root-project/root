@@ -16,6 +16,7 @@
 #include "TEnum.h"
 #include "TError.h"
 #include "TFile.h"
+#include "TInterpreter.h"
 #include "TProtoClass.h"
 #include "TDataMember.h"
 #include "TROOT.h"
@@ -151,7 +152,14 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
    for (const auto & normName : gClassesToStore) {
       TClass *cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
-         Error("CloseStreamerInfoROOTFile", "Cannot find class %s.", normName.c_str());
+         static int uniqueIndex = 0;
+         const std::string checkStdNames_Code = "void RootCling_CheckStdNames_" + std::to_string(++uniqueIndex) +
+                                                "() { using namespace std; using type = " + normName.c_str() + ";}";
+         if (gInterpreter->Declare(checkStdNames_Code.c_str()))
+            Error("CloseStreamerInfoROOTFile",
+                  "ROOT I/O on class %s is unsupported due to missing stdlib type support.", normName.c_str());
+         else
+            Error("CloseStreamerInfoROOTFile", "Cannot find class %s.", normName.c_str());
          return false;
       }
 

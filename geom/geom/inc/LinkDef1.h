@@ -100,9 +100,4 @@
 #pragma link C++ class TGeoNavigator+;
 #pragma link C++ class TGeoNavigatorArray;
 #pragma link C++ class TGDMLMatrix+;
-#pragma link C++ struct std::map<std::thread::id, TGeoNavigatorArray *>;
-#pragma link C++ struct std::pair<std::thread::id, TGeoNavigatorArray *>;
-#pragma link C++ struct std::map<std::thread::id, Int_t>;
-#pragma link C++ struct std::pair<std::thread::id, Int_t>;
-
 #endif

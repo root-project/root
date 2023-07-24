@@ -193,6 +193,9 @@ public:
    static TDictionary* GetDictionary(const char* name);
    static TDictionary* GetDictionary(const std::type_info &typeinfo);
 
+   /// Return `true` if the TClass representd a name in the `std::` namespace.
+   Bool_t IsInStdLib() const { return Property() & kIsDefinedInStd; }
+
    // Type of STL container (returned by IsSTLContainer).
    enum ESTLType {
       kNone              = ROOT::kNotSTL,

@@ -880,6 +880,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    if (!tmplt_specialization) return 0;
 
    string stlType(ROOT::TMetaUtils::ShortTypeName(mTypename.c_str()));
+   stlType = TClassEdit::InsertStd(stlType.c_str());
    string stlName;
    stlName = ROOT::TMetaUtils::ShortTypeName(m.getName().str().c_str());
 
@@ -1192,6 +1193,9 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
 
+   fullname = TClassEdit::InsertStd(fullname.c_str());
+   clsname = TClassEdit::InsertStd(clsname.c_str());
+
    if (autoLoad)
       dictStream << "#include \"TInterpreter.h\"\n";
 
@@ -1204,22 +1208,31 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "const char *" << clsname << "::Class_Name()" << std::endl << "{" << std::endl
-              << "   return \"" << fullname << "\";"  << std::endl << "}" << std::endl << std::endl;
+   dictStream << "const char *" << clsname << "::Class_Name()" << std::endl
+              << "{" << std::endl
+              << "   return \"" << fullname << "\";" << std::endl
+              << "}" << std::endl
+              << std::endl;
 
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "const char *" << clsname << "::ImplFileName()"  << std::endl << "{" << std::endl
-              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-              << "*)nullptr)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
+   dictStream << "const char *" << clsname << "::ImplFileName()" << std::endl
+              << "{" << std::endl
+              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname << "*)nullptr)->GetImplFileName();"
+              << std::endl
+              << "}" << std::endl
+              << std::endl
 
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "int " << clsname << "::ImplFileLine()" << std::endl << "{" << std::endl
-              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-              << "*)nullptr)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
+   dictStream << "int " << clsname << "::ImplFileLine()" << std::endl
+              << "{" << std::endl
+              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname << "*)nullptr)->GetImplFileLine();"
+              << std::endl
+              << "}" << std::endl
+              << std::endl
 
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
@@ -1229,13 +1242,14 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    // Trigger autoloading if dictionary is split
    if (autoLoad)
       dictStream << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
-   dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-                 << "*)nullptr)->GetClass();" << std::endl
-                 << "   return fgIsA;\n"
-                 << "}" << std::endl << std::endl
+   dictStream << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname << "*)nullptr)->GetClass();"
+              << std::endl
+              << "   return fgIsA;\n"
+              << "}" << std::endl
+              << std::endl
 
-                 << "//_______________________________________"
-                 << "_______________________________________" << std::endl;
+              << "//_______________________________________"
+              << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
    dictStream << "TClass *" << clsname << "::Class()" << std::endl << "{" << std::endl;
    if (autoLoad) {
@@ -1407,6 +1421,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname, clsname, nsname, clxx)) {
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
+   clsname = TClassEdit::InsertStd(clsname.c_str());
 
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
@@ -1809,19 +1824,22 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname, clsname, nsname, clxx)) {
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
+   clsname = TClassEdit::InsertStd(clsname.c_str());
 
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
    dictStream << "void " << clsname << "::Streamer(TBuffer &R__b)" << std::endl
               << "{" << std::endl
-              << "   // Stream an object of class " << fullname << "." << std::endl << std::endl
+              << "   // Stream an object of class " << fullname << "." << std::endl
+              << std::endl
               << "   if (R__b.IsReading()) {" << std::endl
-              << "      R__b.ReadClassBuffer(" << fullname << "::Class(),this);" << std::endl
+              << "      R__b.ReadClassBuffer(" << clsname << "::Class(),this);" << std::endl
               << "   } else {" << std::endl
-              << "      R__b.WriteClassBuffer(" << fullname << "::Class(),this);" << std::endl
+              << "      R__b.WriteClassBuffer(" << clsname << "::Class(),this);" << std::endl
               << "   }" << std::endl
-              << "}" << std::endl << std::endl;
+              << "}" << std::endl
+              << std::endl;
 
    while (enclSpaceNesting) {
       dictStream << "} // namespace " << nsname << std::endl;
@@ -2842,14 +2860,15 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include \"TCollectionProxyInfo.h\"\n"
                << "/*******************************************************************/\n\n"
                << "#include \"TDataMember.h\"\n\n"; // To set their transiency
+
+   if (main_dictname.length() > 11 && main_dictname.substr(main_dictname.length() - 11) == "_ACLiC_dict")
+      dictStream << ROOT::TMetaUtils::GetInjectedUsingDecls();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void AddNamespaceSTDdeclaration(std::ostream &dictStream)
+void AddNamespaceSTDdeclaration(std::ostream & dictStream)
 {
-   dictStream  << "// The generated code does not explicitly qualify STL entities\n"
-               << "namespace std {} using namespace std;\n\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4457,8 +4476,24 @@ int RootClingMain(int argc,
       // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
       if (interp.declare("#include <assert.h>\n"
                          "#include \"Rtypes.h\"\n"
-                         "#include \"TObject.h\"") != cling::Interpreter::kSuccess
-         ) {
+                         "#include \"TObject.h\"\n"
+                         "#include <bitset>\n"
+                         "#include <forward_list>\n"
+                         "#include <list>\n"
+                         "#include <map>\n"
+                         "#include <memory>\n"
+                         "#include <set>\n"
+                         "#include <string>\n"
+                         "#include <unordered_map>\n"
+                         "#include <unordered_set>\n"
+                         "#include <utility>\n"
+                         "#include <vector>\n"
+                         "using std::allocator; using std::bitset; using std::default_delete; using "
+                         "std::forward_list; using std::list; using std::map; using std::multimap; using "
+                         "std::multiset; using std::pair; using std::set; using std::shared_ptr; using std::string; "
+                         "using std::unique_ptr; using std::unordered_multimap; using std::unordered_map; using "
+                         "std::unordered_multiset; using std::unordered_set; using std::vector;") !=
+          cling::Interpreter::kSuccess) {
          // There was an error.
          ROOT::TMetaUtils::Error(nullptr, "Error loading the default rootcling header files.\n");
          return 1;
@@ -4467,7 +4502,7 @@ int RootClingMain(int argc,
 
    if (interp.declare("#include <string>\n" // For the list of 'opaque' typedef to also include string.
                       "#include <RtypesCore.h>\n" // For initializing TNormalizedCtxt.
-                      "namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+                      ) != cling::Interpreter::kSuccess) {
       ROOT::TMetaUtils::Error(nullptr, "Error loading the default header files.\n");
       return 1;
    }
@@ -4656,8 +4691,6 @@ int RootClingMain(int argc,
    }
 
    std::ostream &dictStream = (!gOptIgnoreExistingDict && !gOptDictionaryFileName.empty()) ? fileout : std::cout;
-   bool isACLiC = gOptDictionaryFileName.getValue().find("_ACLiC_dict") != std::string::npos;
-
    if (!gOptIgnoreExistingDict) {
       // Now generate a second stream for the split dictionary if it is necessary
       if (gOptSplit) {
@@ -4678,16 +4711,6 @@ int RootClingMain(int argc,
       CreateDictHeader(dictStream, main_dictname);
       if (gOptSplit)
          CreateDictHeader(*splitDictStream, main_dictname);
-
-      if (!gOptNoGlobalUsingStd) {
-         // ACLiC'ed macros might rely on `using namespace std` in front of user headers
-         if (isACLiC) {
-            AddNamespaceSTDdeclaration(dictStream);
-            if (gOptSplit) {
-               AddNamespaceSTDdeclaration(*splitDictStream);
-            }
-         }
-      }
    }
 
    //---------------------------------------------------------------------------
@@ -4905,15 +4928,6 @@ int RootClingMain(int argc,
             GenerateNecessaryIncludes(*splitDictStream, includeForSource, extraIncludes);
          }
       }
-      if (!gOptNoGlobalUsingStd) {
-         // ACLiC'ed macros might have relied on `using namespace std` in front of user headers
-         if (!isACLiC) {
-            AddNamespaceSTDdeclaration(dictStream);
-            if (gOptSplit) {
-               AddNamespaceSTDdeclaration(*splitDictStream);
-            }
-         }
-      }
       if (gDriverConfig->fInitializeStreamerInfoROOTFile) {
          gDriverConfig->fInitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
       }
@@ -4925,13 +4939,6 @@ int RootClingMain(int argc,
          constructorTypes.emplace_back("TRootIOCtor", interp);
          constructorTypes.emplace_back("__void__", interp); // ROOT-7723
          constructorTypes.emplace_back("", interp);
-      }
-   }
-   if (!gOptIgnoreExistingDict && gOptNoGlobalUsingStd) {
-      AddNamespaceSTDdeclaration(dictStream);
-
-      if (gOptSplit && splitDictStream) {
-         AddNamespaceSTDdeclaration(*splitDictStream);
       }
    }
 
