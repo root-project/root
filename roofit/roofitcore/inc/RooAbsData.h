@@ -25,12 +25,12 @@
 #include "RooFit/UniqueId.h"
 #include "RooFit/Detail/DataMap.h"
 
-#include "TNamed.h"
+#include <TMatrixDSym.h>
+#include <TNamed.h>
 
 #include <map>
 #include <string>
 
-class RooAbsArg;
 class RooAbsReal ;
 class RooRealVar;
 class RooAbsRealLValue;
@@ -44,8 +44,6 @@ class TH2F;
 class RooAbsBinning ;
 class Roo1DTable ;
 class RooAbsDataStore ;
-template<typename T> class TMatrixTSym;
-using TMatrixDSym = TMatrixTSym<double>;
 class RooFormulaVar;
 namespace RooFit {
 namespace TestStatistics {
@@ -65,15 +63,15 @@ public:
 
   RooAbsData& operator=(const RooAbsData& other);
   ~RooAbsData() override ;
-  virtual RooAbsData* emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet* vars=nullptr, const char* wgtVarName=nullptr) const = 0 ;
+  virtual RooFit::OwningPtr<RooAbsData> emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet* vars=nullptr, const char* wgtVarName=nullptr) const = 0 ;
 
   // Reduction methods
-  RooAbsData* reduce(const RooCmdArg& arg1,const RooCmdArg& arg2={},const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+  RooFit::OwningPtr<RooAbsData> reduce(const RooCmdArg& arg1,const RooCmdArg& arg2={},const RooCmdArg& arg3={},const RooCmdArg& arg4={},
                      const RooCmdArg& arg5={},const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
-  RooAbsData* reduce(const char* cut) ;
-  RooAbsData* reduce(const RooFormulaVar& cutVar) ;
-  RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=nullptr) ;
-  RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
+  RooFit::OwningPtr<RooAbsData> reduce(const char* cut) ;
+  RooFit::OwningPtr<RooAbsData> reduce(const RooFormulaVar& cutVar) ;
+  RooFit::OwningPtr<RooAbsData> reduce(const RooArgSet& varSubset, const char* cut=nullptr) ;
+  RooFit::OwningPtr<RooAbsData> reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
 
   RooAbsDataStore* store() { return _dstore.get(); }
   const RooAbsDataStore* store() const { return _dstore.get(); }
@@ -177,30 +175,27 @@ public:
 
   // WVE --- This needs to be public to avoid CINT problems
   struct PlotOpt {
-   PlotOpt() : cuts(""), drawOptions("P"), bins(nullptr), etype(RooAbsData::Poisson), cutRange(nullptr), histName(nullptr), histInvisible(false),
-              addToHistName(nullptr),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(false),correctForBinWidth(true),
-              scaleFactor(1.) {} ;
-   const char* cuts ;
-   Option_t* drawOptions ;
-   RooAbsBinning* bins ;
-   RooAbsData::ErrorType etype ;
-   const char* cutRange ;
-   const char* histName ;
-   bool histInvisible ;
-   const char* addToHistName ;
-   double addToWgtSelf ;
-   double addToWgtOther ;
-   double xErrorSize ;
-   bool refreshFrameNorm ;
-   bool correctForBinWidth ;
-   double scaleFactor ;
+   const char* cuts = "";
+   Option_t* drawOptions = "P";
+   RooAbsBinning* bins = nullptr;
+   RooAbsData::ErrorType etype = RooAbsData::Poisson;
+   const char* cutRange = nullptr;
+   const char* histName = nullptr;
+   bool histInvisible = false;
+   const char* addToHistName = nullptr;
+   double addToWgtSelf = 1.0;
+   double addToWgtOther = 1.0;
+   double xErrorSize = 1.0;
+   bool refreshFrameNorm = false;
+   bool correctForBinWidth = true;
+   double scaleFactor = 1.0;
   } ;
 
   // Split a dataset by a category
-  virtual TList* split(const RooAbsCategory& splitCat, bool createEmptyDataSets=false) const ;
+  virtual RooFit::OwningPtr<TList> split(const RooAbsCategory& splitCat, bool createEmptyDataSets=false) const ;
 
   // Split a dataset by categories of a RooSimultaneous
-  virtual TList* split(const RooSimultaneous& simpdf, bool createEmptyDataSets=false) const ;
+  virtual RooFit::OwningPtr<TList> split(const RooSimultaneous& simpdf, bool createEmptyDataSets=false) const ;
 
   // Fast splitting for SimMaster setData
   bool canSplitFast() const ;
@@ -252,10 +247,10 @@ public:
   double covariance(RooRealVar &x,RooRealVar &y, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcov(x,y,cutSpec,cutRange,false) ; }
   double correlation(RooRealVar &x,RooRealVar &y, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcov(x,y,cutSpec,cutRange,true) ; }
 
-  TMatrixDSym* covarianceMatrix(const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return covarianceMatrix(*get(),cutSpec,cutRange) ; }
-  TMatrixDSym* correlationMatrix(const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return correlationMatrix(*get(),cutSpec,cutRange) ; }
-  TMatrixDSym* covarianceMatrix(const RooArgList& vars, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcovMatrix(vars,cutSpec,cutRange,false) ; }
-  TMatrixDSym* correlationMatrix(const RooArgList& vars, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcovMatrix(vars,cutSpec,cutRange,true) ; }
+  RooFit::OwningPtr<TMatrixDSym> covarianceMatrix(const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return covarianceMatrix(*get(),cutSpec,cutRange) ; }
+  RooFit::OwningPtr<TMatrixDSym> correlationMatrix(const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return correlationMatrix(*get(),cutSpec,cutRange) ; }
+  RooFit::OwningPtr<TMatrixDSym> covarianceMatrix(const RooArgList& vars, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcovMatrix(vars,cutSpec,cutRange,false) ; }
+  RooFit::OwningPtr<TMatrixDSym> correlationMatrix(const RooArgList& vars, const char* cutSpec=nullptr, const char* cutRange=nullptr) const { return corrcovMatrix(vars,cutSpec,cutRange,true) ; }
 
   RooRealVar* meanVar(const RooRealVar &var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
   RooRealVar* rmsVar(const RooRealVar &var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
@@ -320,7 +315,7 @@ protected:
   void initializeVars(RooArgSet const& vars);
 
   double corrcov(const RooRealVar& x, const RooRealVar& y, const char* cutSpec, const char* cutRange, bool corr) const  ;
-  TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const  ;
+  RooFit::OwningPtr<TMatrixDSym> corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const  ;
 
   virtual void optimizeReadingWithCaching(RooAbsArg& arg, const RooArgSet& cacheList, const RooArgSet& keepObsList) ;
   bool allClientsCached(RooAbsArg*, const RooArgSet&) ;
@@ -343,7 +338,7 @@ protected:
   virtual void setArgStatus(const RooArgSet& set, bool active) ;
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
-  virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
+  virtual std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                            std::size_t nStart = 0, std::size_t = std::numeric_limits<std::size_t>::max()) = 0 ;
 
   RooRealVar* dataRealVar(const char* methodname, const RooRealVar& extVar) const ;

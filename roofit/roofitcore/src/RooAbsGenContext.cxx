@@ -341,12 +341,12 @@ void RooAbsGenContext::resampleData(double& ratio)
 
   Int_t nOrig = _genData->numEntries() ;
   Int_t nTarg = Int_t(nOrig*ratio+0.5) ;
-  RooDataSet* trimmedData = (RooDataSet*) _genData->reduce(RooFit::EventRange(0,nTarg)) ;
+  std::unique_ptr<RooAbsData> trimmedData{_genData->reduce(RooFit::EventRange(0,nTarg))};
 
   cxcoutD(Generation) << "RooGenContext::resampleData*( existing production trimmed from " << nOrig << " to " << trimmedData->numEntries() << " events" << endl ;
 
   delete _genData ;
-  _genData = trimmedData ;
+  _genData = static_cast<RooDataSet*>(trimmedData.release());
 
   if (_prototype) {
     // Push back proto index by trimmed amount to force recycling of the

@@ -356,14 +356,12 @@ void MCMCInterval::CreateKeysPdf()
       return;
    }
 
-   RooDataSet* chain = fChain->GetAsDataSet(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()));
+   std::unique_ptr<RooDataSet> chain{fChain->GetAsDataSet(SelectVars(fParameters),
+         EventRange(fNumBurnInSteps, fChain->Size()))};
    RooArgList* paramsList = new RooArgList();
    for (Int_t i = 0; i < fDimension; i++)
       paramsList->add(*fAxes[i]);
 
-   // kbelasco: check for memory leaks with chain.  who owns it? does
-   // RooNDKeysPdf take ownership?
    fKeysPdf = new RooNDKeysPdf("keysPDF", "Keys PDF", *paramsList, *chain, "a");
    fCutoffVar = new RooRealVar("cutoff", "cutoff", 0);
    fHeaviside = new Heaviside("heaviside", "Heaviside", *fKeysPdf, *fCutoffVar);
@@ -511,8 +509,8 @@ void MCMCInterval::CreateDataHist()
       return;
    }
 
-   fDataHist = fChain->GetAsDataHist(SelectVars(fParameters),
-         EventRange(fNumBurnInSteps, fChain->Size()));
+   fDataHist = std::unique_ptr<RooDataHist>{fChain->GetAsDataHist(SelectVars(fParameters),
+         EventRange(fNumBurnInSteps, fChain->Size()))}.release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

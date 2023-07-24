@@ -860,9 +860,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     projDataVars.remove(idxCatServers,true,true) ;
 
     if (!idxCompSliceSet->empty()) {
-      projDataTmp.reset( const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString) );
+      projDataTmp = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString)};
     } else {
-      projDataTmp.reset( const_cast<RooAbsData*>(projData)->reduce(projDataVars) );
+      projDataTmp = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(projData)->reduce(projDataVars)};
     }
 
 

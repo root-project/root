@@ -180,16 +180,14 @@ TEST(RooDataSet, ReducingData)
       ASSERT_EQ(test_hist.Integral(), drawnEvents);
 
       // For unbinned data, reducing should be equivalent to the tree.
-      std::unique_ptr<RooDataSet> data_unbinned_reduced(
-         static_cast<RooDataSet *>(data_unbinned->reduce(RooFit::Cut(chi2_test_cut))));
+      std::unique_ptr<RooAbsData> data_unbinned_reduced{data_unbinned->reduce(RooFit::Cut(chi2_test_cut))};
       EXPECT_DOUBLE_EQ(data_unbinned_reduced->sumEntries(), test_hist.Integral());
       EXPECT_EQ(data_unbinned_reduced->numEntries(), test_hist.Integral());
 
       // When using binned data, reducing and expecting the ame number of entries as in the unbinned case is not
       // possible, since information is lost if entries to the left and right of the cut end up in the same bin.
       // Therefore, can only test <=
-      std::unique_ptr<RooDataHist> reduced_binned_data(
-         static_cast<RooDataHist *>(data->reduce(RooFit::Cut(chi2_test_cut))));
+      std::unique_ptr<RooAbsData> reduced_binned_data{data->reduce(RooFit::Cut(chi2_test_cut))};
       if (floor(chi2cutval) == chi2cutval)
          EXPECT_FLOAT_EQ(reduced_binned_data->sumEntries(), test_hist.Integral());
       else

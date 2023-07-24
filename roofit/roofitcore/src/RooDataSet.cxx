@@ -763,7 +763,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
 /// Return an empty clone of this dataset. If vars is not null, only the variables in vars
 /// are added to the definition of the empty clone
 
-RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, const RooArgSet* vars, const char* wgtVarName) const
+RooFit::OwningPtr<RooAbsData> RooDataSet::emptyClone(const char* newName, const char* newTitle, const RooArgSet* vars, const char* wgtVarName) const
 {
    bool useOldWeight = _wgtVar && (wgtVarName == nullptr || strcmp(wgtVarName, _wgtVar->GetName()) == 0);
 
@@ -796,7 +796,7 @@ RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, co
    }
 
    using namespace RooFit;
-   return new RooDataSet(newName, newTitle, vars2, WeightVar(wgtVarName), StoreError(errorSet), StoreAsymError(asymErrorSet));
+   return RooFit::Detail::owningPtr(std::make_unique<RooDataSet>(newName, newTitle, vars2, WeightVar(wgtVarName), StoreError(errorSet), StoreAsymError(asymErrorSet)));
 }
 
 
@@ -832,7 +832,7 @@ void RooDataSet::initialize(const char* wgtVarName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
-RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
+std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
               std::size_t nStart, std::size_t nStop)
 {
   checkInit() ;
@@ -841,8 +841,10 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
     tmp.add(*_wgtVar) ;
   }
 
+  std::unique_ptr<RooDataSet> out;
+
   if (!cutRange || strchr(cutRange,',')==0) {
-  return new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop) ;
+    out.reset(new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop));
   } else {
     // Composite case: multiple ranges
     auto tokens = ROOT::Split(cutRange, ",");
@@ -851,17 +853,16 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
       errMsg << "Error in RooAbsData::reduce! The ranges " << cutRange << " are overlapping!";
       throw std::runtime_error(errMsg.str());
     }
-    RooDataSet * out = nullptr;
     for (const auto& token : tokens) {
       if(!out) {
-        out = new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop);
+        out.reset(new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop));
       } else {
         RooDataSet appendedData{GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop};
         out->append(appendedData);
       }
     }
-    return out;
   }
+  return out;
 }
 
 
@@ -880,7 +881,7 @@ RooDataSet::~RooDataSet()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return binned clone of this dataset
 
-RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) const
+RooFit::OwningPtr<RooDataHist> RooDataSet::binnedClone(const char* newName, const char* newTitle) const
 {
   std::string title;
   std::string name;
@@ -895,7 +896,7 @@ RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) 
     title = std::string(GetTitle()) + "_binned" ;
   }
 
-  return new RooDataHist(name,title,*get(),*this) ;
+  return RooFit::Detail::owningPtr(std::make_unique<RooDataHist>(name,title,*get(),*this));
 }
 
 

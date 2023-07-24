@@ -224,7 +224,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
-    _dataClone = indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName)) ;
+    _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
     //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
   } else {
     _dataClone = (RooAbsData*) indata.Clone() ;
@@ -305,9 +305,9 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     _normSet->remove(*_projDeps,true,true) ;
 
     // Mark all projected dependents as such
-    RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
-    projDataDeps->setAttribAll("projectedDependent") ;
-    delete projDataDeps ;
+    RooArgSet projDataDeps;
+    _funcObsSet->selectCommon(*_projDeps, projDataDeps);
+    projDataDeps.setAttribAll("projectedDependent") ;
   }
 
 
@@ -673,9 +673,9 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
   if (cloneData) {
     // Cloning input dataset
     if (_rangeName.empty()) {
-      _dataClone = (RooAbsData*) indata.reduce(*indata.get()) ;
+      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(*indata.get())}.release();
     } else {
-      _dataClone = ((RooAbsData&)indata).reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str())) ;
+      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str()))}.release();
     }
     _ownData = true ;
 

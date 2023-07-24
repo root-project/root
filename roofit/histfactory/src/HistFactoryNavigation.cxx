@@ -644,7 +644,7 @@ namespace RooStats {
    RooSimultaneous* simPdf = (RooSimultaneous*) fModel;
    RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
 
-   dataset_list.reset(data->split(*channelCat));
+   dataset_list = std::unique_ptr<TList>{data->split(*channelCat)};
 
    data = dynamic_cast<RooDataSet*>( dataset_list->FindObject(channel.c_str()) );
 
