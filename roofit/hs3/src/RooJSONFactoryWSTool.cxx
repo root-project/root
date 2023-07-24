@@ -166,6 +166,34 @@ bool isNumber(const std::string &str)
 }
 
 /**
+ * @brief Check if a string is a valid name.
+ *
+ * A valid name should start with a letter or an underscore, followed by letters, digits, or underscores.
+ * Only characters from the ASCII character set are allowed.
+ *
+ * @param str The string to be checked.
+ * @return bool Returns true if the string is a valid name; otherwise, returns false.
+ */
+bool isValidName(const std::string &str)
+{
+   // Check if the string is empty or starts with a non-letter/non-underscore character
+   if (str.empty() || !(std::isalpha(str[0]) || str[0] == '_')) {
+      return false;
+   }
+
+   // Check the remaining characters in the string
+   for (char c : str) {
+      // Allow letters, digits, and underscore
+      if (!(std::isalnum(c) || c == '_')) {
+         return false;
+      }
+   }
+
+   // If all characters are valid, the string is a valid name
+   return true;
+}
+
+/**
  * @brief Configure a RooRealVar based on information from a JSONNode.
  *
  * This function configures the provided RooRealVar 'v' based on the information provided in the JSONNode 'p'.
@@ -467,6 +495,13 @@ void getObservables(RooWorkspace const &ws, const JSONNode &node, RooArgSet &out
 std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+
+   if (!::isValidName(name)) {
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() data name '" << name << "' is not valid!" << std::endl;
+      RooJSONFactoryWSTool::error(ss.str());
+   }
+
    std::string const &type = p["type"].val();
    if (type == "binned") {
       // binned
@@ -1065,6 +1100,11 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
 
    // some preparations: what type of function are we dealing with here?
    std::string name(RooJSONFactoryWSTool::name(p));
+   if (!::isValidName(name)) {
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() function name '" << name << "' is not valid!" << std::endl;
+      RooJSONFactoryWSTool::error(ss.str());
+   }
 
    // if the RooAbsArg already exists, we don't need to do anything
    if (_workspace.arg(name)) {
@@ -1504,6 +1544,13 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
 {
    // import a RooRealVar object
    std::string name(RooJSONFactoryWSTool::name(p));
+
+   if (!::isValidName(name)) {
+      std::stringstream ss;
+      ss << "RooJSONFactoryWSTool() variable name '" << name << "' is not valid!" << std::endl;
+      RooJSONFactoryWSTool::error(ss.str());
+   }
+
    if (_workspace.var(name))
       return;
    if (!p.is_map()) {
@@ -1886,6 +1933,13 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    if (auto paramPointsNode = n.find("parameter_points")) {
       for (const auto &snsh : paramPointsNode->children()) {
          std::string name = RooJSONFactoryWSTool::name(snsh);
+
+         if (!::isValidName(name)) {
+            std::stringstream ss;
+            ss << "RooJSONFactoryWSTool() node name '" << name << "' is not valid!" << std::endl;
+            RooJSONFactoryWSTool::error(ss.str());
+         }
+
          RooArgSet vars;
          for (const auto &var : snsh["parameters"].children()) {
             if (RooRealVar *rrv = _workspace.var(RooJSONFactoryWSTool::name(var))) {
