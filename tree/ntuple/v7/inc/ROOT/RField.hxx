@@ -292,30 +292,52 @@ protected:
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
-   class RSchemaIterator {
+   template <bool IsConstT>
+   class RSchemaIteratorTemplate {
    private:
       struct Position {
+         using FieldPtr_t = std::conditional_t<IsConstT, const RFieldBase *, RFieldBase *>;
          Position() : fFieldPtr(nullptr), fIdxInParent(-1) { }
-         Position(RFieldBase *fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) { }
-         RFieldBase *fFieldPtr;
+         Position(FieldPtr_t fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) {}
+         FieldPtr_t fFieldPtr;
          int fIdxInParent;
       };
       /// The stack of nodes visited when walking down the tree of fields
       std::vector<Position> fStack;
    public:
-      using iterator = RSchemaIterator;
+      using iterator = RSchemaIteratorTemplate;
       using iterator_category = std::forward_iterator_tag;
-      using value_type = RFieldBase;
       using difference_type = std::ptrdiff_t;
-      using pointer = RFieldBase*;
-      using reference = RFieldBase&;
+      using value_type = std::conditional_t<IsConstT, const RFieldBase, RFieldBase>;
+      using pointer = std::conditional_t<IsConstT, const RFieldBase *, RFieldBase *>;
+      using reference = std::conditional_t<IsConstT, const RFieldBase &, RFieldBase &>;
 
-      RSchemaIterator() { fStack.emplace_back(Position()); }
-      RSchemaIterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
-      ~RSchemaIterator() {}
+      RSchemaIteratorTemplate() { fStack.emplace_back(Position()); }
+      RSchemaIteratorTemplate(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
+      ~RSchemaIteratorTemplate() {}
       /// Given that the iterator points to a valid field which is not the end iterator, go to the next field
       /// in depth-first search order
-      void Advance();
+      void Advance()
+      {
+         auto itr = fStack.rbegin();
+         if (!itr->fFieldPtr->fSubFields.empty()) {
+            fStack.emplace_back(Position(itr->fFieldPtr->fSubFields[0].get(), 0));
+            return;
+         }
+
+         unsigned int nextIdxInParent = ++(itr->fIdxInParent);
+         while (nextIdxInParent >= itr->fFieldPtr->fParent->fSubFields.size()) {
+            if (fStack.size() == 1) {
+               itr->fFieldPtr = itr->fFieldPtr->fParent;
+               itr->fIdxInParent = -1;
+               return;
+            }
+            fStack.pop_back();
+            itr = fStack.rbegin();
+            nextIdxInParent = ++(itr->fIdxInParent);
+         }
+         itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent].get();
+      }
 
       iterator  operator++(int) /* postfix */        { auto r = *this; Advance(); return r; }
       iterator& operator++()    /* prefix */         { Advance(); return *this; }
@@ -324,6 +346,8 @@ public:
       bool      operator==(const iterator& rh) const { return fStack.back().fFieldPtr == rh.fStack.back().fFieldPtr; }
       bool      operator!=(const iterator& rh) const { return fStack.back().fFieldPtr != rh.fStack.back().fFieldPtr; }
    };
+   using RSchemaIterator = RSchemaIteratorTemplate<false>;
+   using RConstSchemaIterator = RSchemaIteratorTemplate<true>;
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
    /// If `isSimple` is `true`, the trait `kTraitMappable` is automatically set on construction. However, the
@@ -450,8 +474,16 @@ public:
    /// Return the C++ type version stored in the field descriptor; only valid after a call to `ConnectPageSource()`
    std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
 
-   RSchemaIterator begin();
-   RSchemaIterator end();
+   RSchemaIterator begin()
+   {
+      return fSubFields.empty() ? RSchemaIterator(this, -1) : RSchemaIterator(fSubFields[0].get(), 0);
+   }
+   RSchemaIterator end() { return RSchemaIterator(this, -1); }
+   RConstSchemaIterator cbegin() const
+   {
+      return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);
+   }
+   RConstSchemaIterator cend() const { return RConstSchemaIterator(this, -1); }
 
    virtual void AcceptVisitor(RFieldVisitor &visitor) const;
 };

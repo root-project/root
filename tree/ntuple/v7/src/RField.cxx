@@ -211,24 +211,10 @@ std::tuple<const void *const *, const std::int32_t *, const std::int32_t *> GetR
 /// but we recreate them. Therefore, the on-disk IDs need to be fixed up.
 void SyncFieldIDs(const ROOT::Experimental::Detail::RFieldBase &from, ROOT::Experimental::Detail::RFieldBase &to)
 {
-   using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
-   std::deque<const RFieldBase *> fromSubfields;
-   std::deque<RFieldBase *> toSubfields;
-
-   fromSubfields.emplace_back(&from);
-   toSubfields.emplace_back(&to);
-
-   while (!fromSubfields.empty()) {
-      auto sFrom = fromSubfields.front();
-      fromSubfields.pop_front();
-      auto sTo = toSubfields.front();
-      toSubfields.pop_front();
-      sTo->SetOnDiskId(sFrom->GetOnDiskId());
-
-      for (const auto f : sFrom->GetSubFields())
-         fromSubfields.emplace_back(f);
-      for (auto f : sTo->GetSubFields())
-         toSubfields.emplace_back(f);
+   auto iFrom = from.cbegin();
+   auto iTo = to.begin();
+   for (; iFrom != from.cend(); ++iFrom, ++iTo) {
+      iTo->SetOnDiskId(iFrom->GetOnDiskId());
    }
 }
 
@@ -661,48 +647,7 @@ void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RFieldVisitor
    visitor.VisitField(*this);
 }
 
-
-ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Detail::RFieldBase::begin()
-{
-   if (fSubFields.empty()) return RSchemaIterator(this, -1);
-   return RSchemaIterator(this->fSubFields[0].get(), 0);
-}
-
-
-ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Detail::RFieldBase::end()
-{
-   return RSchemaIterator(this, -1);
-}
-
-
 //-----------------------------------------------------------------------------
-
-
-void ROOT::Experimental::Detail::RFieldBase::RSchemaIterator::Advance()
-{
-   auto itr = fStack.rbegin();
-   if (!itr->fFieldPtr->fSubFields.empty()) {
-      fStack.emplace_back(Position(itr->fFieldPtr->fSubFields[0].get(), 0));
-      return;
-   }
-
-   unsigned int nextIdxInParent = ++(itr->fIdxInParent);
-   while (nextIdxInParent >= itr->fFieldPtr->fParent->fSubFields.size()) {
-      if (fStack.size() == 1) {
-         itr->fFieldPtr = itr->fFieldPtr->fParent;
-         itr->fIdxInParent = -1;
-         return;
-      }
-      fStack.pop_back();
-      itr = fStack.rbegin();
-      nextIdxInParent = ++(itr->fIdxInParent);
-   }
-   itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent].get();
-}
-
-
-//------------------------------------------------------------------------------
-
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RFieldZero::CloneImpl(std::string_view /*newName*/) const
