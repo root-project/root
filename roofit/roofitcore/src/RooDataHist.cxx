@@ -910,13 +910,13 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
-RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
+std::unique_ptr<RooAbsData> RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
     std::size_t nStart, std::size_t nStop)
 {
   checkInit() ;
   RooArgSet myVarSubset;
   _vars.selectCommon(varSubset, myVarSubset);
-  RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), myVarSubset);
+  auto rdh = std::make_unique<RooDataHist>(GetName(), GetTitle(), myVarSubset);
 
   RooFormulaVar* cloneVar = nullptr;
   std::unique_ptr<RooArgSet> tmp;
@@ -927,7 +927,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
       coutE(DataHandling) << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
       return nullptr;
     }
-    cloneVar = (RooFormulaVar*) tmp->find(*cutVar) ;
+    cloneVar = static_cast<RooFormulaVar*>(tmp->find(*cutVar));
     cloneVar->attachDataSet(*this) ;
   }
 

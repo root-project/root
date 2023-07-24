@@ -2096,6 +2096,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
     // If data set contains more rows than needed, make reduced copy first
     RooAbsData* projDataSel = (RooAbsData*)o.projData;
+    std::unique_ptr<RooAbsData> projDataSelOwned;
 
     if (projDataNeededVars->size() < o.projData->get()->size()) {
 
@@ -2122,11 +2123,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       }
 
       if (!cutString.IsNull()) {
-   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
-   coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << std::endl ;
-      } else {
-   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
+       coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << std::endl ;
       }
+      projDataSelOwned = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(o.projData)->reduce(*projDataNeededVars, cutString.IsNull() ? nullptr : cutString)};
+      projDataSel = projDataSelOwned.get();
       coutI(Plotting) << "RooAbsReal::plotOn(" << GetName()
             << ") only the following components of the projection data will be used: " << *projDataNeededVars << std::endl ;
     }
@@ -2149,9 +2149,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
     // Bin projection dataset if requested
     if (o.binProjData) {
-      RooAbsData* tmp = new RooDataHist(std::string(projDataSel->GetName()) + "_binned","Binned projection data",*projDataSel->get(),*projDataSel) ;
-      if (projDataSel!=o.projData) delete projDataSel ;
-      projDataSel = tmp ;
+      projDataSelOwned = std::make_unique<RooDataHist>(std::string(projDataSel->GetName()) + "_binned","Binned projection data",*projDataSel->get(),*projDataSel);
+      projDataSel = projDataSelOwned.get();
     }
 
     // Construct scaled data weighted average
@@ -2201,8 +2200,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, o.drawOptions, o.curveInvisible);
-
-    if (projDataSel!=o.projData) delete projDataSel ;
 
   } else {
 
@@ -2471,14 +2468,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
     // If data set contains more rows than needed, make reduced copy first
     RooAbsData* projDataSel = (RooAbsData*)o.projData;
+    std::unique_ptr<RooAbsData> projDataSelOwned;
     if (projDataNeededVars && projDataNeededVars->size() < o.projData->get()->size()) {
 
       // Determine if there are any slice variables in the projection set
-      RooArgSet* sliceDataSet = (RooArgSet*) sliceSet.selectCommon(*o.projData->get()) ;
+      RooArgSet sliceDataSet;
+      sliceSet.selectCommon(*o.projData->get(), sliceDataSet);
       TString cutString ;
-      if (!sliceDataSet->empty()) {
+      if (!sliceDataSet.empty()) {
    bool first(true) ;
-   for(RooAbsArg * sliceVar : *sliceDataSet) {
+   for(RooAbsArg * sliceVar : sliceDataSet) {
      if (!first) {
        cutString.Append("&&") ;
      } else {
@@ -2494,15 +2493,13 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
      }
    }
       }
-      delete sliceDataSet ;
 
       if (!cutString.IsNull()) {
-   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
    coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
          << ") reducing given projection dataset to entries with " << cutString << std::endl ;
-      } else {
-   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
       }
+      projDataSelOwned = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(o.projData)->reduce(*projDataNeededVars,cutString.IsNull() ? nullptr : cutString)};
+      projDataSel = projDataSelOwned.get();
       coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
             << ") only the following components of the projection data will be used: " << *projDataNeededVars << std::endl ;
     }
@@ -2540,9 +2537,6 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     frame->addPlotable(curve, o.drawOptions);
 
     ccoutW(Eval) << std::endl ;
-
-    if (projDataSel!=o.projData) delete projDataSel ;
-
   } else {
 
     // Set default range, if not specified
