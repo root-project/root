@@ -376,7 +376,7 @@ bool FitResult::ParameterBounds(unsigned int ipar, double & lower, double & uppe
    assert(itr->second < fParamBounds.size() );
    lower = fParamBounds[itr->second].first;
    upper = fParamBounds[itr->second].second;
-   return false;
+   return true;
 }
 
 std::string FitResult::ParName(unsigned int ipar) const {
