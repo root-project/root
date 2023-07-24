@@ -221,9 +221,10 @@ __global__ void nllSumMultiBlock(const double *__restrict__ probas, int probasSi
    int thIdx = threadIdx.x;
    int gthIdx = thIdx + blockIdx.x * blockSize;
    const int gridSize = blockSize * gridDim.x;
-   double sum = 0;
-   for (int i = gthIdx; i < probasSize; i += gridSize)
+   double sum = 0.0;
+   for (int i = gthIdx; i < probasSize; i += gridSize) {
       sum -= std::log(probas[i]);
+   }
    __shared__ double shArr[blockSize];
    shArr[thIdx] = sum;
    __syncthreads();
@@ -236,48 +237,28 @@ __global__ void nllSumMultiBlock(const double *__restrict__ probas, int probasSi
       out[blockIdx.x] = shArr[0];
 }
 
-__global__ void nllSumKernel(const double *probas, double *out, int n)
+__global__ void nllSumWeightedMultiBlock(const double *__restrict__ probas, const double *__restrict__ weights,
+                                         int probasSize, double *__restrict__ out)
 {
-   int idx = threadIdx.x;
-   double nllSum = 0;
-   for (int i = idx; i < n; i += blockSize) {
-      nllSum -= std::log(probas[i]);
+   int thIdx = threadIdx.x;
+   int gthIdx = thIdx + blockIdx.x * blockSize;
+   const int gridSize = blockSize * gridDim.x;
+   double sum = 0.0;
+   for (int i = gthIdx; i < probasSize; i += gridSize) {
+      if (weights[i] != 0.0) {
+         sum -= weights[i] * std::log(probas[i]);
+      }
    }
-   __shared__ double r[blockSize];
-   r[idx] = nllSum;
+   __shared__ double shArr[blockSize];
+   shArr[thIdx] = sum;
    __syncthreads();
    for (int size = blockSize / 2; size > 0; size /= 2) { // uniform
-      if (idx < size) {
-         r[idx] += r[idx + size];
-      }
+      if (thIdx < size)
+         shArr[thIdx] += shArr[thIdx + size];
       __syncthreads();
    }
-   if (idx == 0) {
-      *out = r[0];
-   }
-}
-
-__global__ void nllSumWeightedKernel(const double *probas, const double *weightSpan, double *out, int n)
-{
-   int idx = threadIdx.x;
-   double nllSum = 0;
-   for (int i = idx; i < n; i += blockSize) {
-      if (weightSpan[i] != 0.0) {
-         nllSum -= weightSpan[i] * std::log(probas[i]);
-      }
-   }
-   __shared__ double r[blockSize];
-   r[idx] = nllSum;
-   __syncthreads();
-   for (int size = blockSize / 2; size > 0; size /= 2) { // uniform
-      if (idx < size) {
-         r[idx] += r[idx + size];
-      }
-      __syncthreads();
-   }
-   if (idx == 0) {
-      *out = r[0];
-   }
+   if (thIdx == 0)
+      out[blockIdx.x] = shArr[0];
 }
 
 double RooBatchComputeClass::reduceSum(cudaStream_t *stream, InputArr input, size_t n)
@@ -304,8 +285,8 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(cudaStream_t *stream, RooSpan<co
       devOut.copyBack(&tmp, 1);
       tmp *= weightSpan[0];
    } else {
-      nllSumWeightedKernel<<<gridSize, blockSize, 0, *stream>>>(probas.data(), weightSpan.data(), devOut.data(),
-                                                                probas.size());
+      nllSumWeightedMultiBlock<<<gridSize, blockSize, 0, *stream>>>(probas.data(), weightSpan.data(), probas.size(),
+                                                                    devOut.data());
       sumMultiBlock<<<1, blockSize, 0, *stream>>>(devOut.data(), gridSize, devOut.data());
       devOut.copyBack(&tmp, 1);
    }
