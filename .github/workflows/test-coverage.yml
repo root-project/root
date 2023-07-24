@@ -290,13 +290,20 @@ jobs:
 
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
-                    --platform       ${{ matrix.image }}
-                    --incremental    false
-                    --base_ref       ${{ github.ref_name }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
-              "
+        # run: ".github/workflows/root-ci-config/build_root.py
+        #             --buildtype      ${{ matrix.config }}
+        #             --platform       ${{ matrix.image }}
+        #             --incremental    false
+        #             --base_ref       ${{ github.ref_name }}
+        #             --repository     ${{ github.server_url }}/${{ github.repository }}
+        #       "
+        run: ".github/workflows/root-ci-config/test_file.py
+              --buildtype      ${{ matrix.config }}
+              --platform       ${{ matrix.image }}
+              --incremental    false
+              --base_ref       ${{ github.ref_name }}
+              --repository     ${{ github.server_url }}/${{ github.repository }}
+             "
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
