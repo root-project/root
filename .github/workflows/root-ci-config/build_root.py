@@ -160,7 +160,9 @@ def main():
     if(platform == "fedora38-cov"):
         shell_log = create_coverage_xml(shell_log)
         # shell_log = create_coverage_html(shell_log)
-    
+        
+    print("upload_failed = ",upload_failed)
+    print("testing_failed = ", testing_failed)
 
     if testing_failed or upload_failed:
         print("testing_failed or upload_failed")
