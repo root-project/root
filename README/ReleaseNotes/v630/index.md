@@ -51,6 +51,72 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
 
+## RNTuple
+ROOT's experimental successor of TTree has seen a large number of updates during the last few months. Specifically, v6.30 includes the following changes:
+
+- Support for custom ROOT I/O rules that target transient members of a user-defined class (see PR [#11944](https://github.com/root-project/root/pull/11944)).  If a rule only targets transient members and it was working in TTree, it should work unmodified in RNTuple.
+
+- Improved support for user-defined classes that behave as a collection.  Specifically, RNTuple now relies on the iterator interface defined in `TVirtualCollectionProxy` (see PR [#12380](https://github.com/root-project/root/pull/12380) for details).
+Note that associative collections are not yet supported.
+
+- Support for new field types: `std::bitset<N>`, `std::unique_ptr<T>`, `std::set<T>`, `Double32_t`, scoped and unscoped enums with dictionary.
+
+- Full support for late model extension, which allows the RNTuple model to be extended after a `RNTupleWriter` has been created from the initial model (see PR [#12376](https://github.com/root-project/root/pull/12376)).
+New top-level fields can be created at any time during the writing process.
+On read-back, zero-initialized values are read for entries before the field was first seen.
+The example below illustrates the use of this feature.
+```
+auto model = RNTupleModel::Create();
+auto fieldPt = model->MakeField<float>("pt", 42.0);
+auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "out.ntuple");
+ntuple->Fill();
+
+auto modelUpdater = ntuple->CreateModelUpdater();
+modelUpdater->BeginUpdate();
+std::array<double, 2> fieldArray;
+modelUpdater->AddField<std::array<double, 2>>("array", &fieldArray);
+modelUpdater->CommitUpdate();
+
+// After this point, entries will have a new field of type `std::array<double, 2>`
+ntuple->Fill();
+```
+
+- Support for alternative column representations (Split / Zigzag encoding).  These encodings allow for better compression and are used by default if compression is enabled.
+Alternatively, users can pick a different column representation for a field by calling `RFieldBase::SetColumnRepresentative()`.
+
+- RNTuple now defaults to 64bit offset columns, which allow for representing large collections.
+RNTuple can still use 32bit offset columns, e.g.
+```
+RNTupleWriteOptions options;
+options.SetHasSmallClusters(true);
+auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "out.ntuple");
+```
+
+- Support for projected fields, i.e. exposing other fields' data as a different (compatible) C++ type.
+Users should provide a mapping function that maps each projected subfield in the tree to theunderlying real field, e.g.
+```
+auto model = RNTupleModel::Create();
+auto fvec = model->MakeField<std::vector<float>>("vec");
+
+auto aliasVec = RFieldBase::Create("aliasVec", "std::vector<float>").Unwrap();
+model->AddProjectedField(std::move(aliasVec), [](const std::string &fieldName) {
+   if (fieldName == "aliasVec") return "vec";
+   else                         return "vec._0";
+});
+```
+Projected fields are stored as part of the metadata.
+
+- Improvements on the internal `RField` value API.  The `RFieldValue` class has been deprecated in favor of `RField::Value` and the related interfaces have changed accordingly (see [#13219](https://github.com/root-project/root/pull/13219) and [#13264](https://github.com/root-project/root/pull/13264)).
+If you were not using `RField::(Read|Append)` directly, this change should not impact you.
+
+- The new `RNTupleImporter` class provides automatic conversion of TTree to RNTuple.
+Note that not all of the C++ types supported in TTree are currently supported in RNTuple.
+
+- Many bug fixes and performance improvements
+
+Please, report any issues regarding the abovementioned features should you encounter them.
+RNTuple is still experimental and is scheduled to become production grade by end of 2024.
+Thus, we appreciate feedback and suggestions for improvement.
 
 ## Histogram Libraries
 
