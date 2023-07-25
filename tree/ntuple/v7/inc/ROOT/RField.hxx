@@ -245,13 +245,13 @@ protected:
    virtual std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const = 0;
 
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' GenerateValue().
-   virtual void GenerateValue(void *where) = 0;
+   virtual void GenerateValue(void *where) const = 0;
    /// Releases the resources acquired during GenerateValue (memory and constructor)
    /// This implementation works for types with a trivial destructor and should be overwritten otherwise.
    virtual void DestroyValue(void *objPtr, bool dtorOnly = false) const;
 
    /// Allow derived classes to call GenerateValue(void *) and DestroyValue on other (sub) fields.
-   static void GenerateValueBy(RFieldBase &other, void *where) { other.GenerateValue(where); }
+   static void GenerateValueBy(const RFieldBase &other, void *where) { other.GenerateValue(where); }
    static void DestroyValueBy(const RFieldBase &other, void *objPtr, bool dtorOnly = false)
    {
       other.DestroyValue(objPtr, dtorOnly);
@@ -498,7 +498,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   void GenerateValue(void *) final {}
+   void GenerateValue(void *) const final {}
 
 public:
    RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
@@ -541,7 +541,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -574,7 +574,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor & /* desc */) final {}
 
-   void GenerateValue(void *where) final { GenerateValueBy(*fSubFields[0], where); }
+   void GenerateValue(void *where) const final { GenerateValueBy(*fSubFields[0], where); }
 
    std::size_t AppendImpl(const void *from) final { return fSubFields[0]->Append(from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { fSubFields[0]->Read(globalIndex, to); }
@@ -689,7 +689,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -732,7 +732,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    std::size_t AppendImpl(const void *from) final;
@@ -786,7 +786,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
-   void GenerateValue(void *where) override { new (where) std::vector<char>(); }
+   void GenerateValue(void *where) const override { new (where) std::vector<char>(); }
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -828,7 +828,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    std::size_t AppendImpl(const void *from) override;
@@ -870,7 +870,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -910,7 +910,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { memset(where, 0, GetValueSize()); }
+   void GenerateValue(void *where) const final { memset(where, 0, GetValueSize()); }
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
@@ -950,7 +950,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -1015,7 +1015,7 @@ class RUniquePtrField : public RNullableField {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void GenerateValue(void *where) final { new (where) std::unique_ptr<char>(); }
+   void GenerateValue(void *where) const final { new (where) std::unique_ptr<char>(); }
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -1038,7 +1038,7 @@ public:
 template <typename T, typename=void>
 class RField : public RClassField {
 protected:
-   void GenerateValue(void *where) final
+   void GenerateValue(void *where) const final
    {
       if constexpr (std::is_default_constructible_v<T>) {
          new (where) T();
@@ -1137,7 +1137,7 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 template <typename T>
 class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> : public RCollectionClassField {
 protected:
-   void GenerateValue(void *where) final { new (where) T(); }
+   void GenerateValue(void *where) const final { new (where) T(); }
 
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
@@ -1163,7 +1163,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *) final {}
+   void GenerateValue(void *) const final {}
 
 public:
    static std::string TypeName() { return ""; }
@@ -1189,7 +1189,7 @@ private:
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<Detail::RFieldBase>, 2> &&itemFields,
@@ -1213,7 +1213,7 @@ private:
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
 
-   void GenerateValue(void *where) override;
+   void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
@@ -1270,7 +1270,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) ClusterSize_t(0); }
+   void GenerateValue(void *where) const final { new (where) ClusterSize_t(0); }
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
@@ -1317,7 +1317,7 @@ protected:
    {
       return std::make_unique<RField<RNTupleCardinality<SizeT>>>(newName);
    }
-   void GenerateValue(void *where) final { new (where) RNTupleCardinality<SizeT>(0); }
+   void GenerateValue(void *where) const final { new (where) RNTupleCardinality<SizeT>(0); }
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
@@ -1359,7 +1359,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) bool(false); }
+   void GenerateValue(void *where) const final { new (where) bool(false); }
 
 public:
    static std::string TypeName() { return "bool"; }
@@ -1401,7 +1401,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) float(0.0); }
+   void GenerateValue(void *where) const final { new (where) float(0.0); }
 
 public:
    static std::string TypeName() { return "float"; }
@@ -1444,7 +1444,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) double(0.0); }
+   void GenerateValue(void *where) const final { new (where) double(0.0); }
 
 public:
    static std::string TypeName() { return "double"; }
@@ -1489,7 +1489,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) char(0); }
+   void GenerateValue(void *where) const final { new (where) char(0); }
 
 public:
    static std::string TypeName() { return "char"; }
@@ -1531,7 +1531,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) int8_t(0); }
+   void GenerateValue(void *where) const final { new (where) int8_t(0); }
 
 public:
    static std::string TypeName() { return "std::int8_t"; }
@@ -1573,7 +1573,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) uint8_t(0); }
+   void GenerateValue(void *where) const final { new (where) uint8_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint8_t"; }
@@ -1615,7 +1615,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) int16_t(0); }
+   void GenerateValue(void *where) const final { new (where) int16_t(0); }
 
 public:
    static std::string TypeName() { return "std::int16_t"; }
@@ -1657,7 +1657,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) int16_t(0); }
+   void GenerateValue(void *where) const final { new (where) int16_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint16_t"; }
@@ -1699,7 +1699,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) int32_t(0); }
+   void GenerateValue(void *where) const final { new (where) int32_t(0); }
 
 public:
    static std::string TypeName() { return "std::int32_t"; }
@@ -1741,7 +1741,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) uint32_t(0); }
+   void GenerateValue(void *where) const final { new (where) uint32_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint32_t"; }
@@ -1783,7 +1783,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) uint64_t(0); }
+   void GenerateValue(void *where) const final { new (where) uint64_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint64_t"; }
@@ -1825,7 +1825,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void GenerateValue(void *where) final { new (where) int64_t(0); }
+   void GenerateValue(void *where) const final { new (where) int64_t(0); }
 
 public:
    static std::string TypeName() { return "std::int64_t"; }
@@ -1870,7 +1870,7 @@ private:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
-   void GenerateValue(void *where) final { new (where) std::string(); }
+   void GenerateValue(void *where) const final { new (where) std::string(); }
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
    std::size_t AppendImpl(const void *from) final;
@@ -1899,7 +1899,7 @@ class RField<std::array<ItemT, N>> : public RArrayField {
    using ContainerT = typename std::array<ItemT, N>;
 
 protected:
-   void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
 
 public:
    static std::string TypeName() {
@@ -1949,7 +1949,7 @@ private:
    }
 
 protected:
-   void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
 
 public:
    static std::string TypeName() { return "std::variant<" + BuildItemTypes<ItemTs...>() + ">"; }
@@ -1966,7 +1966,7 @@ class RField<std::vector<ItemT>> : public RVectorField {
    using ContainerT = typename std::vector<ItemT>;
 
 protected:
-   void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
 
 public:
    static std::string TypeName() { return "std::vector<" + RField<ItemT>::TypeName() + ">"; }
@@ -1996,7 +1996,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
-   void GenerateValue(void *where) final { new (where) std::vector<bool>(); }
+   void GenerateValue(void *where) const final { new (where) std::vector<bool>(); }
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
 
    std::size_t AppendImpl(const void *from) final;
@@ -2034,7 +2034,7 @@ protected:
       return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
    }
 
-   void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
@@ -2104,7 +2104,7 @@ protected:
       return std::make_unique<RField<std::pair<T1, T2>>>(newName, std::move(items));
    }
 
-   void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
@@ -2183,7 +2183,7 @@ protected:
       return std::make_unique<RField<std::tuple<ItemTs...>>>(newName, std::move(items));
    }
 
-   void GenerateValue(void *where) final { new (where) ContainerT(); }
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
