@@ -21,11 +21,11 @@
 
 #include <TFile.h>
 
-#include <cstring>
-#include <iostream>
 #include <algorithm>
+#include <cstring>
 #include <deque>
 #include <exception>
+#include <iostream>
 
 ROOT::Experimental::RNTupleInspector::RNTupleInspector(
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
@@ -176,9 +176,9 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
    return inspector;
 }
 
-int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeName, bool includeSubFields) const
+size_t ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeName, bool includeSubFields) const
 {
-   int typeCount = 0;
+   size_t typeCount = 0;
 
    for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
       if (!includeSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor->GetFieldZeroId()) {
@@ -193,9 +193,9 @@ int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typ
    return typeCount;
 }
 
-int ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
+size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
 {
-   int typeCount = 0;
+   size_t typeCount = 0;
 
    for (auto &[colId, colInfo] : fColumnInfo) {
       if (colInfo.GetType() == colType) {
