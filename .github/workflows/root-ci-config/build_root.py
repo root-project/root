@@ -145,15 +145,15 @@ def main():
 
         if testing:
             extra_ctest_flags = ""
-            result = ""
 
             if WINDOWS:
                 extra_ctest_flags += "--repeat until-pass:3 "
                 extra_ctest_flags += "--build-config " + args.buildtype
 
-            shell_log = run_ctest(shell_log, extra_ctest_flags)
+            result, shell_log = run_ctest(shell_log, extra_ctest_flags)
             print("---*****----")
             print(result)
+
     except:
         testing_failed = True
     
@@ -163,6 +163,7 @@ def main():
     
 
     if testing_failed or upload_failed:
+        
         die(result, "Some tests failed", shell_log)
 
 
@@ -276,7 +277,7 @@ def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
     #     die(result, "Some tests failed", shell_log)
     #print(result)
 
-    return shell_log
+    return result, shell_log
 
 # @github_log_group("Create Test Coverage")
 # def create_coverage():

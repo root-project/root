@@ -164,9 +164,9 @@ jobs:
             config: Debug
             overrides: ["coverage=On"]
 
-          # - image: fedora38
-          #   config: Debug
-          #   overrides: ["coverage=On"]
+          - image: fedora38
+            config: Debug
+            overrides: ["coverage=On"]
 
           # - image: fedora37
           #   config: Debug
