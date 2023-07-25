@@ -161,10 +161,10 @@ public:
 
    /// Get the number of fields of a given type or class present in the RNTuple.
    /// TODO: Add regex support.
-   int GetFieldTypeCount(std::string_view typeName, bool includeSubFields = true) const;
+   size_t GetFieldTypeCount(std::string_view typeName, bool includeSubFields = true) const;
 
    /// Get the number of columns of a given type present in the RNTuple.
-   int GetColumnTypeCount(EColumnType colType) const;
+   size_t GetColumnTypeCount(EColumnType colType) const;
 };
 } // namespace Experimental
 } // namespace ROOT
