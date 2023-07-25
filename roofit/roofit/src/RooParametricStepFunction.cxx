@@ -80,6 +80,7 @@ xframe->Draw();
 
 #include <RooParametricStepFunction.h>
 
+#include <RooCurve.h>
 #include <RooRealVar.h>
 
 ClassImp(RooParametricStepFunction);
@@ -220,4 +221,19 @@ double RooParametricStepFunction::evaluate() const
   }
   return value;
 
+}
+
+
+std::list<double>* RooParametricStepFunction::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
+{
+   if(obs.namePtr() != _x->namePtr()) {
+      return nullptr;
+   }
+
+  // Retrieve position of all bin boundaries
+  std::span<const double> boundaries{_limits.GetArray(), static_cast<std::size_t>(_limits.GetSize())};
+
+  // Use the helper function from RooCurve to make sure to get sampling hints
+  // that work with the RooFitPlotting.
+  return RooCurve::plotSamplingHintForBinBoundaries(boundaries, xlo, xhi);
 }

@@ -30,10 +30,11 @@ but a not-normalized function (RooAbsReal)
 
 #include <RooStepFunction.h>
 
-#include <RooRealVar.h>
 #include <RooArgList.h>
+#include <RooCurve.h>
 #include <RooMsgService.h>
 #include <RooMath.h>
+#include <RooRealVar.h>
 
 ClassImp(RooStepFunction);
 
@@ -139,4 +140,23 @@ double RooStepFunction::evaluate() const
     }
     return 0;
   }
+}
+
+
+std::list<double> *RooStepFunction::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
+{
+   if (obs.namePtr() != _x->namePtr()) {
+      return nullptr;
+   }
+
+   // Retrieve position of all bin boundaries
+   std::vector<double> boundaries;
+   boundaries.reserve(_boundaryList.size());
+   for (auto *boundary : static_range_cast<RooAbsReal *>(_boundaryList)) {
+      boundaries.push_back(boundary->getVal());
+   }
+
+   // Use the helper function from RooCurve to make sure to get sampling hints
+   // that work with the RooFitPlotting.
+   return RooCurve::plotSamplingHintForBinBoundaries(boundaries, xlo, xhi);
 }

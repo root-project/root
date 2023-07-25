@@ -36,6 +36,8 @@ class RooStepFunction : public RooAbsReal {
   const RooArgList& coefficients() { return _coefList; }
   const RooArgList& boundaries() { return _boundaryList; }
 
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
+
  protected:
 
   double evaluate() const override;

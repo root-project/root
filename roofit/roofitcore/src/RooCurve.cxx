@@ -299,6 +299,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
   }
 
   double dx= (xhi-xlo)/(minPoints-1.);
+  const double epsilon = (xhi - xlo) * relativeXEpsilon();;
   std::vector<double> yval(minPoints);
 
   // Get list of initial x values. If function provides sampling hint use that,
@@ -369,7 +370,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
       // If precision is <0, no attempt at recursive interpolation is made
       addPoint(x2,yval[step]) ;
     } else {
-      addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
+      addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal,epsilon);
     }
     step++ ;
   }
@@ -394,10 +395,10 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
 
 void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
          double y1, double y2, double minDy, double minDx,
-         Int_t numee, bool doEEVal, double eeVal)
+         int numee, bool doEEVal, double eeVal, double epsilon)
 {
   // Explicitly skip empty ranges to eliminate point duplication
-  if (std::abs(x2-x1)<1e-20) {
+  if (std::abs(x2-x1) <= epsilon) {
     return ;
   }
 
@@ -424,8 +425,8 @@ void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
   double dy= ymid - 0.5*(y1+y2);
   if((xmid - x1 >= minDx) && std::abs(dy)>0 && std::abs(dy) >= minDy) {
     // fill in each subrange
-    addRange(func,x1,xmid,y1,ymid,minDy,minDx,numee,doEEVal,eeVal);
-    addRange(func,xmid,x2,ymid,y2,minDy,minDx,numee,doEEVal,eeVal);
+    addRange(func,x1,xmid,y1,ymid,minDy,minDx,numee,doEEVal,eeVal,epsilon);
+    addRange(func,xmid,x2,ymid,y2,minDy,minDx,numee,doEEVal,eeVal,epsilon);
   }
   else {
     // add the endpoint
@@ -886,3 +887,37 @@ bool RooCurve::isIdentical(const RooCurve& other, double tol, bool verbose) cons
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns sampling hints for a histogram with given boundaries. This helper
+/// function is meant to be used by binned RooAbsReals to produce sampling
+/// hints that are working well with RooFits plotting.
+
+std::list<double> *
+RooCurve::plotSamplingHintForBinBoundaries(std::span<const double> boundaries, double xlo, double xhi)
+{
+   auto hint = new std::list<double>;
+
+   // Make sure the difference between two points around a bin boundary is
+   // larger than the relative epsilon for which the RooCurve considers two
+   // points as the same. Otherwise, the points right of the bin boundary would
+   // be skipped.
+   const double delta = (xhi - xlo) * RooCurve::relativeXEpsilon();
+
+   // Sample points right next to the plot limits
+   hint->push_back(xlo + delta);
+   hint->push_back(xhi - delta);
+
+   // Sample points very close to the left and right of the bin boundaries that
+   // are strictly in between the plot limits.
+   for (const double x : boundaries) {
+      if (x - xlo > delta && xhi - x > delta) {
+         hint->push_back(x - delta);
+         hint->push_back(x + delta);
+      }
+   }
+
+   hint->sort();
+
+   return hint;
+}

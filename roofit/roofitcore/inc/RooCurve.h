@@ -16,11 +16,15 @@
 #ifndef ROO_CURVE
 #define ROO_CURVE
 
-#include "TGraph.h"
-#include "RooPlotable.h"
+#include <RooPlotable.h>
+
+#include <ROOT/RSpan.hxx>
+
+#include <TGraph.h>
+#include <TMatrixDfwd.h>
+
 #include <list>
 #include <vector>
-#include "TMatrixDfwd.h"
 
 class RooAbsReal;
 class RooRealVar;
@@ -71,6 +75,8 @@ public:
   RooCurve* makeErrorBand(const std::vector<RooCurve*>& variations, double Z=1) const ;
   RooCurve* makeErrorBand(const std::vector<RooCurve*>& plusVar, const std::vector<RooCurve*>& minusVar, const TMatrixD& V, double Z=1) const ;
 
+  static std::list<double>* plotSamplingHintForBinBoundaries(std::span<const double> boundaries, double xlo, double xhi);
+
 protected:
 
   void calcBandInterval(const std::vector<RooCurve*>& variations,Int_t i,double Z,double& lo, double& hi, bool approxGauss) const ;
@@ -83,12 +89,19 @@ protected:
        Int_t numee=0, bool doEEVal=false, double eeVal=0.0,std::list<double>* samplingHint=nullptr) ;
   void addRange(const RooAbsFunc& func, double x1, double x2, double y1,
       double y2, double minDy, double minDx,
-      Int_t numee=0, bool doEEVal=false, double eeVal=0.0);
+      int numee, bool doEEVal, double eeVal, double epsilon);
 
 
   void shiftCurveToZero();
 
   bool _showProgress = false; ///<! Show progress indication when adding points
+
+private:
+  /// The distance between two points x1 and x2 relative to the full plot range
+  /// below which two points are considered identical. No further sampling
+  /// points will be added to the curve when the distance between two sampling
+  /// points falls below this threshold.
+  static constexpr double relativeXEpsilon() { return 1e-9; }
 
   ClassDefOverride(RooCurve,1) // 1-dimensional smooth curve for use in RooPlots
 };
