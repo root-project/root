@@ -266,6 +266,18 @@ protected:
       ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), to);
    }
 
+   /// Write the given value into columns. The value object has to be of the same type as the field.
+   /// Returns the number of uncompressed bytes written.
+   std::size_t Append(const void *from)
+   {
+      if (~fTraits & kTraitMappable)
+         return AppendImpl(from);
+
+      fPrincipalColumn->Append(from);
+      return fPrincipalColumn->GetElement()->GetPackedSize();
+   }
+   static std::size_t AppendBy(RFieldBase &other, const void *from) { return other.Append(from); }
+
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
    /// don't match any of the deserialization types from GetColumnRepresentations().
    const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
@@ -384,17 +396,6 @@ public:
    virtual size_t GetAlignment() const = 0;
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
-
-   /// Write the given value into columns. The value object has to be of the same type as the field.
-   /// Returns the number of uncompressed bytes written.
-   std::size_t Append(const void *from)
-   {
-      if (~fTraits & kTraitMappable)
-         return AppendImpl(from);
-
-      fPrincipalColumn->Append(from);
-      return fPrincipalColumn->GetElement()->GetPackedSize();
-   }
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the ntuple value.
@@ -576,7 +577,7 @@ protected:
 
    void GenerateValue(void *where) const final { GenerateValueBy(*fSubFields[0], where); }
 
-   std::size_t AppendImpl(const void *from) final { return fSubFields[0]->Append(from); }
+   std::size_t AppendImpl(const void *from) final { return AppendBy(*fSubFields[0], from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { fSubFields[0]->Read(globalIndex, to); }
 
 public:
@@ -2047,7 +2048,7 @@ protected:
       auto nbytes = 0;
       auto count = typedValue->size();
       for (unsigned i = 0; i < count; ++i) {
-         nbytes += fSubFields[0]->Append(&typedValue->data()[i]);
+         nbytes += AppendBy(*fSubFields[0], &typedValue->data()[i]);
       }
       this->fNWritten += count;
       fColumns[0]->Append(&this->fNWritten);
