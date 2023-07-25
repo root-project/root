@@ -221,7 +221,7 @@ public:
                out << SP*5 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}};\n";
                out << SP*5 << "q.submit([&](cl::sycl::handler& cgh)) {\n";
                out << SP*6 << "auto acc_tensor_" << fNBroadcastedInputs[i] << " = cl::sycl::accessor{buf_tensor_";
-               out << fNBroadcastedInputs[i]<< ", cl::sycl::write_only, cl::sycl::no_init};\n";
+               out << fNBroadcastedInputs[i]<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
                out << SP*6 << "cgh.copy(data, acc_tensor_" << fNBroadcastedInputs[i] << ");\n";
                out << SP*5 << "};\n";
 
@@ -234,9 +234,9 @@ public:
       if (fNInputs.size() == 1) {
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*4 << "auto acc_tensor_" << fNInputs[0] << " = cl::sycl::accessor{buf_tensor_" << fNInputs[0];
-         out << ", cl::sycl::read_only};\n";
+         out << ", cgh, cl::sycl::read_only};\n";
          out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
-         out << ", cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
          out << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length << "), ";
          out << "[=](cl::sycl::id<1> id){\n";
          out << SP*5 << "acc_tensor_" << fNY << "[id] = acc_tensor_" << fNInputs[0] << "[id];\n";
@@ -247,11 +247,11 @@ public:
          out << SP*3 << "q.submit([&](cl::sycl::handler &cgh){\n";
          for (size_t i=0; i<fNBroadcastedInputs.size(); i++) {
             out << SP*4 << "auto acc_tensor_" << fNBroadcastedInputs[i] << "= cl::sycl::accessor{buf_tensor_" << fNBroadcastedInputs[i];
-            out << ", cl::sycl::read_only};\n"; 
+            out << ", cgh, cl::sycl::read_only};\n"; 
          }
 
          out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
-         out << ", cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
          std::vector<std::string> inputs(fNBroadcastedInputs.size());
          for (size_t i = 0; i < fNBroadcastedInputs.size(); i++) {
