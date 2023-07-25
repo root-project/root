@@ -33,11 +33,26 @@ endforeach()
 string(REPLACE ";" ";\n" EMIT_CAPTURES "${ALL_CAPTURES}")
 configure_file(EmitFromONNX.cxx.in EmitFromONNX_all.cxx @ONLY)
 configure_file(EmitFromRoot.cxx.in EmitFromRoot_all.cxx @ONLY)
+configure_file(EmitFromONNX_GPU.cxx.in EmitFromONNX_GPU_all.cxx @ONLY)
 
 add_executable(emitFromONNX
    EmitFromONNX_all.cxx
 )
+
+add_executable(emitFromONNX_GPU
+  EmitFromONNX_GPU_all.cxx  
+)
+
 target_include_directories(emitFromONNX PRIVATE
+   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
+   ${SOFIE_PARSERS_DIR}/inc
+   ${CMAKE_SOURCE_DIR}/tmva/inc
+   ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+)
+
+target_include_directories(emitFromONNX_GPU PRIVATE
    ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
    ${SOFIE_PARSERS_DIR}/inc
    ${CMAKE_SOURCE_DIR}/tmva/inc
@@ -51,15 +66,25 @@ set_target_properties(emitFromONNX PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
+target_link_libraries(emitFromONNX_GPU ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
+set_target_properties(emitFromONNX_GPU PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
+target_compile_options(emitFromONNX_GPU PRIVATE -Wno-unused-parameter -Wno-array-bounds)
+
 # Automatic compilation of headers from onnx files
 add_custom_target(SofieCompileModels_ONNX)
 add_dependencies(SofieCompileModels_ONNX emitFromONNX)
 
+add_custom_target(SofieCompileGPUModels_ONNX)
+add_dependencies(SofieCompileGPUModels_ONNX emitFromONNX_GPU)
 
 add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
 		USES_TERMINAL )
 
+add_custom_command(TARGET SofieCompileGPUModels_ONNX POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX_GPU ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
+USES_TERMINAL )
 
 # Creating a Google Test
 if (tmva-cpu)  # we need BLAS for compiling the models
@@ -73,6 +98,20 @@ ROOT_ADD_GTEST(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
 )
 
 add_dependencies(TestCustomModelsFromONNX SofieCompileModels_ONNX)
+endif()
+
+# Creating a Google Test
+if (tmva-cpu)  # we need BLAS for compiling the models
+ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
+  LIBRARIES
+    ROOTTMVASofie
+    ${BLAS_LINKER_FLAGS}
+    ${BLAS_LIBRARIES}
+  INCLUDE_DIRS
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_dependencies(TestCustomGPUModelsFromONNX SofieCompileGPUModels_ONNX)
 endif()
 
 #For testing serialisation of RModel object
@@ -141,4 +180,17 @@ if (tmva-cpu)
       ${CMAKE_CURRENT_BINARY_DIR}
   )
  endif()
+
+ if (tmva-cpu)
+  ROOT_ADD_GTEST(TestSofieGPUModels TestSofieGPUModels.cxx
+    LIBRARIES
+      ROOTTMVASofie
+      ROOTTMVASofieParser
+      ${BLAS_LINKER_FLAGS}
+      ${BLAS_LIBRARIES}
+    INCLUDE_DIRS
+      ${CMAKE_CURRENT_BINARY_DIR}
+  )
+ endif()
+
 endif()

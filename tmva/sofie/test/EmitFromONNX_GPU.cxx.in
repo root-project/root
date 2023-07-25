@@ -1,0 +1,30 @@
+// Author: Federico Sossai
+// Last modified: 2021/07/30
+// Description:
+//    SOFIE command line compiler.
+//    This program is automatically run when the target 'TestCustomModelsFromONNX' is built.
+//    Usage example: $./sofiec indir/mymodel.onnx outdir/myname.hxx
+
+#include <iostream>
+
+#include "TMVA/RModel.hxx"
+#include "TMVA/RModelParser_ONNX.hxx"
+
+using namespace TMVA::Experimental::SOFIE;
+
+int EmitModel(std::string filename, std::string outname){
+
+   RModelParser_ONNX parser;
+   RModel model = parser.Parse(filename);
+   model.GenerateGPU();
+   model.OutputGeneratedGPU(outname+"GPU_FromONNX.hxx");
+
+   return 0;
+}
+
+int main(int argc, char *argv[]){
+
+@EMIT_CAPTURES@ ;
+
+}
+
