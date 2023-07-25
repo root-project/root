@@ -305,7 +305,7 @@ public:
       /// The stack of nodes visited when walking down the tree of fields
       std::vector<Position> fStack;
    public:
-      using iterator = RSchemaIteratorTemplate;
+      using iterator = RSchemaIteratorTemplate<IsConstT>;
       using iterator_category = std::forward_iterator_tag;
       using difference_type = std::ptrdiff_t;
       using value_type = std::conditional_t<IsConstT, const RFieldBase, RFieldBase>;
