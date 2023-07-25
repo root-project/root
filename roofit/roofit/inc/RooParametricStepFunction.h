@@ -15,12 +15,12 @@
 #ifndef ROO_PARAMETRIC_STEP_FUNCTION
 #define ROO_PARAMETRIC_STEP_FUNCTION
 
-#include "TArrayD.h"
-#include "RooAbsPdf.h"
-#include "RooRealProxy.h"
-#include "RooListProxy.h"
+#include <RooRealProxy.h>
+#include <RooListProxy.h>
+#include <RooAbsPdf.h>
 
-class RooRealVar;
+#include <TArrayD.h>
+
 class RooArgList ;
 
 class RooParametricStepFunction : public RooAbsPdf {
@@ -29,7 +29,7 @@ public:
    RooParametricStepFunction() {}
 
   RooParametricStepFunction(const char *name, const char *title,
-      RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins=1) ;
+      RooAbsReal& x, const RooArgList& coefList, TArrayD const& limits, Int_t nBins=1) ;
 
   RooParametricStepFunction(const RooParametricStepFunction& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooParametricStepFunction(*this, newname); }
