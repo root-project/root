@@ -279,4 +279,9 @@ Some of these classes are now removed from the public interface:
 
 ## Build, Configuration and Testing Infrastructure
 
+- If `-Droottest=ON` is specified, the ROOT build system used to clone a matching branch of the `roottest` repository.
+This logic has been improved and is now as follows:
+_(i)_ If the current head is a well-known branch, e.g. `master` or `v6-28-00-patches`, use the matching branch upstream;
+_(ii)_ otherwise, try a branch that matches the name of the current head in the forked repository, if it exists; else try using the closest upstream head/tag below `HEAD`'s parent commit;
+_(iii)_ as a last resort, if there is no preferred candidate, checkout the remote's default head.
 
