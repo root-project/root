@@ -61,7 +61,7 @@ protected:
    {
       return std::make_unique<RRDFCardinalityField>();
    }
-   void GenerateValue(void *where) final { *static_cast<std::size_t *>(where) = 0; }
+   void GenerateValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
 public:
    static std::string TypeName() { return "std::size_t"; }

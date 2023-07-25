@@ -1258,7 +1258,7 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
    AddReadCallbacksFromIORules(rules, fClass);
 }
 
-void ROOT::Experimental::RClassField::GenerateValue(void *where)
+void ROOT::Experimental::RClassField::GenerateValue(void *where) const
 {
    fClass->New(where);
 }
@@ -1494,7 +1494,7 @@ void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl(const RNTupl
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RCollectionClassField::GenerateValue(void *where)
+void ROOT::Experimental::RCollectionClassField::GenerateValue(void *where) const
 {
    fProxy->New(where);
 }
@@ -1617,7 +1617,7 @@ void ROOT::Experimental::RRecordField::ReadInClusterImpl(const RClusterIndex &cl
    }
 }
 
-void ROOT::Experimental::RRecordField::GenerateValue(void *where)
+void ROOT::Experimental::RRecordField::GenerateValue(void *where) const
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
       GenerateValueBy(*fSubFields[i], static_cast<unsigned char *>(where) + fOffsets[i]);
@@ -1892,7 +1892,7 @@ void ROOT::Experimental::RRVecField::GenerateColumnsImpl(const RNTupleDescriptor
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RRVecField::GenerateValue(void *where)
+void ROOT::Experimental::RRVecField::GenerateValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
    // currently the inline buffer is left uninitialized
@@ -2148,7 +2148,7 @@ void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clu
    }
 }
 
-void ROOT::Experimental::RArrayField::GenerateValue(void *where)
+void ROOT::Experimental::RArrayField::GenerateValue(void *where) const
 {
    if (fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)
       return;
@@ -2350,7 +2350,7 @@ void ROOT::Experimental::RVariantField::GenerateColumnsImpl(const RNTupleDescrip
    fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RVariantField::GenerateValue(void *where)
+void ROOT::Experimental::RVariantField::GenerateValue(void *where) const
 {
    memset(where, 0, GetValueSize());
    GenerateValueBy(*fSubFields[0], where);
@@ -2581,7 +2581,7 @@ ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
    return result;
 }
 
-void ROOT::Experimental::RPairField::GenerateValue(void *where)
+void ROOT::Experimental::RPairField::GenerateValue(void *where) const
 {
    fClass->New(where);
 }
@@ -2651,7 +2651,7 @@ ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
    return result;
 }
 
-void ROOT::Experimental::RTupleField::GenerateValue(void *where)
+void ROOT::Experimental::RTupleField::GenerateValue(void *where) const
 {
    fClass->New(where);
 }
