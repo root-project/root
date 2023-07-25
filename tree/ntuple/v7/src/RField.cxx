@@ -1213,7 +1213,7 @@ std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      nbytes += fSubFields[i]->Append(static_cast<const unsigned char *>(from) + fSubFieldsInfo[i].fOffset);
+      nbytes += AppendBy(*fSubFields[i], static_cast<const unsigned char *>(from) + fSubFieldsInfo[i].fOffset);
    }
    return nbytes;
 }
@@ -1446,7 +1446,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const void *fr
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), const_cast<void *>(from));
    for (auto ptr : RCollectionIterableOnce{const_cast<void *>(from), fIFuncsWrite, fProxy.get(),
                                            (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
-      nbytes += fSubFields[0]->Append(ptr);
+      nbytes += AppendBy(*fSubFields[0], ptr);
       count++;
    }
 
@@ -1598,7 +1598,7 @@ std::size_t ROOT::Experimental::RRecordField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      nbytes += fSubFields[i]->Append(static_cast<const unsigned char *>(from) + fOffsets[i]);
+      nbytes += AppendBy(*fSubFields[i], static_cast<const unsigned char *>(from) + fOffsets[i]);
    }
    return nbytes;
 }
@@ -1674,7 +1674,7 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
    std::size_t nbytes = 0;
    auto count = typedValue->size() / fItemSize;
    for (unsigned i = 0; i < count; ++i) {
-      nbytes += fSubFields[0]->Append(typedValue->data() + (i * fItemSize));
+      nbytes += AppendBy(*fSubFields[0], typedValue->data() + (i * fItemSize));
    }
    fNWritten += count;
    fColumns[0]->Append(&fNWritten);
@@ -1799,7 +1799,7 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const void *from)
    std::size_t nbytes = 0;
    auto begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      nbytes += fSubFields[0]->Append(begin + i * fItemSize);
+      nbytes += AppendBy(*fSubFields[0], begin + i * fItemSize);
    }
 
    fNWritten += *sizePtr;
@@ -2027,7 +2027,7 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const void
    auto count = typedValue->size();
    for (unsigned i = 0; i < count; ++i) {
       bool bval = (*typedValue)[i];
-      fSubFields[0]->Append(&bval);
+      AppendBy(*fSubFields[0], &bval);
    }
    fNWritten += count;
    fColumns[0]->Append(&fNWritten);
@@ -2126,7 +2126,7 @@ std::size_t ROOT::Experimental::RArrayField::AppendImpl(const void *from)
    std::size_t nbytes = 0;
    auto arrayPtr = static_cast<const unsigned char *>(from);
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      nbytes += fSubFields[0]->Append(arrayPtr + (i * fItemSize));
+      nbytes += AppendBy(*fSubFields[0], arrayPtr + (i * fItemSize));
    }
    return nbytes;
 }
@@ -2308,7 +2308,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
    std::size_t nbytes = 0;
    auto index = 0;
    if (tag > 0) {
-      nbytes += fSubFields[tag - 1]->Append(from);
+      nbytes += AppendBy(*fSubFields[tag - 1], from);
       index = fNWritten[tag - 1]++;
    }
    RColumnSwitch varSwitch(ClusterSize_t(index), tag);
@@ -2424,7 +2424,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
    if (IsDense()) {
       bool mask = false;
       fPrincipalColumn->Append(&mask);
-      return 1 + fSubFields[0]->Append(fDefaultItemValue->GetRawPtr());
+      return 1 + AppendBy(*fSubFields[0], fDefaultItemValue->GetRawPtr());
    } else {
       fPrincipalColumn->Append(&fNWritten);
       return sizeof(ClusterSize_t);
@@ -2433,7 +2433,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
 
 std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
 {
-   auto nbytesItem = fSubFields[0]->Append(from);
+   auto nbytesItem = AppendBy(*fSubFields[0], from);
    if (IsDense()) {
       bool mask = true;
       fPrincipalColumn->Append(&mask);
