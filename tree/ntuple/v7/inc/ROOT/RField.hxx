@@ -121,7 +121,7 @@ public:
       /// The union of the serialization types and the deserialization extra types.  Duplicates the serialization types
       /// list but the benenfit is that GetDeserializationTypes does not need to compile the list.
       TypesList_t fDeserializationTypes;
-   };
+   }; // class RColumnRepresentations
 
    /// Points to an object with RNTuple I/O support and keeps a pointer to the corresponding field.
    /// Only fields can create RValue objects through generation, binding or splitting.
@@ -172,7 +172,7 @@ public:
       }
       void *GetRawPtr() const { return fObjPtr; }
       RFieldBase *GetField() const { return fField; }
-   };
+   }; // class RValue
 
 private:
    /// The field name relative to its parent field
@@ -240,6 +240,13 @@ protected:
    /// The method should to check, using the page source and fOnDiskId, if the column types match
    /// and throw if they don't.
    virtual void GenerateColumnsImpl(const RNTupleDescriptor &desc) = 0;
+   /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
+   /// don't match any of the deserialization types from GetColumnRepresentations().
+   const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
+   /// When connecting a field to a page sink, the field's default column representation is subject
+   /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
+   /// are changed to their unencoded counterparts.
+   void AutoAdjustColumnTypes(const RNTupleWriteOptions &options);
 
    /// Called by Clone(), which additionally copies the on-disk ID
    virtual std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const = 0;
@@ -249,7 +256,6 @@ protected:
    /// Releases the resources acquired during GenerateValue (memory and constructor)
    /// This implementation works for types with a trivial destructor and should be overwritten otherwise.
    virtual void DestroyValue(void *objPtr, bool dtorOnly = false) const;
-
    /// Allow derived classes to call GenerateValue(void *) and DestroyValue on other (sub) fields.
    static void GenerateValueBy(const RFieldBase &other, void *where) { other.GenerateValue(where); }
    static void DestroyValueBy(const RFieldBase &other, void *objPtr, bool dtorOnly = false)
@@ -276,24 +282,19 @@ protected:
       fPrincipalColumn->Append(from);
       return fPrincipalColumn->GetElement()->GetPackedSize();
    }
-   static std::size_t AppendBy(RFieldBase &other, const void *from) { return other.Append(from); }
 
-   /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
-   /// don't match any of the deserialization types from GetColumnRepresentations().
-   const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
+   /// Allow derived classes to call Append and Read on other (sub) fields.
+   static std::size_t AppendBy(RFieldBase &other, const void *from) { return other.Append(from); }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
    /// Returns an index that can be used to remove the callback.
    size_t AddReadCallback(ReadCallback_t func);
    void RemoveReadCallback(size_t idx);
+
    /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
    virtual void OnConnectPageSource() {}
-   /// When connecting a field to a page sink, the field's default column representation is subject
-   /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
-   /// are changed to their unencoded counterparts.
-   void AutoAdjustColumnTypes(const RNTupleWriteOptions &options);
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias
