@@ -39,6 +39,8 @@ public:
   Int_t getnBins() const { return _nBins; }
   double* getLimits() { return _limits.GetArray(); }
 
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
+
 protected:
 
   double lastBinValue() const ;

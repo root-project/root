@@ -28,6 +28,7 @@ discrete dimensions.
 #include "Riostream.h"
 
 #include "RooHistPdf.h"
+#include "RooCurve.h"
 #include "RooDataHist.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
@@ -511,26 +512,11 @@ std::list<double>* RooHistPdf::plotSamplingHint(RooDataHist const& dataHist,
   // Retrieve position of all bin boundaries
 
   const RooAbsBinning* binning = lval->getBinningPtr(nullptr);
-  std::span<double> boundaries{binning->array(), static_cast<std::size_t>(binning->numBoundaries())};
+  std::span<const double> boundaries{binning->array(), static_cast<std::size_t>(binning->numBoundaries())};
 
-  auto hint = new std::list<double> ;
-
-  const double delta = (xhi-xlo)*1e-8 ;
-
-  // Sample points right next to the plot limits
-  hint->push_back(xlo + delta);
-  hint->push_back(xhi - delta);
-
-  // Sample points very close to the left and right of the bin boundaries that
-  // are strictly in between the plot limits.
-  for (const double x : boundaries) {
-    if (x - xlo > delta && xhi - x > delta) {
-      hint->push_back(x - delta);
-      hint->push_back(x + delta);
-    }
-  }
-
-  return hint ;
+  // Use the helper function from RooCurve to make sure to get sampling hints
+  // that work with the RooFitPlotting.
+  return RooCurve::plotSamplingHintForBinBoundaries(boundaries, xlo, xhi);
 }
 
 
