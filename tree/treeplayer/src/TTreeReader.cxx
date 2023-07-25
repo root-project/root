@@ -301,8 +301,9 @@ void TTreeReader::Initialize()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Callback from TChain and TTree's LoadTree.
-
+/// Notify director and values of a change in tree. Called from TChain and TTree's LoadTree.
+/// TTreeReader registers its fNotify data member with the TChain/TTree which
+/// in turn leads to this method being called upon the execution of LoadTree.
 Bool_t TTreeReader::Notify()
 {
 

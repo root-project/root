@@ -23,6 +23,10 @@
 namespace ROOT {
 namespace Experimental {
 
+namespace Details {
+   class RWebWindowPlugin;
+}
+
 /** \class ROOT::Experimental::RFileDialog
 \ingroup rbrowser
 Initial message send to client to configure layout
@@ -36,6 +40,7 @@ using RFileDialogCallback_t = std::function<void(const std::string &)>;
 /** Web-based FileDialog */
 
 class RFileDialog {
+   friend class Details::RWebWindowPlugin;
 public:
 
    enum EDialogTypes {
@@ -71,6 +76,8 @@ protected:
    std::string GetRegexp(const std::string &name) const;
 
    static std::string Dialog(EDialogTypes kind, const std::string &title, const std::string &fname);
+
+   static void SetStartFunc(bool on);
 
 public:
 
@@ -109,7 +116,9 @@ public:
    static std::string SaveAs(const std::string &title = "", const std::string &fname = "");
    static std::string NewFile(const std::string &title = "", const std::string &fname = "");
 
-   static std::shared_ptr<RFileDialog> Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args);
+   static std::shared_ptr<RFileDialog> Embed(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args);
+
+   static bool IsMessageToStartDialog(const std::string &msg);
 
 };
 

@@ -100,7 +100,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 0, 0));
 
 // Combo box for magnetic field option
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(label = new TGLabel(f1, "Mag. field option"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    gClient->GetColorByName("#ff0000", color);
@@ -122,74 +122,74 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
    // Number entry for fieldm
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "FIELDM"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedFieldm = new TGNumberEntry(f1, 0., 5, kMED_FIELDM);
    nef = (TGTextEntry*)fMedFieldm->GetNumberEntry();
    nef->SetToolTipText("Maximum magnetic field [kilogauss]");
    fMedFieldm->Associate(this);
    fMedFieldm->Resize(90, fMedFieldm->GetDefaultHeight());
-   f1->AddFrame(fMedFieldm, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f1->AddFrame(fMedFieldm, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for tmaxfd
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "TMAXFD"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedTmaxfd = new TGNumberEntry(f2, 0., 5, kMED_TMAX);
    nef = (TGTextEntry*)fMedTmaxfd->GetNumberEntry();
    nef->SetToolTipText("Maximum angle per step due to field [deg]");
    fMedTmaxfd->Associate(this);
    fMedTmaxfd->Resize(90, fMedTmaxfd->GetDefaultHeight());
-   f2->AddFrame(fMedTmaxfd, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f2->AddFrame(fMedTmaxfd, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for stemax
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "STEMAX"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedStemax = new TGNumberEntry(f3, 0., 5, kMED_STEMAX);
    nef = (TGTextEntry*)fMedStemax->GetNumberEntry();
    nef->SetToolTipText("Maximum step allowed [cm]");
    fMedStemax->Associate(this);
    fMedStemax->Resize(90, fMedStemax->GetDefaultHeight());
-   f3->AddFrame(fMedStemax, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f3->AddFrame(fMedStemax, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for deemax
    TGCompositeFrame *f4 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f4->AddFrame(new TGLabel(f4, "DEEMAX"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedDeemax = new TGNumberEntry(f4, 0., 5, kMED_DEEMAX);
    nef = (TGTextEntry*)fMedDeemax->GetNumberEntry();
    nef->SetToolTipText("Maximum fraction of energy lost in a step");
    fMedDeemax->Associate(this);
    fMedDeemax->Resize(90, fMedDeemax->GetDefaultHeight());
-   f4->AddFrame(fMedDeemax, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f4->AddFrame(fMedDeemax, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f4, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for epsil
    TGCompositeFrame *f5 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f5->AddFrame(new TGLabel(f5, "EPSIL"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedEpsil = new TGNumberEntry(f5, 0., 5, kMED_EPSIL);
    nef = (TGTextEntry*)fMedEpsil->GetNumberEntry();
    nef->SetToolTipText("Tracking precision [cm]");
    fMedEpsil->Associate(this);
    fMedEpsil->Resize(90, fMedEpsil->GetDefaultHeight());
-   f5->AddFrame(fMedEpsil, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f5->AddFrame(fMedEpsil, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f5, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for stmin
    TGCompositeFrame *f6 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f6->AddFrame(new TGLabel(f6, "STMIN"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedStmin = new TGNumberEntry(f6, 0., 5, kMED_STMIN);
    nef = (TGTextEntry*)fMedStmin->GetNumberEntry();
    nef->SetToolTipText("Minimum step due to continuous processes [cm]");
    fMedStmin->Associate(this);
    fMedStmin->Resize(90, fMedStmin->GetDefaultHeight());
-   f6->AddFrame(fMedStmin, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f6->AddFrame(fMedStmin, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f6, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    compxyz->Resize(160,50);

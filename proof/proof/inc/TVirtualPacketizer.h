@@ -109,11 +109,11 @@ protected:
 
    TDSetElement  *CreateNewPacket(TDSetElement* base, Long64_t first, Long64_t num);
    Long64_t       GetEntries(Bool_t tree, TDSetElement *e); // Num of entries or objects
-   virtual Bool_t HandleTimer(TTimer *timer);
+   Bool_t HandleTimer(TTimer *timer) override;
 
 public:
    enum EStatusBits { kIsInitializing = BIT(16), kIsDone = BIT(17), kIsTree = BIT(18) };
-   virtual ~TVirtualPacketizer();
+   ~TVirtualPacketizer() override;
 
    virtual Int_t           AssignWork(TDSet* /*dset*/, Long64_t /*first*/, Long64_t /*num*/) { return -1; }
    Bool_t                  IsValid() const { return fValid; }
@@ -149,7 +149,7 @@ public:
 
    virtual Int_t GetActiveWorkers() { return -1; }
 
-   ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
+   ClassDefOverride(TVirtualPacketizer,0)  //Generate work packets for parallel processing
 };
 
 //------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ protected:
    TProofProgressStatus *fStatus; // status as of the last finished packet
 
 public:
-   const char *GetName() const { return fWrkFQDN.Data(); }
+   const char *GetName() const override { return fWrkFQDN.Data(); }
    const char *GetOrdinal() const { return fSlave->GetOrdinal(); }
    Long64_t    GetEntriesProcessed() const { return fStatus?fStatus->GetEntries():-1; }
    Double_t    GetProcTime() const { return fStatus?fStatus->GetProcTime():-1; }

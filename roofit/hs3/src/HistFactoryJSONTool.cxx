@@ -38,15 +38,16 @@ bool checkRegularBins(const TAxis &ax)
    return true;
 }
 
-inline void writeAxis(JSONNode &bounds, const TAxis &ax)
+inline void writeAxis(JSONNode &axis, const TAxis &ax)
 {
    bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
+   axis.set_map();
    if (regular) {
-      bounds.set_map();
-      bounds["nbins"] << ax.GetNbins();
-      bounds["min"] << ax.GetXmin();
-      bounds["max"] << ax.GetXmax();
+      axis["nbins"] << ax.GetNbins();
+      axis["min"] << ax.GetXmin();
+      axis["max"] << ax.GetXmax();
    } else {
+      auto &bounds = axis["bounds"];
       bounds.set_seq();
       for (int i = 0; i <= ax.GetNbins(); ++i) {
          bounds.append_child() << ax.GetBinUpEdge(i);
@@ -136,15 +137,13 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
          auto &sys = sample.GetHistoSysList()[i];
          auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
          node["type"] << "histosys";
-         auto &data = node["data"];
-         data.set_map();
+         auto &data = node["data"].set_map();
          exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames, nullptr, false);
          exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames, nullptr, false);
       }
    }
 
-   auto &tags = s["dict"];
-   tags.set_map();
+   auto &tags = s["dict"].set_map();
    tags["normalizeByTheory"] << sample.GetNormalizeByTheory();
 
    if (sample.GetStatError().GetActivate()) {
@@ -152,9 +151,8 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
    }
 
    auto &data = s["data"];
-   TH1 const *errH = sample.GetStatError().GetActivate() && sample.GetStatError().GetUseHisto()
-                        ? sample.GetStatError().GetErrorHist()
-                        : nullptr;
+   const bool useStatError = sample.GetStatError().GetActivate() && sample.GetStatError().GetUseHisto();
+   TH1 const *errH = useStatError ? sample.GetStatError().GetErrorHist() : nullptr;
 
    if (!channelNode.has_child("axes")) {
       writeObservables(*sample.GetHisto(), channelNode, obsnames);
@@ -164,12 +162,9 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
 
 void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
 {
-   ch.set_map();
-   ch["name"] << "model_" + c.GetName();
    ch["type"] << "histfactory_dist";
 
-   auto &staterr = ch["statError"];
-   staterr.set_map();
+   auto &staterr = ch["statError"].set_map();
    staterr["relThreshold"] << c.GetStatErrorConfig().GetRelErrorThreshold();
    staterr["constraint"] << RooStats::HistFactory::Constraint::Name(c.GetStatErrorConfig().GetConstraintType());
 
@@ -225,7 +220,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    auto &pdflist = n["distributions"];
 
    auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], "simPdf");
-   analysisNode.set_map();
    analysisNode["domains"].set_seq().append_child() << "default_domain";
 
    auto &analysisPois = analysisNode["parameters_of_interest"].set_seq();
@@ -255,6 +249,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       double minVal = -5.0;
       double maxVal = 5.0;
       bool isConstant = false;
+      bool writeDomain = true;
    };
    std::unordered_map<std::string, VariableInfo> variables;
 
@@ -272,7 +267,14 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       }
    }
    for (const auto &sys : measurement.GetConstantParams()) {
-      variables[std::string("alpha_") + sys].isConstant = true;
+      auto &info = variables[sys];
+      info.isConstant = true;
+      bool isGamma = sys.find("gamma_") != std::string::npos;
+      // Gammas are 1.0 by default, alphas are 0.0
+      info.val = isGamma ? 1.0 : 0.0;
+      // For the gamma parameters, HistFactory will figure out the ranges
+      // itself based on the template bin contents and errors.
+      info.writeDomain = !isGamma;
    }
 
    // the lumi variables
@@ -302,7 +304,9 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       v["value"] << info.val;
       if (info.isConstant)
          v["const"] << true;
-      domains.readVariable(parname.c_str(), info.minVal, info.maxVal);
+      if (info.writeDomain) {
+         domains.readVariable(parname.c_str(), info.minVal, info.maxVal);
+      }
    }
 
    // the data
@@ -339,7 +343,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    modelConfigAux["mcName"] << "ModelConfig";
 
    // Finally write lumi constraint
-   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint").set_map();
+   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
    lumiConstraint["mean"] << "nominalLumi";
    lumiConstraint["sigma"] << (measurement.GetLumi() * measurement.GetLumiRelErr());
    lumiConstraint["type"] << "gaussian_dist";
@@ -366,8 +370,7 @@ void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
 void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)
 {
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
-   auto &n = tree->rootnode();
-   n.set_map();
+   auto &n = tree->rootnode().set_map();
    RooFit::JSONIO::Detail::Domains domains;
    exportMeasurement(_measurement, n, domains);
    domains.writeJSON(n["domains"]);

@@ -61,7 +61,7 @@ void rf315_projectpdf()
    // ------------------------------------------------------------------------------------------
 
    // Sample 1000 events from modelx
-   RooAbsData *data = modelx->generateBinned(x, 1000);
+   std::unique_ptr<RooAbsData> data{modelx->generateBinned(x, 1000)};
 
    // Fit modelx to toy data
    modelx->fitTo(*data, Verbose(), PrintLevel(-1));

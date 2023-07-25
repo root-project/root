@@ -47,9 +47,15 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    // Get the parameters.
    RooArgSet paramSet;
    obj.getParameters(data ? data->get() : nullptr, paramSet);
+   RooArgSet floatingParamSet;
+   for (RooAbsArg * param : paramSet) {
+      if(!param->isConstant()) {
+        floatingParamSet.add(*param);
+      }
+   }
 
    // Load the parameters and observables.
-   loadParamsAndData(name, pdf.get(), paramSet, data, simPdf);
+   loadParamsAndData(name, pdf.get(), floatingParamSet, data, simPdf);
 
    func = buildCode(*pdf);
 
@@ -161,7 +167,7 @@ void RooFuncWrapper::declareAndDiffFunction(std::string funcName, std::string co
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
 }
 
-void RooFuncWrapper::getGradient(double *out) const
+void RooFuncWrapper::gradient(double *out) const
 {
    updateGradientVarBuffer();
    std::fill(out, out + _params.size(), 0.0);

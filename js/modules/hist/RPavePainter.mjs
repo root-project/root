@@ -1,4 +1,4 @@
-import { settings, isBatchMode, isFunc, isStr, gStyle, nsREX } from '../core.mjs';
+import { settings, isFunc, isStr, gStyle, nsREX } from '../core.mjs';
 import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
@@ -66,7 +66,7 @@ class RPavePainter extends RObjectPainter {
             pave_y = fr.y + offsety;
       }
 
-      this.draw_g.attr('transform', makeTranslate(pave_x,pave_y));
+      makeTranslate(this.draw_g, pave_x, pave_y);
 
       this.draw_g.append('svg:rect')
                  .attr('x', 0)
@@ -83,14 +83,15 @@ class RPavePainter extends RObjectPainter {
 
       return this.drawContent().then(() => {
 
-         if (isBatchMode()) return this;
+         if (!this.isBatchMode()) {
 
-         // TODO: provide pave context menu as in v6
-         if (settings.ContextMenu && this.paveContextMenu)
-            this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
+            // TODO: provide pave context menu as in v6
+            if (settings.ContextMenu && this.paveContextMenu)
+               this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
 
-         addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
-                                minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
+            addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
+                                   minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
+         }
 
          return this;
       });
@@ -132,7 +133,7 @@ class RPavePainter extends RObjectPainter {
       this.v7AttrChange(changes, 'height', this.pave_height / rect.height);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
-      this.draw_g.select('rect')
+      this.draw_g.selectChild('rect')
                  .attr('width', this.pave_width)
                  .attr('height', this.pave_height);
 
@@ -406,7 +407,7 @@ class RHistStatsPainter extends RPavePainter {
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       let stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
 
-      let text_g = this.draw_g.select('.statlines');
+      let text_g = this.draw_g.selectChild('.statlines');
       if (text_g.empty())
          text_g = this.draw_g.append('svg:g').attr('class', 'statlines');
       else

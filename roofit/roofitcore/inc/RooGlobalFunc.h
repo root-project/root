@@ -66,7 +66,7 @@ enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
 /// For setting the batch mode flag with the BatchMode() command argument to
 /// RooAbsPdf::fitTo()
-enum class BatchModeOption { Off, Cpu, Cuda };
+enum class BatchModeOption { Off, Cpu, Cuda, CodeGen };
 
 /// For setting the offset mode with the Offset() command argument to
 /// RooAbsPdf::fitTo()
@@ -195,10 +195,10 @@ RooCmdArg OwnLinked() ;
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
 RooCmdArg OutputFile(const char* fileName) ;
-RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-                 const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
+RooCmdArg Format(const char* what, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                 const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                 const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+                 const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 
 // RooAbsRealLValue::frame arguments
@@ -331,8 +331,8 @@ RooCmdArg Asimov(bool flag=true) ;
 /** @} */
 
 // RooAbsRealLValue::createHistogram arguments
-RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
-RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
+RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;
+RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;
 RooCmdArg AxisLabel(const char* name) ;
 RooCmdArg Scaling(bool flag) ;
 
@@ -352,15 +352,15 @@ RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 // RooMCStudy::ctor arguments
 RooCmdArg Silence(bool flag=true) ;
 RooCmdArg FitModel(RooAbsPdf& pdf) ;
-RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
-                     const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                     const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2={},
+                     const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                     const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 RooCmdArg Binned(bool flag=true) ;
 
 // RooMCStudy::plot* arguments
-RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
-                const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2={},
+                const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 RooCmdArg FrameBins(Int_t nbins) ;
 RooCmdArg FrameRange(double xlo, double xhi) ;
 RooCmdArg FitGauss(bool flag=true) ;
@@ -410,9 +410,9 @@ RooCmdArg ScanNoCdf() ;
 
 // Generic container arguments (to be able to supply more command line arguments)
 RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
-         const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-         const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-         const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
+         const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+         const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+         const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
 
 RooConstVar& RooConst(double val) ;
 

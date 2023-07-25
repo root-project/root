@@ -73,7 +73,7 @@ void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
 {
    // In the future, throw an exception if the type is not product domain
    for (auto const &varNode : node["axes"].children()) {
-      auto &elem = _map[varNode["name"].val()];
+      auto &elem = _map[RooJSONFactoryWSTool::name(varNode)];
 
       if (varNode.has_child("min")) {
          elem.min = varNode["min"].val_double();
@@ -91,12 +91,10 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    node["type"] << "product_domain";
 
    auto &variablesNode = node["axes"];
-   variablesNode.set_seq();
 
    for (auto const &item : _map) {
       auto const &elem = item.second;
-      RooFit::Detail::JSONNode &varnode = variablesNode.append_child().set_map();
-      varnode["name"] << item.first;
+      RooFit::Detail::JSONNode &varnode = RooJSONFactoryWSTool::appendNamedChild(variablesNode, item.first);
       if (elem.hasMin)
          varnode["min"] << elem.min;
       if (elem.hasMax)

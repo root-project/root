@@ -120,7 +120,7 @@ void rf711_lagrangianmorph()
    // ---------------------------------------------
 
    RooWrapperPdf model("wrap_pdf", "wrap_pdf", morphfunc);
-   RooDataSet *data = model.generate(RooArgSet(cHq3, obsvar), 1000000);
+   std::unique_ptr<RooDataSet> data{model.generate({cHq3, obsvar}, 1000000)};
    TH1 *hh_data = data->createHistogram("pTV vs cHq3", obsvar, Binning(20), YVar(cHq3, Binning(50)));
    hh_data->SetTitle("Morphing prediction");
 

@@ -330,6 +330,7 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
                         "values can be interpreted as yields."
                      << " This is not the case for HistFactory models written with ROOT versions before 6.26.00";
             coutE(InputArguments) << errorMsg.str() << std::endl;
+            throw std::runtime_error(errorMsg.str());
          }
          std::string muName = pdfName;
          ctx.addToCodeBody(this, resName + " +=  -1 * (-" + muName + " + " + weight + " * std::log(" + muName +

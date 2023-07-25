@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
+import uuid
 import warnings
 
 from collections import Counter, deque
@@ -12,7 +13,7 @@ from typing import Callable, Deque, Dict, Iterable, List, Optional, TYPE_CHECKIN
 
 import ROOT
 
-from DistRDF import ComputationGraphGenerator, Ranges
+from DistRDF import ComputationGraphGenerator, Ranges, _graph_cache
 from DistRDF.Backends.Base import distrdf_mapper, distrdf_reducer
 from DistRDF.Node import Node
 from DistRDF.Operation import Action, InstantAction, Operation
@@ -88,6 +89,12 @@ class HeadNode(Node, ABC):
         # RDataFrame itself, then calling its direct children, their children
         # and so on. Thus, we need a top-down traversal.
         self.graph_nodes: Deque[Node] = deque([self])
+
+        # Uniquely identify each computation graph execution of this RDataFrame
+        # The uuid can be set here
+        self.rdf_uuid = uuid.uuid4()
+        # The full identifier is created at the beginning of each execution
+        self.exec_id: _graph_cache.ExecutionIdentifier = None
 
         # Internal attribute to keep track of the number of partitions. We also
         # check whether it was specified by the user when creating the dataframe.
@@ -180,8 +187,6 @@ class HeadNode(Node, ABC):
         filled with the values that were computed distributedly so that they
         can be accessed in the application like with local RDataFrame.
         """
-        # Check if the workflow must be generated in optimized mode
-        optimized = ROOT.RDF.Experimental.Distributed.optimized
 
         # Updates the number of partitions for this dataframe if the user did
         # not specify one initially. This is done each time the computations are
@@ -189,18 +194,15 @@ class HeadNode(Node, ABC):
         # between runs (e.g. changing the number of available cores).
         self.npartitions = self.backend.optimize_npartitions()
 
-        if optimized:
-            computation_graph_callable = partial(
-                ComputationGraphGenerator.run_with_cppworkflow, self._generate_graph_dict())
-        else:
-            computation_graph_callable = partial(
-                ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
+        self.exec_id = _graph_cache.ExecutionIdentifier(self.rdf_uuid, uuid.uuid4())
+
+
+        computation_graph_callable = partial(ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
 
         mapper = partial(distrdf_mapper,
                          build_rdf_from_range=self._generate_rdf_creator(),
                          computation_graph_callable=computation_graph_callable,
-                         initialization_fn=self.backend.initialization,
-                         optimized=optimized)
+                         initialization_fn=self.backend.initialization)
 
         # Execute graph distributedly and return the aggregated results from all
         # tasks
@@ -296,7 +298,7 @@ class EmptySourceHeadNode(HeadNode):
                    "in the dataframe. Using {1} partition(s)".format(self.npartitions, self.nentries))
             warnings.warn(msg, UserWarning, stacklevel=2)
             self.npartitions = self.nentries
-        return Ranges.get_balanced_ranges(self.nentries, self.npartitions)
+        return Ranges.get_balanced_ranges(self.nentries, self.npartitions, self.exec_id)
 
     def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
@@ -311,9 +313,16 @@ class EmptySourceHeadNode(HeadNode):
             """
             Builds an RDataFrame instance for a distributed mapper.
             """
-            rdf = ROOT.RDataFrame(nentries)
-            ROOT.Internal.RDF.ChangeEmptyEntryRange(ROOT.RDF.AsRNode(rdf), (current_range.start, current_range.end))
-            return TaskObjects(rdf, None)
+            if current_range.exec_id not in _graph_cache._RDF_REGISTER:
+                rdf_toprocess = ROOT.RDataFrame(nentries)
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
+            else:
+                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
+
+            ROOT.Internal.RDF.ChangeEmptyEntryRange(
+                ROOT.RDF.AsRNode(rdf_toprocess), (current_range.start, current_range.end))
+
+            return TaskObjects(rdf_toprocess, None)
 
         return build_rdf_from_range
 
@@ -446,7 +455,7 @@ class TreeHeadNode(HeadNode):
                         "chunks the dataset can be split in. Some tasks could be doing no work. Consider "
                         "setting the 'npartitions' parameter of the RDataFrame constructor to a lower value.")
 
-        return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo)
+        return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo, self.exec_id)
 
     def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
@@ -500,7 +509,17 @@ class TreeHeadNode(HeadNode):
 
             attach_friend_info_if_present(clustered_range, ds)
 
-            return TaskObjects(ROOT.RDataFrame(ds), entries_in_trees)
+            if current_range.exec_id not in _graph_cache._RDF_REGISTER:
+                rdf_toprocess = ROOT.RDataFrame(ds)
+                # Fill the cache with the new RDataFrame
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
+            else:
+                # Retrieve an already present RDataFrame from the cache
+                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
+                # Update it to the range of entries for this task
+                ROOT.Internal.RDF.ChangeSpec(ROOT.RDF.AsRNode(rdf_toprocess), ROOT.std.move(ds))
+
+            return TaskObjects(rdf_toprocess, entries_in_trees)
 
         return build_rdf_from_range
 

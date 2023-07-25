@@ -1,4 +1,4 @@
-import { settings, isBatchMode, isFunc } from '../core.mjs';
+import { settings, isFunc } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer,
          drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
@@ -282,6 +282,8 @@ class RAxisPainter extends RObjectPainter {
          return this.func(this.major[this.nmajor]);
       };
 
+      handle.get_modifier = function() { return null; };
+
       this.order = 0;
       this.ndig = 0;
 
@@ -414,7 +416,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Add interactive elements to draw axes title */
    addTitleDrag(title_g, side) {
-      if (!settings.MoveResize || isBatchMode()) return;
+      if (!settings.MoveResize || this.isBatchMode()) return;
 
       let drag_rect = null,
           acc_x, acc_y, new_x, new_y, alt_pos, curr_indx,
@@ -486,7 +488,7 @@ class RAxisPainter extends RObjectPainter {
                }
 
                new_x = set_x; new_y = set_y; curr_indx = besti;
-               title_g.attr('transform', makeTranslate(new_x, new_y));
+               makeTranslate(title_g, new_x, new_y);
 
           }).on('end', evnt => {
                if (!drag_rect) return;
@@ -716,7 +718,7 @@ class RAxisPainter extends RObjectPainter {
       return this.finishTextDrawing(label_g).then(() => {
 
         if (lbls_tilt)
-           label_g.selectAll('text').each(function () {
+           label_g.selectAll('text').each(function() {
                let txt = d3_select(this), tr = txt.attr('transform');
                txt.attr('transform', tr + ' rotate(25)').style('text-anchor', 'start');
            });
@@ -735,7 +737,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Add zomming rect to axis drawing */
    addZoomingRect(axis_g, side, lgaps) {
-      if (settings.Zooming && !this.disable_zooming && !isBatchMode()) {
+      if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
          let sz = Math.max(lgaps[side], 10),
              d = this.vertical ? `v${this.gr_range}h${-side*sz}v${-this.gr_range}`
                                : `h${this.gr_range}v${side*sz}h${-this.gr_range}`;
@@ -780,10 +782,10 @@ class RAxisPainter extends RObjectPainter {
                          text: this.fTitle, draw_g: title_g });
       }
 
-      title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
-             .property('basepos', title_basepos)
-             .property('shift_x', title_shift_x)
-             .property('shift_y', title_shift_y);
+      makeTranslate(title_g, title_shift_x, title_shift_y)
+                   .property('basepos', title_basepos)
+                   .property('shift_x', title_shift_x)
+                   .property('shift_y', title_shift_y);
 
       this.addTitleDrag(title_g, side);
 
@@ -848,7 +850,7 @@ class RAxisPainter extends RObjectPainter {
       if (side === undefined) side = 1;
 
       if (!this.standalone) {
-         axis_g = layer.select(`.${this.name}_container`);
+         axis_g = layer.selectChild(`.${this.name}_container`);
          if (axis_g.empty())
             axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else
@@ -925,9 +927,9 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Draw axis again on opposite frame size */
    drawAxisOtherPlace(layer, transform, side, only_ticks) {
-      let axis_g = layer.select('.' + this.name + '_container2');
+      let axis_g = layer.selectChild(`.${this.name}_container2`);
       if (axis_g.empty())
-         axis_g = layer.append('svg:g').attr('class',this.name + '_container2');
+         axis_g = layer.append('svg:g').attr('class',`${this.name}_container2`);
       else
          axis_g.selectAll('*').remove();
 
@@ -981,7 +983,7 @@ class RAxisPainter extends RObjectPainter {
 
       let promise = this.drawAxis(this.draw_g, makeTranslate(pos.x, pos.y));
 
-      if (isBatchMode()) return promise;
+      if (this.isBatchMode()) return promise;
 
       return promise.then(() => {
          if (settings.ContextMenu)

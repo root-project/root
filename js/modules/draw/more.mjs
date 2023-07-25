@@ -1,8 +1,8 @@
-import { BIT, isBatchMode, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '../core.mjs';
+import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu } from '../gui/menu.mjs';
+import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 
 
 /** @summary Draw TText
@@ -64,7 +64,7 @@ async function drawText() {
    this.drawText(arg);
 
    return this.finishTextDrawing().then(() => {
-      if (isBatchMode()) return this;
+      if (this.isBatchMode()) return this;
 
       this.pos_dx = this.pos_dy = 0;
 
@@ -72,7 +72,7 @@ async function drawText() {
          this.moveDrag = function(dx, dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
-            this.draw_g.attr('transform', makeTranslate(this.pos_dx, this.pos_dy));
+            makeTranslate(this.draw_g, this.pos_dx, this.pos_dy);
         }
 
       if (!this.moveEnd)
@@ -92,11 +92,11 @@ async function drawText() {
             let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
                 new_x = this.axisToSvg('x', pos.x, true),
                 new_y = this.axisToSvg('y', pos.y, true);
-            this.draw_g.attr('transform', makeTranslate(new_x - this.pos_x, new_y - this.pos_y));
+            makeTranslate(this.draw_g, new_x - this.pos_x, new_y - this.pos_y);
          };
       }
 
-      assignContextMenu(this);
+      assignContextMenu(this, kToFront);
 
       return this;
    });
@@ -133,18 +133,17 @@ function drawPolyLine() {
       elem.call(this.lineatt.func)
           .style('fill', 'none');
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
-   this.dx = 0;
-   this.dy = 0;
+   this.dx = this.dy = 0;
    this.isndc = isndc;
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.dx += dx;
       this.dy += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
    }
 
    this.moveEnd = function(not_changed) {
@@ -248,24 +247,22 @@ function drawEllipse() {
    this.x = x;
    this.y = y;
 
-   this.draw_g
-      .append('svg:path')
-      .attr('transform', makeTranslate(x, y))
+   makeTranslate(this.draw_g.append('svg:path'), x, y)
       .attr('d', path)
       .call(this.lineatt.func)
       .call(this.fillatt.func);
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.x += dx;
       this.y += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.x, this.y));
+      makeTranslate(this.draw_g.select('path'), this.x, this.y);
    }
 
-   this.moveEnd = function (not_changed) {
+   this.moveEnd = function(not_changed) {
       if (not_changed) return;
       let ellipse = this.getObject();
       ellipse.fX1 = this.svgToAxis('x', this.x);
@@ -287,7 +284,7 @@ function drawPie() {
        rx = this.axisToSvg('x', pie.fX + pie.fRadius) - xc,
        ry = this.axisToSvg('y', pie.fY + pie.fRadius) - yc;
 
-   this.draw_g.attr('transform', makeTranslate(xc, yc));
+   makeTranslate(this.draw_g, xc, yc);
 
    // Draw the slices
    let nb = pie.fPieSlices.length, total = 0,
@@ -373,11 +370,11 @@ function drawBox() {
                  .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
    }
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
-   this.moveStart = function (x,y) {
+   this.moveStart = function(x,y) {
       let ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
 
       this.c_x1 = Math.abs(x - this.x2) > ww*0.1;
@@ -390,7 +387,7 @@ function drawBox() {
          this.c_x1 = this.c_x2 = false;
    }
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       if (this.c_x1) this.x1 += dx;
       if (this.c_x2) this.x2 += dx;
       if (this.c_y1) this.y1 += dy;
@@ -402,7 +399,7 @@ function drawBox() {
       pathes.forEach((path, i) => d3_select(nodes[i]).attr('d', path));
    }
 
-   this.moveEnd = function (not_changed) {
+   this.moveEnd = function(not_changed) {
       if (not_changed) return;
       let box = this.getObject(), exec = '';
       if (this.c_x1) { box.fX1 = this.svgToAxis('x', this.x1); exec += `SetX1(${box.fX1});;`; }
@@ -435,17 +432,16 @@ function drawMarker() {
           .attr('d', path)
           .call(this.markeratt.func);
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
-   this.dx = 0;
-   this.dy = 0;
+   this.dx = this.dy = 0;
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.dx += dx;
       this.dy += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
    }
 
    this.moveEnd = function(not_changed) {
@@ -478,17 +474,16 @@ function drawPolyMarker() {
           .attr('d', path)
           .call(this.markeratt.func);
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
-   this.dx = 0;
-   this.dy = 0;
+   this.dx = this.dy = 0;
 
-   this.moveDrag = function (dx,dy) {
+   this.moveDrag = function(dx,dy) {
       this.dx += dx;
       this.dy += dy;
-      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
    }
 
    this.moveEnd = function(not_changed) {
@@ -521,7 +516,7 @@ function drawJSImage(dom, obj, opt) {
       img.style('width','100%').style('height','100%');
    } else if (opt && opt.indexOf('center') >= 0) {
       main.style('position', 'relative');
-      img.attr('style', 'margin: 0; position: absolute;  top: 50%; left: 50%; transform: translate(-50%, -50%);');
+      img.attr('style', 'margin: 0; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);');
    }
 
    painter.setTopPainter();

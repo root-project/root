@@ -166,7 +166,7 @@ TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
    // Histogram draw options
    TGCompositeFrame *fHistLbl = new TGCompositeFrame(this, 145, 10,
                                                            kHorizontalFrame |
-                                                           kLHintsExpandX   |
+                                                           kFitWidth        |
                                                            kFixedWidth      |
                                                            kOwnBackground);
    fHistLbl->AddFrame(new TGLabel(fHistLbl,"Histogram"),
@@ -277,7 +277,7 @@ TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
 
    // Bar Menu => appears when the BAR checkbox is set
    f10 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
-                                             kLHintsExpandX   |
+                                             kFitWidth        |
                                              kFixedWidth      |
                                              kOwnBackground);
    f10->AddFrame(new TGLabel(f10,"Bar"),
@@ -343,7 +343,7 @@ void TH1Editor::CreateBinTab()
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fBin, 145, 10,
                                                          kHorizontalFrame |
-                                                         kLHintsExpandX   |
+                                                         kFitWidth        |
                                                          kFixedWidth      |
                                                          kOwnBackground);
    title1->AddFrame(new TGLabel(title1, "Rebin"),
@@ -450,7 +450,7 @@ void TH1Editor::CreateBinTab()
                                                     kVerticalFrame);
    TGCompositeFrame *title2 = new TGCompositeFrame(sldCont, 145, 10,
                                                             kHorizontalFrame |
-                                                            kLHintsExpandX   |
+                                                            kFitWidth        |
                                                             kFixedWidth      |
                                                             kOwnBackground);
    title2->AddFrame(new TGLabel(title2, "Axis Range"),

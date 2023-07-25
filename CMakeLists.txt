@@ -171,19 +171,24 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
-# relatedrepo_GetInfo - Return the clone URL and best candidate head/tag to checkout for a related repo
-function(relatedrepo_GetInfo I_name I_prefix I_upstreamprefix O_cloneurl O_candidateref)
-  set(${O_cloneurl} ${I_upstreamprefix}/${I_name} PARENT_SCOPE)
+# relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
+#                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
+# Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
+# current head name.
+function(relatedrepo_GetClosestMatch)
+  cmake_parse_arguments(_ "" "REPO_NAME;ORIGIN_PREFIX;UPSTREAM_PREFIX;FETCHURL_VARIABLE;FETCHREF_VARIABLE" "" ${ARGN})
 
+  set(${__FETCHURL_VARIABLE} ${__UPSTREAM_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
+  
   if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-    set(${O_candidateref} v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION} PARENT_SCOPE)
+    set(${__FETCHREF_VARIABLE} v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION} PARENT_SCOPE)
     return()
   endif()
 
   execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
                   rev-parse --abbrev-ref HEAD
                   OUTPUT_VARIABLE current_head OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(${O_candidateref} ${current_head} PARENT_SCOPE)
+  set(${__FETCHREF_VARIABLE} ${current_head} PARENT_SCOPE)
 
   # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
   # upstream as the fork repository may be out-of-sync
@@ -194,54 +199,69 @@ function(relatedrepo_GetInfo I_name I_prefix I_upstreamprefix O_cloneurl O_candi
       execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
                       for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\)
                       OUTPUT_VARIABLE current_head OUTPUT_STRIP_TRAILING_WHITESPACE)
-      set(${O_candidateref} ${current_head} PARENT_SCOPE)
+      set(${__FETCHREF_VARIABLE} ${current_head} PARENT_SCOPE)
     endif()
     return()
   endif()
 
   # Otherwise, try to use a branch that matches `current_head` in the fork repository
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                  ls-remote --heads --tags ${I_prefix}/${I_name} ${current_head}
-                  OUTPUT_VARIABLE matching_refs)
+  execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
+                  ${__ORIGIN_PREFIX}/${__REPO_NAME} ${current_head} OUTPUT_VARIABLE matching_refs)
   if(NOT "${matching_refs}" STREQUAL "")
-    set(${O_cloneurl} ${I_prefix}/${I_name} PARENT_SCOPE)
+    set(${__FETCHURL_VARIABLE} ${__ORIGIN_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
     return()
   endif()
 
   # Finally, try upstream using the closest head/tag below the parent commit of the current head
   execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
                   describe --all --abbrev=0 HEAD^
-                  OUTPUT_VARIABLE closest_ref OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(REGEX REPLACE "^(heads|tags)/" "" candidate_head ${closest_ref})
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                  ls-remote --heads --tags ${I_upstreamprefix}/${I_name} ${candidate_head}
-                  OUTPUT_VARIABLE matching_refs)
+                  OUTPUT_VARIABLE closest_ref ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REGEX REPLACE "^(heads|tags)/" "" candidate_head "${closest_ref}")
+  execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
+                  ${__UPSTREAM_PREFIX}/${__REPO_NAME} "${candidate_head}" OUTPUT_VARIABLE matching_refs)
   if(NOT "${matching_refs}" STREQUAL "")
-    set(${O_candidateref} ${candidate_head} PARENT_SCOPE)
+    set(${__FETCHREF_VARIABLE} ${candidate_head} PARENT_SCOPE)
     return()
   endif()
-  set(${O_candidateref} "" PARENT_SCOPE)
+  set(${__FETCHREF_VARIABLE} "" PARENT_SCOPE)
 endfunction()
 
-# relatedrepo_Clone - Clone and checkout an appropriate branch of a related repository, e.g. roottest.
-#   The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by removing the
-# `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its value is used instead.
-function(relatedrepo_Clone I_name)
-  if(DEFINED ENV{GITHUB_PR_ORIGIN})
-    set(originurl $ENV{GITHUB_PR_ORIGIN})
-  else()
-    execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                    remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
-  endif()
-  string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
-  relatedrepo_GetInfo(${I_name} ${originprefix} https://github.com/root-project git_clone_url git_clone_ref)
+# relaterepo_Checkout(REPO_NAME <repo> FETCHURL <url> FETCHREF <ref>
+#                     [FORCE] [REPO_DIR_VARIABLE <repo_dir>])
+# Clone/fetch and checkout the specified `ref` from the given repository at `url`.  If a local clone of the
+# repository is found, refuse to update it unless the `FORCE` option is in place.
+function(relatedrepo_Checkout)
+  cmake_parse_arguments(_ "FORCE" "REPO_NAME;FETCHURL;FETCHREF;REPO_DIR_VARIABLE" "" ${ARGN})
 
-  message(STATUS "Cloning ${I_name} from '${git_clone_url}' (${git_clone_ref})")
-  if(NOT "${git_clone_ref}" STREQUAL "")
-    string(PREPEND git_clone_ref "-b")
+  # Check whether the repository exists in the source directory or its parent
+  get_filename_component(source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+  if(IS_DIRECTORY ${source_dir}/${__REPO_NAME})
+    set(repo_dir ${source_dir}/${__REPO_NAME})
+  elseif(IS_DIRECTORY ${source_dir}/../${__REPO_NAME})
+    set(repo_dir ${source_dir}/../${__REPO_NAME})
   endif()
-  execute_process(COMMAND ${GIT_EXECUTABLE} clone ${git_clone_ref} ${git_clone_url}
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+  if(NOT DEFINED repo_dir)
+    message(STATUS "Cloning ${__REPO_NAME} from '${__FETCHURL}' (${__FETCHREF})")
+    if(NOT "${__FETCHREF}" STREQUAL "")
+      string(PREPEND __FETCHREF "-b")
+    endif()
+    execute_process(COMMAND ${GIT_EXECUTABLE} clone ${__FETCHREF} ${__FETCHURL}
+                    WORKING_DIRECTORY ${source_dir})
+    set(repo_dir ${source_dir}/${__REPO_NAME})
+  else()
+    message(STATUS "Found ${__REPO_NAME}: ${repo_dir}")
+    if(${__FORCE})
+      message(STATUS "Updating ${__REPO_NAME} from '${__FETCHURL}' (${__FETCHREF})")
+      execute_process(COMMAND ${GIT_EXECUTABLE} fetch -fu ${__FETCHURL} ${__FETCHREF}:${__FETCHREF}
+                      WORKING_DIRECTORY ${repo_dir})
+      execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${__FETCHREF}
+                      WORKING_DIRECTORY ${repo_dir})
+    endif()
+  endif()
+  if(DEFINED __REPO_DIR_VARIABLE)
+    set(${__REPO_DIR_VARIABLE} ${repo_dir} PARENT_SCOPE)
+  endif()
 endfunction()
 
 #---Enable asserts------------------------------------------------------------------------------
@@ -736,52 +756,48 @@ endif()
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
   include(RootCTest)
+  set(upstreamprefix https://github.com/root-project)
 
   if(roottest)
-    #---Is the roottest source directory around?
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-      set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+    find_package(Git REQUIRED)
+    # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
+    # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
+    # value is used instead.
+    if(DEFINED ENV{GITHUB_PR_ORIGIN})
+      set(originurl $ENV{GITHUB_PR_ORIGIN})
     else()
-      # Need to break into two steps in case the source dir is a symlink
-      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
-      set(roottestdir ${_source_dir}/../roottest)
+      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
+                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
     endif()
-
-    if(IS_DIRECTORY ${roottestdir})
-      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
-      add_subdirectory(${roottestdir} roottest)
-    else()
-      message("-- Could not find roottest directory! Cloning from the repository...")
-      find_package(Git REQUIRED)
-      relatedrepo_Clone(roottest)
-      if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-        message(FATAL_ERROR "Error cloning roottest")
-      endif()
-      add_subdirectory(roottest)
+    string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
+    relatedrepo_GetClosestMatch(REPO_NAME roottest
+                                ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
+                                FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
+    # Use `-Droottest_force_checkout=ON` to force fetch and checkout in an existing repository
+    if(roottest_force_checkout)
+       set(roottest_opts FORCE)
     endif()
+    relatedrepo_Checkout(REPO_NAME roottest FETCHURL ${roottest_url} FETCHREF "${roottest_ref}"
+                         REPO_DIR_VARIABLE roottest_dir ${roottest_opts})
+    if(NOT IS_DIRECTORY ${roottest_dir})
+      message(FATAL_ERROR "Expected roottest at '${roottest_dir}' (not a directory?)")
+    endif()
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
+    add_subdirectory(${roottest_dir} roottest)
   endif()
 
   if(rootbench)
-    #---Is the rootbench source directory around?
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-      set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-    else()
-      # Need to break into two steps in case the source dir is a symlink
-      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
-      set(rootbenchdir ${_source_dir}/../rootbench)
+    find_package(Git REQUIRED)
+    if(rootbench_force_checkout)
+       set(rootbench_opts FORCE)
     endif()
-
-    if(IS_DIRECTORY ${rootbenchdir})
-      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
-      add_subdirectory(${rootbenchdir} rootbench)
-    else()
-      message("-- Could not find rootbench directory! Cloning from the repository...")
-      find_package(Git REQUIRED)
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b master
-                      https://github.com/root-project/rootbench.git
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-      add_subdirectory(rootbench)
+    relatedrepo_Checkout(REPO_NAME rootbench FETCHURL ${upstreamprefix} FETCHREF master
+                         REPO_DIR_VARIABLE rootbench_dir ${rootbench_opts})
+    if(NOT IS_DIRECTORY ${rootbench_dir})
+      message(FATAL_ERROR "Expected rootbench at '${rootbench_dir}' (not a directory?)")
     endif()
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
+    add_subdirectory(${rootbench_dir} rootbench)
   endif()
 endif()
 

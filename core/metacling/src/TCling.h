@@ -533,6 +533,7 @@ public: // Public Interface
    const char* MethodArgInfo_Name(MethodArgInfo_t* marginfo) const final;
    const char* MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const final;
    std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t *marginfo) const final;
+   TypeInfo_t* MethodArgInfo_TypeInfo(MethodArgInfo_t *marginfo) const;
 
    // TypeInfo interface
    void   TypeInfo_Delete(TypeInfo_t* tinfo) const final;
@@ -546,6 +547,7 @@ public: // Public Interface
    int    TypeInfo_RefType(TypeInfo_t* /* tinfo */) const final;
    int    TypeInfo_Size(TypeInfo_t* tinfo) const final;
    const char* TypeInfo_TrueName(TypeInfo_t* tinfo) const final;
+   void*  TypeInfo_QualTypePtr(TypeInfo_t* tinfo) const;
 
    // TypedefInfo interface
    DeclId_t GetDeclId(TypedefInfo_t *info) const final;
@@ -561,6 +563,18 @@ public: // Public Interface
    const char* TypedefInfo_TrueName(TypedefInfo_t* tinfo) const final;
    const char* TypedefInfo_Name(TypedefInfo_t* tinfo) const final;
    const char* TypedefInfo_Title(TypedefInfo_t* tinfo) const final;
+
+   // QualType Opaque Ptr interface
+   bool IsSameType(const void * QualTypePtr1, const void * QualTypePtr2) const;
+   bool IsIntegerType(const void * QualTypePtr) const;
+   bool IsSignedIntegerType(const void * QualTypePtr) const;
+   bool IsUnsignedIntegerType(const void * QualTypePtr) const;
+   bool IsFloatingType(const void * QualTypePtr) const;
+   bool IsPointerType(const void * QualTypePtr) const;
+   bool IsVoidPointerType(const void * QualTypePtr) const;
+
+   // FunctionDecl interface 
+   bool FunctionDeclId_IsMethod(DeclId_t fdeclid) const;
 
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 

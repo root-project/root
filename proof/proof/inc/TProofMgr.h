@@ -70,7 +70,7 @@ protected:
 
 public:
    TProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
-   virtual ~TProofMgr();
+   ~TProofMgr() override;
 
    virtual Bool_t      IsLite() const { return (fServType == kProofLite); }
    virtual Bool_t      IsProofd() const { return (fServType == kProofd); }
@@ -133,7 +133,7 @@ public:
    static TFileCollection *UploadFiles(TList *src, const char *mss, const char *dest = 0);
    static TFileCollection *UploadFiles(const char *txtfile, const char *mss, const char *dest = 0);
 
-   ClassDef(TProofMgr,0)  // Abstract PROOF manager interface
+   ClassDefOverride(TProofMgr,0)  // Abstract PROOF manager interface
 };
 
 //
@@ -158,7 +158,7 @@ public:
                      Int_t id = -1, Int_t remid = -1, Int_t status = kIdle, TProof *p = 0)
                     : TNamed(tag, alias),
      fLocalId(id), fStatus(0), fProof(p), fRemoteId(remid), fUrl(url) { SetStatus(status); }
-   virtual ~TProofDesc() { }
+   ~TProofDesc() override { }
 
    Int_t          GetLocalId() const { return fLocalId; }
    TProof        *GetProof() const { return fProof; }
@@ -172,14 +172,14 @@ public:
 
    Bool_t         MatchId(Int_t id) const { return (fLocalId == id); }
 
-   void           Print(Option_t *opt = "") const;
+   void           Print(Option_t *opt = "") const override;
 
    void           SetStatus(Int_t st) { fStatus = (st < kIdle || st > kShutdown) ? -1 : st; }
 
    void           SetProof(TProof *p) { fProof = p; }
    void           SetRemoteId(Int_t id) { fRemoteId = id; }
 
-   ClassDef(TProofDesc,1)  // Small class describing a proof session
+   ClassDefOverride(TProofDesc,1)  // Small class describing a proof session
 };
 
 #endif

@@ -254,7 +254,7 @@ public:
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
    void LoadEntry(NTupleSize_t index, REntry &entry) {
       for (auto& value : entry) {
-         value.GetField()->Read(index, &value);
+         value.GetField()->Read(index, value.GetRawPtr());
       }
    }
 
@@ -413,7 +413,7 @@ public:
 
       std::size_t bytesWritten = 0;
       for (auto& value : entry) {
-         bytesWritten += value.GetField()->Append(value);
+         bytesWritten += value.GetField()->Append(value.GetRawPtr());
       }
       fUnzippedClusterSize += bytesWritten;
       fNEntries++;
@@ -480,7 +480,7 @@ public:
    void Fill() { Fill(fDefaultEntry.get()); }
    void Fill(REntry *entry) {
       for (auto &value : *entry) {
-         value.GetField()->Append(value);
+         value.GetField()->Append(value.GetRawPtr());
       }
       fOffset++;
    }

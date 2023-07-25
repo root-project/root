@@ -51,9 +51,9 @@ public:
   class ObjSplitRule ;
 
   RooSimultaneous* build(const char* simPdfName, const char* protoPdfName,
-          const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-          const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-          const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+          const RooCmdArg& arg1={},const RooCmdArg& arg2={},
+          const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+          const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 
   RooSimultaneous* build(const char* simPdfName,BuildConfig& bc, bool verbose=true) ;
 
@@ -84,9 +84,9 @@ protected:
    friend class RooSimWSTool ;
    friend class BuildConfig ;
    friend class MultiBuildConfig ;
-   void configure(const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-                  const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                  const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+   void configure(const RooCmdArg& arg1={},const RooCmdArg& arg2={},
+                  const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                  const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 
    std::list<std::string>                                             _miStateNameList ;
    std::map<std::string, std::pair<std::list<std::string>,std::string> > _paramSplitMap  ; //<paramName,<std::list<splitCatSet>,remainderStateName>>
@@ -98,9 +98,9 @@ class RooSimWSTool::BuildConfig
 {
  public:
   BuildConfig(const char* pdfName, SplitRule& sr) ;
-  BuildConfig(const char* pdfName, const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-         const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-         const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+  BuildConfig(const char* pdfName, const RooCmdArg& arg1={},const RooCmdArg& arg2={},
+         const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+         const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 
   BuildConfig(const RooArgSet& legacyBuildConfig) ;
 
@@ -128,9 +128,9 @@ class RooSimWSTool::MultiBuildConfig : public RooSimWSTool::BuildConfig
   ~MultiBuildConfig() override {} ;
   void addPdf(const char* miStateList, const char* pdfName, SplitRule& sr) ;
   void addPdf(const char* miStateList, const char* pdfName,
-         const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-         const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-         const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+         const RooCmdArg& arg1={},const RooCmdArg& arg2={},
+         const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+         const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 
  protected:
   friend class RooSimWSTool ;

@@ -751,6 +751,14 @@ void TGLHistPainter::SetShowProjection(const char *option, Int_t nbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set show projectionXY.
+
+void TGLHistPainter::SetShowProjectionXY(const char *option, Int_t nbinsY, Int_t nbinsX)
+{
+   if (fDefaultPainter.get()) fDefaultPainter->SetShowProjectionXY(option, nbinsY, nbinsX);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void TGLHistPainter::PadToViewport(Bool_t /*selectionPass*/)
 {

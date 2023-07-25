@@ -56,7 +56,6 @@
 #include "RooAddition.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
-#include "RooDataWeightedAverage.h"
 #include "RooNumRunningInt.h"
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
@@ -106,6 +105,58 @@
 #include <limits>
 #include <sstream>
 #include <sys/types.h>
+
+namespace {
+
+// Internal helper RooAbsFunc that evalutes the scaled data-weighted average of
+// given RooAbsReal as a function of a single variable using the RooFitDriver.
+class ScaledDataWeightedAverage : public RooAbsFunc {
+public:
+   ScaledDataWeightedAverage(RooAbsReal const &arg, RooAbsData const &data, double scaleFactor, RooAbsRealLValue &var)
+      : RooAbsFunc{1}, _var{var}, _dataWeights{data.getWeightBatch(0, data.numEntries())}, _scaleFactor{scaleFactor}
+   {
+      _arg = RooFit::Detail::compileForNormSet(arg, *data.get());
+      _arg->recursiveRedirectServers(RooArgList{var});
+      _driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*_arg, RooFit::BatchModeOption::Cpu);
+      _driver->setData(data, "");
+   }
+
+   double operator()(const double xvector[]) const override
+   {
+      double oldVal = _var.getVal();
+      _var.setVal(xvector[0]);
+
+      double out = 0.0;
+      auto pdfValues = _driver->getValues();
+      if (_dataWeights.empty()) {
+         out = std::accumulate(pdfValues.begin(), pdfValues.end(), 0.0) / pdfValues.size();
+      } else {
+         double weightsSum = 0.0;
+         for (std::size_t i = 0; i < pdfValues.size(); ++i) {
+            out += pdfValues[i] * _dataWeights[i];
+            weightsSum += _dataWeights[i];
+         }
+         out /= weightsSum;
+      }
+      out *= _scaleFactor;
+
+      _var.setVal(oldVal);
+      return out;
+   }
+   double getMinLimit(UInt_t /*dimension*/) const override { return _var.getMin(); }
+   double getMaxLimit(UInt_t /*dimension*/) const override { return _var.getMax(); }
+
+private:
+   RooAbsRealLValue &_var;
+   std::unique_ptr<RooAbsReal> _arg;
+   RooSpan<const double> _dataWeights;
+   double _scaleFactor;
+   std::unique_ptr<ROOT::Experimental::RooFitDriver> _driver;
+};
+
+} // namespace
+
+using namespace std ;
 
 ClassImp(RooAbsReal)
 
@@ -458,7 +509,7 @@ void RooAbsReal::printMultiline(std::ostream& os, Int_t contents, bool verbose, 
 /// present function. The nuisance parameters are defined as all parameters
 /// of the function except the stated paramsOfInterest
 
-RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 {
   // Construct name of profile object
   auto name = std::string(GetName()) + "_Profile[";
@@ -474,7 +525,8 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
   name.append("]") ;
 
   // Create and return profile object
-  return new RooProfileLL(name.c_str(),(std::string("Profile of ") + GetTitle()).c_str(),*this,paramsOfInterest) ;
+  auto out = std::make_unique<RooProfileLL>(name.c_str(),(std::string("Profile of ") + GetTitle()).c_str(),*this,paramsOfInterest);
+  return RooFit::Detail::owningPtr(std::move(out));
 }
 
 
@@ -507,7 +559,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
 
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsReal::createIntegral(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsReal::createIntegral(" + std::string(GetName()) + ")");
   pc.defineString("rangeName","RangeWithName",0,"",true) ;
   pc.defineSet("normSet","NormSet",0,0) ;
   pc.defineObject("numIntConfig","NumIntConfig",0,0) ;
@@ -951,7 +1003,6 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the ROOT histogram 'hist' with values sampled from this
 /// function at the bin centers.  Our value is calculated by first
@@ -1300,7 +1351,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 {
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsReal::createHistogram(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsReal::createHistogram(" + std::string(GetName()) + ")");
   pc.defineInt("scaling","Scaling",0,1) ;
   pc.defineInt("intBinning","IntrinsicBinning",0,2) ;
   pc.defineInt("extended","Extended",0,2) ;
@@ -1675,7 +1726,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   }
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsReal::plotOn(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsReal::plotOn(" + std::string(GetName()) + ")");
   pc.defineString("drawOption","DrawOption",0,"L") ;
   pc.defineString("projectionRangeName","ProjectionRange",0,"",true) ;
   pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
@@ -2098,30 +2149,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
     // Bin projection dataset if requested
     if (o.binProjData) {
-      RooAbsData* tmp = new RooDataHist(Form("%s_binned",projDataSel->GetName()),"Binned projection data",*projDataSel->get(),*projDataSel) ;
+      RooAbsData* tmp = new RooDataHist(std::string(projDataSel->GetName()) + "_binned","Binned projection data",*projDataSel->get(),*projDataSel) ;
       if (projDataSel!=o.projData) delete projDataSel ;
       projDataSel = tmp ;
     }
 
-
-
-    // Attach dataset
-    projection->getVal(projDataSel->get()) ;
-    projection->attachDataSet(*projDataSel) ;
-
-    // Construct optimized data weighted average
-    RooAbsTestStatistic::Configuration cfg;
-    cfg.nCPU = o.numCPU;
-    cfg.interleave = o.interleave;
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,
-            std::move(cfg), true) ;
-    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
-
-    // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
-    dwa.constOptimizeTestStatistic(Activate,false) ;
-
-    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", dwa, {RooFit::RooConst(o.scaleFactor)}};
-    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
+    // Construct scaled data weighted average
+    ScaledDataWeightedAverage scaleBind{*projection, *projDataSel, o.scaleFactor, *plotVar};
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -2130,15 +2164,15 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     }
 
     // Construct name of curve for data weighed average
-    TString curveName(projection->GetName()) ;
-    curveName.Append(Form("_DataAvg[%s]",projDataSel->get()->contentsString().c_str())) ;
+    std::string curveName(projection->GetName()) ;
+    curveName.append("_DataAvg[" + projDataSel->get()->contentsString() + "]");
     // Append slice set specification if any
     if (!sliceSet.empty()) {
-      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;
+      curveName.append("_Slice[" + sliceSet.contentsString() + "]");
     }
     // Append any suffixes imported from RooAbsPdf::plotOn
     if (o.curveNameSuffix) {
-      curveName.Append(o.curveNameSuffix) ;
+      curveName.append(o.curveNameSuffix) ;
     }
 
     // Curve constructor for data weighted average
@@ -2147,7 +2181,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
                o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval) ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
-    curve->SetName(curveName.Data()) ;
+    curve->SetName(curveName.c_str()) ;
 
     // Add self to other curve if requested
     if (o.addToCurveName) {
@@ -2201,13 +2235,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Curve constructor for regular projections
 
     // Set default name of curve
-    TString curveName(projection->GetName()) ;
+    std::string curveName(projection->GetName()) ;
     if (!sliceSet.empty()) {
-      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;
+      curveName.append("_Slice[" + sliceSet.contentsString() + "]");
     }
     if (o.curveNameSuffix) {
       // Append any suffixes imported from RooAbsPdf::plotOn
-      curveName.Append(o.curveNameSuffix) ;
+      curveName.append(o.curveNameSuffix) ;
     }
 
     TString opt(o.drawOptions);
@@ -2228,7 +2262,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       RooCurve *curve = new RooCurve(*projection,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
                                      o.scaleFactor,0,o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval,o.progress);
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-      curve->SetName(curveName.Data()) ;
+      curve->SetName(curveName.c_str()) ;
 
       // Add self to other curve if requested
       if (o.addToCurveName) {
@@ -2474,19 +2508,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     }
 
 
-    RooAbsTestStatistic::Configuration cfg;
-    cfg.nCPU = o.numCPU;
-    cfg.interleave = o.interleave;
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,
-            std::move(cfg),true) ;
-    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
-    dwa.constOptimizeTestStatistic(Activate) ;
-
-    ((RooAbsReal*)posProj)->attachDataSet(*projDataSel) ;
-    ((RooAbsReal*)negProj)->attachDataSet(*projDataSel) ;
-
-    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", {dwa, RooFit::RooConst(o.scaleFactor)}};
-    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
+    // Construct scaled data weighted average
+    ScaledDataWeightedAverage scaleBind{funcAsym, *projDataSel, o.scaleFactor, *plotVar};
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -2769,10 +2792,10 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     // Generate variation curves with above set of parameter values
     double ymin = frame->GetMinimum() ;
     double ymax = frame->GetMaximum() ;
-    RooDataSet* d = paramPdf->generate(errorParams,n) ;
+    std::unique_ptr<RooDataSet> generatedData{paramPdf->generate(errorParams,n)};
     std::vector<RooCurve*> cvec ;
-    for (int i=0 ; i<d->numEntries() ; i++) {
-      cloneParams.assign(*d->get(i)) ;
+    for (int i=0 ; i<generatedData->numEntries() ; i++) {
+      cloneParams.assign(*generatedData->get(i)) ;
       plotFunc(*cloneFunc);
       cvec.push_back(frame->getCurve()) ;
       frame->remove(0,false) ;
@@ -2896,7 +2919,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   if (!band) return frame ;
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsPdf::plotOn(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsPdf::plotOn(" + std::string(GetName()) + ")");
   pc.defineString("drawOption","DrawOption",0,"F") ;
   pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
@@ -3083,14 +3106,14 @@ void RooAbsReal::globalSelectComp(bool flag)
 /// F(x1,x2,x3,x4) returns an object f(x1,x3) that is evaluated using the
 /// current values of x2 and x4. The caller takes ownership of the returned adaptor.
 
-RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, bool clipInvalid) const
+RooFit::OwningPtr<RooAbsFunc> RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, bool clipInvalid) const
 {
   auto binding = std::make_unique<RooRealBinding>(*this,vars,nset,clipInvalid);
   if(!binding->isValid()) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":bindVars: cannot bind to " << vars << std::endl ;
     return nullptr;
   }
-  return binding.release();
+  return RooFit::Detail::owningPtr(std::unique_ptr<RooAbsFunc>{std::move(binding)});
 }
 
 
@@ -3230,13 +3253,13 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
 /// Create a RooRealVar fundamental object with our properties. The new
 /// object will be created without any fit limits.
 
-RooAbsArg *RooAbsReal::createFundamental(const char* newname) const
+RooFit::OwningPtr<RooAbsArg> RooAbsReal::createFundamental(const char* newname) const
 {
-  RooRealVar *fund= new RooRealVar(newname?newname:GetName(),GetTitle(),_value,getUnit());
+  auto fund = std::make_unique<RooRealVar>(newname?newname:GetName(),GetTitle(),_value,getUnit());
   fund->removeRange();
   fund->setPlotLabel(getPlotLabel());
   fund->setAttribute("fundamentalCopy");
-  return fund;
+  return RooFit::Detail::owningPtr<RooAbsArg>(std::move(fund));
 }
 
 
@@ -3849,7 +3872,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
              const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsReal::createRunningIntegral(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsReal::createRunningIntegral(" + std::string(GetName()) + ")");
   pc.defineSet("supNormSet","SupNormSet",0,0) ;
   pc.defineInt("numScanBins","ScanParameters",0,1000) ;
   pc.defineInt("intOrder","ScanParameters",1,2) ;
@@ -4210,7 +4233,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
 
   // Pull arguments to be passed to chi2 construction from std::list
   RooLinkedList fitCmdList(cmdList) ;
@@ -4234,13 +4257,15 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 /// \param data Histogram with data
 /// \return \f$ \chi^2 \f$ variable
 
-RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-               const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-               const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const RooCmdArg &arg1, const RooCmdArg &arg2,
+                                                     const RooCmdArg &arg3, const RooCmdArg &arg4,
+                                                     const RooCmdArg &arg5, const RooCmdArg &arg6,
+                                                     const RooCmdArg &arg7, const RooCmdArg &arg8)
 {
-  std::string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
+   std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
 
-  return new RooChi2Var(name.c_str(),name.c_str(),*this,data,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+   return RooFit::Detail::owningPtr(std::make_unique<RooChi2Var>(name.c_str(), name.c_str(), *this, data, arg1, arg2,
+                                                                 arg3, arg4, arg5, arg6, arg7, arg8));
 }
 
 
@@ -4251,7 +4276,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  co
 /// \param data hist data
 /// \param cmdList List with RooCmdArg() from the table
 
-RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
 {
   // Fill array of commands
   const RooCmdArg* cmds[8] ;
@@ -4323,7 +4348,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
 
   // Pull arguments to be passed to chi2 construction from std::list
   RooLinkedList fitCmdList(cmdList) ;
@@ -4350,7 +4375,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
 /// | `Integrate(bool flag)`  | Integrate function over range specified by X errors rather than take value at bin center.
 ///
 
-RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                  const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                  const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -4367,10 +4392,10 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  con
 ////////////////////////////////////////////////////////////////////////////////
 /// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsPdf::fitTo(" + std::string(GetName()) + ")");
 
   pc.defineInt("integrate","Integrate",0,0) ;
   pc.defineObject("yvar","YVar",0,0) ;
@@ -4378,20 +4403,22 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdLis
   // Process and check varargs
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // Decode command line arguments
   bool integrate = pc.getInt("integrate") ;
   RooRealVar* yvar = (RooRealVar*) pc.getObject("yvar") ;
 
-  std::string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
+  std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
 
+  std::unique_ptr<RooAbsReal> out;
   if (yvar) {
-    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
+    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
   } else {
-    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,integrate) ;
+    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,integrate) ;
   }
+  return RooFit::Detail::owningPtr(std::move(out));
 }
 
 
@@ -4405,7 +4432,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdLis
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooAbsPdf::chi2FitDriver(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsPdf::chi2FitDriver(" + std::string(GetName()) + ")");
 
   pc.defineInt("optConst","Optimize",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
@@ -4503,8 +4530,8 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLi
 
   // Optionally return fit result
   if (doSave) {
-    std::string name = Form("fitresult_%s",fcn.GetName()) ;
-    std::string title = Form("Result of fit of %s ",GetName()) ;
+    std::string name = "fitresult_" + std::string(fcn.GetName());
+    std::string title = "Result of fit of " + std::string(GetName()) + " ";
     ret = std::unique_ptr<RooFitResult>{m.save(name.c_str(),title.c_str())};
   }
 

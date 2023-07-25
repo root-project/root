@@ -70,21 +70,21 @@ public :
 
    TSelVerifyDataSet(TTree *);
    TSelVerifyDataSet();
-   virtual ~TSelVerifyDataSet() {}
-   virtual Int_t   Version() const {return 1;}
-   virtual void    Begin(TTree *) { }
-   virtual void    SlaveBegin(TTree *tree);
-   virtual void    Init(TTree *) { }
-   virtual Bool_t  Notify() { return kTRUE; }
-   virtual Bool_t  Process(Long64_t entry);
-   virtual void    SetOption(const char *option) { fOption = option; }
-   virtual void    SetObject(TObject *obj) { fObject = obj; }
-   virtual void    SetInputList(TList *input) {fInput = input;}
-   virtual TList  *GetOutputList() const { return fOutput; }
-   virtual void    SlaveTerminate();
-   virtual void    Terminate() { }
+   ~TSelVerifyDataSet() override {}
+   Int_t   Version() const override {return 1;}
+   void    Begin(TTree *) override { }
+   void    SlaveBegin(TTree *tree) override;
+   void    Init(TTree *) override { }
+   Bool_t  Notify() override { return kTRUE; }
+   Bool_t  Process(Long64_t entry) override;
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override {fInput = input;}
+   TList  *GetOutputList() const override { return fOutput; }
+   void    SlaveTerminate() override;
+   void    Terminate() override { }
 
-   ClassDef(TSelVerifyDataSet,0) //PROOF selector for parallel dataset verification
+   ClassDefOverride(TSelVerifyDataSet,0) //PROOF selector for parallel dataset verification
 };
 
 #endif

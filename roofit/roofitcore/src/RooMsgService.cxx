@@ -185,7 +185,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooMsgService::addReportingStream(%s)",GetName())) ;
+  RooCmdConfig pc("RooMsgService::addReportingStream(" + std::string(GetName()) + ")") ;
   pc.defineInt("prefix","Prefix",0,true) ;
   pc.defineInt("color","Color",0,static_cast<Int_t>(kBlack)) ;
   pc.defineInt("topic","Topic",0,0xFFFFF) ;

@@ -473,6 +473,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // *** START HERE
       // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
       auto binnedInfo = RooHelpers::getBinnedL(*pdf);
+      RooAbsReal &actualPdf = binnedInfo.binnedPdf ? *binnedInfo.binnedPdf : *pdf;
       // WVE END HACK
       // Below here directly pass binnedPdf instead of PROD(binnedPdf,constraints) as constraints are evaluated elsewhere anyway
       // and omitting them reduces model complexity and associated handling/cloning times
@@ -491,7 +492,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       }
       cfg.rangeName = RooHelpers::getRangeNameForSimComponent(rangeName, _splitRange, catName);
       cfg.nCPU = _nCPU;
-      _gofArray.emplace_back(create(catName.c_str(),catName.c_str(),(binnedInfo.binnedPdf?*binnedInfo.binnedPdf:*pdf),*dset,*projDeps,cfg));
+      _gofArray.emplace_back(create(catName.c_str(),catName.c_str(),actualPdf,*dset,*projDeps,cfg));
       // *** END HERE
 
       // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting of all components
@@ -501,12 +502,12 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
       // Servers may have been redirected between instantiation and (deferred) initialization
 
-      auto actualParams = binnedInfo.binnedPdf ? binnedInfo.binnedPdf->getParameters(dset) : pdf->getParameters(dset);
-      RooArgSet* selTargetParams = (RooArgSet*) _paramSet.selectCommon(*actualParams);
+      RooArgSet actualParams;
+      actualPdf.getParameters(dset->get(), actualParams);
+      RooArgSet selTargetParams;
+      _paramSet.selectCommon(actualParams, selTargetParams);
 
-      _gofArray.back()->recursiveRedirectServers(*selTargetParams);
-
-      delete selTargetParams;
+      _gofArray.back()->recursiveRedirectServers(selTargetParams);
     }
   }
   for(auto& gof : _gofArray) {

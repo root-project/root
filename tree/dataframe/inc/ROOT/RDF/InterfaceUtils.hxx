@@ -236,8 +236,7 @@ using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDispla
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<displayHelperArgs_t> &helperArgs, const unsigned int,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display,
-            const RDFInternal::RColumnRegister &colRegister)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display, const RColumnRegister &colRegister)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
@@ -762,8 +761,6 @@ struct IsDeque_t<std::deque<T>> : std::true_type {};
 // clang-format on
 
 void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols);
-
-void TriggerRun(ROOT::RDF::RNode &node);
 
 template <typename T>
 struct InnerValueType {

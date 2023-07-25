@@ -298,13 +298,8 @@ class GridDisplay extends MDIDisplay {
       if (chld_sizes?.length !== num)
          chld_sizes = undefined;
 
-      if (!this.simple_layout) {
-         injectStyle(
-            '.jsroot_vline:after { content:""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #ff0000; }'+
-            '.jsroot_hline:after { content:""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dotted #ff0000; }'+
-            '.jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }', dom.node(), 'grid_style');
+      if (!this.simple_layout)
          this.createGroup(this, dom, num, arr, sizes, chld_sizes);
-      }
    }
 
    /** @summary Create frames group
@@ -480,14 +475,16 @@ class GridDisplay extends MDIDisplay {
       let separ = main.append('div');
 
       separ.classed('jsroot_separator', true)
-           .classed(handle.vertical ? 'jsroot_hline' : 'jsroot_vline', true)
            .property('handle', handle)
            .property('separator_id', group.id)
-           .style('position', 'absolute')
+           .attr('style', 'pointer-events: all; border: 0; margin: 0; padding: 0; position: absolute;')
            .style(handle.vertical ? 'top' : 'left', `calc(${group.position.toFixed(2)}% - 2px)`)
            .style(handle.vertical ? 'width' : 'height', (handle.size?.toFixed(2) || 100)+'%')
            .style(handle.vertical ? 'height' : 'width', '5px')
-           .style('cursor', handle.vertical ? 'ns-resize' : 'ew-resize');
+           .style('cursor', handle.vertical ? 'ns-resize' : 'ew-resize')
+           .append('div').attr('style', 'position: absolute;' + (handle.vertical ?
+                       'left: 0; right: 0; top: 50%; height: 3px; border-top: 1px dotted #ff0000' :
+                       'top: 0; bottom: 0; left: 50%; width: 3px; border-left: 1px dotted #ff0000'));
 
       let pthis = this, drag_move =
         d3_drag().on('start', function() { pthis.handleSeparator(this, 'start'); })
@@ -498,7 +495,7 @@ class GridDisplay extends MDIDisplay {
 
       // need to get touches events handling in drag
       if (browser.touches && !main.on('touchmove'))
-         main.on('touchmove', function() {});
+         main.on('touchmove', () => {});
    }
 
 
@@ -612,9 +609,14 @@ class TabsDisplay extends MDIDisplay {
 
       labels.selectAll('.jsroot_tabs_label').each(function() {
          let id = d3_select(this).property('frame_id'),
-             is_same = (id == frame_id);
+             is_same = (id == frame_id),
+             active_color = settings.DarkMode ? '#333' : 'white';
+
          if (action == 'activate')
-            d3_select(this).style('background', is_same ? (settings.DarkMode ? 'black' : 'white') : null);
+            d3_select(this).style('background', is_same ? active_color : (settings.DarkMode ? 'black' : '#ddd'))
+                           .style('color', settings.DarkMode ? '#ddd' : 'inherit')
+                           .style('border-color', active_color);
+
          else if ((action == 'close') && is_same)
             this.parentNode.remove();
       });
@@ -622,10 +624,13 @@ class TabsDisplay extends MDIDisplay {
       let selected_frame, other_frame;
 
       main.selectAll('.jsroot_tabs_draw').each(function() {
-         if (d3_select(this).property('frame_id') === frame_id)
+         let match = d3_select(this).property('frame_id') === frame_id;
+         if (match)
             selected_frame = this;
          else
             other_frame = this;
+         if (action == 'activate')
+            d3_select(this).style('background', settings.DarkMode ? 'black' : 'white');
       });
 
       if (!selected_frame) return;
@@ -659,29 +664,16 @@ class TabsDisplay extends MDIDisplay {
           top = dom.select('.jsroot_tabs'), labels, main;
 
       if (top.empty()) {
-         top = dom.append('div').classed('jsroot_tabs', true);
-         labels = top.append('div').classed('jsroot_tabs_labels', true);
-         main = top.append('div').classed('jsroot_tabs_main', true);
+         top = dom.append('div').attr('class', 'jsroot_tabs')
+                  .attr('style', 'display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px');
+         labels = top.append('div').attr('class', 'jsroot_tabs_labels')
+                     .attr('style', 'white-space: nowrap; position: relative; overflow-x: auto');
+         main = top.append('div').attr('class', 'jsroot_tabs_main')
+                     .attr('style', 'margin: 0; flex: 1 1 0%; position: relative');
       } else {
          labels = top.select('.jsroot_tabs_labels');
          main = top.select('.jsroot_tabs_main');
       }
-
-      let bkgr_color = settings.DarkMode ? 'black' : 'white',
-          lbl_color = settings.DarkMode ? '#111': '#eee',
-          lbl_border = settings.DarkMode ? '#333' : '#ccc',
-          text_color = settings.DarkMode ? '#ddd' : 'inherit';
-
-      injectStyle(
-         `.jsroot_tabs { display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px; }`+
-         `.jsroot_tabs_labels { white-space: nowrap; position: relative; overflow-x: auto; }`+
-         `.jsroot_tabs_labels .jsroot_tabs_label {`+
-             `color: ${text_color}; background: ${lbl_color}; border: 1px solid ${lbl_border}; display: inline-block; font-size: 1rem; left: 1px;`+
-             `margin-left: 3px; padding: 0px 5px 1px 5px; position: relative; vertical-align: bottom;`+
-         `}`+
-         `.jsroot_tabs_main { margin: 0; flex: 1 1 0%; position: relative; }`+
-         `.jsroot_tabs_main .jsroot_tabs_draw { overflow: hidden; background: ${bkgr_color}; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; }`,
-         dom.node(), 'tabs_style');
 
       let frame_id = this.cnt++, mdi = this, lbl = title;
 
@@ -700,7 +692,8 @@ class TabsDisplay extends MDIDisplay {
          .attr('tabindex', 0)
          .append('label')
          .attr('class', 'jsroot_tabs_label')
-         .style('background', 'white')
+         .attr('style', `border: 1px solid; display: inline-block; font-size: 1rem; left: 1px;`+
+                        `margin-left: 3px; padding: 0px 5px 1px 5px; position: relative; vertical-align: bottom;`)
          .property('frame_id', frame_id)
          .text(lbl)
          .attr('title', title)
@@ -718,11 +711,18 @@ class TabsDisplay extends MDIDisplay {
       let draw_frame = main.append('div')
                            .attr('frame_title', title)
                            .attr('class', 'jsroot_tabs_draw')
+                           .attr('style', `overflow: hidden; position: absolute; inset: 0px`)
                            .property('frame_id', frame_id);
 
       this.modifyTabsFrame(frame_id, 'activate');
 
       return this.afterCreateFrame(draw_frame.node());
+   }
+
+   /** @summary Handle changes in dark mode */
+   changeDarkMode() {
+      let frame = this.getActiveFrame();
+      this.modifyTabsFrame(d3_select(frame).property('frame_id'), 'activate');
    }
 
 } // class TabsDisplay
@@ -927,26 +927,19 @@ class FlexibleDisplay extends MDIDisplay {
           dom = this.selectDom(),
           top = dom.select('.jsroot_flex_top');
 
-      injectStyle(
-         `.jsroot_flex_top { overflow: auto; position: relative; height: 100%; width: 100%; }`+
-         `.jsroot_flex_btn { float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px; }`+
-         `.jsroot_flex_header { height: 23px; overflow: hidden; background-color: lightblue; }`+
-         `.jsroot_flex_header p { margin: 1px; float: left; font-size: 14px; padding-left: 5px; }`+
-         `.jsroot_flex_draw { overflow: hidden; width: 100%; height: calc(100% - 24px); }`+
-         `.jsroot_flex_frame { border: 1px solid black; box-shadow: 1px 1px 2px 2px #aaa; background: white; }`+
-         `.jsroot_flex_resize { position: absolute; right: 2px; bottom: 2px; overflow: hidden; cursor: nwse-resize; }`+
-         `.jsroot_flex_resizable_helper { border: 2px dotted #00F; }`, dom.node(), 'flex_style');
-
       if (top.empty())
-         top = dom.append('div').classed('jsroot_flex_top', true);
+         top = dom.append('div')
+                  .attr('class', 'jsroot_flex_top')
+                  .attr('style', 'overflow: auto; position: relative; height: 100%; width: 100%');
 
       let w = top.node().clientWidth,
           h = top.node().clientHeight,
           main = top.append('div');
 
-      main.html(`<div class='jsroot_flex_header'><p>${title}</p></div>`+
-                `<div id='${this.frameid}_cont${this.cnt}' class='jsroot_flex_draw'></div>`+
-                `<div class='jsroot_flex_resize'>&#x25FF;</div>`);
+      main.html(`<div class='jsroot_flex_header' style='height: 23px; overflow: hidden; background-color: lightblue'>` +
+                `<p style='margin: 1px; float: left; font-size: 14px; padding-left: 5px'>${title}</p></div>`+
+                `<div id='${this.frameid}_cont${this.cnt}' class='jsroot_flex_draw' style='overflow: hidden; width: 100%; height: calc(100% - 24px); background: white'></div>`+
+                `<div class='jsroot_flex_resize' style='position: absolute; right: 3px; bottom: 1px; overflow: hidden; cursor: nwse-resize'>&#x25FF;</div>`);
 
       main.attr('class', 'jsroot_flex_frame')
          .style('position', 'absolute')
@@ -954,6 +947,8 @@ class FlexibleDisplay extends MDIDisplay {
          .style('top', Math.round(h * (this.cnt % 5)/10) + 'px')
          .style('width', Math.round(w * 0.58) + 'px')
          .style('height', Math.round(h * 0.58) + 'px')
+         .style('border', '1px solid black')
+         .style('box-shadow', '1px 1px 2px 2px #aaa')
          .property('state', 'normal')
          .select('.jsroot_flex_header')
          .on('click', function() { mdi.activateFrame(d3_select(this.parentNode).select('.jsroot_flex_draw').node()); })
@@ -962,7 +957,7 @@ class FlexibleDisplay extends MDIDisplay {
          .enter()
          .append('button')
          .attr('type', 'button')
-         .attr('class', 'jsroot_flex_btn')
+         .attr('style', 'float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px')
          .attr('title', d => d.t)
          .html(d => d.n)
          .on('click', function() { mdi._clickButton(this); });
@@ -983,9 +978,7 @@ class FlexibleDisplay extends MDIDisplay {
 
          mdi.activateFrame(main.select('.jsroot_flex_draw').node());
 
-         moving_div = top.append('div').classed('jsroot_flex_resizable_helper', true);
-
-         moving_div.attr('style', main.attr('style'));
+         moving_div = top.append('div').attr('style', main.attr('style')).style('border', '2px dotted #00F');
 
          if (main.property('state') == 'min')
             moving_div.style('width', main.node().clientWidth + 'px')
@@ -1165,10 +1158,12 @@ class BatchDisplay extends MDIDisplay {
       this.jsdom_body = jsdom_body || d3_select('body'); // d3 body handle
    }
 
+   /** @summary Call function for each frame */
    forEachFrame(userfunc) {
       this.frames.forEach(userfunc)
    }
 
+   /** @summary Create batch frame */
    createFrame(title) {
       this.beforeCreateFrame(title);
 
@@ -1179,9 +1174,6 @@ class BatchDisplay extends MDIDisplay {
              .style('width', this.width + 'px').style('height', this.height + 'px')
              .attr('id','jsroot_batch_' + this.frames.length)
              .attr('frame_title', title);
-
-      if (this.frames.length == 0)
-         internals.svg_3ds = undefined;
 
       this.frames.push(frame.node());
 
@@ -1208,19 +1200,21 @@ class BatchDisplay extends MDIDisplay {
       let frame = this.frames[id];
       if (!frame) return;
       let main = d3_select(frame);
-      let has_workarounds = internals.svg_3ds && internals.processSvgWorkarounds;
       main.select('svg')
           .attr('xmlns', 'http://www.w3.org/2000/svg')
-          .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
           .attr('width', this.width)
           .attr('height', this.height)
           .attr('title', null).attr('style', null).attr('class', null).attr('x', null).attr('y', null);
 
-      let svg = main.html();
-      if (has_workarounds)
-         svg = internals.processSvgWorkarounds(svg, id != this.frames.length-1);
+      function clear_element() {
+         const elem = d3_select(this);
+         if (elem.style('display') == 'none') elem.remove();
+      };
 
-      svg = compressSVG(svg);
+      main.selectAll('g.root_frame').each(clear_element);
+      main.selectAll('svg').each(clear_element);
+
+      let svg = compressSVG(main.html());
 
       main.remove();
       return svg;
@@ -1279,23 +1273,18 @@ class BrowserLayout {
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
       injectStyle(
-         `.jsroot_browser { pointer-events: none; position: absolute; left: 0; top: 0; bottom: 0; right:0; margin: 0; border: 0; overflow: hidden; }`+
-         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0; border: 0; }`+
+         `.jsroot_browser { pointer-events: none; position: absolute; inset: 0px; margin: 0px; border: 0px; overflow: hidden; }`+
+         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0px; border: 0px; }`+
          `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }`+
          `.jsroot_browser_area input { ${input_style} }`+
          `.jsroot_browser_area select { ${input_style} }`+
          `.jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }`+
-         `.jsroot_browser_btns { pointer-events: all; opacity: 0; display:flex; flex-direction: column; }`+
-         `.jsroot_browser_btns:hover { opacity: 0.3; }`+
+         `.jsroot_browser_btns { pointer-events: all; display: flex; flex-direction: column; }`+
          `.jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }`+
          `.jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }`+
          `.jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }`+
-         `.jsroot_float_browser { border: solid 3px white; }`+
-         `.jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }`+
-         `.jsroot_status_label { margin: 3px; margin-left: 5px; font-size: 14px; vertical-align: middle; white-space: nowrap; }`+
-         `.jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }`+
-         `.jsroot_h_separator { cursor: ns-resize; background-color: azure; }`+
-         `.jsroot_v_separator { cursor: ew-resize; background-color: azure; }`, this.main().node(), 'browser_layout_style');
+         `.jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }`,
+          this.main().node(), 'browser_layout_style');
    }
 
    /** @summary method used to create basic elements
@@ -1307,7 +1296,8 @@ class BrowserLayout {
                         .classed('jsroot_draw_area', true)
                         .style('position','absolute').style('left',0).style('top',0).style('bottom',0).style('right',0);
 
-      if (with_browser) main.append('div').classed('jsroot_browser', true);
+      if (with_browser)
+         main.append('div').classed('jsroot_browser', true);
 
       this.createStyle();
    }
@@ -1316,9 +1306,13 @@ class BrowserLayout {
    createBrowserBtns() {
       let br = this.browser();
       if (br.empty()) return;
-      let btns = br.append('div').classed('jsroot_browser_btns', true).classed('jsroot', true);
-      btns.style('position','absolute').style('left','7px').style('top','7px');
-      if (browser.touches) btns.style('opacity','0.2'); // on touch devices should be always visible
+      let btns = br.select('.jsroot_browser_btns');
+      if (btns.empty())
+         btns = br.append('div')
+                  .attr('class', 'jsroot jsroot_browser_btns')
+                  .attr('style', 'position:absolute; left:7px; top: 7px');
+      else
+         btns.html('');
       return btns;
    }
 
@@ -1445,9 +1439,10 @@ class BrowserLayout {
           .style('position','absolute').style('left',left_pos).style('height','20px').style('bottom',0).style('right',0)
           .style('margin',0).style('border',0);
 
-      let hsepar = main.insert('div','.jsroot_browser_area')
-                       .classed('jsroot_separator', true).classed('jsroot_h_separator', true)
-                       .style('position','absolute').style('left',left_pos).style('right',0).style('bottom','20px').style('height','5px');
+      let separ_color = settings.DarkMode ? 'grey' : 'azure',
+          hsepar = main.insert('div', '.jsroot_browser_area')
+                       .classed('jsroot_h_separator', true)
+                       .attr('style', `pointer-events: all; border: 0; margin: 0; padding: 0; background-color: ${separ_color}; position: absolute; left: ${left_pos}; right: 0; bottom: 20px; height: 5px; cursor: ns-resize;`);
 
       let drag_move = d3_drag().on('start', () => {
           this._hsepar_move = this._hsepar_position;
@@ -1480,7 +1475,7 @@ class BrowserLayout {
       for (let k = 0; k < 4; ++k)
          d3_select(this.status_layout.getGridFrame(k))
            .attr('title', frame_titles[k]).style('overflow', 'hidden')
-           .append('label').attr('class', 'jsroot_status_label');
+           .append('label').attr('style', 'margin: 3px; margin-left: 5px; font-size: 14px; vertical-align: middle; white-space: nowrap;');
 
       internals.showStatus = this.status_handler = this.showStatus.bind(this);
 
@@ -1681,10 +1676,10 @@ class BrowserLayout {
           area.style('bottom', '0px')
               .style('top', '0px')
               .style('width','').style('height','')
-              .classed('jsroot_float_browser', false);
+              .classed('jsroot_float_browser', false)
+              .style('border', null);
 
-           //jarea.resizable('destroy')
-           //     .draggable('destroy');
+
       } else if (this.browser_kind === 'fix') {
          main.select('.jsroot_v_separator').remove();
          area.style('left', '0px');
@@ -1701,23 +1696,24 @@ class BrowserLayout {
       main.select('.jsroot_browser_title').style('cursor', (kind === 'float') ? 'move' : null);
 
       if (kind === 'float') {
-         area.style('bottom', '40px').classed('jsroot_float_browser', true);
+         area.style('bottom', '40px')
+             .classed('jsroot_float_browser', true)
+             .style('border', 'solid 3px white');
+
         let drag_move = d3_drag().on('start', () => {
            let sl = area.style('left'), st = area.style('top');
            this._float_left = parseInt(sl.slice(0,sl.length-2));
            this._float_top = parseInt(st.slice(0,st.length-2));
-           this._max_left = main.node().clientWidth - area.node().offsetWidth - 1;
-           this._max_top = main.node().clientHeight - area.node().offsetHeight - 1;
+           this._max_left = Math.max(0, main.node().clientWidth - area.node().offsetWidth - 1);
+           this._max_top = Math.max(0, main.node().clientHeight - area.node().offsetHeight - 1);
 
         }).filter(evnt => {
             return main.select('.jsroot_browser_title').node() === evnt.target;
         }).on('drag', evnt => {
            this._float_left += evnt.dx;
            this._float_top += evnt.dy;
-
            area.style('left', Math.min(Math.max(0, this._float_left), this._max_left) + 'px')
                .style('top', Math.min(Math.max(0, this._float_top), this._max_top) + 'px');
-
            this.setButtonsPosition();
         });
 
@@ -1746,10 +1742,10 @@ class BrowserLayout {
 
         area.style('left', 0).style('top', 0).style('bottom', 0).style('height', null);
 
-        let vsepar =
-           main.append('div')
-               .classed('jsroot_separator', true).classed('jsroot_v_separator', true)
-               .style('position', 'absolute').style('top',0).style('bottom',0);
+        let separ_color = settings.DarkMode ? 'grey' : 'azure',
+           vsepar = main.append('div')
+               .classed('jsroot_v_separator', true)
+               .attr('style', `pointer-events: all; border: 0; margin: 0; padding: 0; background-color: ${separ_color}; position: absolute; top: 0; bottom: 0; cursor: ew-resize;`);
 
         let drag_move = d3_drag().on('start', () => {
             this._vsepar_move = this._vsepar_position;

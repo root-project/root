@@ -29,6 +29,99 @@ TEST(RNTuple, TypeName) {
       (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
+TEST(RNTuple, EnumBasics)
+{
+   // Needs fix of TEnum
+   // auto stdEnum = RFieldBase::Create("f", "std::byte");
+   // EXPECT_FALSE(stdEnum);
+
+   auto f = RFieldBase::Create("f", "CustomEnum").Unwrap();
+
+   auto model = RNTupleModel::Create();
+   auto ptrEnum = model->MakeField<CustomEnum>("e");
+   model->MakeField<StructWithEnums>("swe");
+
+   EXPECT_EQ(model->GetField("e")->GetType(), f->GetType());
+
+   FileRaii fileGuard("test_ntuple_enum_basics.root");
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = kCustomEnumVal;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(kCustomEnumVal, *reader->GetModel()->GetDefaultEntry()->Get<CustomEnum>("e"));
+   auto ptrStructWithEnums = reader->GetModel()->GetDefaultEntry()->Get<StructWithEnums>("swe");
+   EXPECT_EQ(42, ptrStructWithEnums->a);
+   EXPECT_EQ(137, ptrStructWithEnums->b);
+   EXPECT_EQ(kCustomEnumVal, ptrStructWithEnums->e);
+}
+
+using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
+                                       CustomEnumInt32, CustomEnumUInt32, CustomEnumInt64, CustomEnumUInt64>;
+
+template <typename EnumT>
+class EnumClass : public ::testing::Test {
+public:
+   using Enum_t = EnumT;
+};
+
+TYPED_TEST_SUITE(EnumClass, EnumClassInts);
+
+TYPED_TEST(EnumClass, Widths)
+{
+   using ThisEnum_t = typename TestFixture::Enum_t;
+   using Underlying_t = std::underlying_type_t<ThisEnum_t>;
+
+   auto enumName = RField<ThisEnum_t>::TypeName();
+
+   FileRaii fileGuard("test_ntuple_enum_class_" + enumName + ".root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrEnum = model->MakeField<ThisEnum_t>("e");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = static_cast<ThisEnum_t>(0);
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(1);
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max());
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max() - 1);
+      writer->Fill();
+      if (std::is_signed_v<Underlying_t>) {
+         *ptrEnum = static_cast<ThisEnum_t>(-1);
+         writer->Fill();
+         *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min());
+         writer->Fill();
+         *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min() + 1);
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto ptrEnum = reader->GetModel()->GetDefaultEntry()->Get<ThisEnum_t>("e");
+   reader->LoadEntry(0);
+   EXPECT_EQ(static_cast<ThisEnum_t>(0), *ptrEnum);
+   reader->LoadEntry(1);
+   EXPECT_EQ(static_cast<ThisEnum_t>(1), *ptrEnum);
+   reader->LoadEntry(2);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max()), *ptrEnum);
+   reader->LoadEntry(3);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max() - 1), *ptrEnum);
+
+   if (!std::is_signed_v<Underlying_t>)
+      return;
+
+   reader->LoadEntry(4);
+   EXPECT_EQ(static_cast<ThisEnum_t>(-1), *ptrEnum);
+   reader->LoadEntry(5);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min()), *ptrEnum);
+   reader->LoadEntry(6);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min() + 1), *ptrEnum);
+}
 
 TEST(RNTuple, CreateField)
 {
@@ -1009,9 +1102,6 @@ TEST(RNTuple, TClassTemplateBased)
 
 TEST(RNTuple, TClassStlDerived)
 {
-   // For non-cxxmodules builds, cling needs to parse the header for the `SG::sgkey_t` type to be known
-   gInterpreter->ProcessLine("#include \"CustomStruct.hxx\"");
-
    FileRaii fileGuard("test_ntuple_tclass_stlderived.ntuple");
    {
       auto model = RNTupleModel::Create();
@@ -1050,7 +1140,8 @@ TEST(RNTuple, TClassStlDerived)
 TEST(RNTuple, TVirtualCollectionProxy)
 {
    SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
-   SimpleCollectionProxy<StructUsingCollectionProxy<float>> proxyF;
+   // Exposing as a non-vector forces iteration over collection elements in `ReadGlobalImpl()`
+   SimpleCollectionProxy<StructUsingCollectionProxy<float>, ROOT::kSTLdeque> proxyF;
    SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
    SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
 
@@ -1166,24 +1257,6 @@ TEST(RNTuple, TVirtualCollectionProxy)
          }
       }
    }
-}
-
-TEST(RNTuple, Enums)
-{
-   FileRaii fileGuard("test_ntuple_enums.ntuple");
-
-   {
-      auto model = RNTupleModel::Create();
-      auto fieldKlass = model->MakeField<StructWithEnums>("klass");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
-      ntuple->Fill();
-   }
-
-   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
-   ASSERT_EQ(1U, ntuple->GetNEntries());
-   auto viewKlass = ntuple->GetView<StructWithEnums>("klass");
-   EXPECT_EQ(42, viewKlass(0).a);
-   EXPECT_EQ(137, viewKlass(0).b);
 }
 
 TEST(RNTuple, Traits)

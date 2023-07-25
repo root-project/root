@@ -96,6 +96,14 @@ Long_t TMethodArg::Property() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the TypeInfo of the method argument.
+
+TypeInfo_t *TMethodArg::GetTypeInfo() const
+{
+   return gCling->MethodArgInfo_TypeInfo(fInfo);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns list of possible options - according to pointed datamember.
 /// If there is no datamember field assigned to this methodarg - returns 0.
 

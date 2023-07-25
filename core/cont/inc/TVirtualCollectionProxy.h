@@ -27,7 +27,6 @@
 
 // Macro indicating the version of the Collection Proxy interface followed
 // by this ROOT build (See also Reflex/Builder/CollectionProxy.h).
-
 #define ROOT_COLLECTIONPROXY_VERSION 3
 
 class TClass;
@@ -35,6 +34,21 @@ namespace TStreamerInfoActions {
    class TActionSequence;
 }
 
+// clang-format off
+/**
+\class TVirtualCollectionProxy
+\brief Defines a common interface to inspect/change the contents of an object that represents a collection
+
+Specifically, an object of a class that derives from TVirtualCollectionProxy relays accesses to any object that
+matches the proxied collection type.
+The interface provides two families of functions: (i) for direct manipulation, e.g. `Insert()` or `At()`; and
+(ii) iterator-based, e.g. `GetFunctionCreateIterators()` or `GetFunctionNext()`.
+TVirtualCollectionProxy objects are stateful; in particular, many functions require to set the object to operate
+on via `PushProxy()` / `PopProxy()`.  The `TPushPop` RAII class is provided for convenience.
+A collection proxy for a given class can be permanently set using `TClass::CopyCollectionProxy()`.
+The `Generate()` function should be overridden in derived classes to return a clean object of the most-derived class.
+*/
+// clang-format on
 class TVirtualCollectionProxy {
 private:
    TVirtualCollectionProxy(const TVirtualCollectionProxy&) = delete;
@@ -50,14 +64,15 @@ public:
       // No longer used
       // kIsInitialized = BIT(1),
       kIsAssociative = BIT(2),
-      kIsEmulated    = BIT(3),
-      kNeedDelete    = BIT(4),  // Flag to indicate that this collection that contains directly or indirectly (only via other collection) some pointers that will need explicit deletions.
-      kCustomAlloc   = BIT(5)   // The collection has a custom allocator.
+      kIsEmulated = BIT(3),
+      /// The collection contains directly or indirectly (via other collection) some pointers that need explicit
+      /// deletion
+      kNeedDelete = BIT(4),
+      kCustomAlloc = BIT(5) ///< The collection has a custom allocator.
    };
 
+   /// RAII helper class that ensures that `PushProxy()` / `PopProxy()` are called when entering / leaving a C++ context
    class TPushPop {
-      // Helper class that insures that push and pop are done when entering
-      // and leaving a C++ context (even in the presence of exceptions)
    public:
       TVirtualCollectionProxy *fProxy;
       inline TPushPop(TVirtualCollectionProxy *proxy,
@@ -70,145 +85,169 @@ public:
 
    TVirtualCollectionProxy() : fClass(), fProperties(0) {}
    TVirtualCollectionProxy(TClass *cl) : fClass(cl), fProperties(0) {}
-
-   virtual TVirtualCollectionProxy* Generate() const = 0; // Returns an object of the actual CollectionProxy class
    virtual ~TVirtualCollectionProxy() {}
 
-   // Reset the info gathered from StreamerInfos and value's TClass.
+   /// Returns a clean object of the actual class that derives from TVirtualCollectionProxy.  The caller is responsible
+   /// for deleting the returned object.
+   virtual TVirtualCollectionProxy *Generate() const = 0;
+
+   /// Reset the information gathered from StreamerInfos and value's TClass.
    virtual Bool_t    Reset() { return kTRUE; }
 
-   virtual TClass   *GetCollectionClass() const { return fClass; }
-   // Return a pointer to the TClass representing the container
+   /// Return a pointer to the `TClass` representing the proxied _container_ class
+   virtual TClass *GetCollectionClass() const { return fClass; }
 
-   virtual Int_t     GetCollectionType() const = 0;
-   // Return the type of collection see TClassEdit::ESTLType
+   /// Return the type of the proxied collection (see enumeration TClassEdit::ESTLType)
+   virtual Int_t GetCollectionType() const = 0;
 
-   virtual ULong_t   GetIncrement() const = 0;
-   // Return the offset between two consecutive value_types (memory layout).
+   /// Return the offset between two consecutive in-memory values (which depends on the `sizeof()` and alignment of the
+   /// value type).
+   virtual ULong_t GetIncrement() const = 0;
 
-   virtual Int_t     GetProperties() const { return fProperties; }
-   // Return miscallenous properties of the proxy see TVirtualCollectionProxy::EProperty
+   /// Return miscallenous properties of the proxy (see TVirtualCollectionProxy::EProperty)
+   virtual Int_t GetProperties() const { return fProperties; }
 
-   virtual void     *New() const {
-      // Return a new container object
-      return !fClass.GetClass() ? nullptr : fClass->New();
-   }
-   virtual void     *New(void *arena) const {
-      // Execute the container constructor
-      return !fClass.GetClass() ? nullptr : fClass->New(arena);
-   }
-   virtual TClass::ObjectPtr NewObject() const {
-      // Return a new container object
+   /// Construct a new container object and return its address
+   virtual void *New() const { return !fClass.GetClass() ? nullptr : fClass->New(); }
+   /// Construct a new container object at the address given by `arena`
+   virtual void *New(void *arena) const { return !fClass.GetClass() ? nullptr : fClass->New(arena); }
+   /// Construct a new container object and return its address
+   virtual TClass::ObjectPtr NewObject() const
+   {
       return !fClass.GetClass() ? TClass::ObjectPtr{} : fClass->NewObject();
    }
-   virtual TClass::ObjectPtr NewObject(void *arena) const {
-      // Execute the container constructor
+   /// Construct a new container object at the address given by `arena`
+   virtual TClass::ObjectPtr NewObject(void *arena) const
+   {
       return !fClass.GetClass() ? TClass::ObjectPtr{} : fClass->NewObject(arena);
    }
 
-   virtual void     *NewArray(Int_t nElements) const {
-      // Return a new container object
-      return !fClass.GetClass() ? nullptr : fClass->NewArray(nElements);
-   }
-   virtual void     *NewArray(Int_t nElements, void *arena) const {
-      // Execute the container constructor
+   /// Construct an array of `nElements` container objects and return the base address of the array
+   virtual void *NewArray(Int_t nElements) const { return !fClass.GetClass() ? nullptr : fClass->NewArray(nElements); }
+   /// Construct an array of `nElements` container objects at the address given by `arena`
+   virtual void *NewArray(Int_t nElements, void *arena) const
+   {
       return !fClass.GetClass() ? nullptr : fClass->NewArray(nElements, arena);
    }
-   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements) const {
-      // Return a new container object
+   /// Construct an array of `nElements` container objects and return the base address of the array
+   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements) const
+   {
       return !fClass.GetClass() ? TClass::ObjectPtr{} : fClass->NewObjectArray(nElements);
    }
-   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements, void *arena) const {
-      // Execute the container constructor
+   /// Construct an array of `nElements` container objects at the address given by `arena`
+   virtual TClass::ObjectPtr NewObjectArray(Int_t nElements, void *arena) const
+   {
       return !fClass.GetClass() ? TClass::ObjectPtr{} : fClass->NewObjectArray(nElements, arena);
    }
 
-   virtual void      Destructor(void *p, Bool_t dtorOnly = kFALSE) const {
-      // Execute the container destructor
+   /// Execute the container destructor
+   virtual void Destructor(void *p, Bool_t dtorOnly = kFALSE) const
+   {
       TClass* cl = fClass.GetClass();
       if (cl) cl->Destructor(p, dtorOnly);
    }
 
-   virtual void      DeleteArray(void *p, Bool_t dtorOnly = kFALSE) const {
-      // Execute the container array destructor
+   /// Execute the container array destructor
+   virtual void DeleteArray(void *p, Bool_t dtorOnly = kFALSE) const
+   {
       TClass* cl = fClass.GetClass();
       if (cl) cl->DeleteArray(p, dtorOnly);
    }
 
-   virtual UInt_t    Sizeof() const = 0;
-   // Return the sizeof the collection object.
+   /// Return the `sizeof()` of the collection object
+   virtual UInt_t Sizeof() const = 0;
 
-   virtual void      PushProxy(void *objectstart) = 0;
-   // Set the address of the container being proxied and keep track of the previous one.
+   /// Set the address of the container being proxied and keep track of the previous one
+   virtual void PushProxy(void *objectstart) = 0;
 
-   virtual void      PopProxy() = 0;
-   // Reset the address of the container being proxied to the previous container
+   /// Reset the address of the container being proxied to the previous container
+   virtual void PopProxy() = 0;
 
-   virtual Bool_t    HasPointers() const = 0;
-   // Return true if the content is of type 'pointer to'
+   /// Return `true` if the content is of type 'pointer to'
+   virtual Bool_t HasPointers() const = 0;
 
-   virtual TClass   *GetValueClass() const = 0;
-   // Return a pointer to the TClass representing the content.
+   /// If the value type is a user-defined class, return a pointer to the `TClass` representing the
+   /// value type of the container.
+   virtual TClass *GetValueClass() const = 0;
 
+   /// If the value type is a fundamental data type, return its type (see enumeration EDataType).
    virtual EDataType GetType() const = 0;
-   // If the content is a simple numerical value, return its type (see TDataType)
 
-   virtual void     *At(UInt_t idx) = 0;
-   // Return the address of the value at index 'idx'
+   /// Return the address of the value at index `idx`
+   virtual void *At(UInt_t idx) = 0;
 
-   virtual void      Clear(const char *opt = "") = 0;
-   // Clear the container
+   /// Clear the container
+   virtual void Clear(const char *opt = "") = 0;
 
-   virtual UInt_t    Size() const = 0;
-   // Return the current size of the container
+   /// Return the current number of elements in the container
+   virtual UInt_t Size() const = 0;
 
+   /// Allocates space for storing at least `n` elements.  This function returns a pointer to the actual object on
+   /// which insertions should take place.  For associative collections, this function returns a pointer to a temporary
+   /// buffer known as the staging area.  If the insertion happened in a staging area (i.e. the returned pointer !=
+   /// proxied object), `Commit()` should be called on the value returned by this function.
    virtual void*     Allocate(UInt_t n, Bool_t forceDelete) = 0;
 
+   /// Commits pending elements in a staging area (see Allocate() for more information).
    virtual void      Commit(void*) = 0;
 
-   virtual void      Insert(const void *data, void *container, size_t size) = 0;
-   // Insert data into the container where data is a C-style array of the actual type contained in the collection
-   // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
+   /// Insert elements into the proxied containe.  `data` is a C-style array of the value type of the given `size`.
+   /// For associative containers, e.g. `std::map`, the data type should be `std::pair<Key_t, Value_t>`.
+   virtual void Insert(const void *data, void *container, size_t size) = 0;
 
-           char     *operator[](UInt_t idx) const { return (char*)(const_cast<TVirtualCollectionProxy*>(this))->At(idx); }
+   /// Return the address of the value at index `idx`
+   char *operator[](UInt_t idx) const { return (char *)(const_cast<TVirtualCollectionProxy *>(this))->At(idx); }
 
-   // MemberWise actions
+   // Functions related to member-wise actions
    virtual TStreamerInfoActions::TActionSequence *GetConversionReadMemberWiseActions(TClass *oldClass, Int_t version) = 0;
    virtual TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t version) = 0;
    virtual TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() = 0;
 
-   // Set of functions to iterate easily throught the collection
+   /// The size of a small buffer that can be allocated on the stack to store iterator-specific information
    static const Int_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
 
+   /// `*begin_arena` and `*end_arena` should contain the location of a memory arena of size `fgIteratorArenaSize`.
+   /// If iterator-specific information is of that size or less, the iterators will be constructed in place in the given
+   /// locations.  Otherwise, iterators will be allocated via `new` and their address returned by modifying the value
+   /// of `*begin_arena and `*end_arena`.
+   /// As a special case, given that iterators for array-backed containers are just pointers, the required information
+   /// will be directly stored in `*(begin|end)_arena`.
    typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy *proxy);
+
+   /// Return a pointer to a function that can create an iterator pair, where each iterator points to the begin and end
+   /// of the collection, respectively (see CreateIterators_t).  If `read == kTRUE`, data is to be read from disk, i.e.
+   /// written to the in-memory collection.
    virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE) = 0;
-   // begin_arena and end_arena should contain the location of a memory arena of size fgIteratorSize.
-   // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
-   // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
 
+   /// Copy the iterator `source` into `dest`.  `dest` should contain the location of a memory arena of size
+   /// `fgIteratorArenaSize`.
+   /// If iterator-specific information is of that size or less, the iterators will be constructed in place in the given
+   /// locations.  Otherwise, iterators will be allocated via `new` and their address returned by modifying the value
+   /// of `*begin_arena and `*end_arena`.  The actual address of the iterator is returned in any case.
    typedef void* (*CopyIterator_t)(void *dest, const void *source);
+
+   /// Return a pointer to a function that can copy an iterator (see CopyIterator_t).  If `read == kTRUE`, data is to be
+   /// read from disk, i.e. written to the in-memory collection.
    virtual CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE) = 0;
-   // Copy the iterator source, into dest.   dest should contain the location of a memory arena of size fgIteratorSize.
-   // If the collection iterator is of that size or less, the iterator will be constructed in place in this location (new with placement)
-   // Otherwise the iterator will be allocated via a regular new.
-   // The actual address of the iterator is returned in both case.
 
+   /// `iter` and `end` should be pointers to an iterator to be incremented and an iterator that points to the end of
+   /// the collection, respectively.  If `iter` has not reached the end of the collection, this function increments the
+   /// iterator and returns a pointer to the element before the increment.  Otherwise, `nullptr` is returned.
    typedef void* (*Next_t)(void *iter, const void *end);
-   virtual Next_t GetFunctionNext(Bool_t read = kTRUE) = 0;
-   // iter and end should be pointers to respectively an iterator to be incremented and the result of collection.end()
-   // If the iterator has not reached the end of the collection, 'Next' increment the iterator 'iter' and return 0 if
-   // the iterator reached the end.
-   // If the end was not reached, 'Next' returns the address of the content pointed to by the iterator before the
-   // incrementation ; if the collection contains pointers, 'Next' will return the value of the pointer.
 
+   /// Return a pointer to a function that can advance an iterator (see Next_t).  If `read == kTRUE`, data is to be
+   /// read from disk, i.e. written to the in-memory collection.
+   virtual Next_t GetFunctionNext(Bool_t read = kTRUE) = 0;
+
+   /// If the size of the iterator is greater than `fgIteratorArenaSize`, call delete on the addresses; otherwise, just
+   /// call the iterator's destructor.
    typedef void (*DeleteIterator_t)(void *iter);
    typedef void (*DeleteTwoIterators_t)(void *begin, void *end);
 
+   /// Return a pointer to a function that can delete an iterator (pair) (see DeleteIterator_t).  If `read == kTRUE`,
+   /// data is to be read from disk, i.e. written to the in-memory collection.
    virtual DeleteIterator_t GetFunctionDeleteIterator(Bool_t read = kTRUE) = 0;
    virtual DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t read = kTRUE) = 0;
-   // If the size of the iterator is greater than fgIteratorArenaSize, call delete on the addresses,
-   // Otherwise just call the iterator's destructor.
-
 };
 
 #endif

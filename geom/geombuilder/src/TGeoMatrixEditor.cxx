@@ -60,7 +60,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for dx
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fTransDx = new TGNumberEntry(f1, 0., 5, kMATRIX_DX);
    nef = (TGTextEntry*)fTransDx->GetNumberEntry();
@@ -71,7 +71,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fTransDy = new TGNumberEntry(f2, 0., 5, kMATRIX_DY);
    nef = (TGTextEntry*)fTransDy->GetNumberEntry();
@@ -82,7 +82,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dx
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fTransDz = new TGNumberEntry(f3, 0., 5, kMATRIX_DZ);
    nef = (TGTextEntry*)fTransDz->GetNumberEntry();
@@ -314,7 +314,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for phi angle
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, " PHI "), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotPhi = new TGNumberEntry(f1, 0., 5, kMATRIX_PHI);
    nef = (TGTextEntry*)fRotPhi->GetNumberEntry();
@@ -326,7 +326,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
 
    // Number entry for theta angle
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "THETA"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotTheta = new TGNumberEntry(f2, 0., 5, kMATRIX_THETA);
    nef = (TGTextEntry*)fRotTheta->GetNumberEntry();
@@ -338,7 +338,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
 
    // Number entry for psi angle
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, " PSI "), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotPsi = new TGNumberEntry(f3, 0., 5, kMATRIX_PSI);
    nef = (TGTextEntry*)fRotPsi->GetNumberEntry();
@@ -355,7 +355,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for rotation angle about one axis
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "ANGLE"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotAxis = new TGNumberEntry(f1, 0., 5, kMATRIX_DX);
    nef = (TGTextEntry*)fRotAxis->GetNumberEntry();
@@ -622,7 +622,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for dx
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fTransDx = new TGNumberEntry(f1, 0., 5, kMATRIX_DX);
    nef = (TGTextEntry*)fTransDx->GetNumberEntry();
@@ -633,7 +633,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fTransDy = new TGNumberEntry(f2, 0., 5, kMATRIX_DY);
    nef = (TGTextEntry*)fTransDy->GetNumberEntry();
@@ -644,7 +644,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dx
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fTransDz = new TGNumberEntry(f3, 0., 5, kMATRIX_DZ);
    nef = (TGTextEntry*)fTransDz->GetNumberEntry();
@@ -661,7 +661,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for phi angle
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, " PHI "), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotPhi = new TGNumberEntry(f1, 0., 5, kMATRIX_PHI);
    nef = (TGTextEntry*)fRotPhi->GetNumberEntry();
@@ -673,7 +673,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
 
    // Number entry for theta angle
    f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "THETA"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotTheta = new TGNumberEntry(f2, 0., 5, kMATRIX_THETA);
    nef = (TGTextEntry*)fRotTheta->GetNumberEntry();
@@ -685,7 +685,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
 
    // Number entry for psi angle
    f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, " PSI "), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotPsi = new TGNumberEntry(f3, 0., 5, kMATRIX_PSI);
    nef = (TGTextEntry*)fRotPsi->GetNumberEntry();
@@ -702,7 +702,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for rotation angle about one axis
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "ANGLE"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fRotAxis = new TGNumberEntry(f1, 0., 5, kMATRIX_DX);
    nef = (TGTextEntry*)fRotAxis->GetNumberEntry();

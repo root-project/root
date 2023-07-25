@@ -437,10 +437,21 @@ The footer envelope has the following structure:
 
 The header checksum can be used to cross-check that header and footer belong together.
 
-The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope).
+#### Schema Extension Record Frame
+
+The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope). Specifically, it is a record frame with the following four fields (identical to the last four fields in Header Envelope):
+
+ - List frame: list of field record frames
+ - List frame: list of column record frames
+ - List frame: list of alias column record frames
+ - List frame: list of extra type information
+
+
 In general, a schema extension is optional and thus this record frame might be empty.
 The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
+
+
 
 The ntuple meta-data can be split over multiple meta-data envelopes (see below).
 
@@ -708,6 +719,13 @@ By default, the mother field has a principal column of type `(Split)Index[64|32]
 This is called sparse representation.
 The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
 In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
+
+### User-defined enums
+
+User-defined enums are stored as a leaf field with a single subfield named `_0`.
+The mother field has no attached columns.
+The subfield corresponds to the integer type the underlies the enum.
+Unscoped and scoped enums are supported as long as the enum has a dictionary.
 
 ### User-defined classes
 

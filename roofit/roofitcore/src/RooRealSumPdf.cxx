@@ -697,6 +697,9 @@ std::list<double>* RooRealSumPdf::plotSamplingHint(RooArgList const& funcList, R
 
    auto* newSumHint = new std::list<double>(sumHint->size()+funcHint->size()) ;
 
+   // the lists must be sorted before merging them
+   funcHint->sort();
+   sumHint->sort();
    // Merge hints into temporary array
    merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
 
@@ -785,12 +788,39 @@ void RooRealSumPdf::printMetaArgs(RooArgList const& funcList, RooArgList const& 
   os << " " ;
 }
 
-std::unique_ptr<RooAbsArg> RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const
+std::unique_ptr<RooAbsArg>
+RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
-   if(normSet.empty() || selfNormalized()) {
+   if (normSet.empty() || selfNormalized()) {
       return RooAbsPdf::compileForNormSet({}, ctx);
    }
-   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf*>(this->Clone()));
+   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
+
+   if (ctx.likelihoodMode() && pdfClone->getAttribute("BinnedLikelihood")) {
+
+      // This has to be done before compiling the servers, such that the
+      // RooBinWidthFunctions know to disable themselves.
+      ctx.setBinnedLikelihoodMode(true);
+
+      ctx.markAsCompiled(*pdfClone);
+      ctx.compileServers(*pdfClone, {});
+
+      pdfClone->setAttribute("BinnedLikelihoodActive");
+      // If this is a binned likelihood, we're flagging it in the context.
+      // Then, the RooBinWidthFunctions know that they should not put
+      // themselves in the computation graph. Like this, the pdf values can
+      // directly be interpreted as yields, without multiplying them with the
+      // bin widths again in the NLL. However, the NLL class has to be careful
+      // to only skip the bin with multiplication when there actually were
+      // RooBinWidthFunctions! This is not the case for old workspace before
+      // ROOT 6.26. Therefore, we use the "BinnedLikelihoodActiveYields"
+      // attribute to let the NLL know what it should do.
+      if (ctx.binWidthFuncFlag()) {
+         pdfClone->setAttribute("BinnedLikelihoodActiveYields");
+      }
+      return pdfClone;
+   }
+
    ctx.compileServers(*pdfClone, {});
 
    RooArgSet depList;
@@ -800,7 +830,7 @@ std::unique_ptr<RooAbsArg> RooRealSumPdf::compileForNormSet(RooArgSet const &nor
 
    // The direct servers are this pdf and the normalization integral, which
    // don't need to be compiled further.
-   for(RooAbsArg * server : newArg->servers()) {
+   for (RooAbsArg *server : newArg->servers()) {
       ctx.markAsCompiled(*server);
    }
    ctx.markAsCompiled(*newArg);

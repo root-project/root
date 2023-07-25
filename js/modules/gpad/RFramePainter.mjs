@@ -1,10 +1,10 @@
-import { gStyle, settings, create, isBatchMode, isFunc, isStr, clTAxis, nsREX } from '../core.mjs';
+import { gStyle, settings, create, isFunc, isStr, clTAxis, nsREX } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { makeTranslate} from '../base/BasePainter.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
-import { FrameInteractive } from './TFramePainter.mjs';
+import { FrameInteractive, getEarthProjectionFunc } from './TFramePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
@@ -61,10 +61,10 @@ class RFramePainter extends RObjectPainter {
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
 
          let rect = this.getPadPainter().getPadRect();
-         this.fX1NDC = this.v7EvalLength('margins_left', rect.width, settings.FrameNDC.fX1NDC) / rect.width;
-         this.fY1NDC = this.v7EvalLength('margins_bottom', rect.height, settings.FrameNDC.fY1NDC) / rect.height;
-         this.fX2NDC = 1 - this.v7EvalLength('margins_right', rect.width, 1-settings.FrameNDC.fX2NDC) / rect.width;
-         this.fY2NDC = 1 - this.v7EvalLength('margins_top', rect.height, 1-settings.FrameNDC.fY2NDC) / rect.height;
+         this.fX1NDC = this.v7EvalLength('margins_left', rect.width, gStyle.fPadLeftMargin) / rect.width;
+         this.fY1NDC = this.v7EvalLength('margins_bottom', rect.height, gStyle.fPadBottomMargin) / rect.height;
+         this.fX2NDC = 1 - this.v7EvalLength('margins_right', rect.width, gStyle.fPadRightMargin) / rect.width;
+         this.fY2NDC = 1 - this.v7EvalLength('margins_top', rect.height, gStyle.fPadTopMargin) / rect.height;
       }
 
       if (!this.fillatt)
@@ -74,30 +74,7 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Returns coordinates transformation func */
-   getProjectionFunc() {
-      switch (this.projection) {
-         // Aitoff2xy
-         case 1: return (l, b) => {
-            const DegToRad = Math.PI/180,
-                  alpha2 = (l/2)*DegToRad,
-                  delta  = b*DegToRad,
-                  r2     = Math.sqrt(2),
-                  f      = 2*r2/Math.PI,
-                  cdec   = Math.cos(delta),
-                  denom  = Math.sqrt(1. + cdec*Math.cos(alpha2));
-            return {
-               x: cdec*Math.sin(alpha2)*2.*r2/denom/f/DegToRad,
-               y: Math.sin(delta)*r2/denom/f/DegToRad
-            };
-         };
-         // mercator
-         case 2: return (l, b) => { return { x: l, y: Math.log(Math.tan((Math.PI/2 + b/180*Math.PI)/2)) }; };
-         // sinusoidal
-         case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
-         // parabolic
-         case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
-      }
-   }
+   getProjectionFunc() { return getEarthProjectionFunc(this.projection); }
 
    /** @summary Rcalculate frame ranges using specified projection functions
      * @desc Not yet used in v7 */
@@ -144,7 +121,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Draw axes grids
      * @desc Called immediately after axes drawing */
    drawGrids() {
-      let layer = this.getFrameSvg().select('.grid_layer');
+      let layer = this.getFrameSvg().selectChild('.grid_layer');
 
       layer.selectAll('.xgrid').remove();
       layer.selectAll('.ygrid').remove();
@@ -265,7 +242,7 @@ class RFramePainter extends RObjectPainter {
 
       this.cleanXY(); // remove all previous configurations
 
-      if (!opts) opts = {};
+      if (!opts) opts = { ndim: 1 };
 
       this.v6axes = true;
       this.swap_xy = opts.swap_xy || false;
@@ -276,6 +253,8 @@ class RFramePainter extends RObjectPainter {
       this.logy = this.v7EvalAttr('y_log', 0);
 
       let w = this.getFrameWidth(), h = this.getFrameHeight();
+
+      this.scales_ndim = opts.ndim;
 
       this.scale_xmin = this.xmin;
       this.scale_xmax = this.xmax;
@@ -415,7 +394,7 @@ class RFramePainter extends RObjectPainter {
          this.z_handle.configureZAxis('zaxis', this);
       }
 
-      let layer = this.getFrameSvg().select('.axis_layer');
+      let layer = this.getFrameSvg().selectChild('.axis_layer');
 
       this.x_handle.has_obstacle = false;
 
@@ -477,7 +456,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Draw secondary configuread axes */
    drawAxes2(second_x, second_y) {
       let w = this.getFrameWidth(), h = this.getFrameHeight(),
-          layer = this.getFrameSvg().select('.axis_layer'),
+          layer = this.getFrameSvg().selectChild('.axis_layer'),
           pr1, pr2;
 
       if (second_x) {
@@ -576,10 +555,8 @@ class RFramePainter extends RObjectPainter {
    cleanXY() {
       // remove all axes drawings
       let clean = (name,grname) => {
-         if (this[name]) {
-            this[name].cleanup();
-            delete this[name];
-         }
+         this[name]?.cleanup();
+         delete this[name];
          delete this[grname];
       };
 
@@ -597,10 +574,8 @@ class RFramePainter extends RObjectPainter {
    cleanupAxes() {
       this.cleanXY();
 
-      if (this.draw_g) {
-         this.draw_g.select('.grid_layer').selectAll('*').remove();
-         this.draw_g.select('.axis_layer').selectAll('*').remove();
-      }
+      this.draw_g?.selectChild('.grid_layer').selectAll('*').remove();
+      this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
       this.axes_drawn = false;
    }
 
@@ -625,10 +600,8 @@ class RFramePainter extends RObjectPainter {
       clean('x2');
       clean('y2');
 
-      if (this.draw_g) {
-         this.draw_g.select('.main_layer').selectAll('*').remove();
-         this.draw_g.select('.upper_layer').selectAll('*').remove();
-      }
+      this.draw_g?.selectChild('.main_layer').selectAll('*').remove();
+      this.draw_g?.selectChild('.upper_layer').selectAll('*').remove();
    }
 
    /** @summary Fully cleanup frame
@@ -719,7 +692,7 @@ class RFramePainter extends RObjectPainter {
 
          this.draw_g = this.getLayerSvg('primitives_layer').append('svg:g').attr('class', 'root_frame');
 
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             this.draw_g.append('svg:title').text('');
 
          top_rect = this.draw_g.append('svg:rect');
@@ -736,8 +709,8 @@ class RFramePainter extends RObjectPainter {
          this.draw_g.append('svg:g').attr('class','axis_layer');
          this.draw_g.append('svg:g').attr('class','upper_layer');
       } else {
-         top_rect = this.draw_g.select('rect');
-         main_svg = this.draw_g.select('.main_layer');
+         top_rect = this.draw_g.selectChild('rect');
+         main_svg = this.draw_g.selectChild('.main_layer');
       }
 
       this.axes_drawn = false;
@@ -766,7 +739,7 @@ class RFramePainter extends RObjectPainter {
       }
 
       return pr.then(() => {
-         if (!isBatchMode()) {
+         if (!this.isBatchMode()) {
             top_rect.style('pointer-events', 'visibleFill');  // let process mouse events inside frame
 
             FrameInteractive.assign(this);
@@ -1078,8 +1051,9 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Fill context menu */
    fillContextMenu(menu, kind, /* obj */) {
-
       // when fill and show context menu, remove all zooming
+
+      if (kind == 'pal') kind = 'z';
 
       if ((kind == 'x') || (kind == 'y') || (kind == 'x2') || (kind == 'y2')) {
          let handle = this[kind+'_handle'];
@@ -1167,7 +1141,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Add interactive keys handlers
     * @private */
    addKeysHandler() {
-      if (isBatchMode()) return;
+      if (this.isBatchMode()) return;
       FrameInteractive.assign(this);
       this.addFrameKeysHandler();
    }
@@ -1176,7 +1150,7 @@ class RFramePainter extends RObjectPainter {
     * @private */
    addInteractivity(for_second_axes) {
 
-      if (isBatchMode() || (!settings.Zooming && !settings.ContextMenu))
+      if (this.isBatchMode() || (!settings.Zooming && !settings.ContextMenu))
          return true;
       FrameInteractive.assign(this);
       return this.addFrameInteractivity(for_second_axes);

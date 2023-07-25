@@ -148,32 +148,10 @@ RooAbsData::StorageType RooAbsData::getDefaultStorageType( )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooAbsData::claimVars(RooAbsData* data)
-{
-  _dcc[data]++ ;
-  //cout << "RooAbsData(" << data << ") claim incremented to " << _dcc[data] << endl ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// If return value is true variables can be deleted
-
-bool RooAbsData::releaseVars(RooAbsData* data)
-{
-  if (_dcc[data]>0) {
-    _dcc[data]-- ;
-  }
-
-  //cout << "RooAbsData(" << data << ") claim decremented to " << _dcc[data] << endl ;
-  return (_dcc[data]==0) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
 RooAbsData::RooAbsData()
 {
-  claimVars(this) ;
   storageType = defaultStorageType;
 
   RooTrace::create(this) ;
@@ -220,8 +198,6 @@ RooAbsData::RooAbsData(RooStringView name, RooStringView title, const RooArgSet&
    } else {
       storageType = RooAbsData::Composite;
    }
-   // cout << "created dataset " << this << endl ;
-   claimVars(this);
 
    initializeVars(vars);
 
@@ -239,8 +215,6 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   _cachedVars("Cached Variables"),
   _namePtr(newname ? RooNameReg::instance().constPtr(newname) : other._namePtr)
 {
-  //cout << "created dataset " << this << endl ;
-  claimVars(this) ;
   _vars.addClone(other._vars) ;
 
   // reconnect any parameterized ranges to internal dataset observables
@@ -280,7 +254,6 @@ RooAbsData& RooAbsData::operator=(const RooAbsData& other) {
   TNamed::operator=(other);
   RooPrintable::operator=(other);
 
-  claimVars(this);
   _vars.Clear();
   _vars.addClone(other._vars);
   _namePtr = other._namePtr;
@@ -335,12 +308,6 @@ void RooAbsData::copyGlobalObservables(const RooAbsData& other) {
 
 RooAbsData::~RooAbsData()
 {
-  if (releaseVars(this)) {
-    // will cause content to be deleted subsequently in dtor
-  } else {
-    _vars.releaseOwnership() ;
-  }
-
   // Delete owned dataset components
   for(map<std::string,RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
     delete iter->second ;
@@ -462,7 +429,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
                 const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)
 {
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsData::reduce(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsData::reduce(" + std::string(GetName()) + ")");
   pc.defineString("name","Name",0,"") ;
   pc.defineString("title","Title",0,"") ;
   pc.defineString("cutRange","CutRange",0,"") ;
@@ -737,7 +704,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   RooLinkedList argList(argListIn) ;
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsData::createHistogram(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsData::createHistogram(" + std::string(GetName()) + ")");
   pc.defineString("cutRange","CutRange",0,"",true) ;
   pc.defineString("cutString","CutSpec",0,"") ;
   pc.defineObject("yvar","YVar",0,0) ;
@@ -1219,7 +1186,7 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooTreeData::statOn(%s)",GetName())) ;
+  RooCmdConfig pc("RooTreeData::statOn(" + std::string(GetName()) + ")");
   pc.defineString("what","What",0,"MNR") ;
   pc.defineString("label","Label",0,"") ;
   pc.defineDouble("xmin","Layout",0,0.65) ;
@@ -1743,7 +1710,7 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   // New experimental plotOn() with varargs...
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsData::plotOn(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsData::plotOn(" + std::string(GetName()) + ")");
   pc.defineString("drawOption","DrawOption",0,"P") ;
   pc.defineString("cutRange","CutRange",0,"",true) ;
   pc.defineString("cutString","CutSpec",0,"") ;

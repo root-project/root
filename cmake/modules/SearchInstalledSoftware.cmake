@@ -1170,13 +1170,21 @@ if(davix AND NOT builtin_davix)
     find_package(Davix 0.6.4)
     if(NOT DAVIX_FOUND)
       find_package(libuuid)
+      if(NOT libuuid_FOUND)
+        message(STATUS "Davix dependency libuuid not found, switching OFF 'davix' option.")
+      endif()
       find_package(LibXml2)
+      if(NOT LIBXML2_FOUND)
+        message(STATUS "Davix dependency libxml2 not found, switching OFF 'davix' option.")
+      endif()
       find_package(OpenSSL)
-      if(UUID_FOUND AND LIBXML2_FOUND AND (OPENSSL_FOUND OR builtin_openssl))
+      if(NOT (OPENSSL_FOUND OR builtin_openssl))
+        message(STATUS "Davix dependency openssl not found, switching OFF 'davix' option.")
+      endif()
+      if(libuuid_FOUND AND LIBXML2_FOUND AND (OPENSSL_FOUND OR builtin_openssl))
         message(STATUS "Davix not found, switching ON 'builtin_davix' option.")
         set(builtin_davix ON CACHE BOOL "Enabled because external Davix not found but davix requested (${builtin_davix_description})" FORCE)
       else()
-        message(STATUS "Davix dependencies not found, switching OFF 'davix' option.")
         set(davix OFF CACHE BOOL "Disabled because dependencies not found (${davix_description})" FORCE)
       endif()
     endif()
@@ -2112,6 +2120,16 @@ if(webgui)
     INSTALL_COMMAND ""
     SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
     TIMEOUT 600
+  )
+  ExternalProject_Add(
+     MATHJAX
+     URL ${CMAKE_SOURCE_DIR}/documentation/doxygen/mathjax.tar.gz
+     URL_HASH SHA256=c5e22e60430a65963a87ab4dcc8856b9be5bd434d3b3871f27ee65b584c3c3ea
+     CONFIGURE_COMMAND ""
+     BUILD_COMMAND ""
+     INSTALL_COMMAND ""
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
+     TIMEOUT 600
   )
   install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()

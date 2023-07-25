@@ -320,11 +320,6 @@ void TThread::Init()
 {
    if (fgThreadImp || fgIsTearDown) return;
 
-#if !defined (_REENTRANT) && !defined (WIN32)
-   // Not having it means (See TVirtualMutext.h) that the LOCKGUARD macro are empty.
-   ::Fatal("Init","_REENTRANT must be #define-d for TThread to work properly.");
-#endif
-
    // 'Insure' gROOT is created before initializing the Thread safe behavior
    // (to make sure we do not have two attempting to create it).
    ROOT::GetROOT();

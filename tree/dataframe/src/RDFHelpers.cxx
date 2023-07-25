@@ -26,11 +26,11 @@
 
 using ROOT::RDF::RResultHandle;
 
-void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
+unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
 {
    if (handles.empty()) {
       Warning("RunGraphs", "Got an empty list of handles, now quitting.");
-      return;
+      return 0u;
    }
 
    // Check that there are results which have not yet been run
@@ -41,7 +41,7 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
               handles.size() - nToRun);
    }
    if (nToRun == 0u)
-      return;
+      return 0u;
 
    // Find the unique event loops
    auto sameGraph = [](const RResultHandle &a, const RResultHandle &b) { return a.fLoopManager < b.fLoopManager; };
@@ -91,4 +91,11 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    R__LOG_INFO(ROOT::Detail::RDF::RDFLogChannel())
       << "Finished RunGraphs run (" << uniqueLoops.size() << " unique computation graphs, " << sw.CpuTime() << "s CPU, "
       << sw.RealTime() << "s elapsed).";
+
+   return uniqueLoops.size();
+}
+
+ROOT::RDF::Experimental::SnapshotPtr_t ROOT::RDF::Experimental::VariationsFor(ROOT::RDF::Experimental::SnapshotPtr_t)
+{
+   throw std::logic_error("Varying a Snapshot result is not implemented yet.");
 }

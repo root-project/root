@@ -525,3 +525,41 @@ TEST(RNTupleShow, CollectionProxy)
       EXPECT_EQ(os.str(), expected);
    }
 }
+
+TEST(RNTupleShow, Enum)
+{
+
+   FileRaii fileGuard("test_ntuple_show_enum.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrEnum = model->MakeField<CustomEnum>("enum");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = kCustomEnumVal;
+      writer->Fill();
+      *ptrEnum = static_cast<CustomEnum>(137);
+      writer->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2U, ntuple->GetNEntries());
+
+   std::ostringstream os0;
+   ntuple->Show(0, os0);
+   // clang-format off
+   std::string expected{std::string("")
+      + "{\n"
+      + "  \"enum\": 7\n"
+      + "}\n"};
+   // clang-format on
+   EXPECT_EQ(os0.str(), expected);
+
+   std::ostringstream os1;
+   ntuple->Show(1, os1);
+   // clang-format off
+   expected = std::string("")
+      + "{\n"
+      + "  \"enum\": 137\n"
+      + "}\n";
+   // clang-format on
+   EXPECT_EQ(os1.str(), expected);
+}

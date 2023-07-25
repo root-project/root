@@ -19,6 +19,7 @@
 #include "THttpCallArg.h"
 #include "TUrl.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TRandom3.h"
 
 #include <cstring>
@@ -1771,3 +1772,43 @@ unsigned RWebWindow::ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDi
    return window->Show(args);
 }
 
+std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> RWebWindow::gStartDialogFunc = nullptr;
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Configure func which has to be used for starting dialog
+
+
+void RWebWindow::SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> func)
+{
+   gStartDialogFunc = func;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Check if this could be the message send by client to start new file dialog
+/// If returns true, one can call RWebWindow::EmbedFileDialog() to really create file dialog
+/// instance inside existing widget
+
+bool RWebWindow::IsFileDialogMessage(const std::string &msg)
+{
+   return msg.compare(0, 11, "FILEDIALOG:") == 0;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Create dialog instance to use as embedded dialog inside provided widget
+/// Loads libROOTBrowserv7 and tries to call RFileDialog::Embedded() method
+/// Embedded dialog started on the client side where FileDialogController.SaveAs() method called
+/// Such method immediately send message with "FILEDIALOG:" prefix
+/// On the server side widget should detect such message and call RFileDialog::Embedded()
+/// providing received string as second argument.
+/// Returned instance of shared_ptr<RFileDialog> may be used to assign callback when file is selected
+
+bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args)
+{
+   if (!gStartDialogFunc)
+      gSystem->Load("libROOTBrowserv7");
+
+   if (!gStartDialogFunc)
+      return false;
+
+   return gStartDialogFunc(window, connid, args);
+}

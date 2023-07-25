@@ -37,13 +37,13 @@
 #include <mach-o/dyld.h>
 #endif
 
-#ifdef __sun
-#   ifndef _REENTRANT
-#      if __SUNPRO_CC > 0x420
-#         define GLOBAL_ERRNO
-#      endif
-#   endif
-#endif
+#ifdef R__FBSD
+#include <sys/param.h>
+#include <sys/user.h>
+#include <sys/types.h>
+#include <libutil.h>
+#include <libprocstat.h>
+#endif // R__FBSD
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #define ROOTBINARY "root_exe.exe"
@@ -82,20 +82,12 @@ using ROOT::ROOTX::gChildpid;
 static int gChildpid;
 static int GetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   return ::errno;
-#else
    return errno;
-#endif
 }
 
 static void ResetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   ::errno = 0;
-#else
    errno = 0;
-#endif
 }
 
 #endif
@@ -120,6 +112,19 @@ static const char *GetExePath()
          buf[ret] = 0;
          exepath = buf;
       }
+#endif
+#if defined(R__FBSD)
+  procstat* ps = procstat_open_sysctl();  //
+  kinfo_proc* kp = kinfo_getproc(getpid());
+
+  if (kp!=NULL) {
+     char path_str[PATH_MAX] = "";
+     procstat_getpathname(ps, kp, path_str, sizeof(path_str));
+     exepath = path_str;
+  }
+
+  free(kp);
+  procstat_close(ps);
 #endif
    }
    return exepath.c_str();

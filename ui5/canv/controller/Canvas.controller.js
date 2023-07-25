@@ -11,7 +11,8 @@ sap.ui.define([
    'sap/m/Button',
    'sap/m/ButtonType',
    'sap/ui/layout/SplitterLayoutData',
-   'sap/ui/core/ResizeHandler'
+   'sap/ui/core/ResizeHandler',
+   'rootui5/browser/controller/FileDialog.controller'
 ], function (Controller,
              Component,
              JSONModel,
@@ -24,7 +25,8 @@ sap.ui.define([
              Button,
              ButtonType,
              SplitterLayoutData,
-             ResizeHandler) {
+             ResizeHandler,
+             FileDialogController) {
    "use strict";
 
    function chk_icon(flag) {
@@ -43,8 +45,9 @@ sap.ui.define([
                                      StatusIcon: chk_icon(false),
                                      ToolbarIcon: chk_icon(false),
                                      TooltipIcon: chk_icon(true),
+                                     AutoResizeIcon: chk_icon(true),
                                      StatusLbl1: "", StatusLbl2: "", StatusLbl3: "", StatusLbl4: "",
-                                     Standalone: true, isRoot6: true, canResize: true });
+                                     Standalone: true, isRoot6: true, canResize: true, FixedSize: false });
          this.getView().setModel(model);
 
          let cp = this.getView().getViewData()?.canvas_painter;
@@ -55,7 +58,9 @@ sap.ui.define([
 
             if (cp.embed_canvas) model.setProperty("/Standalone", false);
 
-            this.getView().byId("MainPanel").getController().setPainter(cp);
+            this.getView().byId('MainPanel').getController().setPainter(cp);
+
+            cp.setFixedCanvasSize = this.setFixedCanvasSize.bind(this);
 
             cp.executeObjectMethod = this.executeObjectMethod.bind(this);
 
@@ -81,7 +86,7 @@ sap.ui.define([
 
             cp.enforceCanvasSize = !cp.embed_canvas && cp.online_canvas;
 
-            model.setProperty("/canResize", !cp.embed_canvas && cp.online_canvas);
+            model.setProperty('/canResize', !cp.embed_canvas && cp.online_canvas);
 
             let ws = cp._websocket || cp._window_handle;
             if (!cp.embed_canvas && ws?.addReloadKeyHandler)
@@ -151,9 +156,19 @@ sap.ui.define([
 
       /** @desc Provide canvas painter */
       getCanvasPainter(also_without_websocket) {
-         let p = this.getView().byId("MainPanel")?.getController().getPainter();
+         let p = this.getView().byId('MainPanel')?.getController().getPainter();
 
          return (p && (p._websocket || also_without_websocket)) ? p : null;
+      },
+
+      setFixedCanvasSize(cw, ch, fixed) {
+         let ctrl = this.getView().byId('MainPanel')?.getController(),
+             is_fixed = ctrl?.setFixedSize(cw, ch, fixed) ?? false;
+
+         this.getView().getModel().setProperty('/FixedSize', is_fixed);
+         this.getView().getModel().setProperty('/AutoResizeIcon', chk_icon(!is_fixed));
+
+         return is_fixed;
       },
 
       closeMethodDialog(painter, method, menu_obj_id) {
@@ -277,17 +292,41 @@ sap.ui.define([
             case "Quit ROOT":
                p.sendWebsocket("QUIT");
                break;
-            case "Canvas.png":
-            case "Canvas.jpeg":
-            case "Canvas.svg":
+            case 'Canvas.png':
+            case 'Canvas.jpeg':
+            case 'Canvas.svg':
                p.saveCanvasAsFile(name);
                break;
-            case "Canvas.root":
-            case "Canvas.pdf":
-            case "Canvas.ps":
-            case "Canvas.C":
+            case 'Canvas.root':
+            case 'Canvas.pdf':
+            case 'Canvas.ps':
+            case 'Canvas.C':
                p.sendSaveCommand(name);
                break;
+            case 'Save as ...': {
+               let filters = ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'ROOT files (*.root)' ];
+               if (!p?.v7canvas)
+                  filters.push('PDF files (*.pdf)', 'C++ (*.cxx *.cpp *.c)');
+
+               FileDialogController.SaveAs({
+                  websocket: p._websocket,
+                  filename: 'Canvas.png',
+                  title: 'Select file name to save canvas',
+                  filter: 'Png files',
+                  filters,
+                  // working_path: "/Home",
+                  onOk: fname => {
+                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg'))
+                         p.saveCanvasAsFile(fname);
+                     else
+                         p.sendSaveCommand(fname);
+                  },
+                  onCancel: () => {},
+                  onFailure: () => {}
+               });
+
+               break;
+           }
          }
 
          MessageToast.show(`Action triggered on item: ${name}`);
@@ -302,11 +341,11 @@ sap.ui.define([
       },
 
       onInterruptPress() {
-         this.getCanvasPainter()?.sendWebsocket("INTERRUPT");
+         this.getCanvasPainter()?.sendWebsocket('INTERRUPT');
       },
 
       onQuitRootPress() {
-         this.getCanvasPainter()?.sendWebsocket("QUIT");
+         this.getCanvasPainter()?.sendWebsocket('QUIT');
       },
 
       onReloadPress() {
@@ -348,13 +387,13 @@ sap.ui.define([
             this.activateGed(this.getCanvasPainter());
       },
 
-      /** @summary Load custom panel in canvas lef area */
+      /** @summary Load custom panel in canvas left area */
       showLeftArea(panel_name, panel_handle) {
          let split = this.getView().byId('MainAreaSplitter'),
              model = this.getView().getModel(),
              curr = model.getProperty('/LeftArea');
 
-         if (!split || (curr === panel_name) || (!curr && !panel_name))
+         if (!split || (!curr && !panel_name) || (curr === panel_name))
             return Promise.resolve(null);
 
          model.setProperty("/LeftArea", panel_name);
@@ -426,7 +465,11 @@ sap.ui.define([
          if (!ctrl || (typeof cp?.drawObject != 'function'))
             return Promise.resolve(null);
 
+         if (typeof ctrl?.cleanupPainter == 'function')
+            ctrl.cleanupPainter();
+
          return ctrl.getRenderPromise().then(dom => {
+            dom.innerHTML = ''; // delete everything
             dom.style.overflow = "hidden";
             return cp.drawObject(dom, obj, opt);
          }).then(painter => {
@@ -471,7 +514,7 @@ sap.ui.define([
          if (this.bottomVisible == is_on)
             return Promise.resolve(this.getBottomController());
 
-         let split = this.getView().byId("BottomAreaSplitter");
+         let split = this.getView().byId('BottomAreaSplitter');
          if (!split) return Promise.resolve(null);
 
          let cont = split.getContentAreas();
@@ -638,8 +681,22 @@ sap.ui.define([
          if (!cp) return;
 
          let item = oEvent.getParameter('item');
-         if (item.getText() == 'Interrupt')
+         if (item.getText() == 'Interrupt') {
             cp.sendWebsocket('INTERRUPT');
+         } else if (item.getText() == 'Auto resize') {
+             let was_fixed = this.getView().getModel().getProperty('/FixedSize'),
+                 cp = this.getCanvasPainter(), w = 0, h = 0;
+             if (!was_fixed) {
+                w = cp?.getPadWidth();
+                h = cp?.getPadHeight();
+             }
+             let is_fixed = this.setFixedCanvasSize(w, h, !was_fixed);
+             if ((is_fixed != was_fixed) && cp) {
+                console.log('Changed fix state - inform server!!!');
+                cp._online_fixed_size = is_fixed;
+                cp.sendResized(true);
+             }
+         }
       },
 
       onToolsMenuAction(oEvent) {

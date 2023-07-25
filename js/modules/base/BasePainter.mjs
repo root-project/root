@@ -1,5 +1,5 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs, isFunc, isStr, btoa_func } from '../core.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func } from '../core.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -14,7 +14,7 @@ function getElementRect(elem, sizearg) {
    if (!elem || elem.empty())
       return { x: 0, y: 0, width: 0, height: 0 };
 
-   if (isNodeJs() && (sizearg != 'bbox'))
+   if ((isNodeJs() && (sizearg != 'bbox')) || elem.property('_batch_mode'))
       return { x: 0, y: 0, width: parseInt(elem.attr('width')), height: parseInt(elem.attr('height')) };
 
    const styleValue = name => {
@@ -111,8 +111,8 @@ function floatToString(value, fmt, ret_fmt) {
 
    if (significance) {
 
-      // when using fixed representation, one could get 0.0
-      if (value && (Number(sg) === 0.) && (prec > 0)) {
+      // when using fixed representation, one could get 0
+      if (value && (Number(sg) === 0) && (prec > 0)) {
          prec = 20; sg = value.toFixed(prec);
       }
 
@@ -393,10 +393,7 @@ function compressSVG(svg) {
             .replace(/<g><\/g>/g, '');                                     // remove all empty groups
 
    // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
-   svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, '')
-
-   if (svg.indexOf('xlink:href') < 0)
-      svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, '');
+   svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, '');
 
    return svg;
 }
@@ -459,10 +456,12 @@ class BasePainter {
           layout = res.property('layout') || 'simple',
           layout_selector = (layout == 'simple') ? '' : res.property('layout_selector');
 
-      if (layout_selector) res = res.select(layout_selector);
+      if (layout_selector)
+         res = res.select(layout_selector);
 
       // one could redirect here
-      if (!is_direct && !res.empty() && use_enlarge) res = d3_select('#jsroot_enlarge_div');
+      if (!is_direct && !res.empty() && use_enlarge)
+         res = d3_select('#jsroot_enlarge_div');
 
       return res;
    }
@@ -528,16 +527,16 @@ class BasePainter {
    testMainResize(check_level, new_size, height_factor) {
 
       let enlarge = this.enlargeMain('state'),
-          main_origin = this.selectDom('origin'),
+          origin = this.selectDom('origin'),
           main = this.selectDom(),
           lmt = 5; // minimal size
 
       if ((enlarge !== 'on') && new_size?.width && new_size?.height)
-         main_origin.style('width', new_size.width + 'px')
-                    .style('height', new_size.height + 'px');
+         origin.style('width', new_size.width + 'px')
+               .style('height', new_size.height + 'px');
 
-      let rect_origin = getElementRect(main_origin, true),
-          can_resize = main_origin.attr('can_resize'),
+      let rect_origin = getElementRect(origin, true),
+          can_resize = origin.attr('can_resize'),
           do_resize = false;
 
       if (can_resize == 'height')
@@ -551,9 +550,9 @@ class BasePainter {
 
          if (rect_origin.width > lmt) {
             height_factor = height_factor || 0.66;
-            main_origin.style('height', Math.round(rect_origin.width * height_factor) + 'px');
+            origin.style('height', Math.round(rect_origin.width * height_factor) + 'px');
          } else if (can_resize !== 'height') {
-            main_origin.style('width', '200px').style('height', '100px');
+            origin.style('width', '200px').style('height', '100px');
          }
       }
 
@@ -574,9 +573,9 @@ class BasePainter {
          main.property('_jsroot_height', rect.height).property('_jsroot_width', rect.width);
 
       // after change enlarge state always mark main element as resized
-      if (main_origin.property('did_enlarge')) {
+      if (origin.property('did_enlarge')) {
          rect.changed = true;
-         main_origin.property('did_enlarge', false);
+         origin.property('did_enlarge', false);
       }
 
       return rect;
@@ -615,7 +614,7 @@ class BasePainter {
          enlarge = d3_select(document.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
-            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; right: 1px; top: 1px; bottom: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          let rect1 = getElementRect(main),
              rect2 = getElementRect(enlarge);
@@ -694,13 +693,17 @@ async function _loadJSDOM() {
 /** @summary Return translate string for transform attribute of some svg element
   * @return string or null if x and y are zeros
   * @private */
-function makeTranslate(x,y) {
-   if (y) return `translate(${x},${y})`;
-   if (x) return `translate(${x})`;
-   return null;
+function makeTranslate(g, x, y) {
+   if (!isObject(g)) {
+      y = x; x = g; g = null;
+   }
+   let res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   return g ? g.attr('transform', res) : res;
 }
 
-/** @summary Configure special style used for highlight or dragging elements */
+
+/** @summary Configure special style used for highlight or dragging elements
+  * @private */
 function addHighlightStyle(elem, drag) {
    if (drag)
       elem.style('stroke', 'steelblue')
@@ -712,39 +715,45 @@ function addHighlightStyle(elem, drag) {
 }
 
 /** @summary Create image based on SVG
-  * @return {Promise} with produced image in base64 form (or canvas when no image_format specified)
+  * @param {string} svg - svg code of the image
+  * @param {string} [image_format] - image format like 'png' or 'jpeg'
+  * @param {boolean} [as_buffer] - return Buffer object for image
+  * @return {Promise} with produced image in base64 form or as Buffer (or canvas when no image_format specified)
   * @private */
-async function svgToImage(svg, image_format) {
+async function svgToImage(svg, image_format, as_buffer) {
 
    if (image_format == 'svg')
       return svg;
 
-   const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-
-   svg = encodeURIComponent(doctype + svg);
-
-   svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
-       let c = String.fromCharCode('0x'+p1);
-       return c === '%' ? '%25' : c;
-   });
-
-   svg = decodeURIComponent(svg);
+   if (!isNodeJs()) {
+      // required with df104.py/df105.py example with RCanvas
+      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+      svg = encodeURIComponent(doctype + svg);
+      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+          let c = String.fromCharCode('0x'+p1);
+          return c === '%' ? '%25' : c;
+      });
+      svg = decodeURIComponent(svg);
+   }
 
    const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
 
    if (isNodeJs())
       return import('canvas').then(async handle => {
 
-         const img = await handle.default.loadImage(img_src);
+         return handle.default.loadImage(img_src).then(img => {
+            const canvas = handle.default.createCanvas(img.width, img.height);
 
-         const canvas = handle.default.createCanvas(img.width, img.height);
+            canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
 
-         canvas.getContext('2d').drawImage(img, 0, 0);
+            if (as_buffer) return canvas.toBuffer('image/' + image_format);
 
-         return image_format ? canvas.toDataURL('image/' + image_format) : canvas;
+            return image_format ? canvas.toDataURL('image/' + image_format) : canvas;
+         });
       });
 
    return new Promise(resolveFunc => {
+
       const image = document.createElement('img');
 
       image.onload = function() {
@@ -754,10 +763,13 @@ async function svgToImage(svg, image_format) {
 
          canvas.getContext('2d').drawImage(image, 0, 0);
 
-         resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
+         if (as_buffer && image_format)
+            canvas.toBlob(blob => blob.arrayBuffer().then(resolveFunc), 'image/' + image_format);
+         else
+            resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
       }
       image.onerror = function(arg) {
-         console.log('IMAGE ERROR', arg);
+         console.log(`IMAGE ERROR ${arg}`);
          resolveFunc(null);
       }
 

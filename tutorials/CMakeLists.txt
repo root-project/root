@@ -77,6 +77,13 @@ if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
 endif()
 
+if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
+endif()
+
 if (NOT dataframe)
     # RDataFrame
     list(APPEND dataframe_veto dataframe/*.C dataframe/*.py)
@@ -87,6 +94,10 @@ if (NOT dataframe)
     list(APPEND dataframe_veto tmva/TMVA_SOFIE_RDataFrame*.C)
     list(APPEND dataframe_veto tmva/TMVA_SOFIE_RDataFrame*.py)
     list(APPEND dataframe_veto tmva/TMVA_SOFIE_Inference.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
     # RooFit tutorial depending on RDataFrame
     list(APPEND dataframe_veto roofit/rf408*)
 elseif(MSVC AND NOT win_broken_tests)
@@ -303,9 +314,11 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RDataFrame_JIT.C)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Inference.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
+    list(APPEND tmva_veto tmva/RBatchGenerator_TensorFlow.py)
   endif()
   if (NOT PY_TORCH_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_PyTorch.C)
+    list(APPEND tmva_veto tmva/RBatchGenerator_PyTorch.py)
   endif()
   if (NOT tmva-sofie)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
@@ -399,7 +412,7 @@ set(extra_veto
   eve7/*.C
   r/rootlogon.C)
 
-if(MSVC AND ${LLVM_VERSION} VERSION_GREATER_EQUAL 13.0.0 AND NOT llvm13_broken_tests)
+if(MSVC AND NOT llvm13_broken_tests)
  list(APPEND extra_veto
       dataframe/df002_dataModel.C
       dataframe/df007_snapshot.C
@@ -458,6 +471,13 @@ set(all_veto hsimple.C
              ${macm1_veto}
              ${clad_veto}
              )
+
+# These tutorials seem to trigger segfaults related to TClass* and RDataFrame
+# JITting on many platforms. Disable for now and revert once the issue is fixed
+list(APPEND all_veto tmva/RBatchGenerator_NumPy.py)
+list(APPEND all_veto tmva/RBatchGenerator_TensorFlow.py)
+list(APPEND all_veto tmva/RBatchGenerator_PyTorch.py)
+list(APPEND all_veto tmva/RBatchGenerator_filters_vectors.py)
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(root7 AND webgui)

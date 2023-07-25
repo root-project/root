@@ -291,7 +291,8 @@ private:
    TEntryList* fEntryList = nullptr; ///< entry list to be used
    EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
    ELoadTreeStatus fLoadTreeStatus = kNoTree;   ///< Indicator on how LoadTree was called 'last' time.
-   TNotifyLink<TTreeReader> fNotify; // Callback object used by the TChain to update this proxy
+   /// TTree and TChain will notify this object upon LoadTree, leading to a call to TTreeReader::Notify().
+   TNotifyLink<TTreeReader> fNotify;
    ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TFriendProxy*> fFriendProxies; ///< proxying for friend TTrees, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director

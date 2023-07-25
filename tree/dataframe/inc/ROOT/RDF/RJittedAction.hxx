@@ -66,6 +66,7 @@ public:
    ROOT::RDF::SampleCallback_t GetSampleCallback() final;
 
    std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final;
+   std::unique_ptr<ROOT::Internal::RDF::RActionBase> CloneAction(void *newResult) final;
 };
 
 } // ns RDF

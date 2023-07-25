@@ -1,4 +1,4 @@
-import { gStyle, settings, constants, isBatchMode, clTAxis, clTGaxis } from '../core.mjs';
+import { gStyle, settings, constants, clTAxis, clTGaxis } from '../core.mjs';
 import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
@@ -567,7 +567,7 @@ class TAxisPainter extends ObjectPainter {
       if (optionNoopt && this.nticks && (this.kind == 'normal'))
          this.noticksopt = true;
 
-      let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func }, ticks;
+      let handle = { painter: this, nminor: 0, nmiddle: 0, nmajor: 0, func: this.func, minor: [], middle: [], major: [] }, ticks;
 
       if (this.fixed_ticks) {
          ticks = [];
@@ -644,6 +644,10 @@ class TAxisPainter extends ObjectPainter {
       handle.next_major_grpos = function() {
          if (this.nmajor >= this.major.length) return null;
          return this.func(this.major[this.nmajor]);
+      };
+
+      handle.get_modifier = function() {
+         return this.painter.findLabelModifier(this.painter.getObject(), this.nmajor-1, this.major.length);
       };
 
       this.order = 0;
@@ -724,13 +728,12 @@ class TAxisPainter extends ObjectPainter {
    isCenteredLabels() {
       if (this.kind === 'labels') return true;
       if (this.log) return false;
-      let axis = this.getObject();
-      return axis && axis.TestBit(EAxisBits.kCenterLabels);
+      return this.getObject()?.TestBit(EAxisBits.kCenterLabels);
    }
 
    /** @summary Add interactive elements to draw axes title */
    addTitleDrag(title_g, vertical, offset_k, reverse, axis_length) {
-      if (!settings.MoveResize || isBatchMode()) return;
+      if (!settings.MoveResize || this.isBatchMode()) return;
 
       let drag_rect = null,
           acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx,
@@ -804,7 +807,7 @@ class TAxisPainter extends ObjectPainter {
 
          if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
             new_x = set_x; new_y = set_y; curr_indx = besti;
-            title_g.attr('transform', makeTranslate(new_x, new_y));
+            makeTranslate(title_g, new_x, new_y);
          }
 
       }).on('end', evnt => {
@@ -900,8 +903,8 @@ class TAxisPainter extends ObjectPainter {
       if (!axis.fModLabs) return null;
       for (let n = 0; n < axis.fModLabs.arr.length; ++n) {
          let mod = axis.fModLabs.arr[n];
-         if (mod.fLabNum === nlabel + 1) return mod;
-         if ((mod.fLabNum < 0) && (nlabel === num_labels + mod.fLabNum)) return mod;
+         if ((mod.fLabNum === nlabel + 1) ||
+             ((mod.fLabNum < 0) && (nlabel === num_labels + mod.fLabNum))) return mod;
       }
       return null;
    }
@@ -1152,7 +1155,7 @@ class TAxisPainter extends ObjectPainter {
       this.lineatt.not_standard = true;
 
       if (!this.is_gaxis || (this.name === 'zaxis')) {
-         axis_g = layer.select(`.${this.name}_container`);
+         axis_g = layer.selectChild(`.${this.name}_container`);
          if (axis_g.empty())
             axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else
@@ -1198,7 +1201,7 @@ class TAxisPainter extends ObjectPainter {
 
          labelsMaxWidth = maxw;
 
-         if (settings.Zooming && !this.disable_zooming && !isBatchMode()) {
+         if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
             let labelSize = Math.max(this.labelsFont.size, 5),
                 r = axis_g.append('svg:rect')
                           .attr('class', 'axis_zoom')
@@ -1276,10 +1279,9 @@ class TAxisPainter extends ObjectPainter {
 
          if (title_g) {
             if (!this.titleOffset && this.vertical && labelsMaxWidth)
-              title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
-
-            title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
-                   .property('shift_x', title_shift_x)
+               title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
+            makeTranslate(title_g, title_shift_x, title_shift_y);
+            title_g.property('shift_x', title_shift_x)
                    .property('shift_y', title_shift_y);
          }
 

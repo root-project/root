@@ -2,7 +2,7 @@ import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMo
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-import { makeTranslate, getElementRect } from '../base/BasePainter.mjs';
+import { makeTranslate } from '../base/BasePainter.mjs';
 import { selectActivePad, cleanup, resize, EAxisBits } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
@@ -271,8 +271,10 @@ class RCanvasPainter extends RPadPainter {
              snapid = msg.slice(0,p1),
              snap = parse(msg.slice(p1+1));
          this.syncDraw(true)
-             .then(() => this.ensureBrowserSize(snap.fWinSize[0], snap.fWinSize[1], !this.snapid && snap?.fWinSize))
-             .then(() => this.redrawPadSnap(snap))
+             .then(() => {
+                if (!this.snapid && snap?.fWinSize)
+                   this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
+             }).then(() => this.redrawPadSnap(snap))
              .then(() => {
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
@@ -594,13 +596,13 @@ class RCanvasPainter extends RPadPainter {
 
       let btns = this.brlayout.createBrowserBtns();
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode', 'browser')
                   .style('margin','3px').on('click', () => this.brlayout.toggleKind('fix'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode', 'browser')
                   .style('margin','3px').on('click', () => this.brlayout.toggleKind('float'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED', 'browser')
                   .style('margin','3px').on('click', () => this.removeGed());
 
       // be aware, that jsroot_browser_hierarchy required for flexible layout that element use full browser area
@@ -651,23 +653,10 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary resize browser window to get requested canvas sizes */
-   resizeBrowser(canvW, canvH) {
-      if (!canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
+   resizeBrowser(fullW, fullH) {
+      if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
-
-      let rect = getElementRect(this.selectDom('origin'));
-      if (!rect.width || !rect.height) return;
-
-      let fullW = window.innerWidth - rect.width + canvW,
-          fullH = window.innerHeight - rect.height + canvH;
-
-      if ((fullW > 0) && (fullH > 0) && ((rect.width != canvW) || (rect.height != canvH))) {
-         if (this._websocket)
-            this._websocket.resizeWindow(fullW, fullH);
-         else if (isFunc(window?.resizeTo))
-            window.resizeTo(fullW, fullH);
-         return true;
-      }
+      this._websocket?.resizeWindow(fullW, fullH);
    }
 
    /** @summary draw RCanvas object */
@@ -709,7 +698,8 @@ function drawRPadSnapshot(dom, snap /*, opt*/) {
   * @param {Object} painter  - painter object to process
   * @param {string|boolean} frame_kind  - false for no frame or '3d' for special 3D mode
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
-  * @return {Promise} for ready */
+  * @return {Promise} for ready
+  * @private */
 async function ensureRCanvas(painter, frame_kind) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
@@ -718,7 +708,7 @@ async function ensureRCanvas(painter, frame_kind) {
    let pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* noframe */) : Promise.resolve(true);
 
    return pr.then(() => {
-      if ((frame_kind !== false) && painter.getFrameSvg().select('.main_layer').empty())
+      if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty())
          return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
    }).then(() => {
       painter.addToPadPrimitives();
@@ -757,7 +747,7 @@ function drawRFrameTitle(reason, drag) {
 
    this.createG();
 
-   this.draw_g.attr('transform', makeTranslate(fx, Math.round(fy-title_margin-title_height)));
+   makeTranslate(this.draw_g, fx, Math.round(fy-title_margin-title_height));
 
    let arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
 
@@ -765,11 +755,10 @@ function drawRFrameTitle(reason, drag) {
 
    this.drawText(arg);
 
-   return this.finishTextDrawing().then(() => {
-      if (!isBatchMode())
-        addDragHandler(this, { x: fx, y: Math.round(fy-title_margin-title_height), width: title_width, height: title_height,
-                               minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d) });
-   });
+   return this.finishTextDrawing().then(() =>
+      addDragHandler(this, { x: fx, y: Math.round(fy-title_margin-title_height), width: title_width, height: title_height,
+                             minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d) })
+   );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -932,13 +921,13 @@ registerMethods(`${nsREX}RPalette`, {
 function drawRFont() {
    let font   = this.getObject(),
        svg    = this.getCanvSvg(),
-       defs   = svg.select('.canvas_defs'),
+       defs   = svg.selectChild('.canvas_defs'),
        clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
 
    if (defs.empty())
       defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
-   let entry = defs.select('.' + clname);
+   let entry = defs.selectChild('.' + clname);
    if (entry.empty())
       entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
 

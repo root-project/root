@@ -25,6 +25,7 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TError.h"
+#include "TTimer.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
@@ -41,7 +42,20 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental;
+namespace ROOT {
+namespace Experimental {
+
+class RBrowserTimer : public TTimer {
+public:
+   RBrowser &fBrowser; ///!< browser processing postponed requests
+
+   /// constructor
+   RBrowserTimer(Long_t milliSec, Bool_t mode, RBrowser &br) : TTimer(milliSec, mode), fBrowser(br) {}
+
+   /// timeout handler
+   /// used to process postponed requests in main ROOT thread
+   void Timeout() override { fBrowser.ProcessPostponedRequests(); }
+};
 
 
 class RBrowserEditorWidget : public RBrowserWidget {
@@ -241,6 +255,11 @@ public:
    }
 };
 
+} // namespace Experimental
+} // namespace ROOT
+
+using namespace ROOT::Experimental;
+
 
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
@@ -267,6 +286,8 @@ RBrowser::RBrowser(bool use_rcanvas)
    SetUseRCanvas(use_rcanvas);
 
    fBrowsable.CreateDefaultElements();
+
+   fTimer = std::make_unique<RBrowserTimer>(10, kTRUE, *this);
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -378,7 +399,7 @@ void RBrowser::ProcessRunMacro(const std::string &file_path)
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
+std::string RBrowser::ProcessDblClick(unsigned connid, std::vector<std::string> &args)
 {
    args.pop_back(); // remove exec string, not used now
 
@@ -425,6 +446,11 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    if (elem->IsCapable(Browsable::RElement::kActGeom) || elem->IsCapable(Browsable::RElement::kActTree)) {
       elem->GetChildsIter();
    }
+
+   fLastProgressSend = 0;
+   Browsable::RProvider::ProgressHandle handle(elem.get(), [this, connid](float progress, void *) {
+      SendProgress(connid, progress);
+   });
 
    auto widget = GetActiveWidget();
    if (widget && widget->DrawElement(elem, opt)) {
@@ -677,6 +703,25 @@ void RBrowser::SendInitMsg(unsigned connid)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return the current directory of ROOT
 
+void RBrowser::SendProgress(unsigned connid, float progr)
+{
+   long long millisec = gSystem->Now();
+
+   // let process window events
+   fWebWindow->Sync();
+
+   if ((!fLastProgressSendTm || millisec > fLastProgressSendTm - 200) && (progr > fLastProgressSend + 0.04) && fWebWindow->CanSend(connid)) {
+      fWebWindow->Send(connid, "PROGRESS:"s + std::to_string(progr));
+
+      fLastProgressSendTm = millisec;
+      fLastProgressSend = progr;
+   }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Return the current directory of ROOT
+
 std::string RBrowser::GetCurrentWorkingDirectory()
 {
    return "WORKPATH:"s + TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath()).Data();
@@ -700,6 +745,34 @@ void RBrowser::CheckWidgtesModified()
    for (auto &widget : fWidgets)
       widget->CheckModified();
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Process postponed requests - decouple from websocket handling
+/// Only requests which can take longer time should be postponed
+
+void RBrowser::ProcessPostponedRequests()
+{
+   if (fPostponed.empty())
+      return;
+
+   auto arr = fPostponed[0];
+   fPostponed.erase(fPostponed.begin(), fPostponed.begin()+1);
+   if (fPostponed.empty())
+      fTimer->TurnOff();
+
+   std::string reply;
+   unsigned connid = std::stoul(arr.back()); arr.pop_back();
+   std::string kind = arr.back(); arr.pop_back();
+
+   if (kind == "DBLCLK") {
+      reply = ProcessDblClick(connid, arr);
+      if (reply.empty()) reply = "NOPE";
+   }
+
+   if (!reply.empty())
+      fWebWindow->Send(connid, reply);
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process received message from the client
@@ -728,16 +801,16 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 
    } else if (kind == "DBLCLK") {
 
-      std::string reply;
-
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
-      if (arr && (arr->size() > 2))
-         reply = ProcessDblClick(*arr);
-
-      if (reply.empty())
-         reply = "NOPE";
-
-      fWebWindow->Send(connid, reply);
+      if (arr && (arr->size() > 2)) {
+         arr->push_back(kind);
+         arr->push_back(std::to_string(connid));
+         fPostponed.push_back(*arr);
+         if (fPostponed.size() == 1)
+            fTimer->TurnOn();
+      } else {
+         fWebWindow->Send(connid, "NOPE");
+      }
 
    } else if (kind == "WIDGET_SELECTED") {
       fActiveWidgetName = msg;
@@ -796,8 +869,10 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       auto logs = GetRootLogs();
       fWebWindow->Send(connid, "LOGS:"s + TBufferJSON::ToJSON(&logs, TBufferJSON::kNoSpaces).Data());
 
-   } else if (kind == "FILEDIALOG") {
-      RFileDialog::Embedded(fWebWindow, arg0);
+   } else if (RFileDialog::IsMessageToStartDialog(arg0)) {
+
+      RFileDialog::Embed(fWebWindow, connid, arg0);
+
    } else if (kind == "SYNCEDITOR") {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
       if (arr && (arr->size() > 4)) {

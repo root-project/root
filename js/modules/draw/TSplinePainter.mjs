@@ -88,8 +88,8 @@ class TSplinePainter extends ObjectPainter {
             ymax = Math.max(knot.fY, ymax);
          });
 
-         if (ymax > 0.0) ymax *= (1 + gStyle.fHistTopMargin);
-         if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
+         if (ymax > 0) ymax *= (1 + gStyle.fHistTopMargin);
+         if (ymin < 0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
       let histo = create(clTH1I);
@@ -132,14 +132,13 @@ class TSplinePainter extends ObjectPainter {
          }
       }
 
-      if (cleanup) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
+      let gbin = this.draw_g?.selectChild('.tooltip_bin'),
+          radius = this.lineatt.width + 3;
+
+      if (cleanup || !this.draw_g) {
+         gbin?.remove();
          return null;
       }
-
-      let gbin = this.draw_g.select('.tooltip_bin'),
-          radius = this.lineatt.width + 3;
 
       if (gbin.empty())
          gbin = this.draw_g.append('svg:circle')

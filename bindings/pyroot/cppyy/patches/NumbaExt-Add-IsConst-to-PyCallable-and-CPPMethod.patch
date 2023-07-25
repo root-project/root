@@ -1,0 +1,56 @@
+From b35b75a2a4f7c497a6718becf0589522330ee311 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Sat, 3 Sep 2022 15:21:22 +0200
+Subject: [PATCH 02/34] [PyROOT] Add IsConst to PyCallable and CPPMethod
+
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx | 4 ++++
+ bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.h   | 2 ++
+ bindings/pyroot/cppyy/CPyCppyy/src/PyCallable.h  | 3 ++-
+ 3 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx
+index fcf549de56..d9218aea13 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx
+@@ -513,6 +513,10 @@ PyObject* CPyCppyy::CPPMethod::GetArgDefault(int iarg)
+     return nullptr;
+ }
+ 
++bool CPyCppyy::CPPMethod::IsConst() {
++    return Cppyy::IsConstMethod(GetMethod());
++}
++
+ //----------------------------------------------------------------------------
+ PyObject* CPyCppyy::CPPMethod::GetScopeProxy()
+ {
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.h b/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.h
+index ddd8aa113d..39b80c7347 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.h
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.h
+@@ -31,6 +31,8 @@ public:
+     virtual int       GetMaxArgs();
+     virtual PyObject* GetCoVarNames();
+     virtual PyObject* GetArgDefault(int iarg);
++    virtual bool      IsConst();
++
+     virtual PyObject* GetScopeProxy();
+     virtual Cppyy::TCppFuncAddr_t GetFunctionAddress();
+ 
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/PyCallable.h b/bindings/pyroot/cppyy/CPyCppyy/src/PyCallable.h
+index 4185e563ca..ba4d223353 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/PyCallable.h
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/PyCallable.h
+@@ -24,7 +24,8 @@ public:
+     virtual int GetMaxArgs() = 0;
+     virtual PyObject* GetCoVarNames() = 0;
+     virtual PyObject* GetArgDefault(int /* iarg */) = 0;
+-
++    virtual bool IsConst() { return false; }
++    
+     virtual PyObject* GetScopeProxy() = 0;
+     virtual Cppyy::TCppFuncAddr_t GetFunctionAddress() = 0;
+ 
+-- 
+2.39.0
+

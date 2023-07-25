@@ -97,6 +97,9 @@ public:
       // create implementation
       fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
 
+      // use async mode to prevent blocking inside qt5/qt6/cef
+      fWebCanvas->SetAsyncMode(kTRUE);
+
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
       SetPrivateCanvasFields(true);
@@ -115,6 +118,9 @@ public:
 
       // create implementation
       fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
+
+      // use async mode to prevent blocking inside qt5/qt6/cef
+      fWebCanvas->SetAsyncMode(kTRUE);
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
@@ -135,6 +141,11 @@ public:
       SetPrivateCanvasFields(false);
 
       gROOT->GetListOfCanvases()->Remove(fCanvas.get());
+
+      if ((fCanvas->GetCanvasID() == -1) && (fCanvas->GetCanvasImp() == fWebCanvas)) {
+         fCanvas->SetCanvasImp(nullptr);
+         delete fWebCanvas;
+      }
 
       fCanvas->Close();
    }
@@ -169,6 +180,8 @@ public:
       std::unique_ptr<Browsable::RHolder> obj = elem->GetObject();
       if (!obj)
          return false;
+
+      Browsable::RProvider::ExtendProgressHandle(elem.get(), obj.get());
 
       std::string drawopt = opt;
 

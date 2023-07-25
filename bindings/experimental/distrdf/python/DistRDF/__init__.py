@@ -17,12 +17,12 @@ import types
 
 import concurrent.futures
 
-from typing import TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING
 
 from DistRDF.Backends import build_backends_submodules
 
 if TYPE_CHECKING:
-    from DistRDF.Proxy import ActionProxy, VariationsProxy
+    from DistRDF.Proxy import ResultPtrProxy, ResultMapProxy
 
 logger = logging.getLogger(__name__)
 
@@ -48,30 +48,7 @@ def initialize(fun, *args, **kwargs):
     Base.BaseBackend.register_initialization(fun, *args, **kwargs)
 
 
-def create_logger(level="WARNING", log_path="./DistRDF.log"):
-    """DistRDF basic logger"""
-    logger = logging.getLogger(__name__)
-
-    level = getattr(logging, level)
-
-    logger.setLevel(level)
-
-    format_string = ("%(levelname)s: %(name)s[%(asctime)s]: %(message)s")
-    formatter = logging.Formatter(format_string)
-
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
-
-    if log_path:
-        file_handler = logging.FileHandler(log_path)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-    return logger
-
-
-def RunGraphs(proxies):
+def RunGraphs(proxies: Iterable) -> int:
     """
     Trigger the execution of multiple RDataFrame computation graphs on a certain
     distributed backend. If the backend doesn't support multiple job
@@ -82,6 +59,10 @@ def RunGraphs(proxies):
         proxies(list): List of action proxies that should be triggered. Only
             actions belonging to different RDataFrame graphs will be
             triggered to avoid useless calls.
+
+    Return:
+        (int): The number of unique computation graphs executed by this call.
+
 
     Example:
 
@@ -99,7 +80,7 @@ def RunGraphs(proxies):
         ]
 
         # Execute the 3 computation graphs
-        RunGraphs(histoproxies)
+        n_graphs_run = RunGraphs(histoproxies)
         # Retrieve all the histograms in one go
         histos = [histoproxy.GetValue() for histoproxy in histoproxies]
         @endcode
@@ -108,21 +89,30 @@ def RunGraphs(proxies):
     """
     # Import here to avoid circular dependencies in main module
     from DistRDF.Proxy import execute_graph
+    import ROOT
 
     if not proxies:
-        raise ValueError("The list of result pointers passed to RunGraphs is empty.")
+        logger.warning("RunGraphs: Got an empty list of handles, now quitting.")
+        return 0
 
     # Get proxies belonging to distinct computation graphs
     uniqueproxies = list({proxy.proxied_node.get_head(): proxy for proxy in proxies}.values())
 
-    # Submit all computation graphs concurrently from multiple Python threads.
-    # The submission is not computationally intensive
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
-        futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
-        concurrent.futures.wait(futures)
+    if ROOT.IsImplicitMTEnabled():
+        # Submit all computation graphs concurrently from multiple Python threads.
+        # The submission is not computationally intensive
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
+            futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
+            concurrent.futures.wait(futures)
+    else:
+        # Run the graphs sequentially
+        for p in uniqueproxies:
+            execute_graph(p.proxied_node)
+
+    return len(uniqueproxies)
 
 
-def VariationsFor(actionproxy: ActionProxy) -> VariationsProxy:
+def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
     """
     Equivalent of ROOT.RDF.Experimental.VariationsFor in distributed mode.
     """
@@ -150,11 +140,7 @@ def create_distributed_module(parentmodule):
 
     # Inject top-level functions
     distributed.initialize = initialize
-    distributed.create_logger = create_logger
     distributed.RunGraphs = RunGraphs
     distributed.VariationsFor = VariationsFor
-
-    # Set non-optimized default mode
-    distributed.optimized = False
 
     return distributed

@@ -379,7 +379,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   args.Add((TObject*)&arg9) ;
 
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooWorkspace::import(%s)",GetName())) ;
+  RooCmdConfig pc("RooWorkspace::import(" + std::string(GetName()) + ")");
 
   pc.defineString("conflictSuffix","RenameConflictNodes",0) ;
   pc.defineInt("renameConflictOrig","RenameConflictNodes",0,0) ;
@@ -531,8 +531,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       string tag = Form("ORIGNAME:%s",origName.c_str()) ;
       cnode2->setAttribute(tag.c_str()) ;
       if (!cnode2->getStringAttribute("origName")) {
-        string tag2 = Form("%s",origName.c_str()) ;
-        cnode2->setStringAttribute("origName",tag2.c_str()) ;
+        cnode2->setStringAttribute("origName",origName.c_str());
       }
 
       // Save name of new top level node for later use
@@ -598,8 +597,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
         string tag = Form("ORIGNAME:%s",origName.c_str()) ;
         cnode->setAttribute(tag.c_str()) ;
         if (!cnode->getStringAttribute("origName")) {
-          string tag2 = Form("%s",origName.c_str()) ;
-          cnode->setStringAttribute("origName",tag2.c_str()) ;
+          cnode->setStringAttribute("origName",origName.c_str()) ;
         }
 
         if (!silence) {
@@ -1884,8 +1882,8 @@ bool RooWorkspace::makeDir()
 {
   if (_dir) return true ;
 
-  TString title= Form("TDirectory representation of RooWorkspace %s",GetName()) ;
-  _dir = new WSDir(GetName(),title.Data(),this) ;
+  std::string title= "TDirectory representation of RooWorkspace " + std::string(GetName());
+  _dir = new WSDir(GetName(),title.c_str(),this) ;
 
   for (RooAbsArg * darg : _allOwnedNodes) {
     if (darg->IsA() != RooConstVar::Class()) {

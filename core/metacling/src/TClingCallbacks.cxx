@@ -442,6 +442,14 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
    if (fIsCodeGening)
       return false;
 
+   // We are currently instantiating one (or more) templates. At that point,
+   // all Decls are present in the AST (with possibly deserialization pending),
+   // and we should not load more modules which could find an implicit template
+   // instantiation that is lazily loaded.
+   Sema &SemaR = m_Interpreter->getSema();
+   if (SemaR.InstantiatingSpecializations.size() > 0)
+      return false;
+
    GlobalModuleIndex *Index = CI->getASTReader()->getGlobalIndex();
    if (!Index)
       return false;

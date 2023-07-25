@@ -77,10 +77,10 @@ void ROOT::Experimental::Detail::RColumn::Flush()
 
    if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) && !fWritePage[otherIdx].IsEmpty()) {
       // Small tail page: merge with previously used page; we know that there is enough space in the shadow page
-      void *dst = fWritePage[otherIdx].GrowUnchecked(fWritePage[fWritePageIdx].GetNElements());
-      RColumnElementBase elem(fWritePage[fWritePageIdx].GetBuffer(), fWritePage[fWritePageIdx].GetElementSize());
-      elem.WriteTo(dst, fWritePage[fWritePageIdx].GetNElements());
-      fWritePage[fWritePageIdx].Reset(0);
+      auto &thisPage = fWritePage[fWritePageIdx];
+      void *dst = fWritePage[otherIdx].GrowUnchecked(thisPage.GetNElements());
+      memcpy(dst, thisPage.GetBuffer(), thisPage.GetElementSize() * thisPage.GetNElements());
+      thisPage.Reset(0);
       std::swap(fWritePageIdx, otherIdx);
    }
 

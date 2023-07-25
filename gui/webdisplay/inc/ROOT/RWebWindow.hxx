@@ -47,6 +47,7 @@ using WebWindowDataCallback_t = std::function<void(unsigned, const std::string &
 /// Waiting will be performed until function returns non-zero value
 using WebWindowWaitFunc_t = std::function<int(double)>;
 
+class RFileDialog;
 class RWebWindowsManager;
 class RWebWindowWSHandler;
 
@@ -55,6 +56,7 @@ class RWebWindow {
    friend class RWebWindowsManager;
    friend class RWebWindowWSHandler;
    friend class RWebDisplayHandle;
+   friend class RFileDialog;
 
 private:
    using timestamp_t = std::chrono::time_point<std::chrono::system_clock>;
@@ -226,6 +228,10 @@ private:
 
    void CheckThreadAssign();
 
+   static std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> gStartDialogFunc;
+
+   static void SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)>);
+
 public:
 
    RWebWindow();
@@ -388,6 +394,9 @@ public:
 
    static unsigned ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDisplayArgs &args = "");
 
+   static bool IsFileDialogMessage(const std::string &msg);
+
+   static bool EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args);
 };
 
 } // namespace Experimental

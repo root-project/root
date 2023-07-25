@@ -13,6 +13,7 @@
 #include <RooGlobalFunc.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
+#include <RooMultiVarGaussian.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooProdPdf.h>
@@ -25,18 +26,8 @@
 
 namespace {
 
-void setupKeys()
-{
-   static bool isAlreadySetup = false;
-   if (isAlreadySetup)
-      return;
-
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-
-   isAlreadySetup = true;
-}
+// If the JSON files should be written out for debugging purpose.
+const bool writeJsonFiles = false;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -46,6 +37,9 @@ int validate(RooWorkspace &ws1, std::string const &argName)
 {
    RooWorkspace ws2;
 
+   if (writeJsonFiles) {
+      RooJSONFactoryWSTool{ws1}.exportJSON(argName + ".json");
+   }
    RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString());
 
    RooRealVar &x1 = *ws1.var("x");
@@ -91,7 +85,6 @@ int validate(RooAbsArg const &arg)
 // Test that the IO of attributes and string attributes works.
 TEST(RooFitHS3, AttributesIO)
 {
-   setupKeys();
 
    std::string jsonString;
 
@@ -164,7 +157,7 @@ TEST(RooFitHS3, RooExponential)
 
 TEST(RooFitHS3, RooExpPoly)
 {
-   // To silence the numeric differentiation
+   // To silence the numeric integration
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    // Test different values for "lowestOrder"
@@ -186,6 +179,17 @@ TEST(RooFitHS3, RooGamma)
 TEST(RooFitHS3, RooGaussian)
 {
    int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooGenericPdf)
+{
+   // To silence the numeric integration
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // At this point, only basic arithmetic operations with +, -, * and / are
+   // defined in the HS3 standard.
+   int status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf('a * x + c', {x, a, c})"});
    EXPECT_EQ(status, 0);
 }
 
@@ -213,6 +217,26 @@ TEST(RooFitHS3, RooLandau)
 TEST(RooFitHS3, RooLognormal)
 {
    int status = validate({"Lognormal::lognormal(x[0.1, 2.0], m0[0.0, 0.1, 10], k[3.0, 1.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooMultiVarGaussian)
+{
+   // To silence the numeric differentiation
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using RooFit::RooConst;
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar y{"y", "y", 0, 10};
+   RooRealVar mean{"mean", "mean", 3};
+   TMatrixDSym cov{2};
+   cov(0, 0) = 1.0;
+   cov(0, 1) = 0.2;
+   cov(1, 0) = 0.2;
+   cov(1, 1) = 1.0;
+   RooMultiVarGaussian multiVarGauss{"multi_var_gauss", "", {x, y}, {mean, RooConst(5.0)}, cov};
+   int status = validate(multiVarGauss);
    EXPECT_EQ(status, 0);
 }
 

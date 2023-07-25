@@ -521,6 +521,10 @@ namespace Internal {
    /// a hint for ROOT: it will try to satisfy the request if the execution
    /// scenario allows it. For example, if ROOT is configured to use an external
    /// scheduler, setting a value for 'numthreads' might not have any effect.
+   /// The maximum number of threads can be influenced by the environment
+   /// variable `ROOT_MAX_THREADS`: `export ROOT_MAX_THREADS=2` will try to set
+   /// the maximum number of active threads to 2, if the scheduling library
+   /// (such as tbb) "permits".
    ///
    /// \note Use `DisableImplicitMT()` to disable multi-threading (some locks will remain in place as
    /// described in EnableThreadSafety()). `EnableImplicitMT(1)` creates a thread-pool of size 1.
@@ -2766,6 +2770,7 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    const char *wd = webdisplay ? webdisplay : "";
 
    // store default values to set them back when needed
+   static TString canName = gEnv->GetValue("Canvas.Name", "");
    static TString brName = gEnv->GetValue("Browser.Name", "");
    static TString trName = gEnv->GetValue("TreeViewer.Name", "");
 
@@ -2797,9 +2802,13 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    }
 
    if (fIsWebDisplay) {
+      // restore canvas and browser classes configured at the moment when gROOT->SetWebDisplay() was called for the first time
+      // This is necessary when SetWebDisplay() called several times and therefore current settings may differ
+      gEnv->SetValue("Canvas.Name", canName);
       gEnv->SetValue("Browser.Name", brName);
       gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
    } else {
+      gEnv->SetValue("Canvas.Name", "TRootCanvas");
       gEnv->SetValue("Browser.Name", "TRootBrowser");
       gEnv->SetValue("TreeViewer.Name", trName);
    }

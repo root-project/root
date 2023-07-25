@@ -50,7 +50,7 @@ void rf312_multirangefit()
    RooAddPdf model("model", "model", RooArgList(sig, bkg), f);
 
    // Sample 10000 events in (x,y) from the model
-   RooDataSet *modelData = model.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> modelData{model.generate({x, y}, 10000)};
 
    // D e f i n e   s i g n a l   a n d   s i d e b a n d   r e g i o n s
    // -------------------------------------------------------------------

@@ -236,5 +236,5 @@ c.SetSize(700, 780)
 c.Show()
 
 # Save plot in PNG file
-c.SaveAs("df104.png")
-print("Saved figure to df104.png")
+if c.SaveAs("df104.png") :
+   print("Saved figure to df104.png")

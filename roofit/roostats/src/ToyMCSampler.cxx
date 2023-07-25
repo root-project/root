@@ -106,12 +106,12 @@ void NuisanceParametersSampler::Refresh() {
       }
 
 
-      fPoints.reset( fPrior->generate(
+      fPoints = std::unique_ptr<RooDataSet>{fPrior->generate(
          *fParams,
          AllBinned(),
          ExpectedData(),
          NumEvents(1) // for Asimov set, this is only a scale factor
-      ));
+      )};
       if(fPoints->numEntries() != fNToys) {
          fNToys = fPoints->numEntries();
          oocoutI(nullptr,InputArguments) <<
@@ -133,7 +133,7 @@ void NuisanceParametersSampler::Refresh() {
    }else{
       oocoutI(nullptr,InputArguments) << "Using randomized nuisance parameters." << endl;
 
-      fPoints.reset(fPrior->generate(*fParams, fNToys));
+      fPoints = std::unique_ptr<RooDataSet>{fPrior->generate(*fParams, fNToys)};
    }
 }
 
@@ -567,7 +567,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
       weight = 1.0;
    }
 
-   RooAbsData *data = Generate(pdf, observables);
+   RooAbsData *data = Generate(pdf, observables).release();
 
    // We generated the data with the randomized nuisance parameter (if hybrid)
    // but now we are setting the nuisance parameters back to where they were.
@@ -584,14 +584,14 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 /// or whether it should use the expected number of events. It also takes
 /// into account the option to generate a binned data set (*i.e.* RooDataHist).
 
-RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet* protoData, int forceEvents) const {
+std::unique_ptr<RooAbsData> ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet* protoData, int forceEvents) const {
 
   if(fProtoData) {
     protoData = fProtoData;
     forceEvents = protoData->numEntries();
   }
 
-  RooAbsData *data = nullptr;
+  std::unique_ptr<RooAbsData> data;
   int events = forceEvents;
   if(events == 0) events = fNEvents;
 
@@ -601,22 +601,22 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
   if (events == 0) {
     if (pdf.canBeExtended() && pdf.expectedEvents(observables) > 0) {
       if(fGenerateBinned) {
-        if(protoData) data = pdf.generate(observables, AllBinned(), Extended(), ProtoData(*protoData, true, true));
-        else          data = pdf.generate(observables, AllBinned(), Extended());
+        if(protoData) data = std::unique_ptr<RooDataSet>{pdf.generate(observables, AllBinned(), Extended(), ProtoData(*protoData, true, true))};
+        else          data = std::unique_ptr<RooDataSet>{pdf.generate(observables, AllBinned(), Extended())};
       } else {
         if (protoData) {
           if (useMultiGen) {
             if (!_gs2) _gs2.reset( pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) );
-            data = pdf.generate(*_gs2) ;
+            data = std::unique_ptr<RooDataSet>{pdf.generate(*_gs2)};
           } else {
-            data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
+            data = std::unique_ptr<RooDataSet>{pdf.generate(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true))};
           }
         } else {
           if (useMultiGen) {
             if (!_gs1) _gs1.reset( pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)) );
-            data = pdf.generate(*_gs1) ;
+            data = std::unique_ptr<RooDataSet>{pdf.generate(*_gs1)};
           } else {
-            data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) );
+            data = std::unique_ptr<RooDataSet>{pdf.generate(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) )};
           }
 
         }
@@ -628,22 +628,22 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
     }
   } else {
     if (fGenerateBinned) {
-      if(protoData) data = pdf.generate(observables, events, AllBinned(), ProtoData(*protoData, true, true));
-      else          data = pdf.generate(observables, events, AllBinned());
+      if(protoData) data = std::unique_ptr<RooDataSet>{pdf.generate(observables, events, AllBinned(), ProtoData(*protoData, true, true))};
+      else          data = std::unique_ptr<RooDataSet>{pdf.generate(observables, events, AllBinned())};
     } else {
       if (protoData) {
         if (useMultiGen) {
           if (!_gs3) _gs3.reset( pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) );
-          data = pdf.generate(*_gs3) ;
+          data = std::unique_ptr<RooDataSet>{pdf.generate(*_gs3)};
         } else {
-          data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
+          data = std::unique_ptr<RooDataSet>{pdf.generate(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true))};
         }
       } else {
         if (useMultiGen) {
           if (!_gs4) _gs4.reset( pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)) );
-          data = pdf.generate(*_gs4) ;
+          data = std::unique_ptr<RooDataSet>{pdf.generate(*_gs4)};
         } else {
-          data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag));
+          data = std::unique_ptr<RooDataSet>{pdf.generate(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag))};
         }
       }
     }

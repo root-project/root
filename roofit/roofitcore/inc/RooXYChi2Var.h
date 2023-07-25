@@ -30,7 +30,6 @@ class RooXYChi2Var : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooXYChi2Var() ;
   RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& data, bool integrate=false) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& data, RooRealVar& yvar, bool integrate=false) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, bool integrate=false) ;

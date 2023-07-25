@@ -1,5 +1,6 @@
 // Bindings
 #include "CPyCppyy.h"
+#include "CPyCppyy/Reflex.h"
 #include "structmember.h"    // from Python
 #if PY_VERSION_HEX < 0x02050000
 #include "compile.h"         // from Python
@@ -790,55 +791,26 @@ static PyObject* mp_richcompare(CPPOverload* self, CPPOverload* other, int op)
 
 
 //= CPyCppyy method proxy access to internals ================================
-static PyObject* mp_overload(CPPOverload* pymeth, PyObject* sigarg)
+static PyObject* mp_overload(CPPOverload* pymeth, PyObject* args)
 {
 // Select and call a specific C++ overload, based on its signature.
-    if (!CPyCppyy_PyText_Check(sigarg)) {
-        PyErr_Format(PyExc_TypeError, "__overload__() argument 1 must be string, not %.50s",
-            sigarg == Py_None ? "None" : Py_TYPE(sigarg)->tp_name);
+    const char* sigarg = nullptr;
+        PyObject* sigarg_tuple = nullptr;
+    int want_const = -1;
+    Py_ssize_t args_size = PyTuple_GET_SIZE(args);
+    if (args_size &&
+        PyArg_ParseTuple(args, const_cast<char*>("s|i:__overload__"), &sigarg, &want_const)) {
+        want_const = args_size == 1 ? -1 : want_const;
+        return pymeth->FindOverload(sigarg ? sigarg : "", want_const);
+    } else if (args_size &&
+               PyArg_ParseTuple(args, const_cast<char*>("O|i:__overload__"), &sigarg_tuple, &want_const)) {
+        PyErr_Clear();
+        want_const = args_size == 1 ? -1 : want_const;
+        return pymeth->FindOverload(sigarg_tuple, want_const);
+    } else {
+        PyErr_Format(PyExc_TypeError, "Unexpected arguments to __overload__");
         return nullptr;
     }
-
-    std::string sig1{"("}; sig1.append(CPyCppyy_PyText_AsString(sigarg)); sig1.append(")");
-    sig1.erase(std::remove(sig1.begin(), sig1.end(), ' '), std::end(sig1));
-
-    CPPOverload::Methods_t& methods = pymeth->fMethodInfo->fMethods;
-    for (auto& meth : methods) {
-
-        bool found = false;
-
-        PyObject* pysig2 = meth->GetSignature(false);
-        std::string sig2(CPyCppyy_PyText_AsString(pysig2));
-        sig2.erase(std::remove(sig2.begin(), sig2.end(), ' '), std::end(sig2));
-        Py_DECREF(pysig2);
-        if (sig1 == sig2) found = true;
-
-        if (!found) {
-            pysig2 = meth->GetSignature(true);
-            std::string sig3(CPyCppyy_PyText_AsString(pysig2));
-            sig3.erase(std::remove(sig3.begin(), sig3.end(), ' '), std::end(sig3));
-            Py_DECREF(pysig2);
-            if (sig1 == sig3) found = true;
-        }
-
-        if (found) {
-            CPPOverload* newmeth = mp_new(nullptr, nullptr, nullptr);
-            CPPOverload::Methods_t vec; vec.push_back(meth->Clone());
-            newmeth->Set(pymeth->fMethodInfo->fName, vec);
-
-            if (pymeth->fSelf) {
-                Py_INCREF(pymeth->fSelf);
-                newmeth->fSelf = pymeth->fSelf;
-            }
-            newmeth->fMethodInfo->fFlags = pymeth->fMethodInfo->fFlags;
-
-            return (PyObject*)newmeth;
-        }
-    }
-
-    PyErr_Format(PyExc_LookupError,
-        "signature \"%s\" not found", CPyCppyy_PyText_AsString(sigarg));
-    return nullptr;
 }
 
 //= CPyCppyy method proxy access to internals ================================
@@ -849,11 +821,25 @@ static PyObject* mp_add_overload(CPPOverload* pymeth, PyObject* new_overload)
     Py_RETURN_NONE;
 }
 
+static PyObject* mp_reflex(CPPOverload* pymeth, PyObject* args)
+{
+// Provide the requested reflection information.
+    Cppyy::Reflex::RequestId_t request = -1;
+    Cppyy::Reflex::FormatId_t  format  = Cppyy::Reflex::OPTIMAL;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("i|i:__cpp_reflex__"), &request, &format))
+        return nullptr;
+
+    return pymeth->fMethodInfo->fMethods[0]->Reflex(request, format);
+}
+
+//----------------------------------------------------------------------------
 static PyMethodDef mp_methods[] = {
-    {(char*)"__overload__",     (PyCFunction)mp_overload, METH_O,
+    {(char*)"__overload__",     (PyCFunction)mp_overload, METH_VARARGS,
       (char*)"select overload for dispatch" },
     {(char*)"__add_overload__", (PyCFunction)mp_add_overload, METH_O,
       (char*)"add a new overload" },
+    {(char*)"__cpp_reflex__",   (PyCFunction)mp_reflex, METH_VARARGS,
+      (char*)"C++ overload reflection information" },
     {(char*)nullptr, nullptr, 0, nullptr }
 };
 
@@ -957,6 +943,130 @@ void CPyCppyy::CPPOverload::MergeOverload(CPPOverload* meth)
     fMethodInfo->fFlags &= ~CallContext::kIsSorted;
     meth->fMethodInfo->fDispatchMap.clear();
     meth->fMethodInfo->fMethods.clear();
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPOverload::FindOverload(const std::string& signature, int want_const)
+{
+    bool accept_any = signature == ":any:";
+    CPPOverload* newmeth = nullptr;
+
+    std::string sig1{"("};
+    if (!accept_any) {
+        sig1.append(signature); sig1.append(")");
+        sig1.erase(std::remove(sig1.begin(), sig1.end(), ' '), std::end(sig1));
+    }
+
+    CPPOverload::Methods_t& methods = fMethodInfo->fMethods;
+    for (auto& meth : methods) {
+
+        bool found = accept_any;
+        if (!found) {
+            PyObject* pysig2 = meth->GetSignature(false);
+            std::string sig2(CPyCppyy_PyText_AsString(pysig2));
+            sig2.erase(std::remove(sig2.begin(), sig2.end(), ' '), std::end(sig2));
+            Py_DECREF(pysig2);
+            if (sig1 == sig2) found = true;
+
+            if (!found) {
+                pysig2 = meth->GetSignature(true);
+                std::string sig3(CPyCppyy_PyText_AsString(pysig2));
+                sig3.erase(std::remove(sig3.begin(), sig3.end(), ' '), std::end(sig3));
+                Py_DECREF(pysig2);
+                if (sig1 == sig3) found = true;
+            }
+        }
+
+        if (found && 0 <= want_const) {
+            bool isconst = meth->IsConst();
+            if (!((want_const && isconst) || (!want_const && !isconst)))
+                found = false;
+        }
+
+        if (found) {
+            if (!newmeth) {
+                newmeth = mp_new(nullptr, nullptr, nullptr);
+                CPPOverload::Methods_t vec; vec.push_back(meth->Clone());
+                newmeth->Set(fMethodInfo->fName, vec);
+
+                if (fSelf) {
+                    Py_INCREF(fSelf);
+                    newmeth->fSelf = fSelf;
+                }
+                newmeth->fMethodInfo->fFlags = fMethodInfo->fFlags;
+            } else
+                newmeth->AdoptMethod(meth->Clone());
+
+            if (!accept_any)
+                return (PyObject*)newmeth;
+        }
+    }
+
+    if (!newmeth)
+        PyErr_Format(PyExc_LookupError, "signature \"%s\" not found", signature.c_str());
+
+    return (PyObject*)newmeth;
+}
+
+PyObject* CPyCppyy::CPPOverload::FindOverload(PyObject *args_tuple, int want_const)
+{
+    Py_ssize_t n = PyTuple_Size(args_tuple);
+    
+    CPPOverload::Methods_t& methods = fMethodInfo->fMethods;
+
+    // This value is set based on the maximum penalty in Cppyy::CompareMethodArgType
+    Py_ssize_t min_score = INT_MAX; 
+    bool found = false;
+    size_t best_method = 0, method_index = 0;
+
+    for (auto& meth : methods) {
+        if (0 <= want_const) {
+            bool isconst = meth->IsConst();
+            if (!((want_const && isconst) || (!want_const && !isconst)))
+                continue;
+        }
+
+        int score = meth->GetArgMatchScore(args_tuple);
+
+        if (score < min_score) {
+            found = true;
+            min_score = score;
+            best_method = method_index;
+        }
+
+        method_index++;
+    }
+
+    if (!found) {
+        std::string sigargs("(");
+
+        for (int i = 0; i < n; i++) {
+            PyObject *pItem = PyTuple_GetItem(args_tuple, i);
+            if(!CPyCppyy_PyText_Check(pItem)) {
+                PyErr_Format(PyExc_LookupError, "argument types should be in string format");
+                return (PyObject*) nullptr;
+            }
+            std::string arg_type(CPyCppyy_PyText_AsString(pItem));
+            sigargs += arg_type + ", ";
+        }
+        sigargs += ")";
+
+        PyErr_Format(PyExc_LookupError, "signature with arguments \"%s\" not found", sigargs.c_str());
+        return (PyObject*) nullptr;
+    }
+        
+    CPPOverload* newmeth = mp_new(nullptr, nullptr, nullptr);
+    CPPOverload::Methods_t vec;
+    vec.push_back(methods[best_method]->Clone());
+    newmeth->Set(fMethodInfo->fName, vec);
+
+    if (fSelf) {
+        Py_INCREF(fSelf);
+        newmeth->fSelf = fSelf;
+    }
+    newmeth->fMethodInfo->fFlags = fMethodInfo->fFlags;
+        
+    return (PyObject*) newmeth;
 }
 
 //----------------------------------------------------------------------------

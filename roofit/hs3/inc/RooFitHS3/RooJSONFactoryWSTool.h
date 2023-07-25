@@ -35,11 +35,10 @@ namespace RooStats {
 class ModelConfig;
 }
 
-class TClass;
-class RooSimultaneous;
-
 class RooJSONFactoryWSTool {
 public:
+   static constexpr bool useListsInsteadOfDicts = true;
+
    struct CombinedData {
       std::string name;
       std::map<std::string, std::string> components;
@@ -55,6 +54,8 @@ public:
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
+
+   static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
@@ -140,8 +141,11 @@ public:
    std::string exportYMLtoString();
    bool importJSONfromString(const std::string &s);
    bool importYMLfromString(const std::string &s);
+   void importJSONElement(const std::string &name, const std::string &jsonString);
+   void importVariableElement(const RooFit::Detail::JSONNode &n);
 
-   void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
+   void importFunction(const RooFit::Detail::JSONNode &n, bool importAllDependants);
+   void importFunction(const std::string &jsonString, bool importAllDependants);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 

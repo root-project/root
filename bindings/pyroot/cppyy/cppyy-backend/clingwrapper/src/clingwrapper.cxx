@@ -33,6 +33,7 @@
 // Standard
 #include <assert.h>
 #include <algorithm>     // for std::count, std::remove
+#include <climits>
 #include <stdexcept>
 #include <map>
 #include <new>
@@ -334,6 +335,16 @@ TFunction* m2f(Cppyy::TCppMethod_t method) {
         wrap->fTF = new TFunction(mi);
     }
     return wrap->fTF;
+}
+
+static inline
+CallWrapper::DeclId_t m2d(Cppyy::TCppMethod_t method) {
+    CallWrapper* wrap = ((CallWrapper*)method);
+    if (!wrap->fTF || wrap->fTF->GetDeclId() != wrap->fDecl) {
+        MethodInfo_t* mi = gInterpreter->MethodInfo_Factory(wrap->fDecl);
+        wrap->fTF = new TFunction(mi);
+    }
+    return wrap->fDecl;
 }
 
 static inline
@@ -890,6 +901,43 @@ Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_
 {
     if (check_enabled && !gEnableFastPath) return (TCppFuncAddr_t)nullptr;
     TFunction* f = m2f(method);
+    TCppFuncAddr_t pf = gInterpreter->FindSym(f->GetMangledName());
+    if (pf) return pf;
+
+    int ierr = 0;
+    const char* fn = TClassEdit::DemangleName(f->GetMangledName(), ierr);
+    if (ierr || !fn)
+        return pf;
+
+    // TODO: the following attempts are all brittle and leak transactions, but
+    // each properly exposes the symbol so subsequent lookups will succeed
+    if (strstr(f->GetName(), "<")) {
+    // force explicit instantiation and try again
+        std::ostringstream sig;
+        sig << "template " << fn << ";";
+        gInterpreter->ProcessLine(sig.str().c_str());
+    } else {
+        std::string sfn(fn);
+        std::string addrstr;
+        addrstr.reserve(128);
+        addrstr.push_back('(');
+        addrstr.append(Cppyy::GetMethodResultType(method));
+        addrstr.append(" (");
+
+        if (gInterpreter->FunctionDeclId_IsMethod(m2d(method))) {
+            std::string::size_type colon = sfn.rfind("::");
+            if (colon != std::string::npos) addrstr.append(sfn.substr(0, colon+2));
+        }
+
+        addrstr.append("*)");
+        addrstr.append(Cppyy::GetMethodSignature(method, false));
+        addrstr.append(") &");
+
+        addrstr.append(sfn.substr(0, sfn.find('(')));
+
+        gInterpreter->Calc(addrstr.c_str());
+    }
+
     return (TCppFuncAddr_t)gInterpreter->FindSym(f->GetMangledName());
 }
 
@@ -1566,6 +1614,36 @@ std::string Cppyy::GetMethodArgType(TCppMethod_t method, TCppIndex_t iarg)
         return arg->GetTypeNormalizedName();
     }
     return "<unknown>";
+}
+
+Cppyy::TCppIndex_t Cppyy::CompareMethodArgType(TCppMethod_t method, TCppIndex_t iarg, const std::string &req_type)
+{
+    if (method) {
+        TFunction* f = m2f(method);
+        TMethodArg* arg = (TMethodArg *)f->GetListOfMethodArgs()->At((int)iarg);
+        void *argqtp = gInterpreter->TypeInfo_QualTypePtr(arg->GetTypeInfo());
+
+        TypeInfo_t *reqti = gInterpreter->TypeInfo_Factory(req_type.c_str());
+        void *reqqtp = gInterpreter->TypeInfo_QualTypePtr(reqti);
+
+        // This scoring is not based on any particular rules
+        if (gInterpreter->IsSameType(argqtp, reqqtp))
+            return 0; // Best match
+        else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsSignedIntegerType(reqqtp)) || 
+                 (gInterpreter->IsUnsignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
+                 (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsFloatingType(reqqtp)))
+            return 1;
+        else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
+                 (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)))
+            return 2;
+        else if ((gInterpreter->IsIntegerType(argqtp) && gInterpreter->IsIntegerType(reqqtp)))
+            return 3;
+        else if ((gInterpreter->IsVoidPointerType(argqtp) && gInterpreter->IsPointerType(reqqtp)))
+            return 4;
+        else 
+            return 10; // Penalize heavily for no possible match
+    }
+    return INT_MAX; // Method is not valid
 }
 
 std::string Cppyy::GetMethodArgDefault(TCppMethod_t method, TCppIndex_t iarg)

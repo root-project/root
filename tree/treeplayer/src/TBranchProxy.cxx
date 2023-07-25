@@ -189,8 +189,12 @@ void ROOT::Detail::TBranchProxy::Print()
    std::cout << "fBranchName " << fBranchName << std::endl;
    //std::cout << "fTree " << fDirector->fTree << std::endl;
    std::cout << "fBranch " << fBranch << std::endl;
-   if (fBranchCount) std::cout << "fBranchCount " << fBranchCount << std::endl;
+   if (fHasLeafCount)
+      std::cout << "fLeafCount " << fLeafCount << std::endl;
+   else if (fBranchCount)
+      std::cout << "fBranchCount " << fBranchCount << std::endl;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize/cache the necessary information.
@@ -281,18 +285,6 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
          return false;
       }
 
-      {
-         // Calculate fBranchCount for a leaf.
-         TLeaf *leaf = (TLeaf*) fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
-         if (leaf) leaf = leaf->GetLeafCount();
-         if (leaf) {
-            fBranchCount = leaf->GetBranch();
-            //          fprintf(stderr,"for leaf %s setting up leafcount %s branchcount %s\n",
-            //                  fBranch->GetName(),leaf->GetName(),fBranchCount->GetName());
-            //fBranchCount->Print();
-         }
-      }
-
       fWhere = (double*)fBranch->GetAddress();
 
       if (!fWhere && fBranch->IsA()==TBranchElement::Class()
@@ -319,6 +311,14 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
                fLeafCount = leaf2->GetLeafCount();
                fHasLeafCount = true;
             }
+         }
+      } else if (fBranch->IsA() == TBranchElement::Class()) {
+         // Calculate fBranchCount for a leaf.
+         TLeaf *leaf = (TLeaf*) fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
+         if (leaf)
+            leaf = leaf->GetLeafCount();
+         if (leaf) {
+            fBranchCount = dynamic_cast<TBranchElement*>(leaf->GetBranch());
          }
       }
 

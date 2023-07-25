@@ -262,20 +262,10 @@ linuxriscv64)
    # RISC-V Linux
    auxlibs="-lm -ldl -rdynamic"
    ;;
-freebsd)
-   # FreeBSD with libc5
+freebsd*)
+   # FreeBSD
    auxcflags="${cxxversionflag}"
-   auxlibs="-lm -lg++"
-   ;;
-freebsd4)
-   # FreeBSD 4 with glibc
-   auxcflags="${cxxversionflag}"
-   auxlibs="-lm -lstdc++"
-   ;;
-freebsd5|freebsd7)
-   # FreeBSD 5/7 with glibc
-   auxcflags="${cxxversionflag}"
-   auxlibs="-lm -lstdc++"
+   auxlibs="-lm"
    ;;
 openbsd)
    # OpenBSD with libc
@@ -368,7 +358,21 @@ esac
 ### compiler dependent settings ###
 
 case $arch in
-freebsd* | openbsd* | linux*)
+freebsd*)
+   auxcflags="-pthread $auxcflags"
+   auxlibs="-pthread $auxlibs"
+
+   for f in $features ; do
+      if test "x$f" = "xrpath" ; then
+         auxlibs="-Wl,-rpath,$libdir $auxlibs"
+      fi
+      if test "x$f" = "xlibcxx" ; then
+         auxcflags="-stdlib=libc++ $auxcflags"
+         auxlibs="-stdlib=libc++ $auxlibs"
+      fi
+   done
+   ;;
+openbsd* | linux*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-pthread $auxlibs"
 
@@ -387,7 +391,6 @@ macosx*)
       auxcflags="-pthread $auxcflags"
       auxlibs="-lpthread $auxlibs"
    else
-      auxcflags="-D_REENTRANT $auxcflags"
       auxlibs="-lpthread $auxlibs"
    fi
    for f in $features ; do
@@ -409,10 +412,7 @@ hpuxacc | hpuxia64acc)
 win32)
    ;;
 *)
-   for f in $features ; do
-      auxcflags="-D_REENTRANT $auxcflags"
-      auxlibs="-lpthread $auxlibs"
-   done
+   auxlibs="-lpthread $auxlibs"
    ;;
 esac
 
@@ -784,8 +784,11 @@ while test $# -gt 0; do
       ### number of available cores
       ncpu=1
       case $arch in
-      freebsd* | openbsd* | linux*)
+      openbsd* | linux*)
          ncpu=$(awk '/^processor/ {++n} END {print n}' /proc/cpuinfo)
+         ;;
+      freebsd*)
+         ncpu=$(sysctl -n hw.ncpu)
          ;;
       macosx*)
          ncpu=$(sysctl -n hw.ncpu)

@@ -629,7 +629,7 @@ void TApplication::OpenInBrowser(const TString &url)
    gSystem->Exec(cMac);
 #elif defined(R__WIN32)
    // Command for opening a browser on Windows.
-   TString cWindows("start ");
+   TString cWindows("start \"\" ");
    cWindows.Append(url);
    gSystem->Exec(cWindows);
 #else
@@ -643,8 +643,10 @@ void TApplication::OpenInBrowser(const TString &url)
    } else {
       // Else the user will have a warning and the URL in the terminal.
       Warning("OpenInBrowser", "The $DISPLAY is not set! Please open (e.g. Ctrl-click) %s\n", url.Data());
+      return;
    }
 #endif
+   Info("OpenInBrowser", "A new tab should have opened in your browser.");
 }
 
 namespace {
@@ -732,6 +734,27 @@ static TString FormatMethodArgsForDoxygen(const TString &scopeName, TFunction *f
    TPRegexp argFix(scopeNameRE);
    argFix.Substitute(methodArguments, "");
    return methodArguments;
+}
+} // namespace
+
+namespace {
+////////////////////////////////////////////////////////////////////////////////
+/// The function returns a TString with the text as an encoded url so that it
+/// can be passed to the function OpenInBrowser
+///
+/// \param[in] text the input text
+/// \return the text appropriately escaped
+
+static TString FormatHttpUrl(TString text)
+{
+   text.ReplaceAll("\n","%0A");
+   text.ReplaceAll("#","%23");
+   text.ReplaceAll(";","%3B");
+   text.ReplaceAll("\"","%22");
+   text.ReplaceAll("`","%60");
+   text.ReplaceAll("+","%2B");
+   text.ReplaceAll("/","%2F");
+   return text;
 }
 } // namespace
 
@@ -928,6 +951,131 @@ static TString GetUrlForMethod(const TString &scopeName, const TString &methodNa
 }
 } // namespace
 
+////////////////////////////////////////////////////////////////////////////////
+/// It gets the ROOT installation setup as TString
+///
+/// \return a string with several lines
+///
+TString TApplication::GetSetup()
+{
+   std::vector<TString> lines;
+   lines.emplace_back("```");
+   lines.emplace_back(TString::Format("ROOT v%s",
+                                      gROOT->GetVersion()));
+   lines.emplace_back(TString::Format("Built for %s on %s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
+   if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
+      static const char *months[] = {"January","February","March","April","May",
+                                     "June","July","August","September","October",
+                                     "November","December"};
+      Int_t idatqq = gROOT->GetVersionDate();
+      Int_t iday   = idatqq%100;
+      Int_t imonth = (idatqq/100)%100;
+      Int_t iyear  = (idatqq/10000);
+
+      lines.emplace_back(TString::Format("From tag %s, %d %s %4d",
+                                         gROOT->GetGitBranch(),
+                                         iday,months[imonth-1],iyear));
+   } else {
+      // If branch and commit are identical - e.g. "v5-34-18" - then we have
+      // a release build. Else specify the git hash this build was made from.
+      lines.emplace_back(TString::Format("From %s@%s",
+                                         gROOT->GetGitBranch(),
+                                         gROOT->GetGitCommit()));
+   }
+   lines.emplace_back(TString::Format("With %s",
+                                      gSystem->GetBuildCompilerVersionStr()));
+   lines.emplace_back("Binary directory: "+ gROOT->GetBinDir());
+   lines.emplace_back("```");
+   TString setup = "";
+   for (auto& line : lines) {
+      setup.Append(line);
+      setup.Append('\n');
+   }
+   setup.Chop(); // trim final `\n`
+   return setup;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// It opens a Forum topic in a web browser with prefilled ROOT version
+///
+/// \param[in] type the issue type (only bug supported right now)
+
+void TApplication::OpenForumTopic(const TString &type)
+{
+   // https://meta.discourse.org/t/how-to-create-a-post-clicking-a-link/96197
+
+   if (type == "bug") {
+      //OpenInBrowser("\"https://root-forum.cern.ch/new-topic?title=topic%20title&body=topic%20body&category=category/subcategory&tags=email,planned\"");
+      TString report_template =
+R"(___
+_Please read [tips for efficient and successful posting](https://root-forum.cern.ch/t/tips-for-efficient-and-successful-posting/28292) and [posting code](https://root-forum.cern.ch/t/posting-code-read-this-first/28293)_
+
+### Describe the bug
+<!--
+A clear and concise description of what the wrong behavior is.
+-->
+### Expected behavior
+<!--
+A clear and concise description of what you expected to happen.
+-->
+
+### To Reproduce
+<!--
+Steps to reproduce the behavior:
+1. Your code that triggers the issue: at least a part; ideally something we can run ourselves.
+2. Don't forget to attach the required input files!
+3. How to run your code and / or build it, e.g. `root myMacro.C`, ...
+-->
+
+### Setup
+```
+)"+GetSetup()+
+R"(```
+
+<!--
+Please specify also how you obtained ROOT, such as `dnf install` / binary download / you built it yourself.
+-->
+
+### Additional context
+<!--
+Add any other context about the problem here.
+-->)";
+      report_template = FormatHttpUrl(report_template);
+
+      OpenInBrowser("\"https://root-forum.cern.ch/new-topic?category=ROOT&tags=bug&body="+report_template+"&\"");
+   } else {
+      Warning("OpenForumTopic", "cannot find \"%s\" as type for a Forum topic\n"
+                                 "Available types are 'bug'.", type.Data());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// It opens a GitHub issue in a web browser with prefilled ROOT version
+///
+/// \param[in] type the issue type (bug, feature or improvement)
+
+void TApplication::OpenGitHubIssue(const TString &type)
+{
+   // https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue#creating-an-issue-from-a-url-query
+
+   if (type == "bug") {
+      OpenInBrowser(
+         "\"https://github.com/root-project/root/issues/new?labels=bug&template=bug_report.yml&root-version=" +
+         FormatHttpUrl(GetSetup()) + "\"");
+   } else if (type == "improvement") {
+      OpenInBrowser("\"https://github.com/root-project/root/issues/"
+                    "new?labels=improvement&template=improvement_report.yml&root-version=" +
+                    FormatHttpUrl(GetSetup()) + "\"");
+   } else if (type == "feature") {
+      OpenInBrowser(
+         "\"https://github.com/root-project/root/issues/new?labels=new+feature&template=feature_request.yml\"");
+   } else {
+      Warning("OpenGitHubIssue",
+              "Cannot find GitHub issue type \"%s\".\n"
+              "Available types are 'bug', 'feature' and 'improvement'.",
+              type.Data());
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// It opens the online reference guide, generated with Doxygen, for the
@@ -1027,8 +1175,51 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 
    // Warning message will appear if the user types the function name incorrectly
    // or the function is not a member function of "cl" or any of its base classes.
-   Warning("Help", "cannot find \"%s\" as member of %s or its base classes! Check %s\n", memberName.Data(),
+   Warning("OpenReferenceGuideFor", "cannot find \"%s\" as member of %s or its base classes! Check %s\n", memberName.Data(),
            scopeName.Data(), UrlGenerator(scopeName, scopeType).Data());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The function (".forum <type>") submits a new post on the ROOT forum
+/// via web browser.
+/// \note You can use "bug" as <type>.
+/// \param[in] line command from the command line
+
+void TApplication::Forum(const char *line)
+{
+   // We first check if the user chose a correct syntax.
+   TString strippedCommand = TString(line).Strip(TString::kBoth);
+   if (!strippedCommand.BeginsWith(".forum ")) {
+      Error("Forum", "Unknown command! Use 'bug' after '.forum '");
+      return;
+   }
+   // We remove the command ".forum" from the TString.
+   strippedCommand.Remove(0, 7);
+   // We strip the command line after removing ".help" or ".?".
+   strippedCommand = strippedCommand.Strip(TString::kBoth);
+
+   OpenForumTopic(strippedCommand);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The function (".gh <type>") submits a new issue on GitHub via web browser.
+/// \note You can use "bug", "feature" or "improvement" as <type>.
+/// \param[in] line command from the command line
+
+void TApplication::GitHub(const char *line)
+{
+   // We first check if the user chose a correct syntax.
+   TString strippedCommand = TString(line).Strip(TString::kBoth);
+   if (!strippedCommand.BeginsWith(".gh ")) {
+      Error("GitHub", "Unknown command! Use 'bug', 'feature' or 'improvement' after '.gh '");
+      return;
+   }
+   // We remove the command ".gh" from the TString.
+   strippedCommand.Remove(0, 4);
+   // We strip the command line after removing ".help" or ".?".
+   strippedCommand = strippedCommand.Strip(TString::kBoth);
+
+   OpenGitHubIssue(strippedCommand);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1054,6 +1245,9 @@ void TApplication::Help(const char *line)
              "                         with signature: ret_type filename(args).");
       Printf("   .credits            : show credits");
       Printf("   .demo               : launch GUI demo");
+      Printf("   .forum bug          : ask for help with a bug or crash at the ROOT forum.");
+      Printf("   .gh [bug|feature|improvement]\n"
+             "                       : submit a bug report, feature or improvement suggestion");
       Printf("   .help Class::Member : open reference guide for that class member (or .?).\n"
              "                         Specifying '::Member' is optional.");
       Printf("   .help edit          : show line editing shortcuts (or .?)");
@@ -1415,6 +1609,16 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    } else if (!strncasecmp(line, ".exit", 4) || !strncasecmp(line, ".quit", 2)) {
       Terminate(0);
       return 0;
+   }
+
+   if (!strncmp(line, ".gh", 3)) {
+      GitHub(line);
+      return 1;
+   }
+
+   if (!strncmp(line, ".forum", 6)) {
+      Forum(line);
+      return 1;
    }
 
    if (!strncmp(line, ".?", 2) || !strncmp(line, ".help", 5)) {

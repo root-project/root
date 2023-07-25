@@ -66,11 +66,6 @@ void DisableImplicitMT();
 bool IsImplicitMTEnabled();
 void EnableImplicitMT(UInt_t numthreads);
 class RDataFrame;
-namespace Internal {
-namespace RDF {
-class GraphCreatorHelper;
-}
-} // namespace Internal
 } // namespace ROOT
 namespace cling {
 std::string printValue(ROOT::RDataFrame *tdf);
@@ -90,7 +85,10 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 
 namespace Internal {
 namespace RDF {
+class GraphCreatorHelper;
 void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
+void TriggerRun(ROOT::RDF::RNode node);
 } // namespace RDF
 } // namespace Internal
 
@@ -120,8 +118,9 @@ class RInterface : public RInterfaceBase {
    template <typename T, typename W>
    friend class RInterface;
 
-   friend void RDFInternal::TriggerRun(RNode &node);
+   friend void RDFInternal::TriggerRun(RNode node);
    friend void RDFInternal::ChangeEmptyEntryRange(const RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+   friend void RDFInternal::ChangeSpec(const RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
@@ -2073,7 +2072,7 @@ public:
    /// \brief Fill and return a two-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
-   /// \tparam V2 The type of the column used to fill the z axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
    /// \param[in] model The returned profile will be constructed using this as a model.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
@@ -2604,43 +2603,57 @@ public:
    /// \return the result of the helper wrapped in a RResultPtr.
    ///
    /// This method books a custom action for execution. The behavior of the action is completely dependent on the
-   /// Helper object provided by the caller. The minimum required interface for the helper is the following (more
-   /// methods can be present, e.g. a constructor that takes the number of worker threads is usually useful):
+   /// Helper object provided by the caller. The required interface for the helper is described below (more
+   /// methods that the ones required can be present, e.g. a constructor that takes the number of worker threads is usually useful):
    ///
-   /// * Helper must publicly inherit from ROOT::Detail::RDF::RActionImpl<Helper>
-   /// * Helper(Helper &&): a move-constructor is required. Copy-constructors are discouraged.
-   /// * Result_t: alias for the type of the result of this action helper. Must be default-constructible.
-   /// * void Exec(unsigned int slot, ColumnTypes...columnValues): each working thread shall call this method
+   /// ### Mandatory interface
+   ///
+   /// * `Helper` must publicly inherit from `ROOT::Detail::RDF::RActionImpl<Helper>`
+   /// * `Helper::Result_t`: public alias for the type of the result of this action helper. `Result_t` must be default-constructible.
+   /// * `Helper(Helper &&)`: a move-constructor is required. Copy-constructors are discouraged.
+   /// * `std::shared_ptr<Result_t> GetResultPtr() const`: return a shared_ptr to the result of this action (of type
+   ///   Result_t). The RResultPtr returned by Book will point to this object. Note that this method can be called
+   ///   _before_ Initialize(), because the RResultPtr is constructed before the event loop is started.
+   /// * `void Initialize()`: this method is called once before starting the event-loop. Useful for setup operations.
+   ///   It must reset the state of the helper to the expected state at the beginning of the event loop: the same helper,
+   ///   or copies of it, might be used for multiple event loops (e.g. in the presence of systematic variations).
+   /// * `void InitTask(TTreeReader *, unsigned int slot)`: each working thread shall call this method during the event
+   ///   loop, before processing a batch of entries. The pointer passed as argument, if not null, will point to the TTreeReader
+   ///   that RDataFrame has set up to read the task's batch of entries. It is passed to the helper to allow certain advanced optimizations
+   ///   it should not usually serve any purpose for the Helper. This method is often no-op for simple helpers.
+   /// * `void Exec(unsigned int slot, ColumnTypes...columnValues)`: each working thread shall call this method
    ///   during the event-loop, possibly concurrently. No two threads will ever call Exec with the same 'slot' value:
    ///   this parameter is there to facilitate writing thread-safe helpers. The other arguments will be the values of
    ///   the requested columns for the particular entry being processed.
-   /// * void InitTask(TTreeReader *, unsigned int slot): each working thread shall call this method during the event
-   ///   loop, before processing a batch of entries (possibly read from the TTreeReader passed as argument, if not null).
-   ///   This method can be used e.g. to prepare the helper to process a batch of entries in a given thread. Can be no-op.
-   /// * void Initialize(): this method is called once before starting the event-loop. Useful for setup operations.
-   ///   It must reset the state of the helper to the expected state at the beginning of the event loop: the same helper,
-   ///   or copies of it, might be used for multiple event loops (e.g. in the presence of systematic variations).
-   /// * void Finalize(): this method is called at the end of the event loop. Commonly used to finalize the contents of the result.
-   /// * Result_t &PartialUpdate(unsigned int slot): this method is optional, i.e. can be omitted. If present, it should
-   ///   return the value of the partial result of this action for the given 'slot'. Different threads might call this
-   ///   method concurrently, but will always pass different 'slot' numbers.
-   /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
-   ///   Result_t). The RResultPtr returned by Book will point to this object. Note that this method can be called
-   ///   before Initialize(), because the RResultPtr is constructed before the event loop is started.
-   /// * ROOT::RDF::SampleCallback_t GetSampleCallback(): optional. If present, it must return a callable with the
-   ///   appropriate signature (see ROOT::RDF::SampleCallback_t) that will be invoked at the beginning of the processing
-   ///   of every sample, as per with DefinePerSample().
+   /// * `void Finalize()`: this method is called at the end of the event loop. Commonly used to finalize the contents of the result.
+   /// * `std::string GetActionName()`: it returns a string identifier for this type of action that RDataFrame will use in
+   ///    diagnostics, SaveGraph(), etc.
    ///
-   /// In case this is called without specifying column types, jitting is used,
-   /// and the Helper class needs to be known to the interpreter.<br>
+   /// ### Optional methods
+   ///
+   /// If these methods are implemented they enable extra functionality as per the description below.
+   ///
+   /// * `Result_t &PartialUpdate(unsigned int slot)`: if present, it must return the value of the partial result of this action for the given 'slot'.
+   ///   Different threads might call this method concurrently, but will do so with different 'slot' numbers.
+   ///   RDataFrame leverages this method to implement RResultPtr::OnPartialResult().
+   /// * `ROOT::RDF::SampleCallback_t GetSampleCallback()`: if present, it must return a callable with the
+   ///   appropriate signature (see ROOT::RDF::SampleCallback_t) that will be invoked at the beginning of the processing
+   ///   of every sample, as in DefinePerSample().
+   /// * `Helper MakeNew(void *newResult)`: if implemented, it enables varying the action's result with VariationsFor(). It takes a
+   ///   type-erased new result that can be safely cast to a `std::shared_ptr<Result_t> *` (a pointer to shared pointer) and should
+   ///   be used as the action's output result.
+   ///
+   /// In case Book is called without specifying column types as template arguments, corresponding typed code will be just-in-time compiled
+   /// by RDataFrame. In that case the Helper class needs to be known to the ROOT interpreter.
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
    ///
    /// ### Examples
-   /// See [this tutorial](https://root.cern/doc/master/df018__customActions_8C.html) for an example implementation of an action helper.<br>
+   /// See [this tutorial](https://root.cern/doc/master/df018__customActions_8C.html) for an example implementation of an action helper.
+   ///
    /// It is also possible to inspect the code used by built-in RDataFrame actions at ActionHelpers.hxx.
    ///
    // clang-format on
-
    template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename Helper>
    RResultPtr<typename std::decay_t<Helper>::Result_t> Book(Helper &&helper, const ColumnNames_t &columns = {})
    {

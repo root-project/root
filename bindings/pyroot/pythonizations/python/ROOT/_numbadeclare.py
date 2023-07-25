@@ -34,6 +34,9 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
         raise Exception('Failed to import cffi')
     import re, sys
 
+    if sys.version_info >= (3, 7) and hasattr(nb, 'version_info') and nb.version_info >= (0, 54):
+        import cppyy.numba_ext
+
     # Normalize input types by stripping ROOT and VecOps namespaces from input types
     def normalize_typename(t):
         '''

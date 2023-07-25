@@ -1205,8 +1205,7 @@ void TDirectoryFile::ls(Option_t *option) const
 
    if (diskobj && fKeys) {
       //*-* Loop on all the keys
-      TObjLink *lnk = fKeys->FirstLink();
-      while (lnk) {
+      for (TObjLink *lnk = fKeys->FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
          TKey *key = (TKey*)lnk->GetObject();
          TString s = key->GetName();
          if (s.Index(re) == kNPOS) continue;
@@ -1219,7 +1218,6 @@ void TDirectoryFile::ls(Option_t *option) const
                key->ls();
          else
             key->ls(false);
-         lnk = lnk->Next();
       }
    }
    TROOT::DecreaseDirLevel();

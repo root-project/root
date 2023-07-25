@@ -54,8 +54,8 @@ public:
   void printValue(std::ostream& os) const override { os << _string; }
 
 
-  RooAbsArg *createFundamental(const char* newname=nullptr) const override {
-    return new RooStringVar(newname ? newname : GetName(), GetTitle(), "", 1);
+  RooFit::OwningPtr<RooAbsArg> createFundamental(const char* newname=nullptr) const override {
+    return RooFit::Detail::owningPtr(std::make_unique<RooStringVar>(newname ? newname : GetName(), GetTitle(), "", 1));
   }
 
 protected:

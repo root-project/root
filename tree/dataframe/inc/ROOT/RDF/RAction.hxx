@@ -33,8 +33,7 @@ namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 namespace GraphDrawing {
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RDFInternal::RColumnRegister &colRegister,
+std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines,
                                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // namespace GraphDrawing
@@ -93,9 +92,9 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
-                                           fIsDefine.data(), *fLoopManager};
-      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info);
+      RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(), fIsDefine.data(),
+                              *fLoopManager};
+      fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }
 
@@ -168,8 +167,19 @@ public:
          std::move(helpers), GetColumnNames(), fPrevNodePtr, GetColRegister()});
    }
 
-private:
+   /**
+    * \brief Returns a new action with a cloned helper.
+    *
+    * \param[in] newResult The result to be filled by the new action (needed to clone the helper).
+    * \return A unique pointer to the new action.
+    */
+   std::unique_ptr<RActionBase> CloneAction(void *newResult) final
+   {
+      return std::make_unique<RAction>(fHelper.CallMakeNew(newResult), GetColumnNames(), fPrevNodePtr,
+                                       GetColRegister());
+   }
 
+private:
    ROOT::RDF::SampleCallback_t GetSampleCallback() final { return fHelper.GetSampleCallback(); }
 };
 

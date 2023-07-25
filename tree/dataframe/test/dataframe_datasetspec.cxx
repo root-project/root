@@ -530,7 +530,7 @@ TEST(RDatasetSpecTest, Describe)
                                              "Column  Type            Origin\n"
                                              "------  ----            ------\n"
                                              "w       Double_t        Dataset\n"
-                                             "x       Double_t        Dataset");
+                                             "x       Double_t        Dataset\n");
    EXPECT_EQ(expectedDescribe, df.Describe().AsString());
    for (auto i = 12u; i < 16; ++i)
       gSystem->Unlink(("specTestFile" + std::to_string(i) + ".root").c_str());
@@ -576,6 +576,41 @@ TEST(RDatasetSpecTest, FromSpec)
 
    for (auto i = 2u; i < 8u; ++i)
       gSystem->Unlink(("PYspecTestFile" + std::to_string(i) + ".root").c_str());
+}
+
+TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)
+{
+   auto dfWriter0 = ROOT::RDataFrame(1).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
+   dfWriter0.Snapshot<ULong64_t>("subTree", "FromSpecTestFile1.root", {"z"});
+   dfWriter0.Snapshot<ULong64_t>("subTree", "FromSpecTestFile2.root", {"z"});
+   dfWriter0.Snapshot<ULong64_t>("anotherTree", "FromSpecTestFile4.root", {"z"});
+   dfWriter0.Snapshot<ULong64_t>("anotherTree", "FromSpecTestFile3.root", {"z"});
+
+   auto rdf_1 = FromSpec("spec_ordering_samples_withFriends.json");
+
+   static const std::string expectedDescribe("Dataframe from TChain  in files\n"
+                                             "  FromSpecTestFile2.root\n"
+                                             "  FromSpecTestFile1.root\n"
+                                             "with friends\n"
+                                             "   (friendTree2) FromSpecTestFile4.root\n"
+                                             "   (friendTree1) FromSpecTestFile3.root\n"
+                                             "\n"
+                                             "Property                Value\n"
+                                             "--------                -----\n"
+                                             "Columns in total            3\n"
+                                             "Columns from defines        0\n"
+                                             "Event loops run             0\n"
+                                             "Processing slots            1\n"
+                                             "\n"
+                                             "Column          Type            Origin\n"
+                                             "------          ----            ------\n"
+                                             "friendTree1.z   ULong64_t       Dataset\n"
+                                             "friendTree2.z   ULong64_t       Dataset\n"
+                                             "z               ULong64_t       Dataset\n");
+   EXPECT_EQ(expectedDescribe, rdf_1.Describe().AsString());
+
+   for (auto i = 1u; i < 5; ++i)
+      gSystem->Unlink(("FromSpecTestFile" + std::to_string(i) + ".root").c_str());
 }
 
 TEST(RMetaData, SimpleOperations)

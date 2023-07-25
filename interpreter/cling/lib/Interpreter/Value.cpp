@@ -142,11 +142,10 @@ namespace cling {
       AllocatedValue::getFromPayload(m_Storage.m_Ptr)->Retain();
   }
 
-  static Value::TypeKind getCorrespondingTypeKind(clang::QualType QT,
-                                                  const clang::ASTContext &C) {
+  static Value::TypeKind getCorrespondingTypeKind(clang::QualType QT) {
     using namespace clang;
 
-    if (C.hasSameType(QT, C.VoidTy))
+    if (QT->isVoidType())
       return Value::kVoid;
 
     if (const auto *ET = dyn_cast<EnumType>(QT.getTypePtr()))
@@ -170,7 +169,7 @@ namespace cling {
   }
 
   Value::Value(clang::QualType clangTy, Interpreter& Interp):
-    m_TypeKind(getCorrespondingTypeKind(clangTy, Interp.getCI()->getASTContext())),
+    m_TypeKind(getCorrespondingTypeKind(clangTy)),
     m_Type(clangTy.getAsOpaquePtr()), // FIXME: What if clangTy is freed?
     m_Interpreter(&Interp) {
     if (m_TypeKind == Value::kPtrOrObjTy) {

@@ -126,7 +126,7 @@ double RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
    // not stable for m/c >> 1.
    // Do numerical integral
    RooArgSet vset(dm.arg(),"vset");
-   RooAbsFunc *func= bindVars(vset);
+   std::unique_ptr<RooAbsFunc> func{bindVars(vset)};
    RooIntegrator1D integrator(*func,min,max);
    return integrator.integral();
       }

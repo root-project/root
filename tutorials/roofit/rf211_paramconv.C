@@ -54,7 +54,7 @@ void rf211_paramconv()
    RooAbsPdf *projModel = model.createProjection(mean);
 
    // Generate 1000 toy events
-   RooDataHist *d = projModel->generateBinned(x, 1000);
+   std::unique_ptr<RooDataHist> d{projModel->generateBinned(x, 1000)};
 
    // Fit pdf to toy data
    projModel->fitTo(*d, Verbose(), PrintLevel(-1));

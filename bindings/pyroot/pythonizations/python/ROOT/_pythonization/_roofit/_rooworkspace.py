@@ -22,9 +22,9 @@ class RooWorkspace(object):
 
     @cpp_signature(
         "Bool_t RooWorkspace::import(const RooAbsArg& arg,"
-        "    const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-        "    const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-        "    const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;"
+        "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+        "    const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;"
     )
     def __init__(self, *args, **kwargs):
         r"""The RooWorkspace constructor is pythonized with the command argument pythonization.
@@ -41,43 +41,53 @@ class RooWorkspace(object):
 
     def __setitem__(self, key, value):
         # Check if initialization is done with string
-        if(isinstance(value, str)):
-            if(not self.obj(key)):
+        if isinstance(value, str):
+            if not self.obj(key):
                 parenthesis_index = -1
-                for i in range(0,len(value)):
-                    if(value[i]=='[' or value[i]=='('):
+                for i in range(0, len(value)):
+                    if value[i] == "[" or value[i] == "(":
                         parenthesis_index = i
                         break
                 # Initializes variables
-                if value[parenthesis_index]=='[' and parenthesis_index!=-1:
+                if value[parenthesis_index] == "[" and parenthesis_index != -1:
                     expr = key + value
                     self.factory(expr)
                 # Initializes functions and p.d.f.s
-                elif value[parenthesis_index]=='(' and parenthesis_index!=-1:
+                elif value[parenthesis_index] == "(" and parenthesis_index != -1:
                     expr = value[0:parenthesis_index] + "::" + key + value[parenthesis_index:]
                     self.factory(expr)
                 # Else raises a Syntax error
                 else:
                     raise SyntaxError("Invalid syntax")
             else:
-                raise RuntimeError("ERROR importing object named " + key + " another instance with same name already in the workspace and no conflict resolution protocol specified")
+                raise RuntimeError(
+                    "ERROR importing object named "
+                    + key
+                    + " another instance with same name already in the workspace and no conflict resolution protocol specified"
+                )
+        elif isinstance(value, dict):
+            import ROOT
+            import json
+
+            json_string = json.dumps(value, separators=(",", ":"))
+            ROOT.RooJSONFactoryWSTool(self).importJSONElement(key, json_string)
         else:
-            raise TypeError("Object of type 'str' expected but " + type(value) + " was given")
+            raise TypeError("Object of type 'str' or 'dict' expected but " + type(value) + " was given")
 
     @cpp_signature(
         [
             "Bool_t RooWorkspace::import(const RooAbsArg& arg,"
-            "         const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-            "         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-            "         const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;",
+            "         const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+            "         const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+            "         const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;",
             "Bool_t RooWorkspace::import(RooAbsData& data,"
-            "         const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-            "         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-            "         const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;",
+            "         const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+            "         const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+            "         const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;",
             "RooWorkspace::import(const char *fileSpec,"
-            "         const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-            "         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-            "         const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;",
+            "         const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+            "         const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+            "         const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;",
         ]
     )
     def Import(self, *args, **kwargs):
@@ -95,7 +105,7 @@ class RooWorkspace(object):
         # here, which results in a clearer error to the user than an infinite
         # call stack involving the internal pythonization code.
         if name in ["_import", "import", "Import"]:
-            raise AttributeError("Resetting the \"" + name + "\" attribute of a RooWorkspace is not allowed!")
+            raise AttributeError('Resetting the "' + name + '" attribute of a RooWorkspace is not allowed!')
         object.__setattr__(self, name, value)
 
 

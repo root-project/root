@@ -449,7 +449,7 @@ class WebWindowHandle {
    resizeWindow(w, h) {
       if (browser.qt5 || browser.cef3)
          this.send(`RESIZE=${w},${h}`, 0);
-      else if (isFunc(window?.resizeTo))
+      else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
          window.resizeTo(w, h);
    }
 
@@ -696,6 +696,9 @@ class WebWindowHandle {
   * @param {string} [arg.href] - URL to RWebWindow, using window.location.href by default
   * @return {Promise} for ready-to-use {@link WebWindowHandle} instance  */
 async function connectWebWindow(arg) {
+
+   // mark that jsroot used with RWebWindow
+   browser.webwindow = true;
 
    if (isFunc(arg))
       arg = { callback: arg };

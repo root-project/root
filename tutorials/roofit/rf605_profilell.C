@@ -40,7 +40,7 @@ void rf605_profilell()
    RooAddPdf model("model", "model", RooArgList(g1, g2), frac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // C o n s t r u c t   p l a i n   l i k e l i h o o d
    // ---------------------------------------------------

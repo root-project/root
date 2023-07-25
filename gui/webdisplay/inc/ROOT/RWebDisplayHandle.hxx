@@ -18,6 +18,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -81,6 +82,8 @@ protected:
 
    static std::unique_ptr<Creator> &FindCreator(const std::string &name, const std::string &libname = "");
 
+   static bool CheckIfCanProduceImages(RWebDisplayArgs &args);
+
 public:
 
    /// constructor
@@ -104,7 +107,11 @@ public:
 
    static bool DisplayUrl(const std::string &url);
 
+   static bool CanProduceImages(const std::string &browser = "");
+
    static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600, const char *batch_file = nullptr);
+
+   static bool ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
 };
 
 }

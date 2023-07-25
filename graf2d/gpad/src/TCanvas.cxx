@@ -320,21 +320,20 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       fBatch        = kTRUE;
    } else {                  //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
-      if (form < 1 || form > 5) form = 1;
+      if (form < 1 || form > 20) form = 1;
       auto factory = gROOT->IsWebDisplay() ? gBatchGuiFactory : gGuiFactory;
+      Int_t ux, uy, cw, ch;
       if (form == 1) {
-         UInt_t uh = UInt_t(cx*gStyle->GetCanvasDefH());
-         UInt_t uw = UInt_t(cx*gStyle->GetCanvasDefW());
-         Int_t  ux = Int_t(cx*gStyle->GetCanvasDefX());
-         Int_t  uy = Int_t(cx*gStyle->GetCanvasDefY());
-         fCanvasImp = factory->CreateCanvasImp(this, name, ux, uy, uw, uh);
+         cw = gStyle->GetCanvasDefW();
+         ch = gStyle->GetCanvasDefH();
+         ux = gStyle->GetCanvasDefX();
+         uy = gStyle->GetCanvasDefY();
+      } else {
+         cw = ch = 500;
+         ux = uy = form * 10;
       }
-      fCw = 500;
-      fCh = 500;
-      if (form == 2) fCanvasImp = factory->CreateCanvasImp(this, name, 20, 20, UInt_t(cx*500), UInt_t(cx*500));
-      if (form == 3) fCanvasImp = factory->CreateCanvasImp(this, name, 30, 30, UInt_t(cx*500), UInt_t(cx*500));
-      if (form == 4) fCanvasImp = factory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
-      if (form == 5) fCanvasImp = factory->CreateCanvasImp(this, name, 50, 50, UInt_t(cx*500), UInt_t(cx*500));
+
+      fCanvasImp = factory->CreateCanvasImp(this, name, Int_t(cx*ux), Int_t(cx*uy), UInt_t(cx*cw),  UInt_t(cx*ch));
       if (!fCanvasImp) return;
 
       if (!gROOT->IsBatch() && fCanvasID == -1)
@@ -2168,7 +2167,7 @@ void TCanvas::SetWindowPosition(Int_t x, Int_t y)
 
 void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 {
-   if (fBatch)
+   if (fBatch && !IsWeb())
       SetCanvasSize((ww + fCw) / 2, (wh + fCh) / 2);
    else if (fCanvasImp)
       fCanvasImp->SetWindowSize(ww, wh);

@@ -29,9 +29,9 @@ class RooSimWSTool(object):
 
     @cpp_signature(
         "RooSimultaneous *RooSimWSTool::build(const char* simPdfName, const char* protoPdfName,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
+        "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;"
     )
     def build(self, *args, **kwargs):
         r"""The RooSimWSTool::build() function is pythonized with the command argument pythonization.

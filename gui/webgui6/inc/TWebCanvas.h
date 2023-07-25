@@ -1,7 +1,7 @@
 // Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -30,8 +30,11 @@ class TPadWebSnapshot;
 class TWebPS;
 class TObjLink;
 class TExec;
+class TWebCanvasTimer;
 
 class TWebCanvas : public TCanvasImp {
+
+friend class TWebCanvasTimer;
 
 public:
    /// Function type for signals, invoked when canvas drawing or update is completed
@@ -57,7 +60,9 @@ protected:
       Long64_t fSendVersion{0};        ///<! canvas version send to the client
       Long64_t fDrawVersion{0};        ///<! canvas version drawn (confirmed) by client
       UInt_t fLastSendHash{0};         ///<! hash of last send draw message, avoid looping
+      std::map<std::string, std::string> fCtrl; ///<! different ctrl parameters which can be send at once
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
+
       WebConn(unsigned id) : fConnId(id) {}
       void reset()
       {
@@ -74,12 +79,13 @@ protected:
    };
 
    std::vector<WebConn> fWebConn;  ///<! connections
+   TWebCanvasTimer *fTimer{nullptr}; ///<! timer to submit control messages
 
    std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
-   Bool_t fReadOnly{true};         ///<! in read-only mode canvas cannot be changed from client side
+   Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
    TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
@@ -97,6 +103,9 @@ protected:
    UInt_t fStyleHash{0};           ///<! last hash of gStyle
    Long64_t fColorsVersion{0};     ///<! current colors/palette version, checked every time when new snapshot created
    UInt_t fColorsHash{0};          ///<! last hash of colors/palette
+   Bool_t fTF1UseSave{kFALSE};     ///<! use save buffer for TF1/TF2, need when evaluation failed on client side
+   std::vector<int> fWindowGeometry; ///<! last received window geometry
+   Bool_t fFixedSize{kFALSE};      ///<! is canvas size fixed
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
@@ -120,9 +129,11 @@ protected:
 
    void CheckPadModified(TPad *pad);
 
-   void CheckCanvasModified(bool force_modified = false);
+   Bool_t CheckCanvasModified(bool force_modified = false);
 
-   Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
+   void AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value);
+
+   void AddSendQueue(unsigned connid, const std::string &msg);
 
    void CheckDataToSend(unsigned connid = 0);
 
@@ -130,7 +141,9 @@ protected:
 
    virtual Bool_t IsJSSupportedClass(TObject *obj, Bool_t many_primitives = kFALSE);
 
-   Bool_t IsFirstConn(unsigned connid) const { return (connid!=0) && (fWebConn.size()>0) && (fWebConn[0].fConnId == connid) ;}
+   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 0) && (fWebConn[0].fConnId == connid); }
+
+   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 0) && (fWebConn[0].fDrawVersion > 0); }
 
    void ShowCmd(const std::string &arg, Bool_t show);
 
@@ -152,7 +165,7 @@ protected:
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
-   ~TWebCanvas() override = default;
+   ~TWebCanvas() override;
 
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 
@@ -178,15 +191,15 @@ public:
 
    void ForceUpdate() override;
 
+   void   SetWindowPosition(Int_t x, Int_t y) override;
+   void   SetWindowSize(UInt_t w, UInt_t h) override;
+   void   SetWindowTitle(const char *newTitle) override;
+   void   SetCanvasSize(UInt_t w, UInt_t h) override;
+   void   Iconify() override;
+   void   RaiseWindow() override;
 
    /*
-      virtual void   Iconify() { }
       virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
-      virtual void   SetWindowPosition(Int_t x, Int_t y);
-      virtual void   SetWindowSize(UInt_t w, UInt_t h);
-      virtual void   SetWindowTitle(const char *newTitle);
-      virtual void   SetCanvasSize(UInt_t w, UInt_t h);
-      virtual void   RaiseWindow();
       virtual void   ReallyDelete();
     */
 
@@ -225,15 +238,19 @@ public:
    void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
-   static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0);
-   static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
+   Bool_t IsFixedSize() const { return fFixedSize; }
+
+   static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0, Bool_t batchmode = kFALSE);
+   static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0, Bool_t batchmode = kFALSE);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
    static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);
 
+   static bool ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width = 0, Int_t height = 0);
+
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
+   ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp
 };
 
 #endif

@@ -322,10 +322,10 @@ public:
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
   // Latex printing methods
-  void printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
-        const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-        const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-        const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+  void printLatex(const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+        const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+        const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+        const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
   void printLatex(std::ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1,
                   const RooLinkedList& siblingLists=RooLinkedList(), const RooCmdArg* formatCmd=nullptr) const ;
 

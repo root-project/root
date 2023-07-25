@@ -20,6 +20,8 @@
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
 
+#include "RooFit/Detail/EvaluateFuncs.h"
+
 #include "Riostream.h"
 #include "TBuffer.h"
 
@@ -41,6 +43,7 @@ using namespace std;
 ClassImp(PiecewiseInterpolation);
 ;
 
+using RooFit::Detail::EvaluateFuncs::piecewiseInterpolation;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,8 +70,11 @@ PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* title, const RooAbsReal& nominal,
                       const RooArgList& lowSet,
                       const RooArgList& highSet,
-                      const RooArgList& paramSet,
-                      bool takeOwnership) :
+                      const RooArgList& paramSet
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+                     , bool takeOwnership
+#endif
+  ) :
   RooAbsReal(name, title),
   _normIntMgr(this),
   _nominal("!nominal","nominal value", this, (RooAbsReal&)nominal),
@@ -91,9 +97,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _lowSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
       _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
   }
 
 
@@ -104,9 +112,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _highSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
       _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
   }
 
 
@@ -117,9 +127,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _paramSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
       _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
     _interpCode.push_back(0); // default code: linear interpolation
   }
 
@@ -176,121 +188,11 @@ double PiecewiseInterpolation::evaluate() const
     auto high  = static_cast<RooAbsReal*>(_highSet.at(i));
     Int_t icode = _interpCode[i] ;
 
-    switch(icode) {
-    case 0: {
-      // piece-wise linear
-      if(param->getVal()>0)
-        sum +=  param->getVal()*(high->getVal() - nominal );
-      else
-        sum += param->getVal()*(nominal - low->getVal());
-      break ;
-    }
-    case 1: {
-      // pice-wise log
-      if(param->getVal()>=0)
-        sum *= pow(high->getVal()/nominal, +param->getVal());
-      else
-        sum *= pow(low->getVal()/nominal,  -param->getVal());
-      break ;
-    }
-    case 2: {
-      // parabolic with linear
-      double a = 0.5*(high->getVal()+low->getVal())-nominal;
-      double b = 0.5*(high->getVal()-low->getVal());
-      double c = 0;
-      if(param->getVal()>1 ){
-        sum += (2*a+b)*(param->getVal()-1)+high->getVal()-nominal;
-      } else if(param->getVal()<-1 ) {
-        sum += -1*(2*a-b)*(param->getVal()+1)+low->getVal()-nominal;
-      } else {
-        sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
-      }
-      break ;
-    }
-    case 3: {
-      //parabolic version of log-normal
-      double a = 0.5*(high->getVal()+low->getVal())-nominal;
-      double b = 0.5*(high->getVal()-low->getVal());
-      double c = 0;
-      if(param->getVal()>1 ){
-        sum += (2*a+b)*(param->getVal()-1)+high->getVal()-nominal;
-      } else if(param->getVal()<-1 ) {
-        sum += -1*(2*a-b)*(param->getVal()+1)+low->getVal()-nominal;
-      } else {
-        sum +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
-      }
-      break ;
-    }
-    case 4: {
-
-      // WVE ****************************************************************
-      // WVE *** THIS CODE IS CRITICAL TO HISTFACTORY FIT CPU PERFORMANCE ***
-      // WVE *** Do not modify unless you know what you are doing...      ***
-      // WVE ****************************************************************
-
-      double x  = param->getVal();
-      if (x>1) {
-        sum += x*(high->getVal() - nominal );
-      } else if (x<-1) {
-        sum += x*(nominal - low->getVal());
-      } else {
-        double eps_plus = high->getVal() - nominal;
-        double eps_minus = nominal - low->getVal();
-        double S = 0.5 * (eps_plus + eps_minus);
-        double A = 0.0625 * (eps_plus - eps_minus);
-
-        //fcns+der+2nd_der are eq at bd
-
-        double val = nominal + x * (S + x * A * ( 15 + x * x * (-10 + x * x * 3  ) ) );
-
-
-        if (val < 0) val = 0;
-        sum += val-nominal;
-      }
-      break ;
-
-      // WVE ****************************************************************
-    }
-    case 5: {
-
-      double x0 = 1.0;//boundary;
-      double x  = param->getVal();
-
-      if (x > x0 || x < -x0)
-      {
-        if(x>0)
-          sum += x*(high->getVal() - nominal );
-        else
-          sum += x*(nominal - low->getVal());
-      }
-      else if (nominal != 0)
-      {
-        double eps_plus = high->getVal() - nominal;
-        double eps_minus = nominal - low->getVal();
-        double S = (eps_plus + eps_minus)/2;
-        double A = (eps_plus - eps_minus)/2;
-
-        //fcns+der are eq at bd
-        double a = S;
-        double b = 3*A/(2*x0);
-        //double c = 0;
-        double d = -A/(2*x0*x0*x0);
-
-        double val = nominal + a*x + b*pow(x, 2) + 0/*c*pow(x, 3)*/ + d*pow(x, 4);
-        if (val < 0) val = 0;
-
-        //cout << "Using interp code 5, val = " << val << endl;
-
-        sum += val-nominal;
-      }
-      break ;
-    }
-    default: {
+    if(icode < 0 || icode > 5) {
       coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName()
                  << " with unknown interpolation code" << icode << endl ;
-      break ;
     }
-    }
+    sum = piecewiseInterpolation(icode, low->getVal(), high->getVal(), nominal, param->getVal(), sum);
   }
 
   if(_positiveDefinite && (sum<0)){
@@ -306,6 +208,34 @@ double PiecewiseInterpolation::evaluate() const
 
 }
 
+void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   unsigned int n = _interpCode.size();
+
+   std::string resName = "total_" + ctx.getTmpVarName();
+   ctx.addToCodeBody(this, "double " + resName + " = " + ctx.getResult(_nominal) + ";\n");
+   std::string code = "";
+   for (std::size_t i = 0; i < n; ++i) {
+      if (_interpCode[i] < 0 || _interpCode[i] > 5) {
+         coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << _paramSet[i].GetName()
+                               << " with unknown interpolation code" << _interpCode[i] << endl;
+      }
+      std::string funcCall;
+      if (_interpCode[i] < 4)
+         funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i], 0,
+                                  _lowSet[i], _highSet[i], 1, _nominal, _paramSet[i], resName);
+      else
+         funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::piecewiseInterpolation", _interpCode[i],
+                                  _lowSet[i], _highSet[i], _nominal, _paramSet[i], resName);
+
+      code += resName + " = " + funcCall + ";\n";
+   }
+   if (_positiveDefinite)
+      code += resName + " = " + resName + " < 0 ? 0 : " + resName + ";\n";
+
+   ctx.addToCodeBody(this, code);
+   ctx.addResult(this, resName);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interpolate between input distributions for all values of the observable in `evalData`.
@@ -323,109 +253,14 @@ void PiecewiseInterpolation::computeBatch(cudaStream_t*, double* sum, size_t /*s
     auto high  = dataMap.at(_highSet.at(i));
     const int icode = _interpCode[i];
 
-    switch(icode) {
-    case 0: {
-      // piece-wise linear
-      for (unsigned int j=0; j < nominal.size(); ++j) {
-        if(param >0)
-          sum[j] += param * (high[j]    - nominal[j]);
-        else
-          sum[j] += param * (nominal[j] - low[j]    );
-      }
-      break;
-    }
-    case 1: {
-      // pice-wise log
-      for (unsigned int j=0; j < nominal.size(); ++j) {
-        if(param >=0)
-          sum[j] *= pow(high[j]/ nominal[j], +param);
-        else
-          sum[j] *= pow(low[j] / nominal[j], -param);
-      }
-      break;
-    }
-    case 2:
-      // parabolic with linear
-      for (unsigned int j=0; j < nominal.size(); ++j) {
-        const double a = 0.5*(high[j]+low[j])-nominal[j];
-        const double b = 0.5*(high[j]-low[j]);
-        const double c = 0;
-        if (param > 1.) {
-          sum[j] += (2*a+b)*(param -1)+high[j]-nominal[j];
-        } else if (param < -1.) {
-          sum[j] += -1*(2*a-b)*(param +1)+low[j]-nominal[j];
-        } else {
-          sum[j] +=  a*pow(param ,2) + b*param +c;
-        }
-      }
-      break;
-    case 3: {
-      //parabolic version of log-normal
-      for (unsigned int j=0; j < nominal.size(); ++j) {
-        const double a = 0.5*(high[j]+low[j])-nominal[j];
-        const double b = 0.5*(high[j]-low[j]);
-        const double c = 0;
-        if (param > 1.) {
-          sum[j] += (2*a+b)*(param -1)+high[j]-nominal[j];
-        } else if (param < -1.) {
-          sum[j] += -1*(2*a-b)*(param +1)+low[j]-nominal[j];
-        } else {
-          sum[j] +=  a*pow(param ,2) + b*param +c;
-        }
-      }
-      break;
-    }
-    case 4:
-      for (unsigned int j=0; j < nominal.size(); ++j) {
-        const double x  = param;
-        if (x > 1.) {
-          sum[j] += x * (high[j]    - nominal[j]);
-        } else if (x < -1.) {
-          sum[j] += x * (nominal[j] - low[j]);
-        } else {
-          const double eps_plus = high[j] - nominal[j];
-          const double eps_minus = nominal[j] - low[j];
-          const double S = 0.5 * (eps_plus + eps_minus);
-          const double A = 0.0625 * (eps_plus - eps_minus);
-
-          double val = nominal[j] + x * (S + x * A * ( 15. + x * x * (-10. + x * x * 3.  ) ) );
-
-          if (val < 0.) val = 0.;
-          sum[j] += val - nominal[j];
-        }
-      }
-      break;
-    case 5:
-      for (unsigned int j=0; j < nominal.size(); ++j) {
-        if (param > 1. || param < -1.) {
-          if(param>0)
-            sum[j] += param * (high[j]    - nominal[j]);
-          else
-            sum[j] += param * (nominal[j] - low[j]    );
-        } else if (nominal[j] != 0) {
-          const double eps_plus = high[j] - nominal[j];
-          const double eps_minus = nominal[j] - low[j];
-          const double S = (eps_plus + eps_minus)/2;
-          const double A = (eps_plus - eps_minus)/2;
-
-          //fcns+der are eq at bd
-          const double a = S;
-          const double b = 3*A/(2*1.);
-          //double c = 0;
-          const double d = -A/(2*1.*1.*1.);
-
-          double val = nominal[j] + a * param + b * pow(param, 2) + d * pow(param, 4);
-          if (val < 0.) val = 0.;
-
-          sum[j] += val - nominal[j];
-        }
-      }
-      break;
-    default:
+    if (icode < 0 || icode > 5) {
       coutE(InputArguments) << "PiecewiseInterpolation::computeBatch(): " << _paramSet[i].GetName()
                        << " with unknown interpolation code" << icode << std::endl;
       throw std::invalid_argument("PiecewiseInterpolation::computeBatch() got invalid interpolation code " + std::to_string(icode));
-      break;
+    }
+
+    for (unsigned int j=0; j < nominal.size(); ++j) {
+       sum[j] = piecewiseInterpolation(icode, low[j], high[j], nominal[j], param, sum[j]);
     }
   }
 

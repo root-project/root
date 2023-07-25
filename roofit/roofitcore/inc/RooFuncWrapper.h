@@ -40,7 +40,8 @@ public:
 
    double defaultErrorLevel() const override { return 0.5; }
 
-   void getGradient(double *out) const;
+   bool hasGradient() const override { return true; }
+   void gradient(double *out) const override;
 
    void gradient(const double *x, double *g) const;
 

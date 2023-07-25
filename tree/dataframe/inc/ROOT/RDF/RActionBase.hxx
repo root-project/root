@@ -91,6 +91,7 @@ public:
    const std::vector<std::string> &GetVariations() const { return fVariations; }
 
    virtual std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) = 0;
+   virtual std::unique_ptr<RActionBase> CloneAction(void *newResult) = 0;
 };
 } // namespace RDF
 } // namespace Internal

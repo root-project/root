@@ -75,11 +75,11 @@ public:
 
   using RooAbsPdf::plotOn ;
   RooPlot* plotOn(RooPlot* frame,
-           const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
-           const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-           const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-           const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),
-           const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const override {
+           const RooCmdArg& arg1            , const RooCmdArg& arg2={},
+           const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+           const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+           const RooCmdArg& arg7={}, const RooCmdArg& arg8={},
+           const RooCmdArg& arg9={}, const RooCmdArg& arg10={}) const override {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
   RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const override ;
@@ -88,7 +88,7 @@ public:
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
 
 
-  RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override ;
+  RooFit::OwningPtr<RooDataSet> generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override ;
 
   virtual RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, double scaleFactor,
                 bool correctForBinVolume=false, bool showProgress=false) const ;

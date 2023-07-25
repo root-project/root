@@ -530,40 +530,41 @@ Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
 {
    long property = m->Property();
+   const char* baseName=m->GetName();
    if (m->GetNargs() - m->GetNargsOpt() == 0
        && (property & kIsConstant)
        && !(property & (kIsPrivate | kIsProtected | kIsPureVirtual) )
        && m->GetReturnTypeName()
        && strcmp("void",m->GetReturnTypeName())
-       && !strstr(m->GetName(),"DeclFile")
-       && !strstr(m->GetName(),"ImplFile")
-       && strcmp(m->GetName(),"IsA")
-       && strcmp(m->GetName(),"Class")
-       && strcmp(m->GetName(),"CanBypassStreamer")
-       && strcmp(m->GetName(),"Class_Name")
-       && strcmp(m->GetName(),"ClassName")
-       && strcmp(m->GetName(),"Clone")
-       && strcmp(m->GetName(),"DrawClone")
-       && strcmp(m->GetName(),"GetName")
-       && strcmp(m->GetName(),"GetDrawOption")
-       && strcmp(m->GetName(),"GetIconName")
-       && strcmp(m->GetName(),"GetOption")
-       && strcmp(m->GetName(),"GetTitle")
-       && strcmp(m->GetName(),"GetUniqueID")
-       && strcmp(m->GetName(),"Hash")
-       && strcmp(m->GetName(),"IsFolder")
-       && strcmp(m->GetName(),"IsOnHeap")
-       && strcmp(m->GetName(),"IsSortable")
-       && strcmp(m->GetName(),"IsZombie")) {
+       && !strstr(baseName,"DeclFile")
+       && !strstr(baseName,"ImplFile")
+       && !strstr(baseName,"operator")
+       && strcmp(baseName,"IsA")
+       && strcmp(baseName,"Class")
+       && strcmp(baseName,"CanBypassStreamer")
+       && strcmp(baseName,"Class_Name")
+       && strcmp(baseName,"ClassName")
+       && strcmp(baseName,"Clone")
+       && strcmp(baseName,"DrawClone")
+       && strcmp(baseName,"GetName")
+       && strcmp(baseName,"GetDrawOption")
+       && strcmp(baseName,"GetIconName")
+       && strcmp(baseName,"GetOption")
+       && strcmp(baseName,"GetTitle")
+       && strcmp(baseName,"GetUniqueID")
+       && strcmp(baseName,"Hash")
+       && strcmp(baseName,"IsFolder")
+       && strcmp(baseName,"IsOnHeap")
+       && strcmp(baseName,"IsSortable")
+       && strcmp(baseName,"IsZombie")) {
 
       // look for matching data member
       TClass* cl=m->GetClass();
       if (!cl) return kTRUE;
       TList* members=cl->GetListOfDataMembers();
       if (!members) return kTRUE;
-      const char* baseName=m->GetName();
-      if (!strncmp(m->GetName(), "Get", 3) ||
-          !strncmp(m->GetName(), "get", 3))
+      if (!strncmp(baseName, "Get", 3) ||
+          !strncmp(baseName, "get", 3))
          baseName+=3;
       if (!baseName[0]) return kTRUE;
 

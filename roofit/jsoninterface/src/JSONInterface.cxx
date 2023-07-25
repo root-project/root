@@ -17,6 +17,8 @@
 #include "RYMLParser.h"
 #endif
 
+#include <sstream>
+
 namespace {
 template <class Nd>
 class ChildItImpl final : public RooFit::Detail::JSONNode::child_iterator_t<Nd>::Impl {
@@ -66,30 +68,34 @@ std::ostream &operator<<(std::ostream &os, JSONNode const &s)
    return os;
 }
 
-std::unique_ptr<JSONTree> JSONTree::create()
+template <typename... Args>
+std::unique_ptr<JSONTree> JSONTree::createImpl(Args &&...args)
 {
    if (getBackendEnum() == Backend::Ryml) {
 #ifdef ROOFIT_WITH_RYML
-      return std::make_unique<TRYMLTree>();
+      return std::make_unique<TRYMLTree>(std::forward<Args>(args)...);
 #else
       throw std::runtime_error(
          "Requesting JSON tree with rapidyaml backend, but rapidyaml could not be found by ROOT when it was compiled.");
 #endif
    }
-   return std::make_unique<TJSONTree>();
+   return std::make_unique<TJSONTree>(std::forward<Args>(args)...);
+}
+
+std::unique_ptr<JSONTree> JSONTree::create()
+{
+   return createImpl();
 }
 
 std::unique_ptr<JSONTree> JSONTree::create(std::istream &is)
 {
-   if (getBackendEnum() == Backend::Ryml) {
-#ifdef ROOFIT_WITH_RYML
-      return std::make_unique<TRYMLTree>(is);
-#else
-      throw std::runtime_error(
-         "Requesting JSON tree with rapidyaml backend, but rapidyaml could not be found by ROOT when it was compiled.");
-#endif
-   }
-   return std::make_unique<TJSONTree>(is);
+   return createImpl(is);
+}
+
+std::unique_ptr<JSONTree> JSONTree::create(std::string const &str)
+{
+   std::stringstream ss{str};
+   return JSONTree::create(ss);
 }
 
 /// Check if ROOT was compiled with support for a certain JSON backend library.

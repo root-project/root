@@ -85,7 +85,18 @@ void RooRealVar::cleanup()
 
 void RooRealVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, GetName());
+   if(!isConstant()) {
+      ctx.addResult(this, GetName());
+   }
+   // Just return a stringy-fied version of the const value.
+   // Formats to the maximum precision.
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   std::stringstream ss;
+   ss.precision(max_precision);
+   // Just use toString to make sure we do not ouput 'inf'.
+   // This is really ugly for large numbers...
+   ss << std::fixed << RooNumber::toString(_value);
+   ctx.addResult(this, ss.str());
 }
 
 /// Return a dummy object to use when properties are not initialised.
@@ -863,7 +874,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
   RooCmdArg tmp(formatArg) ;
   tmp.setProcessRecArgs(true) ;
 
-  RooCmdConfig pc(Form("RooRealVar::format(%s)",GetName())) ;
+  RooCmdConfig pc("RooRealVar::format(" + std::string(GetName()) + ")");
   pc.defineString("what","FormatArgs",0,"") ;
   pc.defineInt("autop","FormatArgs::AutoPrecision",0,2) ;
   pc.defineInt("fixedp","FormatArgs::FixedPrecision",0,2) ;

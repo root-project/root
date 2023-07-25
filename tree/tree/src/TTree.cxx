@@ -6464,9 +6464,9 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
 /// Returns -2 if entry does not exist (just as TChain::LoadTree()).
 /// Returns -6 if an error occurs in the notification callback (just as TChain::LoadTree()).
 ///
-/// Note: This function is overloaded in TChain.
+/// Calls fNotify->Notify() (if fNotify is not null) when starting the processing of a new tree.
 ///
-
+/// \note This function is overloaded in TChain.
 Long64_t TTree::LoadTree(Long64_t entry)
 {
    // We have already been visited while recursively looking
@@ -9213,6 +9213,32 @@ void TTree::SetName(const char* name)
          file->SetCacheRead(pf,this,TFile::kDoNotDisconnect);
       }
    }
+}
+
+void TTree::SetNotify(TObject *obj)
+{
+   if (obj && fNotify && dynamic_cast<TNotifyLinkBase *>(fNotify)) {
+      auto *oldLink = static_cast<TNotifyLinkBase *>(fNotify);
+      auto *newLink = dynamic_cast<TNotifyLinkBase *>(obj);
+      if (!newLink) {
+         Warning("TTree::SetNotify",
+                 "The tree or chain already has a fNotify registered and it is a TNotifyLink, while the new object is "
+                 "not a TNotifyLink. Setting fNotify to the new value will lead to an orphan linked list of "
+                 "TNotifyLinks and it is most likely not intended. If this is the intended goal, please call "
+                 "SetNotify(nullptr) first to silence this warning.");
+      } else if (newLink->GetNext() != oldLink && oldLink->GetNext() != newLink) {
+         // If newLink->GetNext() == oldLink then we are prepending the new head, as in TNotifyLink::PrependLink
+         // If oldLink->GetNext() == newLink then we are removing the head of the list, as in TNotifyLink::RemoveLink
+         // Otherwise newLink and oldLink are unrelated:
+         Warning("TTree::SetNotify",
+                 "The tree or chain already has a TNotifyLink registered, and the new TNotifyLink `obj` does not link "
+                 "to it. Setting fNotify to the new value will lead to an orphan linked list of TNotifyLinks and it is "
+                 "most likely not intended. If this is the intended goal, please call SetNotify(nullptr) first to "
+                 "silence this warning.");
+      }
+   }
+
+   fNotify = obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
