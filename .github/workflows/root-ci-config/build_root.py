@@ -163,7 +163,7 @@ def main():
     
 
     if testing_failed or upload_failed:
-        
+        print("testing_failed or upload_failed")
         die(result, "Some tests failed", shell_log)
 
 
