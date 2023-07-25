@@ -283,8 +283,39 @@ protected:
       return fPrincipalColumn->GetElement()->GetPackedSize();
    }
 
+   /// Populate a single value with data from the field. The memory location pointed to by to needs to be of the
+   /// fitting type. The fast path is conditioned by the field qualifying as simple, i.e. maps as-is
+   /// to a single column and has no read callback.
+   void Read(NTupleSize_t globalIndex, void *to)
+   {
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(globalIndex, to);
+
+      if (fTraits & kTraitMappable)
+         fPrincipalColumn->Read(globalIndex, to);
+      else
+         ReadGlobalImpl(globalIndex, to);
+      if (R__unlikely(!fReadCallbacks.empty()))
+         InvokeReadCallbacks(to);
+   }
+
+   void Read(const RClusterIndex &clusterIndex, void *to)
+   {
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(clusterIndex, to);
+
+      if (fTraits & kTraitMappable)
+         fPrincipalColumn->Read(clusterIndex, to);
+      else
+         ReadInClusterImpl(clusterIndex, to);
+      if (R__unlikely(!fReadCallbacks.empty()))
+         InvokeReadCallbacks(to);
+   }
+
    /// Allow derived classes to call Append and Read on other (sub) fields.
    static std::size_t AppendBy(RFieldBase &other, const void *from) { return other.Append(from); }
+   static void ReadBy(RFieldBase &other, const RClusterIndex &clusterIndex, void *to) { other.Read(clusterIndex, to); }
+   static void ReadBy(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
@@ -397,36 +428,6 @@ public:
    virtual size_t GetAlignment() const = 0;
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
-
-   /// Populate a single value with data from the tree, which needs to be of the fitting type.
-   /// Reading copies data into the memory wrapped by the ntuple value.
-   /// The fast path is conditioned by the field qualifying as simple, i.e. maps as-is to a single column and has no
-   /// read callback.
-   void Read(NTupleSize_t globalIndex, void *to)
-   {
-      if (fIsSimple)
-         return (void)fPrincipalColumn->Read(globalIndex, to);
-
-      if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(globalIndex, to);
-      else
-         ReadGlobalImpl(globalIndex, to);
-      if (R__unlikely(!fReadCallbacks.empty()))
-         InvokeReadCallbacks(to);
-   }
-
-   void Read(const RClusterIndex &clusterIndex, void *to)
-   {
-      if (fIsSimple)
-         return (void)fPrincipalColumn->Read(clusterIndex, to);
-
-      if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(clusterIndex, to);
-      else
-         ReadInClusterImpl(clusterIndex, to);
-      if (R__unlikely(!fReadCallbacks.empty()))
-         InvokeReadCallbacks(to);
-   }
 
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
@@ -579,7 +580,7 @@ protected:
    void GenerateValue(void *where) const final { GenerateValueBy(*fSubFields[0], where); }
 
    std::size_t AppendImpl(const void *from) final { return AppendBy(*fSubFields[0], from); }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { fSubFields[0]->Read(globalIndex, to); }
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { ReadBy(*fSubFields[0], globalIndex, to); }
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -2063,7 +2064,7 @@ protected:
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
       typedValue->resize(nItems);
       for (unsigned i = 0; i < nItems; ++i) {
-         fSubFields[0]->Read(collectionStart + i, &typedValue->data()[i]);
+         ReadBy(*fSubFields[0], collectionStart + i, &typedValue->data()[i]);
       }
    }
 
