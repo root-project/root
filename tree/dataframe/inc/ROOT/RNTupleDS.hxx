@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
@@ -47,16 +48,26 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// Clones of the first source, one for each slot
    std::vector<std::unique_ptr<ROOT::Experimental::Detail::RPageSource>> fSources;
 
-   /// We prepare a column reader prototype for every column. If a column reader is actually requested
-   /// in GetColumnReaders(), we move a clone of the prototype into the hands of RDataFrame.
+   /// The data source may be constructed with an ntuple name and a list of files
+   std::string fNTupleName;
+   std::vector<std::string> fFileNames;
+   std::size_t fNextFileIndex = 0;
+
+   /// We prepare a prototype field for every column. If a column reader is actually requested
+   /// in GetColumnReaders(), we move a clone of the field into a new column reader for RDataFrame.
    /// Only the clone connects to the backing page store and acquires I/O resources.
-   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RNTupleColumnReader>> fColumnReaderPrototypes;
+   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>> fFieldPrototypes;
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
-   std::vector<size_t> fActiveColumns;
+   /// List of column readers returned by GetColumnReaders()
+   std::vector<ROOT::Experimental::Internal::RNTupleColumnReader *> fActiveColumnReaders;
+   /// Connects the IDs of active fields and their subfields to their fully qualified name (a.b.c.d).
+   /// This enables us to reset the field IDs when the file changes (chain).
+   std::unordered_map<ROOT::Experimental::DescriptorId_t, std::string> fFieldId2QualifiedName;
 
    unsigned fNSlots = 0;
    bool fHasSeenAllRanges = false;
+   ULong64_t fSeenEntries = 0; ///< The number of entries so far returned by GetEntryRanges()
 
    /// Provides the RDF column "colName" given the field identified by fieldID. For records and collections,
    /// AddField recurses into the sub fields. The skeinIDs is the list of field IDs of the outer collections
@@ -71,9 +82,14 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
                  DescriptorId_t fieldId,
                  std::vector<DescriptorId_t> skeinIDs);
 
+   /// Re-attach all active column readers to fFileNames[fNextFileIndex]
+   void SwitchFile();
+
 public:
    explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
+   RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
    ~RNTupleDS();
+
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
    bool HasColumn(std::string_view colName) const final;

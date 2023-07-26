@@ -114,22 +114,24 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
-   std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
-   RFieldBase::RValue fValue;          ///< The memory location used to read from fField
-   Long64_t fLastEntry;                ///< Last entry number that was read
+   RFieldBase *fProtoField;                    ///< The prototype field from which fField is cloned
+   std::unique_ptr<RFieldBase> fField;         ///< The field backing the RDF column
+   std::unique_ptr<RFieldBase::RValue> fValue; ///< The memory location used to read from fField
+   unsigned int fSlot;       ///< Allows SwitchFile() to find the correct page source for reconnecting the reader
+   Long64_t fLastEntry = -1; ///< Last entry number that was read
+   /// For chains, the logical entry and the physical entry in a particular file are different.
+   /// The entry offset stores the logical entry number (sum of all previous entries) when the current file was opened.
+   ULong64_t fEntryOffset = 0;
 
 public:
-   RNTupleColumnReader(std::unique_ptr<RFieldBase> f)
-      : fField(std::move(f)), fValue(fField->GenerateValue()), fLastEntry(-1)
+   RNTupleColumnReader(RFieldBase *protoField, unsigned int slot)
+      : fProtoField(protoField),
+        fField(protoField->Clone(protoField->GetName())),
+        fValue(std::make_unique<RFieldBase::RValue>(fField->GenerateValue())),
+        fSlot(slot)
    {
    }
    ~RNTupleColumnReader() = default;
-
-   /// Column readers are created as prototype and then cloned for every slot
-   std::unique_ptr<RNTupleColumnReader> Clone()
-   {
-      return std::make_unique<RNTupleColumnReader>(fField->Clone(fField->GetName()));
-   }
 
    /// Connect the field and its subfields to the page source
    void Connect(RPageSource &source)
@@ -139,13 +141,30 @@ public:
          f.ConnectPageSource(source);
    }
 
+   void Disconnect()
+   {
+      fValue = nullptr;
+      fField = nullptr;
+   }
+
+   void Reconnect(RPageSource &source, ULong64_t entryOffset)
+   {
+      fEntryOffset = entryOffset;
+      fField = fProtoField->Clone(fProtoField->GetName());
+      fValue = std::make_unique<RFieldBase::RValue>(fField->GenerateValue());
+      Connect(source);
+   }
+
+   unsigned int GetSlot() const { return fSlot; }
+   ROOT::Experimental::Detail::RFieldBase *GetProtoField() const { return fProtoField; }
+
    void *GetImpl(Long64_t entry) final
    {
       if (entry != fLastEntry) {
-         fValue.Read(entry);
+         fValue->Read(entry - fEntryOffset);
          fLastEntry = entry;
       }
-      return fValue.GetRawPtr();
+      return fValue->GetRawPtr();
    }
 };
 
@@ -202,9 +221,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          cardinalityField->SetOnDiskId(fieldId);
          fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
          fColumnTypes.emplace_back(cardinalityField->GetType());
-         auto cardColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(
-            std::move(cardinalityField));
-         fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
+         fFieldPrototypes.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
             AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), skeinIDs);
@@ -255,16 +272,13 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    if (cardinalityField) {
       fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
-      auto cardColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(
-         std::move(cardinalityField));
-      fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
+      fFieldPrototypes.emplace_back(std::move(cardinalityField));
    }
 
    skeinIDs.emplace_back(fieldId);
    fColumnNames.emplace_back(colName);
    fColumnTypes.emplace_back(valueField->GetType());
-   auto valColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(std::move(valueField));
-   fColumnReaderPrototypes.emplace_back(std::move(valColReader));
+   fFieldPrototypes.emplace_back(std::move(valueField));
 }
 
 RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
@@ -274,6 +288,13 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
    fSources.emplace_back(std::move(pageSource));
 
    AddField(descriptorGuard.GetRef(), "", descriptorGuard->GetFieldZeroId(), std::vector<DescriptorId_t>());
+}
+
+RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames)
+   : RNTupleDS(Detail::RPageSource::Create(ntupleName, fileNames[0]))
+{
+   fNTupleName = ntupleName;
+   fFileNames = fileNames;
 }
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
@@ -288,9 +309,22 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
    // at this point we can assume that `name` will be found in fColumnNames, RDF is in charge validation
    // TODO(jblomer): check incoming type
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   auto clone = fColumnReaderPrototypes[index]->Clone();
-   clone->Connect(*fSources[slot]);
-   return clone;
+   auto field = fFieldPrototypes[index].get();
+   auto reader = std::make_unique<Internal::RNTupleColumnReader>(field, slot);
+   reader->Connect(*fSources[slot]);
+   fActiveColumnReaders.emplace_back(reader.get());
+
+   if (fFieldId2QualifiedName.count(field->GetOnDiskId()) == 0) {
+      auto descGuard = fSources[slot]->GetSharedDescriptorGuard();
+      fFieldId2QualifiedName[field->GetOnDiskId()] = descGuard->GetQualifiedFieldName(field->GetOnDiskId());
+      for (const auto &s : *field) {
+         if (fFieldId2QualifiedName.count(s.GetOnDiskId()) == 0) {
+            fFieldId2QualifiedName[s.GetOnDiskId()] = descGuard->GetQualifiedFieldName(s.GetOnDiskId());
+         }
+      }
+   }
+
+   return reader;
 }
 
 bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
@@ -298,11 +332,59 @@ bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
    return true;
 }
 
+void RNTupleDS::SwitchFile()
+{
+   if (fFileNames.size() <= 1)
+      return;
+
+   for (auto r : fActiveColumnReaders) {
+      r->Disconnect();
+   }
+
+   fSources[0] = Detail::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+   fSources[0]->Attach();
+   for (unsigned int i = 1; i < fNSlots; ++i) {
+      fSources[i] = fSources[0]->Clone();
+      fSources[i]->Attach();
+   }
+
+   // Reset field IDs of active field prototypes
+   std::unordered_map<ROOT::Experimental::DescriptorId_t, ROOT::Experimental::DescriptorId_t> fFieldIdMap;
+   {
+      auto descGuard = fSources[0]->GetSharedDescriptorGuard();
+      for (const auto &[oldId, qualifiedName] : fFieldId2QualifiedName) {
+         fFieldIdMap[oldId] = descGuard->FindFieldId(qualifiedName);
+      }
+   }
+   for (auto &p : fFieldPrototypes) {
+      if (fFieldId2QualifiedName.count(p->GetOnDiskId()) == 0)
+         continue;
+      p->SetOnDiskId(fFieldIdMap[p->GetOnDiskId()]);
+      for (auto &s : *p) {
+         s.SetOnDiskId(fFieldIdMap[s.GetOnDiskId()]);
+      }
+   }
+   // Update fFieldId2QualifiedName with new field IDs
+   std::unordered_map<ROOT::Experimental::DescriptorId_t, std::string> newFieldId2QualifiedName;
+   for (auto [oldId, newId] : fFieldIdMap) {
+      newFieldId2QualifiedName[newId] = fFieldId2QualifiedName[oldId];
+   }
+   std::swap(newFieldId2QualifiedName, fFieldId2QualifiedName);
+
+   for (auto r : fActiveColumnReaders) {
+      r->Reconnect(*fSources[r->GetSlot()], fSeenEntries);
+   }
+}
+
 std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> rangesBySlot;
    if (fHasSeenAllRanges)
       return rangesBySlot;
+
+   // The first file is opened in the constructor or in Initialize()
+   if (fNextFileIndex != 0)
+      SwitchFile();
 
    std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
    {
@@ -327,12 +409,18 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
       iRange += chunkSize + static_cast<int>(i < remainder);
       R__ASSERT(iRange > 0);
       auto end = rangesByCluster[iRange - 1].second;
-      rangesBySlot.emplace_back(start, end);
+      rangesBySlot.emplace_back(start + fSeenEntries, end + fSeenEntries);
 
       fSources[i]->SetEntryRange({start, end - start});
    }
+   auto nEntries = fSources[0]->GetNEntries();
+   if (nEntries == 0) {
+      rangesBySlot.emplace_back(fSeenEntries, fSeenEntries);
+   }
 
-   fHasSeenAllRanges = true;
+   fNextFileIndex++;
+   fHasSeenAllRanges = (fNextFileIndex >= fFileNames.size());
+   fSeenEntries += fSources[0]->GetNEntries();
    return rangesBySlot;
 }
 
@@ -350,6 +438,9 @@ bool RNTupleDS::HasColumn(std::string_view colName) const
 void RNTupleDS::Initialize()
 {
    fHasSeenAllRanges = false;
+   fSeenEntries = 0;
+   fNextFileIndex = 0;
+   SwitchFile();
 }
 
 void RNTupleDS::Finalize() {}
