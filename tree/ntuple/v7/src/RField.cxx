@@ -1491,6 +1491,10 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
    fCollectionType = fProxy->GetCollectionType();
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
+   if (!fProxy->GetCollectionClass()->HasDictionary()) {
+      throw RException(R__FAIL("dictionary not available for type " +
+                               GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
+   }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
@@ -1501,11 +1505,6 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
                                                                      std::unique_ptr<Detail::RFieldBase> itemField)
    : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
 {
-   if (!fProxy->GetCollectionClass()->HasDictionary()) {
-      throw RException(R__FAIL("dictionary not available for type " +
-                               GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
-   }
-
    fItemSize = itemField->GetValueSize();
    Attach(std::move(itemField));
 }
