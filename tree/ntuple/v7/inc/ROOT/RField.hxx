@@ -314,8 +314,11 @@ protected:
 
    /// Allow derived classes to call Append and Read on other (sub) fields.
    static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
-   static void ReadBy(RFieldBase &other, const RClusterIndex &clusterIndex, void *to) { other.Read(clusterIndex, to); }
-   static void ReadBy(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
+   static void CallReadOn(RFieldBase &other, const RClusterIndex &clusterIndex, void *to)
+   {
+      other.Read(clusterIndex, to);
+   }
+   static void CallReadOn(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
@@ -580,7 +583,7 @@ protected:
    void GenerateValue(void *where) const final { CallGenerateValueOn(*fSubFields[0], where); }
 
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { ReadBy(*fSubFields[0], globalIndex, to); }
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -2064,7 +2067,7 @@ protected:
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
       typedValue->resize(nItems);
       for (unsigned i = 0; i < nItems; ++i) {
-         ReadBy(*fSubFields[0], collectionStart + i, &typedValue->data()[i]);
+         CallReadOn(*fSubFields[0], collectionStart + i, &typedValue->data()[i]);
       }
    }
 
