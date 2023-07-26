@@ -576,7 +576,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     }  // end sys loop
 
-    if(systList.size() > 0){
+    if(!systList.empty()){
        // this is epsilon(alpha_j), a piece-wise linear interpolation
        //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
 
