@@ -866,7 +866,7 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
          return;
       }
 
-      auto it = list_xs.find(sample.c_str());
+      auto it = list_xs.find(sample);
       RooRealVar *xs;
       if (it != list_xs.end()) {
          xs = (RooRealVar *)(physics.at(it->second));
@@ -1909,7 +1909,7 @@ void RooLagrangianMorphFunc::disableInterferences(const std::vector<std::vector<
 void RooLagrangianMorphFunc::init()
 {
    std::string filename = _config.fileName;
-   TDirectory *file = openFile(filename.c_str());
+   TDirectory *file = openFile(filename);
    if (!file) {
       coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
       return;
@@ -2239,7 +2239,7 @@ bool RooLagrangianMorphFunc::updateCoefficients()
    auto cache = this->getCache();
 
    std::string filename = _config.fileName;
-   TDirectory *file = openFile(filename.c_str());
+   TDirectory *file = openFile(filename);
    if (!file) {
       coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
       return false;
@@ -2269,7 +2269,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD &inverse)
    if (cache) {
       std::string filename = _config.fileName;
       cache->_inverse = m;
-      TDirectory *file = openFile(filename.c_str());
+      TDirectory *file = openFile(filename);
       if (!file) {
          coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
          return false;
@@ -2483,7 +2483,7 @@ void RooLagrangianMorphFunc::setParameters(TH1 *paramhist)
 void RooLagrangianMorphFunc::setParameters(const char *foldername)
 {
    std::string filename = _config.fileName;
-   TDirectory *file = openFile(filename.c_str());
+   TDirectory *file = openFile(filename);
    auto paramhist = loadFromFileResidentFolder<TH1>(file, foldername, "param_card");
    setParams(paramhist.get(), _operators, false);
    closeFile(file);

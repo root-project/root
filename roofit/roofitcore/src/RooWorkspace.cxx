@@ -1831,7 +1831,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     // Inform that existing file entry is being recycled because it already contained class code
     oocoutI(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
                 << ") code of class " << tc->GetName()
-                << " was already imported from " << (!implpath.empty() ? implpath : implfile.c_str())
+                << " was already imported from " << (!implpath.empty() ? implpath : implfile)
                 << " and " << (!declpath.empty() ? declpath.c_str() : declfile.c_str()) << std::endl;
 
   }

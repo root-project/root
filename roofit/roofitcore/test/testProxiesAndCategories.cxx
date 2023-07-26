@@ -207,7 +207,7 @@ TEST(RooTemplateProxy, CategoryProxy) {
   EXPECT_TRUE(dummy.cat == 2);
   EXPECT_STREQ(dummy.cat.label(), "B");
 
-  dummy.cat = longStr.c_str();
+  dummy.cat = longStr;
   EXPECT_TRUE(dummy.isValueDirty());
   dummy.clear();
   EXPECT_TRUE(dummy.cat == 500);

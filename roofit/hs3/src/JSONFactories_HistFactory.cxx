@@ -184,7 +184,7 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
 {
    RooWorkspace &ws = *tool.workspace();
 
-   gammas.add(ParamHistFunc::createParamSet(ws, ("gamma_" + sysname).c_str(), observables, gamma_min, gamma_max));
+   gammas.add(ParamHistFunc::createParamSet(ws, "gamma_" + sysname, observables, gamma_min, gamma_max));
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
    for (size_t i = 0; i < gammas.size(); ++i) {
       RooRealVar *v = dynamic_cast<RooRealVar *>(&gammas[i]);

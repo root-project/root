@@ -182,7 +182,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
 
   // Create RooDataHist
   auto hname = std::string(self.GetName()) + "_" + self.inputBaseName() + "_CACHEHIST"
-               + self.cacheNameSuffix(orderedObs).c_str() + self.histNameSuffix().Data();
+               + self.cacheNameSuffix(orderedObs) + self.histNameSuffix().Data();
   _hist = std::make_unique<RooDataHist>(hname,hname,orderedObs,self.binningName()) ;
   _hist->removeSelfFromDir() ;
 

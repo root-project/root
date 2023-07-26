@@ -182,5 +182,5 @@ std::string RooPower::getFormulaExpression(bool expand) const
          ss << _expList.at(i)->GetName();
       ss << ")";
    }
-   return ss.str().c_str();
+   return ss.str();
 }

@@ -962,7 +962,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             double gammaMin = 0.0;
             double gammaMax = 10.0;
             RooArgList statFactorParams = ParamHistFunc::createParamSet(*proto,
-                ParamSetPrefix.c_str(),
+                ParamSetPrefix,
                 theObservables,
                 gammaMin, gammaMax);
 
@@ -1013,7 +1013,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               // GHL: Again, we are putting hard ranges on the gamma's
               //      We should change this to range from 0 to /inf
               RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto,
-                  funcParams.c_str(),
+                  funcParams,
                   theObservables, 0, 1000);
 
               // Create the Function
@@ -1093,7 +1093,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               // Create the Parameters
               std::string funcParams = "gamma_" + shapeSys.GetName();
               RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto,
-                  funcParams.c_str(),
+                  funcParams,
                   theObservables, 0, 10);
 
               // Create the Function

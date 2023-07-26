@@ -3643,7 +3643,7 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
                    << " server values: " << oee._srvval << std::endl ;
        _evalErrorList[this].second.pop_front();
     }
-    _evalErrorList[this].first = oss2.str().c_str() ;
+    _evalErrorList[this].first = oss2.str() ;
     _evalErrorList[this].second.push_back(ee) ;
   }
 
