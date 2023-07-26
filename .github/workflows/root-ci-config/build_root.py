@@ -128,12 +128,13 @@ def main():
         shell_log = show_node_state(shell_log, options)
 
     shell_log = build(options, args.buildtype, shell_log)
-    print(platform)
-
+    
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
+    upload_failed = False
+    testing_failed = False
     try:
         if not pull_request and not args.incremental:
             archive_and_upload(yyyy_mm_dd, obj_prefix)
@@ -151,8 +152,6 @@ def main():
                 extra_ctest_flags += "--build-config " + args.buildtype
 
             result, shell_log = run_ctest(shell_log, extra_ctest_flags)
-            print("---*****----")
-            print(result)
 
     except:
         testing_failed = True
@@ -160,17 +159,10 @@ def main():
     if(platform == "fedora38-cov"):
         shell_log = create_coverage_xml(shell_log)
         # shell_log = create_coverage_html(shell_log)
-        
-    print("upload_failed = ",upload_failed)
-    print("testing_failed = ", testing_failed)
 
-    if testing_failed or upload_failed:
-        print("testing_failed or upload_failed")
-        die(result, "Some tests failed", shell_log)
-
+    upload_testing_failed(upload_failed, testing_failed, result, shell_log)
 
     print_shell_log(shell_log)
-
 
 @github_log_group("Clean up from previous runs")
 def cleanup_previous_build(shell_log):
@@ -274,18 +266,9 @@ def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
         cd '{WORKDIR}/build'
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
-
-    # if result != 0:
-    #     die(result, "Some tests failed", shell_log)
-    #print(result)
-
+    
     return result, shell_log
 
-# @github_log_group("Create Test Coverage")
-# def create_coverage():
-#     directory = f"{WORKDIR}/builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CmakeFiles"
-#     contents = os.listdir(directory)
-#     return contents
 
 @github_log_group("Archive and upload")
 def archive_and_upload(archive_name, prefix):
@@ -365,46 +348,36 @@ def rebase(base_ref, head_ref, shell_log) -> str:
     return shell_log
 
 
-# @github_log_group("Create Test Coverage in HTML")
-# def create_coverage_html(shell_log: str) -> str:
-#     directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
-#     #
-#     #directory = f"../root-ci-config/"
-#     #directory = f"builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
-#     result, shell_log = subprocess_with_log(f"""
-#         cd '{directory}'
-#         ls
-#         lcov --directory . --capture --output-file coverage.info
-#         genhtml coverage.info --output-directory coverage_report
-#         cd coverage_report
-#         firefox index.html
-#     """, shell_log)
-#     if directory == "":
-#         print("No content")
-#     #contents = os.listdir(directory)
-#     print(result)
-#     print("---------")
-#     print(shell_log)
-#     return shell_log
-
-
-
-
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml(shell_log: str) -> str:
-    coverage_directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage"
-    #directory = f"../root-ci-config"
     result, shell_log = subprocess_with_log(f"""
         pwd
         gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
         pwd
         ls
-        cat CoverageXML.xml
     """, shell_log)
-    print(result)
-    print("---------")
-    print(shell_log)
+
+    if result != 0:
+        die(result, "Failed to create test coverage", shell_log)
+
     return shell_log
+
+@github_log_group("Upload and Testing check")
+def upload_testing_failed(upload_failed, testing_failed, result, shell_log):
+
+    if testing_failed:
+        print("testing_failed")
+        die("Testing Failed", shell_log)
+    
+    if result != 0:
+        print("result_not_zero")
+        die(result, "Some tests failed", shell_log)
+    
+    if upload_failed:
+        print("upload_failed")
+        die("Failed to upload!", shell_log)
+
+
 
 
 if __name__ == "__main__":

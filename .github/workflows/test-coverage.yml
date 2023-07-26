@@ -53,13 +53,6 @@ on:
         required: true
         default: true
 
-# on:
-#   workflow_run:
-#     workflows:
-#       - '***'
-#     types:
-#       - completed
-
 env:
   PYTHONUNBUFFERED: true
   OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
@@ -145,6 +138,102 @@ jobs:
   #         name:  Test Results ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
   #         path: /tmp/workspace/build/TestResults.xml
 
+  # build-windows:
+  #   if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
+  #   permissions:
+  #     contents: read
+
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       # We have to get a bit creative here: GitHub actions only allows to
+  #       # exclude partial matches, so we artificially add the event_name as
+  #       # a "constant variable" that we can use to remove the Debug entries
+  #       # for pull requests and on branch pushes. This is further complicated
+  #       # by the fact that event_name is a string, but we need an array. So
+  #       # we construct a JSON string that we can then convert into an array.
+  #       event_name: ${{ fromJSON(format('["{0}"]', github.event_name)) }}
+  #       config: ["Debug", "Release"]
+  #       target_arch: [x64, x86]
+  #       exclude:
+  #         - event_name: pull_request
+  #           config: Debug
+  #         - event_name: push
+  #           config: Debug
+
+  #   name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
+
+  #   runs-on: # Using '[self-hosted, windows, ${{ matrix.arch }}]' does not work for some reason :)
+  #     - self-hosted
+  #     - windows
+  #     - x64 # machine host, not build target
+  #     - target${{ matrix.target_arch }}
+
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+
+  #     - name: Pull Request Build
+  #       if: github.event_name == 'pull_request'
+  #       env:
+  #         INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+  #         GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+  #       shell: cmd
+  #       run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+  #             python .github/workflows/root-ci-config/build_root.py
+  #                   --buildtype    ${{ matrix.config }}
+  #                   --platform     windows10
+  #                   --incremental  $INCREMENTAL
+  #                   --base_ref     ${{ github.base_ref }}
+  #                   --head_ref     refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+  #                   --repository   ${{ github.server_url }}/${{ github.repository }}
+  #                   --architecture ${{ matrix.target_arch }}  "
+
+  #     - name: Workflow dispatch/call
+  #       if:   github.event_name == 'workflow_dispatch'
+  #       shell: cmd
+  #       run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+  #             python .github/workflows/root-ci-config/build_root.py
+  #                   --buildtype    ${{ matrix.config }}
+  #                   --platform     windows10
+  #                   --incremental  ${{ inputs.incremental }}
+  #                   --base_ref     ${{ inputs.base_ref }}
+  #                   --head_ref     ${{ inputs.head_ref }}
+  #                   --repository   ${{ github.server_url }}/${{ github.repository }}
+  #                   --architecture ${{ matrix.target_arch }}  "
+
+  #     - name: Nightly build
+  #       if:   github.event_name == 'schedule'
+  #       shell: cmd
+  #       run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+  #             python .github/workflows/root-ci-config/build_root.py
+  #                   --buildtype    ${{ matrix.config }}
+  #                   --platform     windows10
+  #                   --incremental  false
+  #                   --base_ref     ${{ github.ref_name }}
+  #                   --repository   ${{ github.server_url }}/${{ github.repository }}
+  #                   --architecture ${{ matrix.target_arch }}  "
+
+  #     - name: Update artifacts after push to release branch
+  #       if:   github.event_name == 'push'
+  #       shell: cmd
+  #       run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+  #             python .github/workflows/root-ci-config/build_root.py
+  #                   --buildtype      ${{ matrix.config }}
+  #                   --platform       windows10
+  #                   --incremental    false
+  #                   --base_ref       ${{ github.ref_name }}
+  #                   --repository     ${{ github.server_url }}/${{ github.repository }}
+  #                   --architecture   ${{ matrix.target_arch }}  "
+
+  #     - name: Upload test results
+  #       if:   ${{ !cancelled() }}
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name:  Test Results Windows ${{ matrix.target_arch }} ${{ matrix.config }}
+  #         path: C:/ROOT-CI/build/TestResults.xml
+
 
   
   build-linux:
@@ -164,9 +253,9 @@ jobs:
             config: Debug
             overrides: ["coverage=On"]
 
-          - image: fedora38
-            config: Debug
-            overrides: ["coverage=On"]
+          # - image: fedora38
+          #   config: Debug
+          #   overrides: ["coverage=On"]
 
           # - image: fedora37
           #   config: Debug
@@ -185,15 +274,15 @@ jobs:
           #   overrides: ["imt=Off"]
 
 
-    runs-on: self-hosted
-    # runs-on: ubuntu-latest
+    runs-on: 
+      - self-hosted
+      - linux
+      - x64
 
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-      #image: https://raw.githubusercontent.com/root-project/root-ci-images/main/fedora38-cov/Dockerfile
-      #image: ubuntu:latest
       options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
@@ -310,13 +399,6 @@ jobs:
       #   # When debugging increase to a suitable value!
       #   timeout-minutes: ${{ github.event.pull_request && 40 || 20 }}
 
-      - name: List Files
-        run: |
-          pwd
-          ls -R /tmp/workspace/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage
-          echo "---------"
-          ls
-
       - name: Upload coverage to Codecov
         if: ${{ matrix.image == 'fedora38-cov' && !cancelled() }}
         uses: codecov/codecov-action@v3
@@ -329,10 +411,8 @@ jobs:
           name: codecov-umbrella
           verbose: true   
   
-
-
   event_file:
-
+    #if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
     name: "Upload Event Payload"
     runs-on: ubuntu-latest
     steps:
