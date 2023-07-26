@@ -173,6 +173,7 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    // the inverse transformation
    TListIter trIt(&fTransformations, kIterBackward);
    std::vector< Int_t >::const_iterator rClsIt = fTransformationsReferenceClasses.end();
+   std::vector<Int_t>::const_iterator rClsBegin = fTransformationsReferenceClasses.begin();
    --rClsIt;
    const Event* trEv = ev;
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
@@ -183,7 +184,8 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
             trEv = trf->InverseTransform(ev, (*rClsIt) );
       }
       else break;
-      --rClsIt;
+      if (rClsIt > rClsBegin)
+         --rClsIt;
    }
    return trEv;
 
