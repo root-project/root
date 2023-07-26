@@ -4760,7 +4760,8 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
          clang::QualType SubTy = TA.getAsType();
          // Check if the type needs more desugaring and recurse.
-         if (llvm::isa<clang::SubstTemplateTypeParmType>(SubTy)
+         if (llvm::isa<clang::ElaboratedType>(SubTy)
+             || llvm::isa<clang::SubstTemplateTypeParmType>(SubTy)
              || llvm::isa<clang::TemplateSpecializationType>(SubTy)) {
             clang::QualType newSubTy = ReSubstTemplateArg(SubTy,instance);
             mightHaveChanged = SubTy != newSubTy;
