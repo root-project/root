@@ -435,7 +435,7 @@ void RooMultiVarGaussian::generateEvent(Int_t code)
   Int_t nobs = TU.GetNcols() ;
   vector<int>& omap = gd.omap ;
 
-  while(1) {
+  while(true) {
 
     // Create unit Gaussian vector
     TVectorD xgen(nobs);

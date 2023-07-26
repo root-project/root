@@ -138,7 +138,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
     // Since pdf is normalized - coefficient for degree 0 is fixed to be 1
     if (degree == 0) {
        newCoef->setVal(1);
-       newCoef->setConstant(1);
+       newCoef->setConstant(true);
        continue;
     }
 

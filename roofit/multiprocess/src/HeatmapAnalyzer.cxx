@@ -143,7 +143,7 @@ std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
    }
 
    // do not need the legend in case heatmap is plotted
-   total_matrix->SetStats(0);
+   total_matrix->SetStats(false);
 
    // set the axes labels on the heatmap matrix
    TAxis *y = total_matrix->GetYaxis();

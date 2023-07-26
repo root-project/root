@@ -222,7 +222,7 @@ bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*ve
      bool readToken(true) ;
 
     // Loop over definition sequences
-     while(1) {
+     while(true) {
        if (readToken) token=parser.readToken() ;
        if (token.IsNull()) break ;
        readToken=true ;
@@ -231,7 +231,7 @@ bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*ve
        if (parser.expectToken(":",true)) return true ;
 
        // Loop over list of sources for this destination
-       while(1) {
+       while(true) {
          srcKey = parser.readToken() ;
          token = parser.readToken() ;
 

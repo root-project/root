@@ -110,7 +110,7 @@ void RooDecay::generateEvent(Int_t code)
   R__ASSERT(code==1) ;
 
   // Generate delta-t dependent
-  while(1) {
+  while(true) {
     double rand = RooRandom::uniform() ;
     double tval(0) ;
 
