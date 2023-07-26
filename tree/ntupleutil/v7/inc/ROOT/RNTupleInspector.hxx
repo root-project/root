@@ -167,6 +167,14 @@ public:
 
    /// Get the number of columns of a given type present in the RNTuple.
    size_t GetColumnTypeCount(EColumnType colType) const;
+
+   /// Get the IDs of (sub-)fields whose name matches the given string. Because field names are unique by design,
+   /// providing a single field name will return a vector containing just the ID of that field. However, regular
+   /// expression patterns are supported in order to get the IDs of all fields whose name follow a certain structure.
+   const std::vector<DescriptorId_t>
+   GetFieldsByName(const std::regex &fieldNamePattern, bool includeSubFields = true) const;
+   const std::vector<DescriptorId_t>
+   GetFieldsByName(std::string_view fieldNamePattern, bool includeSubFields = true) const;
 };
 } // namespace Experimental
 } // namespace ROOT

@@ -244,3 +244,28 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(std::string_view fieldNam
 
    return GetFieldTreeInfo(fieldId);
 }
+
+const std::vector<ROOT::Experimental::DescriptorId_t>
+ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNamePattern, bool includeSubFields) const
+{
+   std::vector<DescriptorId_t> fieldIds;
+
+   for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
+
+      if (!includeSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor->GetFieldZeroId()) {
+         continue;
+      }
+
+      if (std::regex_match(fldInfo.GetDescriptor().GetFieldName(), fieldNamePattern)) {
+         fieldIds.emplace_back(fldId);
+      }
+   }
+
+   return fieldIds;
+}
+
+const std::vector<ROOT::Experimental::DescriptorId_t>
+ROOT::Experimental::RNTupleInspector::GetFieldsByName(std::string_view fieldNamePattern, bool includeSubFields) const
+{
+   return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, includeSubFields);
+}
