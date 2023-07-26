@@ -192,8 +192,8 @@ public:
          out << ", cgh, cl::sycl::read_only};\n";
          out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-         out << SP*4 << "auto sumReduction = reduction(sum_buf, cgh, plus<>());\n";
-         out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
+         out << SP*4 << "auto sumReduction = cl::sycl::reduction(sum_buf, cl::sycl::plus<>());\n";
+         out << SP*4 << "cgh.parallel_for<class " << OpName << "_0>(cl::sycl::range<1>(" << length;
          out << "), sumReduction, [=](cl::sycl::id<1> id, auto& sum){\n";
          out << SP*5 << "int tmp = cl::sycl::exp(acc_tensor_" << fNX << "[id]);\n";
          out << SP*5 << "acc_tensor_" << fNY << "[id] = tmp;\n";
@@ -205,11 +205,123 @@ public:
          out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::read_write};\n";
          out << SP*4 << "auto acc_sum_buf = cl::sycl::accessor{sum_buf, cl::sycl::read_only};\n";
-         out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
+         out << SP*4 << "cgh.parallel_for<class " << OpName << "_1>(cl::sycl::range<1>(" << length;
          out << "), [=](cl::sycl::id<1> id){\n";
          out << SP*5 << "acc_tensor_" << fNY << "[id] /= acc_sum_buf[0];\n";
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
+      }
+      else {
+         size_t batch = fShape[0];
+         size_t channel = fShape[1];
+         size_t width = (size > 2) ? fShape[size - 1] : 1;
+         size_t height = (size > 3) ? fShape[size - 2] : 1;
+         size_t depth = (size > 4) ? fShape[size - 3] : 1;
+         size_t hStride = width;
+         size_t dStride = height * width;
+         size_t cStride = depth * dStride;
+         size_t bStride = channel * cStride;
+
+         size_t N = 0; // Size of the axis
+         size_t iStride = 0;
+         if (axis == 0) {
+            N = batch;
+            iStride = bStride;
+         } else if (axis == 1) {
+            N = channel;
+            iStride = cStride;
+         } else if (axis == size - 1) {
+            N = width;
+            iStride = 1;
+         } else if (size > 3 && axis == size - 2) {
+            N = height;
+            iStride = hStride;
+         } else if (size == 5 && axis == size - 3) {
+            N = depth;
+            iStride = dStride;
+         } else {
+            throw
+               std::runtime_error("TMVA::SOFIE - Softmax operator along the axis "
+                  + std::to_string(fAttrAxis) + " with " + std::to_string(size)
+                  + "d input tensor not supported.");
+         }
+
+         bool notBatch = axis != 0;
+         bool notChannel = axis != 1;
+         bool notDepth = (size == 5 && axis != 2);
+         bool notHeight = (size == 5 && axis != 3) || (size == 4 && axis != 2);
+         bool notWidth = (size == 5 && axis != 4) || (size == 4 && axis != 3) || (size == 3 && axis != 2);
+
+         int num_workers = 1;
+
+         if (notBatch) {
+            num_workers *= batch;
+         }
+
+         if (notChannel) {
+            num_workers *= channel;
+         }
+
+         if (notDepth) {
+            num_workers *= depth;
+         }
+
+         if (notHeight) {
+            num_workers *= height;
+         }
+
+         if (notWidth) {
+            num_workers *= width;
+         }
+
+         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::read_write};\n";
+
+         out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << num_workers;
+         out << "), [=](cl::sycl::id<1> id){\n";
+         out << SP*5 << fType << "sum = 0.0;\n";
+         out << SP*5 << "size_t index = 0;\n";
+
+         if (notBatch) {
+            out << SP*5 << "int n = " << length % batch << ";\n";
+            length /= batch; 
+            out << SP*5 << "index += n * " << bStride << ";\n";
+         }
+         if (notChannel) {
+            out << SP*5 << "int c = " << length % channel << ";\n";
+            length /= channel;
+            out << SP*5 << "index += c * " << cStride << ";\n";
+         }
+         if (notDepth) {
+            out << SP*5 << "int d = " << length % depth << ";\n";
+            length /= depth;
+            out << SP*5 << "index += d * " << dStride << ";\n";
+         }
+         if (notHeight) {
+            out << SP*5 << "int h = " << length % height << ";\n";
+            length /= height;
+            out << SP*5 << "index += h * " << hStride << ";\n";
+         }
+         if (notWidth) {
+            out << SP*5 << "int w = " << length % width << ";\n";
+            out << SP*5 << "index += w;\n";
+         }
+
+         out << SP*5 << "for (size_t i=0; i<" << N << "; i++) {\n";
+         out << SP*6 << "int tmp = cl::sycl::exp(acc_tensor_" << fNX << "[index + i * " << iStride << "]);\n";
+         out << SP*6 << "acc_tensor_" << fNY << "[index + i * " << iStride << "] = tmp;\n";
+         out << SP*6 << "sum += tmp;\n";
+         out << SP*5 << "}\n\n"; 
+
+         out << SP*5 << "for (size_t i=0; i<" << N << "; i++) {\n";
+         out << SP*6 << "acc_tensor_" << fNY << "[index + i * " << iStride << "] /= sum;\n";
+         out << SP*5 << "}\n";
+         out << SP*4 << "});\n";
+         out << SP*5 << "});\n";
+          
       }
 
       return out.str();
