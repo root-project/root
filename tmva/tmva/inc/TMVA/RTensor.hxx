@@ -228,7 +228,7 @@ public:
       fSize = Internal::GetSizeFromShape(shape);
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
       fContainer = std::make_shared<Container_t>(fSize);
-      fData = &(*fContainer->begin());
+      fData = fContainer->data();
    }
 
    // Access elements
