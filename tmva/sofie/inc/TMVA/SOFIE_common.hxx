@@ -421,6 +421,74 @@ void Im2col_3d(const T *data_im, const int channels,
    }
 }
 
+/*
+template <typename T, int dims>
+void Im2col_3d_GPU(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int channels, 
+                     const int depth, const int height, const int width,
+                     const int kernel_d, const int kernel_h, const int kernel_w, 
+                     const int pad_d, const int pad_h, const int pad_w, 
+                     const int stride_d, const int stride_h, const int stride_w, 
+                     const int dilation_d, const int dilation_h, const int dilation_w, 
+                     cl::sycl::buffer<T, dims> data_col)
+{
+   const int output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+   const int output_w = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+   const int output_d = (depth + 2 * pad_d - (dilation_d * (kernel_d - 1) + 1)) / stride_d + 1;
+   const int channel_size = height * width * depth;
+
+   auto globalRange = cl::sycl::range<1>{static_cast<size_t>(channels * output_h * output_w * output_d)};
+   auto localRange = cl::sycl::range<1>(1);
+   auto ndRange = cl::sycl::nd_range{globalRange, localRange};
+
+   q.submit([&](cl::sycl::handler& cgh){
+      auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::read_only};
+      auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::write_only, cl::sycl::no_init};
+
+      cgh.parallel_for<class im2col_3d>(ndRange, [=](cl::sycl::nd_item<1> item){
+         auto id = item.get_global_id();
+
+         int w_out = id % output_w;
+         id /= output_w;
+
+         int h_out = id % output_h;
+         id /= output_h;
+
+         int d_out = id % output_d;
+         int channel_in = id / output_d;
+   
+         int channel_out = channel_in * kernel_d * kernel_h * kernel_w;
+         int d_in = d_out * stride_d - pad_d;
+         int h_in = h_out * stride_h - pad_h;
+         int w_in = w_out * stride_w - pad_w;
+
+         int dest = ((channel_out * output_d + d_out) * output_h + h_out) *
+                  output_w + w_out;
+         const int src = ((channel_in * depth + d_in) * height + h_in) * 
+                  width  + w_in;
+         
+         for (int i=0; i < kernel_d; i++) {
+            for (int j=0; j < kernel_h; j++) {
+               for (int k=0; k < kernel_w; k++) {
+                  int d = d_in + i * dilation_d;
+                  int h = h_in + j * dilation_h;
+                  int w = w_in + k * dilation_w;
+
+                  if ( (d >= 0) && (h >= 0) && (w >= 0) && (d < depth) && (h < height) && (w < width)) {
+                     acc_data_col[dest] = acc_data_im[src + i * dilation_d * height * width + 
+                     j * dilation_h * width + k * dilation_w];
+                  }
+                  else {
+                     acc_data_col[dest] = 0;
+                  }
+                  dest += output_d * output_h * output_w;
+               }
+            }
+         }
+      });
+   });
+}
+*/
+
 template <typename Dtype>
 void col2im(const Dtype* data_col, const int channels,
     const int height, const int width, const int kernel_h, const int kernel_w,
