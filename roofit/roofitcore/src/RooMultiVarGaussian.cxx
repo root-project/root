@@ -23,7 +23,7 @@ Multivariate Gaussian p.d.f. with correlations
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooMultiVarGaussian.h"
 #include "RooAbsReal.h"

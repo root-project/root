@@ -32,7 +32,7 @@ analytically. Remaining non-factorising observables are integrated numerically.
 
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooGenProdProj.h"
 #include "RooAbsReal.h"

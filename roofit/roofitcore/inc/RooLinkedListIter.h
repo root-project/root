@@ -21,7 +21,7 @@
 
 #include <memory>
 #include <stdexcept>
-#include <assert.h>
+#include <cassert>
 
 /// Interface for RooFIter-compatible iterators
 class GenericRooFIter

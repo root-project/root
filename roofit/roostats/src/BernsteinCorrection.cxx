@@ -54,7 +54,7 @@ generating the toys (either via a histogram or via an independent model that is 
 #include "TMath.h"
 #include <string>
 #include <vector>
-#include <stdio.h>
+#include <cstdio>
 #include <sstream>
 #include <iostream>
 

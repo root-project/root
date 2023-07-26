@@ -24,7 +24,7 @@
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
-#include <math.h>
+#include <cmath>
 #include "TMath.h"
 
 

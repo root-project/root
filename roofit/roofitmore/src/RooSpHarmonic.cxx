@@ -47,7 +47,7 @@ integrals, using the orthogonality properties of \f$Y_l^m\f$...
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooSpHarmonic.h"
 #include "Math/SpecFunc.h"

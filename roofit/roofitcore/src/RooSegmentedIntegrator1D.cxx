@@ -33,7 +33,7 @@ numerical integration algorithm.
 #include "RooMsgService.h"
 #include "RooNumIntFactory.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 

@@ -32,7 +32,7 @@ though usually only one observable actually changes.
 
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooChangeTracker.h"
 #include "RooAbsReal.h"

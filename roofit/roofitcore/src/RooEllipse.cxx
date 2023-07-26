@@ -29,7 +29,7 @@ an error contour.
 
 #include "Riostream.h"
 #include "TClass.h"
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

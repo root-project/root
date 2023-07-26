@@ -33,7 +33,7 @@ and the outer two pieces, if required are calculated using a 1/x transform
 #include "RooMsgService.h"
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 #include "TClass.h"
 
 

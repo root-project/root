@@ -23,7 +23,7 @@ RooRangeBoolean
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooRangeBoolean.h"
 #include "RooAbsReal.h"

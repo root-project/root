@@ -25,7 +25,7 @@ derivator class.
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooDerivative.h"
 #include "RooAbsReal.h"

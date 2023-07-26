@@ -39,9 +39,9 @@ Scientific Library version 1.5 and applies the 10-, 21-, 43- and
 reached
 **/
 
-#include <assert.h>
-#include <math.h>
-#include <float.h>
+#include <cassert>
+#include <cmath>
+#include <cfloat>
 #include "Riostream.h"
 #include "TMath.h"
 #include "RooGaussKronrodIntegrator1D.h"

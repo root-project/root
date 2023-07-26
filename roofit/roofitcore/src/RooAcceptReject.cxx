@@ -44,7 +44,7 @@ do not define internal methods
 #include "TFoam.h"
 #include "TNamed.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 

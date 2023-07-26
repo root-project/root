@@ -23,7 +23,7 @@ that models a non-relativistic Breit-Wigner shape
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooBreitWigner.h"
 #include "RooRealVar.h"

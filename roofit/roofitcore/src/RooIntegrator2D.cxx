@@ -32,7 +32,7 @@ in terms of a recursive application of RooIntegrator1D
 #include "RooNumber.h"
 #include "RooNumIntFactory.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 

@@ -50,7 +50,7 @@ integration), a relative epsilon 5, 10 or more times higher than for the old int
 #include "RooNumIntFactory.h"
 #include "RooMsgService.h"
 
-#include <assert.h>
+#include <cassert>
 
 namespace {
 

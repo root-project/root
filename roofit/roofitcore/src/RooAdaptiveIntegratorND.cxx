@@ -37,7 +37,7 @@ numerical integration algorithm.
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/Functor.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 

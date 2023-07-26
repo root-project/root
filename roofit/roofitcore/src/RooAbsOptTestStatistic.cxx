@@ -37,7 +37,7 @@ parallelized calculation of test statistics.
 
 #include "Riostream.h"
 #include "TClass.h"
-#include <string.h>
+#include <cstring>
 
 
 #include "RooAbsOptTestStatistic.h"

@@ -16,7 +16,7 @@
 #ifndef ROO_ERROR_HANDLER
 #define ROO_ERROR_HANDLER
 
-#include <signal.h>
+#include <csignal>
 #include <cstdlib>
 #include "RtypesCore.h"
 

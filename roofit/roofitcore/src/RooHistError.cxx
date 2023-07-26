@@ -30,7 +30,7 @@ a specified area of a Poisson or Binomail error distribution.
 #include "TMath.h"
 
 #include "Riostream.h"
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 

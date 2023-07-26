@@ -51,7 +51,7 @@ Access those using:
 #include "RooNumGenFactory.h"
 #include "RooNumGenConfig.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 

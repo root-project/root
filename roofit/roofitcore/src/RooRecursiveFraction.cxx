@@ -26,7 +26,7 @@ from a set of recursive fractions: for a given set of input fractions
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooRecursiveFraction.h"
 #include "RooAbsReal.h"

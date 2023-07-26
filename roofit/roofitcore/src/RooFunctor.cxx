@@ -31,7 +31,7 @@ Lightweight interface adaptor that exports a RooAbsPdf as a functor.
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 

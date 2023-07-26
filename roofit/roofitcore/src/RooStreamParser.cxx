@@ -35,7 +35,7 @@
 
 
 #include "Riostream.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifndef _WIN32
 #include <strings.h>

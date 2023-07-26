@@ -63,7 +63,7 @@
 #include <string>
 #include <algorithm>
 #include <functional>
-#include <ctype.h>   // need to use c version of toupper defined here
+#include <cctype>   // need to use c version of toupper defined here
 
 
 ClassImp(RooStats::LikelihoodInterval); ;

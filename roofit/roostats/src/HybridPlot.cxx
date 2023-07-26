@@ -12,7 +12,7 @@ An example plot is available here:
 http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 */
 
-#include "assert.h"
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <map>
