@@ -121,7 +121,7 @@ void RooLandau::generateEvent(Int_t code)
 {
   assert(1 == code); (void)code;
   double xgen ;
-  while(1) {
+  while(true) {
     xgen = RooRandom::randomGenerator()->Landau(mean,sigma);
     if (xgen<x.max() && xgen>x.min()) {
       x = xgen ;

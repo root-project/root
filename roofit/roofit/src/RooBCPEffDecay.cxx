@@ -206,7 +206,7 @@ void RooBCPEffDecay::generateEvent(Int_t code)
   }
 
   // Generate delta-t dependent
-  while(1) {
+  while(true) {
     double rand = RooRandom::uniform() ;
     double tval(0) ;
 

@@ -138,7 +138,7 @@ void RooLognormal::generateEvent(Int_t code)
   R__ASSERT(code==1) ;
 
   double xgen ;
-  while(1) {
+  while(true) {
     xgen = TMath::Exp(RooRandom::randomGenerator()->Gaus(TMath::Log(m0),TMath::Log(k)));
     if (xgen<=x.max() && xgen>=x.min()) {
       x = xgen ;

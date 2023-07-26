@@ -39,7 +39,7 @@ ClassImp(RooAbsStudy);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(0), _summaryData(nullptr), _detailData(nullptr), _ownDetailData(true)
+RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(false), _summaryData(nullptr), _detailData(nullptr), _ownDetailData(true)
 {
 }
 

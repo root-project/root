@@ -107,7 +107,7 @@ void RooGaussian::generateEvent(Int_t code)
   assert(code==1 || code==2) ;
   double xgen ;
   if(code==1){
-    while(1) {
+    while(true) {
       xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);
       if (xgen<x.max() && xgen>x.min()) {
    x = xgen ;
@@ -115,7 +115,7 @@ void RooGaussian::generateEvent(Int_t code)
       }
     }
   } else if(code==2){
-    while(1) {
+    while(true) {
       xgen = RooRandom::randomGenerator()->Gaus(x,sigma);
       if (xgen<mean.max() && xgen>mean.min()) {
    mean = xgen ;

@@ -283,7 +283,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
 
 Int_t RooAddModel::basisCode(const char* name) const
 {
-  bool first(true), code(0) ;
+  bool first(true), code(false) ;
   for (auto obj : _pdfList) {
     auto model = static_cast<RooResolutionModel*>(obj);
     Int_t subCode = model->basisCode(name) ;
@@ -291,7 +291,7 @@ Int_t RooAddModel::basisCode(const char* name) const
       code = subCode ;
       first = false ;
     } else if (subCode==0) {
-      code = 0 ;
+      code = false ;
     }
   }
 

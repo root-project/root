@@ -348,7 +348,7 @@ RooCategory* HLFactory::GetTotCategory(){
 /// Process an additional configuration file
 
 int HLFactory::ProcessCard(const char* filename){
-    return fReadFile(filename,0);
+    return fReadFile(filename,false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
