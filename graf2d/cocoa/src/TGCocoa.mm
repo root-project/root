@@ -2856,7 +2856,7 @@ Bool_t TGCocoa::HasTTFonts() const
 //______________________________________________________________________________
 Int_t TGCocoa::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return lenght of the string "s" in pixels. Size depends on font.
+   // Return length of the string "s" in pixels. Size depends on font.
    return fPimpl->fFontManager.GetTextWidth(font, s, len);
 }
 

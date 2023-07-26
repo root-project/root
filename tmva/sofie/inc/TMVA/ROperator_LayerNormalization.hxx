@@ -79,7 +79,7 @@ public:
       fAxis = (fAttrAxis < 0) ? fSize + fAttrAxis : fAttrAxis;
       // Shape of fShapeX[0, ..., fAxis)
       fAxesShape = std::vector<size_t>(fShapeX.begin(), fShapeX.begin() + fAxis);
-      // Lenght of the axes
+      // Length of the axes
       fAxesLength = ConvertShapeToLength(fAxesShape);
       // Shape of fShapeX[fAxis, ..., fSize)
       fNormalizedShape = std::vector<size_t>(fShapeX.begin() + fAxis, fShapeX.end());
