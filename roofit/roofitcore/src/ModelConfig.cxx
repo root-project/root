@@ -231,10 +231,10 @@ void ModelConfig::SetSnapshot(const RooArgSet &set)
       return;
 
    fSnapshotName = GetName();
-   if (fSnapshotName.size() > 0)
+   if (!fSnapshotName.empty())
       fSnapshotName += "_";
    fSnapshotName += set.GetName();
-   if (fSnapshotName.size() > 0)
+   if (!fSnapshotName.empty())
       fSnapshotName += "_";
    fSnapshotName += "snapshot";
    GetWS()->saveSnapshot(fSnapshotName.c_str(), set, true); // import also the given parameter values

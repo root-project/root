@@ -92,10 +92,10 @@ bool RooClassFactory::makeAndCompilePdf(const char* name, const char* expression
   string realArgNames,catArgNames ;
   for (RooAbsArg * arg : vars) {
     if (dynamic_cast<RooAbsReal*>(arg)) {
-      if (realArgNames.size()>0) realArgNames += "," ;
+      if (!realArgNames.empty()) realArgNames += "," ;
       realArgNames += arg->GetName() ;
     } else if (dynamic_cast<RooAbsCategory*>(arg)) {
-      if (catArgNames.size()>0) catArgNames += "," ;
+      if (!catArgNames.empty()) catArgNames += "," ;
       catArgNames += arg->GetName() ;
     } else {
       oocoutE(nullptr,InputArguments) << "RooClassFactory::makeAndCompilePdf ERROR input argument " << arg->GetName()
@@ -133,10 +133,10 @@ bool RooClassFactory::makeAndCompileFunction(const char* name, const char* expre
   string realArgNames,catArgNames ;
   for (RooAbsArg * arg : vars) {
     if (dynamic_cast<RooAbsReal*>(arg)) {
-      if (realArgNames.size()>0) realArgNames += "," ;
+      if (!realArgNames.empty()) realArgNames += "," ;
       realArgNames += arg->GetName() ;
     } else if (dynamic_cast<RooAbsCategory*>(arg)) {
-      if (catArgNames.size()>0) catArgNames += "," ;
+      if (!catArgNames.empty()) catArgNames += "," ;
       catArgNames += arg->GetName() ;
     } else {
       oocoutE(nullptr,InputArguments) << "RooClassFactory::makeAndCompileFunction ERROR input argument " << arg->GetName()
@@ -648,7 +648,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
        << "   // EXPRESSION MULTIPLE TIMES" << endl
        << endl  ;
 
-    if (intObs.size()>0) {
+    if (!intObs.empty()) {
       for (UInt_t ii=0 ; ii<intObs.size() ; ii++) {
    cf << "   if (matchArgs(allVars,analVars," << intObs[ii] << ")) return " << ii+1 << " ; " << endl ;
       }
@@ -669,7 +669,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
        << "   // BOUNDARIES FOR EACH OBSERVABLE x" << endl
        << endl ;
 
-    if (intObs.size()>0) {
+    if (!intObs.empty()) {
       for (UInt_t ii=0 ; ii<intObs.size() ; ii++) {
    cf << "   if (code==" << ii+1 << ") { return (" << intExpr[ii] << ") ; } " << endl ;
       }

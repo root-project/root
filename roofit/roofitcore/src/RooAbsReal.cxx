@@ -4567,7 +4567,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
              << ") function does not depend on std::listed parameter " << arg->GetName() << ", ignoring" << std::endl ;
       continue ;
     }
-    if (plist.size()>0) plist += ":" ;
+    if (!plist.empty()) plist += ":" ;
     plist += arg->GetName() ;
   }
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;

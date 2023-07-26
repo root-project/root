@@ -465,7 +465,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     ((RooAbsArg&)inArg).setAttribute("RooWorkspace::Recycle") ;
   }
 
-  if (!suffix && wsarg && !useExistingNodes && !(inArg.isFundamental() && varMap[inArg.GetName()]!="")) {
+  if (!suffix && wsarg && !useExistingNodes && !(inArg.isFundamental() && !varMap[inArg.GetName()].empty())) {
     if (!factoryMatch) {
       if (wsarg!=&inArg) {
         coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << inArg.GetName()
@@ -1565,7 +1565,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     if (declpath.empty()) {
       oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING Cannot access code of class "
                   << tc->GetName() << " because header file " << declfile << " is not found in current directory nor in $ROOTSYS" ;
-      if (_classDeclDirList.size()>0) {
+      if (!_classDeclDirList.empty()) {
    ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
    diter = RooWorkspace::_classDeclDirList.begin() ;
 
@@ -1610,7 +1610,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     if (implpath.empty()) {
       oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING Cannot access code of class "
                   << tc->GetName() << " because implementation file " << implfile << " is not found in current directory nor in $ROOTSYS" ;
-      if (_classDeclDirList.size()>0) {
+      if (!_classDeclDirList.empty()) {
    ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
    iiter = RooWorkspace::_classImplDirList.begin() ;
 
@@ -2281,7 +2281,7 @@ void RooWorkspace::Print(Option_t* opts) const
   }
 
 
-  if (_namedSets.size()>0) {
+  if (!_namedSets.empty()) {
     cout << "named sets" << endl ;
     cout << "----------" << endl ;
     for (map<string,RooArgSet>::const_iterator it = _namedSets.begin() ; it != _namedSets.end() ; ++it) {
@@ -2564,7 +2564,7 @@ std::string RooWorkspace::CodeRepo::listOfClassNames() const
   string ret ;
   map<TString,ClassRelInfo>::const_iterator iter = _c2fmap.begin() ;
   while(iter!=_c2fmap.end()) {
-    if (ret.size()>0) {
+    if (!ret.empty()) {
       ret += ", " ;
     }
     ret += iter->first ;

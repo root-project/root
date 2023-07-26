@@ -93,7 +93,7 @@ public:
   }
   /// Return string stored in slot idx
   const char* getString(Int_t idx) const {
-      return (_s[idx].size()>0) ? _s[idx].c_str() : nullptr ;
+      return (!_s[idx].empty()) ? _s[idx].c_str() : nullptr ;
   }
   /// Return TObject stored in slot idx
   const TObject* getObject(Int_t idx) const {
