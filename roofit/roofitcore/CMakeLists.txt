@@ -177,7 +177,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooRandomizeParamMCSModule.h
     RooRangeBinning.h
     RooRangeBoolean.h
-    RooRealAnalytic.h
     RooRealBinding.h
     RooRealConstant.h
     RooRealIntegral.h
@@ -401,7 +400,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRandomizeParamMCSModule.cxx
     src/RooRangeBinning.cxx
     src/RooRangeBoolean.cxx
-    src/RooRealAnalytic.cxx
     src/RooRealBinding.cxx
     src/RooRealConstant.cxx
     src/RooRealIntegral.cxx
