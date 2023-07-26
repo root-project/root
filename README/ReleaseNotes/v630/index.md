@@ -242,6 +242,8 @@ Some of these classes are now removed from the public interface:
    shared implementation detail of `RooFormulaVar` and `RooGenericPdf`.
 5. The `RooIntegratorBinding`, which was an implementation detail of the
    `RooIntegrator2D` and `RooSegmentedIntegrator2D` classes.
+6. The `RooRealAnalytic`, which was an implementation detail of the
+   `RooRealIntegral` class.
 
 ## 2D Graphics Libraries
 
