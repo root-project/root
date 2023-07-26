@@ -258,7 +258,7 @@ protected:
    virtual void DestroyValue(void *objPtr, bool dtorOnly = false) const;
    /// Allow derived classes to call GenerateValue(void *) and DestroyValue on other (sub) fields.
    static void CallGenerateValueOn(const RFieldBase &other, void *where) { other.GenerateValue(where); }
-   static void DestroyValueBy(const RFieldBase &other, void *objPtr, bool dtorOnly = false)
+   static void CallDestroyValueOn(const RFieldBase &other, void *objPtr, bool dtorOnly = false)
    {
       other.DestroyValue(objPtr, dtorOnly);
    }
