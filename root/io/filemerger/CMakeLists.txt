@@ -131,17 +131,9 @@ else()
 endif()
 
 #TBD: add file generation as test fixture
-if(NOT TARGET hsimple)
-      add_test(NAME roottest-root-io-filemerger-hsimple-create
-               COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_TUTORIALS_DIR}/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }"
-               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-      add_test(NAME roottest-root-io-filemerger-hsimple
-               COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root hsimple.root)
-      set_property(TEST roottest-root-io-filemerger-hsimple PROPERTY DEPENDS roottest-root-io-filemerger-hsimple-create)
-else()
-      add_test(NAME roottest-root-io-filemerger-hsimple
-               COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/tutorials/hsimple.root hsimple.root)
-endif()
+add_test(NAME roottest-root-io-filemerger-hsimple
+         COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_TUTORIALS_DIR}/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 if(${compression_default} STREQUAL "zlib")
    if(ZLIB_CF)
