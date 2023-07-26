@@ -125,12 +125,6 @@ public:
    }
    ~RNTupleColumnReader() = default;
 
-   /// Column readers are created as prototype and then cloned for every slot
-   std::unique_ptr<RNTupleColumnReader> Clone()
-   {
-      return std::make_unique<RNTupleColumnReader>(fField->Clone(fField->GetName()));
-   }
-
    /// Connect the field and its subfields to the page source
    void Connect(RPageSource &source)
    {
@@ -202,9 +196,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          cardinalityField->SetOnDiskId(fieldId);
          fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
          fColumnTypes.emplace_back(cardinalityField->GetType());
-         auto cardColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(
-            std::move(cardinalityField));
-         fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
+         fFieldPrototypes.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
             AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), skeinIDs);
@@ -255,16 +247,13 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    if (cardinalityField) {
       fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
       fColumnTypes.emplace_back(cardinalityField->GetType());
-      auto cardColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(
-         std::move(cardinalityField));
-      fColumnReaderPrototypes.emplace_back(std::move(cardColReader));
+      fFieldPrototypes.emplace_back(std::move(cardinalityField));
    }
 
    skeinIDs.emplace_back(fieldId);
    fColumnNames.emplace_back(colName);
    fColumnTypes.emplace_back(valueField->GetType());
-   auto valColReader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(std::move(valueField));
-   fColumnReaderPrototypes.emplace_back(std::move(valColReader));
+   fFieldPrototypes.emplace_back(std::move(valueField));
 }
 
 RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
@@ -288,9 +277,10 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
    // at this point we can assume that `name` will be found in fColumnNames, RDF is in charge validation
    // TODO(jblomer): check incoming type
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   auto clone = fColumnReaderPrototypes[index]->Clone();
-   clone->Connect(*fSources[slot]);
-   return clone;
+   auto field = fFieldPrototypes[index].get();
+   auto reader = std::make_unique<ROOT::Experimental::Internal::RNTupleColumnReader>(field->Clone(field->GetName()));
+   reader->Connect(*fSources[slot]);
+   return reader;
 }
 
 bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
