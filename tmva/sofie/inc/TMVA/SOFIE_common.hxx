@@ -15,7 +15,6 @@
 #include <sstream>
 #include <iostream>
 
-
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
@@ -313,24 +312,27 @@ void Im2col(const T *data_im, const int channels, const int height, const int wi
    }
 }
 
-void Im2col_GPU(cl::sycl::queue q, cl::sycl::buffer data_im, const int channels, const int height, const int width,
+
+/*
+template <typename T, int dims>
+void Im2col_GPU(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int channels, const int height, const int width,
                         const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, 
-                        const int stride_h, const int stride_w, const int dilation_h, const int dilation_w, cl::sycl::buffer data_col)
+                        const int stride_h, const int stride_w, const int dilation_h, const int dilation_w, cl::sycl::buffer<T, dims> data_col)
 {
    const int output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
    const int output_w = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
    const int channel_size = height * width;
 
-   auto globalRange = cl::sycl::range(channels * output_h * output_w);
-   auto localRange = q.get_device().get_info<cl::sycl::info::device::max_work_group_size>();
-   auto ndRange = sycl::nd_range(globalRange, localRange);
+   auto globalRange = cl::sycl::range<1>{static_cast<size_t>(channels * output_h * output_w)};
+   auto localRange = cl::sycl::range<1>(1);
+   auto ndRange = cl::sycl::nd_range{globalRange, localRange};
 
-   q.submit([&](sycl::handler& cgh){
-      auto acc_data_im = cl::sycl::accessor{data_im, cgh, sycl::read_only};
-      auto acc_data_col = cl::sycl::accessor{data_col, cgh, sycl::write_only, sycl::no_init};
+   q.submit([&](cl::sycl::handler& cgh){
+      auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::read_only};
+      auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::write_only, cl::sycl::no_init};
 
-      cgh.parallel_for<class im2col>(ndRange, [=](sycl::nd_item<1> item){
-         auto id = item.get_globel_id();
+      cgh.parallel_for<class im2col>(ndRange, [=](cl::sycl::nd_item<1> item){
+         auto id = item.get_global_id();
 
          int w_out = id % output_w;
          int idx = id / output_w;
@@ -342,16 +344,16 @@ void Im2col_GPU(cl::sycl::queue q, cl::sycl::buffer data_im, const int channels,
          int h_in = h_out * stride_h - pad_h;
          int w_in = w_out * stride_w - pad_w;
 
-         int dest = (channel_out * output_h + h_out) * kernel_w + w_out;
+         int dest = (channel_out * output_h + h_out) * output_w + w_out;
          const int src = (channel_in * height + h_in) * width + w_in;
 
-         for (auto&i; i<kernel_h; i++) {
-            for (auto&j; j<kernel_w; j++) {
+         for (int i=0; i<kernel_h; i++) {
+            for (int j=0; j<kernel_w; j++) {
                int h = h_in + i * dilation_h;
                int w = w_in + j * dilation_w;
 
                if ( (h >= 0) && (w >= 0) && (h < height) && (w < width) ) {
-                  acc_data_col[dest] = data_im[src + i*dilation_h*width + j * dilation_width];
+                  acc_data_col[dest] = acc_data_im[src + i*dilation_h*width + j * dilation_w];
                }
                else {
                   acc_data_col[dest] = 0;
@@ -362,10 +364,8 @@ void Im2col_GPU(cl::sycl::queue q, cl::sycl::buffer data_im, const int channels,
          }
       });
    });
-
-
 }
-
+*/
 /// 3d implementation
 template <typename T>
 void Im2col_3d(const T *data_im, const int channels,
