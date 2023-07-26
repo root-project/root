@@ -313,7 +313,7 @@ protected:
    }
 
    /// Allow derived classes to call Append and Read on other (sub) fields.
-   static std::size_t AppendBy(RFieldBase &other, const void *from) { return other.Append(from); }
+   static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
    static void ReadBy(RFieldBase &other, const RClusterIndex &clusterIndex, void *to) { other.Read(clusterIndex, to); }
    static void ReadBy(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
 
@@ -579,7 +579,7 @@ protected:
 
    void GenerateValue(void *where) const final { CallGenerateValueOn(*fSubFields[0], where); }
 
-   std::size_t AppendImpl(const void *from) final { return AppendBy(*fSubFields[0], from); }
+   std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { ReadBy(*fSubFields[0], globalIndex, to); }
 
 public:
@@ -2050,7 +2050,7 @@ protected:
       auto nbytes = 0;
       auto count = typedValue->size();
       for (unsigned i = 0; i < count; ++i) {
-         nbytes += AppendBy(*fSubFields[0], &typedValue->data()[i]);
+         nbytes += CallAppendOn(*fSubFields[0], &typedValue->data()[i]);
       }
       this->fNWritten += count;
       fColumns[0]->Append(&this->fNWritten);
