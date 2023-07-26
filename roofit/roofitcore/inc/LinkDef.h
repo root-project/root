@@ -178,7 +178,6 @@
 #pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
 #pragma link C++ class RooRandomizeParamMCSModule+ ;
 #pragma link C++ class RooRangeBinning+ ;
-#pragma link C++ class RooRealAnalytic+ ;
 #pragma link C++ class RooRealBinding+ ;
 #pragma link C++ class RooRealConstant+ ;
 #pragma link C++ class RooRealIntegral+ ;

@@ -35,7 +35,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooRealBinding.h"
-#include "RooRealAnalytic.h"
 #include "RooInvTransform.h"
 #include "RooSuperCategory.h"
 #include "RooNumIntFactory.h"
@@ -686,10 +685,12 @@ bool RooRealIntegral::initNumIntegrator() const
   // All done if there are no arguments to integrate numerically
   if(_intList.empty()) return true;
 
-  // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
+  // Bind the appropriate analytic integral of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    _numIntegrand = std::make_unique<RooRealAnalytic>(*_function,_intList,_mode,funcNormSet(),_rangeName);
+    std::unique_ptr<RooAbsReal> analyticalPart{_function->createIntegral(_anaList, *funcNormSet(), RooNameReg::str(_rangeName))};
+    _numIntegrand = std::make_unique<RooRealBinding>(*analyticalPart,_intList,nullptr,false,_rangeName);
+    const_cast<RooRealIntegral*>(this)->addOwnedComponents(std::move(analyticalPart));
   }
   else {
     _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,funcNormSet(),false,_rangeName);
