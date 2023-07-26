@@ -608,7 +608,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
     removeAsymError() ;
 
     bool reprocessToken = false ;
-    while(1) {
+    while(true) {
       if (parser.atEOL() || parser.atEOF()) break ;
 
       if (!reprocessToken) {

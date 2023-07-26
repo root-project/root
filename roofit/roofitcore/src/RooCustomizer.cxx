@@ -757,7 +757,7 @@ std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const 
     // Now import everything. What we didn't touch gets recycled, everything else was cloned here:
     ft.ws().import(cust.cloneBranchList(), RooFit::Silence(true), RooFit::RecycleConflictNodes(true),    RooFit::NoRecursion(false));
   } else {
-    ft.ws().import(cust.cloneBranchList(), RooFit::Silence(true), RooFit::RenameConflictNodes("orig",1), RooFit::NoRecursion(true));
+    ft.ws().import(cust.cloneBranchList(), RooFit::Silence(true), RooFit::RenameConflictNodes("orig",true), RooFit::NoRecursion(true));
   }
 
   return string(instanceName?instanceName:targ->GetName()) ;

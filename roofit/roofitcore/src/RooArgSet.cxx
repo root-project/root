@@ -435,7 +435,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
   bool inSection(section?false:true) ;
 
   bool reprocessToken = false ;
-  while (1) {
+  while (true) {
 
     if (is.eof() || is.fail() || parser.atEOF()) {
       break ;

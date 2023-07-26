@@ -149,7 +149,7 @@ TString RooStreamParser::readToken()
     }
   }
 
-  while(1) {
+  while(true) {
     // Buffer overflow protection
     if (bufptr >= 63999) {
       oocoutW(nullptr, InputArguments)

@@ -1032,7 +1032,7 @@ void fitGaussToPulls(RooPlot& frame, RooDataSet& fitParData)
    RooRealVar& pullSigma = *ws.var("pullSigma");
    RooAbsPdf& pullGauss = *ws.pdf("pullGauss");
 
-   pullGauss.fitTo(fitParData, RooFit::Minos(0), RooFit::PrintLevel(-1)) ;
+   pullGauss.fitTo(fitParData, RooFit::Minos(false), RooFit::PrintLevel(-1)) ;
    pullGauss.plotOn(&frame) ;
 
    // Instead of using paramOn() without command arguments to plot the fit

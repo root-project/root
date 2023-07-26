@@ -3237,7 +3237,7 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
 {
   TBranch* branch = t.GetBranch(cleanBranchName()) ;
   if (branch) {
-    t.SetBranchStatus(cleanBranchName(),active?1:0) ;
+    t.SetBranchStatus(cleanBranchName(),active?true:false) ;
   }
 }
 
@@ -4488,11 +4488,11 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLi
 
   if (verbose) {
     // Activate verbose options
-    m.setVerbose(1) ;
+    m.setVerbose(true) ;
   }
   if (doTimer) {
     // Activate timer options
-    m.setProfile(1) ;
+    m.setProfile(true) ;
   }
 
   if (strat!=1) {

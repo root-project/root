@@ -216,7 +216,7 @@ void RooBDecay::generateEvent(Int_t code)
 {
   R__ASSERT(code==1);
   double gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
-  while(1) {
+  while(true) {
     double t = -log(RooRandom::uniform())/gammamin;
     if (_type == Flipped || (_type == DoubleSided && RooRandom::uniform() <0.5) ) t *= -1;
     if ( t<_t.min() || t>_t.max() ) continue;

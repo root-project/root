@@ -278,7 +278,7 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 
 void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-  while(1) {
+  while(true) {
 
     // Generate pdf and model data
     _modelGen->generateEvent(*_modelVars,remaining) ;
