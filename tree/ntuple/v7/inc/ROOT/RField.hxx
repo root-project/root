@@ -257,7 +257,7 @@ protected:
    /// This implementation works for types with a trivial destructor and should be overwritten otherwise.
    virtual void DestroyValue(void *objPtr, bool dtorOnly = false) const;
    /// Allow derived classes to call GenerateValue(void *) and DestroyValue on other (sub) fields.
-   static void GenerateValueBy(const RFieldBase &other, void *where) { other.GenerateValue(where); }
+   static void CallGenerateValueOn(const RFieldBase &other, void *where) { other.GenerateValue(where); }
    static void DestroyValueBy(const RFieldBase &other, void *objPtr, bool dtorOnly = false)
    {
       other.DestroyValue(objPtr, dtorOnly);
@@ -577,7 +577,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor & /* desc */) final {}
 
-   void GenerateValue(void *where) const final { GenerateValueBy(*fSubFields[0], where); }
+   void GenerateValue(void *where) const final { CallGenerateValueOn(*fSubFields[0], where); }
 
    std::size_t AppendImpl(const void *from) final { return AppendBy(*fSubFields[0], from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { ReadBy(*fSubFields[0], globalIndex, to); }
