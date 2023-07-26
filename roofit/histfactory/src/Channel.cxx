@@ -22,7 +22,7 @@
 
 #include "RooStats/HistFactory/Channel.h"
 #include "HFMsgService.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TFile.h"
 #include "TKey.h"

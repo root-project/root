@@ -30,7 +30,7 @@ but a not-normalized function (RooAbsReal)
 
 #include "Riostream.h"
 #include "TArrayD.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooStepFunction.h"
 #include "RooRealVar.h"

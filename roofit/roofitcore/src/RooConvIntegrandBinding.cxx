@@ -31,7 +31,7 @@ RooNumConvPdf
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 

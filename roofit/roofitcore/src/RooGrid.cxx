@@ -31,7 +31,7 @@ integration, following the VEGAS algorithm.
 #include "TMath.h"
 #include "RooMsgService.h"
 
-#include <math.h>
+#include <cmath>
 #include "Riostream.h"
 #include <iomanip>
 

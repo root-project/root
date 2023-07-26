@@ -17,7 +17,7 @@
 #define ROO_CONV_COEF_VAR
 
 #include <cmath>
-#include <float.h>
+#include <cfloat>
 
 #include "RooAbsReal.h"
 #include "RooRealVar.h"

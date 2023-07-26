@@ -38,7 +38,7 @@ contents of all bins.
 #include "TClass.h"
 #include "Math/Util.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 

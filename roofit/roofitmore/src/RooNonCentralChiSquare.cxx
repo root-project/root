@@ -43,7 +43,7 @@ http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/
 #include "RooNonCentralChiSquare.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include <math.h>
+#include <cmath>
 #include "TMath.h"
 //#include "RooNumber.h"
 #include "Math/DistFunc.h"
