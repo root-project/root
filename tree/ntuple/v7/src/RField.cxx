@@ -1459,8 +1459,9 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
    auto result = std::unique_ptr<RProxiedCollectionField>(
-      new RProxiedCollectionField(newName, GetType(), fProxy->GetCollectionClass()));
+      new RProxiedCollectionField(newName, GetType(), std::move(newItemField)));
    SyncFieldIDs(*this, *result);
    return result;
 }
@@ -2414,7 +2415,9 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::make_unique<RSetField>(newName, GetType(), std::move(newItemField));
+   auto result = std::unique_ptr<RSetField>(new RSetField(newName, GetType(), std::move(newItemField)));
+   SyncFieldIDs(*this, *result);
+   return result;
 }
 
 //------------------------------------------------------------------------------
