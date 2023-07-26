@@ -324,7 +324,7 @@ namespace RooStats {
    std::string channel_name = fChannelNameVec.at(i_chan);
 
    // If we pass a channel string, we only print that one channel
-   if( channel_to_print != "" && channel_name != channel_to_print) continue;
+   if( !channel_to_print.empty() && channel_name != channel_to_print) continue;
 
    std::unique_ptr<TH1> data_hist{GetDataHist(data, channel_name, channel_name+"_tmp")};
    std::cout << std::setw(_label_print_width) << channel_name + " (data)";
@@ -535,7 +535,7 @@ namespace RooStats {
       RooArgList observable_list( *GetObservableSet(channel) );
 
       std::string name = hist_name;
-      if(hist_name=="") name = channel + "_" + sample + "_hist";
+      if(hist_name.empty()) name = channel + "_" + sample + "_hist";
 
       RooAbsReal* sample_function = SampleFunction(channel, sample);
 
@@ -582,7 +582,7 @@ namespace RooStats {
    total_hist->Add(sample_hist.get());
       }
 
-      if(hist_name=="") total_hist->SetName(hist_name.c_str());
+      if(hist_name.empty()) total_hist->SetName(hist_name.c_str());
       else total_hist->SetName( (channel + "_hist").c_str() );
 
       return total_hist;
@@ -953,7 +953,7 @@ namespace RooStats {
       // Find its value
       double sigma = 0.0;
 
-      if( ConstraintType == "" ) {
+      if( ConstraintType.empty() ) {
    std::cout << "Error: Constraint type is an empty string."
         << " This simply should not be." << std::endl;
    throw hf_exc();

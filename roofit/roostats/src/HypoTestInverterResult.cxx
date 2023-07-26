@@ -1252,7 +1252,7 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
 
      TGraph g;
      for (int k = 0; k < npoints ; ++k) {
-        if (quantVec[index[k]].size()  > 0 )
+        if (!quantVec[index[k]].empty() )
            g.SetPoint(g.GetN(), GetXValue(index[k]), (quantVec[index[k]])[j] );
      }
 

@@ -125,7 +125,7 @@ std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
             std::string task_name = findTaskForDuration(durations_json, durations_json[eval_partition_name][idx],
                                                         durations_json[eval_partition_name][idx + 1]);
 
-            if (task_name == "")
+            if (task_name.empty())
                continue;
 
             // add found combination of task, partition evaluation, and duration to partial matrix

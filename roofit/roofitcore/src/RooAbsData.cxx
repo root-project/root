@@ -222,7 +222,7 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   }
 
 
-  if (other._ownedComponents.size()>0) {
+  if (!other._ownedComponents.empty()) {
 
     // copy owned components here
 
@@ -263,7 +263,7 @@ RooAbsData& RooAbsData::operator=(const RooAbsData& other) {
   }
 
 
-  if (other._ownedComponents.size()>0) {
+  if (!other._ownedComponents.empty()) {
 
     // copy owned components here
 

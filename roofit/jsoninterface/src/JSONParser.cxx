@@ -184,7 +184,7 @@ bool isResettingPossible(nlohmann::json const &node)
    }
 
    if (node.type() == nlohmann::json::value_t::string) {
-      if (node.get<std::string>() == "") {
+      if (node.get<std::string>().empty()) {
          return true;
       }
    }

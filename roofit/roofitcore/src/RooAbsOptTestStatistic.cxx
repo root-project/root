@@ -664,7 +664,7 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
     _dataClone = nullptr ;
   }
 
-  if (!cloneData && _rangeName.size()>0) {
+  if (!cloneData && !_rangeName.empty()) {
     coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
           << "ignoring request to _not_ clone the input dataset" << endl ;
     cloneData = true ;

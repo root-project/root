@@ -890,7 +890,7 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
     ws().commitTransaction() ;
   }
 
-  return out.size() ? ws().arg(out.c_str()) : nullptr ;
+  return !out.empty() ? ws().arg(out.c_str()) : nullptr ;
 }
 
 
@@ -1339,7 +1339,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
     // Create a RooAbsCategory
     string allStates ;
     for (vector<string>::iterator ai = args.begin() ; ai!=args.end() ; ++ai) {
-      if (allStates.size()>0) {
+      if (!allStates.empty()) {
    allStates += "," ;
       }
       allStates += *ai ;

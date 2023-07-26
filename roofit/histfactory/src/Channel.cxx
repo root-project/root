@@ -222,7 +222,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
   // Get the Data Histogram:
 
-  if( fData.GetInputFile() != "" ) {
+  if( !fData.GetInputFile().empty() ) {
     fData.SetHisto( GetHistogram(fData.GetInputFile(),
              fData.GetHistoPath(),
              fData.GetHistoName(),
@@ -231,7 +231,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
   // Collect any histograms for additional Datasets
   for(auto& data : fAdditionalData) {
-    if( data.GetInputFile() != "" ) {
+    if( !data.GetInputFile().empty() ) {
       data.SetHisto( GetHistogram(data.GetInputFile(), data.GetHistoPath(), data.GetHistoName(), fileHandles) );
     }
   }
@@ -332,7 +332,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
 
   try {
 
-    if( fData.GetHisto() == nullptr && fData.GetInputFile() != "" ) {
+    if( fData.GetHisto() == nullptr && !fData.GetInputFile().empty() ) {
       cxcoutEHF << "Error: Data Histogram for channel " << GetName() << " is nullptr." << std::endl;
       throw hf_exc();
     }
@@ -359,7 +359,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
        NegativeBinContent.push_back(histNominal->GetBinContent(ibin));
      }
    }
-   if(NegativeBinNumber.size()>0) {
+   if(!NegativeBinNumber.empty()) {
      cxcoutWHF << "WARNING: Nominal Histogram " << histNominal->GetName() << " for Sample = " << sample.GetName()
           << " in Channel = " << GetName() << " has negative entries in bin numbers = ";
 

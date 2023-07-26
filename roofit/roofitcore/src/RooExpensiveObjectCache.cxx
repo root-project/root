@@ -273,7 +273,7 @@ void RooExpensiveObjectCache::print() const
 void RooExpensiveObjectCache::ExpensiveObject::print() const
 {
   std::cout << _payload->ClassName() << "::" << _payload->GetName() ;
-  if (_realRefParams.size()>0 || _catRefParams.size()>0) {
+  if (!_realRefParams.empty() || !_catRefParams.empty()) {
     std::cout << " parameters=( " ;
     auto iter = _realRefParams.begin() ;
     while(iter!=_realRefParams.end()) {

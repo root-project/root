@@ -116,7 +116,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
       fLastX.addClone(x);
       // generate initial cache
       RooStats::SetParameters(&x, &fMaster);
-      if (fMap.size() > 0) {
+      if (!fMap.empty()) {
          for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
             fIt->first->setVal(fIt->second->getVal(&x));
       }
@@ -124,7 +124,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
    }
 
    bool moved = false;
-   if (fMap.size() > 0) {
+   if (!fMap.empty()) {
       moved = !Equals(fLastX, x);
 
       // if we've moved, set the values of the variables in the PDF to the
