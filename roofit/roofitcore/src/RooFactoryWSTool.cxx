@@ -435,7 +435,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
    string qualvalue ;
    if (_args[i].find(Form("%s::",className)) != string::npos) {
-     qualvalue = _args[i].c_str() ;
+     qualvalue = _args[i] ;
    } else {
      qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;
    }

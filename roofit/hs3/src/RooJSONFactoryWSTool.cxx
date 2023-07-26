@@ -419,7 +419,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    JSONNode const *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisName);
 
    JSONNode const *mcNameNode = mcAuxNode ? mcAuxNode->find("mcName") : nullptr;
-   std::string mcname = mcNameNode ? mcNameNode->val() : analysisName.c_str();
+   std::string mcname = mcNameNode ? mcNameNode->val() : analysisName;
    if (workspace.obj(mcname))
       return;
 

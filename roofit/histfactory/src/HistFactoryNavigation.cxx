@@ -455,7 +455,7 @@ namespace RooStats {
       // (Could be optimized, it uses an intermediate histogram for now...)
 
       // Get the histogram, fetch the bin content, and return
-      std::unique_ptr<TH1> channel_hist_tmp{GetChannelHist(channel, (channel+"_tmp").c_str())};
+      std::unique_ptr<TH1> channel_hist_tmp{GetChannelHist(channel, channel+"_tmp")};
       return channel_hist_tmp->GetBinContent(bin);
     }
 
@@ -467,7 +467,7 @@ namespace RooStats {
       //  Could be optimized, it uses an intermediate histogram for now...)
 
       // Get the histogram, fetch the bin content, and return
-      std::unique_ptr<TH1> sample_hist_tmp{GetSampleHist(channel, sample,  (channel+"_tmp").c_str())};
+      std::unique_ptr<TH1> sample_hist_tmp{GetSampleHist(channel, sample,  channel+"_tmp")};
       return sample_hist_tmp->GetBinContent(bin);
     }
 
@@ -840,8 +840,8 @@ namespace RooStats {
       size_t index = SampleName.find("L_x_");
       SampleName.replace( index, 4, "" );
     }
-    if( SampleName.find(ChannelName.c_str()) != std::string::npos ) {
-      size_t index = SampleName.find(ChannelName.c_str());
+    if( SampleName.find(ChannelName) != std::string::npos ) {
+      size_t index = SampleName.find(ChannelName);
       SampleName = SampleName.substr(0, index-1);
     }
 
