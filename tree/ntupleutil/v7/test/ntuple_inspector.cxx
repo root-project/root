@@ -426,3 +426,31 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
    EXPECT_EQ(topFieldInfo.GetOnDiskSize(), subFieldOnDiskSize);
    EXPECT_EQ(topFieldInfo.GetInMemorySize(), subFieldInMemorySize);
 }
+
+TEST(RNTupleInspector, FieldsByName)
+{
+   FileRaii fileGuard("test_ntuple_inspector_fields_by_name.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt1 = model->MakeField<std::int32_t>("int1");
+      auto nFldInt2 = model->MakeField<std::int32_t>("int2");
+      auto nFldInt3 = model->MakeField<std::int32_t>("int3");
+      auto nFldFloat1 = model->MakeField<float>("float1");
+      auto nFldFloat2 = model->MakeField<float>("float2");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+   }
+
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
+   auto inspector = RNTupleInspector::Create(ntuple);
+
+   auto intFieldIds = inspector->GetFieldsByName("int.");
+
+   EXPECT_EQ(3, intFieldIds.size());
+   for (const auto fieldId : intFieldIds) {
+      EXPECT_EQ("std::int32_t", inspector->GetFieldTreeInfo(fieldId).GetDescriptor().GetTypeName());
+   }
+}
