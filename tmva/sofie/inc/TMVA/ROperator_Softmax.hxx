@@ -172,7 +172,47 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName)  {
-      return std::string();
+      OpName = "op_" + OpName;
+      if (fShape.empty()) {
+         throw std::runtime_error("TMVA SOFIE Operator Softmax called to Generate without being initialized first");
+      }
+      std::stringstream out;
+      size_t size = fShape.size();
+      size_t length = ConvertShapeToLength(fShape);
+      size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
+
+      out << "\n" << SP*3 << "//------ SOFTMAX\n";
+
+      if (size == 1) {
+         out << SP*3 << fType << " sumResult = 0.0;\n";
+         out << SP*3 << "auto sum_buf = cl::sycl::buffer{&sumResult, cl::sycl::range{1}};\n";
+
+         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << SP*4 << "auto sumReduction = reduction(sum_buf, cgh, plus<>());\n";
+         out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
+         out << "), sumReduction, [=](cl::sycl::id<1> id, auto& sum){\n";
+         out << SP*5 << "int tmp = cl::sycl::exp(acc_tensor_" << fNX << "[id]);\n";
+         out << SP*5 << "acc_tensor_" << fNY << "[id] = tmp;\n";
+         out << SP*5 << "sum += tmp;\n";
+         out << SP*4 << "});\n";
+         out << SP*3 << "});\n";
+
+         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::read_write};\n";
+         out << SP*4 << "auto acc_sum_buf = cl::sycl::accessor{sum_buf, cl::sycl::read_only};\n";
+         out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
+         out << "), [=](cl::sycl::id<1> id){\n";
+         out << SP*5 << "acc_tensor_" << fNY << "[id] /= acc_sum_buf[0];\n";
+         out << SP*4 << "});\n";
+         out << SP*3 << "});\n";
+      }
+
+      return out.str();
    }
 };
 

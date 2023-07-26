@@ -128,7 +128,6 @@
                }
             }
             else {
-
                std::vector<size_t> outStride = UTILITY::ComputeStrideFromShape(fOutputShape);
                std::vector<std::vector<size_t>> inStrides(fInputs.size());
                int idx = 0;
