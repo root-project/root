@@ -19,6 +19,20 @@
 #include "RooAbsIntegrator.h"
 #include "RooNumIntConfig.h"
 
+#include <ROOT/RSpan.hxx>
+
+#include <functional>
+
+namespace RooFit {
+namespace Detail {
+
+std::pair<double, int> integrate1d(std::function<double(double)> func, bool doTrapezoid, int maxSteps, int minStepsZero,
+                                   int fixSteps, double epsAbs, double epsRel, bool doExtrap, double xmin, double xmax,
+                                   std::span<double> hArr, std::span<double> sArr);
+
+} // namespace Detail
+} // namespace RooFit
+
 class RooIntegrator1D : public RooAbsIntegrator {
 public:
 
@@ -27,9 +41,9 @@ public:
   RooIntegrator1D() {}
 
   RooIntegrator1D(const RooAbsFunc& function, SummationRule rule= Trapezoid,
-        Int_t maxSteps= 0, double eps= 0) ;
+        int maxSteps= 0, double eps= 0) ;
   RooIntegrator1D(const RooAbsFunc& function, double xmin, double xmax,
-        SummationRule rule= Trapezoid, Int_t maxSteps= 0, double eps= 0) ;
+        SummationRule rule= Trapezoid, int maxSteps= 0, double eps= 0) ;
 
   RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooIntegrator1D(const RooAbsFunc& function, double xmin, double xmax,
@@ -60,30 +74,17 @@ protected:
 
   // Integrator configuration
   SummationRule _rule;
-  Int_t _maxSteps ;      ///< Maximum number of steps
-  Int_t _minStepsZero ;  ///< Minimum number of steps to declare convergence to zero
-  Int_t _fixSteps ;      ///< Fixed number of steps
-  double _epsAbs ;     ///< Absolute convergence tolerance
-  double _epsRel ;     ///< Relative convergence tolerance
-  bool _doExtrap ;     ///< Apply conversion step?
-  enum { _nPoints = 5 };
-
-  // Numerical integrator support functions
-  double addTrapezoids(Int_t n) ;
-  double addMidpoints(Int_t n) ;
-  void extrapolate(Int_t n) ;
+  int _maxSteps ;          ///< Maximum number of steps
+  int _minStepsZero = 999; ///< Minimum number of steps to declare convergence to zero
+  int _fixSteps = 0;       ///< Fixed number of steps
+  double _epsAbs ;         ///< Absolute convergence tolerance
+  double _epsRel ;         ///< Relative convergence tolerance
+  bool _doExtrap = true;   ///< Apply conversion step?
+  double _xmin;            ///<! Lower integration bound
+  double _xmax;            ///<! Upper integration bound
 
   // Numerical integrator workspace
-  double _xmin;              ///<! Lower integration bound
-  double _xmax;              ///<! Upper integration bound
-  double _range;             ///<! Size of integration range
-  double _extrapValue;       ///<! Extrapolated value
-  double _extrapError;       ///<! Error on extrapolated value
-  std::vector<double> _h ;   ///<! Integrator workspace
-  std::vector<double> _s ;   ///<! Integrator workspace
-  std::vector<double> _c ;   ///<! Integrator workspace
-  std::vector<double> _d ;   ///<! Integrator workspace
-  double _savedResult;       ///<! Integrator workspace
+  std::vector<double> _wksp ;   ///<! Integrator workspace
 
   double* xvec(double& xx) { _x[0] = xx ; return _x.data(); }
 
