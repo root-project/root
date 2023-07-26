@@ -35,7 +35,7 @@
 #include "RooTrace.h"
 
 #include <exception>
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 
 using namespace std;

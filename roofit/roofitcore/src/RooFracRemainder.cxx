@@ -28,7 +28,7 @@ a constrained split
 
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooFracRemainder.h"
 #include "RooAbsReal.h"

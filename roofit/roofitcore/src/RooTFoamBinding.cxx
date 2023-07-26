@@ -31,7 +31,7 @@ Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 

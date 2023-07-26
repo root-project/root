@@ -32,7 +32,7 @@ A RooRatio represents the ratio of two given RooAbsReal objects.
 
 #include "TMath.h"
 
-#include <math.h>
+#include <cmath>
 
 ClassImp(RooRatio);
 

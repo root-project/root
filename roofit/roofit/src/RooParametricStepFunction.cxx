@@ -80,7 +80,7 @@ xframe->Draw();
 
 #include "Riostream.h"
 #include "TArrayD.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooParametricStepFunction.h"
 #include "RooRealVar.h"

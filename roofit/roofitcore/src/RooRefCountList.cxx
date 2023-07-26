@@ -28,7 +28,7 @@ reference count until zero, when the object is actually removed.
 #include "RooRefCountList.h"
 
 #include "Riostream.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace std;
 

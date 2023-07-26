@@ -36,7 +36,7 @@ implementations like RooAcceptReject and RooFoam
 #include "RooMsgService.h"
 #include "RooRealBinding.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 
