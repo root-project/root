@@ -174,7 +174,8 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
       int icoeff=0;
-      for (std::vector<Float_t>::const_iterator it = ev->GetValues().begin();it!=ev->GetValues().end();++it){
+      std::vector<Float_t> values = ev->GetValues();
+      for (std::vector<Float_t>::const_iterator it = values.begin();it!=values.end();++it) {
          (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * (*it);
       }
    }
@@ -199,7 +200,8 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
       int icoeff = 0;
-      for (std::vector<Float_t>::const_iterator it = ev->GetValues().begin();it!=ev->GetValues().end();++it){
+      std::vector<Float_t> values = ev->GetValues();
+      for (std::vector<Float_t>::const_iterator it = values.begin();it!=values.end();++it) {
          (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * (*it);
       }
    }
