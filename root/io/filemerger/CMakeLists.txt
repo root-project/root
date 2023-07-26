@@ -132,7 +132,7 @@ endif()
 
 #TBD: add file generation as test fixture
 add_test(NAME roottest-root-io-filemerger-hsimple
-         COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_TUTORIALS_DIR}/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }"
+         COMMAND ${ROOT_root_CMD} -q -l -b -e "#pragma STDC FP_CONTRACT OFF" ${ROOT_TUTORIALS_DIR}/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 if(${compression_default} STREQUAL "zlib")
