@@ -42,12 +42,29 @@ class BaseGenerator:
             columns = x_rdf.GetColumnNames()
 
         template_dict = {
-            "Int_t": "int&",
-            "Float_t": "float&",
             "Bool_t": "bool&",
-            "ROOT::VecOps::RVec<int>": "ROOT::RVec<int>",
-            "ROOT::VecOps::RVec<float>": "ROOT::RVec<float>",
+            "Double_t": "double&",
+            "Double32_t": "double&",
+            "Float_t": "float&",
+            "Float16_t": "float&",
+            "Int_t": "int&",
+            "UInt_t": "unsigned int&",
+            "Long_t": "long&",
+            "ULong_t": "unsigned long&",
+            "Long64_t": "long long&",
+            "ULong64_t": "unsigned long long&",
+            "Short_t": "short&",
+            "UShort_t": "unsigned short&",
+            
             "ROOT::VecOps::RVec<bool>": "ROOT::RVec<bool>",
+            "ROOT::VecOps::RVec<double>": "ROOT::RVec<double>",
+            "ROOT::VecOps::RVec<float>": "ROOT::RVec<float>",
+            "ROOT::VecOps::RVec<int>": "ROOT::RVec<int>",
+            "ROOT::VecOps::RVec<long>": "ROOT::RVec<long>",
+            "ROOT::VecOps::RVec<Long64_t>": "ROOT::RVec<Long64_t>",
+            "ROOT::VecOps::RVec<unsigned int>": "ROOT::RVec<unsigned int>",
+            "ROOT::VecOps::RVec<unsigned long>": "ROOT::RVec<unsigned long>",
+            "ROOT::VecOps::RVec<ULong64_t>": "ROOT::RVec<ULong64_t>"
         }
 
         template_string = ""
@@ -65,9 +82,15 @@ class BaseGenerator:
             template_string += column_type + ","
 
             if column_type in [
-                "ROOT::RVec<int>",
-                "ROOT::RVec<float>",
                 "ROOT::RVec<bool>",
+                "ROOT::RVec<double>",
+                "ROOT::RVec<float>",
+                "ROOT::RVec<int>",
+                "ROOT::RVec<long>",
+                "ROOT::RVec<Long64_t>",
+                "ROOT::RVec<unsigned int>",
+                "ROOT::RVec<unsigned long>",
+                "ROOT::RVec<ULong64_t>"
             ]:
                 # Add column for each element if column is a vector
                 if name_str in max_vec_sizes:
