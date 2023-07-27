@@ -64,6 +64,7 @@ ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testSumW2Error testSumW2Error.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testRooHist testRooHist.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooHistPdf testRooHistPdf.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooIntegrator1D testRooIntegrator1D.cxx LIBRARIES MathCore RooFitCore)
 if (roofit_multiprocess)
   ROOT_ADD_GTEST(testTestStatisticsPlot TestStatistics/testPlot.cxx LIBRARIES RooFitMultiProcess RooFitCore RooFit
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/TestStatistics/TestStatistics_ref.root)
