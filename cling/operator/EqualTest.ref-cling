@@ -6,4 +6,4 @@ SIZE: 4 FILE: equal.C LINE: N/A
 List of member variables: -------------------------------------------------
 List of member functions: -------------------------------------------------
 filename     line:size busy function type and name
-(compiled)     (NA):(NA) 0 private: class privateOp2 &operator=(const int &);
+(compiled)     (NA):(NA) 0 private: privateOp2 &operator=(const int &);
