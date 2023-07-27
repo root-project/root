@@ -150,7 +150,80 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName) {
-      return std::string();
+      OpName = "op_" + OpName;
+      if (fShapeX.empty() || fShapeY.empty()) {
+         throw std::runtime_error("TMVA SOFIE Reduce Op called to Generate without being initialized first");
+      }
+
+      size_t outputLength = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY);
+
+      auto inputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeX);
+      auto outputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeY);
+
+      std::stringstream out;
+      out << "\n" << SP*3 << "//----  operator " << Name() << "  " << OpName << "\n";
+      
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+      out << ", cgh, cl::sycl::read};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << outputLength << "), [=](cl::sycl::id<1> i){\n";
+      size_t dim = fShapeX.size();
+      out << SP*5 << "size_t idx_0 = i / " << outputStrides[0] << ";\n";
+      out << SP*5 << "size_t itmp = i;\n";
+
+      for (size_t k=1; k < dim; k++) {
+         out << SP*5 << "itmp = itmp % " << outputStrides[k-1] << ";\n";
+         if (k < dim - 1) {
+            out << SP*5 << "size_t idx_" << k << " = itmp / " << outputStrides[k] << ";\n";
+         }
+         else {
+            out << SP*5 << "size_t idx_" << k << " = itmp;\n";
+         }
+      }
+
+      if (fReduceOpMode == ReduceProd)
+         out << SP*5 << "float sum = 1;\n";
+      else
+         out << SP*5 << "float sum = 0;\n";
+
+      out << SP*5 << "for (size_t k=0; k < " << fShapeX[fAttrAxes] << "; k++) { \n";
+      out << SP*6 << "idx_" << fAttrAxes << " = k;\n";
+      out << SP*6 << "size_t l = "; 
+
+      for (int n = dim - 1; n >=0; n--) {
+         if (n == int(dim - 1))
+            out << "idx_" << n;
+         else  
+            out << " + " << "idx_" << n << " * " << inputStrides[n];
+      }
+
+      out << ";\n";
+
+      if (fReduceOpMode == ReduceMean) {
+         out << SP*6 << "sum += acc_tensor_" << fNX << "[l];\n";
+         out << SP*5 << "}\n";
+         out << SP*5 << "float reduceResult = sum/static_cast<float>(" << fShapeX[fAttrAxes] << ");\n";
+      }
+      else if (fReduceOpMode == ReduceSumsquare) {
+         out << SP*6 << "sum += acc_tensor_" << fNX << "[l] * acc_tensor_" << fNX << "[l];\n";
+         out << SP*5 << "}\n";
+         out << SP*5 << "float reduceResult = sum;\n";
+      }
+      else if (fReduceOpMode == ReduceProd) {
+         out << SP*6 << "sum *= acc_tensor_" << fNX << "[l]\n";
+         out << SP*5 << "}\n";
+         out << SP*5 << "float reduceResult = sum;\n";
+      }
+
+      out << SP*5 << "acc_tensor_" << fNY << "[i] = reduceResult;\n";
+      out << SP*5 << "});\n";
+      out << SP*4 << "});\n";
+      
+      return out.str();
+
    }
 
 };

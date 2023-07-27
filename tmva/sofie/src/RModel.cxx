@@ -483,7 +483,7 @@ namespace SOFIE{
       }
 
       // include SYCL libraries
-      fGC += "#include <CL/sycl.hpp>\n";
+      fGC += "#include \"CL/sycl.hpp\"\n";
 
       // include BLAS libraries, if needed
       if (!fNeededBlasRoutines.empty()) {
