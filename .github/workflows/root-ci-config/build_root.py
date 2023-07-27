@@ -158,9 +158,8 @@ def main():
     
     if(platform == "fedora38-cov"):
         shell_log = create_coverage_xml(shell_log)
-        # shell_log = create_coverage_html(shell_log)
 
-    upload_testing_failed(upload_failed, testing_failed, result, shell_log)
+    upload_testing_check(upload_failed, testing_failed, result, shell_log)
 
     print_shell_log(shell_log)
 
@@ -351,10 +350,7 @@ def rebase(base_ref, head_ref, shell_log) -> str:
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml(shell_log: str) -> str:
     result, shell_log = subprocess_with_log(f"""
-        pwd
         gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
-        pwd
-        ls
     """, shell_log)
 
     if result != 0:
@@ -362,20 +358,24 @@ def create_coverage_xml(shell_log: str) -> str:
 
     return shell_log
 
+# By
+# 1. testing_failed means that if the run_ctest failed to execute.
+# 2. result != 0 means that if the exit code is not an error code.
+# 3. upload_failed means that if the archive_and_upload failed to execute.
 @github_log_group("Upload and Testing check")
-def upload_testing_failed(upload_failed, testing_failed, result, shell_log):
+def upload_testing_check(upload_failed, testing_failed, result, shell_log):
 
-    if testing_failed:
-        print("testing_failed")
-        die("Testing Failed", shell_log)
-    
+    if upload_failed:
+        print("upload_failed")
+        die("Failed to upload!", shell_log)
+
     if result != 0:
         print("result_not_zero")
         die(result, "Some tests failed", shell_log)
     
-    if upload_failed:
-        print("upload_failed")
-        die("Failed to upload!", shell_log)
+    if testing_failed:
+        print("testing_failed")
+        die("Testing Failed", shell_log)
 
 
 

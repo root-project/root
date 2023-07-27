@@ -4,7 +4,7 @@ name: Test Summary PR comment
 on:
   workflow_run:
     # do NOT use quotes: https://stackoverflow.com/a/72551795/17876693
-    workflows: [ROOT CI]
+    workflows: [ROOT CI TEST]
     types:
       - completed
 permissions: {}
@@ -45,3 +45,13 @@ jobs:
           event_file: artifacts/Event File/event.json
           event_name: ${{ github.event.workflow_run.event }}
           files: "artifacts/**/*.xml"
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true
+          files: artifacts/Test Coverage fedora38-cov Debug/CoverageXML.xml
+          flags: unittests
+          name: codecov-umbrella
+          verbose: true   
