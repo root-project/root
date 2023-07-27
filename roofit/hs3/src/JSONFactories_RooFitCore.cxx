@@ -26,7 +26,6 @@
 #include <RooTFnBinding.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
-#include <RooProdPdf.h>
 #include <RooPolynomial.h>
 #include <RooRealSumFunc.h>
 #include <RooRealSumPdf.h>

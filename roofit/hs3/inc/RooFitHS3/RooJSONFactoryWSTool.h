@@ -119,8 +119,8 @@ public:
       return wsImport(Obj_t(name, name, std::forward<Args_t>(args)...));
    }
 
-   static void error(const char *s);
-   inline static void error(const std::string &s) { error(s.c_str()); }
+   [[noreturn]] static void error(const char *s);
+   [[noreturn]] inline static void error(const std::string &s) { error(s.c_str()); }
    static std::ostream &warning(const std::string &s);
 
    static RooArgSet readAxes(const RooFit::Detail::JSONNode &node);
