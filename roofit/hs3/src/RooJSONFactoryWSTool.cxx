@@ -1600,7 +1600,8 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
 }
 
 void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                                             const std::vector<CombinedData> &combDataSets)
+                                             const std::vector<CombinedData> &combDataSets,
+                                             const std::set<std::string> &dependents)
 {
    auto pdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf());
    if (pdf == nullptr) {
@@ -1617,13 +1618,14 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
       if (hasdata)
          analysisName += "_" + combDataSets[i].name;
 
-      exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr);
+      exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr, dependents);
    }
 }
 
 void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
                                                    std::string const &analysisName,
-                                                   std::map<std::string, std::string> const *dataComponents)
+                                                   std::map<std::string, std::string> const *dataComponents,
+                                                   const std::set<std::string> &dependents)
 {
    auto pdf = static_cast<RooSimultaneous const *>(mc.GetPdf());
 
@@ -1650,6 +1652,30 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       extConstrNode.set_seq();
       for (const auto &constr : *mc.GetExternalConstraints()) {
          extConstrNode.append_child() << constr->GetName();
+      }
+   }
+   if (!useImplicitConstraints) {
+      auto &extConstrNode = nllNode["aux_distributions"];
+      extConstrNode.set_seq();
+      auto *ws = mc.GetWS();
+      auto *globs = mc.GetGlobalObservables();
+      auto *obs = mc.GetObservables();
+      for (const auto &constr : dependents) {
+         std::cout << constr << std::endl;
+         auto *constrpdf = ws->pdf(constr);
+         if (!constrpdf)
+            continue;
+         if (globs) {
+            // if we have globs, we can use them to say which pdfs are constraint terms
+            if (constrpdf->dependsOn(*globs) && !constrpdf->dependsOn(*obs)) {
+               extConstrNode.append_child() << constr;
+            }
+         } else {
+            // otherwise, we have to make do with what we know about observables
+            if (!constrpdf->dependsOn(*obs)) {
+               extConstrNode.append_child() << constr;
+            }
+         }
       }
    }
 
@@ -1699,8 +1725,12 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
    sortByName(allpdfs);
    std::set<std::string> exportedObjectNames;
+   std::map<RooAbsPdf *, std::set<std::string>> dependents;
    for (RooAbsPdf *p : allpdfs) {
-      this->exportObject(*p, exportedObjectNames);
+      std::set<std::string> deps;
+      this->exportObject(*p, deps);
+      exportedObjectNames.insert(deps.begin(), deps.end());
+      dependents[p] = deps;
    }
 
    // export attributes of exported objects
@@ -1729,7 +1759,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
-         exportModelConfig(n, *mc, combData);
+         exportModelConfig(n, *mc, combData, dependents[mc->GetPdf()]);
       }
    }
 

@@ -38,6 +38,7 @@ class ModelConfig;
 class RooJSONFactoryWSTool {
 public:
    static constexpr bool useListsInsteadOfDicts = true;
+   static constexpr bool useImplicitConstraints = false;
 
    struct CombinedData {
       std::string name;
@@ -201,11 +202,13 @@ private:
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
    void exportModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                          const std::vector<RooJSONFactoryWSTool::CombinedData> &d);
+                          const std::vector<RooJSONFactoryWSTool::CombinedData> &d,
+                          const std::set<std::string> &dependents);
 
    void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
                                 std::string const &analysisName,
-                                std::map<std::string, std::string> const *dataComponents);
+                                std::map<std::string, std::string> const *dataComponents,
+                                const std::set<std::string> &dependents);
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
