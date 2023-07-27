@@ -4033,6 +4033,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Int_t nch = strlen(choptin);
    strlcpy(chopt,choptin,128);
    Int_t hdim = fH->GetDimension();
+   Bool_t explicitColor = kFALSE;
 
    Hoption.Axis    = Hoption.Bar     = Hoption.Curve   = Hoption.Error   = 0;
    Hoption.Hist    = Hoption.Line    = Hoption.Mark    = Hoption.Fill    = 0;
@@ -4284,7 +4285,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"COLZ");
    if (l) {
       memcpy(l,"    ",4);
-      if (hdim>1) {
+      if (hdim > 1) {
+         explicitColor = kTRUE;
          Hoption.Color  = 1;
          Hoption.Zscale = 1;
          if (l[4] == '2') { Hoption.Color = 3; l[4] = ' '; }
@@ -4297,7 +4299,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"COL" );
    if (l) {
       memcpy(l,"   ", 3);
-      if (hdim>1) {
+      if (hdim > 1) {
+         explicitColor = kTRUE;
          Hoption.Color = 1;
          if (l[3] == '2') { Hoption.Color = 3; l[3] = ' '; }
          l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  memcpy(l," ",1); }
@@ -4318,7 +4321,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"TRI");
    if (l) {
-      Hoption.Color  = 0;
+      if (!explicitColor) Hoption.Color  = 0;
       Hoption.Tri = 1; memcpy(l,"   ",3);
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
@@ -4346,7 +4349,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Proj = 5; memcpy(l,"        ",9);    //Mollweide projection
    }
    if (Hoption.Proj > 0) {
-      Hoption.Color = 0;
+      if (!explicitColor) Hoption.Color = 0;
       Hoption.Contour = 14;
    }
 
@@ -4364,7 +4367,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"P0"))  Hoption.Mark =10;
 
    if (fH->InheritsFrom(TH2Poly::Class())) {
-      if (Hoption.Fill+Hoption.Line+Hoption.Mark != 0 ) Hoption.Color = 0;
+      if ((Hoption.Fill+Hoption.Line+Hoption.Mark != 0) && !explicitColor) Hoption.Color = 0;
    }
 
    if (strstr(chopt,"E")) {
@@ -4388,7 +4391,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       } else {
          if (Hoption.Error == 0) {
             Hoption.Error = 100;
-            Hoption.Color  = 0;
+            if (!explicitColor) Hoption.Color  = 0;
          }
          if (Hoption.Text) {
             Hoption.Text += 2000;
