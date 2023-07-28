@@ -73,9 +73,9 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && \
 RUN echo "source /opt/intel/oneapi/setvars.sh" >> /home/ioanna/.bashrc
 RUN echo "export PATH=/home/ioanna/.local/bin:$PATH" >> /home/ioanna/.bashrc
 
-COPY root_src /home/ioanna/root_src/
+COPY root_src /home/ioanna/root_src/ 
 
 # Important to update after intel installation
 RUN sudo apt-get update
 
-RUN cd root_build && cmake -DCMAKE_PREFIX_PATH=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so /home/ioanna/root_src && sudo cmake --build . -j16 --target install
+RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so /home/ioanna/root_src && sudo cmake --build . -j16 --target install
