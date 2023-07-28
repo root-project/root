@@ -56,6 +56,6 @@ set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
 
 # tests requires protobuf
-#if (tmva-sofie)
-#  ROOT_ADD_TEST_SUBDIRECTORY(test)
-#endif()
+if (tmva-sofie)
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()

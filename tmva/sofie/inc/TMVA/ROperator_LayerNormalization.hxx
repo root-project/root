@@ -328,7 +328,7 @@ public:
 
       out << "\n" << SP*3 << "// Operator " << OpName << "\n";
       out << SP*3 << "std::vector<size_t> " << OpName << "_InputShape ({";
-      for (size_t i=0; i < fSize; i++) {
+      for (int i=0; i < fSize; i++) {
          out << fShapeX[i];
          if (i + 1 < fSize) {
             out << ", ";
@@ -340,19 +340,19 @@ public:
 
       auto strides = UTILITY::ComputeStrideFromShape(fShapeX);
       std::string InputIndex = "axis_0 * " + std::to_string(strides[0]);
-      for (size_t i = 1; i < fSize; i++) {
+      for (int i = 1; i < fSize; i++) {
          InputIndex += " + axis_" + std::to_string(i) + " * " + std::to_string(strides[i]);
       }
 
       auto axesStrides = UTILITY::ComputeStrideFromShape(fAxesShape);
       std::string axesIndex = "axis_" + std::to_string(0) + " * " + std::to_string(axesStrides[0]);
-      for (size_t i = 1; i < fAxis; i++) {
+      for (int i = 1; i < fAxis; i++) {
          axesIndex += " + axis_" + std::to_string(i) + " * " + std::to_string(axesStrides[i]);
       }
 
       auto normalizedStrides = UTILITY::ComputeStrideFromShape(fNormalizedShape);
       std::string normalizedIndex = "axis_" + std::to_string(fAxis) + " * " + std::to_string(normalizedStrides[0]);
-      for (size_t i = fAxis + 1; i < fSize; i++) {
+      for (int i = fAxis + 1; i < fSize; i++) {
          normalizedIndex += " + axis_" + std::to_string(i) + " * " + std::to_string(normalizedStrides[i - fAxis]);
       }
 
@@ -372,7 +372,7 @@ public:
 
       out << SP*3 << "// Compute the mean\n";
       out << SP*3 << "size_t num_work_items = 1;\n";
-      for (size_t i=0; i<fAxis; i++) {
+      for (int i=0; i<fAxis; i++) {
          out << SP*3 << "num_work_items *= " << inputShape << "[" << i << "]\n";
       }
 
@@ -386,13 +386,13 @@ public:
       out << SP*5 << "float sum = 0.0;\n";
       out << SP*5 << "size_t tid = id\n";
 
-      for (size_t j = fAxis; j < fSize; j++) {
+      for (int j = fAxis; j < fSize; j++) {
          std::string jIdx = "axis_" + std::to_string(j);
          out << SP*(5 + (j - fAxis)) << "for (size_t " << jIdx << " = 0; " << jIdx << " < " << inputShape;
          out << "[" << j << "]; " << jIdx << "++) {\n";
       }
 
-      for (size_t i=fAxis - 1; i>=0; i--) {
+      for (int i=fAxis - 1; i>=0; i--) {
          out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(i);
          out << " = tid % " << inputShape << "[i]\n;";
          out << SP*(5 + (fSize - fAxis + 2)) << "tid /= inputShape[i];\n";
@@ -400,7 +400,7 @@ public:
 
       out << SP*(5 + (fSize - fAxis + 2)) << "sum += acc_tensor_" << fNX << "[" << InputIndex << "];\n";
 
-      for (size_t j = fSize-1; j >= fAxis; j--) {
+      for (int j = fSize-1; j >= fAxis; j--) {
          out << SP*(5 + (j - fAxis)) << "}\n";
       }
 
@@ -423,13 +423,13 @@ public:
       out << SP*5 << fType << " sum = 0.0;\n";
       out << SP*5 << "size_t tid = id\n";
 
-      for (size_t j = fAxis; j < fSize; j++) {
+      for (int j = fAxis; j < fSize; j++) {
          std::string jIdx = "axis_" + std::to_string(j);
          out << SP*(5 + (j - fAxis)) << "for (size_t " << jIdx << " = 0; " << jIdx << " < " << inputShape;
          out << "[" << j << "]; " << jIdx << "++) {\n";
       }
 
-      for (size_t i=fAxis - 1; i>=0; i--) {
+      for (int i=fAxis - 1; i>=0; i--) {
          out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(i);
          out << " = tid % " << inputShape << "[i]\n;";
          out << SP*(5 + (fSize - fAxis + 2)) << "tid /= inputShape[i];\n";
@@ -438,7 +438,7 @@ public:
       out << SP*(5 + (fSize - fAxis + 2)) << "sum += cl::sycl::pow(acc_tensor_" << fNX << "[" << InputIndex << "] - acc_tensor_";
       out << fNMean << "[" << axesIndex << "], 2);\n";
 
-      for (size_t j = fSize-1; j >= fAxis; j--) {
+      for (int j = fSize-1; j >= fAxis; j--) {
          out << SP*(5 + (j - fAxis)) << "}\n";
       }
       
@@ -447,7 +447,7 @@ public:
       out << SP*3 << "});\n\n";
 
       if (!fNCastedX.empty()) {
-         for (size_t j = fAxis; j < fSize; j++) {
+         for (int j = fAxis; j < fSize; j++) {
             out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "]\n";
          }
 
@@ -467,7 +467,7 @@ public:
 
          out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1>id){\n";
          out << SP*5 << "size_t tid = id;\n";
-         for (size_t j = fSize-1; j>=0; j++) {
+         for (int j = fSize-1; j>=0; j++) {
             out << SP*5 << "size_t axis_" << j << " = tid % inputShape[" << j << "];\n";
             out << SP*5 << "tid /= inputShape[" << j << "];\n";
          }
@@ -486,7 +486,7 @@ public:
          out << SP*3 << "});\n";
       }
       else {
-         for (size_t j = fAxis; j < fSize; j++) {
+         for (int j = fAxis; j < fSize; j++) {
             out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "]\n";
          }
 
@@ -505,7 +505,7 @@ public:
          out << "\n" << SP*4 << "Y = Scale o InvStdDev (X-Mean)\n";
          out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1>id){\n";
          out << SP*5 << "size_t tid = id;\n";
-         for (size_t j = fSize-1; j>=0; j++) {
+         for (int j = fSize-1; j>=0; j++) {
             out << SP*5 << "size_t axis_" << j << " = tid % inputShape[" << j << "];\n";
             out << SP*5 << "tid /= inputShape[" << j << "];\n";
          }
