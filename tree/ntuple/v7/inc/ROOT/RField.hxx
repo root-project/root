@@ -196,6 +196,7 @@ public:
       /// Sets a new range for the bulk. If there is enough capacity, the fValues array will be reused.
       /// Otherwise a new array is allocated. After reset, fMaskAvail is false for all values.
       void Reset(const RClusterIndex &firstIndex, std::size_t size);
+      void CountValidValues();
 
       bool ContainsRange(const RClusterIndex &firstIndex, std::size_t size) const
       {
@@ -236,7 +237,16 @@ public:
          bulkSpec.fMaskAvail = &fMaskAvail[offset];
          bulkSpec.fMaskReq = maskReq;
          bulkSpec.fValues = GetValuePtrAt(offset);
-         fNValidValues += fField->ReadBulk(bulkSpec);
+         auto nRead = fField->ReadBulk(bulkSpec);
+         if (nRead == RBulkSpec::kAllSet) {
+            if ((offset == 0) && (size == fSize)) {
+               fNValidValues = fSize;
+            } else {
+               CountValidValues();
+            }
+         } else {
+            fNValidValues += nRead;
+         }
          return GetValuePtrAt(offset);
       }
    }; // class RBulk
@@ -278,6 +288,10 @@ private:
 protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
    struct RBulkSpec {
+      /// As a return value of ReadBulk and ReadBulkImpl(), indicates that the full bulk range was read
+      /// independent of the provided masks.
+      static const std::size_t kAllSet = std::size_t(-1);
+
       RClusterIndex fFirstIndex;  ///< Start of the bulk range
       std::size_t fCount = 0;     ///< Size of the bulk range
       bool *fMaskAvail = nullptr; ///< A bool array of size fCount, indicating the valid values in fValues
@@ -392,6 +406,7 @@ protected:
 
    /// General implementation of bulk read. Loop over the required range and read values that are required
    /// and not already present. Derived classes may implement more optimized versions of this method.
+   /// See ReadBulk() for the return value.
    virtual std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec)
    {
       const auto valueSize = GetValueSize();
@@ -412,14 +427,16 @@ protected:
       return nRead;
    }
 
-   /// Returns the number of newly available values; TODO(jblomer)
+   /// Returns the number of newly available values, that is the number of bools in bulkSpec.fMaskAvail that
+   /// flipped from false to true. As a special return value, kAllSet can be used if all values are read
+   /// independent from the masks.
    std::size_t ReadBulk(const RBulkSpec &bulkSpec)
    {
       if (fIsSimple) {
          /// For simple types, ignore the mask and memcopy the values into the destination
          fPrincipalColumn->ReadV(bulkSpec.fFirstIndex, bulkSpec.fCount, bulkSpec.fValues);
          memset(bulkSpec.fMaskAvail, 1, bulkSpec.fCount);
-         return bulkSpec.fCount;
+         return RBulkSpec::kAllSet;
       }
 
       return ReadBulkImpl(bulkSpec);
