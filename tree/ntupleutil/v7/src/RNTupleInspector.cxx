@@ -194,12 +194,6 @@ ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::regex &typeNa
    return typeCount;
 }
 
-size_t
-ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeNamePattern, bool includeSubFields) const
-{
-   return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, includeSubFields);
-}
-
 size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
 {
    size_t typeCount = 0;
@@ -262,10 +256,4 @@ ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNam
    }
 
    return fieldIds;
-}
-
-const std::vector<ROOT::Experimental::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetFieldsByName(std::string_view fieldNamePattern, bool includeSubFields) const
-{
-   return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, includeSubFields);
 }
