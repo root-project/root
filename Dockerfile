@@ -37,17 +37,16 @@ RUN sudo apt-get install -y libblas-dev liblapack-dev
 # Install Protobuf
 RUN sudo apt-get install -y libprotobuf-dev protobuf-compiler
 
-# Install requirements.txt
-COPY requirements.txt /home/ioanna/
-RUN pip3 install -r requirements.txt
+# Install pip packages
+pip3 install numpy
+pip3 install torch==1.13.0
+pip3 install onnx==1.14.0
+pip3 install protobuf==3.20.3
 
 # Create build, install directories
 RUN mkdir root_build
 RUN mkdir root_install
 RUN mkdir root_src
-
-COPY root_src /home/ioanna/root_src/
-RUN cd root_build && cmake -DCMAKE_PREFIX_PATH=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 /home/ioanna/root_src -Dtesting=On  && sudo cmake --build . -j16 --target install
 
 # Install Intel Oneapi
 RUN sudo apt-get install -y --no-install-recommends \
@@ -70,3 +69,13 @@ RUN sudo apt-get update && sudo apt-get upgrade -y && \
     sudo apt-get install -y --no-install-recommends \
     ca-certificates build-essential pkg-config gnupg libarchive13 openssh-server openssh-client wget net-tools git intel-basekit-getting-started intel-oneapi-advisor intel-oneapi-ccl-devel intel-oneapi-common-licensing intel-oneapi-common-vars intel-oneapi-compiler-dpcpp-cpp intel-oneapi-dal-devel intel-oneapi-dev-utilities intel-oneapi-dnnl-devel intel-oneapi-dpcpp-debugger intel-oneapi-ipp-devel intel-oneapi-ippcp-devel intel-oneapi-libdpstd-devel intel-oneapi-mkl-devel intel-oneapi-tbb-devel intel-oneapi-vtune intel-level-zero-gpu level-zero  && \
   sudo rm -rf /var/lib/apt/lists/*
+
+RUN echo "source /opt/intel/oneapi/setvars.sh" >> /home/ioanna/.bashrc
+RUN echo "export PATH=/home/ioanna/.local/bin:$PATH" >> /home/ioanna/.bashrc
+
+COPY root_src /home/ioanna/root_src/
+
+# Important to update after intel installation
+RUN sudo apt-get update
+
+RUN cd root_build && cmake -DCMAKE_PREFIX_PATH=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so /home/ioanna/root_src && sudo cmake --build . -j16 --target install
