@@ -236,6 +236,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fTitle("")
 {
+   // Creating an interpreter transaction, needs locking.
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!ci || !ci->IsValid()) {
@@ -285,6 +286,8 @@ TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
    if (!IsValid()) {
       return TDictionary::DeclId_t();
    }
+   // Next part interacts with clang, needs locking
+   R__LOCKGUARD(gInterpreterMutex);
    if (auto *FD = GetAsFunctionDecl())
       return (const clang::Decl*)(FD->getCanonicalDecl());
    return (const clang::Decl*)(GetAsUsingShadowDecl()->getCanonicalDecl());
@@ -302,6 +305,8 @@ const clang::UsingShadowDecl *TClingMethodInfo::GetAsUsingShadowDecl() const
 
 const clang::FunctionDecl *TClingMethodInfo::GetTargetFunctionDecl() const
 {
+   // May need to resolve the declaration interacting with clang, needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    const Decl *D = GetDecl();
    do {
       if (auto FD = dyn_cast<FunctionDecl>(D))
@@ -356,6 +361,7 @@ void *TClingMethodInfo::InterfaceMethod() const
    if (!IsValid()) {
       return nullptr;
    }
+   // TODO: can this lock be moved further deep?
    R__LOCKGUARD(gInterpreterMutex);
    TClingCallFunc cf(fInterp);
    cf.SetFunc(this);
@@ -372,6 +378,7 @@ int TClingMethodInfo::NArg() const
    if (!IsValid()) {
       return -1;
    }
+   // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    unsigned num_params = fd->getNumParams();
    // Truncate cast to fit cint interface.
@@ -383,6 +390,7 @@ int TClingMethodInfo::NDefaultArg() const
    if (!IsValid()) {
       return -1;
    }
+   // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    unsigned num_params = fd->getNumParams();
    unsigned min_args = fd->getMinRequiredArguments();
@@ -440,11 +448,14 @@ long TClingMethodInfo::Property() const
    if (llvm::isa<UsingShadowDecl>(declAccess))
       property |= kIsUsing;
 
+   // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    clang::AccessSpecifier Access = clang::AS_public;
    if (!declAccess->getDeclContext()->isNamespace())
       Access = declAccess->getAccess();
 
+   // From here on the method interacts with clang directly, needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    if ((property & kIsUsing) && llvm::isa<CXXConstructorDecl>(fd)) {
       Access = clang::AS_public;
       clang::CXXRecordDecl *typeCXXRD = llvm::cast<RecordType>(Type()->GetQualType())->getAsCXXRecordDecl();
@@ -528,6 +539,7 @@ long TClingMethodInfo::ExtraProperty() const
       return 0L;
    }
    long property = 0;
+   // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    if (fd->isOverloadedOperator())
       property |= kIsOperator;
@@ -551,6 +563,9 @@ TClingTypeInfo *TClingMethodInfo::Type() const
       ti.Init(clang::QualType());
       return &ti;
    }
+
+   // The next part interacts with clang, thus needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    if (llvm::isa<clang::CXXConstructorDecl>(GetTargetFunctionDecl())) {
       // CINT claims that constructors return the class object.
       // For using-ctors of a base, claim that it "returns" the derived class.
@@ -578,6 +593,7 @@ std::string TClingMethodInfo::GetMangledName() const
    mangled_name.clear();
    const FunctionDecl* D = GetTargetFunctionDecl();
 
+   // Creating an interpreter transaction, needs locking.
    R__LOCKGUARD(gInterpreterMutex);
    cling::Interpreter::PushTransactionRAII RAII(fInterp);
    GlobalDecl GD;
@@ -601,10 +617,13 @@ const char *TClingMethodInfo::GetPrototype()
    buf.clear();
    buf += Type()->Name();
    buf += ' ';
+   // The next call locks the interpreter mutex.
    const FunctionDecl *FD = GetTargetFunctionDecl();
    // Use the DeclContext of the decl, not of the target decl:
    // Used base functions should show as if they are part of the derived class,
    // e.g. `Derived Derived::Derived(int)`, not `Derived Base::Derived(int)`.
+   // Interacting with clang in the next part, needs locking
+   R__LOCKGUARD(gInterpreterMutex);
    if (const clang::TypeDecl *td = llvm::dyn_cast<clang::TypeDecl>(GetDecl()->getDeclContext())) {
       std::string name;
       clang::QualType qualType(td->getTypeForDecl(),0);
@@ -643,7 +662,13 @@ const char *TClingMethodInfo::Name() const
    if (!fNameCache.empty())
      return fNameCache.c_str();
 
-   ((TCling*)gCling)->GetFunctionName(GetDecl(), fNameCache);
+   {
+      // The data member needs to be filled. This calls into the interpreter,
+      // needs locking.
+      // TODO: Check if the lock can be moved further deep.
+      R__LOCKGUARD(gInterpreterMutex);
+      ((TCling *)gCling)->GetFunctionName(GetDecl(), fNameCache);
+   }
    return fNameCache.c_str();
 }
 
@@ -653,6 +678,9 @@ const char *TClingMethodInfo::TypeName() const
       // FIXME: Cint does not check!
       return nullptr;
    }
+   // The next *two* calls lock the interpreter mutex. Lock here first instead
+   // of locking/unlocking twice.
+   R__LOCKGUARD(gInterpreterMutex);
    return Type()->Name();
 }
 
@@ -672,6 +700,7 @@ const char *TClingMethodInfo::Title()
    // redecl chain (came from merging of pcms).
    const FunctionDecl *FD = GetTargetFunctionDecl();
 
+   // Creating an interpreter transaction, needs locking.
    R__LOCKGUARD(gInterpreterMutex);
 
    // Could trigger deserialization of decls.
