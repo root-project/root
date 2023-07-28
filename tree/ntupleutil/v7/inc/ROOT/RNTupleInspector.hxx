@@ -157,6 +157,9 @@ public:
 
    const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
 
+   /// Get the number of columns of a given type present in the RNTuple.
+   size_t GetColumnTypeCount(EColumnType colType) const;
+
    const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
    const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
 
@@ -167,9 +170,6 @@ public:
    {
       return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, searchInSubFields);
    }
-
-   /// Get the number of columns of a given type present in the RNTuple.
-   size_t GetColumnTypeCount(EColumnType colType) const;
 
    /// Get the IDs of (sub-)fields whose name matches the given string. Because field names are unique by design,
    /// providing a single field name will return a vector containing just the ID of that field. However, regular

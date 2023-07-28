@@ -176,22 +176,16 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
    return inspector;
 }
 
-size_t
-ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::regex &typeNamePattern, bool searchInSubFields) const
+//------------------------------------------------------------------------------
+
+const ROOT::Experimental::RNTupleInspector::RColumnInfo &
+ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColumnId) const
 {
-   size_t typeCount = 0;
-
-   for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
-      if (!searchInSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor->GetFieldZeroId()) {
-         continue;
-      }
-
-      if (std::regex_match(fldInfo.GetDescriptor().GetTypeName(), typeNamePattern)) {
-         typeCount++;
-      }
+   if (physicalColumnId > fDescriptor->GetNPhysicalColumns()) {
+      throw RException(R__FAIL("No column with physical ID " + std::to_string(physicalColumnId) + " present"));
    }
 
-   return typeCount;
+   return fColumnInfo.at(physicalColumnId);
 }
 
 size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
@@ -207,15 +201,7 @@ size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experiment
    return typeCount;
 }
 
-const ROOT::Experimental::RNTupleInspector::RColumnInfo &
-ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColumnId) const
-{
-   if (physicalColumnId > fDescriptor->GetNPhysicalColumns()) {
-      throw RException(R__FAIL("No column with physical ID " + std::to_string(physicalColumnId) + " present"));
-   }
-
-   return fColumnInfo.at(physicalColumnId);
-}
+//------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RFieldTreeInfo &
 ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(DescriptorId_t fieldId) const
@@ -237,6 +223,24 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(std::string_view fieldNam
    }
 
    return GetFieldTreeInfo(fieldId);
+}
+
+size_t
+ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::regex &typeNamePattern, bool includeSubFields) const
+{
+   size_t typeCount = 0;
+
+   for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
+      if (!includeSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor->GetFieldZeroId()) {
+         continue;
+      }
+
+      if (std::regex_match(fldInfo.GetDescriptor().GetTypeName(), typeNamePattern)) {
+         typeCount++;
+      }
+   }
+
+   return typeCount;
 }
 
 const std::vector<ROOT::Experimental::DescriptorId_t>
