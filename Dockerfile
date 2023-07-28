@@ -38,10 +38,10 @@ RUN sudo apt-get install -y libblas-dev liblapack-dev
 RUN sudo apt-get install -y libprotobuf-dev protobuf-compiler
 
 # Install pip packages
-pip3 install numpy
-pip3 install torch==1.13.0
-pip3 install onnx==1.14.0
-pip3 install protobuf==3.20.3
+RUN pip3 install numpy
+RUN pip3 install torch==1.13.0
+RUN pip3 install onnx==1.14.0
+RUN pip3 install protobuf==3.20.3
 
 # Create build, install directories
 RUN mkdir root_build
