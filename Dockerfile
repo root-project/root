@@ -78,4 +78,19 @@ COPY root_src /home/ioanna/root_src/
 # Important to update after intel installation
 RUN sudo apt-get update
 
-#RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dimt=Off /home/ioanna/root_src && sudo cmake --build . -j16 --target install
+# Install tbb 2018
+WORKDIR /home/ioanna
+RUN wget https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.10.0.tar.gz
+RUN tar -zxvf v2021.10.0.tar.gz
+RUN cd oneTBB-2021.10.0
+WORKDIR /home/ioanna/oneTBB-2021.10.0
+RUN mkdir build && cd build
+RUN mkdir /home/ioanna/tbb_install
+RUN cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/tbb_install/ -DTBB_TEST=off
+RUN cmake --build . -j16
+RUN cmake --install .
+
+WORKDIR /home/ioanna
+RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh"
+ENV PATH=/home/ioanna/.local/bin:$PATH
+RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -DTBB_LIBRARIES=/home/ioanna/tbb_install/lib64/libtbb.so /home/ioanna/root_src && sudo cmake --build . -j16 --target install

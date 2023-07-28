@@ -392,7 +392,7 @@ public:
          out << SP << SP << SP << SP << SP << "for (int m = j; m < j + kw; m++) {\n";
          out << SP << SP << SP << SP << SP << SP << "if (m < 0 || m >= wsize) continue;\n";
          out << SP << SP << SP << SP << SP << SP << SP << "int index = inputOffset + l*wsize + m;\n";
-         if (fPoolMode == MaxPool) {
+         if (fPoolMode == MaxPool) { 
          out << SP << SP << SP << SP << SP << SP << SP << "auto xval = tensor_" << fNX << "[index];\n";
          out << SP << SP << SP << SP << SP << SP << SP << "if (xval > value) value = xval;\n";
          }
@@ -476,7 +476,232 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName) {
-      return std::string();
+      OpName = "op_" + OpName;
+
+      if (fShapeX.empty() || fShapeY.empty()) {
+         throw std::runtime_error("TMVA SOFIE Pool Op called to Generate without being initialized first");
+      }
+
+      std::stringstream out;
+
+      out << "\n" << SP*3 << "//----  operator " << Name() << "  " << OpName << "\n";
+      out << SP*3 << "{\n"; // create a new scope to avoid name clash
+
+      assert(fShapeX[0] == fShapeY[0]);
+      assert(fShapeX[1] == fShapeY[1]);
+      assert(fAttrPads.size() == 6);
+      assert(fAttrKernelShape.size() == 3);
+      // find lower bounds of filtered area
+      int hmin = - fAttrPads[0];   // minimum lower bound value of filter area
+      int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] +1;  // maximum lower bound value + 1
+      int wmin,wmax,dmin,dmax;
+
+      if(fDim >= 2){
+         wmin = - fAttrPads[2];   // minimum lower bound value of filter area
+         wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] +1;  // maximum lower bound value + 1
+      }
+      else{
+         wmin=1;
+         wmax=1;
+      }
+      if(fDim == 3){
+         dmin = - fAttrPads[4];   // minimum lower bound value of filter area
+         dmax = fShapeX[4] + fAttrPads[5] - fAttrKernelShape[2] +1;  // maximum lower bound value + 1
+      }
+      else{
+         dmin=1;
+         dmax=1;
+      }
+
+      out << SP*4 << "constexpr int hsize = " << fShapeX[2] << ";\n";
+      out << SP*4 << "constexpr int hmin = " << hmin << ";\n";
+      out << SP*4 << "constexpr int hmax = " << hmax << ";\n";
+      out << SP*4 << "constexpr int kh = " << fAttrKernelShape[0] << ";\n";
+      if (fDim > 1) {
+         size_t wsize = fShapeX[3];
+         out << SP*4 << "constexpr int wsize = " << wsize << ";\n";
+         out << SP*4 << "constexpr int wmin = " << wmin << ";\n";
+         out << SP*4 << "constexpr int wmax = " << wmax << ";\n";
+         out << SP*4 << "constexpr int kw = " << fAttrKernelShape[1] << ";\n";
+         if (fDim > 2) {
+            size_t dsize = fShapeX[4];
+            out << SP*4 << "constexpr int dsize = " << dsize << ";\n";
+            out << SP*4 << "constexpr int dwsize = " << dsize*wsize << ";\n"; // hstride
+            out << SP*4 << "constexpr int dmin = " << dmin << ";\n";
+            out << SP*4 << "constexpr int dmax = " << dmax << ";\n";
+            out << SP*4 << "constexpr int kd = " << fAttrKernelShape[2] << ";\n";
+         }
+      }
+
+      bool doPadding = false;
+      for ( auto & e : fAttrPads)
+         doPadding |= (e > 0);
+
+      if (fDim == 1) {
+         // loop on batches and channels
+         out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*5 << "size_t outIndex = 0;\n";
+         out << SP*5 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << fShapeX[0] * fShapeX[1] << "), [=](cl::sycl::id<1> n){\n";
+         out << SP*5 << "size_t inputOffset = n * " << fShapeX[2] << ";\n";
+         out << SP*6 << "for (int i=hmin; i < hmax; i+=" << fAttrStrides[0] << ") {\n";
+
+         if (fPoolMode == MaxPool) 
+            out << SP*7 << "float value = -INFINITY;\n";
+         else if (fPoolMode == AveragePool) {
+            out << SP*7 << "float value = 0;\n";
+            if (fAttrCountIncludePad == 0 && doPadding)
+               out << SP*7 << "int nsum = 0;\n";
+            else  
+               out << SP*7 << "constexpr int nsum = kh;\n";
+         }
+
+         out << SP*7 << "for (int l = i;  l < i + kh; l++) {\n";
+         out << SP*8 << "if (l < 0 || l >= hsize) continue;\n";
+         out << SP*8 << "int index = inputOffset + l;\n";
+         if (fPoolMode == MaxPool) {
+            out << SP*8 << SP << SP << SP << SP << SP << "auto xval = acc_tensor_" << fNX << "[index];\n";
+            out << SP*8 << SP << SP << SP << SP << SP << "if (xval > value) value = xval;\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            // compute sum of values
+            out << SP*8 << "value += acc_tensor_" << fNX << "[index];\n";
+            if (fAttrCountIncludePad == 0 && doPadding)
+               // compute number of elements used for the average
+               out << SP*8 << "nsum++;\n";
+         }
+
+         out << SP*7 << "}\n"; // end loop on region elements
+
+         if (fPoolMode == AveragePool) {
+            out << SP*7 << "value /= float(nsum);\n";
+         }
+
+         out << SP*7 << "acc_tensor_" << fNY << "[outIndex++] = value;\n";
+         out << SP*6 << "}\n"; // end loop on i (image rows)
+
+         out << SP*5 << "});\n";
+         out << SP*4 << "});\n";
+      }
+      else if (fDim == 2) {
+         out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*5 << "size_t outIndex = 0;\n";
+         out << SP*5 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << fShapeX[0] * fShapeX[1] << "), [=](cl::sycl::id<1> n){\n";
+         out << SP*5 << "size_t inputOffset = n * " << fShapeX[2] * fShapeX[3] << ";\n";
+         out << SP*6 << "for (int i=hmin; i < hmax; i+=" << fAttrStrides[0] << ") {\n";
+         out << SP*7 << "for (int j=wmin; j< wmax; j+=" << fAttrStrides[1] << ") {\n";
+
+         if (fPoolMode == MaxPool)
+            out << SP*8 << "float value = -INFINITY;\n";
+         else if (fPoolMode == AveragePool) {
+            out << SP*8 << "float value = 0;\n";
+            if (fAttrCountIncludePad == 0 && doPadding) 
+               out << SP*8 << "int nsum = 0;\n";
+            else 
+               out << SP*8 << "constexpr int nsum = kw * kh;\n";
+         }
+
+         out << SP*8 << "for (int l=i; l<i+kh; l++) {\n";
+         out << SP*9 << "if (l < 0 || l >= hsize) continue;\n";
+         out << SP*10 << "int index = inputOffset + l * wsize + m;\n";
+
+         out << SP*10 << "for (int m = j; m < j; m++) {\n";
+         out << SP*11 << "if (m < 0 || m >= wsize) continue;\n";
+         out << SP*11 << "int index = inputOffset + l*wsize + m;\n";
+
+         if (fPoolMode == MaxPool) {
+            out << SP*11 << "auto xval = acc_tensor_" << fNX << "[index];\n";
+            out << SP*11 << "if (xval > value) value = xval;\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*11 << "value += acc_tensor_" << fNX << "[index];\n";
+            if (fAttrCountIncludePad == 0 && doPadding)
+               out << SP*11 << "nsum++;\n";
+         }
+
+         out << SP*10 << "}\n";
+         out << SP*9 << "}\n";
+
+         if (fPoolMode == AveragePool) {
+            out << SP*9 << "value /= float(nsum);\n";
+         }
+
+         out << SP*9 << "acc_tensor_" << fNY << "[outIndex++] = value;\n";
+         out << SP*8 << "}\n";
+         out << SP*7 << "}\n";
+
+         out << SP*6 << "});\n";
+         out << SP*5 << "});\n";
+      }
+      else if (fDim==3) {
+         out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*5 << "size_t outIndex = 0;\n";
+         out << SP*5 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << fShapeX[0] * fShapeX[1] << "), [=](cl::sycl::id<1> n){\n";
+         out << SP*5 << "size_t inputOffset = n * " << fShapeX[2] * fShapeX[3] *fShape[4] << ";\n";
+         out << SP*6 << "for (int i=hmin; i < hmax; i+=" << fAttrStrides[0] << ") {\n";
+         out << SP*7 << "for (int j=wmin; j< wmax; j+=" << fAttrStrides[1] << ") {\n";
+         out << SP*8 << "for (int k=dmin; k < dmax; k+=" fAttrStrides[2] << ") {\n";
+         if (fPoolMode == MaxPool)
+            out << SP*9 << "float value = -INFINITY;\n";
+         else if (fPoolMode == AveragePool) {
+            out << SP*9 << "float value = 0;\n";
+            if (fAttrCountIncludePad == 0 && doPadding) 
+               out << SP*9 << "int nsum = 0;\n";
+            else 
+               out << SP*9 << "constexpr int nsum = kw * kh * kd;\n";
+         }
+
+         out << SP*9 << "for (int l=i; l<i+kh; l++) {\n";
+         out << SP*10 << "if (l < 0 || l >= hsize) continue;\n";
+         out << SP*10 << "for (int m=j; j < j + kw; m++) {\n";
+         out << SP*11 << "if (m < 0 || m >= wsize) continue;\n";
+         out << SP*12 << "for (int p=k; p < k + kd; p++) {\n";
+         out << SP*13 << "int index = inputOffset + l * dwsize + m*dsize + p;\n";
+
+         if (fPoolMode == MaxPool) {
+            out << SP*13 << "auto xval = acc_tensor_" << fNX << "[index];\n";
+            out << SP*13 << "if (xval > value) value = xval;\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*13 << "value += acc_tensor_" << fNX << "[index];\n";
+            if (fAttrCountIncluded == 0 && doPadding)
+               out << SP*13 << "nsum++;\n";
+         }
+
+         out << SP*13 << "}\n";
+         out << SP*12 << "}\n";
+         out << SP*11 << "}\n";
+
+         if (fPoolMode == AveragePool) {
+            out << SP*10 << "value /= float(nsum);\n";
+         }
+
+         out << SP*10 << "acc_tensor_" << fNY << "[outIndex++] = value;\n";
+         out << SP*9 << "}\n";
+         out << SP*8 << "}\n";
+         out << SP*7 << "}\n";
+
+         out << SP*6 << "});\n";
+         out << SP*5 << "});\n";
+      }
+
+      out << SP << "}\n";
+
+      return out.str();
    }
 };
 
