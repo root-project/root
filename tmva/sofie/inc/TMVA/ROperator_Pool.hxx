@@ -539,50 +539,70 @@ public:
 
       if (fDim == 1) {
          // loop on batches and channels
+         out << SP*4 << "size_t num_work_items = " << fShapeX[0] * fShapeX[1] << " * (hmax - hmin + 1) * kh;\n";
+         out << SP*4 << "size_t work_group_size = kh;\n";
+         
          out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*5 << "size_t outIndex = 0;\n";
          out << SP*5 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
          out << ", cgh, cl::sycl::read_only};\n";
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << fShapeX[0] * fShapeX[1] << "), [=](cl::sycl::id<1> n){\n";
-         out << SP*5 << "size_t inputOffset = n * " << fShapeX[2] << ";\n";
-         out << SP*6 << "for (int i=hmin; i < hmax; i+=" << fAttrStrides[0] << ") {\n";
-
-         if (fPoolMode == MaxPool) 
-            out << SP*7 << "float value = -INFINITY;\n";
-         else if (fPoolMode == AveragePool) {
-            out << SP*7 << "float value = 0;\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               out << SP*7 << "int nsum = 0;\n";
-            else  
-               out << SP*7 << "constexpr int nsum = kh;\n";
-         }
-
-         out << SP*7 << "for (int l = i;  l < i + kh; l++) {\n";
-         out << SP*8 << "if (l < 0 || l >= hsize) continue;\n";
-         out << SP*8 << "int index = inputOffset + l;\n";
-         if (fPoolMode == MaxPool) {
-            out << SP*8 << SP << SP << SP << SP << SP << "auto xval = acc_tensor_" << fNX << "[index];\n";
-            out << SP*8 << SP << SP << SP << SP << SP << "if (xval > value) value = xval;\n";
-         }
-         else if (fPoolMode == AveragePool) {
-            // compute sum of values
-            out << SP*8 << "value += acc_tensor_" << fNX << "[index];\n";
-            if (fAttrCountIncludePad == 0 && doPadding)
-               // compute number of elements used for the average
-               out << SP*8 << "nsum++;\n";
-         }
-
-         out << SP*7 << "}\n"; // end loop on region elements
-
+         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::local> scratch(work_group_size, cgh);\n";
+         
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::nd_range<1>{num_work_items, work_group_size}, [=](cl::sycl::nd_item<1> item){\n";
+         out << SP*6 << "auto globalId = item.get_global_id(0);\n";
+         out << SP*6 << "auto groupId = item.get_group(0);\n";
+         out << SP*6 << "auto localId = item.get_local_id(0);\n";
+         out << SP*6 << "auto tmpId = groupId;\n";
+         out << SP*6 << "size_t i = tmpId % (hmax - hmin + 1) + hmin;\n";
+         out << SP*6 << "tmpId /= (hmax - hmin + 1);"
+         out << SP*6 << "size_t inputOffset = tmpId % " << fShapeX[0] * fShapeX[1] << " * " fShape[2] << ";\n";
+         
          if (fPoolMode == AveragePool) {
-            out << SP*7 << "value /= float(nsum);\n";
+            if (fAttrCountIncludePad == 0 && doPadding) {
+               out << SP*6 << "int nsum = 0;\n";
+            }
+            else {
+               out << SP*6 << "constexpr int nsum = kh;\n";
+            }
          }
-
-         out << SP*7 << "acc_tensor_" << fNY << "[outIndex++] = value;\n";
-         out << SP*6 << "}\n"; // end loop on i (image rows)
+         out << SP*6 << "if (localId + i < 0 || localId + i >= hsize) \n";
+         out << SP*7 << "scratch[localId] = 0;\n"
+         out << SP*6 << "else {\n";
+         out << SP*7 << "scratch[localId] = acc_tensor_" << fNX << "[inputOffset + l];\n";
+         if (fPoolMode == AveragePool) {
+            if (fAttrCountIncludePad == 0 && doPadding) {
+               out << SP*7 << "nsum++;\n";
+            }
+         }
+         out << SP*6 << "}\n";
+         out << SP*6 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
+         
+         out << SP*6 << "auto s = static_cast<int>(cl::sycl::ceil(work_group_size / 2));\n";
+         
+         
+         out << SP*6 << "while (s > 0) {\n";
+         out << SP*7 << "if (localId < s) {\n";
+         if (fPoolMode == MaxPool) {
+            out << SP*8 << "scratch[localId] = cl::sycl::fmax(scratch[localId], scratch[localId+s]);\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*8 << "scratch[localId] += scratch[localId + s];\n";
+         }
+         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / 2));\n";
+         out << SP*7 << "}\n";
+               
+         out << SP*7 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
+         
+         if (fPoolMode == MaxPool) {
+            out << SP*7 << "if (localId == 0)\n";
+            out << SP*8 << "acc_tensor_" << fNY << "[groupId] = scratch[localId];\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*7 << "if (localId == 0)\n";
+            out << SP*8 << "acc_tensor_" << fNY << "[groupId] = scratch[localId] / float(nsum);\n";
+         }
 
          out << SP*5 << "});\n";
          out << SP*4 << "});\n";
