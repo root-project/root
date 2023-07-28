@@ -1,2 +1,2 @@
-sudo docker build --network=host -t root-img .
+docker build --network=host -t root-img .
 
