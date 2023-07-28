@@ -306,6 +306,13 @@ void ROOT::Experimental::Detail::RFieldBase::RBulk::Reset(const RClusterIndex &f
    fSize = size;
 }
 
+void ROOT::Experimental::Detail::RFieldBase::RBulk::CountValidValues()
+{
+   fNValidValues = 0;
+   for (std::size_t i = 0; i < fSize; ++i)
+      fNValidValues += static_cast<std::size_t>(fMaskAvail[i]);
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::Detail::RFieldBase::RFieldBase(std::string_view name, std::string_view type,
