@@ -523,6 +523,26 @@ void ROOT::Experimental::Detail::RFieldBase::ReadGlobalImpl(ROOT::Experimental::
    R__ASSERT(false);
 }
 
+std::size_t ROOT::Experimental::Detail::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
+{
+   const auto valueSize = GetValueSize();
+   std::size_t nRead = 0;
+   for (std::size_t i = 0; i < bulkSpec.fCount; ++i) {
+      // Value not needed
+      if (!bulkSpec.fMaskReq[i])
+         continue;
+
+      // Value already present
+      if (bulkSpec.fMaskAvail[i])
+         continue;
+
+      Read(bulkSpec.fFirstIndex + i, reinterpret_cast<unsigned char *>(bulkSpec.fValues) + i * valueSize);
+      bulkSpec.fMaskAvail[i] = true;
+      nRead++;
+   }
+   return nRead;
+}
+
 ROOT::Experimental::Detail::RFieldBase::RValue ROOT::Experimental::Detail::RFieldBase::GenerateValue()
 {
    void *where = malloc(GetValueSize());
