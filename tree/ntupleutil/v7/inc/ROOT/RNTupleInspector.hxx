@@ -162,10 +162,10 @@ public:
 
    /// Get the number of fields of a given type or class present in the RNTuple. The type name may contain regular
    /// expression patterns in order to be able to group multiple kinds of types or classes.
-   size_t GetFieldTypeCount(const std::regex &typeNamePattern, bool includeSubFields = true) const;
-   size_t GetFieldTypeCount(std::string_view typeNamePattern, bool includeSubFields = true) const
+   size_t GetFieldTypeCount(const std::regex &typeNamePattern, bool searchInSubFields = true) const;
+   size_t GetFieldTypeCount(std::string_view typeNamePattern, bool searchInSubFields = true) const
    {
-      return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, includeSubFields);
+      return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, searchInSubFields);
    }
 
    /// Get the number of columns of a given type present in the RNTuple.
@@ -175,10 +175,10 @@ public:
    /// providing a single field name will return a vector containing just the ID of that field. However, regular
    /// expression patterns are supported in order to get the IDs of all fields whose name follow a certain structure.
    const std::vector<DescriptorId_t>
-   GetFieldsByName(const std::regex &fieldNamePattern, bool includeSubFields = true) const;
-   const std::vector<DescriptorId_t> GetFieldsByName(std::string_view fieldNamePattern, bool includeSubFields = true)
+   GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields = true) const;
+   const std::vector<DescriptorId_t> GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubFields = true)
    {
-      return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, includeSubFields);
+      return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubFields);
    }
 };
 } // namespace Experimental
