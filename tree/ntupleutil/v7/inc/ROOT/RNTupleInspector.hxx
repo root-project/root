@@ -163,7 +163,10 @@ public:
    /// Get the number of fields of a given type or class present in the RNTuple. The type name may contain regular
    /// expression patterns in order to be able to group multiple kinds of types or classes.
    size_t GetFieldTypeCount(const std::regex &typeNamePattern, bool includeSubFields = true) const;
-   size_t GetFieldTypeCount(std::string_view typeNamePattern, bool includeSubFields = true) const;
+   size_t GetFieldTypeCount(std::string_view typeNamePattern, bool includeSubFields = true) const
+   {
+      return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, includeSubFields);
+   }
 
    /// Get the number of columns of a given type present in the RNTuple.
    size_t GetColumnTypeCount(EColumnType colType) const;
@@ -173,8 +176,10 @@ public:
    /// expression patterns are supported in order to get the IDs of all fields whose name follow a certain structure.
    const std::vector<DescriptorId_t>
    GetFieldsByName(const std::regex &fieldNamePattern, bool includeSubFields = true) const;
-   const std::vector<DescriptorId_t>
-   GetFieldsByName(std::string_view fieldNamePattern, bool includeSubFields = true) const;
+   const std::vector<DescriptorId_t> GetFieldsByName(std::string_view fieldNamePattern, bool includeSubFields = true)
+   {
+      return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, includeSubFields);
+   }
 };
 } // namespace Experimental
 } // namespace ROOT
