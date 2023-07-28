@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN ln -snf /usr/share/zoneinfo/Europe/Athens /etc/localtime && echo Europe/Athens > /etc/timezone
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils sudo
@@ -78,4 +78,4 @@ COPY root_src /home/ioanna/root_src/
 # Important to update after intel installation
 RUN sudo apt-get update
 
-RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so /home/ioanna/root_src && sudo cmake --build . -j16 --target install
+#RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dimt=Off /home/ioanna/root_src && sudo cmake --build . -j16 --target install
