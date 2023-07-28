@@ -445,6 +445,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooWrapperPdf.cxx
     src/RooBinSamplingPdf.cxx
     src/RooBinWidthFunction.cxx
+    src/RooFitLegacy/OldRooIntegrator1D.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
     src/RunContext.cxx
     src/RooFit/Detail/CodeSquashContext.cxx

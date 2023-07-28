@@ -39,6 +39,7 @@ the preference of the caller as encoded in the configuration object.
 #include "RooNumber.h"
 
 #include "RooIntegrator1D.h"
+#include "RooFitLegacy/OldRooIntegrator1D.h"
 #include "RooBinIntegrator.h"
 #include "RooIntegrator2D.h"
 #include "RooSegmentedIntegrator1D.h"
@@ -66,10 +67,8 @@ void RooNumIntFactory::init() {
   RooSegmentedIntegrator2D::registerIntegrator(*this) ;
   RooImproperIntegrator1D::registerIntegrator(*this) ;
   RooMCIntegrator::registerIntegrator(*this) ;
-  // GSL integrator is now in RooFitMore and it register itself
-  //RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(*this) ;
-  //RooGaussKronrodIntegrator1D::registerIntegrator(*this) ;
   RooAdaptiveIntegratorND::registerIntegrator(*this) ;
+  OldRooIntegrator1D::registerIntegrator(*this);
 
   RooNumIntConfig::defaultConfig().method1D().setLabel("RooIntegrator1D") ;
   RooNumIntConfig::defaultConfig().method1DOpen().setLabel("RooImproperIntegrator1D") ;
@@ -80,7 +79,7 @@ void RooNumIntFactory::init() {
 #ifdef R__HAS_MATHMORE
   int iret = gSystem->Load("libRooFitMore");
   if (iret < 0) {
-     oocoutE(nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not beavailable ! " << std::endl;
+     oocoutE((TObject*)nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not be available ! " << std::endl;
   }
 #endif
 }
