@@ -328,7 +328,7 @@ Bool_t TFunction::Update(MethodInfo_t *info)
       // The next call locks the interpreter mutex.
       SetTitle(gCling->MethodInfo_Title(fInfo));
       if (fMethodArgs) {
-         // TODO: Check for MethodArgInfo thread-safety
+         // The next calls into MethodArgInfo lock the interpreter mutex.
          MethodArgInfo_t *arg = gCling->MethodArgInfo_Factory(fInfo);
          Int_t i = 0;
          while (gCling->MethodArgInfo_Next(arg)) {
