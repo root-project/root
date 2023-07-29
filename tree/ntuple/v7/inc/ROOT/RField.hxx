@@ -180,11 +180,11 @@ public:
    /// on the same range, where in each read operation a different subset of values is required.
    /// The memory of the value array is managed by the RBulk class.
    class RBulk {
+   private:
       friend class RFieldBase;
 
-   private:
       RFieldBase *fField = nullptr;       ///< The field that created the array of values
-      unsigned char *fValues = nullptr;   ///< Pointer to the start of the array
+      void *fValues = nullptr;            ///< Pointer to the start of the array
       std::size_t fValueSize = 0;         ///< Cached copy of fField->GetValueSize()
       std::size_t fCapacity = 0;          ///< The size of the array memory block in number of values
       std::size_t fSize = 0;              ///< The number of available values in the array (provided their mask is set)
@@ -206,13 +206,17 @@ public:
                 ((firstIndex.GetIndex() + size) <= (fFirstIndex.GetIndex() + fSize));
       }
 
-      void *GetValuePtrAt(std::size_t idx) const { return &fValues[idx * fValueSize]; }
+      void *GetValuePtrAt(std::size_t idx) const
+      {
+         return reinterpret_cast<unsigned char *>(fValues) + idx * fValueSize;
+      }
 
       explicit RBulk(RFieldBase *field) : fField(field), fValueSize(field->GetValueSize()) {}
 
    public:
       ~RBulk();
       RBulk(const RBulk &) = delete;
+      RBulk &operator=(const RBulk &) = delete;
       RBulk(RBulk &&other);
       RBulk &operator=(RBulk &&other);
 
@@ -417,7 +421,7 @@ protected:
       if (fIsSimple) {
          /// For simple types, ignore the mask and memcopy the values into the destination
          fPrincipalColumn->ReadV(bulkSpec.fFirstIndex, bulkSpec.fCount, bulkSpec.fValues);
-         memset(bulkSpec.fMaskAvail, 1, bulkSpec.fCount);
+         std::fill(bulkSpec.fMaskAvail, bulkSpec.fMaskAvail + bulkSpec.fCount, true);
          return RBulkSpec::kAllSet;
       }
 
