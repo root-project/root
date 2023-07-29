@@ -287,7 +287,7 @@ void ROOT::Experimental::Detail::RFieldBase::RBulk::Reset(const RClusterIndex &f
 {
    if (fCapacity < size) {
       ReleaseValues();
-      fValues = reinterpret_cast<unsigned char *>(aligned_alloc(fField->GetAlignment(), size * fValueSize));
+      fValues = aligned_alloc(fField->GetAlignment(), size * fValueSize);
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
@@ -299,7 +299,7 @@ void ROOT::Experimental::Detail::RFieldBase::RBulk::Reset(const RClusterIndex &f
       fCapacity = size;
    }
 
-   memset(fMaskAvail.get(), 0, size);
+   std::fill(fMaskAvail.get(), fMaskAvail.get() + size, false);
    fNValidValues = 0;
 
    fFirstIndex = firstIndex;
