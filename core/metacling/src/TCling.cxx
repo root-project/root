@@ -7423,6 +7423,8 @@ int TCling::GetSecurityError() const
 
 int TCling::LoadFile(const char* path) const
 {
+   // Modifying the interpreter state needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    cling::Interpreter::CompilationResult compRes;
    HandleInterpreterException(GetMetaProcessorImpl(), TString::Format(".L %s", path), compRes, /*cling::Value*/nullptr);
    return compRes == cling::Interpreter::kFailure;
@@ -7569,6 +7571,8 @@ void TCling::SetTempLevel(int val) const
 
 int TCling::UnloadFile(const char* path) const
 {
+   // Modifying the interpreter state needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
    std::string canonical = DLM->lookupLibrary(path);
    if (canonical.empty()) {
