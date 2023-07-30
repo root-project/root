@@ -80,7 +80,6 @@ ClassImp(RooNumConvolution);
 RooNumConvolution::RooNumConvolution() :
   _init(false),
   _integrand(0),
-  _integrator(0),
   _cloneVar(0),
   _clonePdf(0),
   _cloneModel(0),
@@ -109,7 +108,6 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
   _init(false),
   _convIntConfig(RooNumIntConfig::defaultConfig()),
   _integrand(0),
-  _integrator(0),
   _origVar("origVar","Original Convolution variable",this,convVar),
   _origPdf("origPdf","Original Input PDF",this,inPdf),
   _origModel("origModel","Original Resolution model",this,resmodel),
@@ -147,7 +145,6 @@ RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char*
   _init(false),
   _convIntConfig(other._convIntConfig),
   _integrand(0),
-  _integrator(0),
   _origVar("origVar",this,other._origVar),
   _origPdf("origPdf",this,other._origPdf),
   _origModel("origModel",this,other._origModel),
@@ -202,7 +199,7 @@ void RooNumConvolution::initialize() const
   _integrand = new RooConvIntegrandBinding(*_clonePdf,*_cloneModel,*_cloneVar,var(),0) ;
 
   // Instantiate integrator for convolution integrand
-  _integrator = RooNumIntFactory::instance().createIntegrator(*_integrand,_convIntConfig,1) ;
+  _integrator = RooNumIntFactory::instance().createIntegrator(*_integrand,_convIntConfig,1);
   _integrator->setUseIntegrandLimits(false) ;
 
   _init = true ;

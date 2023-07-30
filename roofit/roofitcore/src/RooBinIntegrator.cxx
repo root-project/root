@@ -54,19 +54,21 @@ ClassImp(RooBinIntegrator);
 
 void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 {
-  RooRealVar numBins("numBins","Number of bins in range",100) ;
-  RooBinIntegrator* proto = new RooBinIntegrator() ;
-  fact.storeProtoIntegrator(proto,RooArgSet(numBins)) ;
-  RooNumIntConfig::defaultConfig().method1D().setLabel(proto->ClassName()) ;
-}
+   RooRealVar numBins("numBins","Number of bins in range",100) ;
 
+   std::string name = "RooBinIntegrator";
 
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooBinIntegrator>(function, config);
+   };
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+   fact.registerPlugin(name, creator, {numBins},
+                     /*canIntegrate1D=*/true,
+                     /*canIntegrate2D=*/true,
+                     /*canIntegrateND=*/true,
+                     /*canIntegrateOpenEnded=*/false);
 
-RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(false), _x(0)
-{
+  RooNumIntConfig::defaultConfig().method1D().setLabel(name);
 }
 
 
@@ -136,18 +138,6 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   RooBinIntegrator(function, static_cast<int>(config.getConfigSection("RooBinIntegrator").getRealValue("numBins")))
 {
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
-
-RooAbsIntegrator* RooBinIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooBinIntegrator(function,config) ;
-}
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
