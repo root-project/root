@@ -1,6 +1,8 @@
 #include "ntuple_test.hxx"
 #include <ROOT/RPageStorageDaos.hxx>
-#include "ROOT/TestSupport.hxx"
+
+#include <TRandom3.h>
+
 #include <iostream>
 #include <unordered_map>
 

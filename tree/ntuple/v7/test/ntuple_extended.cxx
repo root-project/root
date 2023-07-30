@@ -2,7 +2,8 @@
 
 #include "ntuple_test.hxx"
 
-#include "TROOT.h"
+#include <TRandom3.h>
+#include <TROOT.h>
 
 TEST(RNTuple, RealWorld1)
 {
