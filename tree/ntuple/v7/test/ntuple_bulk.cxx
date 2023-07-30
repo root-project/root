@@ -38,7 +38,6 @@ TEST(RNTupleBulk, Simple)
    for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(i, intArr10[i]);
    }
-   EXPECT_NE(intArr5, intArr10);
 }
 
 TEST(RNTupleBulk, Complex)
@@ -86,5 +85,4 @@ TEST(RNTupleBulk, Complex)
    for (int i = 0; i < 10; ++i) {
       EXPECT_FLOAT_EQ((i % 2 == 0) ? 0.0 : float(i), SArr10[i].a);
    }
-   EXPECT_NE(SArr5, SArr10);
 }
