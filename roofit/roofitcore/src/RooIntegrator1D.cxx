@@ -266,6 +266,18 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
                        /*canIntegrateOpenEnded=*/false);
 
    RooNumIntConfig::defaultConfig().method1D().setLabel(name);
+
+   auto creator2d = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooIntegrator1D>(function, config, 2);
+   };
+   std::string name2d = "RooIntegrator2D";
+   fact.registerPlugin(name2d, creator2d, {},
+                       /*canIntegrate1D=*/false,
+                       /*canIntegrate2D=*/true,
+                       /*canIntegrateND=*/false,
+                       /*canIntegrateOpenEnded=*/false,
+                       /*depName=*/"RooIntegrator1D");
+   RooNumIntConfig::defaultConfig().method2D().setLabel(name2d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,8 +303,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double
    : RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsAbs(eps), _epsRel(eps)
 {
    _useIntegrandLimits = false;
-   _xmin = xmin;
-   _xmax = xmax;
+   _xmin.push_back(xmin);
+   _xmax.push_back(xmax);
    _valid = initialize();
 }
 
@@ -301,8 +313,11 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double
 /// configuration object. The integration limits are taken from the
 /// function binding
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config)
-   : RooAbsIntegrator(function, config.printEvalCounter()), _epsAbs(config.epsAbs()), _epsRel(config.epsRel())
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim)
+   : RooAbsIntegrator(function, config.printEvalCounter()),
+     _nDim{nDim},
+     _epsAbs(config.epsAbs()),
+     _epsRel(config.epsRel())
 {
    // Extract parameters from config object
    const RooArgSet &configSet = config.getConfigSection(ClassName());
@@ -326,8 +341,12 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConf
 /// Construct integrator on given function binding, using specified
 /// configuration object and integration range
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config)
-   : RooAbsIntegrator(function, config.printEvalCounter()), _epsAbs(config.epsAbs()), _epsRel(config.epsRel())
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config,
+                                 int nDim)
+   : RooAbsIntegrator(function, config.printEvalCounter()),
+     _nDim{nDim},
+     _epsAbs(config.epsAbs()),
+     _epsRel(config.epsRel())
 {
    // Extract parameters from config object
    const RooArgSet &configSet = config.getConfigSection(ClassName());
@@ -338,8 +357,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double
    _doExtrap = (bool)configSet.getCatIndex("extrapolation", 1);
 
    _useIntegrandLimits = false;
-   _xmin = xmin;
-   _xmax = xmax;
+   _xmin.push_back(xmin);
+   _xmax.push_back(xmax);
    _valid = initialize();
 }
 
@@ -368,7 +387,7 @@ bool RooIntegrator1D::initialize()
    _x.resize(_function->getDimension());
 
    // Allocate workspace for numerical integration engine
-   _wksp.resize(2 * _maxSteps + 4);
+   _wksp.resize(_nDim * 2 * _maxSteps + 4);
 
    return checkLimits();
 }
@@ -384,8 +403,12 @@ bool RooIntegrator1D::setLimits(double *xmin, double *xmax)
       oocoutE(nullptr, Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << std::endl;
       return false;
    }
-   _xmin = *xmin;
-   _xmax = *xmax;
+   _xmin.resize(_nDim);
+   _xmax.resize(_nDim);
+   for (int iDim = 0; iDim < _nDim; ++iDim) {
+      _xmin[iDim] = xmin[iDim];
+      _xmax[iDim] = xmax[iDim];
+   }
    return checkLimits();
 }
 
@@ -397,32 +420,50 @@ bool RooIntegrator1D::checkLimits() const
 {
    if (_useIntegrandLimits) {
       assert(nullptr != integrand() && integrand()->isValid());
-      const_cast<double &>(_xmin) = integrand()->getMinLimit(0);
-      const_cast<double &>(_xmax) = integrand()->getMaxLimit(0);
+      const_cast<std::vector<double> &>(_xmin).resize(_nDim);
+      const_cast<std::vector<double> &>(_xmax).resize(_nDim);
+      for (int iDim = 0; iDim < _nDim; ++iDim) {
+         const_cast<double &>(_xmin[iDim]) = integrand()->getMinLimit(iDim);
+         const_cast<double &>(_xmax[iDim]) = integrand()->getMaxLimit(iDim);
+      }
    }
-   const double range = _xmax - _xmin;
-   if (range < 0.) {
-      oocoutE(nullptr, Integration) << "RooIntegrator1D::checkLimits: bad range with min > max (_xmin = " << _xmin
-                                    << " _xmax = " << _xmax << ")" << std::endl;
-      return false;
+   for (int iDim = 0; iDim < _nDim; ++iDim) {
+      const double xmin = _xmin[iDim];
+      const double xmax = _xmax[iDim];
+      const double range = xmax - xmin;
+      if (range < 0.) {
+         oocoutE(nullptr, Integration) << "RooIntegrator1D::checkLimits: bad range with min > max (_xmin[" << iDim
+                                       << "] = " << xmin << " _xmax[" << iDim << "] = " << xmax << ")" << std::endl;
+         return false;
+      }
+      if (RooNumber::isInfinite(xmin) || RooNumber::isInfinite(xmax)) {
+         return false;
+      }
    }
-   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;
+   return true;
+}
+
+double RooIntegrator1D::integral(const double *yvec)
+{
+   return integral(yvec, _nDim - 1, _wksp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate numeric integral at given set of function binding parameters.
 
-double RooIntegrator1D::integral(const double *yvec)
+double RooIntegrator1D::integral(const double *yvec, int iDim, std::span<double> wksp)
 {
    assert(isValid());
 
-   const double range = _xmax - _xmin;
+   const double xmin = _xmin[iDim];
+   const double xmax = _xmax[iDim];
+   const double range = xmax - xmin;
 
    if (range == 0.)
       return 0.;
 
    // Copy yvec to xvec if provided
-   if (yvec) {
+   if (yvec && iDim == 0) {
       for (unsigned int i = 0; i < _function->getDimension() - 1; i++) {
          _x[i + 1] = yvec[i];
       }
@@ -430,21 +471,28 @@ double RooIntegrator1D::integral(const double *yvec)
 
    // From the working array
    std::size_t nWorkingArr = _maxSteps + 2;
-   assert(_wksp.size() == 2 * nWorkingArr);
-   double *hArr = _wksp.data();
-   double *sArr = _wksp.data() + nWorkingArr;
+   double *hArr = wksp.data();
+   double *sArr = wksp.data() + nWorkingArr;
 
    double output = 0.0;
    int steps = 0;
 
-   std::tie(output, steps) = RooFit::Detail::integrate1d(
-      [&](double x) { return integrand(xvec(x)); }, _rule == Trapezoid, _maxSteps, _minStepsZero, _fixSteps, _epsAbs,
-      _epsRel, _doExtrap, _xmin, _xmax, {hArr, nWorkingArr}, {sArr, nWorkingArr});
+   std::span<double> nextWksp{wksp.data() + 2 * _maxSteps + 4, wksp.data() + wksp.size()};
+
+   auto func = [&](double x) {
+      _x[iDim] = x;
+
+      return iDim == 0 ? integrand(_x.data()) : integral(yvec, iDim - 1, nextWksp);
+   };
+
+   std::tie(output, steps) =
+      RooFit::Detail::integrate1d(func, _rule == Trapezoid, _maxSteps, _minStepsZero, _fixSteps, _epsAbs, _epsRel,
+                                  _doExtrap, xmin, xmax, {hArr, nWorkingArr}, {sArr, nWorkingArr});
 
    if (steps == _maxSteps) {
 
       oocoutW(nullptr, Integration) << "RooIntegrator1D::integral: integral of " << _function->getName()
-                                    << " over range (" << _xmin << "," << _xmax << ") did not converge after "
+                                    << " over range (" << xmin << "," << xmax << ") did not converge after "
                                     << _maxSteps << " steps" << std::endl;
       for (int j = 1; j <= _maxSteps; ++j) {
          ooccoutW(nullptr, Integration) << "   [" << j << "] h = " << hArr[j] << " , s = " << sArr[j] << std::endl;

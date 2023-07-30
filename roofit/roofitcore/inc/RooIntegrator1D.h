@@ -42,8 +42,8 @@ public:
    RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, SummationRule rule = Trapezoid,
                    int maxSteps = 0, double eps = 0);
 
-   RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config);
-   RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config);
+   RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim = 1);
+   RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config, int nDim = 1);
 
    bool checkLimits() const override;
    double integral(const double *yvec = nullptr) override;
@@ -61,30 +61,25 @@ protected:
    static void registerIntegrator(RooNumIntFactory &fact);
 
    bool initialize();
+   double integral(const double *yvec, int iDim, std::span<double> wksp);
 
    bool _useIntegrandLimits; ///< If true limits of function binding are used
 
    // Integrator configuration
+   int _nDim = 1;
    SummationRule _rule;
-   int _maxSteps;           ///< Maximum number of steps
-   int _minStepsZero = 999; ///< Minimum number of steps to declare convergence to zero
-   int _fixSteps = 0;       ///< Fixed number of steps
-   double _epsAbs;          ///< Absolute convergence tolerance
-   double _epsRel;          ///< Relative convergence tolerance
-   bool _doExtrap = true;   ///< Apply conversion step?
-   double _xmin;            ///<! Lower integration bound
-   double _xmax;            ///<! Upper integration bound
+   int _maxSteps;             ///< Maximum number of steps
+   int _minStepsZero = 999;   ///< Minimum number of steps to declare convergence to zero
+   int _fixSteps = 0;         ///< Fixed number of steps
+   double _epsAbs;            ///< Absolute convergence tolerance
+   double _epsRel;            ///< Relative convergence tolerance
+   bool _doExtrap = true;     ///< Apply conversion step?
+   std::vector<double> _xmin; ///<! Lower integration bounds
+   std::vector<double> _xmax; ///<! Upper integration bounds
 
    // Numerical integrator workspace
    std::vector<double> _wksp; ///<! Integrator workspace
-
-   double *xvec(double &xx)
-   {
-      _x[0] = xx;
-      return _x.data();
-   }
-
-   std::vector<double> _x; //! do not persist
+   std::vector<double> _x;    //! do not persist
 
    ClassDefOverride(RooIntegrator1D, 0) // 1-dimensional numerical integration engine
 };
