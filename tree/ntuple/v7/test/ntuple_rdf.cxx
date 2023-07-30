@@ -1,4 +1,6 @@
 #include "ntuple_test.hxx"
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RNTupleDS.hxx>
 
 TEST(RNTuple, RDF)
 {
