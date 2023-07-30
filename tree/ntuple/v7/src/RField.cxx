@@ -287,7 +287,7 @@ void ROOT::Experimental::Detail::RFieldBase::RBulk::Reset(const RClusterIndex &f
 {
    if (fCapacity < size) {
       ReleaseValues();
-      fValues = aligned_alloc(fField->GetAlignment(), size * fValueSize);
+      fValues = malloc(size * fValueSize);
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
