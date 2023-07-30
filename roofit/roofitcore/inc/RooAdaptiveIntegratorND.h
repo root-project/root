@@ -33,10 +33,8 @@ class RooAdaptiveIntegratorND : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooAdaptiveIntegratorND() ;
   RooAdaptiveIntegratorND(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooAdaptiveIntegratorND() override;
 
   bool checkLimits() const override;
@@ -44,11 +42,6 @@ public:
 
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;
-
-  bool canIntegrate1D() const override { return false ; }
-  bool canIntegrate2D() const override { return true ; }
-  bool canIntegrateND() const override { return true ; }
-  bool canIntegrateOpenEnded() const override { return false ; }
 
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
 

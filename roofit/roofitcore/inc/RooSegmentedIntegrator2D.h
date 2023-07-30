@@ -24,20 +24,13 @@ class RooSegmentedIntegrator2D : public RooSegmentedIntegrator1D {
 public:
 
   // Constructors, assignment etc
-  RooSegmentedIntegrator2D() ;
 
   RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooSegmentedIntegrator2D(const RooAbsFunc& function, double xmin, double xmax, double ymin, double ymax,
         const RooNumIntConfig& config) ;
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooSegmentedIntegrator2D() override ;
 
   bool checkLimits() const override;
-
-  bool canIntegrate1D() const override { return false ; }
-  bool canIntegrate2D() const override { return true ; }
-  bool canIntegrateND() const override { return false ; }
-  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 
@@ -45,7 +38,7 @@ protected:
   static void registerIntegrator(RooNumIntFactory& fact) ;
 
   std::unique_ptr<RooSegmentedIntegrator1D> _xIntegrator;
-  std::unique_ptr<RooAbsFunc> _xint;
+  std::unique_ptr<const RooAbsFunc> _xint;
 
   ClassDefOverride(RooSegmentedIntegrator2D,0) // 2-dimensional piece-wise numerical integration engine
 };

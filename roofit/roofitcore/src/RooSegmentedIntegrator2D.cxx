@@ -49,11 +49,19 @@ ClassImp(RooSegmentedIntegrator2D);
 
 void RooSegmentedIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 {
-  fact.storeProtoIntegrator(new RooSegmentedIntegrator2D(),RooArgSet(),RooSegmentedIntegrator1D::Class()->GetName()) ;
+  auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+     return std::make_unique<RooSegmentedIntegrator2D>(function, config);
+  };
+
+  fact.registerPlugin("RooSegmentedIntegrator2D", creator, {},
+                    /*canIntegrate1D=*/false,
+                    /*canIntegrate2D=*/true,
+                    /*canIntegrateND=*/false,
+                    /*canIntegrateOpenEnded=*/false,
+                    /*depName=*/"RooSegmentedIntegrator1D");
 }
 
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() = default;
 RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() = default;
 
 
@@ -62,15 +70,11 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() = default;
 /// integration limits are taken from the definition in the function binding
 
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, const RooNumIntConfig &config)
+   : RooSegmentedIntegrator1D(
+        *(new RooIntegratorBinding(*(_xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(function, config)))),
+        config),
+     _xint{integrand()}
 {
-   _xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(function, config);
-   _xint = std::make_unique<RooIntegratorBinding>(*_xIntegrator);
-   _function = _xint.get();
-   _config = config;
-   _nseg = (Int_t)config.getConfigSection(ClassName()).getRealValue("numSeg", 3);
-   _useIntegrandLimits = true;
-
-   _valid = initialize();
 }
 
 
@@ -80,26 +84,11 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, c
 
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, double xmin, double xmax, double ymin,
                                                    double ymax, const RooNumIntConfig &config)
+   : RooSegmentedIntegrator1D(*(new RooIntegratorBinding(*(_xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(
+                                                              function, ymin, ymax, config)))),
+                              xmin, xmax, config),
+     _xint{integrand()}
 {
-   _xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(function, ymin, ymax, config);
-   _xint = std::make_unique<RooIntegratorBinding>(*_xIntegrator);
-   _function = _xint.get();
-   _config = config;
-   _nseg = (Int_t)config.getConfigSection(ClassName()).getRealValue("numSeg", 3);
-   _useIntegrandLimits = false;
-   _xmin = xmin;
-   _xmax = xmax;
-
-   _valid = initialize();
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual constructor with given function and configuration. Needed by RooNumIntFactory
-
-RooAbsIntegrator* RooSegmentedIntegrator2D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooSegmentedIntegrator2D(function,config) ;
 }
 
 

@@ -21,6 +21,9 @@
 #include "TObject.h"
 #include "RooLinkedList.h"
 #include "RooAbsIntegrator.h"
+
+#include <functional>
+
 class RooNumIntConfig ;
 class RooAbsFunc ;
 
@@ -30,21 +33,36 @@ typedef void (*RooNumIntInitializerFunc)(RooNumIntFactory&) ;
 class RooNumIntFactory : public TObject {
 public:
 
+  using Creator = std::function<std::unique_ptr<RooAbsIntegrator>(RooAbsFunc const& function, const RooNumIntConfig& config)>;
+
   static RooNumIntFactory& instance() ;
-  ~RooNumIntFactory() override = default;
 
-  bool storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName="") ;
-  const RooAbsIntegrator* getProtoIntegrator(const char* name) const;
-  const char* getDepIntegratorName(const char* name) const;
+  bool registerPlugin(std::string const &name, Creator const &creator, const RooArgSet &defConfig, bool canIntegrate1D,
+                    bool canIntegrate2D, bool canIntegrateND, bool canIntegrateOpenEnded, const char *depName = "");
 
-  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, bool isBinned=false) const;
+  std::unique_ptr<RooAbsIntegrator> createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, bool isBinned=false) const;
 
 
 private:
 
   friend class RooNumIntConfig ;
 
-  std::map<std::string,std::pair<std::unique_ptr<RooAbsIntegrator>,std::string> > _map;
+  struct PluginInfo {
+    Creator creator;
+    bool canIntegrate1D = false;
+    bool canIntegrate2D = false;
+    bool canIntegrateND = false;
+    bool canIntegrateOpenEnded = false;
+    std::string depName;
+  };
+
+  PluginInfo const* getPluginInfo(const char* name) const
+  {
+    auto item = _map.find(name);
+    return item == _map.end() ? nullptr : &item->second;
+  }
+
+  std::map<std::string,PluginInfo> _map;
 
   RooNumIntFactory() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
   RooNumIntFactory(const RooNumIntFactory& other) = delete;
@@ -56,5 +74,3 @@ private:
 };
 
 #endif
-
-

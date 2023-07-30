@@ -259,9 +259,19 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar minSteps("minSteps","Minimum number of steps",999) ;
   RooRealVar fixSteps("fixSteps","Fixed number of steps",0) ;
 
-  RooIntegrator1D* proto = new RooIntegrator1D() ;
-  fact.storeProtoIntegrator(proto,RooArgSet(sumRule,extrap,maxSteps,minSteps,fixSteps)) ;
-  RooNumIntConfig::defaultConfig().method1D().setLabel(proto->ClassName()) ;
+  std::string name = "RooIntegrator1D";
+
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooIntegrator1D>(function, config);
+   };
+
+   fact.registerPlugin(name, creator, {sumRule,extrap,maxSteps,minSteps,fixSteps},
+                     /*canIntegrate1D=*/true,
+                     /*canIntegrate2D=*/false,
+                     /*canIntegrateND=*/false,
+                     /*canIntegrateOpenEnded=*/false);
+
+  RooNumIntConfig::defaultConfig().method1D().setLabel(name);
 }
 
 
@@ -352,17 +362,6 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, double xmin, double
   _xmax= xmax;
   _valid= initialize();
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
-
-RooAbsIntegrator* RooIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooIntegrator1D(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

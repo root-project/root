@@ -165,7 +165,17 @@ void RooAdaptiveGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& f
      method.defineType("51Points", 5);
      method.defineType("61Points", 6);
      method.setIndex(2);
-     fact.storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(), RooArgSet(maxSeg, method));
+
+     auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+        return std::make_unique<RooAdaptiveGaussKronrodIntegrator1D>(function, config);
+     };
+
+     fact.registerPlugin("RooAdaptiveGaussKronrodIntegrator1D", creator, {maxSeg, method},
+                       /*canIntegrate1D=*/true,
+                       /*canIntegrate2D=*/false,
+                       /*canIntegrateND=*/false,
+                       /*canIntegrateOpenEnded=*/true);
+
      oocoutI(nullptr,Integration)  << "RooAdaptiveGaussKronrodIntegrator1D has been registered " << std::endl;
 }
 
@@ -210,17 +220,6 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
   _useIntegrandLimits= false;
   _valid= initialize();
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual constructor
-
-RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooAdaptiveGaussKronrodIntegrator1D(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

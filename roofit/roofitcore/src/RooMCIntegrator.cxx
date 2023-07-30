@@ -76,26 +76,21 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar nIntPerDim("nIntPerDim","Number of integration samples (per dimension)",5000) ;
 
   // Create prototype integrator
-  RooMCIntegrator* proto = new RooMCIntegrator() ;
+  auto creator = [](const RooAbsFunc& function, const RooNumIntConfig& config) {
+    return std::make_unique<RooMCIntegrator>(function,config);
+  };
 
   // Register prototype and default config with factory
-  fact.storeProtoIntegrator(proto,RooArgSet(samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim)) ;
+  std::string name = "RooMCIntegrator";
+  fact.registerPlugin(name, creator, {samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim},
+                    /*canIntegrate1D=*/true,
+                    /*canIntegrate2D=*/true,
+                    /*canIntegrateND=*/true,
+                    /*canIntegrateOpenEnded=*/false);
 
   // Make this method the default for all N>2-dim integrals
-  RooNumIntConfig::defaultConfig().methodND().setLabel(proto->ClassName()) ;
+  RooNumIntConfig::defaultConfig().methodND().setLabel(name) ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-///
-/// coverity[UNINIT_CTOR]
-
- RooMCIntegrator::RooMCIntegrator()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,18 +133,6 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.print(std::cout);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return clone of this generator operating on given function with given configuration
-/// Needed to support RooNumIntFactory
-
-RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooMCIntegrator(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

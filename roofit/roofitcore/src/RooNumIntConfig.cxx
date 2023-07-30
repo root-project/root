@@ -163,28 +163,27 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 /// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
 /// as the default configuration for the integrator.
 
-bool RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
+bool RooNumIntConfig::addConfigSection(std::string const &name, const RooArgSet &inDefaultConfig, bool canIntegrate1D,
+                                       bool canIntegrate2D, bool canIntegrateND, bool canIntegrateOpenEnded)
 {
-  std::string name = proto->ClassName() ;
-
   // Register integrator for appropriate dimensionalities
-  if (proto->canIntegrate1D()) {
+  if (canIntegrate1D) {
     _method1D.defineType(name) ;
-    if (proto->canIntegrateOpenEnded()) {
+    if (canIntegrateOpenEnded) {
       _method1DOpen.defineType(name) ;
     }
   }
 
-  if (proto->canIntegrate2D()) {
+  if (canIntegrate2D) {
     _method2D.defineType(name) ;
-    if (proto->canIntegrateOpenEnded()) {
+    if (canIntegrateOpenEnded) {
       _method2DOpen.defineType(name) ;
     }
   }
 
-  if (proto->canIntegrateND()) {
+  if (canIntegrateND) {
     _methodND.defineType(name) ;
-    if (proto->canIntegrateOpenEnded()) {
+    if (canIntegrateOpenEnded) {
       _methodNDOpen.defineType(name) ;
     }
   }
@@ -303,22 +302,22 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, bool verbos
     os << endl << "Available integration methods:" << endl << endl ;
     for(auto * configSet : static_range_cast<RooArgSet*>(_configSets)) {
 
+      auto const& info = *RooNumIntFactory::instance().getPluginInfo(configSet->GetName());
+
       os << indent << "*** " << configSet->GetName() << " ***" << endl ;
       os << indent << "Capabilities: " ;
-      const RooAbsIntegrator* proto = RooNumIntFactory::instance().getProtoIntegrator(configSet->GetName()) ;
-      if (proto->canIntegrate1D()) os << "[1-D] " ;
-      if (proto->canIntegrate2D()) os << "[2-D] " ;
-      if (proto->canIntegrateND()) os << "[N-D] " ;
-      if (proto->canIntegrateOpenEnded()) os << "[OpenEnded] " ;
+      if (info.canIntegrate1D) os << "[1-D] " ;
+      if (info.canIntegrate2D) os << "[2-D] " ;
+      if (info.canIntegrateND) os << "[N-D] " ;
+      if (info.canIntegrateOpenEnded) os << "[OpenEnded] " ;
       os << endl ;
 
       os << "Configuration: " << endl ;
       configSet->printMultiline(os,kName|kValue) ;
       //configSet->writeToStream(os,false) ;
 
-      const char* depName = RooNumIntFactory::instance().getDepIntegratorName(configSet->GetName()) ;
-      if (strlen(depName)>0) {
-   os << indent << "(Depends on '" << depName << "')" << endl ;
+      if (!info.depName.empty()) {
+   os << indent << "(Depends on '" << info.depName << "')" << endl ;
       }
       os << endl ;
 

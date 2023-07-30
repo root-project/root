@@ -27,11 +27,9 @@ public:
   // Constructors, assignment etc
   enum SamplingMode { Importance, ImportanceOnly, Stratified };
   enum GeneratorType { QuasiRandom, PseudoRandom };
-  RooMCIntegrator() ;
   RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance,
         GeneratorType genType= QuasiRandom, bool verbose= false);
   RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config);
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooMCIntegrator() override;
 
   bool checkLimits() const override;
@@ -47,11 +45,6 @@ public:
   void setGenType(GeneratorType type) { _genType= type; }
 
   const RooGrid &grid() const { return _grid; }
-
-  bool canIntegrate1D() const override { return true ; }
-  bool canIntegrate2D() const override { return true ; }
-  bool canIntegrateND() const override { return true ; }
-  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 

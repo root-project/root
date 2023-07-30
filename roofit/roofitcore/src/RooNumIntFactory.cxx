@@ -112,48 +112,29 @@ RooNumIntFactory& RooNumIntFactory::instance()
 /// default configuration options and an optional list of names of other numeric integrators
 /// on which this integrator depends. Returns true if integrator was previously registered
 
-bool RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName)
+bool RooNumIntFactory::registerPlugin(std::string const &name, Creator const &creator, const RooArgSet &defConfig,
+                                    bool canIntegrate1D, bool canIntegrate2D, bool canIntegrateND,
+                                    bool canIntegrateOpenEnded, const char *depName)
 {
-  TString name = proto->ClassName() ;
-
-  if (getProtoIntegrator(name)) {
+  if (_map.find(name) != _map.end()) {
     //cout << "RooNumIntFactory::storeIntegrator() ERROR: integrator '" << name << "' already registered" << endl ;
     return true ;
   }
 
   // Add to factory
-  _map[name.Data()] = std::make_pair(unique_ptr<RooAbsIntegrator>(proto), std::string(depName));
+  auto& info = _map[name];
+  info.creator = creator;
+  info.canIntegrate1D = canIntegrate1D;
+  info.canIntegrate2D = canIntegrate2D;
+  info.canIntegrateND = canIntegrateND;
+  info.canIntegrateOpenEnded = canIntegrateOpenEnded;
+  info.depName = depName;
 
   // Add default config to master config
-  RooNumIntConfig::defaultConfig().addConfigSection(proto,defConfig) ;
+  RooNumIntConfig::defaultConfig().addConfigSection(name,defConfig, canIntegrate1D, canIntegrate2D, canIntegrateND, canIntegrateOpenEnded) ;
 
   return false ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return prototype integrator with given (class) name
-
-const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) const
-{
-  auto item = _map.find(name);
-
-  return item == _map.end() ? nullptr : item->second.first.get();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get list of class names of integrators needed by integrator named 'name'
-
-const char* RooNumIntFactory::getDepIntegratorName(const char* name) const
-{
-  auto item = _map.find(name);
-
-  return item == _map.end() ? nullptr : item->second.second.c_str();
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +146,7 @@ const char* RooNumIntFactory::getDepIntegratorName(const char* name) const
 /// the number of dimensions, the nature of the limits (open ended vs closed) and the user
 /// preference stated in 'config'
 
-RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, bool isBinned) const
+std::unique_ptr<RooAbsIntegrator> RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, bool isBinned) const
 {
   // First determine dimensionality and domain of integrand
   Int_t ndim = ndimPreset>0 ? ndimPreset : ((Int_t)func.getDimension()) ;
@@ -208,8 +189,7 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
   }
 
   // Retrieve proto integrator and return clone configured for the requested integration task
-  const RooAbsIntegrator* proto = getProtoIntegrator(method) ;
-  RooAbsIntegrator* engine =  proto->clone(func,config) ;
+  std::unique_ptr<RooAbsIntegrator> engine =  getPluginInfo(method)->creator(func,config) ;
   if (config.printEvalCounter()) {
     engine->setPrintEvalCounter(true) ;
   }

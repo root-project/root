@@ -37,7 +37,6 @@ in terms of a recursive application of RooIntegrator1D
 using namespace std;
 
 ClassImp(RooIntegrator2D);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,18 +44,17 @@ ClassImp(RooIntegrator2D);
 
 void RooIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 {
-  RooIntegrator2D* proto = new RooIntegrator2D() ;
-  fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
-  RooNumIntConfig::defaultConfig().method2D().setLabel(proto->ClassName()) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooIntegrator2D::RooIntegrator2D() :
-  _xIntegrator(0), _xint(0)
-{
+  auto creator = [](const RooAbsFunc& function, const RooNumIntConfig& config) {
+    return std::make_unique<RooIntegrator2D>(function,config);
+  };
+  std::string name = "RooIntegrator2D";
+  fact.registerPlugin(name, creator, {},
+                    /*canIntegrate1D=*/false,
+                    /*canIntegrate2D=*/true,
+                    /*canIntegrateND=*/false,
+                    /*canIntegrateOpenEnded=*/false,
+                    /*depName=*/"RooIntegrator1D");
+  RooNumIntConfig::defaultConfig().method2D().setLabel(name) ;
 }
 
 
@@ -107,16 +105,6 @@ RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, double xmin, double
   RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone integrator with new function and configuration. Needed to support RooNumIntFactory
-
-RooAbsIntegrator* RooIntegrator2D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooIntegrator2D(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
