@@ -29,12 +29,10 @@ class RooBinIntegrator : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooBinIntegrator() ;
 
   RooBinIntegrator(const RooAbsFunc& function, int numBins=100) ;
   RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooBinIntegrator() override;
 
   bool checkLimits() const override;
@@ -43,11 +41,6 @@ public:
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
-
-  bool canIntegrate1D() const override { return true ; }
-  bool canIntegrate2D() const override { return true ; }
-  bool canIntegrateND() const override { return true ; }
-  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 

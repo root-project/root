@@ -701,7 +701,7 @@ bool RooRealIntegral::initNumIntegrator() const
 
   // Create appropriate numeric integrator using factory
   bool isBinned = _function->isBinnedDistribution(_intList) ;
-  _numIntEngine.reset(RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig,0,isBinned));
+  _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig,0,isBinned);
 
   if(_numIntEngine == nullptr || !_numIntEngine->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrator." << std::endl;
