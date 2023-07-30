@@ -124,7 +124,6 @@
 #pragma link C++ class RooImproperIntegrator1D+ ;
 #pragma link C++ class RooIntegrator1D+ ;
 #pragma link C++ class RooBinIntegrator+ ;
-#pragma link C++ class RooIntegrator2D+ ;
 #pragma link C++ class RooInvTransform+ ;
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinearCombination+ ;
