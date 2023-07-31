@@ -1471,6 +1471,32 @@ public:
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
       *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
+
+   std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t collectionSize;
+      fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
+
+      auto typedValues = static_cast<RNTupleCardinality<SizeT> *>(bulkSpec.fValues);
+      typedValues[0] = collectionSize;
+
+      auto lastOffset = collectionStart.GetIndex() + collectionSize;
+      ClusterSize_t::ValueType nRemainingEntries = bulkSpec.fCount - 1;
+      std::size_t nEntries = 1;
+      while (nRemainingEntries > 0) {
+         NTupleSize_t nItemsUntilPageEnd;
+         auto offsets = fPrincipalColumn->MapV<ClusterSize_t>(bulkSpec.fFirstIndex + nEntries, nItemsUntilPageEnd);
+         std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
+         for (std::size_t i = 0; i < nBatch; ++i) {
+            typedValues[nEntries + i] = offsets[i] - lastOffset;
+            lastOffset = offsets[i];
+         }
+         nRemainingEntries -= nBatch;
+         nEntries += nBatch;
+      }
+      return RBulkSpec::kAllSet;
+   }
 };
 
 template <>
