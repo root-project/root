@@ -10,11 +10,7 @@ endif()
 
 add_library(ROOT10426 SHARED
    ROOT10426.cxx)
-if(MSVC AND DEFINED ROOT_SOURCE_DIR)
-  target_link_libraries(ROOT10426 PUBLIC Core)
-else()
-  target_link_libraries(ROOT10426 PUBLIC ROOT::Core)
-endif()
+target_link_libraries(ROOT10426 PUBLIC ROOT::Core)
 
 ROOTTEST_ADD_TEST(ROOT-10426
    MACRO  execROOT10426.C
