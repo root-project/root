@@ -52,7 +52,6 @@ can be selected to speed up the convergence of these integrals.
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooNumIntFactory.h"
-#include "RooIntegratorBinding.h"
 #include "TMath.h"
 #include "RooMsgService.h"
 

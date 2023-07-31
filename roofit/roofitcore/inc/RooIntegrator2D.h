@@ -19,6 +19,8 @@
 #include "RooIntegrator1D.h"
 #include "RooNumIntConfig.h"
 
+class RooIntegratorBinding;
+
 class RooIntegrator2D : public RooIntegrator1D {
 public:
 
@@ -41,8 +43,7 @@ protected:
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  RooIntegrator1D* _xIntegrator ; ///< Integrator in first dimension
-  RooAbsFunc* _xint ; ///< Function binding representing integral over first dimension
+  RooIntegratorBinding* _xint ; ///< Function binding representing integral over first dimension
 
   ClassDefOverride(RooIntegrator2D,0) // 2-dimensional numerical integration engine
 };
