@@ -1230,9 +1230,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
          let geom = this.makeEveGeometry(rnr_data);
 
          let fcol = EVE.JSR.getColor(egs.fFillColor);
+         let mop = 1 - egs.fMainTransparency/100;
 
          let material = new THREE.MeshPhongMaterial({// side: THREE.DoubleSide,
-                             depthWrite: false, color:fcol, transparent: true, opacity: 0.2 });
+                             depthWrite: false, color:fcol, transparent: true, opacity: mop });
 
          let mesh = new THREE.Mesh(geom, material);
 
@@ -1251,9 +1252,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
          let ib_len = rnr_data.idxBuff.length;
 
          let fcol = EVE.JSR.getColor(psp.fMainColor);
+         let mop = Math.min( 1, 1.3 *(1 - psp.fMainTransparency/100));
          var line_mat = new THREE.LineBasicMaterial({color:fcol });
          var mesh_mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, depthWrite: false,
-                                                      color:fcol, transparent: true, opacity: 0.4 });
+                                                      color:fcol, transparent: true, opacity: mop });
 
          for (let ib_pos = 0; ib_pos < ib_len; )
          {
