@@ -129,7 +129,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooImproperIntegrator1D.h
     RooIntegrator1D.h
     RooIntegrator2D.h
-    RooIntegratorBinding.h
     RooInvTransform.h
     RooLinearCombination.h
     RooLinearVar.h
@@ -351,7 +350,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooImproperIntegrator1D.cxx
     src/RooIntegrator1D.cxx
     src/RooIntegrator2D.cxx
-    src/RooIntegratorBinding.cxx
     src/RooInvTransform.cxx
     src/RooLinearCombination.cxx
     src/RooLinearVar.cxx

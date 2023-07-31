@@ -70,9 +70,8 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() = default;
 /// integration limits are taken from the definition in the function binding
 
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, const RooNumIntConfig &config)
-   : RooSegmentedIntegrator1D(
-        *(new RooIntegratorBinding(*(_xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(function, config)))),
-        config),
+   : RooSegmentedIntegrator1D(*(new RooIntegratorBinding(std::make_unique<RooSegmentedIntegrator1D>(function, config))),
+                              config),
      _xint{integrand()}
 {
 }
@@ -84,9 +83,9 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, c
 
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, double xmin, double xmax, double ymin,
                                                    double ymax, const RooNumIntConfig &config)
-   : RooSegmentedIntegrator1D(*(new RooIntegratorBinding(*(_xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(
-                                                              function, ymin, ymax, config)))),
-                              xmin, xmax, config),
+   : RooSegmentedIntegrator1D(
+        *(new RooIntegratorBinding(std::make_unique<RooSegmentedIntegrator1D>(function, ymin, ymax, config))), xmin,
+        xmax, config),
      _xint{integrand()}
 {
 }

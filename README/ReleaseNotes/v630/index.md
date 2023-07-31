@@ -240,6 +240,8 @@ Some of these classes are now removed from the public interface:
    root finding.
 4. The `RooFormula` class, which was not meant as a user-facing class, but as a
    shared implementation detail of `RooFormulaVar` and `RooGenericPdf`.
+5. The `RooIntegratorBinding`, which was an implementation detail of the
+   `RooIntegrator2D` and `RooSegmentedIntegrator2D` classes.
 
 ## 2D Graphics Libraries
 
