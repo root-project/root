@@ -54,13 +54,12 @@ if(MSVC)
 
   if(DEFINED ROOT_SOURCE_DIR)
     # ROOT_BINDIR is set by ROOTConfig.cmake
-    get_filename_component(realfp "${ROOT_BINDIR}/../" ABSOLUTE)
-    file(TO_CMAKE_PATH ${realfp} ROOTSYS)
-    # FIXME: Get from root-config.bat --tutdir
-    set(ROOT_TUTORIALS_DIR ${ROOTSYS}/tutorials)
-    #set(ROOT_CONFIG_EXECUTABLE root-config.bat)
-    #exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR)
-    #file(TO_CMAKE_PATH ${ROOT_TUTORIALS_DIR} ROOT_TUTORIALS_DIR)
+    set(ROOT_CONFIG_EXECUTABLE ${ROOT_BINDIR}/root-config.bat)
+    exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
+    file(TO_CMAKE_PATH ${ROOTSYS} ROOTSYS)
+    set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
+    exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR)
+    file(TO_CMAKE_PATH ${ROOT_TUTORIALS_DIR} ROOT_TUTORIALS_DIR)
     set(ROOT_root_CMD ${ROOTSYS}/bin/root.exe)
     set(ROOT_hadd_CMD ${ROOTSYS}/bin/hadd.exe)
     set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex.exe)
@@ -70,12 +69,17 @@ if(MSVC)
     set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libTree libRint libMatrix libMathCore)
   else()
     include(${ROOT_USE_FILE})
+    # remove ${ROOT_DEFINITIONS}, to fix several test failures with errors like:
+    # ROOT_cli_0:1:9: warning: '_WIN64' macro redefined [-Wmacro-redefined]
+    # TODO (bellenot): might be fixed on the ROOT side. To be revised and possibly
+    # removed after further investigations
+    remove_definitions(${ROOT_DEFINITIONS})
     set(ROOT_CONFIG_EXECUTABLE root-config.bat)
+    exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
+    file(TO_CMAKE_PATH ${ROOTSYS} ROOTSYS)
     set(ROOTSYS ${ROOTSYS} CACHE INTERNAL "")
-    # TODO (bellenot): un-comment the following two lines and remove all the special cases
-    # like "if(MSVC AND DEFINED ROOT_SOURCE_DIR)" and use the standard ones
-    #exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
-    #file(TO_CMAKE_PATH ${ROOT_SOURCE_DIR} ROOT_SOURCE_DIR)
+    exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
+    file(TO_CMAKE_PATH ${ROOT_SOURCE_DIR} ROOT_SOURCE_DIR)
     exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR)
     file(TO_CMAKE_PATH ${ROOT_TUTORIALS_DIR} ROOT_TUTORIALS_DIR)
     exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--features" OUTPUT_VARIABLE ROOT_FEATURES RETURN_VALUE RETVAR)
