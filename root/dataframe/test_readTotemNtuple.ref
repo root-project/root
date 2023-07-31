@@ -1,8 +1,8 @@
 
-Foreach:
 Warning in <TClass::Init>: no dictionary for class RPRootDumpPatternInfo is available
 Warning in <TClass::Init>: no dictionary for class RPRootDumpTrackInfo is available
 Warning in <TClass::Init>: no dictionary for class RPRootDumpPattern is available
+Foreach:
 9.10796
 8.10288
 7.6934
