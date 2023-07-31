@@ -25,10 +25,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TPSocket.h"
 #include "TServerSocket.h"
-
-class TPSocket;
-
 
 class TPServerSocket : public TServerSocket {
 
@@ -48,7 +46,7 @@ public:
 
    virtual ~TPServerSocket() {}
 
-   TSocket *Accept(UChar_t Opt = kSrvNoAuth) override;
+   TPSocket *Accept(UChar_t Opt = kSrvNoAuth) override;
 
    ClassDefOverride(TPServerSocket,0)  // Parallel server socket
 };

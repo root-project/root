@@ -35,14 +35,14 @@ class TPSocket : public TSocket {
 friend class TPServerSocket;
 
 private:
-   TSocket   **fSockets;         // array of parallel sockets
-   TMonitor   *fWriteMonitor;    // monitor write on parallel sockets
-   TMonitor   *fReadMonitor;     // monitor read from parallel sockets
-   Int_t       fSize;            // number of parallel sockets
-   Int_t      *fWriteBytesLeft;  // bytes left to write for specified socket
-   Int_t      *fReadBytesLeft;   // bytes left to read for specified socket
-   char      **fWritePtr;        // pointer to write buffer for specified socket
-   char      **fReadPtr;         // pointer to read buffer for specified socket
+   TSocket   **fSockets = nullptr;         // array of parallel sockets
+   TMonitor   *fWriteMonitor = nullptr;    // monitor write on parallel sockets
+   TMonitor   *fReadMonitor = nullptr;     // monitor read from parallel sockets
+   Int_t       fSize;                      // number of parallel sockets
+   Int_t      *fWriteBytesLeft = nullptr;  // bytes left to write for specified socket
+   Int_t      *fReadBytesLeft = nullptr;   // bytes left to read for specified socket
+   char      **fWritePtr = nullptr;        // pointer to write buffer for specified socket
+   char      **fReadPtr = nullptr;         // pointer to read buffer for specified socket
 
    TPSocket(TSocket *pSockets[], Int_t size);
    TPSocket(const TPSocket &) = delete;
@@ -69,12 +69,12 @@ public:
    Int_t   Send(Int_t kind) override { return TSocket::Send(kind); }
    Int_t   Send(Int_t status, Int_t kind) override { return TSocket::Send(status, kind); }
    Int_t   Send(const char *mess, Int_t kind = kMESS_STRING) override { return TSocket::Send(mess, kind); }
-   Int_t   SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt) override;
+   Int_t   SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt = kDefault) override;
    Int_t   Recv(TMessage *&mess) override;
    Int_t   Recv(Int_t &status, Int_t &kind) override { return TSocket::Recv(status, kind); }
    Int_t   Recv(char *mess, Int_t max) override { return TSocket::Recv(mess, max); }
    Int_t   Recv(char *mess, Int_t max, Int_t &kind) override { return TSocket::Recv(mess, max, kind); }
-   Int_t   RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt) override;
+   Int_t   RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt = kDefault) override;
 
    Bool_t  IsValid() const override { return fSockets ? kTRUE : kFALSE; }
    Int_t   GetErrorCode() const;
