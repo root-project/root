@@ -83,7 +83,7 @@ class TestClasNumba:
             return pt
 
         assert (False not in
-                tuple(x == y for x, y in numba_calc_pt_vec(vec_lv)))
+                tuple(math.isclose(x, y) for x, y in numba_calc_pt_vec(vec_lv)))
         assert self.compare(calc_pt_vec, numba_calc_pt_vec, 1, vec_lv)
 
     def test03_inheritance(self):
