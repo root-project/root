@@ -49,7 +49,6 @@ reached
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooNumIntFactory.h"
-#include "RooIntegratorBinding.h"
 #include "RooMsgService.h"
 
 
