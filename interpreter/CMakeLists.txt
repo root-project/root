@@ -249,7 +249,6 @@ else()
       "--libdir"
       "--includedir"
       "--prefix"
-      "--src-root"
       "--cmakedir"
       "--build-mode"
       "--version")
@@ -276,10 +275,9 @@ else()
   list(GET CONFIG_OUTPUT 2 LIBRARY_DIR)
   list(GET CONFIG_OUTPUT 3 INCLUDE_DIR)
   list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
-  list(GET CONFIG_OUTPUT 5 MAIN_SRC_DIR)
-  list(GET CONFIG_OUTPUT 6 LLVM_CONFIG_CMAKE_PATH)
-  list(GET CONFIG_OUTPUT 7 LLVM_BUILD_MODE)
-  list(GET CONFIG_OUTPUT 8 LLVM_VERSION_S)
+  list(GET CONFIG_OUTPUT 5 LLVM_CONFIG_CMAKE_PATH)
+  list(GET CONFIG_OUTPUT 6 LLVM_BUILD_MODE)
+  list(GET CONFIG_OUTPUT 7 LLVM_VERSION_S)
 
   set(LLVM_VERSION_SAVE "${LLVM_VERSION_S}")
 
@@ -296,7 +294,6 @@ else()
   set(LLVM_LIBRARY_DIR ${LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
   set(LLVM_MAIN_INCLUDE_DIR ${INCLUDE_DIR} CACHE PATH "Path to llvm/include")
   set(LLVM_BINARY_DIR ${LLVM_OBJ_ROOT} CACHE PATH "Path to LLVM build tree")
-  set(LLVM_MAIN_SRC_DIR ${MAIN_SRC_DIR} CACHE PATH "Path to LLVM source tree")
 
   set(LLVM_DIR "${LLVM_BINARY_DIR}")
 
