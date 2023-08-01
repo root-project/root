@@ -145,18 +145,6 @@ namespace genreflex {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
-
- // FIXME: We should remove after removal of r flag.
-static llvm::cl::opt<bool>
-gOptIgnoreExistingDict("r",
-               llvm::cl::desc("Deprecated. Similar to -f but it ignores the dictionary generation. \
-When -r is present rootcling becomes a tool to generate rootmaps (and capability files)."),
-               llvm::cl::Hidden,
-               llvm::cl::cat(gRootclingOptions));
-
-////////////////////////////////////////////////////////////////////////////////
-
 void SetRootSys();
 
 ROOT::Internal::RootCling::TROOTSYSSetter::TROOTSYSSetter() {
@@ -2652,6 +2640,7 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
 ////////////////////////////////////////////////////////////////////////////////
 
 int GenerateFullDict(std::ostream &dictStream,
+                     bool ignoreExistingDict,
                      cling::Interpreter &interp,
                      RScanner &scan,
                      const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
@@ -2680,7 +2669,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // SELECTION LOOP
    for (auto const & ns : scan.fSelectedNamespaces) {
-      if (!gOptIgnoreExistingDict) {
+      if (!ignoreExistingDict) {
          WriteNamespaceInit(ns, interp, dictStream);
       }
       auto nsName = ns.GetNamespaceDecl()->getQualifiedNameAsString();
@@ -2725,7 +2714,7 @@ int GenerateFullDict(std::ostream &dictStream,
                Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
             }
          } else {
-            if (!gOptIgnoreExistingDict) {
+            if (!ignoreExistingDict) {
                ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
                                                 needsCollectionProxy);
             }
@@ -2747,7 +2736,7 @@ int GenerateFullDict(std::ostream &dictStream,
          continue;
       }
       const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
-      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass, "Class_Name", interp) && !gOptIgnoreExistingDict) {
+      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass, "Class_Name", interp) && !ignoreExistingDict) {
          WriteClassFunctions(cxxdecl, dictStream, isSplit);
       }
    }
@@ -2765,7 +2754,7 @@ int GenerateFullDict(std::ostream &dictStream,
       const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
 
       if (!ROOT::TMetaUtils::IsSTLContainer(selClass)) {
-         if (!gOptIgnoreExistingDict) {
+         if (!ignoreExistingDict) {
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
                                              needsCollectionProxy);
          }
@@ -2773,7 +2762,7 @@ int GenerateFullDict(std::ostream &dictStream,
       }
    }
    // Loop to write all the ClassCode
-   if (!gOptIgnoreExistingDict) {
+   if (!ignoreExistingDict) {
       for (auto const &selClass : scan.fSelectedClasses) {
           ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
                                            selClass,
@@ -3540,17 +3529,6 @@ public:
    }
 };
 
-static llvm::cl::list<std::string>
-gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
-                     llvm::cl::Hidden,
-                     llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
-                     llvm::cl::cat(gRootclingOptions));
-// Really llvm::cl::Required, will be changed in RootClingMain below.
-static llvm::cl::opt<std::string>
-gOptDictionaryFileName(llvm::cl::Positional,
-                      llvm::cl::desc("<output dictionary file>"),
-                      llvm::cl::cat(gRootclingOptions));
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
 /// is a system module. If not, it will let the current rootcling invocation
@@ -3565,10 +3543,12 @@ class CheckModuleBuildClient : public clang::DiagnosticConsumer {
    clang::DiagnosticConsumer *fChild;
    bool fOwnsChild;
    clang::ModuleMap &fMap;
+   llvm::cl::list<std::string>& fModuleByproducts;
+   const std::string& fDictionaryFileName;
 
 public:
-   CheckModuleBuildClient(clang::DiagnosticConsumer *Child, bool OwnsChild, clang::ModuleMap &Map)
-      : fChild(Child), fOwnsChild(OwnsChild), fMap(Map)
+   CheckModuleBuildClient(clang::DiagnosticConsumer *Child, bool OwnsChild, clang::ModuleMap &Map, llvm::cl::list<std::string>& moduleByproducts, const std::string& dictionaryFileName)
+      : fChild(Child), fOwnsChild(OwnsChild), fMap(Map), fModuleByproducts(moduleByproducts), fDictionaryFileName(dictionaryFileName)
    {
    }
 
@@ -3615,7 +3595,7 @@ public:
       // If we build a I/O requiring module implicitly we should display
       // an error unless the -mByproduct was specified.
       bool isByproductModule
-         = module && std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) != gOptModuleByproducts.end();
+         = module && std::find(fModuleByproducts.begin(), fModuleByproducts.end(), moduleName) != fModuleByproducts.end();
       if (!isByproductModule)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
@@ -3624,7 +3604,7 @@ public:
                                  "Building module '%s' implicitly. If '%s' requires a \n"
                                  "dictionary please specify build dependency: '%s' depends on '%s'.\n"
                                  "Otherwise, specify '-mByproduct %s' to disable this diagnostic.\n",
-                                 moduleName.c_str(), moduleName.c_str(), gOptDictionaryFileName.c_str(),
+                                 moduleName.c_str(), moduleName.c_str(), fDictionaryFileName.c_str(),
                                  moduleName.c_str(), moduleName.c_str());
       }
    }
@@ -3675,11 +3655,6 @@ static void MaybeSuppressWin32CrashDialogs() {
 #endif
 }
 
-static llvm::cl::opt<bool> gOptForce("f", llvm::cl::desc("Overwrite <file>s."),
-                                    llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool> gOptRootBuild("rootbuild", llvm::cl::desc("If we are building ROOT."),
-                                        llvm::cl::Hidden,
-                                        llvm::cl::cat(gRootclingOptions));
 enum VerboseLevel {
    v = ROOT::TMetaUtils::kError,
    v0 = ROOT::TMetaUtils::kFatal,
@@ -3688,175 +3663,6 @@ enum VerboseLevel {
    v3 = ROOT::TMetaUtils::kNote,
    v4 = ROOT::TMetaUtils::kInfo
 };
-static llvm::cl::opt<VerboseLevel>
-gOptVerboseLevel(llvm::cl::desc("Choose verbosity level:"),
-                llvm::cl::values(clEnumVal(v, "Show errors."),
-                                 clEnumVal(v0, "Show only fatal errors."),
-                                 clEnumVal(v1, "Show errors (the same as -v)."),
-                                 clEnumVal(v2, "Show warnings (default)."),
-                                 clEnumVal(v3, "Show notes."),
-                                 clEnumVal(v4, "Show information.")),
-                llvm::cl::init(v2),
-                llvm::cl::cat(gRootclingOptions));
-
-static llvm::cl::opt<bool>
-gOptCint("cint", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-        llvm::cl::Hidden,
-        llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptReflex("reflex", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-          llvm::cl::Hidden,
-          llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptGccXml("gccxml", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-          llvm::cl::Hidden,
-          llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptLibListPrefix("lib-list-prefix",
-                 llvm::cl::desc("An ACLiC feature which exports the list of dependent libraries."),
-                 llvm::cl::Hidden,
-                 llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptGeneratePCH("generate-pch",
-               llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
-               llvm::cl::Hidden,
-               llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptC("c", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptP("p", llvm::cl::desc("Deprecated, legacy flag which is ignored."),
-     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptRootmapLibNames("rml", llvm::cl::ZeroOrMore,
-                   llvm::cl::desc("Generate rootmap file."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptRootMapFileName("rmf",
-                   llvm::cl::desc("Generate a rootmap file with the specified name."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptCxxModule("cxxmodule",
-             llvm::cl::desc("Generate a C++ module."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptModuleMapFiles("moduleMapFile",
-                   llvm::cl::desc("Specify a C++ modulemap file."),
-                   llvm::cl::cat(gRootclingOptions));
-// FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
-static llvm::cl::opt<bool>
-gOptUmbrellaInput("umbrellaHeader",
-                  llvm::cl::desc("A single header including all headers instead of specifying them on the command line."),
-                  llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptMultiDict("multiDict",
-             llvm::cl::desc("If this library has multiple separate LinkDef files."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptNoGlobalUsingStd("noGlobalUsingStd",
-             llvm::cl::desc("Do not declare {using namespace std} in dictionary global scope."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptInterpreterOnly("interpreteronly",
-                   llvm::cl::desc("Generate minimal dictionary for interactivity (without IO information)."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptSplit("split",
-         llvm::cl::desc("Split the dictionary into two parts: one containing the IO (ClassDef)\
-information and another the interactivity support."),
-         llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptNoDictSelection("noDictSelection",
-                   llvm::cl::Hidden,
-                   llvm::cl::desc("Do not run the selection rules. Useful when in -onepcm mode."),
-                   llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptSharedLibFileName("s",
-                     llvm::cl::desc("The path to the library of the built dictionary."),
-                     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptModuleDependencies("m",
-                      llvm::cl::desc("The list of dependent modules of the dictionary."),
-                      llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptExcludePaths("excludePath", llvm::cl::ZeroOrMore,
-                llvm::cl::desc("Do not store the <path> in the dictionary."),
-                llvm::cl::cat(gRootclingOptions));
-// FIXME: This does not seem to work. We have one use of -inlineInputHeader in
-// ROOT and it does not produce the expected result.
-static llvm::cl::opt<bool>
-gOptInlineInput("inlineInputHeader",
-               llvm::cl::desc("Does not generate #include <header> but expands the header content."),
-               llvm::cl::cat(gRootclingOptions));
-// FIXME: This is totally the wrong concept. We should not expose an interface
-// to be able to tell which component is in the pch and which needs extra
-// scaffolding for interactive use. Moreover, some of the ROOT components are
-// partially in the pch and this option makes it impossible to express that.
-// We should be able to get the list of headers in the pch early and scan
-// through them.
-static llvm::cl::opt<bool>
-gOptWriteEmptyRootPCM("writeEmptyRootPCM",
-                     llvm::cl::Hidden,
-                     llvm::cl::desc("Does not include the header files as it assumes they exist in the pch."),
-                     llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptCheckSelectionSyntax("selSyntaxOnly",
-                        llvm::cl::desc("Check the selection syntax only."),
-                        llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptFailOnWarnings("failOnWarnings",
-                  llvm::cl::desc("Fail if there are warnings."),
-                  llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<bool>
-gOptNoIncludePaths("noIncludePaths",
-                  llvm::cl::desc("Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH."),
-                  llvm::cl::cat(gRootclingOptions));
-static llvm::cl::opt<std::string>
-gOptISysRoot("isysroot", llvm::cl::Prefix, llvm::cl::Hidden,
-            llvm::cl::desc("Specify an isysroot."),
-            llvm::cl::cat(gRootclingOptions),
-            llvm::cl::init("-"));
-static llvm::cl::list<std::string>
-gOptIncludePaths("I", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-                llvm::cl::desc("Specify an include path."),
-                llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptCompDefaultIncludePaths("compilerI", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-                    llvm::cl::desc("Specify a compiler default include path, to suppress unneeded `-isystem` arguments."),
-                    llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptSysIncludePaths("isystem", llvm::cl::ZeroOrMore,
-                    llvm::cl::desc("Specify a system include path."),
-                    llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptPPDefines("D", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-             llvm::cl::desc("Specify defined macros."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptPPUndefines("U", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-             llvm::cl::desc("Specify undefined macros."),
-             llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptWDiags("W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
-          llvm::cl::desc("Specify compiler diagnostics options."),
-          llvm::cl::cat(gRootclingOptions));
-// Really OneOrMore, will be changed in RootClingMain below.
-static llvm::cl::list<std::string>
-gOptDictionaryHeaderFiles(llvm::cl::Positional, llvm::cl::ZeroOrMore,
-                         llvm::cl::desc("<list of dictionary header files> <LinkDef file>"),
-                         llvm::cl::cat(gRootclingOptions));
-static llvm::cl::list<std::string>
-gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
-         llvm::cl::desc("Consumes all unrecognized options."),
-         llvm::cl::cat(gRootclingOptions));
-
-static llvm::cl::SubCommand
-gBareClingSubcommand("bare-cling", "Call directly cling and exit.");
-
-static llvm::cl::list<std::string>
-gOptBareClingSink(llvm::cl::OneOrMore, llvm::cl::Sink,
-                  llvm::cl::desc("Consumes options and sends them to cling."),
-                  llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gBareClingSubcommand));
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true iff a given module (and its submodules) contains all headers
@@ -3865,7 +3671,8 @@ gOptBareClingSink(llvm::cl::OneOrMore, llvm::cl::Sink,
 /// not in the given module will be inserted into the MissingHeader variable.
 /// Returns true iff the PCH was successfully generated.
 static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch &headerSearch,
-                                  clang::Module *module, std::vector<std::array<std::string, 2>> &missingHeaders)
+                                  clang::Module *module, std::vector<std::array<std::string, 2>> &missingHeaders,
+                                  llvm::cl::list<std::string>& moduleByproducts)
 {
    // Now we collect all header files from the previously collected modules.
    std::vector<clang::Module::Header> moduleHeaders;
@@ -3913,8 +3720,8 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch 
                OtherModuleName = OtherModule->Name;
 
             // Don't complain about headers that are actually in by-products:
-            if (std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), OtherModuleName)
-                != gOptModuleByproducts.end())
+            if (std::find(moduleByproducts.begin(), moduleByproducts.end(), OtherModuleName)
+                != moduleByproducts.end())
                continue;
 
             missingHeaders.push_back({header, OtherModuleName});
@@ -3930,7 +3737,8 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check moduleName validity from modulemap. Check if this module is defined or not.
 static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
-                             llvm::StringRef LinkdefPath, const std::string &moduleName)
+                             llvm::StringRef LinkdefPath, const std::string &moduleName,
+                             llvm::cl::list<std::string>& moduleByproducts, llvm::cl::opt<bool>& optUmbrellaInput)
 {
    clang::CompilerInstance *CI = interpreter.getCI();
    clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
@@ -3950,7 +3758,7 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
    // by the user on the command line. This is an integrity check to
    // ensure that our used module map is not containing extraneous headers.
    std::vector<std::array<std::string, 2>> missingHdrMod;
-   if (!ModuleContainsHeaders(modGen, headerSearch, module, missingHdrMod)) {
+   if (!ModuleContainsHeaders(modGen, headerSearch, module, missingHdrMod, moduleByproducts)) {
       // FIXME: Upgrade this to an error once modules are stable.
       std::stringstream msgStream;
       msgStream << "after creating module \"" << module->Name << "\" ";
@@ -3975,10 +3783,10 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
       // if we passed rootcling ... -I/some/path somedir/some/header, the
       // modulemap should contain module M { header "somedir/some/header" }
       // This way we will make sure the module is properly activated.
-      if (!gOptUmbrellaInput && maybeUmbrella) {
+      if (!optUmbrellaInput && maybeUmbrella) {
          ROOT::TMetaUtils::Info("CheckModuleValid, %s. You can silence this message by adding %s to the invocation.",
                                 warningMessage.c_str(),
-                                gOptUmbrellaInput.ArgStr.data());
+                                optUmbrellaInput.ArgStr.data());
          return true;
       }
 
@@ -4012,10 +3820,235 @@ int RootClingMain(int argc,
               char **argv,
               bool isGenreflex = false)
 {
-   // Set number of required arguments. We cannot do this globally since it
-   // would interfere with LLVM's option parsing.
-   gOptDictionaryFileName.setNumOccurrencesFlag(llvm::cl::Required);
-   gOptDictionaryHeaderFiles.setNumOccurrencesFlag(llvm::cl::OneOrMore);
+   // Remove all predefined options from linked LLVM
+   llvm::cl::ResetCommandLineParser();
+
+   /* Start of defining options */
+   llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
+
+   // FIXME: We should remove after removal of r flag.
+   llvm::cl::opt<bool> gOptIgnoreExistingDict(
+      "r", llvm::cl::Hidden,
+      llvm::cl::desc("Deprecated. Similar to -f but it ignores the dictionary generation. \
+When -r is present rootcling becomes a tool to generate rootmaps (and capability files)."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptModuleByproducts(
+      "mByproduct", llvm::cl::ZeroOrMore, llvm::cl::Hidden,
+      llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<std::string> gOptDictionaryFileName(
+      llvm::cl::Positional, llvm::cl::Required,
+      llvm::cl::desc("<output dictionary file>"),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptForce(
+      "f",
+      llvm::cl::desc("Overwrite <file>s."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptRootBuild(
+      "rootbuild", llvm::cl::Hidden,
+      llvm::cl::desc("If we are building ROOT."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<VerboseLevel> gOptVerboseLevel(
+      llvm::cl::desc("Choose verbosity level:"),
+      llvm::cl::values(clEnumVal(v, "Show errors."), clEnumVal(v0, "Show only fatal errors."),
+                       clEnumVal(v1, "Show errors (the same as -v)."), clEnumVal(v2, "Show warnings (default)."),
+                       clEnumVal(v3, "Show notes."), clEnumVal(v4, "Show information.")),
+      llvm::cl::init(v2),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptCint(
+      "cint", llvm::cl::Hidden,
+      llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptReflex(
+      "reflex", llvm::cl::Hidden,
+      llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptGccXml(
+      "gccxml", llvm::cl::Hidden,
+      llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<std::string> gOptLibListPrefix(
+      "lib-list-prefix", llvm::cl::Hidden,
+      llvm::cl::desc("An ACLiC feature which exports the list of dependent libraries."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptGeneratePCH(
+      "generate-pch", llvm::cl::Hidden,
+      llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptC(
+      "c",
+      llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptP(
+      "p",
+      llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptRootmapLibNames(
+      "rml", llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Generate rootmap file."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<std::string> gOptRootMapFileName(
+      "rmf",
+      llvm::cl::desc("Generate a rootmap file with the specified name."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptCxxModule(
+      "cxxmodule",
+      llvm::cl::desc("Generate a C++ module."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptModuleMapFiles(
+      "moduleMapFile",
+      llvm::cl::desc("Specify a C++ modulemap file."),
+      llvm::cl::cat(gRootclingOptions));
+
+   // FIXME: Figure out how to combine the code of -umbrellaHeader and inlineInputHeader
+   llvm::cl::opt<bool> gOptUmbrellaInput(
+      "umbrellaHeader",
+      llvm::cl::desc("A single header including all headers instead of specifying them on the command line."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptMultiDict(
+      "multiDict",
+      llvm::cl::desc("If this library has multiple separate LinkDef files."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptNoGlobalUsingStd(
+      "noGlobalUsingStd",
+      llvm::cl::desc("Do not declare {using namespace std} in dictionary global scope."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptInterpreterOnly(
+      "interpreteronly",
+      llvm::cl::desc("Generate minimal dictionary for interactivity (without IO information)."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptSplit(
+      "split",
+      llvm::cl::desc("Split the dictionary into two parts: one containing the IO (ClassDef) \
+information and another the interactivity support."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptNoDictSelection(
+      "noDictSelection", llvm::cl::Hidden,
+      llvm::cl::desc("Do not run the selection rules. Useful when in -onepcm mode."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<std::string> gOptSharedLibFileName(
+      "s",
+      llvm::cl::desc("The path to the library of the built dictionary."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptModuleDependencies(
+      "m",
+      llvm::cl::desc("The list of dependent modules of the dictionary."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptExcludePaths(
+      "excludePath", llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Do not store the <path> in the dictionary."),
+      llvm::cl::cat(gRootclingOptions));
+
+   // FIXME: This does not seem to work. We have one use of -inlineInputHeader in
+   // ROOT and it does not produce the expected result.
+   llvm::cl::opt<bool> gOptInlineInput(
+      "inlineInputHeader",
+      llvm::cl::desc("Does not generate #include <header> but expands the header content."),
+      llvm::cl::cat(gRootclingOptions));
+
+   // FIXME: This is totally the wrong concept. We should not expose an interface
+   // to be able to tell which component is in the pch and which needs extra
+   // scaffolding for interactive use. Moreover, some of the ROOT components are
+   // partially in the pch and this option makes it impossible to express that.
+   // We should be able to get the list of headers in the pch early and scan
+   // through them.
+   llvm::cl::opt<bool> gOptWriteEmptyRootPCM(
+      "writeEmptyRootPCM", llvm::cl::Hidden,
+      llvm::cl::desc("Does not include the header files as it assumes they exist in the pch."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptCheckSelectionSyntax(
+      "selSyntaxOnly",
+      llvm::cl::desc("Check the selection syntax only."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptFailOnWarnings(
+      "failOnWarnings",
+      llvm::cl::desc("Fail if there are warnings."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<bool> gOptNoIncludePaths(
+      "noIncludePaths",
+      llvm::cl::desc("Do not store include paths but rely on the env variable ROOT_INCLUDE_PATH."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::opt<std::string> gOptISysRoot(
+      "isysroot", llvm::cl::Prefix, llvm::cl::Hidden,
+      llvm::cl::desc("Specify an isysroot."),
+      llvm::cl::init("-"),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptIncludePaths(
+      "I", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Specify an include path."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptCompDefaultIncludePaths(
+      "compilerI", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Specify a compiler default include path, to suppress unneeded `-isystem` arguments."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptSysIncludePaths(
+      "isystem", llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Specify a system include path."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptPPDefines(
+      "D", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Specify defined macros."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptPPUndefines(
+      "U", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Specify undefined macros."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptWDiags(
+      "W", llvm::cl::Prefix, llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Specify compiler diagnostics options."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptDictionaryHeaderFiles(
+      llvm::cl::Positional, llvm::cl::OneOrMore,
+      llvm::cl::desc("<list of dictionary header files> <LinkDef file>"),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::list<std::string> gOptSink(
+      llvm::cl::Sink, llvm::cl::ZeroOrMore,
+      llvm::cl::desc("Consumes all unrecognized options."),
+      llvm::cl::cat(gRootclingOptions));
+
+   llvm::cl::SubCommand gBareClingSubcommand("bare-cling", "Call directly cling and exit.");
+
+   llvm::cl::list<std::string> gOptBareClingSink(
+      llvm::cl::Sink, llvm::cl::OneOrMore,
+      llvm::cl::desc("Consumes options and sends them to cling."),
+      llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gBareClingSubcommand));
+   /* End of defining options */
 
    // Copied from cling driver.
    // FIXME: Uncomment once we fix ROOT's teardown order.
@@ -4407,7 +4440,7 @@ int RootClingMain(int argc,
 
    // Attach our own diag client that listens to the module_build remarks from
    // clang to check that we don't build dictionary C++ modules implicitly.
-   auto recordingClient = new CheckModuleBuildClient(diags.getClient(), diags.ownsClient(), moduleMap);
+   auto recordingClient = new CheckModuleBuildClient(diags.getClient(), diags.ownsClient(), moduleMap, gOptModuleByproducts, gOptDictionaryFileName);
    diags.setClient(recordingClient, true);
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
@@ -4946,6 +4979,7 @@ int RootClingMain(int argc,
       }
    } else {
       rootclingRetCode += GenerateFullDict(*splitDictStream,
+                                 gOptIgnoreExistingDict,
                                  interp,
                                  scan,
                                  constructorTypes,
@@ -5007,7 +5041,7 @@ int RootClingMain(int argc,
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
          } else if (gOptCxxModule) {
-            if (!CheckModuleValid(modGen, llvmResourceDir, interp, linkdefFilename, moduleName.str()))
+            if (!CheckModuleValid(modGen, llvmResourceDir, interp, linkdefFilename, moduleName.str(), gOptModuleByproducts, gOptUmbrellaInput))
                return 1;
          }
       }
