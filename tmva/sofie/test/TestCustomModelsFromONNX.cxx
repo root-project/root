@@ -267,6 +267,26 @@ TEST(ONNX, Linear16)
    }
 }
 
+TEST(ONNX, Linear32RootFeacture)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(3200);
+   std::fill_n(input.data(), input.size(), 1.0f);
+   TMVA_SOFIE_Linear32RootFeacture::Session s("Linear_32_FromONNX.root");
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Linear_32_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = Linear_32_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
 
 TEST(ONNX, Linear32)
 {
