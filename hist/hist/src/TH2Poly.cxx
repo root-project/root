@@ -934,50 +934,91 @@ Double_t TH2Poly::GetMinimum(Double_t minval) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Bins the histogram using a honeycomb structure
+/// If the option "v" is specified, the hexagons are drawn "vertically" (default).
+/// If the option "h" is selected they are drawn "horizontally".
 
-void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
-                     Int_t k, Int_t s)
+void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a, Int_t k, Int_t s, Option_t* option)
 {
-   // Add the bins
+   TString opt = option;
+   opt.ToLower();
    Double_t numberOfHexagonsInTheRow;
    Double_t x[6], y[6];
-   Double_t xloop, yloop, xtemp;
-   xloop = xstart; yloop = ystart + a/2.0;
-   for (int sCounter = 0; sCounter < s; sCounter++) {
+   Double_t xloop = xstart, yloop, xtemp, ytemp;
 
-      xtemp = xloop; // Resets the temp variable
+   // Add the bins
+   if (opt.Contains("v")) {
+      yloop = ystart + a / 2.0;
+      for (int sCounter = 0; sCounter < s; sCounter++) {
+         xtemp = xloop;
+         // Determine the number of hexagons in that row
+         if (sCounter%2 == 0)
+            numberOfHexagonsInTheRow = k;
+         else
+            numberOfHexagonsInTheRow = k - 1;
 
-      // Determine the number of hexagons in that row
-      if(sCounter%2 == 0){numberOfHexagonsInTheRow = k;}
-      else{numberOfHexagonsInTheRow = k - 1;}
-
-      for (int kCounter = 0; kCounter <  numberOfHexagonsInTheRow; kCounter++) {
-
-         // Go around the hexagon
-         x[0] = xtemp;
-         y[0] = yloop;
-         x[1] = x[0];
-         y[1] = y[0] + a;
-         x[2] = x[1] + a*TMath::Sqrt(3)/2.0;
-         y[2] = y[1] + a/2.0;
-         x[3] = x[2] + a*TMath::Sqrt(3)/2.0;
-         y[3] = y[1];
-         x[4] = x[3];
-         y[4] = y[0];
-         x[5] = x[2];
-         y[5] = y[4] - a/2.0;
-
-         this->AddBin(6, x, y);
-
-         // Go right
-         xtemp += a*TMath::Sqrt(3);
+         for (int kCounter = 0; kCounter < numberOfHexagonsInTheRow; kCounter++) {
+            // Go around the hexagon
+            x[0] = xtemp;
+            y[0] = yloop;
+            x[1] = x[0];
+            y[1] = y[0] + a;
+            x[2] = x[1] + a * TMath::Sqrt(3) / 2.0;
+            y[2] = y[1] + a / 2.0;
+            x[3] = x[2] + a * TMath::Sqrt(3) / 2.0;
+            y[3] = y[1];
+            x[4] = x[3];
+            y[4] = y[0];
+            x[5] = x[2];
+            y[5] = y[4] - a/2.0;
+            this->AddBin(6, x, y);
+            // Go right
+            xtemp += a * TMath::Sqrt(3);
+         }
+         // Increment the starting position
+         if (sCounter%2 == 0)
+            xloop += a * TMath::Sqrt(3) / 2.0;
+         else
+            xloop -= a * TMath::Sqrt(3) / 2.0;
+         yloop += 1.5 * a;
       }
-
-      // Increment the starting position
-      if (sCounter%2 == 0) xloop += a*TMath::Sqrt(3)/2.0;
-      else                 xloop -= a*TMath::Sqrt(3)/2.0;
-      yloop += 1.5*a;
+   } else if (opt.Contains("h")) {
+      yloop = ystart + a*TMath::Sqrt(3)/2.0;
+      for (int sCounter = 0; sCounter < s; sCounter++) {
+         ytemp = yloop;
+         // Determine the number of hexagons in that row
+         if (sCounter%2 == 0)
+            numberOfHexagonsInTheRow = k;
+         else
+            numberOfHexagonsInTheRow = k - 1;
+         for (int kCounter = 0; kCounter < numberOfHexagonsInTheRow; kCounter++) {
+            // Go around the hexagon
+            x[0] = xloop;
+            y[0] = ytemp;
+            x[1] = x[0] + a/2.0;
+            y[1] = y[0] + a * TMath::Sqrt(3) / 2.0;
+            x[2] = x[1] + a;
+            y[2] = y[1];
+            x[3] = x[2] + a/2.0;
+            y[3] = y[0];
+            x[4] = x[2];
+            y[4] = y[3] - a * TMath::Sqrt(3) / 2.0;
+            x[5] = x[1];
+            y[5] = y[4];
+            this->AddBin(6, x, y);
+            // Go up
+            ytemp += a * TMath::Sqrt(3);
+         }
+         // Increment the starting position
+         if (sCounter%2 == 0)
+            yloop += a * TMath::Sqrt(3) / 2.0;
+         else
+            yloop -= a * TMath::Sqrt(3) / 2.0;
+         xloop += 1.5 * a;
+      }
+   } else {
+      Error("Honeycomb", "Unknown option");
    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
