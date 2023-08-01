@@ -104,7 +104,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   _formExpr(title)
 {
   if (dependents.empty()) {
-    _value = traceEval(0);
+    _value = traceEval(nullptr);
   } else {
     _formula = new RooFormula(GetName(), _formExpr, dependents, checkVariables);
     _formExpr = _formula->formulaString().c_str();
@@ -278,8 +278,8 @@ std::list<double>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, double
 
 double RooFormulaVar::defaultErrorLevel() const
 {
-  RooAbsReal* nllArg(0) ;
-  RooAbsReal* chi2Arg(0) ;
+  RooAbsReal* nllArg(nullptr) ;
+  RooAbsReal* chi2Arg(nullptr) ;
 
   for (const auto arg : _actualVars) {
     if (dynamic_cast<RooNLLVar*>(arg)) {

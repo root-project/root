@@ -44,9 +44,9 @@ ClassImp(RooParamBinning);
 ///   cout << "RooParamBinning(" << this << ") default ctor" << endl ;
 
 RooParamBinning::RooParamBinning(const char* name) :
-  RooAbsBinning(name), _xlo(0), _xhi(0), _nbins(100), _binw(0), _lp(0), _owner(0)
+  RooAbsBinning(name), _xlo(nullptr), _xhi(nullptr), _nbins(100), _binw(0), _lp(nullptr), _owner(nullptr)
 {
-  _array = 0 ;
+  _array = nullptr ;
 }
 
 
@@ -56,13 +56,13 @@ RooParamBinning::RooParamBinning(const char* name) :
 
 RooParamBinning::RooParamBinning(RooAbsReal& xloIn, RooAbsReal& xhiIn, Int_t nBins, const char* name) :
   RooAbsBinning(name),
-  _array(0),
+  _array(nullptr),
   _xlo(&xloIn),
   _xhi(&xhiIn),
   _nbins(nBins),
   _binw(0),
-  _lp(0),
-  _owner(0)
+  _lp(nullptr),
+  _owner(nullptr)
 {
 }
 
@@ -84,9 +84,9 @@ RooParamBinning::~RooParamBinning()
 ///   cout << "RooParamBinning::cctor(" << this << ") orig = " << &other << endl ;
 
 RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name) :
-  RooAbsBinning(name), _binw(0), _owner(0)
+  RooAbsBinning(name), _binw(0), _owner(nullptr)
 {
-  _array = 0 ;
+  _array = nullptr ;
 
   if (other._lp) {
 //     cout << "RooParamBinning::cctor(this = " << this << ") taking addresses from orig  ListProxy" << endl ;
@@ -102,7 +102,7 @@ RooParamBinning::RooParamBinning(const RooParamBinning& other, const char* name)
   }
 
   _nbins = other._nbins ;
-  _lp = 0 ;
+  _lp = nullptr ;
 
   //cout << "RooParamBinning::cctor(this = " << this << " xlo = " << &_xlo << " xhi = " << &_xhi << " _lp = " << _lp << " owner = " << _owner << ")" << endl ;
 }
@@ -133,8 +133,8 @@ void RooParamBinning::insertHook(RooAbsRealLValue& owner) const
   _lp = new RooListProxy(Form("range::%s",GetName()),"lp",&owner,false,true) ;
   _lp->add(*_xlo) ;
   _lp->add(*_xhi) ;
-  _xlo = 0 ;
-  _xhi = 0 ;
+  _xlo = nullptr ;
+  _xhi = nullptr ;
 
 
 }
@@ -147,14 +147,14 @@ void RooParamBinning::insertHook(RooAbsRealLValue& owner) const
 
 void RooParamBinning::removeHook(RooAbsRealLValue& /*owner*/) const
 {
-  _owner = 0 ;
+  _owner = nullptr ;
 
   // Remove list proxy from owner
   if (_lp) {
     _xlo = xlo() ;
     _xhi = xhi() ;
     delete _lp ;
-    _lp = 0 ;
+    _lp = nullptr ;
   }
 }
 

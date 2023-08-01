@@ -695,7 +695,7 @@ bool RooRealIntegral::initNumIntegrator() const
   else {
     _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,funcNormSet(),false,_rangeName);
   }
-  if(0 == _numIntegrand || !_numIntegrand->isValid()) {
+  if(nullptr == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << std::endl;
     return false;
   }
@@ -786,7 +786,7 @@ RooFit::OwningPtr<RooAbsReal> RooRealIntegral::createIntegral(const RooArgSet& i
   isetAll.add(_anaList) ;
   isetAll.add(_facList) ;
 
-  const RooArgSet* newNormSet(0) ;
+  const RooArgSet* newNormSet(nullptr) ;
   std::unique_ptr<RooArgSet> tmp;
   if (nset && !_funcNormSet) {
     newNormSet = nset ;
@@ -844,7 +844,7 @@ double RooRealIntegral::evaluate() const
   case Hybrid:
     {
       // Cache numeric integrals in >1d expensive object cache
-      RooDouble* cacheVal(0) ;
+      RooDouble* cacheVal(nullptr) ;
       if ((_cacheNum && !_intList.empty()) || _intList.getSize()>=_cacheAllNDim) {
         cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
       }

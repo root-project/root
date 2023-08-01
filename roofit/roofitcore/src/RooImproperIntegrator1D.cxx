@@ -246,7 +246,7 @@ bool RooImproperIntegrator1D::checkLimits() const
 RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 {
   // Analyze the specified limits to determine which case applies.
-  if(0 == integrand() || !integrand()->isValid()) return Invalid;
+  if(nullptr == integrand() || !integrand()->isValid()) return Invalid;
 
   if (_useIntegrandLimits) {
     _xmin= integrand()->getMinLimit(0);

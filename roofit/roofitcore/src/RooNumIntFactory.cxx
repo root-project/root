@@ -185,7 +185,7 @@ std::unique_ptr<RooAbsIntegrator> RooNumIntFactory::createIntegrator(RooAbsFunc&
   if (!method.CompareTo("N/A")) {
     oocoutE(nullptr,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for "
                  << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve proto integrator and return clone configured for the requested integration task

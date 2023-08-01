@@ -100,7 +100,7 @@ RooDataHistSliceIter::~RooDataHistSliceIter()
 
 const TCollection* RooDataHistSliceIter::GetCollection() const
 {
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -112,7 +112,7 @@ const TCollection* RooDataHistSliceIter::GetCollection() const
 TObject* RooDataHistSliceIter::Next()
 {
   if (_curStep==_nStep) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Select appropriate entry in RooDataHist

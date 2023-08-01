@@ -437,7 +437,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
     while(token) {
       alist.push_back(token) ;
       isCat.push_back(false) ;
-      token = strtok(0,",") ;
+      token = strtok(nullptr,",") ;
     }
   }
   if (catArgNames && *catArgNames) {
@@ -448,7 +448,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
     while(token) {
       alist.push_back(token) ;
       isCat.push_back(true) ;
-      token = strtok(0,",") ;
+      token = strtok(nullptr,",") ;
     }
   }
 
@@ -634,8 +634,8 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
       char* ptr = strtok(buf.data(),":") ;
       while(ptr) {
    intObs.push_back(ptr) ;
-   intExpr.push_back(strtok(0,";")) ;
-   ptr = strtok(0,":") ;
+   intExpr.push_back(strtok(nullptr,";")) ;
+   ptr = strtok(nullptr,":") ;
       }
     }
 

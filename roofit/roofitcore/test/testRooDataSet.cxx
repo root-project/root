@@ -124,7 +124,7 @@ TEST(RooDataSet, BinnedClone)
    RooRealVar weight("weight", "weight", 1, 0, 100);
 
    {
-      RooDataSet data{"dataset", "dataset", &chain, RooArgSet(mes, weight), 0, weight.GetName()};
+      RooDataSet data{"dataset", "dataset", &chain, RooArgSet(mes, weight), nullptr, weight.GetName()};
       std::unique_ptr<RooDataHist> hist{data.binnedClone()};
 
       EXPECT_DOUBLE_EQ(hist->sumEntries(), sumW);

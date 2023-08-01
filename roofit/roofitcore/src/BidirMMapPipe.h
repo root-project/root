@@ -142,7 +142,7 @@ namespace BidirMMapPipe_impl {
             } impl;
         public:
             /// default constructor
-            Pages() : m_pimpl(0) { }
+            Pages() : m_pimpl(nullptr) { }
 
             /// destructor
             ~Pages();

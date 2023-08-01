@@ -33,7 +33,7 @@ ClassImp(RooMomentMorph);
 /// coverity[UNINIT_CTOR]
 
 RooMomentMorph::RooMomentMorph()
-  : _cacheMgr(this,10,true,true), _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
+  : _cacheMgr(this,10,true,true), _curNormSet(nullptr), _mref(nullptr), _M(nullptr), _useHorizMorph(true)
 {
 }
 
@@ -138,7 +138,7 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
 RooMomentMorph::RooMomentMorph(const RooMomentMorph& other, const char* name) :
   RooAbsPdf(other,name),
   _cacheMgr(other._cacheMgr,this),
-  _curNormSet(0),
+  _curNormSet(nullptr),
   m("m",this,other.m),
   _varList("varList",this,other._varList),
   _pdfList("pdfList",this,other._pdfList),

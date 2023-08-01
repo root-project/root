@@ -179,7 +179,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
     setRange(minValue,maxValue) ;
 
     double clipValue ;
-    inRange(value,0,&clipValue) ;
+    inRange(value,nullptr,&clipValue) ;
     _value = clipValue ;
 
     TRACE_CREATE
@@ -272,7 +272,7 @@ RooSpan<const double> RooRealVar::getValues(RooBatchCompute::RunContext& inputDa
 void RooRealVar::setVal(double value)
 {
   double clipValue ;
-  inRange(value,0,&clipValue) ;
+  inRange(value,nullptr,&clipValue) ;
 
   if (clipValue != _value) {
     setValueDirty() ;
@@ -348,7 +348,7 @@ const RooAbsBinning& RooRealVar::getBinning(const char* name, bool verbose, bool
 RooAbsBinning& RooRealVar::getBinning(const char* name, bool verbose, bool createOnTheFly)
 {
   // Return default (normalization) binning and range if no name is specified
-  if (name==0) {
+  if (name==nullptr) {
     return *_binning ;
   }
 
@@ -492,7 +492,7 @@ void RooRealVar::setMin(const char* name, double value)
   // Clip current value in window if it fell out
   if (!name) {
     double clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
+    if (!inRange(_value,nullptr,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -522,7 +522,7 @@ void RooRealVar::setMax(const char* name, double value)
   // Clip current value in window if it fell out
   if (!name) {
     double clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
+    if (!inRange(_value,nullptr,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -888,7 +888,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
   // Process & check varargs
   pc.process(tmp) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Extract values from named arguments

@@ -142,7 +142,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Clone FUNC
   _funcClone = RooHelpers::cloneTreeWithSameParameters(real, indata.get()).release();
-  _funcCloneSet = 0 ;
+  _funcCloneSet = nullptr ;
 
   // Attach FUNC to data set
   _funcObsSet = std::unique_ptr<RooArgSet>{_funcClone->getObservables(indata)}.release();
@@ -183,7 +183,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     auto realDepRLV = dynamic_cast<const RooAbsRealLValue*>((*_funcObsSet)[i]);
     if (realDepRLV && realDepRLV->isDerived()) {
       RooArgSet tmp2;
-      realDepRLV->leafNodeServerList(&tmp2, 0, true);
+      realDepRLV->leafNodeServerList(&tmp2, nullptr, true);
       _funcObsSet->add(tmp2,true);
     }
   }

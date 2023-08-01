@@ -360,7 +360,7 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset) const
 {
   // Check if cache already exists
-  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,normRange()));
+  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,nullptr,normRange()));
   if (cache) {
     return cache ;
   }
@@ -472,7 +472,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
 
   // Process change in last data set used
   bool nsetChanged(false) ;
-  if (!isActiveNormSet(nset) || _norm==0) {
+  if (!isActiveNormSet(nset) || _norm==nullptr) {
     nsetChanged = syncNormalization(nset) ;
   }
 
@@ -662,7 +662,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
 
   cxcoutD(Caching) << "RooAddPdf::aiWN(" << GetName() << ") calling getProjCache with nset = " << (normSet?*normSet:RooArgSet()) << std::endl ;
 
-  if ((normSet==0 || normSet->empty()) && !_refCoefNorm.empty()) {
+  if ((normSet==nullptr || normSet->empty()) && !_refCoefNorm.empty()) {
 //     cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << std::endl ;
     normSet = &_refCoefNorm ;
   }

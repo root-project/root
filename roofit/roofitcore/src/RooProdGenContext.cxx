@@ -164,7 +164,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
    // Composite term
    if (!termDeps->empty()) {
-     const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;
+     const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),nullptr) ;
 
      // Construct auxiliary PDF expressing product of composite terms,
      // following Conditional component specification of input model
@@ -235,7 +235,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       ++normIter;
     }
 
-    const std::string name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;
+    const std::string name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),nullptr) ;
 
     // Construct auxiliary PDF expressing product of composite terms,
     // following Partial/Full component specification of input model

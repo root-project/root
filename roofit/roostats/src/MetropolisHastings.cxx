@@ -175,7 +175,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    }
 
 
-   ooccoutP((TObject *)0, Generation) << "Metropolis-Hastings progress: ";
+   ooccoutP((TObject *)nullptr, Generation) << "Metropolis-Hastings progress: ";
 
    // do main loop
    for (i = 0; i < fNumIters; i++) {
@@ -183,7 +183,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
       hadEvalError = false;
 
       // print a dot every 1% of the chain construction
-      if (i % (fNumIters / 100) == 0) ooccoutP((TObject*)0, Generation) << ".";
+      if (i % (fNumIters / 100) == 0) ooccoutP((TObject*)nullptr, Generation) << ".";
 
       fPropFunc->Propose(xPrime, x);
 
@@ -241,7 +241,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    // make sure to add the last point
    if (weight != 0.0)
       chain->Add(x, CalcNLL(xL), (double)weight);
-   ooccoutP((TObject *)0, Generation) << endl;
+   ooccoutP((TObject *)nullptr, Generation) << endl;
 
    RooMsgService::instance().setGlobalKillBelow(oldMsgLevel);
 

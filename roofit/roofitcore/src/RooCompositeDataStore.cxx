@@ -225,7 +225,7 @@ const RooArgSet* RooCompositeDataStore::get(Int_t idx) const
 
     return &_vars ;
   }
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -319,7 +319,7 @@ bool RooCompositeDataStore::changeObservableName(const char* from, const char* t
 
 RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
 {
-  RooAbsArg* ret(0) ;
+  RooAbsArg* ret(nullptr) ;
   for (auto const& item : _dataMap) {
     ret = item.second->addColumn(newVar,adjustRange) ;
   }

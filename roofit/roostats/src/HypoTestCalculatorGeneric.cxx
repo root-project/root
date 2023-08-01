@@ -54,8 +54,8 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
    fNullModel(&nullModel),
    fData(&data),
    fTestStatSampler(sampler),
-   fDefaultSampler(0),
-   fDefaultTestStat(0),
+   fDefaultSampler(nullptr),
+   fDefaultTestStat(nullptr),
    fAltToysSeed(0)
 {
    if(!sampler){
@@ -113,18 +113,18 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    std::unique_ptr<const RooArgSet> nullSnapshot {fNullModel->GetSnapshot()};
    if(nullSnapshot == nullptr) {
       oocoutE(nullptr,Generation) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
-      return 0;
+      return nullptr;
    }
 
    // CheckHook
    if(CheckHook() != 0) {
       oocoutE(nullptr,Generation) << "There was an error in CheckHook(). Stop." << endl;
-      return 0;
+      return nullptr;
    }
 
    if (!fTestStatSampler  || !fTestStatSampler->GetTestStatistic() ) {
       oocoutE(nullptr,InputArguments) << "Test Statistic Sampler or Test Statistics not defined. Stop." << endl;
-      return 0;
+      return nullptr;
    }
 
    // get a big list of all variables for convenient switching
@@ -145,7 +145,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    std::unique_ptr<RooArgList> allTS;
    if( toymcs ) {
       allTS = std::unique_ptr<RooArgList>{toymcs->EvaluateAllTestStatistics(*const_cast<RooAbsData*>(fData), nullP)};
-      if (!allTS) return 0;
+      if (!allTS) return nullptr;
       //oocoutP(nullptr,Generation) << "All Test Statistics on data: " << endl;
       //allTS->Print("v");
       RooRealVar* firstTS = (RooRealVar*)allTS->at(0);
@@ -179,7 +179,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
         samp_null = new SamplingDistribution( detOut_null->GetName(), detOut_null->GetTitle(), *detOut_null );
         if (detOut_null->get()->getSize()<=1) {
           delete detOut_null;
-          detOut_null= 0;
+          detOut_null= nullptr;
         }
       }
    }else samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
@@ -210,7 +210,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
         samp_alt = new SamplingDistribution( detOut_alt->GetName(), detOut_alt->GetTitle(), *detOut_alt );
         if (detOut_alt->get()->getSize()<=1) {
           delete detOut_alt;
-          detOut_alt= 0;
+          detOut_alt= nullptr;
         }
       }
 

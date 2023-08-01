@@ -497,16 +497,16 @@ void RooNDKeysPdf::initialize(RooDataSet const& data)
   _xDatLo3s.resize(_nDim,0.);
   _xDatHi3s.resize(_nDim,0.);
 
-  boxInfoInit(&_fullBoxInfo,0,0xFFFF);
+  boxInfoInit(&_fullBoxInfo,nullptr,0xFFFF);
 
   _minWeight=0;
   _maxWeight=0;
   _wMap.clear();
 
-  _covMat = 0;
-  _corrMat= 0;
-  _rotMat = 0;
-  _sigmaR = 0;
+  _covMat = nullptr;
+  _corrMat= nullptr;
+  _rotMat = nullptr;
+  _sigmaR = nullptr;
   _dx = new TVectorD(_nDim); _dx->Zero();
   _dataPtsR.resize(_nEvents,*_dx);
 
@@ -923,8 +923,8 @@ void RooNDKeysPdf::calculateBandWidth()
      vector<double> dummy(_nDim, 0.);
      _weights1.resize(_nEvents, dummy);
 
-     std::vector<std::vector<double>> *weights_prev(0);
-     std::vector<std::vector<double>> *weights_new(0);
+     std::vector<std::vector<double>> *weights_prev(nullptr);
+     std::vector<std::vector<double>> *weights_new(nullptr);
 
      // cout << "Number of adaptive iterations: " << _nAdpt << endl;
 
@@ -1174,7 +1174,7 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   vector<bool> doInt(_nDim,true);
 
   // get BoxInfo
-  BoxInfo* bi(0);
+  BoxInfo* bi(nullptr);
 
   if (rangeName) {
     string rangeNameStr(rangeName) ;

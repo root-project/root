@@ -138,7 +138,7 @@ bool RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArg
 const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name)
 {
   if (_map.count(name)==0) {
-    return 0 ;
+    return nullptr ;
   }
 
   return _map[name] ;
@@ -189,7 +189,7 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
   if (!method.CompareTo("N/A")) {
     oocoutE(nullptr,Integration) << "RooNumGenFactory::createSampler: No sampler method has been defined for "
                  << (cond?"a conditional ":"a ") << ndim << "-dimensional p.d.f" << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve proto integrator and return clone configured for the requested integration task

@@ -144,7 +144,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
       auto realDepRLV = dynamic_cast<RooAbsRealLValue *>(realDep);
       if (realDepRLV && realDepRLV->isDerived()) {
          RooArgSet tmp2;
-         realDepRLV->leafNodeServerList(&tmp2, 0, true);
+         realDepRLV->leafNodeServerList(&tmp2, nullptr, true);
          _funcObsSet->add(tmp2, true);
       }
    }

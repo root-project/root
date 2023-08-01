@@ -50,7 +50,7 @@ ClassImp(RooSimSplitGenContext);
 /// generation of events to the appropriate component generator context
 
 RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const RooArgSet &vars, bool verbose, bool autoBinned, const char* binnedTag) :
-  RooAbsGenContext(model,vars,0,0,verbose), _pdf(&model)
+  RooAbsGenContext(model,vars,nullptr,nullptr,verbose), _pdf(&model)
 {
   // Determine if we are requested to generate the index category
   RooAbsCategoryLValue const& idxCat = model.indexCat();
@@ -94,7 +94,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
     // Create generator context for this PDF
     std::unique_ptr<RooArgSet> compVars{pdf->getObservables(pdfVars)};
-    RooAbsGenContext* cx = pdf->autoGenContext(*compVars,0,0,verbose,autoBinned,binnedTag) ;
+    RooAbsGenContext* cx = pdf->autoGenContext(*compVars,nullptr,nullptr,verbose,autoBinned,binnedTag) ;
 
     const auto state = idxCat.lookupIndex(proxy->name());
 
@@ -178,7 +178,7 @@ RooDataSet* RooSimSplitGenContext::generate(double nEvents, bool skipInit, bool 
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
-    return 0;
+    return nullptr;
   }
 
 

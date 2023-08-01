@@ -382,7 +382,7 @@ void RooPlot::updateNormVars(const RooArgSet &vars)
 
 void RooPlot::addObject(TObject *obj, Option_t *drawOptions, bool invisible)
 {
-  if(0 == obj) {
+  if(nullptr == obj) {
     coutE(InputArguments) << fName << "::addObject: called with a null pointer" << endl;
     return;
   }
@@ -401,7 +401,7 @@ void RooPlot::addObject(TObject *obj, Option_t *drawOptions, bool invisible)
 
 void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, bool invisible)
 {
-  if(0 == hist) {
+  if(nullptr == hist) {
     coutE(InputArguments) << fName << "::addTH1: called with a null pointer" << endl;
     return;
   }
@@ -538,7 +538,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
 
   // add this element to our list and remember its drawing option
   TObject *obj= plotable->crossCast();
-  if(0 == obj) {
+  if(nullptr == obj) {
     coutE(InputArguments) << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
   }
   else {
@@ -754,7 +754,7 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, bool verbose, TStri
 {
   TString deeper(indent);
   deeper.Append("    ");
-  if(0 != _plotVar) {
+  if(nullptr != _plotVar) {
     os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") plots variable ";
     _plotVar->printStream(os,kName|kTitle,kSingleLine,"");
   }
@@ -792,7 +792,7 @@ const char* RooPlot::nameOf(Int_t idx) const
   TObject* obj = _items.at(idx).first;
   if (!obj) {
     coutE(InputArguments) << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << endl ;
-    return 0 ;
+    return nullptr ;
   }
   return obj->GetName() ;
 }
@@ -808,7 +808,7 @@ TObject* RooPlot::getObject(Int_t idx) const
   TObject* obj = _items.at(idx).first;
   if (!obj) {
     coutE(InputArguments) << "RooPlot::getObject(" << GetName() << ") index " << idx << " out of range" << endl ;
-    return 0 ;
+    return nullptr ;
   }
   return obj ;
 }
@@ -1187,7 +1187,7 @@ void RooPlot::DrawOpt::initialize(const char* inRawOpt)
   }
   strlcpy(drawOptions,inRawOpt,128) ;
   strtok(drawOptions,":") ;
-  const char* extraOpt = strtok(0,":") ;
+  const char* extraOpt = strtok(nullptr,":") ;
   if (extraOpt) {
     invisible =  (extraOpt[0]=='I') ;
   }

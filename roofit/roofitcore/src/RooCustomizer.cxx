@@ -252,12 +252,12 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   _owning(false),
   _name(name),
   _masterPdf((RooAbsArg*)&pdf),
-  _masterCat(0),
+  _masterCat(nullptr),
   _masterBranchList("masterBranchList"),
   _masterLeafList("masterLeafList"),
   _internalCloneBranchList("cloneBranchList"),
-  _cloneNodeListAll(0),
-  _cloneNodeListOwned(0)
+  _cloneNodeListAll(nullptr),
+  _cloneNodeListOwned(nullptr)
 {
   _cloneBranchList = &_internalCloneBranchList ;
 
@@ -366,7 +366,7 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 RooAbsArg* RooCustomizer::build(bool verbose)
 {
   // Execute build
-  RooAbsArg* ret =  doBuild(_name.Length()>0?_name.Data():0,verbose) ;
+  RooAbsArg* ret =  doBuild(_name.Length()>0?_name.Data():nullptr,verbose) ;
 
   // Make root object own all cloned nodes
 
@@ -404,14 +404,14 @@ RooAbsArg* RooCustomizer::build(const char* masterCatState, bool verbose)
   if (_sterile) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer::build(" << _name
            << ") ERROR cannot use leaf spitting build() on this sterile customizer" << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   // Set masterCat to given state
   if (_masterCat->setLabel(masterCatState)) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer::build(" << _masterPdf->GetName() << "): ERROR label '" << masterCatState
            << "' not defined for master splitting category " << _masterCat->GetName() << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   return doBuild(masterCatState,verbose) ;
@@ -436,7 +436,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
 
   //   cout << "loop over " << nodeList.getSize() << " nodes" << endl ;
   for (auto node : nodeList) {
-    RooAbsArg* theSplitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):0 ;
+    RooAbsArg* theSplitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):nullptr ;
     if (theSplitArg) {
       RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(theSplitArg)) ;
       if (verbose) {
@@ -565,7 +565,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
   }
 
   // Clone branches, changes their names
-  RooAbsArg* cloneTopPdf = 0;
+  RooAbsArg* cloneTopPdf = nullptr;
   RooArgSet clonedMasterBranches("clonedMasterBranches") ;
 
   for (auto branch : masterBranchesToBeCloned) {
@@ -690,7 +690,7 @@ std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const 
 
   // If name of new object is same as original, execute in sterile mode (i.e no suffixes attached), and rename original nodes in workspace upon import
   if (args[0]==instanceName) {
-    instanceName=0 ;
+    instanceName=nullptr ;
   }
 
   // Create a customizer
@@ -705,7 +705,7 @@ std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const 
     }
     *sep = 0 ;
     RooAbsArg* orig = ft.ws().arg(buf) ;
-    RooAbsArg* subst(0) ;
+    RooAbsArg* subst(nullptr) ;
     if (string(sep+1).find("$REMOVE")==0) {
 
       // Create a removal dummy ;
@@ -721,7 +721,7 @@ std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const 
    while(tok) {
      //cout << "$REMOVE is restricted to " << tok << endl ;
      subst->setAttribute(Form("REMOVE_FROM_%s",tok)) ;
-     tok = R__STRTOK_R(0,",)",&saveptr) ;
+     tok = R__STRTOK_R(nullptr,",)",&saveptr) ;
    }
       } else {
    // Otherwise mark as universal removal node

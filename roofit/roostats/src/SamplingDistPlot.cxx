@@ -46,7 +46,7 @@ using namespace std;
 /// SamplingDistPlot default constructor with bin size
 
 SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
-   fHist(0),
+   fHist(nullptr),
    fLegend(nullptr),
    fItems(),
    fOtherItems(),
@@ -67,7 +67,7 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
 /// SamplingDistPlot constructor with bin size, min and max
 
 SamplingDistPlot::SamplingDistPlot(Int_t nbins, double min, double max) :
-   fHist(0),
+   fHist(nullptr),
    fLegend(nullptr),
    fItems(),
    fOtherItems(),
@@ -137,7 +137,7 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
    if( !IsNaN(fXMax) ) xup = fXMax;
 
    fHist = new TH1F(samplingDist->GetName(), samplingDist->GetTitle(), fBins, xlow, xup);
-   fHist->SetDirectory(0);  // make the object managed by this class
+   fHist->SetDirectory(nullptr);  // make the object managed by this class
 
    if( fVarName.Length() == 0 ) fVarName = samplingDist->GetVarName();
    fHist->GetXaxis()->SetTitle(fVarName.Data());
@@ -189,7 +189,7 @@ double SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistributio
    double scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
 
    TH1F *shaded = (TH1F*)fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str());
-   shaded->SetDirectory(0);
+   shaded->SetDirectory(nullptr);
    shaded->SetFillStyle(fFillStyle++);
    shaded->SetLineWidth(1);
 
@@ -228,7 +228,7 @@ void SamplingDistPlot::AddLine(double x1, double y1, double x2, double y2, const
 void SamplingDistPlot::AddTH1(TH1* h, Option_t *drawOptions) {
    if(fLegend  &&  h->GetTitle()) fLegend->AddEntry(h, h->GetTitle(), "L");
    TH1 * hcopy = (TH1*) h->Clone();
-   hcopy->SetDirectory(0);
+   hcopy->SetDirectory(nullptr);
    addObject(hcopy, drawOptions);
 }
 void SamplingDistPlot::AddTF1(TF1* f, const char* title, Option_t *drawOptions) {
@@ -260,7 +260,7 @@ void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist
 void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 {
 
-  if(0 == obj) {
+  if(nullptr == obj) {
     std::cerr << fName << "::addObject: called with a null pointer" << std::endl;
     return;
   }
@@ -278,7 +278,7 @@ void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 
 void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 {
-  if(0 == obj) {
+  if(nullptr == obj) {
      coutE(InputArguments) << fName << "::addOtherObject: called with a null pointer" << std::endl;
      return;
   }
@@ -339,7 +339,7 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
          //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << endl;
          cloneObj->SetMinimum(theYMin);
       }
-      cloneObj->SetDirectory(0);  // transfer ownership of the object
+      cloneObj->SetDirectory(nullptr);  // transfer ownership of the object
       fRooPlot->addTH1(cloneObj, obj->GetOption());
    }
 
@@ -420,7 +420,7 @@ void SamplingDistPlot::GetAbsoluteInterval(double &theMin, double &theMax, doubl
 /// fill color for the associated shaded TH1F.
 
 void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *samplDist) {
-   if (samplDist == 0) {
+   if (samplDist == nullptr) {
       fHist->SetLineColor(color);
 
       TString shadedName(fHist->GetName());
@@ -458,7 +458,7 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
 
 void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetLineWidth(lwidth);
   }
   else{
@@ -477,7 +477,7 @@ void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *
 
 void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetLineStyle(style);
   }
   else{
@@ -496,7 +496,7 @@ void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *s
 
 void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetMarkerStyle(style);
   }
   else{
@@ -515,7 +515,7 @@ void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution 
 
 void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetMarkerColor(color);
   }
   else{
@@ -534,7 +534,7 @@ void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution 
 
 void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->SetMarkerSize(size);
   }
   else{
@@ -570,7 +570,7 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 
 void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist)
 {
-  if(samplDist == 0){
+  if(samplDist == nullptr){
     fHist->Rebin(rebinFactor);
   }
   else{

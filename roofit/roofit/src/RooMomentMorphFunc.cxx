@@ -30,7 +30,7 @@ ClassImp(RooMomentMorphFunc)
 
 //_____________________________________________________________________________
 RooMomentMorphFunc::RooMomentMorphFunc()
-   : _cacheMgr(this, 10, true, true), _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
+   : _cacheMgr(this, 10, true, true), _curNormSet(nullptr), _mref(nullptr), _M(nullptr), _useHorizMorph(true)
 {
 }
 
@@ -121,7 +121,7 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
 
 //_____________________________________________________________________________
 RooMomentMorphFunc::RooMomentMorphFunc(const RooMomentMorphFunc &other, const char *name)
-   : RooAbsReal(other, name), _cacheMgr(other._cacheMgr, this), _curNormSet(0), m("m", this, other.m),
+   : RooAbsReal(other, name), _cacheMgr(other._cacheMgr, this), _curNormSet(nullptr), m("m", this, other.m),
      _varList("varList", this, other._varList), _pdfList("pdfList", this, other._pdfList), _setting(other._setting),
      _useHorizMorph(other._useHorizMorph)
 {
@@ -176,14 +176,14 @@ void RooMomentMorphFunc::initialize()
 //_____________________________________________________________________________
 RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*nset*/) const
 {
-   CacheElem *cache = (CacheElem *)_cacheMgr.getObj(0, (RooArgSet *)0);
+   auto cache = static_cast<CacheElem *>(_cacheMgr.getObj(nullptr, static_cast<RooArgSet const*>(nullptr)));
    if (cache) {
       return cache;
    }
    Int_t nVar = _varList.getSize();
    Int_t nPdf = _pdfList.getSize();
 
-   RooAbsReal *null = 0;
+   RooAbsReal *null = nullptr;
    vector<RooAbsReal *> meanrv(nPdf * nVar, null);
    vector<RooAbsReal *> sigmarv(nPdf * nVar, null);
    vector<RooAbsReal *> myrms(nVar, null);
@@ -213,7 +213,7 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
       ownedComps.add(*(RooRealVar *)(fracl.at(i)));
    }
 
-   RooRealSumFunc *theSumFunc = 0;
+   RooRealSumFunc *theSumFunc = nullptr;
    std::string sumfuncName = Form("%s_sumfunc", GetName());
 
    if (_useHorizMorph) {
@@ -306,7 +306,7 @@ RooMomentMorphFunc::CacheElem *RooMomentMorphFunc::getCache(const RooArgSet * /*
 
    // Store it in the cache
    cache = new CacheElem(*theSumFunc, *tracker, fracl);
-   _cacheMgr.setObj(0, 0, cache, 0);
+   _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
 
    return cache;
 }
@@ -483,17 +483,17 @@ int RooMomentMorphFunc::idxmax(const double &mval) const
 //_____________________________________________________________________________
 std::list<double> *RooMomentMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
-   return sumFunc(0)->plotSamplingHint(obs, xlo, xhi);
+   return sumFunc(nullptr)->plotSamplingHint(obs, xlo, xhi);
 }
 
 //_____________________________________________________________________________
 std::list<double> *RooMomentMorphFunc::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
-   return sumFunc(0)->binBoundaries(obs, xlo, xhi);
+   return sumFunc(nullptr)->binBoundaries(obs, xlo, xhi);
 }
 
 //_____________________________________________________________________________
 bool RooMomentMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
 {
-   return sumFunc(0)->isBinnedDistribution(obs);
+   return sumFunc(nullptr)->isBinnedDistribution(obs);
 }

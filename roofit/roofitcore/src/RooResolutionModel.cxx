@@ -81,7 +81,7 @@ ClassImp(RooResolutionModel);
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& _x) :
   RooAbsPdf(name,title),
   x("x","Dependent or convolution variable",this,_x),
-  _basisCode(0), _basis(0),
+  _basisCode(0), _basis(nullptr),
   _ownBasis(false)
 {
 
@@ -95,7 +95,7 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooA
 RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) :
   RooAbsPdf(other,name),
   x("x",this,other.x),
-  _basisCode(other._basisCode), _basis(0),
+  _basisCode(other._basisCode), _basis(nullptr),
   _ownBasis(false)
 {
   if (other._basis) {
@@ -154,13 +154,13 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
            << ") convolution parameter of basis function and PDF don't match" << endl
            << "basis->findServer(0) = " << inBasis->findServer(0) << endl
            << "x.absArg()           = " << x.absArg() << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   if (basisCode(inBasis->GetTitle())==0) {
     coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this
            << ") basis function '" << inBasis->GetTitle() << "' is not supported." << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   TString newName(GetName()) ;
@@ -258,7 +258,7 @@ double RooResolutionModel::getValV(const RooArgSet* nset) const
 bool RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
   if (!_basis) {
-    _norm = 0 ;
+    _norm = nullptr ;
     return false ;
   }
 

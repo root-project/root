@@ -52,7 +52,7 @@ public:
       return _pdf->getAnalyticalIntegralWN(allVars, analVars, &_normSet, rangeName);
    }
    /// Forward calculation of analytical integrals to input p.d.f
-   double analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = 0) const override
+   double analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = nullptr) const override
    {
       return _pdf->analyticalIntegralWN(code, &_normSet, rangeName);
    }

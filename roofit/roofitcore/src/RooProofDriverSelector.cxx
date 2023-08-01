@@ -41,7 +41,7 @@ using namespace std;
 void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
 {
   // Retrieve study pack
-  _pkg=0 ;
+  _pkg=nullptr ;
   if (fInput) {
     for (auto * tmp : dynamic_range_cast<RooStudyPackage*>(*fInput)) {
       if (tmp) {
@@ -49,7 +49,7 @@ void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
       }
     }
   }
-  if (_pkg==0) {
+  if (_pkg==nullptr) {
     cout << "RooProofDriverSelector::SlaveBegin() no RooStudyPackage found, aborting process" << endl ;
     fStatus = kAbortProcess ;
   } else {

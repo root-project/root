@@ -51,9 +51,9 @@ HybridPlot::HybridPlot(const char* name,
   fSb_histo_shaded(nullptr),
   fB_histo(nullptr),
   fB_histo_shaded(nullptr),
-  fData_testStat_line(0),
-  fLegend(0),
-  fPad(0),
+  fData_testStat_line(nullptr),
+  fLegend(nullptr),
+  fPad(nullptr),
   fVerbose(verbosity)
 {
    int nToysSB = sb_vals.size();

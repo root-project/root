@@ -110,7 +110,7 @@ RooIntegralMorph::RooIntegralMorph(const char *name, const char *title,
   x("x","x",this,_x),
   alpha("alpha","alpha",this,_alpha),
   _cacheAlpha(doCacheAlpha),
-  _cache(0)
+  _cache(nullptr)
 {
 }
 
@@ -124,7 +124,7 @@ RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph& other, const char* na
   x("x",this,other.x),
   alpha("alpha",this,other.alpha),
   _cacheAlpha(other._cacheAlpha),
-  _cache(0)
+  _cache(nullptr)
 {
 }
 

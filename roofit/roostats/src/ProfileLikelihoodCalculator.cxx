@@ -125,11 +125,11 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
    DoReset();
    RooAbsPdf * pdf = GetPdf();
    RooAbsData* data = GetData();
-   if (!data || !pdf ) return 0;
+   if (!data || !pdf ) return nullptr;
 
    // get all non-const parameters
    std::unique_ptr<RooArgSet> constrainedParams{pdf->getParameters(*data)};
-   if (!constrainedParams) return 0;
+   if (!constrainedParams) return nullptr;
    RemoveConstantParameters(&*constrainedParams);
 
    const auto& config = GetGlobalRooStatsConfig();
@@ -148,7 +148,7 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
 
    // print fit result
    if (fFitResult) {
-      fFitResult->printStream( oocoutI(nullptr,Minimization), fFitResult->defaultPrintContents(0), fFitResult->defaultPrintStyle(0) );
+      fFitResult->printStream( oocoutI(nullptr,Minimization), fFitResult->defaultPrintContents(nullptr), fFitResult->defaultPrintStyle(nullptr) );
 
       if (fFitResult->status() != 0)
          oocoutW(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoGlobalFit -  Global fit failed - status = " << fFitResult->status() << std::endl;
@@ -294,9 +294,9 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    RooAbsData* data = GetData();
 
 
-   if (!data || !pdf) return 0;
+   if (!data || !pdf) return nullptr;
 
-   if (fNullParams.empty()) return 0;
+   if (fNullParams.empty()) return nullptr;
 
    // make a clone and ordered list since a vector will be associated to keep parameter values
    // clone the list since first fit will changes the fNullParams values
@@ -358,7 +358,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       // print fit result
       if (fit2) {
          nLLatCondMLE = fit2->minNll();
-         fit2->printStream( oocoutI(nullptr,Minimization), fit2->defaultPrintContents(0), fit2->defaultPrintStyle(0) );
+         fit2->printStream( oocoutI(nullptr,Minimization), fit2->defaultPrintContents(nullptr), fit2->defaultPrintStyle(nullptr) );
 
          if (fit2->status() != 0)
             oocoutW(nullptr,Minimization) << "ProfileLikelihoodCalcultor::GetHypotest -  Conditional fit failed - status = " << fit2->status() << std::endl;

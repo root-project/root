@@ -124,12 +124,12 @@ namespace {
   bool fullRange(const RooRealProxy& x, const char* range, bool phi)
   {
     if (phi) {
-      return range == 0 || strlen(range) == 0
+      return range == nullptr || strlen(range) == 0
           ? std::abs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
           : std::abs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
     }
 
-    return range == 0 || strlen(range) == 0
+    return range == nullptr || strlen(range) == 0
         ? std::abs(x.min() + 1.) < 1.e-8 && std::abs(x.max() - 1.) < 1.e-8
         : std::abs(x.min(range) + 1.) < 1.e-8 && std::abs(x.max(range) - 1.) < 1.e-8;
   }

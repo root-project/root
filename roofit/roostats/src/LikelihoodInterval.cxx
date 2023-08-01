@@ -76,7 +76,7 @@ using namespace std;
 /// Default constructor with name and title
 
 LikelihoodInterval::LikelihoodInterval(const char* name) :
-   ConfInterval(name), fBestFitParams(0), fLikelihoodRatio(0), fConfidenceLevel(0.95)
+   ConfInterval(name), fBestFitParams(nullptr), fLikelihoodRatio(nullptr), fConfidenceLevel(0.95)
 {
 }
 
@@ -282,7 +282,7 @@ bool LikelihoodInterval::CreateMinimizer() {
    }
    // for finding the contour need to find first global minimum
    bool iret = fMinimizer->Minimize();
-   if (!iret || fMinimizer->X() == 0) {
+   if (!iret || fMinimizer->X() == nullptr) {
       ccoutE(Minimization) << "Error: Minimization failed  " << std::endl;
       return false;
    }

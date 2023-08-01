@@ -418,7 +418,7 @@ bool RooIntegrator1D::setLimits(double *xmin, double *xmax)
 bool RooIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
+    assert(nullptr != integrand() && integrand()->isValid());
     const_cast<double&>(_xmin) = integrand()->getMinLimit(0);
     const_cast<double&>(_xmax) = integrand()->getMaxLimit(0);
   }

@@ -235,7 +235,7 @@ void HypoTestResult::SetTestStatisticData(const double tsd) {
 void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
    if (fAllTestStatisticsData) {
       delete fAllTestStatisticsData;
-      fAllTestStatisticsData = 0;
+      fAllTestStatisticsData = nullptr;
    }
    if (tsd) fAllTestStatisticsData = (const RooArgList*)tsd->snapshot();
 
