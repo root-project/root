@@ -201,6 +201,19 @@ size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experiment
    return typeCount;
 }
 
+const std::vector<ROOT::Experimental::DescriptorId_t>
+ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::Experimental::EColumnType colType)
+{
+   std::vector<DescriptorId_t> colIds;
+
+   for (const auto &[colId, colInfo] : fColumnInfo) {
+      if (colInfo.GetType() == colType)
+         colIds.emplace_back(colId);
+   }
+
+   return colIds;
+}
+
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RFieldTreeInfo &

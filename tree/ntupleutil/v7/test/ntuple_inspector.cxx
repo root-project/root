@@ -279,6 +279,42 @@ TEST(RNTupleInspector, ColumnTypeCount)
    EXPECT_EQ(3, inspector->GetColumnTypeCount(ROOT::Experimental::EColumnType::kSplitInt32));
 }
 
+TEST(RNTupleInspector, ColumnsByType)
+{
+   FileRaii fileGuard("test_ntuple_inspector_columns_by_type.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt1 = model->MakeField<std::int64_t>("int1");
+      auto nFldInt2 = model->MakeField<std::int64_t>("int2");
+      auto nFldFloat = model->MakeField<float>("float");
+      auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+
+   EXPECT_EQ(2U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitInt64).size());
+   for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitInt64)) {
+      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64, inspector->GetColumnInfo(colId).GetType());
+   }
+
+   EXPECT_EQ(2U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal32).size());
+   for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal32)) {
+      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32, inspector->GetColumnInfo(colId).GetType());
+   }
+
+   EXPECT_EQ(1U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64).size());
+   EXPECT_EQ(1U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64).size());
+   for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64)) {
+      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitIndex64, inspector->GetColumnInfo(colId).GetType());
+   }
+
+   EXPECT_EQ(0U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal64).size());
+}
+
 TEST(RNTupleInspector, FieldInfoCompressed)
 {
    FileRaii fileGuard("test_ntuple_inspector_field_info_compressed.root");
