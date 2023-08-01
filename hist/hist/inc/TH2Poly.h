@@ -108,7 +108,7 @@ public:
    Double_t     GetMinimum(Double_t minval) const override;
    Bool_t       GetNewBinAdded() const{return fNewBinAdded;}
    Int_t        GetNumberOfBins() const{return fNcells-kNOverflow;}
-   void         Honeycomb(Double_t xstart, Double_t ystart, Double_t a, Int_t k, Int_t s);
+   void         Honeycomb(Double_t xstart, Double_t ystart, Double_t a, Int_t k, Int_t s, Option_t* option = "v");
    Double_t     Integral(Option_t* option = "") const override;
    Long64_t     Merge(TCollection *) override;
    void Reset(Option_t *option) override;
