@@ -172,7 +172,7 @@ bool RooBinIntegrator::setLimits(double *xmin, double *xmax)
 bool RooBinIntegrator::checkLimits() const
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
+    assert(nullptr != integrand() && integrand()->isValid());
     _xmin.resize(_function->getDimension()) ;
     _xmax.resize(_function->getDimension()) ;
     for (UInt_t i=0 ; i<_function->getDimension() ; i++) {

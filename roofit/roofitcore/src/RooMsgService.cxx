@@ -194,7 +194,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   pc.defineString("baseClassName","BaseClassName",0,"") ;
   pc.defineString("tagName","LabelName",0,"") ;
   pc.defineString("outFile","OutputFile",0,"") ;
-  pc.defineObject("outStream","OutputStream",0,0) ;
+  pc.defineObject("outStream","OutputStream",0,nullptr) ;
   pc.defineMutex("OutputFile","OutputStream") ;
 
   // Process & check varargs

@@ -48,7 +48,7 @@ ClassImp(RooStudyPackage);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStudyPackage::RooStudyPackage() : _ws(0)
+RooStudyPackage::RooStudyPackage() : _ws(nullptr)
 {
 }
 

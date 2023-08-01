@@ -287,14 +287,14 @@ bool RooWorkspace::import(const char* fileSpec,
 
   // Check that file can be opened
   std::unique_ptr<TFile> f{TFile::Open(filename.c_str())};
-  if (f==0) {
+  if (f==nullptr) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl ;
     return false;
   }
 
   // That that file contains workspace
   RooWorkspace* w = dynamic_cast<RooWorkspace*>(f->Get(wsname.c_str())) ;
-  if (w==0) {
+  if (w==nullptr) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No object named " << wsname << " in file " << filename
            << " or object is not a RooWorkspace" << endl ;
     return false;
@@ -417,8 +417,8 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
 
 
   // Turn zero length strings into null pointers
-  if (suffixC && strlen(suffixC)==0) suffixC = 0 ;
-  if (suffixA && strlen(suffixA)==0) suffixA = 0 ;
+  if (suffixC && strlen(suffixC)==0) suffixC = nullptr ;
+  if (suffixA && strlen(suffixA)==0) suffixA = nullptr ;
 
   bool conflictOnly = suffixA ? false : true ;
   const char* suffix = suffixA ? suffixA : suffixC ;
@@ -445,7 +445,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     exceptVarNames.insert(toks.begin(), toks.end());
   }
 
-  if (suffixV != 0 && strlen(suffixV)>0) {
+  if (suffixV != nullptr && strlen(suffixV)>0) {
     std::unique_ptr<RooArgSet> vars{inArg.getVariables()};
     for (const auto v : *vars) {
       if (exceptVarNames.find(v->GetName())==exceptVarNames.end()) {
@@ -459,7 +459,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
 
   // Check for factory specification match
   const char* tagIn = inArg.getStringAttribute("factory_tag") ;
-  const char* tagWs = wsarg ? wsarg->getStringAttribute("factory_tag") : 0 ;
+  const char* tagWs = wsarg ? wsarg->getStringAttribute("factory_tag") : nullptr ;
   bool factoryMatch = (tagIn && tagWs && !strcmp(tagIn,tagWs)) ;
   if (factoryMatch) {
     ((RooAbsArg&)inArg).setAttribute("RooWorkspace::Recycle") ;
@@ -762,7 +762,7 @@ bool RooWorkspace::import(RooAbsData const& inData,
 
   // Transform emtpy string into null pointer
   if (dsetName && strlen(dsetName)==0) {
-    dsetName=0 ;
+    dsetName=nullptr ;
   }
 
   RooLinkedList& dataList = embedded ? _embeddedDataList : _dataList ;
@@ -1677,7 +1677,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
 
       // Look for include state of self
       bool processedInclude = false ;
-      char* extincfile = 0 ;
+      char* extincfile = nullptr ;
 
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
@@ -1686,7 +1686,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
    strlcpy(tmp, buf, 64000);
    bool stdinclude = strchr(buf, '<');
    strtok(tmp, " <\"");
-   char *incfile = strtok(0, " <>\"");
+   char *incfile = strtok(nullptr, " <>\"");
 
    if (!stdinclude) {
       // check if it lives in $ROOTSYS/include
@@ -1731,7 +1731,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
       // Look for include state of self
       bool foundSelfInclude=false ;
       bool processedInclude = false ;
-      char* extincfile = 0 ;
+      char* extincfile = nullptr ;
 
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
@@ -1740,7 +1740,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
    strlcpy(tmp, buf, 64000);
    bool stdinclude = strchr(buf, '<');
    strtok(tmp, " <\"");
-   char *incfile = strtok(0, " <>\"");
+   char *incfile = strtok(nullptr, " <>\"");
 
    if (strstr(incfile, declfilename.c_str())) {
       foundSelfInclude = true;
@@ -1801,7 +1801,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
        strlcpy(tmp, buf2, 64000);
        bool stdinclude = strchr(buf, '<');
        strtok(tmp, " <\"");
-       char *incfile = strtok(0, " <>\"");
+       char *incfile = strtok(nullptr, " <>\"");
 
        if (!stdinclude) {
           // check if it lives in $ROOTSYS/include
@@ -1915,7 +1915,7 @@ bool RooWorkspace::import(TObject const& object, bool replaceExisting)
 
   // Grab the current state of the directory Auto-Add
   ROOT::DirAutoAdd_t func = object.IsA()->GetDirectoryAutoAdd();
-  object.IsA()->SetDirectoryAutoAdd(0);
+  object.IsA()->SetDirectoryAutoAdd(nullptr);
   bool tmp = RooPlot::setAddDirectoryStatus(false) ;
 
   if (oldObj) {

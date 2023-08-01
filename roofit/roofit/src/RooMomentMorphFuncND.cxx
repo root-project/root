@@ -365,7 +365,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf
 //_____________________________________________________________________________
 RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet * /*nset*/) const
 {
-   CacheElem *cache = static_cast<CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
+   auto cache = static_cast<CacheElem *>(_cacheMgr.getObj(nullptr, static_cast<RooArgSet const*>(nullptr)));
    if (cache) {
       return cache;
    }
@@ -373,7 +373,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
    int nObs = _obsList.getSize();
    int nPdf = _referenceGrid._pdfList.getSize();
 
-   RooAbsReal *null = 0;
+   RooAbsReal *null = nullptr;
    vector<RooAbsReal *> meanrv(nPdf * nObs, null);
    vector<RooAbsReal *> sigmarv(nPdf * nObs, null);
    vector<RooAbsReal *> myrms(nObs, null);
@@ -502,7 +502,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 
    // Store it in the cache
    cache = new CacheElem(*theSum, *tracker, fracl);
-   _cacheMgr.setObj(0, 0, cache, 0);
+   _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
 
    return cache;
 }

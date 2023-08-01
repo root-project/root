@@ -98,14 +98,14 @@ using namespace std;
 ClassImp(RooTrace);
 ;
 
-RooTrace* RooTrace::_instance=0 ;
+RooTrace* RooTrace::_instance=nullptr ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooTrace& RooTrace::instance()
 {
-  if (_instance==0) _instance = new RooTrace() ;
+  if (_instance==nullptr) _instance = new RooTrace() ;
   return *_instance ;
 }
 
@@ -353,7 +353,7 @@ void RooTrace::printObjectCounts3()
 
 void RooTrace::callgrind_zero()
 {
-  ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_zero()" << endl ;
+  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_zero()" << endl ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,5 +365,5 @@ void RooTrace::callgrind_zero()
 
 void RooTrace::callgrind_dump()
 {
-  ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_dump()" << endl ;
+  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_dump()" << endl ;
 }

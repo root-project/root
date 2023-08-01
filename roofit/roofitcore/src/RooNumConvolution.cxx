@@ -79,15 +79,15 @@ ClassImp(RooNumConvolution);
 
 RooNumConvolution::RooNumConvolution() :
   _init(false),
-  _integrand(0),
-  _cloneVar(0),
-  _clonePdf(0),
-  _cloneModel(0),
+  _integrand(nullptr),
+  _cloneVar(nullptr),
+  _clonePdf(nullptr),
+  _cloneModel(nullptr),
   _useWindow(false),
   _windowScale(1),
   _verboseThresh(2000),
   _doProf(false),
-  _callHist(0)
+  _callHist(nullptr)
 {
 }
 
@@ -107,21 +107,21 @@ RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRea
   RooAbsReal(name,title),
   _init(false),
   _convIntConfig(RooNumIntConfig::defaultConfig()),
-  _integrand(0),
+  _integrand(nullptr),
   _origVar("origVar","Original Convolution variable",this,convVar),
   _origPdf("origPdf","Original Input PDF",this,inPdf),
   _origModel("origModel","Original Resolution model",this,resmodel),
   _ownedClonedPdfSet("ownedClonePdfSet"),
   _ownedClonedModelSet("ownedCloneModelSet"),
-  _cloneVar(0),
-  _clonePdf(0),
-  _cloneModel(0),
+  _cloneVar(nullptr),
+  _clonePdf(nullptr),
+  _cloneModel(nullptr),
   _useWindow(false),
   _windowScale(1),
   _windowParam("windowParam","Convolution window parameter",this,false),
   _verboseThresh(2000),
   _doProf(false),
-  _callHist(0)
+  _callHist(nullptr)
 {
   // Use Adaptive Gauss-Kronrod integration by default for the convolution integral
   _convIntConfig.method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D") ;
@@ -144,15 +144,15 @@ RooNumConvolution::RooNumConvolution(const RooNumConvolution& other, const char*
   RooAbsReal(other,name),
   _init(false),
   _convIntConfig(other._convIntConfig),
-  _integrand(0),
+  _integrand(nullptr),
   _origVar("origVar",this,other._origVar),
   _origPdf("origPdf",this,other._origPdf),
   _origModel("origModel",this,other._origModel),
   _ownedClonedPdfSet("ownedClonePdfSet"),
   _ownedClonedModelSet("ownedCloneModelSet"),
-  _cloneVar(0),
-  _clonePdf(0),
-  _cloneModel(0),
+  _cloneVar(nullptr),
+  _clonePdf(nullptr),
+  _cloneModel(nullptr),
   _useWindow(other._useWindow),
   _windowScale(other._windowScale),
   _windowParam("windowParam",this,other._windowParam),
@@ -196,7 +196,7 @@ void RooNumConvolution::initialize() const
   _cloneVar->SetName(var().GetName()) ;
 
   // Create Convolution integrand
-  _integrand = new RooConvIntegrandBinding(*_clonePdf,*_cloneModel,*_cloneVar,var(),0) ;
+  _integrand = new RooConvIntegrandBinding(*_clonePdf,*_cloneModel,*_cloneVar,var(),nullptr) ;
 
   // Instantiate integrator for convolution integrand
   _integrator = RooNumIntFactory::instance().createIntegrator(*_integrand,_convIntConfig,1);
@@ -335,7 +335,7 @@ void RooNumConvolution::setCallProfiling(bool flag, Int_t nbinX, Int_t nbinCall,
   } else if (_doProf) {
 
     delete _callHist ;
-    _callHist = 0 ;
+    _callHist = nullptr ;
     _doProf = false ;
   }
 

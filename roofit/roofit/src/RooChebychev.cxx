@@ -38,7 +38,7 @@ ClassImp(RooChebychev);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooChebychev::RooChebychev() : _refRangeName(0)
+RooChebychev::RooChebychev() : _refRangeName(nullptr)
 {
 }
 
@@ -50,7 +50,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this),
-  _refRangeName(0)
+  _refRangeName(nullptr)
 {
   for (const auto coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
@@ -81,7 +81,7 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, bool force)
     _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName) ;
   }
   if (!rangeName) {
-    _refRangeName = 0 ;
+    _refRangeName = nullptr ;
   }
 }
 
@@ -92,8 +92,8 @@ double RooChebychev::evaluate() const
   // first bring the range of the variable _x to the normalised range [-1, 1]
   // calculate sum_k c_k T_k(x) where x is given in the normalised range,
   // c_0 = 1, and the higher coefficients are given in _coefList
-  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
-  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
+  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
 
   std::vector<double> coeffs;
   for (auto it : _coefList)
@@ -106,8 +106,8 @@ void RooChebychev::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // first bring the range of the variable _x to the normalised range [-1, 1]
    // calculate sum_k c_k T_k(x) where x is given in the normalised range,
    // c_0 = 1, and the higher coefficients are given in _coefList
-   double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
-   double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+   double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
+   double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
 
    ctx.addResult(this,
                  ctx.buildCall("RooFit::Detail::EvaluateFuncs::chebychevEvaluate", _coefList, _coefList.size(), _x, xmin, xmax));
@@ -141,9 +141,9 @@ double RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(1 == code); (void)code;
 
-  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
+  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
   double xmaxFull = _x.max(rangeName);
-  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
   double xminFull = _x.min(rangeName);
   unsigned int sz = _coefList.size();
 
@@ -157,9 +157,9 @@ double RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
 std::string RooChebychev::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
                                                       RooFit::Detail::CodeSquashContext &ctx) const
 {
-   double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
+   double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
    double xmaxFull = _x.max(rangeName);
-   double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+   double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
    double xminFull = _x.min(rangeName);
    unsigned int sz = _coefList.size();
 

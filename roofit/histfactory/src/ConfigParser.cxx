@@ -150,8 +150,8 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     std::string OutputFilePrefix;
 
     TListIter attribIt = rootNode->GetAttributes();
-    TXMLAttr* curAttr = 0;
-    while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+    TXMLAttr* curAttr = nullptr;
+    while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
       // Get the Name, Val of this node
       TString attrName    = curAttr->GetName();
@@ -190,7 +190,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     // if no channels are found
     std::vector< std::string > xml_channel_files;
     node = rootNode->GetChildren();
-    while( node != 0 ) {
+    while( node != nullptr ) {
       if( node->GetNodeName() == TString( "Input" ) ) {
    if( node->GetText() == nullptr ) {
      cxcoutEHF << "Error: node: " << node->GetName()
@@ -227,7 +227,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     std::vector< RooStats::HistFactory::PreprocessFunction > functionObjects;
 
     node = rootNode->GetChildren();
-    while( node != 0 ) {
+    while( node != nullptr ) {
       if( node->GetNodeName() == TString( "Function" ) ) {
 
    // For now, add both the objects itself and
@@ -244,7 +244,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 
     // Fill the list of measurements
     node = rootNode->GetChildren();
-    while( node != 0 ) {
+    while( node != nullptr ) {
 
       if( node->GetNodeName() == TString( "" ) ) {
    cxcoutEHF << "Error: Node found in Measurement Driver XML with no name" << std::endl;
@@ -599,8 +599,8 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
   // Walk through the root node and
   // get its attributes
   TListIter attribIt = rootNode->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  TXMLAttr* curAttr = nullptr;
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -660,7 +660,7 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
 
   bool firstData=true;
 
-  while( node != 0 ) {
+  while( node != nullptr ) {
 
     // Restore the Channel-Wide Defaults
     m_currentInputFile = channel.GetInputFile();
@@ -729,8 +729,8 @@ HistFactory::Data ConfigParser::CreateDataElement( TXMLNode* node ) {
 
     // Now, set the attributes
     TListIter attribIt = node->GetAttributes();
-    TXMLAttr* curAttr = 0;
-    while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+    TXMLAttr* curAttr = nullptr;
+    while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
       // Get the Name, Val of this node
       TString attrName    = curAttr->GetName();
@@ -801,8 +801,8 @@ HistFactory::StatErrorConfig ConfigParser::CreateStatErrorConfigElement( TXMLNod
 
   // Loop over the node's attributes
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  TXMLAttr* curAttr = nullptr;
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -863,8 +863,8 @@ HistFactory::Sample ConfigParser::CreateSampleElement( TXMLNode* node ) {
   // Now, set the attributes
 
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  TXMLAttr* curAttr = nullptr;
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -935,7 +935,7 @@ HistFactory::Sample ConfigParser::CreateSampleElement( TXMLNode* node ) {
 
   TXMLNode* child = node->GetChildren();
 
-  while( child != 0 ) {
+  while( child != nullptr ) {
 
     if( child->GetNodeName() == TString( "" ) ) {
       cxcoutEHF << "Error: Encountered node in Sample with no name" << std::endl;
@@ -1001,8 +1001,8 @@ HistFactory::NormFactor ConfigParser::MakeNormFactor( TXMLNode* node ) {
   HistFactory::NormFactor norm;
 
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  TXMLAttr* curAttr = nullptr;
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -1096,7 +1096,7 @@ HistFactory::HistoSys ConfigParser::MakeHistoSys( TXMLNode* node ) {
   histoSys.SetHistoPathHigh( m_currentHistoPath );
 
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
+  TXMLAttr* curAttr = nullptr;
   /*
   string Name, histoPathHigh, histoPathLow,
     histoNameLow, histoNameHigh, inputFileHigh, inputFileLow;
@@ -1105,7 +1105,7 @@ HistFactory::HistoSys ConfigParser::MakeHistoSys( TXMLNode* node ) {
   histoNameLow=histoName; histoNameHigh=histoName;
   */
 
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -1185,8 +1185,8 @@ HistFactory::OverallSys ConfigParser::MakeOverallSys( TXMLNode* node ) {
   HistFactory::OverallSys overallSys;
 
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  TXMLAttr* curAttr = nullptr;
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -1235,7 +1235,7 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
   HistFactory::ShapeFactor shapeFactor;
 
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
+  TXMLAttr* curAttr = nullptr;
 
   // A Shape Factor may or may not include an initial shape
   // This will be set by strings pointing to a histogram
@@ -1244,7 +1244,7 @@ HistFactory::ShapeFactor ConfigParser::MakeShapeFactor( TXMLNode* node ) {
   std::string ShapeInputFile = m_currentInputFile;
   std::string ShapeInputPath = m_currentHistoPath;
 
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -1321,10 +1321,10 @@ HistFactory::ShapeSys ConfigParser::MakeShapeSys( TXMLNode* node ) {
 
 
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
+  TXMLAttr* curAttr = nullptr;
   //EstimateSummary::ConstraintType ConstraintType = EstimateSummary::Gaussian; //"Gaussian";
 
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
 
     // Get the Name, Val of this node
@@ -1410,8 +1410,8 @@ HistFactory::StatError ConfigParser::ActivateStatError( TXMLNode* node ) {
 
   // Loop over the node's attributes
   TListIter attribIt = node->GetAttributes();
-  TXMLAttr* curAttr = 0;
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  TXMLAttr* curAttr = nullptr;
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
 
     // Get the Name, Val of this node
     TString attrName    = curAttr->GetName();
@@ -1492,14 +1492,14 @@ RooStats::HistFactory::PreprocessFunction ConfigParser::ParseFunctionConfig( TXM
 
   //std::string name, expression, dependents;
   TListIter attribIt = functionNode->GetAttributes();
-  TXMLAttr* curAttr = 0;
+  TXMLAttr* curAttr = nullptr;
 
   std::string Name = "";
   std::string Expression = "";
   std::string Dependents = "";
 
   // Add protection to ensure that all parts are there
-  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
+  while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != nullptr ) {
     if( curAttr->GetName() == TString( "Name" ) ) {
       Name = curAttr->GetValue();
       //func.SetName( curAttr->GetValue() );

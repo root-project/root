@@ -215,7 +215,7 @@ int HypoTestInverterResult::ExclusionCleanup()
   bool resultIsAsymptotic(false);
   if (nEntries>=1) {
     HypoTestResult* r = dynamic_cast<HypoTestResult *> ( GetResult(0) );
-    assert(r!=0);
+    assert(r!=nullptr);
     if ( !r->GetNullDistribution() && !r->GetAltDistribution() ) {
       resultIsAsymptotic = true;
     }
@@ -353,7 +353,7 @@ bool HypoTestInverterResult::Add( const HypoTestInverterResult& otherResult   )
       for (int i = 0; i < nOther; ++i) {
          double otherVal = otherResult.fXValues[i];
          HypoTestResult * otherHTR = (HypoTestResult*) otherResult.fYObjects.At(i);
-         if (otherHTR == 0) continue;
+         if (otherHTR == nullptr) continue;
          bool sameXFound = false;
          for (int j = 0; j < nThis; ++j) {
             double thisVal = fXValues[j];
@@ -551,7 +551,7 @@ HypoTestResult* HypoTestInverterResult::GetResult( int index ) const
 {
    if ( index >= ArraySize() || index<0 ) {
       coutE(InputArguments) << "Problem: You are asking for an impossible array index value\n";
-      return 0;
+      return nullptr;
    }
 
    return ((HypoTestResult*) fYObjects.At(index));
@@ -1108,7 +1108,7 @@ double HypoTestInverterResult::UpperLimitEstimatedError()
 SamplingDistribution *  HypoTestInverterResult::GetBackgroundTestStatDist(int index ) const {
 
    HypoTestResult * firstResult = (HypoTestResult*) fYObjects.At(index);
-   if (!firstResult) return 0;
+   if (!firstResult) return nullptr;
    return firstResult->GetBackGroundIsAlt() ? firstResult->GetAltDistribution() : firstResult->GetNullDistribution();
 }
 
@@ -1117,7 +1117,7 @@ SamplingDistribution *  HypoTestInverterResult::GetBackgroundTestStatDist(int in
 
 SamplingDistribution *  HypoTestInverterResult::GetSignalAndBackgroundTestStatDist(int index) const {
    HypoTestResult * result = (HypoTestResult*) fYObjects.At(index);
-   if (!result) return 0;
+   if (!result) return nullptr;
    return !result->GetBackGroundIsAlt() ? result->GetAltDistribution() : result->GetNullDistribution();
 }
 
@@ -1126,7 +1126,7 @@ SamplingDistribution *  HypoTestInverterResult::GetSignalAndBackgroundTestStatDi
 
 SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index) const {
 
-   if (index < 0 || index >=  ArraySize() ) return 0;
+   if (index < 0 || index >=  ArraySize() ) return nullptr;
 
    if (fExpPValues.GetSize() == ArraySize()  ) {
       return (SamplingDistribution*)  fExpPValues.At(index)->Clone();
@@ -1169,7 +1169,7 @@ SamplingDistribution *  HypoTestInverterResult::GetExpectedPValueDist(int index)
    for (int i = 0; i < npoints; ++i) {
       double nsig = -smax + dsig*i;
       double pval = AsymptoticCalculator::GetExpectedPValues( result->NullPValue(), result->AlternatePValue(), nsig, fUseCLs, !fIsTwoSided);
-      if (pval < 0) { return 0;}
+      if (pval < 0) { return nullptr;}
       values[i] = pval;
    }
    return new SamplingDistribution("Asymptotic expected values","Asymptotic expected values",values);
@@ -1184,7 +1184,7 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
    if (ArraySize()<2) {
       coutE(Eval) << "HypoTestInverterResult::GetLimitDistribution"
                          << " not  enough points -  return 0 " << std::endl;
-      return 0;
+      return nullptr;
    }
 
    ooccoutD(this,Eval) << "HypoTestInverterResult - computing  limit distribution...." << std::endl;
@@ -1221,7 +1221,7 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
 
      // make quantiles from the sampling distributions of the expected p values
      std::vector<double> pvalues = distVec[i]->GetSamplingDistribution();
-     delete distVec[i];  distVec[i] = 0;
+     delete distVec[i];  distVec[i] = nullptr;
      std::sort(pvalues.begin(), pvalues.end());
      // find the quantiles of the distribution
      double p[1] = {0};
@@ -1232,7 +1232,7 @@ SamplingDistribution *  HypoTestInverterResult::GetLimitDistribution(bool lower 
         // exclude for a bug in TMath::Quantiles last item
         p[0] = std::min( (ibin+1) * 1./double(size), 1.0);
         // use the type 1 which give the point value
-        TMath::Quantiles(pvalues.size(), 1, &pvalues[0], q, p, true, 0, 1 );
+        TMath::Quantiles(pvalues.size(), 1, &pvalues[0], q, p, true, nullptr, 1 );
         (quantVec[i])[ibin] = q[0];
      }
 
@@ -1317,7 +1317,7 @@ double  HypoTestInverterResult::GetExpectedLimit(double nsig, bool lower, const 
    if (nEntries <= 0)  return (lower) ? 1 : 0;  // return 1 for lower, 0 for upper
 
    HypoTestResult * r = dynamic_cast<HypoTestResult *> (fYObjects.First() );
-   assert(r != 0);
+   assert(r != nullptr);
    if (!r->GetNullDistribution() && !r->GetAltDistribution() ) {
       // we are in the asymptotic case
       // get the limits obtained at the different sigma values
