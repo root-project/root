@@ -3031,10 +3031,6 @@ static void CheckForMinusW(std::string arg,
 
    if (arg.find(pattern) != 0)
       return;
-   if (arg == "-Wno-noexcept-type") {
-      // GCC7 warning not supported by clang 3.9
-      return;
-   }
 
    ROOT::TMetaUtils::ReplaceAll(arg, pattern, "#pragma clang diagnostic ignored \"-W");
    arg += "\"";
