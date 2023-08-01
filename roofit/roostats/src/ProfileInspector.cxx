@@ -73,24 +73,24 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
   if(!poi_set){
     cout << "no parameters of interest" << endl;
-    return 0;
+    return nullptr;
   }
 
   if(poi_set->getSize()!=1){
     cout << "only one parameter of interest is supported currently" << endl;
-    return 0;
+    return nullptr;
   }
   RooRealVar* poi = (RooRealVar*) poi_set->first();
 
 
   if(!nuis_params){
     cout << "no nuisance parameters" << endl;
-    return 0;
+    return nullptr;
   }
 
   if(!pdf){
     cout << "pdf not set" << endl;
-    return 0;
+    return nullptr;
   }
 
   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(data)};
@@ -98,7 +98,7 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
   TList * list = new TList;
   Int_t curve_N=100;
-  double* curve_x=0;
+  double* curve_x=nullptr;
 //   if(curve){
 //     curve_N=curve->GetN();
 //     curve_x=curve->GetX();

@@ -451,7 +451,7 @@ void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*
 
 void RooFormula::printValue(ostream& os) const
 {
-  os << const_cast<RooFormula*>(this)->eval(0) ;
+  os << const_cast<RooFormula*>(this)->eval(nullptr) ;
 }
 
 

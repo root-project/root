@@ -341,9 +341,9 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   pc.defineObject("impTree","ImportTree",0) ;
   pc.defineObject("impData","ImportData",0) ;
   pc.defineObject("indexCat","IndexCat",0) ;
-  pc.defineObject("impSliceData","ImportDataSlice",0,0,true) ; // array
+  pc.defineObject("impSliceData","ImportDataSlice",0,nullptr,true) ; // array
   pc.defineString("impSliceState","ImportDataSlice",0,"",true) ; // array
-  pc.defineObject("lnkSliceData","LinkDataSlice",0,0,true) ; // array
+  pc.defineObject("lnkSliceData","LinkDataSlice",0,nullptr,true) ; // array
   pc.defineString("lnkSliceState","LinkDataSlice",0,"",true) ; // array
   pc.defineString("cutSpec","CutSpec",0,"") ;
   pc.defineObject("cutVar","CutVar",0) ;
@@ -358,7 +358,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   pc.defineObject("dummy2","LinkDataSliceMany",0) ;
   pc.defineSet("errorSet","StoreError",0) ;
   pc.defineSet("asymErrSet","StoreAsymError",0) ;
-  pc.defineSet("glObs","GlobalObservables",0,0) ;
+  pc.defineSet("glObs","GlobalObservables",0,nullptr) ;
   pc.defineMutex("ImportTree","ImportData","ImportDataSlice","LinkDataSlice","ImportFromFile") ;
   pc.defineMutex("CutSpec","CutVar") ;
   pc.defineMutex("WeightVarName","WeightVar") ;
@@ -427,7 +427,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       auto hiter = lnkSliceData.begin();
       while (token) {
         hmap[token] = static_cast<RooAbsData *>(*hiter);
-        token = strtok(0, ",");
+        token = strtok(nullptr, ",");
         ++hiter;
       }
     }
@@ -435,10 +435,10 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     appendToDir(this,true) ;
 
     // Initialize RooDataSet with optional weight variable
-    initialize(0) ;
+    initialize(nullptr) ;
 
     map<string,RooAbsDataStore*> storeMap ;
-    RooCategory* icat = (RooCategory*) (indexCat ? _vars.find(indexCat->GetName()) : 0 ) ;
+    RooCategory* icat = (RooCategory*) (indexCat ? _vars.find(indexCat->GetName()) : nullptr ) ;
     if (!icat) {
       throw std::string("RooDataSet::RooDataSet() ERROR in constructor, cannot find index category") ;
     }
@@ -809,7 +809,7 @@ void RooDataSet::initialize(const char* wgtVarName)
 {
   _varsNoWgt.removeAll() ;
   _varsNoWgt.add(_vars) ;
-  _wgtVar = 0 ;
+  _wgtVar = nullptr ;
   if (wgtVarName) {
     RooAbsArg* wgt = _varsNoWgt.find(wgtVarName) ;
     if (!wgt) {
@@ -843,7 +843,7 @@ std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet& varSubset, co
 
   std::unique_ptr<RooDataSet> out;
 
-  if (!cutRange || strchr(cutRange,',')==0) {
+  if (!cutRange || strchr(cutRange,',')==nullptr) {
     out.reset(new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop));
   } else {
     // Composite case: multiple ranges
@@ -983,7 +983,7 @@ double RooDataSet::weightError(ErrorType etype) const
 const RooArgSet* RooDataSet::get(Int_t index) const
 {
   const RooArgSet* ret  = RooAbsData::get(index) ;
-  return ret ? &_varsNoWgt : 0 ;
+  return ret ? &_varsNoWgt : nullptr ;
 }
 
 
@@ -1273,7 +1273,7 @@ bool RooDataSet::merge(list<RooDataSet*>dsetList)
   // Replace current data store with merged store
   _dstore.reset(mergedStore);
 
-  initialize(_wgtVar?_wgtVar->GetName():0) ;
+  initialize(_wgtVar?_wgtVar->GetName():nullptr) ;
   return false ;
 }
 
@@ -1304,7 +1304,7 @@ RooAbsArg* RooDataSet::addColumn(RooAbsArg& var, bool adjustRange)
   std::unique_ptr<RooAbsArg> ret{_dstore->addColumn(var,adjustRange)};
   RooAbsArg* retPtr = ret.get();
   _vars.addOwned(std::move(ret));
-  initialize(_wgtVar?_wgtVar->GetName():0) ;
+  initialize(_wgtVar?_wgtVar->GetName():nullptr) ;
   return retPtr;
 }
 
@@ -1380,8 +1380,8 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
   pc.defineInt("fillStyle","FillStyle",0,-999) ;
   pc.defineInt("histInvisible","Invisible",0,0) ;
   pc.defineDouble("scaleFactor","Rescale",0,1.) ;
-  pc.defineObject("xvar","XVar",0,0) ;
-  pc.defineObject("yvar","YVar",0,0) ;
+  pc.defineObject("xvar","XVar",0,nullptr) ;
+  pc.defineObject("yvar","YVar",0,nullptr) ;
 
 
   // Process & check varargs
@@ -1393,7 +1393,7 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
   // Extract values from named arguments
   const char* drawOptions = pc.getString("drawOption") ;
   Int_t histInvisible = pc.getInt("histInvisible") ;
-  const char* histName = pc.getString("histName",0,true) ;
+  const char* histName = pc.getString("histName",nullptr,true) ;
   double scaleFactor = pc.getDouble("scaleFactor") ;
 
   RooRealVar* xvar = (RooRealVar*) _vars.find(frame->getPlotVar()->GetName()) ;
@@ -1404,13 +1404,13 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
   // Sanity check. XY plotting only applies to weighted datasets if no YVar is specified
   if (!_wgtVar && !yvar) {
     coutE(InputArguments) << "RooDataSet::plotOnXY(" << GetName() << ") ERROR: no YVar() argument specified and dataset is not weighted" << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
-  RooRealVar* dataY = yvar ? (RooRealVar*) _vars.find(yvar->GetName()) : 0 ;
+  RooRealVar* dataY = yvar ? (RooRealVar*) _vars.find(yvar->GetName()) : nullptr ;
   if (yvar && !dataY) {
     coutE(InputArguments) << "RooDataSet::plotOnXY(" << GetName() << ") ERROR on YVar() argument, dataset does not contain a variable named " << yvar->GetName() << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
 
@@ -1532,7 +1532,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     if (blindState->IsA()!=RooCategory::Class()) {
       oocoutE(nullptr,DataHandling) << "RooDataSet::read: ERROR: variable list already contains"
           << "a non-RooCategory blindState member" << endl ;
-      return 0 ;
+      return nullptr ;
     }
     oocoutW(nullptr,DataHandling) << "RooDataSet::read: WARNING: recycling existing "
         << "blindState category in variable list" << endl ;
@@ -1562,10 +1562,10 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   blindCat = (RooCategory*) data->_vars.find("blindState") ;
 
   // Find index category, if requested
-  RooCategory *indexCat     = 0;
+  RooCategory *indexCat     = nullptr;
   //RooCategory *indexCatOrig = 0;
   if (indexCatName) {
-    RooAbsArg* tmp = 0;
+    RooAbsArg* tmp = nullptr;
     tmp = data->_vars.find(indexCatName) ;
     if (!tmp) {
       oocoutE(data.get(),DataHandling) << "RooDataSet::read: no index category named "
@@ -1614,7 +1614,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
         if (indexCat->defineType(newLabel,fileSeqNum)) {
           oocoutE(data.get(), DataHandling) << "RooDataSet::read: Error, cannot register automatic type name " << newLabel
               << " in index category " << indexCat->GetName() << endl ;
-          return 0 ;
+          return nullptr ;
         }
         // Assign new category number
         indexCat->setIndex(fileSeqNum) ;
@@ -1836,7 +1836,7 @@ void RooDataSet::Streamer(TBuffer &R__b)
        Version_t R__v1 = R__b.ReadVersion(&R__s1, &R__c1); if (R__v1) { }
 
        RooAbsData::Streamer(R__b);
-       TTree* X_tree(0) ; R__b >> X_tree;
+       TTree* X_tree(nullptr) ; R__b >> X_tree;
        RooArgSet X_truth ; X_truth.Streamer(R__b);
        TString X_blindString ; X_blindString.Streamer(R__b);
        R__b.CheckByteCount(R__s1, R__c1, TClass::GetClass("RooTreeData"));

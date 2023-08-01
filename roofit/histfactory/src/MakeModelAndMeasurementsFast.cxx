@@ -136,7 +136,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     if (pos != std::string::npos) {
        std::string outputDir = prefix.substr(0,pos);
        cxcoutDHF << "Checking if output directory : " << outputDir << " -  exists" << std::endl;
-       if (gSystem->OpenDirectory( outputDir.c_str() )  == 0 ) {
+       if (gSystem->OpenDirectory( outputDir.c_str() )  == nullptr ) {
           cxcoutDHF << "Output directory : " << outputDir << " - does not exist, try to create" << std::endl;
           int success = gSystem->MakeDirectory( outputDir.c_str() );
           if( success != 0 ) {

@@ -173,7 +173,7 @@ RooCmdArg Import(const char* state, RooAbsData& data) ;
 RooCmdArg Import(const std::map<std::string,RooDataSet*>& ) ;
 template<class DataPtr_t>
 RooCmdArg Import(std::map<std::string,DataPtr_t> const& map) {
-    RooCmdArg container("ImportDataSliceMany",0,0,0,0,0,0,0,0) ;
+    RooCmdArg container("ImportDataSliceMany",0,0,0,0,nullptr,nullptr,nullptr,nullptr) ;
     for (auto const& item : map) {
       container.addArg(Import(item.first.c_str(), *item.second)) ;
     }

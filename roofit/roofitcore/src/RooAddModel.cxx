@@ -81,7 +81,7 @@ RooAddModel::RooAddModel() :
 RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, bool ownPdfList) :
   RooResolutionModel(name,title,(static_cast<RooResolutionModel*>(inPdfList.at(0)))->convVar()),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(0),
+  _refCoefRangeName(nullptr),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
   _codeReg(10),
@@ -233,7 +233,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
     ccoutE(InputArguments) << "basis->findServer(0) = " << inBasis->findServer(0) << " " << inBasis->findServer(0)->GetName() << endl ;
     ccoutE(InputArguments) << "x.absArg()           = " << x.absArg() << " " << x.absArg()->GetName() << endl ;
     inBasis->Print("v") ;
-    return 0 ;
+    return nullptr ;
   }
 
   TString newName(GetName()) ;
@@ -310,7 +310,7 @@ Int_t RooAddModel::basisCode(const char* name) const
 AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset) const
 {
   // Check if cache already exists
-  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,normRange()));
+  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,nullptr,normRange()));
   if (cache) {
     return cache ;
   }
@@ -499,7 +499,7 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
   for (auto obj : _pdfList) {
     auto model = static_cast<RooResolutionModel*>(obj);
 
-    cache->_intList.addOwned(std::unique_ptr<RooAbsReal>{model->createIntegral(*iset,nset,0,isetRangeName)});
+    cache->_intList.addOwned(std::unique_ptr<RooAbsReal>{model->createIntegral(*iset,nset,nullptr,isetRangeName)});
   }
 
   // Store the partial integral list and return the assigned code ;
@@ -527,7 +527,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
   RooArgList* compIntList ;
 
   // If cache has been sterilized, revive this slot
-  if (cache==0) {
+  if (cache==nullptr) {
     std::unique_ptr<RooArgSet> vars{getParameters(RooArgSet())} ;
     RooArgSet nset = _intCacheMgr.selectFromSet1(*vars, code-1) ;
     RooArgSet iset = _intCacheMgr.selectFromSet2(*vars, code-1) ;

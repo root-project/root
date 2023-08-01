@@ -80,7 +80,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
   _intConfig(*defaultIntegratorConfig())
 {
   _extended = false ;
-  _yvar = 0 ;
+  _yvar = nullptr ;
 
   initialize() ;
 }
@@ -139,7 +139,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
   if (!extPdf.canBeExtended()) {
     throw std::runtime_error(Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible",GetName()));
   }
-  _yvar = 0 ;
+  _yvar = nullptr ;
   initialize() ;
 }
 
@@ -188,7 +188,7 @@ RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
   _integrate(other._integrate),
   _intConfig(other._intConfig)
 {
-  _yvar = other._yvar ? (RooRealVar*) _dataClone->get()->find(other._yvar->GetName()) : 0 ;
+  _yvar = other._yvar ? (RooRealVar*) _dataClone->get()->find(other._yvar->GetName()) : nullptr ;
   initialize() ;
 
 }

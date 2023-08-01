@@ -223,7 +223,7 @@ double RooHistPdf::evaluate() const
     if (harg != parg) {
       parg->syncCache() ;
       harg->copyCache(parg,true) ;
-      if (!harg->inRange(0)) {
+      if (!harg->inRange(nullptr)) {
         return 0 ;
       }
     }
@@ -549,7 +549,7 @@ std::list<double>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries

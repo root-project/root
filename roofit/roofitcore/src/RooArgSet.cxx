@@ -467,7 +467,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
       }
       coutI(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): processing include file "
           << filename << endl ;
-      if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return true ;
+      if (readFromStream(incfs,compact,flagReadAtt,inSection?nullptr:section,verbose)) return true ;
       continue ;
     }
 
@@ -638,7 +638,7 @@ bool RooArgSet::isInRange(const char* rangeSpec)
       return true ;
     }
 
-    token = strtok(0,",") ;
+    token = strtok(nullptr,",") ;
   }
 
   return false ;

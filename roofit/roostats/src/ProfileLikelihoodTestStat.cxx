@@ -56,7 +56,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
        if( fDetailedOutputEnabled && fDetailedOutput ) {
           delete fDetailedOutput;
-          fDetailedOutput = 0;
+          fDetailedOutput = nullptr;
        }
        if( fDetailedOutputEnabled && !fDetailedOutput ) {
           fDetailedOutput = new RooArgSet();
@@ -130,7 +130,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        double uncondML = 0;
        double fit_favored_mu = 0;
        int statusD = 0;
-       RooArgSet * detOutput = 0;
+       RooArgSet * detOutput = nullptr;
        if (type != 2) {
           // minimize and count eval errors
           fNll->clearEvalErrorLog();
