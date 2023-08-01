@@ -76,7 +76,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsSelfCachedPdf.h
     RooAbsSelfCachedReal.h
     RooAbsStudy.h
-    RooAdaptiveIntegratorND.h
     RooAddGenContext.h
     RooAddModel.h
     RooAddPdf.h
@@ -84,7 +83,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooArgList.h
     RooArgProxy.h
     RooArgSet.h
-    RooBinIntegrator.h
     RooBinSamplingPdf.h
     RooBinWidthFunction.h
     RooBinnedGenContext.h
@@ -160,13 +158,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooGenFitStudy.h
     RooGenericPdf.h
     RooGlobalFunc.h
-    RooGrid.h
     RooHelpers.h
     RooHist.h
     RooHistError.h
     RooHistFunc.h
     RooHistPdf.h
-    RooImproperIntegrator1D.h
     RooInvTransform.h
     RooLinTransBinning.h
     RooLinearCombination.h
@@ -175,7 +171,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooLinkedListElem.h
     RooLinkedListIter.h
     RooListProxy.h
-    RooMCIntegrator.h
     RooMCStudy.h
     RooMappedCategory.h
     RooMath.h
@@ -225,7 +220,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooRecursiveFraction.h
     RooRefCountList.h
     RooResolutionModel.h
-    RooRombergIntegrator.h
     RooSTLRefCountList.h
     RooSecondMoment.h
     RooSetProxy.h

@@ -2,12 +2,11 @@
 // Authors: Stephan Hageboeck, CERN  05/2020
 //          Jonas Rembser, CERN  08/2023
 
-#include "RooRealBinding.h"
-#include "RooRealVar.h"
-#include "RooFormulaVar.h"
-#include "RooRombergIntegrator.h"
-#include "RooNumIntConfig.h"
-#include "RooHelpers.h"
+#include <RooRealBinding.h>
+#include <RooRealVar.h>
+#include <RooFormulaVar.h>
+#include <RooNumIntConfig.h>
+#include <RooHelpers.h>
 #include <Math/ProbFuncMathCore.h>
 #include <Math/SpecFuncMathCore.h>
 #include <Math/Integrator.h>
@@ -19,7 +18,9 @@
 #include <numeric>
 #include <algorithm>
 
-TEST(RooIntegrator1D, RunFormulaVar_Trapezoid)
+#include "../src/RooRombergIntegrator.h"
+
+TEST(Roo1DIntegrator, RunFormulaVar_Trapezoid)
 {
 
    RooRealVar x("x", "x", -100, 100);

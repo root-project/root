@@ -21,8 +21,6 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   HEADERS
     RooFitMoreLib.h
-    RooAdaptiveGaussKronrodIntegrator1D.h
-    RooGaussKronrodIntegrator1D.h
     RooLegendre.h
     RooMathMoreReg.h
     RooSpHarmonic.h
