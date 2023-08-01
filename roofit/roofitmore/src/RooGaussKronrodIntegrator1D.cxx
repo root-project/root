@@ -39,7 +39,7 @@ Scientific Library version 1.5 and applies the 10-, 21-, 43- and
 reached
 **/
 
-#include <RooGaussKronrodIntegrator1D.h>
+#include "RooGaussKronrodIntegrator1D.h"
 
 #include <RooArgSet.h>
 #include <RooMsgService.h>

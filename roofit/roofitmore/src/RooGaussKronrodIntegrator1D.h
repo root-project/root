@@ -19,40 +19,46 @@
 #include "RooAbsIntegrator.h"
 #include "RooNumIntConfig.h"
 
-double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) ;
+double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data);
 
 class RooGaussKronrodIntegrator1D : public RooAbsIntegrator {
 public:
+   // Constructors, assignment etc
+   RooGaussKronrodIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config);
+   RooGaussKronrodIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config);
+   bool checkLimits() const override;
+   double integral(const double *yvec = nullptr) override;
 
-  // Constructors, assignment etc
-  RooGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooGaussKronrodIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config) ;
-  bool checkLimits() const override;
-  double integral(const double *yvec=nullptr) override ;
-
-  using RooAbsIntegrator::setLimits ;
-  bool setLimits(double* xmin, double* xmax) override;
-  bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
+   using RooAbsIntegrator::setLimits;
+   bool setLimits(double *xmin, double *xmax) override;
+   bool setUseIntegrandLimits(bool flag) override
+   {
+      _useIntegrandLimits = flag;
+      return true;
+   }
 
 protected:
+   friend class RooNumIntFactory;
+   static void registerIntegrator(RooNumIntFactory &fact);
 
-  friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;
+   friend double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data);
 
-  friend double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) ;
+   bool initialize();
 
-  bool initialize();
+   bool _useIntegrandLimits; // Use limits in function binding?
 
-  bool _useIntegrandLimits;  // Use limits in function binding?
+   double *xvec(double &xx)
+   {
+      _x[0] = xx;
+      return _x.data();
+   }
+   std::vector<double> _x; //! do not persist
 
-  double* xvec(double& xx) { _x[0] = xx ; return _x.data(); }
-  std::vector<double> _x ; //! do not persist
+   double _epsAbs; // Absolute precision
+   double _epsRel; // Relative precision
 
-  double _epsAbs ;                   // Absolute precision
-  double _epsRel ;                   // Relative precision
-
-  mutable double _xmin;              //! Lower integration bound
-  mutable double _xmax;              //! Upper integration bound
+   mutable double _xmin; //! Lower integration bound
+   mutable double _xmax; //! Upper integration bound
 };
 
 #endif
