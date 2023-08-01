@@ -160,6 +160,9 @@ public:
    /// Get the number of columns of a given type present in the RNTuple.
    size_t GetColumnTypeCount(EColumnType colType) const;
 
+   /// Get the IDs of all columns with the given type.
+   const std::vector<DescriptorId_t> GetColumnsByType(EColumnType);
+
    const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
    const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
 
