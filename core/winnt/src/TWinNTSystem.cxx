@@ -4319,10 +4319,12 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
          // full path not found, so split it to extract the library name
          // only, set its extension to '.lib' and add it to the list of
          // libraries to search
-         _splitpath(str.c_str(), drive, dir, fname, ext);
-         std::string libname(fname);
-         libname += ".lib";
-         all_libs.push_back(libname);
+         if (str.find("C:\\WINDOWS\\") == std::string::npos) {
+            _splitpath(str.c_str(), drive, dir, fname, ext);
+            std::string libname(fname);
+            libname += ".lib";
+            all_libs.push_back(libname);
+         }
       }
       for (auto lib : all_libs) {
          // loop over all libraries to check which one exists
