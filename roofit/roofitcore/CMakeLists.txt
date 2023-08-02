@@ -200,8 +200,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSTLRefCountList.h
     RooResolutionModel.h
     RooSecondMoment.h
-    RooSegmentedIntegrator1D.h
-    RooSegmentedIntegrator2D.h
     RooSetProxy.h
     RooSharedProperties.h
     RooSimGenContext.h
@@ -417,8 +415,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSTLRefCountList.cxx
     src/RooResolutionModel.cxx
     src/RooSecondMoment.cxx
-    src/RooSegmentedIntegrator1D.cxx
-    src/RooSegmentedIntegrator2D.cxx
     src/RooSentinel.cxx
     src/RooSharedProperties.cxx
     src/RooSimGenContext.cxx
