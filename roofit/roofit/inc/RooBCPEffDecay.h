@@ -37,7 +37,6 @@ public:
 
   RooBCPEffDecay(const RooBCPEffDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooBCPEffDecay(*this,newname) ; }
-  ~RooBCPEffDecay() override;
 
   double coefficient(Int_t basisIndex) const override ;
 

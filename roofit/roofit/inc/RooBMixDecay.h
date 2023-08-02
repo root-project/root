@@ -35,7 +35,6 @@ public:
 
   RooBMixDecay(const RooBMixDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooBMixDecay(*this,newname) ; }
-  ~RooBMixDecay() override;
 
   double coefficient(Int_t basisIndex) const override ;
 
