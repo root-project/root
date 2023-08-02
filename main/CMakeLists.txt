@@ -62,6 +62,14 @@ foreach(rawUtilName ${utils})
     set(python python)
   endif()
 
+  # Needed by the tests
+  install(FILES ${rawUtilName}
+          DESTINATION ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+          RENAME ${utilName}
+          PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                      GROUP_EXECUTE GROUP_READ
+                      WORLD_EXECUTE WORLD_READ)
+
   install(FILES ${rawUtilName}
           DESTINATION ${CMAKE_INSTALL_BINDIR}
           RENAME ${utilName}
