@@ -1524,12 +1524,18 @@ RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnN
 /// A dataset specification includes trees and file names,
 /// as well as an optional friend list and/or entry range.
 ///
-/// ### Example usage:
+/// ### Example usage from Python:
 /// ~~~{.py}
-/// spec = ROOT.RDF.Experimental.RDatasetSpec("tree", "file.root", (3, 5))
-/// spec.AddFriend([("tree1", "a.root"), ("tree2", "b.root")], "alias")
+/// spec = (
+///     ROOT.RDF.Experimental.RDatasetSpec()
+///     .AddSample(("data", "tree", "file.root"))
+///     .WithGlobalFriends("friendTree", "friend.root", "alias")
+///     .WithGlobalRange((100, 200))
+/// )
 /// df = ROOT.RDataFrame(spec)
 /// ~~~
+///
+/// See also ROOT::RDataFrame::FromSpec().
 RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(spec)))
 {
