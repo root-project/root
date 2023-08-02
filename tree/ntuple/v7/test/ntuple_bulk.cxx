@@ -92,7 +92,7 @@ TEST(RNTupleBulk, CardinalityField)
    using RNTupleCardinality32 = ROOT::Experimental::RNTupleCardinality<std::uint32_t>;
    using RNTupleCardinality64 = ROOT::Experimental::RNTupleCardinality<std::uint64_t>;
 
-   FileRaii fileGuard("test_ntuple_bulk_simple.root");
+   FileRaii fileGuard("test_ntuple_bulk_cardinality.root");
    {
       auto model = RNTupleModel::Create();
       auto fldVec = model->MakeField<ROOT::RVec<int>>("vint");
@@ -127,5 +127,58 @@ TEST(RNTupleBulk, CardinalityField)
    for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(i, card32Arr[i]);
       EXPECT_EQ(i, card64Arr[i]);
+   }
+}
+
+TEST(RNTupleBulk, RVec)
+{
+   FileRaii fileGuard("test_ntuple_bulk_rvec.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldVecI = model->MakeField<ROOT::RVecI>("vint");
+      auto fldVecS = model->MakeField<ROOT::RVec<CustomStruct>>("vs");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         fldVecI->resize(i);
+         fldVecS->resize(i);
+         for (int j = 0; j < i; ++j) {
+            fldVecI->at(j) = j;
+            fldVecS->at(j).a = j;
+         }
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto fieldZero = reader->GetModel()->GetFieldZero();
+   std::unique_ptr<RFieldBase::RBulk> bulkI;
+   std::unique_ptr<RFieldBase::RBulk> bulkS;
+   for (auto &f : *fieldZero) {
+      if (f.GetName() == "vint")
+         bulkI = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+      if (f.GetName() == "vs")
+         bulkS = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+   }
+
+   auto mask = std::make_unique<bool[]>(10);
+   std::fill(mask.get(), mask.get() + 10, true);
+   mask[1] = false; // the RVec<simple type> field optimization should ignore the mask
+
+   auto iArr = static_cast<ROOT::RVecI *>(bulkI->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto sArr = static_cast<ROOT::RVec<CustomStruct> *>(bulkS->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(i, iArr[i].size());
+      EXPECT_EQ(i == 1 ? 0 : i, sArr[i].size());
+      for (std::size_t j = 0; j < iArr[i].size(); ++j) {
+         EXPECT_EQ(j, iArr[i].at(j));
+      }
+      for (std::size_t j = 0; j < sArr[i].size(); ++j) {
+         EXPECT_FLOAT_EQ(j, sArr[i].at(j).a);
+      }
+      // RVec<PoD> should have all the vector elements of the bulk stored consecutively in memory
+      if (i > 1) {
+         EXPECT_EQ(&iArr[i - 1][0] + iArr[i - 1].size(), &iArr[i][0]);
+      }
    }
 }
