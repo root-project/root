@@ -77,7 +77,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Special helper columns: `rdfentry_` and `rdfslot_`](\ref helper-cols)
    - [Just-in-time compilation: column type inference and explicit declaration of column types](\ref jitting)
    - [User-defined custom actions](\ref generic-actions)
-   - [Friend trees](\ref friends)
+   - [Dataset joins with friend trees](\ref friends)
    - [Reading data formats other than ROOT trees](\ref other-file-formats)
    - [Computation graphs (storing and reusing sets of transformations)](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
@@ -1232,26 +1232,56 @@ Notice how we created one `double` variable for each processing slot and later m
 
 
 \anchor friends
-### Friend trees
-Friend TTrees are supported by RDataFrame.
-Friend TTrees with a TTreeIndex are supported starting from ROOT v6.24.
+### Dataset joins with friend trees
 
-To use friend trees in RDataFrame, it is necessary to add the friends directly to
-the tree and instantiate an RDataFrame with the main tree:
+Vertically concatenating multiple trees that have the same columns (creating a logical dataset with the same columns and
+more rows) is trivial in RDataFrame: just pass all tree and file names to RDataFrame's constructor, or create a TChain
+out of the desired trees and pass that to RDataFrame.
+
+Horizontal concatenations of trees or chains (creating a logical dataset with the same number of rows and the union of the
+columns of multiple trees) leverages TTree's "friend" mechanism.
+
+Simple joins of trees that do not have the same number of rows are also possible with indexed friend trees (see below).
+
+To use friend trees in RDataFrame, set up trees with the appropriate relationships and then instantiate an RDataFrame
+with the main tree:
 
 ~~~{.cpp}
-TTree t([...]);
-TTree ft([...]);
-t.AddFriend(&ft, "myFriend");
+TTree main([...]);
+TTree friend([...]);
+main.AddFriend(&friend, "myFriend");
 
-RDataFrame d(t);
-auto f = d.Filter("myFriend.MyCol == 42");
+RDataFrame df(main);
+auto df2 = df.Filter("myFriend.MyCol == 42");
 ~~~
 
-Columns coming from the friend trees can be referred to by their full name, like in the example above,
+The same applies for TChains. Columns coming from the friend trees can be referred to by their full name, like in the example above,
 or the friend tree name can be omitted in case the column name is not ambiguous (e.g. "MyCol" could be used instead of
-      "myFriend.MyCol" in the example above).
+"myFriend.MyCol" in the example above if there is no column "MyCol" in the main tree).
 
+\note A common source of confusion is that trees that are written out from a multi-thread Snapshot() call will have their
+      entries (block-wise) shuffled with respect to the original tree. Such trees cannot be used as friends of the original
+      one: rows will be mismatched.
+
+Indexed friend trees provide a way to perform simple joins of multiple trees over a common column.
+When a certain entry in the main tree (or chain) is loaded, the friend trees (or chains) will then load an entry where the
+"index" columns have a value identical to the one in the main one. For example, in Python:
+
+~~~{.py}
+main_tree = ...
+aux_tree = ...
+
+# If a friend tree has an index on `commonColumn`, when the main tree loads
+# a given row, it also loads the row of the friend tree that has the same
+# value of `commonColumn`
+aux_tree.BuildIndex("commonColumn")
+
+mainTree.AddFriend(aux_tree)
+
+df = ROOT.RDataFrame(mainTree)
+~~~
+
+RDataFrame supports indexed friend TTrees from ROOT v6.24 in single-thread mode and from v6.28/02 in multi-thread mode.
 
 \anchor other-file-formats
 ### Reading data formats other than ROOT trees
