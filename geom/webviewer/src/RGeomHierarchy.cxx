@@ -21,8 +21,7 @@ using namespace ROOT::Experimental;
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc, bool use_server_threads) :
-  fDesc(desc)
+RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc, bool use_server_threads) : fDesc(desc)
 {
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
@@ -49,10 +48,11 @@ RGeomHierarchy::~RGeomHierarchy()
 
 void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   if (arg.compare(0,6, "BRREQ:") == 0) {
+   if (arg.compare(0, 6, "BRREQ:") == 0) {
       // central place for processing browser requests
       auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
-      if (json.length() > 0) fWebWindow->Send(connid, json);
+      if (json.length() > 0)
+         fWebWindow->Send(connid, json);
    } else if (arg.compare(0, 7, "SEARCH:") == 0) {
 
       std::string query = arg.substr(7);
@@ -120,7 +120,6 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
       if (fDesc.ClearAllPhysVisibility())
          fDesc.IssueSignal(this, "NodeVisibility");
    }
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +161,7 @@ void RGeomHierarchy::ProcessSignal(const std::string &kind)
       auto stack = fDesc.GetHighlightedItem();
       auto path = fDesc.MakePathByStack(stack);
       if (stack.size() == 0)
-         path = { "__OFF__" }; // just clear highlight
+         path = {"__OFF__"}; // just clear highlight
       if (fWebWindow)
          fWebWindow->Send(0, "HIGHL:"s + TBufferJSON::ToJSON(&path).Data());
    } else if (kind == "NodeVisibility") {

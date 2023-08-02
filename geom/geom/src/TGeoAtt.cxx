@@ -31,7 +31,8 @@ ClassImp(TGeoAtt);
 TGeoAtt::TGeoAtt()
 {
    fGeoAtt = 0;
-   if (!gGeoManager) return;
+   if (!gGeoManager)
+      return;
    SetActivity(kTRUE);
    SetActiveDaughters(kTRUE);
    SetVisibility(kTRUE);
@@ -57,9 +58,7 @@ TGeoAtt::TGeoAtt(Option_t * /*vis_opt*/, Option_t * /*activity_opt*/, Option_t *
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-TGeoAtt::~TGeoAtt()
-{
-}
+TGeoAtt::~TGeoAtt() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch type visibility.
@@ -104,39 +103,46 @@ void TGeoAtt::SetVisOnly(Bool_t flag)
 
 void TGeoAtt::SetVisibility(Bool_t vis)
 {
-   if (vis)  SetAttBit(kVisThis);
-   else      ResetAttBit(kVisThis);
-   if (gGeoManager && gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   if (vis)
+      SetAttBit(kVisThis);
+   else
+      ResetAttBit(kVisThis);
+   if (gGeoManager && gGeoManager->IsClosed())
+      SetVisTouched(kTRUE);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Set visibility for the daughters.
 
 void TGeoAtt::SetVisDaughters(Bool_t vis)
 {
-   if (vis)  SetAttBit(kVisDaughters);
-   else      ResetAttBit(kVisDaughters);
-   if (gGeoManager && gGeoManager->IsClosed()) SetVisTouched(kTRUE);
+   if (vis)
+      SetAttBit(kVisDaughters);
+   else
+      ResetAttBit(kVisDaughters);
+   if (gGeoManager && gGeoManager->IsClosed())
+      SetVisTouched(kTRUE);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark attributes as "streamed to file".
 
 void TGeoAtt::SetVisStreamed(Bool_t vis)
 {
-   if (vis)  SetAttBit(kVisStreamed);
-   else      ResetAttBit(kVisStreamed);
+   if (vis)
+      SetAttBit(kVisStreamed);
+   else
+      ResetAttBit(kVisStreamed);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark visualization attributes as "modified".
 
 void TGeoAtt::SetVisTouched(Bool_t vis)
 {
-   if (vis)  SetAttBit(kVisTouched);
-   else      ResetAttBit(kVisTouched);
+   if (vis)
+      SetAttBit(kVisTouched);
+   else
+      ResetAttBit(kVisTouched);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Set optimization flags.
 
-void TGeoAtt::SetOptimization(Option_t * /*option*/)
-{
-}
-
+void TGeoAtt::SetOptimization(Option_t * /*option*/) {}

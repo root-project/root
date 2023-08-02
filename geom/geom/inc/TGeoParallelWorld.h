@@ -18,60 +18,68 @@ class TGeoManager;
 class TGeoPhysicalNode;
 class TGeoVolume;
 
-class TGeoParallelWorld : public TNamed
-{
-protected :
-   TGeoManager       *fGeoManager;     // base geometry
-   TObjArray         *fPaths;          // array of paths
-   Bool_t             fUseOverlaps;    // Activated if user defined overlapping candidates
-   Bool_t             fIsClosed;       //! Closed flag
-   TGeoVolume        *fVolume;         //! helper volume
-   TGeoPhysicalNode  *fLastState;      //! Last PN touched
-   TObjArray         *fPhysical;       //! array of physical nodes
+class TGeoParallelWorld : public TNamed {
+protected:
+   TGeoManager *fGeoManager;     // base geometry
+   TObjArray *fPaths;            // array of paths
+   Bool_t fUseOverlaps;          // Activated if user defined overlapping candidates
+   Bool_t fIsClosed;             //! Closed flag
+   TGeoVolume *fVolume;          //! helper volume
+   TGeoPhysicalNode *fLastState; //! Last PN touched
+   TObjArray *fPhysical;         //! array of physical nodes
 
-   TGeoParallelWorld(const TGeoParallelWorld&) = delete;
-   TGeoParallelWorld& operator=(const TGeoParallelWorld&) = delete;
+   TGeoParallelWorld(const TGeoParallelWorld &) = delete;
+   TGeoParallelWorld &operator=(const TGeoParallelWorld &) = delete;
 
 public:
    // constructors
-   TGeoParallelWorld() : TNamed(),fGeoManager(nullptr),fPaths(nullptr),fUseOverlaps(kFALSE),fIsClosed(kFALSE),fVolume(nullptr),fLastState(nullptr),fPhysical(nullptr) {}
+   TGeoParallelWorld()
+      : TNamed(),
+        fGeoManager(nullptr),
+        fPaths(nullptr),
+        fUseOverlaps(kFALSE),
+        fIsClosed(kFALSE),
+        fVolume(nullptr),
+        fLastState(nullptr),
+        fPhysical(nullptr)
+   {
+   }
    TGeoParallelWorld(const char *name, TGeoManager *mgr);
 
    // destructor
    ~TGeoParallelWorld() override;
    // API for adding components nodes
-   void              AddNode(const char *path);
+   void AddNode(const char *path);
    // Activate/deactivate  overlap usage
-   void              SetUseOverlaps(Bool_t flag) {fUseOverlaps = flag;}
-   Bool_t            IsUsingOverlaps() const {return fUseOverlaps;}
-   void              ResetOverlaps() const;
+   void SetUseOverlaps(Bool_t flag) { fUseOverlaps = flag; }
+   Bool_t IsUsingOverlaps() const { return fUseOverlaps; }
+   void ResetOverlaps() const;
    // Adding overlap candidates can highly improve performance.
-   void              AddOverlap(TGeoVolume *vol, Bool_t activate=kTRUE);
-   void              AddOverlap(const char *volname, Bool_t activate=kTRUE);
+   void AddOverlap(TGeoVolume *vol, Bool_t activate = kTRUE);
+   void AddOverlap(const char *volname, Bool_t activate = kTRUE);
    // The normal PW mode (without declaring overlaps) does detect them
-   Int_t             PrintDetectedOverlaps() const;
+   Int_t PrintDetectedOverlaps() const;
 
    // Closing a parallel geometry is mandatory
-   Bool_t            CloseGeometry();
+   Bool_t CloseGeometry();
    // Refresh structures in case of re-alignment
-   void              RefreshPhysicalNodes();
+   void RefreshPhysicalNodes();
 
    // Navigation interface
    TGeoPhysicalNode *FindNode(Double_t point[3]);
-   TGeoPhysicalNode *FindNextBoundary(Double_t point[3], Double_t dir[3], Double_t &step, Double_t stepmax=1.E30);
-   Double_t          Safety(Double_t point[3], Double_t safmax=1.E30);
+   TGeoPhysicalNode *FindNextBoundary(Double_t point[3], Double_t dir[3], Double_t &step, Double_t stepmax = 1.E30);
+   Double_t Safety(Double_t point[3], Double_t safmax = 1.E30);
 
    // Getters
-   TGeoManager      *GetGeometry() const {return fGeoManager;}
-   Bool_t            IsClosed() const    {return fIsClosed;}
-   TGeoVolume       *GetVolume() const   {return fVolume;}
+   TGeoManager *GetGeometry() const { return fGeoManager; }
+   Bool_t IsClosed() const { return fIsClosed; }
+   TGeoVolume *GetVolume() const { return fVolume; }
 
    // Utilities
-   void              CheckOverlaps(Double_t ovlp=0.001); // default 10 microns
-   void              Draw(Option_t *option) override;
+   void CheckOverlaps(Double_t ovlp = 0.001); // default 10 microns
+   void Draw(Option_t *option) override;
 
-   ClassDefOverride(TGeoParallelWorld, 3)     // parallel world base class
+   ClassDefOverride(TGeoParallelWorld, 3) // parallel world base class
 };
 
 #endif
-

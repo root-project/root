@@ -35,18 +35,24 @@ Editor for a TGeoPara.
 ClassImp(TGeoParaEditor);
 
 enum ETGeoParaWid {
-   kPARA_NAME, kPARA_X, kPARA_Y,  kPARA_Z, kPARA_ALPHA,
-   kPARA_THETA, kPARA_PHI, kPARA_APPLY, kPARA_UNDO
+   kPARA_NAME,
+   kPARA_X,
+   kPARA_Y,
+   kPARA_Z,
+   kPARA_ALPHA,
+   kPARA_THETA,
+   kPARA_PHI,
+   kPARA_APPLY,
+   kPARA_UNDO
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for para editor
 
-TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
+TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape = 0;
    fXi = fYi = fZi = fAlphai = fThetai = fPhii = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -68,7 +74,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fEDx = new TGNumberEntry(f1, 0., 5, kPARA_X);
    fEDx->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDx->Resize(100, fEDx->GetDefaultHeight());
-   nef = (TGTextEntry*)fEDx->GetNumberEntry();
+   nef = (TGTextEntry *)fEDx->GetNumberEntry();
    nef->SetToolTipText("Enter the half-length in X");
    fEDx->Associate(this);
    f1->AddFrame(fEDx, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -80,7 +86,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fEDy = new TGNumberEntry(f1, 0., 5, kPARA_Y);
    fEDy->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDy->Resize(100, fEDy->GetDefaultHeight());
-   nef = (TGTextEntry*)fEDy->GetNumberEntry();
+   nef = (TGTextEntry *)fEDy->GetNumberEntry();
    nef->SetToolTipText("Enter the half-length in Y");
    fEDy->Associate(this);
    f1->AddFrame(fEDy, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -92,7 +98,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fEDz = new TGNumberEntry(f1, 0., 5, kPARA_Z);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDz->Resize(100, fEDz->GetDefaultHeight());
-   nef = (TGTextEntry*)fEDz->GetNumberEntry();
+   nef = (TGTextEntry *)fEDz->GetNumberEntry();
    nef->SetToolTipText("Enter the half-length in Z");
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -103,7 +109,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(new TGLabel(f1, "Alpha"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEAlpha = new TGNumberEntry(f1, 0., 5, kPARA_ALPHA);
    fEAlpha->Resize(100, fEAlpha->GetDefaultHeight());
-   nef = (TGTextEntry*)fEAlpha->GetNumberEntry();
+   nef = (TGTextEntry *)fEAlpha->GetNumberEntry();
    nef->SetToolTipText("Enter the angle with respect to Y axis [deg]");
    fEAlpha->Associate(this);
    f1->AddFrame(fEAlpha, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -115,19 +121,19 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fETheta = new TGNumberEntry(f1, 0., 5, kPARA_THETA);
    fETheta->SetNumAttr(TGNumberFormat::kNEAPositive);
    fETheta->Resize(100, fETheta->GetDefaultHeight());
-   nef = (TGTextEntry*)fETheta->GetNumberEntry();
+   nef = (TGTextEntry *)fETheta->GetNumberEntry();
    nef->SetToolTipText("Enter the theta angle of the para axis [deg]");
    fETheta->Associate(this);
    f1->AddFrame(fETheta, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
 
-    // Number entry for Phi
+   // Number entry for Phi
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Phi"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEPhi = new TGNumberEntry(f1, 0., 5, kPARA_PHI);
    fEPhi->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEPhi->Resize(100, fEPhi->GetDefaultHeight());
-   nef = (TGTextEntry*)fEPhi->GetNumberEntry();
+   nef = (TGTextEntry *)fEPhi->GetNumberEntry();
    nef->SetToolTipText("Enter the phi angle of the para axis [deg]");
    fEPhi->Associate(this);
    f1->AddFrame(fEPhi, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -136,8 +142,8 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -145,9 +151,9 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
    fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -160,7 +166,7 @@ TGeoParaEditor::~TGeoParaEditor()
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
       if (el->fFrame->IsComposite())
-         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
+         TGeoTabManager::Cleanup((TGCompositeFrame *)el->fFrame);
    }
    Cleanup();
 }
@@ -188,17 +194,16 @@ void TGeoParaEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect to the selected object.
 
-void TGeoParaEditor::SetModel(TObject* obj)
+void TGeoParaEditor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoPara::Class())) {
+   if (obj == 0 || (obj->IsA() != TGeoPara::Class())) {
       SetActive(kFALSE);
       return;
    }
-   fShape = (TGeoPara*)obj;
+   fShape = (TGeoPara *)obj;
    fXi = fShape->GetX();
    fYi = fShape->GetY();
    fZi = fShape->GetZ();
@@ -206,7 +211,8 @@ void TGeoParaEditor::SetModel(TObject* obj)
    fThetai = fShape->GetTheta();
    fPhii = fShape->GetPhi();
    const char *sname = fShape->GetName();
-   if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
+   if (!strcmp(sname, fShape->ClassName()))
+      fShapeName->SetText("-no_name");
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
@@ -220,7 +226,8 @@ void TGeoParaEditor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
 
-   if (fInit) ConnectSignals2Slots();
+   if (fInit)
+      ConnectSignals2Slots();
    SetActive();
 }
 
@@ -246,7 +253,8 @@ void TGeoParaEditor::DoName()
 void TGeoParaEditor::DoApply()
 {
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
+   if (strcmp(name, fShape->GetName()))
+      fShape->SetName(name);
    Double_t dx = fEDx->GetNumber();
    Double_t dy = fEDy->GetNumber();
    Double_t dz = fEDz->GetNumber();
@@ -271,11 +279,12 @@ void TGeoParaEditor::DoApply()
             fShape->Draw();
             fPad->GetView()->ShowAxis();
          } else {
-            view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
-                           fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
+            view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(), fShape->GetDX(), fShape->GetDY(),
+                           fShape->GetDZ());
             Update();
          }
-      } else Update();
+      } else
+         Update();
    }
 }
 
@@ -309,12 +318,13 @@ void TGeoParaEditor::DoUndo()
 void TGeoParaEditor::DoX()
 {
    Double_t dx = fEDx->GetNumber();
-   if (dx<=0) {
+   if (dx <= 0) {
       dx = 0.1;
       fEDx->SetNumber(dx);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -323,12 +333,13 @@ void TGeoParaEditor::DoX()
 void TGeoParaEditor::DoY()
 {
    Double_t dy = fEDy->GetNumber();
-   if (dy<=0) {
+   if (dy <= 0) {
       dy = 0.1;
       fEDy->SetNumber(dy);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,12 +348,13 @@ void TGeoParaEditor::DoY()
 void TGeoParaEditor::DoZ()
 {
    Double_t dz = fEDz->GetNumber();
-   if (dz<=0) {
+   if (dz <= 0) {
       dz = 0.1;
       fEDz->SetNumber(dz);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,12 +363,13 @@ void TGeoParaEditor::DoZ()
 void TGeoParaEditor::DoAlpha()
 {
    Double_t alpha = fEAlpha->GetNumber();
-   if (TMath::Abs(alpha)>=90) {
-      alpha = 89.9*TMath::Sign(1.,alpha);
+   if (TMath::Abs(alpha) >= 90) {
+      alpha = 89.9 * TMath::Sign(1., alpha);
       fEAlpha->SetNumber(alpha);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,16 +378,17 @@ void TGeoParaEditor::DoAlpha()
 void TGeoParaEditor::DoTheta()
 {
    Double_t theta = fETheta->GetNumber();
-   if (theta<0) {
+   if (theta < 0) {
       theta = 0;
       fETheta->SetNumber(theta);
    }
-   if (theta>180) {
+   if (theta > 180) {
       theta = 180;
       fETheta->SetNumber(theta);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,11 +397,11 @@ void TGeoParaEditor::DoTheta()
 void TGeoParaEditor::DoPhi()
 {
    Double_t phi = fEPhi->GetNumber();
-   if (phi<0 || phi>360) {
+   if (phi < 0 || phi > 360) {
       phi = 0;
       fEPhi->SetNumber(phi);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
-

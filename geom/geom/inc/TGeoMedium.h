@@ -20,43 +20,38 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-class TGeoMedium : public TNamed
-{
+class TGeoMedium : public TNamed {
 public:
-   enum EGeoMedium {
-      kMedSavePrimitive = BIT(18)
-   };
+   enum EGeoMedium { kMedSavePrimitive = BIT(18) };
 
 protected:
-   Int_t                    fId;         // unique Id
-   Double_t                 fParams[20]; // parameters
-   TGeoMaterial            *fMaterial;   // pointer to material
+   Int_t fId;               // unique Id
+   Double_t fParams[20];    // parameters
+   TGeoMaterial *fMaterial; // pointer to material
 
-// methods
-   TGeoMedium(const TGeoMedium&);
-   TGeoMedium& operator=(const TGeoMedium&);
+   // methods
+   TGeoMedium(const TGeoMedium &);
+   TGeoMedium &operator=(const TGeoMedium &);
 
 public:
    // constructors
    TGeoMedium();
-   TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params=nullptr);
-   TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, Int_t ifield,
-              Double_t fieldm, Double_t tmaxfd, Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin);
+   TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params = nullptr);
+   TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, Int_t ifield, Double_t fieldm, Double_t tmaxfd,
+              Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin);
    ~TGeoMedium() override;
    // methods
-   virtual Int_t            GetByteCount() const {return sizeof(*this);}
-   Int_t                    GetId()   const     {return fId;}
-   Double_t                 GetParam(Int_t i) const {return fParams[i];}
-   void                     SetParam(Int_t i, Double_t val)   {fParams[i] = val;}
-   const char              *GetPointerName() const;
-   TGeoMaterial            *GetMaterial() const {return fMaterial;}
-   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   void                     SetId(Int_t id)     {fId = id;}
-   void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
-   virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}
-   ClassDefOverride(TGeoMedium, 1)              // tracking medium
-
+   virtual Int_t GetByteCount() const { return sizeof(*this); }
+   Int_t GetId() const { return fId; }
+   Double_t GetParam(Int_t i) const { return fParams[i]; }
+   void SetParam(Int_t i, Double_t val) { fParams[i] = val; }
+   const char *GetPointerName() const;
+   TGeoMaterial *GetMaterial() const { return fMaterial; }
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void SetId(Int_t id) { fId = id; }
+   void SetMaterial(TGeoMaterial *mat) { fMaterial = mat; }
+   virtual void SetCerenkovProperties(TObject *cerenkov) { fMaterial->SetCerenkovProperties(cerenkov); }
+   ClassDefOverride(TGeoMedium, 1) // tracking medium
 };
 
 #endif
-

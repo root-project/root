@@ -34,22 +34,17 @@ Editor for a TGeoBBox.
 
 ClassImp(TGeoBBoxEditor);
 
-enum ETGeoBBoxWid {
-   kBOX_NAME, kBOX_X, kBOX_Y, kBOX_Z,
-   kBOX_OX, kBOX_OY, kBOX_OZ,
-   kBOX_APPLY, kBOX_CANCEL, kBOX_UNDO
-};
+enum ETGeoBBoxWid { kBOX_NAME, kBOX_X, kBOX_Y, kBOX_Z, kBOX_OX, kBOX_OY, kBOX_OZ, kBOX_APPLY, kBOX_CANCEL, kBOX_UNDO };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for volume editor.
 
-TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
-                               Int_t height, UInt_t options, Pixel_t back)
+TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape = 0;
    fDxi = fDyi = fDzi = 0.0;
-   memset(fOrigi, 0, 3*sizeof(Double_t));
+   memset(fOrigi, 0, 3 * sizeof(Double_t));
    fNamei = "";
    fIsModified = kFALSE;
    fIsShapeEditable = kFALSE;
@@ -66,87 +61,84 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    MakeTitle("Box half-lengths");
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for dx
-   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   TGCompositeFrame *f1 =
+      new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxDx = new TGNumberEntry(f1, 0., 5, kBOX_X);
    fBoxDx->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fBoxDx->GetNumberEntry();
+   nef = (TGTextEntry *)fBoxDx->GetNumberEntry();
    nef->SetToolTipText("Enter the box half-length in X");
    fBoxDx->Associate(this);
-   f1->AddFrame(fBoxDx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fBoxDx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dy
-   TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   TGCompositeFrame *f2 =
+      new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxDy = new TGNumberEntry(f2, 0., 5, kBOX_Y);
    fBoxDy->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fBoxDy->GetNumberEntry();
+   nef = (TGTextEntry *)fBoxDy->GetNumberEntry();
    nef->SetToolTipText("Enter the box half-length in Y");
    fBoxDy->Associate(this);
-   f2->AddFrame(fBoxDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f2->AddFrame(fBoxDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dx
-   TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   TGCompositeFrame *f3 =
+      new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxDz = new TGNumberEntry(f3, 0., 5, kBOX_Z);
    fBoxDz->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fBoxDz->GetNumberEntry();
+   nef = (TGTextEntry *)fBoxDz->GetNumberEntry();
    nef->SetToolTipText("Enter the box half-length in Z");
    fBoxDz->Associate(this);
-   f3->AddFrame(fBoxDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f3->AddFrame(fBoxDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
-   compxyz->Resize(150,30);
+   compxyz->Resize(150, 30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    MakeTitle("Box origin");
    compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for dx
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kFitWidth | kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "OX"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxOx = new TGNumberEntry(f1, 0., 5, kBOX_OX);
-   nef = (TGTextEntry*)fBoxOx->GetNumberEntry();
+   nef = (TGTextEntry *)fBoxOx->GetNumberEntry();
    nef->SetToolTipText("Enter the box origin X coordinate");
    fBoxOx->Associate(this);
-   f1->AddFrame(fBoxOx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fBoxOx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dy
-   f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kFitWidth | kFixedWidth | kOwnBackground);
+   f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "OY"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxOy = new TGNumberEntry(f2, 0., 5, kBOX_OY);
-   nef = (TGTextEntry*)fBoxOy->GetNumberEntry();
+   nef = (TGTextEntry *)fBoxOy->GetNumberEntry();
    nef->SetToolTipText("Enter the box origin Y coordinate");
    fBoxOy->Associate(this);
-   f2->AddFrame(fBoxOy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f2->AddFrame(fBoxOy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dx
-   f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kFitWidth | kFixedWidth | kOwnBackground);
+   f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "OZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxOz = new TGNumberEntry(f3, 0., 5, kBOX_OZ);
-   nef = (TGTextEntry*)fBoxOz->GetNumberEntry();
+   nef = (TGTextEntry *)fBoxOz->GetNumberEntry();
    nef->SetToolTipText("Enter the box origin Z coordinate");
    fBoxOz->Associate(this);
-   f3->AddFrame(fBoxOz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f3->AddFrame(fBoxOz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
-   compxyz->Resize(150,30);
+   compxyz->Resize(150, 30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -154,9 +146,9 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
    fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -169,7 +161,7 @@ TGeoBBoxEditor::~TGeoBBoxEditor()
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
       if (el->fFrame->IsComposite())
-         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
+         TGeoTabManager::Cleanup((TGCompositeFrame *)el->fFrame);
    }
    Cleanup();
 }
@@ -197,23 +189,23 @@ void TGeoBBoxEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Update editor for a new selected box.
 
-void TGeoBBoxEditor::SetModel(TObject* obj)
+void TGeoBBoxEditor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoBBox::Class())) {
+   if (obj == 0 || (obj->IsA() != TGeoBBox::Class())) {
       SetActive(kFALSE);
       return;
    }
-   fShape = (TGeoBBox*)obj;
+   fShape = (TGeoBBox *)obj;
    fDxi = fShape->GetDX();
    fDyi = fShape->GetDY();
    fDzi = fShape->GetDZ();
-   memcpy(fOrigi, fShape->GetOrigin(), 3*sizeof(Double_t));
+   memcpy(fOrigi, fShape->GetOrigin(), 3 * sizeof(Double_t));
    const char *sname = fShape->GetName();
-   if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
+   if (!strcmp(sname, fShape->ClassName()))
+      fShapeName->SetText("-no_name");
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
@@ -227,7 +219,8 @@ void TGeoBBoxEditor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
 
-   if (fInit) ConnectSignals2Slots();
+   if (fInit)
+      ConnectSignals2Slots();
    SetActive();
 }
 
@@ -240,7 +233,7 @@ Bool_t TGeoBBoxEditor::IsDelayed() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for name.
+/// Slot for name.
 
 void TGeoBBoxEditor::DoName()
 {
@@ -248,12 +241,13 @@ void TGeoBBoxEditor::DoName()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for applying current parameters.
+/// Slot for applying current parameters.
 
 void TGeoBBoxEditor::DoApply()
 {
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
+   if (strcmp(name, fShape->GetName()))
+      fShape->SetName(name);
    Double_t dx = fBoxDx->GetNumber();
    Double_t dy = fBoxDy->GetNumber();
    Double_t dz = fBoxDz->GetNumber();
@@ -272,16 +266,17 @@ void TGeoBBoxEditor::DoApply()
             fPad->GetView()->ShowAxis();
          } else {
             const Double_t *origin = fShape->GetOrigin();
-            view->SetRange(origin[0]-fShape->GetDX(), origin[1]-fShape->GetDY(), origin[2]-fShape->GetDZ(),
-                           origin[0]+fShape->GetDX(), origin[1]+fShape->GetDY(), origin[2]+fShape->GetDZ());
+            view->SetRange(origin[0] - fShape->GetDX(), origin[1] - fShape->GetDY(), origin[2] - fShape->GetDZ(),
+                           origin[0] + fShape->GetDX(), origin[1] + fShape->GetDY(), origin[2] + fShape->GetDZ());
             Update();
          }
-      } else Update();
+      } else
+         Update();
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for modifying current parameters.
+/// Slot for modifying current parameters.
 
 void TGeoBBoxEditor::DoModified()
 {
@@ -305,72 +300,76 @@ void TGeoBBoxEditor::DoUndo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for Dx modification.
+/// Slot for Dx modification.
 
 void TGeoBBoxEditor::DoDx()
 {
    Double_t dx = fBoxDx->GetNumber();
-   if (dx<=0) {
-      dx=0.1;
+   if (dx <= 0) {
+      dx = 0.1;
       fBoxDx->SetNumber(dx);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for Dy modification.
+/// Slot for Dy modification.
 
 void TGeoBBoxEditor::DoDy()
 {
    Double_t dy = fBoxDy->GetNumber();
-   if (dy<=0) {
-      dy=0.1;
+   if (dy <= 0) {
+      dy = 0.1;
       fBoxDy->SetNumber(dy);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for Dz modification.
+/// Slot for Dz modification.
 
 void TGeoBBoxEditor::DoDz()
 {
    Double_t dz = fBoxDz->GetNumber();
-   if (dz<=0) {
-      dz=0.1;
+   if (dz <= 0) {
+      dz = 0.1;
       fBoxDz->SetNumber(dz);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for Ox modification.
+/// Slot for Ox modification.
 
 void TGeoBBoxEditor::DoOx()
 {
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for Oy modification.
+/// Slot for Oy modification.
 
 void TGeoBBoxEditor::DoOy()
 {
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for Oz modification.
+/// Slot for Oz modification.
 
 void TGeoBBoxEditor::DoOz()
 {
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
-
-
