@@ -30,9 +30,7 @@ TGeoVGConverter::TGeoVGConverter(TGeoManager *manager) : TVirtualGeoConverter(ma
 ////////////////////////////////////////////////////////////////////////////////
 /// Default destructor.
 
-TGeoVGConverter::~TGeoVGConverter()
-{
-}
+TGeoVGConverter::~TGeoVGConverter() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main geometry conversion method.
@@ -43,9 +41,9 @@ void TGeoVGConverter::ConvertGeometry()
    // First convert the top volume
    TGeoVolume *top = fGeom->GetMasterVolume();
    TGeoVGShape *vgshape = nullptr;
-   if ( !top->GetShape()->IsVecGeom() )
+   if (!top->GetShape()->IsVecGeom())
       vgshape = TGeoVGShape::Create(top->GetShape());
-   Int_t nconverted=0;
+   Int_t nconverted = 0;
    // If shape of top volume not known by VecGeom, keep old one
    if (vgshape) {
       nconverted++;
@@ -57,7 +55,8 @@ void TGeoVGConverter::ConvertGeometry()
    while ((node = next.Next())) {
       TGeoVolume *vol = node->GetVolume();
       // If shape not already converted, convert it
-      if ( vol->GetShape()->IsVecGeom() ) continue;
+      if (vol->GetShape()->IsVecGeom())
+         continue;
       // printf("Converting %s\n", vol->GetName());
       vgshape = TGeoVGShape::Create(vol->GetShape());
       if (vgshape) {

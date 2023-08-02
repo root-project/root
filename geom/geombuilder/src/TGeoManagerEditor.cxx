@@ -86,34 +86,80 @@ following categories:
 ClassImp(TGeoManagerEditor);
 
 enum ETGeoVolumeWid {
-   kMANAGER_NAME, kMANAGER_TITLE,
-   kMANAGER_SHAPE_SELECT, kMANAGER_MEDIA_SELECT,kMANAGER_MATERIAL_SELECT, kMANAGER_ELEMENT_SELECT,
-   kMANAGER_SHAPE_SELECT2, kMANAGER_MEDIUM_SELECT2, kMANAGER_VOLUME_SELECT,
-   kMANAGER_EDIT_SHAPE, kMANAGER_EDIT_MEDIUM, kMANAGER_DENSITY_SELECT, kMANAGER_NELEM_SELECT,
-   kMANAGER_MATERIAL_SELECT2, kMANAGER_MEDIUM_SELECT, kMANAGER_MATRIX_SELECT, kMANAGER_TOP_SELECT,
-   kEXPORT_ROOT, kEXPORT_C, kEXPORT_GEOMETRY,
-   kCAT_GENERAL, kCAT_SHAPES, kCAT_VOLUMES, kCAT_MEDIA, kCAT_MATERIALS, kCAT_MATRICES,
-   kCREATE_BOX, kCREATE_PARA, kCREATE_TRD1, kCREATE_TRD2,
-   kCREATE_TRAP, kCREATE_GTRA, kCREATE_XTRU, kCREATE_ARB8,
-   kCREATE_TUBE, kCREATE_TUBS, kCREATE_CONE, kCREATE_CONS,
-   kCREATE_SPHE, kCREATE_CTUB, kCREATE_ELTU, kCREATE_TORUS,
-   kCREATE_PCON, kCREATE_PGON, kCREATE_HYPE, kCREATE_PARAB, kCREATE_COMP,
-   kCREATE_MATERIAL, kCREATE_MIXTURE, kCREATE_MEDIUM, kCREATE_VOLUME, kCREATE_ASSEMBLY,
-   kCREATE_TRANSLATION, kCREATE_ROTATION, kCREATE_COMBI,
-   kMEDIUM_NAME, kMEDIUM_ID, kMATRIX_NAME, kMATERIAL_NAME, kVOLUME_NAME,
-   kMANAGER_APPLY, kMANAGER_CANCEL, kMANAGER_UNDO
+   kMANAGER_NAME,
+   kMANAGER_TITLE,
+   kMANAGER_SHAPE_SELECT,
+   kMANAGER_MEDIA_SELECT,
+   kMANAGER_MATERIAL_SELECT,
+   kMANAGER_ELEMENT_SELECT,
+   kMANAGER_SHAPE_SELECT2,
+   kMANAGER_MEDIUM_SELECT2,
+   kMANAGER_VOLUME_SELECT,
+   kMANAGER_EDIT_SHAPE,
+   kMANAGER_EDIT_MEDIUM,
+   kMANAGER_DENSITY_SELECT,
+   kMANAGER_NELEM_SELECT,
+   kMANAGER_MATERIAL_SELECT2,
+   kMANAGER_MEDIUM_SELECT,
+   kMANAGER_MATRIX_SELECT,
+   kMANAGER_TOP_SELECT,
+   kEXPORT_ROOT,
+   kEXPORT_C,
+   kEXPORT_GEOMETRY,
+   kCAT_GENERAL,
+   kCAT_SHAPES,
+   kCAT_VOLUMES,
+   kCAT_MEDIA,
+   kCAT_MATERIALS,
+   kCAT_MATRICES,
+   kCREATE_BOX,
+   kCREATE_PARA,
+   kCREATE_TRD1,
+   kCREATE_TRD2,
+   kCREATE_TRAP,
+   kCREATE_GTRA,
+   kCREATE_XTRU,
+   kCREATE_ARB8,
+   kCREATE_TUBE,
+   kCREATE_TUBS,
+   kCREATE_CONE,
+   kCREATE_CONS,
+   kCREATE_SPHE,
+   kCREATE_CTUB,
+   kCREATE_ELTU,
+   kCREATE_TORUS,
+   kCREATE_PCON,
+   kCREATE_PGON,
+   kCREATE_HYPE,
+   kCREATE_PARAB,
+   kCREATE_COMP,
+   kCREATE_MATERIAL,
+   kCREATE_MIXTURE,
+   kCREATE_MEDIUM,
+   kCREATE_VOLUME,
+   kCREATE_ASSEMBLY,
+   kCREATE_TRANSLATION,
+   kCREATE_ROTATION,
+   kCREATE_COMBI,
+   kMEDIUM_NAME,
+   kMEDIUM_ID,
+   kMATRIX_NAME,
+   kMATERIAL_NAME,
+   kVOLUME_NAME,
+   kMANAGER_APPLY,
+   kMANAGER_CANCEL,
+   kMANAGER_UNDO
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for manager editor.
 
-TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
-                                     Int_t height, UInt_t options, Pixel_t back)
+TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    fGeometry = gGeoManager;
-   fTabMgr   = 0;
-   fTab      = 0;
+   fTabMgr = 0;
+   fTab = 0;
    fConnectedCanvas = 0;
 
    fIsModified = kFALSE;
@@ -126,8 +172,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *container;
    Pixel_t color;
    // General settings
-   TGShutterItem *si = new TGShutterItem(fCategories, new TGHotString("General"),kCAT_GENERAL);
-   container = (TGCompositeFrame*)si->GetContainer();
+   TGShutterItem *si = new TGShutterItem(fCategories, new TGHotString("General"), kCAT_GENERAL);
+   container = (TGCompositeFrame *)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
    fCategories->AddItem(si);
    // TextEntry for manager name
@@ -188,9 +234,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    f7->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    container->AddFrame(f7, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
 
-
-   si = new TGShutterItem(fCategories, new TGHotString("Shapes"),kCAT_SHAPES);
-   container = (TGCompositeFrame*)si->GetContainer();
+   si = new TGShutterItem(fCategories, new TGHotString("Shapes"), kCAT_SHAPES);
+   container = (TGCompositeFrame *)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
    fCategories->AddItem(si);
 
@@ -217,7 +262,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fShapeButton[4]->SetToolTipText("Create a general trapezoid");
    fShapeButton[5] = new TGPictureButton(f1, fClient->GetPicture("geogtra_t.xpm"), kCREATE_GTRA);
    fShapeButton[5]->SetToolTipText("Create a general twisted trapezoid");
-   for (ipict=0; ipict<6; ipict++) f1->AddFrame(fShapeButton[ipict],lhb);
+   for (ipict = 0; ipict < 6; ipict++)
+      f1->AddFrame(fShapeButton[ipict], lhb);
    container->AddFrame(f1, lhf1);
    f1 = new TGCompositeFrame(container, 118, 30, kHorizontalFrame);
    fShapeButton[6] = new TGPictureButton(f1, fClient->GetPicture("geoxtru_t.xpm"), kCREATE_XTRU);
@@ -232,7 +278,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fShapeButton[10]->SetToolTipText("Create a conical pipe");
    fShapeButton[11] = new TGPictureButton(f1, fClient->GetPicture("geoconeseg_t.xpm"), kCREATE_CONS);
    fShapeButton[11]->SetToolTipText("Create a conical pipe within a phi range");
-   for (ipict=0; ipict<6; ipict++) f1->AddFrame(fShapeButton[ipict+6],lhb);
+   for (ipict = 0; ipict < 6; ipict++)
+      f1->AddFrame(fShapeButton[ipict + 6], lhb);
    container->AddFrame(f1, lhf1);
    f1 = new TGCompositeFrame(container, 118, 30, kHorizontalFrame);
    fShapeButton[12] = new TGPictureButton(f1, fClient->GetPicture("geosphere_t.xpm"), kCREATE_SPHE);
@@ -247,7 +294,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fShapeButton[16]->SetToolTipText("Create a polycone shape");
    fShapeButton[17] = new TGPictureButton(f1, fClient->GetPicture("geopgon_t.xpm"), kCREATE_PGON);
    fShapeButton[17]->SetToolTipText("Create a polygon shape");
-   for (ipict=0; ipict<6; ipict++) f1->AddFrame(fShapeButton[ipict+12],lhb);
+   for (ipict = 0; ipict < 6; ipict++)
+      f1->AddFrame(fShapeButton[ipict + 12], lhb);
    container->AddFrame(f1, lhf1);
    f1 = new TGCompositeFrame(container, 118, 30, kHorizontalFrame);
    fShapeButton[18] = new TGPictureButton(f1, fClient->GetPicture("geohype_t.xpm"), kCREATE_HYPE);
@@ -256,7 +304,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fShapeButton[19]->SetToolTipText("Create a paraboloid");
    fShapeButton[20] = new TGPictureButton(f1, fClient->GetPicture("geocomposite_t.xpm"), kCREATE_COMP);
    fShapeButton[20]->SetToolTipText("Create a composite shape");
-   for (ipict=0; ipict<3; ipict++) f1->AddFrame(fShapeButton[ipict+18],lhb);
+   for (ipict = 0; ipict < 3; ipict++)
+      f1->AddFrame(fShapeButton[ipict + 18], lhb);
    container->AddFrame(f1, lhf1);
 
    // List of shapes
@@ -286,8 +335,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    container->AddFrame(f2, new TGLayoutHints(kLHintsLeft, 0, 0, 6, 0));
 
    // Volumes category
-   si = new TGShutterItem(fCategories, new TGHotString("Volumes"),kCAT_VOLUMES);
-   container = (TGCompositeFrame*)si->GetContainer();
+   si = new TGShutterItem(fCategories, new TGHotString("Volumes"), kCAT_VOLUMES);
+   container = (TGCompositeFrame *)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
    fCategories->AddItem(si);
 
@@ -340,7 +389,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fVolumeButton[0]->SetToolTipText("Create a new volume from shape and medium");
    fVolumeButton[1] = new TGPictureButton(f1, fClient->GetPicture("geoassembly_t.xpm"), kCREATE_ASSEMBLY);
    fVolumeButton[1]->SetToolTipText("Create a new volume assembly having the selected name");
-   for (ipict=0; ipict<2; ipict++) f1->AddFrame(fVolumeButton[ipict],lhb);
+   for (ipict = 0; ipict < 2; ipict++)
+      f1->AddFrame(fVolumeButton[ipict], lhb);
    container->AddFrame(f1, lhf1);
    // List of volumes
    f3 = new TGCompositeFrame(container, 155, 10, kVerticalFrame | kFixedWidth);
@@ -375,8 +425,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    container->AddFrame(f3, new TGLayoutHints(kLHintsLeft, 0, 0, 6, 0));
 
    // Materials category
-   si = new TGShutterItem(fCategories, new TGHotString("Materials"),kCAT_MATERIALS);
-   container = (TGCompositeFrame*)si->GetContainer();
+   si = new TGShutterItem(fCategories, new TGHotString("Materials"), kCAT_MATERIALS);
+   container = (TGCompositeFrame *)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
    fCategories->AddItem(si);
 
@@ -403,9 +453,9 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    TGeoElementTable *table = gGeoManager->GetElementTable();
    if (table) {
       TGeoElement *element;
-      for (Int_t i=0; i<table->GetNelements(); i++) {
+      for (Int_t i = 0; i < table->GetNelements(); i++) {
          element = table->GetElement(i);
-         fElementList->AddEntry(element->GetTitle(),i);
+         fElementList->AddEntry(element->GetTitle(), i);
       }
    }
    fElementList->Select(0);
@@ -417,8 +467,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fEntryDensity = new TGNumberEntry(f1, 0., 5, kMANAGER_DENSITY_SELECT);
    fEntryDensity->SetNumStyle(TGNumberFormat::kNESRealThree);
    fEntryDensity->SetNumAttr(TGNumberFormat::kNEANonNegative);
-   fEntryDensity->Resize(100,fEntryDensity->GetDefaultHeight());
-   TGTextEntry *nef = (TGTextEntry*)fEntryDensity->GetNumberEntry();
+   fEntryDensity->Resize(100, fEntryDensity->GetDefaultHeight());
+   TGTextEntry *nef = (TGTextEntry *)fEntryDensity->GetNumberEntry();
    nef->SetToolTipText("Enter material/mixture density");
    fEntryDensity->SetNumber(0);
    fEntryDensity->Associate(this);
@@ -432,7 +482,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fMaterialButton[0]->SetToolTipText("Create a new material from element and density");
    fMaterialButton[1] = new TGPictureButton(f1, fClient->GetPicture("geomixture_t.xpm"), kCREATE_MIXTURE);
    fMaterialButton[1]->SetToolTipText("Create a new mixture with selected density");
-   for (ipict=0; ipict<2; ipict++) f1->AddFrame(fMaterialButton[ipict],lhb);
+   for (ipict = 0; ipict < 2; ipict++)
+      f1->AddFrame(fMaterialButton[ipict], lhb);
    container->AddFrame(f1, lhf1);
 
    // List of materials
@@ -461,8 +512,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    f4->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    container->AddFrame(f4, new TGLayoutHints(kLHintsLeft, 0, 0, 6, 0));
 
-   si = new TGShutterItem(fCategories, new TGHotString("Media"),kCAT_MEDIA);
-   container = (TGCompositeFrame*)si->GetContainer();
+   si = new TGShutterItem(fCategories, new TGHotString("Media"), kCAT_MEDIA);
+   container = (TGCompositeFrame *)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
    fCategories->AddItem(si);
 
@@ -484,12 +535,12 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fMediumId = new TGNumberEntry(f1, 0., 5, kMEDIUM_ID);
    fMediumId->SetNumStyle(TGNumberFormat::kNESInteger);
    fMediumId->SetNumAttr(TGNumberFormat::kNEAPositive);
-   fMediumId->Resize(35,fMediumId->GetDefaultHeight());
-   nef = (TGTextEntry*)fMediumId->GetNumberEntry();
+   fMediumId->Resize(35, fMediumId->GetDefaultHeight());
+   nef = (TGTextEntry *)fMediumId->GetNumberEntry();
    nef->SetToolTipText("Enter medium ID");
    fMediumId->SetNumber(fGeometry->GetListOfMedia()->GetSize());
    fMediumId->Associate(this);
-   f1->AddFrame(fMediumId, new TGLayoutHints(kLHintsRight, 2, 2, 2 ,2));
+   f1->AddFrame(fMediumId, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    f1->AddFrame(new TGLabel(f1, "ID"), new TGLayoutHints(kLHintsRight, 1, 1, 6, 0));
    container->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 0));
    // ComboBox for materials
@@ -540,8 +591,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    container->AddFrame(f5, new TGLayoutHints(kLHintsLeft, 0, 0, 6, 0));
 
    // Matrix category
-   si = new TGShutterItem(fCategories, new TGHotString("Matrices"),kCAT_MATRICES);
-   container = (TGCompositeFrame*)si->GetContainer();
+   si = new TGShutterItem(fCategories, new TGHotString("Matrices"), kCAT_MATRICES);
+   container = (TGCompositeFrame *)si->GetContainer();
    container->SetBackgroundColor(GetDefaultFrameBackground());
    fCategories->AddItem(si);
    // Name entry
@@ -568,7 +619,8 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fMatrixButton[1]->SetToolTipText("Create a rotation");
    fMatrixButton[2] = new TGPictureButton(f1, fClient->GetPicture("geocombi_t.xpm"), kCREATE_COMBI);
    fMatrixButton[2]->SetToolTipText("Create a rotation + translation");
-   for (ipict=0; ipict<3; ipict++) f1->AddFrame(fMatrixButton[ipict],lhb);
+   for (ipict = 0; ipict < 3; ipict++)
+      f1->AddFrame(fMatrixButton[ipict], lhb);
    container->AddFrame(f1, lhf1);
    // List of matrices
    f6 = new TGCompositeFrame(container, 155, 10, kVerticalFrame | kFixedWidth);
@@ -596,14 +648,14 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    f6->AddFrame(f1, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
    container->AddFrame(f6, new TGLayoutHints(kLHintsLeft, 0, 0, 6, 0));
 
-   fCategories->Resize(163,370);
+   fCategories->Resize(163, 370);
    AddFrame(fCategories, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
 
    fVolumeTab = CreateEditorTabSubFrame("Volume");
 
    // Set the fTab and disconnect editor from the canvas.
    fTab = fGedEditor->GetTab();
-   TCanvas* edCanvas = fGedEditor->GetCanvas();
+   TCanvas *edCanvas = fGedEditor->GetCanvas();
    fGedEditor->DisconnectFromCanvas();
    if (edCanvas != fConnectedCanvas) {
       DisconnectSelected();
@@ -619,26 +671,27 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
 TGeoManagerEditor::~TGeoManagerEditor()
 {
    TGCompositeFrame *cont;
-   cont = (TGCompositeFrame*)fCategories->GetItem("General")->GetContainer();
+   cont = (TGCompositeFrame *)fCategories->GetItem("General")->GetContainer();
    TGeoTabManager::Cleanup(cont);
    fCategories->GetItem("General")->SetCleanup(0);
-   cont = (TGCompositeFrame*)fCategories->GetItem("Shapes")->GetContainer();
+   cont = (TGCompositeFrame *)fCategories->GetItem("Shapes")->GetContainer();
    TGeoTabManager::Cleanup(cont);
    fCategories->GetItem("Shapes")->SetCleanup(0);
-   cont = (TGCompositeFrame*)fCategories->GetItem("Volumes")->GetContainer();
+   cont = (TGCompositeFrame *)fCategories->GetItem("Volumes")->GetContainer();
    TGeoTabManager::Cleanup(cont);
    fCategories->GetItem("Volumes")->SetCleanup(0);
-   cont = (TGCompositeFrame*)fCategories->GetItem("Materials")->GetContainer();
+   cont = (TGCompositeFrame *)fCategories->GetItem("Materials")->GetContainer();
    TGeoTabManager::Cleanup(cont);
    fCategories->GetItem("Materials")->SetCleanup(0);
-   cont = (TGCompositeFrame*)fCategories->GetItem("Media")->GetContainer();
+   cont = (TGCompositeFrame *)fCategories->GetItem("Media")->GetContainer();
    TGeoTabManager::Cleanup(cont);
    fCategories->GetItem("Media")->SetCleanup(0);
-   cont = (TGCompositeFrame*)fCategories->GetItem("Matrices")->GetContainer();
+   cont = (TGCompositeFrame *)fCategories->GetItem("Matrices")->GetContainer();
    TGeoTabManager::Cleanup(cont);
    fCategories->GetItem("Matrices")->SetCleanup(0);
 
-   delete fExportOption[0]; delete fExportOption[1];
+   delete fExportOption[0];
+   delete fExportOption[1];
 
    Cleanup();
 
@@ -652,10 +705,10 @@ TGeoManagerEditor::~TGeoManagerEditor()
 /// Connected to TCanvas::Selected. TGeoManagerEditor takes this
 /// function from TGedEditor and only uses it if obj is a TGeoVolume.
 
-void TGeoManagerEditor::SelectedSlot(TVirtualPad* /*pad*/, TObject* obj, Int_t event)
+void TGeoManagerEditor::SelectedSlot(TVirtualPad * /*pad*/, TObject *obj, Int_t event)
 {
    if (event == kButton1 && obj->InheritsFrom(TGeoVolume::Class())) {
-      TGeoVolume* v = (TGeoVolume*) obj;
+      TGeoVolume *v = (TGeoVolume *)obj;
       fTabMgr->SetVolTabEnabled();
       fTabMgr->SetTab();
       fTabMgr->GetVolumeEditor(v);
@@ -667,8 +720,8 @@ void TGeoManagerEditor::ConnectSelected(TCanvas *c)
 {
    // Connect to TCanvas::Selected.
 
-   c->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TGeoManagerEditor",
-              this, "SelectedSlot(TVirtualPad*,TObject*,Int_t)");
+   c->Connect("Selected(TVirtualPad*,TObject*,Int_t)", "TGeoManagerEditor", this,
+              "SelectedSlot(TVirtualPad*,TObject*,Int_t)");
 }
 
 void TGeoManagerEditor::DisconnectSelected()
@@ -676,9 +729,8 @@ void TGeoManagerEditor::DisconnectSelected()
    // Disconnect from TCanvas::Selected.
 
    if (fConnectedCanvas)
-      Disconnect(fConnectedCanvas, "Selected(TVirtualPad*,TObject*,Int_t)",
-                 this, "SelectedSlot(TVirtualPad*,TObject*,Int_t)");
-
+      Disconnect(fConnectedCanvas, "Selected(TVirtualPad*,TObject*,Int_t)", this,
+                 "SelectedSlot(TVirtualPad*,TObject*,Int_t)");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,9 +792,9 @@ void TGeoManagerEditor::ConnectSignals2Slots()
 ////////////////////////////////////////////////////////////////////////////////
 /// Refresh editor according the selected obj.
 
-void TGeoManagerEditor::SetModel(TObject* obj)
+void TGeoManagerEditor::SetModel(TObject *obj)
 {
-   fGeometry = (TGeoManager*)obj;
+   fGeometry = (TGeoManager *)obj;
    fManagerName->SetText(fGeometry->GetName());
    fManagerTitle->SetText(fGeometry->GetTitle());
    fMatrixName->SetText(TString::Format("matrix%i", fGeometry->GetListOfMatrices()->GetEntries()));
@@ -750,10 +802,13 @@ void TGeoManagerEditor::SetModel(TObject* obj)
    fMediumName->SetText(TString::Format("medium%i", fGeometry->GetListOfMedia()->GetSize()));
    fVolumeName->SetText(TString::Format("volume%i", fGeometry->GetListOfVolumes()->GetEntries()));
    // Check if master volume can be set
-   if (fGeometry->GetMasterVolume()) fSetTopVolume->SetEnabled(kFALSE);
-   else fSetTopVolume->SetEnabled(kTRUE);
+   if (fGeometry->GetMasterVolume())
+      fSetTopVolume->SetEnabled(kFALSE);
+   else
+      fSetTopVolume->SetEnabled(kTRUE);
    // Check if geometry is already closed
-   if (!fGeometry->IsClosed()) fCloseGeometry->SetEnabled(kTRUE);
+   if (!fGeometry->IsClosed())
+      fCloseGeometry->SetEnabled(kTRUE);
    else {
       fCloseGeometry->SetEnabled(kFALSE);
       fBSelTop->SetEnabled(kFALSE);
@@ -763,14 +818,22 @@ void TGeoManagerEditor::SetModel(TObject* obj)
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kFALSE);
    else
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
-   if (!fGeometry->GetListOfShapes()->GetEntries()) ShowSelectShape(kFALSE);
-   else ShowSelectShape();
-   if (!fGeometry->GetListOfVolumes()->GetEntries()) ShowSelectVolume(kFALSE);
-   else ShowSelectVolume();
-   if (!fGeometry->GetListOfMedia()->GetSize()) ShowSelectMedium(kFALSE);
-   else ShowSelectMedium();
-   if (!fGeometry->GetListOfMatrices()->GetEntries()) ShowSelectMatrix(kFALSE);
-   else ShowSelectMatrix();
+   if (!fGeometry->GetListOfShapes()->GetEntries())
+      ShowSelectShape(kFALSE);
+   else
+      ShowSelectShape();
+   if (!fGeometry->GetListOfVolumes()->GetEntries())
+      ShowSelectVolume(kFALSE);
+   else
+      ShowSelectVolume();
+   if (!fGeometry->GetListOfMedia()->GetSize())
+      ShowSelectMedium(kFALSE);
+   else
+      ShowSelectMedium();
+   if (!fGeometry->GetListOfMatrices()->GetEntries())
+      ShowSelectMatrix(kFALSE);
+   else
+      ShowSelectMatrix();
 
    // Check if media category can be activated
    if (!fGeometry->GetListOfMaterials()->GetSize()) {
@@ -785,9 +848,10 @@ void TGeoManagerEditor::SetModel(TObject* obj)
    fCategories->Layout();
    if (fTabMgr == 0) {
       fTabMgr = TGeoTabManager::GetMakeTabManager(fGedEditor);
-      fTabMgr->fVolumeTab  = fVolumeTab;
+      fTabMgr->fVolumeTab = fVolumeTab;
    }
-   if (fInit) ConnectSignals2Slots();
+   if (fInit)
+      ConnectSignals2Slots();
    // SetActive();
 }
 
@@ -810,8 +874,10 @@ void TGeoManagerEditor::DoExportGeometry()
    s = s.Strip();
    s.Remove(20);
    const char *name;
-   if (asroot) name = TString::Format("%s.root", s.Data());
-   else        name = TString::Format("%s.C", s.Data());
+   if (asroot)
+      name = TString::Format("%s.root", s.Data());
+   else
+      name = TString::Format("%s.C", s.Data());
    fGeometry->Export(name);
 }
 
@@ -821,7 +887,7 @@ void TGeoManagerEditor::DoExportGeometry()
 void TGeoManagerEditor::DoCreateBox()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoBBox(TString::Format("box_%i",id), 1., 1., 1.);
+   fSelectedShape = new TGeoBBox(TString::Format("box_%i", id), 1., 1., 1.);
    ShowSelectShape();
    // Check if volumes category can be activated
    if (fGeometry->GetListOfMedia()->GetSize())
@@ -835,7 +901,7 @@ void TGeoManagerEditor::DoCreateBox()
 void TGeoManagerEditor::DoCreatePara()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoPara(TString::Format("para_%i",id), 1., 1., 1., 30., 20., 45.);
+   fSelectedShape = new TGeoPara(TString::Format("para_%i", id), 1., 1., 1., 30., 20., 45.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -848,7 +914,7 @@ void TGeoManagerEditor::DoCreatePara()
 void TGeoManagerEditor::DoCreateTrd1()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoTrd1(TString::Format("trd1_%i",id), 0.5, 1., 1., 1.);
+   fSelectedShape = new TGeoTrd1(TString::Format("trd1_%i", id), 0.5, 1., 1., 1.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -861,7 +927,7 @@ void TGeoManagerEditor::DoCreateTrd1()
 void TGeoManagerEditor::DoCreateTrd2()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoTrd2(TString::Format("trd2_%i",id), 0.5, 1., 0.5, 1., 1.);
+   fSelectedShape = new TGeoTrd2(TString::Format("trd2_%i", id), 0.5, 1., 0.5, 1., 1.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -874,7 +940,7 @@ void TGeoManagerEditor::DoCreateTrd2()
 void TGeoManagerEditor::DoCreateTrap()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoTrap(TString::Format("trap_%i",id), 1., 15., 45., 0.5, 0.3, 0.5, 30., 0.5, 0.3, 0.5, 30.);
+   fSelectedShape = new TGeoTrap(TString::Format("trap_%i", id), 1., 15., 45., 0.5, 0.3, 0.5, 30., 0.5, 0.3, 0.5, 30.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -887,7 +953,8 @@ void TGeoManagerEditor::DoCreateTrap()
 void TGeoManagerEditor::DoCreateGtra()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoGtra(TString::Format("gtra_%i",id), 1., 15., 45., 45.,0.5, 0.3, 0.5, 30., 0.5, 0.3, 0.5, 30.);
+   fSelectedShape =
+      new TGeoGtra(TString::Format("gtra_%i", id), 1., 15., 45., 45., 0.5, 0.3, 0.5, 30., 0.5, 0.3, 0.5, 30.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -897,17 +964,13 @@ void TGeoManagerEditor::DoCreateGtra()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an extruded polygone.
 
-void TGeoManagerEditor::DoCreateXtru()
-{
-}
+void TGeoManagerEditor::DoCreateXtru() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an arbitrary polygone with maximum 8 vertices sitting on 2 parallel
 /// planes
 
-void TGeoManagerEditor::DoCreateArb8()
-{
-}
+void TGeoManagerEditor::DoCreateArb8() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a tube.
@@ -915,7 +978,7 @@ void TGeoManagerEditor::DoCreateArb8()
 void TGeoManagerEditor::DoCreateTube()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoTube(TString::Format("tube_%i",id), 0.5, 1., 1.);
+   fSelectedShape = new TGeoTube(TString::Format("tube_%i", id), 0.5, 1., 1.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -928,7 +991,7 @@ void TGeoManagerEditor::DoCreateTube()
 void TGeoManagerEditor::DoCreateTubs()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoTubeSeg(TString::Format("tubs_%i",id), 0.5, 1., 1.,0.,45.);
+   fSelectedShape = new TGeoTubeSeg(TString::Format("tubs_%i", id), 0.5, 1., 1., 0., 45.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -941,7 +1004,7 @@ void TGeoManagerEditor::DoCreateTubs()
 void TGeoManagerEditor::DoCreateCone()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoCone(TString::Format("cone_%i",id), 0.5, 0.5, 1., 1.5, 2.);
+   fSelectedShape = new TGeoCone(TString::Format("cone_%i", id), 0.5, 0.5, 1., 1.5, 2.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -954,7 +1017,7 @@ void TGeoManagerEditor::DoCreateCone()
 void TGeoManagerEditor::DoCreateCons()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoConeSeg(TString::Format("cons_%i",id), 0.5, 0.5, 1., 1.5, 2.,0.,45.);
+   fSelectedShape = new TGeoConeSeg(TString::Format("cons_%i", id), 0.5, 0.5, 1., 1.5, 2., 0., 45.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -967,7 +1030,7 @@ void TGeoManagerEditor::DoCreateCons()
 void TGeoManagerEditor::DoCreateSphe()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoSphere(TString::Format("sphere_%i",id), 0.5, 1., 0., 180., 0.,360.);
+   fSelectedShape = new TGeoSphere(TString::Format("sphere_%i", id), 0.5, 1., 0., 180., 0., 360.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -980,7 +1043,7 @@ void TGeoManagerEditor::DoCreateSphe()
 void TGeoManagerEditor::DoCreateCtub()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoCtub(TString::Format("ctub_%i",id), 0.5, 1., 1.,0.,45.,0.,0.,-1,0.,0.,1);
+   fSelectedShape = new TGeoCtub(TString::Format("ctub_%i", id), 0.5, 1., 1., 0., 45., 0., 0., -1, 0., 0., 1);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -993,7 +1056,7 @@ void TGeoManagerEditor::DoCreateCtub()
 void TGeoManagerEditor::DoCreateEltu()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoEltu(TString::Format("para_%i",id), 1., 2., 1.5 );
+   fSelectedShape = new TGeoEltu(TString::Format("para_%i", id), 1., 2., 1.5);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -1006,12 +1069,11 @@ void TGeoManagerEditor::DoCreateEltu()
 void TGeoManagerEditor::DoCreateTorus()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoTorus(TString::Format("torus_%i",id), 10., 1., 1.5, 0, 360.);
+   fSelectedShape = new TGeoTorus(TString::Format("torus_%i", id), 10., 1., 1.5, 0, 360.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
    DoEditShape();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1020,9 +1082,9 @@ void TGeoManagerEditor::DoCreateTorus()
 void TGeoManagerEditor::DoCreatePcon()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoPcon(TString::Format("pcon_%i",id), 0., 360., 2);
-   ((TGeoPcon*)fSelectedShape)->DefineSection(0, -1, 0.5, 1.);
-   ((TGeoPcon*)fSelectedShape)->DefineSection(1, 1, 0.2, 0.5);
+   fSelectedShape = new TGeoPcon(TString::Format("pcon_%i", id), 0., 360., 2);
+   ((TGeoPcon *)fSelectedShape)->DefineSection(0, -1, 0.5, 1.);
+   ((TGeoPcon *)fSelectedShape)->DefineSection(1, 1, 0.2, 0.5);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -1035,9 +1097,9 @@ void TGeoManagerEditor::DoCreatePcon()
 void TGeoManagerEditor::DoCreatePgon()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoPgon(TString::Format("pgon_%i",id), 0., 360.,6,2);
-   ((TGeoPcon*)fSelectedShape)->DefineSection(0, -1, 0.5, 1.);
-   ((TGeoPcon*)fSelectedShape)->DefineSection(1, 1, 0.2, 0.5);
+   fSelectedShape = new TGeoPgon(TString::Format("pgon_%i", id), 0., 360., 6, 2);
+   ((TGeoPcon *)fSelectedShape)->DefineSection(0, -1, 0.5, 1.);
+   ((TGeoPcon *)fSelectedShape)->DefineSection(1, 1, 0.2, 0.5);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -1050,7 +1112,7 @@ void TGeoManagerEditor::DoCreatePgon()
 void TGeoManagerEditor::DoCreateHype()
 {
    Int_t id = gGeoManager->GetListOfShapes()->GetEntries();
-   fSelectedShape = new TGeoHype(TString::Format("hype_%i",id), 1., 15., 2., 30., 5.);
+   fSelectedShape = new TGeoHype(TString::Format("hype_%i", id), 1., 15., 2., 30., 5.);
    ShowSelectShape();
    if (fGeometry->GetListOfMedia()->GetSize())
       fCategories->GetItem("Volumes")->GetButton()->SetEnabled(kTRUE);
@@ -1060,16 +1122,12 @@ void TGeoManagerEditor::DoCreateHype()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a paraboloid.
 
-void TGeoManagerEditor::DoCreateParab()
-{
-}
+void TGeoManagerEditor::DoCreateParab() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a composite shape.
 
-void TGeoManagerEditor::DoCreateComposite()
-{
-}
+void TGeoManagerEditor::DoCreateComposite() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new material.
@@ -1110,7 +1168,8 @@ void TGeoManagerEditor::DoCreateMixture()
 void TGeoManagerEditor::DoCreateMedium()
 {
    Int_t id = fMediumId->GetIntNumber();
-   if (!fSelectedMaterial2) return;
+   if (!fSelectedMaterial2)
+      return;
    const char *name = fMediumName->GetText();
    fSelectedMedium = new TGeoMedium(name, id, fSelectedMaterial2);
    ShowSelectMedium();
@@ -1154,7 +1213,8 @@ void TGeoManagerEditor::DoCreateRotation()
 void TGeoManagerEditor::DoCreateVolume()
 {
    const char *name = fVolumeName->GetText();
-   if (!fSelectedShape2 || !fSelectedMedium2) return;
+   if (!fSelectedShape2 || !fSelectedMedium2)
+      return;
    fSelectedVolume = new TGeoVolume(name, fSelectedShape2, fSelectedMedium2);
    fLSelVolume->SetText(name);
    ShowSelectVolume();
@@ -1195,7 +1255,8 @@ void TGeoManagerEditor::DoCreateCombi()
 
 void TGeoManagerEditor::DoSetTopVolume()
 {
-   if (!fSelectedVolume) return;
+   if (!fSelectedVolume)
+      return;
    fGeometry->SetTopVolume(fSelectedVolume);
    fSetTopVolume->SetEnabled(kFALSE);
 }
@@ -1205,7 +1266,8 @@ void TGeoManagerEditor::DoSetTopVolume()
 
 void TGeoManagerEditor::DoEditShape()
 {
-   if (!fSelectedShape) return;
+   if (!fSelectedShape)
+      return;
    fTabMgr->GetShapeEditor(fSelectedShape);
    fSelectedShape->Draw();
    fTabMgr->GetPad()->GetView()->ShowAxis();
@@ -1231,7 +1293,8 @@ void TGeoManagerEditor::DoEditVolume()
 
 void TGeoManagerEditor::DoEditMedium()
 {
-   if (!fSelectedMedium) return;
+   if (!fSelectedMedium)
+      return;
    fTabMgr->GetMediumEditor(fSelectedMedium);
 }
 
@@ -1240,7 +1303,8 @@ void TGeoManagerEditor::DoEditMedium()
 
 void TGeoManagerEditor::DoEditMaterial()
 {
-   if (!fSelectedMaterial) return;
+   if (!fSelectedMaterial)
+      return;
    fTabMgr->GetMaterialEditor(fSelectedMaterial);
 }
 
@@ -1249,7 +1313,8 @@ void TGeoManagerEditor::DoEditMaterial()
 
 void TGeoManagerEditor::DoEditMatrix()
 {
-   if (!fSelectedMatrix) return;
+   if (!fSelectedMatrix)
+      return;
    fTabMgr->GetMatrixEditor(fSelectedMatrix);
 }
 
@@ -1259,10 +1324,12 @@ void TGeoManagerEditor::DoEditMatrix()
 void TGeoManagerEditor::DoSelectMatrix()
 {
    TGeoMatrix *matrix = fSelectedMatrix;
-   new TGeoMatrixDialog(fBSelMatrix, gClient->GetRoot(), 200,300);
-   fSelectedMatrix = (TGeoMatrix*)TGeoMatrixDialog::GetSelected();
-   if (fSelectedMatrix) fLSelMatrix->SetText(fSelectedMatrix->GetName());
-   else fSelectedMatrix = matrix;
+   new TGeoMatrixDialog(fBSelMatrix, gClient->GetRoot(), 200, 300);
+   fSelectedMatrix = (TGeoMatrix *)TGeoMatrixDialog::GetSelected();
+   if (fSelectedMatrix)
+      fLSelMatrix->SetText(fSelectedMatrix->GetName());
+   else
+      fSelectedMatrix = matrix;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1271,10 +1338,12 @@ void TGeoManagerEditor::DoSelectMatrix()
 void TGeoManagerEditor::DoSelectShape()
 {
    TGeoShape *shape = fSelectedShape;
-   new TGeoShapeDialog(fBSelShape, gClient->GetRoot(), 200,300);
-   fSelectedShape = (TGeoShape*)TGeoShapeDialog::GetSelected();
-   if (fSelectedShape) fLSelShape->SetText(fSelectedShape->GetName());
-   else fSelectedShape = shape;
+   new TGeoShapeDialog(fBSelShape, gClient->GetRoot(), 200, 300);
+   fSelectedShape = (TGeoShape *)TGeoShapeDialog::GetSelected();
+   if (fSelectedShape)
+      fLSelShape->SetText(fSelectedShape->GetName());
+   else
+      fSelectedShape = shape;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1283,10 +1352,12 @@ void TGeoManagerEditor::DoSelectShape()
 void TGeoManagerEditor::DoSelectShape2()
 {
    TGeoShape *shape = fSelectedShape2;
-   new TGeoShapeDialog(fBSelShape2, gClient->GetRoot(), 200,300);
-   fSelectedShape2 = (TGeoShape*)TGeoShapeDialog::GetSelected();
-   if (fSelectedShape2) fLSelShape2->SetText(fSelectedShape2->GetName());
-   else fSelectedShape2 = shape;
+   new TGeoShapeDialog(fBSelShape2, gClient->GetRoot(), 200, 300);
+   fSelectedShape2 = (TGeoShape *)TGeoShapeDialog::GetSelected();
+   if (fSelectedShape2)
+      fLSelShape2->SetText(fSelectedShape2->GetName());
+   else
+      fSelectedShape2 = shape;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1295,10 +1366,12 @@ void TGeoManagerEditor::DoSelectShape2()
 void TGeoManagerEditor::DoSelectMaterial()
 {
    TGeoMaterial *mat = fSelectedMaterial;
-   new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200,300);
-   fSelectedMaterial = (TGeoMaterial*)TGeoMaterialDialog::GetSelected();
-   if (fSelectedMaterial) fLSelMaterial->SetText(fSelectedMaterial->GetName());
-   else fSelectedMaterial = mat;
+   new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200, 300);
+   fSelectedMaterial = (TGeoMaterial *)TGeoMaterialDialog::GetSelected();
+   if (fSelectedMaterial)
+      fLSelMaterial->SetText(fSelectedMaterial->GetName());
+   else
+      fSelectedMaterial = mat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1307,10 +1380,12 @@ void TGeoManagerEditor::DoSelectMaterial()
 void TGeoManagerEditor::DoSelectMaterial2()
 {
    TGeoMaterial *mat = fSelectedMaterial2;
-   new TGeoMaterialDialog(fBSelMaterial2, gClient->GetRoot(), 200,300);
-   fSelectedMaterial2 = (TGeoMaterial*)TGeoMaterialDialog::GetSelected();
-   if (fSelectedMaterial2) fLSelMaterial2->SetText(fSelectedMaterial2->GetName());
-   else fSelectedMaterial2 = mat;
+   new TGeoMaterialDialog(fBSelMaterial2, gClient->GetRoot(), 200, 300);
+   fSelectedMaterial2 = (TGeoMaterial *)TGeoMaterialDialog::GetSelected();
+   if (fSelectedMaterial2)
+      fLSelMaterial2->SetText(fSelectedMaterial2->GetName());
+   else
+      fSelectedMaterial2 = mat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1319,10 +1394,12 @@ void TGeoManagerEditor::DoSelectMaterial2()
 void TGeoManagerEditor::DoSelectMedium()
 {
    TGeoMedium *med = fSelectedMedium;
-   new TGeoMediumDialog(fBSelMedium, gClient->GetRoot(), 200,300);
-   fSelectedMedium = (TGeoMedium*)TGeoMediumDialog::GetSelected();
-   if (fSelectedMedium) fLSelMedium->SetText(fSelectedMedium->GetName());
-   else fSelectedMedium = med;
+   new TGeoMediumDialog(fBSelMedium, gClient->GetRoot(), 200, 300);
+   fSelectedMedium = (TGeoMedium *)TGeoMediumDialog::GetSelected();
+   if (fSelectedMedium)
+      fLSelMedium->SetText(fSelectedMedium->GetName());
+   else
+      fSelectedMedium = med;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1331,10 +1408,12 @@ void TGeoManagerEditor::DoSelectMedium()
 void TGeoManagerEditor::DoSelectMedium2()
 {
    TGeoMedium *med = fSelectedMedium2;
-   new TGeoMediumDialog(fBSelMedium2, gClient->GetRoot(), 200,300);
-   fSelectedMedium2 = (TGeoMedium*)TGeoMediumDialog::GetSelected();
-   if (fSelectedMedium2) fLSelMedium2->SetText(fSelectedMedium2->GetName());
-   else fSelectedMedium2 = med;
+   new TGeoMediumDialog(fBSelMedium2, gClient->GetRoot(), 200, 300);
+   fSelectedMedium2 = (TGeoMedium *)TGeoMediumDialog::GetSelected();
+   if (fSelectedMedium2)
+      fLSelMedium2->SetText(fSelectedMedium2->GetName());
+   else
+      fSelectedMedium2 = med;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1343,10 +1422,12 @@ void TGeoManagerEditor::DoSelectMedium2()
 void TGeoManagerEditor::DoSelectVolume()
 {
    TGeoVolume *vol = fSelectedVolume;
-   new TGeoVolumeDialog(fBSelVolume, gClient->GetRoot(), 200,300);
-   fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
-   if (fSelectedVolume) fLSelVolume->SetText(fSelectedVolume->GetName());
-   else fSelectedVolume = vol;
+   new TGeoVolumeDialog(fBSelVolume, gClient->GetRoot(), 200, 300);
+   fSelectedVolume = (TGeoVolume *)TGeoVolumeDialog::GetSelected();
+   if (fSelectedVolume)
+      fLSelVolume->SetText(fSelectedVolume->GetName());
+   else
+      fSelectedVolume = vol;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1355,11 +1436,14 @@ void TGeoManagerEditor::DoSelectVolume()
 void TGeoManagerEditor::DoSelectTopVolume()
 {
    TGeoVolume *vol = fGeometry->GetTopVolume();
-   new TGeoVolumeDialog(fBSelTop, gClient->GetRoot(), 200,300);
-   fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
-   if (fSelectedVolume) fLSelTop->SetText(fSelectedVolume->GetName());
-   else fSelectedVolume = vol;
-   if (fSelectedVolume && (fSelectedVolume != vol)) fGeometry->SetTopVolume(fSelectedVolume);
+   new TGeoVolumeDialog(fBSelTop, gClient->GetRoot(), 200, 300);
+   fSelectedVolume = (TGeoVolume *)TGeoVolumeDialog::GetSelected();
+   if (fSelectedVolume)
+      fLSelTop->SetText(fSelectedVolume->GetName());
+   else
+      fSelectedVolume = vol;
+   if (fSelectedVolume && (fSelectedVolume != vol))
+      fGeometry->SetTopVolume(fSelectedVolume);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1367,7 +1451,8 @@ void TGeoManagerEditor::DoSelectTopVolume()
 
 void TGeoManagerEditor::DoCloseGeometry()
 {
-   if (!fGeometry->IsClosed()) fGeometry->CloseGeometry();
+   if (!fGeometry->IsClosed())
+      fGeometry->CloseGeometry();
    fCloseGeometry->SetEnabled(kFALSE);
 }
 
@@ -1376,9 +1461,11 @@ void TGeoManagerEditor::DoCloseGeometry()
 
 void TGeoManagerEditor::ShowSelectShape(Bool_t show)
 {
-   TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Shapes")->GetContainer();
-   if (show) cont->ShowFrame(f2);
-   else      cont->HideFrame(f2);
+   TGCompositeFrame *cont = (TGCompositeFrame *)fCategories->GetItem("Shapes")->GetContainer();
+   if (show)
+      cont->ShowFrame(f2);
+   else
+      cont->HideFrame(f2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1386,12 +1473,16 @@ void TGeoManagerEditor::ShowSelectShape(Bool_t show)
 
 void TGeoManagerEditor::ShowSelectVolume(Bool_t show)
 {
-   TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("General")->GetContainer();
-   if (show) cont->ShowFrame(f7);
-   else      cont->HideFrame(f7);
-   cont = (TGCompositeFrame*)fCategories->GetItem("Volumes")->GetContainer();
-   if (show) cont->ShowFrame(f3);
-   else      cont->HideFrame(f3);
+   TGCompositeFrame *cont = (TGCompositeFrame *)fCategories->GetItem("General")->GetContainer();
+   if (show)
+      cont->ShowFrame(f7);
+   else
+      cont->HideFrame(f7);
+   cont = (TGCompositeFrame *)fCategories->GetItem("Volumes")->GetContainer();
+   if (show)
+      cont->ShowFrame(f3);
+   else
+      cont->HideFrame(f3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1399,9 +1490,11 @@ void TGeoManagerEditor::ShowSelectVolume(Bool_t show)
 
 void TGeoManagerEditor::ShowSelectMaterial(Bool_t show)
 {
-   TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Materials")->GetContainer();
-   if (show) cont->ShowFrame(f4);
-   else      cont->HideFrame(f4);
+   TGCompositeFrame *cont = (TGCompositeFrame *)fCategories->GetItem("Materials")->GetContainer();
+   if (show)
+      cont->ShowFrame(f4);
+   else
+      cont->HideFrame(f4);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1409,9 +1502,11 @@ void TGeoManagerEditor::ShowSelectMaterial(Bool_t show)
 
 void TGeoManagerEditor::ShowSelectMedium(Bool_t show)
 {
-   TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Media")->GetContainer();
-   if (show) cont->ShowFrame(f5);
-   else      cont->HideFrame(f5);
+   TGCompositeFrame *cont = (TGCompositeFrame *)fCategories->GetItem("Media")->GetContainer();
+   if (show)
+      cont->ShowFrame(f5);
+   else
+      cont->HideFrame(f5);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1419,16 +1514,14 @@ void TGeoManagerEditor::ShowSelectMedium(Bool_t show)
 
 void TGeoManagerEditor::ShowSelectMatrix(Bool_t show)
 {
-   TGCompositeFrame *cont = (TGCompositeFrame*)fCategories->GetItem("Matrices")->GetContainer();
-   if (show) cont->ShowFrame(f6);
-   else      cont->HideFrame(f6);
+   TGCompositeFrame *cont = (TGCompositeFrame *)fCategories->GetItem("Matrices")->GetContainer();
+   if (show)
+      cont->ShowFrame(f6);
+   else
+      cont->HideFrame(f6);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy static function, used to load plugin
 
-void TGeoManagerEditor::LoadLib()
-{
-
-}
+void TGeoManagerEditor::LoadLib() {}

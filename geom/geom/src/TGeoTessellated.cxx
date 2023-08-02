@@ -33,9 +33,9 @@ for the composing faces.
 #include <array>
 #include <vector>
 
-ClassImp(TGeoTessellated)
+ClassImp(TGeoTessellated);
 
-   using Vertex_t = Tessellated::Vertex_t;
+using Vertex_t = Tessellated::Vertex_t;
 
 std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet)
 {

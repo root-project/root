@@ -34,19 +34,15 @@ Editor for a TGeoTrd2.
 
 ClassImp(TGeoTrd2Editor);
 
-enum ETGeoTrd2Wid {
-   kTRD2_NAME, kTRD2_X1, kTRD2_X2,  kTRD2_Y1, kTRD2_Y2, kTRD2_Z,
-   kTRD2_APPLY, kTRD2_UNDO
-};
+enum ETGeoTrd2Wid { kTRD2_NAME, kTRD2_X1, kTRD2_X2, kTRD2_Y1, kTRD2_Y2, kTRD2_Z, kTRD2_APPLY, kTRD2_UNDO };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for trd2 editor
 
-TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
+TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape = 0;
    fDxi1 = fDxi2 = fDyi1 = fDyi2 = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -65,73 +61,71 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
 
    // Number entry for dx1
-   TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   TGCompositeFrame *f1 =
+      new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDx1 = new TGNumberEntry(f1, 0., 5, kTRD2_X1);
    fEDx1->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fEDx1->GetNumberEntry();
+   nef = (TGTextEntry *)fEDx1->GetNumberEntry();
    nef->SetToolTipText("Enter the half-length in X1");
    fEDx1->Associate(this);
-   f1->AddFrame(fEDx1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fEDx1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dx2
-   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDx2 = new TGNumberEntry(f1, 0., 5, kTRD2_X2);
    fEDx2->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fEDx2->GetNumberEntry();
+   nef = (TGTextEntry *)fEDx2->GetNumberEntry();
    nef->SetToolTipText("Enter the  half-length in X2");
    fEDx2->Associate(this);
-   f1->AddFrame(fEDx2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f1->AddFrame(fEDx2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dy1
-   TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   TGCompositeFrame *f2 =
+      new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDy1 = new TGNumberEntry(f2, 0., 5, kTRD2_Y1);
    fEDy1->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fEDy1->GetNumberEntry();
+   nef = (TGTextEntry *)fEDy1->GetNumberEntry();
    nef->SetToolTipText("Enter the half-length in Y1");
    fEDy1->Associate(this);
-   f2->AddFrame(fEDy1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f2->AddFrame(fEDy1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dy2
-   f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDy2 = new TGNumberEntry(f2, 0., 5, kTRD2_Y2);
    fEDy2->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fEDy2->GetNumberEntry();
+   nef = (TGTextEntry *)fEDy2->GetNumberEntry();
    nef->SetToolTipText("Enter the half-length in Y2");
    fEDy2->Associate(this);
-   f2->AddFrame(fEDy2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f2->AddFrame(fEDy2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
    // Number entry for dz
-   TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kFitWidth | kFixedWidth | kOwnBackground);
+   TGCompositeFrame *f3 =
+      new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDz = new TGNumberEntry(f3, 0., 5, kTRD2_Z);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
-   nef = (TGTextEntry*)fEDz->GetNumberEntry();
+   nef = (TGTextEntry *)fEDz->GetNumberEntry();
    nef->SetToolTipText("Enter the  half-length in Z");
    fEDz->Associate(this);
-   f3->AddFrame(fEDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
+   f3->AddFrame(fEDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
+   compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 4, 4));
 
-   compxyz->Resize(150,30);
+   compxyz->Resize(150, 30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -139,9 +133,9 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
    f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
    fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -154,7 +148,7 @@ TGeoTrd2Editor::~TGeoTrd2Editor()
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
       if (el->fFrame->IsComposite())
-         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
+         TGeoTabManager::Cleanup((TGCompositeFrame *)el->fFrame);
    }
    Cleanup();
 }
@@ -180,24 +174,24 @@ void TGeoTrd2Editor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect to the selected object.
 
-void TGeoTrd2Editor::SetModel(TObject* obj)
+void TGeoTrd2Editor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoTrd2::Class())) {
+   if (obj == 0 || (obj->IsA() != TGeoTrd2::Class())) {
       SetActive(kFALSE);
       return;
    }
-   fShape = (TGeoTrd2*)obj;
+   fShape = (TGeoTrd2 *)obj;
    fDxi1 = fShape->GetDx1();
    fDxi2 = fShape->GetDx2();
    fDyi1 = fShape->GetDy1();
    fDyi2 = fShape->GetDy2();
    fDzi = fShape->GetDz();
    const char *sname = fShape->GetName();
-   if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
+   if (!strcmp(sname, fShape->ClassName()))
+      fShapeName->SetText("-no_name");
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
@@ -210,7 +204,8 @@ void TGeoTrd2Editor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
 
-   if (fInit) ConnectSignals2Slots();
+   if (fInit)
+      ConnectSignals2Slots();
    SetActive();
 }
 
@@ -236,7 +231,8 @@ void TGeoTrd2Editor::DoName()
 void TGeoTrd2Editor::DoApply()
 {
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
+   if (strcmp(name, fShape->GetName()))
+      fShape->SetName(name);
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
    Double_t dy1 = fEDy1->GetNumber();
@@ -256,7 +252,8 @@ void TGeoTrd2Editor::DoApply()
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
          fShape->Draw();
          fPad->GetView()->ShowAxis();
-      } else Update();
+      } else
+         Update();
    }
 }
 
@@ -290,16 +287,17 @@ void TGeoTrd2Editor::DoDx1()
 {
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
-   if (dx1<0) {
+   if (dx1 < 0) {
       dx1 = 0;
       fEDx1->SetNumber(dx1);
    }
-   if (dx1<1.e-6 && dx2<1.e-6) {
+   if (dx1 < 1.e-6 && dx2 < 1.e-6) {
       dx1 = 0.1;
       fEDx1->SetNumber(dx1);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -309,16 +307,17 @@ void TGeoTrd2Editor::DoDx2()
 {
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
-   if (dx2<0) {
+   if (dx2 < 0) {
       dx2 = 0;
       fEDx2->SetNumber(dx2);
    }
-   if (dx1<1.e-6 && dx2<1.e-6) {
+   if (dx1 < 1.e-6 && dx2 < 1.e-6) {
       dx2 = 0.1;
       fEDx2->SetNumber(dx2);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -328,16 +327,17 @@ void TGeoTrd2Editor::DoDy1()
 {
    Double_t dy1 = fEDy1->GetNumber();
    Double_t dy2 = fEDy2->GetNumber();
-   if (dy1<0) {
+   if (dy1 < 0) {
       dy1 = 0;
       fEDy1->SetNumber(dy1);
    }
-   if (dy1<1.e-6 && dy2<1.e-6) {
+   if (dy1 < 1.e-6 && dy2 < 1.e-6) {
       dy1 = 0.1;
       fEDy1->SetNumber(dy1);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,16 +347,17 @@ void TGeoTrd2Editor::DoDy2()
 {
    Double_t dy1 = fEDy1->GetNumber();
    Double_t dy2 = fEDy2->GetNumber();
-   if (dy2<0) {
+   if (dy2 < 0) {
       dy2 = 0;
       fEDy2->SetNumber(dy2);
    }
-   if (dy1<1.e-6 && dy2<1.e-6) {
+   if (dy1 < 1.e-6 && dy2 < 1.e-6) {
       dy2 = 0.1;
       fEDy2->SetNumber(dy2);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,12 +366,11 @@ void TGeoTrd2Editor::DoDy2()
 void TGeoTrd2Editor::DoDz()
 {
    Double_t dz = fEDz->GetNumber();
-   if (dz<=0) {
+   if (dz <= 0) {
       dz = 0.1;
       fEDz->SetNumber(dz);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
-
-
