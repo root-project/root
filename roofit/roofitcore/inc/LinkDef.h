@@ -205,8 +205,6 @@
     for (TObject * binning : onfile._altBinning) { _altBinning[binning->GetName()] = static_cast<RooAbsBinning*>(binning); } \
   }"
 #pragma link C++ class RooRefCountList+ ;
-#pragma link C++ class RooSegmentedIntegrator1D+ ;
-#pragma link C++ class RooSegmentedIntegrator2D+ ;
 #pragma link C++ class RooSetProxy+ ;
 #pragma link C++ class RooCollectionProxy<RooArgSet>+ ;
 #pragma read sourceClass="RooSetProxy" targetClass="RooCollectionProxy<RooArgSet>";

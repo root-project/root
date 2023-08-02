@@ -252,11 +252,12 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
    RooRealVar maxSteps("maxSteps", "Maximum number of steps", 20);
    RooRealVar minSteps("minSteps", "Minimum number of steps", 999);
    RooRealVar fixSteps("fixSteps", "Fixed number of steps", 0);
+   RooRealVar numSeg("numSeg", "Number of segments", 3); // only for the segmented integrators
 
    std::string name = "RooIntegrator1D";
 
    auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
-      return std::make_unique<RooIntegrator1D>(function, config);
+      return std::make_unique<RooIntegrator1D>(function, config, 1, /*doSegmentation=*/false);
    };
 
    fact.registerPlugin(name, creator, {sumRule, extrap, maxSteps, minSteps, fixSteps},
@@ -268,7 +269,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
    RooNumIntConfig::defaultConfig().method1D().setLabel(name);
 
    auto creator2d = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
-      return std::make_unique<RooIntegrator1D>(function, config, 2);
+      return std::make_unique<RooIntegrator1D>(function, config, 2, /*doSegmentation=*/false);
    };
    std::string name2d = "RooIntegrator2D";
    fact.registerPlugin(name2d, creator2d, {},
@@ -278,6 +279,28 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
                        /*canIntegrateOpenEnded=*/false,
                        /*depName=*/"RooIntegrator1D");
    RooNumIntConfig::defaultConfig().method2D().setLabel(name2d);
+
+   auto creatorSeg = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooIntegrator1D>(function, config, 1, /*doSegmentation=*/true);
+   };
+
+   fact.registerPlugin("RooSegmentedIntegrator1D", creatorSeg, {numSeg},
+                       /*canIntegrate1D=*/true,
+                       /*canIntegrate2D=*/false,
+                       /*canIntegrateND=*/false,
+                       /*canIntegrateOpenEnded=*/false,
+                       /*depName=*/"RooIntegrator1D");
+
+   auto creatorSeg2d = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooIntegrator1D>(function, config, 2, /*doSegmentation=*/true);
+   };
+
+   fact.registerPlugin("RooSegmentedIntegrator2D", creatorSeg2d, {},
+                       /*canIntegrate1D=*/false,
+                       /*canIntegrate2D=*/true,
+                       /*canIntegrateND=*/false,
+                       /*canIntegrateOpenEnded=*/false,
+                       /*depName=*/"RooSegmentedIntegrator1D");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +336,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double
 /// configuration object. The integration limits are taken from the
 /// function binding
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim)
+RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim,
+                                 bool doSegmentation)
    : RooAbsIntegrator(function, config.printEvalCounter()),
      _nDim{nDim},
      _epsAbs(config.epsAbs()),
@@ -326,6 +350,11 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConf
    _minStepsZero = (int)configSet.getRealValue("minSteps", 999);
    _fixSteps = (int)configSet.getRealValue("fixSteps", 0);
    _doExtrap = (bool)configSet.getCatIndex("extrapolation", 1);
+   if (doSegmentation) {
+      _nSeg = (int)config.getConfigSection("RooSegmentedIntegrator1D").getRealValue("numSeg", 3);
+      _epsAbs /= std::sqrt(_nSeg);
+      _epsRel /= std::sqrt(_nSeg);
+   }
 
    if (_fixSteps > _maxSteps) {
       oocoutE(nullptr, Integration) << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps"
@@ -445,13 +474,20 @@ bool RooIntegrator1D::checkLimits() const
 
 double RooIntegrator1D::integral(const double *yvec)
 {
-   return integral(yvec, _nDim - 1, _wksp);
+   // Copy yvec to xvec if provided
+   if (yvec) {
+      for (unsigned int i = 0; i < _function->getDimension() - 1; i++) {
+         _x[i + _nDim] = yvec[i];
+      }
+   }
+
+   return integral(_nDim - 1, _nSeg, _wksp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate numeric integral at given set of function binding parameters.
 
-double RooIntegrator1D::integral(const double *yvec, int iDim, std::span<double> wksp)
+double RooIntegrator1D::integral(int iDim, int nSeg, std::span<double> wksp)
 {
    assert(isValid());
 
@@ -462,11 +498,22 @@ double RooIntegrator1D::integral(const double *yvec, int iDim, std::span<double>
    if (range == 0.)
       return 0.;
 
-   // Copy yvec to xvec if provided
-   if (yvec && iDim == 0) {
-      for (unsigned int i = 0; i < _function->getDimension() - 1; i++) {
-         _x[i + 1] = yvec[i];
+   // In case of segmentation, split this integral up in a loop.
+   if (nSeg > 1) {
+      const double segSize = (xmax - xmin) / nSeg;
+      double result = 0.0;
+      for (int iSeg = 0; iSeg < nSeg; iSeg++) {
+         _xmin[iDim] = xmin + iSeg * segSize;
+         _xmax[iDim] = xmin + (iSeg + 1) * segSize;
+         double part = integral(iDim, 1, wksp);
+         result += part;
       }
+
+      // reset limits
+      _xmin[iDim] = xmin;
+      _xmax[iDim] = xmax;
+
+      return result;
    }
 
    // From the working array
@@ -482,7 +529,7 @@ double RooIntegrator1D::integral(const double *yvec, int iDim, std::span<double>
    auto func = [&](double x) {
       _x[iDim] = x;
 
-      return iDim == 0 ? integrand(_x.data()) : integral(yvec, iDim - 1, nextWksp);
+      return iDim == 0 ? integrand(_x.data()) : integral(iDim - 1, _nSeg, nextWksp);
    };
 
    std::tie(output, steps) =
