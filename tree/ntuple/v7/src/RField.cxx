@@ -1970,6 +1970,68 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    }
 }
 
+std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
+{
+   if (!fSubFields[0]->IsSimple())
+      return RFieldBase::ReadBulkImpl(bulkSpec);
+
+   if (bulkSpec.fAuxData->empty()) {
+      /// Initialize auxiliary memory: the first sizeof(size_t) bytes store the value size of the item field.
+      /// The following bytes store the item values, consecutively.
+      bulkSpec.fAuxData->resize(sizeof(std::size_t));
+      *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data()) = fSubFields[0]->GetValueSize();
+   }
+   const auto itemValueSize = *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data());
+   unsigned char *itemValueArray = bulkSpec.fAuxData->data() + sizeof(std::size_t);
+   void **beginPtr = reinterpret_cast<void **>(bulkSpec.fValues);
+
+   // Get size of the first RVec of the bulk
+   RClusterIndex firstItemIndex;
+   RClusterIndex collectionStart;
+   ClusterSize_t collectionSize;
+   this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
+   *beginPtr = itemValueArray;
+   new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(collectionSize);
+
+   // Set the size of the remaining RVecs of the bulk, going page by page through the RNTuple offset column.
+   // We optimistically assume that bulkSpec.fAuxData is already large enough to hold all the item values in the
+   // given range. If not, we'll fix up the pointers afterwards.
+   auto lastOffset = firstItemIndex.GetIndex() + collectionSize;
+   ClusterSize_t::ValueType nRemainingValues = bulkSpec.fCount - 1;
+   std::size_t nValues = 1;
+   std::size_t nItems = collectionSize;
+   while (nRemainingValues > 0) {
+      NTupleSize_t nElementsUntilPageEnd;
+      const auto offsets = fPrincipalColumn->MapV<ClusterSize_t>(bulkSpec.fFirstIndex + nValues, nElementsUntilPageEnd);
+      const std::size_t nBatch = std::min(nRemainingValues, nElementsUntilPageEnd);
+      for (std::size_t i = 0; i < nBatch; ++i) {
+         const auto size = offsets[i] - lastOffset;
+         beginPtr = reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(beginPtr) + fValueSize);
+         *beginPtr = itemValueArray + nItems * itemValueSize;
+         new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(size);
+
+         nItems += size;
+         lastOffset = offsets[i];
+      }
+      nRemainingValues -= nBatch;
+      nValues += nBatch;
+   }
+
+   bulkSpec.fAuxData->resize(sizeof(std::size_t) + nItems * itemValueSize);
+   // If the vector got reallocated, we need to fix-up the RVecs begin pointers.
+   const auto delta = itemValueArray - (bulkSpec.fAuxData->data() + sizeof(std::size_t));
+   if (delta != 0) {
+      auto beginPtrAsUChar = reinterpret_cast<unsigned char *>(bulkSpec.fValues);
+      for (std::size_t i = 0; i < bulkSpec.fCount; ++i) {
+         *reinterpret_cast<unsigned char **>(beginPtrAsUChar) -= delta;
+         beginPtrAsUChar += fValueSize;
+      }
+   }
+
+   GetPrincipleColumnOf(*fSubFields[0])->ReadV(firstItemIndex, nItems, itemValueArray - delta);
+   return RBulkSpec::kAllSet;
+}
+
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 {
