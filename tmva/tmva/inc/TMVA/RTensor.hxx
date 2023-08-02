@@ -454,20 +454,18 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::ExpandDims(i
    auto shape = fShape;
    auto strides = fStrides;
    if (idx < 0) {
-      if (len + idx + 1 < 0) {
-         throw std::runtime_error("Given negative index is invalid.");
-      }
-      shape.insert(shape.end() + 1 + idx, 1);
-      strides.insert(strides.begin() + 1 + idx, 1);
-   } else {
-      if (idx > len) {
-         throw std::runtime_error("Given index is invalid.");
-      }
-      shape.insert(shape.begin() + idx, 1);
-      strides.insert(strides.begin() + idx, 1);
+      idx = len + 1 + idx;
    }
+   if (idx < 0) {
+      throw std::runtime_error("Given negative index is invalid.");
+   }
+   else if (idx > len) {
+      throw std::runtime_error("Given index is invalid.");
+   }
+   shape.insert(shape.begin() + idx, 1);
+   strides = Internal::ComputeStridesFromShape(shape, fLayout);
 
-   // Create copy, attach new shape and strides and return
+   // Create view copy, attach new shape and strides and return
    RTensor<Value_t, Container_t> x(*this);
    x.fShape = shape;
    x.fStrides = strides;
@@ -496,7 +494,7 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Resize(const
 {
    // Create new tensor with the specified shape
    RTensor <Value_t, Container_t> x(shape, fLayout);
-   
+
    // Copying contents from previous tensor
    size_t n = (x.GetSize()>fSize) ? fSize : x.GetSize();
    std::copy(this->GetData(), this->GetData() + n, x.GetData() );
