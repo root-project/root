@@ -396,8 +396,8 @@ jobs:
         if:   ${{ matrix.image == 'fedora38-cov' && !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
-          name:  Test Coverage ${{ matrix.image }} ${{ matrix.config }}
-          path: /tmp/workspace/CoverageXML.xml
+          name: Test Coverage ${{ matrix.image }} ${{ matrix.config }}
+          path: /tmp/workspace/build/CoverageXML.xml
       # - name: Setup tmate session
       #   if: failure() && runner.debug == '1'
       #   uses: mxschmitt/action-tmate@v3
