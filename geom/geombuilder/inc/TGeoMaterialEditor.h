@@ -27,54 +27,51 @@ class TString;
 class TGeoMaterialEditor : public TGeoGedFrame {
 
 protected:
+   Double_t fAi;               // Initial atomic mass
+   Int_t fZi;                  // Initial Z
+   Int_t fStatei;              // Initial material state
+   Double_t fDensityi;         // Initial density
+   Double_t fTempi;            // Initial temperature
+   Double_t fPresi;            // Initial pressure
+   TString fNamei;             // Initial name
+   TGeoMaterial *fMaterial;    // Material object
+   Bool_t fIsModified;         // Flag that material was modified
+   Bool_t fIsMaterialEditable; // Flag that the material can be changed
 
-   Double_t             fAi;                 // Initial atomic mass
-   Int_t                fZi;                 // Initial Z
-   Int_t                fStatei;             // Initial material state
-   Double_t             fDensityi;           // Initial density
-   Double_t             fTempi;              // Initial temperature
-   Double_t             fPresi;              // Initial pressure
-   TString              fNamei;              // Initial name
-   TGeoMaterial        *fMaterial;           // Material object
-   Bool_t               fIsModified;         // Flag that material was modified
-   Bool_t               fIsMaterialEditable; // Flag that the material can be changed
+   TGTextEntry *fMaterialName;     // Material name text entry
+   TGNumberEntry *fMatA;           // Number entry for A
+   TGNumberEntry *fMatZ;           // Number entry for Z
+   TGComboBox *fMatState;          // Material state
+   TGNumberEntry *fMatDensity;     // Number entry for density
+   TGNumberEntry *fMatTemperature; // Number entry for temperature
+   TGNumberEntry *fMatPressure;    // Number entry for pressure
+   TGNumberEntry *fMatRadLen;      // Number entry for radiation length
+   TGNumberEntry *fMatAbsLen;      // Number entry for absorption length
+   TGCompositeFrame *f23;          // Frame for buttons
+   TGTextButton *fApply;           // Apply-Button to accept changes
+   TGTextButton *fUndo;            // Undo-Button
 
-   TGTextEntry         *fMaterialName;       // Material name text entry
-   TGNumberEntry       *fMatA;               // Number entry for A
-   TGNumberEntry       *fMatZ;               // Number entry for Z
-   TGComboBox          *fMatState;           // Material state
-   TGNumberEntry       *fMatDensity;         // Number entry for density
-   TGNumberEntry       *fMatTemperature;     // Number entry for temperature
-   TGNumberEntry       *fMatPressure;        // Number entry for pressure
-   TGNumberEntry       *fMatRadLen;          // Number entry for radiation length
-   TGNumberEntry       *fMatAbsLen;          // Number entry for absorption length
-   TGCompositeFrame    *f23;                 // Frame for buttons
-   TGTextButton        *fApply;              // Apply-Button to accept changes
-   TGTextButton        *fUndo;               // Undo-Button
-
-   virtual void ConnectSignals2Slots();      // Connect the signals to the slots
+   virtual void ConnectSignals2Slots(); // Connect the signals to the slots
 
 public:
-   TGeoMaterialEditor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
+   TGeoMaterialEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
+                      Pixel_t back = GetDefaultFrameBackground());
    ~TGeoMaterialEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
-   void           DoA();
-   void           DoZ();
-   void           DoDensity();
-   void           DoModified();
-   void           DoName();
-   void           DoRadAbs();
-   void           DoState(Int_t state);
-   void           DoTemperature();
-   void           DoPressure();
-   void           DoApply();
-   void           DoUndo();
+   void DoA();
+   void DoZ();
+   void DoDensity();
+   void DoModified();
+   void DoName();
+   void DoRadAbs();
+   void DoState(Int_t state);
+   void DoTemperature();
+   void DoPressure();
+   void DoApply();
+   void DoUndo();
 
-   ClassDefOverride(TGeoMaterialEditor,0)   // TGeoMaterial editor
+   ClassDefOverride(TGeoMaterialEditor, 0) // TGeoMaterial editor
 };
 
 class TGCheckButton;
@@ -83,41 +80,38 @@ class TGeoMixture;
 class TGeoMixtureEditor : public TGeoMaterialEditor {
 
 protected:
+   TGeoMixture *fMixture; // Mixture object
 
-   TGeoMixture         *fMixture;           // Mixture object
+   TGComboBox *fMixElem;        // Combo box for elements
+   TGLabel *fNelem;             // Label for number of elements
+   TGLabel *fAelem;             // Label for A
+   TGLabel *fZelem;             // Label for Z
+   TGCheckButton *fChkFraction; // Check button for fraction by weight.
+   TGNumberEntry *fNEFraction;  // Number entry for fraction value
+   TGCheckButton *fChkNatoms;   // Check button for number of atoms
+   TGNumberEntry *fNENatoms;    // Number entry for number of atoms
+   TGTextButton *fBAddElem;     // Button for adding element as component
+   TGCompositeFrame *fComps;    // Frame with components
 
-   TGComboBox          *fMixElem;           // Combo box for elements
-   TGLabel             *fNelem;             // Label for number of elements
-   TGLabel             *fAelem;             // Label for A
-   TGLabel             *fZelem;             // Label for Z
-   TGCheckButton       *fChkFraction;       // Check button for fraction by weight.
-   TGNumberEntry       *fNEFraction;        // Number entry for fraction value
-   TGCheckButton       *fChkNatoms;         // Check button for number of atoms
-   TGNumberEntry       *fNENatoms;          // Number entry for number of atoms
-   TGTextButton        *fBAddElem;          // Button for adding element as component
-   TGCompositeFrame    *fComps;             // Frame with components
-
-   void ConnectSignals2Slots() override;     // Connect the signals to the slots
+   void ConnectSignals2Slots() override; // Connect the signals to the slots
 
 public:
-   TGeoMixtureEditor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
+   TGeoMixtureEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
+                     Pixel_t back = GetDefaultFrameBackground());
    ~TGeoMixtureEditor() override {}
-   void   SetModel(TObject *obj) override;
-   void           UpdateElements();
+   void SetModel(TObject *obj) override;
+   void UpdateElements();
 
-   void           DoApply1();
-   void           DoUndo1();
-   void           DoChkFraction();
-   void           DoChkNatoms();
-   void           DoFraction();
-   void           DoNatoms();
-   void           DoSelectElement(Int_t iel);
-   void           DoAddElem();
+   void DoApply1();
+   void DoUndo1();
+   void DoChkFraction();
+   void DoChkNatoms();
+   void DoFraction();
+   void DoNatoms();
+   void DoSelectElement(Int_t iel);
+   void DoAddElem();
 
-   ClassDefOverride(TGeoMixtureEditor,0)   // TGeoMixture editor
+   ClassDefOverride(TGeoMixtureEditor, 0) // TGeoMixture editor
 };
 
 #endif

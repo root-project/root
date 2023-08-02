@@ -27,49 +27,46 @@ class TString;
 class TGeoHypeEditor : public TGeoGedFrame {
 
 protected:
+   Double_t fRini;          // Initial  inner radius
+   Double_t fRouti;         // Initial  outer radius
+   Double_t fDzi;           // Initial  half length Dz
+   Double_t fStIni;         // Initial  stereo angle for inner surface
+   Double_t fStOuti;        // Initial  stereo angle for outer surface
+   TString fNamei;          // Initial name
+   TGeoHype *fShape;        // Shape object
+   Bool_t fIsModified;      // Flag that volume was modified
+   Bool_t fIsShapeEditable; // Flag that the shape can be changed
 
-   Double_t             fRini;              // Initial  inner radius
-   Double_t             fRouti;             // Initial  outer radius
-   Double_t             fDzi;               // Initial  half length Dz
-   Double_t             fStIni;             // Initial  stereo angle for inner surface
-   Double_t             fStOuti;            // Initial  stereo angle for outer surface
-   TString              fNamei;             // Initial name
-   TGeoHype            *fShape;             // Shape object
-   Bool_t               fIsModified;        // Flag that volume was modified
-   Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
+   TGTextEntry *fShapeName; // Shape name text entry
+   TGNumberEntry *fERin;    // Number entry for  Rin
+   TGNumberEntry *fERout;   // Number entry for  Rout
+   TGNumberEntry *fEDz;     // Number entry for  Dz
+   TGNumberEntry *fEStIn;   // Number entry for  StIn
+   TGNumberEntry *fEStOut;  // Number entry for  StOut
+   TGTextButton *fApply;    // Apply-Button to accept changes
+   TGTextButton *fUndo;     // Undo-Button
+   TGCheckButton *fDelayed; // Check button for delayed draw
 
-   TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fERin;              // Number entry for  Rin
-   TGNumberEntry       *fERout;             // Number entry for  Rout
-   TGNumberEntry       *fEDz;               // Number entry for  Dz
-   TGNumberEntry       *fEStIn;             // Number entry for  StIn
-   TGNumberEntry       *fEStOut;            // Number entry for  StOut
-   TGTextButton        *fApply;             // Apply-Button to accept changes
-   TGTextButton        *fUndo;              // Undo-Button
-   TGCheckButton       *fDelayed;           // Check button for delayed draw
-
-   virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;
+   virtual void ConnectSignals2Slots(); // Connect the signals to the slots
+   Bool_t IsDelayed() const;
 
 public:
-   TGeoHypeEditor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
+   TGeoHypeEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
+                  Pixel_t back = GetDefaultFrameBackground());
    ~TGeoHypeEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
-   void           DoRin();
-   void           DoRout();
-   void           DoDz();
-   void           DoStIn();
-   void           DoStOut();
-   void           DoModified();
-   void           DoName();
-   void           DoApply();
-   void           DoUndo();
+   void DoRin();
+   void DoRout();
+   void DoDz();
+   void DoStIn();
+   void DoStOut();
+   void DoModified();
+   void DoName();
+   void DoApply();
+   void DoUndo();
 
-   ClassDefOverride(TGeoHypeEditor,0)   // TGeoHype editor
+   ClassDefOverride(TGeoHypeEditor, 0) // TGeoHype editor
 };
 
 #endif

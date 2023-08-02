@@ -54,8 +54,7 @@ TGeoBuilder *TGeoBuilder::fgInstance = NULL;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TGeoBuilder::TGeoBuilder()
-            :fGeometry(nullptr)
+TGeoBuilder::TGeoBuilder() : fGeometry(nullptr)
 {
    fgInstance = this;
 }
@@ -77,7 +76,8 @@ TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom)
       printf("ERROR: Cannot create geometry builder with NULL geometry\n");
       return NULL;
    }
-   if (!fgInstance) fgInstance = new TGeoBuilder();
+   if (!fgInstance)
+      fgInstance = new TGeoBuilder();
    fgInstance->SetGeometry(geom);
    return fgInstance;
 }
@@ -87,7 +87,8 @@ TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom)
 
 Int_t TGeoBuilder::AddMaterial(TGeoMaterial *material)
 {
-   if (!material) return -1;
+   if (!material)
+      return -1;
    TList *materials = fGeometry->GetListOfMaterials();
    Int_t index = materials->GetSize();
    material->SetIndex(index);
@@ -101,10 +102,11 @@ Int_t TGeoBuilder::AddMaterial(TGeoMaterial *material)
 Int_t TGeoBuilder::AddTransformation(TGeoMatrix *matrix)
 {
    Int_t index = -1;
-   if (!matrix) return -1;
+   if (!matrix)
+      return -1;
    TObjArray *matrices = fGeometry->GetListOfMatrices();
    index = matrices->GetEntriesFast();
-   matrices->AddAtAndExpand(matrix,index);
+   matrices->AddAtAndExpand(matrix, index);
    return index;
 }
 
@@ -114,11 +116,13 @@ Int_t TGeoBuilder::AddTransformation(TGeoMatrix *matrix)
 Int_t TGeoBuilder::AddShape(TGeoShape *shape)
 {
    Int_t index = -1;
-   if (!shape) return -1;
+   if (!shape)
+      return -1;
    TObjArray *shapes = fGeometry->GetListOfShapes();
-   if (shape->IsRunTimeShape()) shapes =  fGeometry->GetListOfGShapes();
+   if (shape->IsRunTimeShape())
+      shapes = fGeometry->GetListOfGShapes();
    index = shapes->GetEntriesFast();
-   shapes->AddAtAndExpand(shape,index);
+   shapes->AddAtAndExpand(shape, index);
    return index;
 }
 
@@ -128,7 +132,8 @@ Int_t TGeoBuilder::AddShape(TGeoShape *shape)
 
 void TGeoBuilder::RegisterMatrix(TGeoMatrix *matrix)
 {
-   if (matrix->IsRegistered()) return;
+   if (matrix->IsRegistered())
+      return;
    TObjArray *matrices = fGeometry->GetListOfMatrices();
    Int_t nmat = matrices->GetEntriesFast();
    matrices->AddAtAndExpand(matrix, nmat);
@@ -137,8 +142,7 @@ void TGeoBuilder::RegisterMatrix(TGeoMatrix *matrix)
 ////////////////////////////////////////////////////////////////////////////////
 /// Make an TGeoArb8 volume.
 
-TGeoVolume *TGeoBuilder::MakeArb8(const char *name, TGeoMedium *medium,
-                                  Double_t dz, Double_t *vertices)
+TGeoVolume *TGeoBuilder::MakeArb8(const char *name, TGeoMedium *medium, Double_t dz, Double_t *vertices)
 {
    TGeoArb8 *arb = new TGeoArb8(name, dz, vertices);
    TGeoVolume *vol = new TGeoVolume(name, arb, medium);
@@ -148,8 +152,7 @@ TGeoVolume *TGeoBuilder::MakeArb8(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a box shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium,
-                                    Double_t dx, Double_t dy, Double_t dz)
+TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium, Double_t dx, Double_t dy, Double_t dz)
 {
    TGeoBBox *box = new TGeoBBox(name, dx, dy, dz);
    TGeoVolume *vol = 0;
@@ -165,15 +168,14 @@ TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a parallelepiped shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium,
-                                    Double_t dx, Double_t dy, Double_t dz,
-                                    Double_t alpha, Double_t theta, Double_t phi)
+TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium, Double_t dx, Double_t dy, Double_t dz,
+                                  Double_t alpha, Double_t theta, Double_t phi)
 {
-   if (TMath::Abs(alpha)<TGeoShape::Tolerance() && TMath::Abs(theta)<TGeoShape::Tolerance()) {
-      Warning("MakePara","parallelepiped %s having alpha=0, theta=0 -> making box instead", name);
+   if (TMath::Abs(alpha) < TGeoShape::Tolerance() && TMath::Abs(theta) < TGeoShape::Tolerance()) {
+      Warning("MakePara", "parallelepiped %s having alpha=0, theta=0 -> making box instead", name);
       return MakeBox(name, medium, dx, dy, dz);
    }
-   TGeoPara *para=0;
+   TGeoPara *para = 0;
    para = new TGeoPara(name, dx, dy, dz, alpha, theta, phi);
    TGeoVolume *vol = 0;
    if (para->IsRunTimeShape()) {
@@ -188,9 +190,8 @@ TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a sphere shape with given medium
 
-TGeoVolume *TGeoBuilder::MakeSphere(const char *name, TGeoMedium *medium,
-                                    Double_t rmin, Double_t rmax, Double_t themin, Double_t themax,
-                                    Double_t phimin, Double_t phimax)
+TGeoVolume *TGeoBuilder::MakeSphere(const char *name, TGeoMedium *medium, Double_t rmin, Double_t rmax, Double_t themin,
+                                    Double_t themax, Double_t phimin, Double_t phimax)
 {
    TGeoSphere *sph = new TGeoSphere(name, rmin, rmax, themin, themax, phimin, phimax);
    TGeoVolume *vol = new TGeoVolume(name, sph, medium);
@@ -200,10 +201,10 @@ TGeoVolume *TGeoBuilder::MakeSphere(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a torus shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeTorus(const char *name, TGeoMedium *medium, Double_t r,
-                                   Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
+TGeoVolume *TGeoBuilder::MakeTorus(const char *name, TGeoMedium *medium, Double_t r, Double_t rmin, Double_t rmax,
+                                   Double_t phi1, Double_t dphi)
 {
-   TGeoTorus *tor = new TGeoTorus(name,r,rmin,rmax,phi1,dphi);
+   TGeoTorus *tor = new TGeoTorus(name, r, rmin, rmax, phi1, dphi);
    TGeoVolume *vol = new TGeoVolume(name, tor, medium);
    return vol;
 }
@@ -211,11 +212,10 @@ TGeoVolume *TGeoBuilder::MakeTorus(const char *name, TGeoMedium *medium, Double_
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a tube shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeTube(const char *name, TGeoMedium *medium,
-                                     Double_t rmin, Double_t rmax, Double_t dz)
+TGeoVolume *TGeoBuilder::MakeTube(const char *name, TGeoMedium *medium, Double_t rmin, Double_t rmax, Double_t dz)
 {
-   if (rmin>rmax) {
-      Error("MakeTube", "tube %s, Rmin=%g greater than Rmax=%g", name,rmin,rmax);
+   if (rmin > rmax) {
+      Error("MakeTube", "tube %s, Rmin=%g greater than Rmax=%g", name, rmin, rmax);
    }
    TGeoTube *tube = new TGeoTube(name, rmin, rmax, dz);
    TGeoVolume *vol = 0;
@@ -231,9 +231,8 @@ TGeoVolume *TGeoBuilder::MakeTube(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a tube segment shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium,
-                                     Double_t rmin, Double_t rmax, Double_t dz,
-                                     Double_t phi1, Double_t phi2)
+TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium, Double_t rmin, Double_t rmax, Double_t dz,
+                                  Double_t phi1, Double_t phi2)
 {
    TGeoTubeSeg *tubs = new TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2);
    TGeoVolume *vol = 0;
@@ -249,8 +248,7 @@ TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a tube shape with given medium
 
-TGeoVolume *TGeoBuilder::MakeEltu(const char *name, TGeoMedium *medium,
-                                     Double_t a, Double_t b, Double_t dz)
+TGeoVolume *TGeoBuilder::MakeEltu(const char *name, TGeoMedium *medium, Double_t a, Double_t b, Double_t dz)
 {
    TGeoEltu *eltu = new TGeoEltu(name, a, b, dz);
    TGeoVolume *vol = 0;
@@ -266,10 +264,10 @@ TGeoVolume *TGeoBuilder::MakeEltu(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a tube shape with given medium
 
-TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium,
-                                        Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
+TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium, Double_t rin, Double_t stin, Double_t rout,
+                                  Double_t stout, Double_t dz)
 {
-   TGeoHype * hype =  new TGeoHype(name, rin,stin,rout,stout,dz);
+   TGeoHype *hype = new TGeoHype(name, rin, stin, rout, stout, dz);
    TGeoVolume *vol = 0;
    if (hype->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
@@ -283,8 +281,7 @@ TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a tube shape with given medium
 
-TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, TGeoMedium *medium,
-                                        Double_t rlo, Double_t rhi, Double_t dz)
+TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, TGeoMedium *medium, Double_t rlo, Double_t rhi, Double_t dz)
 {
    TGeoParaboloid *parab = new TGeoParaboloid(name, rlo, rhi, dz);
    TGeoVolume *vol = 0;
@@ -300,9 +297,9 @@ TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a tube segment shape with given medium
 
-TGeoVolume *TGeoBuilder::MakeCtub(const char *name, TGeoMedium *medium,
-                                     Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
-                                     Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
+TGeoVolume *TGeoBuilder::MakeCtub(const char *name, TGeoMedium *medium, Double_t rmin, Double_t rmax, Double_t dz,
+                                  Double_t phi1, Double_t phi2, Double_t lx, Double_t ly, Double_t lz, Double_t tx,
+                                  Double_t ty, Double_t tz)
 {
    TGeoCtub *ctub = new TGeoCtub(name, rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
    TGeoVolume *vol = new TGeoVolume(name, ctub, medium);
@@ -312,9 +309,8 @@ TGeoVolume *TGeoBuilder::MakeCtub(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a cone shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium,
-                                     Double_t dz, Double_t rmin1, Double_t rmax1,
-                                     Double_t rmin2, Double_t rmax2)
+TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium, Double_t dz, Double_t rmin1, Double_t rmax1,
+                                  Double_t rmin2, Double_t rmax2)
 {
    TGeoCone *cone = new TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2);
    TGeoVolume *vol = 0;
@@ -330,10 +326,8 @@ TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a cone segment shape with given medium
 
-TGeoVolume *TGeoBuilder::MakeCons(const char *name, TGeoMedium *medium,
-                                     Double_t dz, Double_t rmin1, Double_t rmax1,
-                                     Double_t rmin2, Double_t rmax2,
-                                     Double_t phi1, Double_t phi2)
+TGeoVolume *TGeoBuilder::MakeCons(const char *name, TGeoMedium *medium, Double_t dz, Double_t rmin1, Double_t rmax1,
+                                  Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
 {
    TGeoConeSeg *cons = new TGeoConeSeg(name, dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    TGeoVolume *vol = 0;
@@ -349,8 +343,7 @@ TGeoVolume *TGeoBuilder::MakeCons(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a polycone shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakePcon(const char *name, TGeoMedium *medium,
-                                     Double_t phi, Double_t dphi, Int_t nz)
+TGeoVolume *TGeoBuilder::MakePcon(const char *name, TGeoMedium *medium, Double_t phi, Double_t dphi, Int_t nz)
 {
    TGeoPcon *pcon = new TGeoPcon(name, phi, dphi, nz);
    TGeoVolume *vol = new TGeoVolume(name, pcon, medium);
@@ -360,8 +353,8 @@ TGeoVolume *TGeoBuilder::MakePcon(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a polygone shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakePgon(const char *name, TGeoMedium *medium,
-                                     Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
+TGeoVolume *
+TGeoBuilder::MakePgon(const char *name, TGeoMedium *medium, Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
    TGeoPgon *pgon = new TGeoPgon(name, phi, dphi, nedges, nz);
    TGeoVolume *vol = new TGeoVolume(name, pgon, medium);
@@ -371,8 +364,8 @@ TGeoVolume *TGeoBuilder::MakePgon(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, TGeoMedium *medium,
-                                  Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
+TGeoVolume *
+TGeoBuilder::MakeTrd1(const char *name, TGeoMedium *medium, Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
    TGeoTrd1 *trd1 = new TGeoTrd1(name, dx1, dx2, dy, dz);
    TGeoVolume *vol = 0;
@@ -388,9 +381,8 @@ TGeoVolume *TGeoBuilder::MakeTrd1(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, TGeoMedium *medium,
-                                  Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
-                                  Double_t dz)
+TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, TGeoMedium *medium, Double_t dx1, Double_t dx2, Double_t dy1,
+                                  Double_t dy2, Double_t dz)
 {
    TGeoTrd2 *trd2 = new TGeoTrd2(name, dx1, dx2, dy1, dy2, dz);
    TGeoVolume *vol = 0;
@@ -406,13 +398,11 @@ TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a trapezoid shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeTrap(const char *name, TGeoMedium *medium,
-                                  Double_t dz, Double_t theta, Double_t phi, Double_t h1,
-                                  Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
+TGeoVolume *TGeoBuilder::MakeTrap(const char *name, TGeoMedium *medium, Double_t dz, Double_t theta, Double_t phi,
+                                  Double_t h1, Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-   TGeoTrap *trap = new TGeoTrap(name, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2,
-                                 tl2, alpha2);
+   TGeoTrap *trap = new TGeoTrap(name, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, trap, medium);
    return vol;
 }
@@ -420,13 +410,11 @@ TGeoVolume *TGeoBuilder::MakeTrap(const char *name, TGeoMedium *medium,
 ////////////////////////////////////////////////////////////////////////////////
 /// Make in one step a volume pointing to a twisted trapezoid shape with given medium.
 
-TGeoVolume *TGeoBuilder::MakeGtra(const char *name, TGeoMedium *medium,
-                                  Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
-                                  Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
-                                  Double_t tl2, Double_t alpha2)
+TGeoVolume *TGeoBuilder::MakeGtra(const char *name, TGeoMedium *medium, Double_t dz, Double_t theta, Double_t phi,
+                                  Double_t twist, Double_t h1, Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2,
+                                  Double_t bl2, Double_t tl2, Double_t alpha2)
 {
-   TGeoGtra *gtra = new TGeoGtra(name, dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2,
-                                 tl2, alpha2);
+   TGeoGtra *gtra = new TGeoGtra(name, dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, gtra, medium);
    return vol;
 }
@@ -457,7 +445,6 @@ TGeoVolumeMulti *TGeoBuilder::MakeVolumeMulti(const char *name, TGeoMedium *medi
    return (new TGeoVolumeMulti(name, medium));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new volume by dividing an existing one (GEANT3 like)
 ///
@@ -473,8 +460,8 @@ TGeoVolumeMulti *TGeoBuilder::MakeVolumeMulti(const char *name, TGeoMedium *medi
 ///        in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
 ///  - SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
 
-TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t iaxis,
-                                  Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
+TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, Double_t start,
+                                  Double_t step, Int_t numed, Option_t *option)
 {
    TGeoVolume *amother;
    TString sname = name;
@@ -484,11 +471,13 @@ TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t ia
    smname = smname.Strip();
    const char *mname = smname.Data();
 
-   amother = (TGeoVolume*)fGeometry->GetListOfGVolumes()->FindObject(mname);
-   if (!amother) amother = fGeometry->GetVolume(mname);
-   if (amother) return amother->Divide(vname,iaxis,ndiv,start,step,numed, option);
+   amother = (TGeoVolume *)fGeometry->GetListOfGVolumes()->FindObject(mname);
+   if (!amother)
+      amother = fGeometry->GetVolume(mname);
+   if (amother)
+      return amother->Divide(vname, iaxis, ndiv, start, step, numed, option);
 
-   Error("Division","VOLUME: \"%s\" not defined",mname);
+   Error("Division", "VOLUME: \"%s\" not defined", mname);
 
    return 0;
 }
@@ -505,11 +494,10 @@ TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t ia
 ///  - phi3     azimuthal angle for axis Z
 ///
 
-void TGeoBuilder::Matrix(Int_t index, Double_t theta1, Double_t phi1,
-                         Double_t theta2, Double_t phi2,
-                         Double_t theta3, Double_t phi3)
+void TGeoBuilder::Matrix(Int_t index, Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2, Double_t theta3,
+                         Double_t phi3)
 {
-   TGeoRotation * rot = new TGeoRotation("",theta1,phi1,theta2,phi2,theta3,phi3);
+   TGeoRotation *rot = new TGeoRotation("", theta1, phi1, theta2, phi2, theta3, phi3);
    rot->SetUniqueID(index);
    rot->RegisterYourself();
 }
@@ -517,9 +505,10 @@ void TGeoBuilder::Matrix(Int_t index, Double_t theta1, Double_t phi1,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create material with given A, Z and density, having an unique id.
 
-TGeoMaterial *TGeoBuilder::Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid,Double_t radlen, Double_t intlen)
+TGeoMaterial *TGeoBuilder::Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid, Double_t radlen,
+                                    Double_t intlen)
 {
-   TGeoMaterial *material = new TGeoMaterial(name,a,z,dens,radlen,intlen);
+   TGeoMaterial *material = new TGeoMaterial(name, a, z, dens, radlen, intlen);
    material->SetUniqueID(uid);
    return material;
 }
@@ -528,32 +517,32 @@ TGeoMaterial *TGeoBuilder::Material(const char *name, Double_t a, Double_t z, Do
 /// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
 /// materials defined by arrays A,Z and WMAT, having an unique id.
 
-TGeoMaterial *TGeoBuilder::Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens,
-                                   Int_t nelem, Float_t *wmat, Int_t uid)
+TGeoMaterial *
+TGeoBuilder::Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens, Int_t nelem, Float_t *wmat, Int_t uid)
 {
-   TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
+   TGeoMixture *mix = new TGeoMixture(name, nelem, dens);
    mix->SetUniqueID(uid);
    Int_t i;
-   for (i=0;i<nelem;i++) {
-      mix->DefineElement(i,a[i],z[i],wmat[i]);
+   for (i = 0; i < nelem; i++) {
+      mix->DefineElement(i, a[i], z[i], wmat[i]);
    }
-   return (TGeoMaterial*)mix;
+   return (TGeoMaterial *)mix;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create mixture OR COMPOUND IMAT as composed by THE BASIC nelem
 /// materials defined by arrays A,Z and WMAT, having an unique id.
 
-TGeoMaterial *TGeoBuilder::Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens,
-                                   Int_t nelem, Double_t *wmat, Int_t uid)
+TGeoMaterial *
+TGeoBuilder::Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens, Int_t nelem, Double_t *wmat, Int_t uid)
 {
-   TGeoMixture *mix = new TGeoMixture(name,nelem,dens);
+   TGeoMixture *mix = new TGeoMixture(name, nelem, dens);
    mix->SetUniqueID(uid);
    Int_t i;
-   for (i=0;i<nelem;i++) {
-      mix->DefineElement(i,a[i],z[i],wmat[i]);
+   for (i = 0; i < nelem; i++) {
+      mix->DefineElement(i, a[i], z[i], wmat[i]);
    }
-   return (TGeoMaterial*)mix;
+   return (TGeoMaterial *)mix;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -576,12 +565,10 @@ TGeoMaterial *TGeoBuilder::Mixture(const char *name, Double_t *a, Double_t *z, D
 ///    performed with g3helix; ifield = 3 if tracking performed with g3helx3.
 ///
 
-TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol,
-                                Int_t ifield, Double_t fieldm, Double_t tmaxfd,
-                                Double_t stemax, Double_t deemax, Double_t epsil,
-                                Double_t stmin)
+TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t isvol, Int_t ifield, Double_t fieldm,
+                                Double_t tmaxfd, Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin)
 {
-   return new TGeoMedium(name,numed,nmat,isvol,ifield,fieldm,tmaxfd,stemax,deemax,epsil,stmin);
+   return new TGeoMedium(name, numed, nmat, isvol, ifield, fieldm, tmaxfd, stemax, deemax, epsil, stmin);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -599,127 +586,139 @@ TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 ///  - IROT   Rotation matrix number w.r.t. mother ref. sys.
 ///  - ISONLY ONLY/MANY flag
 
-void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
-                       Double_t x, Double_t y, Double_t z, Int_t irot,
+void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Float_t *upar, Int_t npar)
 {
-   TGeoVolume *amother= 0;
+   TGeoVolume *amother = 0;
    TGeoVolume *volume = 0;
 
    // look into special volume list first
-   amother = fGeometry->FindVolumeFast(mother,kTRUE);
-   if (!amother) amother = fGeometry->FindVolumeFast(mother);
+   amother = fGeometry->FindVolumeFast(mother, kTRUE);
+   if (!amother)
+      amother = fGeometry->FindVolumeFast(mother);
    if (!amother) {
       TString mname = mother;
       mname = mname.Strip();
-      Error("Node","Mother VOLUME \"%s\" not defined",mname.Data());
+      Error("Node", "Mother VOLUME \"%s\" not defined", mname.Data());
       return;
    }
    Int_t i;
-   if (npar<=0) {
-   //---> acting as G3 gspos
-      if (gDebug > 0) Info("Node","Calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i",mother,name,nr,x,y,z,irot,(Int_t)isOnly);
+   if (npar <= 0) {
+      //---> acting as G3 gspos
+      if (gDebug > 0)
+         Info("Node", "Calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i", mother, name, nr,
+              x, y, z, irot, (Int_t)isOnly);
       // look into special volume list first
-      volume  = fGeometry->FindVolumeFast(name,kTRUE);
-      if (!volume) volume = fGeometry->FindVolumeFast(name);
+      volume = fGeometry->FindVolumeFast(name, kTRUE);
+      if (!volume)
+         volume = fGeometry->FindVolumeFast(name);
       if (!volume) {
          TString vname = name;
          vname = vname.Strip();
-         Error("Node","VOLUME: \"%s\" not defined",vname.Data());
+         Error("Node", "VOLUME: \"%s\" not defined", vname.Data());
          return;
       }
-      if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
+      if (((TObject *)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
          Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
          return;
       }
    } else {
-   //---> acting as G3 gsposp
-      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGeometry->FindVolumeFast(name, kTRUE);
+      //---> acting as G3 gsposp
+      TGeoVolumeMulti *vmulti = (TGeoVolumeMulti *)fGeometry->FindVolumeFast(name, kTRUE);
       if (!vmulti) {
          volume = fGeometry->FindVolumeFast(name);
          if (volume) {
             Warning("Node", "volume: %s is defined as single -> ignoring shape parameters", volume->GetName());
-            Node(name,nr,mother,x,y,z,irot,isOnly, upar);
+            Node(name, nr, mother, x, y, z, irot, isOnly, upar);
             return;
          }
          TString vname = name;
          vname = vname.Strip();
-         Error("Node","VOLUME: \"%s\" not defined ",vname.Data());
+         Error("Node", "VOLUME: \"%s\" not defined ", vname.Data());
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();
-      TString sh    = vmulti->GetTitle();
+      TString sh = vmulti->GetTitle();
       sh.ToLower();
       if (sh.Contains("box")) {
-         volume = MakeBox(name,medium,upar[0],upar[1],upar[2]);
+         volume = MakeBox(name, medium, upar[0], upar[1], upar[2]);
       } else if (sh.Contains("trd1")) {
-         volume = MakeTrd1(name,medium,upar[0],upar[1],upar[2],upar[3]);
+         volume = MakeTrd1(name, medium, upar[0], upar[1], upar[2], upar[3]);
       } else if (sh.Contains("trd2")) {
-         volume = MakeTrd2(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTrd2(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
       } else if (sh.Contains("trap")) {
-         volume = MakeTrap(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeTrap(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7],
+                           upar[8], upar[9], upar[10]);
       } else if (sh.Contains("gtra")) {
-         volume = MakeGtra(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
+         volume = MakeGtra(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7],
+                           upar[8], upar[9], upar[10], upar[11]);
       } else if (sh.Contains("tube")) {
-         volume = MakeTube(name,medium,upar[0],upar[1],upar[2]);
+         volume = MakeTube(name, medium, upar[0], upar[1], upar[2]);
       } else if (sh.Contains("tubs")) {
-         volume = MakeTubs(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTubs(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
       } else if (sh.Contains("cone")) {
-         volume = MakeCone(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeCone(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
       } else if (sh.Contains("cons")) {
-         volume = MakeCons(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
+         volume = MakeCons(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6]);
       } else if (sh.Contains("pgon")) {
-         volume = MakePgon(name,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
+         volume = MakePgon(name, medium, upar[0], upar[1], (Int_t)upar[2], (Int_t)upar[3]);
          Int_t nz = (Int_t)upar[3];
-         for (i=0;i<nz;i++) {
-            ((TGeoPgon*)volume->GetShape())->DefineSection(i,upar[3*i+4],upar[3*i+5],upar[3*i+6]);
+         for (i = 0; i < nz; i++) {
+            ((TGeoPgon *)volume->GetShape())->DefineSection(i, upar[3 * i + 4], upar[3 * i + 5], upar[3 * i + 6]);
          }
       } else if (sh.Contains("pcon")) {
-         volume = MakePcon(name,medium,upar[0],upar[1],(Int_t)upar[2]);
+         volume = MakePcon(name, medium, upar[0], upar[1], (Int_t)upar[2]);
          Int_t nz = (Int_t)upar[2];
-         for (i=0;i<nz;i++) {
-            ((TGeoPcon*)volume->GetShape())->DefineSection(i,upar[3*i+3],upar[3*i+4],upar[3*i+5]);
+         for (i = 0; i < nz; i++) {
+            ((TGeoPcon *)volume->GetShape())->DefineSection(i, upar[3 * i + 3], upar[3 * i + 4], upar[3 * i + 5]);
          }
       } else if (sh.Contains("eltu")) {
-         volume = MakeEltu(name,medium,upar[0],upar[1],upar[2]);
+         volume = MakeEltu(name, medium, upar[0], upar[1], upar[2]);
       } else if (sh.Contains("sphe")) {
-         volume = MakeSphere(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakeSphere(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
       } else if (sh.Contains("ctub")) {
-         volume = MakeCtub(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeCtub(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7],
+                           upar[8], upar[9], upar[10]);
       } else if (sh.Contains("para")) {
-         volume = MakePara(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakePara(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
       } else {
-         Error("Node","cannot create shape %s",sh.Data());
+         Error("Node", "cannot create shape %s", sh.Data());
       }
 
-      if (!volume) return;
+      if (!volume)
+         return;
       vmulti->AddVolume(volume);
    }
    if (irot) {
       TGeoRotation *matrix = 0;
       TGeoMatrix *mat;
       TIter next(fGeometry->GetListOfMatrices());
-      while ((mat=(TGeoMatrix*)next())) {
-         if (mat->GetUniqueID()==UInt_t(irot)) {
-            matrix = dynamic_cast<TGeoRotation*>(mat);
+      while ((mat = (TGeoMatrix *)next())) {
+         if (mat->GetUniqueID() == UInt_t(irot)) {
+            matrix = dynamic_cast<TGeoRotation *>(mat);
             break;
          }
       }
       if (!matrix) {
-         Fatal("Node", "Node %s/%s_%d rotation %i not found",mother, name, nr ,irot);
+         Fatal("Node", "Node %s/%s_%d rotation %i not found", mother, name, nr, irot);
          return;
       }
-      if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
-      else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
+      if (isOnly)
+         amother->AddNode(volume, nr, new TGeoCombiTrans(x, y, z, matrix));
+      else
+         amother->AddNodeOverlap(volume, nr, new TGeoCombiTrans(x, y, z, matrix));
    } else {
-      if (TMath::Abs(x)<TGeoShape::Tolerance() &&
-          TMath::Abs(y)<TGeoShape::Tolerance() &&
-          TMath::Abs(z)<TGeoShape::Tolerance()) {
-         if (isOnly) amother->AddNode(volume,nr);
-         else        amother->AddNodeOverlap(volume,nr);
+      if (TMath::Abs(x) < TGeoShape::Tolerance() && TMath::Abs(y) < TGeoShape::Tolerance() &&
+          TMath::Abs(z) < TGeoShape::Tolerance()) {
+         if (isOnly)
+            amother->AddNode(volume, nr);
+         else
+            amother->AddNodeOverlap(volume, nr);
       } else {
-         if (isOnly) amother->AddNode(volume,nr,new TGeoTranslation(x,y,z));
-         else        amother->AddNodeOverlap(volume,nr,new TGeoTranslation(x,y,z));
+         if (isOnly)
+            amother->AddNode(volume, nr, new TGeoTranslation(x, y, z));
+         else
+            amother->AddNodeOverlap(volume, nr, new TGeoTranslation(x, y, z));
       }
    }
 }
@@ -739,127 +738,139 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
 ///  - IROT   Rotation matrix number w.r.t. mother ref. sys.
 ///  - ISONLY ONLY/MANY flag
 
-void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
-                       Double_t x, Double_t y, Double_t z, Int_t irot,
+void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Double_t *upar, Int_t npar)
 {
-   TGeoVolume *amother= 0;
+   TGeoVolume *amother = 0;
    TGeoVolume *volume = 0;
 
    // look into special volume list first
-   amother = fGeometry->FindVolumeFast(mother,kTRUE);
-   if (!amother) amother = fGeometry->FindVolumeFast(mother);
+   amother = fGeometry->FindVolumeFast(mother, kTRUE);
+   if (!amother)
+      amother = fGeometry->FindVolumeFast(mother);
    if (!amother) {
       TString mname = mother;
       mname = mname.Strip();
-      Error("Node","Mother VOLUME \"%s\" not defined",mname.Data());
+      Error("Node", "Mother VOLUME \"%s\" not defined", mname.Data());
       return;
    }
    Int_t i;
-   if (npar<=0) {
-   //---> acting as G3 gspos
-      if (gDebug > 0) Info("Node","Calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i",mother,name,nr,x,y,z,irot,(Int_t)isOnly);
+   if (npar <= 0) {
+      //---> acting as G3 gspos
+      if (gDebug > 0)
+         Info("Node", "Calling gspos, mother=%s, name=%s, nr=%d, x=%g, y=%g, z=%g, irot=%d, konly=%i", mother, name, nr,
+              x, y, z, irot, (Int_t)isOnly);
       // look into special volume list first
-      volume  = fGeometry->FindVolumeFast(name,kTRUE);
-      if (!volume) volume = fGeometry->FindVolumeFast(name);
+      volume = fGeometry->FindVolumeFast(name, kTRUE);
+      if (!volume)
+         volume = fGeometry->FindVolumeFast(name);
       if (!volume) {
          TString vname = name;
          vname = vname.Strip();
-         Error("Node","VOLUME: \"%s\" not defined",vname.Data());
+         Error("Node", "VOLUME: \"%s\" not defined", vname.Data());
          return;
       }
-      if (((TObject*)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
+      if (((TObject *)volume)->TestBit(TGeoVolume::kVolumeMulti) && !volume->GetShape()) {
          Error("Node", "cannot add multiple-volume object %s as node", volume->GetName());
          return;
       }
    } else {
-   //---> acting as G3 gsposp
-      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGeometry->FindVolumeFast(name, kTRUE);
+      //---> acting as G3 gsposp
+      TGeoVolumeMulti *vmulti = (TGeoVolumeMulti *)fGeometry->FindVolumeFast(name, kTRUE);
       if (!vmulti) {
          volume = fGeometry->FindVolumeFast(name);
          if (volume) {
             Warning("Node", "volume: %s is defined as single -> ignoring shape parameters", volume->GetName());
-            Node(name,nr,mother,x,y,z,irot,isOnly, upar);
+            Node(name, nr, mother, x, y, z, irot, isOnly, upar);
             return;
          }
          TString vname = name;
          vname = vname.Strip();
-         Error("Node","VOLUME: \"%s\" not defined ",vname.Data());
+         Error("Node", "VOLUME: \"%s\" not defined ", vname.Data());
          return;
       }
       TGeoMedium *medium = vmulti->GetMedium();
-      TString sh    = vmulti->GetTitle();
+      TString sh = vmulti->GetTitle();
       sh.ToLower();
       if (sh.Contains("box")) {
-         volume = MakeBox(name,medium,upar[0],upar[1],upar[2]);
+         volume = MakeBox(name, medium, upar[0], upar[1], upar[2]);
       } else if (sh.Contains("trd1")) {
-         volume = MakeTrd1(name,medium,upar[0],upar[1],upar[2],upar[3]);
+         volume = MakeTrd1(name, medium, upar[0], upar[1], upar[2], upar[3]);
       } else if (sh.Contains("trd2")) {
-         volume = MakeTrd2(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTrd2(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
       } else if (sh.Contains("trap")) {
-         volume = MakeTrap(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeTrap(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7],
+                           upar[8], upar[9], upar[10]);
       } else if (sh.Contains("gtra")) {
-         volume = MakeGtra(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
+         volume = MakeGtra(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7],
+                           upar[8], upar[9], upar[10], upar[11]);
       } else if (sh.Contains("tube")) {
-         volume = MakeTube(name,medium,upar[0],upar[1],upar[2]);
+         volume = MakeTube(name, medium, upar[0], upar[1], upar[2]);
       } else if (sh.Contains("tubs")) {
-         volume = MakeTubs(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeTubs(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
       } else if (sh.Contains("cone")) {
-         volume = MakeCone(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+         volume = MakeCone(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
       } else if (sh.Contains("cons")) {
-         volume = MakeCons(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
+         volume = MakeCons(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6]);
       } else if (sh.Contains("pgon")) {
-         volume = MakePgon(name,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
+         volume = MakePgon(name, medium, upar[0], upar[1], (Int_t)upar[2], (Int_t)upar[3]);
          Int_t nz = (Int_t)upar[3];
-         for (i=0;i<nz;i++) {
-            ((TGeoPgon*)volume->GetShape())->DefineSection(i,upar[3*i+4],upar[3*i+5],upar[3*i+6]);
+         for (i = 0; i < nz; i++) {
+            ((TGeoPgon *)volume->GetShape())->DefineSection(i, upar[3 * i + 4], upar[3 * i + 5], upar[3 * i + 6]);
          }
       } else if (sh.Contains("pcon")) {
-         volume = MakePcon(name,medium,upar[0],upar[1],(Int_t)upar[2]);
+         volume = MakePcon(name, medium, upar[0], upar[1], (Int_t)upar[2]);
          Int_t nz = (Int_t)upar[2];
-         for (i=0;i<nz;i++) {
-            ((TGeoPcon*)volume->GetShape())->DefineSection(i,upar[3*i+3],upar[3*i+4],upar[3*i+5]);
+         for (i = 0; i < nz; i++) {
+            ((TGeoPcon *)volume->GetShape())->DefineSection(i, upar[3 * i + 3], upar[3 * i + 4], upar[3 * i + 5]);
          }
       } else if (sh.Contains("eltu")) {
-         volume = MakeEltu(name,medium,upar[0],upar[1],upar[2]);
+         volume = MakeEltu(name, medium, upar[0], upar[1], upar[2]);
       } else if (sh.Contains("sphe")) {
-         volume = MakeSphere(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakeSphere(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
       } else if (sh.Contains("ctub")) {
-         volume = MakeCtub(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+         volume = MakeCtub(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7],
+                           upar[8], upar[9], upar[10]);
       } else if (sh.Contains("para")) {
-         volume = MakePara(name,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+         volume = MakePara(name, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
       } else {
-         Error("Node","cannot create shape %s",sh.Data());
+         Error("Node", "cannot create shape %s", sh.Data());
       }
 
-      if (!volume) return;
+      if (!volume)
+         return;
       vmulti->AddVolume(volume);
    }
    if (irot) {
       TGeoRotation *matrix = 0;
       TGeoMatrix *mat;
       TIter next(fGeometry->GetListOfMatrices());
-      while ((mat=(TGeoMatrix*)next())) {
-         if (mat->GetUniqueID()==UInt_t(irot)) {
-            matrix = dynamic_cast<TGeoRotation*>(mat);
+      while ((mat = (TGeoMatrix *)next())) {
+         if (mat->GetUniqueID() == UInt_t(irot)) {
+            matrix = dynamic_cast<TGeoRotation *>(mat);
             break;
          }
       }
       if (!matrix) {
-         Fatal("Node", "Node %s/%s_%d rotation %i not found",mother, name, nr ,irot);
+         Fatal("Node", "Node %s/%s_%d rotation %i not found", mother, name, nr, irot);
          return;
       }
-      if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
-      else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
+      if (isOnly)
+         amother->AddNode(volume, nr, new TGeoCombiTrans(x, y, z, matrix));
+      else
+         amother->AddNodeOverlap(volume, nr, new TGeoCombiTrans(x, y, z, matrix));
    } else {
-      if (TMath::Abs(x)<TGeoShape::Tolerance() &&
-          TMath::Abs(y)<TGeoShape::Tolerance() &&
-          TMath::Abs(z)<TGeoShape::Tolerance()) {
-         if (isOnly) amother->AddNode(volume,nr);
-         else        amother->AddNodeOverlap(volume,nr);
+      if (TMath::Abs(x) < TGeoShape::Tolerance() && TMath::Abs(y) < TGeoShape::Tolerance() &&
+          TMath::Abs(z) < TGeoShape::Tolerance()) {
+         if (isOnly)
+            amother->AddNode(volume, nr);
+         else
+            amother->AddNodeOverlap(volume, nr);
       } else {
-         if (isOnly) amother->AddNode(volume,nr,new TGeoTranslation(x,y,z));
-         else        amother->AddNodeOverlap(volume,nr,new TGeoTranslation(x,y,z));
+         if (isOnly)
+            amother->AddNode(volume, nr, new TGeoTranslation(x, y, z));
+         else
+            amother->AddNodeOverlap(volume, nr, new TGeoTranslation(x, y, z));
       }
    }
 }
@@ -872,14 +883,13 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
 ///  - NPAR   Number of shape parameters
 ///  - UPAR   Vector containing shape parameters
 
-TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
-                                Float_t *upar, Int_t npar)
+TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed, Float_t *upar, Int_t npar)
 {
    Int_t i;
    TGeoVolume *volume = 0;
    TGeoMedium *medium = fGeometry->GetMedium(nmed);
    if (!medium) {
-      Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
+      Error("Volume", "cannot create volume: %s, medium: %d is unknown", name, nmed);
       return 0;
    }
    TString sh = shape;
@@ -888,11 +898,11 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
    const char *vname = sname.Data();
    if (npar <= 0) {
       //--- create a TGeoVolumeMulti
-      volume = MakeVolumeMulti(vname,medium);
+      volume = MakeVolumeMulti(vname, medium);
       volume->SetTitle(shape);
-      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGeometry->GetListOfGVolumes()->FindObject(vname);
+      TGeoVolumeMulti *vmulti = (TGeoVolumeMulti *)fGeometry->GetListOfGVolumes()->FindObject(vname);
       if (!vmulti) {
-         Error("Volume","volume multi: %s not created",vname);
+         Error("Volume", "volume multi: %s not created", vname);
          return 0;
       }
       return vmulti;
@@ -900,54 +910,56 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
    //---> create a normal volume
    sh.ToLower();
    if (sh.Contains("box")) {
-      volume = MakeBox(vname,medium,upar[0],upar[1],upar[2]);
+      volume = MakeBox(vname, medium, upar[0], upar[1], upar[2]);
    } else if (sh.Contains("trd1")) {
-      volume = MakeTrd1(vname,medium,upar[0],upar[1],upar[2],upar[3]);
+      volume = MakeTrd1(vname, medium, upar[0], upar[1], upar[2], upar[3]);
    } else if (sh.Contains("trd2")) {
-      volume = MakeTrd2(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeTrd2(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    } else if (sh.Contains("trap")) {
-      volume = MakeTrap(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+      volume = MakeTrap(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7], upar[8],
+                        upar[9], upar[10]);
    } else if (sh.Contains("gtra")) {
-      volume = MakeGtra(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
+      volume = MakeGtra(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7], upar[8],
+                        upar[9], upar[10], upar[11]);
    } else if (sh.Contains("tube")) {
-      volume = MakeTube(vname,medium,upar[0],upar[1],upar[2]);
+      volume = MakeTube(vname, medium, upar[0], upar[1], upar[2]);
    } else if (sh.Contains("tubs")) {
-      volume = MakeTubs(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeTubs(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    } else if (sh.Contains("cone")) {
-      volume = MakeCone(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeCone(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    } else if (sh.Contains("cons")) {
-      volume = MakeCons(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
+      volume = MakeCons(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6]);
    } else if (sh.Contains("pgon")) {
-      volume = MakePgon(vname,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
+      volume = MakePgon(vname, medium, upar[0], upar[1], (Int_t)upar[2], (Int_t)upar[3]);
       Int_t nz = (Int_t)upar[3];
-      for (i=0;i<nz;i++) {
-         ((TGeoPgon*)volume->GetShape())->DefineSection(i,upar[3*i+4],upar[3*i+5],upar[3*i+6]);
+      for (i = 0; i < nz; i++) {
+         ((TGeoPgon *)volume->GetShape())->DefineSection(i, upar[3 * i + 4], upar[3 * i + 5], upar[3 * i + 6]);
       }
    } else if (sh.Contains("pcon")) {
-      volume = MakePcon(vname,medium,upar[0],upar[1],(Int_t)upar[2]);
+      volume = MakePcon(vname, medium, upar[0], upar[1], (Int_t)upar[2]);
       Int_t nz = (Int_t)upar[2];
-      for (i=0;i<nz;i++) {
-         ((TGeoPcon*)volume->GetShape())->DefineSection(i,upar[3*i+3],upar[3*i+4],upar[3*i+5]);
+      for (i = 0; i < nz; i++) {
+         ((TGeoPcon *)volume->GetShape())->DefineSection(i, upar[3 * i + 3], upar[3 * i + 4], upar[3 * i + 5]);
       }
    } else if (sh.Contains("eltu")) {
-      volume = MakeEltu(vname,medium,upar[0],upar[1],upar[2]);
+      volume = MakeEltu(vname, medium, upar[0], upar[1], upar[2]);
    } else if (sh.Contains("sphe")) {
-      volume = MakeSphere(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+      volume = MakeSphere(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
    } else if (sh.Contains("ctub")) {
-      volume = MakeCtub(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+      volume = MakeCtub(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7], upar[8],
+                        upar[9], upar[10]);
    } else if (sh.Contains("para")) {
-      volume = MakePara(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+      volume = MakePara(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
    } else if (sh.Contains("tor")) {
-      volume = MakeTorus(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeTorus(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    }
 
    if (!volume) {
-      Error("Volume","volume: %s not created",vname);
+      Error("Volume", "volume: %s not created", vname);
       return 0;
    }
    return volume;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a volume in GEANT3 style.
@@ -957,14 +969,13 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
 ///  - NPAR   Number of shape parameters
 ///  - UPAR   Vector containing shape parameters
 
-TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
-                                Double_t *upar, Int_t npar)
+TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed, Double_t *upar, Int_t npar)
 {
    Int_t i;
    TGeoVolume *volume = 0;
    TGeoMedium *medium = fGeometry->GetMedium(nmed);
    if (!medium) {
-      Error("Volume","cannot create volume: %s, medium: %d is unknown",name,nmed);
+      Error("Volume", "cannot create volume: %s, medium: %d is unknown", name, nmed);
       return 0;
    }
    TString sh = shape;
@@ -973,11 +984,11 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
    const char *vname = sname.Data();
    if (npar <= 0) {
       //--- create a TGeoVolumeMulti
-      volume = MakeVolumeMulti(vname,medium);
+      volume = MakeVolumeMulti(vname, medium);
       volume->SetTitle(shape);
-      TGeoVolumeMulti *vmulti  = (TGeoVolumeMulti*)fGeometry->GetListOfGVolumes()->FindObject(vname);
+      TGeoVolumeMulti *vmulti = (TGeoVolumeMulti *)fGeometry->GetListOfGVolumes()->FindObject(vname);
       if (!vmulti) {
-         Error("Volume","volume multi: %s not created",vname);
+         Error("Volume", "volume multi: %s not created", vname);
          return 0;
       }
       return vmulti;
@@ -985,51 +996,53 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
    //---> create a normal volume
    sh.ToLower();
    if (sh.Contains("box")) {
-      volume = MakeBox(vname,medium,upar[0],upar[1],upar[2]);
+      volume = MakeBox(vname, medium, upar[0], upar[1], upar[2]);
    } else if (sh.Contains("trd1")) {
-      volume = MakeTrd1(vname,medium,upar[0],upar[1],upar[2],upar[3]);
+      volume = MakeTrd1(vname, medium, upar[0], upar[1], upar[2], upar[3]);
    } else if (sh.Contains("trd2")) {
-      volume = MakeTrd2(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeTrd2(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    } else if (sh.Contains("trap")) {
-      volume = MakeTrap(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+      volume = MakeTrap(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7], upar[8],
+                        upar[9], upar[10]);
    } else if (sh.Contains("gtra")) {
-      volume = MakeGtra(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10],upar[11]);
+      volume = MakeGtra(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7], upar[8],
+                        upar[9], upar[10], upar[11]);
    } else if (sh.Contains("tube")) {
-      volume = MakeTube(vname,medium,upar[0],upar[1],upar[2]);
+      volume = MakeTube(vname, medium, upar[0], upar[1], upar[2]);
    } else if (sh.Contains("tubs")) {
-      volume = MakeTubs(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeTubs(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    } else if (sh.Contains("cone")) {
-      volume = MakeCone(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeCone(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    } else if (sh.Contains("cons")) {
-      volume = MakeCons(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6]);
+      volume = MakeCons(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6]);
    } else if (sh.Contains("pgon")) {
-      volume = MakePgon(vname,medium,upar[0],upar[1],(Int_t)upar[2],(Int_t)upar[3]);
+      volume = MakePgon(vname, medium, upar[0], upar[1], (Int_t)upar[2], (Int_t)upar[3]);
       Int_t nz = (Int_t)upar[3];
-      for (i=0;i<nz;i++) {
-         ((TGeoPgon*)volume->GetShape())->DefineSection(i,upar[3*i+4],upar[3*i+5],upar[3*i+6]);
+      for (i = 0; i < nz; i++) {
+         ((TGeoPgon *)volume->GetShape())->DefineSection(i, upar[3 * i + 4], upar[3 * i + 5], upar[3 * i + 6]);
       }
    } else if (sh.Contains("pcon")) {
-      volume = MakePcon(vname,medium,upar[0],upar[1],(Int_t)upar[2]);
+      volume = MakePcon(vname, medium, upar[0], upar[1], (Int_t)upar[2]);
       Int_t nz = (Int_t)upar[2];
-      for (i=0;i<nz;i++) {
-         ((TGeoPcon*)volume->GetShape())->DefineSection(i,upar[3*i+3],upar[3*i+4],upar[3*i+5]);
+      for (i = 0; i < nz; i++) {
+         ((TGeoPcon *)volume->GetShape())->DefineSection(i, upar[3 * i + 3], upar[3 * i + 4], upar[3 * i + 5]);
       }
    } else if (sh.Contains("eltu")) {
-      volume = MakeEltu(vname,medium,upar[0],upar[1],upar[2]);
+      volume = MakeEltu(vname, medium, upar[0], upar[1], upar[2]);
    } else if (sh.Contains("sphe")) {
-      volume = MakeSphere(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+      volume = MakeSphere(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
    } else if (sh.Contains("ctub")) {
-      volume = MakeCtub(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5],upar[6],upar[7],upar[8],upar[9],upar[10]);
+      volume = MakeCtub(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5], upar[6], upar[7], upar[8],
+                        upar[9], upar[10]);
    } else if (sh.Contains("para")) {
-      volume = MakePara(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4],upar[5]);
+      volume = MakePara(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4], upar[5]);
    } else if (sh.Contains("tor")) {
-      volume = MakeTorus(vname,medium,upar[0],upar[1],upar[2],upar[3],upar[4]);
+      volume = MakeTorus(vname, medium, upar[0], upar[1], upar[2], upar[3], upar[4]);
    }
 
    if (!volume) {
-      Error("Volume","volume: %s not created",vname);
+      Error("Volume", "volume: %s not created", vname);
       return 0;
    }
    return volume;
 }
-

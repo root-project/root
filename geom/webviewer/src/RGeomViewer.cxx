@@ -29,7 +29,6 @@ using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -44,17 +43,18 @@ RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
       fWebWindow->SetDisconnectCallBack([this](unsigned connid) { WebWindowDisconnect(connid); });
 
       fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
-      fWebWindow->SetConnLimit(0); // allow any connections numbers at the same time
+      fWebWindow->SetConnLimit(0);       // allow any connections numbers at the same time
       fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
    }
 
-   fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
+   fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline", 0) != 0);
    fDesc.SetJsonComp(gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces));
    fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1));
 
    fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
 
-   if (mgr) SetGeometry(mgr, volname);
+   if (mgr)
+      SetGeometry(mgr, volname);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,8 +157,10 @@ std::vector<int> RGeomViewer::GetStackFromJson(const std::string &json, bool nod
    std::vector<int> *stack{nullptr}, res;
 
    if (TBufferJSON::FromJSON(stack, json.c_str())) {
-      if (node_ids) res = fDesc.MakeStackByIds(*stack);
-               else res = *stack;
+      if (node_ids)
+         res = fDesc.MakeStackByIds(*stack);
+      else
+         res = *stack;
       delete stack;
    } else {
       R__LOG_ERROR(RGeomLog()) << "Fail convert " << json << " into vector<int>";
@@ -192,7 +194,6 @@ void RGeomViewer::SendGeometry(unsigned connid, bool first_time)
       fWebWindow->Send(connid, json0);
    else
       fWebWindow->Send(connid, json1);
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,9 +213,10 @@ void RGeomViewer::SetDrawOptions(const std::string &opt)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce PNG image of the geometry
 /// If web-browser is shown and drawing completed, image is requested from the browser.
-/// In this case method executed asynchronously - it returns immediately and image will stored shortly afterwards when received from the client
-/// Height and width parameters are ignored in that case and derived from actual drawing size in the browser.
-/// Another possibility is to invoke headless browser, providing positive width and height parameter explicitely
+/// In this case method executed asynchronously - it returns immediately and image will stored shortly afterwards when
+/// received from the client Height and width parameters are ignored in that case and derived from actual drawing size
+/// in the browser. Another possibility is to invoke headless browser, providing positive width and height parameter
+/// explicitely
 ///
 
 void RGeomViewer::SaveImage(const std::string &fname, int width, int height)
@@ -224,8 +226,10 @@ void RGeomViewer::SaveImage(const std::string &fname, int width, int height)
    if (connid && (width <= 0) && (height <= 0)) {
       fWebWindow->Send(connid, "IMAGE:"s + fname);
    } else {
-      if (width <= 0) width = 800;
-      if (height <= 0) height = width;
+      if (width <= 0)
+         width = 800;
+      if (height <= 0)
+         height = width;
 
       if (!fDesc.HasDrawData())
          fDesc.ProduceDrawData();
@@ -260,7 +264,7 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 
       if (!fWebHierarchy)
          fWebHierarchy = std::make_shared<RGeomHierarchy>(fDesc);
-      fWebHierarchy->Show({ fWebWindow, connid, chid });
+      fWebHierarchy->Show({fWebWindow, connid, chid});
 
    } else if (arg.compare(0, 4, "GET:") == 0) {
       // provide exact shape
@@ -279,16 +283,18 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       auto stack = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(10));
       if (stack && fDesc.SetHighlightedItem(*stack))
          fDesc.IssueSignal(this, "HighlightItem");
-   } else if (arg.compare(0,6, "IMAGE:") == 0) {
-      auto separ = arg.find("::",6);
-      if (separ == std::string::npos) return;
+   } else if (arg.compare(0, 6, "IMAGE:") == 0) {
+      auto separ = arg.find("::", 6);
+      if (separ == std::string::npos)
+         return;
 
-      std::string fname = arg.substr(6, separ-6);
+      std::string fname = arg.substr(6, separ - 6);
       if (fname.empty()) {
          int cnt = 0;
          do {
             fname = "geometry"s;
-            if (cnt++>0) fname += std::to_string(cnt);
+            if (cnt++ > 0)
+               fname += std::to_string(cnt);
             fname += ".png"s;
          } while (!gSystem->AccessPathName(fname.c_str()));
       }
@@ -299,9 +305,9 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       ofs.write(binary.Data(), binary.Length());
       ofs.close();
 
-      printf("Image file %s size %d has been created\n", fname.c_str(), (int) binary.Length());
+      printf("Image file %s size %d has been created\n", fname.c_str(), (int)binary.Length());
 
-   } else if (arg.compare(0,4, "CFG:") == 0) {
+   } else if (arg.compare(0, 4, "CFG:") == 0) {
 
       if (fDesc.ChangeConfiguration(arg.substr(4)))
          SendGeometry(connid);
@@ -329,7 +335,6 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
    } else if (arg == "SAVEMACRO") {
       SaveAsMacro("viewer.cxx");
    }
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -354,7 +359,8 @@ void RGeomViewer::ProcessSignal(const std::string &kind)
       SendGeometry();
    } else if (kind == "ChangeSearch") {
       auto json = fDesc.GetSearchJson();
-      if (json.empty()) json = "CLRSCH";
+      if (json.empty())
+         json = "CLRSCH";
       if (fWebWindow)
          fWebWindow->Send(0, json);
    } else if (kind == "ClearSearch") {
@@ -369,7 +375,9 @@ void RGeomViewer::ProcessSignal(const std::string &kind)
          auto stack = fDesc.GetClickedItem();
          auto info = fDesc.MakeNodeInfo(stack);
          if (info && fWebWindow)
-            fWebWindow->Send(0, "NINFO:"s + TBufferJSON::ToJSON(info.get(), (fDesc.GetJsonComp() % 5) + TBufferJSON::kSameSuppression).Data());
+            fWebWindow->Send(
+               0, "NINFO:"s +
+                     TBufferJSON::ToJSON(info.get(), (fDesc.GetJsonComp() % 5) + TBufferJSON::kSameSuppression).Data());
       }
    }
 }
@@ -380,12 +388,13 @@ void RGeomViewer::ProcessSignal(const std::string &kind)
 void RGeomViewer::SaveAsMacro(const std::string &fname)
 {
    std::ofstream fs(fname);
-   if (!fs) return;
+   if (!fs)
+      return;
    std::string prefix = "   ";
 
    auto p = fname.find(".");
    if (p > 0) {
-      fs << "void " << fname.substr(0,p) << "() { " << std::endl;
+      fs << "void " << fname.substr(0, p) << "() { " << std::endl;
    } else {
       fs << "{" << std::endl;
    }
@@ -403,7 +412,8 @@ void RGeomViewer::SaveAsMacro(const std::string &fname)
    fs << prefix << "using namespace ROOT::Experimental;" << std::endl << std::endl;
 
    fs << prefix << "auto viewer = std::make_shared<RGeomViewer>(gGeoManager";
-   if (!fSelectedVolume.empty()) fs << ", \"" << fSelectedVolume << "\"";
+   if (!fSelectedVolume.empty())
+      fs << ", \"" << fSelectedVolume << "\"";
    fs << ");" << std::endl;
 
    fDesc.SavePrimitive(fs, "viewer->Description().");

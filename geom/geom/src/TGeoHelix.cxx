@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 /** \class TGeoHelix
 \ingroup Shapes_classes
 
@@ -61,16 +60,16 @@ ClassImp(TGeoHelix);
 
 TGeoHelix::TGeoHelix()
 {
-   fC    = 0.;
-   fS    = 0.;
+   fC = 0.;
+   fS = 0.;
    fStep = 0.;
-   fPhi  = 0.;
+   fPhi = 0.;
    fPointInit[0] = fPointInit[1] = fPointInit[2] = 0.;
    fDirInit[0] = fDirInit[1] = fDirInit[2] = 0.;
    fPoint[0] = fPoint[1] = fPoint[2] = 0.;
    fDir[0] = fDir[1] = fDir[2] = 0.;
    fB[0] = fB[1] = fB[2] = 0.;
-   fQ    = 0;
+   fQ = 0;
    fMatrix = 0;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    TObject::SetBit(kHelixStraight, kFALSE);
@@ -84,16 +83,16 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
 {
    SetXYcurvature(curvature);
    SetHelixStep(hstep);
-   fQ    = 0;
+   fQ = 0;
    SetCharge(charge);
    fStep = 0.;
-   fPhi  = 0.;
+   fPhi = 0.;
    fPointInit[0] = fPointInit[1] = fPointInit[2] = 0.;
    fDirInit[0] = fDirInit[1] = fDirInit[2] = 0.;
    fPoint[0] = fPoint[1] = fPoint[2] = 0.;
    fDir[0] = fDir[1] = fDir[2] = 0.;
    fB[0] = fB[1] = fB[2] = 0.;
-   fMatrix    = new TGeoHMatrix();
+   fMatrix = new TGeoHMatrix();
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    TObject::SetBit(kHelixStraight, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);
@@ -104,7 +103,8 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
 
 TGeoHelix::~TGeoHelix()
 {
-   if (fMatrix)    delete fMatrix;
+   if (fMatrix)
+      delete fMatrix;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,9 +113,10 @@ TGeoHelix::~TGeoHelix()
 
 Double_t TGeoHelix::ComputeSafeStep(Double_t epsil) const
 {
-   if (TestBit(kHelixStraight) || TMath::Abs(fC)<TGeoShape::Tolerance()) return 1.E30;
+   if (TestBit(kHelixStraight) || TMath::Abs(fC) < TGeoShape::Tolerance())
+      return 1.E30;
    Double_t c = GetTotalCurvature();
-   Double_t step = TMath::Sqrt(2.*epsil/c);
+   Double_t step = TMath::Sqrt(2. * epsil / c);
    return step;
 }
 
@@ -133,7 +134,7 @@ void TGeoHelix::InitPoint(Double_t x0, Double_t y0, Double_t z0)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set initial point on the helix.
 
-void TGeoHelix::InitPoint (Double_t *point)
+void TGeoHelix::InitPoint(Double_t *point)
 {
    InitPoint(point[0], point[1], point[2]);
 }
@@ -147,9 +148,11 @@ void TGeoHelix::InitDirection(Double_t dirx, Double_t diry, Double_t dirz, Bool_
    fDirInit[1] = diry;
    fDirInit[2] = dirz;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-   if (is_normalized) return;
-   Double_t norm = 1./TMath::Sqrt(dirx*dirx+diry*diry+dirz*dirz);
-   for (Int_t i=0; i<3; i++) fDirInit[i] *= norm;
+   if (is_normalized)
+      return;
+   Double_t norm = 1. / TMath::Sqrt(dirx * dirx + diry * diry + dirz * dirz);
+   for (Int_t i = 0; i < 3; i++)
+      fDirInit[i] *= norm;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +168,7 @@ void TGeoHelix::InitDirection(Double_t *dir, Bool_t is_normalized)
 
 Double_t TGeoHelix::GetTotalCurvature() const
 {
-   Double_t k = fC/(1.+fC*fC*fS*fS);
+   Double_t k = fC / (1. + fC * fC * fS * fS);
    return k;
 }
 
@@ -174,7 +177,7 @@ Double_t TGeoHelix::GetTotalCurvature() const
 
 void TGeoHelix::SetXYcurvature(Double_t curvature)
 {
-   fC    = curvature;
+   fC = curvature;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    if (fC < 0) {
       Error("SetXYcurvature", "Curvature %f not valid. Must be positive.", fC);
@@ -191,12 +194,13 @@ void TGeoHelix::SetXYcurvature(Double_t curvature)
 
 void TGeoHelix::SetCharge(Int_t charge)
 {
-   if (charge==0) {
+   if (charge == 0) {
       Error("ctor", "charge cannot be 0 - define it positive for a left-handed helix, negative otherwise");
       return;
    }
    Int_t q = TMath::Sign(1, charge);
-   if (q == fQ) return;
+   if (q == fQ)
+      return;
    fQ = q;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
 }
@@ -210,9 +214,11 @@ void TGeoHelix::SetField(Double_t bx, Double_t by, Double_t bz, Bool_t is_normal
    fB[1] = by;
    fB[2] = bz;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-   if (is_normalized) return;
-   Double_t norm = 1./TMath::Sqrt(bx*bx+by*by+bz*bz);
-   for (Int_t i=0; i<3; i++) fB[i] *= norm;
+   if (is_normalized)
+      return;
+   Double_t norm = 1. / TMath::Sqrt(bx * bx + by * by + bz * bz);
+   for (Int_t i = 0; i < 3; i++)
+      fB[i] *= norm;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,8 +231,9 @@ void TGeoHelix::SetHelixStep(Double_t step)
       return;
    }
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-   fS    = 0.5*step/TMath::Pi();
-   if (fS < TGeoShape::Tolerance()) TObject::SetBit(kHelixCircle, kTRUE);
+   fS = 0.5 * step / TMath::Pi();
+   if (fS < TGeoShape::Tolerance())
+      TObject::SetBit(kHelixCircle, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,8 +242,8 @@ void TGeoHelix::SetHelixStep(Double_t step)
 void TGeoHelix::ResetStep()
 {
    fStep = 0.;
-   memcpy(fPoint, fPointInit, 3*sizeof(Double_t));
-   memcpy(fDir, fDirInit, 3*sizeof(Double_t));
+   memcpy(fPoint, fPointInit, 3 * sizeof(Double_t));
+   memcpy(fDir, fDirInit, 3 * sizeof(Double_t));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,25 +262,26 @@ void TGeoHelix::Step(Double_t step)
    Int_t i;
    fStep += step;
    if (TObject::TestBit(kHelixStraight)) {
-      for (i=0; i<3; i++) {
-         fPoint[i] = fPointInit[i]+fStep*fDirInit[i];
+      for (i = 0; i < 3; i++) {
+         fPoint[i] = fPointInit[i] + fStep * fDirInit[i];
          fDir[i] = fDirInit[i];
       }
       return;
    }
-   if (TObject::TestBit(kHelixNeedUpdate)) UpdateHelix();
-   Double_t r = 1./fC;
-   fPhi = fStep/TMath::Sqrt(r*r+fS*fS);
+   if (TObject::TestBit(kHelixNeedUpdate))
+      UpdateHelix();
+   Double_t r = 1. / fC;
+   fPhi = fStep / TMath::Sqrt(r * r + fS * fS);
    Double_t vect[3];
    vect[0] = r * TMath::Cos(fPhi);
    vect[1] = -fQ * r * TMath::Sin(fPhi);
    vect[2] = fS * fPhi;
    fMatrix->LocalToMaster(vect, fPoint);
 
-   Double_t ddb = fDirInit[0]*fB[0]+fDirInit[1]*fB[1]+fDirInit[2]*fB[2];
-   Double_t f = -TMath::Sqrt(1.-ddb*ddb);
-   vect[0] = f*TMath::Sin(fPhi);
-   vect[1] = fQ*f*TMath::Cos(fPhi);
+   Double_t ddb = fDirInit[0] * fB[0] + fDirInit[1] * fB[1] + fDirInit[2] * fB[2];
+   Double_t f = -TMath::Sqrt(1. - ddb * ddb);
+   vect[0] = f * TMath::Sin(fPhi);
+   vect[1] = fQ * f * TMath::Cos(fPhi);
    vect[2] = ddb;
    TMath::Normalize(vect);
    fMatrix->LocalToMasterVect(vect, fDir);
@@ -288,28 +296,32 @@ Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
    Double_t snext = 1.E30;
    Double_t dx, dy, dz;
    Double_t ddn, pdn;
-   if (TObject::TestBit(kHelixNeedUpdate)) UpdateHelix();
+   if (TObject::TestBit(kHelixNeedUpdate))
+      UpdateHelix();
    dx = point[0] - fPoint[0];
    dy = point[1] - fPoint[1];
    dz = point[2] - fPoint[2];
-   pdn = dx*norm[0]+dy*norm[1]+dz*norm[2];
-   ddn = fDir[0]*norm[0]+fDir[1]*norm[1]+fDir[2]*norm[2];
+   pdn = dx * norm[0] + dy * norm[1] + dz * norm[2];
+   ddn = fDir[0] * norm[0] + fDir[1] * norm[1] + fDir[2] * norm[2];
    if (TObject::TestBit(kHelixStraight)) {
       // propagate straight line to plane
-      if ((pdn*ddn) <= 0) return snext;
-      snext = pdn/ddn;
+      if ((pdn * ddn) <= 0)
+         return snext;
+      snext = pdn / ddn;
       Step(snext);
       return snext;
    }
 
-   Double_t r = 1./fC;
+   Double_t r = 1. / fC;
    Double_t dist;
    Double_t safety = TMath::Abs(pdn);
    Double_t safestep = ComputeSafeStep();
    snext = 1.E30;
-   Bool_t approaching = (ddn*pdn>0)?kTRUE:kFALSE;
-   if (approaching) snext = pdn/ddn;
-   else if (safety > 2.*r) return snext;
+   Bool_t approaching = (ddn * pdn > 0) ? kTRUE : kFALSE;
+   if (approaching)
+      snext = pdn / ddn;
+   else if (safety > 2. * r)
+      return snext;
    while (snext > safestep) {
       dist = TMath::Max(safety, safestep);
       Step(dist);
@@ -317,13 +329,14 @@ Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
       dx = point[0] - fPoint[0];
       dy = point[1] - fPoint[1];
       dz = point[2] - fPoint[2];
-      pdn = dx*norm[0]+dy*norm[1]+dz*norm[2];
-      ddn = fDir[0]*norm[0]+fDir[1]*norm[1]+fDir[2]*norm[2];
+      pdn = dx * norm[0] + dy * norm[1] + dz * norm[2];
+      ddn = fDir[0] * norm[0] + fDir[1] * norm[1] + fDir[2] * norm[2];
       safety = TMath::Abs(pdn);
-      approaching = (ddn*pdn>0)?kTRUE:kFALSE;
+      approaching = (ddn * pdn > 0) ? kTRUE : kFALSE;
       snext = 1.E30;
-      if (approaching) snext = pdn/ddn;
-      else if (safety > 2.*r) {
+      if (approaching)
+         snext = pdn / ddn;
+      else if (safety > 2. * r) {
          ResetStep();
          return snext;
       }
@@ -340,12 +353,12 @@ void TGeoHelix::UpdateHelix()
 {
    TObject::SetBit(kHelixNeedUpdate, kFALSE);
    fStep = 0.;
-   memcpy(fPoint, fPointInit, 3*sizeof(Double_t));
-   memcpy(fDir, fDirInit, 3*sizeof(Double_t));
+   memcpy(fPoint, fPointInit, 3 * sizeof(Double_t));
+   memcpy(fDir, fDirInit, 3 * sizeof(Double_t));
    Double_t rot[9];
    Double_t tr[3];
-   Double_t ddb = fDirInit[0]*fB[0]+fDirInit[1]*fB[1]+fDirInit[2]*fB[2];
-   if ((1.-TMath::Abs(ddb))<TGeoShape::Tolerance() || TMath::Abs(fC)<TGeoShape::Tolerance()) {
+   Double_t ddb = fDirInit[0] * fB[0] + fDirInit[1] * fB[1] + fDirInit[2] * fB[2];
+   if ((1. - TMath::Abs(ddb)) < TGeoShape::Tolerance() || TMath::Abs(fC) < TGeoShape::Tolerance()) {
       // helix is just a straight line
       TObject::SetBit(kHelixStraight, kTRUE);
       fMatrix->Clear();
@@ -354,22 +367,22 @@ void TGeoHelix::UpdateHelix()
    rot[2] = fB[0];
    rot[5] = fB[1];
    rot[8] = fB[2];
-   if (ddb < 0) fS = -TMath::Abs(fS);
-   Double_t fy = - fQ*TMath::Sqrt(1.-ddb*ddb);
-   fy = 1./fy;
-   rot[1] = fy*(fDirInit[0]-fB[0]*ddb);
-   rot[4] = fy*(fDirInit[1]-fB[1]*ddb);
-   rot[7] = fy*(fDirInit[2]-fB[2]*ddb);
+   if (ddb < 0)
+      fS = -TMath::Abs(fS);
+   Double_t fy = -fQ * TMath::Sqrt(1. - ddb * ddb);
+   fy = 1. / fy;
+   rot[1] = fy * (fDirInit[0] - fB[0] * ddb);
+   rot[4] = fy * (fDirInit[1] - fB[1] * ddb);
+   rot[7] = fy * (fDirInit[2] - fB[2] * ddb);
 
-   rot[0] = rot[4]*rot[8] - rot[7]*rot[5];
-   rot[3] = rot[7]*rot[2] - rot[1]*rot[8];
-   rot[6] = rot[1]*rot[5] - rot[4]*rot[2];
+   rot[0] = rot[4] * rot[8] - rot[7] * rot[5];
+   rot[3] = rot[7] * rot[2] - rot[1] * rot[8];
+   rot[6] = rot[1] * rot[5] - rot[4] * rot[2];
 
-   tr[0] = fPointInit[0] - rot[0]/fC;
-   tr[1] = fPointInit[1] - rot[3]/fC;
-   tr[2] = fPointInit[2] - rot[6]/fC;
+   tr[0] = fPointInit[0] - rot[0] / fC;
+   tr[1] = fPointInit[1] - rot[3] / fC;
+   tr[2] = fPointInit[2] - rot[6] / fC;
 
    fMatrix->SetTranslation(tr);
    fMatrix->SetRotation(rot);
-
 }

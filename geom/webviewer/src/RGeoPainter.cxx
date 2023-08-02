@@ -22,15 +22,12 @@ RGeoPainter::RGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    fGeoManager = manager;
 }
 
-RGeoPainter::~RGeoPainter()
-{
-}
+RGeoPainter::~RGeoPainter() {}
 
 void RGeoPainter::SetTopVisible(Bool_t on)
 {
    fTopVisible = on ? 1 : 0;
 }
-
 
 void RGeoPainter::SetGeoManager(TGeoManager *mgr)
 {
@@ -54,7 +51,6 @@ void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
       return;
    }
 
-
    if (!fViewer)
       fViewer = std::make_shared<RGeomViewer>(fGeoManager);
 
@@ -62,7 +58,7 @@ void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
    fViewer->SetGeometry(fGeoManager, vol->GetName());
 
    std::string drawopt = "";
-   if (opt && strstr(opt,"s"))
+   if (opt && strstr(opt, "s"))
       drawopt = "wire";
 
    // specify JSROOT draw options - here clipping on X,Y,Z axes
@@ -70,7 +66,6 @@ void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
 
    if (fTopVisible >= 0)
       fViewer->SetTopVisible(fTopVisible > 0);
-
 
    // set default limits for number of visible nodes and faces
    // when viewer created, initial values exported from TGeoManager

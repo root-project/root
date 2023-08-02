@@ -19,10 +19,8 @@ ClassImp(TGeoGedFrame);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGeoGedFrame::TGeoGedFrame(const TGWindow *p, Int_t width, Int_t height,
-                           UInt_t options, Pixel_t back) :
-  TGedFrame(p, width, height, options, back),
-  fTab(0), fTabMgr(0), fPad(0)
+TGeoGedFrame::TGeoGedFrame(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options, back), fTab(0), fTabMgr(0), fPad(0)
 {
    fTab = fGedEditor->GetTab();
    fPad = fGedEditor->GetPad();
@@ -35,12 +33,12 @@ TGeoGedFrame::TGeoGedFrame(const TGWindow *p, Int_t width, Int_t height,
 void TGeoGedFrame::SetActive(Bool_t active)
 {
    if (active)
-      ((TGCompositeFrame*)GetParent())->ShowFrame(this);
+      ((TGCompositeFrame *)GetParent())->ShowFrame(this);
    else
-      ((TGCompositeFrame*)GetParent())->HideFrame(this);
+      ((TGCompositeFrame *)GetParent())->HideFrame(this);
 
-// no need to call for every single editor Layout of TGMainFrame
-//   ((TGMainFrame*)GetMainFrame())->Layout();
+   // no need to call for every single editor Layout of TGMainFrame
+   //   ((TGMainFrame*)GetMainFrame())->Layout();
 
    // to avoid that the user changes options on a deactivated Tab
    if (fTab->IsEnabled(fTab->GetCurrent()))

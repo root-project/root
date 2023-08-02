@@ -14,7 +14,6 @@
 
 #include <TNamed.h>
 
-
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGDMLProperty - A property with a name and a reference name pointing   //
@@ -34,28 +33,27 @@ typedef TNamed TGDMLProperty;
 class TGDMLMatrix : public TNamed {
 public:
    TGDMLMatrix() {}
-   TGDMLMatrix(const char *name, size_t rows,size_t cols);
-   TGDMLMatrix(const TGDMLMatrix& rhs);
-   TGDMLMatrix& operator=(const TGDMLMatrix& rhs);
-  ~TGDMLMatrix() override { delete [] fMatrix; }
+   TGDMLMatrix(const char *name, size_t rows, size_t cols);
+   TGDMLMatrix(const TGDMLMatrix &rhs);
+   TGDMLMatrix &operator=(const TGDMLMatrix &rhs);
+   ~TGDMLMatrix() override { delete[] fMatrix; }
 
-   void        Set(size_t r, size_t c, Double_t a);
-   Double_t    Get(size_t r, size_t c) const;
-   size_t      GetRows() const { return fNrows; }
-   size_t      GetCols() const { return fNcols; }
-   void        SetMatrixAsString(const char *mat) { fTitle = mat; }
+   void Set(size_t r, size_t c, Double_t a);
+   Double_t Get(size_t r, size_t c) const;
+   size_t GetRows() const { return fNrows; }
+   size_t GetCols() const { return fNcols; }
+   void SetMatrixAsString(const char *mat) { fTitle = mat; }
    const char *GetMatrixAsString() const { return fTitle.Data(); }
 
-   void        Print(Option_t *option="") const override;
+   void Print(Option_t *option = "") const override;
 
- private:
+private:
+   Int_t fNelem = 0;            // Number of elements
+   size_t fNrows = 0;           // Number of rows
+   size_t fNcols = 0;           // Number of columns
+   Double_t *fMatrix = nullptr; // [fNelem] Matrix elements
 
-   Int_t  fNelem = 0;                // Number of elements
-   size_t fNrows = 0;                // Number of rows
-   size_t fNcols = 0;                // Number of columns
-   Double_t *fMatrix = nullptr;      // [fNelem] Matrix elements
-
-   ClassDefOverride(TGDMLMatrix, 1)          // Class representing a matrix used temporary for GDML parsing
+   ClassDefOverride(TGDMLMatrix, 1) // Class representing a matrix used temporary for GDML parsing
 };
 
 #endif /* ROOT_TGDMLMATRIX */

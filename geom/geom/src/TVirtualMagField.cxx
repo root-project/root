@@ -59,8 +59,7 @@ ClassImp(TGeoUniformMagField);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor;
 
-TGeoUniformMagField::TGeoUniformMagField()
-                    :TVirtualMagField()
+TGeoUniformMagField::TGeoUniformMagField() : TVirtualMagField()
 {
    fB[0] = 0.;
    fB[1] = 0.;
@@ -71,7 +70,7 @@ TGeoUniformMagField::TGeoUniformMagField()
 /// Default constructor;
 
 TGeoUniformMagField::TGeoUniformMagField(Double_t Bx, Double_t By, Double_t Bz)
-                    :TVirtualMagField("Uniform magnetic field")
+   : TVirtualMagField("Uniform magnetic field")
 {
    fB[0] = Bx;
    fB[1] = By;

@@ -27,43 +27,40 @@ class TString;
 class TGeoEltuEditor : public TGeoGedFrame {
 
 protected:
+   Double_t fAi;            // Initial  semi-axis of the ellipse along x
+   Double_t fBi;            // Initial  semi-axis of the ellipse along y
+   Double_t fDzi;           // Initial  half length in z
+   TString fNamei;          // Initial name
+   TGeoEltu *fShape;        // Shape object
+   Bool_t fIsModified;      // Flag that volume was modified
+   Bool_t fIsShapeEditable; // Flag that the shape can be changed
 
-   Double_t             fAi;                // Initial  semi-axis of the ellipse along x
-   Double_t             fBi;                // Initial  semi-axis of the ellipse along y
-   Double_t             fDzi;               // Initial  half length in z
-   TString              fNamei;             // Initial name
-   TGeoEltu            *fShape;             // Shape object
-   Bool_t               fIsModified;        // Flag that volume was modified
-   Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
+   TGTextEntry *fShapeName; // Shape name text entry
+   TGNumberEntry *fEA;      // Number entry for  A
+   TGNumberEntry *fEB;      // Number entry for  B
+   TGNumberEntry *fEDz;     // Number entry for  DZ
+   TGTextButton *fApply;    // Apply-Button to accept changes
+   TGTextButton *fUndo;     // Undo-Button
+   TGCheckButton *fDelayed; // Check button for delayed draw
 
-   TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fEA;                // Number entry for  A
-   TGNumberEntry       *fEB;                // Number entry for  B
-   TGNumberEntry       *fEDz;               // Number entry for  DZ
-   TGTextButton        *fApply;             // Apply-Button to accept changes
-   TGTextButton        *fUndo;              // Undo-Button
-   TGCheckButton       *fDelayed;           // Check button for delayed draw
-
-   virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;
+   virtual void ConnectSignals2Slots(); // Connect the signals to the slots
+   Bool_t IsDelayed() const;
 
 public:
-   TGeoEltuEditor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
+   TGeoEltuEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
+                  Pixel_t back = GetDefaultFrameBackground());
    ~TGeoEltuEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
-   void           DoA();
-   void           DoB();
-   void           DoDz();
-   void           DoModified();
-   void           DoName();
-   void           DoApply();
-   void           DoUndo();
+   void DoA();
+   void DoB();
+   void DoDz();
+   void DoModified();
+   void DoName();
+   void DoApply();
+   void DoUndo();
 
-   ClassDefOverride(TGeoEltuEditor,0)   // TGeoEltu editor
+   ClassDefOverride(TGeoEltuEditor, 0) // TGeoEltu editor
 };
 
 #endif

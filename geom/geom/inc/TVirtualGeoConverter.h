@@ -18,18 +18,18 @@ class TGeoManager;
 class TVirtualGeoConverter : public TObject {
 
 protected:
-   static TVirtualGeoConverter   *fgGeoConverter; // Pointer to geometry converter
-   TGeoManager                   *fGeom; // Pointer to geometry manager
+   static TVirtualGeoConverter *fgGeoConverter; // Pointer to geometry converter
+   TGeoManager *fGeom;                          // Pointer to geometry manager
 public:
    TVirtualGeoConverter(TGeoManager *geom);
    ~TVirtualGeoConverter() override;
 
-   virtual void       ConvertGeometry() {}
-   static  TVirtualGeoConverter *Instance(TGeoManager *geom=nullptr);
-   static void        SetConverter(const TVirtualGeoConverter *conv);
-   void               SetGeometry(TGeoManager *geom) { fGeom = geom; }
+   virtual void ConvertGeometry() {}
+   static TVirtualGeoConverter *Instance(TGeoManager *geom = nullptr);
+   static void SetConverter(const TVirtualGeoConverter *conv);
+   void SetGeometry(TGeoManager *geom) { fGeom = geom; }
 
-   ClassDefOverride(TVirtualGeoConverter,0)  // Abstract interface for geometry converters
+   ClassDefOverride(TVirtualGeoConverter, 0) // Abstract interface for geometry converters
 };
 
 #endif

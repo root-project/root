@@ -27,29 +27,29 @@ ClassImp(TGeoStateInfo);
 /// Constructor
 
 TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
-              :fNode(0),
-               fAsmCurrent(0),
-               fAsmNext(0),
-               fDivCurrent(0),
-               fDivNext(0),
-               fDivTrans(),
-               fDivRot(),
-               fDivCombi(),
-               fVoxNcandidates(0),
-               fVoxCurrent(0),
-               fVoxCheckList(0),
-               fVoxBits1(0),
-               fBoolSelected(0),
-               fXtruSeg(0),
-               fXtruIz(0),
-               fXtruXc(0),
-               fXtruYc(0),
-               fXtruPoly(0)
+   : fNode(0),
+     fAsmCurrent(0),
+     fAsmNext(0),
+     fDivCurrent(0),
+     fDivNext(0),
+     fDivTrans(),
+     fDivRot(),
+     fDivCombi(),
+     fVoxNcandidates(0),
+     fVoxCurrent(0),
+     fVoxCheckList(0),
+     fVoxBits1(0),
+     fBoolSelected(0),
+     fXtruSeg(0),
+     fXtruIz(0),
+     fXtruXc(0),
+     fXtruYc(0),
+     fXtruPoly(0)
 {
-   Int_t maxDaughters = (maxdaughters>0) ? maxdaughters : TGeoManager::GetMaxDaughters();
-   Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();
+   Int_t maxDaughters = (maxdaughters > 0) ? maxdaughters : TGeoManager::GetMaxDaughters();
+   Int_t maxXtruVert = TGeoManager::GetMaxXtruVert();
    fVoxCheckList = new Int_t[maxDaughters];
-   fVoxBits1 = new UChar_t[2 + ((maxDaughters-1)>>3)];
+   fVoxBits1 = new UChar_t[2 + ((maxDaughters - 1) >> 3)];
    fXtruXc = new Double_t[maxXtruVert];
    fXtruYc = new Double_t[maxXtruVert];
    fVoxSlices[0] = fVoxSlices[1] = fVoxSlices[2] = -1;
@@ -63,8 +63,8 @@ TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
 
 TGeoStateInfo::~TGeoStateInfo()
 {
-   delete [] fVoxCheckList;
-   delete [] fVoxBits1;
-   delete [] fXtruXc;
-   delete [] fXtruYc;
+   delete[] fVoxCheckList;
+   delete[] fVoxBits1;
+   delete[] fXtruXc;
+   delete[] fXtruYc;
 }

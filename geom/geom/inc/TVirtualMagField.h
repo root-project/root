@@ -13,18 +13,16 @@
 
 #include "TNamed.h"
 
-class TVirtualMagField : public TNamed
-{
+class TVirtualMagField : public TNamed {
 public:
-   TVirtualMagField()                 : TNamed() {}
-   TVirtualMagField(const char *name) : TNamed(name,"") {}
+   TVirtualMagField() : TNamed() {}
+   TVirtualMagField(const char *name) : TNamed(name, "") {}
    ~TVirtualMagField() override;
 
    virtual void Field(const Double_t *x, Double_t *B) = 0;
 
-   ClassDefOverride(TVirtualMagField, 1)              // Abstract base field class
+   ClassDefOverride(TVirtualMagField, 1) // Abstract base field class
 };
-
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -32,26 +30,35 @@ public:
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-class TGeoUniformMagField : public TVirtualMagField
-{
+class TGeoUniformMagField : public TVirtualMagField {
 private:
-   Double_t                fB[3]; // Magnetic field vector
+   Double_t fB[3]; // Magnetic field vector
 
 protected:
-   TGeoUniformMagField(const TGeoUniformMagField&) = delete;
-   TGeoUniformMagField& operator=(const TGeoUniformMagField&) = delete;
+   TGeoUniformMagField(const TGeoUniformMagField &) = delete;
+   TGeoUniformMagField &operator=(const TGeoUniformMagField &) = delete;
 
 public:
    TGeoUniformMagField();
    TGeoUniformMagField(Double_t Bx, Double_t By, Double_t Bz);
    ~TGeoUniformMagField() override {}
 
-   void            Field(const Double_t * /*x*/, Double_t *B) override {B[0]=fB[0]; B[1]=fB[1]; B[2]=fB[2];}
+   void Field(const Double_t * /*x*/, Double_t *B) override
+   {
+      B[0] = fB[0];
+      B[1] = fB[1];
+      B[2] = fB[2];
+   }
 
    const Double_t *GetFieldValue() const { return &fB[0]; }
-   void            SetFieldValue(Double_t Bx, Double_t By, Double_t Bz) {fB[0]=Bx; fB[1]=By; fB[2]=Bz;}
+   void SetFieldValue(Double_t Bx, Double_t By, Double_t Bz)
+   {
+      fB[0] = Bx;
+      fB[1] = By;
+      fB[2] = Bz;
+   }
 
-   ClassDefOverride(TGeoUniformMagField, 1)  // Uniform magnetic field
+   ClassDefOverride(TGeoUniformMagField, 1) // Uniform magnetic field
 };
 
 #endif

@@ -27,49 +27,46 @@ class TString;
 class TGeoTrd2Editor : public TGeoGedFrame {
 
 protected:
+   Double_t fDxi1;          // Initial  dx1
+   Double_t fDxi2;          // Initial  dx2
+   Double_t fDyi1;          // Initial  dy1
+   Double_t fDyi2;          // Initial  dy2
+   Double_t fDzi;           // Initial  dz
+   TString fNamei;          // Initial name
+   TGeoTrd2 *fShape;        // Shape object
+   Bool_t fIsModified;      // Flag that volume was modified
+   Bool_t fIsShapeEditable; // Flag that the shape can be changed
 
-   Double_t             fDxi1;              // Initial  dx1
-   Double_t             fDxi2;              // Initial  dx2
-   Double_t             fDyi1;              // Initial  dy1
-   Double_t             fDyi2;              // Initial  dy2
-   Double_t             fDzi;               // Initial  dz
-   TString              fNamei;             // Initial name
-   TGeoTrd2            *fShape;             // Shape object
-   Bool_t               fIsModified;        // Flag that volume was modified
-   Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
+   TGTextEntry *fShapeName; // Shape name text entry
+   TGNumberEntry *fEDx1;    // Number entry for  DX1
+   TGNumberEntry *fEDx2;    // Number entry for  DX2
+   TGNumberEntry *fEDy1;    // Number entry for  DY1
+   TGNumberEntry *fEDy2;    // Number entry for  DY1
+   TGNumberEntry *fEDz;     // Number entry for  DZ
+   TGTextButton *fApply;    // Apply-Button to accept changes
+   TGTextButton *fUndo;     // Undo-Button
+   TGCheckButton *fDelayed; // Check button for delayed draw
 
-   TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fEDx1;              // Number entry for  DX1
-   TGNumberEntry       *fEDx2;              // Number entry for  DX2
-   TGNumberEntry       *fEDy1;              // Number entry for  DY1
-   TGNumberEntry       *fEDy2;              // Number entry for  DY1
-   TGNumberEntry       *fEDz;               // Number entry for  DZ
-   TGTextButton        *fApply;             // Apply-Button to accept changes
-   TGTextButton        *fUndo;              // Undo-Button
-   TGCheckButton       *fDelayed;           // Check button for delayed draw
-
-   virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;
+   virtual void ConnectSignals2Slots(); // Connect the signals to the slots
+   Bool_t IsDelayed() const;
 
 public:
-   TGeoTrd2Editor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
+   TGeoTrd2Editor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
+                  Pixel_t back = GetDefaultFrameBackground());
    ~TGeoTrd2Editor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
-   void           DoDx1();
-   void           DoDx2();
-   void           DoDy1();
-   void           DoDy2();
-   void           DoDz();
-   void           DoModified();
-   void           DoName();
-   void           DoApply();
-   void           DoUndo();
+   void DoDx1();
+   void DoDx2();
+   void DoDy1();
+   void DoDy2();
+   void DoDz();
+   void DoModified();
+   void DoName();
+   void DoApply();
+   void DoUndo();
 
-   ClassDefOverride(TGeoTrd2Editor,0)   // TGeoTrd2 editor
+   ClassDefOverride(TGeoTrd2Editor, 0) // TGeoTrd2 editor
 };
 
 #endif

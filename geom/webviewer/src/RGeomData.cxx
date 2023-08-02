@@ -49,13 +49,11 @@
 namespace ROOT {
 namespace Experimental {
 
-
 RLogChannel &RGeomLog()
 {
    static RLogChannel sLog("ROOT.Geom");
    return sLog;
 }
-
 
 /** Iterator of hierarchical geometry structures */
 
@@ -70,7 +68,6 @@ class RGeomBrowserIter {
    std::vector<int> fStackChilds;
 
 public:
-
    RGeomBrowserIter(RGeomDescription &desc) : fDesc(desc) {}
 
    const std::string &GetName() const { return fDesc.fDesc[fNodeId].name; }
@@ -97,11 +94,12 @@ public:
          return true;
       }
 
-      if (fNodeId >= (int) fDesc.fDesc.size())
+      if (fNodeId >= (int)fDesc.fDesc.size())
          return false;
 
       auto &node = fDesc.fDesc[fNodeId];
-      if (node.chlds.size() == 0) return false;
+      if (node.chlds.size() == 0)
+         return false;
       fStackParents.emplace_back(fParentId);
       fStackChilds.emplace_back(fChild);
       fParentId = fNodeId;
@@ -179,7 +177,8 @@ public:
    bool Navigate(const std::string &path)
    {
       size_t pos = path.find("/");
-      if (pos != 0) return false;
+      if (pos != 0)
+         return false;
 
       Reset(); // set to the top of element
 
@@ -188,11 +187,13 @@ public:
 
          pos = path.find("/", last);
 
-         if (pos == std::string::npos) pos = path.length();
+         if (pos == std::string::npos)
+            pos = path.length();
 
-         std::string folder = path.substr(last, pos-last);
+         std::string folder = path.substr(last, pos - last);
 
-         if (!Enter()) return false;
+         if (!Enter())
+            return false;
 
          bool find = false;
 
@@ -200,7 +201,8 @@ public:
             find = (folder.compare(GetName()) == 0);
          } while (!find && Next());
 
-         if (!find) return false;
+         if (!find)
+            return false;
       }
 
       return true;
@@ -213,7 +215,8 @@ public:
 
       for (auto &folder : path) {
 
-         if (!Enter()) return false;
+         if (!Enter())
+            return false;
 
          bool find = false;
 
@@ -221,7 +224,8 @@ public:
             find = (folder.compare(GetName()) == 0);
          } while (!find && Next());
 
-         if (!find) return false;
+         if (!find)
+            return false;
       }
 
       return true;
@@ -253,39 +257,36 @@ public:
       }
       return res;
    }
-
 };
 
 } // namespace Experimental
 } // namespace ROOT
 
-
 using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
 
-
 namespace {
 
-   int compare_stacks(const std::vector<int> &stack1, const std::vector<int> &stack2)
-   {
-      unsigned len1 = stack1.size(), len2 = stack2.size(), len = (len1 < len2) ? len1 : len2, indx = 0;
-      while (indx < len) {
-         if (stack1[indx] < stack2[indx])
-            return -1;
-         if (stack1[indx] > stack2[indx])
-            return 1;
-         ++indx;
-      }
-
-      if (len1 < len2)
+int compare_stacks(const std::vector<int> &stack1, const std::vector<int> &stack2)
+{
+   unsigned len1 = stack1.size(), len2 = stack2.size(), len = (len1 < len2) ? len1 : len2, indx = 0;
+   while (indx < len) {
+      if (stack1[indx] < stack2[indx])
          return -1;
-      if (len1 > len2)
+      if (stack1[indx] > stack2[indx])
          return 1;
-
-      return 0;
+      ++indx;
    }
+
+   if (len1 < len2)
+      return -1;
+   if (len1 > len2)
+      return 1;
+
+   return 0;
 }
+} // namespace
 
 /////////////////////////////////////////////////////////////////////
 /// Issue signal, which distributed on all handlers - excluding source handler
@@ -349,20 +350,19 @@ void RGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
    auto scale = matr->GetScale();
    auto rotate = matr->GetRotationMatrix();
 
-   bool is_translate = matr->IsA() == TGeoTranslation::Class(),
-        is_scale = matr->IsA() == TGeoScale::Class(),
+   bool is_translate = matr->IsA() == TGeoTranslation::Class(), is_scale = matr->IsA() == TGeoScale::Class(),
         is_rotate = matr->IsA() == TGeoRotation::Class();
 
    if (!is_translate && !is_scale && !is_rotate) {
       // check if trivial matrix
 
-      auto test = [](double val, double chk) { return (val==chk) || (TMath::Abs(val-chk) < 1e-20); };
+      auto test = [](double val, double chk) { return (val == chk) || (TMath::Abs(val - chk) < 1e-20); };
 
-      bool no_scale = test(scale[0],1) && test(scale[1],1) && test(scale[2],1);
-      bool no_trans = test(trans[0],0) && test(trans[1],0) && test(trans[2],0);
-      bool no_rotate = test(rotate[0],1) && test(rotate[1],0) && test(rotate[2],0) &&
-                       test(rotate[3],0) && test(rotate[4],1) && test(rotate[5],0) &&
-                       test(rotate[6],0) && test(rotate[7],0) && test(rotate[8],1);
+      bool no_scale = test(scale[0], 1) && test(scale[1], 1) && test(scale[2], 1);
+      bool no_trans = test(trans[0], 0) && test(trans[1], 0) && test(trans[2], 0);
+      bool no_rotate = test(rotate[0], 1) && test(rotate[1], 0) && test(rotate[2], 0) && test(rotate[3], 0) &&
+                       test(rotate[4], 1) && test(rotate[5], 0) && test(rotate[6], 0) && test(rotate[7], 0) &&
+                       test(rotate[8], 1);
 
       if (no_scale && no_trans && no_rotate)
          return;
@@ -395,16 +395,28 @@ void RGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
 
    if (is_rotate) {
       vect.resize(9);
-      for (int n=0;n<9;++n)
+      for (int n = 0; n < 9; ++n)
          vect[n] = rotate[n];
       return;
    }
 
    vect.resize(16);
-   vect[0] = rotate[0]; vect[4] = rotate[1]; vect[8]  = rotate[2]; vect[12] = trans[0];
-   vect[1] = rotate[3]; vect[5] = rotate[4]; vect[9]  = rotate[5]; vect[13] = trans[1];
-   vect[2] = rotate[6]; vect[6] = rotate[7]; vect[10] = rotate[8]; vect[14] = trans[2];
-   vect[3] = 0;         vect[7] = 0;         vect[11] = 0;         vect[15] = 1;
+   vect[0] = rotate[0];
+   vect[4] = rotate[1];
+   vect[8] = rotate[2];
+   vect[12] = trans[0];
+   vect[1] = rotate[3];
+   vect[5] = rotate[4];
+   vect[9] = rotate[5];
+   vect[13] = trans[1];
+   vect[2] = rotate[6];
+   vect[6] = rotate[7];
+   vect[10] = rotate[8];
+   vect[14] = trans[2];
+   vect[3] = 0;
+   vect[7] = 0;
+   vect[11] = 0;
+   vect[15] = 1;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -414,7 +426,8 @@ void RGeomDescription::PackMatrix(std::vector<float> &vect, TGeoMatrix *matr)
 void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 {
    ClearDescription();
-   if (!mgr) return;
+   if (!mgr)
+      return;
 
    TLockGuard lock(fMutex);
 
@@ -439,7 +452,6 @@ void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
       if (vol && (vol != topnode->GetVolume()) && iter.Navigate(vol))
          fSelectedStack = MakeStackByIds(iter.CurrentIds());
    }
-
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -449,7 +461,8 @@ void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 void RGeomDescription::Build(TGeoVolume *vol)
 {
    ClearDescription();
-   if (!vol) return;
+   if (!vol)
+      return;
 
    TLockGuard lock(fMutex);
 
@@ -524,7 +537,8 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
 
       auto shape = dynamic_cast<TGeoBBox *>(vol->GetShape());
       if (shape) {
-         desc.vol = TMath::Sqrt(shape->GetDX()*shape->GetDX() + shape->GetDY()*shape->GetDY() + shape->GetDZ()*shape->GetDZ());
+         desc.vol = TMath::Sqrt(shape->GetDX() * shape->GetDX() + shape->GetDY() * shape->GetDY() +
+                                shape->GetDZ() * shape->GetDZ());
          desc.nfaces = CountShapeFaces(shape);
       }
 
@@ -536,7 +550,7 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
 
       if (chlds)
          for (int n = 0; n <= chlds->GetLast(); ++n) {
-            auto chld = dynamic_cast<TGeoNode *> (chlds->At(n));
+            auto chld = dynamic_cast<TGeoNode *>(chlds->At(n));
             desc.chlds.emplace_back(chld->GetNumber() - offset);
          }
    }
@@ -545,7 +559,8 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
    cnt = 0;
    for (auto node : fNodes) {
       auto number = numbers[cnt++];
-      if (node) node->SetNumber(number);
+      if (node)
+         node->SetNumber(number);
    }
 
    // sort in volume descent order
@@ -569,7 +584,8 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
 TGeoVolume *RGeomDescription::GetVolume(int nodeid)
 {
    auto node = fNodes[nodeid];
-   if (node) return node->GetVolume();
+   if (node)
+      return node->GetVolume();
    return nodeid == 0 ? fDrawVolume : nullptr;
 }
 
@@ -579,7 +595,7 @@ TGeoVolume *RGeomDescription::GetVolume(int nodeid)
 int RGeomDescription::MarkVisible(bool on_screen)
 {
    int res = 0;
-   for (int nodeid = 0; nodeid < (int) fNodes.size(); nodeid++) {
+   for (int nodeid = 0; nodeid < (int)fNodes.size(); nodeid++) {
 
       auto node = fNodes[nodeid];
       auto vol = GetVolume(nodeid);
@@ -601,7 +617,8 @@ int RGeomDescription::MarkVisible(bool on_screen)
             desc.vis = 1;
       }
 
-      if (desc.IsVisible() && desc.CanDisplay()) res++;
+      if (desc.IsVisible() && desc.CanDisplay())
+         res++;
    }
 
    return res;
@@ -620,7 +637,7 @@ void RGeomDescription::ProduceIdShifts()
    ScanFunc_t scan_func = [&, this](RGeomNode &node) {
       if (node.idshift < 0) {
          node.idshift = 0;
-         for(auto id : node.chlds)
+         for (auto id : node.chlds)
             node.idshift += scan_func(fDesc[id]);
       }
 
@@ -636,7 +653,8 @@ void RGeomDescription::ProduceIdShifts()
 
 int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t func)
 {
-   if (fDesc.empty()) return 0;
+   if (fDesc.empty())
+      return 0;
 
    std::vector<int> stack;
    stack.reserve(25); // reserve enough space for most use-cases
@@ -646,7 +664,6 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
    using ScanFunc_t = std::function<int(int, int, bool)>;
 
    ScanFunc_t scan_func = [&, this](int nodeid, int lvl, bool is_inside) {
-
       if (!is_inside && (fSelectedStack == stack))
          is_inside = true;
 
@@ -654,7 +671,8 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
       auto desc_vis = desc.vis;
       int res = 0;
 
-      if (desc.nochlds && (lvl > 0)) lvl = 0;
+      if (desc.nochlds && (lvl > 0))
+         lvl = 0;
 
       bool can_display = desc.CanDisplay(), scan_childs = true;
 
@@ -688,9 +706,12 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
       return res;
    };
 
-   if (!maxlvl && (GetVisLevel() > 0)) maxlvl = GetVisLevel();
-   if (!maxlvl) maxlvl = 4;
-   if (maxlvl > 97) maxlvl = 97; // check while vis property of node is 99 normally
+   if (!maxlvl && (GetVisLevel() > 0))
+      maxlvl = GetVisLevel();
+   if (!maxlvl)
+      maxlvl = 4;
+   if (maxlvl > 97)
+      maxlvl = 97; // check while vis property of node is 99 normally
 
    return scan_func(0, maxlvl, false);
 }
@@ -767,7 +788,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
 
       int cnt = 0;
       for (auto &item : fDesc)
-         vect[cnt++]= &item;
+         vect[cnt++] = &item;
 
       res = "DESCR:"s + TBufferJSON::ToJSON(&vect, GetJsonComp()).Data();
 
@@ -804,8 +825,8 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
 
             while (iter.IsValid() && (request->number > 0)) {
                int pvis = IsPhysNodeVisible(stack);
-               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(),
-                                       iter.GetNodeId(), iter.GetColor(), iter.GetMaterial(), iter.GetVisible(), pvis < 0 ? iter.GetVisible() : pvis);
+               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(), iter.GetNodeId(), iter.GetColor(),
+                                       iter.GetMaterial(), iter.GetVisible(), pvis < 0 ? iter.GetVisible() : pvis);
                if (toplevel)
                   temp_nodes.back().SetExpanded(true);
                if (stack == fSelectedStack)
@@ -813,9 +834,10 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
                request->number--;
 
                if (stack.size() > 0)
-                  stack[stack.size()-1]++;
+                  stack[stack.size() - 1]++;
 
-               if (!iter.Next()) break;
+               if (!iter.Next())
+                  break;
             }
          }
       }
@@ -845,13 +867,12 @@ RGeomDescription::ShapeDescr &RGeomDescription::FindShapeDescr(TGeoShape *shape)
    return elem;
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 /// Function produces mesh for provided shape, applying matrix to the result
 
 std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *shape)
 {
-   TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *> (shape);
+   TGeoCompositeShape *comp = dynamic_cast<TGeoCompositeShape *>(shape);
 
    std::unique_ptr<RootCsg::TBaseMesh> res;
 
@@ -862,10 +883,10 @@ std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *sha
          Double_t *v = b3d->fPnts;
          Double_t buf[3];
          for (UInt_t i = 0; i < b3d->NbPnts(); ++i) {
-            buf[0] = v[i*3];
-            buf[1] = v[i*3+1];
-            buf[2] = v[i*3+2];
-            matr->LocalToMaster(buf, &v[i*3]);
+            buf[0] = v[i * 3];
+            buf[1] = v[i * 3 + 1];
+            buf[2] = v[i * 3 + 2];
+            matr->LocalToMaster(buf, &v[i * 3]);
          }
       }
 
@@ -874,7 +895,10 @@ std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *sha
       auto node = comp->GetBoolNode();
 
       TGeoHMatrix mleft, mright;
-      if (matr) { mleft = *matr; mright = *matr; }
+      if (matr) {
+         mleft = *matr;
+         mright = *matr;
+      }
 
       mleft.Multiply(node->GetLeftMatrix());
       auto left = MakeGeoMesh(&mleft, node->GetLeftShape());
@@ -882,9 +906,12 @@ std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *sha
       mright.Multiply(node->GetRightMatrix());
       auto right = MakeGeoMesh(&mright, node->GetRightShape());
 
-      if (node->IsA() == TGeoUnion::Class()) res.reset(RootCsg::BuildUnion(left.get(), right.get()));
-      if (node->IsA() == TGeoIntersection::Class()) res.reset(RootCsg::BuildIntersection(left.get(), right.get()));
-      if (node->IsA() == TGeoSubtraction::Class()) res.reset(RootCsg::BuildDifference(left.get(), right.get()));
+      if (node->IsA() == TGeoUnion::Class())
+         res.reset(RootCsg::BuildUnion(left.get(), right.get()));
+      if (node->IsA() == TGeoIntersection::Class())
+         res.reset(RootCsg::BuildIntersection(left.get(), right.get()));
+      if (node->IsA() == TGeoSubtraction::Class())
+         res.reset(RootCsg::BuildDifference(left.get(), right.get()));
    }
 
    return res;
@@ -910,7 +937,8 @@ int RGeomDescription::GetUsedNSegments(int min)
 
 int RGeomDescription::CountShapeFaces(TGeoShape *shape)
 {
-   if (!shape) return 0;
+   if (!shape)
+      return 0;
 
    auto countTubeFaces = [this](const std::array<Double_t, 2> &outerR, const std::array<Double_t, 2> &innerR,
                                 Double_t thetaLength = 360.) -> int {
@@ -939,7 +967,7 @@ int RGeomDescription::CountShapeFaces(TGeoShape *shape)
    };
 
    if (shape->IsA() == TGeoSphere::Class()) {
-      TGeoSphere *sphere = (TGeoSphere *) shape;
+      TGeoSphere *sphere = (TGeoSphere *)shape;
       auto widthSegments = sphere->GetNumberOfDivisions();
       auto heightSegments = sphere->GetNz();
       auto phiLength = sphere->GetPhi2() - sphere->GetPhi1();
@@ -952,76 +980,85 @@ int RGeomDescription::CountShapeFaces(TGeoShape *shape)
 
       return numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
    } else if (shape->IsA() == TGeoCone::Class()) {
-      auto cone = (TGeoCone *) shape;
-      return countTubeFaces({ cone->GetRmax2(), cone->GetRmax1() }, { cone->GetRmin2(), cone->GetRmin1() });
+      auto cone = (TGeoCone *)shape;
+      return countTubeFaces({cone->GetRmax2(), cone->GetRmax1()}, {cone->GetRmin2(), cone->GetRmin1()});
    } else if (shape->IsA() == TGeoConeSeg::Class()) {
-      auto cone = (TGeoConeSeg *) shape;
-      return countTubeFaces({ cone->GetRmax2(), cone->GetRmax1() }, { cone->GetRmin2(), cone->GetRmin1() }, cone->GetPhi2() - cone->GetPhi1());
+      auto cone = (TGeoConeSeg *)shape;
+      return countTubeFaces({cone->GetRmax2(), cone->GetRmax1()}, {cone->GetRmin2(), cone->GetRmin1()},
+                            cone->GetPhi2() - cone->GetPhi1());
    } else if (shape->IsA() == TGeoTube::Class()) {
-      auto tube = (TGeoTube *) shape;
-      return countTubeFaces({ tube->GetRmax(), tube->GetRmax() }, { tube->GetRmin(), tube->GetRmin() });
+      auto tube = (TGeoTube *)shape;
+      return countTubeFaces({tube->GetRmax(), tube->GetRmax()}, {tube->GetRmin(), tube->GetRmin()});
    } else if (shape->IsA() == TGeoTubeSeg::Class()) {
-      auto tube = (TGeoTubeSeg *) shape;
-      return countTubeFaces({ tube->GetRmax(), tube->GetRmax() }, { tube->GetRmin(), tube->GetRmin() }, tube->GetPhi2() - tube->GetPhi1());
+      auto tube = (TGeoTubeSeg *)shape;
+      return countTubeFaces({tube->GetRmax(), tube->GetRmax()}, {tube->GetRmin(), tube->GetRmin()},
+                            tube->GetPhi2() - tube->GetPhi1());
    } else if (shape->IsA() == TGeoCtub::Class()) {
-      auto tube = (TGeoCtub *) shape;
-      return countTubeFaces({ tube->GetRmax(), tube->GetRmax() }, { tube->GetRmin(), tube->GetRmin() }, tube->GetPhi2() - tube->GetPhi1());
+      auto tube = (TGeoCtub *)shape;
+      return countTubeFaces({tube->GetRmax(), tube->GetRmax()}, {tube->GetRmin(), tube->GetRmin()},
+                            tube->GetPhi2() - tube->GetPhi1());
    } else if (shape->IsA() == TGeoEltu::Class()) {
       return GetUsedNSegments(4) * 4;
    } else if (shape->IsA() == TGeoTorus::Class()) {
-      auto torus = (TGeoTorus *) shape;
+      auto torus = (TGeoTorus *)shape;
       auto radialSegments = GetUsedNSegments(6);
       auto tubularSegments = TMath::Max(8, TMath::Nint(torus->GetDphi() / 360. * GetUsedNSegments()));
       return (torus->GetRmin() > 0 ? 4 : 2) * radialSegments * (tubularSegments + (torus->GetDphi() != 360. ? 1 : 0));
    } else if (shape->IsA() == TGeoPcon::Class()) {
-      auto pcon = (TGeoPcon *) shape;
+      auto pcon = (TGeoPcon *)shape;
 
       bool hasrmin = false;
       int radiusSegments = TMath::Max(5, TMath::Nint(pcon->GetDphi() / 360 * GetUsedNSegments()));
       for (int layer = 0; layer < pcon->GetNz(); ++layer)
          if (pcon->GetRmin(layer) > 0.)
             hasrmin = true;
-      return (hasrmin ? 4 : 2) * radiusSegments * (pcon->GetNz()-1);
+      return (hasrmin ? 4 : 2) * radiusSegments * (pcon->GetNz() - 1);
    } else if (shape->IsA() == TGeoPgon::Class()) {
-      auto pgon = (TGeoPgon *) shape;
+      auto pgon = (TGeoPgon *)shape;
 
       bool hasrmin = false;
       int radiusSegments = TMath::Max(5, TMath::Nint(pgon->GetDphi() / 360 * GetUsedNSegments()));
       for (int layer = 0; layer < pgon->GetNz(); ++layer)
          if (pgon->GetRmin(layer) > 0.)
             hasrmin = true;
-      return (hasrmin ? 4 : 2) * radiusSegments * (pgon->GetNz()-1);
+      return (hasrmin ? 4 : 2) * radiusSegments * (pgon->GetNz() - 1);
    } else if (shape->IsA() == TGeoXtru::Class()) {
-      auto xtru = (TGeoXtru *) shape;
-      return (xtru->GetNz()-1) * xtru->GetNvert() * 2  + xtru->GetNvert()*3;
+      auto xtru = (TGeoXtru *)shape;
+      return (xtru->GetNz() - 1) * xtru->GetNvert() * 2 + xtru->GetNvert() * 3;
    } else if (shape->IsA() == TGeoParaboloid::Class()) {
-      auto para = (TGeoParaboloid *) shape;
+      auto para = (TGeoParaboloid *)shape;
       int radiusSegments = GetUsedNSegments(4), heightSegments = 30;
-      int numfaces = (heightSegments+1) * radiusSegments*2;
-      if (para->GetRlo() == 0.) numfaces -= radiusSegments*2; // complete layer
-      if (para->GetRhi() == 0.) numfaces -= radiusSegments*2; // complete layer
+      int numfaces = (heightSegments + 1) * radiusSegments * 2;
+      if (para->GetRlo() == 0.)
+         numfaces -= radiusSegments * 2; // complete layer
+      if (para->GetRhi() == 0.)
+         numfaces -= radiusSegments * 2; // complete layer
       return numfaces;
    } else if (shape->IsA() == TGeoHype::Class()) {
-      TGeoHype *hype = (TGeoHype *) shape;
+      TGeoHype *hype = (TGeoHype *)shape;
       if ((hype->GetStIn() == 0) && (hype->GetStOut() == 0))
-         return countTubeFaces({ hype->GetRmax(), hype->GetRmax() }, { hype->GetRmin(), hype->GetRmin() });
+         return countTubeFaces({hype->GetRmax(), hype->GetRmax()}, {hype->GetRmin(), hype->GetRmin()});
       int radiusSegments = GetUsedNSegments(4), heightSegments = 30;
       return radiusSegments * (heightSegments + 1) * ((hype->GetRmin() > 0.) ? 4 : 2);
    } else if (shape->IsA() == TGeoTessellated::Class()) {
-      auto tess = (TGeoTessellated *) shape;
+      auto tess = (TGeoTessellated *)shape;
       int numfaces = 0;
       for (int i = 0; i < tess->GetNfacets(); ++i) {
-         if (tess->GetFacet(i).GetNvert() == 4) numfaces += 2;
-                                           else numfaces += 1;
+         if (tess->GetFacet(i).GetNvert() == 4)
+            numfaces += 2;
+         else
+            numfaces += 1;
       }
       return numfaces;
    } else if (shape->IsA() == TGeoScaledShape::Class()) {
-      auto scaled = (TGeoScaledShape *) shape;
+      auto scaled = (TGeoScaledShape *)shape;
       return CountShapeFaces(scaled->GetShape());
    } else if (shape->IsA() == TGeoCompositeShape::Class()) {
-      auto comp = (TGeoCompositeShape *) shape;
-      if (!comp->GetBoolNode()) return 0;
-      return CountShapeFaces(comp->GetBoolNode()->GetLeftShape()) + CountShapeFaces(comp->GetBoolNode()->GetRightShape());
+      auto comp = (TGeoCompositeShape *)shape;
+      if (!comp->GetBoolNode())
+         return 0;
+      return CountShapeFaces(comp->GetBoolNode()->GetLeftShape()) +
+             CountShapeFaces(comp->GetBoolNode()->GetRightShape());
    }
 
    // many of simple shapes have 12 faces
@@ -1072,8 +1109,8 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
                num_polynoms += (size_of_polygon - 2);
          }
 
-         Int_t index_buffer_size = num_polynoms * 3,  // triangle indexes
-               vertex_buffer_size = num_vertices * 3; // X,Y,Z array
+         Int_t index_buffer_size = num_polynoms * 3, // triangle indexes
+            vertex_buffer_size = num_vertices * 3;   // X,Y,Z array
 
          elem.nfaces = num_polynoms;
 
@@ -1081,9 +1118,9 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 
          for (Int_t i = 0; i < num_vertices; ++i) {
             auto v = mesh->GetVertex(i);
-            vertices[i*3] = v[0];
-            vertices[i*3+1] = v[1];
-            vertices[i*3+2] = v[2];
+            vertices[i * 3] = v[0];
+            vertices[i * 3 + 1] = v[1];
+            vertices[i * 3 + 2] = v[2];
          }
 
          elem.fRawInfo.raw.resize(vertices.size() * sizeof(float));
@@ -1107,11 +1144,10 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
             if (size_of_polygon > 3)
                for (unsigned vertex = 3; vertex < size_of_polygon; vertex++) {
                   indexes[pos++] = mesh->GetVertexIndex(polyIndex, 0);
-                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, vertex-1);
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, vertex - 1);
                   indexes[pos++] = mesh->GetVertexIndex(polyIndex, vertex);
                }
          }
-
       }
    }
 
@@ -1123,7 +1159,8 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 
 void RGeomDescription::CopyMaterialProperties(TGeoVolume *volume, RGeomNode &node)
 {
-   if (!volume) return;
+   if (!volume)
+      return;
 
    TColor *col = nullptr;
 
@@ -1132,21 +1169,25 @@ void RGeomDescription::CopyMaterialProperties(TGeoVolume *volume, RGeomNode &nod
    else if (volume->GetLineColor() >= 0)
       col = gROOT->GetColor(volume->GetLineColor());
 
-   if (volume->GetMedium() && (volume->GetMedium() != TGeoVolume::DummyMedium()) && volume->GetMedium()->GetMaterial()) {
+   if (volume->GetMedium() && (volume->GetMedium() != TGeoVolume::DummyMedium()) &&
+       volume->GetMedium()->GetMaterial()) {
       auto material = volume->GetMedium()->GetMaterial();
 
       node.material = material->GetName();
 
       auto fillstyle = material->GetFillStyle();
-      if ((fillstyle>=3000) && (fillstyle<=3100)) node.opacity = (3100 - fillstyle) / 100.;
-      if (!col) col = gROOT->GetColor(material->GetFillColor());
+      if ((fillstyle >= 3000) && (fillstyle <= 3100))
+         node.opacity = (3100 - fillstyle) / 100.;
+      if (!col)
+         col = gROOT->GetColor(material->GetFillColor());
    } else {
       node.material.clear();
    }
 
    if (col) {
       TString colbuf;
-      colbuf.Form("#%02x%02x%02x", (int)(col->GetRed()*255), (int)(col->GetGreen()*255), (int) (col->GetBlue()*255));
+      colbuf.Form("#%02x%02x%02x", (int)(col->GetRed() * 255), (int)(col->GetGreen() * 255),
+                  (int)(col->GetBlue() * 255));
       node.color = colbuf.Data();
       if (node.opacity == 1.)
          node.opacity = col->GetAlpha();
@@ -1160,7 +1201,7 @@ void RGeomDescription::CopyMaterialProperties(TGeoVolume *volume, RGeomNode &nod
 
 void RGeomDescription::ResetRndrInfos()
 {
-   for (auto &s: fShapes)
+   for (auto &s : fShapes)
       s.reset();
 }
 
@@ -1186,7 +1227,6 @@ void RGeomDescription::ResetRndrInfos()
 ///
 ///  In JSROOT one loads data from JSON file and call `build` function to
 ///  produce three.js model. Also see example in tutorials/webgui/geom/ folder
-
 
 std::string RGeomDescription::ProduceJson(bool all_nodes)
 {
@@ -1218,18 +1258,20 @@ std::string RGeomDescription::ProduceJson(bool all_nodes)
 
    int totalnumfaces = 0, totalnumnodes = 0;
 
-   //for (auto &node : fDesc)
+   // for (auto &node : fDesc)
    //   node.SetDisplayed(false);
 
    // build all shapes in volume decreasing order
-   for (auto &sid: fSortMap) {
+   for (auto &sid : fSortMap) {
       fDrawIdCut++; //
       auto &desc = fDesc[sid];
 
-      if ((viscnt[sid] <= 0) || (desc.vol <= 0)) continue;
+      if ((viscnt[sid] <= 0) || (desc.vol <= 0))
+         continue;
 
       auto shape = GetVolume(sid)->GetShape();
-      if (!shape) continue;
+      if (!shape)
+         continue;
 
       // now we need to create TEveGeoPolyShape, which can provide all rendering data
       auto &shape_descr = MakeShapeDescr(shape);
@@ -1242,11 +1284,13 @@ std::string RGeomDescription::ProduceJson(bool all_nodes)
 
       // check how many faces are created
       totalnumfaces += shape_descr.nfaces * viscnt[sid];
-      if ((GetMaxVisFaces() > 0) && (totalnumfaces > GetMaxVisFaces())) break;
+      if ((GetMaxVisFaces() > 0) && (totalnumfaces > GetMaxVisFaces()))
+         break;
 
       // also avoid too many nodes
       totalnumnodes += viscnt[sid];
-      if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes())) break;
+      if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes()))
+         break;
 
       // desc.SetDisplayed(true);
    }
@@ -1271,7 +1315,8 @@ std::string RGeomDescription::ProduceJson(bool all_nodes)
          auto &sd = MakeShapeDescr(volume->GetShape());
 
          item.ri = sd.rndr_info();
-         if (sd.has_shape()) has_shape = true;
+         if (sd.has_shape())
+            has_shape = true;
       }
       return true;
    });
@@ -1304,9 +1349,8 @@ void RGeomDescription::ProduceSearchData()
 
    SearchVisibles(fSearch, hjson, fSearchJson);
 
-   (void) hjson; // not used here
+   (void)hjson; // not used here
 }
-
 
 /////////////////////////////////////////////////////////////////////
 /// Collect all information required to draw geometry on the client
@@ -1360,7 +1404,6 @@ bool RGeomDescription::IsPrincipalEndNode(int nodeid)
    return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay() && (desc.chlds.size() == 0);
 }
 
-
 /////////////////////////////////////////////////////////////////////
 /// Search visible nodes for provided name
 /// If number of found elements less than 100, create description and shapes for them
@@ -1383,30 +1426,31 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
    int nmatches = 0;
    std::string test = find;
    int kind = 0;
-   if (test.compare(0,2,"c:") == 0) {
-      test.erase(0,2);
+   if (test.compare(0, 2, "c:") == 0) {
+      test.erase(0, 2);
       kind = 1;
-   } else if (test.compare(0,2,"m:") == 0) {
-      test.erase(0,2);
+   } else if (test.compare(0, 2, "m:") == 0) {
+      test.erase(0, 2);
       kind = 2;
    }
 
    TRegexp regexp(test.c_str());
 
-   auto match_func = [&regexp,kind](RGeomNode &node) {
+   auto match_func = [&regexp, kind](RGeomNode &node) {
       return (node.vol > 0) && (TString(node.GetArg(kind)).Index(regexp) >= 0);
    };
 
    // first count how many times each individual node appears
-   ScanNodes(false, 0, [&nodescnt, &viscnt, &match_func, &nmatches](RGeomNode &node, std::vector<int> &, bool is_vis, int) {
-
-      if (match_func(node)) {
-         nmatches++;
-         nodescnt[node.id]++;
-         if (is_vis) viscnt[node.id]++;
-      };
-      return true;
-   });
+   ScanNodes(false, 0,
+             [&nodescnt, &viscnt, &match_func, &nmatches](RGeomNode &node, std::vector<int> &, bool is_vis, int) {
+                if (match_func(node)) {
+                   nmatches++;
+                   nodescnt[node.id]++;
+                   if (is_vis)
+                      viscnt[node.id]++;
+                };
+                return true;
+             });
 
    // do not send too much data, limit could be made configurable later
    if (nmatches == 0) {
@@ -1425,16 +1469,20 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
    bool send_rawdata = true;
 
    // build all shapes in volume decreasing order
-   for (auto &sid: fSortMap) {
-      if (scnt++ < fDrawIdCut) continue; // no need to send most significant shapes
+   for (auto &sid : fSortMap) {
+      if (scnt++ < fDrawIdCut)
+         continue; // no need to send most significant shapes
 
-      if (viscnt[sid] == 0) continue; // this node is not used at all
+      if (viscnt[sid] == 0)
+         continue; // this node is not used at all
 
       auto &desc = fDesc[sid];
-      if ((viscnt[sid] <= 0) && (desc.vol <= 0)) continue;
+      if ((viscnt[sid] <= 0) && (desc.vol <= 0))
+         continue;
 
       auto shape = GetVolume(sid)->GetShape();
-      if (!shape) continue;
+      if (!shape)
+         continue;
 
       // create shape raw data
       auto &shape_descr = MakeShapeDescr(shape);
@@ -1447,11 +1495,17 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
 
       // check how many faces are created
       totalnumfaces += shape_descr.nfaces * viscnt[sid];
-      if ((GetMaxVisFaces() > 0) && (totalnumfaces > GetMaxVisFaces())) { send_rawdata = false; break; }
+      if ((GetMaxVisFaces() > 0) && (totalnumfaces > GetMaxVisFaces())) {
+         send_rawdata = false;
+         break;
+      }
 
       // also avoid too many nodes
       totalnumnodes += viscnt[sid];
-      if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes()))  { send_rawdata = false; break; }
+      if ((GetMaxVisNodes() > 0) && (totalnumnodes > GetMaxVisNodes())) {
+         send_rawdata = false;
+         break;
+      }
    }
 
    // only for debug purposes - remove later
@@ -1460,9 +1514,8 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
    // finally we should create data for streaming to the client
    // it includes list of visible nodes and rawdata (if there is enough space)
 
-
-   std::vector<RGeomNodeBase> found_desc; ///<! hierarchy of nodes, used for search
-   std::vector<int> found_map(fDesc.size(), -1);   ///<! mapping between nodeid - > foundid
+   std::vector<RGeomNodeBase> found_desc;        ///<! hierarchy of nodes, used for search
+   std::vector<int> found_map(fDesc.size(), -1); ///<! mapping between nodeid - > foundid
 
    // these are only selected nodes to produce hierarchy
 
@@ -1489,7 +1542,7 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
          if (found_map[chldid] <= 0) {
             int newid = found_desc.size();
             found_desc.emplace_back(newid); // potentially original id can be used here
-            found_map[chldid] = newid; // re-map into reduced hierarchy
+            found_map[chldid] = newid;      // re-map into reduced hierarchy
 
             found_desc.back().vis = fDesc[chldid].vis;
             found_desc.back().name = fDesc[chldid].name;
@@ -1509,7 +1562,8 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
       }
 
       // no need to add visibles
-      if (!is_vis) return true;
+      if (!is_vis)
+         return true;
 
       drawing.visibles.emplace_back(node.id, seqid, stack);
 
@@ -1529,7 +1583,8 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
       auto &sd = MakeShapeDescr(volume->GetShape());
 
       item.ri = sd.rndr_info();
-      if (sd.has_shape()) has_shape = true;
+      if (sd.has_shape())
+         has_shape = true;
       return true;
    });
 
@@ -1551,9 +1606,10 @@ int RGeomDescription::FindNodeId(const std::vector<int> &stack)
 
    int nodeid = 0;
 
-   for (auto &chindx: stack) {
+   for (auto &chindx : stack) {
       auto &node = fDesc[nodeid];
-      if (chindx >= (int) node.chlds.size()) return -1;
+      if (chindx >= (int)node.chlds.size())
+         return -1;
       nodeid = node.chlds[chindx];
    }
 
@@ -1584,7 +1640,7 @@ std::vector<int> RGeomDescription::MakeStackByIds(const std::vector<int> &ids)
       int prntid = nodeid;
       nodeid = ids[k];
 
-      if (nodeid >= (int) fDesc.size()) {
+      if (nodeid >= (int)fDesc.size()) {
          printf("Wrong node id %d\n", nodeid);
          stack.clear();
          return stack;
@@ -1592,7 +1648,7 @@ std::vector<int> RGeomDescription::MakeStackByIds(const std::vector<int> &ids)
       auto &chlds = fDesc[prntid].chlds;
       auto pos = std::find(chlds.begin(), chlds.end(), nodeid);
       if (pos == chlds.end()) {
-         printf("Wrong id %d not a child of %d - fail to find stack num %d\n", nodeid, prntid, (int) chlds.size());
+         printf("Wrong id %d not a child of %d - fail to find stack num %d\n", nodeid, prntid, (int)chlds.size());
          stack.clear();
          return stack;
       }
@@ -1637,7 +1693,10 @@ std::vector<int> RGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
 
    for (auto s : stack) {
       auto &chlds = fDesc[nodeid].chlds;
-      if (s >= (int) chlds.size()) { failure = true; break; }
+      if (s >= (int)chlds.size()) {
+         failure = true;
+         break;
+      }
 
       ids.emplace_back(chlds[s]);
 
@@ -1668,7 +1727,6 @@ std::vector<std::string> RGeomDescription::MakePathByStack(const std::vector<int
    return path;
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////
 /// Return string with only part of nodes description which were modified
 /// Checks also volume
@@ -1690,7 +1748,6 @@ std::string RGeomDescription::ProduceModifyReply(int nodeid)
 
    return "MODIF:"s + TBufferJSON::ToJSON(&nodes, GetJsonComp()).Data();
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Produce shape rendering data for given stack
@@ -1716,9 +1773,11 @@ bool RGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool che
       // select only nodes which reference same shape
 
       if (check_volume) {
-         if (GetVolume(node.id) != vol) return true;
+         if (GetVolume(node.id) != vol)
+            return true;
       } else {
-         if (node.id != nodeid) return true;
+         if (node.id != nodeid)
+            return true;
       }
 
       drawing.visibles.emplace_back(node.id, seq_id, stack);
@@ -1745,8 +1804,10 @@ bool RGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool che
    // assign shape data
    for (auto &item : drawing.visibles) {
       item.ri = sd.rndr_info();
-      if (sd.has_shape()) has_shape = true;
-      if (sd.has_raw()) has_raw = true;
+      if (sd.has_shape())
+         has_shape = true;
+      if (sd.has_raw())
+         has_raw = true;
    }
 
    CollectNodes(drawing);
@@ -1807,19 +1868,20 @@ bool RGeomDescription::ChangeNodeVisibility(const std::vector<std::string> &path
    dnode.vis = selected ? 99 : 0;
    vol->SetVisibility(selected);
    if (dnode.chlds.size() > 0) {
-      if (selected) dnode.vis = 1; // visibility disabled when any child
+      if (selected)
+         dnode.vis = 1; // visibility disabled when any child
       vol->SetVisDaughters(selected);
    }
 
    int id = 0;
-   for (auto &desc: fDesc)
+   for (auto &desc : fDesc)
       if (GetVolume(id++) == vol)
          desc.vis = dnode.vis;
 
    auto stack = MakeStackByIds(giter.CurrentIds());
 
    // any change in logical node visibility erase individual physical node settings
-   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter ++)
+   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter++)
       if (compare_stacks(iter->stack, stack) == 0) {
          fVisibility.erase(iter);
          break;
@@ -1918,7 +1980,7 @@ bool RGeomDescription::SetPhysNodeVisibility(const std::vector<std::string> &pat
 
    auto nodeid = giter.GetNodeId();
 
-   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter ++) {
+   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter++) {
       auto res = compare_stacks(iter->stack, stack);
 
       if (res == 0) {
@@ -1958,21 +2020,21 @@ bool RGeomDescription::SetPhysNodeVisibility(const std::string &itemname, bool o
 
    while (p1 < itemname.length()) {
       if (itemname[p1] == '/') {
-         p1++; continue;
+         p1++;
+         continue;
       }
       auto p = itemname.find("/", p1);
       if (p == std::string::npos) {
          path.emplace_back(itemname.substr(p1));
          p1 = itemname.length();
       } else {
-         path.emplace_back(itemname.substr(p1, p-p1));
+         path.emplace_back(itemname.substr(p1, p - p1));
          p1 = p + 1;
       }
    }
 
    return SetPhysNodeVisibility(path, on);
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Check if there special settings for specified physical node
@@ -1985,7 +2047,7 @@ int RGeomDescription::IsPhysNodeVisible(const std::vector<int> &stack)
       if (stack.size() < sz)
          continue;
       bool match = true;
-      for (unsigned n = 0 ;n < sz; ++n)
+      for (unsigned n = 0; n < sz; ++n)
          if (stack[n] != item.stack[n]) {
             match = false;
             break;
@@ -2011,7 +2073,7 @@ bool RGeomDescription::ClearPhysNodeVisibility(const std::vector<std::string> &p
 
    auto stack = MakeStackByIds(giter.CurrentIds());
 
-   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter ++)
+   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter++)
       if (compare_stacks(iter->stack, stack) == 0) {
          fVisibility.erase(iter);
          ClearDrawData();
@@ -2043,7 +2105,8 @@ bool RGeomDescription::ClearAllPhysVisibility()
 bool RGeomDescription::ChangeConfiguration(const std::string &json)
 {
    auto cfg = TBufferJSON::FromJSON<RGeomConfig>(json);
-   if (!cfg) return false;
+   if (!cfg)
+      return false;
 
    TLockGuard lock(fMutex);
 
@@ -2102,9 +2165,8 @@ void RGeomDescription::SavePrimitive(std::ostream &fs, const std::string &name)
    for (auto &item : fVisibility) {
       auto path = MakePathByStack(item.stack);
       fs << prefix << name << "SetPhysNodeVisibility(";
-      for (int i = 0; i < (int) path.size(); ++i)
+      for (int i = 0; i < (int)path.size(); ++i)
          fs << (i == 0 ? "{\"" : ", \"") << path[i] << "\"";
       fs << "}, " << (item.visible ? "true" : "false") << ");" << std::endl;
    }
-
 }

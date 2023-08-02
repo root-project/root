@@ -27,9 +27,9 @@ public:
    TGeoVGConverter(TGeoManager *manager);
    ~TGeoVGConverter() override;
 
-   void       ConvertGeometry() override;
+   void ConvertGeometry() override;
 
-   ClassDefOverride(TGeoVGConverter,0)  // VecGeom geometry converter
+   ClassDefOverride(TGeoVGConverter, 0) // VecGeom geometry converter
 };
 
 #endif
