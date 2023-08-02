@@ -191,6 +191,10 @@ public:
       std::unique_ptr<bool[]> fMaskAvail; ///< Masks invalid values in the array
       std::size_t fNValidValues = 0;      ///< The sum of non-zero elements in the fMask
       RClusterIndex fFirstIndex;          ///< Index of the first value of the array
+      /// Reading arrays of complex values may require additional memory, for instance for the elements of
+      /// arrays of vectors. A pointer to the fAuxData array is passed to the field's BulkRead method.
+      /// The RBulk class does not modify the array in-between calls to the field's BulkRead method.
+      std::vector<unsigned char> fAuxData;
 
       void ReleaseValues();
       /// Sets a new range for the bulk. If there is enough capacity, the fValues array will be reused.
@@ -241,6 +245,7 @@ public:
          bulkSpec.fMaskReq = maskReq;
          bulkSpec.fMaskAvail = &fMaskAvail[offset];
          bulkSpec.fValues = GetValuePtrAt(offset);
+         bulkSpec.fAuxData = &fAuxData;
          auto nRead = fField->ReadBulk(bulkSpec);
          if (nRead == RBulkSpec::kAllSet) {
             if ((offset == 0) && (size == fSize)) {
@@ -303,6 +308,9 @@ protected:
       bool *fMaskAvail = nullptr; ///< A bool array of size fCount, indicating the valid values in fValues
       /// The destination area, which has to be a big enough array of valid objects of the correct type
       void *fValues = nullptr;
+      /// Reference to memory owned by the RBulk class. The field implementing BulkReadImpl may use fAuxData
+      /// as memory that stays persistent between calls.
+      std::vector<unsigned char> *fAuxData = nullptr;
    };
 
    /// Collections and classes own sub fields
@@ -435,6 +443,9 @@ protected:
       other.Read(clusterIndex, to);
    }
    static void CallReadOn(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
+
+   /// Fields may need direct access to the principal column of their sub fields, e.g. in RRevField::ReadBulk
+   static RColumn *GetPrincipleColumnOf(const RFieldBase &other) { return other.fPrincipalColumn; }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
@@ -957,6 +968,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) override;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
+   std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
 
 public:
    RRVecField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
