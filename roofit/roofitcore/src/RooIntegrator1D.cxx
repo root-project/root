@@ -40,7 +40,6 @@ desired precision is reached.
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
-#include "RooIntegratorBinding.h"
 #include "RooNumIntConfig.h"
 #include "RooNumIntFactory.h"
 #include "RooMsgService.h"
