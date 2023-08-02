@@ -42,7 +42,8 @@ public:
    RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, SummationRule rule = Trapezoid,
                    int maxSteps = 0, double eps = 0);
 
-   RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim = 1);
+   RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim = 1,
+                   bool doSegmentation = false);
    RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config, int nDim = 1);
 
    bool checkLimits() const override;
@@ -61,7 +62,7 @@ protected:
    static void registerIntegrator(RooNumIntFactory &fact);
 
    bool initialize();
-   double integral(const double *yvec, int iDim, std::span<double> wksp);
+   double integral(int iDim, int nSeg, std::span<double> wksp);
 
    bool _useIntegrandLimits; ///< If true limits of function binding are used
 
@@ -74,6 +75,7 @@ protected:
    double _epsAbs;            ///< Absolute convergence tolerance
    double _epsRel;            ///< Relative convergence tolerance
    bool _doExtrap = true;     ///< Apply conversion step?
+   int _nSeg = 1;             ///< Number of segments
    std::vector<double> _xmin; ///<! Lower integration bounds
    std::vector<double> _xmax; ///<! Upper integration bounds
 
