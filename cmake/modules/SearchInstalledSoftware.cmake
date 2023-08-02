@@ -2057,7 +2057,6 @@ if (builtin_gtest)
     add_library(${lib} IMPORTED STATIC GLOBAL)
     set_target_properties(${lib} PROPERTIES
       IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
-      INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIRS}"
     )
     add_dependencies(${lib} googletest)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
