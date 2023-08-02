@@ -165,7 +165,7 @@ public:
       
       out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
       out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
-      out << ", cgh, cl::sycl::read};\n";
+      out << ", cgh, cl::sycl::read_only};\n";
       out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
       out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
@@ -213,7 +213,7 @@ public:
          out << SP*5 << "float reduceResult = sum;\n";
       }
       else if (fReduceOpMode == ReduceProd) {
-         out << SP*6 << "sum *= acc_tensor_" << fNX << "[l]\n";
+         out << SP*6 << "sum *= acc_tensor_" << fNX << "[l];\n";
          out << SP*5 << "}\n";
          out << SP*5 << "float reduceResult = sum;\n";
       }

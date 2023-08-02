@@ -260,7 +260,7 @@ public:
 
          out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(";
          out << length << "), [=](cl::sycl::id<1> id){\n";
-         out << SP*5 << NaryOperatorTraits<T, Op>::Op_GPU("acc_tensor" + fNY + "[id]", inputs);
+         out << SP*5 << NaryOperatorTraits<T, Op>::Op_GPU("acc_tensor_" + fNY + "[id]", inputs);
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
       }

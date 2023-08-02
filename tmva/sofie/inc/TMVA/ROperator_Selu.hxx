@@ -80,8 +80,8 @@ public:
       out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << std::to_string(length);
       out << "), [=](cl::sycl::id<1> id){\n";
       out << SP*5 << "acc_tensor_" << fNY << "[id] = 1.0507009873554804934193349852946 * ";
-      out << "(cl::sycl::max(0.0, acc_tensor_" << fNX << "[id]) + cl::sycl::min(0.0, ";
-      out << "1.6732632423543772848170429916717 * (cl::sycl::exp(acc_tensor_" << fNX << "[id])-1)));\n";        
+      out << "(cl::sycl::max(static_cast<float>(0.0), acc_tensor_" << fNX << "[id]) + cl::sycl::min(static_cast<float>(0.0), ";
+      out << "static_cast<float>(1.6732632423543772848170429916717) * (cl::sycl::exp(acc_tensor_" << fNX << "[id])-1)));\n";        
       out << SP*4 << "});\n";
       out << SP*3 << "});\n";
 

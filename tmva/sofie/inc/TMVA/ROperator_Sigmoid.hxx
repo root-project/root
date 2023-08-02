@@ -78,7 +78,7 @@ public:
       out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
       out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n\n";
       out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << std::to_string(length);
-      out << ")[=](cl::sycl::id<1> id){\n";
+      out << "), [=](cl::sycl::id<1> id){\n";
       out << SP*5 << "acc_tensor_" << fNY << "[id] = 1 / (1 + cl::sycl::exp(-acc_tensor_" << fNX << "[id]));\n";
       out << SP*4 << "});\n";
       out << SP*3 << "});\n";

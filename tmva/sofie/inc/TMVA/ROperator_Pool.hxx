@@ -556,7 +556,7 @@ public:
          out << SP*6 << "auto localId = item.get_local_id(0);\n";
          out << SP*6 << "auto tmpId = groupId;\n";
          out << SP*6 << "size_t i = tmpId % " << (hmax - hmin + 1) /  fAttrStrides[0] << ";\n";
-         out << SP*6 << "tmpId /= " (hmax - hmin + 1) / fAttrStrides[0] << ";\n";
+         out << SP*6 << "tmpId /= " << (hmax - hmin + 1) / fAttrStrides[0] << ";\n";
          out << SP*6 << "size_t inputOffset = tmpId * " << fShapeX[2] << ";\n";
          
          if (fPoolMode == AveragePool) {
@@ -568,7 +568,7 @@ public:
             }
          }
          out << SP*6 << "if (localId + i + hmin < 0 || localId + i + hmin >= hsize) \n";
-         out << SP*7 << "scratch[localId] = 0;\n"
+         out << SP*7 << "scratch[localId] = 0;\n";
          out << SP*6 << "else {\n";
          out << SP*7 << "scratch[localId] = acc_tensor_" << fNX << "[inputOffset + localId];\n";
          if (fPoolMode == AveragePool) {
@@ -579,7 +579,7 @@ public:
          out << SP*6 << "}\n";
          out << SP*6 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
          
-         out << SP*6 << "auto s = static_cast<int>(cl::sycl::ceil(work_group_size / 2));\n";
+         out << SP*6 << "auto s = static_cast<int>(cl::sycl::ceil(work_group_size / float(2)));\n";
          
          
          out << SP*6 << "while (s > 0) {\n";
@@ -590,7 +590,7 @@ public:
          else if (fPoolMode == AveragePool) {
             out << SP*8 << "scratch[localId] += scratch[localId + s];\n";
          }
-         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / 2));\n";
+         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
          out << SP*7 << "}\n";
                
          out << SP*7 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
@@ -660,7 +660,7 @@ public:
          out << SP*6 << "}\n";
          out << SP*6 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
          
-         out << SP*6 << "auto s = static_cast<int>(cl::sycl::ceil(kh*kw / 2));\n";
+         out << SP*6 << "auto s = static_cast<int>(cl::sycl::ceil(kh*kw / float(2)));\n";
          
          out << SP*6 << "while (s > 0) {\n";
          out << SP*7 << "if (localId_0 * kw + localId_1 < s) {\n";
@@ -671,7 +671,7 @@ public:
             out << SP*8 << "scratch[localId_0 * kw + localId_1] += scratch[localId_0 * kw + localId_1 + s];\n";
          }
 
-         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / 2));\n";
+         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
          out << SP*7 << "}\n";
 
          out << SP*7 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
@@ -679,11 +679,11 @@ public:
          out << SP*6 << "}\n";
          if (fPoolMode == MaxPool) {
             out << SP*6 << "if (localId_0 == 0 && localId_1 == 0) \n";
-            out << SP*7 << "acc_tensor_" << fNY << "[groupId_1 + groupdId_0 * " <<  num_work_items[1] / work_group_size[1]"] = scratch[0]\n";
+            out << SP*7 << "acc_tensor_" << fNY << "[groupId_1 + groupId_0 * num_work_items[1] / work_group_size[1]] = scratch[0];\n";
          }
          else if (fPoolMode == AveragePool) {
             out << SP*6 << "if (localId_0 == 0 && localId_1 == 0) \n";
-            out << SP*7 << "acc_tensor_" << fNY << "[groupId_1 + groupdId_0 * " <<  num_work_items[1] / work_group_size[1]"] = scratch[0] / float(nsum);\n";
+            out << SP*7 << "acc_tensor_" << fNY << "[groupId_1 + groupId_0 * num_work_items[1] / work_group_size[1]] = scratch[0] / float(nsum);\n";
          }
 
          out << SP*5 << "});\n";
@@ -691,7 +691,7 @@ public:
 
       }
       else if (fDim==3) {
-         out << SP*4 << "auto num_work_items = cl::sycl::range(" << fShapeX[0] * fShapeX[1] * (hmax - hmin + 1) / fAttrStrides[0] ", ";
+         out << SP*4 << "auto num_work_items = cl::sycl::range{" << fShapeX[0] * fShapeX[1] * (hmax - hmin + 1) / fAttrStrides[0] << ", ";
          out << fShapeX[0] * fShapeX[1] * (wmax - wmin + 1) / fAttrStrides[1] << ", ";
          out << fShapeX[0] * fShapeX[2] * (dmax - dmin + 1) / fAttrStrides[2] << "};\n";
          out << SP*4 << "auto work_group_size = cl::sycl::range{kh, kw, kd};\n";
@@ -702,8 +702,8 @@ public:
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-         out << SP*5 << "cl::sycl::accesssor<float, 1, cl::sycl::mode::read_write, cl::sycl::access::target::local> scratcj{kh * kw * kd, cgh};\n";
-         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::nd_range<3>(num_work_items, work_group_size), [=](cl::sycl::item<3> item){\n";
+         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::local> scratch{kh * kw * kd, cgh};\n";
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::nd_range<3>(num_work_items, work_group_size), [=](cl::sycl::nd_item<3> item){\n";
 
          out << SP*6 << "auto globalId_0 = item.get_global_id(0);\n";
          out << SP*6 << "auto globalId_1 = item.get_global_id(1);\n";
@@ -729,7 +729,7 @@ public:
          out << SP*6 << "size_t k = tmpId_2 % " << (dmax - dmin + 1) / fAttrStrides[2] << ";\n";
 
          if (fPoolMode == AveragePool) {
-            if (fAttrCountIncludedPad == 0 && doPadding) {
+            if (fAttrCountIncludePad == 0 && doPadding) {
                out << SP*6 << "int nsum = 0;\n";
             }
             else {
@@ -738,9 +738,9 @@ public:
          }
 
          out << SP*6 << "if (localId_0 + i + hmin < 0 || localId_0 + i + hmin >= hsize || localId_1 + j + wmin < 0 || localId_1 + j + wmin >= wsize || localId_2 + k + dmin < 0 || localId_2 + k + dmin >= dsize) \n";
-         out << SP*7 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] = 0\n";
+         out << SP*7 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] = 0;\n";
          out << SP*6 << "else {\n";
-         out << SP*7 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] = acc_tensor_" << fNX << "[inputOffset + localId_0*dwsize + localId_1 * dsize + p];\n";
+         out << SP*7 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] = acc_tensor_" << fNX << "[inputOffset + localId_0*dwsize + localId_1 * dsize + localId_2];\n";
          
          if (fPoolMode == AveragePool) {
             if (fAttrCountIncludePad == 0 && doPadding) {
@@ -749,30 +749,30 @@ public:
          }
          out << SP*6 << "}\n";
          out << SP*6 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
-         out << "auto s = static_cast<int>(cl::sycl::ceil(kh * kw * kd / 2));\n";
+         out << "auto s = static_cast<int>(cl::sycl::ceil(kh * kw * kd / float(2)));\n";
 
          out << SP*6 << "while (s > 0) {\n";
          out << SP*7 << "if (localId_2 + localId_1 * kd + localId_0 * kw * kd < s) {\n";
          
          if (fPoolMode == MaxPool) {
-            out << SP*8 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] = cl::sycl::fmax(scratch[localId_2 + localId_1 * kd + localId_2 * kw * kd + s]);\n";
+            out << SP*8 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] = cl::sycl::fmax(scratch[localId_2 + localId_1 * kd + localId_2 * kw * kd], scratch[localId_2 + localId_1 * kd + localId_2 * kw * kd + s]);\n";
          }
          else {
             out << SP*8 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] += scratch[localId_2 + localId_1 * kd + localId_0 * kd * kw];\n";
          }
 
-         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / 2));\n";
+         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
          out << SP*7 << "}\n";
          out << SP*7 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
          out << SP*6 << "}\n";
 
          if (fPoolMode == MaxPool) {
-            out << SP*6 << "if (localId_0 == 0 && localId_1 == 0 && localId_2 == 0) "
-            out << SP*7 << "acc_tensor_" << fNY << "[groupId_2 + groupdId_1 * " <<  num_work_items[2] / work_group_size[2] << " * groupId_0 * " << num_work_items[2] / work_group_size[2] * num_work_items[1] / work_group_size[1] << "] = scratch[0]\n";
+            out << SP*6 << "if (localId_0 == 0 && localId_1 == 0 && localId_2 == 0) ";
+            out << SP*7 << "acc_tensor_" << fNY << "[groupId_2 + groupId_1 * num_work_items[2] / work_group_size[2] * groupId_0 * num_work_items[2] / work_group_size[2] * num_work_items[1] / work_group_size[1]] = scratch[0];\n";
          }
          else if (fPoolMode == AveragePool) {
-            out << SP*6 << "if (localId_0 == 0 && localId_1 == 0 && localId_2 == 0) "
-            out << SP*7 << "acc_tensor_" << fNY << "[groupId_2 + groupdId_1 * " <<  num_work_items[2] / work_group_size[2] << " * groupId_0 * " << num_work_items[2] / work_group_size[2] * num_work_items[1] / work_group_size[1] << "] = scratch[0] / float(nsum);\n";
+            out << SP*6 << "if (localId_0 == 0 && localId_1 == 0 && localId_2 == 0) ";
+            out << SP*7 << "acc_tensor_" << fNY << "[groupId_2 + groupId_1 * num_work_items[2] / work_group_size[2] * groupId_0 * num_work_items[2] / work_group_size[2] * num_work_items[1] / work_group_size[1]] = scratch[0] / float(nsum);\n";
          }
 
          out << SP*5 << "});\n";

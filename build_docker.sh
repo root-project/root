@@ -1,2 +1,2 @@
-docker build --network=host -t root-img ../
+docker build --network=host --no-cache -t root-img ../
 

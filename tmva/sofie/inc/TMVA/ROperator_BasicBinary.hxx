@@ -226,7 +226,7 @@ public:
       out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY << ", cgh";
       out << ", cl::sycl::write_only};\n";
       out << SP*4 << "cgh.parallel_for<class " << OpName <<">(cl::sycl::range<1>(" << length << ")";
-      out << "[=](cl::sycl::id<1> id){\n";
+      out << ", [=](cl::sycl::id<1> id){\n";
       out << SP*5 << "acc_tensor_" << fNY << "[id] = " << BinaryOperatorTrait<T, Op>::Op_GPU("acc_tensor_" + nameA + "[id]", "acc_tensor_" + nameB + "[id]") << ";\n"; 
       out << SP*4 << "});\n";
       out << SP*3 << "});\n";

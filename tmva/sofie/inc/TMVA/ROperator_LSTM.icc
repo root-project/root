@@ -1477,8 +1477,55 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
 template<typename T>
 auto ROperator_LSTM<T>::GenerateGPU(std::string OpName)
 -> std::string {
+   /*
+   OpName = "op_" + OpName;
+   std::stringstream out;
+
+   size_t seq_length = (fAttrLayout == 0) ? fShapeX[0] : fShapeX[1];
+   size_t batch_size = (fAttrLayout == 0) ? fShapeX[1] : fShapeX[0];
+   size_t input_size = fShapeX[2];
+   size_t num_directions = fShapeW[0];
+
+   // set the input
+   if (fAttrLayout != 0) {
+      if (fUseSession) {
+         out << SP*3 << "auto buf_" << OpName << "_input = cl::sycl::buffer{fVec_" << OpName << "_input.data(), cl::sycl::range{fVec_" << OpName << "_input.size()}};\n";
+         out << SP*3 << "buf_" << OpName << "_input.set_final_data(nullptr);\n";
+      }
+      else {
+         out << SP*3 << "auto buf_" << OpName << "_input = cl::sycl::buffer{cl::sycl::range<1>(" << seq_length * batch_size * input_size" << ")};\n";   
+         out << SP*3 << "buf_" << OpName << "_input.set_final_data(nullptr);\n";
+      }
+
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_" << OpName << "_input = cl::sycl::accessor{buf_" << OpName;
+      out << "_input, cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+      
+      out << SP*4 << "cgh.parallel_for<class " << OpName << "_0>(cl::sycl::range<3>(" << seq_length << ", " << batch_size << ", " << input_size << "), [=](cl::sycl::id<3> id){\n";
+      out << SP*5 << "auto seq = id[0];\n";
+      out << SP*5 << "auto batch = id[1];\n";
+      out << SP*5 << "auto i = id[2];\n";
+      out << SP*5 << "acc_" << OpName << "_input[seq * " << batch_size * input_size 
+         << " + batch * " << input_size << " + i] = acc_tensor_" << fNX << "[batch * "
+         << seq_length * input_size << " + seq * " << input_size << " + i];\n";
+      out << SP*4 << "});\n";
+      out << SP*5 << "});\n";
+      }
+
+      //Set the initial hidden state
+      if (!fNInitial_h.empty()) {
+         // initial_hidden_state -> buf_tensor_initial_h
+         if (fAttrLayout != 0) {
+            if (fUseSession) {
+               out << SP*
+            }
+         }
+      }
+   */
    return std::string();
-}
+} 
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA
