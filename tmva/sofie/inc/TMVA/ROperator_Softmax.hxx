@@ -192,7 +192,7 @@ public:
          out << ", cgh, cl::sycl::read_only};\n";
          out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-         out << SP*4 << "auto sumReduction = cl::sycl::reduction(sum_buf, cl::sycl::plus<>());\n";
+         out << SP*4 << "auto sumReduction = cl::sycl::reduction(sum_buf, cgh, cl::sycl::plus<>());\n";
          out << SP*4 << "cgh.parallel_for<class " << OpName << "_0>(cl::sycl::range<1>(" << length;
          out << "), sumReduction, [=](cl::sycl::id<1> id, auto& sum){\n";
          out << SP*5 << "int tmp = cl::sycl::exp(acc_tensor_" << fNX << "[id]);\n";

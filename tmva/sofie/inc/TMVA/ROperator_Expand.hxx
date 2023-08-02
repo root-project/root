@@ -113,6 +113,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Expand Op called to Generate without being initialized first");
       }
       std::stringstream out;
+      /*
       out << "\n" << SP*3 << "//------ Expand Op" << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
       // No need to broadcast A if it's an initialized tensor
@@ -130,7 +131,7 @@ public:
       else {
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNX << "\n";
          out << SP*3 << "{\n";
-         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNX << ".data(), " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_";
          out << fNY << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
@@ -139,6 +140,7 @@ public:
          out << SP*4 << "delete[] data;\n";
          out << SP << "}\n";
       }
+      */
       return out.str();
    }
 
