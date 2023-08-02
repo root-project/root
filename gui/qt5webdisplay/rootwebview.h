@@ -39,7 +39,7 @@ public:
    RootWebView(QWidget *parent = nullptr, unsigned width = 0, unsigned height = 0, int x = -1, int y = -1);
    virtual ~RootWebView() = default;
 
-   virtual QSize  sizeHint() const;
+   QSize  sizeHint() const override;
 };
 
 #endif

@@ -71,7 +71,6 @@ protected:
    RootWebView *fView{nullptr};  ///< pointer on widget, need to release when handle is destroyed
 
    class Qt5Creator : public Creator {
-      int fCounter{0}; ///< counter used to number handlers
       QApplication *qapp{nullptr};  ///< created QApplication
       int qargc{1};                 ///< arg counter
       char *qargv[2];               ///< arg values
