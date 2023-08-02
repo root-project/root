@@ -20,7 +20,7 @@ namespace SOFIE{
    }
 
    enum class WeightFileType { None, RootBinary, Text };
-   WeightFileType Weightfile = WeightFileType::Text;
+   WeightFileType Weightfile;
    RModel::RModel(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
@@ -623,13 +623,26 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
                length *= dim;
             }
             std::string tensor_name = "tensor_" + i.first;
-            f << tensor_name << " " << length << "\n";
-            const float * data = (std::static_pointer_cast<float>(i.second.fData)).get();
-            for (size_t idx = 0; idx < length - 1; idx++) {
-               f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[idx] << " ";
+            fGC += "   std::vector<float*> " + tensor_name + " = nullptr;\n";
+            fGC += "   rootFile.GetObject(\"" + tensor_name + "\", " + tensor_name + ");\n";
+            fGC += "   if (" + tensor_name + " == nullptr) {\n";
+            fGC += "      throw std::runtime_error(\"tmva-sofie failed to read tensor " + i.first + " from ROOT file\");\n";
+            fGC += "   }\n";
+
+            // Store the loaded tensor into fInitializedTensors
+            fGC += "   InitializedTensor tensor;\n";
+            fGC += "   tensor.fType = ETensorType::FLOAT;\n";
+            fGC += "   tensor.fShape = {";
+            for (size_t j = 0; j < i.second.fShape.size(); ++j) {
+               if (j > 0)
+                  fGC += ",";
+               fGC += std::to_string(i.second.fShape[j]);
             }
-            f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[length - 1];
-            f << "\n";
+            fGC += "};\n";
+               fGC += "   tensor.fSize = 0;\n";
+               fGC += "   tensor.fData = std::shared_ptr<void>(" + tensor_name + ", [](float* p){});\n";
+               fGC += "   tensor.fPersistentData = nullptr;\n";
+               fGC += "   fInitializedTensors[" + i.first + "] = tensor;\n";
          }
       }
       f.close();
