@@ -216,14 +216,14 @@ public:
             if (fNBroadcastedInputs[i] != fNInputs[i]) {
                out << SP*4 << "// Broadcasting " << fNInputs[i] << " to " << ConvertShapeToString(fShapeY) << "\n";
                out << SP*4 << "{\n";
-               out << SP*5 << fType << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(tensor_" + fNInputs[i] << ", " << ConvertShapeToString(fShapeInputs[i]);
+               out << SP*5 << fType << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(fTensor_" + fNInputs[i] << ".data(), " << ConvertShapeToString(fShapeInputs[i]);
                out << ", " << ConvertShapeToString(fShapeY) << ");\n";
                out << SP*5 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}};\n";
-               out << SP*5 << "q.submit([&](cl::sycl::handler& cgh)) {\n";
-               out << SP*6 << "auto acc_tensor_" << fNBroadcastedInputs[i] << " = cl::sycl::accessor{buf_tensor_";
+               out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
+               out << SP*6 << "auto acc_" << fNBroadcastedInputs[i] << " = cl::sycl::accessor{buf_";
                out << fNBroadcastedInputs[i]<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-               out << SP*6 << "cgh.copy(data, acc_tensor_" << fNBroadcastedInputs[i] << ");\n";
-               out << SP*5 << "};\n";
+               out << SP*6 << "cgh.copy(data, acc_" << fNBroadcastedInputs[i] << ");\n";
+               out << SP*5 << "});\n";
 
                out << SP*5 << "delete[] data;\n";
                out << SP*4 << "}\n";
@@ -233,20 +233,20 @@ public:
 
       if (fNInputs.size() == 1) {
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*4 << "auto acc_tensor_" << fNInputs[0] << " = cl::sycl::accessor{buf_tensor_" << fNInputs[0];
+         out << SP*4 << "auto acc_" << fNInputs[0] << " = cl::sycl::accessor{buf_" << fNInputs[0];
          out << ", cgh, cl::sycl::read_only};\n";
-         out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
+         out << SP*4 << "auto acc_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
          out << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length << "), ";
          out << "[=](cl::sycl::id<1> id){\n";
-         out << SP*5 << "acc_tensor_" << fNY << "[id] = acc_tensor_" << fNInputs[0] << "[id];\n";
+         out << SP*5 << "acc_tensor_" << fNY << "[id] = acc_" << fNInputs[0] << "[id];\n";
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
       }
       else {
          out << SP*3 << "q.submit([&](cl::sycl::handler &cgh){\n";
          for (size_t i=0; i<fNBroadcastedInputs.size(); i++) {
-            out << SP*4 << "auto acc_tensor_" << fNBroadcastedInputs[i] << "= cl::sycl::accessor{buf_tensor_" << fNBroadcastedInputs[i];
+            out << SP*4 << "auto acc_" << fNBroadcastedInputs[i] << "= cl::sycl::accessor{buf_" << fNBroadcastedInputs[i];
             out << ", cgh, cl::sycl::read_only};\n"; 
          }
 

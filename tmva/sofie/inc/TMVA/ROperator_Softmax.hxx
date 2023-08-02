@@ -282,7 +282,7 @@ public:
 
          out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << num_workers;
          out << "), [=](cl::sycl::id<1> id){\n";
-         out << SP*5 << fType << "sum = 0.0;\n";
+         out << SP*5 << fType << " sum = 0.0;\n";
          out << SP*5 << "size_t index = 0;\n";
 
          if (notBatch) {

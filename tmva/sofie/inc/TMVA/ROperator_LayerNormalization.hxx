@@ -225,12 +225,12 @@ public:
          out << "[" << j << "]; " << jIdx << "++){\n";
       }
       out << SP << SP << SP << "sum += std::pow(tensor_" << fNX << "[" << InputIndex << "] - tensor_";
-      out << fNMean << "[" << axesIndex << "], 2);\n";
+      out << fNMean << "[" << axesIndex << "], static_cast<float>(2));\n";
       for (size_t j = fAxis; j < fSize; j++) {
          out << SP << SP << "}\n";
       }
-      out << SP << SP << "tensor_" << fNInvStdDev << "[" << axesIndex << "] = 1 / std::sqrt(";
-      out << "sum / " << fType << "(" << fNormalizedLength << ") + " << fAttrEpsilon << ");\n";
+      out << SP << SP << "tensor_" << fNInvStdDev << "[" << axesIndex << "] = 1 / (std::sqrt(";
+      out << "sum / " << fType << "(" << fNormalizedLength << ")) + static_cast<float>(" << fAttrEpsilon << "));\n";
       for (size_t i = 0; i < fAxis; i++) {
          out << SP << "}\n";
       }
@@ -373,18 +373,18 @@ public:
       out << SP*3 << "// Compute the mean\n";
       out << SP*3 << "size_t num_work_items = 1;\n";
       for (size_t i=0; i<fAxis; i++) {
-         out << SP*3 << "num_work_items *= " << inputShape << "[" << i << "]\n";
+         out << SP*3 << "num_work_items *= " << inputShape << "[" << i << "];\n";
       }
 
       out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
       out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
       out << ", cgh, cl::sycl::read_only};\n";
       out << SP*4 << "auto acc_tensor_" << fNMean << " = cl::sycl::accessor{buf_tensor_" << fNMean;
-      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init);\n";
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
       
       out << SP*4 << "cgh.parallel_for<class " << OpName << "_1>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1> id){\n";
       out << SP*5 << "float sum = 0.0;\n";
-      out << SP*5 << "size_t tid = id\n";
+      out << SP*5 << "size_t tid = id;\n";
 
       for (size_t j = fAxis; j < fSize; j++) {
          std::string jIdx = "axis_" + std::to_string(j);
@@ -395,7 +395,7 @@ public:
       for (size_t i=1; i<=fAxis; i++) {
          out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(fAxis-i);
          out << " = tid % " << inputShape << "[" << fAxis-i << "]\n;";
-         out << SP*(5 + (fSize - fAxis + 2)) << "tid /= inputShape[" << fAxis - i << "];\n";
+         out << SP*(5 + (fSize - fAxis + 2)) << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
       }
 
       out << SP*(5 + (fSize - fAxis + 2)) << "sum += acc_tensor_" << fNX << "[" << InputIndex << "];\n";
@@ -404,7 +404,7 @@ public:
          out << SP*(5 + (j - fAxis)) << "}\n";
       }
 
-      out << SP*5 << "acc_tensor_fNMean[id] = sum / " << fType << "(" << fNormalizedLength << ");\n";
+      out << SP*5 << "acc_tensor_" << fNMean << "[id] = sum / " << fType << "(" << fNormalizedLength << ");\n";
       out << SP*4 << "});\n";
       out << SP*3 << "});\n\n";
 
@@ -418,10 +418,10 @@ public:
       out << SP*4 << "auto acc_tensor_" << fNInvStdDev << "= cl::sycl::accessor{buf_tensor_" << fNInvStdDev;
       out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
       
-      out << SP*4 << "cgh.parallel_for<class " << OpName << "_2>(cl::sycl::range<1>(num_work_items, [=](cl::sycl::id<1> id){\n";
+      out << SP*4 << "cgh.parallel_for<class " << OpName << "_2>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1> id){\n";
 
       out << SP*5 << fType << " sum = 0.0;\n";
-      out << SP*5 << "size_t tid = id\n";
+      out << SP*5 << "size_t tid = id;\n";
 
       for (size_t j = fAxis; j < fSize; j++) {
          std::string jIdx = "axis_" + std::to_string(j);
@@ -432,23 +432,23 @@ public:
       for (size_t i=1; i<=fAxis; i++) {
          out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(fAxis-i);
          out << " = tid % " << inputShape << "[" << fAxis - i << "]\n;";
-         out << SP*(5 + (fSize - fAxis + 2)) << "tid /= inputShape[" << fAxis - i << "];\n";
+         out << SP*(5 + (fSize - fAxis + 2)) << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
       }
 
       out << SP*(5 + (fSize - fAxis + 2)) << "sum += cl::sycl::pow(acc_tensor_" << fNX << "[" << InputIndex << "] - acc_tensor_";
-      out << fNMean << "[" << axesIndex << "], 2);\n";
+      out << fNMean << "[" << axesIndex << "], static_cast<float>(2));\n";
 
       for (size_t j = fSize-1; j >= fAxis; j--) {
          out << SP*(5 + (j - fAxis)) << "}\n";
       }
       
-      out << SP*5 << "acc_tensor_" << fNInvStdDev << "[id] = cl::sycl::native::recip(cl::sycl::sqrt(sum / " << fType << "(" << fNormalizedLength << ") + " << fAttrEpsilon << ");\n";  
+      out << SP*5 << "acc_tensor_" << fNInvStdDev << "[id] = cl::sycl::native::recip(cl::sycl::sqrt(sum / " << fType << "(" << fNormalizedLength << ")) + static_cast<float>(" << fAttrEpsilon << "));\n";  
       out << SP*4 << "});\n";
       out << SP*3 << "});\n\n";
 
       if (!fNCastedX.empty()) {
          for (size_t j = fAxis; j < fSize; j++) {
-            out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "]\n";
+            out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "];\n";
          }
 
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
@@ -468,14 +468,14 @@ public:
          out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1>id){\n";
          out << SP*5 << "size_t tid = id;\n";
          for (size_t j = 1; j<=fSize; j++) {
-            out << SP*5 << "size_t axis_" << fSize-j << " = tid % inputShape[" << fSize-j << "];\n";
-            out << SP*5 << "tid /= inputShape[" << fSize - j << "];\n";
+            out << SP*5 << "size_t axis_" << fSize-j << " = tid % " << inputShape << "[" << fSize-j << "];\n";
+            out << SP*5 << "tid /= " << inputShape << "[" << fSize - j << "];\n";
          }
 
          out << "\n" << SP*5 << "// NormalizedX = InvStdDev * (CastedX - Mean)\n";
          out << SP*5 << "acc_tensor_" << fNNormalizedX << "[" << InputIndex << "] = acc_tensor_";
          out << fNInvStdDev << "[" << axesIndex << "] * (acc_tensor_" << fNCastedX << "[" << InputIndex;
-         out << "] - acc_tensor_" << fNMean << "[" << axesIndex << "])\n";
+         out << "] - acc_tensor_" << fNMean << "[" << axesIndex << "]);\n";
 
          out << "\n" << SP*5 << "// Y = Scale o NormalizedX\n";
          out << SP*5 << "acc_tensor_" << fNY << "[" << InputIndex << "] = acc_tensor_" << fNScale;
@@ -487,7 +487,7 @@ public:
       }
       else {
          for (size_t j = fAxis; j < fSize; j++) {
-            out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "]\n";
+            out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "];\n";
          }
 
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
@@ -502,12 +502,12 @@ public:
          out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-         out << "\n" << SP*4 << "Y = Scale o InvStdDev (X-Mean)\n";
+         out << "\n" << SP*4 << "// Y = Scale o InvStdDev (X-Mean)\n";
          out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1>id){\n";
          out << SP*5 << "size_t tid = id;\n";
          for (size_t j = 1; j<=fSize; j++) {
-            out << SP*5 << "size_t axis_" << fSize-j << " = tid % inputShape[" << fSize-j << "];\n";
-            out << SP*5 << "tid /= inputShape[" << fSize-j << "];\n";
+            out << SP*5 << "size_t axis_" << fSize-j << " = tid % " << inputShape << "[ " << fSize-j << " ];\n";
+            out << SP*5 << "tid /= " << inputShape << "[" << fSize-j << "];\n";
          }
 
          out << SP*5 << "acc_tensor_" << fNY << "[" << InputIndex << "] = acc_tensor_" << fNScale;
@@ -522,7 +522,7 @@ public:
       if (!fNB.empty()) {
          std::string Bias = "buf_tensor_" + ((fNBroadcastedB.empty()) ? fNB : fNBroadcastedB);
          out << "\n" << SP*3 << "// Add the bias to Y\n";
-         out << SP*3 << "int " << OpName << "_n" << fLength << ";\n";
+         out << SP*3 << "int " << OpName << "_n = " << fLength << ";\n";
          out << SP*3 << "float " << OpName << "_alpha = 1.;\n";
          out << SP*3 << "int " << OpName << "_inc = 1;\n";
          out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_n, " << OpName << "_alpha, ";

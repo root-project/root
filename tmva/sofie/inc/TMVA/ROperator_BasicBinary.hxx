@@ -188,7 +188,7 @@ public:
       if (!fNBroadcadstedA.empty()) {
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNA << "\n";
          out << SP*3 << "{\n";
-         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNA << ".data(), " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}};";
          out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*5 << "auto acc_tensor_" << fNBroadcadstedA << " = cl::sycl::accessor{buf_tensor_" << fNBroadcadstedA;
@@ -203,7 +203,7 @@ public:
       if (!fNBroadcadstedB.empty()) {
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNB << "\n";
          out << SP*3 << "{\n";
-         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNB << ".data(), " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}};";
          out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*5 << "auto acc_tensor_" << fNBroadcadstedB << " = cl::sycl::accessor{buf_tensor_" << fNBroadcadstedB;
