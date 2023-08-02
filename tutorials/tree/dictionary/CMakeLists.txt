@@ -12,7 +12,7 @@
 #####################################################################################################################
 
 # CMakeLists.txt that creates a library with dictionary and a main program
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(treeUsingCustomClass)
 

@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 
-# Tested with and supporting policies up to the following CMake version. 
+# Tested with and supporting policies up to the following CMake version.
 # Not using ... syntax due to parser bug in MSVC's built-in CMake server mode.
 if(${CMAKE_VERSION} VERSION_LESS 3.12)
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
@@ -126,7 +126,7 @@ export(PACKAGE Minuit2)
 # Only add tests and docs if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     enable_testing()
-    
+
     # Make adding tests cleaner using this macro
     macro(add_minuit2_test TESTNAME)
         add_executable(${TESTNAME} ${ARGN})
@@ -207,4 +207,3 @@ set(CPACK_SOURCE_IGNORE_FILES
     /Pipfile.*$
 )
 include(CPack)
-

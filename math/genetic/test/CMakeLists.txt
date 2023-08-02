@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(NOT DEFINED ROOT_SOURCE_DIR)
-   cmake_minimum_required(VERSION 3.9)
+   cmake_minimum_required(VERSION 3.10)
    project(genetic-tests)
    find_package(ROOT REQUIRED)
    include(${ROOT_USE_FILE})
