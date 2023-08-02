@@ -18,7 +18,7 @@
 class RooIntegratorBinding : public RooAbsFunc {
 public:
    RooIntegratorBinding(std::unique_ptr<RooAbsIntegrator> integrator)
-      : RooAbsFunc(integrator->integrand()->getDimension() - 1), _integrator(integrator.get())
+      : RooAbsFunc(integrator->integrand()->getDimension() - 1), _integrator(std::move(integrator))
    {
    }
 
