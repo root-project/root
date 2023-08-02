@@ -12,6 +12,18 @@
 /**
  * Used to test serialization and deserialization of classes in RNTuple with TClass
  */
+
+enum CustomEnum { kCustomEnumVal = 7 };
+// TODO(jblomer): use standard integer types for specifying the underlying width; requires TEnum fix.
+enum class CustomEnumInt8 : char {};
+enum class CustomEnumUInt8 : unsigned char {};
+enum class CustomEnumInt16 : short int {};
+enum class CustomEnumUInt16 : unsigned short int {};
+enum class CustomEnumInt32 : int {};
+enum class CustomEnumUInt32 : unsigned int {};
+enum class CustomEnumInt64 : long int {};
+enum class CustomEnumUInt64 : unsigned long int {};
+
 struct CustomStruct {
    float a = 0.0;
    std::vector<float> v1;
@@ -119,6 +131,7 @@ struct StructWithEnums : BaseOfStructWithEnums {
    enum class DeclEC { E1, E2, E42 = 137 };
    int a = E42;
    int b = static_cast<int>(DeclEC::E42);
+   CustomEnum e = kCustomEnumVal;
 };
 
 /// A class that behaves as a collection accessed through the `TVirtualCollectionProxy` interface

@@ -37,7 +37,6 @@ in terms of a recursive application of RooIntegrator1D
 using namespace std;
 
 ClassImp(RooIntegrator2D);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,18 +44,17 @@ ClassImp(RooIntegrator2D);
 
 void RooIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 {
-  RooIntegrator2D* proto = new RooIntegrator2D() ;
-  fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
-  RooNumIntConfig::defaultConfig().method2D().setLabel(proto->ClassName()) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooIntegrator2D::RooIntegrator2D() :
-  _xIntegrator(0), _xint(0)
-{
+  auto creator = [](const RooAbsFunc& function, const RooNumIntConfig& config) {
+    return std::make_unique<RooIntegrator2D>(function,config);
+  };
+  std::string name = "RooIntegrator2D";
+  fact.registerPlugin(name, creator, {},
+                    /*canIntegrate1D=*/false,
+                    /*canIntegrate2D=*/true,
+                    /*canIntegrateND=*/false,
+                    /*canIntegrateOpenEnded=*/false,
+                    /*depName=*/"RooIntegrator1D");
+  RooNumIntConfig::defaultConfig().method2D().setLabel(name) ;
 }
 
 
@@ -65,9 +63,11 @@ RooIntegrator2D::RooIntegrator2D() :
 /// maximum number of steps and conversion tolerance. The integration
 /// limits are taken from the definition in the function binding.
 
-RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, RooIntegrator1D::SummationRule rule,
-             Int_t maxSteps, double eps) :
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,rule,maxSteps,eps)))),rule,maxSteps,eps)
+RooIntegrator2D::RooIntegrator2D(const RooAbsFunc &function, RooIntegrator1D::SummationRule rule, Int_t maxSteps,
+                                 double eps)
+   : RooIntegrator1D(
+        *(_xint = new RooIntegratorBinding(std::make_unique<RooIntegrator1D>(function, rule, maxSteps, eps))), rule,
+        maxSteps, eps)
 {
 }
 
@@ -80,7 +80,7 @@ RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, RooIntegrator1D::Su
 RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, double xmin, double xmax,
              double ymin, double ymax,
              SummationRule rule, Int_t maxSteps, double eps) :
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,rule,maxSteps,eps)))),xmin,xmax,rule,maxSteps,eps)
+  RooIntegrator1D(*(_xint=new RooIntegratorBinding(std::make_unique<RooIntegrator1D>(function,ymin,ymax,rule,maxSteps,eps))),xmin,xmax,rule,maxSteps,eps)
 {
 }
 
@@ -91,7 +91,7 @@ RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, double xmin, double
 /// binding
 
 RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,config)))),config)
+  RooIntegrator1D(*(_xint=new RooIntegratorBinding(std::make_unique<RooIntegrator1D>(function,config))),config)
 {
 }
 
@@ -104,19 +104,9 @@ RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, const RooNumIntConf
 RooIntegrator2D::RooIntegrator2D(const RooAbsFunc& function, double xmin, double xmax,
              double ymin, double ymax,
              const RooNumIntConfig& config) :
-  RooIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
+  RooIntegrator1D(*(_xint=new RooIntegratorBinding(std::make_unique<RooIntegrator1D>(function,ymin,ymax,config))),xmin,xmax,config)
 {
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone integrator with new function and configuration. Needed to support RooNumIntFactory
-
-RooAbsIntegrator* RooIntegrator2D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooIntegrator2D(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,7 +115,6 @@ RooAbsIntegrator* RooIntegrator2D::clone(const RooAbsFunc& function, const RooNu
 RooIntegrator2D::~RooIntegrator2D()
 {
   delete _xint ;
-  delete _xIntegrator ;
 }
 
 
@@ -135,6 +124,6 @@ RooIntegrator2D::~RooIntegrator2D()
 bool RooIntegrator2D::checkLimits() const
 {
   bool ret = RooIntegrator1D::checkLimits() ;
-  ret &= _xIntegrator->checkLimits() ;
+  ret &= _xint->integrator().checkLimits() ;
   return ret ;
 }

@@ -109,7 +109,6 @@ observable snapshots are stored in the dataset.
 #include "RooHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
-#include "TMatrixDSym.h"
 #include "TPaveText.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -425,7 +424,7 @@ void RooAbsData::setDirtyProp(bool flag)
 /// <tr><td> `Title(const char* name)`   <td> Give specified title to output dataset
 /// </table>
 
-RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,const RooCmdArg& arg4,
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,const RooCmdArg& arg4,
                 const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)
 {
   // Define configuration for this method
@@ -471,7 +470,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
     varSubset.add(*get()) ;
   }
 
-  RooAbsData* ret = nullptr;
+  std::unique_ptr<RooAbsData> ret;
   if (cutSpec) {
 
     RooFormulaVar cutVarTmp(cutSpec,cutSpec,*get()) ;
@@ -489,7 +488,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
   if (title) ret->SetTitle(title) ;
 
   ret->copyGlobalObservables(*this);
-  return ret ;
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -498,12 +497,12 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
 /// other variables, such as intermediate formula objects, use the equivalent
 /// reduce method specifying the as a RooFormulVar reference.
 
-RooAbsData* RooAbsData::reduce(const char* cut)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut)
 {
   RooFormulaVar cutVar(cut,cut,*get()) ;
-  RooAbsData* ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
+  auto ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
-  return ret;
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -511,11 +510,11 @@ RooAbsData* RooAbsData::reduce(const char* cut)
 /// The 'cutVar' formula variable is used to select the subset of data points to be
 /// retained in the reduced data collection.
 
-RooAbsData* RooAbsData::reduce(const RooFormulaVar& cutVar)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooFormulaVar& cutVar)
 {
-  RooAbsData* ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
+  auto ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
-  return ret;
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -526,7 +525,7 @@ RooAbsData* RooAbsData::reduce(const RooFormulaVar& cutVar)
 /// other variables, such as intermediate formula objects, use the equivalent
 /// reduce method specifying the as a RooFormulVar reference.
 
-RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
@@ -538,7 +537,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
     }
   }
 
-  RooAbsData* ret = nullptr;
+  std::unique_ptr<RooAbsData> ret;
   if (cut && strlen(cut)>0) {
     RooFormulaVar cutVar(cut, cut, *get(), false);
     ret = reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max());
@@ -546,7 +545,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
     ret = reduceEng(varSubset2,0,0,0,std::numeric_limits<std::size_t>::max());
   }
   ret->copyGlobalObservables(*this);
-  return ret;
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -556,7 +555,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
 /// The 'cutVar' formula variable is used to select the subset of data points to be
 /// retained in the reduced data collection.
 
-RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar)
+RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar)
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
@@ -568,9 +567,9 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
     }
   }
 
-  RooAbsData* ret = reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
+  auto ret = reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
-  return ret;
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 
@@ -963,7 +962,8 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  RooFormula* select = cutSpec ? new RooFormula("select",cutSpec,*get()) : 0 ;
+  std::unique_ptr<RooFormula> select;
+  if (cutSpec) select = std::make_unique<RooFormula>("select",cutSpec,*get());
 
   // Calculate requested moment
   double xysum(0),xsum(0),ysum(0),x2sum(0),y2sum(0);
@@ -991,9 +991,6 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
     y2sum/=sumEntries(cutSpec, cutRange) ;
   }
 
-  // Cleanup
-  if (select) delete select ;
-
   // Return covariance or correlation as requested
   if (corr) {
     return (xysum-xsum*ysum)/(sqrt(x2sum-(xsum*xsum))*sqrt(y2sum-(ysum*ysum))) ;
@@ -1005,7 +1002,7 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
 ////////////////////////////////////////////////////////////////////////////////
 /// Return covariance matrix from data for given list of observables
 
-TMatrixDSym* RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const
+RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const
 {
   RooArgList varList ;
   for(auto * var : static_range_cast<RooRealVar*>(vars)) {
@@ -1064,7 +1061,7 @@ TMatrixDSym* RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSp
   }
 
   // Calculate covariance matrix
-  TMatrixDSym* C = new TMatrixDSym(varList.size()) ;
+  auto C = std::make_unique<TMatrixDSym>(varList.size()) ;
   for (std::size_t ix=0 ; ix<varList.size() ; ix++) {
     for (std::size_t iy=0 ; iy<varList.size() ; iy++) {
       (*C)(ix,iy) = xysum(ix,iy)-xsum[ix]*xsum[iy] ;
@@ -1074,7 +1071,7 @@ TMatrixDSym* RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSp
     }
   }
 
-  return C ;
+  return RooFit::Detail::owningPtr(std::move(C));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1510,39 +1507,39 @@ SplittingSetup initSplit(RooAbsData const &data, RooAbsCategory const &splitCat)
    return setup;
 }
 
-TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool createEmptyDataSets,
-                 std::function<RooAbsData *(const char *label)> createEmptyData)
+RooFit::OwningPtr<TList> splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool createEmptyDataSets,
+                                   std::function<std::unique_ptr<RooAbsData>(const char *label)> createEmptyData)
 {
-   auto dsetList = new TList;
+   auto dsetList = std::make_unique<TList>();
 
    // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
    if (createEmptyDataSets) {
       for (const auto &nameIdx : cloneCat) {
-         dsetList->Add(createEmptyData(nameIdx.first.c_str()));
+         dsetList->Add(createEmptyData(nameIdx.first.c_str()).release());
       }
    }
 
-   bool isDataHist = dynamic_cast<RooDataHist const*>(&data);
+   bool isDataHist = dynamic_cast<RooDataHist const *>(&data);
 
    // Loop over dataset and copy event to matching subset
    for (Int_t i = 0; i < data.numEntries(); ++i) {
       const RooArgSet *row = data.get(i);
       auto subset = static_cast<RooAbsData *>(dsetList->FindObject(cloneCat.getCurrentLabel()));
       if (!subset) {
-         subset = createEmptyData(cloneCat.getCurrentLabel());
+         subset = createEmptyData(cloneCat.getCurrentLabel()).release();
          dsetList->Add(subset);
       }
 
       // For datasets with weight errors or sumW2, the interface to fill
       // RooDataHist and RooDataSet is not the same.
       if (isDataHist) {
-         static_cast<RooDataHist*>(subset)->add(*row, data.weight(), data.weightSquared());
+         static_cast<RooDataHist *>(subset)->add(*row, data.weight(), data.weightSquared());
       } else {
-         static_cast<RooDataSet*>(subset)->add(*row, data.weight(), data.weightError());
+         static_cast<RooDataSet *>(subset)->add(*row, data.weight(), data.weightError());
       }
    }
 
-   return dsetList;
+   return RooFit::Detail::owningPtr(std::move(dsetList));
 }
 
 } // namespace
@@ -1556,18 +1553,20 @@ TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool cr
 /// If createEmptyDataSets is false (default) this method only creates datasets for states
 /// which have at least one entry The caller takes ownership of the returned list and its contents
 
-TList* RooAbsData::split(const RooAbsCategory& splitCat, bool createEmptyDataSets) const
+RooFit::OwningPtr<TList> RooAbsData::split(const RooAbsCategory &splitCat, bool createEmptyDataSets) const
 {
-  SplittingSetup setup = initSplit(*this, splitCat);
+   SplittingSetup setup = initSplit(*this, splitCat);
 
-  // Something went wrong
-  if(!setup.cloneCat) return nullptr;
+   // Something went wrong
+   if (!setup.cloneCat)
+      return nullptr;
 
-  auto createEmptyData = [&](const char * label) -> RooAbsData* {
-    return emptyClone(label, label, &setup.subsetVars, setup.addWeightVar ? "weight" : nullptr);
-  };
+   auto createEmptyData = [&](const char *label) -> std::unique_ptr<RooAbsData> {
+      return std::unique_ptr<RooAbsData>{
+         emptyClone(label, label, &setup.subsetVars, setup.addWeightVar ? "weight" : nullptr)};
+   };
 
-  return splitImpl(*this, *setup.cloneCat, createEmptyDataSets, createEmptyData);
+   return splitImpl(*this, *setup.cloneCat, createEmptyDataSets, createEmptyData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1579,40 +1578,42 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, bool createEmptyDataSet
 /// If createEmptyDataSets is false (default) this method only creates datasets for states
 /// which have at least one entry The caller takes ownership of the returned list and its contents
 
-TList* RooAbsData::split(const RooSimultaneous& simpdf, bool createEmptyDataSets) const
+RooFit::OwningPtr<TList> RooAbsData::split(const RooSimultaneous &simpdf, bool createEmptyDataSets) const
 {
-  auto& splitCat = const_cast<RooAbsCategoryLValue&>(simpdf.indexCat());
+   auto &splitCat = const_cast<RooAbsCategoryLValue &>(simpdf.indexCat());
 
-  SplittingSetup setup = initSplit(*this, splitCat);
+   SplittingSetup setup = initSplit(*this, splitCat);
 
-  // Something went wrong
-  if(!setup.cloneCat) return nullptr;
+   // Something went wrong
+   if (!setup.cloneCat)
+      return nullptr;
 
-  // Get the observables for a given pdf in the RooSimultaneous, or an empty
-  // RooArgSet if no pdf is set
-  auto getPdfObservables = [this, &simpdf](const char * label) {
-    RooArgSet obsSet;
-    if(RooAbsPdf* catPdf = simpdf.getPdf(label)) {
-      catPdf->getObservables(this->get(), obsSet);
-    }
-    return obsSet;
-  };
+   // Get the observables for a given pdf in the RooSimultaneous, or an empty
+   // RooArgSet if no pdf is set
+   auto getPdfObservables = [this, &simpdf](const char *label) {
+      RooArgSet obsSet;
+      if (RooAbsPdf *catPdf = simpdf.getPdf(label)) {
+         catPdf->getObservables(this->get(), obsSet);
+      }
+      return obsSet;
+   };
 
-  // By default, remove all category observables from the subdatasets
-  RooArgSet allObservables;
-  for( const auto& catPair : splitCat) {
-    allObservables.add(getPdfObservables(catPair.first.c_str()));
-  }
-  setup.subsetVars.remove(allObservables, true, true);
+   // By default, remove all category observables from the subdatasets
+   RooArgSet allObservables;
+   for (const auto &catPair : splitCat) {
+      allObservables.add(getPdfObservables(catPair.first.c_str()));
+   }
+   setup.subsetVars.remove(allObservables, true, true);
 
-  auto createEmptyData = [&](const char * label) -> RooAbsData* {
-    // Add in the subset only the observables corresponding to this category
-    RooArgSet subsetVarsCat(setup.subsetVars);
-    subsetVarsCat.add(getPdfObservables(label));
-    return this->emptyClone(label, label, &subsetVarsCat, setup.addWeightVar ? "weight" : nullptr);
-  };
+   auto createEmptyData = [&](const char *label) -> std::unique_ptr<RooAbsData> {
+      // Add in the subset only the observables corresponding to this category
+      RooArgSet subsetVarsCat(setup.subsetVars);
+      subsetVarsCat.add(getPdfObservables(label));
+      return std::unique_ptr<RooAbsData>{
+         this->emptyClone(label, label, &subsetVarsCat, setup.addWeightVar ? "weight" : nullptr)};
+   };
 
-  return splitImpl(*this, *setup.cloneCat, createEmptyDataSets, createEmptyData);
+   return splitImpl(*this, *setup.cloneCat, createEmptyDataSets, createEmptyData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

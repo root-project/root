@@ -49,7 +49,6 @@ reached
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooNumIntFactory.h"
-#include "RooIntegratorBinding.h"
 #include "RooMsgService.h"
 
 
@@ -99,10 +98,19 @@ static Roo_reg_GKInteg1D instance;
 ////////////////////////////////////////////////////////////////////////////////
 /// Register RooGaussKronrodIntegrator1D, its parameters and capabilities with RooNumIntConfig
 
-void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
+void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
 {
-  fact.storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
-  oocoutI(nullptr,Integration) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooGaussKronrodIntegrator1D>(function, config);
+   };
+
+   fact.registerPlugin("RooGaussKronrodIntegrator1D", creator, {},
+                       /*canIntegrate1D=*/true,
+                       /*canIntegrate2D=*/false,
+                       /*canIntegrateND=*/false,
+                       /*canIntegrateOpenEnded=*/true);
+
+   oocoutI(nullptr, Integration) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
 }
 
 
@@ -136,17 +144,6 @@ RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& funct
   _useIntegrandLimits= false;
   _valid= initialize();
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone integrator with given function and configuration. Needed for RooNumIntFactory
-
-RooAbsIntegrator* RooGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooGaussKronrodIntegrator1D(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

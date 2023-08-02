@@ -49,11 +49,20 @@ ClassImp(RooSegmentedIntegrator1D);
 void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 {
   RooRealVar numSeg("numSeg","Number of segments",3) ;
-  fact.storeProtoIntegrator(new RooSegmentedIntegrator1D(),numSeg,RooIntegrator1D::Class()->GetName()) ;
+
+  auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+     return std::make_unique<RooSegmentedIntegrator1D>(function, config);
+  };
+
+  fact.registerPlugin("RooSegmentedIntegrator1D", creator, {numSeg},
+                    /*canIntegrate1D=*/true,
+                    /*canIntegrate2D=*/false,
+                    /*canIntegrateND=*/false,
+                    /*canIntegrateOpenEnded=*/false,
+                    /*depName=*/"RooIntegrator1D");
 }
 
 
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() = default;
 RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D() = default;
 
 
@@ -86,16 +95,6 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, d
   _xmax= xmax;
 
   _valid= initialize();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual constructor with given function and configuration. Needed by RooNumIntFactory
-
-RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooSegmentedIntegrator1D(function,config) ;
 }
 
 

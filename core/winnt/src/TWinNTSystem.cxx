@@ -4318,11 +4318,28 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
          }
          // full path not found, so split it to extract the library name
          // only, set its extension to '.lib' and add it to the list of
-         // libraries to search
-         _splitpath(str.c_str(), drive, dir, fname, ext);
-         std::string libname(fname);
-         libname += ".lib";
-         all_libs.push_back(libname);
+         // libraries to search, but only if not a system DLL for which
+         // we might not have the proper import library
+         char *windir;
+         size_t requiredSize;
+         getenv_s( &requiredSize, NULL, 0, "WinDir");
+         if (requiredSize == 0) {
+            windir = strdup(":\\WINDOWS");
+         } else {
+            windir = (char*) malloc(requiredSize * sizeof(char));
+            if (!windir) {
+               windir = strdup(":\\WINDOWS");
+            } else {
+               getenv_s( &requiredSize, windir, requiredSize, "WinDir" );
+            }
+         }
+         if (str.find(windir) == std::string::npos) {
+            _splitpath(str.c_str(), drive, dir, fname, ext);
+            std::string libname(fname);
+            libname += ".lib";
+            all_libs.push_back(libname);
+         }
+         free(windir);
       }
       for (auto lib : all_libs) {
          // loop over all libraries to check which one exists

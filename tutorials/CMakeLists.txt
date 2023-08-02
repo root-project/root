@@ -77,7 +77,7 @@ if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
 endif()
 
-if (${PYTHON_VERSION_STRING_Development_Main} VERSION_LESS 3.8)
+if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8)
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
@@ -471,6 +471,13 @@ set(all_veto hsimple.C
              ${macm1_veto}
              ${clad_veto}
              )
+
+# These tutorials seem to trigger segfaults related to TClass* and RDataFrame
+# JITting on many platforms. Disable for now and revert once the issue is fixed
+list(APPEND all_veto tmva/RBatchGenerator_NumPy.py)
+list(APPEND all_veto tmva/RBatchGenerator_TensorFlow.py)
+list(APPEND all_veto tmva/RBatchGenerator_PyTorch.py)
+list(APPEND all_veto tmva/RBatchGenerator_filters_vectors.py)
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(root7 AND webgui)

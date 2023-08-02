@@ -1748,6 +1748,57 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated * geoShape)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Creates a scaled node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreateScaledN(TGeoScaledShape *geoShape)
+{
+   XMLNodePointer_t mainN, childN, unscaledN;
+   const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
+   TString nodeName = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
+   auto const scale = geoShape->GetScale()->GetScale();
+   TGeoShape *unscaled = geoShape->GetShape();
+   // Create the unscaled shape record
+   unscaledN = ChooseObject(unscaled);
+   // retrieve node name by their pointer to make reference
+   TString uname = fNameList->fLst[TString::Format("%p", unscaled)];
+
+   // the unplaced node appended to main structure of nodes (if they are not already there)
+   if (unscaledN != nullptr) {
+      fGdmlE->AddChild(fSolidsNode, unscaledN);
+      fSolCnt++;
+   } else {
+      if (uname.Contains("missing_") || uname == "") {
+         Info("CreateScaledN", "ERROR! Unscaled node is NULL - Scaled shape will be skipped");
+         return nullptr;
+      }
+   }
+
+   //create union node and its child nodes (or intersection or subtraction)
+   /* <scaledSolid name="...">
+    *   <solidref ref="unscaled solid name" />
+    *   <scale name="scale name" x="sx" y="sy" z="sz">
+    * </scaledSolid>
+   */
+   mainN = fGdmlE->NewChild(nullptr, nullptr, "scaledSolid", nullptr);
+   fGdmlE->NewAttr(mainN, nullptr, "name", nodeName);
+
+   //<solidref> (solid)
+   childN = fGdmlE->NewChild(nullptr, nullptr, "solidref", nullptr);
+   fGdmlE->NewAttr(childN, nullptr, "ref", uname);
+   fGdmlE->AddChild(mainN, childN);
+
+   //<scale ame="scale name" x="sx" y="sy" z="sz">
+   childN = fGdmlE->NewChild(nullptr, nullptr, "scale", nullptr);
+   fGdmlE->NewAttr(childN, nullptr, "name", (nodeName + "scl").Data());
+   fGdmlE->NewAttr(childN, nullptr, "x", TString::Format(fltPrecision.Data(), scale[0]));
+   fGdmlE->NewAttr(childN, nullptr, "y", TString::Format(fltPrecision.Data(), scale[1]));
+   fGdmlE->NewAttr(childN, nullptr, "z", TString::Format(fltPrecision.Data(), scale[2]));
+   fGdmlE->AddChild(mainN, childN);
+
+   return mainN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates common part of union intersection and subtraction nodes
 
 XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
@@ -2175,19 +2226,7 @@ XMLNodePointer_t TGDMLWrite::ChooseObject(TGeoShape *geoShape)
    } else if (strcmp(clsname, "TGeoTessellated") == 0) {
       solidN = CreateTessellatedN((TGeoTessellated*) geoShape);
    } else if (strcmp(clsname, "TGeoScaledShape") == 0) {
-      TGeoScaledShape * geoscale = (TGeoScaledShape *) geoShape;
-      TString scaleObjClsName = geoscale->GetShape()->ClassName();
-      if (scaleObjClsName == "TGeoCone") {
-         solidN = CreateElConeN((TGeoScaledShape*) geoShape);
-      } else {
-         Info("ChooseObject",
-              "ERROR! TGeoScaledShape object is not possible to process correctly. %s object is processed without scale",
-              scaleObjClsName.Data());
-         solidN = ChooseObject(geoscale->GetShape());
-         //Name has to be propagated to geoscale level pointer
-         fNameList->fLst[TString::Format("%p", geoscale)] =
-            fNameList->fLst[TString::Format("%p", geoscale->GetShape())];
-      }
+      solidN = CreateScaledN((TGeoScaledShape*) geoShape);
    } else if (strcmp(clsname, "TGeoCompositeShape") == 0) {
       solidN = CreateCommonBoolN((TGeoCompositeShape*) geoShape);
    } else if (strcmp(clsname, "TGeoUnion") == 0) {

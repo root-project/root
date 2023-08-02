@@ -242,6 +242,7 @@ const char *TGDMLParse::ParseGDML(TXMLEngine *gdml, XMLNodePointer_t node)
    const char *parbstr = "paraboloid";
    const char *intestr = "intersection";
    const char *reflstr = "reflectedSolid";
+   const char *ssolstr = "scaledSolid";
    const char *ellistr = "ellipsoid";
    const char *elcnstr = "elcone";
    const char *optsstr = "opticalsurface";
@@ -374,6 +375,8 @@ const char *TGDMLParse::ParseGDML(TXMLEngine *gdml, XMLNodePointer_t node)
       node = BooSolid(gdml, node, attr, 3);
    } else if ((strcmp(name, reflstr)) == 0) {
       node = Reflection(gdml, node, attr);
+   } else if ((strcmp(name, ssolstr)) == 0) {
+      node = ScaledSolid(gdml, node, attr);
    } else if ((strcmp(name, assestr)) == 0) {
       node = AssProcess(gdml, node);
    } else if ((strcmp(name, usrstr)) == 0) {
@@ -2430,6 +2433,7 @@ XMLNodePointer_t TGDMLParse::UsrProcess(TXMLEngine *gdml, XMLNodePointer_t node)
    return child;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// In the structure section of the GDML file, assembly volumes can be
 /// declared. when the assembly keyword is found, this function is called,
@@ -4437,6 +4441,69 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine *gdml, XMLNodePointer_t node
    fsolmap[local_name.Data()] = tsl;
 
    return node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// In the solids section of the GDML file, a Scaled Solid may be
+/// declared when the scaledSolid keyword is found, this function
+/// is called. The scale transformation is used as internal matrix.
+
+XMLNodePointer_t TGDMLParse::ScaledSolid(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString tempattr, reftemp;
+   XMLAttrPointer_t childattr;
+
+   XMLNodePointer_t child = gdml->GetChild(node);
+   TString solidname = "";
+   TGeoShape *solid = nullptr;
+   TGeoScale *scl = nullptr;
+
+   TString name;
+   while (attr != nullptr) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+   TString local_name = name;
+   if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+      local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+   }
+
+   while (child != 0) {
+      tempattr = gdml->GetNodeName(child);
+      tempattr.ToLower();
+      if (tempattr == "solidref") {
+         reftemp = gdml->GetAttr(child, "ref");
+         if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+            reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+         }
+         if (fsolmap.find(reftemp.Data()) != fsolmap.end()) {
+            solid = fsolmap[reftemp.Data()];
+         } else {
+            printf("Solid: %s, Not Yet Defined!\n", reftemp.Data());
+         }
+      } else if (tempattr == "scale") {
+         childattr = gdml->GetFirstAttr(child);
+         SclProcess(gdml, child, childattr);
+         reftemp = gdml->GetAttr(child, "name");
+         scl = GetScaleObj(reftemp.Data());
+      } else if (tempattr == "scaleref") {
+         reftemp = gdml->GetAttr(child, "ref");
+         scl = GetScaleObj(reftemp.Data());
+         if (!scl)
+            Fatal("ScaledSolid", "Solid's scale %s not found", reftemp.Data());
+      }
+
+      child = gdml->GetNext(child);
+   }
+
+   auto scaled = new TGeoScaledShape(NameShort(name), solid, scl);
+   fsolmap[local_name.Data()] = scaled;
+
+   return child;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

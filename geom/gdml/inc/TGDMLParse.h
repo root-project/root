@@ -165,6 +165,7 @@ private:
    XMLNodePointer_t  Reflection(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Tessellated(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  ScaledSolid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
 
    //'structure' section
    XMLNodePointer_t  VolProcess(TXMLEngine* gdml, XMLNodePointer_t node);

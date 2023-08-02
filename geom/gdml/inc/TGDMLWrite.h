@@ -197,6 +197,7 @@ private:
    XMLNodePointer_t CreateXtrusionN(TGeoXtru * geoShape);
    XMLNodePointer_t CreateEllipsoidN(TGeoCompositeShape * geoShape, TString elName);
    XMLNodePointer_t CreateElConeN(TGeoScaledShape * geoShape);
+   XMLNodePointer_t CreateScaledN(TGeoScaledShape * geoShape);
    XMLNodePointer_t CreateTessellatedN(TGeoTessellated * geoShape);
    XMLNodePointer_t CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf);
    XMLNodePointer_t CreateSkinSurfaceN(TGeoSkinSurface * geoSurf);

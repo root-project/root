@@ -123,37 +123,16 @@ private:
 
    struct RImportField {
       RImportField() = default;
-      ~RImportField()
-      {
-         if (fOwnsFieldBuffer)
-            free(fFieldBuffer);
-      }
+      ~RImportField() = default;
       RImportField(const RImportField &other) = delete;
-      RImportField(RImportField &&other)
-         : fField(other.fField),
-           fFieldBuffer(other.fFieldBuffer),
-           fOwnsFieldBuffer(other.fOwnsFieldBuffer),
-           fIsInUntypedCollection(other.fIsInUntypedCollection),
-           fIsClass(other.fIsClass)
-      {
-         other.fOwnsFieldBuffer = false;
-      }
+      RImportField(RImportField &&other) = default;
       RImportField &operator=(const RImportField &other) = delete;
-      RImportField &operator=(RImportField &&other)
-      {
-         fField = other.fField;
-         fFieldBuffer = other.fFieldBuffer;
-         fOwnsFieldBuffer = other.fOwnsFieldBuffer;
-         fIsInUntypedCollection = other.fIsInUntypedCollection;
-         fIsClass = other.fIsClass;
-         other.fOwnsFieldBuffer = false;
-         return *this;
-      }
+      RImportField &operator=(RImportField &&other) = default;
 
       /// The field is kept during schema preparation and transferred to the fModel before the writing starts
       Detail::RFieldBase *fField = nullptr;
+      std::unique_ptr<Detail::RFieldBase::RValue> fValue; ///< set if a value is generated, only for transformed fields
       void *fFieldBuffer = nullptr; ///< Usually points to the corresponding RImportBranch::fBranchBuffer but not always
-      bool fOwnsFieldBuffer = false;       ///< Whether or not `fFieldBuffer` needs to be freed on destruction
       bool fIsInUntypedCollection = false; ///< Sub-fields of untyped collections (leaf count arrays in the input)
       bool fIsClass = false; ///< Field imported from a branch with stramer info (e.g., STL, user-defined class)
    };
@@ -170,6 +149,19 @@ private:
       virtual ~RImportTransformation() = default;
       virtual RResult<void> Transform(const RImportBranch &branch, RImportField &field) = 0;
       virtual void ResetEntry() = 0; // called at the end of an entry
+   };
+
+   /// When the schema is set up and the import started, it needs to be reset before the next Import() call
+   /// can start.  This RAII guard ensures that ResetSchema is called.
+   struct RImportGuard {
+      RNTupleImporter &fImporter;
+
+      explicit RImportGuard(RNTupleImporter &importer) : fImporter(importer) {}
+      RImportGuard(const RImportGuard &) = delete;
+      RImportGuard &operator=(const RImportGuard &) = delete;
+      RImportGuard(RImportGuard &&) = delete;
+      RImportGuard &operator=(RImportGuard &&) = delete;
+      ~RImportGuard() { fImporter.ResetSchema(); }
    };
 
    /// Leaf count arrays require special treatment. They are translated into RNTuple untyped collections.
@@ -233,14 +225,14 @@ private:
    bool fIsQuiet = false;
    std::unique_ptr<RProgressCallback> fProgressCallback;
 
+   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<REntry> fEntry;
    std::vector<RImportBranch> fImportBranches;
    std::vector<RImportField> fImportFields;
    /// Maps the count leaf to the information about the corresponding untyped collection
    std::map<std::string, RImportLeafCountCollection> fLeafCountCollections;
    /// The list of transformations to be performed for every entry
    std::vector<std::unique_ptr<RImportTransformation>> fImportTransformations;
-   std::unique_ptr<RNTupleModel> fModel;
-   std::unique_ptr<REntry> fEntry;
 
    ROOT::Experimental::RResult<void> InitDestination(std::string_view destFileName);
 

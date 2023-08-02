@@ -8,11 +8,11 @@ setlocal EnableDelayedExpansion
 
 set "usage="
 for %%u in (
-   "Usage: root-config [--version] [--cflags] [--libs] [--glibs] [--evelibs]"
-   " [--bindir] [--libdir] [--incdir] [--etcdir] [--tutdir] [--has-<feature>]"
-   " [--arch] [--platform] [--config] [--features] [--ncpu] [--git-revision]"
-   " [--python-version] [--python2-version] [--python3-version] [--cc] [--cxx]"
-   " [--f77] [--ld ] [--help]"
+   "Usage: root-config [--prefix] [--version] [--cflags] [--libs] [--glibs]"
+   " [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir] [--tutdir]"
+   " [--has-<feature>] [--arch] [--platform] [--config] [--features] [--ncpu]"
+   " [--git-revision] [--python-version] [--python2-version] [--python3-version]"
+   " [--cc] [--cxx] [--f77] [--ld ] [--help]"
 ) do set usage=!usage!%%~u^
 
 
@@ -21,6 +21,10 @@ if "%1"=="" (
    exit /b 1
 )
 
+for %%i in ("%~dp0..") do set "folder=%%~fi"
+
+set ROOTSYS=%folder%
+set prefix=%ROOTSYS%
 set arch=@architecture@
 set platform=@CMAKE_SYSTEM@
 set bindir=%ROOTSYS%\bin
@@ -99,6 +103,10 @@ for %%w in (%*) do (
             )
          )
       )
+   )
+   if "!arg!"=="--prefix" (
+      rem Output the prefix
+      set out=!out! !prefix!
    )
    if "!arg!"=="--version" (
       rem Output the version number. If RVersion.h can not be found, give up.
@@ -218,6 +226,7 @@ echo Usage: %0 [options]
 echo.
 echo   --arch                Print the architecture (compiler/OS)
 echo   --platform            Print the platform (OS)
+echo   --prefix              Print the prefix
 echo   --libs                Print regular ROOT libraries
 echo   --glibs               Print regular + GUI ROOT libraries
 echo   --evelibs             Print regular + GUI + Eve libraries

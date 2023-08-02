@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <TRandom3.h>
 
 namespace {
 struct RFieldBaseTest : public ROOT::Experimental::Detail::RFieldBase {

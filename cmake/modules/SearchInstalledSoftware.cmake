@@ -1684,6 +1684,15 @@ if(tmva-sofie)
         message(STATUS "Protobuf found but its version is not high enough (>3.0). Switching off tmva-sofie option")
         set(tmva-sofie OFF CACHE BOOL "Disabled because found Protobuf version is not enough" FORCE)
       endif()
+    else()
+      if(NOT TARGET protobuf::protoc)
+        if(fail-on-missing)
+          message(FATAL_ERROR "Protobuf compiler not found (tmva-sofie option enabled)")
+        else()
+          message(STATUS "Protobuf compiler not found. Switching off tmva-sofie option")
+          set(tmva-sofie OFF CACHE BOOL "Disabled because Protobuf compiler not found" FORCE)
+        endif()
+      endif()
     endif()
   endif()
 endif()
@@ -2048,7 +2057,6 @@ if (builtin_gtest)
     add_library(${lib} IMPORTED STATIC GLOBAL)
     set_target_properties(${lib} PROPERTIES
       IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
-      INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIRS}"
     )
     add_dependencies(${lib} googletest)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
