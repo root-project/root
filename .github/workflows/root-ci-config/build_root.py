@@ -355,7 +355,6 @@ def create_coverage_xml(shell_log: str) -> str:
         gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
         pwd
         ls
-        cat CoverageXML.xml
     """, shell_log)
 
     if result != 0:
