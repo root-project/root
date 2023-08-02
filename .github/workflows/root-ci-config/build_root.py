@@ -350,7 +350,11 @@ def rebase(base_ref, head_ref, shell_log) -> str:
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml(shell_log: str) -> str:
     result, shell_log = subprocess_with_log(f"""
+        pwd                                    
         gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
+        pwd
+        ls
+        cat CoverageXML.xml
     """, shell_log)
 
     if result != 0:
