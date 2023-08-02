@@ -694,8 +694,10 @@ namespace SOFIE{
 
       // Create buffers for initialized tensors
       for (auto& i : fInitializedTensors) {
-         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}};\n";
-         fGC += SP*3 + "buf_tensor_" + i.first + ".set_final_data(nullptr);\n";
+         if (i.second.fType == ETensorType::FLOAT){
+            fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}};\n";
+            fGC += SP*3 + "buf_tensor_" + i.first + ".set_final_data(nullptr);\n";
+         }
       }
 
       fGC += "\n";

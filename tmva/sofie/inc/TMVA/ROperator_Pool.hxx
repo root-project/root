@@ -548,7 +548,7 @@ public:
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::local> scratch(work_group_size, cgh);\n";
+         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::local_accessor> scratch(work_group_size, cgh);\n";
          
          out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::nd_range<1>{num_work_items, work_group_size}, [=](cl::sycl::nd_item<1> item){\n";
          out << SP*6 << "auto globalId = item.get_global_id(0);\n";
@@ -618,7 +618,7 @@ public:
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::local> scratch(kh*kw, cgh);\n";
+         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::local_accessor> scratch(kh*kw, cgh);\n";
          out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::nd_range<2>{num_work_items, work_group_size}, [=](cl::sycl::nd_item<2> item){\n";
          out << SP*6 << "auto globalId_0 = item.get_global_id(0);\n";
          out << SP*6 << "auto globalId_1 = item.get_global_id(1);\n";
@@ -702,7 +702,7 @@ public:
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::access::target::local> scratch{kh * kw * kd, cgh};\n";
+         out << SP*5 << "cl::sycl::accessor<float, 1, cl::sycl::access::mode::read_write, cl::sycl::local_accessor> scratch{kh * kw * kd, cgh};\n";
          out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::nd_range<3>(num_work_items, work_group_size), [=](cl::sycl::nd_item<3> item){\n";
 
          out << SP*6 << "auto globalId_0 = item.get_global_id(0);\n";
