@@ -34,8 +34,21 @@ using namespace std;
 
 ClassImp(RooBMixDecay);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// \brief Constructor for RooBMixDecay.
+///
+/// Creates an instance of RooBMixDecay with the specified parameters.
+///
+/// \param[in] name         The name of the PDF.
+/// \param[in] title        The title of the PDF.
+/// \param[in] t            The time variable.
+/// \param[in] mixState     The mixing state category.
+/// \param[in] tagFlav      The flavour of tagged B0 category.
+/// \param[in] tau          The mixing life time parameter.
+/// \param[in] dm           The mixing frequency parameter.
+/// \param[in] mistag       The mistag rate parameter.
+/// \param[in] delMistag    The delta mistag rate parameter.
+/// \param[in] model        The resolution model.
+/// \param[in] type         The decay type.
 
 RooBMixDecay::RooBMixDecay(const char *name, const char *title,
             RooRealVar& t, RooAbsCategory& mixState,
@@ -89,13 +102,6 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
   _genFlavFrac(other._genFlavFrac),
   _genFlavFracMix(other._genFlavFracMix),
   _genFlavFracUnmix(other._genFlavFracUnmix)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBMixDecay::~RooBMixDecay()
 {
 }
 

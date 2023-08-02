@@ -21,7 +21,7 @@
 
 Most general description of B decay time distribution with effects
 of CP violation, mixing and life time differences. This function can
-be analytically convolved with any RooResolutionModel implementation
+be analytically convolved with any RooResolutionModel implementation.
 **/
 
 #include "Riostream.h"
@@ -36,7 +36,22 @@ using namespace std;
 
 ClassImp(RooBDecay);
 
-////////////////////////////////////////////////////////////////////////////////
+/// \brief Constructor for RooBDecay.
+///
+/// Creates an instance of RooBDecay with the specified parameters.
+///
+/// \param[in] name      The name of the PDF.
+/// \param[in] title     The title of the PDF.
+/// \param[in] t         The time variable.
+/// \param[in] tau       The average decay time parameter.
+/// \param[in] dgamma    The Delta Gamma parameter.
+/// \param[in] f0        The Cosh Coefficient.
+/// \param[in] f1        The Sinh Coefficient.
+/// \param[in] f2        The Cos Coefficient.
+/// \param[in] f3        The Sin Coefficient.
+/// \param[in] dm        The Delta Mass parameter.
+/// \param[in] model     The resolution model.
+/// \param[in] type      The decay type.
 
 RooBDecay::RooBDecay(const char *name, const char* title,
           RooRealVar& t, RooAbsReal& tau, RooAbsReal& dgamma,
@@ -96,13 +111,6 @@ RooBDecay::RooBDecay(const RooBDecay& other, const char* name) :
   _basisCos(other._basisCos),
   _basisSin(other._basisSin),
   _type(other._type)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///Destructor
-
-RooBDecay::~RooBDecay()
 {
 }
 

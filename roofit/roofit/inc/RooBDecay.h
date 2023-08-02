@@ -42,7 +42,6 @@ public:
   {
     return new RooBDecay(*this,newname);
   }
-  ~RooBDecay() override;
 
   double coefficient(Int_t basisIndex) const override;
   RooFit::OwningPtr<RooArgSet> coefVars(Int_t coefIdx) const override ;
