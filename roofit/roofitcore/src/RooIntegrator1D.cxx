@@ -31,10 +31,6 @@ Richardson series acceleration is applied to the series. For refinement step \f$
 The integrator will evaluate the first six refinements (i.e. 64 points) in one go,
 apply a five-point series acceleration, and successively add more steps until the
 desired precision is reached.
-\since In ROOT 6.24, the implementation of the integrator was revised, since it often
-stopped early, not reaching the desired relative precision. The old (less accurate) integrator
-is available under the name OldIntegrator1D. If less precision is actually desired (to speed up the
-integration), a relative epsilon 5, 10 or more times higher than for the old integrator can be used.
 **/
 
 
