@@ -2028,7 +2028,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
       }
    }
 
-   GetPrincipleColumnOf(*fSubFields[0])->ReadV(firstItemIndex, nItems, itemValueArray - delta);
+   GetPrincipalColumnOf(*fSubFields[0])->ReadV(firstItemIndex, nItems, itemValueArray - delta);
    return RBulkSpec::kAllSet;
 }
 
