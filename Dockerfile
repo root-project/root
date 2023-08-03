@@ -80,4 +80,5 @@ WORKDIR /home/ioanna
 RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh"
 ENV PATH=/home/ioanna/.local/bin:$PATH
 # COPY root_src /home/ioanna/root_src/ 
-# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On /home/ioanna/root_src && sudo cmake --build . -j16 --target install
+# RUN cd root_build &&  cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=On -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin-llvm/clang -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin-llvm/clang++ -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ -Dxrootd=Off -Dimt=Off -Dbuiltin_xrootd=Off /home/ioanna/root_src && sudo cmake --build . -j16 --target install
+

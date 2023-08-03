@@ -102,15 +102,21 @@ endif()
 
 # Creating a Google Test
 if (tmva-sycl)  # we need oneapi math kernel library to compile the models
+find_package(IntelSYCL REQUIRED)
+find_package(MKL CONFIG REQUIRED)
 ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
   LIBRARIES
     ROOTTMVASofie
-    /opt/intel/oneapi/compiler/2023.2.1/linux/lib/libsycl.so
+    $<LINK_ONLY:MKL::MKL>
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
-    /opt/intel/oneapi/compiler/2023.2.1/linux/include/sycl/
+    $<TARGET_PROPERTY:MKL::MKL,INTERFACE_INCLUDE_DIRECTORIES>
 )
+add_sycl_to_target(TARGET TestCustomGPUModelsFromONNX SOURCES TestCustomGPUModelsFromONNX.cxx)
 
+#if(MKL_ENV)
+#  set_tests_properties(TestCustonGPUModelsFromONNX PROPERTIES ENVIRONMENT "${MKL_ENV}")
+#endif()
 add_dependencies(TestCustomGPUModelsFromONNX SofieCompileGPUModels_ONNX)
 endif()
 

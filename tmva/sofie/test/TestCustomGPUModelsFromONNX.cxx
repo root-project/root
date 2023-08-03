@@ -236,7 +236,7 @@
 #include "Gather2dGPU_FromONNX.hxx"
 #include "input_models/references/Gather2d.ref.hxx"
 
-#include "GatherNegativeIndices_FromONNX.hxx"
+#include "GatherNegativeIndicesGPU_FromONNX.hxx"
 #include "input_models/references/GatherNegativeIndices.ref.hxx"
 
 #include "gtest/gtest.h"
