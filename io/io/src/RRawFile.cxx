@@ -38,14 +38,15 @@
 #include <iostream>
 #include <random>
 
-//#ifndef RRAWFILE_TESTING_MODE
-#define RRAWFILE_TESTING_MODE
+//#define BIT_FLIP_TESTING_MODE
+#define SHORT_READ_TESTING_MODE
 
 namespace {
 
 //static bool testing_mode = true;
 static uint64_t bytes_processed_readAt = 0;
 static bool flip_triggered = false;
+static bool short_read_triggered = false;
 
 std::random_device rd;
 
@@ -189,7 +190,7 @@ void ROOT::Internal::RRawFile::PossiblyTriggerBitFlip(void* buffer, size_t total
    std::mt19937 mt(rd());
    std::uniform_int_distribution<std::mt19937::result_type> p_dist(0,100);
    
-   int rdm = 1;//p_dist(mt);
+   int rdm = 0;//p_dist(mt);
    
    if(rdm >= 0 && rdm <= 10 && !flip_triggered && bytes_processed_readAt >= ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin && bytes_processed_readAt <= ROOT::Internal::RRawFile::GetBitFlipParams().rng_end){
       
@@ -231,15 +232,52 @@ void ROOT::Internal::RRawFile::PossiblyTriggerBitFlip(void* buffer, size_t total
    }
 }
 
+
+void ROOT::Internal::RRawFile::PossiblyTriggerShortRead(void* buffer, size_t total_bytes){
+   if(!short_read_triggered && bytes_processed_readAt >= ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin && bytes_processed_readAt <= ROOT::Internal::RRawFile::GetBitFlipParams().rng_end){
+
+      short_read_triggered = true;
+      
+      std::cout << "\nShort Read Triggered" << std::endl;
+      std::cout << "bytes processed: " << bytes_processed_readAt << std::endl;
+      std::cout << "range begin: " << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
+      std::cout << "range end: " << ROOT::Internal::RRawFile::GetBitFlipParams().rng_end << "\n" << std::endl;
+
+      // make a copy of the original buffer
+      auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
+      unsigned char* original_buffer = new unsigned char[total_bytes];
+      std::memcpy(original_buffer, byte_ptr, total_bytes);
+
+      // for all bits in the buffer, make them zero
+      for (size_t byte_idx = 0; byte_idx < total_bytes; ++byte_idx) {
+         byte_ptr[byte_idx] = 0x00; // Set the byte to 0
+      }
+
+      // compare the modified buffer with the original buffer
+      if (std::memcmp(original_buffer, byte_ptr, total_bytes) == 0) {
+         std::cout << "Unsuccessful short read (zero padded)" << std::endl;
+      } else {
+         std::cout << "Successful short read (zero padded)" << std::endl;
+      }
+
+      delete[] original_buffer;
+   }
+}
+
+
 size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-
    size_t total_bytes = ReadTotalBytes(buffer,nbytes,offset);
 
    bytes_processed_readAt += total_bytes;
 
-#ifdef RRAWFILE_TESTING_MODE
+#ifdef BIT_FLIP_TESTING_MODE
    PossiblyTriggerBitFlip(buffer, total_bytes);
+#endif
+
+#ifdef SHORT_READ_TESTING_MODE
+   //total_bytes = total_bytes - 1;
+   PossiblyTriggerShortRead(buffer, total_bytes);
 #endif
 
    return total_bytes;
@@ -251,6 +289,12 @@ size_t ROOT::Internal::RRawFile::ReadTotalBytes(void *buffer, size_t nbytes, std
       OpenImpl();
    R__ASSERT(fOptions.fBlockSize >= 0);
    fIsOpen = true;
+
+   std::uint64_t fileSize = GetSize();
+
+   //std::cout << "file size " << fileSize << std::endl;
+   //std::cout << "block size " << static_cast<unsigned int>(fOptions.fBlockSize) << std::endl;
+   //std::cout << "num block buffers " << kNumBlockBuffers << std::endl;
 
    // "Large" reads are served directly, bypassing the cache
    if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
@@ -279,18 +323,19 @@ size_t ROOT::Internal::RRawFile::ReadTotalBytes(void *buffer, size_t nbytes, std
    fBlockBufferIdx++;
 
    /// The request was not fully satisfied and fBlockBufferIdx now points to the previous shadow buffer
-
    /// The remaining bytes populate the newly promoted main buffer
    RBlockBuffer *thisBuffer = &fBlockBuffers[fBlockBufferIdx % kNumBlockBuffers];
    size_t res = ReadAtImpl(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
    thisBuffer->fBufferOffset = offset;
    thisBuffer->fBufferSize = res;
+
    size_t remainingBytes = std::min(res, nbytes);
    memcpy(buffer, thisBuffer->fBuffer, remainingBytes);
    totalBytes += remainingBytes;
    return totalBytes;
-}
 
+   return 0;
+}
 
 void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
 {
@@ -299,35 +344,13 @@ void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
    fIsOpen = true;
    ReadVImpl(ioVec, nReq);
 
-#ifdef RRAWFILE_TESTING_MODE
-
+#ifdef BIT_FLIP_TESTING_MODE
    std::mt19937 gen(rd()); 
    std::uniform_real_distribution<double> dist6(0, nReq);
    int random_idx = dist6(gen);
 
    PossiblyTriggerBitFlip(ioVec[random_idx].fBuffer, ioVec[random_idx].fOutBytes);
 #endif
-
-//#if RRAWFILE_TESTING_MODE
-   // trigger a single bit flip in a specific location (header/footer)
-   // if(testing_mode && bytes_processed_readAt >= range_begin() && bytes_processed_readAt <= (range_begin()+range_size()) && !flip_triggered)
-   // {
-   //    flip_triggered = true;
-
-   //    std::mt19937 gen(rd()); 
-   //    std::uniform_real_distribution<double> dist6(0, nReq);
-   //    int random_idx = dist6(gen);
-      
-   //    //int random_idx = rand() % nReq+1;
-
-   //    std::cout << "\nRead V Bit Flip Triggered" << std::endl;
-   //    std::cout << "bytes processed: " << bytes_processed_readAt << std::endl;
-   //    std::cout << "header offset: " << range_begin() << std::endl;
-   //    std::cout << "header size: " << range_size() << "\n" << std::endl;
-      
-   //    TriggerBitFlip(ioVec[random_idx].fBuffer, ioVec[random_idx].fOutBytes); 
-   // }
-//#endif
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)

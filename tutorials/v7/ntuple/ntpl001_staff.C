@@ -24,7 +24,6 @@ R__LOAD_LIBRARY(ROOTNTuple)
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
-
 #include <TCanvas.h>
 #include <TH1I.h>
 #include <TROOT.h>
@@ -57,6 +56,12 @@ void Ingest() {
    // The input file cernstaff.dat is a copy of the CERN staff data base from 1988
    ifstream fin(gROOT->GetTutorialDir() + "/tree/cernstaff.dat");
    assert(fin.is_open());
+
+   fin.seekg(0, ios::end);
+   std::streampos fileSize = fin.tellg();
+   fin.seekg(0,ios::beg);
+
+   std::cout << "File size is " << fileSize << std::endl;
 
    // We create a unique pointer to an empty data model
    auto model = RNTupleModel::Create();
@@ -120,79 +125,24 @@ void Ingest() {
 
    // // Get page range of Xcl
    auto &pageRangeXcl = clusterDescriptor.GetPageRange(clusterId); // returns list of page ranges
-   
-   // // Get page range of Xcol
-   //auto &pageRangeXcol = descriptor->GetPageRange(columnId);
 
-
-   const auto &pageInfo = pageRangeXcl.fPageInfos[0]; // page info for first page ?
-   auto loc = pageInfo.fLocator; // locator for first page ?
-   auto nelem = pageInfo.fNElements; // number of bytes in the first page ?
+   const auto &pageInfo = pageRangeXcl.fPageInfos[0]; // page info for first page
+   auto loc = pageInfo.fLocator; // locator for first page
+   auto nelem = loc.fBytesOnStorage; // num of bytes
    auto offset = loc.GetPosition<std::uint64_t>(); // offset of first page ?
 
-
    std::cout << "the offset is " << offset << std::endl;
-   std::cout << "fNElements is " << nelem << std::endl;
+   std::cout << "size is " << nelem << std::endl;
 
-   ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
-   ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
-
-   // Get first page info of page range from above
-   //const auto &firstPageInfo = pageRangeXcl.fPageInfos.front();
-   //const auto &firstPageInfo = pageRangeXcl.fFirstInPage;
-
-   //std::uint64_t nElements = firstPageInfo.fNElements; 
-   //auto locator = firstPageInfo.fLocator;
-
-   //std::cout << "n elems " << nElements << std::endl;
-
-   //auto offset = GetPosition<std::uint64_t>();
-
-   // Get locator of page info from above
-   // number of elements and location
-
-   //auto &pageRangeXcol = descriptor->GetPageRange(columnId);
-   //auto startXcol = pageRangeXcol.first;
-   //auto endXcol = pageRangeXcol.second;
-
-   // // Get first page info of page range from above
-   //auto clusterPgRng = clusterDescriptor->GetPageRange(clusterId);
-   // const RPageInfo& firstPgInfoCluster = descriptor->GetPageInfo(clusterPgRng.first);
-
-   //auto columnPgRng = descriptor->GetPageRange(columnId);
-   // const RPageInfo& firstPgInfoColumn = descriptor->GetPageInfo(columnPgRng.first);
-
-   // // Get locator of page info from above
-   // const RPageLocator& pageLocator = firstPgInfoCluster.GetLocator();
-   // std::uint64_t pgStart = pageLocator.GetStart();
-   // std::uint66_t pgEnd = pageLocator.GetEnd();
-
-   // // set start and end point for targeted bit flip
-   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = pgStart;
-   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = pgEnd;
-
-   // std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
-   // std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_end << std::endl;
-    
-
-   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = ntpl->GetSeekHeader();
-   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
-
-   // set parameters for targeted bit flips in the header
-   //ROOT::Internal::RRawFile::range_begin(.) = ntpl->GetSeekHeader(); // file offset of the header
-   //ROOT::Internal::RRawFile::range_end() = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader(); // size of the compressed ntuple header
+   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
+   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
 
    std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
    std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_end << std::endl;
 
-   //ROOT::Internal::RRawFile::bitFlipParams.rng_begin = ntpl->GetSeekHeader();
-   //ROOT::Internal::RRawFile::bitFlipParams.rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
-
-   // set parameters for targeted bit flips in the footer
-   //ROOT::Internal::RRawFile::range_begin() = ntpl->GetSeekFooter();
-   //ROOT::Internal::RRawFile::range_size() = ntpl->GetNBytesFooter();
-
-   // Note: GetLenHeader() and GetLenFooter() return the size of the uncompressed ntuple header
+   // set last few bytes to zeros - short read (second type)
+   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
+   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
 
 }
 
@@ -205,7 +155,6 @@ void Analyze() {
 
    // Create an ntuple and attach the read model to it
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
-   //std::string("test://")+kNTupleFileName
    
    // Quick overview of the ntuple and list of fields.
    //ntuple->PrintInfo();
@@ -214,7 +163,7 @@ void Analyze() {
    //ntuple->Show(0);
 
    //specify and open output file
-   std::ofstream file("run_3.txt");
+   std::ofstream file("short_read_0.txt");
 
    if(file.is_open())
    {
