@@ -84,7 +84,7 @@ namespace {
 
    std::string param = string_list.at(i);
    // Split the string
-   size_t eql_location = param.find("=");
+   size_t eql_location = param.find('=');
 
    // If there is no '=' deliminator, we only
    // set the variable constant

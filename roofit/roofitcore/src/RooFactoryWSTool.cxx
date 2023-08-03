@@ -455,7 +455,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
    } else {
      btype = *ti ;
    }
-   if (btype.find("&")) {
+   if (btype.find('&')) {
      btype.erase(btype.size()-1,btype.size()) ;
    }
 
@@ -2046,7 +2046,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     if (pargv.size() > 3)
       order = atoi(pargv[3].c_str());
     if (pargv.size() > 2) {
-      if (pargv[2].find(",") != string::npos)
+      if (pargv[2].find(',') != string::npos)
         throw string(Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
       else observablesValue = atof(pargv[2].c_str());
     }

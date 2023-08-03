@@ -235,7 +235,7 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
 {
    std::stringstream expression;
    std::string classname(ex.tclass->GetName());
-   size_t colon = classname.find_last_of(":");
+   size_t colon = classname.find_last_of(':');
    expression << (colon < classname.size() ? classname.substr(colon + 1) : classname);
    bool first = true;
    const auto &name = RooJSONFactoryWSTool::name(p);

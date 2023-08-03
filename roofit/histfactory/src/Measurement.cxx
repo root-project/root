@@ -618,8 +618,8 @@ std::string RooStats::HistFactory::Measurement::GetDirPath( TDirectory* dir )
 
   std::string path = dir->GetPath();
 
-  if( path.find(":") != std::string::npos ) {
-    size_t index = path.find(":");
+  if( path.find(':') != std::string::npos ) {
+    size_t index = path.find(':');
     path.replace( 0, index+1, "" );
   }
 
