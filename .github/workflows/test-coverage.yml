@@ -412,7 +412,7 @@ jobs:
         with:
           env_vars: OS,PYTHON
           fail_ci_if_error: true
-          files: /tmp/workspace/buid/CoverageXML.xml
+          files: /tmp/workspace/build/CoverageXML.xml
           flags: unittests
           name: codecov-umbrella
           verbose: true   
