@@ -1985,7 +1985,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    }
    const auto itemValueSize = *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data());
    unsigned char *itemValueArray = bulkSpec.fAuxData->data() + sizeof(std::size_t);
-   void **beginPtr = reinterpret_cast<void **>(bulkSpec.fValues);
+   auto [beginPtr, sizePtr, _] = GetRVecDataMembers(bulkSpec.fValues);
 
    // Get size of the first RVec of the bulk
    RClusterIndex firstItemIndex;
@@ -1993,7 +1993,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    ClusterSize_t collectionSize;
    this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
-   new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(collectionSize);
+   *sizePtr = collectionSize;
 
    // Set the size of the remaining RVecs of the bulk, going page by page through the RNTuple offset column.
    // We optimistically assume that bulkSpec.fAuxData is already large enough to hold all the item values in the
@@ -2008,9 +2008,10 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
       const std::size_t nBatch = std::min(nRemainingValues, nElementsUntilPageEnd);
       for (std::size_t i = 0; i < nBatch; ++i) {
          const auto size = offsets[i] - lastOffset;
-         beginPtr = reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(beginPtr) + fValueSize);
+         std::tie(beginPtr, sizePtr, _) = GetRVecDataMembers(
+            reinterpret_cast<unsigned char *>(bulkSpec.fValues) + (nValues + i) * fValueSize);
          *beginPtr = itemValueArray + nItems * itemValueSize;
-         new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(size);
+         *sizePtr = size;
 
          nItems += size;
          lastOffset = offsets[i];
