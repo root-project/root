@@ -444,7 +444,7 @@ protected:
    }
    static void CallReadOn(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
 
-   /// Fields may need direct access to the principal column of their sub fields, e.g. in RRevField::ReadBulk
+   /// Fields may need direct access to the principal column of their sub fields, e.g. in RRVecField::ReadBulk
    static RColumn *GetPrincipalColumnOf(const RFieldBase &other) { return other.fPrincipalColumn; }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
