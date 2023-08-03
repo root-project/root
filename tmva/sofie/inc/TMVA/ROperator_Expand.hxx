@@ -135,7 +135,7 @@ public:
          out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_";
          out << fNY << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-         out << SP*6 << "cgh.copy(data, tensor_" << fNY << ");\n";
+         out << SP*6 << "cgh.copy(data, acc_tensor_" << fNY << ");\n";
          out << SP*5 << "});\n";
          out << SP*4 << "delete[] data;\n";
          out << SP << "}\n";

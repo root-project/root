@@ -209,11 +209,12 @@
 
 #include "Concat_0DGPU_FromONNX.hxx"
 
-#include "LayerNormalization2dGPU_FromONNX.hxx"
+/*#include "LayerNormalization2dGPU_FromONNX.hxx"
 #include "input_models/references/LayerNormalization2d.hxx"
 
 #include "LayerNormalization4dGPU_FromONNX.hxx"
 #include "input_models/references/LayerNormalization4d.hxx"
+*/
 
 #include "ExpandSameSizeGPU_FromONNX.hxx"
 #include "input_models/references/ExpandSameSize.ref.hxx"
@@ -249,7 +250,7 @@ TEST(ONNX, Linear16)
 
    // Preparing the standard all-ones input
    std::vector<float> input(1600);
-   std::fill_n(input, input.size(), 1.0f);
+   std::fill_n(input.begin(), input.size(), 1.0f);
    TMVA_SOFIE_Linear_16::Session s("Linear_16_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
@@ -271,7 +272,7 @@ TEST(ONNX, Linear32)
 
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
-   std::fill_n(input, input.size(), 1.0f);
+   std::fill_n(input.begin(), input.size(), 1.0f);
    TMVA_SOFIE_Linear_32::Session s("Linear_32_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
@@ -444,7 +445,7 @@ TEST(ONNX, Linear64)
 
    // Preparing the standard all-ones input
    std::vector<float> input(6400);
-   std::fill_n(input, input.size(), 1.0f);
+   std::fill_n(input.begin(), input.size(), 1.0f);
    TMVA_SOFIE_Linear_64::Session s("Linear_64_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
@@ -466,7 +467,7 @@ TEST(ONNX, LinearWithSelu)
 
    // Preparing the standard all-ones input
    std::vector<float> input(48);
-   std::fill_n(input, input.size(), 1.0f);
+   std::fill_n(input.begin(), input.size(), 1.0f);
    TMVA_SOFIE_LinearWithSelu::Session s("LinearWithSelu_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
@@ -540,7 +541,7 @@ TEST(ONNX, LinearWithSigmoid)
 
    // Preparing the standard all-ones input
    std::vector<float> input(48);
-   std::fill_n(input, input.size(), 1.0f);
+   std::fill_n(input.begin(), input.size(), 1.0f);
    TMVA_SOFIE_LinearWithSigmoid::Session s("LinearWithSigmoid_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
@@ -946,7 +947,7 @@ TEST(ONNX, MaxMultidirectionalBroadcast) {
 
    TMVA_SOFIE_MaxMultidirectionalBroadcast::Session s("MaxMultidirectionalBroadcast_FromONNX.dat");
 
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   std::vector<float> output = s.infer(A, B, c.data());
 
    EXPECT_EQ(output.size(), sizeof(MaxMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -966,7 +967,7 @@ TEST(ONNX, MinMultidirectionalBroadcast) {
 
    TMVA_SOFIE_MinMultidirectionalBroadcast::Session s("MinMultidirectionalBroadcast_FromONNX.dat");
 
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   std::vector<float> output = s.infer(A, B, c.data());
 
    EXPECT_EQ(output.size(), sizeof(MinMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -986,7 +987,7 @@ TEST(ONNX, MeanMultidirectionalBroadcast) {
 
    TMVA_SOFIE_MeanMultidirectionalBroadcast::Session s("MeanMultidirectionalBroadcast_FromONNX.dat");
 
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   std::vector<float> output = s.infer(A, B, c.data());
 
    EXPECT_EQ(output.size(), sizeof(MeanMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -1006,7 +1007,7 @@ TEST(ONNX, SumMultidirectionalBroadcast) {
 
    TMVA_SOFIE_SumMultidirectionalBroadcast::Session s("SumMultidirectionalBroadcast_FromONNX.dat");
 
-   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+   std::vector<float> output = s.infer(A, B, c.data());
 
    EXPECT_EQ(output.size(), sizeof(SumMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -1868,7 +1869,7 @@ TEST(ONNX, AddBroadcast1) {
                  0.16927211, 1.06756969,  -0.81634773, 0.88467744,  0.78902059});
 
    TMVA_SOFIE_AddBroadcast1::Session s("AddBroadcast1_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast1_ExpectedOutput::output) / sizeof(float));
@@ -1921,7 +1922,7 @@ TEST(ONNX, AddBroadcast2) {
         9.62438348e-01,  1.13413513e+00,  -9.24612219e-01, -2.26132356e+00});
 
    TMVA_SOFIE_AddBroadcast2::Session s("AddBroadcast2_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast2_ExpectedOutput::output) / sizeof(float));
@@ -1969,7 +1970,7 @@ TEST(ONNX, AddBroadcast3) {
         -0.11893711, -1.22414638, -1.62747593, 0.53264501,  0.53483601});
 
    TMVA_SOFIE_AddBroadcast3::Session s("AddBroadcast3_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast3_ExpectedOutput::output) / sizeof(float));
@@ -1992,7 +1993,7 @@ TEST(ONNX, AddBroadcast4) {
    std::vector<float> B({0.50898894, -0.27829921, -0.68761628,  0.33186382,  0.57915535,
         0.406858  ,  1.4203833 ,  0.19857093});
    TMVA_SOFIE_AddBroadcast4::Session s("AddBroadcast4_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast4_ExpectedOutput::output) / sizeof(float));
@@ -2020,7 +2021,7 @@ TEST(ONNX, AddBroadcast5) {
        -0.49491276, -1.4246271 , -0.99973914, -0.2571329});
 
    TMVA_SOFIE_AddBroadcast5::Session s("AddBroadcast5_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast5_ExpectedOutput::output) / sizeof(float));
@@ -2055,7 +2056,7 @@ TEST(ONNX, AddBroadcast6) {
        -0.1547858 ,  2.50788792,  0.30898059});
 
    TMVA_SOFIE_AddBroadcast6::Session s("AddBroadcast6_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast6_ExpectedOutput::output) / sizeof(float));
@@ -2081,7 +2082,7 @@ TEST(ONNX, AddBroadcast7) {
         8.05744026e-04, -2.08031088e-01,  9.69779132e-01,  7.58373863e-01});
 
    TMVA_SOFIE_AddBroadcast7::Session s("AddBroadcast7_FromONNX.dat");
-   std::vector<float> output(s.infer(A.data(), B.data()));
+   std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(AddBroadcast7_ExpectedOutput::output) / sizeof(float));

@@ -394,7 +394,7 @@ public:
 
       for (size_t i=1; i<=fAxis; i++) {
          out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(fAxis-i);
-         out << " = tid % " << inputShape << "[" << fAxis-i << "]\n;";
+         out << " = tid % " << inputShape << "[" << fAxis-i << "];\n";
          out << SP*(5 + (fSize - fAxis + 2)) << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
       }
 
@@ -431,7 +431,7 @@ public:
 
       for (size_t i=1; i<=fAxis; i++) {
          out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(fAxis-i);
-         out << " = tid % " << inputShape << "[" << fAxis - i << "]\n;";
+         out << " = tid % " << inputShape << "[" << fAxis - i << "];\n";
          out << SP*(5 + (fSize - fAxis + 2)) << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
       }
 
