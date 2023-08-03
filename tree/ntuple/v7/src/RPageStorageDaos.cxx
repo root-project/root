@@ -537,11 +537,15 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
-   if (sealedPage.fBuffer) {
+   if (!sealedPage.fBuffer)
+      return;
+   if (pageInfo.fLocator.fType != RNTupleLocator::kTypePageZero) {
       RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
          fNTupleIndex, clusterId, physicalColumnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
       fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage, daosKey.fOid,
                                      daosKey.fDkey, daosKey.fAkey);
+   } else {
+      memcpy(const_cast<void *>(sealedPage.fBuffer), RPage::GetPageZeroBuffer(), bytesOnStorage);
    }
 }
 
@@ -560,6 +564,15 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
 
    const void *sealedPageBuffer = nullptr; // points either to directReadBuffer or to a read-only page in the cluster
    std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
+
+   if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+      auto pageZero = RPage::MakePageZero(columnId, elementSize);
+      pageZero.GrowUnchecked(pageInfo.fNElements);
+      pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
+                         RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
+      fPagePool->RegisterPage(pageZero, RPageDeleter([](const RPage &, void *) {}, nullptr));
+      return pageZero;
+   }
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       if (pageInfo.fLocator.fReserved & Internal::EDaosLocatorFlags::kCagedPage) {
@@ -690,28 +703,21 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       std::unordered_map<std::uint32_t, std::vector<RDaosSealedPageLocator>> onDiskPages;
 
       unsigned clusterBufSz = 0, nPages = 0;
-      {
-         auto descriptorGuard = GetSharedDescriptorGuard();
-         const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
+      auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
+      PrepareLoadCluster(clusterKey, *pageZeroMap,
+                         [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
+                             const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
+                            const auto &pageLocator = pageInfo.fLocator;
+                            uint32_t position, offset;
+                            std::tie(position, offset) =
+                               DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
+                            auto [itLoc, _] = onDiskPages.emplace(position, std::vector<RDaosSealedPageLocator>());
 
-         // Collect the necessary page meta-data and sum up the total size of the compressed and packed pages
-         for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
-            const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
-            NTupleSize_t columnPageCount = 0;
-            for (const auto &pageInfo : pageRange.fPageInfos) {
-               const auto &pageLocator = pageInfo.fLocator;
-               uint32_t position, offset;
-               std::tie(position, offset) = DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
-               auto [itLoc, _] = onDiskPages.emplace(position, std::vector<RDaosSealedPageLocator>());
-
-               itLoc->second.push_back(
-                  {clusterId, physicalColumnId, columnPageCount, position, offset, pageLocator.fBytesOnStorage});
-               ++columnPageCount;
-               clusterBufSz += pageLocator.fBytesOnStorage;
-            }
-            nPages += columnPageCount;
-         }
-      }
+                            itLoc->second.push_back(
+                               {clusterId, physicalColumnId, pageNo, position, offset, pageLocator.fBytesOnStorage});
+                            ++nPages;
+                            clusterBufSz += pageLocator.fBytesOnStorage;
+                         });
 
       auto clusterBuffer = new unsigned char[clusterBufSz];
       auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(clusterBuffer));
@@ -747,6 +753,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
 
       auto cluster = std::make_unique<RCluster>(clusterId);
       cluster->Adopt(std::move(pageMap));
+      cluster->Adopt(std::move(pageZeroMap));
       for (auto colId : clusterKey.fPhysicalColumnSet)
          cluster->SetColumnAvailable(colId);
       return cluster;
