@@ -1011,9 +1011,10 @@ TEST_F(RDFSnapshotMT, Reshuffled_friends)
       TFile f(fname);
       TTree *t = f.Get<TTree>("t");
       TTree t2("t2", "t2");
-      const auto expected = "Tree 't' has the kEntriesReshuffled bit set, and cannot be used as "
-                            "friend nor can be added as a friend unless the main tree has a TTreeIndex on the friend "
-                            "tree 't'. You can also unset the bit manually if you know what you are doing.";
+      const auto expected =
+         "Tree 't' has the kEntriesReshuffled bit set and cannot have friends nor can be added as a friend unless the "
+         "main tree has a TTreeIndex on the friend tree 't'. You can also unset the bit manually if you know what you "
+         "are doing; note that you risk associating wrong TTree entries of the friend with those of the main TTree!";
       ROOT_EXPECT_ERROR(t2.AddFriend(t), "AddFriend", expected);
    }
 
@@ -1022,9 +1023,10 @@ TEST_F(RDFSnapshotMT, Reshuffled_friends)
       TFile f(fname);
       TTree *t = f.Get<TTree>("t");
       TTree t2("t2", "t2");
-      const auto expected = "Tree 't' has the kEntriesReshuffled bit set, and cannot be used as "
-                            "friend nor can be added as a friend unless the main tree has a TTreeIndex on the friend "
-                            "tree 't2'. You can also unset the bit manually if you know what you are doing.";
+      const auto expected =
+         "Tree 't' has the kEntriesReshuffled bit set and cannot have friends nor can be added as a friend unless the "
+         "main tree has a TTreeIndex on the friend tree 't2'. You can also unset the bit manually if you know what you "
+         "are doing; note that you risk associating wrong TTree entries of the friend with those of the main TTree!";
       ROOT_EXPECT_ERROR(t->AddFriend(&t2);, "AddFriend", expected);
    }
 }
