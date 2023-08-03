@@ -23,35 +23,35 @@ jobs:
       actions: read
 
     steps:
-      # - name: Download and Extract Artifacts
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #      mkdir -p artifacts && cd artifacts
-
-      #      artifacts_url=${{ github.event.workflow_run.artifacts_url }}
-
-      #      gh api --paginate "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
-      #      do
-      #        IFS=$'\t' read name url <<< "$artifact"
-      #        gh api $url > "$name.zip"
-      #        unzip -d "$name" "$name.zip"
-      #      done
-
       - name: Download and Extract Artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p artifacts && cd artifacts
+           mkdir -p artifacts && cd artifacts
 
-          artifacts_url=${{ github.event.workflow_run.artifacts_url }}
+           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
 
-          artifact_names=$(gh api --paginate "$artifacts_url" -q '.artifacts[] | select(.name | startswith("Test Coverage") or startswith("Test Results")) | .name')
+           gh api --paginate "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
+           do
+             IFS=$'\t' read name url <<< "$artifact"
+             gh api $url > "$name.zip"
+             unzip -d "$name" "$name.zip"
+           done
 
-          for name in $artifact_names; do
-            gh api --paginate "$artifacts_url" -q ".artifacts[] | select(.name == \"$name\") | [.archive_download_url]" | xargs -I {} gh api {} > "$name.zip"
-            unzip -d "$name" "$name.zip"
-          done
+      # - name: Download and Extract Artifacts
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     mkdir -p artifacts && cd artifacts
+
+      #     artifacts_url=${{ github.event.workflow_run.artifacts_url }}
+
+      #     artifact_names=$(gh api --paginate "$artifacts_url" -q '.artifacts[] | select(.name | startswith("Test Coverage") or startswith("Test Results")) | .name')
+
+      #     for name in $artifact_names; do
+      #       gh api --paginate "$artifacts_url" -q ".artifacts[] | select(.name == \"$name\") | [.archive_download_url]" | xargs -I {} gh api {} > "$name.zip"
+      #       unzip -d "$name" "$name.zip"
+      #     done
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -69,7 +69,7 @@ jobs:
         with:
           env_vars: OS,PYTHON
           fail_ci_if_error: true
-          files: artifacts/Test Coverage fedora38-cov Debug/CoverageXML.xml
+          files: artifacts/*/CoverageXML.xml
           flags: unittests
           name: codecov-umbrella
           verbose: true   
