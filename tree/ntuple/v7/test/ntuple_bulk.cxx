@@ -137,13 +137,19 @@ TEST(RNTupleBulk, RVec)
       auto model = RNTupleModel::Create();
       auto fldVecI = model->MakeField<ROOT::RVecI>("vint");
       auto fldVecS = model->MakeField<ROOT::RVec<CustomStruct>>("vs");
+      auto fldVecVI = model->MakeField<ROOT::RVec<ROOT::RVecI>>("vvint");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       for (int i = 0; i < 10; ++i) {
          fldVecI->resize(i);
          fldVecS->resize(i);
+         fldVecVI->resize(i);
          for (int j = 0; j < i; ++j) {
             fldVecI->at(j) = j;
             fldVecS->at(j).a = j;
+            fldVecVI->at(j).resize(j);
+            for (int k = 0; k < j; ++k) {
+               fldVecVI->at(j).at(k) = k;
+            }
          }
          writer->Fill();
       }
@@ -154,11 +160,14 @@ TEST(RNTupleBulk, RVec)
    auto fieldZero = reader->GetModel()->GetFieldZero();
    std::unique_ptr<RFieldBase::RBulk> bulkI;
    std::unique_ptr<RFieldBase::RBulk> bulkS;
+   std::unique_ptr<RFieldBase::RBulk> bulkVI;
    for (auto &f : *fieldZero) {
       if (f.GetName() == "vint")
          bulkI = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
       if (f.GetName() == "vs")
          bulkS = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
+      if (f.GetName() == "vvint")
+         bulkVI = std::make_unique<RFieldBase::RBulk>(f.GenerateBulk());
    }
 
    auto mask = std::make_unique<bool[]>(10);
@@ -167,18 +176,26 @@ TEST(RNTupleBulk, RVec)
 
    auto iArr = static_cast<ROOT::RVecI *>(bulkI->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
    auto sArr = static_cast<ROOT::RVec<CustomStruct> *>(bulkS->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
+   auto viArr = static_cast<ROOT::RVec<ROOT::RVecI> *>(bulkVI->ReadBulk(RClusterIndex(0, 0), mask.get(), 10));
    for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(i, iArr[i].size());
       EXPECT_EQ(i == 1 ? 0 : i, sArr[i].size());
+      EXPECT_EQ(i == 1 ? 0 : i, viArr[i].size());
       for (std::size_t j = 0; j < iArr[i].size(); ++j) {
          EXPECT_EQ(j, iArr[i].at(j));
-      }
-      for (std::size_t j = 0; j < sArr[i].size(); ++j) {
-         EXPECT_FLOAT_EQ(j, sArr[i].at(j).a);
       }
       // RVec<PoD> should have all the vector elements of the bulk stored consecutively in memory
       if (i > 1) {
          EXPECT_EQ(&iArr[i - 1][0] + iArr[i - 1].size(), &iArr[i][0]);
+      }
+      for (std::size_t j = 0; j < sArr[i].size(); ++j) {
+         EXPECT_FLOAT_EQ(j, sArr[i].at(j).a);
+      }
+      for (std::size_t j = 0; j < viArr[i].size(); ++j) {
+         EXPECT_EQ(j, viArr[i].at(j).size());
+         for (std::size_t k = 0; k < viArr[i].at(j).size(); ++k) {
+            EXPECT_EQ(k, viArr[i][j][k]);
+         }
       }
    }
 }
