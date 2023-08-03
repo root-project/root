@@ -33,6 +33,10 @@ df = ROOT.RDF.Experimental.FromSpec(my_spec) # Creates a single dataframe for al
 # Access metadata information that is stored in the JSON config file of the RDataFrame
 # The metadata contained in the JSON file is accessible within a `DefinePerSample` call, through the `RDFSampleInfo` class
 
+# Add the ProgressBar feature
+
+ROOT.RDF.Experimental.AddProgressbar(df) 
+
 df = df.DefinePerSample("xsecs", 'rdfsampleinfo_.GetD("xsecs")')
 df = df.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")') 
 df = df.DefinePerSample("sumws", 'rdfsampleinfo_.GetD("sumws")')
