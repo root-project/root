@@ -25,6 +25,7 @@
 #include <cstring>
 #include <deque>
 #include <exception>
+#include <iomanip>
 #include <iostream>
 
 ROOT::Experimental::RNTupleInspector::RNTupleInspector(
@@ -217,6 +218,53 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::Experimental::EColu
    }
 
    return colIds;
+}
+
+void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorPrintFormat format, std::ostream &output)
+{
+   struct ColumnTypeInfo {
+      std::uint32_t count;
+      std::uint64_t nElems, onDiskSize, inMemSize;
+
+      void operator()(const RColumnInfo &colInfo)
+      {
+         this->count++;
+         this->nElems += colInfo.GetNElements();
+         this->onDiskSize += colInfo.GetOnDiskSize();
+         this->inMemSize += colInfo.GetInMemorySize();
+      }
+   };
+
+   std::map<EColumnType, ColumnTypeInfo> colTypeInfo;
+
+   for (const auto &[colId, colInfo] : fColumnInfo) {
+      colTypeInfo[colInfo.GetType()](colInfo);
+   }
+
+   int colWidth = 20;
+   switch (format) {
+   case ENTupleInspectorPrintFormat::kTable:
+      output << std::setw(colWidth) << "column type |" << std::setw(colWidth / 2) << "count |" << std::setw(colWidth)
+             << "# elements |" << std::setw(colWidth) << "bytes on disk |" << std::setw(colWidth) << "bytes in memory"
+             << std::endl;
+      output << std::setw(colWidth * 4 + (colWidth / 2)) << std::setfill('-') << "-" << std::setfill(' ') << std::endl;
+      colWidth -= 2;
+      for (const auto &[colType, typeInfo] : colTypeInfo) {
+         output << std::setw(colWidth) << Detail::RColumnElementBase::GetTypeName(colType) << " |"
+                << std::setw(colWidth / 2 - 1) << typeInfo.count << " |" << std::setw(colWidth) << typeInfo.nElems
+                << " |" << std::setw(colWidth) << typeInfo.onDiskSize << " |" << std::setw(colWidth)
+                << typeInfo.inMemSize << std::endl;
+      }
+      break;
+   case ENTupleInspectorPrintFormat::kCSV:
+      output << "columnType,count,nElements,onDiskSize,inMemSize" << std::endl;
+      for (const auto &[colType, typeInfo] : colTypeInfo) {
+         output << Detail::RColumnElementBase::GetTypeName(colType) << "," << typeInfo.count << "," << typeInfo.nElems
+                << "," << typeInfo.onDiskSize << "," << typeInfo.inMemSize << std::endl;
+      }
+      break;
+   default: throw RException(R__FAIL("Invalid print format"));
+   }
 }
 
 //------------------------------------------------------------------------------
