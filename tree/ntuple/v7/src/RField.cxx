@@ -1941,8 +1941,10 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
       }
 
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
-      if (owns)
+      if (owns) {
+         // *beginPtr points to the array of item values (allocated in an earlier call by the following malloc())
          free(*beginPtr);
+      }
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
       *beginPtr = malloc(nItems * fItemSize);
