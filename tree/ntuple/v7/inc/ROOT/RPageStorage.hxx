@@ -420,6 +420,30 @@ protected:
    /// `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned pages.
    RPage UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
 
+   /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
+   /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
+   /// commonly used as part of `LoadClusters()` in derived classes.
+   template <typename PerPageFuncT>
+   void PrepareLoadCluster(const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap, PerPageFuncT perPageFunc)
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
+      for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
+         const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
+         NTupleSize_t pageNo = 0;
+         for (const auto &pageInfo : pageRange.fPageInfos) {
+            if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+               pageZeroMap.Register(
+                  ROnDiskPage::Key{physicalColumnId, pageNo},
+                  ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.fLocator.fBytesOnStorage));
+            } else {
+               perPageFunc(physicalColumnId, pageNo, pageInfo);
+            }
+            ++pageNo;
+         }
+      }
+   }
+
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
    /// A subclass using the default set of metrics is responsible for updating the counters
