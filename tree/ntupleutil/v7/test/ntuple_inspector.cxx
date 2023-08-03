@@ -320,6 +320,72 @@ TEST(RNTupleInspector, ColumnsByType)
    EXPECT_EQ(0U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal64).size());
 }
 
+TEST(RNTupleInspector, PrintColumnTypeInfo)
+{
+   FileRaii fileGuard("test_ntuple_inspector_print_column_type_info.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt1 = model->MakeField<std::int64_t>("int1");
+      auto nFldInt2 = model->MakeField<std::int64_t>("int2");
+      auto nFldFloat = model->MakeField<float>("float");
+      auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+
+      for (unsigned i = 0; i < 10; ++i) {
+         *nFldInt1 = static_cast<std::int64_t>(i);
+         *nFldInt2 = static_cast<std::int64_t>(i) * 2;
+         *nFldFloat = static_cast<float>(i) * .1f;
+         *nFldFloatVec = {static_cast<float>(i), 3.14f, static_cast<float>(i) * *nFldFloat};
+         ntuple->Fill();
+      }
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+
+   std::stringstream csvOutput;
+   inspector->PrintColumnTypeInfo(ROOT::Experimental::ENTupleInspectorPrintFormat::kCSV, csvOutput);
+
+   std::string line;
+   std::string expectedCsvHeader{"columnType,count,nElements,onDiskSize,inMemSize"};
+   std::getline(csvOutput, line);
+   EXPECT_EQ(expectedCsvHeader, line);
+
+   size_t nLines = 0;
+   std::string colTypeStr;
+   while (std::getline(csvOutput, line)) {
+      ++nLines;
+      colTypeStr = line.substr(0, line.find(","));
+
+      if (colTypeStr != "SplitIndex64" && colTypeStr != "SplitInt64" && colTypeStr != "SplitReal32")
+         FAIL() << "Unexpected column type: " << colTypeStr;
+   }
+   EXPECT_EQ(nLines, 3U);
+
+   std::stringstream tableOutput;
+   inspector->PrintColumnTypeInfo(ROOT::Experimental::ENTupleInspectorPrintFormat::kTable, tableOutput);
+
+   std::string expectedTableHeader{
+      "       column type |   count |        # elements |     bytes on disk |     bytes in memory"};
+   std::getline(tableOutput, line);
+   EXPECT_EQ(expectedTableHeader, line);
+
+   nLines = 0;
+   // The table output contains a separator line
+   std::getline(tableOutput, line);
+   while (std::getline(tableOutput, line)) {
+      ++nLines;
+      colTypeStr = line.substr(0, line.find("|"));
+      colTypeStr.erase(remove_if(colTypeStr.begin(), colTypeStr.end(), isspace), colTypeStr.end());
+
+      if (colTypeStr != "SplitIndex64" && colTypeStr != "SplitInt64" && colTypeStr != "SplitReal32")
+         FAIL() << "Unexpected column type: " << colTypeStr;
+   }
+   EXPECT_EQ(nLines, 3U);
+}
+
 TEST(RNTupleInspector, FieldInfoCompressed)
 {
    FileRaii fileGuard("test_ntuple_inspector_field_info_compressed.root");
