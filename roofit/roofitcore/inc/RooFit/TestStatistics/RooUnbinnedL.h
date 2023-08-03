@@ -52,6 +52,7 @@ private:
    Section lastSection_ = {0, 0}; // used for cache together with the parameter tracker
    mutable ROOT::Math::KahanSum<double> cachedResult_{0.};
    std::shared_ptr<ROOT::Experimental::RooFitDriver> driver_; ///<! For batched evaluation
+   std::stack<std::vector<double>> _vectorBuffers;            // used for preserving resources in batched evaluation
 };
 
 } // namespace TestStatistics

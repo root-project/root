@@ -743,8 +743,8 @@ TEST_P(WeightsTest, VectorizedWeights)
 
    std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*absReal, *data.get());
    ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
-   driver.setData(data, "");
-   auto weightsGetValues = driver.getValues();
+   driver.setInput(x.GetName(), xVals, false);
+   std::span<const double> weightsGetValues = driver.run();
 
    for (std::size_t i = 0; i < nVals; ++i) {
       EXPECT_NEAR(weightsGetVal[i], weightsGetValues[i], 1e-6);

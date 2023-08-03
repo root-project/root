@@ -23,6 +23,7 @@
 #include <RooFitResult.h>
 #include <RooPlot.h>
 
+#include "../src/RooFit/BatchModeDataHelpers.h"
 #include "../src/RooFitDriver.h"
 
 #include <TROOT.h>
@@ -46,8 +47,16 @@ std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
 {
    std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, *data.get());
    ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
-   driver.setData(data, "");
-   return driver.getValues();
+   std::stack<std::vector<double>> vectorBuffers;
+   auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
+                                                               /*takeGlobalObservablesFromData=*/true, vectorBuffers);
+   for (auto const &item : dataSpans) {
+      driver.setInput(item.first->GetName(), item.second, false);
+   }
+   std::vector<double> out;
+   std::span<const double> results = driver.run();
+   out.assign(results.begin(), results.end());
+   return out;
 }
 
 } // namespace
