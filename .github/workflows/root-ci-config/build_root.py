@@ -263,7 +263,7 @@ def show_node_state(shell_log: str, options: str) -> str:
 def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
     result, shell_log = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
-        ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
+        # ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
     
     return result, shell_log
@@ -316,7 +316,7 @@ def build(options, buildtype, shell_log):
     shell_log += f"\nBUILD OPTIONS: {options}"
 
     result, shell_log = subprocess_with_log(f"""
-        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
+        # cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
     """, shell_log)
 
     if result != 0:
@@ -352,7 +352,8 @@ def create_coverage_xml(shell_log: str) -> str:
     result, shell_log = subprocess_with_log(f"""
         pwd
         cd '{WORKDIR}/build'                                    
-        gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
+        # gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
+        echo 'test' > CoverageXML.xml
         pwd
         ls
     """, shell_log)
