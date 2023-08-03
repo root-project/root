@@ -146,6 +146,9 @@
 #      define R__USESTHROW
 #      define R__SEEK64
 #   endif
+#   if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 38)
+#      define HAS_STRLCPY
+#   endif
 #endif
 
 #if defined(linux) && defined(__i386__)
