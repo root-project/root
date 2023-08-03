@@ -22,6 +22,7 @@
 /// \author Stefan Wunsch (KIT, CERN)
 
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDFHelpers.hxx"
 #include "ROOT/RVec.hxx"
 #include "TCanvas.h"
 #include "TH1D.h"
@@ -36,7 +37,11 @@ void df102_NanoAODDimuonAnalysis()
    ROOT::EnableImplicitMT();
 
    // Create dataframe from NanoAOD files
-   ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/AOD2NanoAODOutreachTool/Run2012BC_DoubleMuParked_Muons.root");
+   ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/AOD2NanoAODOutreachTool/"
+                                 "Run2012BC_DoubleMuParked_Muons.root");
+
+   // Add ProgressBar
+   ROOT::RDF::Experimental::AddProgressbar(df);
 
    // For simplicity, select only events with exactly two muons and require opposite charge
    auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
@@ -49,7 +54,7 @@ void df102_NanoAODDimuonAnalysis()
    auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon mass;m_{#mu#mu} (GeV);N_{Events}", 30000, 0.25, 300}, "Dimuon_mass");
 
    // Request cut-flow report
-   auto report = df_mass.Report();
+   auto report = df.Report();
 
    // Produce plot
    gStyle->SetOptStat(0); gStyle->SetTextFont(42);
