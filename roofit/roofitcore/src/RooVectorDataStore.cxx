@@ -1198,10 +1198,10 @@ RooAbsData::CategorySpans RooVectorDataStore::getCategoryBatches(std::size_t fir
 /// If an array with weights is stored, a batch with these weights will be returned. If
 /// no weights are stored, an empty batch is returned. Use weight() to check if there's
 /// a constant weight.
-RooSpan<const double> RooVectorDataStore::getWeightBatch(std::size_t first, std::size_t len) const
+std::span<const double> RooVectorDataStore::getWeightBatch(std::size_t first, std::size_t len) const
 {
   if (_extWgtArray) {
-    return RooSpan<const double>(_extWgtArray + first, _extWgtArray + first + len);
+    return std::span<const double>(_extWgtArray + first, _extWgtArray + first + len);
   }
 
   if (_wgtVar) {

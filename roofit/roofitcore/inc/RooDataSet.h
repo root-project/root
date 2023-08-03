@@ -129,7 +129,7 @@ public:
   const RooArgSet* get(Int_t index) const override;
   const RooArgSet* get() const override;
 
-  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
+  std::span<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
 
   /// Add one ore more rows of data
   void add(const RooArgSet& row, double weight, double weightError);

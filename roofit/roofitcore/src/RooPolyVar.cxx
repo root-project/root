@@ -148,7 +148,7 @@ void RooPolyVar::computeBatchImpl(RooAbsArg const* caller, double *output, size_
    const double zero = 1.0;
    const double one = 1.0;
    for (int i = lowestOrder - 1; i >= 0; --i) {
-      vars.push_back(i == 0 ? RooSpan<const double>{&one, 1} : RooSpan<const double>{&zero, 1});
+      vars.push_back(i == 0 ? std::span<const double>{&one, 1} : std::span<const double>{&zero, 1});
    }
 
    for (RooAbsArg *coef : coefs) {

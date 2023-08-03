@@ -13,7 +13,7 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include <RooSpan.h>
+#include <ROOT/RSpan.hxx>
 
 #include <RConfig.h>
 
@@ -43,7 +43,7 @@
  */
 namespace RooBatchCompute {
 
-typedef std::vector<RooSpan<const double>> VarVector;
+typedef std::vector<std::span<const double>> VarVector;
 typedef std::vector<double> ArgVector;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
@@ -148,9 +148,9 @@ public:
    }
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
-   virtual ReduceNLLOutput reduceNLL(Config const &cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
-                                     RooSpan<const double> weights, double weightSum,
-                                     RooSpan<const double> binVolumes) = 0;
+   virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weightSpan,
+                                     std::span<const double> weights, double weightSum,
+                                     std::span<const double> binVolumes) = 0;
 
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
@@ -204,8 +204,8 @@ inline double reduceSum(Config cfg, InputArr input, size_t n)
    return dispatch->reduceSum(cfg, input, n);
 }
 
-inline ReduceNLLOutput reduceNLL(Config cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
-                                 RooSpan<const double> weights, double weightSum, RooSpan<const double> binVolumes)
+inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std::span<const double> weightSpan,
+                                 std::span<const double> weights, double weightSum, std::span<const double> binVolumes)
 {
    init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;

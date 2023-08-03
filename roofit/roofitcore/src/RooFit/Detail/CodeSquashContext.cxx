@@ -251,7 +251,7 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
    return savedName;
 }
 
-std::string CodeSquashContext::buildArg(RooSpan<const double> arr)
+std::string CodeSquashContext::buildArg(std::span<const double> arr)
 {
    unsigned int n = arr.size();
    std::string arrName = getTmpVarName();

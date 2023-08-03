@@ -152,8 +152,8 @@ void RooGaussModel::computeBatch(double *output, size_t size,
    auto param1 = static_cast<RooAbsReal *>(basis().getParameter(1));
    auto param2 = static_cast<RooAbsReal *>(basis().getParameter(2));
    const double zeroVal = 0.0;
-   auto param1Vals = param1 ? dataMap.at(param1) : RooSpan<const double>{&zeroVal, 1};
-   auto param2Vals = param2 ? dataMap.at(param2) : RooSpan<const double>{&zeroVal, 1};
+   auto param1Vals = param1 ? dataMap.at(param1) : std::span<const double>{&zeroVal, 1};
+   auto param2Vals = param2 ? dataMap.at(param2) : std::span<const double>{&zeroVal, 1};
 
    BasisType basisType = getBasisType(_basisCode);
    double basisSign = _basisCode - 10 * (basisType - 1) - 2;

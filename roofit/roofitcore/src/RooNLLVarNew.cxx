@@ -145,7 +145,7 @@ void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgS
    }
 }
 
-double RooNLLVarNew::computeBatchBinnedL(RooSpan<const double> preds, RooSpan<const double> weights) const
+double RooNLLVarNew::computeBatchBinnedL(std::span<const double> preds, std::span<const double> weights) const
 {
    ROOT::Math::KahanSum<double> result{0.0};
    ROOT::Math::KahanSum<double> sumWeightKahanSum{0.0};
@@ -192,8 +192,8 @@ double RooNLLVarNew::computeBatchBinnedL(RooSpan<const double> preds, RooSpan<co
 **/
 void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail::DataMap const &dataMap) const
 {
-   RooSpan<const double> weights = dataMap.at(_weightVar);
-   RooSpan<const double> weightsSumW2 = dataMap.at(_weightSquaredVar);
+   std::span<const double> weights = dataMap.at(_weightVar);
+   std::span<const double> weightsSumW2 = dataMap.at(_weightSquaredVar);
 
    if (_binnedL) {
       output[0] = computeBatchBinnedL(dataMap.at(&*_pdf), _weightSquared ? weightsSumW2 : weights);
@@ -213,7 +213,7 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
 
    auto nllOut =
       RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights, weights, _sumWeight,
-                                 _doBinOffset ? dataMap.at(_binVolumeVar) : RooSpan<const double>{});
+                                 _doBinOffset ? dataMap.at(_binVolumeVar) : std::span<const double>{});
 
    if (nllOut.nLargeValues > 0) {
       oocoutW(&*_pdf, Eval) << "RooAbsPdf::getLogVal(" << _pdf->GetName()
@@ -227,7 +227,7 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
    }
 
    if (_expectedEvents) {
-      RooSpan<const double> expected = dataMap.at(*_expectedEvents);
+      std::span<const double> expected = dataMap.at(*_expectedEvents);
       nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected[0], _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
    }
 

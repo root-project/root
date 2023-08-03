@@ -123,7 +123,7 @@ public:
 
   RooAbsData::RealSpans getBatches(std::size_t first, std::size_t len) const override;
   RooAbsData::CategorySpans getCategoryBatches(std::size_t /*first*/, std::size_t len) const override;
-  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
+  std::span<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
   bool changeObservableName(const char* from, const char* to) override;
@@ -289,11 +289,11 @@ public:
       *_nativeBuf = *_buf ;
     }
 
-    RooSpan<const double> getRange(std::size_t first, std::size_t last) const {
+    std::span<const double> getRange(std::size_t first, std::size_t last) const {
       auto beg = std::min(_vec.cbegin() + first, _vec.cend());
       auto end = std::min(_vec.cbegin() + last,  _vec.cend());
 
-      return RooSpan<const double>(&*beg, std::distance(beg, end));
+      return std::span<const double>(&*beg, std::distance(beg, end));
     }
 
     std::size_t size() const { return _vec.size() ; }
@@ -496,11 +496,11 @@ public:
       *_nativeBuf = *_buf;
     }
 
-    RooSpan<const RooAbsCategory::value_type> getRange(std::size_t first, std::size_t last) const {
+    std::span<const RooAbsCategory::value_type> getRange(std::size_t first, std::size_t last) const {
       auto beg = std::min(_vec.cbegin() + first, _vec.cend());
       auto end = std::min(_vec.cbegin() + last,  _vec.cend());
 
-      return RooSpan<const RooAbsCategory::value_type>(&*beg, std::distance(beg, end));
+      return std::span<const RooAbsCategory::value_type>(&*beg, std::distance(beg, end));
     }
 
 

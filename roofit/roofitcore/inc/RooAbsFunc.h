@@ -16,8 +16,8 @@
 #ifndef ROO_ABS_FUNC
 #define ROO_ABS_FUNC
 
-#include "Rtypes.h"
-#include "RooSpan.h"
+#include <ROOT/RSpan.hxx>
+#include <Rtypes.h>
 
 #include <list>
 #include <vector>

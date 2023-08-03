@@ -148,7 +148,7 @@ public:
 private:
    RooAbsRealLValue &_var;
    std::unique_ptr<RooAbsReal> _arg;
-   RooSpan<const double> _dataWeights;
+   std::span<const double> _dataWeights;
    double _scaleFactor;
    std::unique_ptr<ROOT::Experimental::RooFitDriver> _driver;
 };
@@ -4539,7 +4539,7 @@ void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::Da
   // and switch them into "always clean" operating mode, so they return always the last-set value.
   struct ServerData {
     RooAbsArg* server;
-    RooSpan<const double> batch;
+    std::span<const double> batch;
     double oldValue;
     RooAbsArg::OperMode oldOperMode;
     bool oldValueDirty;

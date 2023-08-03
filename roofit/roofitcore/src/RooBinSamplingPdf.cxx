@@ -184,7 +184,7 @@ void RooBinSamplingPdf::computeBatch(double* output, size_t /*size*/, RooFit::De
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the bin boundaries for the observable.
 /// These will be recomputed whenever the shape of this object is dirty.
-RooSpan<const double> RooBinSamplingPdf::binBoundaries() const {
+std::span<const double> RooBinSamplingPdf::binBoundaries() const {
   if (isShapeDirty() || _binBoundaries.empty()) {
     _binBoundaries.clear();
     const RooAbsBinning& binning = _observable->getBinning(nullptr);

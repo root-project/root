@@ -243,8 +243,8 @@ void RooTruthModel::computeBatch(double *output, size_t nEvents, RooFit::Detail:
 
    auto param1 = static_cast<RooAbsReal const *>(basis().getParameter(1));
    auto param2 = static_cast<RooAbsReal const *>(basis().getParameter(2));
-   auto param1Vals = param1 ? dataMap.at(param1) : RooSpan<const double>{};
-   auto param2Vals = param2 ? dataMap.at(param2) : RooSpan<const double>{};
+   auto param1Vals = param1 ? dataMap.at(param1) : std::span<const double>{};
+   auto param2Vals = param2 ? dataMap.at(param2) : std::span<const double>{};
 
    // Return desired basis function
    RooBatchCompute::ArgVector extraArgs{basisSign};

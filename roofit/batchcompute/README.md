@@ -35,23 +35,23 @@ To make use of it, one should override `RooAbsReal::computeBatch()`
 ```c++
   void RooMyPDF::computeBatch(RooBatchCompute::RooBatchComputeInterface*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 ```
-This method must be implemented so that it fills the `output` array with the **normalized** probabilities computed for `nEvents` events, the data of which can be retrieved from `dataMap`. `dataMap` is a simple `std::map<RooRealVar*, RooSpan<const double>>`. Note that it is not necessary to evaluate any of the objects that the PDF relies to, because they have already been evaluated by the RooFitDriver, so that their updated results are always present in `dataMap`. The `RooBatchCompute::RooBatchComputeInterface` pointer should be ignored.
+This method must be implemented so that it fills the `output` array with the **normalized** probabilities computed for `nEvents` events, the data of which can be retrieved from `dataMap`. `dataMap` is a simple `std::map<RooRealVar*, std::span<const double>>`. Note that it is not necessary to evaluate any of the objects that the PDF relies to, because they have already been evaluated by the RooFitDriver, so that their updated results are always present in `dataMap`. The `RooBatchCompute::RooBatchComputeInterface` pointer should be ignored.
 
 ```c++
 void RooMyPDF::computeBatch(RooBatchCompute::RooBatchComputeInterface*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
-  // Retrieve `RooSpan`s for each parameter of the PDF
-  RooSpan<const double> span1 = dataMap.at(&*proxyVar1);
+  // Retrieve `std::span`s for each parameter of the PDF
+  std::span<const double> span1 = dataMap.at(&*proxyVar1);
   // or: auto span1 = dataMap.at(&*proxyVar1);
-  RooSpan<const double> span2 = dataMap.at(&*proxyVar2);
+  std::span<const double> span2 = dataMap.at(&*proxyVar2);
   
-  // let's assume c is a scalar parameter of the PDF. In this case the dataMap contains a RooSpan with only one value.
-  RooSpan<const double> scalar = dataMap.at(&*c);
+  // let's assume c is a scalar parameter of the PDF. In this case the dataMap contains a std::span with only one value.
+  std::span<const double> scalar = dataMap.at(&*c);
   
   // Perform computations in a for-loop
   // Use VDT if possible to facilitate auto-vectorization
   for (size_t i=0; i<nEvents; ++i) {
-    output[i] = RooBatchCompute::fast_log(span1[i]+span2[i]) + scalar[0]; //scalar is a RooSpan of length 1
+    output[i] = RooBatchCompute::fast_log(span1[i]+span2[i]) + scalar[0]; //scalar is a std::span of length 1
   }
 }
 ```

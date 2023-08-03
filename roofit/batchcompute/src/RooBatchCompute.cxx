@@ -139,9 +139,9 @@ public:
    }
    /// Return the sum of an input array
    double reduceSum(Config const&, InputArr input, size_t n) override;
-   ReduceNLLOutput reduceNLL(Config const&, RooSpan<const double> probas, RooSpan<const double> weightSpan,
-                             RooSpan<const double> weights, double weightSum,
-                             RooSpan<const double> binVolumes) override;
+   ReduceNLLOutput reduceNLL(Config const&, std::span<const double> probas, std::span<const double> weightSpan,
+                             std::span<const double> weights, double weightSum,
+                             std::span<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
 
 namespace {
@@ -172,9 +172,9 @@ double RooBatchComputeClass::reduceSum(Config const&, InputArr input, size_t n)
    return ROOT::Math::KahanSum<double, 4u>::Accumulate(input, input + n).Sum();
 }
 
-ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const&, RooSpan<const double> probas,
-                                                RooSpan<const double> weightSpan, RooSpan<const double> weights,
-                                                double weightSum, RooSpan<const double> binVolumes)
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const&, std::span<const double> probas,
+                                                std::span<const double> weightSpan, std::span<const double> weights,
+                                                double weightSum, std::span<const double> binVolumes)
 {
    ReduceNLLOutput out;
 
@@ -229,7 +229,7 @@ Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgV
 {
    _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
-      const RooSpan<const double> &span = vars[i];
+      const std::span<const double> &span = vars[i];
       if (span.empty()) {
          std::stringstream ss;
          ss << "The span number " << i << " passed to Batches::Batches() is empty!";

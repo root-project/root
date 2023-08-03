@@ -335,7 +335,7 @@ namespace {
 /// This is only needed in the rare case where a parameter is used as an observable.
 template<typename Tx, typename Tl, typename Tz, typename Tb, typename Ts, typename Tm, typename Ta, typename Tn,
 typename Ta2, typename Tn2>
-void compute(RooSpan<double> output, Tx x, Tl lambda, Tz zeta, Tb beta, Ts sigma, Tm mu, Ta a, Tn n, Ta2 a2, Tn2 n2) {
+void compute(std::span<double> output, Tx x, Tl lambda, Tz zeta, Tb beta, Ts sigma, Tm mu, Ta a, Tn n, Ta2 a2, Tn2 n2) {
   const auto N = output.size();
   const bool zetaIsAlwaysLargerZero = !zeta.isBatch() && zeta[0] > 0.;
   const bool zetaIsAlwaysZero = !zeta.isBatch() && zeta[0] == 0.;
@@ -431,7 +431,7 @@ using RooBatchCompute::BracketAdapter;
 //////////////////////////////////////////////////////////////////////////////////////////
 /// A specialised compute function where x is an observable, and all parameters are used as
 /// parameters. Since many things can be calculated outside of the loop, it is faster.
-void compute(RooSpan<double> output, RooSpan<const double> x,
+void compute(std::span<double> output, std::span<const double> x,
     BracketAdapter<double> lambda, BracketAdapter<double> zeta, BracketAdapter<double> beta,
     BracketAdapter<double> sigma, BracketAdapter<double> mu,
     BracketAdapter<double> a, BracketAdapter<double> n, BracketAdapter<double> a2, BracketAdapter<double> n2) {
@@ -506,7 +506,7 @@ void RooHypatia2::computeBatch(double* output, size_t size, RooFit::Detail::Data
   for (const auto& i:{lambda, zeta, beta, sig, mu, a, n, a2, n2}) {
     paramSizeSum += i.size();
   }
-  RooSpan<double> outputSpan{output, size};
+  std::span<double> outputSpan{output, size};
 
   // Run high performance compute if only x has multiple values
   if (x.size()>1 && paramSizeSum==9) {

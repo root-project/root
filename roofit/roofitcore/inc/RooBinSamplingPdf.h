@@ -110,7 +110,7 @@ public:
 
 protected:
   double evaluate() const override;
-  RooSpan<const double> binBoundaries() const;
+  std::span<const double> binBoundaries() const;
 
 private:
   template<typename Func>

@@ -724,7 +724,7 @@ bool checkInfNaNNeg(const T& inputs) {
 /// \param[in,out] outputs Array to be scanned & fixed.
 /// \param[in] begin Begin of event range. Only needed to print the correct event number
 /// where the error occurred.
-void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const {
+void RooAbsPdf::logBatchComputationErrors(std::span<const double>& outputs, std::size_t begin) const {
   for (unsigned int i=0; i<outputs.size(); ++i) {
     const double value = outputs[i];
     if (TMath::IsNaN(outputs[i])) {
@@ -741,7 +741,7 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 }
 
 
-void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * output) const {
+void RooAbsPdf::getLogProbabilities(std::span<const double> pdfValues, double * output) const {
   for (std::size_t i = 0; i < pdfValues.size(); ++i) {
      output[i] = getLog(pdfValues[i], this);
   }
