@@ -132,7 +132,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     // to get the directory name.
     // We do by finding last occurrence of "/" and using as directory name what is before
     // if we do not have a "/" in the prefix there is no output directory to be checked or created
-    size_t pos = prefix.rfind("/");
+    size_t pos = prefix.rfind('/');
     if (pos != std::string::npos) {
        std::string outputDir = prefix.substr(0,pos);
        cxcoutDHF << "Checking if output directory : " << outputDir << " -  exists" << std::endl;
