@@ -24,11 +24,13 @@
 
 #include <cstdlib>
 #include <memory>
-#include <vector>
 #include <regex>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 
 // clang-format off
 /**
@@ -168,6 +170,11 @@ public:
 
    /// Get the IDs of all columns with the given type.
    const std::vector<DescriptorId_t> GetColumnsByType(EColumnType);
+
+   /// Print the per-column type information in CSV format. This includes the column type, its count, the total number
+   /// of elements, the on-disk size and the in-memory size.
+   void PrintColumnTypeInfo(ENTupleInspectorPrintFormat format = ENTupleInspectorPrintFormat::kTable,
+                            std::ostream &output = std::cout);
 
    const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
    const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
