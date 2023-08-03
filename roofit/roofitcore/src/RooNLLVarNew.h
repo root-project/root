@@ -63,7 +63,7 @@ private:
    void resetWeightVarNames();
    double finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const;
    void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables);
-   double computeBatchBinnedL(RooSpan<const double> preds, RooSpan<const double> weights) const;
+   double computeBatchBinnedL(std::span<const double> preds, std::span<const double> weights) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooTemplateProxy<RooAbsReal> _weightVar;

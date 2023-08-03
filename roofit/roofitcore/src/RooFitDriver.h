@@ -58,7 +58,7 @@ public:
    ////////////////////
    // Enums and aliases
 
-   using DataSpansMap = std::map<RooFit::Detail::DataKey, RooSpan<const double>>;
+   using DataSpansMap = std::map<RooFit::Detail::DataKey, std::span<const double>>;
 
    //////////////////////////
    // Public member functions

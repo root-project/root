@@ -78,7 +78,7 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
 {
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
-   std::map<RooFit::Detail::DataKey, RooSpan<const double>> spans;
+   std::map<RooFit::Detail::DataKey, std::span<const double>> spans;
 
    if (data) {
       spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);

@@ -63,9 +63,9 @@ See RooAbsData::plotOn().
 #include "RooFormulaVar.h"
 #include "RooFormula.h"
 #include "RooUniformBinning.h"
-#include "RooSpan.h"
 
-#include "ROOT/StringUtils.hxx"
+#include <ROOT/RSpan.hxx>
+#include <ROOT/StringUtils.hxx>
 
 #include "TAxis.h"
 #include "TH1.h"
@@ -1151,7 +1151,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 ///                          histogram is mirrored at the boundaries for the
 ///                          interpolation.
 
-void RooDataHist::interpolateQuadratic(double* output, RooSpan<const double> xVals,
+void RooDataHist::interpolateQuadratic(double* output, std::span<const double> xVals,
                                        bool correctForBinSize, bool cdfBoundaries)
 {
   const std::size_t nBins = numEntries();
@@ -1258,7 +1258,7 @@ void RooDataHist::interpolateQuadratic(double* output, RooSpan<const double> xVa
 ///                          histogram is mirrored at the boundaries for the
 ///                          interpolation.
 
-void RooDataHist::interpolateLinear(double* output, RooSpan<const double> xVals,
+void RooDataHist::interpolateLinear(double* output, std::span<const double> xVals,
                                     bool correctForBinSize, bool cdfBoundaries)
 {
   const std::size_t nBins = numEntries();
@@ -1346,7 +1346,7 @@ void RooDataHist::interpolateLinear(double* output, RooSpan<const double> xVals,
 ///                          histogram is mirrored at the boundaries for the
 ///                          interpolation.
 
-void RooDataHist::weights(double* output, RooSpan<double const> xVals, int intOrder, bool correctForBinSize, bool cdfBoundaries)
+void RooDataHist::weights(double* output, std::span<double const> xVals, int intOrder, bool correctForBinSize, bool cdfBoundaries)
 {
   auto const nEvents = xVals.size();
 
@@ -2397,7 +2397,7 @@ void RooDataHist::Streamer(TBuffer &R__b) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Return event weights of all events in range [first, first+len).
 /// If cacheValidEntries() has been called, out-of-range events will have a weight of 0.
-RooSpan<const double> RooDataHist::getWeightBatch(std::size_t first, std::size_t len, bool sumW2 /*=false*/) const {
+std::span<const double> RooDataHist::getWeightBatch(std::size_t first, std::size_t len, bool sumW2 /*=false*/) const {
   return {(sumW2 && _sumw2 ? _sumw2 : _wgt) + first, len};
 }
 

@@ -19,7 +19,7 @@
 namespace RooFit {
 namespace Detail {
 
-RooSpan<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*caller*/)
+std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*caller*/)
 {
    if (!arg->hasDataToken()) {
       auto var = static_cast<RooRealVar const *>(arg);

@@ -22,9 +22,10 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
-#include "RooSpan.h"
 #include "RooFit/Detail/DataMap.h"
 #include "RooFit/Detail/CodeSquashContext.h"
+
+#include <ROOT/RSpan.hxx>
 
 class RooDataSet ;
 class RooPlot;
