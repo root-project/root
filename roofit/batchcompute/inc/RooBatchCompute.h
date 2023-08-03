@@ -25,6 +25,7 @@
 
 #include <Math/Util.h>
 
+#include <cassert>
 #include <functional>
 #include <string>
 #include <vector>

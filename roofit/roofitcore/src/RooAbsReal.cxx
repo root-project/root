@@ -76,6 +76,7 @@
 #include "RooHelpers.h"
 #include "TreeReadBuffer.h"
 #include "ValueChecking.h"
+#include "RooFit/BatchModeDataHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "Compression.h"
@@ -117,7 +118,13 @@ public:
       _arg = RooFit::Detail::compileForNormSet(arg, *data.get());
       _arg->recursiveRedirectServers(RooArgList{var});
       _driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*_arg, RooFit::BatchModeOption::Cpu);
-      _driver->setData(data, "");
+      std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+      auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
+                                                                   /*takeGlobalObservablesFromData=*/true,
+                                                                   _vectorBuffers);
+      for (auto const& item : dataSpans) {
+         _driver->setInput(item.first->GetName(), item.second, false);
+      }
    }
 
    double operator()(const double xvector[]) const override
@@ -126,7 +133,7 @@ public:
       _var.setVal(xvector[0]);
 
       double out = 0.0;
-      auto pdfValues = _driver->getValues();
+      std::span<const double> pdfValues = _driver->run();
       if (_dataWeights.empty()) {
          out = std::accumulate(pdfValues.begin(), pdfValues.end(), 0.0) / pdfValues.size();
       } else {
@@ -151,6 +158,7 @@ private:
    std::span<const double> _dataWeights;
    double _scaleFactor;
    std::unique_ptr<ROOT::Experimental::RooFitDriver> _driver;
+   std::stack<std::vector<double>> _vectorBuffers;
 };
 
 } // namespace

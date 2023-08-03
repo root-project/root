@@ -18,6 +18,7 @@
 #include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <stack>
@@ -38,7 +39,7 @@ getDataSpans(RooAbsData const &data, std::string const &rangeName, RooSimultaneo
 
 std::map<RooFit::Detail::DataKey, std::size_t>
 determineOutputSizes(RooAbsArg const &topNode,
-                     std::map<RooFit::Detail::DataKey, std::span<const double>> const &dataSpans);
+                     std::function<std::size_t(RooFit::Detail::DataKey)> const &inputSizeFunc);
 
 } // namespace BatchModeDataHelpers
 } // namespace RooFit

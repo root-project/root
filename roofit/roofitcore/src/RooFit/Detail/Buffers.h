@@ -22,6 +22,8 @@
 #include <cstddef>
 #include <memory>
 
+#include <memory>
+
 namespace ROOT {
 namespace Experimental {
 namespace Detail {
