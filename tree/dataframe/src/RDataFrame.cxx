@@ -1235,7 +1235,7 @@ Notice how we created one `double` variable for each processing slot and later m
 ### Dataset joins with friend trees
 
 Vertically concatenating multiple trees that have the same columns (creating a logical dataset with the same columns and
-more rows) is trivial in RDataFrame: just pass all tree and file names to RDataFrame's constructor, or create a TChain
+more rows) is trivial in RDataFrame: just pass the tree name and a list of file names to RDataFrame's constructor, or create a TChain
 out of the desired trees and pass that to RDataFrame.
 
 Horizontal concatenations of trees or chains (creating a logical dataset with the same number of rows and the union of the
