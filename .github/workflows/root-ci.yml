@@ -1,5 +1,19 @@
 
-# name: 'ROOT CI'
+name: 'ROOT CI'
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  do-nothing:
+    runs-on: ubuntu-latest
+
+    steps:
+      # This workflow does nothing
+      - name: Dummy start
+        run: echo "This is a dummy workflow"
 
 # on:
 #   schedule:
