@@ -1799,7 +1799,7 @@ function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "REPEATS;FAILREGEX"
-    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;MKL" ${ARGN})
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;COMPILE_OPTIONS;LINK_OPTIONS" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1818,7 +1818,15 @@ function(ROOT_ADD_GTEST test_suite)
   target_include_directories(${test_suite} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   if (ARG_INCLUDE_DIRS)
     target_include_directories(${test_suite} PRIVATE ${ARG_INCLUDE_DIRS})
-  endif(ARG_INCLUDE_DIRS)
+  endif()
+
+  if (ARG_COMPILE_OPTIONS)
+    target_compile_options(${test_suite} PRIVATE ${ARG_COMPILE_OPTIONS})
+  endif()
+
+  if (ARG_LINK_OPTIONS)
+    target_link_options(${test_suite} PRIVATE ${ARG_LINK_OPTIONS})
+  endif()
 
   if(MSVC)
     set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch

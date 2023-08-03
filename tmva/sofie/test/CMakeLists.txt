@@ -107,13 +107,14 @@ find_package(MKL REQUIRED)
 ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
   LIBRARIES
     ROOTTMVASofie
-    ${MKL_LIBRARIES}
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${MKL_INCLUDE_DIRS}
+  COMPILE_OPTIONS
+    -fsycl -DMKL_ILP64  -I"${MKLROOT}/include"
+  LINK_OPTIONS
+    -fsycl  -L${MKLROOT}/lib/intel64 -lmkl_sycl -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lsycl -lpthread -lm -ldl
 )
 add_sycl_to_target(TARGET TestCustomGPUModelsFromONNX SOURCES TestCustomGPUModelsFromONNX.cxx)
-
 add_dependencies(TestCustomGPUModelsFromONNX SofieCompileGPUModels_ONNX)
 endif()
 
