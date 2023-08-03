@@ -17,7 +17,7 @@
 #ifndef ROOFIT_BATCHCOMPUTE_BRACKETADAPTER_H
 #define ROOFIT_BATCHCOMPUTE_BRACKETADAPTER_H
 
-#include "RooSpan.h"
+#include <ROOT/RSpan.hxx>
 
 #include <vector>
 
@@ -32,7 +32,7 @@ class BracketAdapter {
     constexpr BracketAdapter(T payload) noexcept :
     _payload{payload} { }
 
-    constexpr BracketAdapter(RooSpan<const T> payload) noexcept :
+    constexpr BracketAdapter(std::span<const T> payload) noexcept :
     _payload{payload[0]} { }
 
     constexpr double operator[](std::size_t) const {
@@ -57,7 +57,7 @@ class BracketAdapterWithMask {
     /// Construct adapter from a fallback value and a batch of values.
     /// - If `batch.empty()`, always return `payload`.
     /// - Else, return `batch[i]`.
-    BracketAdapterWithMask(double payload, const RooSpan<const double>& batch) noexcept :
+    BracketAdapterWithMask(double payload, const std::span<const double>& batch) noexcept :
     _isBatch(!batch.empty()),
     _payload(payload),
     _pointer(batch.empty() ? &_payload : batch.data()),
@@ -68,7 +68,7 @@ class BracketAdapterWithMask {
     /// Construct adapter from a batch of values.
     /// - If `batch.size() == 1`, always return the value at `batch[0]`.
     /// - Else, return `batch[i]`.
-    BracketAdapterWithMask(RooSpan<const double> batch) :
+    BracketAdapterWithMask(std::span<const double> batch) :
     _isBatch(batch.size() > 1),
     _payload(batch[0]),
     _pointer(batch.data()),

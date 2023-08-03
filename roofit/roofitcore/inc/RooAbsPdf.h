@@ -239,7 +239,7 @@ public:
   double getValV(const RooArgSet* set=nullptr) const override ;
   virtual double getLogVal(const RooArgSet* set=nullptr) const ;
 
-  void getLogProbabilities(RooSpan<const double> pdfValues, double * output) const;
+  void getLogProbabilities(std::span<const double> pdfValues, double * output) const;
 
   /// \copydoc getNorm(const RooArgSet*) const
   double getNorm(const RooArgSet& nset) const {
@@ -327,7 +327,7 @@ private:
                            const char *label= "", double xmin=0.65,
                            double xmax= 0.99,double ymax=0.95, const RooCmdArg* formatCmd=nullptr) ;
 
-  void logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const;
+  void logBatchComputationErrors(std::span<const double>& outputs, std::size_t begin) const;
   bool traceEvalPdf(double value) const;
 
   /// Setter for the _normSet member, which should never be set directly.

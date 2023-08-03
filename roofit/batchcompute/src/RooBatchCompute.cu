@@ -78,9 +78,9 @@ public:
    }
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
-   ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, RooSpan<const double> probas,
-                             RooSpan<const double> weightSpan, RooSpan<const double> weights, double weightSum,
-                             RooSpan<const double> binVolumes) override;
+   ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
+                             std::span<const double> weightSpan, std::span<const double> weights, double weightSum,
+                             std::span<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
 
 // This is the same implementation of the ROOT::Math::KahanSum::operator+=(KahanSum) but in GPU
@@ -174,9 +174,9 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
    return tmp;
 }
 
-ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &cfg, RooSpan<const double> probas,
-                                                RooSpan<const double> weightSpan, RooSpan<const double> weights,
-                                                double weightSum, RooSpan<const double> binVolumes)
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
+                                                std::span<const double> weightSpan, std::span<const double> weights,
+                                                double weightSum, std::span<const double> binVolumes)
 {
    ReduceNLLOutput out;
    const int gridSize = std::ceil(double(probas.size()) / blockSize);
@@ -231,7 +231,7 @@ Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgV
    }
 
    for (int i = 0; i < vars.size(); i++) {
-      const RooSpan<const double> &span = vars[i];
+      const std::span<const double> &span = vars[i];
       size_t size = span.size();
       if (size == 1)
          _arrays[i].set(span[0], nullptr, false);

@@ -206,7 +206,7 @@ void RooHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::Data
     return;
   }
 
-  std::vector<RooSpan<const double>> inputValues;
+  std::vector<std::span<const double>> inputValues;
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
     if (realObs) {
@@ -569,18 +569,18 @@ Int_t RooHistFunc::getBin() const {
 /// Compute bin numbers corresponding to all coordinates in `evalData`.
 /// \return Vector of bin numbers. If a bin is not in the current range of the observables, return -1.
 std::vector<Int_t> RooHistFunc::getBins(RooFit::Detail::DataMap const& dataMap) const {
-  std::vector<RooSpan<const double>> depData;
+  std::vector<std::span<const double>> depData;
   for (const auto dep : _depList) {
     auto real = dynamic_cast<const RooAbsReal*>(dep);
     if (real) {
       depData.push_back(dataMap.at(real));
     } else {
-      depData.emplace_back(nullptr, 0);
+      depData.emplace_back();
     }
   }
 
   const auto batchSize = std::max_element(depData.begin(), depData.end(),
-      [](const RooSpan<const double>& a, const RooSpan<const double>& b){ return a.size() < b.size(); })->size();
+      [](const std::span<const double>& a, const std::span<const double>& b){ return a.size() < b.size(); })->size();
   std::vector<Int_t> results;
 
   for (std::size_t evt = 0; evt < batchSize; ++evt) {

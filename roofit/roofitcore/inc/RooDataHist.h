@@ -83,10 +83,10 @@ public:
   bool isWeighted() const override { return true; }
   bool isNonPoissonWeighted() const override ;
 
-  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const override;
+  std::span<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const override;
 
   /// Retrieve all bin volumes. Bins are indexed according to getIndex().
-  RooSpan<const double> binVolumes(std::size_t first, std::size_t len) const {
+  std::span<const double> binVolumes(std::size_t first, std::size_t len) const {
     return {_binv + first, len};
   }
 
@@ -99,7 +99,7 @@ public:
                const std::map<const RooAbsArg*, std::pair<double, double> >& ranges,
                std::function<double(int)> getBinScale = [](int){ return 1.0; } );
 
-  void weights(double* output, RooSpan<double const> xVals, int intOrder, bool correctForBinSize, bool cdfBoundaries);
+  void weights(double* output, std::span<double const> xVals, int intOrder, bool correctForBinSize, bool cdfBoundaries);
   /// Return weight of i-th bin. \see getIndex()
   double weight(std::size_t i) const { return _wgt[i]; }
   double weightFast(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
@@ -256,8 +256,8 @@ public:
   mutable double _cache_sum{0.};          ///<! Cache for sum of entries ;
 
 private:
-  void interpolateQuadratic(double* output, RooSpan<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
-  void interpolateLinear(double* output, RooSpan<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
+  void interpolateQuadratic(double* output, std::span<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
+  void interpolateLinear(double* output, std::span<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
   double weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
 
   void _adjustBinning(RooRealVar &theirVar, const TAxis &axis, RooRealVar *ourVar, Int_t *offset);

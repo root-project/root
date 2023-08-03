@@ -17,7 +17,9 @@
 #define ROO_REAL_BINDING
 
 #include "RooAbsFunc.h"
-#include "RooSpan.h"
+
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 #include <memory>
 

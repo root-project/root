@@ -2498,7 +2498,7 @@ void RooAbsData::SetNameTitle(const char *name, const char *title)
 /// Return sum of squared weights of this data.
 
 double RooAbsData::sumEntriesW2() const {
-  const RooSpan<const double> eventWeights = getWeightBatch(0, numEntries(), /*sumW2=*/true);
+  const std::span<const double> eventWeights = getWeightBatch(0, numEntries(), /*sumW2=*/true);
   if (eventWeights.empty()) {
     return numEntries() * weightSquared();
   }
