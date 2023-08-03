@@ -352,7 +352,7 @@ def create_coverage_xml(shell_log: str) -> str:
     result, shell_log = subprocess_with_log(f"""
         pwd
         cd '{WORKDIR}/build'                                    
-        gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r /tmp/workspace/src /tmp/workspace/build -o CoverageXML.xml
+        gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r ../src ../build -o CoverageXML.xml
     """, shell_log)
 
     if result != 0:
