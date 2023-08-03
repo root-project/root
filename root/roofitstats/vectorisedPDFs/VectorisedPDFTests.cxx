@@ -29,6 +29,9 @@
 #include "Math/Util.h"
 #include "RooHelpers.h"
 
+#include "../src/RooFit/BatchModeDataHelpers.h"
+#include "../src/RooFitDriver.h"
+
 #include <numeric>
 #include <ctime>
 #include <chrono>
@@ -39,6 +42,22 @@
 void __itt_resume() {}
 void __itt_pause() {}
 #endif
+
+std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
+{
+   std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, *data.get());
+   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
+   std::stack<std::vector<double>> vectorBuffers;
+   auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
+                                                               /*takeGlobalObservablesFromData=*/true, vectorBuffers);
+   for (auto const &item : dataSpans) {
+      driver.setInput(item.first->GetName(), item.second, false);
+   }
+   std::vector<double> out;
+   std::span<const double> results = driver.run();
+   out.assign(results.begin(), results.end());
+   return out;
+}
 
 class MyTimer {
   public:
@@ -202,7 +221,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   std::unique_ptr<RooArgSet> parameters{_pdf->getParameters(*_dataUniform)};
 
   auto callBatchFunc = [this](const RooAbsPdf& pdf) {
-      return pdf.getValues(*_dataUniform);
+      return getValues(pdf, *_dataUniform);
   };
 
   auto callScalarFunc = [compareLogs](const RooAbsPdf& pdf, const RooArgSet* theNormSet) {
@@ -216,7 +235,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
     normSet = &_variables;
   }
 
-  std::vector<RooSpan<const double>> batchResults;
+  std::vector<std::span<const double>> batchResults;
   std::vector<std::vector<double>> resultData;
   MyTimer batchTimer("Evaluate batch" + timerSuffix + _name);
   __itt_resume();
@@ -233,7 +252,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
     std::cout << batchTimer;
 
   const auto totalSize = std::accumulate(batchResults.begin(),  batchResults.end(), 0,
-      [](std::size_t acc, const RooSpan<const double>& span){ return acc + span.size(); });
+      [](std::size_t acc, const std::span<const double>& span){ return acc + span.size(); });
   ASSERT_EQ(totalSize, _dataUniform->numEntries());
 
   for (auto& outputsBatch : batchResults) {
