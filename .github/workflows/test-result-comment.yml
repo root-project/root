@@ -63,7 +63,7 @@ jobs:
           files: "artifacts/**/*.xml"
 
       - name: View Contents of CoverageXML.xml
-        run: cat artifacts/Test Coverage fedora38-cov Debug/CoverageXML.xml
+        run: cat artifacts/'Test Coverage fedora38-cov Debug'/CoverageXML.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
