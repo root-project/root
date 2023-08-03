@@ -392,12 +392,12 @@ jobs:
           name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
           path: /tmp/workspace/build/TestResults.xml
       
-      - name: Upload coverage results
-        if:   ${{ matrix.image == 'fedora38-cov' && !cancelled() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: Test Coverage ${{ matrix.image }} ${{ matrix.config }}
-          path: /tmp/workspace/build/CoverageXML.xml
+      # - name: Upload coverage results
+      #   if:   ${{ matrix.image == 'fedora38-cov' && !cancelled() }}
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: Test Coverage ${{ matrix.image }} ${{ matrix.config }}
+      #     path: /tmp/workspace/build/CoverageXML.xml
       # - name: Setup tmate session
       #   if: failure() && runner.debug == '1'
       #   uses: mxschmitt/action-tmate@v3
@@ -406,17 +406,16 @@ jobs:
       #   # When debugging increase to a suitable value!
       #   timeout-minutes: ${{ github.event.pull_request && 40 || 20 }}
 
-      # - name: Upload coverage to Codecov
-      #   if: ${{ matrix.image == 'fedora38-cov' && !cancelled() }}
-      #   uses: codecov/codecov-action@v3
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     env_vars: OS,PYTHON
-      #     fail_ci_if_error: true
-      #     files: /tmp/workspace/CoverageXML.xml
-      #     flags: unittests
-      #     name: codecov-umbrella
-      #     verbose: true   
+      - name: Upload coverage to Codecov
+        if: ${{ matrix.image == 'fedora38-cov' && !cancelled() }}
+        uses: codecov/codecov-action@v3
+        with:
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true
+          files: /tmp/workspace/buid/CoverageXML.xml
+          flags: unittests
+          name: codecov-umbrella
+          verbose: true   
   
   event_file:
     #if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'

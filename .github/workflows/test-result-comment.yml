@@ -24,20 +24,20 @@ jobs:
       actions: read
 
     steps:
-      # - name: Download and Extract Artifacts
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #      mkdir -p artifacts && cd artifacts
+      - name: Download and Extract Artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+           mkdir -p artifacts && cd artifacts
 
-      #      artifacts_url=${{ github.event.workflow_run.artifacts_url }}
+           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
 
-      #      gh api --paginate "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
-      #      do
-      #        IFS=$'\t' read name url <<< "$artifact"
-      #        gh api $url > "$name.zip"
-      #        unzip -d "$name" "$name.zip"
-      #      done
+           gh api --paginate "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
+           do
+             IFS=$'\t' read name url <<< "$artifact"
+             gh api $url > "$name.zip"
+             unzip -d "$name" "$name.zip"
+           done
 
       # - name: Download and Extract Artifacts
       #   env:
@@ -55,27 +55,27 @@ jobs:
       #     done
 
 
-      - name: Download and Extract Artifacts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p artifacts && cd artifacts
+      # - name: Download and Extract Artifacts
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     mkdir -p artifacts && cd artifacts
 
-          artifacts_url=${{ github.event.workflow_run.artifacts_url }}
+      #     artifacts_url=${{ github.event.workflow_run.artifacts_url }}
 
-          # Filter artifacts based on the convention "Test Coverage" and "Test Results"
-          artifact_names=$(gh api --paginate "$artifacts_url" -q '.artifacts[] | select(.name | startswith("Test Coverage") or startswith("Test Results")) | .name')
+      #     # Filter artifacts based on the convention "Test Coverage" and "Test Results"
+      #     artifact_names=$(gh api --paginate "$artifacts_url" -q '.artifacts[] | select(.name | startswith("Test Coverage") or startswith("Test Results")) | .name')
 
-          for name in $artifact_names; do
-            gh api --paginate "$artifacts_url" -q ".artifacts[] | select(.name == \"$name\") | [.archive_download_url]" | xargs -I {} gh api {} > "$name.zip"
+      #     for name in $artifact_names; do
+      #       gh api --paginate "$artifacts_url" -q ".artifacts[] | select(.name == \"$name\") | [.archive_download_url]" | xargs -I {} gh api {} > "$name.zip"
 
-            # Check if the downloaded file is a valid zip archive
-            if unzip -t "$name.zip" >/dev/null; then
-              unzip -d "$name" "$name.zip"
-            else
-              echo "Error: $name.zip is not a valid ZIP archive or doesn't exist."
-            fi
-          done
+      #       # Check if the downloaded file is a valid zip archive
+      #       if unzip -t "$name.zip" >/dev/null; then
+      #         unzip -d "$name" "$name.zip"
+      #       else
+      #         echo "Error: $name.zip is not a valid ZIP archive or doesn't exist."
+      #       fi
+      #     done
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -85,15 +85,12 @@ jobs:
           event_name: ${{ github.event.workflow_run.event }}
           files: "artifacts/**/*.xml"
 
-      - name: View Contents of CoverageXML.xml
-        run: cat artifacts/'Test Coverage fedora38-cov Debug'/CoverageXML.xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          env_vars: OS,PYTHON
-          fail_ci_if_error: true
-          files: artifacts/*/CoverageXML.xml
-          flags: unittests
-          name: codecov-umbrella
-          verbose: true   
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     env_vars: OS,PYTHON
+      #     fail_ci_if_error: true
+      #     files: artifacts/*/CoverageXML.xml
+      #     flags: unittests
+      #     name: codecov-umbrella
+      #     verbose: true   
