@@ -24,6 +24,18 @@
 #include <string>
 #include <unordered_set>
 
+unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
+{
+   // TTree/TChain as input
+   const auto tree = fLoopManager->GetTree();
+
+   if (tree) {
+      const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
+      return files.size();
+   }
+   return 0;
+}
+
 std::string ROOT::RDF::RInterfaceBase::DescribeDataset() const
 {
    // TTree/TChain as input
