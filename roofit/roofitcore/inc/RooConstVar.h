@@ -19,9 +19,6 @@
 #include "RooAbsReal.h"
 
 class RooArgSet ;
-namespace RooBatchCompute {
-  struct RunContext;
-}
 
 class RooConstVar final : public RooAbsReal {
 public:
@@ -36,8 +33,6 @@ public:
   double getValV(const RooArgSet*) const override {
     return _value;
   }
-
-  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet*) const override;
 
   void writeToStream(std::ostream& os, bool compact) const override ;
 

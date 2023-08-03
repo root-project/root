@@ -8,6 +8,9 @@
 #include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
+#include <RooFit/Detail/NormalizationHelpers.h>
+
+#include "../src/RooFitDriver.h"
 
 #include <gtest/gtest.h>
 #include <array>
@@ -67,7 +70,10 @@ TEST(ParamHistFunc, ValidateND)
    }
 
    // Get the results in BatchMode using the dataset
-   auto resultsBatch = paramHistFunc.getValues(data);
+   std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(paramHistFunc, *data.get());
+   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
+   driver.setData(data, "");
+   auto resultsBatch = driver.getValues();
 
    // Validate the results
    for (std::size_t i = 0; i < nEntries; ++i) {

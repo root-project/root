@@ -36,9 +36,6 @@ class RooMinimizer ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
 
-namespace RooBatchCompute {
-struct RunContext;
-}
 
 class RooAbsPdf : public RooAbsReal {
 public:

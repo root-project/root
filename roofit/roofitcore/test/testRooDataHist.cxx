@@ -12,6 +12,9 @@
 #include "RooAbsArg.h"
 #include "RooDataSet.h"
 #include "RooRandom.h"
+#include "RooFit/Detail/NormalizationHelpers.h"
+
+#include "../src/RooFitDriver.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -738,7 +741,10 @@ TEST_P(WeightsTest, VectorizedWeights)
    }
    x.setVal(0.0);
 
-   auto weightsGetValues = absReal->getValues(data);
+   std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*absReal, *data.get());
+   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
+   driver.setData(data, "");
+   auto weightsGetValues = driver.getValues();
 
    for (std::size_t i = 0; i < nVals; ++i) {
       EXPECT_NEAR(weightsGetVal[i], weightsGetValues[i], 1e-6);
