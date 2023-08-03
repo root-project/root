@@ -210,6 +210,7 @@ public:
    ColumnNames_t GetDefinedColumnNames();
    unsigned int GetNSlots() const;
    unsigned int GetNRuns() const;
+   unsigned int GetNFiles();
 };
 } // namespace RDF
 } // namespace ROOT
