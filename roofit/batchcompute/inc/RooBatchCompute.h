@@ -43,8 +43,6 @@
  */
 namespace RooBatchCompute {
 
-struct RunContext;
-
 typedef std::vector<RooSpan<const double>> VarVector;
 typedef std::vector<double> ArgVector;
 typedef double *__restrict RestrictArr;

@@ -12,6 +12,7 @@
 #include <RooFitHS3/HistFactoryJSONTool.h>
 
 #include <RooFit/Common.h>
+#include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooDataHist.h>
 #include <RooWorkspace.h>
 #include <RooArgSet.h>
@@ -21,6 +22,8 @@
 #include <RooHelpers.h>
 #include <RooFitResult.h>
 #include <RooPlot.h>
+
+#include "../src/RooFitDriver.h"
 
 #include <TROOT.h>
 #include <TFile.h>
@@ -38,6 +41,14 @@ namespace {
 
 // If the JSON files should be written out for debugging purpose.
 const bool writeJsonFiles = false;
+
+std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
+{
+   std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, *data.get());
+   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
+   driver.setData(data, "");
+   return driver.getValues();
+}
 
 } // namespace
 
@@ -482,7 +493,7 @@ TEST_P(HFFixture, BatchEvaluation)
    // Test evaluating the model:
    RooDataHist dataHist{"dataHist", "dataHist", *obs};
 
-   std::vector<double> normResults = channelPdf->getValues(dataHist);
+   std::vector<double> normResults = getValues(*channelPdf, dataHist);
 
    for (unsigned int i = 0; i < 2; ++i) {
       obs->setBin(i);
@@ -499,7 +510,7 @@ TEST_P(HFFixture, BatchEvaluation)
 
       // Test syst up:
       var->setVal(1.);
-      std::vector<double> normResultsSyst = channelPdf->getValues(dataHist);
+      std::vector<double> normResultsSyst = getValues(*channelPdf, dataHist);
       for (unsigned int i = 0; i < 2; ++i) {
          EXPECT_NEAR(normResultsSyst[i], _targetSysUp[i] / obs->getBinWidth(i) / (_targetSysUp[0] + _targetSysUp[1]),
                      1.E-6);
@@ -507,7 +518,7 @@ TEST_P(HFFixture, BatchEvaluation)
 
       // Test syst down:
       var->setVal(-1.);
-      normResultsSyst = channelPdf->getValues(dataHist);
+      normResultsSyst = getValues(*channelPdf, dataHist);
       for (unsigned int i = 0; i < 2; ++i) {
          obs->setBin(i);
          EXPECT_NEAR(normResultsSyst[i], _targetSysDo[i] / obs->getBinWidth(i) / (_targetSysDo[0] + _targetSysDo[1]),

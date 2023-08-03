@@ -74,7 +74,6 @@
 #include "RooVectorDataStore.h"
 #include "RooCachedReal.h"
 #include "RooHelpers.h"
-#include "RunContext.h"
 #include "TreeReadBuffer.h"
 #include "ValueChecking.h"
 
@@ -292,51 +291,6 @@ double RooAbsReal::getValV(const RooArgSet* nset) const
   return hideOffset() ? _value + offset() : _value;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute batch of values for input data stored in `evalData`.
-///
-/// This is a faster, multi-value version of getVal(). It calls computeBatch() to trigger computations, and
-/// finalises those (e.g. error checking or automatic normalisation) before returning a span with the results.
-/// This span will also be stored in `evalData`, so subsquent calls of getValues() will return immediately.
-///
-/// If `evalData` is empty, a single value will be returned, which is the result of evaluating the current value
-/// of each object that's serving values to us. If `evalData` contains a batch of values for one or more of the
-/// objects serving values to us, a batch of values for each entry stored in `evalData` is returned. To fill a
-/// RunContext with values from a dataset, use RooAbsData::getBatches().
-///
-/// \param[in] evalData  Object holding spans of input data. The results are also stored here.
-/// \param[in] normSet   Use these variables for normalisation (relevant for PDFs), and pass this normalisation
-/// on to object serving values to us.
-/// \return RooSpan pointing to the computation results. The memory this span points to is owned by `evalData`.
-RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  auto item = evalData.spans.find(this);
-  if (item != evalData.spans.end()) {
-    return item->second;
-  }
-
-  std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans;
-  for (auto const &evalDataItem : evalData.spans) {
-    dataSpans[evalDataItem.first] = evalDataItem.second;
-  }
-
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, normSet ? *normSet : RooArgSet{});
-  ROOT::Experimental::RooFitDriver driver(*clone);
-  driver.setData(dataSpans);
-  auto& results = evalData.ownedMemory[this];
-  results = driver.getValues(); // the compiler should use the move assignment here
-  evalData.spans[this] = results;
-  return results;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::vector<double> RooAbsReal::getValues(RooAbsData const& data) const {
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *data.get());
-  ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
-  driver.setData(data, "");
-  return driver.getValues();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4705,78 +4659,6 @@ double RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
   }
 
   return ret;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Walk through expression tree headed by the `this` object, and check a batch computation.
-///
-/// Check if the results in `evalData` for event `evtNo` are identical to the current value of the nodes.
-/// If a difference is found, an exception is thrown, and propagates up the expression tree. The tree is formatted
-/// to see where the computation error happened.
-/// @param evalData Data with results of batch computation. This is checked against the current value of the expression tree.
-/// @param evtNo    Event from `evalData` to check for.
-/// @param normSet  Optional normalisation set that was used in computation.
-/// @param relAccuracy Accuracy required for passing the check.
-void RooAbsReal::checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
-  for (const auto server : _serverList) {
-    try {
-      auto realServer = dynamic_cast<RooAbsReal*>(server);
-      if (realServer)
-        realServer->checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
-    } catch (CachingError& error) {
-      throw CachingError(std::move(error),
-          FormatPdfTree() << *this);
-    }
-  }
-
-  const auto item = evalData.spans.find(this);
-  if (item == evalData.spans.end())
-    return;
-
-  auto batch = item->second;
-  const double value = getVal(normSet);
-  const double batchVal = batch.size() == 1 ? batch[0] : batch[evtNo];
-  const double relDiff = value != 0. ? (value - batchVal)/value : value - batchVal;
-
-  if (std::abs(relDiff) > relAccuracy && std::abs(value) > 1.E-300) {
-    FormatPdfTree formatter;
-    formatter << "--> (Batch computation wrong:)\n";
-    printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
-    formatter << "\n batch=" << batch.data() << " size=" << batch.size() << std::setprecision(17)
-    << "\n batch[" << std::setw(7) << evtNo-1 << "]=     " << (evtNo > 0 && evtNo - 1 < batch.size() ? std::to_string(batch[evtNo-1]) : "---")
-    << "\n batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
-    << "\n expected ('value'): " << value
-    << "\n eval(unnorm.)     : " << evaluate()
-    << "\n delta         " <<                     " =     " << value - batchVal
-    << "\n rel delta     " <<                     " =     " << relDiff
-    << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (batch.size() > evtNo+1 ? std::to_string(batch[evtNo+1]) : "---");
-
-
-
-    formatter << "\nServers: ";
-    for (const auto server : _serverList) {
-      formatter << "\n - ";
-      server->printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress | kValue, kInline);
-      formatter << std::setprecision(17);
-
-      auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
-      if (serverAsReal) {
-        auto serverBatch = evalData.spans.count(serverAsReal) != 0 ? evalData.spans.find(serverAsReal)->second : RooSpan<const double>();
-        if (serverBatch.size() > evtNo) {
-          formatter << "\n   _batch[" << evtNo-1 << "]=" << (serverBatch.size() > evtNo-1 ? std::to_string(serverBatch[evtNo-1]) : "---")
-                    << "\n   _batch[" << evtNo << "]=" << serverBatch[evtNo]
-                    << "\n   _batch[" << evtNo+1 << "]=" << (serverBatch.size() > evtNo+1 ? std::to_string(serverBatch[evtNo+1]) : "---");
-        }
-        else {
-          formatter << std::setprecision(17)
-          << "\n   getVal()=" << serverAsReal->getVal(normSet);
-        }
-      }
-    }
-
-    throw CachingError(formatter);
-  }
 }
 
 

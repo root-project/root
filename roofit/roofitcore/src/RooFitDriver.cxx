@@ -39,7 +39,11 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include "RooFit/BatchModeHelpers.h"
 #include <RooSimultaneous.h>
 
-#include <TList.h>
+#include "RooFit/Detail/Buffers.h"
+
+#ifdef R__HAS_CUDA
+#include <RooFit/Detail/CudaInterface.h>
+#endif
 
 #include <iomanip>
 #include <numeric>
@@ -132,7 +136,9 @@ struct NodeInfo {
 /// \param[in] batchMode The computation mode, accepted values are
 ///            `RooBatchCompute::Cpu` and `RooBatchCompute::Cuda`.
 RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption batchMode)
-   : _topNode{const_cast<RooAbsReal &>(absReal)}, _batchMode{batchMode}
+   : _bufferManager{std::make_unique<Detail::BufferManager>()},
+     _topNode{const_cast<RooAbsReal &>(absReal)},
+     _batchMode{batchMode}
 {
 #ifndef R__HAS_CUDA
    if (_batchMode == RooFit::BatchModeOption::Cuda) {
@@ -349,10 +355,10 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 #endif
       if (!info.buffer) {
 #ifdef R__HAS_CUDA
-         info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream.get())
-                                                : _bufferManager.makeCpuBuffer(nOut);
+         info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream.get())
+                                                : _bufferManager->makeCpuBuffer(nOut);
 #else
-         info.buffer = _bufferManager.makeCpuBuffer(nOut);
+         info.buffer = _bufferManager->makeCpuBuffer(nOut);
 #endif
       }
       buffer = info.buffer->cpuWritePtr();
@@ -525,8 +531,8 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
       buffer = &info.scalarBuffer;
       _dataMapCPU.set(node, {buffer, nOut});
    } else {
-      info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream.get())
-                                             : _bufferManager.makeGpuBuffer(nOut);
+      info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream.get())
+                                             : _bufferManager->makeGpuBuffer(nOut);
       buffer = info.buffer->gpuWritePtr();
    }
    _dataMapCUDA.set(node, {buffer, nOut});

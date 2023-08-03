@@ -137,9 +137,6 @@ public:
 
   virtual double getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
-  virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
-  std::vector<double> getValues(RooAbsData const& data) const;
-
   double getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = {}) const;
 
   bool operator==(double value) const ;
@@ -539,9 +536,6 @@ protected:
 
 
 private:
-  //---------- Interface to access batch data ---------------------------
-  //
-  void checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
 
   /// Debug version of getVal(), which is slow and does error checking.
   double _DEBUG_getVal(const RooArgSet* normalisationSet) const;
@@ -569,16 +563,6 @@ private:
    static bool _hideOffset;       ///< Offset hiding flag
 
    ClassDefOverride(RooAbsReal,3); // Abstract real-valued variable
-};
-
-
-/// Helper class to access a batch-related part of RooAbsReal's interface, which should not leak to the outside world.
-class BatchInterfaceAccessor {
-  public:
-    static void checkBatchComputation(const RooAbsReal& theReal, const RooBatchCompute::RunContext& evalData, std::size_t evtNo,
-        const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) {
-      theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
-    }
 };
 
 

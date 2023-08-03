@@ -32,7 +32,6 @@ contents of all bins.
 #include "RooNumIntConfig.h"
 #include "RooNumIntFactory.h"
 #include "RooMsgService.h"
-#include "RunContext.h"
 #include "RooRealBinding.h"
 
 #include "TClass.h"
@@ -88,20 +87,6 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
   _xmin.resize(_function->getDimension()) ;
   _xmax.resize(_function->getDimension()) ;
 
-  auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
-
-  // We could use BatchMode for RooRealBindings as they implement getValues().
-  // However, this is not efficient right now, because every time getValue() is
-  // called, a new RooFitDriver is created. Needs to be refactored.
-
-  //const bool useBatchMode = realBinding;
-  const bool useBatchMode = false;
-
-  if (useBatchMode) {
-    _evalData = std::make_unique<RooBatchCompute::RunContext>();
-    _evalDataOrig = std::make_unique<RooBatchCompute::RunContext>();
-  }
-
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     _xmin[i]= _function->getMinLimit(i);
     _xmax[i]= _function->getMaxLimit(i);
@@ -118,13 +103,6 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
     }
     _binb.emplace_back(tmp->begin(), tmp->end());
 
-    if (useBatchMode) {
-      const std::vector<double>& binb = _binb.back();
-      RooSpan<double> binCentres = _evalDataOrig->makeBatch(realBinding->observable(i), binb.size() - 1);
-      for (unsigned int ibin = 0; ibin < binb.size() - 1; ++ibin) {
-        binCentres[ibin] = (binb[ibin + 1] + binb[ibin]) / 2.;
-      }
-    }
   }
   checkLimits();
 
@@ -205,28 +183,12 @@ double RooBinIntegrator::integral(const double *)
   if (_function->getDimension() == 1) {
     const std::vector<double>& binb = _binb[0];
 
-    if (_evalData) {
-      // Real bindings support batch evaluations. Can fast track now.
-      auto realBinding = static_cast<const RooRealBinding*>(integrand());
-
-      // Reset computation results to only contain known bin centres, and keep all memory intact:
-      _evalData->spans = _evalDataOrig->spans;
-      auto results = realBinding->getValuesOfBoundFunction(*_evalData);
-      assert(results.size() == binb.size() - 1);
-
-      for (unsigned int ibin = 0; ibin < binb.size() - 1; ++ibin) {
-        const double width = binb[ibin + 1] - binb[ibin];
-        sum += results[ibin] * width;
-      }
-    } else {
-      // Need to use single-value interface
-      for (unsigned int ibin=0; ibin < binb.size() - 1; ++ibin) {
-        const double xhi = binb[ibin + 1];
-        const double xlo = binb[ibin];
-        const double xcenter = (xhi+xlo)/2.;
-        const double binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
-        sum += binInt ;
-      }
+    for (unsigned int ibin=0; ibin < binb.size() - 1; ++ibin) {
+      const double xhi = binb[ibin + 1];
+      const double xlo = binb[ibin];
+      const double xcenter = (xhi+xlo)/2.;
+      const double binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
+      sum += binInt ;
     }
   } else if (_function->getDimension() == 2) {
     const std::vector<double>& binbx = _binb[0];

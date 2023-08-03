@@ -173,7 +173,6 @@ called for each data event.
 #include "RooFit/BatchModeHelpers.h"
 #include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/TestStatistics/RooRealL.h"
-#include "RunContext.h"
 #include "ConstraintHelpers.h"
 #include "RooFitDriver.h"
 #include "RooSimultaneous.h"

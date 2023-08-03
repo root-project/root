@@ -19,11 +19,8 @@
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooRealProxy.h>
-#include "RooFit/Detail/Buffers.h"
 
-#ifdef R__HAS_CUDA
-#include <RooFit/Detail/CudaInterface.h>
-#endif
+#include <RConfig.h>
 
 #include <chrono>
 #include <memory>
@@ -33,10 +30,28 @@ class RooAbsArg;
 class RooAbsCategory;
 class RooSimultaneous;
 
+#ifdef R__HAS_CUDA
+namespace RooFit {
+namespace Detail {
+namespace CudaInterface {
+class DeviceMemory;
+template <class Data_t, class Memory_t>
+class Array;
+template <class T>
+using DeviceArray = Array<T, DeviceMemory>;
+} // CudaInterface
+} // namespace Detail
+} // namespace RooFit
+#endif
+
 namespace ROOT {
 namespace Experimental {
 
 struct NodeInfo;
+
+namespace Detail {
+class BufferManager;
+}
 
 class RooFitDriver {
 public:
@@ -82,7 +97,7 @@ private:
    ///////////////////////////
    // Private member variables
 
-   Detail::BufferManager _bufferManager; // The object managing the different buffers for the intermediate results
+   std::unique_ptr<Detail::BufferManager> _bufferManager;
 
    RooAbsReal &_topNode;
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;

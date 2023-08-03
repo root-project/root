@@ -40,7 +40,6 @@ In extended mode, a
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
 #include "RooNaNPacker.h"
-#include "RunContext.h"
 #include "RooDataHist.h"
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
