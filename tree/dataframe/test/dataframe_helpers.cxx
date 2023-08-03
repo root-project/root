@@ -682,3 +682,60 @@ TEST(RunGraphs, AlreadyRun)
    ROOT_EXPECT_WARNING(ROOT::RDF::RunGraphs({r1, r2, r3, r4}), "RunGraphs",
                        "Got 4 handles from which 2 link to results which are already ready.");
 }
+
+TEST(RDFHelpers, ProgressHelper_Existence_ST)
+{
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "f1.root");
+   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "f2.root");
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"f1.root", "f2.root"});
+   ROOT::RDF::Experimental::AddProgressbar(d);
+   d.Count().GetValue();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_FALSE(strCout.str().empty());
+}
+
+// The code below is a unit test for a function called `ProgressHelper_Existence_MT` in the `RDFHelpers` class.
+
+#ifdef R__USE_IMT
+
+TEST(RDFHelpers, ProgressHelper_Existence_MT)
+{
+   // Redirect cout.
+   ROOT::EnableImplicitMT();
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "f1.root");
+   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "f2.root");
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"f1.root", "f2.root"});
+   ROOT::RDF::Experimental::AddProgressbar(d);
+   d.Count().GetValue();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_FALSE(strCout.str().empty());
+}
+
+TEST(RDFHelpers, ProgressHelper_existence_singleTTreeInput)
+{
+   // Redirect cout.
+   ROOT::EnableImplicitMT();
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "f1.root");
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"f1.root"});
+   ROOT::RDF::Experimental::AddProgressbar(d);
+   d.Count().GetValue();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_FALSE(strCout.str().empty());
+}
+#endif // R__USE_IMT
