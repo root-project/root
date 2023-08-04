@@ -3139,7 +3139,7 @@ inline RVec<std::size_t> Range(std::size_t begin, std::size_t end)
 /// An empty RVec is returned if begin >= end and stride > 0 or if
 /// begin < end and stride < 0. Allows for negative begin, end, and/or
 /// stride
-RVec<int> Range(int begin, int end, int stride)
+inline RVec<int> Range(int begin, int end, int stride)
 {
     if (!stride)
     {
