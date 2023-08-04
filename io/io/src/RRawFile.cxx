@@ -13,9 +13,6 @@
 #include <ROOT/RRawFile.hxx>
 
 
-#include <ROOT/RRawFileTest.hxx>
-
-
 #ifdef _WIN32
 #include <ROOT/RRawFileWin.hxx>
 #else
@@ -98,9 +95,6 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 #else
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
-   }
-   if (transport == "test") {
-      return std::unique_ptr<RRawFile>(new RRawFileTest(url, options));
    }
    if (transport == "http" || transport == "https" ||
        transport == "root" || transport == "roots" ) {
@@ -248,10 +242,16 @@ void ROOT::Internal::RRawFile::PossiblyTriggerShortRead(void* buffer, size_t tot
       unsigned char* original_buffer = new unsigned char[total_bytes];
       std::memcpy(original_buffer, byte_ptr, total_bytes);
 
-      // for all bits in the buffer, make them zero
-      for (size_t byte_idx = 0; byte_idx < total_bytes; ++byte_idx) {
+      size_t start_short_read = (total_bytes/4)*3;
+
+      for (size_t byte_idx = start_short_read; byte_idx < total_bytes; ++byte_idx) {
          byte_ptr[byte_idx] = 0x00; // Set the byte to 0
       }
+
+      // for all bits in the buffer, make them zero
+      // for (size_t byte_idx = 0; byte_idx < total_bytes; ++byte_idx) {
+      //    byte_ptr[byte_idx] = 0x00; // Set the byte to 0
+      // }
 
       // compare the modified buffer with the original buffer
       if (std::memcmp(original_buffer, byte_ptr, total_bytes) == 0) {
