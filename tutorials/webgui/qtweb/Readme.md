@@ -24,7 +24,7 @@ Compile ROOT with qt5web support in Release mode:
     cd C:\
     mkdir root
     cd C:\root
-    cmake -G"Visual Studio 16 2019" -A Win32 -Thost=x64 c:\git\root -Droot7=ON -DCMAKE_CXX_STANDARD=14 -Dwebgui=ON -Dqt5web=ON
+    cmake -G"Visual Studio 16 2019" -A Win32 -Thost=x64 c:\git\root -Droot7=ON -DCMAKE_CXX_STANDARD=17 -Dwebgui=ON -Dqt5web=ON
     cmake --build . --config Release -- /maxcpucount
 
 Configure ROOT, create build directory and build qt5web tutorial:
