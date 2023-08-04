@@ -50,6 +50,13 @@ namespace ROOT {
          kGraph
       };
 
+      enum EChisquareType {
+         kNeyman = 0,
+         kPLikeRatio,
+         kPearson
+      };
+
+
 
       //#ifndef __CINT__  // does not link on Windows (why ??)
 
@@ -166,7 +173,7 @@ namespace ROOT {
       /**
          compute the chi2 value for an histogram given a function  (see TH1::Chisquare for the documentation)
       */
-      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, bool usePL = false);
+      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, EChisquareType type);
 
       /**
          compute the chi2 value for a graph given a function (see TGraph::Chisquare)

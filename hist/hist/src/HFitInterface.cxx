@@ -236,7 +236,10 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
                if (hdim == 2)  dv.Add(  x,  x[1],  yaxis->GetBinWidth(biny) / error  );
                if (hdim == 3)  dv.Add(  x,  x[2],  zaxis->GetBinWidth(binz) / error  );
             } else {
-               dv.Add(   x,  value, error  );
+               if (fitOpt.fErrors1)
+                  dv.Add(   x,  value );
+               else
+                  dv.Add(   x,  value, error  );
                if (useBinEdges) {
                   dv.AddBinUpEdge( s );
                }
