@@ -44,10 +44,10 @@
 #  define R__NULLPTR
 # endif
 #else
-# if defined(__cplusplus) && (__cplusplus < 201402L)
-#  error "ROOT requires support for C++14 or higher."
+#if defined(__cplusplus) && (__cplusplus < 201703L)
+#error "ROOT requires support for C++17 or higher."
 #  if defined(__GNUC__) || defined(__clang__)
-#   error "Pass `-std=c++14` as compiler argument."
+#error "Pass `-std=c++17` as compiler argument."
 #  endif
 # endif
 #endif
@@ -380,7 +380,7 @@
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
 #      define R__GLOBALSTL       /* STL in global name space */
-#      error "ROOT requires proper support for C++11 or higher"
+#error "ROOT requires proper support for C++17 or higher"
 #   else
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__TMPLTSTREAM     /* std::iostream implemented with templates */
