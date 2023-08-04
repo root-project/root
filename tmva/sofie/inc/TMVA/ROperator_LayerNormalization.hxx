@@ -327,7 +327,7 @@ public:
       std::stringstream out;
 
       out << "\n" << SP*3 << "// Operator " << OpName << "\n";
-      out << SP*3 << "std::vector<size_t> " << OpName << "_InputShape ({";
+      out << SP*3 << "std::array<size_t, " << fSize << "> " << OpName << "_InputShape ({";
       for (size_t i=0; i < fSize; i++) {
          out << fShapeX[i];
          if (i + 1 < fSize) {

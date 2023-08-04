@@ -209,12 +209,11 @@
 
 #include "Concat_0DGPU_FromONNX.hxx"
 
-/*#include "LayerNormalization2dGPU_FromONNX.hxx"
+#include "LayerNormalization2dGPU_FromONNX.hxx"
 #include "input_models/references/LayerNormalization2d.hxx"
 
 #include "LayerNormalization4dGPU_FromONNX.hxx"
 #include "input_models/references/LayerNormalization4d.hxx"
-*/
 
 #include "ExpandSameSizeGPU_FromONNX.hxx"
 #include "input_models/references/ExpandSameSize.ref.hxx"
@@ -2110,14 +2109,14 @@ TEST(ONNX, Concat0D) {
    }
 }
 
-/*TEST(ONNX, LayerNormalization2d) {
+TEST(ONNX, LayerNormalization2d) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
    std::vector<float> x(12);
    std::iota(x.begin(), x.end(), 0.);
    TMVA_SOFIE_LayerNormalization2d::Session s("LayerNormalization2dGPU_FromONNX.dat");
-   std::vector<float> output(s.infer(x.data()));
+   std::vector<float> output(s.infer(x));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(LayerNormalization2d_ExpectedOutput::output) / sizeof(float));
@@ -2137,7 +2136,7 @@ TEST(ONNX, LayerNormalization4d) {
    std::vector<float> x(120);
    std::iota(x.begin(), x.end(), 0.);
    TMVA_SOFIE_LayerNormalization4d::Session s("LayerNormalization4dGPU_FromONNX.dat");
-   std::vector<float> output(s.infer(x.data()));
+   std::vector<float> output(s.infer(x));
 
    // Checking the output size
    EXPECT_EQ(output.size(), sizeof(LayerNormalization4d_ExpectedOutput::output) / sizeof(float));
@@ -2149,7 +2148,7 @@ TEST(ONNX, LayerNormalization4d) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-*/
+
 
 TEST(ONNX, ExpandSameSize) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
