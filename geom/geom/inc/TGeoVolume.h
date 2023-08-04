@@ -55,6 +55,7 @@ protected:
    Int_t fNumber;                 //  volume serial number in the list of volumes
    Int_t fNtotal;                 // total number of physical nodes
    Int_t fRefCount;               // reference counter
+   Char_t fTransparency;          // transparency setting
    TGeoExtension *fUserExtension; //! Transient user-defined extension to volumes
    TGeoExtension *fFWExtension;   //! Transient framework-defined extension to volumes
 
@@ -185,7 +186,7 @@ public:
    Bool_t GetOptimalVoxels() const;
    Option_t *GetOption() const override { return fOption.Data(); }
    const char *GetPointerName() const;
-   Char_t GetTransparency() const { return !fMedium ? 0 : fMedium->GetMaterial()->GetTransparency(); }
+   Char_t GetTransparency() const;
    TGeoShape *GetShape() const { return fShape; }
    void GrabFocus(); // *MENU*
    void Gsord(Int_t /*iaxis*/) {}
@@ -225,11 +226,7 @@ public:
    }
    void SetOverlappingCandidate(Bool_t flag) { TObject::SetBit(kVolumeOC, flag); }
    void SetShape(const TGeoShape *shape);
-   void SetTransparency(Char_t transparency = 0)
-   {
-      if (fMedium)
-         fMedium->GetMaterial()->SetTransparency(transparency);
-   } // *MENU*
+   void SetTransparency(Char_t transparency = 0); // *MENU*
    void SetField(TObject *field) { fField = field; }
    void SetOption(const char *option);
    void SetAttVisibility(Bool_t vis) { TGeoAtt::SetVisibility(vis); }
@@ -255,7 +252,7 @@ public:
    Double_t Weight(Double_t precision = 0.01, Option_t *option = "va"); // *MENU*
    Double_t WeightA() const;
 
-   ClassDefOverride(TGeoVolume, 6) // geometry volume descriptor
+   ClassDefOverride(TGeoVolume, 7)              // geometry volume descriptor
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -366,6 +363,18 @@ inline Int_t TGeoVolume::GetNdaughters() const
    if (!fNodes)
       return 0;
    return (fNodes->GetEntriesFast());
+}
+
+inline Char_t TGeoVolume::GetTransparency() const
+{
+   // If the transparency is (-1), the old default handling is applied
+   if ( fTransparency >= 0 ) return fTransparency;
+   return !fMedium ? 0 : fMedium->GetMaterial()->GetTransparency();
+}
+
+inline void TGeoVolume::SetTransparency(Char_t transparency)
+{
+   fTransparency = transparency;
 }
 
 #endif
