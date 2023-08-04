@@ -251,7 +251,7 @@ TEST(ONNX, Linear16)
    // Preparing the standard all-ones input
    std::vector<float> input(1600);
    std::fill_n(input.begin(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_16::Session s("Linear_16_FromONNX.dat");
+   TMVA_SOFIE_Linear_16::Session s("Linear_16GPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -273,7 +273,7 @@ TEST(ONNX, Linear32)
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
    std::fill_n(input.begin(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_32::Session s("Linear_32_FromONNX.dat");
+   TMVA_SOFIE_Linear_32::Session s("Linear_32GPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -298,7 +298,7 @@ TEST(ONNX, Sub)
       std::vector<float> input2({
          0, 1
       });
-      TMVA_SOFIE_Sub::Session s("Sub_FromONNX.dat");
+      TMVA_SOFIE_Sub::Session s("SubGPU_FromONNX.dat");
 
       std::vector<float> output = s.infer(input1, input2);
 
@@ -324,7 +324,7 @@ TEST(ONNX, Add)
       std::vector<float> input2({
          0, 1
       });
-      TMVA_SOFIE_Add::Session s("Add_FromONNX.dat");
+      TMVA_SOFIE_Add::Session s("AddGPU_FromONNX.dat");
 
       std::vector<float> output = s.infer(input1, input2);
 
@@ -350,7 +350,7 @@ TEST(ONNX, Mul)
       std::vector<float> input2({
          0, 1
       });
-      TMVA_SOFIE_Mul::Session s("Mul_FromONNX.dat");
+      TMVA_SOFIE_Mul::Session s("MulGPU_FromONNX.dat");
 
       std::vector<float> output = s.infer(input1, input2);
 
@@ -376,7 +376,7 @@ TEST(ONNX, Div)
       std::vector<float> input2({
          2, 2
       });
-      TMVA_SOFIE_Div::Session s("Div_FromONNX.dat");
+      TMVA_SOFIE_Div::Session s("DivGPU_FromONNX.dat");
 
       std::vector<float> output = s.infer(input1, input2);
 
@@ -401,7 +401,7 @@ TEST(ONNX, Neg)
         -0.7077,  1.0645, -0.8607,  0.2085
       });
 
-      TMVA_SOFIE_Neg::Session s("Neg_FromONNX.dat");
+      TMVA_SOFIE_Neg::Session s("NegGPU_FromONNX.dat");
       std::vector<float> output = s.infer(input);
 
       // Checking output size
@@ -424,7 +424,7 @@ TEST(ONNX, Cast)
       1,2,3,4,5,6
    });
 
-   TMVA_SOFIE_Cast::Session s("Cast_FromONNX.dat");
+   TMVA_SOFIE_Cast::Session s("CastGPU_FromONNX.dat");
 
    auto output = s.infer(input);
 
@@ -446,7 +446,7 @@ TEST(ONNX, Linear64)
    // Preparing the standard all-ones input
    std::vector<float> input(6400);
    std::fill_n(input.begin(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_64::Session s("Linear_64_FromONNX.dat");
+   TMVA_SOFIE_Linear_64::Session s("Linear_64GPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -468,7 +468,7 @@ TEST(ONNX, LinearWithSelu)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.begin(), input.size(), 1.0f);
-   TMVA_SOFIE_LinearWithSelu::Session s("LinearWithSelu_FromONNX.dat");
+   TMVA_SOFIE_LinearWithSelu::Session s("LinearWithSeluGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -493,7 +493,7 @@ TEST(ONNX, Tanh)
       1.3493,  0.8132,  1.7156, -0.8637, -0.1971,  0.0411, -0.5662, -0.2516
    });
 
-   TMVA_SOFIE_Tanh::Session s("Tanh_FromONNX.dat");
+   TMVA_SOFIE_Tanh::Session s("TanhGPU_FromONNX.dat");
 
    std::vector<float> output = s.infer(input);
 
@@ -519,7 +519,7 @@ TEST(ONNX, LinearWithLeakyRelu)
       0.7057, -0.3749, -0.3310,  0.0986, -0.1370,  0.0832, -1.6465, -0.2793
    });
 
-   TMVA_SOFIE_LinearWithLeakyRelu::Session s("LinearWithLeakyRelu_FromONNX.dat");
+   TMVA_SOFIE_LinearWithLeakyRelu::Session s("LinearWithLeakyReluGPU_FromONNX.dat");
 
    std::vector<float> output = s.infer(input);
 
@@ -542,7 +542,7 @@ TEST(ONNX, LinearWithSigmoid)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.begin(), input.size(), 1.0f);
-   TMVA_SOFIE_LinearWithSigmoid::Session s("LinearWithSigmoid_FromONNX.dat");
+   TMVA_SOFIE_LinearWithSigmoid::Session s("LinearWithSigmoidGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -564,7 +564,7 @@ TEST(ONNX, LinearWithSigmoid)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithPadding::Session s("ConvWithPadding_FromONNX.dat");
+   TMVA_SOFIE_ConvWithPadding::Session s("ConvWithPaddingGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -586,7 +586,7 @@ TEST(ONNX, ConvWithoutPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithoutPadding::Session s("ConvWithoutPadding_FromONNX.dat");
+   TMVA_SOFIE_ConvWithoutPadding::Session s("ConvWithoutPaddingGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -608,7 +608,7 @@ TEST(ONNX, ConvWithAutopadSameLower)
    // Preparing the standard all-ones input
    std::vector<float> input(25);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithAutopadSameLower::Session s("ConvWithAutopadSameLower_FromONNX.dat");
+   TMVA_SOFIE_ConvWithAutopadSameLower::Session s("ConvWithAutopadSameLowerGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -630,7 +630,7 @@ TEST(ONNX, ConvWithStridesPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithStridesPadding::Session s("ConvWithStridesPadding_FromONNX.dat");
+   TMVA_SOFIE_ConvWithStridesPadding::Session s("ConvWithStridesPaddingGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -652,7 +652,7 @@ TEST(ONNX, ConvWithStridesNoPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithStridesNoPadding::Session s("ConvWithStridesNoPadding_FromONNX.dat");
+   TMVA_SOFIE_ConvWithStridesNoPadding::Session s("ConvWithStridesNoPaddingGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -675,7 +675,7 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    // Preparing the standard all-ones input
    std::vector<float> input(35);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvWithAsymmetricPadding::Session s("ConvWithAsymmetricPadding_FromONNX.dat");
+   TMVA_SOFIE_ConvWithAsymmetricPadding::Session s("ConvWithAsymmetricPaddingGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
 
    // Checking output size
@@ -706,7 +706,7 @@ TEST(ONNX, MaxPool1d){
          -0.1657,  0.0649, -1.6066,  0.4162, -1.1525, -0.8184,  1.1324,
           -1.1086,  0.1061,  1.0071});
 
-   TMVA_SOFIE_MaxPool1d::Session s("MaxPool1d_FromONNX.dat");
+   TMVA_SOFIE_MaxPool1d::Session s("MaxPool1dGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool1d_ExpectedOutput::output) / sizeof(float));
@@ -737,7 +737,7 @@ TEST(ONNX, MaxPool2d){
             0.8810,  0.8506,  0.4455
    });
 
-   TMVA_SOFIE_MaxPool2d::Session s("MaxPool2d_FromONNX.dat");
+   TMVA_SOFIE_MaxPool2d::Session s("MaxPool2dGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool2d_ExpectedOutput::output) / sizeof(float));
@@ -769,7 +769,7 @@ TEST(ONNX, MaxPool3d){
             0.3842,  0.2428,  1.7924
    });
 
-   TMVA_SOFIE_MaxPool3d::Session s("MaxPool3d_FromONNX.dat");
+   TMVA_SOFIE_MaxPool3d::Session s("MaxPool3dGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(MaxPool3d_ExpectedOutput::output) / sizeof(float));
@@ -800,7 +800,7 @@ TEST(ONNX, AvgPool){
             0.2385,  0.3783, -1.0500
    });
 
-   TMVA_SOFIE_AvgPool::Session s("AvgPool_FromONNX.dat");
+   TMVA_SOFIE_AvgPool::Session s("AvgPoolGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(AvgPool_ExpectedOutput::output) / sizeof(float));
@@ -826,7 +826,7 @@ TEST(ONNX, Pow){
       4, 5, 6
    });
 
-   TMVA_SOFIE_Pow::Session s("Pow_FromONNX.dat");
+   TMVA_SOFIE_Pow::Session s("PowGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input1,input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_ExpectedOutput::outputs) / sizeof(float));
@@ -851,7 +851,7 @@ TEST(ONNX, Pow_broadcast){
       2, 3, 4, 2, 3, 4
    });
 
-   TMVA_SOFIE_Pow_broadcast::Session s("Pow_broadcast_FromONNX.dat");
+   TMVA_SOFIE_Pow_broadcast::Session s("Pow_broadcastGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input1,input2);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_broadcast_ExpectedOutput::outputs) / sizeof(float));
@@ -875,7 +875,7 @@ TEST(ONNX, Pow_broadcast){
       5, 5, 4
    });
 
-   TMVA_SOFIE_ReduceMean::Session s("ReduceMean_FromONNX.dat");
+   TMVA_SOFIE_ReduceMean::Session s("ReduceMeanGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ReduceMean_ExpectedOutput::output) / sizeof(float));
@@ -898,7 +898,7 @@ TEST(ONNX, Pow_broadcast){
       5, 5, 4
    });
 
-   TMVA_SOFIE_ReduceProd::Session s("ReduceProd_FromONNX.dat");
+   TMVA_SOFIE_ReduceProd::Session s("ReduceProdGPU_FromONNX.dat");
    std::vector<float> output = s.infer(input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ReduceProd_ExpectedOutput::output) / sizeof(float));
@@ -923,7 +923,7 @@ TEST(ONNX, Max)
       std::vector<float> input2({
          3.0, 0.0, 4.0
       });
-      TMVA_SOFIE_Max::Session s("Max_FromONNX.dat");
+      TMVA_SOFIE_Max::Session s("MaxGPU_FromONNX.dat");
 
       std::vector<float> output = s.infer(input1,input2);
 
@@ -945,7 +945,7 @@ TEST(ONNX, MaxMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_MaxMultidirectionalBroadcast::Session s("MaxMultidirectionalBroadcast_FromONNX.dat");
+   TMVA_SOFIE_MaxMultidirectionalBroadcast::Session s("MaxMultidirectionalBroadcastGPU_FromONNX.dat");
 
    std::vector<float> output = s.infer(A, B, c.data());
 
@@ -965,7 +965,7 @@ TEST(ONNX, MinMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_MinMultidirectionalBroadcast::Session s("MinMultidirectionalBroadcast_FromONNX.dat");
+   TMVA_SOFIE_MinMultidirectionalBroadcast::Session s("MinMultidirectionalBroadcastGPU_FromONNX.dat");
 
    std::vector<float> output = s.infer(A, B, c.data());
 
@@ -985,7 +985,7 @@ TEST(ONNX, MeanMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_MeanMultidirectionalBroadcast::Session s("MeanMultidirectionalBroadcast_FromONNX.dat");
+   TMVA_SOFIE_MeanMultidirectionalBroadcast::Session s("MeanMultidirectionalBroadcastGPU_FromONNX.dat");
 
    std::vector<float> output = s.infer(A, B, c.data());
 
@@ -1005,7 +1005,7 @@ TEST(ONNX, SumMultidirectionalBroadcast) {
    std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
    std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
 
-   TMVA_SOFIE_SumMultidirectionalBroadcast::Session s("SumMultidirectionalBroadcast_FromONNX.dat");
+   TMVA_SOFIE_SumMultidirectionalBroadcast::Session s("SumMultidirectionalBroadcastGPU_FromONNX.dat");
 
    std::vector<float> output = s.infer(A, B, c.data());
 
@@ -1026,7 +1026,7 @@ TEST(ONNX, Shape){
       1, 2
    });
 
-   TMVA_SOFIE_Shape::Session s("Shape_FromONNX.dat");
+   TMVA_SOFIE_Shape::Session s("ShapeGPU_FromONNX.dat");
    auto output = s.infer(input);
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
@@ -1047,7 +1047,7 @@ TEST(ONNX, RNNBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_RNNBatchwise::Session s("RNNBatchwise_FromONNX.dat");
+   TMVA_SOFIE_RNNBatchwise::Session s("RNNBatchwiseGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1073,7 +1073,7 @@ TEST(ONNX, RNNBidirectional)
    std::vector<float> input({0.,    0.01, 0.02, 0.03, 0.04, 0.05,
                              0.06, 0.07, 0.08, 0.09, 0.1,  0.11,
                              0.12, 0.13, 0.14, 0.15, 0.16, 0.17});
-   TMVA_SOFIE_RNNBidirectional::Session s("RNNBidirectional_FromONNX.dat");
+   TMVA_SOFIE_RNNBidirectional::Session s("RNNBidirectionalGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1108,7 +1108,7 @@ TEST(ONNX, RNNBidirectionalBatchwise)
       0,    0.01, 0.06, 0.07, 0.12, 0.13,
       0.02, 0.03, 0.08, 0.09, 0.14, 0.15,
       0.04, 0.05, 0.1,  0.11, 0.16, 0.17});
-   TMVA_SOFIE_RNNBidirectionalBatchwise::Session s("RNNBidirectionalBatchwise_FromONNX.dat");
+   TMVA_SOFIE_RNNBidirectionalBatchwise::Session s("RNNBidirectionalBatchwiseGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1141,7 +1141,7 @@ TEST(ONNX, RNNDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_RNNDefaults::Session s("RNNDefaults_FromONNX.dat");
+   TMVA_SOFIE_RNNDefaults::Session s("RNNDefaultsGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1174,7 +1174,7 @@ TEST(ONNX, RNNSeqLength)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_RNNSeqLength::Session s("RNNSeqLength_FromONNX.dat");
+   TMVA_SOFIE_RNNSeqLength::Session s("RNNSeqLengthGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1215,7 +1215,7 @@ TEST(ONNX, RNNSequence)
       0.06,    0.087,  0.01,    0.3,  -0.001,
       0.0,     0.0,    0.0,     0.0,   0.0,
       0.0,     0.0,    0.0,     0.0,   0.0});
-   TMVA_SOFIE_RNNSequence::Session s("RNNSequence_FromONNX.dat");
+   TMVA_SOFIE_RNNSequence::Session s("RNNSequenceGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1256,7 +1256,7 @@ TEST(ONNX, RNNSequenceBatchwise)
       0.16,  -0.19,   0.003,  0.0,   0.0001,
       0.0,     0.0,   0.0,    0.0,   0.0,
       0.0,     0.0,   0.0,    0.0,   0.0});
-   TMVA_SOFIE_RNNSequenceBatchwise::Session s("RNNSequenceBatchwise_FromONNX.dat");
+   TMVA_SOFIE_RNNSequenceBatchwise::Session s("RNNSequenceBatchwiseGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1289,7 +1289,7 @@ TEST(ONNX, LSTMBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMBatchwise::Session s("LSTMBatchwise_FromONNX.dat");
+   TMVA_SOFIE_LSTMBatchwise::Session s("LSTMBatchwiseGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1320,7 +1320,7 @@ TEST(ONNX, LSTMBidirectional)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMBidirectional::Session s("LSTMBidirectional_FromONNX.dat");
+   TMVA_SOFIE_LSTMBidirectional::Session s("LSTMBidirectionalGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1364,7 +1364,7 @@ TEST(ONNX, LSTMDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMDefaults::Session s("LSTMDefaults_FromONNX.dat");
+   TMVA_SOFIE_LSTMDefaults::Session s("LSTMDefaultsGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1397,7 +1397,7 @@ TEST(ONNX, LSTMInitialBias)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMInitialBias::Session s("LSTMInitialBias_FromONNX.dat");
+   TMVA_SOFIE_LSTMInitialBias::Session s("LSTMInitialBiasGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1430,7 +1430,7 @@ TEST(ONNX, LSTMPeepholes)
    // Preparing the standard all-ones input
    std::vector<float> input(8);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_LSTMPeepholes::Session s("LSTMPeepholes_FromONNX.dat");
+   TMVA_SOFIE_LSTMPeepholes::Session s("LSTMPeepholesGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1462,7 +1462,7 @@ TEST(ONNX, GRUBatchwise)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUBatchwise::Session s("GRUBatchwise_FromONNX.dat");
+   TMVA_SOFIE_GRUBatchwise::Session s("GRUBatchwiseGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1493,7 +1493,7 @@ TEST(ONNX, GRUBidirectional)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUBidirectional::Session s("GRUBidirectional_FromONNX.dat");
+   TMVA_SOFIE_GRUBidirectional::Session s("GRUBidirectionalGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1524,7 +1524,7 @@ TEST(ONNX, GRUDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(6);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUDefaults::Session s("GRUDefaults_FromONNX.dat");
+   TMVA_SOFIE_GRUDefaults::Session s("GRUDefaultsGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1555,7 +1555,7 @@ TEST(ONNX, GRUInitialBias)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUInitialBias::Session s("GRUInitialBias_FromONNX.dat");
+   TMVA_SOFIE_GRUInitialBias::Session s("GRUInitialBiasGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1586,7 +1586,7 @@ TEST(ONNX, GRUSeqLength)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 1.0f);
-   TMVA_SOFIE_GRUSeqLength::Session s("GRUSeqLength_FromONNX.dat");
+   TMVA_SOFIE_GRUSeqLength::Session s("GRUSeqLengthGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
    std::vector<float> output_yh = output[1];
@@ -1617,7 +1617,7 @@ TEST(ONNX, Softmax1d)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({-1., 0., 1.});
-   TMVA_SOFIE_Softmax1d::Session s("Softmax1d_FromONNX.dat");
+   TMVA_SOFIE_Softmax1d::Session s("Softmax1dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    EXPECT_EQ(output.size(), sizeof(Softmax1d_ExpectedOutput::output) / sizeof(float));
@@ -1635,7 +1635,7 @@ TEST(ONNX, Softmax2d)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({-1., 0., 1.});
-   TMVA_SOFIE_Softmax2d::Session s("Softmax2d_FromONNX.dat");
+   TMVA_SOFIE_Softmax2d::Session s("Softmax2dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    EXPECT_EQ(output.size(), sizeof(Softmax2d_ExpectedOutput::output) / sizeof(float));
@@ -1656,7 +1656,7 @@ TEST(ONNX, Softmax3d)
         -0.8939, -0.3674,  0.1763,  1.5804, -0.4687,  1.2253, -1.3488, -0.1000,
         -0.1262,  0.4962,  1.0870,  0.6905, -0.3451, -1.6981, -0.4688,  0.4468,
         -0.5479,  0.0650,  1.0446, -1.6249, -0.7190, -1.7520,  3.7753, -1.4939});
-   TMVA_SOFIE_Softmax3d::Session s("Softmax3d_FromONNX.dat");
+   TMVA_SOFIE_Softmax3d::Session s("Softmax3dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    EXPECT_EQ(output.size(), sizeof(Softmax3d_ExpectedOutput::output) / sizeof(float));
@@ -1680,7 +1680,7 @@ TEST(ONNX, Softmax4d)
         -0.6153, -0.6274, -1.2304, -0.6757,  1.0178, -0.2379, -0.7912, -0.0165,
         -0.5423,  0.1459,  1.3585, -0.5005, -0.2187, -1.8181, -0.6642,  0.0287,
         -1.9103,  0.7984, -0.7860,  1.5134,  1.3873, -0.6462, -0.6354, -0.1335});
-   TMVA_SOFIE_Softmax4d::Session s("Softmax4d_FromONNX.dat");
+   TMVA_SOFIE_Softmax4d::Session s("Softmax4dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    EXPECT_EQ(output.size(), sizeof(Softmax4d_ExpectedOutput::output) / sizeof(float));
@@ -1700,7 +1700,7 @@ TEST(ONNX, ConvTranspose1d)
    // Preparing the standard all-ones input
    std::vector<float> input(3);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTranspose1d::Session s("ConvTranspose1d_FromONNX.dat");
+   TMVA_SOFIE_ConvTranspose1d::Session s("ConvTranspose1dGPU_FromONNX.dat");
    auto output = s.infer(input);
 
    // Checking output size
@@ -1721,7 +1721,7 @@ TEST(ONNX, ConvTranspose2d)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTranspose2d::Session s("ConvTranspose2d_FromONNX.dat");
+   TMVA_SOFIE_ConvTranspose2d::Session s("ConvTranspose2dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking output size
@@ -1744,7 +1744,7 @@ TEST(ONNX, ConvTranspose3d)
    // Preparing the standard all-ones input
    std::vector<float> input(8);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3d_FromONNX.dat");
+   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking output size
@@ -1767,7 +1767,7 @@ TEST(ONNX, ConvTransposeBias2d)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTransposeBias2d::Session s("ConvTransposeBias2d_FromONNX.dat");
+   TMVA_SOFIE_ConvTransposeBias2d::Session s("ConvTransposeBias2dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking output size
@@ -1788,7 +1788,7 @@ TEST(ONNX, ConvTransposeBias2dBatched)
    // Preparing the standard all-ones input
    std::vector<float> input(18);
    std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTransposeBias2dBatched::Session s("ConvTransposeBias2dBatched_FromONNX.dat");
+   TMVA_SOFIE_ConvTransposeBias2dBatched::Session s("ConvTransposeBias2dBatchedGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking output size
@@ -1808,7 +1808,7 @@ TEST(ONNX, Sqrt)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({0.8344, 0.4716, 0.6226, 0.8448, 0.2483, 0.9467});
-   TMVA_SOFIE_Sqrt::Session s("Sqrt_FromONNX.data");
+   TMVA_SOFIE_Sqrt::Session s("SqrtGPU_FromONNX.data");
    std::vector<float> output = s.infer(input);
 
    EXPECT_EQ(output.size(), sizeof(Sqrt_ExpectedOutput::output) / sizeof(float));
@@ -1825,7 +1825,7 @@ TEST(ONNX, Reciprocal)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input({1.2691, -1.2160,  0.6393, -0.4438,  0.8065,  0.2011});
-   TMVA_SOFIE_Reciprocal::Session s("Reciprocal_FromONNX.data");
+   TMVA_SOFIE_Reciprocal::Session s("ReciprocalGPU_FromONNX.data");
    std::vector<float> output = s.infer(input);
 
    EXPECT_EQ(output.size(), sizeof(Reciprocal_ExpectedOutput::output) / sizeof(float));
@@ -1843,7 +1843,7 @@ TEST(ONNX, Exp)
 
    std::vector<float> input({1.46566453,  0.63334515,  2.4048165 ,  0.54468453,
       -1.41271672, -0.18609187,  0.2754482 ,  1.10615209,  0.88474389,  0.47531232});
-   TMVA_SOFIE_Exp::Session s("Exp_FromONNX.data");
+   TMVA_SOFIE_Exp::Session s("ExpGPU_FromONNX.data");
    std::vector<float> output = s.infer(input);
 
    EXPECT_EQ(output.size(), sizeof(Exp_ExpectedOutput::output) / sizeof(float));
@@ -1868,7 +1868,7 @@ TEST(ONNX, AddBroadcast1) {
                  0.50450593, -0.41265227, -0.22474539, -0.22362374, 0.00509674,
                  0.16927211, 1.06756969,  -0.81634773, 0.88467744,  0.78902059});
 
-   TMVA_SOFIE_AddBroadcast1::Session s("AddBroadcast1_FromONNX.dat");
+   TMVA_SOFIE_AddBroadcast1::Session s("AddBroadcast1GPU_FromONNX.dat");
    std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
@@ -1921,7 +1921,7 @@ TEST(ONNX, AddBroadcast2) {
         -6.20603382e-01, -1.04235434e+00, -1.32974691e+00, -1.35968049e-01,
         9.62438348e-01,  1.13413513e+00,  -9.24612219e-01, -2.26132356e+00});
 
-   TMVA_SOFIE_AddBroadcast2::Session s("AddBroadcast2_FromONNX.dat");
+   TMVA_SOFIE_AddBroadcast2::Session s("AddBroadcast2GPU_FromONNX.dat");
    std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
@@ -1969,7 +1969,7 @@ TEST(ONNX, AddBroadcast3) {
         0.96272832,  0.54303206,  -0.84973033, 0.28780329,  0.17027854,
         -0.11893711, -1.22414638, -1.62747593, 0.53264501,  0.53483601});
 
-   TMVA_SOFIE_AddBroadcast3::Session s("AddBroadcast3_FromONNX.dat");
+   TMVA_SOFIE_AddBroadcast3::Session s("AddBroadcast3GPU_FromONNX.dat");
    std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
@@ -1992,7 +1992,7 @@ TEST(ONNX, AddBroadcast4) {
    // The shape of B is {2, 4}
    std::vector<float> B({0.50898894, -0.27829921, -0.68761628,  0.33186382,  0.57915535,
         0.406858  ,  1.4203833 ,  0.19857093});
-   TMVA_SOFIE_AddBroadcast4::Session s("AddBroadcast4_FromONNX.dat");
+   TMVA_SOFIE_AddBroadcast4::Session s("AddBroadcast4GPU_FromONNX.dat");
    std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
@@ -2020,7 +2020,7 @@ TEST(ONNX, AddBroadcast5) {
        -0.23466058, -0.5520268 , -0.13844847,  0.53055759,  0.17068648,
        -0.49491276, -1.4246271 , -0.99973914, -0.2571329});
 
-   TMVA_SOFIE_AddBroadcast5::Session s("AddBroadcast5_FromONNX.dat");
+   TMVA_SOFIE_AddBroadcast5::Session s("AddBroadcast5GPU_FromONNX.dat");
    std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
@@ -2055,7 +2055,7 @@ TEST(ONNX, AddBroadcast6) {
        -1.12947258,  1.61818821, -0.05826431, -1.47802183,  0.25637381,
        -0.1547858 ,  2.50788792,  0.30898059});
 
-   TMVA_SOFIE_AddBroadcast6::Session s("AddBroadcast6_FromONNX.dat");
+   TMVA_SOFIE_AddBroadcast6::Session s("AddBroadcast6GPU_FromONNX.dat");
    std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
@@ -2081,7 +2081,7 @@ TEST(ONNX, AddBroadcast7) {
        -4.86212681e-01, -6.88210109e-01, -6.77434705e-01,  3.67088873e-01,
         8.05744026e-04, -2.08031088e-01,  9.69779132e-01,  7.58373863e-01});
 
-   TMVA_SOFIE_AddBroadcast7::Session s("AddBroadcast7_FromONNX.dat");
+   TMVA_SOFIE_AddBroadcast7::Session s("AddBroadcast7GPU_FromONNX.dat");
    std::vector<float> output(s.infer(A, B));
 
    // Checking the output size
@@ -2102,7 +2102,7 @@ TEST(ONNX, Concat0D) {
    // input
    std::vector<float> input({1.40519865e+00, -2.87660856e-01});
    std::vector<float> expected_output({1.40519865e+00, -2.87660856e-01, 1.40519865e+00, -2.87660856e-01});
-   TMVA_SOFIE_Concat_0D::Session s("Concat_0D_FromONNX.dat");
+   TMVA_SOFIE_Concat_0D::Session s("Concat_0DGPU_FromONNX.dat");
    std::vector<float> actual_output(s.infer(input));
 
    // Checking the output size
@@ -2122,7 +2122,7 @@ TEST(ONNX, LayerNormalization2d) {
    // input
    std::vector<float> x(12);
    std::iota(x.begin(), x.end(), 0.);
-   TMVA_SOFIE_LayerNormalization2d::Session s("LayerNormalization2d_FromONNX.dat");
+   TMVA_SOFIE_LayerNormalization2d::Session s("LayerNormalization2dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(x.data()));
 
    // Checking the output size
@@ -2142,7 +2142,7 @@ TEST(ONNX, LayerNormalization4d) {
    // input
    std::vector<float> x(120);
    std::iota(x.begin(), x.end(), 0.);
-   TMVA_SOFIE_LayerNormalization4d::Session s("LayerNormalization4d_FromONNX.dat");
+   TMVA_SOFIE_LayerNormalization4d::Session s("LayerNormalization4dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(x.data()));
 
    // Checking the output size
@@ -2161,7 +2161,7 @@ TEST(ONNX, ExpandSameSize) {
 
    // input
    std::vector<float> input({0., 1., 2.});
-   TMVA_SOFIE_ExpandSameSize::Session s("ExpandSameSize_FromONNX.dat");
+   TMVA_SOFIE_ExpandSameSize::Session s("ExpandSameSizeGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size
@@ -2180,7 +2180,7 @@ TEST(ONNX, ExpandDiffSize) {
 
    // input
    std::vector<float> input({0., 1., 2.});
-   TMVA_SOFIE_ExpandDiffSize::Session s("ExpandDiffSize_FromONNX.dat");
+   TMVA_SOFIE_ExpandDiffSize::Session s("ExpandDiffSizeGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size
@@ -2200,7 +2200,7 @@ TEST(ONNX, GatherAxis0) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis0::Session s("GatherAxis0_FromONNX.dat");
+   TMVA_SOFIE_GatherAxis0::Session s("GatherAxis0GPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size
@@ -2220,7 +2220,7 @@ TEST(ONNX, GatherAxis1) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis1::Session s("GatherAxis1_FromONNX.dat");
+   TMVA_SOFIE_GatherAxis1::Session s("GatherAxis1GPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size
@@ -2240,7 +2240,7 @@ TEST(ONNX, GatherAxis2) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis2::Session s("GatherAxis2_FromONNX.dat");
+   TMVA_SOFIE_GatherAxis2::Session s("GatherAxis2GPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size
@@ -2260,7 +2260,7 @@ TEST(ONNX, GatherAxis3) {
    // input
    std::vector<float> input(120);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherAxis3::Session s("GatherAxis3_FromONNX.dat");
+   TMVA_SOFIE_GatherAxis3::Session s("GatherAxis3GPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size
@@ -2280,7 +2280,7 @@ TEST(ONNX, Gather2d) {
    // input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_Gather2d::Session s("Gather2d_FromONNX.dat");
+   TMVA_SOFIE_Gather2d::Session s("Gather2dGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size
@@ -2300,7 +2300,7 @@ TEST(ONNX, GatherNegativeIndices) {
    // input
    std::vector<float> input(10);
    std::iota(input.begin(), input.end(), 0.);
-   TMVA_SOFIE_GatherNegativeIndices::Session s("GatherNegativeIndices_FromONNX.dat");
+   TMVA_SOFIE_GatherNegativeIndices::Session s("GatherNegativeIndicesGPU_FromONNX.dat");
    std::vector<float> output(s.infer(input));
 
    // Checking the output size

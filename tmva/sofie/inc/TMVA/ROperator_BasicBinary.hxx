@@ -189,10 +189,11 @@ public:
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNA << "\n";
          out << SP*3 << "{\n";
          out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNA << ".data(), " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}};";
          out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*5 << "auto acc_tensor_" << fNBroadcadstedA << " = cl::sycl::accessor{buf_tensor_" << fNBroadcadstedA;
-         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << SP*5 << "auto acc_tensor_" << fNBroadcadstedA << " = buf_tensor_" << fNBroadcadstedA << ".get_access";
+         out << "<cl::sycl::access::mode::discard_write(cgh)>;\n";
+         //out << SP*5 << "auto acc_tensor_" << fNBroadcadstedA << " = cl::sycl::accessor{buf_tensor_" << fNBroadcadstedA;
+         //out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
          out << SP*5 << "cgh.copy(data, acc_tensor_" << fNBroadcadstedA << ");\n";
          out << SP*4 << "});\n";
          out << SP*4 << "delete[] data;\n";
@@ -204,10 +205,9 @@ public:
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNB << "\n";
          out << SP*3 << "{\n";
          out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNB << ".data(), " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}};";
          out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*5 << "auto acc_tensor_" << fNBroadcadstedB << " = cl::sycl::accessor{buf_tensor_" << fNBroadcadstedB;
-         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << SP*5 << "auto acc_tensor_" << fNBroadcadstedB << " = buf_tensor_" << fNBroadcadstedB << ".get_access";
+         out << "<cl::sycl::access::mode::discard_write(cgh)>;\n";
          out << SP*5 << "cgh.copy(data, acc_tensor_" << fNBroadcadstedB << ");\n";
          out << SP*4 << "});\n";
          out << SP*4 << "delete[] data;\n";
@@ -224,7 +224,7 @@ public:
       out << SP*4 << "auto acc_tensor_" << nameB << " = cl::sycl::accessor{buf_tensor_" << nameB << ", cgh";
       out << ", cl::sycl::read_only};\n";
       out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY << ", cgh";
-      out << ", cl::sycl::write_only};\n";
+      out << ", cl::sycl::write_only, cl::sycl::no_init};\n";
       out << SP*4 << "cgh.parallel_for<class " << OpName <<">(cl::sycl::range<1>(" << length << ")";
       out << ", [=](cl::sycl::id<1> id){\n";
       out << SP*5 << "acc_tensor_" << fNY << "[id] = " << BinaryOperatorTrait<T, Op>::Op_GPU("acc_tensor_" + nameA + "[id]", "acc_tensor_" + nameB + "[id]") << ";\n"; 
