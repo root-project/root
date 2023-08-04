@@ -226,16 +226,16 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
    auto totalFiles = fTotalFiles;
 
    if (fUseShellColours)
-      stream << "\e[35m";
+      stream << "\033[35m";
    stream << "["
           << "Elapsed time: " << elapsedSeconds << "  ";
    if (fUseShellColours)
-      stream << "\e[0m";
+      stream << "\033[0m";
    stream << "processing file: " << currentFileIdx << " / " << totalFiles << "  ";
 
    // Event counts:
    if (fUseShellColours)
-      stream << "\e[32m";
+      stream << "\033[32m";
 
    stream << "processed evts: " << currentEventCount;
    if (GetNEventsOfCurrentFile != 0) {
@@ -244,7 +244,7 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
    stream << "  ";
 
    if (fUseShellColours)
-      stream << "\e[0m";
+      stream << "\033[0m";
 
    // events/s
    stream << std::scientific << std::setprecision(2) << evtpersec << " evt/s";
@@ -252,13 +252,13 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
    // Time statistics:
    if (GetNEventsOfCurrentFile != 0) {
       if (fUseShellColours)
-         stream << "\e[35m";
+         stream << "\033[35m";
       std::chrono::seconds remainingSeconds(
          static_cast<long long>((ComputeNEventsSoFar() - currentEventCount) / evtpersec));
       stream << " " << remainingSeconds << " "
              << " remaining time (per file)";
       if (fUseShellColours)
-         stream << "\e[0m";
+         stream << "\033[0m";
    }
 
    stream << "]   ";
@@ -280,10 +280,10 @@ void ProgressHelper::PrintProgressbar(std::ostream &stream, std::size_t currentE
    bars.back() = (nBar == fBarWidth) ? '=' : '>';
 
    if (fUseShellColours)
-      stream << "\e[33m";
+      stream << "\033[33m";
    stream << '|' << std::setfill(' ') << std::setw(fBarWidth) << std::left << bars << "|   ";
    if (fUseShellColours)
-      stream << "\e[0m";
+      stream << "\033[0m";
 }
 //*/
 namespace Experimental {
