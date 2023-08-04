@@ -2477,6 +2477,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 /// By default the full range of the histogram is used.
 /// Use option "R" for restricting the chisquare calculation to the given range of the function
 /// Use option "L" for using the chisquare based on the poisson likelihood (Baker-Cousins Chisquare)
+/// Use option "P" for using the Pearson chisquare based on the expected bin errors
 
 Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 {
@@ -2487,9 +2488,11 @@ Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 
    TString opt(option); opt.ToUpper();
    bool useRange = opt.Contains("R");
-   bool usePL = opt.Contains("L");
+   ROOT::Fit::EChisquareType type = ROOT::Fit::kNeyman;  // default chi2 with observed error
+   if (opt.Contains("L")) type = ROOT::Fit::kPLikeRatio;
+   else if (opt.Contains("P")) type = ROOT::Fit::kPearson;
 
-   return ROOT::Fit::Chisquare(*this, *func, useRange, usePL);
+   return ROOT::Fit::Chisquare(*this, *func, useRange, type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

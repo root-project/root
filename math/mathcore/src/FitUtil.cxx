@@ -246,7 +246,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
    bool useExpErrors = (fitOpt.fExpErrors);
-   bool isWeighted = data.IsWeighted();
+   bool isWeighted = fitOpt.fExpErrors && !fitOpt.fErrors1 && data.IsWeighted();  //used in case of Person weighted chi2 fits
 #ifdef DEBUG
    std::cout << "\n\nFit data size = " << n << std::endl;
    std::cout << "evaluate chi2 using function " << &func << "  " << p << std::endl;
@@ -337,18 +337,18 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
       // expected errors
       if (useExpErrors) {
          double invWeight  = 1.0;
+         // case of weighted Pearson chi2 fit
          if (isWeighted) {
-            // we need first to check if a weight factor needs to be applied
-            // weight = sumw2/sumw = error**2/content
-            //invWeight = y * invError * invError;
-            // we use always the global weight and not the observed one in the bin
-            // for empty bins use global weight (if it is weighted data.SumError2() is not zero)
-            invWeight = data.SumOfContent()/ data.SumOfError2();
-            //if (invError > 0) invWeight = y * invError * invError;
+            // in case of requested a weighted Pearson fit (option "PW") a weight factor needs to be applied
+            // the bin inverse weight is estimated from bin error and bin content
+            if (y != 0)
+               invWeight = y * invError * invError;
+            else
+               // when y is 0 we use a global weight estimated form all histogram (correct if scaling the histogram)
+               // note that if the data is weighted data.SumOfError2 will not be equal to zero
+               invWeight = data.SumOfContent()/ data.SumOfError2();
          }
-
-         //  if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
-         // compute expected error  as f(x) / weight
+         // compute expected error  as f(x) or f(x) / weight (if weighted fit)
          double invError2 = (fval > 0) ? invWeight / fval : 0.0;
          invError = std::sqrt(invError2);
          //std::cout << "using Pearson chi2 " << x[0] << "  " << 1./invError2 << "  " << fval << std::endl;
@@ -591,19 +591,20 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 
    // expected errors
    if (useExpErrors) {
-      // we need first to check if a weight factor needs to be applied
-      // weight = sumw2/sumw = error**2/content
-      // NOTE: assume histogram is not weighted
-      // don't know how to do with bins with weight = 0
-      //double invWeight = y * invError * invError;
-      // if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+      // check if a weight factor needs to be applied
+      // for bins with y = 0 use as weight the global of the full histogram
+      double invWeight = 1.0;
+      if (data.IsWeighted() && !fitOpt.fErrors1 ) { // case of weighted Pearson chi2 fit
+         invWeight = y * invError * invError;
+         if (y == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+      }
       // compute expected error  as f(x) / weight
-      double invError2 = (fval > 0) ? 1.0 / fval : 0.0;
+      double invError2 = (fval > 0) ? invWeight / fval : 0.0;
       invError = std::sqrt(invError2);
    }
 
 
-   double resval =   ( y -fval )* invError;
+   double resval =   ( y -fval ) * invError;
 
    // avoid infinities or nan in  resval
    resval = CorrectValue(resval);
