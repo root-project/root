@@ -369,11 +369,6 @@ foreach(opt ${root_build_options})
   endif()
 endforeach()
 
-#---ROOT 7 requires C++17 standard or higher---------------------------------------------------
-if(NOT CMAKE_CXX_STANDARD GREATER 14)
-  set(root7_defvalue OFF)
-endif()
-
 #---webgui by default always build together with root7-----------------------------------------
 set(webgui_defvalue ${root7_defvalue})
 
@@ -395,24 +390,6 @@ if (NOT builtin_cling)
     message(WARNING "No need to build internal llvm or clang. Consider turning builtin_clang=Off and builtin_llvm=Off")
   endif()
 endif(NOT builtin_cling)
-
-if(root7)
-  if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++17 standard used with root7")
-    message(STATUS "Enabling C++17 for compilation of root7 components")
-  elseif(NOT CMAKE_CXX_STANDARD GREATER 14)
-    message(FATAL_ERROR ">>> At least C++17 standard required with root7, please enable it using CMake option: -DCMAKE_CXX_STANDARD=17")
-  endif()
-endif()
-
-#---check if webgui can be built-------------------------------
-if(webgui)
-  if(NOT CMAKE_CXX_STANDARD GREATER 11)
-    set(webgui OFF CACHE BOOL "(WebGUI requires at least C++14)" FORCE)
-  elseif(NOT http)
-    set(http ON CACHE BOOL "(Enabled since it's needed by webgui)" FORCE)
-  endif()
-endif()
 
 if(NOT webgui)
    set(qt5web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
