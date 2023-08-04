@@ -255,8 +255,8 @@ bool RooAbsReal::isIdentical(const RooAbsArg& other, bool assumeSameType) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return this variable's title std::string. If appendUnit is true and
-/// this variable has units, also append a std::string " (<unit>)".
+/// Return this variable's title string. If appendUnit is true and
+/// this variable has units, also append a string " (<unit>)".
 
 TString RooAbsReal::getTitle(bool appendUnit) const
 {
@@ -792,7 +792,7 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct std::string with unique suffix name to give to integral object that encodes
+/// Construct string with unique suffix name to give to integral object that encodes
 /// integrated observables, normalization observables and the integration range name
 
 TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset, const char* rangeName, bool omitEmpty) const
@@ -2581,17 +2581,19 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate error on self by *linearly* propagating errors on parameters using the covariance matrix
-/// from a fit result.
-/// The error is calculated as follows
-/// \f[
-///     \mathrm{error}^2(x) = F_\mathbf{a}(x) \cdot \mathrm{Cov}(\mathbf{a},\mathbf{a}') \cdot F_{\mathbf{a}'}^{\mathrm{T}}(x)
-/// \f]
-/// where \f$ F_mathbf{a}(x) = \frac{ f(x, mathbf{a} + \mathrm{d}mathbf{a}) - f(x, mathbf{a} - \mathrm{d}mathbf{a}) }{2} \f$,
-/// with \f$ f(x) = \f$ `this` and \f$ \mathrm{d}mathbf{a} \f$ the vector of one-sigma uncertainties of all
-/// fit parameters taken from the fit result and
-/// \f$ \mathrm{Cov}(mathbf{a},mathbf{a}') \f$ = the covariance matrix from the fit result.
+/// \brief Propagates parameter uncertainties to an uncertainty estimate for this RooAbsReal.
 ///
+/// Estimates the uncertainty \f$\sigma_f(x;\theta)\f$ on a function \f$f(x;\theta)\f$ represented by this RooAbsReal.
+/// Here, \f$\theta\f$ is a vector of parameters with uncertainties \f$\sigma_\theta\f$, and \f$x\f$ are usually observables.
+/// The uncertainty is estimated by *linearly* propagating the parameter uncertainties using the correlation matrix from a fit result.
+///
+/// The square of the uncertainty on \f$f(x;\theta)\f$ is calculated as follows:
+/// \f[
+///     \sigma_f(x)^2 = \Delta f_i(x) \cdot \mathrm{Corr}_{i, j} \cdot \Delta f_j(x),
+/// \f]
+/// where \f$ \Delta f_i(x) = \frac{1}{2} \left(f(x;\theta_i + \sigma_{\theta_i}) - f(x; \theta_i - \sigma_{\theta_i}) \right) \f$
+/// is the vector of function variations when changing the parameters one at a time, and
+/// \f$ \mathrm{Corr}_{i,j} = \left(\sigma_{\theta_i} \sigma_{\theta_j}\right)^{-1} \cdot \mathrm{Cov}_{i,j}  \f$ is the correlation matrix from the fit result.
 
 double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset) const
 {
@@ -3577,8 +3579,8 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
 /// to truncate the std::list by printEvalErrors. This is the standard mode of error logging
 /// during MINUIT operations. If enableEvalErrorLogging() is false, all errors
 /// reported through this method are passed for immediate printing through RooMsgService.
-/// A std::string with server names and values is constructed automatically for error logging
-/// purposes, unless a custom std::string with similar information is passed as argument.
+/// A string with server names and values is constructed automatically for error logging
+/// purposes, unless a custom string with similar information is passed as argument.
 
 void RooAbsReal::logEvalError(const char* message, const char* serverValueString) const
 {
