@@ -69,11 +69,6 @@ if(MSVC)
     set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libTree libRint libMatrix libMathCore)
   else()
     include(${ROOT_USE_FILE})
-    # remove ${ROOT_DEFINITIONS}, to fix several test failures with errors like:
-    # ROOT_cli_0:1:9: warning: '_WIN64' macro redefined [-Wmacro-redefined]
-    # TODO (bellenot): might be fixed on the ROOT side. To be revised and possibly
-    # removed after further investigations
-    remove_definitions(${ROOT_DEFINITIONS})
     set(ROOT_CONFIG_EXECUTABLE root-config.bat)
     exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--prefix" OUTPUT_VARIABLE ROOTSYS RETURN_VALUE RETVAR)
     file(TO_CMAKE_PATH ${ROOTSYS} ROOTSYS)
