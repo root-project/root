@@ -667,7 +667,7 @@ A string is stored as a single field with two columns.
 The first (principle) column is of type SplitIndex32.
 The second column is of type Char.
 
-#### std::vector<T> and ROOT::RVec<T>
+#### std::vector\<T\> and ROOT::RVec\<T\>
 
 STL vector and ROOT's RVec have identical on-disk representations.
 They are stored as two fields:
@@ -702,13 +702,13 @@ The child fileds are named `_0` and `_1`.
 A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
 The child fields are named `_0`, `_1`, ...
 
-#### std::bitset<N>
+#### std::bitset\<N\>
 
 A bitset is stored as a repetitive leaf field with an attached `Bit` column.
 The bitset size `N` is stored as repetition parameter in the field meta-data.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
 
-#### std::unique_ptr<T>, std::optional<T>
+#### std::unique_ptr\<T\>, std::optional\<T\>
 
 A unique pointer and an optional type have the same on disk representation.
 They are represented as a collection of `T`s of zero or one elements.
@@ -720,7 +720,7 @@ This is called sparse representation.
 The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
 In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
 
-#### std::set<T>
+#### std::set\<T\>
 
 While STL sets by definition are associative containers (i.e., elements are referenced by their keys, which in the case for sets are equal to the values), on disk they are represented as indexed collections.
 This means that they have the same on-disk representation as `std::vector<T>`, using two fields:
