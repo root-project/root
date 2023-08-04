@@ -671,7 +671,7 @@ The second column is of type Char.
 
 STL vector and ROOT's RVec have identical on-disk representations.
 They are stored as two fields:
-  - Collection mother field of type SplitIndex32 or SplitIndex64
+  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
@@ -724,7 +724,7 @@ In this second case, a default-constructed `T` (or, if applicable, a `T` constru
 
 While STL sets by definition are associative containers (i.e., elements are referenced by their keys, which in the case for sets are equal to the values), on disk they are represented as indexed collections.
 This means that they have the same on-disk representation as `std::vector<T>`, using two fields:
-  - Collection mother field of type SplitIndex32 or SplitIndex64
+  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
@@ -761,7 +761,7 @@ User classes that specify a collection proxy behave as collections of a given va
 Associative collections are not currently supported.
 
 The on-disk representation is similar to a `std::vector<T>` where `T` is the value type; specifically, it is stored as two fields:
-  - Collection mother field of type SplitIndex32 or SplitIndex64
+  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
