@@ -557,7 +557,7 @@ TEST(ONNX, LinearWithSigmoid)
 }
 
 
-/*TEST(ONNX, ConvWithPadding)
+TEST(ONNX, ConvWithPadding)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1735,8 +1735,6 @@ TEST(ONNX, ConvTranspose2d)
    }
 }
 
-*/
-/*
 TEST(ONNX, ConvTranspose3d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -1757,9 +1755,7 @@ TEST(ONNX, ConvTranspose3d)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-*/
 
-/*
 TEST(ONNX, ConvTransposeBias2d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -2095,7 +2091,6 @@ TEST(ONNX, AddBroadcast7) {
    }
 }
 
-/*
 TEST(ONNX, Concat0D) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
