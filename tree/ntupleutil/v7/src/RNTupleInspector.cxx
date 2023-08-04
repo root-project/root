@@ -61,8 +61,13 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 
          if (fCompressionSettings == -1) {
             fCompressionSettings = columnRange.fCompressionSettings;
-         } else {
-            R__ASSERT(columnRange.fCompressionSettings == fCompressionSettings);
+         } else if (fCompressionSettings != columnRange.fCompressionSettings) {
+            // Note that currently all clusters and columns are compressed with the same settings and it is not yet
+            // possible to do otherwise. This measn that currently, this exception should never be thrown, but this
+            // could change in the future.
+            throw RException(R__FAIL("compression setting mismatch between column ranges (" +
+                                     std::to_string(fCompressionSettings) + " vs " +
+                                     std::to_string(columnRange.fCompressionSettings) + ")"));
          }
 
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
