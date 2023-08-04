@@ -43,12 +43,14 @@ def fixedParticleData(infoLine):
         mass = float(elements[7])
         width = float(elements[8])
             
-        if trueId in massWidthData:
-            if massWidthData[trueId]['Mass']:
-                mass = float(massWidthData[trueId]['Mass'])
-            if massWidthData[trueId]['Width']:
-                width = float(massWidthData[trueId]['Width'])
-                
+        if 0 <= trueId < len(massWidthData):
+            if (massWidthData[trueId] is not None):
+                if (massWidthData[trueId].mass is not None):
+                    mass = float(massWidthData[trueId].mass)
+                if massWidthData[trueId].width is not None:
+                    width = float(massWidthData[trueId].width)
+                print(f"{float(elements[7]):<10e}  {float(massWidthData[trueId].mass):<10e}  {massWidthData[trueId].name:<10}")
+
         # Formatting the output line with the updated mass and width
         return f"{elements[0]:>5} {name:<16} {trueId:>6} {elements[3]:>2} {elements[4]:>3} {elements[5]:<10} {elements[6]:>2} {mass:<11e} {width:<11e} {elements[9]:>3} {elements[10]:>2} {elements[11]:>3} {elements[12]:>2} {elements[13]:>4} {elements[14]:>3}\n"
 
@@ -57,13 +59,13 @@ def fixedParticleData(infoLine):
 #---------------------------------
 
 def getMassWidthValues(lines):
-    data = {}  # Dictionary to store the data
+    data = []  # Array to store the data
     for line in lines:
         if line.startswith('*'):
             continue  # Skip comments
 
         # Extracting relevant information based on the character column positions
-        particleId = line[MASS_WIDTH_ID_START:MASS_WIDTH_ID_END].strip()
+        particleId = int(line[MASS_WIDTH_ID_START:MASS_WIDTH_ID_END].strip())
 
         if line[MASS_WIDTH_MASS_START:MASS_WIDTH_MASS_END].strip():
             mass = line[MASS_WIDTH_MASS_START:MASS_WIDTH_MASS_END].strip()
@@ -79,11 +81,11 @@ def getMassWidthValues(lines):
         name = nameWithCharge.split()[0]  # Extract only the name, excluding the charge
 
         # Storing the data in the dictionary
-        if particleId in data:
-            print("Duplicated ID " + particleId)
-        else:
-            data[particleId] = {'Mass': float(mass), 'Width': float(width), 'Name': name}
-
+        if particleId >= len(data):
+            while (len(data) <= particleId):
+                data.append(None)
+        data[particleId] = MWDataObj(float(mass), float(width), name)
+        
     return data
 
 #------------------------------
@@ -107,6 +109,16 @@ def updateTable(massWidthData, originalTable):
                 outputLines.append(fixedParticleData(line))
 
     return outputLines
+
+#---------------------------------------
+# Object for the data of the mass_width
+#---------------------------------------
+
+class MWDataObj:
+    def __init__(self, mass, width, name):
+        self.mass = mass
+        self.width = width
+        self.name = name
 
 #------------------
 # Setup everything
