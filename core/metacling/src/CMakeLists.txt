@@ -137,12 +137,12 @@ if(MSVC)
         __std_find_trivial_8
     )
   endif()
-  if(CMAKE_CXX_STANDARD GREATER 14)
-    set(cling_exports ${cling_exports}
-      _Smtx_lock_shared
-      _Smtx_unlock_shared
-    )
-  endif()
+
+  set(cling_exports ${cling_exports}
+    _Smtx_lock_shared
+    _Smtx_unlock_shared
+  )
+
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(cling_exports ${cling_exports}
       ??2@YAPEAX_K@Z
