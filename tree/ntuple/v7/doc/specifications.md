@@ -43,7 +43,7 @@ followed by the characters.
 Strings are ASCII encoded; every character is a signed 8bit integer.
 
 _Compression settings_: A 32bit integer containing both a compression algorithm and the compression level.
-The compression settings are encoded according to this formula: $$ settings = algorithm * 100 + level $$
+The compression settings are encoded according to this formula: $settings = algorithm * 100 + level$.
 See Compression.[h/cxx] for details and available algorithms.
 
 The meta-data envelope defines additional basic types (see below).
@@ -348,8 +348,8 @@ Delta + split
   Followed by split encoding.
 
 Zigzag + split
-: Used on signed integers only; it maps x to 2x if x is positive and to -(2x+1) if x is negative.
-  Followed by split encoding
+: Used on signed integers only; it maps $x$ to $2x$ if $x$ is positive and to $-(2x+1)$ if $x$ is negative.
+  Followed by split encoding.
 
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
