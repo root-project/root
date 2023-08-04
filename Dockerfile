@@ -125,8 +125,25 @@ RUN sudo chmod +x cmake-3.27.1-linux-x86_64.sh
 RUN echo "y" | echo "y" | ./cmake-3.27.1-linux-x86_64.sh
 RUN sudo apt-get purge cmake -y
 RUN echo "export PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH" >> /home/ioanna/.bashrc
+RUN export PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH
+ENV PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH
 RUN sudo chown ioanna:ioanna root_build
 RUN sudo chmod +w root_build
-#COPY root_src /home/ioanna/root_src
-#RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ -Dxrootd=Off -Dimt=Off -Dbuiltin_xrootd=Off /home/ioanna/root_src && cmake --build . -j16 --target install
+# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ -Dxrootd=Off -Dimt=Off -Dbuiltin_xrootd=Off /home/ioanna/root_src && cmake --build . -j16 --target install
 
+RUN mkdir neo && cd neo
+WORKDIR /home/ioanna/neo
+RUN wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-core_1.0.12149.1_amd64.deb
+RUN wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-opencl_1.0.12149.1_amd64.deb
+RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-level-zero-gpu-dbgsym_1.3.24347_amd64.ddeb
+RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-level-zero-gpu_1.3.24347_amd64.deb
+RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-opencl-icd-dbgsym_22.39.24347_amd64.ddeb
+RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-opencl-icd_22.39.24347_amd64.deb
+RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/libigdgmm12_22.2.0_amd64.deb
+
+RUN sudo chmod +x *.deb
+RUN sudo dpkg -i *.deb
+RUN sudo usermod -a -G video ioanna
+
+WORKDIR /home/ioanna
+COPY root_src /home/ioanna/root_src
