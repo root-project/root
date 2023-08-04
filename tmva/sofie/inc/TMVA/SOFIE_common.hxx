@@ -14,7 +14,7 @@
 #include <regex>
 #include <sstream>
 #include <iostream>
-#include "CL/sycl.hpp"
+
 
 namespace TMVA{
 namespace Experimental{
@@ -314,7 +314,7 @@ void Im2col(const T *data_im, const int channels, const int height, const int wi
 }
 
 
-
+#ifdef SYCL
 template <typename T, int dims>
 void Im2col_GPU(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int channels, const int height, const int width,
                         const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, 
@@ -366,7 +366,7 @@ void Im2col_GPU(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int 
       });
    });
 }
-
+#endif
 /// 3d implementation
 template <typename T>
 void Im2col_3d(const T *data_im, const int channels,
@@ -422,7 +422,7 @@ void Im2col_3d(const T *data_im, const int channels,
    }
 }
 
-
+#ifdef SYCL
 template <typename T, int dims>
 void Im2col_3d_GPU(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int channels, 
                      const int depth, const int height, const int width,
@@ -488,7 +488,7 @@ void Im2col_3d_GPU(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const i
       });
    });
 }
-
+#endif
 
 template <typename Dtype>
 void col2im(const Dtype* data_col, const int channels,

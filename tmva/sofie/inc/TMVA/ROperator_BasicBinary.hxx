@@ -195,7 +195,7 @@ public:
          //out << SP*5 << "auto acc_tensor_" << fNBroadcadstedA << " = cl::sycl::accessor{buf_tensor_" << fNBroadcadstedA;
          //out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
          out << SP*5 << "cgh.copy(data, acc_tensor_" << fNBroadcadstedA << ");\n";
-         out << SP*4 << "});\n";
+         out << SP*4 << "}).wait();\n";
          out << SP*4 << "delete[] data;\n";
          out << SP*3 << "}\n";
       }
@@ -209,7 +209,7 @@ public:
          out << SP*5 << "auto acc_tensor_" << fNBroadcadstedB << " = buf_tensor_" << fNBroadcadstedB << ".get_access";
          out << "<cl::sycl::access::mode::discard_write>(cgh);\n";
          out << SP*5 << "cgh.copy(data, acc_tensor_" << fNBroadcadstedB << ");\n";
-         out << SP*4 << "});\n";
+         out << SP*4 << "}).wait();\n";
          out << SP*4 << "delete[] data;\n";
          out << SP*3 << "}\n";
       }

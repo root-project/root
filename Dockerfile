@@ -123,7 +123,10 @@ ENV PATH=/home/ioanna/.local/bin:$PATH
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.27.1/cmake-3.27.1-linux-x86_64.sh
 RUN sudo chmod +x cmake-3.27.1-linux-x86_64.sh
 RUN echo "y" | echo "y" | ./cmake-3.27.1-linux-x86_64.sh
-ENV PATH="/home/ioanna/cmake-3.27.1-linux-x86_64./bin:$PATH"
-COPY root_src /home/ioanna/root_src
-RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ -Dxrootd=Off -Dimt=Off -Dbuiltin_xrootd=Off /home/ioanna/root_src && cmake --build . -j16 --target install
+RUN sudo apt-get purge cmake -y
+RUN echo "export PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH" >> /home/ioanna/.bashrc
+RUN sudo chown ioanna:ioanna root_build
+RUN sudo chmod +w root_build
+#COPY root_src /home/ioanna/root_src
+#RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ -Dxrootd=Off -Dimt=Off -Dbuiltin_xrootd=Off /home/ioanna/root_src && cmake --build . -j16 --target install
 

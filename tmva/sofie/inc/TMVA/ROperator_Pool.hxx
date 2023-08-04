@@ -590,9 +590,10 @@ public:
          else if (fPoolMode == AveragePool) {
             out << SP*8 << "scratch[localId] += scratch[localId + s];\n";
          }
-         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
-         out << SP*7 << "}\n";
-               
+
+         out << SP*7 << "}\n";    
+         out << SP*7 << "if (s == 1) s=0;\n";
+         out << SP*7 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
          out << SP*7 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
          out << SP*6 << "}\n";
 
@@ -671,9 +672,10 @@ public:
             out << SP*8 << "scratch[localId_0 * kw + localId_1] += scratch[localId_0 * kw + localId_1 + s];\n";
          }
 
-         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
          out << SP*7 << "}\n";
 
+         out << SP*7 << "if (s == 1) s=0;\n";
+         out << SP*7 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
          out << SP*7 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
 
          out << SP*6 << "}\n";
@@ -761,8 +763,9 @@ public:
             out << SP*8 << "scratch[localId_2 + localId_1 * kd + localId_0 * kw * kd] += scratch[localId_2 + localId_1 * kd + localId_0 * kd * kw];\n";
          }
 
-         out << SP*8 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n";
          out << SP*7 << "}\n";
+         out << SP*7 << "if (s == 1) s=0;\n";
+         out << SP*7 << "s = static_cast<int>(cl::sycl::ceil(s / float(2)));\n"; 
          out << SP*7 << "item.barrier(cl::sycl::access::fence_space::local_space);\n";
          out << SP*6 << "}\n";
 

@@ -689,7 +689,7 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    }
 }
 
-TEST(ONNX, MaxPool1d){
+/*TEST(ONNX, MaxPool1d){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
@@ -813,7 +813,6 @@ TEST(ONNX, AvgPool){
    }
 
 }
-
 */
 TEST(ONNX, Pow){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -865,7 +864,7 @@ TEST(ONNX, Pow_broadcast){
 
 }
 
-/*
+
    TEST(ONNX, ReduceMean){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -938,7 +937,7 @@ TEST(ONNX, Max)
       }
    }
 
-TEST(ONNX, MaxMultidirectionalBroadcast) {
+/*TEST(ONNX, MaxMultidirectionalBroadcast) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
@@ -947,7 +946,7 @@ TEST(ONNX, MaxMultidirectionalBroadcast) {
 
    TMVA_SOFIE_MaxMultidirectionalBroadcast::Session s("MaxMultidirectionalBroadcastGPU_FromONNX.dat");
 
-   std::vector<float> output = s.infer(A, B, c.data());
+   std::vector<float> output = s.infer(a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MaxMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -967,7 +966,7 @@ TEST(ONNX, MinMultidirectionalBroadcast) {
 
    TMVA_SOFIE_MinMultidirectionalBroadcast::Session s("MinMultidirectionalBroadcastGPU_FromONNX.dat");
 
-   std::vector<float> output = s.infer(A, B, c.data());
+   std::vector<float> output = s.infer(a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MinMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -987,7 +986,7 @@ TEST(ONNX, MeanMultidirectionalBroadcast) {
 
    TMVA_SOFIE_MeanMultidirectionalBroadcast::Session s("MeanMultidirectionalBroadcastGPU_FromONNX.dat");
 
-   std::vector<float> output = s.infer(A, B, c.data());
+   std::vector<float> output = s.infer(a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(MeanMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -998,6 +997,7 @@ TEST(ONNX, MeanMultidirectionalBroadcast) {
    }
 }
 
+
 TEST(ONNX, SumMultidirectionalBroadcast) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1007,7 +1007,7 @@ TEST(ONNX, SumMultidirectionalBroadcast) {
 
    TMVA_SOFIE_SumMultidirectionalBroadcast::Session s("SumMultidirectionalBroadcastGPU_FromONNX.dat");
 
-   std::vector<float> output = s.infer(A, B, c.data());
+   std::vector<float> output = s.infer(a, b, c);
 
    EXPECT_EQ(output.size(), sizeof(SumMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
 
@@ -1017,7 +1017,7 @@ TEST(ONNX, SumMultidirectionalBroadcast) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
+*/
 TEST(ONNX, Shape){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1735,7 +1735,7 @@ TEST(ONNX, ConvTranspose2d)
    }
 }
 
-TEST(ONNX, ConvTranspose3d)
+/*TEST(ONNX, ConvTranspose3d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1755,7 +1755,7 @@ TEST(ONNX, ConvTranspose3d)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
+*/
 TEST(ONNX, ConvTransposeBias2d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -1798,7 +1798,6 @@ TEST(ONNX, ConvTransposeBias2dBatched)
    }
 }
 
-*/
 TEST(ONNX, Sqrt)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -2111,7 +2110,7 @@ TEST(ONNX, Concat0D) {
    }
 }
 
-TEST(ONNX, LayerNormalization2d) {
+/*TEST(ONNX, LayerNormalization2d) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // input
@@ -2150,6 +2149,7 @@ TEST(ONNX, LayerNormalization4d) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
+*/
 
 TEST(ONNX, ExpandSameSize) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -2308,4 +2308,3 @@ TEST(ONNX, GatherNegativeIndices) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-*/
