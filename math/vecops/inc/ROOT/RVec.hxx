@@ -3135,6 +3135,38 @@ inline RVec<std::size_t> Range(std::size_t begin, std::size_t end)
    return ret;
 }
 
+/// Produce RVec<int> with entries equal to begin, begin+stride, ..., end +/- stride.
+/// An empty RVec is returned if begin >= end and stride > 0 or if
+/// begin < end and stride < 0. Allows for negative begin, end, and/or
+/// stride
+RVec<int> Range(int begin, int end, int stride)
+{
+    if (!stride)
+    {
+        throw std::runtime_error("the stride must not be zero");
+    }
+
+    RVec<int> ret;
+    float ret_cap = std::ceilf(static_cast<float>(end-begin) / stride);
+    if (ret_cap < 0)
+    {
+        return ret;
+    }
+    ret.reserve(static_cast<size_t>(ret_cap));
+    
+    if (stride > 0)
+    {
+        for (auto i = begin; i < end; i+=stride)
+           ret.push_back(i);
+    }
+    else
+    {
+        for (auto i = begin; i > end; i+=stride)
+           ret.push_back(i);
+    }
+    return ret;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
