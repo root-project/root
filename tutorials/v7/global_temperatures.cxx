@@ -1,10 +1,11 @@
 /// \file
 /// \ingroup tutorial_v7
 ///
-/// This ROOT 7 example demonstrates how to use RNTuple in combination with ROOT 6 features like RDataframe and visualizations.
-/// It ingests climate data and creates a model with fields like AverageTemperature. Then it uses RDataframe to process and filter the climate data for
-/// average temperature per city by season. Then it does the same for average temperature per city for the years between 1993-2002, and 2003-2013.
-/// Finally, the tutorial visualizes this processed data through histograms.
+/// This ROOT 7 example demonstrates how to use RNTuple in combination with ROOT 6 features like RDataframe and
+/// visualizations. It ingests climate data and creates a model with fields like AverageTemperature. Then it uses
+/// RDataframe to process and filter the climate data for average temperature per city by season. Then it does the same
+/// for average temperature per city for the years between 1993-2002, and 2003-2013. Finally, the tutorial visualizes
+/// this processed data through histograms.
 ///
 /// TODO(jblomer): re-enable once issues are fixed (\macro_image (rcanvas_js))
 /// \macro_code
@@ -17,7 +18,7 @@
 /// \warning The RNTuple classes are experimental at this point.
 /// Functionality, interface, and data format is still subject to changes.
 /// Do not use for real data! During ROOT setup, configure the following flags:
-/// `-DCMAKE_CXX_STANDARD=14 -Droot7=ON -Dwebgui=ON`
+/// `-DCMAKE_CXX_STANDARD=17 -Droot7=ON -Dwebgui=ON`
 ///
 /// \date 2021-02-26
 /// \author John Yoon
