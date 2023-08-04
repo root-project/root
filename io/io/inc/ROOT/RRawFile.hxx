@@ -156,18 +156,6 @@ public:
       return params;
    }
 
-   // static std::uint64_t& range_begin() {
-   //    retSurn GetBitFlipParams().rng_begin;
-   // }
-
-   // static std::uint64_t& range_end() {
-   //    return GetBitFlipParams().rng_end;
-   // }
-
-   // Define the byte range start point and size for targeted bit flips
-   //static std::uint64_t& range_begin() { static std::uint64_t rng_begin = 0; return rng_begin; }
-   //static std::uint64_t& range_end() { static std::uint64_t rng_size = 0; return rng_size; }
-
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
    RRawFile &operator=(const RRawFile &) = delete;
@@ -189,6 +177,7 @@ public:
     */
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
    void PossiblyTriggerBitFlip(void* buffer, size_t total_bytes);
+   void PossiblyTriggerShortRead(void* buffer, size_t total_bytes);
    size_t ReadTotalBytes(void *buffer, size_t nbytes, std::uint64_t offset);
 
    /// Read from fFilePos offset. Returns the actual number of bytes read.
