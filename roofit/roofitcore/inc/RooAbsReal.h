@@ -140,7 +140,7 @@ public:
   virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
   std::vector<double> getValues(RooAbsData const& data) const;
 
-  double getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
+  double getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = {}) const;
 
   bool operator==(double value) const ;
   bool operator==(const RooAbsArg& other) const override;
