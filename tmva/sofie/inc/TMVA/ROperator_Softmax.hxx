@@ -195,7 +195,7 @@ public:
          out << SP*4 << "auto sumReduction = cl::sycl::reduction(sum_buf, cgh, cl::sycl::plus<>());\n";
          out << SP*4 << "cgh.parallel_for<class " << OpName << "_0>(cl::sycl::range<1>(" << length;
          out << "), sumReduction, [=](cl::sycl::id<1> id, auto& sum){\n";
-         out << SP*5 << "int tmp = cl::sycl::exp(acc_tensor_" << fNX << "[id]);\n";
+         out << SP*5 << "float tmp = cl::sycl::exp(acc_tensor_" << fNX << "[id]);\n";
          out << SP*5 << "acc_tensor_" << fNY << "[id] = tmp;\n";
          out << SP*5 << "sum += tmp;\n";
          out << SP*4 << "});\n";
@@ -204,7 +204,7 @@ public:
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::read_write};\n";
-         out << SP*4 << "auto acc_sum_buf = cl::sycl::accessor{sum_buf, cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_sum_buf = cl::sycl::accessor{sum_buf, cgh, cl::sycl::read_only};\n";
          out << SP*4 << "cgh.parallel_for<class " << OpName << "_1>(cl::sycl::range<1>(" << length;
          out << "), [=](cl::sycl::id<1> id){\n";
          out << SP*5 << "acc_tensor_" << fNY << "[id] /= acc_sum_buf[0];\n";
@@ -286,32 +286,56 @@ public:
          out << SP*5 << "size_t index = 0;\n";
 
          if (notBatch) {
-            out << SP*5 << "int n = " << length % batch << ";\n";
-            length /= batch; 
+            if (!notChannel || !notDepth || !notHeight || !notWidth) {
+               out << SP*5 << "int n = id % " << batch << ";\n";
+               out << SP*5 << "id /= " << batch << ";\n"; 
+            }
+            else {
+               out << SP*5 << "int n = id / " << batch << ";\n";
+            }
             out << SP*5 << "index += n * " << bStride << ";\n";
          }
+
          if (notChannel) {
-            out << SP*5 << "int c = " << length % channel << ";\n";
-            length /= channel;
+            if (!notDepth || !notHeight || !notWidth) {
+               out << SP*5 << "int c = id % " << channel << ";\n";
+               out << SP*5 << "id /= " << channel << ";\n";  
+            }
+            else {
+               out << SP*5 << "int c = id / " << channel << ";\n";
+            }
             out << SP*5 << "index += c * " << cStride << ";\n";
          }
+
          if (notDepth) {
-            out << SP*5 << "int d = " << length % depth << ";\n";
-            length /= depth;
+            if (!notHeight || !notWidth) {
+               out << SP*5 << "int d = id % " << depth << ";\n";
+               out << SP*5 << "id /= " << depth << ";\n";  
+            }
+            else {
+               out << SP*5 << "int d = id / " << depth << ";\n";
+            }
             out << SP*5 << "index += d * " << dStride << ";\n";
          }
+
          if (notHeight) {
-            out << SP*5 << "int h = " << length % height << ";\n";
-            length /= height;
+            if (!notWidth) {
+               out << SP*5 << "int h = id % " << height << ";\n";
+               out << SP*5 << "id /= " << height << ";\n";  
+            }
+            else {
+               out << SP*5 << "int h = id / " << height << ";\n";
+            }
             out << SP*5 << "index += h * " << hStride << ";\n";
          }
+
          if (notWidth) {
-            out << SP*5 << "int w = " << length % width << ";\n";
+            out << SP*5 << "int w = id;\n";
             out << SP*5 << "index += w;\n";
          }
 
          out << SP*5 << "for (size_t i=0; i<" << N << "; i++) {\n";
-         out << SP*6 << "int tmp = cl::sycl::exp(acc_tensor_" << fNX << "[index + i * " << iStride << "]);\n";
+         out << SP*6 << "float tmp = cl::sycl::exp(acc_tensor_" << fNX << "[index + i * " << iStride << "]);\n";
          out << SP*6 << "acc_tensor_" << fNY << "[index + i * " << iStride << "] = tmp;\n";
          out << SP*6 << "sum += tmp;\n";
          out << SP*5 << "}\n\n"; 
@@ -320,7 +344,7 @@ public:
          out << SP*6 << "acc_tensor_" << fNY << "[index + i * " << iStride << "] /= sum;\n";
          out << SP*5 << "}\n";
          out << SP*4 << "});\n";
-         out << SP*5 << "});\n";
+         out << SP*3 << "});\n";
           
       }
 
