@@ -97,6 +97,10 @@ if(ROOT_minuit2_omp_FOUND)
   find_dependency(OpenMP)
   find_dependency(Threads)
 endif()
+if(ROOT_libbsd_FOUND)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LIBBSD REQUIRED QUIET libbsd IMPORTED_TARGET GLOBAL)
+endif()
 
 #----------------------------------------------------------------------------
 # Now set them to ROOT_LIBRARIES
