@@ -13,6 +13,10 @@ if (roofit_multiprocess)
   set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
 endif()
 
+if(cuda)
+  set(CudaDependencies RooFitCuda)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
@@ -239,7 +243,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/ConstraintHelpers.cxx
     src/BatchModeHelpers.cxx
     src/BatchModeDataHelpers.cxx
-    src/CUDAHelpers.cxx
     src/Buffers.cxx
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -475,6 +478,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     MathCore
     Foam
     Smatrix
+    ${CudaDependencies}
   LINKDEF
     inc/LinkDef.h
   ${EXTRA_DICT_OPTS}

@@ -375,7 +375,7 @@ double RooProduct::evaluate() const
 }
 
 
-void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProduct::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   for (unsigned int i = 0; i < nEvents; ++i) {
     output[i] = 1.;

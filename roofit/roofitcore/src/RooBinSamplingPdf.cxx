@@ -160,7 +160,7 @@ double RooBinSamplingPdf::evaluate() const {
 /// Integrate the PDF over all its bins, and return a batch with those values.
 /// \param[in,out] evalData Struct with evaluation data.
 /// \param[in] normSet Normalisation set that's used to evaluate the PDF.
-void RooBinSamplingPdf::computeBatch(cudaStream_t*, double* output, size_t /*size*/, RooFit::Detail::DataMap const& dataMap) const
+void RooBinSamplingPdf::computeBatch(double* output, size_t /*size*/, RooFit::Detail::DataMap const& dataMap) const
 {
   // Retrieve binning, which we need to compute the probabilities
   auto boundaries = binBoundaries();

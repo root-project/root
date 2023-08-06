@@ -75,12 +75,12 @@ void RooPoisson::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of the Poisson distribution.
-void RooPoisson::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+void RooPoisson::computeBatch(double *output, size_t nEvents,
                               RooFit::Detail::DataMap const &dataMap) const
 {
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
    RooBatchCompute::ArgVector extraArgs{static_cast<double>(_protectNegative), static_cast<double>(_noRounding)};
-   dispatch->compute(stream, RooBatchCompute::Poisson, output, nEvents, {dataMap.at(x), dataMap.at(mean)}, extraArgs);
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Poisson, output, nEvents,
+                            {dataMap.at(x), dataMap.at(mean)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -68,11 +68,10 @@ void RooLandau::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Landau distribution.
-void RooLandau::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooLandau::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Landau, output, nEvents,
-          {dataMap.at(x), dataMap.at(mean), dataMap.at(sigma)});
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Landau, output, nEvents,
+                            {dataMap.at(x), dataMap.at(mean), dataMap.at(sigma)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

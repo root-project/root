@@ -199,7 +199,7 @@ void RooHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
    RooHistPdf::rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _depList, false);
 }
 
-void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
   if (_depList.size() == 1) {
     auto xVals = dataMap.at(_depList[0]);
     _dataHist->weights(output, xVals, _intOrder, false, _cdfBoundaries);

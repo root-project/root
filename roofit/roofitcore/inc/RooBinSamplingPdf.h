@@ -106,7 +106,7 @@ public:
   const RooAbsPdf& pdf() const { return _pdf.arg(); }
   const RooAbsReal& observable() const { return _observable.arg(); }
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
 protected:
   double evaluate() const override;

@@ -171,7 +171,6 @@ called for each data event.
 #include "RooFormulaVar.h"
 #include "RooDerivative.h"
 #include "RooFit/BatchModeHelpers.h"
-#include "RooVDTHeaders.h"
 #include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/TestStatistics/RooRealL.h"
 #include "RunContext.h"

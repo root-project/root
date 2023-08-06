@@ -4579,7 +4579,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 \param nEvents The number of events to be processed
 \param dataMap A std::map containing the input data for the computations
 **/
-void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.
   struct ServerData {

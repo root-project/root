@@ -167,7 +167,7 @@ void compute(  size_t batchSize, const int l1, const int m1, const int l2, const
 }
 };
 
-void RooLegendre::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
+void RooLegendre::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
 {
   compute(size, _l1, _m1, _l2, _m2, output, dataMap.at(_ctheta).data());
 }

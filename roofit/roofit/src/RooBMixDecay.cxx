@@ -121,13 +121,11 @@ double RooBMixDecay::coefficient(Int_t basisIndex) const
   return 0 ;
 }
 
-void RooBMixDecay::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
-                                RooFit::Detail::DataMap const &dataMap) const
+void RooBMixDecay::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-   dispatch->compute(stream, RooBatchCompute::BMixDecay, output, nEvents,
-                     {dataMap.at(&_convSet[0]), dataMap.at(&_convSet[1]), dataMap.at(_tagFlav), dataMap.at(_delMistag),
-                      dataMap.at(_mixState), dataMap.at(_mistag)});
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::BMixDecay, output, nEvents,
+                            {dataMap.at(&_convSet[0]), dataMap.at(&_convSet[1]), dataMap.at(_tagFlav),
+                             dataMap.at(_delMistag), dataMap.at(_mixState), dataMap.at(_mistag)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

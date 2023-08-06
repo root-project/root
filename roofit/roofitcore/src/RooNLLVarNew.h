@@ -44,7 +44,7 @@ public:
    /// Return default level for MINUIT error analysis.
    double defaultErrorLevel() const override { return 0.5; }
 
-   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
+   void computeBatch(double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
    bool canComputeBatchWithCuda() const override { return !_binnedL; }
    bool isReducerNode() const override { return true; }
 

@@ -62,7 +62,7 @@ public:
   std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override  ;
 
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 

@@ -75,10 +75,9 @@ double RooArgusBG::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooArgusBG::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooArgusBG::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::ArgusBG, output, nEvents,
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ArgusBG, output, nEvents,
           {dataMap.at(m), dataMap.at(m0), dataMap.at(c), dataMap.at(p)});
 }
 

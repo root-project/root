@@ -115,15 +115,14 @@ void RooChebychev::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Chebychev.
-void RooChebychev::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooChebychev::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::ArgVector extraArgs;
   for (auto* coef:_coefList)
     extraArgs.push_back( static_cast<const RooAbsReal*>(coef)->getVal() );
   extraArgs.push_back( _x.min(_refRangeName?_refRangeName->GetName() : nullptr) );
   extraArgs.push_back( _x.max(_refRangeName?_refRangeName->GetName() : nullptr) );
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Chebychev, output, nEvents, {dataMap.at(_x)}, extraArgs);
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Chebychev, output, nEvents, {dataMap.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

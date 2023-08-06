@@ -25,8 +25,6 @@
 #define __roodevice__
 #define __roohost__
 #define __rooglobal__
-struct cudaEvent_t;
-struct cudaStream_t;
 #endif // #indef __CUDACC__
 
 namespace RooBatchCompute {

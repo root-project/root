@@ -196,11 +196,11 @@ RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
    return _dataHist;
 }
 
-void RooHistPdf::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
   // For interpolation and histograms of higher dimension, use base function
   if(_pdfObsList.size() > 1) {
-      RooAbsReal::computeBatch(nullptr, output, nEvents, dataMap);
+      RooAbsReal::computeBatch(output, nEvents, dataMap);
       return;
   }
 

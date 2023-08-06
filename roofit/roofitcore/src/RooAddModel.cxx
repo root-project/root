@@ -377,10 +377,11 @@ double RooAddModel::evaluate() const
   return value ;
 }
 
-void RooAddModel::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+void RooAddModel::computeBatch(double *output, size_t nEvents,
                                RooFit::Detail::DataMap const &dataMap) const
 {
    // Like many other functions in this class, the implementation was copy-pasted from the RooAddPdf
+   RooBatchCompute::Config config = dataMap.config(this);
 
    _coefCache.resize(_pdfList.size());
    for (std::size_t i = 0; i < _coefList.size(); ++i) {
@@ -390,10 +391,10 @@ void RooAddModel::computeBatch(cudaStream_t *stream, double *output, size_t nEve
       // With CUDA, we can't do that because the inputs might be on the device.
       // That's why we throw an exception then.
       if (coefVals.size() > 1) {
-         if (stream) {
+         if (config.useCuda()) {
             throw std::runtime_error("The RooAddPdf doesn't support per-event coefficients in CUDA mode yet!");
          }
-         RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
+         RooAbsReal::computeBatch(output, nEvents, dataMap);
          return;
       }
       _coefCache[i] = coefVals[0];
@@ -414,8 +415,7 @@ void RooAddModel::computeBatch(cudaStream_t *stream, double *output, size_t nEve
          coefs.push_back(_coefCache[pdfNo] / cache->suppNormVal(pdfNo));
       }
    }
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-   dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+   RooBatchCompute::compute(config, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
 

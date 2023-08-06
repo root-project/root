@@ -159,9 +159,9 @@ double RooFormulaVar::evaluate() const
 }
 
 
-void RooFormulaVar::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooFormulaVar::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  getFormula().computeBatch(stream, output, nEvents, dataMap);
+  getFormula().computeBatch(output, nEvents, dataMap);
 }
 
 

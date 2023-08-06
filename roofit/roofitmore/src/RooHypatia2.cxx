@@ -487,7 +487,7 @@ void compute(RooSpan<double> output, RooSpan<const double> x,
 
 }
 
-void RooHypatia2::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
+void RooHypatia2::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
 {
   using namespace RooBatchCompute;
 

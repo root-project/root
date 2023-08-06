@@ -232,7 +232,7 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
    ctx.addResult(this, resName);
 }
 
-void FlexibleInterpVar::computeBatch(cudaStream_t* /*stream*/, double* output, size_t /*nEvents*/, RooFit::Detail::DataMap const& dataMap) const
+void FlexibleInterpVar::computeBatch(double* output, size_t /*nEvents*/, RooFit::Detail::DataMap const& dataMap) const
 {
   double total(_nominal) ;
 

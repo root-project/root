@@ -92,7 +92,7 @@ void RooConstraintSum::translate(RooFit::Detail::CodeSquashContext &ctx) const
    ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::constraintSumEvaluate", _set1, _set1.size()));
 }
 
-void RooConstraintSum::computeBatch(cudaStream_t *, double *output, size_t /*size*/,
+void RooConstraintSum::computeBatch(double *output, size_t /*size*/,
                                     RooFit::Detail::DataMap const &dataMap) const
 {
    double sum(0);

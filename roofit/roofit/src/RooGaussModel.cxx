@@ -140,7 +140,7 @@ double RooGaussModel::evaluate() const
    return evaluate(x, mean * msf, sigma * ssf, param1, param2, _basisCode);
 }
 
-void RooGaussModel::computeBatch(cudaStream_t *stream, double *output, size_t size,
+void RooGaussModel::computeBatch(double *output, size_t size,
                                  RooFit::Detail::DataMap const &dataMap) const
 {
    auto xVals = dataMap.at(x);
@@ -158,15 +158,13 @@ void RooGaussModel::computeBatch(cudaStream_t *stream, double *output, size_t si
    BasisType basisType = getBasisType(_basisCode);
    double basisSign = _basisCode - 10 * (basisType - 1) - 2;
 
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-
    // We have an implementation also for CUDA right now only for the most used
    // basis type, which is expBasis. If the need to support other basis types
    // arises, they can be implemented following this example. Remember to also
    // adapt RooGaussModel::canComputeBatchWithCuda().
    if (basisType == expBasis) {
       RooBatchCompute::ArgVector extraArgs{basisSign};
-      dispatch->compute(stream, RooBatchCompute::GaussModelExpBasis, output, size,
+      RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::GaussModelExpBasis, output, size,
                         {xVals, meanVals, meanSfVals, sigmaVals, sigmaSfVals, param1Vals}, extraArgs);
       return;
    }
@@ -174,7 +172,7 @@ void RooGaussModel::computeBatch(cudaStream_t *stream, double *output, size_t si
    // For now, if the arrays don't have the expected input shape, fall back to the scalar mode
    if (xVals.size() != size || meanVals.size() != 1 || meanSfVals.size() != 1 || sigmaVals.size() != 1 ||
        sigmaSfVals.size() != 1 || param1Vals.size() != 1 || param2Vals.size() != 1) {
-      return RooAbsPdf::computeBatch(stream, output, size, dataMap);
+      return RooAbsPdf::computeBatch(output, size, dataMap);
    }
 
    for (unsigned int i = 0; i < size; ++i) {

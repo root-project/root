@@ -20,8 +20,7 @@
  * normalization set into a new self-normalized pdf.
  */
 
-void RooNormalizedPdf::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
-                                    RooFit::Detail::DataMap const &dataMap) const
+void RooNormalizedPdf::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
    auto nums = dataMap.at(_pdf);
    auto integralSpan = dataMap.at(_normIntegral);
@@ -29,8 +28,8 @@ void RooNormalizedPdf::computeBatch(cudaStream_t *stream, double *output, size_t
    // We use the extraArgs as output parameter to count evaluation errors.
    RooBatchCompute::ArgVector extraArgs{0.0, 0.0, 0.0};
 
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-   dispatch->compute(stream, RooBatchCompute::NormalizedPdf, output, nEvents, {nums, integralSpan}, extraArgs);
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::NormalizedPdf, output, nEvents, {nums, integralSpan},
+                            extraArgs);
 
    std::size_t nEvalErrorsType0 = extraArgs[0];
    std::size_t nEvalErrorsType1 = extraArgs[1];

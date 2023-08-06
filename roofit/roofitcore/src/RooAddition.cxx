@@ -169,7 +169,7 @@ double RooAddition::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAddition::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
@@ -180,8 +180,7 @@ void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEve
     pdfs.push_back(dataMap.at(arg));
     coefs.push_back(1.0);
   }
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -87,7 +87,7 @@ public:
 
   protected:
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
   PdfCacheElem* getCache(const RooArgSet* nset, bool recalculate=true) const ;
 

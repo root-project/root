@@ -73,7 +73,7 @@ public:
 
   // Function evaluation
   double evaluate() const override ;
-  void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const override;
 
   protected:
   // Post-processing of server redirection

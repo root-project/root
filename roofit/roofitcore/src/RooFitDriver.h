@@ -65,12 +65,15 @@ private:
 
    void processVariable(NodeInfo &nodeInfo);
    void setClientsDirty(NodeInfo &nodeInfo);
-   double getValHeterogeneous();
-   void markGPUNodes();
-   void assignToGPU(NodeInfo &info);
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
    void syncDataTokens();
+
+#ifdef R__HAS_CUDA
+   double getValHeterogeneous();
+   void markGPUNodes();
+   void assignToGPU(NodeInfo &info);
+#endif
 
    ///////////////////////////
    // Private member variables
@@ -80,11 +83,15 @@ private:
    RooAbsReal &_topNode;
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;
+#ifdef R__HAS_CUDA
    double *_cudaMemDataset = nullptr;
+#endif
 
    // used for preserving static info about the computation graph
    RooFit::Detail::DataMap _dataMapCPU;
+#ifdef R__HAS_CUDA
    RooFit::Detail::DataMap _dataMapCUDA;
+#endif
 
    // the ordered computation graph
    std::vector<NodeInfo> _nodes;

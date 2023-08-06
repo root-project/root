@@ -46,7 +46,7 @@ protected:
    mutable std::vector<double> _wksp; ///<! do not persist
 
    double evaluate() const override;
-   void computeBatch(cudaStream_t *, double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
+   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
 
    // It doesn't make sense to use the GPU if the polynomial has no terms.
    inline bool canComputeBatchWithCuda() const override { return !_coefList.empty(); }
@@ -54,7 +54,7 @@ protected:
 private:
    friend class RooPolynomial;
 
-   static void computeBatchImpl(cudaStream_t *, double *output, size_t nEvents, RooFit::Detail::DataMap const &,
+   static void computeBatchImpl(RooAbsArg const* caller, double *output, size_t nEvents, RooFit::Detail::DataMap const &,
                                 RooAbsReal const &x, RooArgList const &coefs, int lowestOrder);
 
    static void fillCoeffValues(std::vector<double> &wksp, RooListProxy const &coefList);

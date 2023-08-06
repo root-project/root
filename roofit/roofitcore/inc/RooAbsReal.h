@@ -395,7 +395,7 @@ public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
                      RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
-  virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
+  virtual void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const;
 
   virtual bool hasGradient() const { return false; }
   virtual void gradient(double *) const {
