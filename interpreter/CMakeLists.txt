@@ -462,6 +462,9 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
     # install-clang-cpp target defined by LLVM's cmake module
     set(CLANG_LINKS_TO_CREATE clang++ clang-cl)
 
+    # Disable linking against shared LLVM
+    set(LLVM_LINK_LLVM_DYLIB OFF)
+
     add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
   endif(builtin_clang)
 
