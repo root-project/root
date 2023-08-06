@@ -108,7 +108,7 @@ protected:
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
   friend class RooAbsCachedReal ;
 
   void ioStreamerPass2() override ;

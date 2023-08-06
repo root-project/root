@@ -190,8 +190,7 @@ double RooNLLVarNew::computeBatchBinnedL(RooSpan<const double> preds, RooSpan<co
 \note nEvents is the number of events to be processed (the dataMap size)
 \param dataMap A map containing spans with the input data for the computation
 **/
-void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*nOut*/,
-                                RooFit::Detail::DataMap const &dataMap) const
+void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail::DataMap const &dataMap) const
 {
    RooSpan<const double> weights = dataMap.at(_weightVar);
    RooSpan<const double> weightsSumW2 = dataMap.at(_weightSquaredVar);
@@ -201,19 +200,20 @@ void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*n
       return;
    }
 
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   auto config = dataMap.config(this);
 
    auto probas = dataMap.at(_pdf);
 
-   _sumWeight =
-      weights.size() == 1 ? weights[0] * probas.size() : dispatch->reduceSum(stream, weights.data(), weights.size());
+   _sumWeight = weights.size() == 1 ? weights[0] * probas.size()
+                                    : RooBatchCompute::reduceSum(config, weights.data(), weights.size());
    if (_expectedEvents && _weightSquared && _sumWeight2 == 0.0) {
       _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * probas.size()
-                                        : dispatch->reduceSum(stream, weightsSumW2.data(), weightsSumW2.size());
+                                        : RooBatchCompute::reduceSum(config, weightsSumW2.data(), weightsSumW2.size());
    }
 
-   auto nllOut = dispatch->reduceNLL(stream, probas, _weightSquared ? weightsSumW2 : weights, weights, _sumWeight,
-                                     _doBinOffset ? dataMap.at(_binVolumeVar) : RooSpan<const double>{});
+   auto nllOut =
+      RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights, weights, _sumWeight,
+                                 _doBinOffset ? dataMap.at(_binVolumeVar) : RooSpan<const double>{});
 
    if (nllOut.nLargeValues > 0) {
       oocoutW(&*_pdf, Eval) << "RooAbsPdf::getLogVal(" << _pdf->GetName()

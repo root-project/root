@@ -133,10 +133,10 @@ void RooPolynomial::translate(RooFit::Detail::CodeSquashContext &ctx) const
 }
 
 /// Compute multiple values of Polynomial.
-void RooPolynomial::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+void RooPolynomial::computeBatch(double *output, size_t nEvents,
                                  RooFit::Detail::DataMap const &dataMap) const
 {
-   return RooPolyVar::computeBatchImpl(stream, output, nEvents, dataMap, _x.arg(), _coefList, _lowestOrder);
+   return RooPolyVar::computeBatchImpl(this, output, nEvents, dataMap, _x.arg(), _coefList, _lowestOrder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -12,12 +12,15 @@
 
 #include "RooFit/Detail/Buffers.h"
 
-#include <RooBatchCompute.h>
-
 #include <stdexcept>
 #include <functional>
 #include <queue>
 #include <map>
+
+#ifdef R__HAS_CUDA
+namespace CudaInterface = RooFit::Detail::CudaInterface;
+using CudaInterface::CudaStream;
+#endif
 
 namespace ROOT {
 namespace Experimental {
@@ -67,18 +70,19 @@ private:
    std::vector<double> _vec;
 };
 
+#ifdef R__HAS_CUDA
 class GPUBufferContainer {
 public:
    GPUBufferContainer() {}
    GPUBufferContainer(std::size_t size)
    {
-      _data = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMalloc(size * sizeof(double)));
+      _data = CudaInterface::cudaMalloc<double>(size);
       _size = size;
    }
    ~GPUBufferContainer()
    {
       if (_data)
-         RooBatchCompute::dispatchCUDA->cudaFree(_data);
+         CudaInterface::cudaFree(_data);
    }
    GPUBufferContainer(const GPUBufferContainer &) = delete;
    GPUBufferContainer &operator=(const GPUBufferContainer &) = delete;
@@ -117,7 +121,7 @@ public:
    PinnedBufferContainer() {}
    PinnedBufferContainer(std::size_t size)
    {
-      _data = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMallocHost(size * sizeof(double)));
+      _data = CudaInterface::cudaMallocHost<double>(size);
       _size = size;
       _gpuBuffer = GPUBufferContainer{size};
    }
@@ -135,14 +139,13 @@ public:
    }
    std::size_t size() const { return _size; }
 
-   void setCudaStream(cudaStream_t *stream) { _cudaStream = stream; }
+   void setCudaStream(CudaStream stream) { _cudaStream = stream; }
 
    double const *cpuReadPtr() const
    {
 
       if (_lastAccess == LastAccessType::GPU_WRITE) {
-         RooBatchCompute::dispatchCUDA->memcpyToCPU(_data, _gpuBuffer.gpuWritePtr(), _size * sizeof(double),
-                                                    _cudaStream);
+         CudaInterface::memcpyToCPU(_data, _gpuBuffer.gpuWritePtr(), _size * sizeof(double), _cudaStream);
       }
 
       _lastAccess = LastAccessType::CPU_READ;
@@ -152,8 +155,7 @@ public:
    {
 
       if (_lastAccess == LastAccessType::CPU_WRITE) {
-         RooBatchCompute::dispatchCUDA->memcpyToCUDA(_gpuBuffer.gpuWritePtr(), _data, _size * sizeof(double),
-                                                     _cudaStream);
+         CudaInterface::memcpyToCUDA(_gpuBuffer.gpuWritePtr(), _data, _size * sizeof(double), _cudaStream);
       }
 
       _lastAccess = LastAccessType::GPU_READ;
@@ -177,9 +179,10 @@ private:
    double *_data = nullptr;
    std::size_t _size;
    GPUBufferContainer _gpuBuffer;
-   cudaStream_t *_cudaStream = nullptr;
+   CudaStream _cudaStream;
    mutable LastAccessType _lastAccess = LastAccessType::CPU_READ;
 };
+#endif // R__HAS_CUDA
 
 template <class Container>
 class BufferImpl : public AbsBuffer {
@@ -214,14 +217,18 @@ private:
 
 using ScalarBuffer = BufferImpl<ScalarBufferContainer>;
 using CPUBuffer = BufferImpl<CPUBufferContainer>;
+#ifdef R__HAS_CUDA
 using GPUBuffer = BufferImpl<GPUBufferContainer>;
 using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
+#endif
 
 struct BufferQueuesMaps {
    ScalarBuffer::QueuesMap scalarBufferQueuesMap;
    CPUBuffer::QueuesMap cpuBufferQueuesMap;
+#ifdef R__HAS_CUDA
    GPUBuffer::QueuesMap gpuBufferQueuesMap;
    PinnedBuffer::QueuesMap pinnedBufferQueuesMap;
+#endif
 };
 
 BufferManager::BufferManager()
@@ -242,16 +249,18 @@ AbsBuffer *BufferManager::makeCpuBuffer(std::size_t size)
 {
    return new CPUBuffer{size, _queuesMaps->cpuBufferQueuesMap};
 }
+#ifdef R__HAS_CUDA
 AbsBuffer *BufferManager::makeGpuBuffer(std::size_t size)
 {
    return new GPUBuffer{size, _queuesMaps->gpuBufferQueuesMap};
 }
-AbsBuffer *BufferManager::makePinnedBuffer(std::size_t size, cudaStream_t *stream)
+AbsBuffer *BufferManager::makePinnedBuffer(std::size_t size, CudaStream stream)
 {
    auto out = new PinnedBuffer{size, _queuesMaps->pinnedBufferQueuesMap};
    out->vec().setCudaStream(stream);
    return out;
 }
+#endif // R__HAS_CUDA
 
 } // end namespace Detail
 } // end namespace Experimental

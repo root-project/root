@@ -10,29 +10,31 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooFit/CUDAHelpers.h"
+#include "CudaHelpers.h"
 
-#include <RooBatchCompute.h>
+#include <RooFit/Detail/CudaInterface.h>
 
 /// Measure the time for transfering data from host to device and vice-versa.
 std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFit::CUDAHelpers::memcpyBenchmark(std::size_t nBytes)
 {
    using namespace std::chrono;
+   namespace CudaInterface = RooFit::Detail::CudaInterface;
 
    std::pair<std::chrono::microseconds, std::chrono::microseconds> ret;
-   auto hostArr = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMallocHost(nBytes));
-   auto deviArr = static_cast<double *>(RooBatchCompute::dispatchCUDA->cudaMalloc(nBytes));
-   for (int i = 0; i < 5; i++) {
+   char *hostArr = CudaInterface::cudaMallocHost<char>(nBytes);
+   char *deviArr = CudaInterface::cudaMalloc<char>(nBytes);
+   constexpr std::size_t nIterations = 5;
+   for (std::size_t i = 0; i < nIterations; i++) {
       auto start = steady_clock::now();
-      RooBatchCompute::dispatchCUDA->memcpyToCUDA(deviArr, hostArr, nBytes);
+      CudaInterface::memcpyToCUDA(deviArr, hostArr, nBytes);
       ret.first += duration_cast<microseconds>(steady_clock::now() - start);
       start = steady_clock::now();
-      RooBatchCompute::dispatchCUDA->memcpyToCPU(hostArr, deviArr, nBytes);
+      CudaInterface::memcpyToCPU(hostArr, deviArr, nBytes);
       ret.second += duration_cast<microseconds>(steady_clock::now() - start);
    }
-   RooBatchCompute::dispatchCUDA->cudaFreeHost(hostArr);
-   RooBatchCompute::dispatchCUDA->cudaFree(deviArr);
-   ret.first /= 5;
-   ret.second /= 5;
+   CudaInterface::cudaFreeHost(hostArr);
+   CudaInterface::cudaFree(deviArr);
+   ret.first /= nIterations;
+   ret.second /= nIterations;
    return ret;
 }

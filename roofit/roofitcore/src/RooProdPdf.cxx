@@ -410,24 +410,24 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::calculateBatch(const RooProdPdf::CacheElem& cache, cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProdPdf::calculateBatch(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, double *output,
+                                size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-
-  if (cache._isRearranged) {
-    auto numerator = dataMap.at(cache._rearrangedNum.get());
-    auto denominator = dataMap.at(cache._rearrangedDen.get());
-    dispatch->compute(stream, RooBatchCompute::Ratio, output, nEvents, {numerator, denominator});
-  } else {
-    RooBatchCompute::VarVector factors;
-    factors.reserve(cache._partList.size());
-    for (const RooAbsArg *i : cache._partList) {
-       auto span = dataMap.at(i);
-       factors.push_back(span);
-    }
-    RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
-    dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, factors, special);
-  }
+   if (cache._isRearranged) {
+      auto numerator = dataMap.at(cache._rearrangedNum.get());
+      auto denominator = dataMap.at(cache._rearrangedDen.get());
+      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Ratio, output, nEvents,
+                               {numerator, denominator});
+   } else {
+      RooBatchCompute::VarVector factors;
+      factors.reserve(cache._partList.size());
+      for (const RooAbsArg *i : cache._partList) {
+         auto span = dataMap.at(i);
+         factors.push_back(span);
+      }
+      RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
+      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::ProdPdf, output, nEvents, factors, special);
+   }
 }
 
 namespace {
@@ -2343,10 +2343,10 @@ public:
 
    inline bool canComputeBatchWithCuda() const override { return true; }
 
-   void computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+   void computeBatch(double *output, size_t nEvents,
                      RooFit::Detail::DataMap const &dataMap) const override
    {
-      _prodPdf->calculateBatch(*_cache, stream, output, nEvents, dataMap);
+      _prodPdf->calculateBatch(this, *_cache, output, nEvents, dataMap);
    }
 
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }

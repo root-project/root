@@ -135,9 +135,9 @@ double RooGenericPdf::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooGenericPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  formula().computeBatch(stream, output, nEvents, dataMap);
+  formula().computeBatch(output, nEvents, dataMap);
 }
 
 

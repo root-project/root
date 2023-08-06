@@ -14,6 +14,7 @@
 #define RooFit_Detail_DataMap_h
 
 #include <RooAbsArg.h>
+#include <RooBatchCompute.h>
 #include <RooSpan.h>
 
 #include <TNamed.h>
@@ -77,13 +78,14 @@ namespace Detail {
 
 class DataMap {
 public:
-   auto empty() const { return _dataMap.empty(); }
-   auto begin() { return _dataMap.begin(); }
-   auto end() { return _dataMap.end(); }
-   auto begin() const { return _dataMap.begin(); }
-   auto end() const { return _dataMap.end(); }
-   auto size() const { return _dataMap.size(); }
-   auto resize(std::size_t n) { return _dataMap.resize(n); }
+   auto size() const {
+       assert(_dataMap.size() == _cfgs.size());
+       return _dataMap.size();
+   }
+   void resize(std::size_t n) {
+       _cfgs.resize(n);
+       _dataMap.resize(n);
+   }
 
    inline void set(RooAbsArg const *arg, RooSpan<const double> const &span)
    {
@@ -91,6 +93,14 @@ public:
          return;
       std::size_t idx = arg->dataToken();
       _dataMap[idx] = span;
+   }
+
+   inline void setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config)
+   {
+      if (!arg->hasDataToken())
+         return;
+      std::size_t idx = arg->dataToken();
+      _cfgs[idx] = config;
    }
 
    RooSpan<const double> at(RooAbsArg const *arg, RooAbsArg const * caller = nullptr);
@@ -112,8 +122,19 @@ public:
       return at(&proxy.arg(), proxy.owner());
    }
 
+   RooBatchCompute::Config config(RooAbsArg const *arg) const
+   {
+      if (!arg->hasDataToken()) {
+         return {};
+      }
+      std::size_t idx = arg->dataToken();
+      return _cfgs[idx];
+   }
+
+
 private:
    std::vector<RooSpan<const double>> _dataMap;
+   std::vector<RooBatchCompute::Config> _cfgs;
 };
 
 } // namespace Detail

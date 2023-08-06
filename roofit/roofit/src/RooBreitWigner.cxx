@@ -63,10 +63,9 @@ double RooBreitWigner::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BreitWigner distribution.
-void RooBreitWigner::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooBreitWigner::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::BreitWigner, output, nEvents, {dataMap.at(x), dataMap.at(mean), dataMap.at(width)});
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::BreitWigner, output, nEvents, {dataMap.at(x), dataMap.at(mean), dataMap.at(width)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
