@@ -13,7 +13,7 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include <RooBatchComputeTypes.h>
+#include <RooSpan.h>
 
 #include <RConfig.h>
 
@@ -27,6 +27,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
@@ -41,6 +42,13 @@
  * available on a specific platform.
  */
 namespace RooBatchCompute {
+
+struct RunContext;
+
+typedef std::vector<RooSpan<const double>> VarVector;
+typedef std::vector<double> ArgVector;
+typedef double *__restrict RestrictArr;
+typedef const double *__restrict InputArr;
 
 void init();
 

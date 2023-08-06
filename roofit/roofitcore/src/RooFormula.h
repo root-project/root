@@ -15,7 +15,6 @@
 #include "RooArgList.h"
 #include "RooArgSet.h"
 #include "RooFit/Detail/DataMap.h"
-#include "RooBatchComputeTypes.h"
 
 #include "TFormula.h"
 

@@ -13,9 +13,6 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTETYPES_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTETYPES_H
 
-#include <RooSpan.h>
-
-#include <vector>
 
 #ifdef __CUDACC__
 #define __roodevice__ __device__
@@ -26,16 +23,5 @@
 #define __roohost__
 #define __rooglobal__
 #endif // #indef __CUDACC__
-
-namespace RooBatchCompute {
-
-struct RunContext;
-
-typedef std::vector<RooSpan<const double>> VarVector;
-typedef std::vector<double> ArgVector;
-typedef double *__restrict RestrictArr;
-typedef const double *__restrict InputArr;
-
-} // namespace RooBatchCompute
 
 #endif

@@ -23,7 +23,6 @@
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
-#include "RooBatchComputeTypes.h"
 #include "RooFit/Detail/DataMap.h"
 #include "RooFit/Detail/CodeSquashContext.h"
 
