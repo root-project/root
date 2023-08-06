@@ -28,6 +28,5 @@ RooSpan<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*call
    return _dataMap[idx];
 }
 
-
 } // namespace Detail
 } // namespace RooFit

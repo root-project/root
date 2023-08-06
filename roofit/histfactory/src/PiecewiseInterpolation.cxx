@@ -241,7 +241,7 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
 /// Interpolate between input distributions for all values of the observable in `evalData`.
 /// \param[in,out] evalData Struct holding spans pointing to input data. The results of this function will be stored here.
 /// \param[in] normSet Arguments to normalise over.
-void PiecewiseInterpolation::computeBatch(cudaStream_t*, double* sum, size_t /*size*/, RooFit::Detail::DataMap const& dataMap) const {
+void PiecewiseInterpolation::computeBatch(double* sum, size_t /*size*/, RooFit::Detail::DataMap const& dataMap) const {
   auto nominal = dataMap.at(_nominal);
   for(unsigned int j=0; j < nominal.size(); ++j) {
     sum[j] = nominal[j];

@@ -85,10 +85,9 @@ void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.
-void RooLognormal::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooLognormal::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Lognormal, output, nEvents,
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Lognormal, output, nEvents,
           {dataMap.at(x), dataMap.at(m0), dataMap.at(k)});
 }
 

@@ -61,10 +61,9 @@ double RooExponential::evaluate() const{
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Exponential distribution.
-void RooExponential::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooExponential::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Exponential, output, nEvents, {dataMap.at(x),dataMap.at(c)});
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Exponential, output, nEvents, {dataMap.at(x),dataMap.at(c)});
 }
 
 

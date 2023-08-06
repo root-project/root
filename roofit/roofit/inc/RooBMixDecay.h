@@ -45,7 +45,7 @@ public:
   void initGenerator(Int_t code) override ;
   void generateEvent(Int_t code) override;
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 protected:

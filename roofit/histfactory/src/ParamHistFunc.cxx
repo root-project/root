@@ -606,7 +606,7 @@ void ParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 /// the associated parameters.
 /// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
-void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+void ParamHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
 
   auto const& n = _numBinsPerDim;
   // check if _numBins needs to be filled

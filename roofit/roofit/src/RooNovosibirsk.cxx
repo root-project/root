@@ -89,10 +89,9 @@ double RooNovosibirsk::evaluate() const
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Novosibirsk distribution.
-void RooNovosibirsk::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooNovosibirsk::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Novosibirsk, output, nEvents,
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Novosibirsk, output, nEvents,
           {dataMap.at(x), dataMap.at(peak), dataMap.at(width), dataMap.at(tail)});
 }
 
