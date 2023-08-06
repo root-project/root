@@ -21,8 +21,6 @@
 
 #include <Math/Util.h>
 
-#include "RooBatchComputeTypes.h"
-
 namespace ROOT {
 namespace Experimental {
 
