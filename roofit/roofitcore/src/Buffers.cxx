@@ -192,30 +192,27 @@ struct BufferQueuesMaps {
 
 BufferManager::BufferManager()
 {
-   _queuesMaps = new BufferQueuesMaps;
+   _queuesMaps = std::make_unique<BufferQueuesMaps>();
 }
 
-BufferManager::~BufferManager()
-{
-   delete _queuesMaps;
-}
+BufferManager::~BufferManager() = default;
 
-AbsBuffer *BufferManager::makeScalarBuffer()
+std::unique_ptr<AbsBuffer> BufferManager::makeScalarBuffer()
 {
-   return new ScalarBuffer{1, _queuesMaps->scalarBufferQueuesMap};
+   return std::make_unique<ScalarBuffer>(1, _queuesMaps->scalarBufferQueuesMap);
 }
-AbsBuffer *BufferManager::makeCpuBuffer(std::size_t size)
+std::unique_ptr<AbsBuffer> BufferManager::makeCpuBuffer(std::size_t size)
 {
-   return new CPUBuffer{size, _queuesMaps->cpuBufferQueuesMap};
+   return std::make_unique<CPUBuffer>(size, _queuesMaps->cpuBufferQueuesMap);
 }
 #ifdef R__HAS_CUDA
-AbsBuffer *BufferManager::makeGpuBuffer(std::size_t size)
+std::unique_ptr<AbsBuffer> BufferManager::makeGpuBuffer(std::size_t size)
 {
-   return new GPUBuffer{size, _queuesMaps->gpuBufferQueuesMap};
+   return std::make_unique<GPUBuffer>(size, _queuesMaps->gpuBufferQueuesMap);
 }
-AbsBuffer *BufferManager::makePinnedBuffer(std::size_t size, CudaStream *stream)
+std::unique_ptr<AbsBuffer> BufferManager::makePinnedBuffer(std::size_t size, CudaStream *stream)
 {
-   auto out = new PinnedBuffer{size, _queuesMaps->pinnedBufferQueuesMap};
+   auto out = std::make_unique<PinnedBuffer>(size, _queuesMaps->pinnedBufferQueuesMap);
    out->vec().setCudaStream(stream);
    return out;
 }

@@ -98,45 +98,30 @@ void logArchitectureInfo(RooFit::BatchModeOption batchMode)
 struct NodeInfo {
 
    bool isScalar() const { return outputSize == 1; }
-
 #ifdef R__HAS_CUDA
    bool computeInGPU() const { return (absArg->isReducerNode() || !isScalar()) && absArg->canComputeBatchWithCuda(); }
 #endif
 
    RooAbsArg *absArg = nullptr;
-
-   Detail::AbsBuffer *buffer = nullptr;
+   std::unique_ptr<Detail::AbsBuffer> buffer;
    std::size_t iNode = 0;
+#ifdef R__HAS_CUDA
    int remClients = 0;
    int remServers = 0;
-#ifdef R__HAS_CUDA
+   std::unique_ptr<RooFit::Detail::CudaInterface::CudaEvent> event;
+   std::unique_ptr<RooFit::Detail::CudaInterface::CudaStream> stream;
    bool copyAfterEvaluation = false;
+   bool hasLogged = false;
 #endif
    bool fromDataset = false;
    bool isVariable = false;
    bool isDirty = true;
    bool isCategory = false;
-   bool hasLogged = false;
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = std::numeric_limits<std::size_t>::max();
    double scalarBuffer = 0.0;
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
-
-#ifdef R__HAS_CUDA
-   std::unique_ptr<RooFit::Detail::CudaInterface::CudaEvent> event;
-   std::unique_ptr<RooFit::Detail::CudaInterface::CudaStream> stream;
-
-   /// Check the servers of a node that has been computed and release it's resources
-   /// if they are no longer needed.
-   void decrementRemainingClients()
-   {
-      if (--remClients == 0) {
-         delete buffer;
-         buffer = nullptr;
-      }
-   }
-#endif // R__HAS_CUDA
 };
 
 /// Construct a new RooFitDriver. The constructor analyzes and saves metadata about the graph,
@@ -260,10 +245,7 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
 #endif
    std::size_t iNode = 0;
    for (auto &info : _nodes) {
-      if (info.buffer) {
-         delete info.buffer;
-         info.buffer = nullptr;
-      }
+      info.buffer.reset();
       auto found = dataSpans.find(info.absArg->namePtr());
       if (found != dataSpans.end()) {
          info.absArg->setDataToken(iNode);
@@ -453,9 +435,7 @@ double RooFitDriver::getValHeterogeneous()
    for (auto &info : _nodes) {
       info.remClients = info.clientInfos.size();
       info.remServers = info.serverInfos.size();
-      if (info.buffer)
-         delete info.buffer;
-      info.buffer = nullptr;
+      info.buffer.reset();
    }
 
    // find initial GPU nodes and assign them to GPU
@@ -479,7 +459,11 @@ double RooFitDriver::getValHeterogeneous()
                }
             }
             for (auto *serverInfo : info.serverInfos) {
-               serverInfo->decrementRemainingClients();
+               /// Check the servers of a node that has been computed and release it's resources
+               /// if they are no longer needed.
+               if (--serverInfo->remClients == 0) {
+                  serverInfo->buffer.reset();
+               }
             }
          }
       }
@@ -513,7 +497,11 @@ double RooFitDriver::getValHeterogeneous()
          }
       }
       for (auto *serverInfo : info.serverInfos) {
-         serverInfo->decrementRemainingClients();
+         /// Check the servers of a node that has been computed and release it's resources
+         /// if they are no longer needed.
+         if (--serverInfo->remClients == 0) {
+            serverInfo->buffer.reset();
+         }
       }
    }
 
@@ -525,8 +513,6 @@ double RooFitDriver::getValHeterogeneous()
 /// in case they only depend on GPU nodes.
 void RooFitDriver::assignToGPU(NodeInfo &info)
 {
-   using namespace Detail;
-
    auto node = static_cast<RooAbsReal const *>(info.absArg);
 
    info.remServers = -1;
@@ -644,6 +630,12 @@ void RooFitDriver::print(std::ostream &os) const
    printHorizontalRow();
 }
 
+/// Gets all the parameters of the RooAbsReal. This is in principle not
+/// necessary, because we can always ask the RooAbsReal itself, but the
+/// RooFitDriver has the cached information to get the answer quicker.
+/// Therefore, this is not meant to be used in general, just where it matters.
+/// \warning If we find another solution to get the parameters efficiently,
+/// this function might be removed without notice.
 RooArgSet RooFitDriver::getParameters() const
 {
    RooArgSet parameters;
