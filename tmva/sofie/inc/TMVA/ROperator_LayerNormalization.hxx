@@ -410,7 +410,7 @@ public:
       out << SP*5 << "float sum = 0.0;\n";
 
       for (size_t i=0; i<fAxis; i++) {
-         out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_0[" << i << "];\n";
+         out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_0[" << std::to::string(i) << "];\n";
       }
 
       for (size_t j = fAxis; j < fSize; j++) {
@@ -445,7 +445,7 @@ public:
       out << SP*5 << fType << " sum = 0.0;\n";
 
       for (size_t i=0; i<fAxis; i++) {
-         out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_0[" << i << "];\n";
+         out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_0[" << std::to_string(i) << "];\n";
       }
 
       for (size_t j = fAxis; j < fSize; j++) {
@@ -486,7 +486,7 @@ public:
          out << fSize << ">(num_work_items_1), [=](cl::sycl::id<" << fSize << ">id){\n";
       
          for (size_t i=0; i<fSize; i++) {
-            out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_1[" << i << "];\n";
+            out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_1[" << std::to_string(i) << "];\n";
          }
 
          out << "\n" << SP*5 << "// NormalizedX = InvStdDev * (CastedX - Mean)\n";
@@ -521,7 +521,7 @@ public:
          out << fSize << ">(num_work_items_1), [=](cl::sycl::id<" << fSize << ">id){\n";
 
          for (size_t i=0; i<fSize; i++) {
-            out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_1[" << i << "];\n";
+            out << SP*5 << "size_t axis_" + std::to_string(i) = "num_work_items_1[" << std::to_string(i) << "];\n";
          }
 
          out << SP*5 << "acc_tensor_" << fNY << "[" << InputIndex << "] = acc_tensor_" << fNScale;
