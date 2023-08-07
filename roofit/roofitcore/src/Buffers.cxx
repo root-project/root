@@ -48,7 +48,6 @@ private:
 
 class CPUBufferContainer {
 public:
-   CPUBufferContainer() {}
    CPUBufferContainer(std::size_t size) : _vec(size) {}
    std::size_t size() const { return _vec.size(); }
 
@@ -73,71 +72,31 @@ private:
 #ifdef R__HAS_CUDA
 class GPUBufferContainer {
 public:
-   GPUBufferContainer() {}
-   GPUBufferContainer(std::size_t size)
-   {
-      _data = CudaInterface::cudaMalloc<double>(size);
-      _size = size;
-   }
-   ~GPUBufferContainer()
-   {
-      if (_data)
-         CudaInterface::cudaFree(_data);
-   }
-   GPUBufferContainer(const GPUBufferContainer &) = delete;
-   GPUBufferContainer &operator=(const GPUBufferContainer &) = delete;
-   GPUBufferContainer(GPUBufferContainer &&other) { *this = std::move(other); }
-   GPUBufferContainer &operator=(GPUBufferContainer &&other)
-   {
-      _data = other._data;
-      other._data = nullptr;
-      _size = other._size;
-      other._size = 0;
-      return *this;
-   }
-   std::size_t size() const { return _size; }
+   GPUBufferContainer(std::size_t size) : _arr(size) {}
+   std::size_t size() const { return _arr.size(); }
 
    double const *cpuReadPtr() const
    {
       throw std::bad_function_call();
       return nullptr;
    }
-   double const *gpuReadPtr() const { return static_cast<double *>(_data); }
+   double const *gpuReadPtr() const { return _arr.data(); }
 
    double *cpuWritePtr() const
    {
       throw std::bad_function_call();
       return nullptr;
    }
-   double *gpuWritePtr() const { return static_cast<double *>(_data); }
+   double *gpuWritePtr() const { return const_cast<double *>(_arr.data()); }
 
 private:
-   double *_data = nullptr;
-   std::size_t _size;
+   CudaInterface::DeviceArray<double> _arr;
 };
 
 class PinnedBufferContainer {
 public:
-   PinnedBufferContainer() {}
-   PinnedBufferContainer(std::size_t size)
-   {
-      _data = CudaInterface::cudaMallocHost<double>(size);
-      _size = size;
-      _gpuBuffer = GPUBufferContainer{size};
-   }
-   PinnedBufferContainer(const PinnedBufferContainer &) = delete;
-   PinnedBufferContainer &operator=(const PinnedBufferContainer &) = delete;
-   PinnedBufferContainer(PinnedBufferContainer &&other) { *this = std::move(other); }
-   PinnedBufferContainer &operator=(PinnedBufferContainer &&other)
-   {
-      _data = other._data;
-      other._data = nullptr;
-      _size = other._size;
-      other._size = 0;
-      _gpuBuffer = std::move(other._gpuBuffer);
-      return *this;
-   }
-   std::size_t size() const { return _size; }
+   PinnedBufferContainer(std::size_t size) : _arr{size}, _gpuBuffer{size} {}
+   std::size_t size() const { return _arr.size(); }
 
    void setCudaStream(CudaStream stream) { _cudaStream = stream; }
 
@@ -145,17 +104,18 @@ public:
    {
 
       if (_lastAccess == LastAccessType::GPU_WRITE) {
-         CudaInterface::memcpyToCPU(_data, _gpuBuffer.gpuWritePtr(), _size * sizeof(double), _cudaStream);
+         CudaInterface::copyDeviceToHost(_gpuBuffer.gpuReadPtr(), const_cast<double *>(_arr.data()), size(),
+                                         _cudaStream);
       }
 
       _lastAccess = LastAccessType::CPU_READ;
-      return static_cast<double *>(_data);
+      return const_cast<double *>(_arr.data());
    }
    double const *gpuReadPtr() const
    {
 
       if (_lastAccess == LastAccessType::CPU_WRITE) {
-         CudaInterface::memcpyToCUDA(_gpuBuffer.gpuWritePtr(), _data, _size * sizeof(double), _cudaStream);
+         CudaInterface::copyHostToDevice(_arr.data(), _gpuBuffer.gpuWritePtr(), size(), _cudaStream);
       }
 
       _lastAccess = LastAccessType::GPU_READ;
@@ -165,7 +125,7 @@ public:
    double *cpuWritePtr()
    {
       _lastAccess = LastAccessType::CPU_WRITE;
-      return static_cast<double *>(_data);
+      return _arr.data();
    }
    double *gpuWritePtr()
    {
@@ -176,8 +136,7 @@ public:
 private:
    enum class LastAccessType { CPU_READ, GPU_READ, CPU_WRITE, GPU_WRITE };
 
-   double *_data = nullptr;
-   std::size_t _size;
+   CudaInterface::PinnedHostArray<double> _arr;
    GPUBufferContainer _gpuBuffer;
    CudaStream _cudaStream;
    mutable LastAccessType _lastAccess = LastAccessType::CPU_READ;
@@ -187,13 +146,13 @@ private:
 template <class Container>
 class BufferImpl : public AbsBuffer {
 public:
-   using Queue = std::queue<Container>;
+   using Queue = std::queue<std::unique_ptr<Container>>;
    using QueuesMap = std::map<std::size_t, Queue>;
 
    BufferImpl(std::size_t size, QueuesMap &queuesMap) : _queue{queuesMap[size]}
    {
       if (_queue.empty()) {
-         _vec = Container(size);
+         _vec = std::make_unique<Container>(size);
       } else {
          _vec = std::move(_queue.front());
          _queue.pop();
@@ -202,16 +161,16 @@ public:
 
    ~BufferImpl() override { _queue.emplace(std::move(_vec)); }
 
-   double const *cpuReadPtr() const override { return _vec.cpuReadPtr(); }
-   double const *gpuReadPtr() const override { return _vec.gpuReadPtr(); }
+   double const *cpuReadPtr() const override { return _vec->cpuReadPtr(); }
+   double const *gpuReadPtr() const override { return _vec->gpuReadPtr(); }
 
-   double *cpuWritePtr() override { return _vec.cpuWritePtr(); }
-   double *gpuWritePtr() override { return _vec.gpuWritePtr(); }
+   double *cpuWritePtr() override { return _vec->cpuWritePtr(); }
+   double *gpuWritePtr() override { return _vec->gpuWritePtr(); }
 
-   Container &vec() { return _vec; }
+   Container &vec() { return *_vec; }
 
 private:
-   Container _vec;
+   std::unique_ptr<Container> _vec;
    Queue &_queue;
 };
 

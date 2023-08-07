@@ -21,6 +21,10 @@
 #include <RooRealProxy.h>
 #include "RooFit/Detail/Buffers.h"
 
+#ifdef R__HAS_CUDA
+#include <RooFit/Detail/CudaInterface.h>
+#endif
+
 #include <chrono>
 #include <memory>
 #include <stack>
@@ -84,7 +88,7 @@ private:
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;
 #ifdef R__HAS_CUDA
-   double *_cudaMemDataset = nullptr;
+   std::unique_ptr<RooFit::Detail::CudaInterface::DeviceArray<double>> _cudaMemDataset;
 #endif
 
    // used for preserving static info about the computation graph
