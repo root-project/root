@@ -47,11 +47,13 @@ template <>
 void Deleter<DeviceMemory>::operator()(void *ptr)
 {
    ERRCHECK(::cudaFree(ptr));
+   ptr = nullptr;
 }
 template <>
 void Deleter<PinnedHostMemory>::operator()(void *ptr)
 {
    ERRCHECK(::cudaFreeHost(ptr));
+   ptr = nullptr;
 }
 
 /**
@@ -61,24 +63,29 @@ void Deleter<PinnedHostMemory>::operator()(void *ptr)
  *                            If `false`, the `cudaEventDisableTiming` is passed to CUDA.
  * @return                    CudaEvent object representing the new event.
  */
-CudaEvent newCudaEvent(bool forTiming)
+CudaEvent::CudaEvent(bool forTiming)
 {
-   CudaEvent ret;
-   ret.reset(new cudaEvent_t);
-   ERRCHECK(cudaEventCreateWithFlags(ret.get(), forTiming ? 0 : cudaEventDisableTiming));
-   return ret;
+   auto event = new cudaEvent_t;
+   ERRCHECK(cudaEventCreateWithFlags(event, forTiming ? 0 : cudaEventDisableTiming));
+   _ptr.reset(event);
 }
 
-/**
- * Destroys a CUDA event.
- *
- * @param[in] event           CudaEvent object representing the event to be destroyed.
- */
-void deleteCudaEvent(CudaEvent event)
+template <>
+void Deleter<CudaEvent>::operator()(void *ptr)
 {
-   ERRCHECK(cudaEventDestroy(*event.get()));
-   delete event.get();
-   event.reset(nullptr);
+   auto event = reinterpret_cast<cudaEvent_t *>(ptr);
+   ERRCHECK(cudaEventDestroy(*event));
+   delete event;
+   ptr = nullptr;
+}
+
+template <>
+void Deleter<CudaStream>::operator()(void *ptr)
+{
+   auto stream = reinterpret_cast<cudaStream_t *>(ptr);
+   ERRCHECK(cudaStreamDestroy(*stream));
+   delete stream;
+   ptr = nullptr;
 }
 
 /**
@@ -87,9 +94,9 @@ void deleteCudaEvent(CudaEvent event)
  * @param[in] event           CudaEvent object representing the event to be recorded.
  * @param[in] stream          CudaStream in which to record the event.
  */
-void cudaEventRecord(CudaEvent event, CudaStream stream)
+void cudaEventRecord(CudaEvent &event, CudaStream &stream)
 {
-   ERRCHECK(::cudaEventRecord(*event.get(), *stream.get()));
+   ERRCHECK(::cudaEventRecord(event, stream));
 }
 
 /**
@@ -97,35 +104,21 @@ void cudaEventRecord(CudaEvent event, CudaStream stream)
  *
  * @return                    CudaStream object representing the new stream.
  */
-CudaStream newCudaStream()
+CudaStream::CudaStream()
 {
-   CudaStream ret;
-   ret.reset(new cudaStream_t);
-   ERRCHECK(cudaStreamCreate(ret.get()));
-   return ret;
-}
-
-/**
- * Destroys a CUDA stream.
- *
- * @param[in] stream          CudaStream object representing the stream to be destroyed.
- */
-void deleteCudaStream(CudaStream stream)
-{
-   ERRCHECK(cudaStreamDestroy(*stream.get()));
-   delete stream.get();
-   stream.reset(nullptr);
+   auto stream = new cudaStream_t;
+   ERRCHECK(cudaStreamCreate(stream));
+   _ptr.reset(stream);
 }
 
 /**
  * Checks if a CUDA stream is currently active.
  *
- * @param[in] stream          CudaStream object representing the stream to be checked.
  * @return                    True if the stream is active, false otherwise.
  */
-bool streamIsActive(CudaStream stream)
+bool CudaStream::isActive()
 {
-   cudaError_t err = cudaStreamQuery(*stream.get());
+   cudaError_t err = cudaStreamQuery(*this);
    if (err == cudaErrorNotReady)
       return true;
    else if (err == cudaSuccess)
@@ -137,12 +130,11 @@ bool streamIsActive(CudaStream stream)
 /**
  * Makes a CUDA stream wait for a CUDA event.
  *
- * @param[in] stream          CudaStream object representing the stream to wait on.
  * @param[in] event           CudaEvent object representing the event to wait for.
  */
-void cudaStreamWaitEvent(CudaStream stream, CudaEvent event)
+void CudaStream::waitForEvent(CudaEvent &event)
 {
-   ERRCHECK(::cudaStreamWaitEvent(*stream.get(), *event.get(), 0));
+   ERRCHECK(::cudaStreamWaitEvent(*this, event, 0));
 }
 
 /**
@@ -152,27 +144,27 @@ void cudaStreamWaitEvent(CudaStream stream, CudaEvent event)
  * @param[in] end             CudaEvent representing the end event.
  * @return                    Elapsed time in milliseconds.
  */
-float cudaEventElapsedTime(CudaEvent begin, CudaEvent end)
+float cudaEventElapsedTime(CudaEvent &begin, CudaEvent &end)
 {
    float ret;
-   ERRCHECK(::cudaEventElapsedTime(&ret, *begin.get(), *end.get()));
+   ERRCHECK(::cudaEventElapsedTime(&ret, begin, end));
    return ret;
 }
 
 /// \internal
-void copyHostToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream stream)
+void copyHostToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
 {
-   if (stream.get())
-      ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyHostToDevice, *stream.get()));
+   if (stream)
+      ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyHostToDevice, *stream));
    else
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyHostToDevice));
 }
 
 /// \internal
-void copyDeviceToHostImpl(const void *src, void *dest, size_t nBytes, CudaStream stream)
+void copyDeviceToHostImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
 {
-   if (stream.get())
-      ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyDeviceToHost, *stream.get()));
+   if (stream)
+      ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyDeviceToHost, *stream));
    else
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToHost));
 }

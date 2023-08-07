@@ -57,16 +57,16 @@ void init();
 class Config {
 public:
 #ifdef R__HAS_CUDA
-   bool useCuda() const { return _cudaStream; }
-   void setCudaStream(RooFit::Detail::CudaInterface::CudaStream cudaStream) { _cudaStream = cudaStream; }
-   RooFit::Detail::CudaInterface::CudaStream cudaStream() const { return _cudaStream; }
+   bool useCuda() const { return _cudaStream != nullptr; }
+   void setCudaStream(RooFit::Detail::CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
+   RooFit::Detail::CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
 #else
    bool useCuda() const { return false; }
 #endif
 
 private:
 #ifdef R__HAS_CUDA
-   RooFit::Detail::CudaInterface::CudaStream _cudaStream;
+   RooFit::Detail::CudaInterface::CudaStream *_cudaStream = nullptr;
 #endif
 };
 
