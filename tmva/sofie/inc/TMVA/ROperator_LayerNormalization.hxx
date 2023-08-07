@@ -386,18 +386,22 @@ public:
       */
 
       out << SP*3 << "auto num_work_items_0 = cl::sycl::range<" << fAxis << ">{";
+      std::string sizeList = "";
       for (size_t i=0; i<fAxis; i++) {
-         out << inputShape << "[" << i << "], ";
+         sizeList += inputShape + "[" + std::to_string(i) + "], ";
       }
-      out.str().pop_back();
-      out << "};\n";
+      sizeList.pop_back();
 
+      out << sizeList << "};\n";
+
+      sizeList = "";
       out << SP*3 << "auto num_work_items_1 = cl::sycl::range<" << fSize << ">{";
       for (size_t i=0; i<fSize; i++) {
-         out << inputShape << "[" << i << "], ";
+         sizeList += inputShape + "[" + std::to_string(i) + "], ";
       }
-      out.str().pop_back();
-      out << "};\n";
+
+      sizeList.pop_back();
+      out << sizeList << "};\n";
 
       out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
       out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
@@ -440,7 +444,7 @@ public:
       out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
       
       out << SP*4 << "cgh.parallel_for<class " << OpName << "_2>(cl::sycl::range<";
-      out << fAxis << ">(num_work_items_0), [=](cl::sycl::id<" << fAxis << "1> id){\n";
+      out << fAxis << ">(num_work_items_0), [=](cl::sycl::id<" << fAxis << "> id){\n";
 
       out << SP*5 << fType << " sum = 0.0;\n";
 
