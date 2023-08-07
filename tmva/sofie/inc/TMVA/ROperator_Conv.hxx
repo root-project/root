@@ -625,7 +625,101 @@ public:
          
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
-      }
+
+         out << SP*3 << "oneapi::mkl::transpose_" << OpName << "_transA = oneapi::mkl::transpose::nontrans;\n";
+         out << SP*3 << "oneapi::mkl::transpose_" << OpName << "_transB = oneapi::mkl::transpose::nontrans;\n";
+         out << SP*3 << "int " << OpName << "_m = " << oHeight * oWidth * oDepth << ";\n"; // output h*w
+         assert(fShapeY[1] == fShapeW[0]);
+         assert(fShapeW[1] == fShapeX[1] / fAttrGroup);
+         out << SP*3 << "int " << OpName << "_n = " << fShapeW[0] << ";\n"; // output channels
+         out << SP*3 << "int " << OpName << "_k = " << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] << ";\n";
+         out << SP*3 << "float " << OpName << "_alpha = 1.0;\n";
+         out << SP*3 << "float " << OpName << "_beta = 0.0;\n";
+
+         if (fUseSession) {
+            out << SP*3 << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n"; 
+         }
+         else {
+            out << SP*3 << fType << " " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] * oDepth * oHeight * oWidth
+            << "] = {0};\n";
+         }
+
+         out << SP*3 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), fVec_" << OpName << "_xcol.size()};\n";
+
+         // Loop on batch size
+         out << SP*3 << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
+         if (fDim ==1) {
+         if (fAttrPads[0] != fAttrPads[1] ) {
+            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
+                      << std::endl;
+            fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
+         }
+         fAttrPads[1] = 0;
+         fAttrStrides[1] = 1;
+         }
+         if (fDim == 2) {
+            if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
+               std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+               fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
+               fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
+            }
+         }
+         if (fDim == 3) {
+            if (fAttrPads[0] != fAttrPads[3] || fAttrPads[1] != fAttrPads[4] || fAttrPads[2] != fAttrPads[5]) {
+               std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+               fAttrPads[0] = (fAttrPads[0] + fAttrPads[3]) / 2;
+               fAttrPads[1] = (fAttrPads[1] + fAttrPads[4]) / 2;
+               fAttrPads[2] = (fAttrPads[2] + fAttrPads[5]) / 2;
+            }
+         }
+
+         out << SP*4 << "size_t out_offset = n * " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
+         if (fAttrGroup == 1) {
+            out << SP*4 << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << ";\n";
+            // when using im2col - resulting matrix is transposed, the dimension is (input_c * filter_h * filter_y,  output_h *
+            // output_w)
+
+            if (fDim < 3) {
+               out << SP*4 << "buf_tensor_" << fNX << " = cl::sycl::buffer{(" << fNX + x_offset << ").data(), cl::sycl::range{fShapeX[1] * iHeight * iWidth}};\n";
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float , 1>(q, buf_tensor_" << fNX;
+               out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
+            
+               if (fDim == 1)
+               out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
+                   << fAttrDilations[0];
+               else // dim ==2
+                  out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
+                     << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
+                     << fAttrDilations[1];
+               out << "," << OpName << "_xcol);\n\n ";
+            }
+         } 
+            /*
+            else {
+            // 3d im2col
+            out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float>(tensor_" << fNX
+                << " + x_offset,"
+                //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
+                //  dilation_d, dilation_h, dilation_w,
+                //
+                << fShapeW[1] << "," << iDepth << "," << iHeight << "," << iWidth << ","
+                << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << ","
+                << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrPads[2] << ","
+                << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
+                << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ","
+                << OpName << "_xcol);\n\n ";
+            }      
+               out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, ";
+               out << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha, ";
+               out << "buf_tensor_" << fNB << ", " << OpName << "_ldb, buf_tensor_" << fNA << ", " << OpName;
+               out << "_lda, " << OpName << "_beta, buf_tensor_" << fNY << ", " << OpName << "_n);\n";
+         } else {
+
+         }
+         */
+
+         return out.str();
+   }
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
