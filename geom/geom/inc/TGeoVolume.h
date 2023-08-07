@@ -205,7 +205,7 @@ public:
    void RemoveNode(TGeoNode *node);
    TGeoNode *ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape = nullptr, TGeoMatrix *newpos = nullptr,
                          TGeoMedium *newmed = nullptr);
-   void ResetTransparency(Char_t transparency = -1);
+   void ResetTransparency(Char_t transparency = -1); // *MENU*
    void SaveAs(const char *filename, Option_t *option = "") const override; // *MENU*
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void SelectVolume(Bool_t clear = kFALSE);
