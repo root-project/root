@@ -644,8 +644,6 @@ public:
             << "] = {0};\n";
          }
 
-         out << SP*3 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), fVec_" << OpName << "_xcol.size()};\n";
-
          // Loop on batch size
          out << SP*3 << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
          if (fDim ==1) {
@@ -680,8 +678,7 @@ public:
             // output_w)
 
             if (fDim < 3) {
-               out << SP*4 << "buf_tensor_" << fNX << " = cl::sycl::buffer{(" << fNX << "+ x_offset).data(), cl::sycl::range{" << fShapeX[1] * iHeight * iWidth << "}};\n";
-               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float , 1>(q, buf_tensor_" << fNX;
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float , 1>(q, fTensor_" << fNX;
                out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
             
                if (fDim == 1)
@@ -691,8 +688,16 @@ public:
                   out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
                      << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                      << fAttrDilations[1];
-               out << "," << OpName << "_xcol);\n\n ";
+               out << ", fVec_" << OpName << "_xcol);\n\n ";
             }
+
+            out << SP*4 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), cl::sycl::range{fVec_" << OpName << "_xcol.size()}};\n";
+            out << SP*4 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transA, " << OpName << "transB, " << OpName;
+            out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
+            out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, buf_tensor_" << fNY;
+            out << ", "
+  
+
          } 
             /*
             else {
