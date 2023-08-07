@@ -680,7 +680,7 @@ public:
             // output_w)
 
             if (fDim < 3) {
-               out << SP*4 << "buf_tensor_" << fNX << " = cl::sycl::buffer{(" << fNX + x_offset << ").data(), cl::sycl::range{fShapeX[1] * iHeight * iWidth}};\n";
+               out << SP*4 << "buf_tensor_" << fNX << " = cl::sycl::buffer{(" << fNX << "+ x_offset).data(), cl::sycl::range{" << fShapeX[1] * iHeight * iWidth << "}};\n";
                out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float , 1>(q, buf_tensor_" << fNX;
                out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
             
