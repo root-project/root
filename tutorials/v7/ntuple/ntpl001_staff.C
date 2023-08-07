@@ -57,12 +57,6 @@ void Ingest() {
    ifstream fin(gROOT->GetTutorialDir() + "/tree/cernstaff.dat");
    assert(fin.is_open());
 
-   fin.seekg(0, ios::end);
-   std::streampos fileSize = fin.tellg();
-   fin.seekg(0,ios::beg);
-
-   std::cout << "File size is " << fileSize << std::endl;
-
    // We create a unique pointer to an empty data model
    auto model = RNTupleModel::Create();
 
@@ -124,7 +118,8 @@ void Ingest() {
    const auto &clusterDescriptor = descriptor->GetClusterDescriptor(clusterId);
 
    // // Get page range of Xcl
-   auto &pageRangeXcl = clusterDescriptor.GetPageRange(clusterId); // returns list of page ranges
+   //auto &pageRangeXcl = clusterDescriptor.GetPageRange(clusterId); // returns list of page ranges
+   auto &pageRangeXcl = clusterDescriptor.GetPageRange(columnId);
 
    const auto &pageInfo = pageRangeXcl.fPageInfos[0]; // page info for first page
    auto loc = pageInfo.fLocator; // locator for first page
@@ -134,11 +129,16 @@ void Ingest() {
    std::cout << "the offset is " << offset << std::endl;
    std::cout << "size is " << nelem << std::endl;
 
-   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
-   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
+   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
+   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
 
-   std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
-   std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_end << std::endl;
+   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = 0;
+   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = 0;
+   ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType = ROOT::Internal::RRawFile::SetFailureType(ROOT::Internal::RRawFile::FailureType::ShortRead);
+
+   std::cout << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin << std::endl;
+   std::cout << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end << std::endl;
+   std::cout << ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType << std::endl;
 
    // set last few bytes to zeros - short read (second type)
    //ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;

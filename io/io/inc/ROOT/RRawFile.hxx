@@ -145,16 +145,35 @@ protected:
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
 public:
+
+   enum FailureType { BitFlip, ShortRead };
    
-   struct BitFlipParams{               
-      std::uint64_t rng_begin {0};
-      std::uint64_t rng_end {0};
+   struct FailureInjectionParams{
+      std::uint32_t rng_begin {0};
+      std::uint32_t rng_end {0};
+      FailureType failureType = BitFlip;
+      float failureProbability = 0.0; 
    };
 
-   static BitFlipParams& GetBitFlipParams() {
-      static BitFlipParams params;
+   static FailureInjectionParams& GetFailureInjectionParams(){
+      static FailureInjectionParams params;
       return params;
    }
+
+   static FailureType SetFailureType(FailureType failureType){
+      GetFailureInjectionParams().failureType = failureType;
+      return failureType;
+   }
+
+   // struct BitFlipParams{               
+   //    std::uint64_t rng_begin {0};
+   //    std::uint64_t rng_end {0};
+   // };
+
+   // static BitFlipParams& GetBitFlipParams() {
+   //    static BitFlipParams params;
+   //    return params;
+   // }
 
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
@@ -176,8 +195,9 @@ public:
     * Short reads indicate the end of the file
     */
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
-   void PossiblyTriggerBitFlip(void* buffer, size_t total_bytes);
-   void PossiblyTriggerShortRead(void* buffer, size_t total_bytes);
+   void TriggerBitFlip(void* buffer, size_t total_bytes);
+   void TriggerShortRead(void* buffer, size_t total_bytes);
+   void PossiblyInjectFailure(void* buffer, size_t total_bytes);
    size_t ReadTotalBytes(void *buffer, size_t nbytes, std::uint64_t offset);
 
    /// Read from fFilePos offset. Returns the actual number of bytes read.
