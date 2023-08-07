@@ -16,8 +16,6 @@
 #include <cstddef>
 #include <memory>
 
-#include <vector>
-
 namespace RooFit {
 namespace Detail {
 namespace CudaInterface {
@@ -30,40 +28,37 @@ struct Deleter {
 /// Wrapper around cudaEvent_t.
 class CudaEvent {
 public:
-   operator bool() const { return _ptr; }
+   CudaEvent(bool /*forTiming*/);
+
 // When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
 #ifdef __CUDACC__
-   inline cudaEvent_t *get() { return reinterpret_cast<cudaEvent_t *&>(_ptr); }
-   void reset(void *ptr) { _ptr = ptr; }
+   inline operator cudaEvent_t() { return *reinterpret_cast<cudaEvent_t *>(_ptr.get()); }
 #endif
 private:
-   void *_ptr = nullptr;
+   std::unique_ptr<void, Deleter<CudaEvent>> _ptr;
 };
 
 /// Wrapper around cudaStream_t.
 class CudaStream {
 public:
-   operator bool() const { return _ptr; }
+   CudaStream();
+
+   bool isActive();
+   void waitForEvent(CudaEvent &);
 
 // When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
 #ifdef __CUDACC__
    inline cudaStream_t *get() { return reinterpret_cast<cudaStream_t *&>(_ptr); }
-   void reset(void *ptr) { _ptr = ptr; }
+   inline operator cudaStream_t() { return *reinterpret_cast<cudaStream_t *>(_ptr.get()); }
 #endif
 private:
-   void *_ptr = nullptr;
+   std::unique_ptr<void, Deleter<CudaStream>> _ptr;
 };
 
-CudaEvent newCudaEvent(bool /*forTiming*/);
-void deleteCudaEvent(CudaEvent);
-CudaStream newCudaStream();
-void deleteCudaStream(CudaStream);
-bool streamIsActive(CudaStream);
-void cudaEventRecord(CudaEvent, CudaStream);
-void cudaStreamWaitEvent(CudaStream, CudaEvent);
-float cudaEventElapsedTime(CudaEvent, CudaEvent);
-void copyHostToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStream = {});
-void copyDeviceToHostImpl(const void *src, void *dest, std::size_t n, CudaStream = {});
+void cudaEventRecord(CudaEvent &, CudaStream &);
+float cudaEventElapsedTime(CudaEvent &, CudaEvent &);
+void copyHostToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStream * = nullptr);
+void copyDeviceToHostImpl(const void *src, void *dest, std::size_t n, CudaStream * = nullptr);
 
 /**
  * Copies data from the host to the CUDA device.
@@ -74,7 +69,7 @@ void copyDeviceToHostImpl(const void *src, void *dest, std::size_t n, CudaStream
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
-void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream = {})
+void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream * = nullptr)
 {
    copyHostToDeviceImpl(src, dest, sizeof(T) * n);
 }
@@ -88,7 +83,7 @@ void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream = {})
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
-void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream = {})
+void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream * = nullptr)
 {
    copyDeviceToHostImpl(src, dest, sizeof(T) * n);
 }
