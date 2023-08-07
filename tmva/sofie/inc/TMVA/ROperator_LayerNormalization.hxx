@@ -371,10 +371,17 @@ public:
       }
 
       out << SP*3 << "// Compute the mean\n";
-      out << SP*3 << "size_t num_work_items = 1;\n";
+      out << SP*3 << "size_t num_work_items_0 = 1";
       for (size_t i=0; i<fAxis; i++) {
-         out << SP*3 << "num_work_items *= " << inputShape << "[" << i << "];\n";
+         out << " * " << inputShape << "[" << i << "]";
       }
+      out << ";\n";
+
+      out << SP*3 << "size_t num_work_items_1 = num_work_items_0";
+      for (size_t i=fAxis; i<fSize; i++) {
+         out << " * " << inputShape << "[" << i << "]";
+      }
+      out << ";\n";
 
       out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
       out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
@@ -382,7 +389,7 @@ public:
       out << SP*4 << "auto acc_tensor_" << fNMean << " = cl::sycl::accessor{buf_tensor_" << fNMean;
       out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
       
-      out << SP*4 << "cgh.parallel_for<class " << OpName << "_1>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1> id){\n";
+      out << SP*4 << "cgh.parallel_for<class " << OpName << "_1>(cl::sycl::range<1>(num_work_items_0), [=](cl::sycl::id<1> id){\n";
       out << SP*5 << "float sum = 0.0;\n";
       out << SP*5 << "size_t tid = id;\n";
 
@@ -420,7 +427,7 @@ public:
       out << SP*4 << "auto acc_tensor_" << fNInvStdDev << "= cl::sycl::accessor{buf_tensor_" << fNInvStdDev;
       out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
       
-      out << SP*4 << "cgh.parallel_for<class " << OpName << "_2>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1> id){\n";
+      out << SP*4 << "cgh.parallel_for<class " << OpName << "_2>(cl::sycl::range<1>(num_work_items_0), [=](cl::sycl::id<1> id){\n";
 
       out << SP*5 << fType << " sum = 0.0;\n";
       out << SP*5 << "size_t tid = id;\n";
@@ -451,9 +458,7 @@ public:
       out << SP*3 << "});\n\n";
 
       if (!fNCastedX.empty()) {
-         for (size_t j = fAxis; j < fSize; j++) {
-            out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "];\n";
-         }
+
 
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*4 << "auto acc_tensor_" << fNScale << " = cl::sycl::accessor{buf_tensor_" << fNScale;
@@ -469,7 +474,7 @@ public:
          out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-         out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1>id){\n";
+         out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items_1), [=](cl::sycl::id<1>id){\n";
          out << SP*5 << "size_t tid = id;\n";
          for (size_t j = 1; j<fSize; j++) {
             out << SP*5 << "size_t axis_" << fSize-j << " = tid % " << inputShape << "[" << fSize-j << "];\n";
@@ -493,9 +498,6 @@ public:
          out << SP*3 << "});\n";
       }
       else {
-         for (size_t j = fAxis; j < fSize; j++) {
-            out << SP*3 <<"num_work_items *= " << inputShape << "[" << j << "];\n";
-         }
 
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*4 << "auto acc_tensor_" << fNScale << " = cl::sycl::accessor{buf_tensor_" << fNScale;
@@ -510,7 +512,7 @@ public:
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
          out << "\n" << SP*4 << "// Y = Scale o InvStdDev (X-Mean)\n";
-         out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items), [=](cl::sycl::id<1>id){\n";
+         out << SP*4 << "cgh.parallel_for<class " << OpName << "_3>(cl::sycl::range<1>(num_work_items_1), [=](cl::sycl::id<1>id){\n";
          out << SP*5 << "size_t tid = id;\n";
          for (size_t j = 1; j<fSize; j++) {
             out << SP*5 << "size_t axis_" << fSize-j << " = tid % " << inputShape << "[ " << fSize-j << " ];\n";
