@@ -129,7 +129,15 @@ RUN export PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH
 ENV PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH
 RUN sudo chown ioanna:ioanna root_build
 RUN sudo chmod +w root_build
-# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ -Dxrootd=Off -Dimt=Off -Dbuiltin_xrootd=Off /home/ioanna/root_src && cmake --build . -j16 --target install
+# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On 
+# -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx 
+# -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx 
+# -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ 
+# -Dxrootd=Off -Dbuiltin_xrootd=Off -DTBB_LIBRARY=/opt/intel/oneapi/tbb/2021.10.0/lib/intel64/gcc4.8/libtbb.so
+# /home/ioanna/root_src
+# && cmake --build . -j96 --target install
+
+# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On  -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx  -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx  -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/  -Dxrootd=Off -Dbuiltin_xrootd=Off -DTBB_LIBRARY=/opt/intel/oneapi/tbb/2021.10.0/lib/intel64/gcc4.8/libtbb.so /home/ioanna/root_src && cmake --build . -j96 --target install
 
 RUN mkdir neo && cd neo
 WORKDIR /home/ioanna/neo
