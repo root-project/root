@@ -537,7 +537,94 @@ public:
       }
 
       std::string GenerateGPU(std::string OpName) {
-         return std::string();
+         OpName = "op_" + OpName;
+
+         if (fShapeX.empty() || fShapeW.empty() || (fNB != "" && fShapeB.empty()) || fShapeY.empty()) {
+            throw
+               std::runtime_error("TMVA SOFIE Conv Op called to Generate without being initialized first");
+         }
+
+         std::stringstream out;
+         size_t bsize = fShapeX[0];
+         size_t kDepth = (fDim > 2) ?  fShapeW[2] : 1;  // kernel depth
+         size_t kHeight = (fDim > 1) ? fShapeW[fDim] : 1;  // kernel height
+         size_t kWidth = fShapeW[fDim+1]; // kernel width
+         size_t iDepth = (fDim > 2) ?  fShapeX[2] : 1;  // input depth
+         size_t iHeight = (fDim > 1) ? fShapeX[fDim] : 1; // input height
+         size_t iWidth = fShapeX[fDim+1]; // input width
+         size_t oDepth = (fDim > 2) ? fShapeY[2] : 1; // output depth
+         size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1;  // ouput height
+         size_t oWidth = fShapeY[fDim+1]; // output width
+
+         out << "\n" << SP*3 << "//----  operator Conv " << OpName << "\n";
+
+         // create first matrix with convolution kernels
+         if (fUseSession)
+            out << SP*3 << fType << " * " << OpName << "_f = fVec_" << OpName << "_f.data();\n";
+         else
+            out << SP*3 << fType << " " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
+
+         out << SP*3 << "auto buf_" << OpName << "_f = cl::sycl::buffer{fVec_" << OpName << "_f.data(), fVec_" << OpName << "_f.size()};\n";
+
+         // vectorize the (dilated)convolution kernels into a matrix
+         // no need to transpose the matrix
+         // to fix for 1d and 3d
+
+         size_t id = (fDim > 2) ? fDim-3 : 2;
+         size_t ih = (fDim > 1) ? fDim-2 : 1;
+         size_t iw = fDim-1;
+
+         size_t wstrideDil = fAttrDilations[iw];
+         size_t hstride = kWidth;
+         size_t hstrideDil = fAttrDilations[ih] * fAttrKernelShape[iw];  // stride dilated in the height
+         size_t dstride = kHeight * kWidth;
+         size_t dstrideDil = fAttrDilations[id] * fAttrKernelShape[ih] * fAttrKernelShape[iw];
+         size_t icstride = kHeight * kWidth * kDepth;
+         size_t icstrideDil = fAttrKernelShape[id] * fAttrKernelShape[ih] * fAttrKernelShape[iw];
+         size_t ocstride = fShapeW[1] * icstride;
+         size_t ocstrideDil = fShapeW[1] * icstrideDil;
+
+         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*4 << "auto acc_tensor_" << fNW << " = cl::sycl::accessor{buf_tensor_" << fNW;
+         out << ", cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_" << OpName << "_f = cl::sycl::accessor{buf_" << OpName << "_f, ";
+         out << "cl::sycl::write_only, cl::sycl::no_init};\n";
+         
+         size_t num_threads = fShapeW[0] * fShapeW[1];
+         if (fDim > 2) 
+            num_threads *= kDepth;
+         if (fDim > 1)
+            num_threads *= kHeight;
+         num_threads *= kWidth;
+         
+         out << SP*4 << "cgh.parallel_for<class " << OpName << "_0>(cl::sycl::range<1>(" << num_threads << "), [=](cl::sycl::id<1> id){\n";
+         out << SP*5 << "auto tid = id;\n";
+         out << SP*5 << "auto kw = tid % " << kWidth << ";\n";
+         out << SP*5 << "tid /= " << kWidth << ";\n";
+         if (fDim > 1) {
+            out << SP*5 << "auto kh = tid % " << kHeight << ";\n";
+            out << SP*5 << "tid /= " << kHeight << ";\n";
+         }
+
+         if (fDim > 2) {
+            out << SP*5 << "auto kd = tid % " << kDepth << ";\n";
+            out << SP*5 << "tid /= " << kDepth << ";\n";
+         }
+         
+         out << SP*5 << "auto ic = tid % " << fShapeW[1] << ";\n";
+         out << SP*5 << "auto oc = tid / " << fShapeW[1] << ";\n";
+
+         out << SP*5 << "acc_" << OpName << "_f[oc * " << ocstrideDil << " + ic * " << icstrideDil;
+         if (fDim > 2)
+            out << " + kd * " << dstrideDil;
+         if (fDim > 1) 
+            out << "+ kh * " << hstrideDil;
+         out << " + kw * " << wstrideDil << "] = acc_tensor_" << fNW << "[oc * ";
+         out << ocstride << "+ ic * " << icstride << "+ kd * " << dstride << " + kh * ";
+         out << hstride << " + kw];\n";
+         
+         out << SP*4 << "});\n";
+         out << SP*3 << "});\n";
       }
 
    /*! \brief Returns the blas routines needed to compile the generated code
