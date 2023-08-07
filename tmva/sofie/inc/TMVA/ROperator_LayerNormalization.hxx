@@ -410,7 +410,7 @@ public:
       out << SP*5 << "float sum = 0.0;\n";
 
       for (size_t i=0; i<fAxis; i++) {
-         out << SP*5 << "size_t axis_" << std::to_string(i) << "= num_work_items_0[" << std::to::string(i) << "];\n";
+         out << SP*5 << "size_t axis_" << std::to_string(i) << "= num_work_items_0[" << std::to_string(i) << "];\n";
       }
 
       for (size_t j = fAxis; j < fSize; j++) {
