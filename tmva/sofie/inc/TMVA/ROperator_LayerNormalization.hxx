@@ -393,19 +393,20 @@ public:
       out << SP*5 << "float sum = 0.0;\n";
       out << SP*5 << "size_t tid = id;\n";
 
+      for (size_t i=1; i<fAxis; i++) {
+         out << SP*5 << "size_t axis_" + std::to_string(fAxis-i);
+         out << " = tid % " << inputShape << "[" << fAxis-i << "];\n";
+         out << SP*5 << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
+      }
+
+      out << SP*5 << "size_t axis_0 = tid;\n";
+
       for (size_t j = fAxis; j < fSize; j++) {
          std::string jIdx = "axis_" + std::to_string(j);
          out << SP*(5 + (j - fAxis)) << "for (size_t " << jIdx << " = 0; " << jIdx << " < " << inputShape;
          out << "[" << j << "]; " << jIdx << "++) {\n";
       }
 
-      for (size_t i=1; i<fAxis; i++) {
-         out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(fAxis-i);
-         out << " = tid % " << inputShape << "[" << fAxis-i << "];\n";
-         out << SP*(5 + (fSize - fAxis + 2)) << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
-      }
-
-      out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_0 = tid;\n";
 
       out << SP*(5 + (fSize - fAxis + 2)) << "sum += acc_tensor_" << fNX << "[" << InputIndex << "];\n";
 
@@ -431,20 +432,20 @@ public:
 
       out << SP*5 << fType << " sum = 0.0;\n";
       out << SP*5 << "size_t tid = id;\n";
+      
+      for (size_t i=1; i<fAxis; i++) {
+         out << SP*5 << "size_t axis_" + std::to_string(fAxis-i);
+         out << " = tid % " << inputShape << "[" << fAxis-i << "];\n";
+         out << SP*5 << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
+      }
+
+      out << SP*5 << "size_t axis_0 = tid;\n";
 
       for (size_t j = fAxis; j < fSize; j++) {
          std::string jIdx = "axis_" + std::to_string(j);
          out << SP*(5 + (j - fAxis)) << "for (size_t " << jIdx << " = 0; " << jIdx << " < " << inputShape;
          out << "[" << j << "]; " << jIdx << "++) {\n";
       }
-
-      for (size_t i=1; i<fAxis; i++) {
-         out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_" + std::to_string(fAxis-i);
-         out << " = tid % " << inputShape << "[" << fAxis - i << "];\n";
-         out << SP*(5 + (fSize - fAxis + 2)) << "tid /= " << inputShape << "[" << fAxis - i << "];\n";
-      }
-
-      out << SP*(5 + (fSize - fAxis + 2)) << "size_t axis_0 = tid;\n";
 
       out << SP*(5 + (fSize - fAxis + 2)) << "sum += cl::sycl::pow(acc_tensor_" << fNX << "[" << InputIndex << "] - acc_tensor_";
       out << fNMean << "[" << axesIndex << "], static_cast<float>(2));\n";
