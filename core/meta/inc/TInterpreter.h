@@ -517,7 +517,7 @@ public:
    virtual const char *MethodArgInfo_Name(MethodArgInfo_t * /* marginfo */) const {return nullptr;}
    virtual const char *MethodArgInfo_TypeName(MethodArgInfo_t * /* marginfo */) const {return nullptr;}
    virtual std::string MethodArgInfo_TypeNormalizedName(MethodArgInfo_t * /* marginfo */) const = 0;
-   virtual TypeInfo_t *MethodArgInfo_TypeInfo(MethodArgInfo_t * /* marginfo */) const {return 0;}
+   virtual TypeInfo_t *MethodArgInfo_TypeInfo(MethodArgInfo_t * /* marginfo */) const {return nullptr;}
 
 
    // TypeInfo interface
@@ -532,7 +532,7 @@ public:
    virtual int    TypeInfo_RefType(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual int    TypeInfo_Size(TypeInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypeInfo_TrueName(TypeInfo_t * /* tinfo */) const {return nullptr;}
-   virtual void  *TypeInfo_QualTypePtr(TypeInfo_t * /* tinfo */) const {return 0;}
+   virtual void  *TypeInfo_QualTypePtr(TypeInfo_t * /* tinfo */) const {return nullptr;}
 
 
    // TypedefInfo interface
@@ -558,7 +558,7 @@ public:
    virtual Bool_t IsPointerType(const void * /* QualTypePtr */) const {return 0;}
    virtual Bool_t IsVoidPointerType(const void * /* QualTypePtr */) const {return 0;}
 
-   // FunctionDecl interface 
+   // FunctionDecl interface
    virtual Bool_t FunctionDeclId_IsMethod(DeclId_t /* fdeclid */) const {return 0;}
 
    static TInterpreter *Instance();
