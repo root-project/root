@@ -21,19 +21,17 @@ std::pair<std::chrono::microseconds, std::chrono::microseconds> RooFit::CUDAHelp
    namespace CudaInterface = RooFit::Detail::CudaInterface;
 
    std::pair<std::chrono::microseconds, std::chrono::microseconds> ret;
-   char *hostArr = CudaInterface::cudaMallocHost<char>(nBytes);
-   char *deviArr = CudaInterface::cudaMalloc<char>(nBytes);
+   CudaInterface::PinnedHostArray<char> hostArr{nBytes};
+   CudaInterface::DeviceArray<char> deviArr{nBytes};
    constexpr std::size_t nIterations = 5;
    for (std::size_t i = 0; i < nIterations; i++) {
       auto start = steady_clock::now();
-      CudaInterface::memcpyToCUDA(deviArr, hostArr, nBytes);
+      CudaInterface::copyHostToDevice(hostArr.data(), deviArr.data(), nBytes);
       ret.first += duration_cast<microseconds>(steady_clock::now() - start);
       start = steady_clock::now();
-      CudaInterface::memcpyToCPU(hostArr, deviArr, nBytes);
+      CudaInterface::copyDeviceToHost(deviArr.data(), hostArr.data(), nBytes);
       ret.second += duration_cast<microseconds>(steady_clock::now() - start);
    }
-   CudaInterface::cudaFreeHost(hostArr);
-   CudaInterface::cudaFree(deviArr);
    ret.first /= nIterations;
    ret.second /= nIterations;
    return ret;

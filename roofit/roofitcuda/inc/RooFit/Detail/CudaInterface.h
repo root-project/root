@@ -14,10 +14,18 @@
 #define RooFit_Detail_CudaInterface_h
 
 #include <cstddef>
+#include <memory>
+
+#include <vector>
 
 namespace RooFit {
 namespace Detail {
 namespace CudaInterface {
+
+template <class T>
+struct Deleter {
+   void operator()(void *ptr);
+};
 
 /// Wrapper around cudaEvent_t.
 class CudaEvent {
@@ -25,8 +33,10 @@ public:
    operator bool() const { return _ptr; }
 // When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
 #ifdef __CUDACC__
-   inline cudaEvent_t *&get() { return reinterpret_cast<cudaEvent_t *&>(_ptr); }
+   inline cudaEvent_t *get() { return reinterpret_cast<cudaEvent_t *&>(_ptr); }
+   void reset(void *ptr) { _ptr = ptr; }
 #endif
+private:
    void *_ptr = nullptr;
 };
 
@@ -37,16 +47,13 @@ public:
 
 // When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
 #ifdef __CUDACC__
-   inline cudaStream_t *&get() { return reinterpret_cast<cudaStream_t *&>(_ptr); }
+   inline cudaStream_t *get() { return reinterpret_cast<cudaStream_t *&>(_ptr); }
+   void reset(void *ptr) { _ptr = ptr; }
 #endif
 private:
    void *_ptr = nullptr;
 };
 
-void *cudaMallocImpl(std::size_t);
-void cudaFree(void *);
-void *cudaMallocHostImpl(std::size_t);
-void cudaFreeHost(void *);
 CudaEvent newCudaEvent(bool /*forTiming*/);
 void deleteCudaEvent(CudaEvent);
 CudaStream newCudaStream();
@@ -55,34 +62,76 @@ bool streamIsActive(CudaStream);
 void cudaEventRecord(CudaEvent, CudaStream);
 void cudaStreamWaitEvent(CudaStream, CudaEvent);
 float cudaEventElapsedTime(CudaEvent, CudaEvent);
-void memcpyToCUDA(void *, const void *, std::size_t, CudaStream = {});
-void memcpyToCPU(void *, const void *, std::size_t, CudaStream = {});
+void copyHostToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStream = {});
+void copyDeviceToHostImpl(const void *src, void *dest, std::size_t n, CudaStream = {});
 
 /**
- * Allocates device memory on the CUDA GPU.
+ * Copies data from the host to the CUDA device.
  *
- * @tparam T                  Element type of the allocated array.
- * @param[in] nBytes          Size in bytes of the memory to allocate.
- * @return                    Pointer to the allocated device memory.
+ * @param[in] src             Pointer to the source memory on the host.
+ * @param[in] dest            Pointer to the destination memory on the device.
+ * @param[in] nBytes          Number of bytes to copy.
+ * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
-T *cudaMalloc(size_t n)
+void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream = {})
 {
-   return static_cast<T *>(cudaMallocImpl(n * sizeof(T)));
+   copyHostToDeviceImpl(src, dest, sizeof(T) * n);
 }
 
 /**
- * Allocates memory on the host.
+ * Copies data from the CUDA device to the host.
  *
- * @tparam T                  Element type of the allocated array.
- * @param[in] nBytes          Size in bytes of the memory to allocate.
- * @return                    Pointer to the allocated host memory.
+ * @param[in] src             Pointer to the source memory on the device.
+ * @param[in] dest            Pointer to the destination memory on the host.
+ * @param[in] nBytes          Number of bytes to copy.
+ * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
-T *cudaMallocHost(size_t n)
+void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream = {})
 {
-   return static_cast<T *>(cudaMallocHostImpl(n * sizeof(T)));
+   copyDeviceToHostImpl(src, dest, sizeof(T) * n);
 }
+
+class DeviceMemory {
+public:
+   DeviceMemory(std::size_t n, std::size_t typeSize);
+
+   std::size_t size() const { return _size; }
+   void *data() { return _data.get(); }
+   void const *data() const { return _data.get(); }
+
+private:
+   std::unique_ptr<void, Deleter<DeviceMemory>> _data;
+   std::size_t _size = 0;
+};
+
+class PinnedHostMemory {
+public:
+   PinnedHostMemory(std::size_t n, std::size_t typeSize);
+
+   std::size_t size() const { return _size; }
+   void *data() { return _data.get(); }
+   void const *data() const { return _data.get(); }
+
+private:
+   std::unique_ptr<void, Deleter<PinnedHostMemory>> _data;
+   std::size_t _size = 0;
+};
+
+template <class Data_t, class Memory_t>
+class Array : public Memory_t {
+public:
+   Array(std::size_t n) : Memory_t{n, sizeof(Data_t)} {}
+   inline Data_t *data() { return static_cast<Data_t *>(Memory_t::data()); }
+   inline Data_t const *data() const { return static_cast<Data_t const *>(Memory_t::data()); }
+};
+
+template <class T>
+using DeviceArray = Array<T, DeviceMemory>;
+
+template <class T>
+using PinnedHostArray = Array<T, PinnedHostMemory>;
 
 } // namespace CudaInterface
 } // namespace Detail

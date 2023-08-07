@@ -32,6 +32,8 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #error "RF_ARCH should always be defined"
 #endif
 
+namespace CudaInterface = RooFit::Detail::CudaInterface;
+
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
@@ -70,46 +72,18 @@ public:
    \param nEvents The number of events to be processed.
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(RooBatchCompute::Config const& cfg, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
-                ArgVector &extraArgs) override
+   void compute(RooBatchCompute::Config const &cfg, Computer computer, RestrictArr output, size_t nEvents,
+                const VarVector &vars, ArgVector &extraArgs) override
    {
       Batches batches(output, nEvents, vars, extraArgs);
       _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream().get()>>>(batches);
    }
    /// Return the sum of an input array
-   double reduceSum(RooBatchCompute::Config const& cfg, InputArr input, size_t n) override;
-   ReduceNLLOutput reduceNLL(RooBatchCompute::Config const& cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
-                             RooSpan<const double> weights, double weightSum,
+   double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
+   ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, RooSpan<const double> probas,
+                             RooSpan<const double> weightSpan, RooSpan<const double> weights, double weightSum,
                              RooSpan<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
-
-template <class T>
-class DeviceArray {
-public:
-   DeviceArray(std::size_t n) : _size{n} { cudaMalloc(reinterpret_cast<void **>(&_deviceArray), n * sizeof(T)); }
-   DeviceArray(T const *hostArray, std::size_t n) : _size{n}
-   {
-      cudaMalloc((void **)&_deviceArray, n * sizeof(T));
-      cudaMemcpy(_deviceArray, hostArray, n * sizeof(T), cudaMemcpyHostToDevice);
-   }
-   DeviceArray(DeviceArray const &other) = delete;
-   DeviceArray &operator=(DeviceArray const &other) = delete;
-   ~DeviceArray() { cudaFree(_deviceArray); }
-
-   std::size_t size() const { return _size; }
-   T *data() { return _deviceArray; }
-   T const *data() const { return _deviceArray; }
-
-   void copyBack(T *hostArray, std::size_t n)
-   {
-      cudaMemcpy(hostArray, _deviceArray, sizeof(T) * n, cudaMemcpyDeviceToHost);
-   }
-
-private:
-   T *_deviceArray = nullptr;
-   std::size_t _size = 0;
-
-};
 
 __global__ void nllSumMultiBlock(const double *__restrict__ probas, int probasSize, double *__restrict__ out)
 {
@@ -156,38 +130,38 @@ __global__ void nllSumWeightedMultiBlock(const double *__restrict__ probas, cons
       out[blockIdx.x] = shArr[0];
 }
 
-double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const& cfg, InputArr input, size_t n)
+double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n)
 {
    using RooFit::Detail::CudaKernels::Reducers::SumVectors;
-   DeviceArray<double> devOut{gridSize};
+   CudaInterface::DeviceArray<double> devOut{gridSize};
    double tmp = 0.0;
    auto stream = cfg.cudaStream().get();
    SumVectors<blockSize, 1><<<gridSize, blockSize, 0, *stream>>>(n, input, devOut.data());
    SumVectors<blockSize, 1><<<1, blockSize, 0, *stream>>>(gridSize, devOut.data(), devOut.data());
-   devOut.copyBack(&tmp, 1);
+   CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
    return tmp;
 }
 
-ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const& cfg, RooSpan<const double> probas,
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &cfg, RooSpan<const double> probas,
                                                 RooSpan<const double> weightSpan, RooSpan<const double> weights,
                                                 double weightSum, RooSpan<const double> binVolumes)
 {
    using RooFit::Detail::CudaKernels::Reducers::SumVectors;
    ReduceNLLOutput out;
-   DeviceArray<double> devOut{gridSize};
+   CudaInterface::DeviceArray<double> devOut{gridSize};
    double tmp = 0.0;
    auto stream = cfg.cudaStream().get();
 
    if (weightSpan.size() == 1) {
       nllSumMultiBlock<<<gridSize, blockSize, 0, *stream>>>(probas.data(), probas.size(), devOut.data());
       SumVectors<blockSize, 1><<<1, blockSize, 0, *stream>>>(gridSize, devOut.data(), devOut.data());
-      devOut.copyBack(&tmp, 1);
+      CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
       tmp *= weightSpan[0];
    } else {
       nllSumWeightedMultiBlock<<<gridSize, blockSize, 0, *stream>>>(probas.data(), weightSpan.data(), probas.size(),
                                                                     devOut.data());
       SumVectors<blockSize, 1><<<1, blockSize, 0, *stream>>>(gridSize, devOut.data(), devOut.data());
-      devOut.copyBack(&tmp, 1);
+      CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
    }
 
    out.nllSum.Add(tmp);

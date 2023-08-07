@@ -46,11 +46,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <thread>
 
 #ifdef R__HAS_CUDA
-
-#include <RooFit/Detail/CudaInterface.h>
-
 namespace CudaInterface = RooFit::Detail::CudaInterface;
-
 #endif
 
 namespace ROOT {
@@ -314,7 +310,7 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
 
    // copy observable data to the GPU
    // TODO: use separate buffers here
-   _cudaMemDataset = CudaInterface::cudaMalloc<double>(totalSize);
+   _cudaMemDataset = std::make_unique<CudaInterface::DeviceArray<double>>(totalSize);
    size_t idx = 0;
    for (auto &info : _nodes) {
       if (!info.fromDataset)
@@ -324,8 +320,8 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
          // Scalar observables from the data don't need to be copied to the GPU
          _dataMapCUDA.set(info.absArg, _dataMapCPU.at(info.absArg));
       } else {
-         _dataMapCUDA.set(info.absArg, {_cudaMemDataset + idx, size});
-         CudaInterface::memcpyToCUDA(_cudaMemDataset + idx, _dataMapCPU.at(info.absArg).data(), size * sizeof(double));
+         _dataMapCUDA.set(info.absArg, {_cudaMemDataset->data() + idx, size});
+         CudaInterface::copyHostToDevice(_dataMapCPU.at(info.absArg).data(), _cudaMemDataset->data() + idx, size);
          idx += size;
       }
    }
@@ -339,12 +335,6 @@ RooFitDriver::~RooFitDriver()
    for (auto &info : _nodes) {
       info.absArg->resetDataToken();
    }
-
-#ifdef R__HAS_CUDA
-   if (_batchMode == RooFit::BatchModeOption::Cuda) {
-      CudaInterface::cudaFree(_cudaMemDataset);
-   }
-#endif // R__HAS_CUDA
 }
 
 std::vector<double> RooFitDriver::getValues()
