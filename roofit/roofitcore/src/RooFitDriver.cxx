@@ -124,16 +124,8 @@ struct NodeInfo {
    std::vector<NodeInfo *> clientInfos;
 
 #ifdef R__HAS_CUDA
-   RooFit::Detail::CudaInterface::CudaEvent event;
-   RooFit::Detail::CudaInterface::CudaStream stream;
-
-   ~NodeInfo()
-   {
-      if (event)
-         CudaInterface::deleteCudaEvent(event);
-      if (stream)
-         CudaInterface::deleteCudaStream(stream);
-   }
+   std::unique_ptr<RooFit::Detail::CudaInterface::CudaEvent> event;
+   std::unique_ptr<RooFit::Detail::CudaInterface::CudaStream> stream;
 
    /// Check the servers of a node that has been computed and release it's resources
    /// if they are no longer needed.
@@ -219,10 +211,10 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
    if (_batchMode == RooFit::BatchModeOption::Cuda) {
       // create events and streams for every node
       for (auto &info : _nodes) {
-         info.event = CudaInterface::newCudaEvent(true);
-         info.stream = CudaInterface::newCudaStream();
+         info.event = std::make_unique<CudaInterface::CudaEvent>(false);
+         info.stream = std::make_unique<CudaInterface::CudaStream>();
          RooBatchCompute::Config cfg;
-         cfg.setCudaStream(info.stream);
+         cfg.setCudaStream(info.stream.get());
          _dataMapCUDA.setConfig(info.absArg, cfg);
       }
    }
@@ -379,7 +371,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 #endif
       if (!info.buffer) {
 #ifdef R__HAS_CUDA
-         info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
+         info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream.get())
                                                 : _bufferManager.makeCpuBuffer(nOut);
 #else
          info.buffer = _bufferManager.makeCpuBuffer(nOut);
@@ -393,7 +385,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    if (info.copyAfterEvaluation) {
       _dataMapCUDA.set(node, {info.buffer->gpuReadPtr(), nOut});
       if (info.event) {
-         CudaInterface::cudaEventRecord(info.event, info.stream);
+         CudaInterface::cudaEventRecord(*info.event, *info.stream);
       }
    }
 #endif
@@ -477,7 +469,7 @@ double RooFitDriver::getValHeterogeneous()
    while (topNodeInfo.remServers != -2) {
       // find finished GPU nodes
       for (auto &info : _nodes) {
-         if (info.remServers == -1 && !CudaInterface::streamIsActive(info.stream)) {
+         if (info.remServers == -1 && !info.stream->isActive()) {
             info.remServers = -2;
             // Decrement number of remaining servers for clients and start GPU computations
             for (auto *infoClient : info.clientInfos) {
@@ -541,7 +533,7 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
    // wait for every server to finish
    for (auto *infoServer : info.serverInfos) {
       if (infoServer->event)
-         CudaInterface::cudaStreamWaitEvent(info.stream, infoServer->event);
+         info.stream->waitForEvent(*infoServer->event);
    }
 
    const std::size_t nOut = info.outputSize;
@@ -551,13 +543,13 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
       buffer = &info.scalarBuffer;
       _dataMapCPU.set(node, {buffer, nOut});
    } else {
-      info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
+      info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream.get())
                                              : _bufferManager.makeGpuBuffer(nOut);
       buffer = info.buffer->gpuWritePtr();
    }
    _dataMapCUDA.set(node, {buffer, nOut});
    node->computeBatch(buffer, nOut, _dataMapCUDA);
-   CudaInterface::cudaEventRecord(info.event, info.stream);
+   CudaInterface::cudaEventRecord(*info.event, *info.stream);
    if (info.copyAfterEvaluation) {
       _dataMapCPU.set(node, {info.buffer->cpuReadPtr(), nOut});
    }

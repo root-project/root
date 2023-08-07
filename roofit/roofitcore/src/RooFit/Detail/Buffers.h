@@ -48,7 +48,7 @@ public:
    AbsBuffer *makeCpuBuffer(std::size_t size);
 #ifdef R__HAS_CUDA
    AbsBuffer *makeGpuBuffer(std::size_t size);
-   AbsBuffer *makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream stream = {});
+   AbsBuffer *makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream *stream = nullptr);
 #endif
 
 private:

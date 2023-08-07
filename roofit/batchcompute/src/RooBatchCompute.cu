@@ -76,7 +76,7 @@ public:
                 const VarVector &vars, ArgVector &extraArgs) override
    {
       Batches batches(output, nEvents, vars, extraArgs);
-      _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream().get()>>>(batches);
+      _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream()>>>(batches);
    }
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
@@ -135,9 +135,9 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
    using RooFit::Detail::CudaKernels::Reducers::SumVectors;
    CudaInterface::DeviceArray<double> devOut{gridSize};
    double tmp = 0.0;
-   auto stream = cfg.cudaStream().get();
-   SumVectors<blockSize, 1><<<gridSize, blockSize, 0, *stream>>>(n, input, devOut.data());
-   SumVectors<blockSize, 1><<<1, blockSize, 0, *stream>>>(gridSize, devOut.data(), devOut.data());
+   cudaStream_t stream = *cfg.cudaStream();
+   SumVectors<blockSize, 1><<<gridSize, blockSize, 0, stream>>>(n, input, devOut.data());
+   SumVectors<blockSize, 1><<<1, blockSize, 0, stream>>>(gridSize, devOut.data(), devOut.data());
    CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
    return tmp;
 }
@@ -150,17 +150,17 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    ReduceNLLOutput out;
    CudaInterface::DeviceArray<double> devOut{gridSize};
    double tmp = 0.0;
-   auto stream = cfg.cudaStream().get();
+   cudaStream_t stream = *cfg.cudaStream();
 
    if (weightSpan.size() == 1) {
-      nllSumMultiBlock<<<gridSize, blockSize, 0, *stream>>>(probas.data(), probas.size(), devOut.data());
-      SumVectors<blockSize, 1><<<1, blockSize, 0, *stream>>>(gridSize, devOut.data(), devOut.data());
+      nllSumMultiBlock<<<gridSize, blockSize, 0, stream>>>(probas.data(), probas.size(), devOut.data());
+      SumVectors<blockSize, 1><<<1, blockSize, 0, stream>>>(gridSize, devOut.data(), devOut.data());
       CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
       tmp *= weightSpan[0];
    } else {
-      nllSumWeightedMultiBlock<<<gridSize, blockSize, 0, *stream>>>(probas.data(), weightSpan.data(), probas.size(),
-                                                                    devOut.data());
-      SumVectors<blockSize, 1><<<1, blockSize, 0, *stream>>>(gridSize, devOut.data(), devOut.data());
+      nllSumWeightedMultiBlock<<<gridSize, blockSize, 0, stream>>>(probas.data(), weightSpan.data(), probas.size(),
+                                                                   devOut.data());
+      SumVectors<blockSize, 1><<<1, blockSize, 0, stream>>>(gridSize, devOut.data(), devOut.data());
       CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
    }
 

@@ -98,7 +98,7 @@ public:
    PinnedBufferContainer(std::size_t size) : _arr{size}, _gpuBuffer{size} {}
    std::size_t size() const { return _arr.size(); }
 
-   void setCudaStream(CudaStream stream) { _cudaStream = stream; }
+   void setCudaStream(CudaStream *stream) { _cudaStream = stream; }
 
    double const *cpuReadPtr() const
    {
@@ -138,7 +138,7 @@ private:
 
    CudaInterface::PinnedHostArray<double> _arr;
    GPUBufferContainer _gpuBuffer;
-   CudaStream _cudaStream;
+   CudaStream *_cudaStream = nullptr;
    mutable LastAccessType _lastAccess = LastAccessType::CPU_READ;
 };
 #endif // R__HAS_CUDA
@@ -213,7 +213,7 @@ AbsBuffer *BufferManager::makeGpuBuffer(std::size_t size)
 {
    return new GPUBuffer{size, _queuesMaps->gpuBufferQueuesMap};
 }
-AbsBuffer *BufferManager::makePinnedBuffer(std::size_t size, CudaStream stream)
+AbsBuffer *BufferManager::makePinnedBuffer(std::size_t size, CudaStream *stream)
 {
    auto out = new PinnedBuffer{size, _queuesMaps->pinnedBufferQueuesMap};
    out->vec().setCudaStream(stream);
