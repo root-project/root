@@ -408,7 +408,7 @@ if(NOT webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs alien bonjour castor chirp geocad glite globus hdfs ios
+foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad glite globus hdfs ios
             krb5 ldap memstat qt qtgsi rfio ruby sapdb srp table python vmc)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
