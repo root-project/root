@@ -172,23 +172,6 @@ set(CMAKE_CXX_STANDARD ${CXX_STANDARD_STRING} CACHE STRING "")
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "")
 
-if(cxx11 OR cxx14 OR cxx17)
-  message(DEPRECATION "Options cxx11/14/17 are deprecated. Please use CMAKE_CXX_STANDARD instead.")
-
-  # for backward compatibility
-  if(cxx17)
-    set(CMAKE_CXX_STANDARD 17 CACHE STRING "" FORCE)
-  elseif(cxx14)
-    set(CMAKE_CXX_STANDARD 14 CACHE STRING "" FORCE)
-  elseif(cxx11)
-    set(CMAKE_CXX_STANDARD 11 CACHE STRING "" FORCE)
-  endif()
-
-  unset(cxx17 CACHE)
-  unset(cxx14 CACHE)
-  unset(cxx11 CACHE)
-endif()
-
 if(NOT CMAKE_CXX_STANDARD MATCHES "17|20")
   message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}. Supported standards are: 17, 20.")
 endif()
