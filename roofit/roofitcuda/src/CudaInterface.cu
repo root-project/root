@@ -151,7 +151,8 @@ float cudaEventElapsedTime(CudaEvent &begin, CudaEvent &end)
    return ret;
 }
 
-/// \internal
+/// \cond ROOFIT_INTERNAL
+
 void copyHostToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
 {
    if (stream)
@@ -160,7 +161,6 @@ void copyHostToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyHostToDevice));
 }
 
-/// \internal
 void copyDeviceToHostImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
 {
    if (stream)
@@ -168,6 +168,8 @@ void copyDeviceToHostImpl(const void *src, void *dest, size_t nBytes, CudaStream
    else
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToHost));
 }
+
+/// \endcond
 
 } // namespace CudaInterface
 } // namespace Detail

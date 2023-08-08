@@ -13,6 +13,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+/// \cond ROOFIT_INTERNAL
+
 #include "RooSTLRefCountList.h"
 
 #include "RooRefCountList.h"
@@ -41,3 +43,4 @@ RooSTLRefCountList<RooAbsArg> convert(const RooRefCountList& old) {
 }
 }
 
+/// \endcond

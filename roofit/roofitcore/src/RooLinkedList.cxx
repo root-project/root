@@ -46,7 +46,9 @@ Use RooAbsCollection derived objects for public use
 using namespace std;
 
 ClassImp(RooLinkedList);
-;
+
+/// \cond ROOFIT_INTERNAL
+
 namespace RooLinkedListImplDetails {
   /// a chunk of memory in a pool for quick allocation of RooLinkedListElems
   class Chunk {
@@ -255,6 +257,8 @@ namespace RooLinkedListImplDetails {
     return sz;
   }
 }
+
+/// \endcond
 
 RooLinkedList::Pool* RooLinkedList::_pool = nullptr;
 

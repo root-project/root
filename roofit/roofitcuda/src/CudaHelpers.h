@@ -10,18 +10,25 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_CUDAHelpers_h
-#define RooFit_CUDAHelpers_h
+#ifndef RooFit_CudaHelpers_h
+#define RooFit_CudaHelpers_h
 
 #include <chrono>
 #include <utility>
 
 namespace RooFit {
-namespace CUDAHelpers {
+namespace Detail {
+/*
+ * Contains helper functions that might be useful in the context of using a CUDA GPU.
+ *
+ * \ingroup RooFitCuda
+ */
+namespace CudaHelpers {
 
 std::pair<std::chrono::microseconds, std::chrono::microseconds> memcpyBenchmark(std::size_t nBytes);
 
-} // namespace CUDAHelpers
+} // namespace CudaHelpers
+} // namespace Detail
 } // namespace RooFit
 
 #endif
