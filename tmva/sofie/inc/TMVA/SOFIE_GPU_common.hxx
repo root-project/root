@@ -280,7 +280,7 @@ inline bool is_a_ge_zero_and_a_lt_b(int a, int b) {
 ///
 
 template <typename T, int dims>
-void Im2col(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int offset, const int channels, const int height, const int width,
+void Im2col(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int channels, const int height, const int width,
                         const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, 
                         const int stride_h, const int stride_w, const int dilation_h, const int dilation_w, cl::sycl::buffer<T, dims> data_col)
 {
@@ -310,7 +310,7 @@ void Im2col(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int offs
          int w_in = w_out * stride_w - pad_w;
 
          int dest = (channel_out * output_h + h_out) * output_w + w_out;
-         const int src = offset + (channel_in * height + h_in) * width + w_in;
+         const int src = (channel_in * height + h_in) * width + w_in;
 
          for (int i=0; i<kernel_h; i++) {
             for (int j=0; j<kernel_w; j++) {

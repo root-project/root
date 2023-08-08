@@ -681,8 +681,10 @@ public:
             // when using im2col - resulting matrix is transposed, the dimension is (input_c * filter_h * filter_y,  output_h *
             // output_w)
             if (fDim < 3) {
-               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float , 1>(q, buf_tensor_" << fNX;
-               out << ", x_offset, " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
+               out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
+               out << iDepth * iHeight * iWidth << ")};\n";
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float, 1>(q, tmp_buf_tensor_" << fNX;
+               out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
             
                if (fDim == 1)
                out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
