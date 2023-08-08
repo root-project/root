@@ -73,7 +73,32 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName)  {
-      return std::string();
+      OpName = "op_" + OpName;
+      if (fShape.empty()) {
+         throw std::runtime_error("TMVA SOFIE Shape op called to Generate without being initialized first");
+      }
+      std::stringstream out;
+
+      out << SP*3 << "\n//------ Shape\n";
+      size_t length = ConvertShapeToLength(fOutput_shape);
+
+      out << SP*3 << "std::vector<int64_t> shape = {";
+      for (size_t id = 0; id < length-1; id++) {
+         out << fShape[fStart+id] << ", ";
+      }
+
+      out << fShape[fStart + length - 1] << "};\n";
+      out << SP*3 << "auto buf_shape = cl::sycl::buffer{shape.data(), cl::sycl::range<1>(shape.size())};\n";
+
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_shape = cl::sycl::accessor{buf_shape, cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+      out << SP*4 << "cgh.copy(acc_shape, acc_tensor_" << fNY << ");\n";
+      out << SP*3 << "}).wait();\n";
+
+      return out.str();
    }
 
 };
