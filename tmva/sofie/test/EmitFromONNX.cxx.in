@@ -12,11 +12,11 @@
 
 using namespace TMVA::Experimental::SOFIE;
 
-int EmitModel(std::string filename, std::string outname){
+int EmitModel(std::string filename, std::string outname) {
 
    RModelParser_ONNX parser;
    RModel model = parser.Parse(filename);
-   model.Generate();
+   model.Generate(Options::kTextWeightFile);
    model.OutputGenerated(outname+"_FromONNX.hxx");
 
    return 0;

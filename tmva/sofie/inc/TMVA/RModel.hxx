@@ -23,15 +23,20 @@ namespace SOFIE{
 enum class Options {
    kDefault = 0x0,
    kNoSession = 0x1,
-   kNoWeightFile = 0x2,
+   kTextWeightFile = 0x2,
+   kRootBinaryWeightFile = 0x4
 };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
 std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
 
+enum class WeightFileType {None, RootBinary, Text};
+
 class RModel: public TObject{
 
 private:
+   WeightFileType fWeightFile = WeightFileType::None;
+
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //graph input only; not including operator input (intermediate tensors)
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
@@ -52,7 +57,7 @@ private:
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
-   bool fUseWeightFile = true;
+   bool fUseWeightFile = false;
    bool fUseSession = true;
 
 public:
@@ -109,7 +114,7 @@ public:
    void ReadInitializedTensorsFromFile();
    void WriteInitializedTensorsToFile(std::string filename = "");
 
-   void PrintGenerated(){
+   void PrintGenerated() {
       std::cout << fGC;
    }
    void PrintIntermediateTensors();

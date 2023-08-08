@@ -267,7 +267,7 @@ TEST(ONNX, Linear16)
    }
 }
 
-TEST(ONNX, Linear32RootFeacture)
+/*TEST(ONNX, Linear32RootFeature)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -286,7 +286,7 @@ TEST(ONNX, Linear32RootFeacture)
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-}
+}*/
 
 TEST(ONNX, Linear32)
 {

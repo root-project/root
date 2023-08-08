@@ -29,15 +29,15 @@ int EmitModel(std::string inputfile, std::string outname){
       // use Session and weight file for linear model with large weights
       if (outname.find("Linear_32") != std::string::npos) return 0; // skip test
       if (outname.find("Linear_64") != std::string::npos) return 0; // skip test
-      modelPtr->Generate();
+      modelPtr->Generate(Options::kRootBinaryWeightFile);
    }
-   else if (outname.find("LinearWith") != std::string::npos){
+   else if (outname.find("LinearWith") != std::string::npos) {
       // in this case we don't write session class but not weight file
-      modelPtr->Generate(Options::kNoWeightFile);
+      modelPtr->Generate();
    }
    else {
       // in this case we don't write session class and not weight file
-      modelPtr->Generate(Options::kNoSession | Options::kNoWeightFile);
+      modelPtr->Generate(Options::kNoSession);
    }
    modelPtr->OutputGenerated(outname+"_FromROOT.hxx");
    return 0;
