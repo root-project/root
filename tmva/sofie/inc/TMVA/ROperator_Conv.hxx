@@ -564,7 +564,7 @@ public:
          else
             out << SP*3 << fType << " " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
 
-         out << SP*3 << "auto buf_" << OpName << "_f = cl::sycl::buffer{fVec_" << OpName << "_f.data(), fVec_" << OpName << "_f.size()};\n";
+         out << SP*3 << "auto buf_" << OpName << "_f = cl::sycl::buffer{fVec_" << OpName << "_f.data(), cl::sycl::range{fVec_" << OpName << "_f.size()}};\n";
 
          // vectorize the (dilated)convolution kernels into a matrix
          // no need to transpose the matrix
@@ -586,8 +586,8 @@ public:
 
          out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*4 << "auto acc_tensor_" << fNW << " = cl::sycl::accessor{buf_tensor_" << fNW;
-         out << ", cl::sycl::read_only};\n";
-         out << SP*4 << "auto acc_" << OpName << "_f = cl::sycl::accessor{buf_" << OpName << "_f, ";
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_" << OpName << "_f = cl::sycl::accessor{buf_" << OpName << "_f, cgh, ";
          out << "cl::sycl::write_only, cl::sycl::no_init};\n";
          
          size_t num_threads = fShapeW[0] * fShapeW[1];
@@ -601,16 +601,17 @@ public:
          out << SP*5 << "auto tid = id;\n";
          out << SP*5 << "auto kw = tid % " << kWidth << ";\n";
          out << SP*5 << "tid /= " << kWidth << ";\n";
-         if (fDim > 1) {
-            out << SP*5 << "auto kh = tid % " << kHeight << ";\n";
-            out << SP*5 << "tid /= " << kHeight << ";\n";
-         }
 
          if (fDim > 2) {
             out << SP*5 << "auto kd = tid % " << kDepth << ";\n";
             out << SP*5 << "tid /= " << kDepth << ";\n";
          }
-         
+
+         if (fDim > 1) {
+            out << SP*5 << "auto kh = tid % " << kHeight << ";\n";
+            out << SP*5 << "tid /= " << kHeight << ";\n";
+         }
+
          out << SP*5 << "auto ic = tid % " << fShapeW[1] << ";\n";
          out << SP*5 << "auto oc = tid / " << fShapeW[1] << ";\n";
 
@@ -620,14 +621,15 @@ public:
          if (fDim > 1) 
             out << "+ kh * " << hstrideDil;
          out << " + kw * " << wstrideDil << "] = acc_tensor_" << fNW << "[oc * ";
-         out << ocstride << "+ ic * " << icstride << "+ kd * " << dstride << " + kh * ";
-         out << hstride << " + kw];\n";
+         out << ocstride << "+ ic * " << icstride;
+         if (fDim > 2) out << "+ kd * " << dstride;
+         if (fDim > 1) out << " + kh * " << hstride << " + kw];\n";
          
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
 
-         out << SP*3 << "oneapi::mkl::transpose_" << OpName << "_transA = oneapi::mkl::transpose::nontrans;\n";
-         out << SP*3 << "oneapi::mkl::transpose_" << OpName << "_transB = oneapi::mkl::transpose::nontrans;\n";
+         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transA = oneapi::mkl::transpose::nontrans;\n";
+         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transB = oneapi::mkl::transpose::nontrans;\n";
          out << SP*3 << "int " << OpName << "_m = " << oHeight * oWidth * oDepth << ";\n"; // output h*w
          assert(fShapeY[1] == fShapeW[0]);
          assert(fShapeW[1] == fShapeX[1] / fAttrGroup);
@@ -643,6 +645,8 @@ public:
             out << SP*3 << fType << " " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] * oDepth * oHeight * oWidth
             << "] = {0};\n";
          }
+
+         out << SP*3 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), cl::sycl::range{fVec_" << OpName << "_xcol.size()}};\n";
 
          // Loop on batch size
          out << SP*3 << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
@@ -676,10 +680,9 @@ public:
             out << SP*4 << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << ";\n";
             // when using im2col - resulting matrix is transposed, the dimension is (input_c * filter_h * filter_y,  output_h *
             // output_w)
-
             if (fDim < 3) {
-               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float , 1>(q, fTensor_" << fNX;
-               out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float , 1>(q, buf_tensor_" << fNX;
+               out << ", x_offset, " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
             
                if (fDim == 1)
                out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
@@ -688,40 +691,32 @@ public:
                   out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
                      << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                      << fAttrDilations[1];
-               out << ", fVec_" << OpName << "_xcol);\n\n ";
+               out << ", buf_" << OpName << "_xcol);\n\n ";
             }
 
-            out << SP*4 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), cl::sycl::range{fVec_" << OpName << "_xcol.size()}};\n";
-            out << SP*4 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transA, " << OpName << "transB, " << OpName;
+            out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
+            out << oHeight * oWidth * oDepth * fShapeW[1] * fShapeW[0] << ")};\n";
+            out << SP*4 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transA, " << OpName << "_transB, " << OpName;
             out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
-            out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, buf_tensor_" << fNY;
-            out << ", "
-  
-
+            out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
+            out << ", " << OpName << "_m);\n";
          } 
-            /*
-            else {
-            // 3d im2col
-            out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float>(tensor_" << fNX
-                << " + x_offset,"
-                //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
-                //  dilation_d, dilation_h, dilation_w,
-                //
-                << fShapeW[1] << "," << iDepth << "," << iHeight << "," << iWidth << ","
-                << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << ","
-                << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrPads[2] << ","
-                << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
-                << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ","
-                << OpName << "_xcol);\n\n ";
-            }      
-               out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, ";
-               out << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha, ";
-               out << "buf_tensor_" << fNB << ", " << OpName << "_ldb, buf_tensor_" << fNA << ", " << OpName;
-               out << "_lda, " << OpName << "_beta, buf_tensor_" << fNY << ", " << OpName << "_n);\n";
-         } else {
+         else {
 
          }
-         */
+
+         if (fNB2!= "") {
+            out << SP*3 << "int " << OpName << "_size = " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
+            out << SP*3 << "float " << OpName << "_gamma = 1.0;\n";
+            out << SP*3 << "int " << OpName << "_incx = 1;\n";
+            out << SP*3 << "int " << OpName << "_incy = 1;\n";
+
+            out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNB2;
+            out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
+         }
+
+         out << SP*3 << "}\n"; // end of batch size loop
+
 
          return out.str();
    }

@@ -125,7 +125,7 @@ public:
          out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n\n";
          out << SP*4 << "cgh.copy_in_device(acc_tensor_" << fNX << ", acc_tensor_" << fNY << ");\n";
-         out << SP*4 << "});\n";
+         out << SP*4 << "}).wait();\n";
          out << SP*3 << "});\n";
       }
       else {
@@ -136,7 +136,7 @@ public:
          out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_";
          out << fNY << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
          out << SP*6 << "cgh.copy(data, acc_tensor_" << fNY << ");\n";
-         out << SP*5 << "});\n";
+         out << SP*5 << "}).wait();\n";
          out << SP*4 << "delete[] data;\n";
          out << SP << "}\n";
       }

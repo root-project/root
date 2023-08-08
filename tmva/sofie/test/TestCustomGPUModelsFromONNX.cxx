@@ -597,6 +597,11 @@ TEST(ONNX, ConvWithoutPadding)
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+
+   for (size_t i=0; i<output.size(); ++i) {
+      std::cout << output[i] << std::endl;
+      std::cout << correct[i] << std::endl;
+   }
 }
 
 
