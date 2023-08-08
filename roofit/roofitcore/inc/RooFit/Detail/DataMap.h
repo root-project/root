@@ -14,7 +14,6 @@
 #define RooFit_Detail_DataMap_h
 
 #include <RooAbsArg.h>
-#include <RooBatchCompute.h>
 #include <RooSpan.h>
 
 #include <TNamed.h>
@@ -26,6 +25,10 @@
 
 template <class T>
 class RooTemplateProxy;
+
+namespace RooBatchCompute {
+class Config;
+}
 
 /// \class RooFit::DataKey
 /// To use as a key type for RooFit data maps and containers. A RooFit::DataKey
@@ -78,14 +81,11 @@ namespace Detail {
 
 class DataMap {
 public:
-   auto size() const {
-       assert(_dataMap.size() == _cfgs.size());
-       return _dataMap.size();
+   auto size() const
+   {
+      return _dataMap.size();
    }
-   void resize(std::size_t n) {
-       _cfgs.resize(n);
-       _dataMap.resize(n);
-   }
+   void resize(std::size_t n);
 
    inline void set(RooAbsArg const *arg, RooSpan<const double> const &span)
    {
@@ -95,15 +95,9 @@ public:
       _dataMap[idx] = span;
    }
 
-   inline void setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config)
-   {
-      if (!arg->hasDataToken())
-         return;
-      std::size_t idx = arg->dataToken();
-      _cfgs[idx] = config;
-   }
+   void setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config);
 
-   RooSpan<const double> at(RooAbsArg const *arg, RooAbsArg const * caller = nullptr);
+   RooSpan<const double> at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr);
 
    inline RooSpan<const double> at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr) const
    {
@@ -122,15 +116,7 @@ public:
       return at(&proxy.arg(), proxy.owner());
    }
 
-   RooBatchCompute::Config config(RooAbsArg const *arg) const
-   {
-      if (!arg->hasDataToken()) {
-         return {};
-      }
-      std::size_t idx = arg->dataToken();
-      return _cfgs[idx];
-   }
-
+   RooBatchCompute::Config config(RooAbsArg const *arg) const;
 
 private:
    std::vector<RooSpan<const double>> _dataMap;

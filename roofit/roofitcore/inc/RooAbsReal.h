@@ -45,6 +45,9 @@ namespace Experimental {
 class RooFitDriver ;
 }
 }
+namespace RooBatchCompute {
+struct RunContext;
+}
 
 class TH1;
 class TH1F;
