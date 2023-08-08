@@ -16,7 +16,10 @@
 namespace RooFit {
 namespace Detail {
 
-/// Namespace for templated CUDA kernels.
+/*
+ * Namespace for templated CUDA kernels.
+ * \ingroup RooFitCuda
+ */
 namespace CudaKernels {
 
 /// The type for array size parameters.

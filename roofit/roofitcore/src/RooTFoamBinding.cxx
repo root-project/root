@@ -14,6 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+/// \cond ROOFIT_INTERNAL
+
 /**
 \file RooTFoamBinding.cxx
 \class RooTFoamBinding
@@ -69,3 +71,5 @@ double RooTFoamBinding::Density(Int_t ndim, double *xvec)
   double ret = (*_binding)(x) ;
   return ret<0?0:ret ;
 }
+
+/// \endcond

@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -13,6 +15,7 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
 #ifndef ROO_SENTINEL
 #define ROO_SENTINEL
 
@@ -33,3 +36,5 @@ protected:
 };
 
 #endif
+
+/// \endcond

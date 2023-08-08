@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 // Author: Stephan Hageboeck, CERN, 12/2018
 /*****************************************************************************
  * Project: RooFit                                                           *
@@ -326,3 +328,5 @@ namespace STLRefCountListHelpers {
 }
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_ */
+
+/// \endcond

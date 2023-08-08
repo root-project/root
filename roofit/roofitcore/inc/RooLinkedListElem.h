@@ -22,10 +22,14 @@ class TObject ;
 class RooLinkedListElem ;
 class TBuffer ;
 
+/// \cond ROOFIT_INTERNAL
+
 namespace RooLinkedListImplDetails {
     class Chunk;
     class Pool;
 }
+
+/// \endcond
 
 class RooLinkedListElem {
 public:

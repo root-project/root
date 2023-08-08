@@ -165,6 +165,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title, RooSimulta
    }
 }
 
+/// \cond ROOFIT_INTERNAL
 
 // This class cannot be locally defined in initialize as it cannot be
 // used as a template argument in that case
@@ -176,6 +177,8 @@ namespace RooSimultaneousAux {
     std::unique_ptr<RooArgSet> subIndexComps;
   } ;
 }
+
+/// \endcond
 
 std::unique_ptr<RooSimultaneous::InitializationOutput>
 RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inIndexCat,
