@@ -43,3 +43,6 @@ compile_commands.json
 documentation/doxygen/*.eps
 documentation/doxygen/*.pcm
 documentation/doxygen/*.jpg
+
+# Pycache
+.github/workflows/root-ci-config/__pycache__
