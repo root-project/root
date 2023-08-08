@@ -465,6 +465,7 @@ TGeoVolume::TGeoVolume()
    fRefCount = 0;
    fUserExtension = 0;
    fFWExtension = 0;
+   fTransparency = -1;
    TObject::ResetBit(kVolumeImportNodes);
 }
 
@@ -497,6 +498,7 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    fRefCount = 0;
    fUserExtension = 0;
    fFWExtension = 0;
+   fTransparency = -1;
    if (fGeoManager)
       fNumber = fGeoManager->AddVolume(this);
    TObject::ResetBit(kVolumeImportNodes);
