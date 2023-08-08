@@ -288,17 +288,11 @@ void Im2col(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int chan
    const int output_w = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
    const int channel_size = height * width;
 
-   auto globalRange = cl::sycl::range<1>{static_cast<size_t>(channels * output_h * output_w)};
-   auto localRange = cl::sycl::range<1>(1);
-   auto ndRange = cl::sycl::nd_range{globalRange, localRange};
-
    q.submit([&](cl::sycl::handler& cgh){
       auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::read_only};
       auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::write_only, cl::sycl::no_init};
 
-      cgh.parallel_for<class im2col>(ndRange, [=](cl::sycl::nd_item<1> item){
-         auto id = item.get_global_id();
-
+      cgh.parallel_for<class im2col>(cl::sycl::range{static_cast<size_t>(channels * output_h * output_w)}, [=](cl::sycl::id<1> id){
          int w_out = id % output_w;
          int idx = id / output_w;
 
@@ -345,17 +339,11 @@ void Im2col_3d(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int c
    const int output_d = (depth + 2 * pad_d - (dilation_d * (kernel_d - 1) + 1)) / stride_d + 1;
    const int channel_size = height * width * depth;
 
-   auto globalRange = cl::sycl::range<1>{static_cast<size_t>(channels * output_h * output_w * output_d)};
-   auto localRange = cl::sycl::range<1>(1);
-   auto ndRange = cl::sycl::nd_range{globalRange, localRange};
-
    q.submit([&](cl::sycl::handler& cgh){
       auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::read_only};
       auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::write_only, cl::sycl::no_init};
 
-      cgh.parallel_for<class im2col_3d>(ndRange, [=](cl::sycl::nd_item<1> item){
-         auto id = item.get_global_id();
-
+      cgh.parallel_for<class im2col_3d>(cl::sycl::range{static_cast<size_t>(channels * output_h * output_w * output_d)}, [=](cl::sycl::id<1> id){
          int w_out = id % output_w;
          id /= output_w;
 
