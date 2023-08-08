@@ -30,10 +30,14 @@ class RooFIter;
 class TIterator ;
 class RooAbsArg ;
 
+/// \cond ROOFIT_INTERNAL
+
 namespace RooLinkedListImplDetails {
     class Chunk;
     class Pool;
 }
+
+/// \endcond
 
 class RooLinkedList : public TObject {
 public:

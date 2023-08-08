@@ -121,7 +121,7 @@ def print_roofit_pythonization_page():
         return funcs_have_doc
 
     # Fill separate RooFit pythonization page, starting with the introduction and table of contents...
-    print("\defgroup RoofitPythonizations Roofit pythonizations")
+    print("\defgroup RoofitPythonizations RooFit Pythonizations")
     print("\ingroup Roofitmain")
     for python_klass in _roofit.python_classes:
         if python_klass.__doc__ is None and not member_funcs_have_doc(python_klass):
