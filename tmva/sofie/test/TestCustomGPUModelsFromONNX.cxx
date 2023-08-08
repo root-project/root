@@ -941,7 +941,7 @@ TEST(ONNX, Max)
       }
    }
 
-/*TEST(ONNX, MaxMultidirectionalBroadcast) {
+TEST(ONNX, MaxMultidirectionalBroadcast) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
@@ -1021,7 +1021,7 @@ TEST(ONNX, SumMultidirectionalBroadcast) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-*/
+
 TEST(ONNX, Shape){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 

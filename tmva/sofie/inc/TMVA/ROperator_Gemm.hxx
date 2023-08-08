@@ -257,7 +257,7 @@ namespace SOFIE{
                out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
                out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
                out << SP*4 << "cgh.copy(tensor_" << fNC2 << ", acc_tensor_" << fNY << ");\n";
-               out << SP*3 << "});\n";
+               out << SP*3 << "}).wait();\n";
             } else {
                //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
                // the previous result

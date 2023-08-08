@@ -166,7 +166,40 @@
          }
 
          std::string GenerateGPU(std::string OpName) {
-            return std::string();
+            OpName = "op_"+OpName;
+            if(fOutputShape.empty()){
+                  throw std::runtime_error("TMVA SOFIE Concat called to Generate without being initialized first");
+            }
+            std::stringstream out;
+            out<<"\n//--------- Concat\n";
+            // special case when memory is contigous
+            bool hasShapeOnes = true;
+            for(int i = 0; i<fAxis; ++i){
+               if(fInputShapes[0][i]!=1){
+                  hasShapeOnes = false;
+                  break;
+               }
+            }
+
+            if (fAxis == 0 || hasShapeOnes) {
+               size_t offset = 0;
+               for (size_t i=0; i<fInputs.size(); ++i) {
+                  out << SP*3 << "auto buf_tensor_" << fOutput << "_" << i << " = cl::sycl::buffer{buf_tensor_" << fOutput << ", cl::sycl::id<1>(" << offset << ")";
+                  out << ", cl::sycl::range<1>(" << ConvertShapeToLength(fInputShapes[i]) << ")};\n";
+                  
+                  out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+                  out << SP*4 << "auto acc_tensor_" << fInputs[i] << "= cl::sycl::accessor{buf_tensor_" << fInputs[i];
+                  out << ", cgh, cl::sycl::read_only};\n";
+                  out << SP*4 << "auto acc_tensor_" << fOutput << "_" << i << " = cl::sycl::accessor{buf_tensor_" << fOutput << "_" << i;
+                  out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+                  out << SP*4 << "cgh.copy(acc_tensor_" << fInputs[i] << ", acc_tensor_" << fOutput << "_" << i << ");\n";
+                  out << SP*3 << "}).wait();\n";
+
+                  offset+=ConvertShapeToLength(fInputShapes[i]);
+               }
+            }
+            return out.str();
          }
      };
  }//SOFIE

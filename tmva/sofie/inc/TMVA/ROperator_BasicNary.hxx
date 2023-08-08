@@ -223,7 +223,7 @@ public:
                out << SP*6 << "auto acc_" << fNBroadcastedInputs[i] << " = cl::sycl::accessor{buf_";
                out << fNBroadcastedInputs[i]<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
                out << SP*6 << "cgh.copy(data, acc_" << fNBroadcastedInputs[i] << ");\n";
-               out << SP*5 << "});\n";
+               out << SP*5 << "}).wait();\n";
 
                out << SP*5 << "delete[] data;\n";
                out << SP*4 << "}\n";

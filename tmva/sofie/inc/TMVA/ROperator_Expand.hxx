@@ -124,9 +124,8 @@ public:
          out << ", cgh, cl::sycl::read_only};\n";
          out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n\n";
-         out << SP*4 << "cgh.copy_in_device(acc_tensor_" << fNX << ", acc_tensor_" << fNY << ");\n";
-         out << SP*4 << "}).wait();\n";
-         out << SP*3 << "});\n";
+         out << SP*4 << "cgh.copy(acc_tensor_" << fNX << ", acc_tensor_" << fNY << ");\n";
+         out << SP*3 << "}).wait();\n";
       }
       else {
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNX << "\n";
