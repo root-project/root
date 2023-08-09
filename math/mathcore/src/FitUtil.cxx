@@ -354,7 +354,6 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
          //std::cout << "using Pearson chi2 " << x[0] << "  " << 1./invError2 << "  " << fval << std::endl;
       }
 
-
 #ifdef DEBUG
       std::cout << x[0] << "  " << y << "  " << 1./invError << " params : ";
       for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar)
@@ -693,7 +692,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    const IGradModelFunction &func = *fg;
 
 #ifdef DEBUG
-   std::cout << "\n\nFit data size = " << n << std::endl;
+   std::cout << "\n\nFit data size = " << nPoints << std::endl;
    std::cout << "evaluate chi2 using function gradient " << &func << "  " << p << std::endl;
 #endif
 

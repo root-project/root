@@ -178,7 +178,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    assert( ndim > 0 );
    //typedef  BinPoint::CoordData CoordData;
    //CoordData x = CoordData( hfit->GetDimension() );
-   dv.Initialize(n,ndim);
+   dv.Initialize(n,ndim, (fitOpt.fErrors1) ? ROOT::Fit::BinData::kNoError : ROOT::Fit::BinData::kValueError);
 
    double x[3];
    double s[3];
