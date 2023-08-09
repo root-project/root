@@ -2488,9 +2488,9 @@ Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 
    TString opt(option); opt.ToUpper();
    bool useRange = opt.Contains("R");
-   ROOT::Fit::EChisquareType type = ROOT::Fit::kNeyman;  // default chi2 with observed error
-   if (opt.Contains("L")) type = ROOT::Fit::kPLikeRatio;
-   else if (opt.Contains("P")) type = ROOT::Fit::kPearson;
+   ROOT::Fit::EChisquareType type = ROOT::Fit::EChisquareType::kNeyman;  // default chi2 with observed error
+   if (opt.Contains("L")) type = ROOT::Fit::EChisquareType::kPLikeRatio;
+   else if (opt.Contains("P")) type = ROOT::Fit::EChisquareType::kPearson;
 
    return ROOT::Fit::Chisquare(*this, *func, useRange, type);
 }
@@ -4264,7 +4264,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 {
    // implementation of Fit method is in file hist/src/HFitImpl.cxx
    Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kHistogram,option,fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kHistogram,option,fitOption);
 
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(xxmin,xxmax);
@@ -4620,7 +4620,7 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
 Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
 {
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kHistogram, choptin,fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kHistogram, choptin,fitOption);
    return 1;
 }
 
