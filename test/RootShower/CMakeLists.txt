@@ -9,24 +9,8 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project(RootShower)
 
 find_package(ROOT REQUIRED)
-include(${ROOT_USE_FILE})
 
-include_directories(${ROOT_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
-
-set(HEADERS
-  GButtonFrame.h
-  GTitleFrame.h
-  MyDetector.h
-  MyEvent.h
-  MyParticle.h
-  ParticlesDef.h
-  RootShower.h
-  RSAbout.h
-  RSHelpText.h
-  RSMsgBox.h
-  RSVersion.h
-  SettingsDlg.h
-)
+include_directories(${ROOT_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SOURCES
   GButtonFrame.cxx
@@ -41,11 +25,15 @@ set(SOURCES
   SettingsDlg.cxx
 )
 
+set(HEADERS MyParticle.h MyDetector.h MyEvent.h)
+
 if(MSVC)
   set(RCFILE RootShower.rc)
 endif()
 
-ROOT_GENERATE_DICTIONARY(RootShowerDict MyParticle.h MyDetector.h MyEvent.h LINKDEF RSLinkDef.h)
+ROOT_GENERATE_DICTIONARY(RootShowerDict ${HEADERS} LINKDEF RSLinkDef.h)
+file(COPY ${HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ".rootshowerrc" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(RootShower ${SOURCES} RootShowerDict.cxx ${RCFILE})
 target_link_libraries(RootShower ROOT::Core ROOT::Rint ROOT::Gui ROOT::RIO ROOT::Hist ROOT::Gpad
@@ -59,3 +47,12 @@ if(MSVC)
   )
   set_target_properties(RootShower PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
+
+file(COPY anim DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY icons DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+install(TARGETS RootShower RUNTIME DESTINATION ${PROJECT_NAME} COMPONENT applications)
+install(DIRECTORY anim  DESTINATION ${PROJECT_NAME}/anim COMPONENT anim)
+install(DIRECTORY icons  DESTINATION ${PROJECT_NAME}/icons COMPONENT icons)
+install(FILES ${HEADERS} DESTINATION ${PROJECT_NAME} COMPONENT headers)
+install(FILES ".rootshowerrc" DESTINATION ${PROJECT_NAME} COMPONENT settings)
