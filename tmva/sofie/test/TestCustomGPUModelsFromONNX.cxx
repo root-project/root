@@ -597,11 +597,6 @@ TEST(ONNX, ConvWithoutPadding)
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
-   for (size_t i=0; i<output.size(); ++i) {
-      std::cout << output[i] << std::endl;
-      std::cout << correct[i] << std::endl;
-   }
 }
 
 
@@ -693,7 +688,7 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    }
 }
 
-/*TEST(ONNX, MaxPool1d){
+TEST(ONNX, MaxPool1d){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input
@@ -720,6 +715,12 @@ TEST(DISABLED_ONNX, ConvWithAsymmetricPadding)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+
+   for (size_t i=0; i<output.size(); ++i) {
+      std::cout << output[i] << std::endl;
+      std::cout << correct[i] << std::endl;
    }
 
 }
@@ -817,7 +818,7 @@ TEST(ONNX, AvgPool){
    }
 
 }
-*/
+
 TEST(ONNX, Pow){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 

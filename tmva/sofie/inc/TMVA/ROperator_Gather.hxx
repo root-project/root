@@ -185,7 +185,7 @@ public:
       std::vector<size_t> stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
       // array because std::vector is not device-copyable
       size_t indicesLength = ConvertShapeToLength(fShapeIndices);
-      out << SP << "std::array<int64_t, " << std::to_string(indicesLength) << "> " << OpName << "_indices = {";
+      out << SP*3 << "std::array<int64_t, " << std::to_string(indicesLength) << "> " << OpName << "_indices = {";
       
       for (size_t i = 0; i < indicesLength; i++) {
          out << fIndices[i] << (i + 1 < indicesLength? ", " : "};\n");
