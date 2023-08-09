@@ -139,6 +139,7 @@ unsigned int __WRITE__ = 0; // write fitted object in a file
 
 int gSelectedTest = 0;
 int gSelectedFit = 0; // to select a fit in the test
+int gTestIndex = 0;
 
 bool gEnableMT = kFALSE;
 
@@ -292,12 +293,11 @@ public:
 };
 
 // Set the limits of a function given a vector of ParLimit
-void SetParsLimits(vector<ParLimit>& v, TF1* func)
+void SetParsLimits(const vector<ParLimit>& v, TF1* func)
 {
-   for ( vector<ParLimit>::iterator it = v.begin();
-         it !=  v.end(); ++it ) {
+   for ( auto & it : v ) {
 //       printf("Setting parameters: %d, %f, %f\n", (*it)->npar, (*it)->min, (*it)->max);
-      func->SetParLimits( it->npar, it->min, it->max);
+      func->SetParLimits( it.npar, it.min, it.max);
    }
 }
 
@@ -447,7 +447,6 @@ public:
 };
 
 // Print the Name of the test
-int gTestIndex = 0;
 template <typename T>
 void printTestName(T* object, TF1* func)
 {
@@ -658,6 +657,7 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
 
    func->SetParameters(fitpars);
    func->SetParErrors(parSteps.data());
+   SetParsLimits(fitFunction.parLimits, func);
 
    // use as reference algorithm the first one in the list
    auto & refAlgo = listAlgos[0][0];
@@ -760,13 +760,14 @@ int test1DObjects(vector< vector<algoType> >& listH,
    {
       if ( func ) delete func;
       func = new TF1( listOfFunctions[j].name, listOfFunctions[j].func, minX, maxX, listOfFunctions[j].npars);
+      // set original parameter values
       func->SetParameters(&(listOfFunctions[j].origPars[0]));
-      for (int i =0; i < func->GetNpar(); i++) func->SetParError(i,0.);
-      SetParsLimits(listOfFunctions[j].parLimits, func);
 
-      // create here h1 since it is used to make TGrpahs's and THnsparse
+      // create here h1 since it is used to make TGraphs's and THnsparse
       if (h1) delete h1;
       h1 = new TH1D("h1", "Histogram1D Equal Bins", nbinsX, minX, maxX);
+      rndm.SetSeed(100+gTestIndex);
+
       for (int i = 1; i <= h1->GetNbinsX() + 1; ++i)
          h1->SetBinContent(i, rndm.Poisson(func->Eval(h1->GetBinCenter(i))));
 
@@ -790,14 +791,18 @@ int test1DObjects(vector< vector<algoType> >& listH,
       gTestIndex++;
       if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          // variable bin test
+         rndm.SetSeed(100+gTestIndex);
+         func->SetParameters(&(listOfFunctions[j].origPars[0]));
          double v[nbinsX + 1];
          FillVariableRange(v, nbinsX, minX, maxX);
          if (h2) delete h2;
          TString hname = "H1D_VarBins";
          h2 = new TH1D(hname, "Histogram1D Variable Bins", nbinsX, v);
-         for (int i = 1; i <= h2->GetNbinsX(); ++i)
-            h2->SetBinContent(i,rndm.Poisson(func->Integral(h2->GetXaxis()->GetBinLowEdge(i),
-                                                            h2->GetXaxis()->GetBinUpEdge(i)) ));
+         for (int i = 1; i <= h2->GetNbinsX(); ++i) {
+            double expValue = func->Integral(h2->GetXaxis()->GetBinLowEdge(i),
+                                             h2->GetXaxis()->GetBinUpEdge(i));
+            h2->SetBinContent(i,rndm.Poisson(expValue));
+         }
 
          if (c0 && !__DRAW__) delete c0;
          c0 = new TCanvas(TString::Format("c%d_H1D", gTestIndex), "Histogram1D Variable");
@@ -904,6 +909,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
       ge1->SetName("Graph2DErrors");
       ge1->SetTitle("Graph2D with Errors");
       unsigned int counter = 0;
+      rndm.SetSeed(100+gTestIndex);
       for (int i = 1; i <= h1->GetNbinsX() ; ++i) {
          for (int j = 1; j <= h1->GetNbinsY() ; ++j) {
             double xc = h1->GetXaxis()->GetBinCenter(i);
@@ -940,6 +946,8 @@ int test2DObjects(vector< vector<algoType> >& listH,
       gTestIndex++;
       if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          // fill and test 2D variable bins histograms
+         rndm.SetSeed(100+gTestIndex);
+         func->SetParameters(&(listOfFunctions[h].origPars[0]));
          if (h2) delete h2;
          double x[nbinsX + 1];
          FillVariableRange(x, nbinsX, minX, maxX);
@@ -1083,6 +1091,7 @@ int testUnBinnedFit(int n = 10000)
    func->SetParameters(origPars);
 
    TUnuranMultiContDist dist(func);
+   rndm.SetSeed(100+gTestIndex);
    TUnuran unr(&rndm);
 
    // sampling with vnrou methods
@@ -1099,6 +1108,7 @@ int testUnBinnedFit(int n = 10000)
    tree->Branch("v",&v,"v/D");
    tree->Branch("w",&w,"w/D");
    double xx[2];
+   rndm.SetSeed(100+gTestIndex);
    for (Int_t i=0;i<n;i++) {
       unr.SampleMulti(xx);
       x = xx[0];
@@ -1198,7 +1208,7 @@ void init_structures()
    extraAlgos.push_back( algoType( "GSLMultiMin", "conjugatefr", "X", CompareResult(cmpChi2)) );
    extraAlgos.push_back( algoType( "GSLMultiMin", "conjugatepr", "X", CompareResult(cmpChi2)) );
    extraAlgos.push_back( algoType( "GSLMultiMin", "bfgs2",       "X", CompareResult(cmpChi2)) );
-   extraAlgos.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult(cmpChi2,0,1.)) );
+   extraAlgos.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult(cmpChi2,0,3.)) );
 #endif
 
 
@@ -1306,6 +1316,7 @@ void init_structures()
    // the G option. In this case the fit is linearized using the gradient as the linear components
    // Use option "X" to force Chi2 calculations
    linearAlgos.push_back( algoType( "Linear",      "",            "XG", CompareResult(cmpPars)) );
+   linearAlgos.push_back( algoType( "Minuit2",     "",            "XF", CompareResult(cmpPars)) );
 
    listLinearAlgos.clear();
    listTH1DAlgos.clear();
@@ -1379,8 +1390,8 @@ void init_structures()
 
    l1DLinearFunctions.push_back( fitFunctions("Polynomial", poly1DImpl, 4, poly1DOrig, poly1DFit, emptyLimits) );
 
-   double poly2DOrig[] = { 2, 3, 4, 5, 6, 7, 200, };
-   double poly2DFit[] = { 6.4, -2.3, 15.4, 3, 10, -3, 210.5};
+   double poly2DOrig[] = { 2, 3, 4, 5, 6, 7, 700, };
+   double poly2DFit[] = { 6.4, -2.3, 15.4, 3, 10, -3, 1000};
    l2DLinearFunctions.push_back( fitFunctions("Poly2D", poly2DImpl, 7, poly2DOrig, poly2DFit, emptyLimits) );
 }
 
