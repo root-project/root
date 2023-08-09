@@ -10,6 +10,8 @@ project(RootShower)
 
 find_package(ROOT REQUIRED)
 
+set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS})
+
 include_directories(${ROOT_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SOURCES
