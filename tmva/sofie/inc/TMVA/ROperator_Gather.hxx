@@ -172,8 +172,91 @@ public:
       return out.str();
    }
 
-   std::string GenerateGPU(std::string OpName) override {
-      return std::string();
+   std::string GenerateGPU(std::string OpName) {
+      OpName = "op_" + OpName;
+      std::stringstream out;
+      // The shape of the output is q + r - 1
+      size_t r = fShapeX.size();
+      // Indices of shape q
+      size_t q = fShapeIndices.size();
+      // Strides
+      std::vector<size_t> stridesX = UTILITY::ComputeStrideFromShape(fShapeX);
+      std::vector<size_t> stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
+      std::vector<size_t> stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
+      // array because std::vector is not device-copyable
+      size_t indicesLength = ConvertShapeToLength(fShapeIndices);
+      out << SP << "std::array<int64_t, " << std::to_string(indicesLength) << "> " << OpName << "_indices = {";
+      
+      for (size_t i = 0; i < indicesLength; i++) {
+         out << fIndices[i] << (i + 1 < indicesLength? ", " : "};\n");
+      }
+
+      size_t num_elements = 1;
+
+      for (size_t j=0; j<size_t(fAttrAxis); j++) {
+         num_elements *= fShapeY[j];
+      }
+
+      for (size_t i=0; i<q; i++) {
+         num_elements *= fShapeIndices[i];
+      }
+
+      for (size_t j = fAttrAxis; j+1 < r; j++) {
+         num_elements *= fShapeY[ q + j ];
+      }
+
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << num_elements;
+      out << "), [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "auto tid = id;\n";
+
+      out << SP*5 << "size_t y_index = 0;\n";
+      for (size_t j = 0; j < size_t(fAttrAxis); j++) {
+         out << SP*5 << "auto j_" << std::to_string(j) << " = tid % " << fShapeY[j] << ";\n";
+         out << SP*5 << "y_index += j_" << std::to_string(j) << " * " << stridesY[j] << ";\n";
+         out << SP*5 << "tid /= " << fShapeY[j] << ";\n";
+      }
+
+      for (size_t i=0; i<q; i++) {
+         out << SP*5 << "auto i_" << std::to_string(i) << " = tid % " << fShapeIndices[i] << ";\n";
+         out << SP*5 << "y_index += i_" << std::to_string(i) << " * " << stridesY[fAttrAxis + i] << ";\n";
+         out << SP*5 << "tid /= " << fShapeIndices[i] << ";\n";
+      }
+
+      for (size_t j = fAttrAxis; j + 1 < r; j++) {
+         out << SP*5 << "auto j_" << std::to_string(j) << " = tid % " << fShapeY[q+j] << ";\n";
+         out << SP*5 << "y_index += j_" << std::to_string(j) << " * " << stridesY[q + j] << ";\n";
+         out << SP*5 << "tid /= " << fShapeY[q+j] << ";\n";
+      }
+
+      out << SP*5 << "size_t i_index = 0;\n";
+
+      for (size_t i=0; i < q; i++) {
+         out << SP*5 << "i_index += i_" << std::to_string(i) << " * " << stridesIndices[i] << ";\n";
+      }
+
+      out << SP*5 << "size_t k = static_cast<size_t>(" << OpName<< "_indices[i_index]);\n";
+      out << SP*5 << "size_t x_index = k * " << stridesX[fAttrAxis] << ";\n";
+
+      for (size_t j = 0; j < size_t(fAttrAxis); j++) {
+         out << SP*5 << "x_index += j_" << std::to_string(j) << " * " << stridesX[j] << ";\n";
+      }
+
+      for (size_t j = fAttrAxis + 1; j < r; j++) {
+         out << SP*5 << "x_index += j_" << std::to_string(j - 1) << " * " << stridesX[j] << ";\n";
+      }
+
+      out << SP*5 << "acc_tensor_" << fNY << "[y_index] = acc_tensor_" << fNX << "[x_index];\n";
+
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+
+      return out.str();
    }
 
 };
