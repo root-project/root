@@ -16,7 +16,7 @@ int EmitModel(std::string filename, std::string outname) {
 
    RModelParser_ONNX parser;
    RModel model = parser.Parse(filename);
-   model.Generate(Options::kTextWeightFile);
+   model.Generate();
    model.OutputGenerated(outname+"_FromONNX.hxx");
 
    return 0;

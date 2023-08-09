@@ -241,7 +241,9 @@ namespace SOFIE{
       if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
          fUseSession = false;
       }
-
+      if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
+         fUseWeightFile = false;
+      }
       if (static_cast<std::underlying_type_t<Options>>(Options::kTextWeightFile) & options) {
          fWeightFile = WeightFileType::Text;
          fUseWeightFile = true;
@@ -522,9 +524,15 @@ namespace SOFIE{
 
       for (auto &i : fInitializedTensors) {
          fGC += "  {\n";
+         std::string tensor_name = "tensor_" + i.first;
          if (i.second.fType == ETensorType::FLOAT) {
-            std::string tensor_name = "tensor_" + i.first;
             fGC += "fTensor_" + i.first + " = *reinterpret_cast<std::vector<float>*>(rootFile->Get(";
+            fGC += "\"" + tensor_name + "\"));\n";
+         } else if (i.second.fType == ETensorType::DOUBLE) {
+            fGC += "fTensor_" + i.first + " = *reinterpret_cast<std::vector<double>*>(rootFile->Get(";
+            fGC += "\"" + tensor_name + "\"));\n";
+         } else if (i.second.fType == ETensorType::INT64) {
+            fGC += "fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(";
             fGC += "\"" + tensor_name + "\"));\n";
          }
          fGC += "  }\n";
@@ -570,7 +578,7 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
       else if(item.second.fType == ETensorType::DOUBLE){
          const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
          const double* data = (std::static_pointer_cast<double>(item.second.fData)).get();
-         std::vector<float> tensorDataVector(data , data + length);
+         std::vector<double> tensorDataVector(data , data + length);
          outputFile->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
       }
       else if(item.second.fType == ETensorType::INT64) {

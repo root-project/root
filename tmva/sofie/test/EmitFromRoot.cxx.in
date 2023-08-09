@@ -33,11 +33,11 @@ int EmitModel(std::string inputfile, std::string outname){
    }
    else if (outname.find("LinearWith") != std::string::npos) {
       // in this case we don't write session class but not weight file
-      modelPtr->Generate();
+      modelPtr->Generate(Options::kNoWeightFile);
    }
    else {
       // in this case we don't write session class and not weight file
-      modelPtr->Generate(Options::kNoSession);
+      modelPtr->Generate(Options::kNoSession | Options::kNoWeightFile);
    }
    modelPtr->OutputGenerated(outname+"_FromROOT.hxx");
    return 0;

@@ -23,8 +23,9 @@ namespace SOFIE{
 enum class Options {
    kDefault = 0x0,
    kNoSession = 0x1,
-   kTextWeightFile = 0x2,
-   kRootBinaryWeightFile = 0x4
+   kNoWeightFile = 0x2,
+   kTextWeightFile = 0x4,
+   kRootBinaryWeightFile = 0x8
 };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
@@ -57,7 +58,7 @@ private:
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
-   bool fUseWeightFile = false;
+   bool fUseWeightFile = true;
    bool fUseSession = true;
 
 public:
@@ -107,7 +108,7 @@ public:
 
    void Initialize(int batchSize=1);
    void Generate(std::underlying_type_t<Options> options, int batchSize = 1);
-   void Generate(Options options = Options::kDefault, int batchSize = 1) {
+   void Generate(Options options = Options::kTextWeightFile, int batchSize = 1) {
       Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize);
    }
 
