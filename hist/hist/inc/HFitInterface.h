@@ -45,12 +45,12 @@ namespace ROOT {
       class UnBinData;
       class SparseData;
 
-      enum EFitObjectType {
+      enum class EFitObjectType {
          kHistogram,
          kGraph
       };
 
-      enum EChisquareType {
+      enum class EChisquareType {
          kNeyman = 0,
          kPLikeRatio,
          kPearson

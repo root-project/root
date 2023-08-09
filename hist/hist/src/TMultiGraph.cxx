@@ -702,7 +702,7 @@ TFitResultPtr TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axi
 {
    // internal multigraph fitting methods
    Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph,option,fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kGraph,option,fitOption);
 
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(rxmin,rxmax);
@@ -1596,9 +1596,9 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMultiGraph::Class())) 
+   if (gROOT->ClassSaved(TMultiGraph::Class()))
       out<<"   ";
-   else 
+   else
       out<<"   TMultiGraph *";
    out<<"multigraph = new TMultiGraph();"<<std::endl;
    out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;

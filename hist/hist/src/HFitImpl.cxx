@@ -700,7 +700,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    opt.ToUpper();
 
    // parse firt the specific options
-   if (type == kHistogram) {
+   if (type == EFitObjectType::kHistogram) {
 
       if (opt.Contains("WIDTH")) {
          fitOption.BinVolume = 1;  // scale content by the bin width
@@ -757,7 +757,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       }
    }
    // specific Graph options (need to be parsed before)
-   else if (type == kGraph) {
+   else if (type == EFitObjectType::kGraph) {
       opt.ReplaceAll("ROB", "H");
       opt.ReplaceAll("EX0", "T");
 
@@ -1029,7 +1029,7 @@ double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, ROOT::Fit:
 }
 
 double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) {
-   return HFit::ComputeChi2(g,f1, useRange, kNeyman);
+   return HFit::ComputeChi2(g,f1, useRange, ROOT::Fit::EChisquareType::kNeyman);
 }
 
 template<class FitObject>
@@ -1037,11 +1037,10 @@ double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, ROOT:
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
-   if (type != ROOT::Fit::kNeyman) opt.fUseEmpty=true;  // use empty bin when not using Neyman chisquare (observed error)
-   if (type == ROOT::Fit::kPearson) {
-      opt.fExpErrors=true;
-      opt.fErrors1= true;  // not using actual errors
-   }
+   opt.fUseEmpty = (type != ROOT::Fit::EChisquareType::kNeyman);  // use empty bin when not using Neyman chisquare (observed error)
+   opt.fExpErrors = (type == ROOT::Fit::EChisquareType::kPearson);
+   opt.fErrors1 = (type == ROOT::Fit::EChisquareType::kPearson);  // not using observed errors in Pearson chi2
+
    ROOT::Fit::DataRange range;
    // get range of function
    if (useRange) HFit::GetFunctionRange(f1,range);
@@ -1053,7 +1052,7 @@ double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, ROOT:
       return -1;
    }
    ROOT::Math::WrappedMultiTF1  wf1(f1);
-   if (type == ROOT::Fit::kPLikeRatio) {
+   if (type == ROOT::Fit::EChisquareType::kPLikeRatio) {
       // use the poisson log-lokelihood (Baker-Cousins chi2)
       ROOT::Fit::PoissonLLFunction nll(data, wf1);
       return 2.* nll( f1.GetParameters() ) ;
