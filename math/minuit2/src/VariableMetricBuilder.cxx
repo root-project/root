@@ -133,11 +133,13 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
       edm = result.back().Edm();
       // need to correct again for Dcovar: edm *= (1. + 3. * e.Dcovar()) ???
 
-      if ((strategy.Strategy() == 2) || (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05)) {
+      if ((strategy.Strategy() >= 2) || (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05)) {
 
          print.Debug("MnMigrad will verify convergence and Error matrix; dcov =", min.Error().Dcovar());
 
-         MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(), maxfcn);
+         MnStrategy strat(strategy);
+         strat.SetHessianForcePosDef(1); // ensure no matter what strategy is used, we force the result positive-definite if required
+         MinimumState st = MnHesse(strat)(fcn, min.State(), min.Seed().Trafo(), maxfcn);
 
          print.Info("After Hessian");
 
