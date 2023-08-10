@@ -84,6 +84,12 @@
 #include "GRUSeqLength_FromROOT.hxx"
 #include "input_models/references/GRUSeqLength.ref.hxx"
 
+#include "RangeFloat_FromROOT.hxx"
+#include "input_models/references/RangeFloat.ref.hxx"
+
+#include "RangeInt_FromROOT.hxx"
+#include "input_models/references/RangeInt.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -875,5 +881,43 @@ TEST(ROOT, GRUSeqLength)
    // Checking every output value, one by one
    for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RangeFloat) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // inputs
+   float start = 1.;
+   float limit = 10.;
+   float delta = 2.;
+   std::vector<float> output = TMVA_SOFIE_RangeFloat::infer(&start, &limit, &delta);
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(RangeFloat_ExpectedOutput::outputs) / sizeof(float));
+
+   float* correct = RangeFloat_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ROOT, RangeInt) {
+   // inputs
+   int64_t start = 1;
+   int64_t limit = 10;
+   int64_t delta = 2;
+   std::vector<int64_t> output = TMVA_SOFIE_RangeInt::infer(&start, &limit, &delta);
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(RangeInt_ExpectedOutput::outputs) / sizeof(int64_t));
+
+   int64_t* correct = RangeInt_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_EQ(output[i], correct[i]);
    }
 }

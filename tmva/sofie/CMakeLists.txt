@@ -42,6 +42,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_LayerNormalization.hxx
    TMVA/ROperator_Expand.hxx
    TMVA/ROperator_Erf.hxx
+   TMVA/ROperator_Range.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
   SOURCES

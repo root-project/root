@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cctype>
 #include <memory>
+#include <string>
 
 #include "TMVA/RModel.hxx"
 #include "TMVA/SOFIE_common.hxx"
@@ -55,7 +56,7 @@ namespace SOFIE{
       fName = fFileName.substr(0, fFileName.rfind("."));
    }
 
-   const std::vector<size_t>& RModel::GetTensorShape(std::string name){
+   const std::vector<size_t>& RModel::GetTensorShape(std::string name) {
       auto f = fReadyInputTensorInfos.find(name);
       if (f != fReadyInputTensorInfos.end()){
          return f->second.shape;
@@ -71,6 +72,15 @@ namespace SOFIE{
       auto f4 = fIntermediateTensorInfos.find(name);
       if (f4 != fIntermediateTensorInfos.end()){
          return f4->second.shape;
+      }
+
+      throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
+   }
+
+   const std::vector<Dim>& RModel::GetDynamicTensorShape(std::string name){
+      auto f = fDynamicTensorInfos.find(name);
+      if (f != fDynamicTensorInfos.end()){
+         return f->second.shape;
       }
 
       throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
@@ -93,6 +103,10 @@ namespace SOFIE{
       if (f4 != fIntermediateTensorInfos.end()){
          return f4->second.type;
       }
+      auto f5 = fDynamicTensorInfos.find(name);
+      if (f5 != fDynamicTensorInfos.end()){
+         return f5->second.type;
+      }
 
       throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the type is requested is not found");
    }
@@ -101,6 +115,7 @@ namespace SOFIE{
       if (fReadyInputTensorInfos.find(tensor_name) != fReadyInputTensorInfos.end())  return true;
       if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()) return true;
       if (fIntermediateTensorInfos.find(tensor_name) != fIntermediateTensorInfos.end()) return true;
+      if (fDynamicTensorInfos.find(tensor_name) != fDynamicTensorInfos.end()) return true;
       return false;
    }
 
@@ -156,6 +171,11 @@ namespace SOFIE{
       return fInitializedTensors.find(name) != fInitializedTensors.end();
    }
 
+   bool RModel::IsDynamicTensor(const std::string& tensorName) const {
+      std::string name = UTILITY::Clean_name(tensorName);
+      return fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+   }
+
    void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape){
       tensor_name = UTILITY::Clean_name(tensor_name);
       if (CheckIfTensorAlreadyExist(tensor_name)){
@@ -163,6 +183,15 @@ namespace SOFIE{
       }
       TensorInfo new_tensor {type, shape};
       fIntermediateTensorInfos[tensor_name] = new_tensor;
+   }
+
+   void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape){
+      tensor_name = UTILITY::Clean_name(tensor_name);
+      if (CheckIfTensorAlreadyExist(tensor_name)){
+         throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+      }
+      DynamicTensorInfo new_tensor {type, shape};
+      fDynamicTensorInfos[tensor_name] = new_tensor;
    }
 
    void RModel::AddOutputTensorNameList(std::vector<std::string> outputtensornames){
@@ -230,9 +259,9 @@ namespace SOFIE{
       }
 
 
-      for (auto& i : fOperators){
+      for (auto& op : fOperators) {
          //std::cout << "initialize operator  " << typeid(*i).name() << std::endl;
-         i->Initialize(*this);
+         op->Initialize(*this);
       }
    }
 
@@ -301,7 +330,7 @@ namespace SOFIE{
       if (fUseSession) {
          fGC += "struct Session {\n";
       }
-      for (auto& i: fInitializedTensors){
+      for (auto& i: fInitializedTensors) {
          if (i.second.fType == ETensorType::FLOAT){
             size_t length = 1;
             for (auto & dim: i.second.fShape){
@@ -325,6 +354,7 @@ namespace SOFIE{
 
          }
       }
+
       for (auto&i: fIntermediateTensorInfos){
          size_t length = ConvertShapeToLength(i.second.shape);
          if (i.second.type == ETensorType::FLOAT){
@@ -340,6 +370,17 @@ namespace SOFIE{
             fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
          }
       }
+
+      for (auto&i: fDynamicTensorInfos) {
+         if (i.second.type == ETensorType::FLOAT) {
+            fGC += "std::vector<float> tensor_" + i.first  + ";\n";
+         } else if (i.second.type == ETensorType::DOUBLE) {
+            fGC += "std::vector<double> tensor_" + i.first  + ";\n";
+         } else if (i.second.type == ETensorType::INT64) {
+            fGC += "std::vector<int64_t> tensor_" + i.first  + ";\n";
+         }
+      }
+
       if (fUseSession) {
          // add here specific operator code that needs to define session data members
          fGC += "\n";
@@ -377,21 +418,32 @@ namespace SOFIE{
       std::string outputType;
       if (outputSize == 1) {
          auto f = fIntermediateTensorInfos.find(fOutputTensorNames[0]);
-         if (f == fIntermediateTensorInfos.end()){
-            throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[0] + " not found when trying to get its info");
-         }else{
+         if (f != fIntermediateTensorInfos.end()) {
             outputType = ConvertTypeToString(f->second.type);
             fGC += "std::vector<" + outputType + "> ";
+         } else {
+            auto f2 = fDynamicTensorInfos.find(fOutputTensorNames[0]);
+            if (f2 != fDynamicTensorInfos.end()) {
+               outputType = ConvertTypeToString(f2->second.type);
+               fGC += "std::vector<" + outputType + "> ";
+            } else {
+               throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[0] + " not found when trying to get its info");
+            }
          }
       } else {
          std::vector<ETensorType> outputTensorsTypes(outputSize);
          for (size_t i = 0; i < outputSize; i++) {
             auto f = fIntermediateTensorInfos.find(fOutputTensorNames[i]);
-            if (f == fIntermediateTensorInfos.end()) {
-               throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i]
-                  + " not found when trying to get its info");
-            } else {
+            if (f != fIntermediateTensorInfos.end()) {
                outputTensorsTypes[i] = f->second.type;
+            } else {
+               auto f2 = fDynamicTensorInfos.find(fOutputTensorNames[i]);
+               if (f2 != fDynamicTensorInfos.end()) {
+                  outputTensorsTypes[i] = f2->second.type;
+               } else {
+                  throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i]
+                     + " not found when trying to get its info");
+               }
             }
          }
          // assume all output types are the same
@@ -437,10 +489,14 @@ namespace SOFIE{
          fGC+= (fOperators[id]->Generate(std::to_string(id)));
       }
       if (outputSize == 1) {
-         size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
-
-         fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
-               std::to_string(outputLength) + ");\n";
+         std::string tensorName = fOutputTensorNames[0];
+         if (IsDynamicTensor(tensorName)) {
+            fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + tensorName + ");\n";
+         } else {
+            size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
+            fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
+                  std::to_string(outputLength) + ");\n";
+         }
       } else {
          for (size_t i = 0; i < outputSize; i++) {
             if (!fOutputTensorNames[i].empty()) {

@@ -41,22 +41,22 @@ private:
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
    std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
-   std::vector<std::string> fOutputTensorNames;
-   std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
+   std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
 
-   std::vector<std::unique_ptr<ROperator>> fOperators;
+   std::unordered_set<std::string> fNeededBlasRoutines;
+   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
+   std::unordered_set<std::string> fNeededStdLib = {"vector"};
+   std::unordered_set<std::string> fCustomOpHeaders;
 
    std::string fName="UnnamedModel";
    std::string fFileName; //file name of original model file for identification
    std::string fParseTime; //UTC date and time string at parsing
-
-
    std::string fGC; //generated code
-   std::unordered_set<std::string> fNeededBlasRoutines;
 
-   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
-   std::unordered_set<std::string> fNeededStdLib = {"vector"};
-   std::unordered_set<std::string> fCustomOpHeaders;
+   std::vector<std::unique_ptr<ROperator>> fOperators;
+   std::vector<std::string> fOutputTensorNames;
+   std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
+
    bool fUseWeightFile = true;
    bool fUseSession = true;
 
@@ -75,6 +75,7 @@ public:
    RModel(std::string name, std::string parsedtime);
 
    const std::vector<size_t>& GetTensorShape(std::string name);
+   const std::vector<Dim>& GetDynamicTensorShape(std::string name);
    const ETensorType& GetTensorType(std::string name);
 
    bool CheckIfTensorAlreadyExist(std::string tensor_name);
@@ -84,7 +85,9 @@ public:
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
    // Check if a tensor is initialized
    bool IsInitializedTensor(const std::string& name) const;
+   bool IsDynamicTensor(const std::string& name) const;
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
+   void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
    void AddBlasRoutines(std::vector<std::string> routines) {
       for (auto &routine : routines) {
          fNeededBlasRoutines.insert(routine);

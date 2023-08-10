@@ -242,6 +242,12 @@
 #include "GatherNegativeIndices_FromONNX.hxx"
 #include "input_models/references/GatherNegativeIndices.ref.hxx"
 
+#include "RangeFloat_FromONNX.hxx"
+#include "input_models/references/RangeFloat.ref.hxx"
+
+#include "RangeInt_FromONNX.hxx"
+#include "input_models/references/RangeInt.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2354,3 +2360,44 @@ TEST(ONNX, GatherNegativeIndices) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
+
+TEST(ONNX, RangeFloat) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // inputs
+   float start = 1.;
+   float limit = 10.;
+   float delta = 2.;
+   TMVA_SOFIE_RangeFloat::Session s("RangeFloat_FromONNX.dat");
+   std::vector<float> output(s.infer(&start, &limit, &delta));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(RangeFloat_ExpectedOutput::outputs) / sizeof(float));
+
+   float* correct = RangeFloat_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, RangeInt) {
+   // inputs
+   int64_t start = 1;
+   int64_t limit = 10;
+   int64_t delta = 2;
+   TMVA_SOFIE_RangeInt::Session s("RangeInt_FromONNX.dat");
+   std::vector<int64_t> output(s.infer(&start, &limit, &delta));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(RangeInt_ExpectedOutput::outputs) / sizeof(int64_t));
+
+   int64_t* correct = RangeInt_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_EQ(output[i], correct[i]);
+   }
+}
+
