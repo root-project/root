@@ -962,8 +962,8 @@ void TMVA::MethodANNBase::CreateWeightMonitoringHists( const TString& bulkname,
       Int_t numNeurons1 = layer1->GetEntriesFast();
       Int_t numNeurons2 = layer2->GetEntriesFast();
 
-      TString name = Form("%s%i%i", bulkname.Data(), i, i+1);
-      hist = new TH2F(name + "", name + "",
+      TString name = TString::Format("%s%i%i", bulkname.Data(), i, i+1);
+      hist = new TH2F(name.Data(), name.Data(),
                       numNeurons1, 0, numNeurons1, numNeurons2, 0, numNeurons2);
 
       for (Int_t j = 0; j < numNeurons1; j++) {
@@ -992,7 +992,7 @@ void TMVA::MethodANNBase::CreateWeightMonitoringHists( const TString& bulkname,
 
 void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
 {
-   PrintMessage(Form("Write special histos to file: %s", BaseDir()->GetPath()), kTRUE);
+   PrintMessage(TString::Format("Write special histos to file: %s", BaseDir()->GetPath()).Data(), kTRUE);
 
    if (fEstimatorHistTrain) fEstimatorHistTrain->Write();
    if (fEstimatorHistTest ) fEstimatorHistTest ->Write();
@@ -1003,11 +1003,11 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
    // now save all the epoch-wise monitoring information
    static std::atomic<int> epochMonitoringDirectoryNumber{0};
    int epochVal = epochMonitoringDirectoryNumber++;
-   TDirectory* epochdir = NULL;
+   TDirectory* epochdir = nullptr;
    if( epochVal == 0 )
       epochdir = BaseDir()->mkdir( "EpochMonitoring" );
    else
-      epochdir = BaseDir()->mkdir( Form("EpochMonitoring_%4d",epochVal) );
+      epochdir = BaseDir()->mkdir( TString::Format("EpochMonitoring_%4d",epochVal).Data() );
 
    epochdir->cd();
    for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); ++it) {
