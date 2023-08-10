@@ -151,7 +151,15 @@ RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/
 
 RUN sudo chmod +x *.deb
 RUN sudo dpkg -i *.deb
+# add user to video group
 RUN sudo usermod -a -G video ioanna
 
 WORKDIR /home/ioanna
-COPY root_src /home/ioanna/root_src
+# install onnxruntime
+RUN git clone --recursive https://github.com/Microsoft/onnxruntime.git
+RUN cd onnxruntime && ./build.sh --config RelWithDebInfo --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync
+
+RUN git clone --branch tmva_sofie_benchmark https://github.com/lmoneta/rootbench.git
+RUN cd rootbench && pip install -r requirements.txt
+#cmake -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx  -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DONNXRuntime_INCLUDE_DIR=/home/ioanna/onnxruntime/include/onnxruntime/core/session -DONNXRuntime_LIBRARY=/home/ioanna/onnxruntime/build/Linux/RelWithDebInfo/libonnxruntime.so -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ ../rootbench
+

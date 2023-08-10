@@ -241,6 +241,7 @@
 
 #include "gtest/gtest.h"
 
+
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
 
 TEST(ONNX, Linear16)

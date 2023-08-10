@@ -699,7 +699,7 @@ public:
             else {
                out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
                out << iDepth * iHeight * iWidth << ")};\n";
-               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::Utility::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
                out << ", " << fShapeW[1] << ", " << iDepth << ", " << iHeight << ", " << iWidth << ", ";
                out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
                out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
@@ -738,7 +738,7 @@ public:
             else {
                out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
                out << iDepth * iHeight * iWidth << ")};\n";
-               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::Utility::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
                out << ", " << fShapeW[1] << ", " << iDepth << ", " << iHeight << ", " << iWidth << ", ";
                out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
                out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
