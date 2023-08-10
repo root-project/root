@@ -364,11 +364,11 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
             binnings[k] = vsForBinning[icls][ivar][k];
          }
          fCumulativeDist[ivar].resize(numDist);
-         if (0 != fCumulativeDist[ivar][icls] ) {
+         if (fCumulativeDist[ivar][icls] ) {
             delete fCumulativeDist[ivar][icls];
          }
-         fCumulativeDist[ivar][icls] = new TH1F(Form("Cumulative_Var%d_cls%d",ivar,icls),
-                                                Form("Cumulative_Var%d_cls%d",ivar,icls),
+         fCumulativeDist[ivar][icls] = new TH1F(TString::Format("Cumulative_Var%d_cls%d",ivar,icls),
+                                                TString::Format("Cumulative_Var%d_cls%d",ivar,icls),
                                                 nbins[icls][ivar] -1, // class icls
                                                 binnings);
          fCumulativeDist[ivar][icls]->SetDirectory(0);
@@ -428,7 +428,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
             (fCumulativeDist[ivar][icls])->SetBinContent(ibin,sum/total);
          }
          // create PDf
-         fCumulativePDF[ivar].push_back(new PDF( Form("GaussTransform var%d cls%d",ivar,icls),  fCumulativeDist[ivar][icls], PDF::kSpline1, fPdfMinSmooth, fPdfMaxSmooth,kFALSE,kFALSE));
+         fCumulativePDF[ivar].push_back(new PDF( TString::Format("GaussTransform var%d cls%d",ivar,icls),  fCumulativeDist[ivar][icls], PDF::kSpline1, fPdfMinSmooth, fPdfMaxSmooth,kFALSE,kFALSE));
       }
    }
 }
@@ -482,7 +482,7 @@ void TMVA::VariableGaussTransform::AttachXMLTo(void* parent) {
          Log() << kFATAL << "Cumulative histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
 
       for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++){
-         void* pdfxml = gTools().AddChild( varxml, Form("CumulativePDF_cls%d",icls));
+         void* pdfxml = gTools().AddChild( varxml, TString::Format("CumulativePDF_cls%d",icls));
          (fCumulativePDF[ivar][icls])->AddXMLTo(pdfxml);
       }
    }
