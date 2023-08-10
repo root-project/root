@@ -16,13 +16,14 @@
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 
-#include "data2Tree.hpp"
+#include "data2Tree.hxx"
 
 void writeTree()
 {
    std::unique_ptr<TFile> ofile { TFile::Open("testFile.root", "recreate") };
    if (!ofile || ofile->IsZombie()) {
       throw std::runtime_error("Could not open file testFile.root");
+   }
 
    std::unique_ptr<TTree> myTree = std::make_unique<TTree>("myTree", "");
    myDetectorData obj_for_branch1;

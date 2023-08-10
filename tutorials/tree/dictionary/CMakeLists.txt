@@ -28,12 +28,12 @@ include_directories(${CMAKE_SOURCE_DIR})
 # CMake function provided by ROOT, used to generate the dictionary file, G__data2Tree.cxx
 #     See this link for further details:
 #     https://root.cern/manual/io_custom_classes/#using-cmake
-ROOT_GENERATE_DICTIONARY(G__data2Tree data2Tree.hpp LINKDEF data2TreeLinkDef.hpp)
+ROOT_GENERATE_DICTIONARY(G__data2Tree data2Tree.hxx LINKDEF data2TreeLinkDef.hxx)
 
 #---Create a shared library from
 #   * the previously generated dictionary, G__data2Tree.cxx
 #   * the class implementation
-add_library(data2TreeLib SHARED data2Tree.cpp G__data2Tree.cxx)
+add_library(data2TreeLib SHARED data2Tree.cxx G__data2Tree.cxx)
 target_link_libraries(data2TreeLib ${ROOT_LIBRARIES}  ) 
 
 #--- This is needed on Windows in order to export the symbols and create the data2TreeLib.lib file
@@ -42,6 +42,6 @@ if(MSVC)
 endif()
 
 #---Create  a main program using the library
-add_executable(treeExample main.cpp readTree.cpp writeTree.cpp)
+add_executable(treeExample main.cpp readTree.cxx writeTree.cxx)
 target_link_libraries(treeExample ${ROOT_LIBRARIES} data2TreeLib)
 

@@ -12,7 +12,7 @@
 // This file contains the definition of the class method
 // The class method was declared in the corresponding .hpp file
 
-#include "data2Tree.hpp"
+#include "data2Tree.hxx"
 
 void myDetectorData::clear()
 {

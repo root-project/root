@@ -16,7 +16,7 @@
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
 
-#include "data2Tree.hpp"
+#include "data2Tree.hxx"
 
 void readTree()
 {
