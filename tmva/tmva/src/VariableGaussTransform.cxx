@@ -371,7 +371,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
                                                 TString::Format("Cumulative_Var%d_cls%d",ivar,icls),
                                                 nbins[icls][ivar] -1, // class icls
                                                 binnings);
-         fCumulativeDist[ivar][icls]->SetDirectory(0);
+         fCumulativeDist[ivar][icls]->SetDirectory(nullptr);
          delete [] binnings;
       }
    }
@@ -590,7 +590,7 @@ void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& i
          if ( histToRead !=0 ) delete histToRead;
          // recreate the cumulative histogram to be filled with the values read
          histToRead = new TH1F( hname, hname, nbins, Binnings );
-         histToRead->SetDirectory(0);
+         histToRead->SetDirectory(nullptr);
          fCumulativeDist[ivar][type]=histToRead;
 
          istr >> devnullS; // read the line "BinContent" ..

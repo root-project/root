@@ -623,7 +623,7 @@ void  TMVA::MethodCuts::Train( void )
    delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
 
    // init
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 );
@@ -1265,7 +1265,7 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
    if (fEffBvsSLocal != 0) delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
 
    for (Int_t ibin=0; ibin<fNbins; ibin++) {
       istr >> tmpbin >> tmpeffS >> tmpeffB;
@@ -1366,7 +1366,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 ); // Init
 
    fCutMin = new Double_t*[GetNvar()];
