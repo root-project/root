@@ -154,7 +154,7 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
       int nNodes = 0;
       if (sToAdd.BeginsWith("N")) { sToAdd.Remove(0,1); nNodes = GetNvar(); }
       nNodes += atoi(sToAdd);
-      fHiddenLayer = Form( "%s%i:", (const char*)fHiddenLayer, nNodes );
+      fHiddenLayer = TString::Format( "%s%i:", (const char*)fHiddenLayer, nNodes );
    }
 
    // set input vars

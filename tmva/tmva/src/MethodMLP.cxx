@@ -638,7 +638,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
       }
 
       // draw progress
-      TString convText = Form( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainE, testE,i  ); //zjh
+      TString convText = TString::Format( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainE, testE,i  ); //zjh
       if (fSteps > 0) {
          Float_t progress = 0;
          if (Float_t(i)/nEpochs < fSamplingEpoch)
@@ -1120,7 +1120,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
       }
 
       // draw progress bar (add convergence value)
-      TString convText = Form( "<D^2> (train/test): %.4g/%.4g", trainE, testE );
+      TString convText = TString::Format( "<D^2> (train/test): %.4g/%.4g", trainE, testE );
       if (fSteps > 0) {
          Float_t progress = 0;
          if (Float_t(i)/nEpochs < fSamplingEpoch)

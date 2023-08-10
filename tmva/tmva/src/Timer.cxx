@@ -262,20 +262,20 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  )
 TString TMVA::Timer::SecToText( Double_t seconds, Bool_t Scientific ) const
 {
    TString out = "";
-   if      (Scientific    ) out = Form( "%.3g sec", seconds );
+   if      (Scientific    ) out = TString::Format( "%.3g sec", seconds );
    else if (seconds <  0  ) out = "unknown";
-   else if (seconds <= 300) out = Form( "%i sec", Int_t(seconds) );
+   else if (seconds <= 300) out = TString::Format( "%i sec", Int_t(seconds) );
    else {
       if (seconds > 3600) {
          Int_t h = Int_t(seconds/3600);
-         if (h <= 1) out = Form( "%i hr : ", h );
-         else        out = Form( "%i hrs : ", h );
+         if (h <= 1) out = TString::Format( "%i hr : ", h );
+         else        out = TString::Format( "%i hrs : ", h );
 
          seconds = Int_t(seconds)%3600;
       }
       Int_t m = Int_t(seconds/60);
-      if (m <= 1) out += Form( "%i min", m );
-      else        out += Form( "%i mins", m );
+      if (m <= 1) out += TString::Format( "%i min", m );
+      else        out += TString::Format( "%i mins", m );
    }
 
    return (fColourfulOutput) ? gTools().Color("red") + out + gTools().Color("reset") : out;

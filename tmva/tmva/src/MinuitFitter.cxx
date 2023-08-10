@@ -145,7 +145,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
 
    // define fit parameters
    for (Int_t ipar=0; ipar<fNpars; ipar++) {
-      fMinWrap->SetParameter( ipar, Form( "Par%i",ipar ),
+      fMinWrap->SetParameter( ipar, TString::Format( "Par%i",ipar ),
                               pars[ipar], fRanges[ipar]->GetWidth()/100.0,
                               fRanges[ipar]->GetMin(), fRanges[ipar]->GetMax() );
       if (fRanges[ipar]->GetWidth() == 0.0) fMinWrap->FixParameter( ipar );

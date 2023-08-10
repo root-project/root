@@ -1294,7 +1294,7 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "OptimisationMethod", (Int_t)fEffMethod);
    gTools().AddAttr( wght, "FitMethod",          (Int_t)fFitMethod );
    gTools().AddAttr( wght, "nbins",              fNbins );
-   gTools().AddComment( wght, Form( "Below are the optimised cuts for %i variables: Format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0] ... cutMin[ivar=n-1] cutMax[ivar=n-1]", GetNvar() ) );
+   gTools().AddComment( wght, TString::Format( "Below are the optimised cuts for %i variables: Format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0] ... cutMin[ivar=n-1] cutMax[ivar=n-1]", GetNvar() ) );
 
    // NOTE: The signal efficiency written out into
    //       the weight file does not correspond to the center of the bin within which the
@@ -1315,8 +1315,8 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
       gTools().AddAttr( binxml, "effB", fEffBvsSLocal->GetBinContent( ibin + 1 ) );
       void* cutsxml = gTools().AddChild( binxml, "Cuts" );
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         gTools().AddAttr( cutsxml, Form( "cutMin_%i", ivar ), cutsMin[ivar] );
-         gTools().AddAttr( cutsxml, Form( "cutMax_%i", ivar ), cutsMax[ivar] );
+         gTools().AddAttr( cutsxml, TString::Format( "cutMin_%i", ivar ), cutsMin[ivar] );
+         gTools().AddAttr( cutsxml, TString::Format( "cutMax_%i", ivar ), cutsMax[ivar] );
       }
    }
 }
@@ -1398,8 +1398,8 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
       fEffBvsSLocal->SetBinContent( tmpbin, tmpeffB );
       void* ct = gTools().GetChild(ch);
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         gTools().ReadAttr( ct, Form( "cutMin_%i", ivar ), fCutMin[ivar][tmpbin-1] );
-         gTools().ReadAttr( ct, Form( "cutMax_%i", ivar ), fCutMax[ivar][tmpbin-1] );
+         gTools().ReadAttr( ct, TString::Format( "cutMin_%i", ivar ), fCutMin[ivar][tmpbin-1] );
+         gTools().ReadAttr( ct, TString::Format( "cutMax_%i", ivar ), fCutMax[ivar][tmpbin-1] );
       }
       ch = gTools().GetNextChild(ch, "Bin");
    }
