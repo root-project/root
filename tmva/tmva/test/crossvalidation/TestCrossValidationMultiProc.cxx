@@ -71,15 +71,15 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
    dataloader->AddVariable("y", 'D');
    dataloader->AddSpectator("EventNumber", 'I');
 
-   TString dataloaderOptions = Form("SplitMode=Block:nTrain_Signal=%i"
+   TString dataloaderOptions = TString::Format("SplitMode=Block:nTrain_Signal=%i"
                                     ":nTrain_Background=%i:!V",
                                     NUM_EVENTS_SIG, NUM_EVENTS_BKG);
    dataloader->PrepareTrainingAndTestTree("", dataloaderOptions);
 
    // TMVA::CrossValidation takes ownership of dataloader
    std::string splitExpr = "UInt_t([EventNumber])%UInt_t([NumFolds])";
-   TMVA::CrossValidation cv{Form("%i-proc", numWorkers), dataloader,
-                            Form("!Silent:AnalysisType=Classification"
+   TMVA::CrossValidation cv{TString::Format("%i-proc", numWorkers), dataloader,
+                            TString::Format("!Silent:AnalysisType=Classification"
                                  ":NumWorkerProcs=%i:NumFolds=%i"
                                  ":SplitType=Deterministic:SplitExpr=%s",
                                  numWorkers, NUM_FOLDS, splitExpr.c_str())};
