@@ -54,7 +54,7 @@ TMVA::Results::Results( const DataSetInfo* dsi, TString resultsName )
      fDsi(dsi),
      fStorage( new TList() ),
      fHistAlias( new std::map<TString, TObject*> ),
-     fLogger( new MsgLogger(Form("Results%s",resultsName.Data()), kINFO) )
+     fLogger( new MsgLogger(TString::Format("Results%s",resultsName.Data()).Data(), kINFO) )
 {
    fStorage->SetOwner();
 }

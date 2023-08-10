@@ -484,10 +484,10 @@ TH1* TMVA::ROCCalc::GetSignificance( Int_t nStot, Int_t nBtot)
         tl.SetNDC();
         tl.SetTextSize( 0.033 );
         Int_t maxbin = fSignificance->GetMaximumBin();
-        line1 = tl.DrawLatex( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", nStot, nBtot));
+        line1 = tl.DrawLatex( 0.15, 0.23, TString::Format("For %1.0f signal and %1.0f background", nStot, nBtot));
         tl.DrawLatex( 0.15, 0.19, "events the maximum S/Sqrt(S+B) is");
 
-        line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f",
+        line2 = tl.DrawLatex( 0.15, 0.15, TString::Format("%4.2f when cutting at %5.2f",
         maxSig,
         fSignificance->GetXaxis()->GetBinCenter(maxbin)) );
    */

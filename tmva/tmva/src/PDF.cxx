@@ -819,24 +819,24 @@ void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& hi
 
 void TMVA::PDF::DeclareOptions()
 {
-   DeclareOptionRef( fNsmooth, Form("NSmooth%s",fSuffix.Data()),
+   DeclareOptionRef( fNsmooth, TString::Format("NSmooth%s",fSuffix.Data()),
                      "Number of smoothing iterations for the input histograms" );
-   DeclareOptionRef( fMinNsmooth, Form("MinNSmooth%s",fSuffix.Data()),
+   DeclareOptionRef( fMinNsmooth, TString::Format("MinNSmooth%s",fSuffix.Data()),
                      "Min number of smoothing iterations, for bins with most data" );
 
-   DeclareOptionRef( fMaxNsmooth, Form("MaxNSmooth%s",fSuffix.Data()),
+   DeclareOptionRef( fMaxNsmooth, TString::Format("MaxNSmooth%s",fSuffix.Data()),
                      "Max number of smoothing iterations, for bins with least data" );
 
-   DeclareOptionRef( fHistAvgEvtPerBin, Form("NAvEvtPerBin%s",fSuffix.Data()),
+   DeclareOptionRef( fHistAvgEvtPerBin, TString::Format("NAvEvtPerBin%s",fSuffix.Data()),
                      "Average number of events per PDF bin" );
 
-   DeclareOptionRef( fHistDefinedNBins, Form("Nbins%s",fSuffix.Data()),
+   DeclareOptionRef( fHistDefinedNBins, TString::Format("Nbins%s",fSuffix.Data()),
                      "Defined number of bins for the histogram from which the PDF is created" );
 
-   DeclareOptionRef( fCheckHist, Form("CheckHist%s",fSuffix.Data()),
+   DeclareOptionRef( fCheckHist, TString::Format("CheckHist%s",fSuffix.Data()),
                      "Whether or not to check the source histogram of the PDF" );
 
-   DeclareOptionRef( fInterpolateString, Form("PDFInterpol%s",fSuffix.Data()),
+   DeclareOptionRef( fInterpolateString, TString::Format("PDFInterpol%s",fSuffix.Data()),
                      "Interpolation method for reference histograms (e.g. Spline2 or KDE)" );
    AddPreDefVal(TString("Spline0")); // take histogram
    AddPreDefVal(TString("Spline1")); // linear interpolation between bins
@@ -845,17 +845,17 @@ void TMVA::PDF::DeclareOptions()
    AddPreDefVal(TString("Spline5")); // fifth order polynom interpolation
    AddPreDefVal(TString("KDE"));     // use kernel density estimator
 
-   DeclareOptionRef( fKDEtypeString, Form("KDEtype%s",fSuffix.Data()), "KDE kernel type (1=Gauss)" );
+   DeclareOptionRef( fKDEtypeString, TString::Format("KDEtype%s",fSuffix.Data()), "KDE kernel type (1=Gauss)" );
    AddPreDefVal(TString("Gauss"));
 
-   DeclareOptionRef( fKDEiterString, Form("KDEiter%s",fSuffix.Data()), "Number of iterations (1=non-adaptive, 2=adaptive)" );
+   DeclareOptionRef( fKDEiterString, TString::Format("KDEiter%s",fSuffix.Data()), "Number of iterations (1=non-adaptive, 2=adaptive)" );
    AddPreDefVal(TString("Nonadaptive"));
    AddPreDefVal(TString("Adaptive"));
 
-   DeclareOptionRef( fFineFactor , Form("KDEFineFactor%s",fSuffix.Data()),
+   DeclareOptionRef( fFineFactor , TString::Format("KDEFineFactor%s",fSuffix.Data()),
                      "Fine tuning factor for Adaptive KDE: Factor to multiply the width of the kernel");
 
-   DeclareOptionRef( fBorderMethodString, Form("KDEborder%s",fSuffix.Data()),
+   DeclareOptionRef( fBorderMethodString, TString::Format("KDEborder%s",fSuffix.Data()),
                      "Border effects treatment (1=no treatment , 2=kernel renormalization, 3=sample mirroring)" );
    AddPreDefVal(TString("None"));
    AddPreDefVal(TString("Renorm"));

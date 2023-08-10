@@ -50,7 +50,7 @@ Class that is the base-class for a vector of result
 
 TMVA::ResultsRegression::ResultsRegression( const DataSetInfo* dsi, TString resultsName  )
    : Results( dsi, resultsName  ),
-     fLogger( new MsgLogger(Form("ResultsRegression%s",resultsName.Data()) , kINFO) )
+     fLogger( new MsgLogger(TString::Format("ResultsRegression%s",resultsName.Data()).Data() , kINFO) )
 {
 }
 
@@ -77,7 +77,7 @@ TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t trunc
    DataSet* ds = GetDataSet();
    ds->SetCurrentType( GetTreeType() );
    const DataSetInfo* dsi = GetDataSetInfo();
-   TString name( Form("tgt_%d",tgtNum) );
+   TString name = TString::Format("tgt_%d",tgtNum);
    VariableInfo vinf = dsi->GetTargetInfo(tgtNum);
    Float_t xmin=0., xmax=0.;
    if (truncate){
@@ -95,7 +95,7 @@ TH1F*  TMVA::ResultsRegression::QuadraticDeviation( UInt_t tgtNum , Bool_t trunc
    xmax *= 1.1;
    Int_t nbins = 500;
    TH1F* h = new TH1F( name, name, nbins, xmin, xmax);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
    h->GetXaxis()->SetTitle("Quadratic Deviation");
    h->GetYaxis()->SetTitle("Weighted Entries");
 
@@ -117,7 +117,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
    DataSet* ds = GetDataSet();
    ds->SetCurrentType( GetTreeType() );
 
-   TString name( Form("tgt_%d_var_%d",tgtNum, varNum) );
+   TString name = TString::Format("tgt_%d_var_%d",tgtNum, varNum);
    const DataSetInfo* dsi = GetDataSetInfo();
    Float_t xmin, xmax;
    Bool_t takeTargets = kFALSE;
@@ -208,7 +208,7 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
    for (UInt_t ivar = 0; ivar < dsi->GetNVariables(); ivar++) {
       for (UInt_t itgt = 0; itgt < dsi->GetNTargets(); itgt++) {
          TH2F* h = DeviationAsAFunctionOf( ivar, itgt );
-         TString name( Form("%s_reg_var%d_rtgt%d",prefix.Data(),ivar,itgt) );
+         TString name = TString::Format("%s_reg_var%d_rtgt%d",prefix.Data(),ivar,itgt);
          h->SetName( name );
          h->SetTitle( name );
          Store( h );
@@ -218,7 +218,7 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
    for (UInt_t ivar = 0; ivar < dsi->GetNTargets(); ivar++) {
       for (UInt_t itgt = 0; itgt < dsi->GetNTargets(); itgt++) {
          TH2F* h = DeviationAsAFunctionOf( dsi->GetNVariables()+ivar, itgt );
-         TString name( Form("%s_reg_tgt%d_rtgt%d",prefix.Data(),ivar,itgt) );
+         TString name = TString::Format("%s_reg_tgt%d_rtgt%d",prefix.Data(),ivar,itgt);
          h->SetName( name );
          h->SetTitle( name );
          Store( h );
@@ -228,7 +228,7 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
    Log() << kINFO << "Create regression average deviation" << Endl;
    for (UInt_t itgt = 0; itgt < dsi->GetNTargets(); itgt++) {
       TH1F* h =  QuadraticDeviation(itgt);
-      TString name( Form("%s_Quadr_Deviation_target_%d_",prefix.Data(),itgt) );
+      TString name = TString::Format("%s_Quadr_Deviation_target_%d_",prefix.Data(),itgt);
       h->SetName( name );
       h->SetTitle( name );
       Double_t yq[1], xq[]={0.9};
@@ -236,7 +236,7 @@ void  TMVA::ResultsRegression::CreateDeviationHistograms( TString prefix )
       Store( h );
 
       TH1F* htrunc = QuadraticDeviation(itgt, true, yq[0]);
-      TString name2( Form("%s_Quadr_Dev_best90perc_target_%d_",prefix.Data(),itgt) );
+      TString name2 = TString::Format("%s_Quadr_Dev_best90perc_target_%d_",prefix.Data(),itgt);
       htrunc->SetName( name2 );
       htrunc->SetTitle( name2 );
       Store( htrunc );
