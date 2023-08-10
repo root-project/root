@@ -98,6 +98,12 @@ void Ingest() {
    
    auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Staff");
 
+   //std::cout << "begin " << ntpl->GetSeekHeader() << std::endl;
+   //std::cout << "end " << ntpl->GetNBytesHeader() << std::endl;
+
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekHeader();
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
+
    // Create an RNTupleReader from the ntuple
    std::unique_ptr<RNTupleReader> ntupleReader = RNTupleReader::Open("Staff", "/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root");
 
@@ -118,31 +124,28 @@ void Ingest() {
    const auto &clusterDescriptor = descriptor->GetClusterDescriptor(clusterId);
 
    // // Get page range of Xcl
-   //auto &pageRangeXcl = clusterDescriptor.GetPageRange(clusterId); // returns list of page ranges
    auto &pageRangeXcl = clusterDescriptor.GetPageRange(columnId);
 
    const auto &pageInfo = pageRangeXcl.fPageInfos[0]; // page info for first page
    auto loc = pageInfo.fLocator; // locator for first page
    auto nelem = loc.fBytesOnStorage; // num of bytes
-   auto offset = loc.GetPosition<std::uint64_t>(); // offset of first page ?
+   auto offset = loc.GetPosition<std::uint64_t>(); // offset of first page
 
-   std::cout << "the offset is " << offset << std::endl;
-   std::cout << "size is " << nelem << std::endl;
+   //std::cout << "offset = " << offset << " nelem = " << nelem << std::endl;
 
-   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
-   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = offset;
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = offset + nelem;
 
-   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = 0;
-   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = 0;
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = offset;
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = offset + nelem;
    ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType = ROOT::Internal::RRawFile::SetFailureType(ROOT::Internal::RRawFile::FailureType::ShortRead);
-
-   std::cout << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin << std::endl;
-   std::cout << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end << std::endl;
-   std::cout << ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType << std::endl;
-
-   // set last few bytes to zeros - short read (second type)
-   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
-   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
+   
+   // ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekHeader();
+   // ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
+   
+   //std::cout << "rng begin " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin << std::endl;
+   //std::cout << "rng end " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end << std::endl;
+   //std::cout << "failure type " << ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType << std::endl;
 
 }
 
@@ -155,12 +158,6 @@ void Analyze() {
 
    // Create an ntuple and attach the read model to it
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
-   
-   // Quick overview of the ntuple and list of fields.
-   //ntuple->PrintInfo();
-   // In a future version of RNTuple, there will be support for ntuple->Scan()
-
-   //ntuple->Show(0);
 
    //specify and open output file
    std::ofstream file("short_read_0.txt");
