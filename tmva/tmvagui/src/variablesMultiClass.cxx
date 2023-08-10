@@ -63,7 +63,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
    Int_t countPad    = 0;
 
    // loop over all objects in directory
-   TCanvas* canv = 0;
+   TCanvas* canv = nullptr;
    Bool_t   createNewFig = kFALSE;
    TIter next(dir->GetListOfKeys());
     
@@ -96,7 +96,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
       //create new canvas
       if (countPad%noPadPerCanv==0) {
          ++countCanvas;
-         canv = new TCanvas( Form("canvas%d", countCanvas), title,
+         canv = new TCanvas( TString::Format("canvas%d", countCanvas), title,
                              countCanvas*50+50, countCanvas*20, width, height );
          canv->Divide(xPad,yPad);
          canv->Draw();
@@ -107,7 +107,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
       TObjArray hists;
       for(; classiter!=classnames.end(); ++classiter){
          //assemble histogram names
-         TString hname(*variter + "__" + *classiter + "_" + tmp);
+         TString hname = *variter + "__" + *classiter + "_" + tmp;
          TH1 *hist = (TH1*)dir->Get(hname);
          //cout << "Looking for histgram " << hname << endl;
          if (hist == NULL) {
@@ -184,7 +184,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
       for(Int_t i=0; i<hists.GetEntriesFast(); ++i, ++classiter){
          if(((TH1*)hists[i])->GetBinContent(0)!=0 || ((TH1*)hists[i])->GetBinContent(nbin+1)!=0){
             uoflow += *classiter;
-            uoflow += Form( " U/O-flow:  %.1f / %.1f %%", 
+            uoflow += TString::Format( " U/O-flow:  %.1f / %.1f %%", 
                             ((TH1*)hists[i])->GetBinContent(0)*dxu*100, ((TH1*)hists[i])->GetBinContent(nbin+1)*dxo*100);
          }
       }
@@ -198,7 +198,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
       
       // save canvas to file
       if (countPad%noPadPerCanv==0) {
-         TString fname = dataset+Form( "/plots/%s_c%i", outfname.Data(), countCanvas );
+         TString fname = dataset+TString::Format( "/plots/%s_c%i", outfname.Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
          createNewFig = kFALSE;
@@ -209,7 +209,7 @@ void TMVA::variablesMultiClass(TString dataset, TString fin , TString dirName , 
    } 
    
    if (createNewFig) {
-      TString fname = dataset+Form( "/plots/%s_c%i", outfname.Data(), countCanvas );
+      TString fname = dataset+TString::Format( "/plots/%s_c%i", outfname.Data(), countCanvas );
       TMVAGlob::plot_logo();
       TMVAGlob::imgconv( canv, fname );
       createNewFig = kFALSE;

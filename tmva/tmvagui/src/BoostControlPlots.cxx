@@ -44,7 +44,7 @@ void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
    char cn[100];
    const TString titName = boostdir->GetName();
    snprintf( cn, 100, "cv_%s", titName.Data() );
-   TCanvas *c = new TCanvas( cn,  Form( "%s Control Plots", titName.Data() ),
+   TCanvas *c = new TCanvas( cn,  TString::Format( "%s Control Plots", titName.Data() ),
                              width, height ); 
    c->Divide(2,4);
 
@@ -132,7 +132,7 @@ void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
    }
 
    // write to file
-   TString fname = dataset+Form( "/plots/%s_ControlPlots", titName.Data() );
+   TString fname = dataset+TString::Format( "/plots/%s_ControlPlots", titName.Data() );
    TMVAGlob::imgconv( c, fname );
 
 }

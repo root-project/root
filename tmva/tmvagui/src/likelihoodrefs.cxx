@@ -47,7 +47,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
                snprintf( cn, 20, "cv%d_%s", ic+1, titName.Data() );
                ++ic;
                TString n = hname;
-               c[ic] = new TCanvas( cn, Form( "%s reference for variable: %s", 
+               c[ic] = new TCanvas( cn, TString::Format( "%s reference for variable: %s", 
                                               titName.Data(),(n.ReplaceAll("_sig","")).Data() ), 
                                     ic*50+50, ic*20, width, height ); 
                c[ic]->Divide(2,1);
@@ -108,7 +108,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
             b = 0;
             TString pname = hname; pname.ReplaceAll("_nice","");            
             for (int i=0; i<= 5; i++) {
-               TString hspline = pname + Form( "_smoothed_hist_from_spline%i", i );
+               TString hspline = pname + TString::Format( "_smoothed_hist_from_spline%i", i );
                h = (TH1F*)lhdir->Get( hspline );
                if (h) {
                   b = (TH1F*)lhdir->Get( hspline.ReplaceAll("_sig","_bgd") );
@@ -158,7 +158,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
             c[ic]->Update();
 
             // write to file
-            TString fname = Form( "%s/plots/%s_refs_c%i",dataset.Data(), titName.Data(), ic+1 );
+            TString fname = TString::Format( "%s/plots/%s_refs_c%i",dataset.Data(), titName.Data(), ic+1 );
             TMVAGlob::imgconv( c[ic], fname );
             //c[ic]->Update();
 

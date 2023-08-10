@@ -22,8 +22,8 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
    // switches
    const Bool_t Save_Images     = kTRUE;
 
-   // checks if file with name "fin" is already open, and if not opens one   
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   // checks if file with name "fin" is already open, and if not opens one
+   TFile* file = TMVAGlob::OpenFile( fin );
    if (!file) {
       cout << "Cannot open flie: " << fin << endl;
       return;
@@ -37,7 +37,7 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
 
    // counter variables
    Int_t countCanvas = 0;
-   
+
    // retrieve trees
    TTree *tree = (TTree*)file->Get( "TestTree" );
 
@@ -46,26 +46,26 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
    for (Int_t imva=0; imva<branches->GetEntries(); imva++) {
       TBranch* b = (TBranch*)(*branches)[imva];
       TString methodS = b->GetName();
-      cout << "Use MVA output of Method " << methodS <<endl; 
-      
+      cout << "Use MVA output of Method " << methodS <<endl;
+
       if (!methodS.BeginsWith("MVA_") || methodS.EndsWith("_Proba")) continue;
       if (methodS.Contains("Cuts") ) continue;
-      
+
       methodS.Remove(0,4);
-      cout << "--- Found variable: \"" << methodS << "\"" << endl;      
-      
+      cout << "--- Found variable: \"" << methodS << "\"" << endl;
+
       // create new canvas
-      TString cname = Form("TMVA output %s",methodS.Data());
-      c = new TCanvas( Form("canvas%d", countCanvas+1), cname, 
-                       countCanvas*50+200, countCanvas*20, width, width*1.0 ); 
+      TString cname = TString::Format("TMVA output %s",methodS.Data());
+      c = new TCanvas( TString::Format("canvas%d", countCanvas+1), cname,
+                       countCanvas*50+200, countCanvas*20, width, width*1.0 );
       c->Divide( 1, 1 );
-          
+
       // set the histogram style
       Float_t xmin = tree->GetMinimum( varx );
       Float_t xmax = tree->GetMaximum( varx );
       Float_t ymin = tree->GetMinimum( vary );
       Float_t ymax = tree->GetMaximum( vary );
-      
+
       Int_t nbin = 100;
       TH2F* frame   = new TH2F( "frame",  "frame",  nbin, xmin, xmax, nbin, ymin, ymax );
       TH2F* frameS  = new TH2F( "DataS",  "DataS",  nbin, xmin, xmax, nbin, ymin, ymax );
@@ -76,31 +76,31 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
       Int_t nbinC = 20;
       TH2F* refS = new TH2F( "RefS", "RefS", nbinC, xmin, xmax, nbinC, ymin, ymax );
       TH2F* refB = new TH2F( "RefB", "RefB", nbinC, xmin, xmax, nbinC, ymin, ymax );
-      
-      Float_t mvaMin = tree->GetMinimum( Form( "MVA_%s", methodS.Data() ) );
-      Float_t mvaMax = tree->GetMaximum( Form( "MVA_%s", methodS.Data() ) );
+
+      Float_t mvaMin = tree->GetMinimum( TString::Format( "MVA_%s", methodS.Data() ) );
+      Float_t mvaMax = tree->GetMaximum( TString::Format( "MVA_%s", methodS.Data() ) );
 
       // project trees
-      TString expr = Form( "((MVA_%s-(%f))/(%f-(%f)))", methodS.Data(), mvaMin, mvaMax, mvaMin );
+      TString expr = TString::Format( "((MVA_%s-(%f))/(%f-(%f)))", methodS.Data(), mvaMin, mvaMax, mvaMin );
       cout << "Expression = " << expr << endl;
-      tree->Project( "DataS", Form( "%s:%s", vary.Data(), varx.Data() ), 
-                     Form( "%s*(type==1)", expr.Data() ) );
-      tree->Project( "DataB", Form( "%s:%s", vary.Data(), varx.Data() ), 
-                     Form( "%s*(type==0)", expr.Data() ) );
-      tree->Project( "DataRS", Form( "%s:%s", vary.Data(), varx.Data() ), 
+      tree->Project( "DataS", TString::Format( "%s:%s", vary.Data(), varx.Data() ),
+                     TString::Format( "%s*(type==1)", expr.Data() ) );
+      tree->Project( "DataB", TString::Format( "%s:%s", vary.Data(), varx.Data() ),
+                     TString::Format( "%s*(type==0)", expr.Data() ) );
+      tree->Project( "DataRS", TString::Format( "%s:%s", vary.Data(), varx.Data() ),
                      "type==1" );
-      tree->Project( "DataRB", Form( "%s:%s", vary.Data(), varx.Data() ), 
+      tree->Project( "DataRB", TString::Format( "%s:%s", vary.Data(), varx.Data() ),
                      "type==0" );
-      tree->Project( "RefS", Form( "%s:%s", vary.Data(), varx.Data() ), 
+      tree->Project( "RefS", TString::Format( "%s:%s", vary.Data(), varx.Data() ),
                      "type==1", "", 500000  );
-      tree->Project( "RefB", Form( "%s:%s", vary.Data(), varx.Data() ), 
+      tree->Project( "RefB", TString::Format( "%s:%s", vary.Data(), varx.Data() ),
                      "type==0", "", 500000, 10000 );
 
       Float_t zminS = frameS->GetMinimum();
       Float_t zmaxS = frameS->GetMaximum();
       Float_t zminB = frameB->GetMinimum();
       Float_t zmaxB = frameB->GetMaximum();
-      // normalise      
+      // normalise
       for (Int_t i=1; i<=nbin; i++) {
          for (Int_t j=1; j<=nbin; j++) {
             // signal
@@ -125,7 +125,7 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
       zmaxS = frameS->GetMaximum();
       zminB = frameB->GetMinimum();
       zmaxB = frameB->GetMaximum();
-      // renormalise      
+      // renormalise
       for (Int_t i=1; i<=nbin; i++) {
          for (Int_t j=1; j<=nbin; j++) {
             // signal
@@ -145,9 +145,9 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
       frameS->SetMaximum( +1.0 );
       frameB->SetMinimum( -1.0 );
       frameB->SetMaximum( +1.0 );
-      
+
       // axis labels
-      frame->SetTitle( Form( "Signal and background distributions weighted by %s output", 
+      frame->SetTitle( TString::Format( "Signal and background distributions weighted by %s output",
                              methodS.Data() ) );
       frame->SetTitleSize( 0.08 );
       frame->GetXaxis()->SetTitle( varx );
@@ -184,7 +184,7 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
       // set style
       refS->SetMarkerSize( 0.2 );
       refS->SetMarkerColor( 104 );
-      
+
       refB->SetMarkerSize( 0.2 );
       refB->SetMarkerColor( 102 );
 
@@ -207,17 +207,17 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
 
       // and plot
       c->cd(1);
-      
+
       frame->Draw();
       frameS->Draw( "contsame" );
       refS->Draw( "cont3same" );
-      refB->Draw( "cont3same" );  
+      refB->Draw( "cont3same" );
       //      frameB->Draw( "colzsame" );
 
       // save canvas to file
       c->Update();
       if (Save_Images) {
-         TMVAGlob::imgconv( c, Form("plots/mvaweights_%s",   methodS.Data()) );
+         TMVAGlob::imgconv( c, TString::Format("plots/mvaweights_%s",   methodS.Data()) );
       }
       countCanvas++;
    }

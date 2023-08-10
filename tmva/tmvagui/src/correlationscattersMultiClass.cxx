@@ -10,30 +10,30 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString var, 
+void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString var,
                                          TString dirName_ , TString /*title*/,
                                          Bool_t /*isRegression */,
                                          Bool_t useTMVAStyle )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
-   
+
    TString extension = dirName_;
    extension.ReplaceAll( "InputVariables", "" );
    extension.ReplaceAll( " ", "" );
    if (extension == "") extension = "_Id"; // use 'Id' for 'idendtity transform'
 
    var.ReplaceAll( extension, "" );
-   cout << "Called macro \"correlationscattersMultiClass\" for variable: \"" << var 
-        << "\", transformation type \"" << dirName_ 
+   cout << "Called macro \"correlationscattersMultiClass\" for variable: \"" << var
+        << "\", transformation type \"" << dirName_
         << "\" (extension: \"" << extension << "\")" << endl;
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile* file = TMVAGlob::OpenFile( fin );
 
    TString dirName = dirName_ + "/CorrelationPlots";
-  
-   // find out number of input variables   
+
+   // find out number of input variables
    TDirectory* vardir = (TDirectory*)file->GetDirectory(dataset.Data())->Get( "InputVariables_Id" );
    if (!vardir) {
       cout << "ERROR: no such directory: \"InputVariables\"" << endl;
@@ -50,7 +50,7 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
 
    TListIter keyIt(dir->GetListOfKeys());
    Int_t noPlots = noVars - 1;
-   
+
    cout << "noPlots: " << noPlots << " --> noVars: " << noVars << endl;
    if (noVars != Int_t(noVars)) {
       cout << "*** Warning: problem in inferred number of variables ... not an integer *** " << endl;
@@ -74,7 +74,7 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
    default:
       xPad = 3; yPad = 2; width = 800; height = 0.55*width; break;
    }
-   Int_t noPadPerCanv = xPad * yPad ;   
+   Int_t noPadPerCanv = xPad * yPad ;
 
    // counter variables
    Int_t countCanvas = 0;
@@ -91,7 +91,7 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
       TCanvas* canv = 0;
 
       Int_t countPad    = 0;
-   
+
       while ( (key = (TKey*)next()) ) {
 
          if (key->GetCycle() != 1) continue;
@@ -101,25 +101,25 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
          if (!cl->InheritsFrom("TH1")) continue;
          TH1 *scat = (TH1*)key->ReadObj();
          TString hname = scat->GetName();
-         
+
          //std::cout << classnames[itype] << " " << extension << "" << hname << " " << var << std::endl;
          // check for scatter plots
-         if (! (hname.EndsWith( classnames[itype] + extension ) && 
+         if (! (hname.EndsWith( classnames[itype] + extension ) &&
                 hname.Contains( TString("_") + var + "_" ) && hname.BeginsWith("scat_")) ) {
             scat->Delete();
-            continue; 
+            continue;
          }
 
          // found a new signal plot
-            
+
          // create new canvas
          if (countPad%noPadPerCanv==0) {
             ++countCanvas;
             TString ext = extension; ext.Remove( 0, 1 );
-            canv = new TCanvas( Form("canvas%d", countCanvas), 
-                                Form("Correlation profiles for '%s'-transformed variables (%s)", 
+            canv = new TCanvas( TString::Format("canvas%d", countCanvas),
+                                TString::Format("Correlation profiles for '%s'-transformed variables (%s)",
                                      ext.Data(), classnames[itype].Data()),
-                                countCanvas*50+200, countCanvas*20, width, height ); 
+                                countCanvas*50+200, countCanvas*20, width, height );
             canv->Divide(xPad,yPad);
          }
 
@@ -139,17 +139,17 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
          // this is set but not stored during plot creation in MVA_Factory
          TMVAGlob::SetSignalAndBackgroundStyle( scat, prof );
 
-         // chop off "signal" 
+         // chop off "signal"
          TMVAGlob::SetFrameStyle( scat, 1.2 );
 
          // normalise both signal and background
          scat->Scale( 1.0/scat->GetSumOfWeights() );
 
-         // finally plot and overlay       
+         // finally plot and overlay
          // Float_t sc = 1.1;
          // if (countPad==2) sc = 1.3;
          scat->SetMarkerColor(  4);
-         scat->Draw("col");      
+         scat->Draw("col");
          prof->SetMarkerColor( gConfig().fVariablePlotting.fUsePaperStyle ? 1 : 2  );
          prof->SetMarkerSize( 0.2 );
          prof->SetLineColor( gConfig().fVariablePlotting.fUsePaperStyle ? 1 : 2 );
@@ -164,7 +164,7 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
          if (countPad%noPadPerCanv==0) {
             canv->Update();
 
-            TString fname = dataset+Form( "/plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
+            TString fname = dataset+TString::Format( "/plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
             TMVAGlob::plot_logo();
             TMVAGlob::imgconv( canv, fname );
          }
@@ -172,7 +172,7 @@ void TMVA::correlationscattersMultiClass(TString dataset, TString fin , TString 
       if (countPad%noPadPerCanv!=0) {
          canv->Update();
 
-         TString fname = dataset+Form( "/plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
+         TString fname = dataset+TString::Format( "/plots/correlationscatter_%s_%s_c%i",var.Data(), extension.Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
       }

@@ -49,8 +49,8 @@ void TMVA::CorrGuiMultiClass(TString dataset,  TString fin , TString dirName , T
 
    std::vector<TString>::const_iterator iter = names.begin();
    for (; iter != names.end(); ++iter) {    
-      cbar->AddButton( Form( "      Variable: %s      ", (*iter).Data()),
-                       Form( "TMVA::correlationscattersMultiClass(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%i)",
+      cbar->AddButton( TString::Format( "      Variable: %s      ", (*iter).Data()),
+                       TString::Format( "TMVA::correlationscattersMultiClass(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%i)",
                              dataset.Data(), fin.Data(), (*iter).Data(), dirName.Data(), title.Data(), (Int_t)isRegression ),
                        buttonType );
    }

@@ -67,7 +67,7 @@ TMVA::StatDialogBDT::StatDialogBDT(TString dataset, const TGWindow* p, TString w
    // main frame
    fMain = new TGMainFrame(p, totalWidth, totalHeight, kMainFrame | kVerticalFrame);
 
-   TGLabel *sigLab = new TGLabel( fMain, Form( "Decision tree [%i-%i]",0,fNtrees-1 ) );
+   TGLabel *sigLab = new TGLabel( fMain, TString::Format( "Decision tree [%i-%i]",0,fNtrees-1 ) );
    fMain->AddFrame(sigLab, new TGLayoutHints(kLHintsLeft | kLHintsTop,5,5,5,5));
 
    fInput = new TGNumberEntry(fMain, (Double_t) fItree,5,-1,(TGNumberFormat::EStyle) 5);
@@ -194,9 +194,9 @@ void TMVA::StatDialogBDT::DrawNode( TMVA::DecisionTreeNode *n,
 
    if (n->GetNodeType() == 0){
       if (n->GetCutType()){
-         t->AddText(TString(vars[n->GetSelector()]+">"+=::Form("%5.3g",n->GetCutValue())));
+         t->AddText(vars[n->GetSelector()] + ">" + TString::Format("%5.3g",n->GetCutValue()));
       }else{
-         t->AddText(TString(vars[n->GetSelector()]+"<"+=::Form("%5.3g",n->GetCutValue())));
+         t->AddText(vars[n->GetSelector()] + "<" + TString::Format("%5.3g",n->GetCutValue()));
       }
    }
 
@@ -318,8 +318,8 @@ void TMVA::StatDialogBDT::DrawTree( Int_t itree )
 
    Int_t   canvasColor = TMVAStyle->GetCanvasColor(); // backup
 
-   TString cbuffer = Form( "Reading weight file: %s", fWfile.Data() );
-   TString tbuffer = Form( "Decision Tree no.: %d", itree );
+   TString cbuffer = TString::Format( "Reading weight file: %s", fWfile.Data() );
+   TString tbuffer = TString::Format( "Decision Tree no.: %d", itree );
    if (!fCanvas) fCanvas = new TCanvas( "c1", cbuffer, 200, 0, 1000, 600 );
    else          fCanvas->Clear();
    fCanvas->Draw();
@@ -359,7 +359,7 @@ void TMVA::StatDialogBDT::DrawTree( Int_t itree )
 
 
    fCanvas->Update();
-   TString fname = fDataset+Form("/plots/%s_%i", fMethName.Data(), itree );
+   TString fname = fDataset + TString::Format("/plots/%s_%i", fMethName.Data(), itree);
    cout << "--- Creating image: " << fname << endl;
    TMVAGlob::imgconv( fCanvas, fname );
 
@@ -422,7 +422,7 @@ void TMVA::BDT(TString dataset, const TString& fin  )
       TString fname = path[im];
       if (fname[fname.Length()-1] != '/') fname += "/";
       fname += wfile[im];
-      TString macro = Form( "TMVA::BDT(\"%s\",0,\"%s\",\"%s\")",dataset.Data(), fname.Data(), methname[im].Data() );
+      TString macro = TString::Format( "TMVA::BDT(\"%s\",0,\"%s\",\"%s\")",dataset.Data(), fname.Data(), methname[im].Data() );
       cbar->AddButton( fname, macro, "Plot decision trees from this weight file", "button" );
    }
 
