@@ -1306,29 +1306,24 @@ void RootShower::ShowInfos()
    Window_t wdummy;
    int ax, ay;
    TRootHelpDialog *hd;
-   Char_t str[32];
-   Char_t Msg[500];
+   std::stringstream Msg;
    Double_t dimx,dimy,dimz;
 
    fEvent->GetDetector()->GetDimensions(&dimx, &dimy, &dimz);
 
-   sprintf(Msg, "  Some information about the current shower\n");
-   sprintf(Msg, "%s  Dimensions of the target\n", Msg);
-   sprintf(Msg, "%s  X .................... : %1.2e [cm]    \n", Msg, dimx);
-   sprintf(Msg, "%s  Y .................... : %1.2e [cm]    \n", Msg, dimy);
-   sprintf(Msg, "%s  Z .................... : %1.2e [cm]    \n", Msg, dimz);
-   sprintf(Msg, "%s  Magnetic field ....... : %1.2e [kGauss]\n", Msg,
-           fEvent->GetB());
-   sprintf(Msg, "%s  Initial particle ..... : %s \n", Msg,
-           fEvent->GetParticle(0)->GetName());
-   sprintf(Msg, "%s  Initial energy ....... : %1.2e [GeV] \n", Msg,
-           fEvent->GetHeader()->GetEnergy());
-   sprintf(Msg, "%s  Total Energy loss .... : %1.2e [GeV]", Msg,
-           fEvent->GetDetector()->GetTotalELoss());
+   Msg << std::scientific << std::setprecision(2);
+   Msg << "  Some information about the current shower" << std::endl;
+   Msg << "  Dimensions of the target" << std::endl;
+   Msg << "    X .................. : " << dimx << " [cm]" << std::endl;
+   Msg << "    Y .................. : " << dimy << " [cm]" << std::endl;
+   Msg << "    Z .................. : " << dimz << " [cm]" << std::endl;
+   Msg << "  Magnetic field ....... : " << fEvent->GetB() << " [kGauss]" << std::endl;
+   Msg << "  Initial particle ..... : " << fEvent->GetParticle(0)->GetName() << std::endl;
+   Msg << "  Initial energy ....... : " << fEvent->GetHeader()->GetEnergy() << " [GeV]" << std::endl;
+   Msg << "  Total Energy loss .... : " << fEvent->GetDetector()->GetTotalELoss() << " [GeV]" << std::endl;
 
-   sprintf(str, "Infos on current shower");
-   hd = new TRootHelpDialog(this, str, 420, 155);
-   hd->SetText(Msg);
+   hd = new TRootHelpDialog(this, "Infos on current shower", 420, 155);
+   hd->SetText(Msg.str().c_str());
    gVirtualX->TranslateCoordinates( GetId(), GetParent()->GetId(),
               (Int_t)(GetWidth() - 420) >> 1,(Int_t)(GetHeight() - 155) >> 1,
               ax, ay, wdummy);
@@ -1448,6 +1443,7 @@ void RootShower::Clicked(TGListTreeItem *item, Int_t x, Int_t y)
 
 int main(int argc, char **argv)
 {
+   TApplication *theApp;
    Bool_t rint = kFALSE;
    for (int i = 0; i < argc; i++) {
       if (!strcmp(argv[i], "-d")) rint = kTRUE;
@@ -1458,8 +1454,8 @@ int main(int argc, char **argv)
          return 0;
       }
    }
-
-   TApplication *theApp;
+   std::string inclCwd = "-I" + gSystem->GetWorkingDirectory();
+   TROOT::AddExtraInterpreterArgs({inclCwd});
    if (rint)
       theApp = new TRint("App", &argc, argv);
    else
