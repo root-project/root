@@ -37,7 +37,7 @@ void TMVA::correlationsMultiClass(TString dataset, TString fin , Bool_t /* isReg
       }
 
       TCanvas* c = new TCanvas( hnames[ic], 
-                                Form("Correlations between MVA input variables (%s)", 
+                                TString::Format("Correlations between MVA input variables (%s)", 
                                      classnames[ic].Data()), 
                                 ic*(width+5)+200, 0, width, width ); 
       Float_t newMargin1 = 0.13;

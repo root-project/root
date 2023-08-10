@@ -83,9 +83,9 @@ void TMVA::CorrGui(TString dataset,  TString fin, TString dirName , TString titl
   
    for (Int_t ic=0;ic<it;ic++) {    
       cbar->AddButton( (Var[ic].Contains("_target") ? 
-                        Form( "      Target: %s      ", Var[ic].ReplaceAll("_target","").Data()) : 
-                        Form( "      Variable: %s      ", Var[ic].Data())),
-                       Form( "TMVA::correlationscatters(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%i)",dataset.Data(),fin.Data(), Var[ic].Data(), dirName.Data(), title.Data(), (Int_t)isRegression ),
+                        TString::Format( "      Target: %s      ", Var[ic].ReplaceAll("_target","").Data()) : 
+                        TString::Format( "      Variable: %s      ", Var[ic].Data())),
+                       TString::Format( "TMVA::correlationscatters(\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",%i)",dataset.Data(),fin.Data(), Var[ic].Data(), dirName.Data(), title.Data(), (Int_t)isRegression ),
                        buttonType );
    }
 

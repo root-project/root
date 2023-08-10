@@ -100,7 +100,7 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
             {
                TKey *key=(TKey*)file->GetListOfKeys()->At(i);
                dataset=key->GetName();
-               bar->AddButton(dataset.Data(),Form("TMVA::TMVAMultiClassGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
+               bar->AddButton(dataset.Data(),TString::Format("TMVA::TMVAMultiClassGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
             }
        
          bar->AddSeparator();
@@ -110,7 +110,7 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
          bar->SetTextColor("black");
          bar->Show();
          gROOT->SaveContext();
-         return ;
+         return;
       }
    
    // find all references   
@@ -139,13 +139,13 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    char ch = 'a';
    while ((str = (TObjString*)it())) {
       TString tmp   = str->GetString();
-      TString title = Form( "Input variables '%s'-transformed (training sample)", 
+      TString title = TString::Format( "Input variables '%s'-transformed (training sample)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );
       if (tmp.Contains( "Id" )) title = "Input variables (training sample)";
       MultiClassActionButton( cbar, 
-                              Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                              Form( "TMVA::variablesMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data(), fName, str->GetString().Data(), title.Data() ),
-                              Form( "Plots all '%s'-transformed input variables (macro variablesMultiClass(...))", str->GetString().Data() ),
+                              TString::Format( "(%i%c) %s", ic, ch++, title.Data() ),
+                              TString::Format( "TMVA::variablesMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data(), fName, str->GetString().Data(), title.Data() ),
+                              TString::Format( "Plots all '%s'-transformed input variables (macro variablesMultiClass(...))", str->GetString().Data() ),
                               buttonType, str->GetString() );
    }      
    ic++;
@@ -154,162 +154,162 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    it.Reset(); ch = 'a';
    while ((str = (TObjString*)it())) {
       TString tmp   = str->GetString();
-      TString title = Form( "Input variable correlations '%s'-transformed (scatter profiles)", 
+      TString title = TString::Format( "Input variable correlations '%s'-transformed (scatter profiles)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );
       if (tmp.Contains( "Id" )) title = "Input variable correlations (scatter profiles)";
       MultiClassActionButton( cbar, 
-                              Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                              Form( "TMVA::CorrGuiMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
-                              Form( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGuiMultiClass(...))", 
+                              TString::Format( "(%i%c) %s", ic, ch++, title.Data() ),
+                              TString::Format( "TMVA::CorrGuiMultiClass(\"%s\",\"%s\",\"%s\",\"%s\")",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
+                              TString::Format( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGuiMultiClass(...))", 
                                     str->GetString().Data() ),
                               buttonType, str->GetString() );
    }      
    
    TString title;
    // coefficients
-   title =Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic );
+   title =TString::Format( "(%i) Input Variable Linear Correlation Coefficients", ++ic );
    MultiClassActionButton( cbar,  
                            title,
-                           Form( "TMVA::correlationsMultiClass(\"%s\",\"%s\")",dataset.Data(), fName ),
+                           TString::Format( "TMVA::correlationsMultiClass(\"%s\",\"%s\")",dataset.Data(), fName ),
                            "Plots signal and background correlation summaries for all input variables (macro correlationsMultiClass.cxx)", 
                            buttonType );
 
-   title =Form( "(%ia) Classifier Output Distributions (test sample)", ++ic );
+   title =TString::Format( "(%ia) Classifier Output Distributions (test sample)", ++ic );
    MultiClassActionButton( cbar,  
                            title,
-                           Form( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kMVAType)",dataset.Data() , fName ),
+                           TString::Format( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kMVAType)",dataset.Data() , fName ),
                            "Plots the output of each classifier for the test data (macro mvas(...,0))",
                            buttonType, defaultRequiredClassifier );
 
-   title =Form( "(%ib) Classifier Output Distributions (test and training samples superimposed)", ic );
+   title =TString::Format( "(%ib) Classifier Output Distributions (test and training samples superimposed)", ic );
    MultiClassActionButton( cbar,  
                            title,
-                           Form( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kCompareType)",dataset.Data(), fName ),
+                           TString::Format( "TMVA::mvasMulticlass(\"%s\",\"%s\",TMVA::kCompareType)",dataset.Data(), fName ),
                            "Plots the output of each classifier for the test (histograms) and training (dots) data (macro mvas(...,3))",
                            buttonType, defaultRequiredClassifier );
    /*
-     title = Form( "(%ic) Classifier Probability Distributions (test sample)", ic );
+     title = TString::Format( "(%ic) Classifier Probability Distributions (test sample)", ic );
      MultiClassActionButton( cbar,
-     Form( "(%ic) Classifier Probability Distributions (test sample)", ic ),
-     Form( "TMVA::mvas(\"%s\",TMVA::kProbaType)", fName ),
+     TString::Format( "(%ic) Classifier Probability Distributions (test sample)", ic ),
+     TString::Format( "TMVA::mvas(\"%s\",TMVA::kProbaType)", fName ),
      "Plots the probability of each classifier for the test data (macro mvas(...,1))",
      buttonType, defaultRequiredClassifier );
 
-     title =Form( "(%id) Classifier Rarity Distributions (test sample)", ic );
+     title =TString::Format( "(%id) Classifier Rarity Distributions (test sample)", ic );
      MultiClassActionButton( cbar,
-     Form( "(%id) Classifier Rarity Distributions (test sample)", ic ),
-     Form( "TMVA::mvas(\"%s\",TMVA::kRarityType)", fName ),
+     TString::Format( "(%id) Classifier Rarity Distributions (test sample)", ic ),
+     TString::Format( "TMVA::mvas(\"%s\",TMVA::kRarityType)", fName ),
      "Plots the Rarity of each classifier for the test data (macro mvas(...,2)) - background distribution should be
      uniform", buttonType, defaultRequiredClassifier );
 
 
-     title =Form( "(%ia) Classifier Cut Efficiencies", ++ic );
+     title =TString::Format( "(%ia) Classifier Cut Efficiencies", ++ic );
      MultiClassActionButton( cbar,
      title,
-     Form( "TMVA::mvaeffs(\"%s\")", fName ),
+     TString::Format( "TMVA::mvaeffs(\"%s\")", fName ),
      "Plots signal and background efficiencies versus cut on classifier output (macro mvaeffs.cxx)",
      buttonType, defaultRequiredClassifier );
     */
 
-   title = Form("(%i) Classifier Backgr. Rej. vs Sig. Eff. (1-vs-rest ROC curves)", ++ic);
+   title = TString::Format("(%i) Classifier Backgr. Rej. vs Sig. Eff. (1-vs-rest ROC curves)", ++ic);
    MultiClassActionButton(
-      cbar, title, Form("TMVA::efficienciesMulticlass1vsRest(\"%s\", \"%s\")", dataset.Data(), fName),
+      cbar, title, TString::Format("TMVA::efficienciesMulticlass1vsRest(\"%s\", \"%s\")", dataset.Data(), fName),
       "Plots background rejection vs signal efficiencies (macro efficienciesMulticlass.cxx) [\"ROC\" stands "
       "for \"Receiver Operation Characteristics\"]",
       buttonType, defaultRequiredClassifier);
 
-   // title = Form("(%i) Classifier (1/Backgr. Rejection) vs Sig. Eff. (1-vs-rest ROC curve)", ++ic);
-   // MultiClassActionButton(cbar, title, Form("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
+   // title = TString::Format("(%i) Classifier (1/Backgr. Rejection) vs Sig. Eff. (1-vs-rest ROC curve)", ++ic);
+   // MultiClassActionButton(cbar, title, TString::Format("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
    //                        "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands
    //                        "
    //                        "for \"Receiver Operation Characteristics\"]",
    //                        buttonType, defaultRequiredClassifier);
 
-   title = Form("(%i) Classifier Backgr. Rej. vs Sig. Eff. (1-vs-1 ROC curves)", ++ic);
+   title = TString::Format("(%i) Classifier Backgr. Rej. vs Sig. Eff. (1-vs-1 ROC curves)", ++ic);
    MultiClassActionButton(
-      cbar, title, Form("TMVA::efficienciesMulticlass1vs1(\"%s\", \"%s\")", dataset.Data(), fName),
+      cbar, title, TString::Format("TMVA::efficienciesMulticlass1vs1(\"%s\", \"%s\")", dataset.Data(), fName),
       "Plots background rejection vs signal efficiencies (macro efficienciesMulticlass.cxx) [\"ROC\" stands "
       "for \"Receiver Operation Characteristics\"]",
       buttonType, defaultRequiredClassifier);
 
-   // title = Form("(%i) Classifier (1/Backgr. Rejection) vs Sig. Eff. (1-vs-1 ROC curve)", ++ic);
-   // MultiClassActionButton(cbar, title, Form("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
+   // title = TString::Format("(%i) Classifier (1/Backgr. Rejection) vs Sig. Eff. (1-vs-1 ROC curve)", ++ic);
+   // MultiClassActionButton(cbar, title, TString::Format("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
    //                        "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands
    //                        "
    //                        "for \"Receiver Operation Characteristics\"]",
    //                        buttonType, defaultRequiredClassifier);
 
    /*
-   title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
+   title = TString::Format( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
    MultiClassActionButton( cbar,
    title,
-   Form( "TMVA::paracoor(\"%s\")", fName ),
+   TString::Format( "TMVA::paracoor(\"%s\")", fName ),
    "Plots parallel coordinates for classifiers and input variables (macro paracoor.cxx, requires ROOT >= 5.17)",
    buttonType, defaultRequiredClassifier );
 
-   title =Form( "(%i) PDFs of Classifiers (requires \"CreateMVAPdfs\" option set)", ++ic );
+   title =TString::Format( "(%i) PDFs of Classifiers (requires \"CreateMVAPdfs\" option set)", ++ic );
    MultiClassActionButton( cbar,
    title,
-   Form( "TMVA::probas(\"%s\")", fName ),
+   TString::Format( "TMVA::probas(\"%s\")", fName ),
    "Plots the PDFs of the classifier output distributions for signal and background - if requested (macro probas.cxx)",
    buttonType, defaultRequiredClassifier );
 
-   title = Form( "(%i) Likelihood Reference Distributiuons", ++ic);
+   title = TString::Format( "(%i) Likelihood Reference Distributiuons", ++ic);
    MultiClassActionButton( cbar,
    title,
-   Form( "TMVA::likelihoodrefs(\"%s\")", fName ),
+   TString::Format( "TMVA::likelihoodrefs(\"%s\")", fName ),
    "Plots to verify the likelihood reference distributions (macro likelihoodrefs.cxx)",
    buttonType, "Likelihood" );
  */
 
-   title = Form( "(%ia) Network Architecture (MLP)", ++ic );
-   TString call = Form( "TMVA::network(\"%s\",\"%s\")",dataset.Data() , fName );
+   title = TString::Format( "(%ia) Network Architecture (MLP)", ++ic );
+   TString call = TString::Format( "TMVA::network(\"%s\",\"%s\")",dataset.Data() , fName );
    MultiClassActionButton( cbar,  
                            title,
                            call, 
                            "Plots the MLP weights (macro network.cxx)",
                            buttonType, "MLP" );
 
-   title = Form( "(%ib) Network Convergence Test (MLP)", ic );
+   title = TString::Format( "(%ib) Network Convergence Test (MLP)", ic );
    MultiClassActionButton( cbar,  
                            title,
-                           Form( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
+                           TString::Format( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
                            "Plots error estimator versus training epoch for training and test samples (macro annconvergencetest.cxx)",
                            buttonType, "MLP" );
 
-   title = Form( "(%i) Decision Trees (BDT)", ++ic );
+   title = TString::Format( "(%i) Decision Trees (BDT)", ++ic );
    MultiClassActionButton( cbar,  
                            title,
-                           Form( "TMVA::BDT(\"%s\",\"%s\")",dataset.Data() , fName ),
+                           TString::Format( "TMVA::BDT(\"%s\",\"%s\")",dataset.Data() , fName ),
                            "Plots the Decision Trees trained by BDT algorithms (macro BDT(itree,...))",
                            buttonType, "BDT" );
 
    /*
-     title = Form( "(%i) Decision Tree Control Plots (BDT)", ++ic );
+     title = TString::Format( "(%i) Decision Tree Control Plots (BDT)", ++ic );
      MultiClassActionButton( cbar,  
      title,
-     Form( "TMVA::BDTControlPlots(\"%s\")", fName ),
+     TString::Format( "TMVA::BDTControlPlots(\"%s\")", fName ),
      "Plots to monitor boosting and pruning of decision trees (macro BDTControlPlots.cxx)",
      buttonType, "BDT" );
 
    */
-   title = Form( "(%i) Plot Foams (PDEFoam)", ++ic );
+   title = TString::Format( "(%i) Plot Foams (PDEFoam)", ++ic );
    MultiClassActionButton( cbar,  
                            title,
-                           Form("TMVA::PlotFoams(\"%s/weights/TMVAMulticlass_PDEFoam.weights_foams.root\")",dataset.Data()),
+                           TString::Format("TMVA::PlotFoams(\"%s/weights/TMVAMulticlass_PDEFoam.weights_foams.root\")",dataset.Data()),
                            "Plot Foams (macro PlotFoams.cxx)",
                            buttonType, "PDEFoam" );
    /*
-     title = Form( "(%i) General Boost Control Plots", ++ic );
+     title = TString::Format( "(%i) General Boost Control Plots", ++ic );
      MultiClassActionButton( cbar,  
      title,
-     Form( "TMVA::BoostControlPlots(\"%s\")", fName ),
+     TString::Format( "TMVA::BoostControlPlots(\"%s\")", fName ),
      "Plots to monitor boosting of general classifiers (macro BoostControlPlots.cxx)",
      buttonType, "Boost" );
    */
    cbar->AddSeparator();
 
-   cbar->AddButton( Form( "(%i) Quit", ++ic ),   ".q", "Quit", buttonType );
+   cbar->AddButton( TString::Format( "(%i) Quit", ++ic ),   ".q", "Quit", buttonType );
 
    // set the style 
    cbar->SetTextColor("black");

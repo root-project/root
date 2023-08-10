@@ -13,10 +13,10 @@ void TMVA::BDTControlPlots(TString dataset, TString fin , Bool_t useTMVAStyle  )
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
-  
+
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
-   
+   TFile* file = TMVAGlob::OpenFile( fin );
+
    if (file == NULL) {
       cout << "Problems with input file, tried to open " << fin << " but somehow did not succeed .." << endl;
       return;
@@ -51,8 +51,8 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
    char cn2[bufferSize];
    const TString titName = bdtdir->GetName();
    snprintf( cn, bufferSize, "cv_%s", titName.Data() );
-   TCanvas *c = new TCanvas( cn,  Form( "%s Control Plots", titName.Data() ),
-                             width, height ); 
+   TCanvas *c = new TCanvas( cn,  TString::Format( "%s Control Plots", titName.Data() ),
+                             width, height );
    c->Divide(3,2);
 
 
@@ -63,10 +63,10 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
    Bool_t BoostMonitorIsDone=kFALSE;
 
    for (Int_t i=0; i<nPlots; i++){
-      Int_t color = 4; 
+      Int_t color = 4;
       c->cd(i+1);
       TH1 *h = (TH1*) bdtdir->Get(hname[i]);
-      
+
       if (h){
          h->SetMaximum(h->GetMaximum()*1.3);
          h->SetMinimum( 0 );
@@ -95,25 +95,25 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
          c->Update();
       }
    }
-   
-   
+
+
    TCanvas *c2 = NULL;
    if (BoostMonitorIsDone){
       snprintf( cn2, bufferSize, "cv2_%s", titName.Data() );
-      c2 = new TCanvas( cn2,  Form( "%s BoostWeights", titName.Data() ),
-                        1200, 1200 ); 
+      c2 = new TCanvas( cn2,  TString::Format( "%s BoostWeights", titName.Data() ),
+                        1200, 1200 );
       c2->Divide(5,5);
       Int_t ipad=1;
-      
+
       TIter keys( bdtdir->GetListOfKeys() );
       TKey *key;
       //      gDirectory->ls();
       while ( (key = (TKey*)keys.Next()) && ipad < 26) {
          TObject *obj=key->ReadObj();
-         if (obj->IsA()->InheritsFrom(TH1::Class())){   
+         if (obj->IsA()->InheritsFrom(TH1::Class())){
             TH1F *hx = (TH1F*)obj;
-            TString hhname_(Form("%s",obj->GetTitle()));
-            if (hhname_.Contains("BoostWeightsInTreeB")){ 
+            TString hhname_ = obj->GetTitle();
+            if (hhname_.Contains("BoostWeightsInTreeB")){
                c2->cd(ipad++);
                hx->SetLineColor(4);
                hx->Draw();
@@ -127,35 +127,35 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
             c2->Update();
          }
       }
-               
+
    }
 
    // write to file
-   TString fname = dataset+Form( "/plots/%s_ControlPlots", titName.Data() );
+   TString fname = dataset+TString::Format( "/plots/%s_ControlPlots", titName.Data() );
    TMVAGlob::imgconv( c, fname );
-   
+
    if (c2){
-      fname = dataset+Form( "/plots/%s_ControlPlots2", titName.Data() );
+      fname = dataset+TString::Format( "/plots/%s_ControlPlots2", titName.Data() );
       TMVAGlob::imgconv( c2, fname );
    }
 
    TCanvas *c3 = NULL;
    if (BoostMonitorIsDone){
       snprintf( cn2, bufferSize, "cv3_%s", titName.Data() );
-      c3 = new TCanvas( cn2,  Form( "%s Variables", titName.Data() ),
-                        1200, 1200 ); 
+      c3 = new TCanvas( cn2,  TString::Format( "%s Variables", titName.Data() ),
+                        1200, 1200 );
       c3->Divide(5,5);
       Int_t ipad=1;
-      
+
       TIter keys( bdtdir->GetListOfKeys() );
       TKey *key;
       //      gDirectory->ls();
       while ( (key = (TKey*)keys.Next()) && ipad < 26) {
          TObject *obj=key->ReadObj();
-         if (obj->IsA()->InheritsFrom(TH1::Class())){   
+         if (obj->IsA()->InheritsFrom(TH1::Class())){
             TH1F *hx = (TH1F*)obj;
-            TString hname_(Form("%s",obj->GetTitle()));
-            if (hname_.Contains("SigVar0AtTree")){ 
+            TString hname_ = obj->GetTitle();
+            if (hname_.Contains("SigVar0AtTree")){
                c3->cd(ipad++);
                hx->SetLineColor(4);
                hx->Draw();
@@ -169,7 +169,7 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
             c3->Update();
          }
       }
-               
+
    }
 
 

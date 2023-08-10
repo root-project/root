@@ -36,7 +36,7 @@ void TMVA::correlations(TString dataset, TString fin , Bool_t isRegression ,
       }
 
       TCanvas* c = new TCanvas( hName[ic], 
-                                Form("Correlations between MVA input variables (%s)", 
+                                TString::Format("Correlations between MVA input variables (%s)", 
                                      (isRegression ? "" : (ic==0 ? "signal" : "background"))), 
                                 ic*(width+5)+200, 0, width, width ); 
       Float_t newMargin1 = 0.13;
