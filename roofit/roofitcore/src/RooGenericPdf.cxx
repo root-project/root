@@ -90,7 +90,7 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
   _formExpr(inFormula)
 {
   if (dependents.empty()) {
-    _value = traceEval(0);
+    _value = traceEval(nullptr);
   } else {
     _formula = new RooFormula(GetName(), _formExpr, dependents);
     _formExpr = _formula->formulaString().c_str();
@@ -135,9 +135,9 @@ double RooGenericPdf::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooGenericPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  formula().computeBatch(stream, output, nEvents, dataMap);
+  formula().computeBatch(output, nEvents, dataMap);
 }
 
 

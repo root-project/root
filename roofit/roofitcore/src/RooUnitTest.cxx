@@ -161,7 +161,7 @@ RooWorkspace* RooUnitTest::getWS(const char* refName)
   if (!ws) {
     if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve RooWorkspace " << refName
                              << " from reference file, skipping " << endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   return ws ;
@@ -243,7 +243,7 @@ bool RooUnitTest::runCompTests()
    cout << "benchmark: " ; bmark->Print() ;
       }
 
-      RooPlot* compPlot = _debug ? iter->first->emptyClone(Form("%s_comparison",iter->first->GetName())) : 0 ;
+      RooPlot* compPlot = _debug ? iter->first->emptyClone(Form("%s_comparison",iter->first->GetName())) : nullptr ;
       bool anyFail=false ;
 
       Stat_t nItems = iter->first->numItems() ;

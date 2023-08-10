@@ -1249,9 +1249,10 @@ bool CheckReshuffling(TTree &mainTree, TTree &friendTree)
 
    if ((isMainReshuffled || isFriendReshuffled) && !friendHasValidIndex) {
       const auto reshuffledTreeName = isMainReshuffled ? mainTree.GetName() : friendTree.GetName();
-      const auto msg = "Tree '%s' has the kEntriesReshuffled bit set, and cannot be used as friend nor can be added as "
-                       "a friend unless the main tree has a TTreeIndex on the friend tree '%s'. You can also unset the "
-                       "bit manually if you know what you are doing.";
+      const auto msg =
+         "Tree '%s' has the kEntriesReshuffled bit set and cannot have friends nor can be added as a friend unless the "
+         "main tree has a TTreeIndex on the friend tree '%s'. You can also unset the bit manually if you know what you "
+         "are doing; note that you risk associating wrong TTree entries of the friend with those of the main TTree!";
       Error("AddFriend", msg, reshuffledTreeName, friendTree.GetName());
       return false;
    }
@@ -5403,7 +5404,7 @@ Int_t TTree::GetBranchStyle()
 
 Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
-   auto calculateCacheSize = [=](Double_t cacheFactor)
+   auto calculateCacheSize = [this](Double_t cacheFactor)
    {
       Long64_t cacheSize = 0;
       if (fAutoFlush < 0) {

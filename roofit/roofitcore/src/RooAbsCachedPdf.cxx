@@ -114,7 +114,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 {
   // Check if this configuration was created becfore
   int sterileIdx = -1 ;
-  auto cache = static_cast<PdfCacheElem*>(_cacheMgr.getObj(nset,0,&sterileIdx));
+  auto cache = static_cast<PdfCacheElem*>(_cacheMgr.getObj(nset,nullptr,&sterileIdx));
 
   // Check if we have a cache histogram in the global expensive object cache
   if (cache) {
@@ -150,7 +150,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
 
   // Store this cache configuration
-  int code = _cacheMgr.setObj(nset,0,(static_cast<RooAbsCacheElement*>(cache)),0) ;
+  int code = _cacheMgr.setObj(nset,nullptr,(static_cast<RooAbsCacheElement*>(cache)),nullptr) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
        << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
@@ -182,7 +182,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
 
   // Create RooDataHist
   auto hname = std::string(self.GetName()) + "_" + self.inputBaseName() + "_CACHEHIST"
-               + self.cacheNameSuffix(orderedObs).c_str() + self.histNameSuffix().Data();
+               + self.cacheNameSuffix(orderedObs) + self.histNameSuffix().Data();
   _hist = std::make_unique<RooDataHist>(hname,hname,orderedObs,self.binningName()) ;
   _hist->removeSelfFromDir() ;
 
@@ -379,7 +379,7 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
     return getVal(normSet) ;
   }
 
-  RooArgSet *allVars(0),*anaVars(0),*normSet2(0),*dummy(0) ;
+  RooArgSet *allVars(nullptr),*anaVars(nullptr),*normSet2(nullptr),*dummy(nullptr) ;
   const std::vector<int> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
 
   PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,false) ;
@@ -397,10 +397,10 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
 }
 
 
-void RooAbsCachedPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAbsCachedPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto * cachePdf = getCachePdf(_normSet);
-  cachePdf->computeBatch(stream, output, nEvents, dataMap);
+  cachePdf->computeBatch(output, nEvents, dataMap);
 }
 
 

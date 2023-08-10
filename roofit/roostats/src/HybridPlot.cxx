@@ -12,7 +12,7 @@ An example plot is available here:
 http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 */
 
-#include "assert.h"
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -51,9 +51,9 @@ HybridPlot::HybridPlot(const char* name,
   fSb_histo_shaded(nullptr),
   fB_histo(nullptr),
   fB_histo_shaded(nullptr),
-  fData_testStat_line(0),
-  fLegend(0),
-  fPad(0),
+  fData_testStat_line(nullptr),
+  fLegend(nullptr),
+  fPad(nullptr),
   fVerbose(verbosity)
 {
    int nToysSB = sb_vals.size();

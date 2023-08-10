@@ -33,7 +33,7 @@ and the outer two pieces, if required are calculated using a 1/x transform
 #include "RooMsgService.h"
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 #include "TClass.h"
 
 
@@ -44,20 +44,18 @@ ClassImp(RooImproperIntegrator1D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Register RooImproperIntegrator1D, its parameters and capabilities with RooNumIntFactory
 
-void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
+void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
 {
-  RooImproperIntegrator1D* proto = new RooImproperIntegrator1D() ;
-  fact.storeProtoIntegrator(proto,RooArgSet(),RooIntegrator1D::Class()->GetName()) ;
-}
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooImproperIntegrator1D>(function, config);
+   };
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooImproperIntegrator1D::RooImproperIntegrator1D() :
-  _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(true)
-{
+   fact.registerPlugin("RooImproperIntegrator1D", creator, {},
+                     /*canIntegrate1D=*/true,
+                     /*canIntegrate2D=*/false,
+                     /*canIntegrateND=*/false,
+                     /*canIntegrateOpenEnded=*/true,
+                     /*depName=*/"RooIntegrator1D");
 }
 
 
@@ -102,16 +100,6 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, dou
   _config(config)
 {
   initialize(&function) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return clone of integrator with given function and configuration. Needed by RooNumIntFactory.
-
-RooAbsIntegrator* RooImproperIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooImproperIntegrator1D(function,config) ;
 }
 
 
@@ -258,7 +246,7 @@ bool RooImproperIntegrator1D::checkLimits() const
 RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 {
   // Analyze the specified limits to determine which case applies.
-  if(0 == integrand() || !integrand()->isValid()) return Invalid;
+  if(nullptr == integrand() || !integrand()->isValid()) return Invalid;
 
   if (_useIntegrandLimits) {
     _xmin= integrand()->getMinLimit(0);

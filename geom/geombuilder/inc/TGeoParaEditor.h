@@ -27,52 +27,49 @@ class TString;
 class TGeoParaEditor : public TGeoGedFrame {
 
 protected:
+   Double_t fXi;            // Initial  X
+   Double_t fYi;            // Initial  Y
+   Double_t fZi;            // Initial  Z
+   Double_t fAlphai;        // Initial  alpha
+   Double_t fThetai;        // Initial  theta
+   Double_t fPhii;          // Initial  phi
+   TString fNamei;          // Initial name
+   TGeoPara *fShape;        // Shape object
+   Bool_t fIsModified;      // Flag that volume was modified
+   Bool_t fIsShapeEditable; // Flag that the shape can be changed
 
-   Double_t             fXi;                // Initial  X
-   Double_t             fYi;                // Initial  Y
-   Double_t             fZi;                // Initial  Z
-   Double_t             fAlphai;            // Initial  alpha
-   Double_t             fThetai;            // Initial  theta
-   Double_t             fPhii;              // Initial  phi
-   TString              fNamei;             // Initial name
-   TGeoPara            *fShape;             // Shape object
-   Bool_t               fIsModified;        // Flag that volume was modified
-   Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
+   TGTextEntry *fShapeName; // Shape name text entry
+   TGNumberEntry *fEDx;     // Number entry for  DX2
+   TGNumberEntry *fEDy;     // Number entry for  DY
+   TGNumberEntry *fEDz;     // Number entry for  DZ
+   TGNumberEntry *fEAlpha;  // Number entry for  Alpha
+   TGNumberEntry *fETheta;  // Number entry for  Theta
+   TGNumberEntry *fEPhi;    // Number entry for  Theta
+   TGTextButton *fApply;    // Apply-Button to accept changes
+   TGTextButton *fUndo;     // Undo-Button
+   TGCheckButton *fDelayed; // Check button for delayed draw
 
-   TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fEDx;               // Number entry for  DX2
-   TGNumberEntry       *fEDy;               // Number entry for  DY
-   TGNumberEntry       *fEDz;               // Number entry for  DZ
-   TGNumberEntry       *fEAlpha;            // Number entry for  Alpha
-   TGNumberEntry       *fETheta;            // Number entry for  Theta
-   TGNumberEntry       *fEPhi  ;            // Number entry for  Theta
-   TGTextButton        *fApply;             // Apply-Button to accept changes
-   TGTextButton        *fUndo;              // Undo-Button
-   TGCheckButton       *fDelayed;           // Check button for delayed draw
-
-   virtual void ConnectSignals2Slots();     // Connect the signals to the slots
-   Bool_t       IsDelayed() const;
+   virtual void ConnectSignals2Slots(); // Connect the signals to the slots
+   Bool_t IsDelayed() const;
 
 public:
-   TGeoParaEditor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
+   TGeoParaEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
+                  Pixel_t back = GetDefaultFrameBackground());
    ~TGeoParaEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
-   void           DoX();
-   void           DoY();
-   void           DoZ();
-   void           DoAlpha();
-   void           DoTheta();
-   void           DoPhi();
-   void           DoModified();
-   void           DoName();
-   void           DoApply();
-   void           DoUndo();
+   void DoX();
+   void DoY();
+   void DoZ();
+   void DoAlpha();
+   void DoTheta();
+   void DoPhi();
+   void DoModified();
+   void DoName();
+   void DoApply();
+   void DoUndo();
 
-   ClassDefOverride(TGeoParaEditor,0)   // TGeoPara editor
+   ClassDefOverride(TGeoParaEditor, 0) // TGeoPara editor
 };
 
 #endif

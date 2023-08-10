@@ -39,9 +39,9 @@ Scientific Library version 1.5 and applies the 10-, 21-, 43- and
 reached
 **/
 
-#include <assert.h>
-#include <math.h>
-#include <float.h>
+#include <cassert>
+#include <cmath>
+#include <cfloat>
 #include "Riostream.h"
 #include "TMath.h"
 #include "RooGaussKronrodIntegrator1D.h"
@@ -49,7 +49,6 @@ reached
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooNumIntFactory.h"
-#include "RooIntegratorBinding.h"
 #include "RooMsgService.h"
 
 
@@ -99,10 +98,19 @@ static Roo_reg_GKInteg1D instance;
 ////////////////////////////////////////////////////////////////////////////////
 /// Register RooGaussKronrodIntegrator1D, its parameters and capabilities with RooNumIntConfig
 
-void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
+void RooGaussKronrodIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
 {
-  fact.storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
-  oocoutI(nullptr,Integration) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooGaussKronrodIntegrator1D>(function, config);
+   };
+
+   fact.registerPlugin("RooGaussKronrodIntegrator1D", creator, {},
+                       /*canIntegrate1D=*/true,
+                       /*canIntegrate2D=*/false,
+                       /*canIntegrateND=*/false,
+                       /*canIntegrateOpenEnded=*/true);
+
+   oocoutI(nullptr, Integration) << "RooGaussKronrodIntegrator1D has been registered" << std::endl;
 }
 
 
@@ -136,17 +144,6 @@ RooGaussKronrodIntegrator1D::RooGaussKronrodIntegrator1D(const RooAbsFunc& funct
   _useIntegrandLimits= false;
   _valid= initialize();
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone integrator with given function and configuration. Needed for RooNumIntFactory
-
-RooAbsIntegrator* RooGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooGaussKronrodIntegrator1D(function,config) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +184,7 @@ bool RooGaussKronrodIntegrator1D::setLimits(double* xmin, double* xmax)
 bool RooGaussKronrodIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
+    assert(nullptr != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);
     _xmax= integrand()->getMaxLimit(0);
   }

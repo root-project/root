@@ -244,7 +244,7 @@ bool ToyMCSampler::CheckConfig(void) {
 RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi) {
    DetailedOutputAggregator detOutAgg;
    const RooArgList* allTS = EvaluateAllTestStatistics(data, poi, detOutAgg);
-   if (!allTS) return 0;
+   if (!allTS) return nullptr;
    // no need to delete allTS, it is deleted in destructor of detOutAgg
    return  dynamic_cast<RooArgList*>(allTS->snapshot());
 }
@@ -686,7 +686,7 @@ void ToyMCSampler::ClearCache() {
   _allVars = nullptr;
 
   // no need to delete the _pdfList since it is managed by the RooSimultaneous object
-  if (_pdfList.size() > 0) {
+  if (!_pdfList.empty()) {
     _pdfList.clear();
     _obsList.clear();
     _gsList.clear();

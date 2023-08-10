@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <TTree.h>
 
 namespace ROOT {
 namespace Experimental {

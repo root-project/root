@@ -27,49 +27,46 @@ class TString;
 class TGeoTorusEditor : public TGeoGedFrame {
 
 protected:
+   Double_t fRi;            // Initial  axial radius
+   Double_t fRmini;         // Initial  inner radius
+   Double_t fRmaxi;         // Initial  outer radius
+   Double_t fPhi1i;         // Initial  starting phi1
+   Double_t fDphii;         // Initial  phi extent
+   TString fNamei;          // Initial name
+   TGeoTorus *fShape;       // Shape object
+   Bool_t fIsModified;      // Flag that volume was modified
+   Bool_t fIsShapeEditable; // Flag that the shape can be changed
 
-   Double_t             fRi;                // Initial  axial radius
-   Double_t             fRmini;             // Initial  inner radius
-   Double_t             fRmaxi;             // Initial  outer radius
-   Double_t             fPhi1i;             // Initial  starting phi1
-   Double_t             fDphii;             // Initial  phi extent
-   TString              fNamei;             // Initial name
-   TGeoTorus           *fShape;             // Shape object
-   Bool_t               fIsModified;        // Flag that volume was modified
-   Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
+   TGTextEntry *fShapeName; // Shape name text entry
+   TGNumberEntry *fER;      // Number entry for  R
+   TGNumberEntry *fERmin;   // Number entry for  Rmin
+   TGNumberEntry *fERmax;   // Number entry for  Rmax
+   TGNumberEntry *fEPhi1;   // Number entry for  phi1
+   TGNumberEntry *fEDphi;   // Number entry for  Dphi
+   TGTextButton *fApply;    // Apply-Button to accept changes
+   TGTextButton *fUndo;     // Undo-Button
+   TGCheckButton *fDelayed; // Check button for delayed draw
 
-   TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fER;                // Number entry for  R
-   TGNumberEntry       *fERmin;             // Number entry for  Rmin
-   TGNumberEntry       *fERmax;             // Number entry for  Rmax
-   TGNumberEntry       *fEPhi1;             // Number entry for  phi1
-   TGNumberEntry       *fEDphi;             // Number entry for  Dphi
-   TGTextButton        *fApply;             // Apply-Button to accept changes
-   TGTextButton        *fUndo;              // Undo-Button
-   TGCheckButton       *fDelayed;           // Check button for delayed draw
-
-   virtual void ConnectSignals2Slots();     // Connect the signals to the slots
-   Bool_t       IsDelayed() const;
+   virtual void ConnectSignals2Slots(); // Connect the signals to the slots
+   Bool_t IsDelayed() const;
 
 public:
-   TGeoTorusEditor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
+   TGeoTorusEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
    ~TGeoTorusEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
-   void           DoR();
-   void           DoRmin();
-   void           DoRmax();
-   void           DoPhi1();
-   void           DoDphi();
-   void           DoModified();
-   void           DoName();
-   void           DoApply();
-   void           DoUndo();
+   void DoR();
+   void DoRmin();
+   void DoRmax();
+   void DoPhi1();
+   void DoDphi();
+   void DoModified();
+   void DoName();
+   void DoApply();
+   void DoUndo();
 
-   ClassDefOverride(TGeoTorusEditor,0)   // TGeoTorus editor
+   ClassDefOverride(TGeoTorusEditor, 0) // TGeoTorus editor
 };
 
 #endif

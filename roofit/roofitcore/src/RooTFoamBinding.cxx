@@ -31,7 +31,7 @@ Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 
@@ -43,7 +43,7 @@ using namespace std;
 RooTFoamBinding::RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observables)
 {
   _nset.add(observables) ;
-  _binding = new RooRealBinding(pdf,observables,&_nset,false,0) ;
+  _binding = new RooRealBinding(pdf,observables,&_nset,false,nullptr) ;
 }
 
 

@@ -36,7 +36,7 @@ implementations like RooAcceptReject and RooFoam
 #include "RooMsgService.h"
 #include "RooRealBinding.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 
@@ -50,7 +50,7 @@ RooAbsNumGenerator::RooAbsNumGenerator() = default;
 /// cloned and so will not be disturbed during the generation process.
 
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose, const RooAbsReal* maxFuncVal) :
-  _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose)
+  _funcClone(nullptr), _funcMaxVal(maxFuncVal), _verbose(verbose)
 {
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
@@ -68,7 +68,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   // sets of categories and reals. Check that the area of the generating
   // space is finite.
   _isValid= true;
-  const RooAbsArg *found = 0;
+  const RooAbsArg *found = nullptr;
   for (RooAbsArg const* arg : genVars) {
     if(!arg->isFundamental()) {
       oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator: cannot generate values for derived \""
@@ -84,14 +84,14 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
       // clone any variables we generate that we haven't cloned already
       arg= _cloneSet.addClone(*arg);
     }
-    assert(0 != arg);
+    assert(nullptr != arg);
     // is this argument a category or a real?
     const RooCategory *catVar= dynamic_cast<const RooCategory*>(arg);
     const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(arg);
-    if(0 != catVar) {
+    if(nullptr != catVar) {
       _catVars.add(*catVar);
     }
-    else if(0 != realVar) {
+    else if(nullptr != realVar) {
       if(realVar->hasMin() && realVar->hasMax()) {
    _realVars.add(*realVar);
       }
@@ -123,7 +123,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
 
   // attach our function clone to the cache dataset
   const RooArgSet *cacheVars= _cache->get();
-  assert(0 != cacheVars);
+  assert(nullptr != cacheVars);
   _funcClone->recursiveRedirectServers(*cacheVars,false);
 
   // update ours sets of category and real args to refer to the cache dataset

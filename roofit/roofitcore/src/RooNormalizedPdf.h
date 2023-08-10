@@ -52,7 +52,7 @@ public:
       return _pdf->getAnalyticalIntegralWN(allVars, analVars, &_normSet, rangeName);
    }
    /// Forward calculation of analytical integrals to input p.d.f
-   double analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = 0) const override
+   double analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = nullptr) const override
    {
       return _pdf->analyticalIntegralWN(code, &_normSet, rangeName);
    }
@@ -70,7 +70,7 @@ public:
    bool canComputeBatchWithCuda() const override { return true; }
 
 protected:
-   void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const &) const override;
+   void computeBatch(double *output, size_t size, RooFit::Detail::DataMap const &) const override;
    double evaluate() const override
    {
       // Evaluate() should not be called in the BatchMode, but we still need it

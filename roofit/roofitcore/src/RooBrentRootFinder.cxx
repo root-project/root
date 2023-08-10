@@ -26,7 +26,7 @@ in the GNU scientific library (v0.99).
 
 #include "RooBrentRootFinder.h"
 #include "RooAbsFunc.h"
-#include <math.h>
+#include <cmath>
 #include "Riostream.h"
 #include "RooMsgService.h"
 
@@ -65,7 +65,7 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
   double fa= (*_function)(&a) - value;
   double fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
-    oocxcoutD((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
+    oocxcoutD((TObject*)nullptr,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
             << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
     return false;
   }

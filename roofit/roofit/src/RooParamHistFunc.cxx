@@ -24,7 +24,7 @@
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
-#include <math.h>
+#include <cmath>
 #include "TMath.h"
 
 
@@ -182,7 +182,7 @@ list<double>* RooParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double x
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
@@ -219,7 +219,7 @@ std::list<double>* RooParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dh.get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries

@@ -95,7 +95,7 @@ public:
 
   const RooAbsBinning* getBinningPtr(const char* /*rangeName*/) const override { return nullptr ; }
   std::list<std::string> getBinningNames() const override { return std::list<std::string>(1, "") ; }
-  Int_t getBin(const RooAbsBinning* /*ptr*/) const override { return getBin((const char*)0) ; }
+  Int_t getBin(const RooAbsBinning* /*ptr*/) const override { return getBin((const char*)nullptr) ; }
 
 
   inline void setConstant(bool value= true) {

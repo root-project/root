@@ -117,8 +117,8 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 
 RooAbsArg::RooAbsArg()
    : TNamed(), _deleteWatch(false), _valueDirty(true), _shapeDirty(true), _operMode(Auto), _fast(false), _ownedComponents(nullptr),
-     _prohibitServerRedirect(false), _namePtr(0), _isConstant(false), _localNoInhibitDirty(false),
-     _myws(0)
+     _prohibitServerRedirect(false), _namePtr(nullptr), _isConstant(false), _localNoInhibitDirty(false),
+     _myws(nullptr)
 {
   _namePtr = RooNameReg::instance().constPtr(GetName()) ;
 
@@ -131,8 +131,8 @@ RooAbsArg::RooAbsArg()
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
    : TNamed(name, title), _deleteWatch(false), _valueDirty(true), _shapeDirty(true), _operMode(Auto), _fast(false),
-     _ownedComponents(0), _prohibitServerRedirect(false), _namePtr(0), _isConstant(false),
-     _localNoInhibitDirty(false), _myws(0)
+     _ownedComponents(nullptr), _prohibitServerRedirect(false), _namePtr(nullptr), _isConstant(false),
+     _localNoInhibitDirty(false), _myws(nullptr)
 {
   if (name == nullptr || strlen(name) == 0) {
     throw std::logic_error("Each RooFit object needs a name. "
@@ -149,9 +149,9 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
    : TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other),
      _boolAttrib(other._boolAttrib),
      _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(false),
-     _ownedComponents(0), _prohibitServerRedirect(false),
+     _ownedComponents(nullptr), _prohibitServerRedirect(false),
      _namePtr(name ? RooNameReg::instance().constPtr(name) : other._namePtr),
-     _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(0)
+     _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(nullptr)
 {
 
   // Copy server list by hand
@@ -205,7 +205,7 @@ RooAbsArg::~RooAbsArg()
 
   if (_ownedComponents) {
     delete _ownedComponents ;
-    _ownedComponents = 0 ;
+    _ownedComponents = nullptr ;
   }
 
 }
@@ -301,7 +301,7 @@ const Text_t* RooAbsArg::getStringAttribute(const Text_t* key) const
   if (iter!=_stringAttrib.end()) {
     return iter->second.c_str() ;
   } else {
-    return 0 ;
+    return nullptr ;
   }
 }
 
@@ -561,7 +561,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 
 RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData* set, bool stripDisconnected) const
 {
-  return getParameters(set?set->get():0,stripDisconnected) ;
+  return getParameters(set?set->get():nullptr,stripDisconnected) ;
 }
 
 
@@ -778,7 +778,7 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
 
   // Make iterator over tree leaf node list
   RooArgSet leafList("leafNodeServerList") ;
-  treeNodeServerList(&leafList,0,false,true,valueOnly) ;
+  treeNodeServerList(&leafList,nullptr,false,true,valueOnly) ;
 
   if (valueOnly) {
     for (const auto arg : leafList) {
@@ -965,7 +965,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
   }
 
   // Cyclical dependency interception
-  if (source==0) {
+  if (source==nullptr) {
     source=this ;
   } else if (source==this) {
     // Cyclical dependency, abort
@@ -1009,7 +1009,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
   }
 
   // Set 'dirty' shape state for this object and propagate flag to all its clients
-  if (source==0) {
+  if (source==nullptr) {
     source=this ;
   } else if (source==this) {
     // Cyclical dependency, abort
@@ -1580,7 +1580,7 @@ void RooAbsArg::printArgs(ostream& os) const
   os << "[ " ;
   for (Int_t i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* p = getProxy(i) ;
-    if (p==0) continue ;
+    if (p==nullptr) continue ;
     if (!TString(p->name()).BeginsWith("!")) {
       p->print(os) ;
       os << " " ;
@@ -1724,7 +1724,7 @@ void RooAbsArg::printAttribList(ostream& os) const
 void RooAbsArg::attachArgs(const RooAbsCollection &set)
 {
   RooArgSet branches;
-  branchNodeServerList(&branches,0,true);
+  branchNodeServerList(&branches,nullptr,true);
 
   for(auto const& branch : branches) {
     branch->redirectServers(set,false,false);
@@ -2189,8 +2189,8 @@ RooLinkedList RooAbsArg::getCloningAncestors() const
       char buf[128] ;
       strlcpy(buf,iter->c_str(),128) ;
       strtok(buf,"(") ;
-      char* ptrToken = strtok(0,")") ;
-      RooAbsArg* ptr = (RooAbsArg*) strtoll(ptrToken,0,16) ;
+      char* ptrToken = strtok(nullptr,")") ;
+      RooAbsArg* ptr = (RooAbsArg*) strtoll(ptrToken,nullptr,16) ;
       retVal.Add(ptr) ;
     }
   }
@@ -2249,7 +2249,7 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
     string nodeLabel = (useTitle && !nodeTitle.empty()) ? nodeTitle : nodeName;
 
     // if using latex, replace ROOT's # with normal latex backslash
-    string::size_type position = nodeLabel.find("#") ;
+    string::size_type position = nodeLabel.find('#') ;
     while(useLatex && position!=nodeLabel.npos){
       nodeLabel.replace(position, 1, "\\");
     }

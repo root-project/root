@@ -38,7 +38,7 @@ contents of all bins.
 #include "TClass.h"
 #include "Math/Util.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 
@@ -54,19 +54,21 @@ ClassImp(RooBinIntegrator);
 
 void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 {
-  RooRealVar numBins("numBins","Number of bins in range",100) ;
-  RooBinIntegrator* proto = new RooBinIntegrator() ;
-  fact.storeProtoIntegrator(proto,RooArgSet(numBins)) ;
-  RooNumIntConfig::defaultConfig().method1D().setLabel(proto->ClassName()) ;
-}
+   RooRealVar numBins("numBins","Number of bins in range",100) ;
 
+   std::string name = "RooBinIntegrator";
 
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooBinIntegrator>(function, config);
+   };
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+   fact.registerPlugin(name, creator, {numBins},
+                     /*canIntegrate1D=*/true,
+                     /*canIntegrate2D=*/true,
+                     /*canIntegrateND=*/true,
+                     /*canIntegrateOpenEnded=*/false);
 
-RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(false), _x(0)
-{
+  RooNumIntConfig::defaultConfig().method1D().setLabel(name);
 }
 
 
@@ -139,18 +141,6 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clone integrator with new function binding and configuration. Needed by RooNumIntFactory
-
-RooAbsIntegrator* RooBinIntegrator::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  return new RooBinIntegrator(function,config) ;
-}
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 RooBinIntegrator::~RooBinIntegrator()
@@ -182,7 +172,7 @@ bool RooBinIntegrator::setLimits(double *xmin, double *xmax)
 bool RooBinIntegrator::checkLimits() const
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
+    assert(nullptr != integrand() && integrand()->isValid());
     _xmin.resize(_function->getDimension()) ;
     _xmax.resize(_function->getDimension()) ;
     for (UInt_t i=0 ; i<_function->getDimension() ; i++) {

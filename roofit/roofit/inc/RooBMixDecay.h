@@ -35,7 +35,6 @@ public:
 
   RooBMixDecay(const RooBMixDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooBMixDecay(*this,newname) ; }
-  ~RooBMixDecay() override;
 
   double coefficient(Int_t basisIndex) const override ;
 
@@ -46,7 +45,7 @@ public:
   void initGenerator(Int_t code) override ;
   void generateEvent(Int_t code) override;
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 protected:

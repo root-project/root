@@ -4,6 +4,16 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ enum CustomEnum;
+#pragma link C++ enum CustomEnumInt8;
+#pragma link C++ enum CustomEnumUInt8;
+#pragma link C++ enum CustomEnumInt16;
+#pragma link C++ enum CustomEnumUInt16;
+#pragma link C++ enum CustomEnumInt32;
+#pragma link C++ enum CustomEnumUInt32;
+#pragma link C++ enum CustomEnumInt64;
+#pragma link C++ enum CustomEnumUInt64;
+
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class DerivedA+;
 #pragma link C++ class DerivedA2+;
@@ -40,6 +50,13 @@
 #pragma link C++ class StringTraits + ;
 #pragma link C++ class ConstructorTraits + ;
 #pragma link C++ class DestructorTraits + ;
+
+#pragma link C++ class std::set<std::int64_t> +;
+#pragma link C++ class std::set<std::string> +;
+#pragma link C++ class std::set<float> +;
+#pragma link C++ class std::set<std::set<CustomStruct>> +;
+#pragma link C++ class std::set<std::set<char>> +;
+#pragma link C++ class std::set<std::pair<int, CustomStruct>> +;
 
 #pragma link C++ options = version(3) class StructWithIORulesBase + ;
 #pragma link C++ options = version(3) class StructWithTransientString + ;

@@ -20,7 +20,6 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <cstdint>
@@ -282,7 +281,7 @@ public:
 
       auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
       field->SetDescription(fieldNameDesc.fDescription);
-      fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
+      fDefaultEntry->AddValue(field->BindValue(fromWhere));
       fFieldZero->Attach(std::move(field));
    }
 

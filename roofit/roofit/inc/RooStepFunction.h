@@ -17,18 +17,16 @@
 #ifndef ROO_STEP_FUNCTION
 #define ROO_STEP_FUNCTION
 
-#include "TArrayD.h"
-#include "RooAbsReal.h"
-#include "RooRealProxy.h"
-#include "RooListProxy.h"
+#include <RooAbsReal.h>
+#include <RooListProxy.h>
+#include <RooRealProxy.h>
 
-class RooRealVar;
 class RooArgList ;
 
 class RooStepFunction : public RooAbsReal {
  public:
 
-  RooStepFunction() ;
+  RooStepFunction() {}
   RooStepFunction(const char *name, const char *title,
         RooAbsReal& x, const RooArgList& coefList, const RooArgList& limits, bool interpolate=false) ;
 
@@ -37,6 +35,8 @@ class RooStepFunction : public RooAbsReal {
 
   const RooArgList& coefficients() { return _coefList; }
   const RooArgList& boundaries() { return _boundaryList; }
+
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
 
  protected:
 
@@ -47,7 +47,7 @@ class RooStepFunction : public RooAbsReal {
   RooRealProxy _x;
   RooListProxy _coefList ;
   RooListProxy _boundaryList ;
-  bool       _interpolate ;
+  bool       _interpolate = false;
 
   ClassDefOverride(RooStepFunction,1) //  Step Function
 };

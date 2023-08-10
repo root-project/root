@@ -2162,8 +2162,10 @@ void TCling::RegisterModule(const char* modulename,
                   }
                }
                if (scopes.empty() || DC) {
-                  // We know the scope; let's look for the enum.
-                  size_t posEnumName = fwdDeclsLine.find("\"))) ", 32);
+                  // We know the scope; let's look for the enum. For that, look
+                  // for the *last* closing parentheses of an attribute because
+                  // there can be multiple.
+                  size_t posEnumName = fwdDeclsLine.rfind("\"))) ");
                   R__ASSERT(posEnumName != std::string::npos && "Inconsistent enum fwd decl!");
                   posEnumName += 5; // skip "\"))) "
                   while (isspace(fwdDeclsLine[posEnumName]))
@@ -7421,6 +7423,8 @@ int TCling::GetSecurityError() const
 
 int TCling::LoadFile(const char* path) const
 {
+   // Modifying the interpreter state needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    cling::Interpreter::CompilationResult compRes;
    HandleInterpreterException(GetMetaProcessorImpl(), TString::Format(".L %s", path), compRes, /*cling::Value*/nullptr);
    return compRes == cling::Interpreter::kFailure;
@@ -7567,6 +7571,8 @@ void TCling::SetTempLevel(int val) const
 
 int TCling::UnloadFile(const char* path) const
 {
+   // Modifying the interpreter state needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
    std::string canonical = DLM->lookupLibrary(path);
    if (canonical.empty()) {

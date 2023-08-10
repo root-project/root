@@ -32,7 +32,7 @@ analytically. Remaining non-factorising observables are integrated numerically.
 
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooGenProdProj.h"
 #include "RooAbsReal.h"
@@ -169,7 +169,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 
     if (doFactorize && pdf->dependsOn(anaIntSet)) {
       RooArgSet anaSet ;
-      Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
+      Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,nullptr,isetRangeName) ;
       if (code!=0) {
         // Analytical integral, create integral object
         std::unique_ptr<RooAbsReal> pai{pdf->createIntegral(anaSet,emptyNormSet,isetRangeName)};

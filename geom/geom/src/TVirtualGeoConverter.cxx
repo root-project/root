@@ -22,17 +22,14 @@ Abstract class for geometry converters
 #include "TPluginManager.h"
 #include "TGeoManager.h"
 
-TVirtualGeoConverter  *TVirtualGeoConverter::fgGeoConverter = 0;
+TVirtualGeoConverter *TVirtualGeoConverter::fgGeoConverter = 0;
 
 ClassImp(TVirtualGeoConverter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry converter default constructor
 
-TVirtualGeoConverter::TVirtualGeoConverter(TGeoManager *geom)
-    :TObject(), fGeom(geom)
-{
-}
+TVirtualGeoConverter::TVirtualGeoConverter(TGeoManager *geom) : TObject(), fGeom(geom) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry converter default destructor
@@ -41,7 +38,6 @@ TVirtualGeoConverter::~TVirtualGeoConverter()
 {
    fgGeoConverter = 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function returning a pointer to the current geometry converter.
@@ -52,23 +48,25 @@ TVirtualGeoConverter *TVirtualGeoConverter::Instance(TGeoManager *geom)
 {
    // if no converter set yet, create a default converter via the PluginManager
    TGeoManager *mgr = geom;
-   if (!mgr) mgr = gGeoManager;
+   if (!mgr)
+      mgr = gGeoManager;
    if (!fgGeoConverter) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoConverter"))) {
          if (h->LoadPlugin() == -1) {
             ::Error("TVirtualGeoConverter::Instance()",
-            "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
-            "It appears that you are missing or having outdated support for VecGeom package. "
-            "To enable it, configure ROOT with:\n"
-            "   -Dvecgeom -DCMAKE_PREFIX_PATH=<vecgeom_prefix_path>/lib/CMake/VecGeom"
-            "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+                    "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n"
+                    "It appears that you are missing or having outdated support for VecGeom package. "
+                    "To enable it, configure ROOT with:\n"
+                    "   -Dvecgeom -DCMAKE_PREFIX_PATH=<vecgeom_prefix_path>/lib/CMake/VecGeom"
+                    "\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
             return 0;
          }
-         fgGeoConverter = (TVirtualGeoConverter*)h->ExecPlugin(1,mgr);
+         fgGeoConverter = (TVirtualGeoConverter *)h->ExecPlugin(1, mgr);
       }
    }
-   if (fgGeoConverter) fgGeoConverter->SetGeometry(mgr);
+   if (fgGeoConverter)
+      fgGeoConverter->SetGeometry(mgr);
    return fgGeoConverter;
 }
 
@@ -77,5 +75,5 @@ TVirtualGeoConverter *TVirtualGeoConverter::Instance(TGeoManager *geom)
 
 void TVirtualGeoConverter::SetConverter(const TVirtualGeoConverter *converter)
 {
-   fgGeoConverter = (TVirtualGeoConverter*)converter;
+   fgGeoConverter = (TVirtualGeoConverter *)converter;
 }

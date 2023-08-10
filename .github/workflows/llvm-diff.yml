@@ -14,7 +14,10 @@ jobs:
           path: root
       - name: Determine tag in fork of monorepo
         id: determine-tag
-        run: echo "tag=$(cat root/interpreter/llvm-project/llvm-project.tag)" >> $GITHUB_OUTPUT
+        run: |
+          tag_file=root/interpreter/llvm-project/llvm-project.tag
+          echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
+          rm $tag_file
       - name: Check out llvm-project
         uses: actions/checkout@v3
         with:
@@ -28,9 +31,8 @@ jobs:
             find . -name $d -prune -exec rm -r "{}" \;
           done
           rm -r llvm/utils/vscode
-          rm llvm/.git*
-      - name: Compare
-        run: |
-          for d in clang llvm; do
-            diff -ur llvm-project/$d root/interpreter/llvm-project/$d
+          for f in $(ls -A); do
+            [ -e ../root/interpreter/llvm-project/$f ] || rm -r $f
           done
+      - name: Compare
+        run: diff -ur llvm-project/ root/interpreter/llvm-project/

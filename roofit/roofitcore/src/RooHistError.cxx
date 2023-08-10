@@ -30,7 +30,7 @@ a specified area of a Poisson or Binomail error distribution.
 #include "TMath.h"
 
 #include "Riostream.h"
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 
@@ -116,7 +116,7 @@ bool RooHistError::getPoissonIntervalCalc(Int_t n, double &mu1, double &mu2, dou
   }
 
   // Backup solution for negative numbers
-  return getInterval(&upper,0,(double)n,1.0,mu1,mu2,nSigma);
+  return getInterval(&upper,nullptr,(double)n,1.0,mu1,mu2,nSigma);
 }
 
 
@@ -169,7 +169,7 @@ bool RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
     status= getInterval(&upper,&lower,(double)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
   }
   else {
-    status= getInterval(&upper,0,(double)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
+    status= getInterval(&upper,nullptr,(double)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
   }
 
   // undo the swap here
@@ -233,7 +233,7 @@ bool RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
     status= getInterval(&upper,&lower,eff,0.1,asym1,asym2,nSigma*0.5);
   }
   else {
-    status= getInterval(&upper,0,eff,0.1,asym1,asym2,nSigma*0.5);
+    status= getInterval(&upper,nullptr,eff,0.1,asym1,asym2,nSigma*0.5);
   }
 
   // undo the swap here
@@ -258,7 +258,7 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
              double stepSize, double &lo, double &hi, double nSigma) const
 {
   // sanity checks
-  assert(0 != Qu || 0 != Ql);
+  assert(nullptr != Qu || nullptr != Ql);
 
   // convert number of sigma into a confidence level
   double beta= TMath::Erf(nSigma/sqrt(2.));
@@ -267,10 +267,10 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
   // Does the central interval contain the point estimate?
   bool ok(true);
   double loProb(1),hiProb(0);
-  if(0 != Ql) loProb= (*Ql)(&pointEstimate);
-  if(0 != Qu) hiProb= (*Qu)(&pointEstimate);
+  if(nullptr != Ql) loProb= (*Ql)(&pointEstimate);
+  if(nullptr != Qu) hiProb= (*Qu)(&pointEstimate);
 
-  if (Qu && (0 == Ql || loProb > alpha + beta))  {
+  if (Qu && (nullptr == Ql || loProb > alpha + beta))  {
     // Force the low edge to be at the pointEstimate
     lo= pointEstimate;
     double target= loProb - beta;
@@ -278,7 +278,7 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
     RooBrentRootFinder uFinder(*Qu);
     ok= uFinder.findRoot(hi,hi-stepSize,hi,target);
   }
-  else if(Ql && (0 == Qu || hiProb < alpha)) {
+  else if(Ql && (nullptr == Qu || hiProb < alpha)) {
     // Force the high edge to be at pointEstimate
     hi= pointEstimate;
     double target= hiProb + beta;

@@ -77,7 +77,7 @@ if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
 endif()
 
-if (${PYTHON_VERSION_STRING_Development_Main} VERSION_LESS 3.8)
+if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8)
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
@@ -106,12 +106,11 @@ elseif(MSVC AND NOT win_broken_tests)
       list(APPEND dataframe_veto dataframe/df016_vecOps.py)
       list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.py)
     endif()
-    if(CMAKE_CXX_STANDARD GREATER 14)
-        list(APPEND dataframe_veto dataframe/df032_RDFFromNumpy.py)
-        list(APPEND dataframe_veto dataframe/df033_Describe.py)
-    else()
-        list(APPEND dataframe_veto dataframe/*.py)
-    endif()
+
+    # Why do we need to veto these tutorials on Windows with C++17?
+    list(APPEND dataframe_veto dataframe/df032_RDFFromNumpy.py)
+    list(APPEND dataframe_veto dataframe/df033_Describe.py)
+
 endif()
 
 if(NOT sqlite)
@@ -150,9 +149,6 @@ if(NOT ROOT_roofit_FOUND)
 else()
   if(MSVC AND NOT win_broken_tests)
     set(roofit_veto roofit/rf401_importttreethx.py roofit/rf708_bphysics.py roofit/rf501_simultaneouspdf.py)
-    if(CMAKE_CXX_STANDARD LESS 17)
-      list(APPEND roofit_veto roofit/rf408_RDataFrameToRooFit.py)
-    endif()
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       list(APPEND roofit_veto roofit/rf409_NumPyPandasToRooFit.py)
     endif()
@@ -471,6 +467,13 @@ set(all_veto hsimple.C
              ${macm1_veto}
              ${clad_veto}
              )
+
+# These tutorials seem to trigger segfaults related to TClass* and RDataFrame
+# JITting on many platforms. Disable for now and revert once the issue is fixed
+list(APPEND all_veto tmva/RBatchGenerator_NumPy.py)
+list(APPEND all_veto tmva/RBatchGenerator_TensorFlow.py)
+list(APPEND all_veto tmva/RBatchGenerator_PyTorch.py)
+list(APPEND all_veto tmva/RBatchGenerator_filters_vectors.py)
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(root7 AND webgui)

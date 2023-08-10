@@ -125,7 +125,6 @@
 #pragma link C++ class RooIntegrator1D+ ;
 #pragma link C++ class RooBinIntegrator+ ;
 #pragma link C++ class RooIntegrator2D+ ;
-#pragma link C++ class RooIntegratorBinding+ ;
 #pragma link C++ class RooInvTransform+ ;
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinearCombination+ ;
@@ -179,7 +178,6 @@
 #pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
 #pragma link C++ class RooRandomizeParamMCSModule+ ;
 #pragma link C++ class RooRangeBinning+ ;
-#pragma link C++ class RooRealAnalytic+ ;
 #pragma link C++ class RooRealBinding+ ;
 #pragma link C++ class RooRealConstant+ ;
 #pragma link C++ class RooRealIntegral+ ;

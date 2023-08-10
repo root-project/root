@@ -37,7 +37,7 @@ numerical integration algorithm.
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/Functor.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 
@@ -58,24 +58,15 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar maxEvalND("maxEvalND","Max number of function evaluations for >3-dim integrals",10000000) ;
   RooRealVar maxWarn("maxWarn","Max number of warnings on precision not reached that is printed",5) ;
 
-  fact.storeProtoIntegrator(new RooAdaptiveIntegratorND(),RooArgSet(maxEval2D,maxEval3D,maxEvalND,maxWarn)) ;
-}
+   auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
+      return std::make_unique<RooAdaptiveIntegratorND>(function, config);
+   };
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default ctor
-
-RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
-{
-  _epsRel = 1e-7 ;
-  _epsAbs = 1e-7 ;
-  _nmax = 10000 ;
-  _integrator = 0 ;
-  _nError = 0 ;
-  _nWarn = 0 ;
-  _useIntegrandLimits = true ;
-  _intName = "(none)" ;
+   fact.registerPlugin("RooAdaptiveIntegratorND", creator, {maxEval2D,maxEval3D,maxEvalND,maxWarn},
+                     /*canIntegrate1D=*/false,
+                     /*canIntegrate2D=*/true,
+                     /*canIntegrateND=*/true,
+                     /*canIntegrateOpenEnded=*/false);
 }
 
 
@@ -110,20 +101,6 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   checkLimits() ;
   _intName = function.getName() ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual constructor with given function and configuration. Needed by RooNumIntFactory
-
-RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
-{
-  RooAbsIntegrator* ret = new RooAdaptiveIntegratorND(function,config) ;
-
-  return ret ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

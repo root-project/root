@@ -273,7 +273,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
 
 RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
           const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8) :
-  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
+  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataHist::RooDataHist", "IndexCat",0,nullptr,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
 {
   // Initialize datastore
   _dstore = makeDefaultDataStore(name, title, _vars);
@@ -283,14 +283,14 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   pc.defineObject("impHist","ImportHisto",0) ;
   pc.defineInt("impDens","ImportHisto",0) ;
   pc.defineObject("indexCat","IndexCat",0) ;
-  pc.defineObject("impSliceHist","ImportHistoSlice",0,0,true) ; // array
+  pc.defineObject("impSliceHist","ImportHistoSlice",0,nullptr,true) ; // array
   pc.defineString("impSliceState","ImportHistoSlice",0,"",true) ; // array
-  pc.defineObject("impSliceDHist","ImportDataHistSlice",0,0,true) ; // array
+  pc.defineObject("impSliceDHist","ImportDataHistSlice",0,nullptr,true) ; // array
   pc.defineString("impSliceDState","ImportDataHistSlice",0,"",true) ; // array
   pc.defineDouble("weight","Weight",0,1) ;
   pc.defineObject("dummy1","ImportDataHistSliceMany",0) ;
   pc.defineObject("dummy2","ImportHistoSliceMany",0) ;
-  pc.defineSet("glObs","GlobalObservables",0,0) ;
+  pc.defineSet("glObs","GlobalObservables",0,nullptr) ;
   pc.defineMutex("ImportHisto","ImportHistoSlice","ImportDataHistSlice") ;
   pc.defineDependency("ImportHistoSlice","IndexCat") ;
   pc.defineDependency("ImportDataHistSlice","IndexCat") ;
@@ -383,8 +383,8 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
 
   // Define x,y,z as 1st, 2nd and 3rd observable
   RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
-  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : 0 ) ;
-  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : 0 ) ;
+  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
+  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
@@ -494,7 +494,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
 {
   RooCategory* icat = (RooCategory*) _vars.find(indexCat.GetName()) ;
 
-  TH1* histo(0) ;
+  TH1* histo(nullptr) ;
   bool init(false) ;
   for (const auto& hiter : hmap) {
     // Store pointer to first histogram from which binning specification will be taken
@@ -537,8 +537,8 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
 
   // Define x,y,z as 1st, 2nd and 3rd observable
   RooRealVar* xvar = (RooRealVar*) _vars.find(vars.at(0)->GetName()) ;
-  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : 0 ) ;
-  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : 0 ) ;
+  RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : nullptr ) ;
+  RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : nullptr ) ;
 
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
@@ -558,7 +558,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   double avgBV = volume / numEntries() ;
 
   Int_t ic(0),ix(0),iy(0),iz(0) ;
-  for (ic=0 ; ic < icat->numBins(0) ; ic++) {
+  for (ic=0 ; ic < icat->numBins(nullptr) ; ic++) {
     icat->setBin(ic) ;
     histo = hmap[icat->getCurrentLabel()] ;
     for (ix=0 ; ix < xvar->getBins() ; ix++) {
@@ -897,8 +897,8 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
     auto lvarg = dynamic_cast<RooAbsLValue*>(rvarg);
     assert(lvarg);
     _lvvars.push_back(lvarg);
-    const RooAbsBinning* binning = lvarg->getBinningPtr(0);
-    _lvbins.emplace_back(binning ? binning->clone() : 0) ;
+    const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
+    _lvbins.emplace_back(binning ? binning->clone() : nullptr) ;
   }
 
   registerWeightArraysToDataStore();
@@ -910,13 +910,13 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
-RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
+std::unique_ptr<RooAbsData> RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
     std::size_t nStart, std::size_t nStop)
 {
   checkInit() ;
   RooArgSet myVarSubset;
   _vars.selectCommon(varSubset, myVarSubset);
-  RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), myVarSubset);
+  auto rdh = std::make_unique<RooDataHist>(GetName(), GetTitle(), myVarSubset);
 
   RooFormulaVar* cloneVar = nullptr;
   std::unique_ptr<RooArgSet> tmp;
@@ -927,7 +927,7 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
       coutE(DataHandling) << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
       return nullptr;
     }
-    cloneVar = (RooFormulaVar*) tmp->find(*cutVar) ;
+    cloneVar = static_cast<RooFormulaVar*>(tmp->find(*cutVar));
     cloneVar->attachDataSet(*this) ;
   }
 
@@ -1812,7 +1812,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, doubl
 {
   checkInit() ;
 
-  RooFormulaVar* cloneVar = 0;
+  RooFormulaVar* cloneVar = nullptr;
   std::unique_ptr<RooArgSet> tmp;
   if (cutVar) {
     // Deep clone cutVar and attach clone to this dataset
@@ -2122,7 +2122,7 @@ double RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
 {
   checkInit() ;
 
-  if (cutSpec==0 && cutRange==0) {
+  if (cutSpec==nullptr && cutRange==nullptr) {
     return sumEntries();
   } else {
 
@@ -2214,7 +2214,7 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
   RooAbsArg* intArg = _vars.find(sliceArg) ;
   if (!intArg) {
     coutE(InputArguments) << "RooDataHist::sliceIterator() variable " << sliceArg.GetName() << " is not part of this RooDataHist" << endl ;
-    return 0 ;
+    return nullptr ;
   }
   return new RooDataHistSliceIter(*this,*intArg) ;
 }
@@ -2334,7 +2334,7 @@ void RooDataHist::Streamer(TBuffer &R__b) {
     if (R__v > 2) {
       R__b.ReadClassBuffer(RooDataHist::Class(),this,R__v,R__s,R__c);
       R__b.CheckByteCount(R__s, R__c, RooDataHist::IsA());
-      initialize(0, false);
+      initialize(nullptr, false);
     } else {
 
       // Legacy dataset conversion happens here. Legacy RooDataHist inherits from RooTreeData
@@ -2347,7 +2347,7 @@ void RooDataHist::Streamer(TBuffer &R__b) {
       Version_t R__v1 = R__b.ReadVersion(&R__s1, &R__c1); if (R__v1) { }
 
       RooAbsData::Streamer(R__b);
-      TTree* X_tree(0) ; R__b >> X_tree;
+      TTree* X_tree(nullptr) ; R__b >> X_tree;
       RooArgSet X_truth ; X_truth.Streamer(R__b);
       TString X_blindString ; X_blindString.Streamer(R__b);
       R__b.CheckByteCount(R__s1, R__c1, TClass::GetClass("RooTreeData"));

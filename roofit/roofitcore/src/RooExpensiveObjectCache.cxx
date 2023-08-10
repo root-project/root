@@ -96,7 +96,7 @@ const TObject* RooExpensiveObjectCache::retrieveObject(const char* name, TClass*
 
   // If no cache element found, return 0 ;
   if (!eo) {
-    return 0 ;
+    return nullptr ;
   }
 
   // If parameters also match, return payload ;
@@ -104,7 +104,7 @@ const TObject* RooExpensiveObjectCache::retrieveObject(const char* name, TClass*
     return eo->payload() ;
   }
 
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -119,7 +119,7 @@ const TObject* RooExpensiveObjectCache::getObj(Int_t uid)
       return iter->second->payload() ;
     }
   }
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -273,7 +273,7 @@ void RooExpensiveObjectCache::print() const
 void RooExpensiveObjectCache::ExpensiveObject::print() const
 {
   std::cout << _payload->ClassName() << "::" << _payload->GetName() ;
-  if (_realRefParams.size()>0 || _catRefParams.size()>0) {
+  if (!_realRefParams.empty() || !_catRefParams.empty()) {
     std::cout << " parameters=( " ;
     auto iter = _realRefParams.begin() ;
     while(iter!=_realRefParams.end()) {

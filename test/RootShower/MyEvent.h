@@ -53,7 +53,7 @@ public:
    Int_t       GetPrimary() const { return fPrimary; }
    Double_t    GetEnergy() const { return fEnergy; }
 
-   ClassDefOverride(EventHeader,1)  //Event Header
+   ClassDef(EventHeader,1)  //Event Header
 };
 
 class MyEvent : public TObject {

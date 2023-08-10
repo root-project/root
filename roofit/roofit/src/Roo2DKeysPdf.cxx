@@ -555,7 +555,7 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) con
 
 void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
 {
-  TFile * file = 0;
+  TFile * file = nullptr;
 
   //make sure that any existing file is not over written
   file = new TFile(outputFile, "UPDATE");

@@ -38,7 +38,6 @@ public:
 
   RooBCPGenDecay(const RooBCPGenDecay& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooBCPGenDecay(*this,newname) ; }
-  ~RooBCPGenDecay() override;
 
   double coefficient(Int_t basisIndex) const override ;
 

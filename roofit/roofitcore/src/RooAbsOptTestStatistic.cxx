@@ -37,7 +37,7 @@ parallelized calculation of test statistics.
 
 #include "Riostream.h"
 #include "TClass.h"
-#include <string.h>
+#include <cstring>
 
 
 #include "RooAbsOptTestStatistic.h"
@@ -142,7 +142,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Clone FUNC
   _funcClone = RooHelpers::cloneTreeWithSameParameters(real, indata.get()).release();
-  _funcCloneSet = 0 ;
+  _funcCloneSet = nullptr ;
 
   // Attach FUNC to data set
   _funcObsSet = std::unique_ptr<RooArgSet>{_funcClone->getObservables(indata)}.release();
@@ -183,7 +183,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     auto realDepRLV = dynamic_cast<const RooAbsRealLValue*>((*_funcObsSet)[i]);
     if (realDepRLV && realDepRLV->isDerived()) {
       RooArgSet tmp2;
-      realDepRLV->leafNodeServerList(&tmp2, 0, true);
+      realDepRLV->leafNodeServerList(&tmp2, nullptr, true);
       _funcObsSet->add(tmp2,true);
     }
   }
@@ -224,7 +224,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
-    _dataClone = indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName)) ;
+    _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
     //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
   } else {
     _dataClone = (RooAbsData*) indata.Clone() ;
@@ -305,9 +305,9 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     _normSet->remove(*_projDeps,true,true) ;
 
     // Mark all projected dependents as such
-    RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
-    projDataDeps->setAttribAll("projectedDependent") ;
-    delete projDataDeps ;
+    RooArgSet projDataDeps;
+    _funcObsSet->selectCommon(*_projDeps, projDataDeps);
+    projDataDeps.setAttribAll("projectedDependent") ;
   }
 
 
@@ -664,7 +664,7 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
     _dataClone = nullptr ;
   }
 
-  if (!cloneData && _rangeName.size()>0) {
+  if (!cloneData && !_rangeName.empty()) {
     coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
           << "ignoring request to _not_ clone the input dataset" << endl ;
     cloneData = true ;
@@ -673,9 +673,9 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
   if (cloneData) {
     // Cloning input dataset
     if (_rangeName.empty()) {
-      _dataClone = (RooAbsData*) indata.reduce(*indata.get()) ;
+      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(*indata.get())}.release();
     } else {
-      _dataClone = ((RooAbsData&)indata).reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str())) ;
+      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str()))}.release();
     }
     _ownData = true ;
 

@@ -14,7 +14,6 @@
  *************************************************************************/
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -135,7 +134,7 @@ void ROOT::Experimental::RPrintValueVisitor::PrintCollection(const Detail::RFiel
       RPrintOptions options;
       options.fPrintSingleLine = true;
       options.fPrintName = false;
-      RPrintValueVisitor elemVisitor(*iValue, fOutput, 0 /* level */, options);
+      RPrintValueVisitor elemVisitor(iValue->GetNonOwningCopy(), fOutput, 0 /* level */, options);
       iValue->GetField()->AcceptVisitor(elemVisitor);
 
       if (++iValue == elems.end())
@@ -300,13 +299,13 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &
    PrintName(field);
    fOutput << "{";
    auto elems = field.SplitValue(fValue);
-   for (auto iValue = elems.begin(); iValue != elems.end(); ) {
+   for (auto iValue = elems.begin(); iValue != elems.end();) {
       if (!fPrintOptions.fPrintSingleLine)
          fOutput << std::endl;
 
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
-      RPrintValueVisitor visitor(*iValue, fOutput, fLevel + 1, options);
+      RPrintValueVisitor visitor(iValue->GetNonOwningCopy(), fOutput, fLevel + 1, options);
       iValue->GetField()->AcceptVisitor(visitor);
 
       if (++iValue == elems.end()) {
@@ -336,7 +335,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
 
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
-      RPrintValueVisitor visitor(*iValue, fOutput, fLevel + 1, options);
+      RPrintValueVisitor visitor(iValue->GetNonOwningCopy(), fOutput, fLevel + 1, options);
       iValue->GetField()->AcceptVisitor(visitor);
 
       if (++iValue == elems.end()) {
@@ -364,12 +363,24 @@ void ROOT::Experimental::RPrintValueVisitor::VisitNullableField(const RNullableF
       RPrintOptions options;
       options.fPrintSingleLine = true;
       options.fPrintName = false;
-      RPrintValueVisitor visitor(elems[0], fOutput, fLevel, options);
+      RPrintValueVisitor visitor(elems[0].GetNonOwningCopy(), fOutput, fLevel, options);
       elems[0].GetField()->AcceptVisitor(visitor);
    }
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitEnumField(const REnumField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   auto intValue = field.SplitValue(fValue)[0].GetNonOwningCopy();
+   RPrintOptions options;
+   options.fPrintSingleLine = true;
+   options.fPrintName = false;
+   RPrintValueVisitor visitor(intValue.GetNonOwningCopy(), fOutput, fLevel, options);
+   intValue.GetField()->AcceptVisitor(visitor);
+}
+
+void ROOT::Experimental::RPrintValueVisitor::VisitProxiedCollectionField(const RProxiedCollectionField &field)
 {
    PrintCollection(field);
 }
@@ -378,7 +389,6 @@ void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RVectorField
 {
    PrintCollection(field);
 }
-
 
 void ROOT::Experimental::RPrintValueVisitor::VisitVectorBoolField(const RField<std::vector<bool>> &field)
 {

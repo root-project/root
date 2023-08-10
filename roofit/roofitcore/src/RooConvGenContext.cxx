@@ -92,7 +92,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
     RooErrorHandler::softAbort() ;
   }
   std::unique_ptr<RooResolutionModel> modelClone{static_cast<RooResolutionModel*>(_modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing"))};
-  modelClone->changeBasis(0) ;
+  modelClone->changeBasis(nullptr) ;
   convV = dynamic_cast<RooRealVar*>(&modelClone->convVar());
   if (!convV) {
     throw std::runtime_error("RooConvGenContext only works with convolution variables of type RooRealVar.");
@@ -278,7 +278,7 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 
 void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-  while(1) {
+  while(true) {
 
     // Generate pdf and model data
     _modelGen->generateEvent(*_modelVars,remaining) ;

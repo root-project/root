@@ -29,13 +29,105 @@ TEST(RNTuple, TypeName) {
       (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
+TEST(RNTuple, EnumBasics)
+{
+   // Needs fix of TEnum
+   // auto stdEnum = RFieldBase::Create("f", "std::byte");
+   // EXPECT_FALSE(stdEnum);
+
+   auto f = RFieldBase::Create("f", "CustomEnum").Unwrap();
+
+   auto model = RNTupleModel::Create();
+   auto ptrEnum = model->MakeField<CustomEnum>("e");
+   model->MakeField<StructWithEnums>("swe");
+
+   EXPECT_EQ(model->GetField("e")->GetType(), f->GetType());
+
+   FileRaii fileGuard("test_ntuple_enum_basics.root");
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = kCustomEnumVal;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(kCustomEnumVal, *reader->GetModel()->GetDefaultEntry()->Get<CustomEnum>("e"));
+   auto ptrStructWithEnums = reader->GetModel()->GetDefaultEntry()->Get<StructWithEnums>("swe");
+   EXPECT_EQ(42, ptrStructWithEnums->a);
+   EXPECT_EQ(137, ptrStructWithEnums->b);
+   EXPECT_EQ(kCustomEnumVal, ptrStructWithEnums->e);
+}
+
+using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
+                                       CustomEnumInt32, CustomEnumUInt32, CustomEnumInt64, CustomEnumUInt64>;
+
+template <typename EnumT>
+class EnumClass : public ::testing::Test {
+public:
+   using Enum_t = EnumT;
+};
+
+TYPED_TEST_SUITE(EnumClass, EnumClassInts);
+
+TYPED_TEST(EnumClass, Widths)
+{
+   using ThisEnum_t = typename TestFixture::Enum_t;
+   using Underlying_t = std::underlying_type_t<ThisEnum_t>;
+
+   auto enumName = RField<ThisEnum_t>::TypeName();
+
+   FileRaii fileGuard("test_ntuple_enum_class_" + enumName + ".root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrEnum = model->MakeField<ThisEnum_t>("e");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = static_cast<ThisEnum_t>(0);
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(1);
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max());
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max() - 1);
+      writer->Fill();
+      if (std::is_signed_v<Underlying_t>) {
+         *ptrEnum = static_cast<ThisEnum_t>(-1);
+         writer->Fill();
+         *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min());
+         writer->Fill();
+         *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min() + 1);
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto ptrEnum = reader->GetModel()->GetDefaultEntry()->Get<ThisEnum_t>("e");
+   reader->LoadEntry(0);
+   EXPECT_EQ(static_cast<ThisEnum_t>(0), *ptrEnum);
+   reader->LoadEntry(1);
+   EXPECT_EQ(static_cast<ThisEnum_t>(1), *ptrEnum);
+   reader->LoadEntry(2);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max()), *ptrEnum);
+   reader->LoadEntry(3);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max() - 1), *ptrEnum);
+
+   if (!std::is_signed_v<Underlying_t>)
+      return;
+
+   reader->LoadEntry(4);
+   EXPECT_EQ(static_cast<ThisEnum_t>(-1), *ptrEnum);
+   reader->LoadEntry(5);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min()), *ptrEnum);
+   reader->LoadEntry(6);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min() + 1), *ptrEnum);
+}
 
 TEST(RNTuple, CreateField)
 {
    auto field = RFieldBase::Create("test", "vector<unsigned int>").Unwrap();
    EXPECT_STREQ("std::vector<std::uint32_t>", field->GetType().c_str());
    auto value = field->GenerateValue();
-   field->DestroyValue(value);
 
    std::vector<std::unique_ptr<RFieldBase>> itemFields;
    itemFields.push_back(std::make_unique<RField<std::uint32_t>>("u32"));
@@ -208,6 +300,74 @@ TEST(RNTuple, StdTuple)
       EXPECT_EQ(std::to_string(i), std::get<0>(nested));
       EXPECT_EQ(static_cast<char>('2' + i), std::get<1>(nested));
    }
+}
+
+TEST(RNTuple, StdSet)
+{
+   auto field = RField<std::set<int64_t>>("setField");
+   EXPECT_STREQ("std::set<std::int64_t>", field.GetType().c_str());
+   auto otherField = RFieldBase::Create("test", "std::set<int64_t>").Unwrap();
+   EXPECT_STREQ(field.GetType().c_str(), otherField->GetType().c_str());
+   EXPECT_EQ((sizeof(std::set<int64_t>)), field.GetValueSize());
+   EXPECT_EQ((sizeof(std::set<int64_t>)), otherField->GetValueSize());
+   EXPECT_EQ((alignof(std::set<int64_t>)), field.GetAlignment());
+   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
+   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::set<int64_t>)), otherField->GetAlignment());
+
+   auto setSetField = RField<std::set<std::set<CustomStruct>>>("setSetField");
+   EXPECT_STREQ("std::set<std::set<CustomStruct>>", setSetField.GetType().c_str());
+
+   FileRaii fileGuard("test_ntuple_rfield_stdset.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto set_field = model->MakeField<std::set<float>>({"mySet", "float set"});
+      auto set_field2 = model->MakeField<std::set<std::pair<int, CustomStruct>>>({"mySet2"});
+
+      auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
+      auto mySet4 = RFieldBase::Create("mySet4", "std::set<std::set<char>>").Unwrap();
+
+      model->AddField(std::move(mySet3));
+      model->AddField(std::move(mySet4));
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
+      auto set_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::string>>("mySet3");
+      auto set_field4 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet4");
+      for (int i = 0; i < 2; i++) {
+         *set_field = {static_cast<float>(i), 3.14, 0.42};
+         *set_field2 = {std::make_pair(i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+                        std::make_pair(i + 1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})};
+         *set_field3 = {"Hello", "world!", std::to_string(i)};
+         *set_field4 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("set_ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+
+   auto viewSet = ntuple->GetView<std::set<float>>("mySet");
+   auto viewSet2 = ntuple->GetView<std::set<std::pair<int, CustomStruct>>>("mySet2");
+   auto viewSet3 = ntuple->GetView<std::set<std::string>>("mySet3");
+   auto viewSet4 = ntuple->GetView<std::set<std::set<char>>>("mySet4");
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(std::set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
+
+      auto pairSet = std::set<std::pair<int, CustomStruct>>(
+         {std::make_pair(i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+          std::make_pair(i + 1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
+      EXPECT_EQ(pairSet, viewSet2(i));
+
+      EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet3(i));
+      EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet4(i));
+   }
+
+   ntuple->LoadEntry(0);
+   auto mySet2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::pair<int, CustomStruct>>>("mySet2");
+   auto pairSet =
+      std::set<std::pair<int, CustomStruct>>({std::make_pair(0, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+                                              std::make_pair(1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
+   EXPECT_EQ(pairSet, *mySet2);
 }
 
 TEST(RNTuple, Int64)
@@ -1052,7 +1212,7 @@ TEST(RNTuple, TVirtualCollectionProxy)
    SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
    SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
 
-   // `RCollectionClassField` instantiated but no collection proxy set (yet)
+   // `RProxiedCollectionField` instantiated but no collection proxy set (yet)
    EXPECT_THROW(RField<StructUsingCollectionProxy<float>>("hasTraitButNoCollectionProxySet"),
                 ROOT::Experimental::RException);
 
@@ -1164,24 +1324,6 @@ TEST(RNTuple, TVirtualCollectionProxy)
          }
       }
    }
-}
-
-TEST(RNTuple, Enums)
-{
-   FileRaii fileGuard("test_ntuple_enums.ntuple");
-
-   {
-      auto model = RNTupleModel::Create();
-      auto fieldKlass = model->MakeField<StructWithEnums>("klass");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
-      ntuple->Fill();
-   }
-
-   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
-   ASSERT_EQ(1U, ntuple->GetNEntries());
-   auto viewKlass = ntuple->GetView<StructWithEnums>("klass");
-   EXPECT_EQ(42, viewKlass(0).a);
-   EXPECT_EQ(137, viewKlass(0).b);
 }
 
 TEST(RNTuple, Traits)

@@ -30,8 +30,11 @@ class TPadWebSnapshot;
 class TWebPS;
 class TObjLink;
 class TExec;
+class TWebCanvasTimer;
 
 class TWebCanvas : public TCanvasImp {
+
+friend class TWebCanvasTimer;
 
 public:
    /// Function type for signals, invoked when canvas drawing or update is completed
@@ -57,7 +60,9 @@ protected:
       Long64_t fSendVersion{0};        ///<! canvas version send to the client
       Long64_t fDrawVersion{0};        ///<! canvas version drawn (confirmed) by client
       UInt_t fLastSendHash{0};         ///<! hash of last send draw message, avoid looping
+      std::map<std::string, std::string> fCtrl; ///<! different ctrl parameters which can be send at once
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
+
       WebConn(unsigned id) : fConnId(id) {}
       void reset()
       {
@@ -74,10 +79,9 @@ protected:
    };
 
    std::vector<WebConn> fWebConn;  ///<! connections
+   TWebCanvasTimer *fTimer{nullptr}; ///<! timer to submit control messages
 
    std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
-
-   std::map<std::string, std::string> fCtrlMsgs; ///<! different ctrl messages which can be send with next update
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
@@ -125,9 +129,11 @@ protected:
 
    void CheckPadModified(TPad *pad);
 
-   void CheckCanvasModified(bool force_modified = false);
+   Bool_t CheckCanvasModified(bool force_modified = false);
 
-   Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
+   void AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value);
+
+   void AddSendQueue(unsigned connid, const std::string &msg);
 
    void CheckDataToSend(unsigned connid = 0);
 
@@ -159,7 +165,7 @@ protected:
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
-   ~TWebCanvas() override = default;
+   ~TWebCanvas() override;
 
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 
@@ -189,11 +195,11 @@ public:
    void   SetWindowSize(UInt_t w, UInt_t h) override;
    void   SetWindowTitle(const char *newTitle) override;
    void   SetCanvasSize(UInt_t w, UInt_t h) override;
+   void   Iconify() override;
+   void   RaiseWindow() override;
 
    /*
-      virtual void   Iconify() { }
       virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
-      virtual void   RaiseWindow();
       virtual void   ReallyDelete();
     */
 

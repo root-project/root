@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include <TRandom3.h>
 
 namespace {
 /// An RPageSink that keeps counters of (vector) commit of (sealed) pages; used to test RPageSinkBuf

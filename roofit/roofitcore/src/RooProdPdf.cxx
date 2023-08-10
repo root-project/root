@@ -354,12 +354,12 @@ RooProdPdf::~RooProdPdf()
 
 RooProdPdf::CacheElem* RooProdPdf::getCacheElem(RooArgSet const* nset) const {
   int code ;
-  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, 0, &code)) ;
+  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, nullptr, &code)) ;
 
   // If cache doesn't have our configuration, recalculate here
   if (!cache) {
     code = getPartIntList(nset, nullptr) ;
-    cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, 0, &code)) ;
+    cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, nullptr, &code)) ;
   }
   return cache;
 }
@@ -410,24 +410,24 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::calculateBatch(const RooProdPdf::CacheElem& cache, cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProdPdf::calculateBatch(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, double *output,
+                                size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-
-  if (cache._isRearranged) {
-    auto numerator = dataMap.at(cache._rearrangedNum.get());
-    auto denominator = dataMap.at(cache._rearrangedDen.get());
-    dispatch->compute(stream, RooBatchCompute::Ratio, output, nEvents, {numerator, denominator});
-  } else {
-    RooBatchCompute::VarVector factors;
-    factors.reserve(cache._partList.size());
-    for (const RooAbsArg *i : cache._partList) {
-       auto span = dataMap.at(i);
-       factors.push_back(span);
-    }
-    RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
-    dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, factors, special);
-  }
+   if (cache._isRearranged) {
+      auto numerator = dataMap.at(cache._rearrangedNum.get());
+      auto denominator = dataMap.at(cache._rearrangedDen.get());
+      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Ratio, output, nEvents,
+                               {numerator, denominator});
+   } else {
+      RooBatchCompute::VarVector factors;
+      factors.reserve(cache._partList.size());
+      for (const RooAbsArg *i : cache._partList) {
+         auto span = dataMap.at(i);
+         factors.push_back(span);
+      }
+      RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
+      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::ProdPdf, output, nEvents, factors, special);
+   }
 }
 
 namespace {
@@ -481,10 +481,10 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   std::vector<RooArgSet> depIntNoNormList;
 
   // Setup lists for factorization terms and their dependents
-  RooArgSet* term(0);
-  RooArgSet* termNormDeps(0);
-  RooArgSet* termIntDeps(0);
-  RooArgSet* termIntNoNormDeps(0);
+  RooArgSet* term(nullptr);
+  RooArgSet* termNormDeps(nullptr);
+  RooArgSet* termIntDeps(nullptr);
+  RooArgSet* termIntNoNormDeps(nullptr);
 
   std::vector<RooAbsArg*> pdfIntNoNormDeps;
   std::vector<RooAbsArg*> pdfIntSet;
@@ -506,7 +506,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // RooAbsArg::treeNodeServer list is relatively expensive, so we only do it
     // once and use it in a lambda function.
     RooArgSet pdfLeafList("leafNodeServerList") ;
-    pdf.treeNodeServerList(&pdfLeafList,0,false,true,true) ;
+    pdf.treeNodeServerList(&pdfLeafList,nullptr,false,true,true) ;
     auto getObservablesOfCurrentPdf = [&pdfLeafList](
             std::vector<RooAbsArg*> & out,
             const RooArgSet& dataList) {
@@ -722,7 +722,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 //       cout<<"FK: termImpSet.getSize()  = "<<termImpSet.getSize()<< " " << termImpSet << endl;
 //       cout<<"FK: _refRangeName = "<<_refRangeName<<endl;
 
-      if (!termImpSet.empty() && 0 != _refRangeName) {
+      if (!termImpSet.empty() && nullptr != _refRangeName) {
 
 //    cout << "WVE now here" << endl;
 
@@ -762,7 +762,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
    imps=(RooArgSet*)imp.At(termIdx);
    RooArgSet termNSet(*norm), termImpSet(*imps);
 
-   if (!termImpSet.empty() && 0 != _refRangeName) {
+   if (!termImpSet.empty() && nullptr != _refRangeName) {
 
      // WVE we can skip this if the ref range is equal to the normalization range
      bool rangeIdentical(true);
@@ -902,12 +902,12 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       cache->_partList.add(*inttmp);
 
       // Product of numerator terms
-      const string prodname_num = makeRGPPName("SPECPROD_NUM", compTermNum, RooArgSet(), RooArgSet(), 0);
+      const string prodname_num = makeRGPPName("SPECPROD_NUM", compTermNum, RooArgSet(), RooArgSet(), nullptr);
       auto prodtmp_num = std::make_unique<RooProduct>(prodname_num.c_str(), prodname_num.c_str(), compTermNum);
       prodtmp_num->addOwnedComponents(compTermNum);
 
       // Product of denominator terms
-      const string prodname_den = makeRGPPName("SPECPROD_DEN", compTermDen, RooArgSet(), RooArgSet(), 0);
+      const string prodname_den = makeRGPPName("SPECPROD_DEN", compTermDen, RooArgSet(), RooArgSet(), nullptr);
       auto prodtmp_den = std::make_unique<RooProduct>(prodname_den.c_str(), prodname_den.c_str(), compTermDen);
       prodtmp_den->addOwnedComponents(compTermDen);
 
@@ -977,11 +977,11 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   {
     std::vector<char> buf(strlen(_normRange.Data()) + 1);
     strcpy(buf.data(),_normRange.Data()) ;
-    char* save(0) ;
+    char* save(nullptr) ;
     char* token = R__STRTOK_R(buf.data(),",",&save) ;
     while(token) {
       rangeComps.push_back(token) ;
-      token = R__STRTOK_R(0,",",&save) ;
+      token = R__STRTOK_R(nullptr,",",&save) ;
     }
   }
 
@@ -1004,7 +1004,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //     cout << "corresponding denominator = " << den->GetName() << endl ;
 
 
-    RooFormulaVar* ratio(0) ;
+    RooFormulaVar* ratio(nullptr) ;
     RooArgSet origNumTerm ;
 
     if (string("SPECINT")==part->getStringAttribute("PROD_TERM_TYPE")) {
@@ -1096,7 +1096,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //        specializedRatio->printComponentTree() ;
 
        // Replace generic ratio with specialized ratio
-       RooAbsArg *partCust(0) ;
+       RooAbsArg *partCust(nullptr) ;
        if (parg->InheritsFrom(RooAddition::Class())) {
 
 
@@ -1147,7 +1147,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
      RooArgSet tmp(origNumTerm) ;
      tmp.add(*specRatio) ;
-     const string pname = makeRGPPName("PROD",tmp,RooArgSet(),RooArgSet(),0) ;
+     const string pname = makeRGPPName("PROD",tmp,RooArgSet(),RooArgSet(),nullptr) ;
      auto specDenProd = std::make_unique<RooProduct>(pname.c_str(),pname.c_str(),tmp) ;
      std::unique_ptr<RooAbsReal> specInt;
 
@@ -1363,12 +1363,12 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
                      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
                      bool& isOwned, bool forceWrap) const
 {
-  vector<RooAbsReal*> ret(3) ; ret[0] = 0 ; ret[1] = 0 ; ret[2] = 0 ;
+  vector<RooAbsReal*> ret(3) ; ret[0] = nullptr ; ret[1] = nullptr ; ret[2] = nullptr ;
 
   // CASE I: factorizing term: term is integrated over all normalizing observables
   // -----------------------------------------------------------------------------
   // Check if all observbales of this term are integrated. If so the term cancels
-  if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize() && isetRangeName==0) {
+  if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize() && isetRangeName==nullptr) {
 
 
     //cout << "processProductTerm(" << GetName() << ") case I " << endl ;
@@ -1428,7 +1428,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       isOwned=true ;
       ret[0] = partInt ;
 
-      const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
+      const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),nullptr) ;
 
       // WVE FIX THIS
       RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
@@ -1457,7 +1457,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     isOwned=true ;
     ret[0] = partInt ;
 
-    const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
+    const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),nullptr) ;
 
     // WVE FIX THIS
     RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
@@ -1613,7 +1613,7 @@ double RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, co
   CacheElem* cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
 
   // If cache has been sterilized, revive this slot
-  if (cache==0) {
+  if (cache==nullptr) {
     std::unique_ptr<RooArgSet> vars{getParameters(RooArgSet())} ;
     RooArgSet nset = _cacheMgr.selectFromSet1(*vars, code-1) ;
     RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1) ;
@@ -1808,7 +1808,7 @@ bool RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
   if (!_useDefaultGen) return RooAbsPdf::isDirectGenSafe(arg) ;
 
   // Argument may appear in only one PDF component
-  RooAbsPdf* thePdf(0) ;
+  RooAbsPdf* thePdf(nullptr) ;
   for (auto* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
 
     if (pdf->dependsOn(arg)) {
@@ -2343,10 +2343,10 @@ public:
 
    inline bool canComputeBatchWithCuda() const override { return true; }
 
-   void computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+   void computeBatch(double *output, size_t nEvents,
                      RooFit::Detail::DataMap const &dataMap) const override
    {
-      _prodPdf->calculateBatch(*_cache, stream, output, nEvents, dataMap);
+      _prodPdf->calculateBatch(this, *_cache, output, nEvents, dataMap);
    }
 
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }

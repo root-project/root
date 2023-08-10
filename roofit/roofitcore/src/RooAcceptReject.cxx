@@ -44,7 +44,7 @@ do not define internal methods
 #include "TFoam.h"
 #include "TNamed.h"
 
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 
@@ -173,9 +173,9 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
       }
     }
 
-    event= 0;
+    event= nullptr;
     double oldMax2(_maxFuncVal);
-    while(0 == event) {
+    while(nullptr == event) {
       // Use any cached events first
       if (_maxFuncVal>oldMax2) {
    oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor"
@@ -192,7 +192,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
       // Always generate at least one more event so we don't get stuck.
       if(_totalEvents*_maxFuncVal <= 0) {
    oocoutE(nullptr, Generation) << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
-   return 0;
+   return nullptr;
       }
 
       double eff= _funcSum/(_totalEvents*_maxFuncVal);
@@ -221,8 +221,8 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
     _maxFuncVal = _funcMaxVal->getVal() ;
 
     // Generate enough trials to produce a single accepted event
-    event = 0 ;
-    while(0==event) {
+    event = nullptr ;
+    while(nullptr==event) {
       addEventToCache() ;
       event = nextAcceptedEvent() ;
     }
@@ -242,7 +242,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
 
 const RooArgSet *RooAcceptReject::nextAcceptedEvent()
 {
-  const RooArgSet *event = 0;
+  const RooArgSet *event = nullptr;
   while((event= _cache->get(_eventsUsed))) {
     _eventsUsed++ ;
     // accept this cached event?

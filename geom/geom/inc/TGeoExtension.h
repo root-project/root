@@ -16,8 +16,7 @@
 
 #include "TObject.h"
 
-class TGeoExtension : public TObject
-{
+class TGeoExtension : public TObject {
 protected:
    TGeoExtension() : TObject() {}
    ~TGeoExtension() override {}
@@ -28,34 +27,43 @@ public:
    virtual TGeoExtension *Grab() = 0;
    // Method called always when the pointer to the extension is not needed
    // Equivalent to delete()
-   virtual void           Release() const = 0;
+   virtual void Release() const = 0;
 
-   ClassDefOverride(TGeoExtension, 1)       // User extension for volumes and nodes
+   ClassDefOverride(TGeoExtension, 1) // User extension for volumes and nodes
 };
 
-class TGeoRCExtension : public TGeoExtension
-{
+class TGeoRCExtension : public TGeoExtension {
 protected:
-   ~TGeoRCExtension() override {delete fUserObject;}
+   ~TGeoRCExtension() override { delete fUserObject; }
+
 public:
    TGeoRCExtension() : TGeoExtension(), fRC(0), fUserObject(nullptr) { fRC++; }
    TGeoRCExtension(TObject *obj) : TGeoExtension(), fRC(0), fUserObject(obj) { fRC++; }
 
-   TGeoExtension       *Grab() override             { fRC++; return this; }
-   void                 Release() const override    { assert(fRC > 0); fRC--; if (fRC==0) delete this; }
+   TGeoExtension *Grab() override
+   {
+      fRC++;
+      return this;
+   }
+   void Release() const override
+   {
+      assert(fRC > 0);
+      fRC--;
+      if (fRC == 0)
+         delete this;
+   }
 
-   void                 SetUserObject(TObject *obj) { fUserObject = obj; }
-   TObject             *GetUserObject() const       { return fUserObject; }
-
+   void SetUserObject(TObject *obj) { fUserObject = obj; }
+   TObject *GetUserObject() const { return fUserObject; }
 
 private:
    // Copy constructor and assignment not allowed
    TGeoRCExtension(const TGeoRCExtension &) = delete;
-   TGeoRCExtension &operator =(const TGeoRCExtension &) = delete;
-   mutable Int_t        fRC{0};           // Reference counter
-   TObject             *fUserObject{nullptr};   // Attached user object
+   TGeoRCExtension &operator=(const TGeoRCExtension &) = delete;
+   mutable Int_t fRC{0};          // Reference counter
+   TObject *fUserObject{nullptr}; // Attached user object
 
-   ClassDefOverride(TGeoRCExtension, 1)       // Reference counted extension for volumes and nodes
+   ClassDefOverride(TGeoRCExtension, 1) // Reference counted extension for volumes and nodes
 };
 
 #endif

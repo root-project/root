@@ -217,22 +217,20 @@ double RooTruthModel::evaluate() const
 }
 
 
-void RooTruthModel::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
-                                 RooFit::Detail::DataMap const &dataMap) const
+void RooTruthModel::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-
+   auto config = dataMap.config(this);
    auto xVals = dataMap.at(x);
 
    // No basis: delta function
    if (_basisCode == noBasis) {
-      dispatch->compute(stream, RooBatchCompute::DeltaFunction, output, nEvents, {xVals});
+      RooBatchCompute::compute(config, RooBatchCompute::DeltaFunction, output, nEvents, {xVals});
       return;
    }
 
    // Generic basis: evaluate basis function object
    if (_basisCode == genericBasis) {
-      dispatch->compute(stream, RooBatchCompute::Identity, output, nEvents, {dataMap.at(&basis())});
+      RooBatchCompute::compute(config, RooBatchCompute::Identity, output, nEvents, {dataMap.at(&basis())});
       return;
    }
 
@@ -252,36 +250,38 @@ void RooTruthModel::computeBatch(cudaStream_t *stream, double *output, size_t nE
    RooBatchCompute::ArgVector extraArgs{basisSign};
    switch (basisType) {
    case expBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals}, extraArgs);
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals},
+                               extraArgs);
       break;
    }
    case sinBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelSinBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        extraArgs);
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinBasis, output, nEvents,
+                               {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case cosBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelCosBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        extraArgs);
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCosBasis, output, nEvents,
+                               {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case linBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelLinBasis, output, nEvents, {xVals, param1Vals}, extraArgs);
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelLinBasis, output, nEvents, {xVals, param1Vals},
+                               extraArgs);
       break;
    }
    case quadBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelQuadBasis, output, nEvents, {xVals, param1Vals},
-                        extraArgs);
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelQuadBasis, output, nEvents, {xVals, param1Vals},
+                               extraArgs);
       break;
    }
    case sinhBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelSinhBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        extraArgs);
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinhBasis, output, nEvents,
+                               {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case coshBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelCoshBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        extraArgs);
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCoshBasis, output, nEvents,
+                               {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    default: R__ASSERT(0);

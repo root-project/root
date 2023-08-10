@@ -13,15 +13,21 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include <RooBatchComputeTypes.h>
+#include <RooSpan.h>
+
+#include <RConfig.h>
+
+#ifdef R__HAS_CUDA
+#include <RooFit/Detail/CudaInterface.h>
+#endif
 
 #include <DllImport.h> //for R__EXTERN, needed for windows
-#include <TError.h>
 
 #include <Math/Util.h>
 
 #include <functional>
 #include <string>
+#include <vector>
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
@@ -36,6 +42,33 @@
  * available on a specific platform.
  */
 namespace RooBatchCompute {
+
+struct RunContext;
+
+typedef std::vector<RooSpan<const double>> VarVector;
+typedef std::vector<double> ArgVector;
+typedef double *__restrict RestrictArr;
+typedef const double *__restrict InputArr;
+
+void init();
+
+/// Minimal configuration struct to steer the evaluation of a single node with
+/// the RooBatchCompute library.
+class Config {
+public:
+#ifdef R__HAS_CUDA
+   bool useCuda() const { return _cudaStream != nullptr; }
+   void setCudaStream(RooFit::Detail::CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
+   RooFit::Detail::CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
+#else
+   bool useCuda() const { return false; }
+#endif
+
+private:
+#ifdef R__HAS_CUDA
+   RooFit::Detail::CudaInterface::CudaStream *_cudaStream = nullptr;
+#endif
+};
 
 enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
 
@@ -52,6 +85,7 @@ enum Computer {
    ChiSquare,
    DeltaFunction,
    DstD0BG,
+   ExpPoly,
    Exponential,
    Gamma,
    GaussModelExpBasis,
@@ -65,6 +99,7 @@ enum Computer {
    Novosibirsk,
    Poisson,
    Polynomial,
+   Power,
    ProdPdf,
    Ratio,
    TruthModelExpBasis,
@@ -93,7 +128,7 @@ struct ReduceNLLOutput {
  * The class RooBatchComputeInterface provides the mechanism for external modules (like RooFit) to call
  * functions from the library. The power lies in the virtual functions that can resolve to different
  * implementations for the functionality; for example, calling a function through dispatchCuda
- * will resolve to efficient cuda implementations.
+ * will resolve to efficient CUDA implementations.
  *
  * This interface contains the signatures of the compute functions of every PDF that has an optimised implementation
  * available. These are the functions that perform the actual computations in batches.
@@ -107,36 +142,20 @@ struct ReduceNLLOutput {
 class RooBatchComputeInterface {
 public:
    virtual ~RooBatchComputeInterface() = default;
-   virtual void compute(cudaStream_t *, Computer, RestrictArr, size_t, const VarVector &, ArgVector &) = 0;
-   inline void compute(cudaStream_t *stream, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
+   virtual void compute(Config const &cfg, Computer, RestrictArr, size_t, const VarVector &, ArgVector &) = 0;
+   inline void compute(Config const &cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
    {
       ArgVector extraArgs{};
-      compute(stream, comp, output, size, vars, extraArgs);
+      compute(cfg, comp, output, size, vars, extraArgs);
    }
 
-   virtual double reduceSum(cudaStream_t *, InputArr input, size_t n) = 0;
-   virtual ReduceNLLOutput reduceNLL(cudaStream_t *, RooSpan<const double> probas, RooSpan<const double> weightSpan,
+   virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
+   virtual ReduceNLLOutput reduceNLL(Config const &cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
                                      RooSpan<const double> weights, double weightSum,
                                      RooSpan<const double> binVolumes) = 0;
 
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
-
-   // cuda functions that need to be interfaced
-   virtual void *cudaMalloc(size_t) { throw std::bad_function_call(); }
-   virtual void cudaFree(void *) { throw std::bad_function_call(); }
-   virtual void *cudaMallocHost(size_t) { throw std::bad_function_call(); }
-   virtual void cudaFreeHost(void *) { throw std::bad_function_call(); }
-   virtual cudaEvent_t *newCudaEvent(bool /*forTiming*/) { throw std::bad_function_call(); }
-   virtual void deleteCudaEvent(cudaEvent_t *) { throw std::bad_function_call(); }
-   virtual cudaStream_t *newCudaStream() { throw std::bad_function_call(); }
-   virtual void deleteCudaStream(cudaStream_t *) { throw std::bad_function_call(); }
-   virtual bool streamIsActive(cudaStream_t *) { throw std::bad_function_call(); }
-   virtual void cudaEventRecord(cudaEvent_t *, cudaStream_t *) { throw std::bad_function_call(); }
-   virtual void cudaStreamWaitEvent(cudaStream_t *, cudaEvent_t *) { throw std::bad_function_call(); }
-   virtual float cudaEventElapsedTime(cudaEvent_t *, cudaEvent_t *) { throw std::bad_function_call(); }
-   virtual void memcpyToCUDA(void *, const void *, size_t, cudaStream_t * = nullptr) { throw std::bad_function_call(); }
-   virtual void memcpyToCPU(void *, const void *, size_t, cudaStream_t * = nullptr) { throw std::bad_function_call(); }
 };
 
 /**
@@ -147,6 +166,34 @@ public:
  * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
  */
 R__EXTERN RooBatchComputeInterface *dispatchCPU, *dispatchCUDA;
+
+inline void
+compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars, ArgVector &extraArgs)
+{
+   auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
+   dispatch->compute(cfg, comp, output, size, vars, extraArgs);
+}
+
+inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
+{
+   ArgVector extraArgs{};
+   auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
+   dispatch->compute(cfg, comp, output, size, vars, extraArgs);
+}
+
+inline double reduceSum(Config cfg, InputArr input, size_t n)
+{
+   auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
+   return dispatch->reduceSum(cfg, input, n);
+}
+
+inline ReduceNLLOutput reduceNLL(Config cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
+                                 RooSpan<const double> weights, double weightSum, RooSpan<const double> binVolumes)
+{
+   auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
+   return dispatch->reduceNLL(cfg, probas, weightSpan, weights, weightSum, binVolumes);
+}
+
 } // End namespace RooBatchCompute
 
 #endif

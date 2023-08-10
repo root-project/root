@@ -25,11 +25,9 @@ class RooAdaptiveGaussKronrodIntegrator1D : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooAdaptiveGaussKronrodIntegrator1D() {}
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, double xmin, double xmax,
                                       const RooNumIntConfig& config) ;
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooAdaptiveGaussKronrodIntegrator1D() override;
 
   bool checkLimits() const override;
@@ -40,23 +38,6 @@ public:
   bool setUseIntegrandLimits(bool flag) override {
     // If flag is true, intergration limits are taken from definition in input function binding
     _useIntegrandLimits = flag ; return true ;
-  }
-
-  bool canIntegrate1D() const override {
-    // We can integrate 1-dimensional functions
-    return true ;
-  }
-  bool canIntegrate2D() const override {
-    // We can not integrate 2-dimensional functions
-    return false ;
-  }
-  bool canIntegrateND() const override {
-    // We can not integrate >2-dimensional functions
-    return false ;
-  }
-  bool canIntegrateOpenEnded() const override {
-    // We can integrate over open-ended domains
-    return true ;
   }
 
 protected:

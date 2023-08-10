@@ -13,6 +13,14 @@ if (roofit_multiprocess)
   set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
 endif()
 
+if(roofit_multiprocess)
+  list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
+endif()
+
+if(cuda)
+  list(APPEND EXTRA_LIBRARIES RooFitCuda)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
@@ -129,7 +137,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooImproperIntegrator1D.h
     RooIntegrator1D.h
     RooIntegrator2D.h
-    RooIntegratorBinding.h
     RooInvTransform.h
     RooLinearCombination.h
     RooLinearVar.h
@@ -178,7 +185,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooRandomizeParamMCSModule.h
     RooRangeBinning.h
     RooRangeBoolean.h
-    RooRealAnalytic.h
     RooRealBinding.h
     RooRealConstant.h
     RooRealIntegral.h
@@ -241,7 +247,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/ConstraintHelpers.cxx
     src/BatchModeHelpers.cxx
     src/BatchModeDataHelpers.cxx
-    src/CUDAHelpers.cxx
     src/Buffers.cxx
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -351,7 +356,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooImproperIntegrator1D.cxx
     src/RooIntegrator1D.cxx
     src/RooIntegrator2D.cxx
-    src/RooIntegratorBinding.cxx
     src/RooInvTransform.cxx
     src/RooLinearCombination.cxx
     src/RooLinearVar.cxx
@@ -403,7 +407,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRandomizeParamMCSModule.cxx
     src/RooRangeBinning.cxx
     src/RooRangeBoolean.cxx
-    src/RooRealAnalytic.cxx
     src/RooRealBinding.cxx
     src/RooRealConstant.cxx
     src/RooRealIntegral.cxx
@@ -467,6 +470,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   LIBRARIES
     RooBatchCompute
     RooFitCommon
+    ${EXTRA_LIBRARIES}
   DEPENDENCIES
     Core
     Hist
@@ -483,12 +487,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     inc/LinkDef.h
   ${EXTRA_DICT_OPTS}
 )
-
-if (roofit_multiprocess)
-  target_link_libraries(RooFitCore PRIVATE RooFitMultiProcess)
-  set(RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
-  target_include_directories(RooFitCore PRIVATE ${RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR})
-endif()
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:

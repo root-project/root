@@ -311,7 +311,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       cxcoutI(HistFactory) << "processing hist " << hist->GetName() << endl;
     } else {
       cxcoutF(HistFactory) << "hist is empty" << endl;
-      R__ASSERT(hist != 0);
+      R__ASSERT(hist != nullptr);
       return nullptr;
     }
 
@@ -576,7 +576,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     }  // end sys loop
 
-    if(systList.size() > 0){
+    if(!systList.empty()){
        // this is epsilon(alpha_j), a piece-wise linear interpolation
        //      LinInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
 
@@ -705,7 +705,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     if (channel.GetSamples().empty()) {
       Error("MakeSingleChannelWorkspace",
           "The input Channel does not contain any sample - return a nullptr");
-      return 0;
+      return nullptr;
     }
 
     const TH1* channel_hist_template = channel.GetSamples().front().GetHisto();
@@ -719,7 +719,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
                    << " in channel " << channel.GetName() << " does not contain a histogram. This is the channel:\n";
       channel.Print(stream);
       Error("MakeSingleChannelWorkspace", "%s", stream.str().c_str());
-      return 0;
+      return nullptr;
     }
 
     if( ! channel.CheckHistograms() ) {
@@ -962,7 +962,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             double gammaMin = 0.0;
             double gammaMax = 10.0;
             RooArgList statFactorParams = ParamHistFunc::createParamSet(*proto,
-                ParamSetPrefix.c_str(),
+                ParamSetPrefix,
                 theObservables,
                 gammaMin, gammaMax);
 
@@ -1013,7 +1013,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               // GHL: Again, we are putting hard ranges on the gamma's
               //      We should change this to range from 0 to /inf
               RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto,
-                  funcParams.c_str(),
+                  funcParams,
                   theObservables, 0, 1000);
 
               // Create the Function
@@ -1093,7 +1093,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               // Create the Parameters
               std::string funcParams = "gamma_" + shapeSys.GetName();
               RooArgList shapeFactorParams = ParamHistFunc::createParamSet(*proto,
-                  funcParams.c_str(),
+                  funcParams,
                   theObservables, 0, 10);
 
               // Create the Function

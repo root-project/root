@@ -61,61 +61,57 @@ Event if one forgets to call ptr2 = 0, the object gets delete when the method
 using ptr2 gets out of scope.
 */
 
-template<class T>
-class TGeoRCPtr
-{
+template <class T>
+class TGeoRCPtr {
 public:
-   //Construct using a C pointer, e.g. TGeoRCPtr<T> x = new T();
-   TGeoRCPtr(T* ptr = nullptr)
-       : fPtr(ptr)
+   // Construct using a C pointer, e.g. TGeoRCPtr<T> x = new T();
+   TGeoRCPtr(T *ptr = nullptr) : fPtr(ptr)
    {
-      if(ptr) ptr->Grab();
+      if (ptr)
+         ptr->Grab();
    }
 
-   //Copy constructor
-   TGeoRCPtr(const TGeoRCPtr &ptr)
-       : fPtr(ptr.fPtr)
+   // Copy constructor
+   TGeoRCPtr(const TGeoRCPtr &ptr) : fPtr(ptr.fPtr)
    {
-      if(fPtr) fPtr->Grab();
+      if (fPtr)
+         fPtr->Grab();
    }
 
    ~TGeoRCPtr()
    {
-      if(fPtr) fPtr->Release();
+      if (fPtr)
+         fPtr->Release();
    }
 
-   //Assign a pointer, e.g. x = new T();
-   TGeoRCPtr &operator=(T* ptr)
+   // Assign a pointer, e.g. x = new T();
+   TGeoRCPtr &operator=(T *ptr)
    {
-      if(ptr) ptr->Grab();
-      if(fPtr) fPtr->Release();
+      if (ptr)
+         ptr->Grab();
+      if (fPtr)
+         fPtr->Release();
       fPtr = ptr;
       return (*this);
    }
 
-   //Assign another TGeoRCPtr
-   TGeoRCPtr &operator=(const TGeoRCPtr &ptr)
-   {
-      return (*this) = ptr.fPtr;
-   }
+   // Assign another TGeoRCPtr
+   TGeoRCPtr &operator=(const TGeoRCPtr &ptr) { return (*this) = ptr.fPtr; }
 
-   //Retrieve actual pointer
-   T* Get() const
-   {
-      return fPtr;
-   }
+   // Retrieve actual pointer
+   T *Get() const { return fPtr; }
 
-   //Some overloaded operators to facilitate dealing with an TGeoRCPtr as a conventional C pointer.
-   //Without these operators, one can still use the less transparent Get() method to access the pointer.
-   T* operator->() const {return fPtr;}   //x->member
-   T &operator*() const {return *fPtr;}   //*x, (*x).member
-   operator T*() const {return fPtr;}      //T* y = x;
-   operator bool() const {return fPtr != nullptr;}   //if(x) {/*x is not NULL*/}
-   bool operator==(const TGeoRCPtr &ptr) {return fPtr == ptr.fPtr;}
-   bool operator==(const T *ptr) {return fPtr == ptr;}
+   // Some overloaded operators to facilitate dealing with an TGeoRCPtr as a conventional C pointer.
+   // Without these operators, one can still use the less transparent Get() method to access the pointer.
+   T *operator->() const { return fPtr; }            // x->member
+   T &operator*() const { return *fPtr; }            //*x, (*x).member
+   operator T *() const { return fPtr; }             // T* y = x;
+   operator bool() const { return fPtr != nullptr; } // if(x) {/*x is not NULL*/}
+   bool operator==(const TGeoRCPtr &ptr) { return fPtr == ptr.fPtr; }
+   bool operator==(const T *ptr) { return fPtr == ptr; }
 
 private:
-   T *fPtr;   //Actual pointer
+   T *fPtr; // Actual pointer
 };
 
 #endif

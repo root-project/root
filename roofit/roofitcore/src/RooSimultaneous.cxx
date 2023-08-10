@@ -464,7 +464,7 @@ double RooSimultaneous::evaluate() const
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
 
   //assert(proxy!=0) ;
-  if (proxy==0) return 0 ;
+  if (proxy==nullptr) return 0 ;
 
   // Calculate relative weighting factor for sim-pdfs of all extendable components
   double catFrac(1) ;
@@ -508,7 +508,7 @@ double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
     RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
 
     //assert(proxy!=0) ;
-    if (proxy==0) return 0 ;
+    if (proxy==nullptr) return 0 ;
 
     // Return the selected PDF value, normalized by the number of index states
     return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset);
@@ -532,7 +532,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   Int_t code ;
 
   // Check if this configuration was created before
-  CacheElem* cache = (CacheElem*) _partIntMgr.getObj(normSet,&analVars,0,RooNameReg::ptr(rangeName)) ;
+  CacheElem* cache = (CacheElem*) _partIntMgr.getObj(normSet,&analVars,nullptr,RooNameReg::ptr(rangeName)) ;
   if (cache) {
     code = _partIntMgr.lastIndex() ;
     return code+1 ;
@@ -541,7 +541,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
   // Create the partial integral set for this request
   for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-    cache->_partIntList.addOwned(std::unique_ptr<RooAbsReal>{proxy->arg().createIntegral(analVars,normSet,0,rangeName)});
+    cache->_partIntList.addOwned(std::unique_ptr<RooAbsReal>{proxy->arg().createIntegral(analVars,normSet,nullptr,rangeName)});
   }
 
   // Store the partial integral list and return the assigned code ;
@@ -591,7 +591,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   pc.defineString("sliceCatState","SliceCat",0,"",true) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
-  pc.defineObject("sliceCatList","SliceCat",0,0,true) ;
+  pc.defineObject("sliceCatList","SliceCat",0,nullptr,true) ;
   // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
   // It is not used directly, but the "SliceCat" commands are nested in it.
   // Removing this dummy definition results in "ERROR: unrecognized command: SliceCatMany".
@@ -619,7 +619,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
 
   // Look for category slice arguments and add them to the master slice list if found
-  const char* sliceCatState = pc.getString("sliceCatState",0,true) ;
+  const char* sliceCatState = pc.getString("sliceCatState",nullptr,true) ;
   const RooLinkedList& sliceCatList = pc.getObjectList("sliceCatList") ;
   if (sliceCatState) {
 
@@ -860,9 +860,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     projDataVars.remove(idxCatServers,true,true) ;
 
     if (!idxCompSliceSet->empty()) {
-      projDataTmp.reset( const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString) );
+      projDataTmp = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString)};
     } else {
-      projDataTmp.reset( const_cast<RooAbsData*>(projData)->reduce(projDataVars) );
+      projDataTmp = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(projData)->reduce(projDataVars)};
     }
 
 
@@ -949,8 +949,8 @@ RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const R
 {
   const char* idxCatName = _indexCat.arg().GetName() ;
 
-  if (vars.find(idxCatName) && prototype==0
-      && (auxProto==0 || auxProto->empty())
+  if (vars.find(idxCatName) && prototype==nullptr
+      && (auxProto==nullptr || auxProto->empty())
       && (autoBinned || (binnedTag && strlen(binnedTag)))) {
 
     // Return special generator config that can also do binned generation for selected states
@@ -1016,8 +1016,8 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
                                            bool showProgress) const
 {
   if (RooAbsReal::fillDataHist (hist, nset, scaleFactor,
-                                correctForBinVolume, showProgress) == 0)
-    return 0;
+                                correctForBinVolume, showProgress) == nullptr)
+    return nullptr;
 
   const double sum = hist->sumEntries();
   if (sum != 0) {

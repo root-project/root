@@ -430,14 +430,11 @@ bool SelectionRules::GetDeclName(const clang::Decl* D, std::string& name, std::s
       return false;
 
    // the identifier is NULL for some special methods like constructors, destructors and operators
-   if (N->getIdentifier()) {
+   if (N->getIdentifier() || N->isCXXClassMember()) {
       name = N->getNameAsString();
+      llvm::raw_string_ostream stream(qual_name);
+      N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
    }
-   else if (N->isCXXClassMember()) { // for constructors, destructors, operator=, etc. methods
-      name =  N->getNameAsString(); // we use this (unefficient) method to Get the name in that case
-   }
-   llvm::raw_string_ostream stream(qual_name);
-   N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
    return true;
 }
 

@@ -17,7 +17,6 @@
 #define ROOT7_RFieldVisitor
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <algorithm>
@@ -49,11 +48,12 @@ public:
    virtual void VisitBitsetField(const RBitsetField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
-   virtual void VisitCollectionClassField(const RCollectionClassField &field) { VisitField(field); }
+   virtual void VisitProxiedCollectionField(const RProxiedCollectionField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
    virtual void VisitCardinalityField(const RCardinalityField &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
+   virtual void VisitEnumField(const REnumField &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
    virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
    virtual void VisitInt8Field(const RField<std::int8_t> &field) { VisitField(field); }
@@ -177,7 +177,7 @@ public:
    };
 
 private:
-   Detail::RFieldValue fValue;
+   Detail::RFieldBase::RValue fValue;
    /// The output is directed to fOutput which may differ from std::cout.
    std::ostream &fOutput;
    unsigned int fLevel;
@@ -188,11 +188,11 @@ private:
    void PrintCollection(const Detail::RFieldBase &field);
 
 public:
-   RPrintValueVisitor(const Detail::RFieldValue &value,
-                      std::ostream &output,
-                      unsigned int level = 0,
+   RPrintValueVisitor(Detail::RFieldBase::RValue &&value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
-      : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options) {}
+      : fValue(std::move(value)), fOutput{output}, fLevel(level), fPrintOptions(options)
+   {
+   }
 
    void VisitField(const Detail::RFieldBase &field) final;
 
@@ -214,12 +214,13 @@ public:
    void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitRecordField(const RRecordField &field) final;
-   void VisitCollectionClassField(const RCollectionClassField &field) final;
+   void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
    void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
    void VisitRVecField(const RRVecField &field) final;
    void VisitBitsetField(const RBitsetField &field) final;
    void VisitNullableField(const RNullableField &field) final;
+   void VisitEnumField(const REnumField &field) final;
 };
 
 

@@ -25,7 +25,7 @@ so that they can contain data for every kind of compute function.
 
 #include <RooBatchComputeTypes.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace RooBatchCompute {
 

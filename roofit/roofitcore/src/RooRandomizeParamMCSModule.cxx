@@ -55,7 +55,7 @@ ClassImp(RooRandomizeParamMCSModule);
 /// Constructor
 
 RooRandomizeParamMCSModule::RooRandomizeParamMCSModule() :
-  RooAbsMCStudyModule("RooRandomizeParamMCSModule","RooRandomizeParamMCSModule"), _data(0)
+  RooAbsMCStudyModule("RooRandomizeParamMCSModule","RooRandomizeParamMCSModule"), _data(nullptr)
 {
 }
 
@@ -68,7 +68,7 @@ RooRandomizeParamMCSModule::RooRandomizeParamMCSModule(const RooRandomizeParamMC
   RooAbsMCStudyModule(other),
   _unifParams(other._unifParams),
   _gausParams(other._gausParams),
-  _data(0)
+  _data(nullptr)
 {
 }
 

@@ -2246,6 +2246,10 @@ void MethodUnitTestWithROCLimits::run()
   for (int i=0;i<nTest;i++) delete reader[i];
   if (reader2) delete reader2;
 
+  if (input) delete input;
+  delete testFile;
+  delete testFile2;
+
   if (!ok){
      cout << "Failure in reader test "<< _methodTitle <<": maxdiff="<<maxdiff<<", sumdiff="<<sumdiff<<" stuckcount="<<stuckCount<<endl;
   }
@@ -2325,6 +2329,7 @@ void MethodUnitTestWithROCLimits::run()
      fout << "if (maxdiff >1.e-2) std::cout << \"maxdiff=\"<<maxdiff<< \", sumdiff=\"<<sumdiff<<std::endl;" << std::endl;
      fout << "if (sumdiff >2.e-4) ok=false;" << std::endl;
      fout << "testFile->Close();" << std::endl;
+     fout << "delete testFile;" << std::endl;
      fout << "if (!ok) {" << std::endl;
      fout << "std::cout << \"maxdiff=\"<<maxdiff<< \", sumdiff=\"<<sumdiff<<std::endl;}" << std::endl;
      fout << "return ok;" << std::endl;
@@ -2503,6 +2508,7 @@ void RegressionUnitTestWithDeviation::run()
    test_(DeviationWithinLimits());
 
    outputFile->Close();
+   delete outputFile;
    delete dataloader; 
    delete factory;
    delete input;
@@ -2577,6 +2583,7 @@ void RegressionUnitTestWithDeviation::run()
    test_(stuckCount<nevt/10);
 
    testFile->Close();
+   delete testFile;
 
    for (int i=0;i<nTest;i++) delete reader[i];
 
@@ -2763,6 +2770,8 @@ void MethodUnitTestWithComplexData::run()
      test_(ROCIntegralWithinInterval());
   }
   outputFile->Close();
+  delete outputFile;
+  if (input) delete input;
   delete dataloader; 
   delete factory;
 }
@@ -2840,6 +2849,7 @@ bool MethodUnitTestWithComplexData::create_data(const char* filename, int nmax)
 
    dataFile->Write();
    dataFile->Close();
+   delete dataFile;
    return true;
 }
 

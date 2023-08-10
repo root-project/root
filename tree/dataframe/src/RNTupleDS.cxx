@@ -16,7 +16,6 @@
 
 #include <ROOT/RDF/RColumnReaderBase.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
@@ -62,6 +61,7 @@ protected:
    {
       return std::make_unique<RRDFCardinalityField>();
    }
+   void GenerateValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
 public:
    static std::string TypeName() { return "std::size_t"; }
@@ -87,14 +87,6 @@ public:
          ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
    }
 
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
-   {
-      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<std::size_t *>(where));
-   }
-   ROOT::Experimental::Detail::RFieldValue CaptureValue(void *where) final
-   {
-      return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
-   }
    size_t GetValueSize() const final { return sizeof(std::size_t); }
    size_t GetAlignment() const final { return alignof(std::size_t); }
 
@@ -120,11 +112,10 @@ public:
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
-   using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
-   RFieldValue fValue;                 ///< The memory location used to read from fField
+   RFieldBase::RValue fValue;          ///< The memory location used to read from fField
    Long64_t fLastEntry;                ///< Last entry number that was read
 
 public:
@@ -132,7 +123,7 @@ public:
       : fField(std::move(f)), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
    }
-   ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
+   ~RNTupleColumnReader() = default;
 
    /// Column readers are created as prototype and then cloned for every slot
    std::unique_ptr<RNTupleColumnReader> Clone()
@@ -151,7 +142,7 @@ public:
    void *GetImpl(Long64_t entry) final
    {
       if (entry != fLastEntry) {
-         fField->Read(entry, fValue.GetRawPtr());
+         fValue.Read(entry);
          fLastEntry = entry;
       }
       return fValue.GetRawPtr();
@@ -236,11 +227,14 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
    // The fieldID could be the root field or the class of fieldId might not be loaded.
    // In these cases, only the inner fields are exposed as RDF columns.
-   auto fieldOrException = Detail::RFieldBase::Create("", fieldDesc.GetTypeName());
+   auto fieldOrException = Detail::RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
    valueField->SetOnDiskId(fieldId);
+   for (auto &f : *valueField) {
+      f.SetOnDiskId(desc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));
+   }
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
    if (!skeinIDs.empty()) {

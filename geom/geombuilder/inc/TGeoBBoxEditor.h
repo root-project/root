@@ -27,49 +27,46 @@ class TString;
 class TGeoBBoxEditor : public TGeoGedFrame {
 
 protected:
+   Double_t fDxi;           // Initial box dx
+   Double_t fDyi;           // Initial box dy
+   Double_t fDzi;           // Initial box dz
+   Double_t fOrigi[3];      // Initial origin
+   TString fNamei;          // Initial name
+   TGeoBBox *fShape;        // Shape object
+   Bool_t fIsModified;      // Flag that volume was modified
+   Bool_t fIsShapeEditable; // Flag that the shape can be changed
+   TGTextEntry *fShapeName; // Shape name text entry
+   TGNumberEntry *fBoxDx;   // Number entry for box DX
+   TGNumberEntry *fBoxDy;   // Number entry for box DY
+   TGNumberEntry *fBoxDz;   // Number entry for box DZ
+   TGNumberEntry *fBoxOx;   // Number entry for box OX
+   TGNumberEntry *fBoxOy;   // Number entry for box OY
+   TGNumberEntry *fBoxOz;   // Number entry for box OZ
+   TGTextButton *fApply;    // Apply-Button to accept changes
+   TGTextButton *fUndo;     // Undo-Button
+   TGCheckButton *fDelayed; // Check button for delayed draw
 
-   Double_t             fDxi;               // Initial box dx
-   Double_t             fDyi;               // Initial box dy
-   Double_t             fDzi;               // Initial box dz
-   Double_t             fOrigi[3];          // Initial origin
-   TString              fNamei;             // Initial name
-   TGeoBBox            *fShape;             // Shape object
-   Bool_t               fIsModified;        // Flag that volume was modified
-   Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
-   TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fBoxDx;             // Number entry for box DX
-   TGNumberEntry       *fBoxDy;             // Number entry for box DY
-   TGNumberEntry       *fBoxDz;             // Number entry for box DZ
-   TGNumberEntry       *fBoxOx;             // Number entry for box OX
-   TGNumberEntry       *fBoxOy;             // Number entry for box OY
-   TGNumberEntry       *fBoxOz;             // Number entry for box OZ
-   TGTextButton        *fApply;             // Apply-Button to accept changes
-   TGTextButton        *fUndo;              // Undo-Button
-   TGCheckButton       *fDelayed;           // Check button for delayed draw
-
-   virtual void ConnectSignals2Slots();     // Connect the signals to the slots
-   Bool_t       IsDelayed() const;
+   virtual void ConnectSignals2Slots(); // Connect the signals to the slots
+   Bool_t IsDelayed() const;
 
 public:
-   TGeoBBoxEditor(const TGWindow *p = nullptr,
-                   Int_t width = 140, Int_t height = 30,
-                   UInt_t options = kChildFrame,
-                   Pixel_t back = GetDefaultFrameBackground());
+   TGeoBBoxEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30, UInt_t options = kChildFrame,
+                  Pixel_t back = GetDefaultFrameBackground());
    ~TGeoBBoxEditor() override;
-   void   SetModel(TObject *obj) override;
+   void SetModel(TObject *obj) override;
 
-   void           DoDx();
-   void           DoDy();
-   void           DoDz();
-   void           DoOx();
-   void           DoOy();
-   void           DoOz();
-   void           DoModified();
-   void           DoName();
-   void           DoApply();
-   void           DoUndo();
+   void DoDx();
+   void DoDy();
+   void DoDz();
+   void DoOx();
+   void DoOy();
+   void DoOz();
+   void DoModified();
+   void DoName();
+   void DoApply();
+   void DoUndo();
 
-   ClassDefOverride(TGeoBBoxEditor,0)   // TGeoBBox editor
+   ClassDefOverride(TGeoBBoxEditor, 0) // TGeoBBox editor
 };
 
 #endif

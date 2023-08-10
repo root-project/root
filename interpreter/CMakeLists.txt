@@ -249,7 +249,6 @@ else()
       "--libdir"
       "--includedir"
       "--prefix"
-      "--src-root"
       "--cmakedir"
       "--build-mode"
       "--version")
@@ -276,10 +275,9 @@ else()
   list(GET CONFIG_OUTPUT 2 LIBRARY_DIR)
   list(GET CONFIG_OUTPUT 3 INCLUDE_DIR)
   list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
-  list(GET CONFIG_OUTPUT 5 MAIN_SRC_DIR)
-  list(GET CONFIG_OUTPUT 6 LLVM_CONFIG_CMAKE_PATH)
-  list(GET CONFIG_OUTPUT 7 LLVM_BUILD_MODE)
-  list(GET CONFIG_OUTPUT 8 LLVM_VERSION_S)
+  list(GET CONFIG_OUTPUT 5 LLVM_CONFIG_CMAKE_PATH)
+  list(GET CONFIG_OUTPUT 6 LLVM_BUILD_MODE)
+  list(GET CONFIG_OUTPUT 7 LLVM_VERSION_S)
 
   set(LLVM_VERSION_SAVE "${LLVM_VERSION_S}")
 
@@ -296,7 +294,6 @@ else()
   set(LLVM_LIBRARY_DIR ${LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
   set(LLVM_MAIN_INCLUDE_DIR ${INCLUDE_DIR} CACHE PATH "Path to llvm/include")
   set(LLVM_BINARY_DIR ${LLVM_OBJ_ROOT} CACHE PATH "Path to LLVM build tree")
-  set(LLVM_MAIN_SRC_DIR ${MAIN_SRC_DIR} CACHE PATH "Path to LLVM source tree")
 
   set(LLVM_DIR "${LLVM_BINARY_DIR}")
 
@@ -346,7 +343,7 @@ else()
   if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.0(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.0.x")
+    message(FATAL_ERROR "LLVM version ${LLVM_PACKAGE_VERSION} different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.0.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
@@ -443,6 +440,9 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
     # install-clang-cpp target defined by LLVM's cmake module
     set(CLANG_LINKS_TO_CREATE clang++ clang-cl)
 
+    # Disable linking against shared LLVM
+    set(LLVM_LINK_LLVM_DYLIB OFF)
+
     add_subdirectory(llvm-project/clang EXCLUDE_FROM_ALL)
   endif(builtin_clang)
 
@@ -503,6 +503,7 @@ if (builtin_cling)
     string(APPEND CMAKE_C_FLAGS " -fPIC")
   endif(LLVM_ENABLE_PIC AND NOT MSVC)
   # Avoid cling being installed under ROOTSYS/include.
+  set(CLING_ROOT_BUILD ON)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 

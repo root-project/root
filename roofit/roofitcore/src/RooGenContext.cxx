@@ -65,8 +65,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
               const RooDataSet *prototype, const RooArgSet* auxProto,
               bool verbose, const RooArgSet* forceDirect) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
-  _pdfClone(0), _generator(0),
-  _maxVar(0), _updateFMaxPerEvent(0)
+  _pdfClone(nullptr), _generator(nullptr),
+  _maxVar(nullptr), _updateFMaxPerEvent(0)
 {
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
@@ -97,7 +97,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Analyze the list of variables to generate...
   _isValid= true;
-  const RooAbsArg *arg = 0;
+  const RooAbsArg *arg = nullptr;
   for(RooAbsArg * tmp : vars) {
     if(!_isValid) break;
 
@@ -109,7 +109,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     }
     // lookup this argument in the cloned set of PDF dependents
     arg= static_cast<RooAbsArg const*>(_cloneSet.find(tmp->GetName()));
-    if(0 == arg) {
+    if(nullptr == arg) {
       coutI(Generation) << "RooGenContext::ctor() WARNING model does not depend on \"" << tmp->GetName()
            << "\" which will have uniform distribution" << endl;
       _uniformVars.add(*tmp);
@@ -119,10 +119,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       // does the model depend on this variable directly, ie, like "x" in
       // f(x) or f(x,g(x,y)) or even f(x,x) ?
       const RooAbsArg *direct= arg ;
-      if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
+      if (forceDirect==nullptr || !forceDirect->find(direct->GetName())) {
    if (!_pdfClone->isDirectGenSafe(*arg)) {
      cxcoutD(Generation) << "RooGenContext::ctor() observable " << arg->GetName() << " has been determined to be unsafe for internal generation" << endl;
-     direct=0 ;
+     direct=nullptr ;
    }
       }
 
@@ -296,7 +296,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->generatorName() << "  from function for observables " << _otherVars << endl ;
     //_generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,RooNumGenConfig::defaultConfig(),_verbose,_maxVar);
   } else {
-    _generator = 0 ;
+    _generator = nullptr ;
   }
 
   _otherVars.add(_uniformVars);
@@ -379,7 +379,7 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
            << resampleRatio << " due to increased maximum weight" << endl ;
    resampleData(resampleRatio) ;
       }
-      if(0 == subEvent) {
+      if(nullptr == subEvent) {
    coutE(Generation) << "RooGenContext::generateEvent ERROR accept/reject generator failed" << endl ;
    return;
       }

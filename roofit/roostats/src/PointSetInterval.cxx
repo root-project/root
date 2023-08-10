@@ -48,7 +48,7 @@ using namespace RooStats;
 /// Default constructor
 
 PointSetInterval::PointSetInterval(const char* name) :
-   ConfInterval(name), fConfidenceLevel(0.95), fParameterPointsInInterval(0)
+   ConfInterval(name), fConfidenceLevel(0.95), fParameterPointsInInterval(nullptr)
 {
 }
 
@@ -90,7 +90,7 @@ bool PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
       return false;
   }
   else if( tree ){
-    const RooArgSet* thisPoint = 0;
+    const RooArgSet* thisPoint = nullptr;
     // need to check if the parameter point is the same as any point in tree.
     for(Int_t i = 0; i<tree->numEntries(); ++i){
       // This method is not complete

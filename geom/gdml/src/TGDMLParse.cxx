@@ -242,6 +242,7 @@ const char *TGDMLParse::ParseGDML(TXMLEngine *gdml, XMLNodePointer_t node)
    const char *parbstr = "paraboloid";
    const char *intestr = "intersection";
    const char *reflstr = "reflectedSolid";
+   const char *ssolstr = "scaledSolid";
    const char *ellistr = "ellipsoid";
    const char *elcnstr = "elcone";
    const char *optsstr = "opticalsurface";
@@ -374,6 +375,8 @@ const char *TGDMLParse::ParseGDML(TXMLEngine *gdml, XMLNodePointer_t node)
       node = BooSolid(gdml, node, attr, 3);
    } else if ((strcmp(name, reflstr)) == 0) {
       node = Reflection(gdml, node, attr);
+   } else if ((strcmp(name, ssolstr)) == 0) {
+      node = ScaledSolid(gdml, node, attr);
    } else if ((strcmp(name, assestr)) == 0) {
       node = AssProcess(gdml, node);
    } else if ((strcmp(name, usrstr)) == 0) {
@@ -493,36 +496,36 @@ void TGDMLParse::DefineConstants()
    auto def_units = gGeoManager->GetDefaultUnits();
 
    // Units used in TGeo. Note that they are based on cm/degree/GeV and they are different from Geant4
-   fconsts["mm"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::mm : TGeant4Unit::mm;
+   fconsts["mm"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::mm : TGeant4Unit::mm;
    fconsts["millimeter"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::mm : TGeant4Unit::mm;
-   fconsts["cm"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
+   fconsts["cm"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
    fconsts["centimeter"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
-   fconsts["m"]          = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::m  : TGeant4Unit::m;
-   fconsts["meter"]      = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::m  : TGeant4Unit::m;
-   fconsts["km"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::km : TGeant4Unit::km;
-   fconsts["kilometer"]  = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::km : TGeant4Unit::km;
-   fconsts["rad"]        = TGeoUnit::rad;
-   fconsts["radian"]     = TGeoUnit::rad;
-   fconsts["deg"]        = TGeoUnit::deg;
-   fconsts["degree"]     = TGeoUnit::deg;
-   fconsts["pi"]         = TGeoUnit::pi;
-   fconsts["twopi"]      = TGeoUnit::twopi;
-   fconsts["avogadro"]   = TMath::Na();
-   fconsts["gev"]        = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::GeV : TGeant4Unit::GeV;
-   fconsts["GeV"]        = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::GeV : TGeant4Unit::GeV;
-   fconsts["mev"]        = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::MeV : TGeant4Unit::MeV;
-   fconsts["MeV"]        = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::MeV : TGeant4Unit::MeV;
-   fconsts["kev"]        = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::keV : TGeant4Unit::keV;
-   fconsts["keV"]        = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::keV : TGeant4Unit::keV;
-   fconsts["ev"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::eV  : TGeant4Unit::eV;
-   fconsts["eV"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::eV  : TGeant4Unit::eV;
-   fconsts["s"]          = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::s   : TGeant4Unit::s;
-   fconsts["ms"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::ms  : TGeant4Unit::ms;
-   fconsts["ns"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::ns  : TGeant4Unit::ns;
-   fconsts["us"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::us  : TGeant4Unit::us;
-   fconsts["kg"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::kg  : TGeant4Unit::kg;
-   fconsts["g"]          = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::g   : TGeant4Unit::g;
-   fconsts["mg"]         = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::mg  : TGeant4Unit::mg;
+   fconsts["m"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::m : TGeant4Unit::m;
+   fconsts["meter"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::m : TGeant4Unit::m;
+   fconsts["km"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::km : TGeant4Unit::km;
+   fconsts["kilometer"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::km : TGeant4Unit::km;
+   fconsts["rad"] = TGeoUnit::rad;
+   fconsts["radian"] = TGeoUnit::rad;
+   fconsts["deg"] = TGeoUnit::deg;
+   fconsts["degree"] = TGeoUnit::deg;
+   fconsts["pi"] = TGeoUnit::pi;
+   fconsts["twopi"] = TGeoUnit::twopi;
+   fconsts["avogadro"] = TMath::Na();
+   fconsts["gev"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::GeV : TGeant4Unit::GeV;
+   fconsts["GeV"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::GeV : TGeant4Unit::GeV;
+   fconsts["mev"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::MeV : TGeant4Unit::MeV;
+   fconsts["MeV"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::MeV : TGeant4Unit::MeV;
+   fconsts["kev"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::keV : TGeant4Unit::keV;
+   fconsts["keV"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::keV : TGeant4Unit::keV;
+   fconsts["ev"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::eV : TGeant4Unit::eV;
+   fconsts["eV"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::eV : TGeant4Unit::eV;
+   fconsts["s"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::s : TGeant4Unit::s;
+   fconsts["ms"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::ms : TGeant4Unit::ms;
+   fconsts["ns"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::ns : TGeant4Unit::ns;
+   fconsts["us"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::us : TGeant4Unit::us;
+   fconsts["kg"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::kg : TGeant4Unit::kg;
+   fconsts["g"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::g : TGeant4Unit::g;
+   fconsts["mg"] = (def_units == TGeoManager::kRootUnits) ? TGeoUnit::mg : TGeant4Unit::mg;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -597,10 +600,9 @@ XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine *gdml, XMLNodePointer_t no
 
    // Const Properties in GDML are matrices with size 1 not constants
    // This gives some ambiguity, but what can one do?
-   if ( coldim == 1 && valueList.size() == 1 )    {
+   if (coldim == 1 && valueList.size() == 1) {
       gGeoManager->AddProperty(name, valueList[0]);
-   }
-   else  {
+   } else {
       TGDMLMatrix *matrix = new TGDMLMatrix(name, valueList.size() / coldim, coldim);
       matrix->SetMatrixAsString(values.c_str());
       for (size_t i = 0; i < valueList.size(); ++i)
@@ -733,32 +735,32 @@ Double_t TGDMLParse::GetScaleVal(const char *sunit)
    unit.ToLower();
 
    if ((unit == "mm") || (unit == "millimeter") || (unit == "milimeter")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 0.1 : 1.0;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 0.1 : 1.0;
    } else if ((unit == "cm") || (unit == "centimeter")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 1.0 : 10.0;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 1.0 : 10.0;
    } else if ((unit == "m") || (unit == "meter")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 100.0 : 1e3;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 100.0 : 1e3;
    } else if ((unit == "km") || (unit == "kilometer")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 100000.0 : 1e6;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 100000.0 : 1e6;
    } else if ((unit == "rad") || (unit == "radian")) {
-     retunit = TMath::RadToDeg();
+      retunit = TMath::RadToDeg();
    } else if ((unit == "deg") || (unit == "degree")) {
-     retunit = 1.0;
+      retunit = 1.0;
    } else if ((unit == "ev") || (unit == "electronvolt")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 0.000000001 : 1e-6;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 0.000000001 : 1e-6;
    } else if ((unit == "kev") || (unit == "kiloelectronvolt")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 0.000001 : 1e-3;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 0.000001 : 1e-3;
    } else if ((unit == "mev") || (unit == "megaelectronvolt")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 0.001 : 1.0;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 0.001 : 1.0;
    } else if ((unit == "gev") || (unit == "gigaelectronvolt")) {
-     retunit = (def_units == TGeoManager::kRootUnits) ? 1.0 : 1000.0;
+      retunit = (def_units == TGeoManager::kRootUnits) ? 1.0 : 1000.0;
    } else if (unit == "pi") {
-     retunit = TMath::Pi();
+      retunit = TMath::Pi();
    } else if (unit == "avogadro") {
-     retunit = TMath::Na();
+      retunit = TMath::Na();
    } else {
-     Fatal("GetScaleVal", "Unit <%s> not known", sunit);
-     retunit = 0;
+      Fatal("GetScaleVal", "Unit <%s> not known", sunit);
+      retunit = 0;
    }
    return retunit;
 }
@@ -1921,7 +1923,8 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                   ffilemap[fCurrentFile] = volref;
                }
 
-               if (filevol) volref = filevol;
+               if (filevol)
+                  volref = filevol;
                lv = GetVolume(volref.Data());
 
                fFILENO = fFILENO - 1;
@@ -2486,7 +2489,7 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                pos = GetPosition(reftemp.Data());
                if (!pos)
                   Fatal("AssProcess", "Position %s not found", reftemp.Data());
-           } else if (tempattr == "position") {
+            } else if (tempattr == "position") {
                attr = gdml->GetFirstAttr(subchild);
                PosProcess(gdml, subchild, attr);
                reftemp = gdml->GetAttr(subchild, "name");
@@ -4437,6 +4440,69 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine *gdml, XMLNodePointer_t node
    fsolmap[local_name.Data()] = tsl;
 
    return node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// In the solids section of the GDML file, a Scaled Solid may be
+/// declared when the scaledSolid keyword is found, this function
+/// is called. The scale transformation is used as internal matrix.
+
+XMLNodePointer_t TGDMLParse::ScaledSolid(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString tempattr, reftemp;
+   XMLAttrPointer_t childattr;
+
+   XMLNodePointer_t child = gdml->GetChild(node);
+   TString solidname = "";
+   TGeoShape *solid = nullptr;
+   TGeoScale *scl = nullptr;
+
+   TString name;
+   while (attr != nullptr) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+   TString local_name = name;
+   if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+      local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+   }
+
+   while (child != 0) {
+      tempattr = gdml->GetNodeName(child);
+      tempattr.ToLower();
+      if (tempattr == "solidref") {
+         reftemp = gdml->GetAttr(child, "ref");
+         if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+            reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+         }
+         if (fsolmap.find(reftemp.Data()) != fsolmap.end()) {
+            solid = fsolmap[reftemp.Data()];
+         } else {
+            printf("Solid: %s, Not Yet Defined!\n", reftemp.Data());
+         }
+      } else if (tempattr == "scale") {
+         childattr = gdml->GetFirstAttr(child);
+         SclProcess(gdml, child, childattr);
+         reftemp = gdml->GetAttr(child, "name");
+         scl = GetScaleObj(reftemp.Data());
+      } else if (tempattr == "scaleref") {
+         reftemp = gdml->GetAttr(child, "ref");
+         scl = GetScaleObj(reftemp.Data());
+         if (!scl)
+            Fatal("ScaledSolid", "Solid's scale %s not found", reftemp.Data());
+      }
+
+      child = gdml->GetNext(child);
+   }
+
+   auto scaled = new TGeoScaledShape(NameShort(name), solid, scl);
+   fsolmap[local_name.Data()] = scaled;
+
+   return child;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -606,7 +606,7 @@ void ParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 /// the associated parameters.
 /// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
-void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+void ParamHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
 
   auto const& n = _numBinsPerDim;
   // check if _numBins needs to be filled
@@ -655,7 +655,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)0) ;
+  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)nullptr) ;
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }
@@ -664,7 +664,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   cache = new CacheElem ;
 
   // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
+  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,nullptr) ;
 
   return code+1 ;
 

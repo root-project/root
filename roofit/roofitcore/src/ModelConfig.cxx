@@ -231,10 +231,10 @@ void ModelConfig::SetSnapshot(const RooArgSet &set)
       return;
 
    fSnapshotName = GetName();
-   if (fSnapshotName.size() > 0)
+   if (!fSnapshotName.empty())
       fSnapshotName += "_";
    fSnapshotName += set.GetName();
-   if (fSnapshotName.size() > 0)
+   if (!fSnapshotName.empty())
       fSnapshotName += "_";
    fSnapshotName += "snapshot";
    GetWS()->saveSnapshot(fSnapshotName.c_str(), set, true); // import also the given parameter values
@@ -248,22 +248,22 @@ void ModelConfig::SetSnapshot(const RooArgSet &set)
 const RooArgSet *ModelConfig::GetSnapshot() const
 {
    if (!GetWS())
-      return 0;
+      return nullptr;
    if (!fSnapshotName.length())
-      return 0;
+      return nullptr;
    // calling loadSnapshot will also copy the current parameter values in the workspaces
    // since we do not want to change the model parameters - we restore the previous ones
    if (!GetWS()->set(fSnapshotName.c_str()))
-      return 0;
+      return nullptr;
    RooArgSet snapshotVars(*GetWS()->set(fSnapshotName.c_str()));
    if (snapshotVars.empty())
-      return 0;
+      return nullptr;
    // make my snapshot which will contain a copy of the snapshot variables
    RooArgSet tempSnapshot;
    snapshotVars.snapshot(tempSnapshot);
    // load snapshot value from the workspace
    if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())))
-      return 0;
+      return nullptr;
    // by doing this snapshotVars will have the snapshot values - make the snapshot to return
    const RooArgSet *modelSnapshot = dynamic_cast<const RooArgSet *>(snapshotVars.snapshot());
    // restore now the variables of snapshot in ws to their original values

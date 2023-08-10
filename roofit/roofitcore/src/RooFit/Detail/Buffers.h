@@ -13,7 +13,14 @@
 #ifndef RooFit_Detail_Buffers_h
 #define RooFit_Detail_Buffers_h
 
-#include <RooBatchComputeTypes.h>
+#include <RConfig.h>
+
+#ifdef R__HAS_CUDA
+#include <RooFit/Detail/CudaInterface.h>
+#endif
+
+#include <cstddef>
+#include <memory>
 
 namespace ROOT {
 namespace Experimental {
@@ -38,13 +45,16 @@ public:
    BufferManager();
    ~BufferManager();
 
-   AbsBuffer *makeScalarBuffer();
-   AbsBuffer *makeCpuBuffer(std::size_t size);
-   AbsBuffer *makeGpuBuffer(std::size_t size);
-   AbsBuffer *makePinnedBuffer(std::size_t size, cudaStream_t *stream = nullptr);
+   std::unique_ptr<AbsBuffer> makeScalarBuffer();
+   std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size);
+#ifdef R__HAS_CUDA
+   std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size);
+   std::unique_ptr<AbsBuffer>
+   makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream *stream = nullptr);
+#endif
 
 private:
-   BufferQueuesMaps *_queuesMaps;
+   std::unique_ptr<BufferQueuesMaps> _queuesMaps;
 };
 
 } // end namespace Detail

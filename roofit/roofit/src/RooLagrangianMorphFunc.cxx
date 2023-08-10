@@ -866,7 +866,7 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
          return;
       }
 
-      auto it = list_xs.find(sample.c_str());
+      auto it = list_xs.find(sample);
       RooRealVar *xs;
       if (it != list_xs.end()) {
          xs = (RooRealVar *)(physics.at(it->second));
@@ -1392,22 +1392,22 @@ public:
 
       if (false) {
          if (unitywarning) {
-            oocxcoutW((TObject *)0, Eval) << "Warning: The matrix inversion seems to be unstable. This can "
+            oocxcoutW((TObject *)nullptr, Eval) << "Warning: The matrix inversion seems to be unstable. This can "
                                              "be a result to input samples that are not sufficiently "
                                              "different to provide any morphing power."
                                           << std::endl;
          } else if (weightwarning) {
-            oocxcoutW((TObject *)0, Eval) << "Warning: Some weights are excessively large. This can be a "
+            oocxcoutW((TObject *)nullptr, Eval) << "Warning: Some weights are excessively large. This can be a "
                                              "result to input samples that are not sufficiently different to "
                                              "provide any morphing power."
                                           << std::endl;
          }
-         oocxcoutW((TObject *)0, Eval) << "         Please consider the couplings "
+         oocxcoutW((TObject *)nullptr, Eval) << "         Please consider the couplings "
                                           "encoded in your samples to cross-check:"
                                        << std::endl;
          for (auto sampleit : inputParameters) {
             const std::string sample(sampleit.first);
-            oocxcoutW((TObject *)0, Eval) << "         " << sample << ": ";
+            oocxcoutW((TObject *)nullptr, Eval) << "         " << sample << ": ";
             // set all vars to value stored in input file
             setParams(sampleit.second, operators, true);
             bool first = true;
@@ -1417,10 +1417,10 @@ public:
                obj = dynamic_cast<RooAbsReal *>(itr);
                if (!first)
                   std::cerr << ", ";
-               oocxcoutW((TObject *)0, Eval) << obj->GetName() << "=" << obj->getVal();
+               oocxcoutW((TObject *)nullptr, Eval) << obj->GetName() << "=" << obj->getVal();
                first = false;
             }
-            oocxcoutW((TObject *)0, Eval) << std::endl;
+            oocxcoutW((TObject *)nullptr, Eval) << std::endl;
          }
       }
 #ifndef USE_UBLAS
@@ -1538,8 +1538,8 @@ public:
          return cache;
       }
 
-      oocxcoutP((TObject *)0, ObjectHandling) << "observable: " << func->getObservable()->GetName() << std::endl;
-      oocxcoutP((TObject *)0, ObjectHandling) << "binWidth: " << func->getBinWidth()->GetName() << std::endl;
+      oocxcoutP((TObject *)nullptr, ObjectHandling) << "observable: " << func->getObservable()->GetName() << std::endl;
+      oocxcoutP((TObject *)nullptr, ObjectHandling) << "binWidth: " << func->getBinWidth()->GetName() << std::endl;
 
       setParams(func->_flags, 1);
       cache->buildMorphingFunction(func->GetName(), func->_config.paramCards, func->_sampleMap, func->_physics,
@@ -1621,7 +1621,7 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
    // cxcoutP(ObjectHandling) << "setting up observable" << std::endl;
    RooRealVar *obs = nullptr;
    bool obsExists(false);
-   if (_observables.at(0) != 0) {
+   if (_observables.at(0) != nullptr) {
       obs = (RooRealVar *)_observables.at(0);
       obsExists = true;
    }
@@ -1909,7 +1909,7 @@ void RooLagrangianMorphFunc::disableInterferences(const std::vector<std::vector<
 void RooLagrangianMorphFunc::init()
 {
    std::string filename = _config.fileName;
-   TDirectory *file = openFile(filename.c_str());
+   TDirectory *file = openFile(filename);
    if (!file) {
       coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
       return;
@@ -2239,7 +2239,7 @@ bool RooLagrangianMorphFunc::updateCoefficients()
    auto cache = this->getCache();
 
    std::string filename = _config.fileName;
-   TDirectory *file = openFile(filename.c_str());
+   TDirectory *file = openFile(filename);
    if (!file) {
       coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
       return false;
@@ -2263,12 +2263,13 @@ bool RooLagrangianMorphFunc::updateCoefficients()
 
 bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD &inverse)
 {
-   auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
+   auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(
+      _cacheMgr.getObj(nullptr, static_cast<RooArgSet const *>(nullptr)));
    Matrix m = makeSuperMatrix(inverse);
    if (cache) {
       std::string filename = _config.fileName;
       cache->_inverse = m;
-      TDirectory *file = openFile(filename.c_str());
+      TDirectory *file = openFile(filename);
       if (!file) {
          coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
          return false;
@@ -2286,7 +2287,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD &inverse)
       cache = RooLagrangianMorphFunc::CacheElem::createCache(this, m);
       if (!cache)
          coutE(Caching) << "unable to create cache!" << std::endl;
-      _cacheMgr.setObj(0, 0, cache, 0);
+      _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
    }
    return true;
 }
@@ -2297,7 +2298,8 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD &inverse)
 
 bool RooLagrangianMorphFunc::useCoefficients(const char *filename)
 {
-   auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
+   auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(
+      _cacheMgr.getObj(nullptr, static_cast<RooArgSet const *>(nullptr)));
    if (cache) {
       return false;
    }
@@ -2325,7 +2327,8 @@ bool RooLagrangianMorphFunc::writeCoefficients(const char *filename)
 
 typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache() const
 {
-   auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
+   auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(
+      _cacheMgr.getObj(nullptr, static_cast<RooArgSet const *>(nullptr)));
    if (!cache) {
       cxcoutP(Caching) << "creating cache from getCache function for " << this << std::endl;
       cxcoutP(Caching) << "current storage has size " << _sampleMap.size() << std::endl;
@@ -2480,7 +2483,7 @@ void RooLagrangianMorphFunc::setParameters(TH1 *paramhist)
 void RooLagrangianMorphFunc::setParameters(const char *foldername)
 {
    std::string filename = _config.fileName;
-   TDirectory *file = openFile(filename.c_str());
+   TDirectory *file = openFile(filename);
    auto paramhist = loadFromFileResidentFolder<TH1>(file, foldername, "param_card");
    setParams(paramhist.get(), _operators, false);
    closeFile(file);

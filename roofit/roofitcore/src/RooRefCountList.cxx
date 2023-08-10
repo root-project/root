@@ -28,7 +28,7 @@ reference count until zero, when the object is actually removed.
 #include "RooRefCountList.h"
 
 #include "Riostream.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace std;
 
@@ -79,7 +79,7 @@ bool RooRefCountList::Remove(TObject* obj)
 {
   RooLinkedListElem* link = findLink(obj) ;
   if (!link) {
-    return 0 ;
+    return false ;
   } else {
     if (link->decRefCount()==0) {
       //cout << "RooRefCountList::AddLast(" << obj << ") removed object" << endl ;
@@ -87,7 +87,7 @@ bool RooRefCountList::Remove(TObject* obj)
     }
     //cout << "RooRefCountList::AddLast(" << obj << ") decremented reference count to " << link->refCount() << endl ;
   }
-  return 0 ;
+  return false ;
 }
 
 

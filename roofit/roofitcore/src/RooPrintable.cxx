@@ -272,6 +272,6 @@ ostream &RooPrintable::defaultPrintStream(ostream *os)
   static ostream *_defaultPrintStream = &cout;
 
   ostream& _oldDefault= *_defaultPrintStream;
-  if(0 != os) _defaultPrintStream= os;
+  if(nullptr != os) _defaultPrintStream= os;
   return _oldDefault;
 }

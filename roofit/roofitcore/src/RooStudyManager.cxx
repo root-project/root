@@ -104,7 +104,7 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, bool s
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
 
   // Check that PROOF initialization actually succeeeded
-  if (p==0) {
+  if (p==nullptr) {
     coutE(Generation) << "RooStudyManager::runProof(" << GetName() << ") ERROR initializing proof, aborting" << endl ;
     return ;
   }
