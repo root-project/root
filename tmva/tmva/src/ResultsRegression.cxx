@@ -178,7 +178,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
 
 
    TH2F* h = new TH2F( name, name, nxbins, xmin, xmax, nybins, ymin, ymax );
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
 
    h->GetXaxis()->SetTitle( (takeTargets ? dsi->GetTargetInfo(varNum).GetTitle() : dsi->GetVariableInfo(varNum).GetTitle() ) );
    TString varName( dsi->GetTargetInfo(tgtNum).GetTitle() );

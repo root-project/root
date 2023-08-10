@@ -777,7 +777,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
       for (Int_t cls = 0; cls < ncls; cls++) {
          if (hVars.at(cls).at(i) != 0) {
             hVars.at(cls).at(i)->Write();
-            hVars.at(cls).at(i)->SetDirectory(0);
+            hVars.at(cls).at(i)->SetDirectory(nullptr);
             delete hVars.at(cls).at(i);
          }
       }
@@ -797,12 +797,12 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
             for (Int_t cls = 0; cls < ncls; cls++) {
                if (mycorr.at(cls).at(i).at(j) != 0 ) {
                   mycorr.at(cls).at(i).at(j)->Write();
-                  mycorr.at(cls).at(i).at(j)->SetDirectory(0);
+                  mycorr.at(cls).at(i).at(j)->SetDirectory(nullptr);
                   delete mycorr.at(cls).at(i).at(j);
                }
                if (myprof.at(cls).at(i).at(j) != 0) {
                   myprof.at(cls).at(i).at(j)->Write();
-                  myprof.at(cls).at(i).at(j)->SetDirectory(0);
+                  myprof.at(cls).at(i).at(j)->SetDirectory(nullptr);
                   delete myprof.at(cls).at(i).at(j);
                }
             }

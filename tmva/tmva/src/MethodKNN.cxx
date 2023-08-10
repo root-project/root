@@ -686,7 +686,7 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 
    kNN::Event *event = new kNN::Event();
    TTree *tree = new TTree("knn", "event tree");
-   tree->SetDirectory(0);
+   tree->SetDirectory(nullptr);
    tree->Branch("event", "TMVA::kNN::Event", &event);
 
    Double_t size = 0.0;

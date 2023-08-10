@@ -195,7 +195,7 @@ TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
 TTree* TMVA::DataLoader::CreateEventAssignTrees( const TString& name )
 {
    TTree * assignTree = new TTree( name, name );
-   assignTree->SetDirectory(0);
+   assignTree->SetDirectory(nullptr);
    assignTree->Branch( "type",   &fATreeType,   "ATreeType/I" );
    assignTree->Branch( "weight", &fATreeWeight, "ATreeWeight/F" );
 

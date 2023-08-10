@@ -2628,7 +2628,7 @@ TH1F *TMVA::Factory::GetImportance(const int nbits, std::vector<Double_t> import
    vih1->GetYaxis()->SetTitleOffset(1.24);
 
    vih1->GetYaxis()->SetRangeUser(-7, 50);
-   vih1->SetDirectory(0);
+   vih1->SetDirectory(nullptr);
 
    //   vih1->Draw("B");
    return vih1;

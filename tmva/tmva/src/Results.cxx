@@ -87,19 +87,19 @@ void TMVA::Results::Store( TObject* obj, const char* alias )
 {
    TListIter l(fStorage);
    // check if object is already in list
-   while (void* p = (void*)l()) {
-      if(p==obj)
-         *fLogger << kFATAL << "Histogram pointer " << p << " already exists in results storage" << Endl;
+   while (auto p = l()) {
+      if(p == obj)
+         *fLogger << kFATAL << "Histogram pointer " << (void *) p << " already exists in results storage" << Endl;
    }
 
-   TString as(obj->GetName());
-   if (alias!=0) as=TString(alias);
+   TString as = obj->GetName();
+   if (alias) as=TString(alias);
    if (fHistAlias->find(as) != fHistAlias->end()) {
       // alias exists
       *fLogger << kFATAL << "Alias " << as << " already exists in results storage" << Endl;
    }
    if( obj->InheritsFrom(TH1::Class()) ) {
-      ((TH1*)obj)->SetDirectory(0);
+      ((TH1*)obj)->SetDirectory(nullptr);
    }
    fStorage->Add( obj );
    fHistAlias->insert(std::pair<TString, TObject*>(as,obj));

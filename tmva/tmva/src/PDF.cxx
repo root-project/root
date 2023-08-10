@@ -291,8 +291,8 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
    fHist        ->SetTitle( fHist->GetName() );
 
    // do not store in current target file
-   fHistOriginal->SetDirectory(0);
-   fHist        ->SetDirectory(0);
+   fHistOriginal->SetDirectory(nullptr);
+   fHist        ->SetDirectory(nullptr);
    fUseHistogram = kFALSE;
 
    if (fInterpolMethod == PDF::kKDE) BuildKDEPDF();
@@ -377,7 +377,7 @@ void TMVA::PDF::BuildSplinePDF()
    if (fNormalize)
       if (integral>0) fPDFHist->Scale( 1.0/integral );
 
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,7 +447,7 @@ void TMVA::PDF::BuildKDEPDF()
    // normalize
    if (fNormalize)
       if (integral>0) fPDFHist->Scale( 1.0/integral );
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -544,7 +544,7 @@ void TMVA::PDF::FillSplineToHist()
          fPDFHist->SetBinContent( bin, TMath::Max(y, fgEpsilon) );
       }
    }
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -986,7 +986,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    TH1* newhist = 0;
    if (hasEquidistantBinning) {
       newhist = new TH1F( hname, hname, nbins, xmin, xmax );
-      newhist->SetDirectory(0);
+      newhist->SetDirectory(nullptr);
       const char* content = gTools().GetContent(histch);
       std::stringstream s(content);
       Double_t val;
@@ -1010,7 +1010,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
       std::stringstream sb(binString);
       for (UInt_t i=0; i<=nbins; i++) sb >> binns[i];
       newhist =  new TH1F( hname, hname, nbins, binns.GetMatrixArray() );
-      newhist->SetDirectory(0);
+      newhist->SetDirectory(nullptr);
       for (UInt_t i=0; i<nbins; i++) {
          s >> val;
          newhist->SetBinContent(i+1,val);
@@ -1024,7 +1024,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    fHistOriginal = newhist;
    fHist = (TH1F*)fHistOriginal->Clone( hnameSmooth );
    fHist->SetTitle( hnameSmooth );
-   fHist->SetDirectory(0);
+   fHist->SetDirectory(nullptr);
 
    if (fInterpolMethod == PDF::kKDE) BuildKDEPDF();
    else                              BuildSplinePDF();
@@ -1111,7 +1111,7 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
       std::exit(1);
    }
    TH1* newhist = new TH1F( hname,hname, nbins, xmin, xmax );
-   newhist->SetDirectory(0);
+   newhist->SetDirectory(nullptr);
    Float_t val;
    for (Int_t i=0; i<nbins; i++) {
       istr >> val;
@@ -1122,7 +1122,7 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
    pdf.fHistOriginal = newhist;
    pdf.fHist = (TH1F*)pdf.fHistOriginal->Clone( hnameSmooth );
    pdf.fHist->SetTitle( hnameSmooth );
-   pdf.fHist->SetDirectory(0);
+   pdf.fHist->SetDirectory(nullptr);
 
    if (pdf.fMinNsmooth>=0) pdf.BuildSplinePDF();
    else {

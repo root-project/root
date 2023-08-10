@@ -153,7 +153,8 @@ TTree* TMVA::DataInputHandler::ReadInputTree( const TString& dataFile )
 {
    TTree* tr = new TTree( "tmp", dataFile );
    std::ifstream in(dataFile);
-   tr->SetDirectory(0); Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl;
+   tr->SetDirectory(nullptr); 
+   Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl;
    if (!in.good()) Log() << kFATAL << "Could not open file: " << dataFile << Endl;
    in.close();
 
