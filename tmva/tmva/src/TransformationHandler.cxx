@@ -552,7 +552,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                Int_t xmax = TMath::Nint( GetMax( ( var_tgt*nvar )+ivar) + 1 );
                Int_t nbins = xmax - xmin;
 
-               h = new TH1F( Form("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()),
+               h = new TH1F( TString::Format("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()).Data(),
                              info.GetTitle(), nbins, xmin, xmax );
             }
             else {
@@ -566,7 +566,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                // safety margin for values equal to the maximum within the histogram
                xmax += (xmax - xmin)/nbins1D;
 
-               h = new TH1F( Form("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()),
+               h = new TH1F( TString::Format("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()).Data(),
                              info.GetTitle(), nbins1D, xmin, xmax );
             }
 
@@ -751,9 +751,9 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 
       TString uniqueOutputDir = outputDir;
       Int_t counter = 0;
-      TObject* o = NULL;
-      while( (o = fRootBaseDir->FindObject(uniqueOutputDir)) != 0 ){
-         uniqueOutputDir = outputDir+Form("_%d",counter);
+      TObject* o = nullptr;
+      while( (o = fRootBaseDir->FindObject(uniqueOutputDir)) != nullptr ){
+         uniqueOutputDir = outputDir + TString::Format("_%d",counter);
          Log() << kINFO << "A " << o->ClassName() << " with name " << o->GetName() << " already exists in "
                << fRootBaseDir->GetPath() << ", I will try with "<<uniqueOutputDir<<"." << Endl;
          ++counter;

@@ -148,7 +148,7 @@ TMVA::VariableInfo& TMVA::VariableInfo::operator=(const VariableInfo& rhs)
 void TMVA::VariableInfo::WriteToStream( std::ostream& o ) const
 {
    UInt_t nc = TMath::Max( 30, TMath::Max( GetExpression().Length()+1, GetInternalName().Length()+1 ) );
-   TString expBr(Form("\'%s\'",GetExpression().Data()));
+   TString expBr = TString::Format("\'%s\'",GetExpression().Data());
    o << std::setw(nc) << GetExpression();
    o << std::setw(nc) << GetInternalName();
    o << std::setw(nc) << GetLabel();
@@ -202,7 +202,7 @@ void TMVA::VariableInfo::AddToXML( void* varnode )
    typeStr[0] = GetVarType();
    // in case of array variables, add "[]" to the type string: e.g. F[]
    if (TestBit(DataSetInfo::kIsArrayVariable))
-      typeStr += "[]"; 
+      typeStr += "[]";
    gTools().AddAttr(varnode, "Type", typeStr);
    gTools().AddAttr( varnode, "Min", gTools().StringFromDouble(GetMin()) );
    gTools().AddAttr( varnode, "Max", gTools().StringFromDouble(GetMax()) );
@@ -224,7 +224,7 @@ void TMVA::VariableInfo::ReadFromXML( void* varnode )
    gTools().ReadAttr( varnode, "Max",        fXmaxNorm );
 
    SetVarType(type[0]);
-   // detect variables from array 
+   // detect variables from array
    if (type.Contains("[]"))
       SetBit(DataSetInfo::kIsArrayVariable);
 }
