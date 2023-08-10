@@ -269,8 +269,9 @@ void TMVA::MethodTMlpANN::Train( void )
    localTrainingTree->Branch( "weight",     &weight,      "weight/F",      basketsize );
 
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      const char* myVar = GetInternalVarName(ivar).Data();
-      localTrainingTree->Branch( myVar, &vArr[ivar], Form("Var%02i/F", ivar), basketsize );
+      TString myVar = GetInternalVarName(ivar);
+      TString myTyp = TString::Format("Var%02i/F", ivar);
+      localTrainingTree->Branch( myVar.Data(), &vArr[ivar], myTyp.Data(), basketsize );
    }
 
    for (UInt_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
@@ -305,7 +306,7 @@ void TMVA::MethodTMlpANN::Train( void )
    // localTrainingTree->Print();
 
    // create NN
-   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   if (fMLP) { delete fMLP; fMLP = nullptr; }
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(),
                                      localTrainingTree,
                                      trainList,
@@ -352,12 +353,12 @@ void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const
    std::ifstream inf( tmpfile.Data() );
    char temp[256];
    TString data("");
-   void *ch=NULL;
+   void *ch = nullptr;
    while (inf.getline(temp,256)) {
       TString dummy(temp);
       //std::cout << dummy << std::endl; // remove annoying debug printout with std::cout
       if (dummy.BeginsWith('#')) {
-         if (ch!=0) gTools().AddRawLine( ch, data.Data() );
+         if (ch) gTools().AddRawLine( ch, data.Data() );
          dummy = dummy.Strip(TString::kLeading, '#');
          dummy = dummy(0,dummy.First(' '));
          ch = gTools().AddChild(wght, dummy);
@@ -366,7 +367,7 @@ void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const
       }
       data += (dummy + " ");
    }
-   if (ch != 0) gTools().AddRawLine( ch, data.Data() );
+   if (ch) gTools().AddRawLine( ch, data.Data() );
 
    inf.close();
 }
@@ -424,11 +425,12 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
    TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
    for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {
       TString vn = DataInfo().GetVariableInfo(ivar).GetInternalName();
-      dummyTree->Branch(Form("%s",vn.Data()), d+ivar, Form("%s/D",vn.Data()));
+      TString vt = TString::Format("%s/D", vn.Data());
+      dummyTree->Branch(vn.Data(), d+ivar, vt.Data());
    }
    dummyTree->Branch("type", &type, "type/I");
 
-   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   if (fMLP) { delete fMLP; fMLP = nullptr; }
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
    fMLP->LoadWeights( fname );
 }
@@ -447,17 +449,18 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( std::istream& istr )
    // the MLP is already build
    Log() << kINFO << "Load TMLP weights into " << fMLP << Endl;
 
-   Double_t* d = new Double_t[Data()->GetNVariables()] ;
+   Double_t *d = new Double_t[Data()->GetNVariables()] ;
    Int_t type;
    gROOT->cd();
    TTree * dummyTree = new TTree("dummy","Empty dummy tree", 1);
    for (UInt_t ivar = 0; ivar<Data()->GetNVariables(); ivar++) {
       TString vn = DataInfo().GetVariableInfo(ivar).GetLabel();
-      dummyTree->Branch(Form("%s",vn.Data()), d+ivar, Form("%s/D",vn.Data()));
+      TString vt = TString::Format("%s/D", vn.Data());
+      dummyTree->Branch(vn.Data(), d+ivar, vt.Data());
    }
    dummyTree->Branch("type", &type, "type/I");
 
-   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   if (fMLP) { delete fMLP; fMLP = nullptr; }
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
 
    fMLP->LoadWeights( "./TMlp.nn.weights.temp" );
