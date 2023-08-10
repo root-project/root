@@ -350,7 +350,7 @@ void TMVA::MethodBoost::CheckSetup()
 
 void TMVA::MethodBoost::Train()
 {
-   TDirectory* methodDir( 0 );
+   TDirectory* methodDir = nullptr;
    TString     dirName,dirTitle;
    Int_t       StopCounter=0;
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
@@ -390,7 +390,7 @@ void TMVA::MethodBoost::Train()
       if (fCurrentMethodIdx>0) TMVA::MsgLogger::InhibitOutput();
 
       IMethod *method = ClassifierFactory::Instance().Create(
-         fBoostedMethodName.Data(), GetJobName(), Form("%s_B%04i", fBoostedMethodTitle.Data(), fCurrentMethodIdx),
+         fBoostedMethodName.Data(), GetJobName(), TString::Format("%s_B%04i", fBoostedMethodTitle.Data(), fCurrentMethodIdx),
          DataInfo(), fBoostedMethodOptions);
       TMVA::MsgLogger::EnableOutput();
 
@@ -427,9 +427,9 @@ void TMVA::MethodBoost::Train()
       if(!IsSilentFile())
       {
         if (fMonitorBoostedMethod) {
-            methodDir=GetFile()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
-            if (methodDir==0) {
-                methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
+            methodDir = GetFile()->GetDirectory(dirName=TString::Format("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
+            if (!methodDir) {
+                methodDir = BaseDir()->mkdir(dirName,dirTitle=TString::Format("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
             }
             fCurrentMethod->SetMethodDir(methodDir);
             fCurrentMethod->BaseDir()->cd();
@@ -554,12 +554,12 @@ void TMVA::MethodBoost::CreateMVAHistorgrams()
 
    // creating all the histograms
    for (UInt_t imtd=0; imtd<fBoostNum; imtd++) {
-      fTrainSigMVAHist .push_back( new TH1F( Form("MVA_Train_S_%04i",imtd), "MVA_Train_S",        fNbins, xmin, xmax ) );
-      fTrainBgdMVAHist .push_back( new TH1F( Form("MVA_Train_B%04i", imtd), "MVA_Train_B",        fNbins, xmin, xmax ) );
-      fBTrainSigMVAHist.push_back( new TH1F( Form("MVA_BTrain_S%04i",imtd), "MVA_BoostedTrain_S", fNbins, xmin, xmax ) );
-      fBTrainBgdMVAHist.push_back( new TH1F( Form("MVA_BTrain_B%04i",imtd), "MVA_BoostedTrain_B", fNbins, xmin, xmax ) );
-      fTestSigMVAHist  .push_back( new TH1F( Form("MVA_Test_S%04i",  imtd), "MVA_Test_S",         fNbins, xmin, xmax ) );
-      fTestBgdMVAHist  .push_back( new TH1F( Form("MVA_Test_B%04i",  imtd), "MVA_Test_B",         fNbins, xmin, xmax ) );
+      fTrainSigMVAHist .push_back( new TH1F( TString::Format("MVA_Train_S_%04i",imtd).Data(), "MVA_Train_S",        fNbins, xmin, xmax ) );
+      fTrainBgdMVAHist .push_back( new TH1F( TString::Format("MVA_Train_B%04i", imtd).Data(), "MVA_Train_B",        fNbins, xmin, xmax ) );
+      fBTrainSigMVAHist.push_back( new TH1F( TString::Format("MVA_BTrain_S%04i",imtd).Data(), "MVA_BoostedTrain_S", fNbins, xmin, xmax ) );
+      fBTrainBgdMVAHist.push_back( new TH1F( TString::Format("MVA_BTrain_B%04i",imtd).Data(), "MVA_BoostedTrain_B", fNbins, xmin, xmax ) );
+      fTestSigMVAHist  .push_back( new TH1F( TString::Format("MVA_Test_S%04i",  imtd).Data(), "MVA_Test_S",         fNbins, xmin, xmax ) );
+      fTestBgdMVAHist  .push_back( new TH1F( TString::Format("MVA_Test_B%04i",  imtd).Data(), "MVA_Test_B",         fNbins, xmin, xmax ) );
    }
 }
 
@@ -704,18 +704,18 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
    }
    maxMVA = maxMVA+(maxMVA-minMVA)/nBins;
 
-   TH1D *mvaS  = new TH1D(Form("MVAS_%d",fCurrentMethodIdx) ,"",nBins,minMVA,maxMVA);
-   TH1D *mvaB  = new TH1D(Form("MVAB_%d",fCurrentMethodIdx) ,"",nBins,minMVA,maxMVA);
-   TH1D *mvaSC = new TH1D(Form("MVASC_%d",fCurrentMethodIdx),"",nBins,minMVA,maxMVA);
-   TH1D *mvaBC = new TH1D(Form("MVABC_%d",fCurrentMethodIdx),"",nBins,minMVA,maxMVA);
+   TH1D *mvaS  = new TH1D(TString::Format("MVAS_%d",fCurrentMethodIdx) ,"",nBins,minMVA,maxMVA);
+   TH1D *mvaB  = new TH1D(TString::Format("MVAB_%d",fCurrentMethodIdx) ,"",nBins,minMVA,maxMVA);
+   TH1D *mvaSC = new TH1D(TString::Format("MVASC_%d",fCurrentMethodIdx),"",nBins,minMVA,maxMVA);
+   TH1D *mvaBC = new TH1D(TString::Format("MVABC_%d",fCurrentMethodIdx),"",nBins,minMVA,maxMVA);
 
 
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
    if (fDetailedMonitoring){
-      results->Store(mvaS, Form("MVAS_%d",fCurrentMethodIdx));
-      results->Store(mvaB, Form("MVAB_%d",fCurrentMethodIdx));
-      results->Store(mvaSC,Form("MVASC_%d",fCurrentMethodIdx));
-      results->Store(mvaBC,Form("MVABC_%d",fCurrentMethodIdx));
+      results->Store(mvaS, TString::Format("MVAS_%d",fCurrentMethodIdx));
+      results->Store(mvaB, TString::Format("MVAB_%d",fCurrentMethodIdx));
+      results->Store(mvaSC,TString::Format("MVASC_%d",fCurrentMethodIdx));
+      results->Store(mvaBC,TString::Format("MVABC_%d",fCurrentMethodIdx));
    }
 
    for (Long64_t ievt=0; ievt<Data()->GetNEvents(); ievt++) {
@@ -1350,10 +1350,10 @@ void TMVA::MethodBoost::MonitorBoost( Types::EBoostStage stage , UInt_t methodIn
       if (fDetailedMonitoring){
          // the following code is useful only for 2D examples - mainly illustration for debug/educational purposes:
          if (DataInfo().GetNVariables() == 2) {
-            results->Store(new TH2F(Form("EventDistSig_%d",methodIndex),Form("EventDistSig_%d",methodIndex),100,0,7,100,0,7));
-            results->GetHist(Form("EventDistSig_%d",methodIndex))->SetMarkerColor(4);
-            results->Store(new TH2F(Form("EventDistBkg_%d",methodIndex),Form("EventDistBkg_%d",methodIndex),100,0,7,100,0,7));
-            results->GetHist(Form("EventDistBkg_%d",methodIndex))->SetMarkerColor(2);
+            results->Store(new TH2F(TString::Format("EventDistSig_%d",methodIndex),TString::Format("EventDistSig_%d",methodIndex),100,0,7,100,0,7));
+            results->GetHist(TString::Format("EventDistSig_%d",methodIndex))->SetMarkerColor(4);
+            results->Store(new TH2F(TString::Format("EventDistBkg_%d",methodIndex),TString::Format("EventDistBkg_%d",methodIndex),100,0,7,100,0,7));
+            results->GetHist(TString::Format("EventDistBkg_%d",methodIndex))->SetMarkerColor(2);
 
             Data()->SetCurrentType(Types::kTraining);
             for (Long64_t ievt=0; ievt<GetNEvents(); ievt++) {
@@ -1363,8 +1363,8 @@ void TMVA::MethodBoost::MonitorBoost( Types::EBoostStage stage , UInt_t methodIn
                Float_t v1= ev->GetValue(1);
                //         if (ievt<3) std::cout<<ievt<<" var0="<<v0<<" var1="<<v1<<" weight="<<w<<std::endl;
                TH2* h;
-               if (DataInfo().IsSignal(ev)) h=results->GetHist2D(Form("EventDistSig_%d",methodIndex));
-               else                         h=results->GetHist2D(Form("EventDistBkg_%d",methodIndex));
+               if (DataInfo().IsSignal(ev)) h = results->GetHist2D(TString::Format("EventDistSig_%d",methodIndex));
+               else                         h = results->GetHist2D(TString::Format("EventDistBkg_%d",methodIndex));
                if (h) h->Fill(v0,v1,w);
             }
          }

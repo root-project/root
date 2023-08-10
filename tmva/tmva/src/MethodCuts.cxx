@@ -669,16 +669,16 @@ void  TMVA::MethodCuts::Train( void )
 
       switch (fFitMethod) {
       case kUseGeneticAlgorithm:
-         fitter = new GeneticFitter( *this, Form("%sFitter_GA",     GetName()), ranges, GetOptions() );
+         fitter = new GeneticFitter( *this, TString::Format("%sFitter_GA",     GetName()), ranges, GetOptions() );
          break;
       case kUseMonteCarlo:
-         fitter = new MCFitter     ( *this, Form("%sFitter_MC",     GetName()), ranges, GetOptions() );
+         fitter = new MCFitter     ( *this, TString::Format("%sFitter_MC",     GetName()), ranges, GetOptions() );
          break;
       case kUseMinuit:
-         fitter = new MinuitFitter ( *this, Form("%sFitter_MINUIT", GetName()), ranges, GetOptions() );
+         fitter = new MinuitFitter ( *this, TString::Format("%sFitter_MINUIT", GetName()), ranges, GetOptions() );
          break;
       case kUseSimulatedAnnealing:
-         fitter = new SimulatedAnnealingFitter( *this, Form("%sFitter_SA", GetName()), ranges, GetOptions() );
+         fitter = new SimulatedAnnealingFitter( *this, TString::Format("%sFitter_SA", GetName()), ranges, GetOptions() );
          break;
       default:
          Log() << kFATAL << "Wrong fit method: " << fFitMethod << Endl;
