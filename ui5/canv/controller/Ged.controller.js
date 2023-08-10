@@ -431,6 +431,9 @@ sap.ui.define([
 
          if (typeof painter.getHisto == 'function') {
             painter.options.Mode3Dindx = painter.options.Mode3D ? 1 : 0;
+            painter.options.Error = !!painter.options.Error;
+            painter.options.Palette = !!painter.options.Palette;
+            painter.options.Zero = !!painter.options.Zero;
             let model = new JSONModel({ opts : painter.options });
             model.attachPropertyChange({ options: painter.options }, this.processHistModelChange, this);
             await this.addFragment(oPage, 'Hist', model);
