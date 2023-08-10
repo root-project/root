@@ -254,13 +254,13 @@ void TMVA::MethodLikelihood::DeclareOptions()
    fDefaultPDFLik->ParseOptions();
    updatedOptions = fDefaultPDFLik->GetOptions();
    for (UInt_t ivar = 0; ivar< DataInfo().GetNVariables(); ivar++) {
-      (*fPDFSig)[ivar] = new PDF( Form("%s PDF Sig[%d]", GetName(), ivar), updatedOptions,
-                                  Form("Sig[%d]",ivar), fDefaultPDFLik );
+      (*fPDFSig)[ivar] = new PDF( TString::Format("%s PDF Sig[%d]", GetName(), ivar), updatedOptions,
+                                  TString::Format("Sig[%d]",ivar), fDefaultPDFLik );
       (*fPDFSig)[ivar]->DeclareOptions();
       (*fPDFSig)[ivar]->ParseOptions();
       updatedOptions = (*fPDFSig)[ivar]->GetOptions();
-      (*fPDFBgd)[ivar] = new PDF( Form("%s PDF Bkg[%d]", GetName(), ivar), updatedOptions,
-                                  Form("Bkg[%d]",ivar), fDefaultPDFLik );
+      (*fPDFBgd)[ivar] = new PDF( TString::Format("%s PDF Bkg[%d]", GetName(), ivar), updatedOptions,
+                                  TString::Format("Bkg[%d]",ivar), fDefaultPDFLik );
       (*fPDFBgd)[ivar]->DeclareOptions();
       (*fPDFBgd)[ivar]->ParseOptions();
       updatedOptions = (*fPDFBgd)[ivar]->GetOptions();
@@ -380,10 +380,12 @@ void TMVA::MethodLikelihood::Train( void )
          Int_t nbinsS = (*fPDFSig)[ivar]->GetHistNBins( minNEvt );
          Int_t nbinsB = (*fPDFBgd)[ivar]->GetHistNBins( minNEvt );
 
-         (*fHistSig)[ivar] = new TH1F( Form("%s_%s_%s_sig",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
-                                       Form("%s_%s_%s signal training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
-         (*fHistBgd)[ivar] = new TH1F( Form("%s_%s_%s_bgd",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
-                                       Form("%s_%s_%s background training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
+         (*fHistSig)[ivar] = new TH1F( TString::Format("%s_%s_%s_sig",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       TString::Format("%s_%s_%s signal training",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       nbinsS, xmin[ivar], xmax[ivar] );
+         (*fHistBgd)[ivar] = new TH1F( TString::Format("%s_%s_%s_bgd",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       TString::Format("%s_%s_%s background training",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       nbinsB, xmin[ivar], xmax[ivar] );
       }
    }
 
@@ -565,7 +567,7 @@ void TMVA::MethodLikelihood::WriteOptionsToStream( std::ostream& o, const TStrin
    }
    for (UInt_t ivar = 0; ivar < fPDFSig->size(); ivar++) {
       if ((*fPDFSig)[ivar] != 0) {
-         o << prefix << std::endl << prefix << Form("#Signal[%d] Likelihood PDF Options:",ivar) << std::endl << prefix << std::endl;
+         o << prefix << std::endl << prefix << TString::Format("#Signal[%d] Likelihood PDF Options:",ivar) << std::endl << prefix << std::endl;
          (*fPDFSig)[ivar]->WriteOptionsToStream( o, prefix );
       }
       if ((*fPDFBgd)[ivar] != 0) {
