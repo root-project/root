@@ -96,7 +96,7 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
             {
                TKey *key=(TKey*)file->GetListOfKeys()->At(i);
                dataset=key->GetName();
-               bar->AddButton(dataset.Data(),Form("TMVA::TMVARegGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
+               bar->AddButton(dataset.Data(),TString::Format("TMVA::TMVARegGui(\"%s\",\"%s\")",fName,dataset.Data()),dataset.Data());
             }
        
          bar->AddSeparator();
@@ -122,7 +122,7 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
    // create the control bar
    TControlBar* cbar = new TControlBar( "vertical", "TMVA Plotting Macros for Regression", 0, 0 );
 
-   const TString buttonType( "button" );
+   const TString buttonType = "button";
 
    // configure buttons   
    Int_t ic = 1;
@@ -130,17 +130,17 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
    // find all input variables types
    TList* keylist = RegGuiGetKeyList( "InputVariables" );
    TListIter it( keylist );
-   TObjString* str = 0;
+   TObjString* str = nullptr;
    char ch = 'a';
    while ( (str = (TObjString*)it()) ) {
       TString tmp   = str->GetString();
-      TString title = Form( "Input variables and target(s) '%s'-transformed (training sample)", 
+      TString title = TString::Format( "Input variables and target(s) '%s'-transformed (training sample)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );
       if (tmp.Contains( "Id" )) title = "Input variables and target(s) (training sample)";
       RegGuiActionButton( cbar, 
-                          Form( "    (%i%c) %s    ", ic, ch++, title.Data() ),
-                          Form( "TMVA::variables(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
-                          Form( "Plots all '%s'-transformed input variables and target(s) (macro variables(...))", 
+                          TString::Format( "    (%i%c) %s    ", ic, ch++, title.Data() ),
+                          TString::Format( "TMVA::variables(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
+                          TString::Format( "Plots all '%s'-transformed input variables and target(s) (macro variables(...))", 
                                 str->GetString().Data() ),
                           buttonType, str->GetString() );
    }      
@@ -150,87 +150,87 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
    it.Reset(); ch = 'a';
    while ( (str = (TObjString*)it()) ) {
       TString tmp   = str->GetString();
-      TString title = Form( "Input variable correlations '%s'-transformed (scatter profiles)", 
+      TString title = TString::Format( "Input variable correlations '%s'-transformed (scatter profiles)", 
                             tmp.ReplaceAll("InputVariables_","").Data() );
       if (tmp.Contains( "Id" )) title = "Input variable correlations (scatter profiles)";
       RegGuiActionButton( cbar, 
-                          Form( "(%i%c) %s", ic, ch++, title.Data() ),
-                          Form( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
-                          Form( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGui(...))", 
+                          TString::Format( "(%i%c) %s", ic, ch++, title.Data() ),
+                          TString::Format( "TMVA::CorrGui(\"%s\",\"%s\",\"%s\",\"%s\",kTRUE)",dataset.Data() , fName, str->GetString().Data(), title.Data() ),
+                          TString::Format( "Plots all correlation profiles between '%s'-transformed input variables (macro CorrGui(...))", 
                                 str->GetString().Data() ),
                           buttonType, str->GetString() );
    }      
    
    // coefficients
    RegGuiActionButton( cbar,  
-                       Form( "(%i) Input Variable Linear Correlation Coefficients", ++ic ),
-                       Form( "TMVA::correlations(\"%s\",\"%s\",kTRUE)",dataset.Data(), fName ),
+                       TString::Format( "(%i) Input Variable Linear Correlation Coefficients", ++ic ),
+                       TString::Format( "TMVA::correlations(\"%s\",\"%s\",kTRUE)",dataset.Data(), fName ),
                        "Plots signal and background correlation summaries for all input variables (macro correlations.cxx)", 
                        buttonType );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%ia) Regression Output Deviation versus Target (test sample)", ++ic ),
-                       Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kTRUE)",dataset.Data(), fName ),
+                       TString::Format( "(%ia) Regression Output Deviation versus Target (test sample)", ++ic ),
+                       TString::Format( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kTRUE)",dataset.Data(), fName ),
                        "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                        buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%ib) Regression Output Deviation versus Target (training sample)", ic ),
-                       Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kTRUE)",dataset.Data() , fName ),
+                       TString::Format( "(%ib) Regression Output Deviation versus Target (training sample)", ic ),
+                       TString::Format( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kTRUE)",dataset.Data() , fName ),
                        "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                        buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%ic) Regression Output Deviation versus Input Variables (test sample)", ic ),
-                       Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kFALSE)",dataset.Data(), fName ),
+                       TString::Format( "(%ic) Regression Output Deviation versus Input Variables (test sample)", ic ),
+                       TString::Format( "TMVA::deviations(\"%s\",\"%s\",TMVA::kMVAType,kFALSE)",dataset.Data(), fName ),
                        "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                        buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
-                       Form( "   (%id) Regression Output Deviation versus Input Variables (training sample)   ", ic ),
-                       Form( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kFALSE)",dataset.Data() , fName ),
+                       TString::Format( "   (%id) Regression Output Deviation versus Input Variables (training sample)   ", ic ),
+                       TString::Format( "TMVA::deviations(\"%s\",\"%s\",TMVA::kCompareType,kFALSE)",dataset.Data() , fName ),
                        "Plots the deviation between regression output and target versus target on test data (macro deviations(...,0))",
                        buttonType, defaultRequiredClassifier );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%i) Summary of Average Regression Deviations ", ++ic ),
-                       Form( "TMVA::regression_averagedevs(\"%s\",\"%s\")",dataset.Data() , fName ),
+                       TString::Format( "(%i) Summary of Average Regression Deviations ", ++ic ),
+                       TString::Format( "TMVA::regression_averagedevs(\"%s\",\"%s\")",dataset.Data() , fName ),
                        "Plot Summary of average deviations: MVAvalue - target (macro regression_averagedevs.cxx)",
                        buttonType );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%ia) Network Architecture", ++ic ),
-                       Form( "TMVA::network(\"%s\",\"%s\")",dataset.Data(), fName ), 
+                       TString::Format( "(%ia) Network Architecture", ++ic ),
+                       TString::Format( "TMVA::network(\"%s\",\"%s\")",dataset.Data(), fName ), 
                        "Plots the MLP weights (macro network.cxx)",
                        buttonType, "MLP" );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%ib) Network Convergence Test", ic ),
-                       Form( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
+                       TString::Format( "(%ib) Network Convergence Test", ic ),
+                       TString::Format( "TMVA::annconvergencetest(\"%s\",\"%s\")",dataset.Data() , fName ), 
                        "Plots error estimator versus training epoch for training and test samples (macro annconvergencetest.cxx)",
                        buttonType, "MLP" );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%i) Plot Foams", ++ic ),
-                       Form("TMVA::PlotFoams(\"%s/weights/TMVARegression_PDEFoam.weights_foams.root\")",dataset.Data()),
+                       TString::Format( "(%i) Plot Foams", ++ic ),
+                       TString::Format("TMVA::PlotFoams(\"%s/weights/TMVARegression_PDEFoam.weights_foams.root\")",dataset.Data()),
                        "Plot Foams (macro PlotFoams.cxx)",
                        buttonType, "PDEFoam" );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%i) Regression Trees (BDT)", ++ic ),
-                       Form( "TMVA::BDT_Reg(\"%s\",\"%s\")",dataset.Data() , fName ),
+                       TString::Format( "(%i) Regression Trees (BDT)", ++ic ),
+                       TString::Format( "TMVA::BDT_Reg(\"%s\",\"%s\")",dataset.Data() , fName ),
                        "Plots the Regression Trees trained by BDT algorithms (macro BDT_Reg(itree,...))",
                        buttonType, "BDT" );
 
    RegGuiActionButton( cbar,  
-                       Form( "(%i) Regression Tree Control Plots (BDT)", ++ic ),
-                       Form( "TMVA::BDTControlPlots(\"%s\",\"%s\")",dataset.Data(), fName ),
+                       TString::Format( "(%i) Regression Tree Control Plots (BDT)", ++ic ),
+                       TString::Format( "TMVA::BDTControlPlots(\"%s\",\"%s\")",dataset.Data(), fName ),
                        "Plots to monitor boosting and pruning of regression trees (macro BDTControlPlots.cxx)",
                        buttonType, "BDT" );
 
    cbar->AddSeparator();
 
-   cbar->AddButton( Form( "(%i) Quit", ++ic ),   ".q", "Quit", buttonType );
+   cbar->AddButton( TString::Format( "(%i) Quit", ++ic ),   ".q", "Quit", buttonType );
 
    // set the style 
    cbar->SetTextColor("black");

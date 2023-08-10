@@ -227,7 +227,7 @@ void TMVA::plotEfficienciesMulticlass(roccurvelist_t rocCurves, classcanvasmap_t
          plotWrapper->addGraph(h);
          plotWrapper->addLegendEntry(methodTitle, h);
       } catch (const std::out_of_range &) {
-         cout << Form("ERROR: Class %s discovered among plots but was not found by TMVAMulticlassGui. Skipping.",
+         cout << TString::Format("ERROR: Class %s discovered among plots but was not found by TMVAMulticlassGui. Skipping.",
                       classname.Data())
               << endl;
       }
@@ -280,8 +280,8 @@ void TMVA::plotEfficienciesMulticlass1vsRest(TString dataset, EEfficiencyPlotTyp
 
    classcanvasmap_t classCanvasMap;
    for (auto &classname : classnames) {
-      TString name = Form("roc_%s_vs_rest", classname.Data());
-      TString title = Form("ROC Curve %s vs rest", classname.Data());
+      TString name = TString::Format("roc_%s_vs_rest", classname.Data());
+      TString title = TString::Format("ROC Curve %s vs rest", classname.Data());
       EfficiencyPlotWrapper *plotWrapper = new EfficiencyPlotWrapper(name, title, dataset, iPlot++);
       classCanvasMap.emplace(classname.Data(), plotWrapper);
    }
@@ -316,8 +316,8 @@ void TMVA::efficienciesMulticlass1vs1(TString dataset, TString fin)
 
    // configure buttons
    for (auto &classname : classnames) {
-      cbar->AddButton(Form("Class: %s", classname.Data()),
-                      Form("TMVA::plotEfficienciesMulticlass1vs1(\"%s\", \"%s\", \"%s\")", dataset.Data(), fin.Data(),
+      cbar->AddButton(TString::Format("Class: %s", classname.Data()),
+                      TString::Format("TMVA::plotEfficienciesMulticlass1vs1(\"%s\", \"%s\", \"%s\")", dataset.Data(), fin.Data(),
                            classname.Data()),
                       BUTTON_TYPE);
    }
@@ -353,7 +353,7 @@ void TMVA::plotEfficienciesMulticlass1vs1(TString dataset, TString fin, TString 
    size_t iPlot = 0;
 
    TString methodPrefix = "MVA_";
-   TString graphNameRef = Form("_1v1rejBvsS_%s_vs_", baseClassname.Data());
+   TString graphNameRef = TString::Format("_1v1rejBvsS_%s_vs_", baseClassname.Data());
 
    TFile *file = TMVAGlob::OpenFile(fin);
    if (file == nullptr) {
@@ -369,8 +369,8 @@ void TMVA::plotEfficienciesMulticlass1vs1(TString dataset, TString fin, TString 
          continue;
       }
 
-      TString name = Form("1v1roc_%s_vs_%s", baseClassname.Data(), classname.Data());
-      TString title = Form("ROC Curve %s (Sig) vs %s (Bkg)", baseClassname.Data(), classname.Data());
+      TString name = TString::Format("1v1roc_%s_vs_%s", baseClassname.Data(), classname.Data());
+      TString title = TString::Format("ROC Curve %s (Sig) vs %s (Bkg)", baseClassname.Data(), classname.Data());
       EfficiencyPlotWrapper *plotWrapper = new EfficiencyPlotWrapper(name, title, dataset, iPlot++);
       classCanvasMap.emplace(classname.Data(), plotWrapper);
    }
@@ -474,7 +474,7 @@ TCanvas *EfficiencyPlotWrapper::newEfficiencyCanvas(TString name, TString title,
    Double_t y1 = 0.0;
    Double_t y2 = 1.0;
 
-   TH1F *frame = new TH1F(Form("%s_%s", title.Data(), "frame"), title, 500, x1, x2);
+   TH1F *frame = new TH1F(TString::Format("%s_frame", title.Data()), title, 500, x1, x2);
    frame->SetMinimum(y1);
    frame->SetMaximum(y2);
 
