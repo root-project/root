@@ -967,7 +967,7 @@ TGraph *TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    if (setTitles) {
       graph->GetYaxis()->SetTitle("Background rejection (Specificity)");
       graph->GetXaxis()->SetTitle("Signal efficiency (Sensitivity)");
-      graph->SetTitle(Form("Signal efficiency vs. Background rejection (%s)", theMethodName.Data()));
+      graph->SetTitle(TString::Format("Signal efficiency vs. Background rejection (%s)", theMethodName.Data()).Data());
    }
 
    return graph;
@@ -1081,8 +1081,8 @@ TCanvas *TMVA::Factory::GetROCCurve(TString datasetname, UInt_t iClass, Types::E
       return 0;
    }
 
-   TString name = Form("ROCCurve %s class %i", datasetname.Data(), iClass);
-   TCanvas *canvas = new TCanvas(name, "ROC Curve", 200, 10, 700, 500);
+   TString name = TString::Format("ROCCurve %s class %i", datasetname.Data(), iClass);
+   TCanvas *canvas = new TCanvas(name.Data(), "ROC Curve", 200, 10, 700, 500);
    canvas->SetGrid();
 
    TMultiGraph *multigraph = this->GetROCCurveAsMultiGraph(datasetname, iClass, type);
@@ -1093,14 +1093,14 @@ TCanvas *TMVA::Factory::GetROCCurve(TString datasetname, UInt_t iClass, Types::E
       multigraph->GetYaxis()->SetTitle("Background rejection (Specificity)");
       multigraph->GetXaxis()->SetTitle("Signal efficiency (Sensitivity)");
 
-      TString titleString = Form("Signal efficiency vs. Background rejection");
+      TString titleString = TString::Format("Signal efficiency vs. Background rejection");
       if (this->fAnalysisType == Types::kMulticlass) {
-         titleString = Form("%s (Class=%i)", titleString.Data(), iClass);
+         titleString = TString::Format("%s (Class=%i)", titleString.Data(), iClass);
       }
 
       // Workaround for TMultigraph not drawing title correctly.
-      multigraph->GetHistogram()->SetTitle(titleString);
-      multigraph->SetTitle(titleString);
+      multigraph->GetHistogram()->SetTitle(titleString.Data());
+      multigraph->SetTitle(titleString.Data());
 
       canvas->BuildLegend(0.15, 0.15, 0.35, 0.3, "MVA Method");
    }
@@ -1914,15 +1914,15 @@ void TMVA::Factory::EvaluateAllMethods(void)
 
          //    TString header = "DataSet Name     MVA Method     ";
          //    for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
-         //       header += Form("%-12s ", theMethod->fDataSetInfo.GetClassInfo(icls)->GetName());
+         //       header += TString::Format("%-12s ", theMethod->fDataSetInfo.GetClassInfo(icls)->GetName());
          //    }
 
          //    Log() << kINFO << header << Endl;
          //    Log() << kINFO << hLine << Endl;
          //    for (Int_t i = 0; i < nmeth_used[0]; i++) {
-         //       TString res = Form("[%-14s] %-15s", theMethod->fDataSetInfo.GetName(), (const char *)mname[0][i]);
+         //       TString res = TString::Format("[%-14s] %-15s", theMethod->fDataSetInfo.GetName(), mname[0][i].Data());
          //       for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
-         //          res += Form("%#1.3f        ", (multiclass_testEff[i][icls]) * (multiclass_testPur[i][icls]));
+         //          res += TString::Format("%#1.3f        ", (multiclass_testEff[i][icls]) * (multiclass_testPur[i][icls]));
          //       }
          //       Log() << kINFO << res << Endl;
          //    }
@@ -1933,10 +1933,10 @@ void TMVA::Factory::EvaluateAllMethods(void)
 
          // --- 1 vs Rest ROC AUC, signal efficiency @ given background efficiency
          // --------------------------------------------------------------------
-         TString header1 = Form("%-15s%-15s%-15s%-15s%-15s%-15s", "Dataset", "MVA Method", "ROC AUC", "Sig eff@B=0.01",
-                                "Sig eff@B=0.10", "Sig eff@B=0.30");
-         TString header2 = Form("%-15s%-15s%-15s%-15s%-15s%-15s", "Name:", "/ Class:", "test  (train)", "test  (train)",
-                                "test  (train)", "test  (train)");
+         TString header1 = TString::Format("%-15s%-15s%-15s%-15s%-15s%-15s", "Dataset", "MVA Method", "ROC AUC", "Sig eff@B=0.01",
+                                           "Sig eff@B=0.10", "Sig eff@B=0.30");
+         TString header2 = TString::Format("%-15s%-15s%-15s%-15s%-15s%-15s", "Name:", "/ Class:", "test  (train)", "test  (train)",
+                                           "test  (train)", "test  (train)");
          Log() << kINFO << Endl;
          Log() << kINFO << "1-vs-rest performance metrics per class" << Endl;
          Log() << kINFO << hLine << Endl;
@@ -1964,7 +1964,7 @@ void TMVA::Factory::EvaluateAllMethods(void)
                }
 
                Log() << kINFO << Endl;
-               TString row = Form("%-15s%-15s", datasetName.Data(), mvaName.Data());
+               TString row = TString::Format("%-15s%-15s", datasetName.Data(), mvaName.Data());
                Log() << kINFO << row << Endl;
                Log() << kINFO << "------------------------------" << Endl;
 
@@ -1983,11 +1983,11 @@ void TMVA::Factory::EvaluateAllMethods(void)
                   const Double_t effB01Test = rocCurveTest->GetEffSForEffB(0.01);
                   const Double_t effB10Test = rocCurveTest->GetEffSForEffB(0.10);
                   const Double_t effB30Test = rocCurveTest->GetEffSForEffB(0.30);
-                  const TString rocaucCmp = Form("%5.3f (%5.3f)", rocaucTest, rocaucTrain);
-                  const TString effB01Cmp = Form("%5.3f (%5.3f)", effB01Test, effB01Train);
-                  const TString effB10Cmp = Form("%5.3f (%5.3f)", effB10Test, effB10Train);
-                  const TString effB30Cmp = Form("%5.3f (%5.3f)", effB30Test, effB30Train);
-                  row = Form("%-15s%-15s%-15s%-15s%-15s%-15s", "", className.Data(), rocaucCmp.Data(), effB01Cmp.Data(),
+                  const TString rocaucCmp = TString::Format("%5.3f (%5.3f)", rocaucTest, rocaucTrain);
+                  const TString effB01Cmp = TString::Format("%5.3f (%5.3f)", effB01Test, effB01Train);
+                  const TString effB10Cmp = TString::Format("%5.3f (%5.3f)", effB10Test, effB10Train);
+                  const TString effB30Cmp = TString::Format("%5.3f (%5.3f)", effB30Test, effB30Train);
+                  row = TString::Format("%-15s%-15s%-15s%-15s%-15s%-15s", "", className.Data(), rocaucCmp.Data(), effB01Cmp.Data(),
                              effB10Cmp.Data(), effB30Cmp.Data());
                   Log() << kINFO << row << Endl;
 
@@ -2009,27 +2009,27 @@ void TMVA::Factory::EvaluateAllMethods(void)
 
             // TODO: Ensure matrices are same size.
 
-            TString header = Form(" %-14s", " ");
-            TString headerInfo = Form(" %-14s", " ");
-            ;
+            TString header = TString::Format(" %-14s", " ");
+            TString headerInfo = TString::Format(" %-14s", " ");
+
             for (UInt_t iCol = 0; iCol < numClasses; ++iCol) {
-               header += Form(" %-14s", classnames[iCol].Data());
-               headerInfo += Form(" %-14s", " test (train)");
+               header += TString::Format(" %-14s", classnames[iCol].Data());
+               headerInfo += TString::Format(" %-14s", " test (train)");
             }
             stream << kINFO << header << Endl;
             stream << kINFO << headerInfo << Endl;
 
             for (UInt_t iRow = 0; iRow < numClasses; ++iRow) {
-               stream << kINFO << Form(" %-14s", classnames[iRow].Data());
+               stream << kINFO << TString::Format(" %-14s", classnames[iRow].Data());
 
                for (UInt_t iCol = 0; iCol < numClasses; ++iCol) {
                   if (iCol == iRow) {
-                     stream << kINFO << Form(" %-14s", "-");
+                     stream << kINFO << TString::Format(" %-14s", "-");
                   } else {
                      Double_t trainValue = matTraining[iRow][iCol];
                      Double_t testValue = matTesting[iRow][iCol];
-                     TString entry = Form("%-5.3f (%-5.3f)", testValue, trainValue);
-                     stream << kINFO << Form(" %-14s", entry.Data());
+                     TString entry = TString::Format("%-5.3f (%-5.3f)", testValue, trainValue);
+                     stream << kINFO << TString::Format(" %-14s", entry.Data());
                   }
                }
                stream << kINFO << Endl;
