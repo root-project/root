@@ -1331,7 +1331,7 @@ void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
    Int_t   iday   = idatqq%100;
    Int_t   imonth = (idatqq/100)%100;
    Int_t   iyear  = (idatqq/10000);
-   TString versionDate = Form("%s %d, %4d",months[imonth-1],iday,iyear);
+   TString versionDate = TString::Format("%s %d, %4d",months[imonth-1],iday,iyear);
 
    logger << kHEADER ;
    logger << "You are running ROOT Version: " << gROOT->GetVersion() << ", " << versionDate << Endl;
@@ -1756,7 +1756,7 @@ Double_t TMVA::Tools::RMS(Long64_t n, const T *a, const Double_t *w)
 
 TH1* TMVA::Tools::GetCumulativeDist( TH1* h)
 {
-   TH1* cumulativeDist= (TH1*) h->Clone(Form("%sCumul",h->GetTitle()));
+   TH1* cumulativeDist= (TH1*) h->Clone(TString::Format("%sCumul",h->GetTitle()));
    //cumulativeDist->Smooth(5); // with this, I get less beautiful ROC curves, hence out!
 
    Float_t partialSum = 0;
