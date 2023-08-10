@@ -143,13 +143,13 @@ std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( I
 
          switch( type ) {
          case 'v':
-            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Variables()[idx].GetLabel().Data() );
+            str += TString::Format( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Variables()[idx].GetLabel().Data() );
             break;
          case 't':
-            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Targets()[idx].GetLabel().Data() );
+            str += TString::Format( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Targets()[idx].GetLabel().Data() );
             break;
          case 's':
-            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Spectators()[idx].GetLabel().Data() );
+            str += TString::Format( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Spectators()[idx].GetLabel().Data() );
             break;
          default:
             Log() << kFATAL << "VariableDecorrTransform::GetTransformationStrings : unknown type '" << type << "'." << Endl;

@@ -2235,7 +2235,7 @@ void TMVA::MethodBase::CreateMVAPdfs()
 
    if (DataInfo().GetNClasses() == 2) { // TODO: this is an ugly hack.. adapt this to new framework
       Log() << kINFO<<Form("Dataset[%s] : ",DataInfo().GetName())
-            << Form( "<CreateMVAPdfs> Separation from histogram (PDF): %1.3f (%1.3f)",
+            << TString::Format( "<CreateMVAPdfs> Separation from histogram (PDF): %1.3f (%1.3f)",
                      GetSeparation( histMVAPdfS, histMVAPdfB ), GetSeparation( fMVAPdfS, fMVAPdfB ) )
             << Endl;
    }

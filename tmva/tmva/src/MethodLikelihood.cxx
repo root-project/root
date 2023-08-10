@@ -616,8 +616,8 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
       // this variable should not be used
       fDropVariable = ivar;
 
-      TString nameS = Form( "rS_%i", ivar+1 );
-      TString nameB = Form( "rB_%i", ivar+1 );
+      TString nameS = TString::Format( "rS_%i", ivar+1 );
+      TString nameB = TString::Format( "rB_%i", ivar+1 );
       TH1* rS = new TH1F( nameS, nameS, 80, 0, 1 );
       TH1* rB = new TH1F( nameB, nameB, 80, 0, 1 );
 
@@ -724,8 +724,8 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-      (*fPDFSig)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_S", GetInputVar( ivar ).Data() ) );
-      (*fPDFBgd)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_B", GetInputVar( ivar ).Data() ) );
+      (*fPDFSig)[ivar] = (TMVA::PDF*)rf.Get( TString::Format( "PDF_%s_S", GetInputVar( ivar ).Data() ) );
+      (*fPDFBgd)[ivar] = (TMVA::PDF*)rf.Get( TString::Format( "PDF_%s_B", GetInputVar( ivar ).Data() ) );
    }
    TH1::AddDirectory(addDirStatus);
 }
