@@ -292,8 +292,8 @@ void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
    }
 
    if (fTrainAssignTree[clIndex]==0) { // does not exist yet
-      fTrainAssignTree[clIndex] = CreateEventAssignTrees( Form("TrainAssignTree_%s", className.Data()) );
-      fTestAssignTree[clIndex]  = CreateEventAssignTrees( Form("TestAssignTree_%s",  className.Data()) );
+      fTrainAssignTree[clIndex] = CreateEventAssignTrees( TString::Format("TrainAssignTree_%s", className.Data()).Data() );
+      fTestAssignTree[clIndex]  = CreateEventAssignTrees( TString::Format("TestAssignTree_%s",  className.Data()).Data() );
    }
 
    fATreeType   = clIndex;
@@ -607,8 +607,8 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut,
 
    AddCut( cut  );
 
-   DefaultDataSetInfo().SetSplitOptions( Form("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:%s",
-                                              NsigTrain, NbkgTrain, NsigTest, NbkgTest, otherOpt.Data()) );
+   DefaultDataSetInfo().SetSplitOptions( TString::Format("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:%s",
+                                              NsigTrain, NbkgTrain, NsigTest, NbkgTest, otherOpt.Data()).Data() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -621,8 +621,8 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( const TCut& cut, Int_t Ntrain
 
    AddCut( cut  );
 
-   DefaultDataSetInfo().SetSplitOptions( Form("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:SplitMode=Random:EqualTrainSample:!V",
-                                              Ntrain, Ntrain, Ntest, Ntest) );
+   DefaultDataSetInfo().SetSplitOptions( TString::Format("nTrain_Signal=%i:nTrain_Background=%i:nTest_Signal=%i:nTest_Background=%i:SplitMode=Random:EqualTrainSample:!V",
+                                              Ntrain, Ntrain, Ntest, Ntest).Data() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

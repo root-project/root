@@ -157,12 +157,12 @@ void TMVA::CrossValidationResult::Print() const
    MsgLogger fLogger("CrossValidation");
    fLogger << kHEADER << " ==== Results ====" << Endl;
    for(auto &item:fROCs) {
-      fLogger << kINFO << Form("Fold  %i ROC-Int : %.4f",item.first,item.second) << std::endl;
+      fLogger << kINFO << TString::Format("Fold  %i ROC-Int : %.4f",item.first,item.second) << std::endl;
    }
 
    fLogger << kINFO << "------------------------" << Endl;
-   fLogger << kINFO << Form("Average ROC-Int : %.4f",GetROCAverage()) << Endl;
-   fLogger << kINFO << Form("Std-Dev ROC-Int : %.4f",GetROCStandardDeviation()) << Endl;
+   fLogger << kINFO << TString::Format("Average ROC-Int : %.4f",GetROCAverage()) << Endl;
+   fLogger << kINFO << TString::Format("Std-Dev ROC-Int : %.4f",GetROCStandardDeviation()) << Endl;
 
    TMVA::gConfig().SetSilent(kTRUE);
 }
@@ -403,11 +403,11 @@ void TMVA::CrossValidation::ParseOptions()
       fOutputFactoryOptions += "!V:";
    }
 
-   fCvFactoryOptions += Form("VerboseLevel=%s:", fVerboseLevel.Data());
-   fOutputFactoryOptions += Form("VerboseLevel=%s:", fVerboseLevel.Data());
+   fCvFactoryOptions += TString::Format("VerboseLevel=%s:", fVerboseLevel.Data());
+   fOutputFactoryOptions += TString::Format("VerboseLevel=%s:", fVerboseLevel.Data());
 
-   fCvFactoryOptions += Form("AnalysisType=%s:", fAnalysisTypeStr.Data());
-   fOutputFactoryOptions += Form("AnalysisType=%s:", fAnalysisTypeStr.Data());
+   fCvFactoryOptions += TString::Format("AnalysisType=%s:", fAnalysisTypeStr.Data());
+   fOutputFactoryOptions += TString::Format("AnalysisType=%s:", fAnalysisTypeStr.Data());
 
    if (!fDrawProgressBar) {
       fCvFactoryOptions += "!DrawProgressBar:";
@@ -415,8 +415,8 @@ void TMVA::CrossValidation::ParseOptions()
    }
 
    if (fTransformations != "") {
-      fCvFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
-      fOutputFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
+      fCvFactoryOptions += TString::Format("Transformations=%s:", fTransformations.Data());
+      fOutputFactoryOptions += TString::Format("Transformations=%s:", fTransformations.Data());
    }
 
    if (fCorrelations) {
@@ -436,8 +436,8 @@ void TMVA::CrossValidation::ParseOptions()
    }
 
    if (fSilent) {
-      fCvFactoryOptions += Form("Silent:");
-      fOutputFactoryOptions += Form("Silent:");
+      fCvFactoryOptions += "Silent:";
+      fOutputFactoryOptions += "Silent:";
    }
 
    // CE specific options
@@ -643,7 +643,7 @@ void TMVA::CrossValidation::Evaluate()
 
       // Serialise the cross evaluated method
       TString options =
-         Form("SplitExpr=%s:NumFolds=%i"
+         TString::Format("SplitExpr=%s:NumFolds=%i"
               ":EncapsulatedMethodName=%s"
               ":EncapsulatedMethodTypeName=%s"
               ":OutputEnsembling=%s",
