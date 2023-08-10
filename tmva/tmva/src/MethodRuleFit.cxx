@@ -704,7 +704,7 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
          }
       }
       fout << ") rval+=" << std::setprecision(10) << (*rules)[ir]->GetCoefficient() << ";" << std::flush;
-      fout << "   // importance = " << Form("%3.3f",impr) << std::endl;
+      fout << "   // importance = " << TString::Format("%3.3f",impr) << std::endl;
    }
    fout << std::setprecision(dp);
 }
@@ -737,7 +737,7 @@ void TMVA::MethodRuleFit::MakeClassLinear( std::ostream& fout ) const
               << "*std::min( double(" << std::setprecision(10) << rens->GetLinDP(il)
               << "), std::max( double(inputValues[" << il << "]), double(" << std::setprecision(10) << rens->GetLinDM(il) << ")));"
               << std::flush;
-         fout << "   // importance = " << Form("%3.3f",imp) << std::endl;
+         fout << "   // importance = " << TString::Format("%3.3f",imp) << std::endl;
       }
    }
 }
