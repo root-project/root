@@ -301,7 +301,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
 
    // if epochs are counted create monitoring histograms (only available for classification)
    TString type  = (treeType == Types::kTraining ? "train" : "test");
-   TString name  = Form("convergencetest___mlp_%s_epoch_%04i", type.Data(), iEpoch);
+   TString name  = TString::Format("convergencetest___mlp_%s_epoch_%04i", type.Data(), iEpoch);
    TString nameB = name + "_B";
    TString nameS = name + "_S";
    Int_t   nbin  = 100;
@@ -425,7 +425,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
 
    // provide epoch-wise monitoring
    if (fEpochMon && iEpoch >= 0 && !DoRegression() && treeType == Types::kTraining) {
-      CreateWeightMonitoringHists( Form("epochmonitoring___epoch_%04i_weights_hist", iEpoch), &fEpochMonHistW );
+      CreateWeightMonitoringHists( TString::Format("epochmonitoring___epoch_%04i_weights_hist", iEpoch), &fEpochMonHistW );
    }
 
    return estimator;
@@ -1618,7 +1618,7 @@ void TMVA::MethodMLP::MinuitMinimize()
 
    // init parameters
    for (Int_t ipar=0; ipar < fNumberOfWeights; ipar++) {
-      TString parName = Form("w%i", ipar);
+      TString parName = TString::Format("w%i", ipar);
       tfitter->SetParameter( ipar,
                              parName, w[ipar], 0.1, 0, 0 );
    }
