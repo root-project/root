@@ -126,9 +126,9 @@ void TMVA::Ranking::Print() const
    Log() << kINFO << hline << Endl;
    for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ++ir ) {
       Log() << kINFO
-            << Form( "%4i : ",(*ir).GetRank() )
+            << TString::Format( "%4i : ",(*ir).GetRank() )
             << std::setw(TMath::Max(maxL+0,9)) << (*ir).GetVariable().Data()
-            << Form( " : %3.3e", (*ir).GetRankValue() ) << Endl;
+            << TString::Format( " : %3.3e", (*ir).GetRankValue() ) << Endl;
    }
    Log() << kINFO << hline << Endl;
 }

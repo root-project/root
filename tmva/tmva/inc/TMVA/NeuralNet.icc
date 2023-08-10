@@ -902,7 +902,7 @@ template <typename LAYERDATA>
 
                 if ((int)cycleCount % 10 == 0) {
 
-                   TString convText = Form( "(train/test/epo/conv/maxco): %.3g/%.3g/%d/%d/%d",
+                   TString convText = TString::Format( "(train/test/epo/conv/maxco): %.3g/%.3g/%d/%d/%d",
                                             trainError,
                                             testError,
                                             (int)cycleCount,
@@ -915,7 +915,7 @@ template <typename LAYERDATA>
             while (true);
             settings.endTrainCycle (trainError);
 
-            TString convText = Form( "(train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
+            TString convText = TString::Format( "(train/test/epoch): %.4g/%.4g/%d", trainError, testError, (int)cycleCount);
             double progress = 100*(double)settings.maxConvergenceCount() /(double)settings.convergenceSteps ();
             settings.cycle (progress, convText);
 

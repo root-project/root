@@ -591,9 +591,9 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                      Double_t rymax = fVariableStats.at(fNumC-1).at( ( v_t*nvar )+j).fMax;
 
                      // scatter plot
-                     TH2F* h2 = new TH2F( Form( "scat_%s_vs_%s_%s%s" , myVarj.Data(), myVari.Data(),
+                     TH2F* h2 = new TH2F( TString::Format( "scat_%s_vs_%s_%s%s" , myVarj.Data(), myVari.Data(),
                                                 className.Data(), transfType.Data() ),
-                                          Form( "%s versus %s (%s)%s", infoj.GetTitle(), info.GetTitle(),
+                                          TString::Format( "%s versus %s (%s)%s", infoj.GetTitle(), info.GetTitle(),
                                                 className.Data(), transfType.Data() ),
                                           nbins2D, rxmin , rxmax,
                                           nbins2D, rymin , rymax );
@@ -603,10 +603,10 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                      mycorr.at(cls).at((var_tgt*nvar)+ivar).at((v_t*nvar)+j) = h2;
 
                      // profile plot
-                     TProfile* p = new TProfile( Form( "prof_%s_vs_%s_%s%s", myVarj.Data(),
+                     TProfile* p = new TProfile( TString::Format( "prof_%s_vs_%s_%s%s", myVarj.Data(),
                                                        myVari.Data(), className.Data(),
                                                        transfType.Data() ),
-                                                 Form( "profile %s versus %s (%s)%s",
+                                                 TString::Format( "profile %s versus %s (%s)%s",
                                                        infoj.GetTitle(), info.GetTitle(),
                                                        className.Data(), transfType.Data() ), nbins1D,
                                                  rxmin, rxmax );

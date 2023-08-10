@@ -288,8 +288,8 @@ std::vector<TString>* TMVA::VariableNormalizeTransform::GetTransformationStrings
       TString str("");
       VariableInfo& varInfo = (type=='v'?fDsi.GetVariableInfo(idx):(type=='t'?fDsi.GetTargetInfo(idx):fDsi.GetSpectatorInfo(idx)));
 
-      if (offset < 0) str = Form( "2*%g*([%s] + %g) - 1", scale, varInfo.GetLabel().Data(), -offset );
-      else            str = Form( "2*%g*([%s] - %g) - 1", scale, varInfo.GetLabel().Data(),  offset );
+      if (offset < 0) str = TString::Format( "2*%g*([%s] + %g) - 1", scale, varInfo.GetLabel().Data(), -offset );
+      else            str = TString::Format( "2*%g*([%s] - %g) - 1", scale, varInfo.GetLabel().Data(),  offset );
       (*strVec)[iinp] = str;
 
       ++iinp;

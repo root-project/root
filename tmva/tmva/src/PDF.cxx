@@ -616,14 +616,14 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
    }
 
    Log() << kDEBUG << "Validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
-   Log() << kDEBUG << Form( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)",
+   Log() << kDEBUG << TString::Format( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)",
                   chi2, ndof, chi2/ndof, TMath::Prob( chi2, ndof ) ) << Endl;
    if ((1.0 - TMath::Prob( chi2, ndof )) > 0.9999994) {
       Log() << kDEBUG << "Comparison of the original histogram \"" << originalHist->GetTitle() << "\"" << Endl;
       Log() << kDEBUG << "with the corresponding PDF gave a chi2/ndof of " << chi2/ndof << "," << Endl;
       Log() << kDEBUG << "which corresponds to a deviation of more than 5 sigma! Please check!" << Endl;
    }
-   Log() << kDEBUG << Form( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
+   Log() << kDEBUG << TString::Format( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
                   "[%i(%i),%i(%i),%i(%i),%i(%i)]",
                   nc1, Int_t(TMath::Prob(1.0,1)*ndof), nc2, Int_t(TMath::Prob(4.0,1)*ndof),
                   nc3, Int_t(TMath::Prob(9.0,1)*ndof), nc6, Int_t(TMath::Prob(36.0,1)*ndof) ) << Endl;
