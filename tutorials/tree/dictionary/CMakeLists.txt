@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project(treeUsingCustomClass)
 
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
-find_package(ROOT REQUIRED COMPONENTS MathCore RIO Hist Tree Net Graf3d Graf Gpad Thread TreePlayer)
+find_package(ROOT REQUIRED COMPONENTS MathCore RIO Hist Tree Net Graf3d Graf Gpad Thread TreePlayer ROOTDataFrame)
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
@@ -42,6 +42,6 @@ if(MSVC)
 endif()
 
 #---Create  a main program using the library
-add_executable(treeExample main.cpp readTree.cxx writeTree.cxx)
+add_executable(treeExample main.cpp writeTree.cxx readTree.cxx readTreeDF.cxx)
 target_link_libraries(treeExample ${ROOT_LIBRARIES} data2TreeLib)
 

@@ -9,24 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
+/* Example of reading a TTree using the RDataFrame interface
+ * Documentation of RDataFrame: https://root.cern/doc/master/classROOT_1_1RDataFrame.html
+ */
 
-void writeTree();
-void readTree();
-void readTreeDF();
+#include <ROOT/RDataFrame.hxx>
 
-int main()
+#include "data2Tree.hxx"
+
+void readTreeDF()
 {
-   std::cout << "Starting writeTree()..." << std::endl;
-   writeTree();
-   std::cout << "Starting writeTree()... Done! " << std::endl;
-   std::cout << "Starting readTree()..." << std::endl;
-   readTree();
-   std::cout << "Starting readTree()... Done! " << std::endl;
-   std::cout << "Starting readTreeDF()..." << std::endl;
-   readTreeDF();
-   std::cout << "Starting readTreeDF()... Done! " << std::endl;
 
-   return 0;
+   ROOT::RDataFrame df{"myTree", "testFile.root"};
+   df.Display({"branch1.time","branch1.energy","branch2.time","branch2.energy"}, /*nRows*/ 10)->Print();
+
 }
 
