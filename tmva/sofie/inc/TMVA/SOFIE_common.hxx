@@ -49,9 +49,16 @@ struct TensorInfo{
    std::vector<size_t> shape;
 };
 
+struct DynamicTensorInfo{
+   ETensorType type;
+   std::vector<Dim> shape;
+};
+
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
 std::string ConvertShapeToString(std::vector<size_t> shape);
+
+std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
 struct InitializedTensor{
    ETensorType fType;

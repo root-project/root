@@ -61,7 +61,7 @@ ETensorType ConvertStringToType(std::string type){
    if(type == "float32" || type == "float" || type == "Float"){
      return ETensorType::FLOAT;
    }
-   else if(type == "int64"){
+   else if(type == "int64" || type == "int64_t"){
      return ETensorType::INT64;
    }
    else if (type == "double" || type == "float64"){
@@ -84,6 +84,24 @@ std::string ConvertShapeToString(std::vector<size_t> shape) {
    }
    out << " }";
    return out.str();
+}
+
+std::string ConvertDynamicShapeToLength(std::vector<Dim> shape) {
+   std::string length;
+   if (shape[0].isParam) {
+      length += shape[0].param;
+   } else {
+      length += std::to_string(shape[0].dim);
+   }
+   for (size_t i = 1; i < shape.size(); i++) {
+      length += " * ";
+      if (shape[i].isParam) {
+         length += shape[i].param;
+      } else {
+         length += std::to_string(shape[i].dim);
+      }
+   }
+   return length;
 }
 
 namespace{
