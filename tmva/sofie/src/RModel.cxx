@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cctype>
 #include <memory>
+#include <string>
 
 #include "TFile.h"
 
@@ -73,6 +74,15 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) {
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
+const std::vector<Dim> &RModel::GetDynamicTensorShape(std::string name) {
+   auto f = fDynamicTensorInfos.find(name);
+   if (f != fDynamicTensorInfos.end()) {
+      return f->second.shape;
+   }
+
+   throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
+}
+
 const ETensorType& RModel::GetTensorType(std::string name) {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
@@ -90,6 +100,10 @@ const ETensorType& RModel::GetTensorType(std::string name) {
     if (f4 != fIntermediateTensorInfos.end()) {
         return f4->second.type;
     }
+    auto f5 = fDynamicTensorInfos.find(name);
+    if (f5 != fDynamicTensorInfos.end()){
+      return f5->second.type;
+    }
 
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the type is requested is not found");
 }
@@ -98,6 +112,7 @@ bool RModel::CheckIfTensorAlreadyExist(std::string tensor_name) {
     if (fReadyInputTensorInfos.find(tensor_name) != fReadyInputTensorInfos.end())  return true;
     if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()) return true;
     if (fIntermediateTensorInfos.find(tensor_name) != fIntermediateTensorInfos.end()) return true;
+    if (fDynamicTensorInfos.find(tensor_name) != fDynamicTensorInfos.end()) return true;
     return false;
 }
 
@@ -153,6 +168,11 @@ bool RModel::IsInitializedTensor(const std::string& tensorName) const {
     return fInitializedTensors.find(name) != fInitializedTensors.end();
 }
 
+bool RModel::IsDynamicTensor(const std::string& tensorName) const {
+   std::string name = UTILITY::Clean_name(tensorName);
+   return fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+}
+
 void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape) {
     tensor_name = UTILITY::Clean_name(tensor_name);
     if (CheckIfTensorAlreadyExist(tensor_name)) {
@@ -160,6 +180,15 @@ void RModel::AddIntermediateTensor(std::string tensor_name, ETensorType type, st
     }
     TensorInfo new_tensor {type, shape};
     fIntermediateTensorInfos[tensor_name] = new_tensor;
+}
+
+void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape){
+   tensor_name = UTILITY::Clean_name(tensor_name);
+   if (CheckIfTensorAlreadyExist(tensor_name)){
+      throw std::runtime_error("TMVA-SOFIE: intermediate tensor with name " + tensor_name + " already exists \n");
+   }
+   DynamicTensorInfo new_tensor {type, shape};
+   fDynamicTensorInfos[tensor_name] = new_tensor;
 }
 
 void RModel::AddOutputTensorNameList(std::vector<std::string> outputtensornames) {
@@ -227,8 +256,8 @@ void RModel::Initialize(int batchSize) {
         if (!modelHasWeights) fUseWeightFile = false;
     }
 
-    for (auto& i : fOperators) {
-        i->Initialize(*this);
+    for (auto& op : fOperators) {
+      op->Initialize(*this);
     }
 }
 
@@ -275,9 +304,19 @@ void RModel::GenerateIntermediateTensorInfo() {
             fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
         }
         if (i.second.type == ETensorType::BOOL){
-            fGC += "bool tensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";         
+            fGC += "bool tensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";
         }
-    }
+   }
+   // add also intermediate tensors
+   for (auto&i: fDynamicTensorInfos) {
+      if (i.second.type == ETensorType::FLOAT) {
+         fGC += "std::vector<float> tensor_" + i.first  + ";\n";
+      } else if (i.second.type == ETensorType::DOUBLE) {
+         fGC += "std::vector<double> tensor_" + i.first  + ";\n";
+      } else if (i.second.type == ETensorType::INT64) {
+         fGC += "std::vector<int64_t> tensor_" + i.first  + ";\n";
+      }
+   }
 }
 
 void RModel::GenerateOutput() {
@@ -296,11 +335,16 @@ void RModel::GenerateOutput() {
         std::vector<ETensorType> outputTensorsTypes(outputSize);
         for (size_t i = 0; i < outputSize; i++) {
             auto f = fIntermediateTensorInfos.find(fOutputTensorNames[i]);
-            if (f == fIntermediateTensorInfos.end()) {
-                throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i]
-                                         + " not found when trying to get its info");
-            } else {
+            if (f != fIntermediateTensorInfos.end()) {
                 outputTensorsTypes[i] = f->second.type;
+            } else {
+               auto f2 = fDynamicTensorInfos.find(fOutputTensorNames[i]);
+               if (f2 != fDynamicTensorInfos.end()) {
+                  outputTensorsTypes[i] = f2->second.type;
+               } else {
+                  throw std::runtime_error("TMVA-SOFIE: output tensor " + fOutputTensorNames[i]
+                     + " not found when trying to get its info");
+               }
             }
         }
         // assume all output types are the same
@@ -353,10 +397,14 @@ void RModel::GenerateOutput() {
     }
 
     if (outputSize == 1) {
-        size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
-
-        fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
+         std::string tensorName = fOutputTensorNames[0];
+         if (IsDynamicTensor(tensorName)) {
+            fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + tensorName + ");\n";
+         } else {
+            size_t outputLength = ConvertShapeToLength(GetTensorShape(fOutputTensorNames[0]));
+            fGC += SP + "std::vector<" + outputType + "> ret (tensor_" + fOutputTensorNames[0] + ", tensor_" + fOutputTensorNames[0] + " + " +
                std::to_string(outputLength) + ");\n";
+         }
     } else {
         for (size_t i = 0; i < outputSize; i++) {
             if (!fOutputTensorNames[i].empty()) {

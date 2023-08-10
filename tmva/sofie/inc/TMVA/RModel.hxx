@@ -17,6 +17,7 @@ private:
     std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
     std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
     std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
+    std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
     std::vector<std::string> fOutputTensorNames;
     std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
 
@@ -40,6 +41,7 @@ public:
     RModel(std::string function_name):RModel_Base(function_name) {}
 
     const std::vector<size_t>& GetTensorShape(std::string name);
+    const std::vector<Dim>& GetDynamicTensorShape(std::string name);
     const ETensorType& GetTensorType(std::string name);
 
     bool CheckIfTensorAlreadyExist(std::string tensor_name);
@@ -65,7 +67,10 @@ public:
 
     // Check if a tensor is initialized
     bool IsInitializedTensor(const std::string& name) const;
+    bool IsDynamicTensor(const std::string& name) const;
+
     void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
+    void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
 
     void AddInputTensorName(std::string name);
     void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
