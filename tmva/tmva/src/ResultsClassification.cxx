@@ -51,7 +51,7 @@ namespace TMVA {
 TMVA::ResultsClassification::ResultsClassification( const DataSetInfo* dsi, TString resultsName  )
    : Results( dsi,resultsName  ),
      fRet(1),
-     fLogger( new MsgLogger(Form("ResultsClassification%s",resultsName.Data()) , kINFO) )
+     fLogger( new MsgLogger(TString::Format("ResultsClassification%s",resultsName.Data()).Data() , kINFO) )
 {
 }
 

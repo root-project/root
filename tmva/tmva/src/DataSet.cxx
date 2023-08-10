@@ -62,7 +62,7 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
      fCurrentTreeIdx(0),
      fCurrentEventIdx(0),
      fHasNegativeEventWeights(kFALSE),
-     fLogger( new MsgLogger(TString(TString("Dataset:")+dsi.GetName()).Data()) ),
+     fLogger( new MsgLogger((TString("Dataset:")+dsi.GetName()).Data()) ),
      fTrainingBlockSize(0)
 {
 
@@ -94,7 +94,7 @@ TMVA::DataSet::DataSet()
      fCurrentTreeIdx(0),
      fCurrentEventIdx(0),
      fHasNegativeEventWeights(kFALSE),
-     fLogger( new MsgLogger(TString(TString("Dataset:")+GetName()).Data()) ),
+     fLogger( new MsgLogger((TString("Dataset:")+GetName()).Data()) ),
      fTrainingBlockSize(0)
 {
 
