@@ -49,10 +49,8 @@ using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 
 constexpr char const* kNTupleFileName = "ntpl001_staff.root";
-//constexpr char const* kNTupleFileName = "test://ntpl001_staff.root";
 
-void Ingest() {   
-   
+void Ingest() {
    // The input file cernstaff.dat is a copy of the CERN staff data base from 1988
    ifstream fin(gROOT->GetTutorialDir() + "/tree/cernstaff.dat");
    assert(fin.is_open());
@@ -74,10 +72,6 @@ void Ingest() {
    auto fldDivision = model->MakeField<std::string>("Division");
    auto fldNation   = model->MakeField<std::string>("Nation");
 
-   // We hand-over the data model to a newly created ntuple of name "Staff", stored in kNTupleFileName
-   // In return, we get a unique pointer to an ntuple that we can fill
-
-   // Compress the .root file
    RNTupleWriteOptions write_options;
    write_options.SetCompression(0);
 
@@ -93,17 +87,10 @@ void Ingest() {
       }
    }
 
-   // open the root file and retrieve rntuple object
    auto f = TFile::Open("/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root","READ");
-   
    auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Staff");
 
-   //std::cout << "begin " << ntpl->GetSeekHeader() << std::endl;
-   //std::cout << "end " << ntpl->GetNBytesHeader() << std::endl;
-
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekHeader();
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
-
+   // TRIGGERING FAILURES IN A PAGE
    // Create an RNTupleReader from the ntuple
    std::unique_ptr<RNTupleReader> ntupleReader = RNTupleReader::Open("Staff", "/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root");
 
@@ -126,42 +113,41 @@ void Ingest() {
    // // Get page range of Xcl
    auto &pageRangeXcl = clusterDescriptor.GetPageRange(columnId);
 
-   const auto &pageInfo = pageRangeXcl.fPageInfos[0]; // page info for first page
-   auto loc = pageInfo.fLocator; // locator for first page
-   auto nelem = loc.fBytesOnStorage; // num of bytes
-   auto offset = loc.GetPosition<std::uint64_t>(); // offset of first page
-
-   //std::cout << "offset = " << offset << " nelem = " << nelem << std::endl;
-
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = offset;
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = offset + nelem;
+   // Get page info for first page
+   const auto &pageInfo = pageRangeXcl.fPageInfos[0];
+   auto loc = pageInfo.fLocator;
+   auto nelem = loc.fBytesOnStorage;
+   auto offset = loc.GetPosition<std::uint64_t>();
 
    //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = offset;
    //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = offset + nelem;
-   ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType = ROOT::Internal::RRawFile::SetFailureType(ROOT::Internal::RRawFile::FailureType::ShortRead);
-   
-   // ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekHeader();
-   // ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
-   
-   //std::cout << "rng begin " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin << std::endl;
-   //std::cout << "rng end " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end << std::endl;
-   //std::cout << "failure type " << ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType << std::endl;
 
+   // TRIGGERING FAILURES IN HEADER
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekHeader();
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
+
+   // TRIGGERING FAILURES IN FOOTER
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekFooter();
+   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekFooter() + ntpl->GetNBytesFooter();
+
+   std::cout << "Failure Type: " << ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType << std::endl;
+   std::cout << "Range Begin: " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin << std::endl;
+   std::cout << "Range End: " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end << std::endl;
 }
 
 void Analyze() {
+   
    // Get a unique pointer to an empty RNTuple model
    auto model = RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
-   std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
-
+   auto fldAge = model->MakeField<int>("Age");
+   
    // Create an ntuple and attach the read model to it
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
 
    //specify and open output file
-   std::ofstream file("short_read_0.txt");
-
+   std::ofstream file("output.txt");
    if(file.is_open())
    {
       for(int idx = 0; idx < ntuple->GetNEntries(); idx++) 
@@ -173,8 +159,7 @@ void Analyze() {
       file.close();
    }
 
-   std::cout << "File Created!" << std::endl;
-
+   std::cout << "Complete!" << std::endl;
 }
 
 void ntpl001_staff() {

@@ -146,12 +146,12 @@ protected:
 
 public:
 
-   enum FailureType { BitFlip, ShortRead };
+   enum FailureType { BitFlip, ShortRead, None };
    
    struct FailureInjectionParams{
       std::uint32_t rng_begin {0};
       std::uint32_t rng_end {0};
-      FailureType failureType = BitFlip;
+      FailureType failureType = None;
       float failureProbability = 0.0; 
    };
 

@@ -11,8 +11,6 @@
 
 #include <ROOT/RConfig.h>
 #include <ROOT/RRawFile.hxx>
-
-
 #ifdef _WIN32
 #include <ROOT/RRawFileWin.hxx>
 #else
@@ -31,20 +29,11 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
-
 #include <iostream>
-#include <random>
 
 #define TESTING_MODE
 
 namespace {
-
-//static bool testing_mode = true;
-static uint64_t bytes_processed_readAt = 0;
-static bool flip_triggered = false;
-
-std::random_device rd;
-
 const char *kTransportSeparator = "://";
 // Corresponds to ELineBreaks
 #ifdef _WIN32
@@ -176,100 +165,8 @@ size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
    return res;
 }
 
-void ROOT::Internal::RRawFile::TriggerBitFlip(void* buffer, size_t total_bytes, std::uint64_t offset)
-{    
-   // bit flip should occur randomly between the range limits defined
-   // use offset and total_bytes plus the range values defined to target a bit flip
-
-
-   if(!flip_triggered)// && bytes_processed_readAt >= ROOT::Internal::RRawFile::FailureInjectionParams().rng_begin && bytes_processed_readAt <= ROOT::Internal::RRawFile::FailureInjectionParams().rng_end)
-   {   
-      std::cout << "triggering bit flip " << std::endl;
-      std::cout << "bytes processed " << bytes_processed_readAt << std::endl;
-      std::cout << "range begin " << ROOT::Internal::RRawFile::FailureInjectionParams().rng_begin << std::endl;
-      std::cout << "range end " << ROOT::Internal::RRawFile::FailureInjectionParams().rng_end << std::endl;      
-      
-      // only trigger one bit flip (for now)
-      flip_triggered = true;
-
-      auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
-
-      // randomly pick a byte within the buffer and a random bit to flip within that byte
-      std::mt19937 gen(rd());
-      std::uniform_int_distribution<std::mt19937::result_type> r_byte(0,total_bytes);
-      std::uniform_int_distribution<std::mt19937::result_type> r_bit(0,8);
-      int byte_idx = r_byte(gen);
-      int bit_idx = r_bit(gen);
-
-      // perform bit flip
-      unsigned char &chosen_byte = byte_ptr[byte_idx];
-      chosen_byte ^= (1 << bit_idx);
-   }
-}
-
-// SHORT READ V2
-// for every buffer
-// choose random position after halfway point
-// write \0 bytes from chosen position to the end of the buffer
-void ROOT::Internal::RRawFile::TriggerShortRead(void* buffer, size_t total_bytes, std::uint64_t offset)
-{
-   auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
-
-   // generate random position at which short read should start
-   size_t rng_end = offset + total_bytes;
-   size_t midpoint = rng_end/2;
-   std::mt19937 gen(rd());
-   std::uniform_int_distribution<std::mt19937::result_type> r_pos(midpoint, rng_end);
-   int start_pos = r_pos(gen);
-
-   // set the start point of the short read in a random position after the halfway point in the buffer
-   GetFailureInjectionParams().rng_begin = start_pos;
-   GetFailureInjectionParams().rng_end = rng_end;
-
-   // change all bits to zero from start point until the end of the buffer
-   for (size_t byte_idx = start_pos; byte_idx < rng_end; ++byte_idx) {
-      byte_ptr[byte_idx] = 0x00;
-   }
-}
-
-void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset){
-   
-   // check probability that failure occurs
-   //GetFailureInjectionParams().failureProbability
-
-   // trigger failure
-   switch(GetFailureInjectionParams().failureType) {
-      case 0:
-         // bit flip
-         //TriggerBitFlip(buffer, total_bytes, offset);
-         break;
-      case 1:
-         TriggerShortRead(buffer, total_bytes, offset);
-         break;
-      default:
-         break;
-   }
-}
-
-size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
-{
-   size_t total_bytes = ReadTotalBytes(buffer,nbytes,offset);
-
-   //std::cout << "the offset is " << offset << " nbytes is " << nbytes << " total bytes is " << total_bytes << std::endl;
-
-   bytes_processed_readAt += total_bytes;
-
-#ifdef TESTING_MODE
-   PossiblyInjectFailure(buffer, total_bytes, offset);
-   //PossiblyTriggerBitFlip(buffer, total_bytes);
-   //total_bytes = total_bytes - 1;
-   //PossiblyTriggerShortRead(buffer, total_bytes);
-#endif
-   return total_bytes;
-}
-
 size_t ROOT::Internal::RRawFile::ReadTotalBytes(void *buffer, size_t nbytes, std::uint64_t offset)
-{   
+{
    if (!fIsOpen)
       OpenImpl();
    R__ASSERT(fOptions.fBlockSize >= 0);
@@ -302,18 +199,51 @@ size_t ROOT::Internal::RRawFile::ReadTotalBytes(void *buffer, size_t nbytes, std
    fBlockBufferIdx++;
 
    /// The request was not fully satisfied and fBlockBufferIdx now points to the previous shadow buffer
+
    /// The remaining bytes populate the newly promoted main buffer
    RBlockBuffer *thisBuffer = &fBlockBuffers[fBlockBufferIdx % kNumBlockBuffers];
    size_t res = ReadAtImpl(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
    thisBuffer->fBufferOffset = offset;
    thisBuffer->fBufferSize = res;
-
    size_t remainingBytes = std::min(res, nbytes);
    memcpy(buffer, thisBuffer->fBuffer, remainingBytes);
    totalBytes += remainingBytes;
    return totalBytes;
+}
 
-   return 0;
+void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset)
+{
+   // check probability of error occurring here
+
+   // trigger particular failure
+   switch(GetFailureInjectionParams().failureType) {
+      case 0:
+         std::cout << "Triggering Bit Flip" << std::endl;
+         //TriggerBitFlip(buffer, total_bytes, offset);
+         break;
+      case 1:
+         std::cout << "Triggering Short Read" << std::endl;
+         //TriggerShortRead(buffer, total_bytes, offset);
+         break;
+      default:
+         break;
+   }
+}
+
+size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+{
+   std::cout << "REACHED 0" << std::endl;
+
+   size_t total_bytes = ReadTotalBytes(buffer,nbytes,offset);
+
+   std::cout << "REACHED 1" << std::endl;
+
+#ifdef TESTING_MODE
+   std::cout << "REACHED 2" << std::endl;
+   PossiblyInjectFailure(buffer, total_bytes, offset);
+#endif
+
+   return total_bytes;
 }
 
 void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
@@ -322,13 +252,6 @@ void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
       OpenImpl();
    fIsOpen = true;
    ReadVImpl(ioVec, nReq);
-
-#ifdef TESTING_MODE
-   // std::mt19937 gen(rd()); 
-   // std::uniform_real_distribution<double> dist6(0, nReq);
-   // int random_idx = dist6(gen);
-   // PossiblyTriggerBitFlip(ioVec[random_idx].fBuffer, ioVec[random_idx].fOutBytes);
-#endif
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)
