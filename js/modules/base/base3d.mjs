@@ -966,7 +966,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
           intersects = this.getMouseIntersects(mouse);
       if (intersects)
          for (let n = 0; n < intersects.length; ++n)
-            if (intersects[n].object.zoom)
+            if (intersects[n].object.zoom && !intersects[n].object.zoom_disabled)
                return intersects[n];
 
       return null;
@@ -1142,7 +1142,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          this.tooltip.hide();
          if (intersects)
             for (let n = 0; n < intersects.length; ++n)
-               if (intersects[n].object.zoom) this.cursor_changed = true;
+               if (intersects[n].object.zoom && !intersects[n].object.zoom_disabled)
+                  this.cursor_changed = true;
       }
 
       document.body.style.cursor = this.cursor_changed ? 'pointer' : 'auto';

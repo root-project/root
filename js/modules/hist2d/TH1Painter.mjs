@@ -1211,24 +1211,4 @@ class TH1Painter extends THistPainter {
 
 } // class TH1Painter
 
-
-/**
- * @summary Set histogram title
- * @desc If provided, also change axes title
- * @private
- */
-
-function setHistTitle(histo, title) {
-   if (!histo) return;
-   if (title.indexOf(';') < 0) {
-      histo.fTitle = title;
-   } else {
-      let arr = title.split(';');
-      histo.fTitle = arr[0];
-      if (arr.length > 1) histo.fXaxis.fTitle = arr[1];
-      if (arr.length > 2) histo.fYaxis.fTitle = arr[2];
-      if (arr.length > 3) histo.fZaxis.fTitle = arr[3];
-   }
-}
-
-export { TH1Painter, setHistTitle, PadDrawOptions };
+export { TH1Painter,  PadDrawOptions };

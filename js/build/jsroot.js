@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '19/07/2023';
+let version_date = '11/08/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1360,6 +1360,23 @@ function createHistogram(typename, nbinsx, nbinsy, nbinsz) {
    return histo;
 }
 
+/** @summary Set histogram title
+ * @desc Title may include axes titles, provided with ';' symbol like "Title;x;y;z" */
+
+function setHistogramTitle(histo, title) {
+   if (!histo) return;
+   if (title.indexOf(';') < 0) {
+      histo.fTitle = title;
+   } else {
+      let arr = title.split(';');
+      histo.fTitle = arr[0];
+      if (arr.length > 1) histo.fXaxis.fTitle = arr[1];
+      if (arr.length > 2) histo.fYaxis.fTitle = arr[2];
+      if (arr.length > 3) histo.fZaxis.fTitle = arr[3];
+   }
+}
+
+
 /** @summary Creates TPolyLine object
   * @param {number} npoints - number of points
   * @param {boolean} [use_int32] - use Int32Array type for points, default is Float32Array */
@@ -1873,6 +1890,7 @@ parseMulti: parseMulti,
 prROOT: prROOT,
 registerMethods: registerMethods,
 setBatchMode: setBatchMode,
+setHistogramTitle: setHistogramTitle,
 settings: settings,
 get source_dir () { return exports.source_dir; },
 toJSON: toJSON,
@@ -54732,7 +54750,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
           intersects = this.getMouseIntersects(mouse);
       if (intersects)
          for (let n = 0; n < intersects.length; ++n)
-            if (intersects[n].object.zoom)
+            if (intersects[n].object.zoom && !intersects[n].object.zoom_disabled)
                return intersects[n];
 
       return null;
@@ -54908,7 +54926,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          this.tooltip.hide();
          if (intersects)
             for (let n = 0; n < intersects.length; ++n)
-               if (intersects[n].object.zoom) this.cursor_changed = true;
+               if (intersects[n].object.zoom && !intersects[n].object.zoom_disabled)
+                  this.cursor_changed = true;
       }
 
       document.body.style.cursor = this.cursor_changed ? 'pointer' : 'auto';
@@ -68153,7 +68172,7 @@ class TCanvasPainter extends TPadPainter {
 
             select('#ged_placeholder').text('');
 
-            sap.ui.define(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
+            sap.ui.require(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
 
                let oModel = new JSONModel({ handle: null });
 
@@ -69877,7 +69896,7 @@ class THistDrawOptions {
               Mark: false, Same: false, Scat: false, ScatCoef: 1., Func: true,
               Arrow: false, Box: false, BoxStyle: 0,
               Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
-              Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0,
+              Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: false,
               Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
               Candle: '', Violin: '', Scaled: null, Circular: 0,
               GLBox: 0, GLColor: false, Project: '', System: kCARTESIAN,
@@ -69907,6 +69926,20 @@ class THistDrawOptions {
 
       if (Number.isInteger(this.Zero) || force)
          this.Zero = isany ? 0 : 1;
+   }
+
+   /** @summary Is palette can be used with current draw options */
+   canHavePalette() {
+      if (this.ndim !== 2)
+         return false;
+
+      if (this.Mode3D)
+         return this.Lego === 12 || this.Lego === 14 || this.Surf === 11 || this.Surf === 12;
+
+      if (this.Color || this.Contour || this.Axis)
+         return true;
+
+      return !this.Scat && !this.Box && !this.Arrow && !this.Proj && !this.Candle && !this.Violin && !this.Text;
    }
 
    /** @summary Decode histogram draw options */
@@ -69973,6 +70006,9 @@ class THistDrawOptions {
 
       if (d.check('X3DSC', true)) this.x3dscale = d.partAsInt(0, 100) / 100;
       if (d.check('Y3DSC', true)) this.y3dscale = d.partAsInt(0, 100) / 100;
+
+      if (d.check('PERSPECTIVE') || d.check('PERSP')) this.Ortho = false;
+      if (d.check('ORTHO')) this.Ortho = true;
 
       let lx = 0, ly = 0, check3dbox = '', check3d = (hdim == 3);
       if (d.check('LOG2XY')) lx = ly = 2;
@@ -71231,6 +71267,9 @@ class THistPainter extends ObjectPainter {
        if ((func._typename === clTF1) || (func._typename === clTF2))
           return !func.TestBit(BIT(9)); // TF1::kNotDraw
 
+       if ((func._typename === 'TGraphDelaunay') || (func._typename === 'TGraphDelaunay2D'))
+          return false; // do not try to draw delaunay classes
+
        return func._typename !== clTPaletteAxis;
    }
 
@@ -71504,6 +71543,7 @@ class THistPainter extends ObjectPainter {
                main.options.BackBox = !main.options.BackBox;
                fp.render3D();
             });
+            menu.addchk(fp.camera?.isOrthographicCamera, 'Othographic camera', flag => fp.change3DCamera(flag));
          }
 
          if (this.draw_content) {
@@ -71633,7 +71673,7 @@ class THistPainter extends ObjectPainter {
       cntr.configIndicies(this.options.Zero ? -1 : 0, (cntr.colzmin != 0) || !this.options.Zero || this.isTH2Poly() ? 0 : -1);
 
       let fp = this.getFramePainter();
-      if ((this.getDimension() < 3) && fp) {
+      if (fp && (this.getDimension() < 3) && !fp.mode3d) {
          fp.zmin = cntr.colzmin;
          fp.zmax = cntr.colzmax;
       }
@@ -71701,8 +71741,8 @@ class THistPainter extends ObjectPainter {
    }
 
    /** @summary Return levels from contour object */
-   getContourLevels() {
-      return this.getContour().getLevels();
+   getContourLevels(force_recreate) {
+      return this.getContour(force_recreate).getLevels();
    }
 
    /** @summary Returns color palette associated with histogram
@@ -71942,10 +71982,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Toggle color z palette drawing */
    toggleColz() {
-      let can_toggle = this.options.Mode3D ? (this.options.Lego === 12 || this.options.Lego === 14 || this.options.Surf === 11 || this.options.Surf === 12) :
-                       this.options.Color || this.options.Contour;
-
-      if (can_toggle) {
+      if (this.options.canHavePalette()) {
          this.options.Zscale = !this.options.Zscale;
          return this.drawColorPalette(this.options.Zscale, false, true)
                     .then(() => this.processOnlineChange('drawopt'));
@@ -72404,215 +72441,254 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
    }
 }
 
+/** @summary Handle 3D triangles with color levels */
+
+class Triangles3DHandler {
+   constructor(ilevels, grz, grz_min, grz_max, dolines, donormals, dogrid) {
+
+      let levels = [grz_min, grz_max]; // just cut top/bottom parts
+
+      if (ilevels) {
+         // recalculate levels into graphical coordinates
+         levels = new Float32Array(ilevels.length);
+         for (let ll = 0; ll < ilevels.length; ++ll)
+            levels[ll] = grz(ilevels[ll]);
+      }
+
+      Object.assign(this, { grz_min, grz_max, dolines, donormals, dogrid });
+
+      this.loop = 0;
+
+      let nfaces = [], posbuf = [], posbufindx = [],    // buffers for faces
+          nsegments = 0, lpos = null, lindx = 0,  // buffer for lines
+          ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
+          normindx = [],                             // buffer to remember place of vertex for each bin
+          pntbuf = new Float32Array(6*3), pntindx = 0, // maximal 6 points
+          lastpart = 0, gridpnts = new Float32Array(2*3), gridcnt = 0,
+          levels_eps = (levels[levels.length-1] - levels[0]) / levels.length / 1e2;
+
+      function checkSide(z, level1, level2, eps) {
+         return (z < level1 - eps) ? -1 : (z > level2 + eps ? 1 : 0);
+      }
+      this.createNormIndex = function(handle) {
+          // for each bin maximal 8 points reserved
+         if (handle.donormals)
+            normindx = new Int32Array((handle.i2-handle.i1)*(handle.j2-handle.j1)*8).fill(-1);
+      };
+
+      this.createBuffers = function() {
+         if (!this.loop) return;
+
+         for (let lvl = 1; lvl < levels.length; ++lvl)
+            if (nfaces[lvl]) {
+               posbuf[lvl] = new Float32Array(nfaces[lvl] * 9);
+               posbufindx[lvl] = 0;
+            }
+         if (this.dolines && (nsegments > 0))
+            lpos = new Float32Array(nsegments * 6);
+         if (this.dogrid && (ngridsegments > 0))
+            grid = new Float32Array(ngridsegments * 6);
+      };
+
+      this.addLineSegment = function(x1,y1,z1, x2,y2,z2) {
+         if (!this.dolines) return;
+         let side1 = checkSide(z1, this.grz_min, this.grz_max, 0),
+             side2 = checkSide(z2, this.grz_min, this.grz_max, 0);
+         if ((side1 === side2) && (side1 !== 0))
+            return;
+         if (!this.loop)
+            return ++nsegments;
+
+         if (side1 !== 0) {
+            let diff = z2 - z1;
+            z1 = (side1 < 0) ? this.grz_min : this.grz_max;
+            x1 = x2 - (x2 - x1) / diff * (z2 - z1);
+            y1 = y2 - (y2 - y1) / diff * (z2 - z1);
+         }
+         if (side2 !== 0) {
+            let diff = z1 - z2;
+            z2 = (side2 < 0) ? this.grz_min : this.grz_max;
+            x2 = x1 - (x1 - x2) / diff * (z1 - z2);
+            y2 = y1 - (y1 - y2) / diff * (z1 - z2);
+         }
+
+         lpos[lindx] = x1; lpos[lindx+1] = y1; lpos[lindx+2] = z1; lindx+=3;
+         lpos[lindx] = x2; lpos[lindx+1] = y2; lpos[lindx+2] = z2; lindx+=3;
+      };
+
+      function addCrossingPoint(xx1,yy1,zz1, xx2,yy2,zz2, crossz, with_grid) {
+         if (pntindx >= pntbuf.length)
+            console.log('more than 6 points???');
+
+         let part = (crossz - zz1) / (zz2 - zz1), shift = 3;
+         if ((lastpart !== 0) && (Math.abs(part) < Math.abs(lastpart))) {
+            // while second crossing point closer than first to original, move it in memory
+            pntbuf[pntindx] = pntbuf[pntindx-3];
+            pntbuf[pntindx+1] = pntbuf[pntindx-2];
+            pntbuf[pntindx+2] = pntbuf[pntindx-1];
+            pntindx-=3; shift = 6;
+         }
+
+         pntbuf[pntindx] = xx1 + part*(xx2-xx1);
+         pntbuf[pntindx+1] = yy1 + part*(yy2-yy1);
+         pntbuf[pntindx+2] = crossz;
+
+         if (with_grid && grid) {
+            gridpnts[gridcnt] = pntbuf[pntindx];
+            gridpnts[gridcnt+1] = pntbuf[pntindx+1];
+            gridpnts[gridcnt+2] = pntbuf[pntindx+2];
+            gridcnt += 3;
+         }
+
+         pntindx += shift;
+         lastpart = part;
+      }
+      function rememberVertex(indx, handle, ii,jj) {
+         let bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1))*8;
+
+         if (normindx[bin] >= 0)
+            return console.error('More than 8 vertexes for the bin');
+
+         let pos = bin + 8 + normindx[bin]; // position where write index
+         normindx[bin]--;
+         normindx[pos] = indx; // at this moment index can be overwritten, means all 8 position are there
+      }
+      this.addMainTriangle = function(x1,y1,z1, x2,y2,z2, x3,y3,z3, is_first, handle, i, j) {
+
+         for (let lvl = 1; lvl < levels.length; ++lvl) {
+
+            let side1 = checkSide(z1, levels[lvl-1], levels[lvl], levels_eps),
+                side2 = checkSide(z2, levels[lvl-1], levels[lvl], levels_eps),
+                side3 = checkSide(z3, levels[lvl-1], levels[lvl], levels_eps),
+                side_sum = side1 + side2 + side3;
+
+            // always show top segments
+            if ((lvl > 1) && (lvl === levels.length - 1) && (side_sum === 3) && (z1 <= this.grz_max)) {
+               side1 = side2 =  side3 = side_sum = 0;
+            }
+
+            if (side_sum === 3) continue;
+            if (side_sum === -3) return;
+
+            if (!this.loop) {
+               let npnts = Math.abs(side2-side1) + Math.abs(side3-side2) + Math.abs(side1-side3);
+               if (side1 === 0) ++npnts;
+               if (side2 === 0) ++npnts;
+               if (side3 === 0) ++npnts;
+
+               if ((npnts === 1) || (npnts === 2)) console.error(`FOUND npnts = ${npnts}`);
+
+               if (npnts > 2) {
+                  if (nfaces[lvl] === undefined)
+                     nfaces[lvl] = 0;
+                  nfaces[lvl] += npnts-2;
+               }
+
+               // check if any(contours for given level exists
+               if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
+                      ++ngridsegments;
+
+               continue;
+            }
+
+            gridcnt = 0;
+
+            pntindx = 0;
+            if (side1 === 0) { pntbuf[pntindx] = x1; pntbuf[pntindx+1] = y1; pntbuf[pntindx+2] = z1; pntindx += 3; }
+
+            if (side1 !== side2) {
+               // order is important, should move from 1->2 point, checked via lastpart
+               lastpart = 0;
+               if ((side1 < 0) || (side2 < 0)) addCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl-1]);
+               if ((side1 > 0) || (side2 > 0)) addCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl], true);
+            }
+
+            if (side2 === 0) { pntbuf[pntindx] = x2; pntbuf[pntindx+1] = y2; pntbuf[pntindx+2] = z2; pntindx += 3; }
+
+            if (side2 !== side3) {
+               // order is important, should move from 2->3 point, checked via lastpart
+               lastpart = 0;
+               if ((side2 < 0) || (side3 < 0)) addCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl-1]);
+               if ((side2 > 0) || (side3 > 0)) addCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl], true);
+            }
+
+            if (side3 === 0) { pntbuf[pntindx] = x3; pntbuf[pntindx+1] = y3; pntbuf[pntindx+2] = z3; pntindx += 3; }
+
+            if (side3 !== side1) {
+               // order is important, should move from 3->1 point, checked via lastpart
+               lastpart = 0;
+               if ((side3 < 0) || (side1 < 0)) addCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl-1]);
+               if ((side3 > 0) || (side1 > 0)) addCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl], true);
+            }
+
+            if (pntindx === 0) continue;
+            if (pntindx < 9) { console.log(`found ${pntindx/3} points, must be at least 3`); continue; }
+
+            if (grid && (gridcnt === 6)) {
+               for (let jj = 0; jj < 6; ++jj)
+                  grid[gindx+jj] = gridpnts[jj];
+               gindx += 6;
+            }
+
+            // if three points and surf == 14, remember vertex for each point
+
+            let buf = posbuf[lvl], s = posbufindx[lvl];
+            if (this.donormals && (pntindx === 9)) {
+               rememberVertex(s, handle, i, j);
+               rememberVertex(s+3, handle, i+1, is_first ? j+1 : j);
+               rememberVertex(s+6, handle, is_first ? i : i+1, j+1);
+            }
+
+            for (let k1 = 3; k1 < pntindx - 3; k1 += 3) {
+               buf[s] = pntbuf[0]; buf[s+1] = pntbuf[1]; buf[s+2] = pntbuf[2]; s+=3;
+               buf[s] = pntbuf[k1]; buf[s+1] = pntbuf[k1+1]; buf[s+2] = pntbuf[k1+2]; s+=3;
+               buf[s] = pntbuf[k1+3]; buf[s+1] = pntbuf[k1+4]; buf[s+2] = pntbuf[k1+5]; s+=3;
+            }
+            posbufindx[lvl] = s;
+         }
+      };
+
+      this.callFuncs = function(meshFunc, linesFunc) {
+         for (let lvl = 1; lvl < levels.length; ++lvl) {
+            if (posbuf[lvl] && meshFunc)
+               meshFunc(lvl, posbuf[lvl], normindx);
+         }
+
+         if (lpos && linesFunc) {
+            if (nsegments*6 !== lindx)
+               console.error(`SURF lines mismmatch nsegm=${nsegments} lindx=${lindx} diff=${nsegments*6 - lindx}`);
+            linesFunc(false, lpos);
+         }
+
+         if (grid && linesFunc) {
+            if (ngridsegments*6 !== gindx)
+               console.error(`SURF grid draw mismatch ngridsegm=${ngridsegments} gindx=${gindx} diff=${ngridsegments*6 - gindx}`);
+            linesFunc(true, grid);
+         }
+      };
+
+    }
+
+}
+
 
 /** @summary Build 3d surface
   * @desc Make it indepependent from three.js to be able reuse it for 2d case
   * @private */
 function buildSurf3D(histo, handle, ilevels, meshFunc, linesFunc) {
-   let main_grz = handle.grz,
-       main_grz_min = handle.grz_min,
-       main_grz_max = handle.grz_max,
-       levels = null;
+   let main_grz = handle.grz;
 
-   if (ilevels) {
-      // recalculate levels into graphical coordinates
-      levels = new Float32Array(ilevels.length);
-      for (let ll = 0; ll < ilevels.length; ++ll)
-         levels[ll] = main_grz(ilevels[ll]);
-   } else {
-      levels = [main_grz_min, main_grz_max]; // just cut top/bottom parts
-   }
-
-   let loop, nfaces = [], pos = [], indx = [],    // buffers for faces
-       nsegments = 0, lpos = null, lindx = 0,     // buffer for lines
-       ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
-       normindx = [],                             // buffer to remember place of vertex for each bin
-       arrx = handle.original ? handle.origx : handle.grx,
+   let arrx = handle.original ? handle.origx : handle.grx,
        arry = handle.original ? handle.origy : handle.gry,
        i, j, x1, x2, y1, y2, z11, z12, z21, z22,
-       levels_eps = (levels[levels.length-1] - levels[0]) / levels.length / 1e2;
+       triangles = new Triangles3DHandler(ilevels, handle.grz, handle.grz_min, handle.grz_max, handle.dolines, handle.donormals, handle.dogrid);
 
-   function CheckSide(z, level1, level2, eps) {
-      return (z < level1 - eps) ? -1 : (z > level2 + eps ? 1 : 0);
-   }
+   triangles.createNormIndex(handle);
 
-   function AddLineSegment(x1,y1,z1, x2,y2,z2) {
-      if (!handle.dolines) return;
-      let side1 = CheckSide(z1, main_grz_min, main_grz_max, 0),
-          side2 = CheckSide(z2, main_grz_min, main_grz_max, 0);
-      if ((side1 === side2) && (side1 !== 0)) return;
-      if (!loop) return ++nsegments;
+   for (triangles.loop = 0; triangles.loop < 2; ++triangles.loop) {
+      triangles.createBuffers();
 
-      if (side1 !== 0) {
-         let diff = z2 - z1;
-         z1 = (side1 < 0) ? main_grz_min : main_grz_max;
-         x1 = x2 - (x2 - x1) / diff * (z2 - z1);
-         y1 = y2 - (y2 - y1) / diff * (z2 - z1);
-      }
-      if (side2 !== 0) {
-         let diff = z1 - z2;
-         z2 = (side2 < 0) ? main_grz_min : main_grz_max;
-         x2 = x1 - (x1 - x2) / diff * (z1 - z2);
-         y2 = y1 - (y1 - y2) / diff * (z1 - z2);
-      }
-
-      lpos[lindx] = x1; lpos[lindx+1] = y1; lpos[lindx+2] = z1; lindx+=3;
-      lpos[lindx] = x2; lpos[lindx+1] = y2; lpos[lindx+2] = z2; lindx+=3;
-   }
-
-   let pntbuf = new Float32Array(6*3), k = 0, lastpart = 0, // maximal 6 points
-       gridpnts = new Float32Array(2*3), gridcnt = 0;
-
-   function AddCrossingPoint(xx1,yy1,zz1, xx2,yy2,zz2, crossz, with_grid) {
-      if (k >= pntbuf.length)
-         console.log('more than 6 points???');
-
-      let part = (crossz - zz1) / (zz2 - zz1), shift = 3;
-      if ((lastpart !== 0) && (Math.abs(part) < Math.abs(lastpart))) {
-         // while second crossing point closer than first to original, move it in memory
-         pntbuf[k] = pntbuf[k-3];
-         pntbuf[k+1] = pntbuf[k-2];
-         pntbuf[k+2] = pntbuf[k-1];
-         k-=3; shift = 6;
-      }
-
-      pntbuf[k] = xx1 + part*(xx2-xx1);
-      pntbuf[k+1] = yy1 + part*(yy2-yy1);
-      pntbuf[k+2] = crossz;
-
-      if (with_grid && grid) {
-         gridpnts[gridcnt] = pntbuf[k];
-         gridpnts[gridcnt+1] = pntbuf[k+1];
-         gridpnts[gridcnt+2] = pntbuf[k+2];
-         gridcnt+=3;
-      }
-
-      k += shift;
-      lastpart = part;
-   }
-
-   function RememberVertex(indx, ii,jj) {
-      let bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1))*8;
-
-      if (normindx[bin] >= 0)
-         return console.error('More than 8 vertexes for the bin');
-
-      let pos = bin+8+normindx[bin]; // position where write index
-      normindx[bin]--;
-      normindx[pos] = indx; // at this moment index can be overwritten, means all 8 position are there
-   }
-
-   function AddMainTriangle(x1,y1,z1, x2,y2,z2, x3,y3,z3, is_first) {
-
-      for (let lvl = 1; lvl < levels.length; ++lvl) {
-
-         let side1 = CheckSide(z1, levels[lvl-1], levels[lvl], levels_eps),
-             side2 = CheckSide(z2, levels[lvl-1], levels[lvl], levels_eps),
-             side3 = CheckSide(z3, levels[lvl-1], levels[lvl], levels_eps),
-             side_sum = side1 + side2 + side3;
-
-         // always show top segments
-         if (ilevels && (lvl === levels.length - 1) && (side_sum === 3) && (z1 <= main_grz_max)) {
-            side1 = side2 =  side3 = side_sum = 0;
-         }
-
-         if (side_sum === 3) continue;
-         if (side_sum === -3) return;
-
-         if (!loop) {
-            let npnts = Math.abs(side2-side1) + Math.abs(side3-side2) + Math.abs(side1-side3);
-            if (side1 === 0) ++npnts;
-            if (side2 === 0) ++npnts;
-            if (side3 === 0) ++npnts;
-
-            if ((npnts === 1) || (npnts === 2)) console.error(`FOUND npnts = ${npnts}`);
-
-            if (npnts > 2) {
-               if (nfaces[lvl] === undefined) nfaces[lvl] = 0;
-               nfaces[lvl] += npnts-2;
-            }
-
-            // check if any(contours for given level exists
-            if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                ((side1!==side2) || (side2!==side3) || (side3!==side1))) ++ngridsegments;
-
-            continue;
-         }
-
-         gridcnt = 0;
-
-         k = 0;
-         if (side1 === 0) { pntbuf[k] = x1; pntbuf[k+1] = y1; pntbuf[k+2] = z1; k += 3; }
-
-         if (side1 !== side2) {
-            // order is important, should move from 1->2 point, checked via lastpart
-            lastpart = 0;
-            if ((side1 < 0) || (side2 < 0)) AddCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl-1]);
-            if ((side1 > 0) || (side2 > 0)) AddCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl], true);
-         }
-
-         if (side2 === 0) { pntbuf[k] = x2; pntbuf[k+1] = y2; pntbuf[k+2] = z2; k += 3; }
-
-         if (side2 !== side3) {
-            // order is important, should move from 2->3 point, checked via lastpart
-            lastpart = 0;
-            if ((side2 < 0) || (side3 < 0)) AddCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl-1]);
-            if ((side2 > 0) || (side3 > 0)) AddCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl], true);
-         }
-
-         if (side3 === 0) { pntbuf[k] = x3; pntbuf[k+1] = y3; pntbuf[k+2] = z3; k+=3; }
-
-         if (side3 !== side1) {
-            // order is important, should move from 3->1 point, checked via lastpart
-            lastpart = 0;
-            if ((side3 < 0) || (side1 < 0)) AddCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl-1]);
-            if ((side3 > 0) || (side1 > 0)) AddCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl], true);
-         }
-
-         if (k === 0) continue;
-         if (k < 9) { console.log('found less than 3 points', k/3); continue; }
-
-         if (grid && (gridcnt === 6)) {
-            for (let jj = 0; jj < 6; ++jj)
-               grid[gindx+jj] = gridpnts[jj];
-            gindx += 6;
-         }
-
-         // if three points and surf == 14, remember vertex for each point
-
-         let buf = pos[lvl], s = indx[lvl];
-         if (handle.donormals && (k === 9)) {
-            RememberVertex(s, i, j);
-            RememberVertex(s+3, i+1, is_first ? j+1 : j);
-            RememberVertex(s+6, is_first ? i : i+1, j+1);
-         }
-
-         for (let k1 = 3; k1 < k-3; k1 += 3) {
-            buf[s] = pntbuf[0]; buf[s+1] = pntbuf[1]; buf[s+2] = pntbuf[2]; s+=3;
-            buf[s] = pntbuf[k1]; buf[s+1] = pntbuf[k1+1]; buf[s+2] = pntbuf[k1+2]; s+=3;
-            buf[s] = pntbuf[k1+3]; buf[s+1] = pntbuf[k1+4]; buf[s+2] = pntbuf[k1+5]; s+=3;
-         }
-         indx[lvl] = s;
-
-      }
-   }
-
-   if (handle.donormals)
-      // for each bin maximal 8 points reserved
-      normindx = new Int32Array((handle.i2-handle.i1)*(handle.j2-handle.j1)*8).fill(-1);
-
-   for (loop = 0; loop < 2; ++loop) {
-      if (loop) {
-         for (let lvl = 1; lvl < levels.length; ++lvl)
-            if (nfaces[lvl]) {
-               pos[lvl] = new Float32Array(nfaces[lvl] * 9);
-               indx[lvl] = 0;
-            }
-         if (handle.dolines && (nsegments > 0))
-            lpos = new Float32Array(nsegments * 6);
-         if (handle.dogrid && (ngridsegments > 0))
-            grid = new Float32Array(ngridsegments * 6);
-      }
       for (i = handle.i1;i < handle.i2-1; ++i) {
          x1 = handle.original ? 0.5 * (arrx[i] + arrx[i+1]) : arrx[i];
          x2 = handle.original ? 0.5 * (arrx[i+1] + arrx[i+2]) : arrx[i+1];
@@ -72625,35 +72701,20 @@ function buildSurf3D(histo, handle, ilevels, meshFunc, linesFunc) {
             z21 = main_grz(histo.getBinContent(i+2, j+1));
             z22 = main_grz(histo.getBinContent(i+2, j+2));
 
-            AddMainTriangle(x1,y1,z11, x2,y2,z22, x1,y2,z12, true);
+            triangles.addMainTriangle(x1,y1,z11, x2,y2,z22, x1,y2,z12, true, handle, i, j);
 
-            AddMainTriangle(x1,y1,z11, x2,y1,z21, x2,y2,z22, false);
+            triangles.addMainTriangle(x1,y1,z11, x2,y1,z21, x2,y2,z22, false, handle, i, j);
 
-            AddLineSegment(x1,y2,z12, x1,y1,z11);
-            AddLineSegment(x1,y1,z11, x2,y1,z21);
+            triangles.addLineSegment(x1,y2,z12, x1,y1,z11);
+            triangles.addLineSegment(x1,y1,z11, x2,y1,z21);
 
-            if (i === handle.i2 - 2) AddLineSegment(x2,y1,z21, x2,y2,z22);
-            if (j === handle.j2 - 2) AddLineSegment(x1,y2,z12, x2,y2,z22);
+            if (i === handle.i2 - 2) triangles.addLineSegment(x2,y1,z21, x2,y2,z22);
+            if (j === handle.j2 - 2) triangles.addLineSegment(x1,y2,z12, x2,y2,z22);
          }
       }
    }
 
-   for (let lvl = 1; lvl < levels.length; ++lvl) {
-      if (pos[lvl] && meshFunc)
-         meshFunc(lvl, pos[lvl], normindx);
-   }
-
-   if (lpos && linesFunc) {
-      if (nsegments*6 !== lindx)
-         console.error(`SURF lines mismmatch nsegm=${nsegments} lindx=${lindx} diff=${nsegments*6 - lindx}`);
-      linesFunc(false, lpos);
-   }
-
-   if (grid && linesFunc) {
-      if (ngridsegments*6 !== gindx)
-         console.error(`SURF grid draw mismatch ngridsegm=${ngridsegments} gindx=${gindx} diff=${ngridsegments*6 - gindx}`);
-      linesFunc(true, grid);
-   }
+   triangles.callFuncs(meshFunc, linesFunc);
 }
 
 
@@ -73040,7 +73101,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          // Paint histogram axis only
          this.draw_content = false;
       } else {
-         this.draw_content = (this.gmaxbin > 0);
+         this.draw_content = this.gmaxbin > 0;
          if (!this.draw_content  && this.options.Zero && this.isTH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
@@ -75195,7 +75256,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       this.clear3DScene();
 
-      let need_palette = this.options.Zscale && (this.options.Color || this.options.Contour);
+      let need_palette = this.options.Zscale && this.options.canHavePalette();
 
       // draw new palette, resize frame if required
       return this.drawColorPalette(need_palette, true).then(pp => {
@@ -75431,30 +75492,39 @@ function testAxisVisibility(camera, toplevel, fb, bb) {
    if ((pos.x >= 0) && (pos.y >= 0)) qudrant = 3;
    if ((pos.x >= 0) && (pos.y < 0)) qudrant = 4;
 
-   let testvisible = (id, range) => {
-      if (id <= qudrant) id+=4;
+   const testVisible = (id, range) => {
+      if (id <= qudrant) id += 4;
       return (id > qudrant) && (id < qudrant+range);
+   }, handleZoomMesh = obj3d => {
+      for (let k = 0; k < obj3d.children?.length; ++k)
+         if (obj3d.children[k].zoom !== undefined)
+            obj3d.children[k].zoom_disabled = !obj3d.visible;
    };
 
    for (let n = 0; n < top.children.length; ++n) {
       let chld = top.children[n];
-      if (chld.grid) chld.visible = bb && testvisible(chld.grid, 3); else
-      if (chld.zid) chld.visible = testvisible(chld.zid, 2); else
-      if (chld.xyid) chld.visible = testvisible(chld.xyid, 3); else
-      if (chld.xyboxid) {
+      if (chld.grid)
+         chld.visible = bb && testVisible(chld.grid, 3);
+      else if (chld.zid) {
+         chld.visible = testVisible(chld.zid, 2);
+         handleZoomMesh(chld);
+      } else if (chld.xyid) {
+         chld.visible = testVisible(chld.xyid, 3);
+         handleZoomMesh(chld);
+      } else if (chld.xyboxid) {
          let range = 5, shift = 0;
          if (bb && !fb) { range = 3; shift = -2; } else
          if (fb && !bb) range = 3; else
          if (!fb && !bb) range = (chld.bottom ? 3 : 0);
-         chld.visible = testvisible(chld.xyboxid + shift, range);
+         chld.visible = testVisible(chld.xyboxid + shift, range);
          if (!chld.visible && chld.bottom && bb)
-            chld.visible = testvisible(chld.xyboxid, 3);
+            chld.visible = testVisible(chld.xyboxid, 3);
       } else if (chld.zboxid) {
          let range = 2, shift = 0;
          if (fb && bb) range = 5; else
          if (bb && !fb) range = 4; else
          if (!bb && fb) { shift = -2; range = 4; }
-         chld.visible = testvisible(chld.zboxid + shift, range);
+         chld.visible = testVisible(chld.zboxid + shift, range);
       }
    }
 }
@@ -75529,21 +75599,44 @@ function createLegoGeom(painter, positions, normals, binsx, binsy) {
    return geometry;
 }
 
+function create3DCamera(fp, orthographic) {
+   if (fp.camera) {
+      fp.scene.remove(fp.camera);
+      disposeThreejsObject(fp.camera);
+      delete fp.camera;
+   }
+
+   if (orthographic)
+      fp.camera = new OrthographicCamera(-fp.scene_width/2, fp.scene_width/2, fp.scene_height/2, -fp.scene_height/2, 0.001, 40*fp.size_z3d);
+   else
+      fp.camera = new PerspectiveCamera(45, fp.scene_width / fp.scene_height, 1, 40*fp.size_z3d);
+
+   fp.camera.up.set(0,0,1);
+
+   fp.pointLight = new PointLight(0xffffff,1);
+   fp.pointLight.position.set(fp.size_x3d/2, fp.size_y3d/2, fp.size_z3d/2);
+   fp.camera.add(fp.pointLight);
+   fp.lookat = new Vector3(0,0,0.8*fp.size_z3d);
+   fp.scene.add(fp.camera);
+}
 
 /** @summary Set default camera position
   * @private */
 function setCameraPosition(fp, first_time) {
    let pad = fp.getPadPainter().getRootPad(true),
        max3dx = Math.max(0.75*fp.size_x3d, fp.size_z3d),
-       max3dy = Math.max(0.75*fp.size_y3d, fp.size_z3d);
+       max3dy = Math.max(0.75*fp.size_y3d, fp.size_z3d),
+       k = fp.camera.isOrthographicCamera ? 0.5 : 1;
 
    if (first_time) {
       if (max3dx === max3dy)
-         fp.camera.position.set(-1.6*max3dx, -3.5*max3dy, 1.4*fp.size_z3d);
+         fp.camera.position.set(-1.6*max3dx*k, -3.5*max3dy*k, 1.4*fp.size_z3d);
       else if (max3dx > max3dy)
-         fp.camera.position.set(-2*max3dx, -3.5*max3dy, 1.4*fp.size_z3d);
+         fp.camera.position.set(-2*max3dx*k, -3.5*max3dy*k, 1.4*fp.size_z3d);
       else
-         fp.camera.position.set(-3.5*max3dx, -2*max3dy, 1.4*fp.size_z3d);
+         fp.camera.position.set(-3.5*max3dx*k, -2*max3dy*k, 1.4*fp.size_z3d);
+      if (fp.camera.isOrthographicCamera && fp.scene_width > 5 && fp.scene_height > 5)
+         fp.camera.zoom = (isNodeJs() ? 3 : 5) * fp.scene_height / fp.scene_width;
    }
 
    if (pad && (first_time || !fp.zoomChangedInteractive()))
@@ -75553,20 +75646,107 @@ function setCameraPosition(fp, first_time) {
          max3dx = 3*Math.max(fp.size_x3d, fp.size_z3d);
          max3dy = 3*Math.max(fp.size_y3d, fp.size_z3d);
          let phi = (270-pad.fPhi)/180*Math.PI, theta = (pad.fTheta-10)/180*Math.PI;
-         fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta),
-                                max3dy*Math.sin(phi)*Math.cos(theta),
-                                fp.size_z3d + (max3dx+max3dy)*0.5*Math.sin(theta));
+         fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta)*k,
+                                max3dy*Math.sin(phi)*Math.cos(theta)*k,
+                                fp.size_z3d + (max3dx+max3dy)*0.5*Math.sin(theta))*k;
          first_time = true;
       }
 
    if (first_time)
       fp.camera.lookAt(fp.lookat);
+
+   if (first_time && fp.camera.isOrthographicCamera && fp.scene_width && fp.scene_height) {
+      let screen_ratio = fp.scene_width / fp.scene_height,
+          szx = fp.camera.right - fp.camera.left, szy = fp.camera.top - fp.camera.bottom;
+
+      if (screen_ratio > szx / szy) {
+         // screen wider than actual geometry
+         let m = (fp.camera.right + fp.camera.left) / 2;
+         fp.camera.left = m - szy * screen_ratio / 2;
+         fp.camera.right = m + szy * screen_ratio / 2;
+      } else {
+         // screen heigher than actual geometry
+         let m = (fp.camera.top + fp.camera.bottom) / 2;
+         fp.camera.top  = m + szx / screen_ratio / 2;
+         fp.camera.bottom = m - szx / screen_ratio / 2;
+      }
+    }
+
+    fp.camera.updateProjectionMatrix();
+}
+
+function create3DControl(fp) {
+
+   fp.control = createOrbitControl(fp, fp.camera, fp.scene, fp.renderer, fp.lookat);
+
+   let frame_painter = fp, obj_painter = fp.getMainPainter();
+
+   fp.control.processMouseMove = function(intersects) {
+
+      let tip = null, mesh = null, zoom_mesh = null;
+
+      for (let i = 0; i < intersects.length; ++i) {
+         if (isFunc(intersects[i].object?.tooltip)) {
+            tip = intersects[i].object.tooltip(intersects[i]);
+            if (tip) { mesh = intersects[i].object; break; }
+         } else if (intersects[i].object?.zoom && !zoom_mesh) {
+            zoom_mesh = intersects[i].object;
+         }
+      }
+
+      if (tip && !tip.use_itself) {
+         let delta_x = 1e-4*frame_painter.size_x3d,
+             delta_y = 1e-4*frame_painter.size_y3d,
+             delta_z = 1e-4*frame_painter.size_z3d;
+         if ((tip.x1 > tip.x2) || (tip.y1 > tip.y2) || (tip.z1 > tip.z2)) console.warn('check 3D hints coordinates');
+         tip.x1 -= delta_x; tip.x2 += delta_x;
+         tip.y1 -= delta_y; tip.y2 += delta_y;
+         tip.z1 -= delta_z; tip.z2 += delta_z;
+      }
+
+      frame_painter.highlightBin3D(tip, mesh);
+
+      if (!tip && zoom_mesh && isFunc(frame_painter.get3dZoomCoord)) {
+         let pnt = zoom_mesh.globalIntersect(this.raycaster),
+             axis_name = zoom_mesh.zoom,
+             axis_value = frame_painter.get3dZoomCoord(pnt, axis_name);
+
+         if ((axis_name === 'z') && zoom_mesh.use_y_for_z) axis_name = 'y';
+
+         return { name: axis_name,
+                  title: 'axis object',
+                  line: axis_name + ' : ' + frame_painter.axisAsText(axis_name, axis_value),
+                  only_status: true };
+      }
+
+      return tip?.lines ? tip : '';
+   };
+
+   fp.control.processMouseLeave = function() {
+      frame_painter.highlightBin3D(null);
+   };
+
+   fp.control.contextMenu = function(pos, intersects) {
+      let kind = 'painter', p = obj_painter;
+      if (intersects)
+         for (let n = 0; n < intersects.length; ++n) {
+            let mesh = intersects[n].object;
+            if (mesh.zoom) { kind = mesh.zoom; p = null; break; }
+            if (isFunc(mesh.painter?.fillContextMenu)) {
+               p = mesh.painter; break;
+            }
+         }
+
+      let fp = obj_painter.getFramePainter();
+      if (isFunc(fp?.showContextMenu))
+         fp.showContextMenu(kind, pos, p);
+   };
 }
 
 /** @summary Create all necessary components for 3D drawings in frame painter
   * @return {Promise} when render3d !== -1
   * @private */
-function create3DScene(render3d, x3dscale, y3dscale) {
+function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
 
    if (render3d === -1) {
 
@@ -75649,17 +75829,10 @@ function create3DScene(render3d, x3dscale, y3dscale) {
    this.scene_x = sz.x ?? 0;
    this.scene_y = sz.y ?? 0;
 
-   this.camera = new PerspectiveCamera(45, this.scene_width / this.scene_height, 1, 40*this.size_z3d);
-
    this.camera_Phi = 30;
    this.camera_Theta = 30;
 
-   this.pointLight = new PointLight(0xffffff,1);
-   this.camera.add(this.pointLight);
-   this.pointLight.position.set(this.size_x3d/2, this.size_y3d/2, this.size_z3d/2);
-   this.lookat = new Vector3(0,0,0.8*this.size_z3d);
-   this.camera.up = new Vector3(0,0,1);
-   this.scene.add( this.camera );
+   create3DCamera(this, orthographic);
 
    setCameraPosition(this, true);
 
@@ -75673,77 +75846,32 @@ function create3DScene(render3d, x3dscale, y3dscale) {
       this.first_render_tm = 0;
       this.enable_highlight = false;
 
-      if (this.isBatchMode() || !this.webgl)
-         return this;
-
-      this.control = createOrbitControl(this, this.camera, this.scene, this.renderer, this.lookat);
-
-      let frame_painter = this, obj_painter = this.getMainPainter();
-
-      this.control.processMouseMove = function(intersects) {
-
-         let tip = null, mesh = null, zoom_mesh = null;
-
-         for (let i = 0; i < intersects.length; ++i) {
-            if (isFunc(intersects[i].object?.tooltip)) {
-               tip = intersects[i].object.tooltip(intersects[i]);
-               if (tip) { mesh = intersects[i].object; break; }
-            } else if (intersects[i].object?.zoom && !zoom_mesh) {
-               zoom_mesh = intersects[i].object;
-            }
-         }
-
-         if (tip && !tip.use_itself) {
-            let delta_x = 1e-4*frame_painter.size_x3d,
-                delta_y = 1e-4*frame_painter.size_y3d,
-                delta_z = 1e-4*frame_painter.size_z3d;
-            if ((tip.x1 > tip.x2) || (tip.y1 > tip.y2) || (tip.z1 > tip.z2)) console.warn('check 3D hints coordinates');
-            tip.x1 -= delta_x; tip.x2 += delta_x;
-            tip.y1 -= delta_y; tip.y2 += delta_y;
-            tip.z1 -= delta_z; tip.z2 += delta_z;
-         }
-
-         frame_painter.highlightBin3D(tip, mesh);
-
-         if (!tip && zoom_mesh && isFunc(frame_painter.get3dZoomCoord)) {
-            let pnt = zoom_mesh.globalIntersect(this.raycaster),
-                axis_name = zoom_mesh.zoom,
-                axis_value = frame_painter.get3dZoomCoord(pnt, axis_name);
-
-            if ((axis_name === 'z') && zoom_mesh.use_y_for_z) axis_name = 'y';
-
-            return { name: axis_name,
-                     title: 'axis object',
-                     line: axis_name + ' : ' + frame_painter.axisAsText(axis_name, axis_value),
-                     only_status: true };
-         }
-
-         return tip?.lines ? tip : '';
-      };
-
-      this.control.processMouseLeave = function() {
-         frame_painter.highlightBin3D(null);
-      };
-
-      this.control.contextMenu = function(pos, intersects) {
-         let kind = 'painter', p = obj_painter;
-         if (intersects)
-            for (let n = 0; n < intersects.length; ++n) {
-               let mesh = intersects[n].object;
-               if (mesh.zoom) { kind = mesh.zoom; p = null; break; }
-               if (isFunc(mesh.painter?.fillContextMenu)) {
-                  p = mesh.painter; break;
-               }
-            }
-
-         let fp = obj_painter.getFramePainter();
-         if (isFunc(fp?.showContextMenu))
-            fp.showContextMenu(kind, pos, p);
-      };
+      if (!this.isBatchMode() && this.webgl)
+         create3DControl(this);
 
       return this;
    });
 }
+
+/** @summary Change camera kind in frame painter
+  * @private */
+function change3DCamera(orthographic) {
+   let has_control = false;
+   if (this.control) {
+       this.control.cleanup();
+       delete this.control;
+       has_control = true;
+   }
+
+   create3DCamera(this, orthographic);
+   setCameraPosition(this, true);
+
+   if (has_control)
+      create3DControl(this);
+
+   this.render3D();
+}
+
 
 /** @summary call 3D rendering of the frame
   * @param {number} tmout - specifies delay, after which actual rendering will be invoked
@@ -76508,6 +76636,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (opts.draw && zticksline)
          zcont[n].add(n == 0 ? zticksline : new LineSegments(zticksline.geometry, zticksline.material));
+
       if (opts.zoom && opts.drawany)
          zcont[n].add(createZoomMesh('z', this.size_z3d, opts.use_y_for_z));
 
@@ -76600,7 +76729,7 @@ function convert3DtoPadNDC(x, y, z) {
 /** @summary Assign 3D methods for frame painter
   * @private */
 function assignFrame3DMethods(fpainter) {
-   Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
+   Object.assign(fpainter, { create3DScene, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
 /** @summary Draw histograms in 3D mode
@@ -76812,7 +76941,7 @@ function drawBinsLego(painter, is_v7 = false) {
       mesh.zmin = axis_zmin;
       mesh.zmax = axis_zmax;
       mesh.baseline = (painter.options.BaseLine !== false) ? painter.options.BaseLine : (painter.options.Zero ? axis_zmin : 0);
-      mesh.tip_color = (rootcolor===3) ? 0xFF0000 : 0x00FF00;
+      mesh.tip_color = (rootcolor=== 3) ? 0xFF0000 : 0x00FF00;
       mesh.handle = handle;
 
       mesh.tooltip = function(intersect) {
@@ -78507,26 +78636,6 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
 }; // class TH1Painter
 
-
-/**
- * @summary Set histogram title
- * @desc If provided, also change axes title
- * @private
- */
-
-function setHistTitle(histo, title) {
-   if (!histo) return;
-   if (title.indexOf(';') < 0) {
-      histo.fTitle = title;
-   } else {
-      let arr = title.split(';');
-      histo.fTitle = arr[0];
-      if (arr.length > 1) histo.fXaxis.fTitle = arr[1];
-      if (arr.length > 2) histo.fYaxis.fTitle = arr[2];
-      if (arr.length > 3) histo.fZaxis.fTitle = arr[3];
-   }
-}
-
 /** @summary Draw 1-D histogram in 3D
   * @private */
 
@@ -78555,7 +78664,7 @@ class TH1Painter extends TH1Painter$2 {
 
          if (is_main) {
             assignFrame3DMethods(main);
-            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
                main.set3DOptions(this.options);
                main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1,
@@ -78822,7 +78931,7 @@ class TH2Painter extends TH2Painter$2 {
 
          if (is_main) {
             assignFrame3DMethods(main);
-            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
                main.set3DOptions(this.options);
                main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2,
@@ -78844,6 +78953,9 @@ class TH2Painter extends TH2Painter$2 {
                      drawBinsError3D(this);
                   else
                      drawBinsLego(this);
+               } else if (this.options.Axis && this.options.Zscale) {
+                  this.getContourLevels(true);
+                  this.getHistPalette();
                }
                main.render3D();
                this.updateStatWebCanvas();
@@ -78854,7 +78966,7 @@ class TH2Painter extends TH2Painter$2 {
       //  (re)draw palette by resize while canvas may change dimension
       if (is_main)
          pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego == 12) || (this.options.Lego == 14) ||
-                                     (this.options.Surf == 11) || (this.options.Surf == 12)))).then(() => this.drawHistTitle());
+                                                  (this.options.Surf == 11) || (this.options.Surf == 12)))).then(() => this.drawHistTitle());
 
       return pr.then(() => this);
    }
@@ -79461,7 +79573,7 @@ class TH3Painter extends THistPainter {
 
       } else {
          assignFrame3DMethods(main);
-         pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+         pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
             main.set3DOptions(this.options);
             main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3,
@@ -89987,7 +90099,7 @@ class TGeoPainter extends ObjectPainter {
 
       if (this._camera.isOrthographicCamera && this.isOrthoCamera() && this._scene_width && this._scene_height) {
          let screen_ratio = this._scene_width / this._scene_height,
-             szx = (this._camera.right - this._camera.left), szy = this._camera.top - this._camera.bottom;
+             szx = this._camera.right - this._camera.left, szy = this._camera.top - this._camera.bottom;
 
          if (screen_ratio > szx / szy) {
             // screen wider than actual geometry
@@ -90000,7 +90112,6 @@ class TGeoPainter extends ObjectPainter {
             this._camera.top  = m + szx / screen_ratio / 2;
             this._camera.bottom = m - szx / screen_ratio / 2;
          }
-
       }
 
       this._camera.lookAt(this._lookat);
@@ -97680,11 +97791,19 @@ class TDrawSelector extends TSelector {
          res.max = this.hist_args[axisid * 3 + 2];
       } else {
 
-         res.min = res.max = arr[0];
+         let is_any = false;
          for (let i = 1; i < arr.length; ++i) {
-            res.min = Math.min(res.min, arr[i]);
-            res.max = Math.max(res.max, arr[i]);
+            let v = arr[i];
+            if (!Number.isFinite(v)) continue;
+            if (is_any) {
+               res.min = Math.min(res.min, v);
+               res.max = Math.max(res.max, v);
+            } else {
+               res.min = res.max = v;
+               is_any = true;
+            }
          }
+         if (!is_any) { res.min = 0; res.max = 1; }
 
          if (this.hist_nbins)
             nbins = res.nbins = this.hist_nbins;
@@ -97718,8 +97837,8 @@ class TDrawSelector extends TSelector {
       res.k = res.nbins / (res.max - res.min);
 
       res.GetBin = function(value) {
-         const bin = this.lbls?.indexOf(value) ?? Math.floor((value - this.min) * this.k);
-         return (bin < 0) ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
+         const bin = this.lbls?.indexOf(value) ?? Number.isFinite(value) ? Math.floor((value - this.min) * this.k) : this.nbins + 1;
+         return bin < 0 ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
       };
 
       return res;
@@ -97884,7 +98003,7 @@ class TDrawSelector extends TSelector {
       let bin = this.x.GetBin(xvalue);
       this.hist.fArray[bin] += weight;
 
-      if (!this.x.lbls) {
+      if (!this.x.lbls && Number.isFinite(xvalue)) {
          this.hist.fTsumw += weight;
          this.hist.fTsumwx += weight * xvalue;
          this.hist.fTsumwx2 += weight * xvalue * xvalue;
@@ -97894,10 +98013,10 @@ class TDrawSelector extends TSelector {
    /** @summary Fill 2D histogram */
    fill2DHistogram(xvalue, yvalue, weight) {
       let xbin = this.x.GetBin(xvalue),
-         ybin = this.y.GetBin(yvalue);
+          ybin = this.y.GetBin(yvalue);
 
       this.hist.fArray[xbin + (this.x.nbins + 2) * ybin] += weight;
-      if (!this.x.lbls && !this.y.lbls) {
+      if (!this.x.lbls && !this.y.lbls && Number.isFinite(xvalue) && Number.isFinite(yvalue)) {
          this.hist.fTsumw += weight;
          this.hist.fTsumwx += weight * xvalue;
          this.hist.fTsumwy += weight * yvalue;
@@ -97910,11 +98029,11 @@ class TDrawSelector extends TSelector {
    /** @summary Fill 3D histogram */
    fill3DHistogram(xvalue, yvalue, zvalue, weight) {
       let xbin = this.x.GetBin(xvalue),
-         ybin = this.y.GetBin(yvalue),
-         zbin = this.z.GetBin(zvalue);
+          ybin = this.y.GetBin(yvalue),
+          zbin = this.z.GetBin(zvalue);
 
       this.hist.fArray[xbin + (this.x.nbins + 2) * (ybin + (this.y.nbins + 2) * zbin)] += weight;
-      if (!this.x.lbls && !this.y.lbls && !this.z.lbls) {
+      if (!this.x.lbls && !this.y.lbls && !this.z.lbls && Number.isFinite(xvalue) && Number.isFinite(yvalue) && Number.isFinite(zvalue)) {
          this.hist.fTsumw += weight;
          this.hist.fTsumwx += weight * xvalue;
          this.hist.fTsumwy += weight * yvalue;
@@ -98286,7 +98405,7 @@ async function treeProcess(tree, selector, args) {
       // console.log(`Add branch ${branch.fName}`);
 
       item = {
-         branch: branch,
+         branch,
          tgt: target_object, // used target object - can be differ for object members
          name: target_name,
          index: -1, // index in the list of read branches
@@ -98308,14 +98427,14 @@ async function treeProcess(tree, selector, args) {
          staged_prev: 0, // entry limit of previous I/O request
          staged_now: 0, // entry limit of current I/O request
          progress_showtm: 0, // last time when progress was showed
-         GetBasketEntry(k) {
+         getBasketEntry(k) {
             if (!this.branch || (k > this.branch.fMaxBaskets)) return 0;
             let res = (k < this.branch.fMaxBaskets) ? this.branch.fBasketEntry[k] : 0;
             if (res) return res;
             let bskt = (k > 0) ? this.branch.fBaskets.arr[k - 1] : null;
             return bskt ? (this.branch.fBasketEntry[k - 1] + bskt.fNevBuf) : 0;
          },
-         GetTarget(tgtobj) {
+         getTarget(tgtobj) {
             // returns target object which should be used for the branch reading
             if (!this.tgt) return tgtobj;
             for (let k = 0; k < this.tgt.length; ++k) {
@@ -98325,7 +98444,7 @@ async function treeProcess(tree, selector, args) {
             }
             return tgtobj;
          },
-         GetEntry(entry) {
+         getEntry(entry) {
             // This should be equivalent to TBranch::GetEntry() method
             let shift = entry - this.first_entry, off;
             if (!this.branch.TestBit(kDoNotUseBufferMap))
@@ -98339,12 +98458,12 @@ async function treeProcess(tree, selector, args) {
             }
             this.raw.locate(off - this.raw.raw_shift);
 
-            // this.member.func(this.raw, this.GetTarget(tgtobj));
+            // this.member.func(this.raw, this.getTarget(tgtobj));
          }
       };
 
       // last basket can be stored directly with the branch
-      while (item.GetBasketEntry(item.numbaskets + 1)) item.numbaskets++;
+      while (item.getBasketEntry(item.numbaskets + 1)) item.numbaskets++;
 
       // check all counters if we
       let nb_leaves = branch.fLeaves ? branch.fLeaves.arr.length : 0,
@@ -98821,7 +98940,7 @@ async function treeProcess(tree, selector, args) {
 
       if ((item.numentries !== item0.numentries) || (item.numbaskets !== item0.numbaskets)) handle.simple_read = false;
       for (let n = 0; n < item.numbaskets; ++n)
-         if (item.GetBasketEntry(n) !== item0.GetBasketEntry(n))
+         if (item.getBasketEntry(n) !== item0.getBasketEntry(n))
             handle.simple_read = false;
    }
 
@@ -99022,11 +99141,11 @@ async function treeProcess(tree, selector, args) {
                let k = elem.staged_basket++;
 
                // no need to read more baskets, process_max is not included
-               if (elem.GetBasketEntry(k) >= handle.process_max) break;
+               if (elem.getBasketEntry(k) >= handle.process_max) break;
 
                // check which baskets need to be read
                if (elem.first_readentry < 0) {
-                  let lmt = elem.GetBasketEntry(k + 1),
+                  let lmt = elem.getBasketEntry(k + 1),
                      not_needed = (lmt <= handle.process_min);
 
                   //for (let d=0;d<elem.ascounter.length;++d) {
@@ -99038,7 +99157,7 @@ async function treeProcess(tree, selector, args) {
 
                   elem.curr_basket = k; // basket where reading will start
 
-                  elem.first_readentry = elem.GetBasketEntry(k); // remember which entry will be read first
+                  elem.first_readentry = elem.getBasketEntry(k); // remember which entry will be read first
                }
 
                // check if basket already loaded in the branch
@@ -99071,7 +99190,7 @@ async function treeProcess(tree, selector, args) {
                   isany = true;
                }
 
-               elem.staged_entry = elem.GetBasketEntry(k + 1);
+               elem.staged_entry = elem.getBasketEntry(k + 1);
 
                min_staged = Math.min(min_staged, elem.staged_entry);
 
@@ -99159,7 +99278,7 @@ async function treeProcess(tree, selector, args) {
                elem.raw = bitem.raw;
                elem.basket = bitem.bskt_obj;
                // elem.nev = bitem.fNevBuf; // number of entries in raw buffer
-               elem.first_entry = elem.GetBasketEntry(bitem.basket);
+               elem.first_entry = elem.getBasketEntry(bitem.basket);
 
                bitem.raw = null; // remove reference on raw buffer
                bitem.branch = null; // remove reference on the branch
@@ -99183,7 +99302,7 @@ async function treeProcess(tree, selector, args) {
             for (n = 0; n < handle.arr.length; ++n) {
                elem = handle.arr[n];
 
-               elem.GetEntry(handle.current_entry);
+               elem.getEntry(handle.current_entry);
 
                elem.arrmember.arrlength = loopentries;
                elem.arrmember.func(elem.raw, handle.selector.tgtarr);
@@ -99205,9 +99324,9 @@ async function treeProcess(tree, selector, args) {
                   elem = handle.arr[n];
 
                   // locate buffer offset at proper place
-                  elem.GetEntry(handle.current_entry);
+                  elem.getEntry(handle.current_entry);
 
-                  elem.member.func(elem.raw, elem.GetTarget(handle.selector.tgtobj));
+                  elem.member.func(elem.raw, elem.getTarget(handle.selector.tgtobj));
                }
 
                handle.selector.Process(handle.current_entry);
@@ -100358,43 +100477,47 @@ function listHierarchy(folder, lst) {
 
    folder._childs = [];
    for (let i = 0; i < lst.arr.length; ++i) {
-      let obj = ismap ? lst.arr[i].first : lst.arr[i],
-          item = !obj?._typename ? {
+      let obj = ismap ? lst.arr[i].first : lst.arr[i], item;
+      if (!obj?._typename) {
+         item = {
             _name: i.toString(),
             _kind: prROOT + 'NULL',
             _title: 'NULL',
             _value: 'null',
             _obj: null
-          } : {
+          };
+      } else {
+         item =  {
             _name: obj.fName || obj.name,
             _kind: prROOT + obj._typename,
             _title: `${obj.fTitle || ''} type:${obj._typename}`,
             _obj: obj
-          };
+         };
 
-        switch(obj._typename) {
-           case clTColor: item._value = getRGBfromTColor(obj); break;
-           case clTText:
-           case clTLatex: item._value = obj.fTitle; break;
-           case clTObjString: item._value = obj.fString; break;
-           default: if (lst.opt && lst.opt[i] && lst.opt[i].length) item._value = lst.opt[i];
-        }
+         switch(obj._typename) {
+            case clTColor: item._value = getRGBfromTColor(obj); break;
+            case clTText:
+            case clTLatex: item._value = obj.fTitle; break;
+            case clTObjString: item._value = obj.fString; break;
+            default: if (lst.opt && lst.opt[i] && lst.opt[i].length) item._value = lst.opt[i];
+         }
 
-        if (do_context && canDrawHandle(obj._typename)) item._direct_context = true;
+         if (do_context && canDrawHandle(obj._typename)) item._direct_context = true;
 
-        // if name is integer value, it should match array index
-        if (!item._name || (Number.isInteger(parseInt(item._name)) && (parseInt(item._name) !== i))
-            || (lst.arr.indexOf(obj) < i)) {
-           item._name = i.toString();
-        } else {
-           // if there are several such names, add cycle number to the item name
-           let indx = names.indexOf(obj.fName);
-           if ((indx >= 0) && (cnt[indx] > 1)) {
-              item._cycle = cycle[indx]++;
-              item._keyname = item._name;
-              item._name = item._keyname + ';' + item._cycle;
-           }
-        }
+         // if name is integer value, it should match array index
+         if (!item._name || (Number.isInteger(parseInt(item._name)) && (parseInt(item._name) !== i))
+             || (lst.arr.indexOf(obj) < i)) {
+            item._name = i.toString();
+         } else {
+            // if there are several such names, add cycle number to the item name
+            let indx = names.indexOf(obj.fName);
+            if ((indx >= 0) && (cnt[indx] > 1)) {
+               item._cycle = cycle[indx]++;
+               item._keyname = item._name;
+               item._name = item._keyname + ';' + item._cycle;
+            }
+         }
+      }
 
       folder._childs.push(item);
    }
@@ -104977,7 +105100,7 @@ class THStackPainter extends ObjectPainter {
 
       if (!numhistos) {
          let histo = createHistogram(clTH1I, 100);
-         histo.fTitle = stack.fTitle;
+         setHistogramTitle(histo, stack.fTitle);
          return histo;
       }
 
@@ -105488,6 +105611,864 @@ __proto__: null,
 TGraphTimePainter: TGraphTimePainter
 });
 
+function getMax(arr) {
+   let v = arr[0];
+   for (let i = 1; i < arr.length; ++i)
+      v = Math.max(v, arr[i]);
+   return v;
+}
+
+function getMin(arr) {
+   let v = arr[0];
+   for (let i = 1; i < arr.length; ++i)
+      v = Math.min(v, arr[i]);
+   return v;
+}
+
+function TMath_Sort(np, values, indicies, down) {
+   let arr = new Array(np);
+   for (let i = 0; i < np; ++i)
+      arr[i] = { v: values[i], i };
+
+   arr.sort((a,b) => { return a.v < b.v ? -1 : (a.v > b.v ? 1 : 0); });
+
+   for (let i = 0; i < np; ++i)
+      indicies[i] = arr[i].i;
+}
+
+class TGraphDelaunay {
+
+   constructor(g) {
+      this.fGraph2D      = g;
+      this.fX            = g.fX;
+      this.fY            = g.fY;
+      this.fZ            = g.fZ;
+      this.fNpoints      = g.fNpoints;
+      this.fZout         = 0.;
+      this.fNdt          = 0;
+      this.fNhull        = 0;
+      this.fHullPoints   = null;
+      this.fXN           = null;
+      this.fYN           = null;
+      this.fOrder        = null;
+      this.fDist         = null;
+      this.fPTried       = null;
+      this.fNTried       = null;
+      this.fMTried       = null;
+      this.fInit         = false;
+      this.fXNmin        = 0.;
+      this.fXNmax        = 0.;
+      this.fYNmin        = 0.;
+      this.fYNmax        = 0.;
+      this.fXoffset      = 0.;
+      this.fYoffset      = 0.;
+      this.fXScaleFactor = 0.;
+      this.fYScaleFactor = 0.;
+
+      this.SetMaxIter();
+   }
+
+
+   Initialize()
+   {
+      if (!this.fInit) {
+         this.CreateTrianglesDataStructure();
+         this.FindHull();
+         this.fInit = true;
+      }
+   }
+
+   ComputeZ(x, y)
+   {
+      // Initialise the Delaunay algorithm if needed.
+      // CreateTrianglesDataStructure computes fXoffset, fYoffset,
+      // fXScaleFactor and fYScaleFactor;
+      // needed in this function.
+      this.Initialize();
+
+      // Find the z value corresponding to the point (x,y).
+      let xx = (x+this.fXoffset)*this.fXScaleFactor;
+      let yy = (y+this.fYoffset)*this.fYScaleFactor;
+      let zz = this.Interpolate(xx, yy);
+
+      // Wrong zeros may appear when points sit on a regular grid.
+      // The following line try to avoid this problem.
+      if (zz==0) zz = this.Interpolate(xx+0.0001, yy);
+
+      return zz;
+   }
+
+
+   CreateTrianglesDataStructure()
+   {
+      // Offset fX and fY so they average zero, and scale so the average
+      // of the X and Y ranges is one. The normalized version of fX and fY used
+      // in Interpolate.
+      let xmax = getMax(this.fGraph2D.fX),
+          ymax = getMax(this.fGraph2D.fY),
+          xmin = getMin(this.fGraph2D.fX),
+          ymin = getMin(this.fGraph2D.fY);
+      this.fXoffset      = -(xmax+xmin)/2.;
+      this.fYoffset      = -(ymax+ymin)/2.;
+      this.fXScaleFactor  = 1./(xmax-xmin);
+      this.fYScaleFactor  = 1./(ymax-ymin);
+      this.fXNmax        = (xmax+this.fXoffset)*this.fXScaleFactor;
+      this.fXNmin        = (xmin+this.fXoffset)*this.fXScaleFactor;
+      this.fYNmax        = (ymax+this.fYoffset)*this.fYScaleFactor;
+      this.fYNmin        = (ymin+this.fYoffset)*this.fYScaleFactor;
+      this.fXN           = new Array(this.fNpoints+1);
+      this.fYN           = new Array(this.fNpoints+1);
+      for (let n = 0; n < this.fNpoints; n++) {
+         this.fXN[n+1] = (this.fX[n]+this.fXoffset)*this.fXScaleFactor;
+         this.fYN[n+1] = (this.fY[n]+this.fYoffset)*this.fYScaleFactor;
+      }
+
+      // If needed, creates the arrays to hold the Delaunay triangles.
+      // A maximum number of 2*fNpoints is guessed. If more triangles will be
+      // find, FillIt will automatically enlarge these arrays.
+      this.fPTried    = [];
+      this.fNTried    = [];
+      this.fMTried    = [];
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Is point e inside the triangle t1-t2-t3 ?
+
+   Enclose(t1, t2, t3, e)
+   {
+      let x = [ this.fXN[t1], this.fXN[t2], this.fXN[t3], this.fXN[t1] ];
+      let y = [ this.fYN[t1], this.fYN[t2], this.fYN[t3], this.fYN[t1] ];
+      let xp = this.fXN[e];
+      let yp = this.fYN[e];
+
+      // return TMath::IsInside(xp, yp, 4, x, y);
+      let i = 0, j = x.length - 1, oddNodes = false;
+
+      for (; i < x.length; ++i) {
+         if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
+            if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
+               oddNodes = !oddNodes;
+            }
+         }
+         j=i;
+      }
+
+      return oddNodes;
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Files the triangle defined by the 3 vertices p, n and m into the
+   /// fxTried arrays. If these arrays are to small they are automatically
+   /// expanded.
+
+   FileIt(p, n, m)
+   {
+      let swap;
+      let tmp, ps = p, ns = n, ms = m;
+
+      // order the vertices before storing them
+      do {
+         swap = false;
+         if (ns > ps) { tmp = ps; ps = ns; ns = tmp; swap = true; }
+         if (ms > ns) { tmp = ns; ns = ms; ms = tmp; swap = true; }
+      } while (swap);
+
+      // store a new Delaunay triangle
+      this.fNdt++;
+      this.fPTried.push(ps);
+      this.fNTried.push(ns);
+      this.fMTried.push(ms);
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Attempt to find all the Delaunay triangles of the point set. It is not
+   /// guaranteed that it will fully succeed, and no check is made that it has
+   /// fully succeeded (such a check would be possible by referencing the points
+   /// that make up the convex hull). The method is to check if each triangle
+   /// shares all three of its sides with other triangles. If not, a point is
+   /// generated just outside the triangle on the side(s) not shared, and a new
+   /// triangle is found for that point. If this method is not working properly
+   /// (many triangles are not being found) it's probably because the new points
+   /// are too far beyond or too close to the non-shared sides. Fiddling with
+   /// the size of the `alittlebit' parameter may help.
+
+   FindAllTriangles()
+   {
+      if (this.fAllTri) return;
+
+      this.fAllTri = true;
+
+      let xcntr,ycntr,xm,ym,xx,yy;
+      let sx,sy,nx,ny,mx,my,mdotn,nn,a;
+      let t1,t2,pa,na,ma,pb,nb,mb,p1=0,p2=0,m,n,p3=0;
+      let s = [false, false, false];
+      let alittlebit = 0.0001;
+
+      this.Initialize();
+
+      // start with a point that is guaranteed to be inside the hull (the
+      // centre of the hull). The starting point is shifted "a little bit"
+      // otherwise, in case of triangles aligned on a regular grid, we may
+      // found none of them.
+      xcntr = 0;
+      ycntr = 0;
+      for (n=1; n<=this.fNhull; n++) {
+         xcntr = xcntr+this.fXN[this.fHullPoints[n-1]];
+         ycntr = ycntr+this.fYN[this.fHullPoints[n-1]];
+      }
+      xcntr = xcntr/this.fNhull+alittlebit;
+      ycntr = ycntr/this.fNhull+alittlebit;
+      // and calculate it's triangle
+      this.Interpolate(xcntr,ycntr);
+
+      // loop over all Delaunay triangles (including those constantly being
+      // produced within the loop) and check to see if their 3 sides also
+      // correspond to the sides of other Delaunay triangles, i.e. that they
+      // have all their neighbours.
+      t1 = 1;
+      while (t1 <= this.fNdt) {
+         // get the three points that make up this triangle
+         pa = this.fPTried[t1-1];
+         na = this.fNTried[t1-1];
+         ma = this.fMTried[t1-1];
+
+         // produce three integers which will represent the three sides
+         s[0]  = false;
+         s[1]  = false;
+         s[2]  = false;
+         // loop over all other Delaunay triangles
+         for (t2=1; t2<=this.fNdt; t2++) {
+            if (t2 != t1) {
+               // get the points that make up this triangle
+               pb = this.fPTried[t2-1];
+               nb = this.fNTried[t2-1];
+               mb = this.fMTried[t2-1];
+               // do triangles t1 and t2 share a side?
+               if ((pa==pb && na==nb) || (pa==pb && na==mb) || (pa==nb && na==mb)) {
+                  // they share side 1
+                  s[0] = true;
+               } else if ((pa==pb && ma==nb) || (pa==pb && ma==mb) || (pa==nb && ma==mb)) {
+                  // they share side 2
+                  s[1] = true;
+               } else if ((na==pb && ma==nb) || (na==pb && ma==mb) || (na==nb && ma==mb)) {
+                  // they share side 3
+                  s[2] = true;
+               }
+            }
+            // if t1 shares all its sides with other Delaunay triangles then
+            // forget about it
+            if (s[0] && s[1] && s[2]) continue;
+         }
+         // Looks like t1 is missing a neighbour on at least one side.
+         // For each side, take a point a little bit beyond it and calculate
+         // the Delaunay triangle for that point, this should be the triangle
+         // which shares the side.
+         for (m=1; m<=3; m++) {
+            if (!s[m-1]) {
+               // get the two points that make up this side
+               if (m == 1) {
+                  p1 = pa;
+                  p2 = na;
+                  p3 = ma;
+               } else if (m == 2) {
+                  p1 = pa;
+                  p2 = ma;
+                  p3 = na;
+               } else if (m == 3) {
+                  p1 = na;
+                  p2 = ma;
+                  p3 = pa;
+               }
+               // get the coordinates of the centre of this side
+               xm = (this.fXN[p1]+this.fXN[p2])/2.;
+               ym = (this.fYN[p1]+this.fYN[p2])/2.;
+               // we want to add a little to these coordinates to get a point just
+               // outside the triangle; (sx,sy) will be the vector that represents
+               // the side
+               sx = this.fXN[p1]-this.fXN[p2];
+               sy = this.fYN[p1]-this.fYN[p2];
+               // (nx,ny) will be the normal to the side, but don't know if it's
+               // pointing in or out yet
+               nx    = sy;
+               ny    = -sx;
+               nn    = Math.sqrt(nx*nx+ny*ny);
+               nx    = nx/nn;
+               ny    = ny/nn;
+               mx    = this.fXN[p3]-xm;
+               my    = this.fYN[p3]-ym;
+               mdotn = mx*nx+my*ny;
+               if (mdotn > 0) {
+                  // (nx,ny) is pointing in, we want it pointing out
+                  nx = -nx;
+                  ny = -ny;
+               }
+               // increase/decrease xm and ym a little to produce a point
+               // just outside the triangle (ensuring that the amount added will
+               // be large enough such that it won't be lost in rounding errors)
+               a  = Math.abs(Math.max(alittlebit*xm, alittlebit*ym));
+               xx = xm+nx*a;
+               yy = ym+ny*a;
+               // try and find a new Delaunay triangle for this point
+               this.Interpolate(xx,yy);
+
+               // this side of t1 should now, hopefully, if it's not part of the
+               // hull, be shared with a new Delaunay triangle just calculated by Interpolate
+            }
+         }
+         t1++;
+      }
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Finds those points which make up the convex hull of the set. If the xy
+   /// plane were a sheet of wood, and the points were nails hammered into it
+   /// at the respective coordinates, then if an elastic band were stretched
+   /// over all the nails it would form the shape of the convex hull. Those
+   /// nails in contact with it are the points that make up the hull.
+
+   FindHull()
+   {
+      if (!this.fHullPoints)
+         this.fHullPoints = new Array(this.fNpoints);
+
+      let nhull_tmp = 0;
+      for(let n=1; n<=this.fNpoints; n++) {
+         // if the point is not inside the hull of the set of all points
+         // bar it, then it is part of the hull of the set of all points
+         // including it
+         let is_in = this.InHull(n,n);
+         if (!is_in) {
+            // cannot increment fNhull directly - InHull needs to know that
+            // the hull has not yet been completely found
+            nhull_tmp++;
+            this.fHullPoints[nhull_tmp-1] = n;
+         }
+      }
+      this.fNhull = nhull_tmp;
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Is point e inside the hull defined by all points apart from x ?
+
+   InHull(e, x)
+   {
+      let n1,n2,n,m,ntry;
+      let lastdphi,dd1,dd2,dx1,dx2,dx3,dy1,dy2,dy3;
+      let u,v,vNv1,vNv2,phi1,phi2,dphi,xx,yy;
+
+      let deTinhull = false;
+
+      xx = this.fXN[e];
+      yy = this.fYN[e];
+
+      if (this.fNhull > 0) {
+         //  The hull has been found - no need to use any points other than
+         //  those that make up the hull
+         ntry = this.fNhull;
+      } else {
+         //  The hull has not yet been found, will have to try every point
+         ntry = this.fNpoints;
+      }
+
+      //  n1 and n2 will represent the two points most separated by angle
+      //  from point e. Initially the angle between them will be <180 degs.
+      //  But subsequent points will increase the n1-e-n2 angle. If it
+      //  increases above 180 degrees then point e must be surrounded by
+      //  points - it is not part of the hull.
+      n1 = 1;
+      n2 = 2;
+      if (n1 == x) {
+         n1 = n2;
+         n2++;
+      } else if (n2 == x) {
+         n2++;
+      }
+
+      //  Get the angle n1-e-n2 and set it to lastdphi
+      dx1  = xx-this.fXN[n1];
+      dy1  = yy-this.fYN[n1];
+      dx2  = xx-this.fXN[n2];
+      dy2  = yy-this.fYN[n2];
+      phi1 = Math.atan2(dy1,dx1);
+      phi2 = Math.atan2(dy2,dx2);
+      dphi = (phi1-phi2)-(Math.floor((phi1-phi2)/(Math.PI*2))*Math.PI*2);
+      if (dphi < 0) dphi += Math.PI*2;
+      lastdphi = dphi;
+      for (n=1; n<=ntry; n++) {
+         if (this.fNhull > 0) {
+            // Try hull point n
+            m = this.fHullPoints[n-1];
+         } else {
+            m = n;
+         }
+         if ((m!=n1) && (m!=n2) && (m!=x)) {
+            // Can the vector e->m be represented as a sum with positive
+            // coefficients of vectors e->n1 and e->n2?
+            dx1 = xx-this.fXN[n1];
+            dy1 = yy-this.fYN[n1];
+            dx2 = xx-this.fXN[n2];
+            dy2 = yy-this.fYN[n2];
+            dx3 = xx-this.fXN[m];
+            dy3 = yy-this.fYN[m];
+
+            dd1 = (dx2*dy1-dx1*dy2);
+            dd2 = (dx1*dy2-dx2*dy1);
+
+            if (dd1*dd2!=0) {
+               u = (dx2*dy3-dx3*dy2)/dd1;
+               v = (dx1*dy3-dx3*dy1)/dd2;
+               if ((u<0) || (v<0)) {
+                  // No, it cannot - point m does not lie in-between n1 and n2 as
+                  // viewed from e. Replace either n1 or n2 to increase the
+                  // n1-e-n2 angle. The one to replace is the one which makes the
+                  // smallest angle with e->m
+                  vNv1 = (dx1*dx3+dy1*dy3)/Math.sqrt(dx1*dx1+dy1*dy1);
+                  vNv2 = (dx2*dx3+dy2*dy3)/Math.sqrt(dx2*dx2+dy2*dy2);
+                  if (vNv1 > vNv2) {
+                     n1   = m;
+                     phi1 = Math.atan2(dy3,dx3);
+                     phi2 = Math.atan2(dy2,dx2);
+                  } else {
+                     n2   = m;
+                     phi1 = Math.atan2(dy1,dx1);
+                     phi2 = Math.atan2(dy3,dx3);
+                  }
+                  dphi = (phi1-phi2)-(Math.floor((phi1-phi2)/(Math.PI*2))*Math.PI*2);
+                  if (dphi < 0) dphi += Math.PI*2;
+                  if ((dphi - Math.PI)*(lastdphi - Math.PI) < 0) {
+                     // The addition of point m means the angle n1-e-n2 has risen
+                     // above 180 degs, the point is in the hull.
+                     deTinhull = true;
+                     return deTinhull;
+                  }
+                  lastdphi = dphi;
+               }
+            }
+         }
+      }
+      // Point e is not surrounded by points - it is not in the hull.
+      return deTinhull;
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Finds the z-value at point e given that it lies
+   /// on the plane defined by t1,t2,t3
+
+   InterpolateOnPlane(TI1, TI2, TI3, e)
+   {
+      let tmp, swap;
+      let x1,x2,x3,y1,y2,y3,f1,f2,f3,u,v,w;
+
+      let t1 = TI1, t2 = TI2, t3 = TI3;
+
+      // order the vertices
+      do {
+         swap = false;
+         if (t2 > t1) { tmp = t1; t1 = t2; t2 = tmp; swap = true;}
+         if (t3 > t2) { tmp = t2; t2 = t3; t3 = tmp; swap = true;}
+      } while (swap);
+
+      x1 = this.fXN[t1];
+      x2 = this.fXN[t2];
+      x3 = this.fXN[t3];
+      y1 = this.fYN[t1];
+      y2 = this.fYN[t2];
+      y3 = this.fYN[t3];
+      f1 = this.fZ[t1-1];
+      f2 = this.fZ[t2-1];
+      f3 = this.fZ[t3-1];
+      u  = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2));
+      v  = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2));
+      w  = f1-u*x1-v*y1;
+
+      return u*this.fXN[e] + v*this.fYN[e] + w;
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
+   /// calculate a z-value for it by linearly interpolating the z-values that
+   /// make up that triangle.
+
+   Interpolate(xx, yy)
+   {
+      let thevalue;
+
+      let it, ntris_tried, p, n, m;
+      let i,j,k,l,z,f,d,o1,o2,a,b,t1,t2,t3;
+      let ndegen=0,degen=0,fdegen=0,o1degen=0,o2degen=0;
+      let vxN,vyN;
+      let d1,d2,d3,c1,c2,dko1,dko2,dfo1;
+      let dfo2,sin_sum,cfo1k,co2o1k,co2o1f;
+
+      let shouldbein;
+      let dx1,dx2,dx3,dy1,dy2,dy3,u,v,dxz = [0,0,0], dyz = [0,0,0];
+
+      // initialise the Delaunay algorithm if needed
+      this.Initialize();
+
+      // create vectors needed for sorting
+      if (!this.fOrder) {
+         this.fOrder = new Array(this.fNpoints);
+         this.fDist  = new Array(this.fNpoints);
+      }
+
+      // the input point will be point zero.
+      this.fXN[0] = xx;
+      this.fYN[0] = yy;
+
+      // set the output value to the default value for now
+      thevalue = this.fZout;
+
+      // some counting
+      ntris_tried = 0;
+
+      // no point in proceeding if xx or yy are silly
+      if ((xx>this.fXNmax) || (xx<this.fXNmin) || (yy>this.fYNmax) || (yy<this.fYNmin))
+         return thevalue;
+
+      // check existing Delaunay triangles for a good one
+      for (it=1; it<=this.fNdt; it++) {
+         p = this.fPTried[it-1];
+         n = this.fNTried[it-1];
+         m = this.fMTried[it-1];
+         // p, n and m form a previously found Delaunay triangle, does it
+         // enclose the point?
+         if (this.Enclose(p,n,m,0)) {
+            // yes, we have the triangle
+            thevalue = this.InterpolateOnPlane(p,n,m,0);
+            return thevalue;
+         }
+      }
+
+      // is this point inside the convex hull?
+      shouldbein = this.InHull(0,-1);
+      if (!shouldbein)
+         return thevalue;
+
+      // it must be in a Delaunay triangle - find it...
+
+      // order mass points by distance in mass plane from desired point
+      for (it=1; it<=this.fNpoints; it++) {
+         vxN = this.fXN[it];
+         vyN = this.fYN[it];
+         this.fDist[it-1] = Math.sqrt((xx-vxN)*(xx-vxN)+(yy-vyN)*(yy-vyN));
+      }
+
+      // sort array 'fDist' to find closest points
+      TMath_Sort(this.fNpoints, this.fDist, this.fOrder);
+      for (it=0; it<this.fNpoints; it++) this.fOrder[it]++;
+
+      // loop over triplets of close points to try to find a triangle that
+      // encloses the point.
+      for (k=3; k<=this.fNpoints; k++) {
+         m = this.fOrder[k-1];
+         for (j=2; j<=k-1; j++) {
+            n = this.fOrder[j-1];
+            for (i=1; i<=j-1; i++) {
+               let skip_this_triangle = false; // used instead of goto L90
+               p = this.fOrder[i-1];
+               if (ntris_tried > this.fMaxIter) {
+                  // perhaps this point isn't in the hull after all
+   ///            Warning("Interpolate",
+   ///                    "Abandoning the effort to find a Delaunay triangle (and thus interpolated z-value) for point %g %g"
+   ///                    ,xx,yy);
+                  return thevalue;
+               }
+               ntris_tried++;
+               // check the points aren't colinear
+               d1 = Math.sqrt((this.fXN[p]-this.fXN[n])*(this.fXN[p]-this.fXN[n])+(this.fYN[p]-this.fYN[n])*(this.fYN[p]-this.fYN[n]));
+               d2 = Math.sqrt((this.fXN[p]-this.fXN[m])*(this.fXN[p]-this.fXN[m])+(this.fYN[p]-this.fYN[m])*(this.fYN[p]-this.fYN[m]));
+               d3 = Math.sqrt((this.fXN[n]-this.fXN[m])*(this.fXN[n]-this.fXN[m])+(this.fYN[n]-this.fYN[m])*(this.fYN[n]-this.fYN[m]));
+               if ((d1+d2<=d3) || (d1+d3<=d2) || (d2+d3<=d1))
+                  continue;
+
+               // does the triangle enclose the point?
+               if (!this.Enclose(p,n,m,0))
+                  continue;
+
+               // is it a Delaunay triangle? (ie. are there any other points
+               // inside the circle that is defined by its vertices?)
+
+               // test the triangle for Delaunay'ness
+
+               // loop over all other points testing each to see if it's
+               // inside the triangle's circle
+               ndegen = 0;
+               for ( z = 1; z <= this.fNpoints; z++) {
+                  if ((z == p) || (z == n) || (z == m))
+                     continue; // goto L50;
+                  // An easy first check is to see if point z is inside the triangle
+                  // (if it's in the triangle it's also in the circle)
+
+                  // point z cannot be inside the triangle if it's further from (xx,yy)
+                  // than the furthest pointing making up the triangle - test this
+                  for (l=1; l<=this.fNpoints; l++) {
+                     if (this.fOrder[l-1] == z) {
+                        if ((l<i) || (l<j) || (l<k)) {
+                           // point z is nearer to (xx,yy) than m, n or p - it could be in the
+                           // triangle so call enclose to find out
+
+                           // if it is inside the triangle this can't be a Delaunay triangle
+                           if (this.Enclose(p,n,m,z)) { skip_this_triangle = true; break; } // goto L90;
+                        } else {
+                           // there's no way it could be in the triangle so there's no point
+                           // calling enclose
+                           break; // goto L1;
+                        }
+                     }
+                  }
+
+                  if (skip_this_triangle) break;
+
+                  // is point z colinear with any pair of the triangle points?
+   // L1:
+                  if (((this.fXN[p]-this.fXN[z])*(this.fYN[p]-this.fYN[n])) == ((this.fYN[p]-this.fYN[z])*(this.fXN[p]-this.fXN[n]))) {
+                     // z is colinear with p and n
+                     a = p;
+                     b = n;
+                  } else if (((this.fXN[p]-this.fXN[z])*(this.fYN[p]-this.fYN[m])) == ((this.fYN[p]-this.fYN[z])*(this.fXN[p]-this.fXN[m]))) {
+                     // z is colinear with p and m
+                     a = p;
+                     b = m;
+                  } else if (((this.fXN[n]-this.fXN[z])*(this.fYN[n]-this.fYN[m])) == ((this.fYN[n]-this.fYN[z])*(this.fXN[n]-this.fXN[m]))) {
+                     // z is colinear with n and m
+                     a = n;
+                     b = m;
+                  } else {
+                     a = 0;
+                     b = 0;
+                  }
+                  if (a != 0) {
+                     // point z is colinear with 2 of the triangle points, if it lies
+                     // between them it's in the circle otherwise it's outside
+                     if (this.fXN[a] != this.fXN[b]) {
+                        if (((this.fXN[z]-this.fXN[a])*(this.fXN[z]-this.fXN[b])) < 0) {
+                           skip_this_triangle = true;
+                           break;
+                           // goto L90;
+                        } else if (((this.fXN[z]-this.fXN[a])*(this.fXN[z]-this.fXN[b])) == 0) {
+                           // At least two points are sitting on top of each other, we will
+                           // treat these as one and not consider this a 'multiple points lying
+                           // on a common circle' situation. It is a sign something could be
+                           // wrong though, especially if the two coincident points have
+                           // different fZ's. If they don't then this is harmless.
+                           Warning("Interpolate", "Two of these three points are coincident %d %d %d",a,b,z);
+                        }
+                     } else {
+                        if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
+                           skip_this_triangle = true;
+                           break;
+                           // goto L90;
+                        } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) == 0) {
+                           // At least two points are sitting on top of each other - see above.
+                           console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
+                        }
+                     }
+                     // point is outside the circle, move to next point
+                     continue; // goto L50;
+                  }
+
+                  if (skip_this_triangle) break;
+
+   ///            Error("Interpolate", "Should not get to here");
+                  // may as well soldier on
+                  // SL: initialize before try to find better values
+                  f  = m;
+                  o1 = p;
+                  o2 = n;
+
+                  // if point z were to look at the triangle, which point would it see
+                  // lying between the other two? (we're going to form a quadrilateral
+                  // from the points, and then demand certain properties of that
+                  // quadrilateral)
+                  dxz[0] = this.fXN[p]-this.fXN[z];
+                  dyz[0] = this.fYN[p]-this.fYN[z];
+                  dxz[1] = this.fXN[n]-this.fXN[z];
+                  dyz[1] = this.fYN[n]-this.fYN[z];
+                  dxz[2] = this.fXN[m]-this.fXN[z];
+                  dyz[2] = this.fYN[m]-this.fYN[z];
+                  for(l=1; l<=3; l++) {
+                     dx1 = dxz[l-1];
+                     dx2 = dxz[l%3];
+                     dx3 = dxz[(l+1)%3];
+                     dy1 = dyz[l-1];
+                     dy2 = dyz[l%3];
+                     dy3 = dyz[(l+1)%3];
+
+                     // u et v are used only to know their sign. The previous
+                     // code computed them with a division which was long and
+                     // might be a division by 0. It is now replaced by a
+                     // multiplication.
+                     u = (dy3*dx2-dx3*dy2)*(dy1*dx2-dx1*dy2);
+                     v = (dy3*dx1-dx3*dy1)*(dy2*dx1-dx2*dy1);
+
+                     if ((u >= 0) && (v >= 0)) {
+                        // vector (dx3,dy3) is expressible as a sum of the other two vectors
+                        // with positive coefficients -> i.e. it lies between the other two vectors
+                        if (l == 1) {
+                           f  = m;
+                           o1 = p;
+                           o2 = n;
+                        } else if (l == 2) {
+                           f  = p;
+                           o1 = n;
+                           o2 = m;
+                        } else {
+                           f  = n;
+                           o1 = m;
+                           o2 = p;
+                        }
+                        break; // goto L2;
+                     }
+                  }
+   // L2:
+                  // this is not a valid quadrilateral if the diagonals don't cross,
+                  // check that points f and z lie on opposite side of the line o1-o2,
+                  // this is true if the angle f-o1-z is greater than o2-o1-z and o2-o1-f
+                  cfo1k  = ((this.fXN[f]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
+                           Math.sqrt(((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))*
+                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
+                  co2o1k = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
+                           Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
+                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])  + (this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
+                  co2o1f = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))/
+                           Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
+                           ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1]) + (this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]) ));
+                  if ((cfo1k > co2o1k) || (cfo1k > co2o1f)) {
+                     // not a valid quadrilateral - point z is definitely outside the circle
+                     continue; // goto L50;
+                  }
+                  // calculate the 2 internal angles of the quadrangle formed by joining
+                  // points z and f to points o1 and o2, at z and f. If they sum to less
+                  // than 180 degrees then z lies outside the circle
+                  dko1    = Math.sqrt((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]));
+                  dko2    = Math.sqrt((this.fXN[z]-this.fXN[o2])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o2])*(this.fYN[z]-this.fYN[o2]));
+                  dfo1    = Math.sqrt((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]));
+                  dfo2    = Math.sqrt((this.fXN[f]-this.fXN[o2])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o2])*(this.fYN[f]-this.fYN[o2]));
+                  c1      = ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o2]))/dko1/dko2;
+                  c2      = ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o2]))/dfo1/dfo2;
+                  sin_sum = c1*Math.sqrt(1-c2*c2)+c2*Math.sqrt(1-c1*c1);
+
+                  // sin_sum doesn't always come out as zero when it should do.
+                  if (sin_sum < -1.e-6) {
+                     // z is inside the circle, this is not a Delaunay triangle
+                     skip_this_triangle = true;
+                     break;
+                     // goto L90;
+                  } else if (Math.abs(sin_sum) <= 1.e-6) {
+                     // point z lies on the circumference of the circle (within rounding errors)
+                     // defined by the triangle, so there is potential for degeneracy in the
+                     // triangle set (Delaunay triangulation does not give a unique way to split
+                     // a polygon whose points lie on a circle into constituent triangles). Make
+                     // a note of the additional point number.
+                     ndegen++;
+                     degen   = z;
+                     fdegen  = f;
+                     o1degen = o1;
+                     o2degen = o2;
+                  }
+
+                  // L50: continue;
+
+               } // end of for ( z = 1 ...) loop
+
+               if (skip_this_triangle) continue;
+
+               // This is a good triangle
+               if (ndegen > 0) {
+                  // but is degenerate with at least one other,
+                  // haven't figured out what to do if more than 4 points are involved
+   ///            if (ndegen > 1) {
+   ///               Error("Interpolate",
+   ///                     "More than 4 points lying on a circle. No decision making process formulated for triangulating this region in a non-arbitrary way %d %d %d %d",
+   ///                     p,n,m,degen);
+   ///               return thevalue;
+   ///            }
+
+                  // we have a quadrilateral which can be split down either diagonal
+                  // (d<->f or o1<->o2) to form valid Delaunay triangles. Choose diagonal
+                  // with highest average z-value. Whichever we choose we will have
+                  // verified two triangles as good and two as bad, only note the good ones
+                  d  = degen;
+                  f  = fdegen;
+                  o1 = o1degen;
+                  o2 = o2degen;
+                  if ((this.fZ[o1-1] + this.fZ[o2-1]) > (this.fZ[d-1] + this.fZ[f-1])) {
+                     // best diagonalisation of quadrilateral is current one, we have
+                     // the triangle
+                     t1 = p;
+                     t2 = n;
+                     t3 = m;
+                     // file the good triangles
+                     this.FileIt(p, n, m);
+                     this.FileIt(d, o1, o2);
+                  } else {
+                     // use other diagonal to split quadrilateral, use triangle formed by
+                     // point f, the degnerate point d and whichever of o1 and o2 create
+                     // an enclosing triangle
+                     t1 = f;
+                     t2 = d;
+                     if (this.Enclose(f,d,o1,0)) {
+                        t3 = o1;
+                     } else {
+                        t3 = o2;
+                     }
+                     // file the good triangles
+                     this.FileIt(f, d, o1);
+                     this.FileIt(f, d, o2);
+                  }
+               } else {
+                  // this is a Delaunay triangle, file it
+                  this.FileIt(p, n, m);
+                  t1 = p;
+                  t2 = n;
+                  t3 = m;
+               }
+               // do the interpolation
+               thevalue = this.InterpolateOnPlane(t1,t2,t3,0);
+               return thevalue;
+
+   //L90:      continue;
+            }
+         }
+      }
+      if (shouldbein) {
+         console.error(`Interpolate Point outside hull when expected inside: this point could be dodgy ${xx}  ${yy} ${ntris_tried}`);
+      }
+      return thevalue;
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Defines the number of triangles tested for a Delaunay triangle
+   /// (number of iterations) before abandoning the search
+
+   SetMaxIter(n = 100000)
+   {
+      this.fAllTri  = false;
+      this.fMaxIter = n;
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Sets the histogram bin height for points lying outside the convex hull ie:
+   /// the bins in the margin.
+
+   SetMarginBinsContent(z)
+   {
+      this.fZout = z;
+   }
+
+}
+
+
 /**
  * @summary Painter for TGraph2D classes
  * @private
@@ -105504,19 +106485,35 @@ class TGraph2DPainter extends ObjectPainter {
 
       let res = this.options;
 
-      res.Color = d.check('COL');
+      if (d.check('TRI1'))
+         res.Triangles = 11; // wireframe and colors
+      else if (d.check('TRI2'))
+         res.Triangles = 10; // only color triangles
+      else if (d.check('TRIW') || d.check('TRI'))
+         res.Triangles = 1;
+      else
+         res.Triangles = 0;
       res.Line = d.check('LINE');
       res.Error = d.check('ERR') && (this.matchObjectType(clTGraph2DErrors) || this.matchObjectType(clTGraph2DAsymmErrors));
-      res.Circles = d.check('P0');
-      res.Markers = d.check('P');
 
-      if (!res.Markers && !res.Error && !res.Circles && !res.Line) {
+      if (d.check('P0COL')) {
+         res.Color = res.Circles = res.Markers = true;
+      } else {
+         res.Color = d.check('COL');
+         res.Circles = d.check('P0');
+         res.Markers = d.check('P');
+      }
+
+      if (!res.Markers && !res.Error && !res.Circles && !res.Line && !res.Triangles) {
          if ((gr.fMarkerSize == 1) && (gr.fMarkerStyle == 1))
             res.Circles = true;
          else
             res.Markers = true;
       }
       if (!res.Markers) res.Color = false;
+
+      if (res.Color || res.Triangles >= 10)
+         res.Zscale = d.check('Z');
 
       this.storeDrawOpt(opt);
    }
@@ -105574,7 +106571,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       let histo = createHistogram(clTH2I, 10, 10);
       histo.fName = graph.fName + '_h';
-      histo.fTitle = graph.fTitle;
+      setHistogramTitle(histo, graph.fTitle);
       histo.fXaxis.fXmin = uxmin;
       histo.fXaxis.fXmax = uxmax;
       histo.fYaxis.fXmin = uymin;
@@ -105627,6 +106624,62 @@ class TGraph2DPainter extends ObjectPainter {
       };
    }
 
+   drawTriangles(fp, graph, levels, palette) {
+      let dulaunay = new TGraphDelaunay(graph);
+      dulaunay.FindAllTriangles();
+      if (!dulaunay.fNdt) return;
+
+      let main_grz = !fp.logz ? fp.grz : value => (value < axis_zmin) ? -0.1 : fp.grz(value),
+          do_faces = this.options.Triangles >= 10,
+          do_lines = this.options.Triangles % 10 === 1,
+          triangles = new Triangles3DHandler(levels, main_grz, 0, 2*fp.size_z3d, do_lines);
+
+      for (triangles.loop = 0; triangles.loop < 2; ++triangles.loop) {
+         triangles.createBuffers();
+
+         for (let t = 0; t < dulaunay.fNdt; ++t) {
+            let points = [ dulaunay.fPTried[t], dulaunay.fNTried[t], dulaunay.fMTried[t] ],
+                coord = [], use_triangle = true;
+            for (let i = 0; i < 3; ++i) {
+               let pnt = points[i] - 1;
+               coord.push(fp.grx(graph.fX[pnt]),  fp.gry(graph.fY[pnt]), main_grz(graph.fZ[pnt]));
+
+                if ((graph.fX[pnt] < fp.scale_xmin) || (graph.fX[pnt] > fp.scale_xmax) ||
+                    (graph.fY[pnt] < fp.scale_ymin) || (graph.fY[pnt] > fp.scale_ymax))
+                  use_triangle = false;
+            }
+
+            if (do_faces && use_triangle)
+               triangles.addMainTriangle(...coord);
+
+            if (do_lines && use_triangle) {
+               triangles.addLineSegment(coord[0],coord[1],coord[2], coord[3],coord[4],coord[5]);
+
+               triangles.addLineSegment(coord[3],coord[4],coord[5], coord[6],coord[7],coord[8]);
+
+               triangles.addLineSegment(coord[6],coord[7],coord[8], coord[0],coord[1],coord[2]);
+            }
+         }
+      }
+
+      triangles.callFuncs((lvl, pos) => {
+         let geometry = createLegoGeom(this.getMainPainter(), pos, null, 100, 100),
+             color = palette.calcColor(lvl, levels.length),
+             material = new MeshBasicMaterial(getMaterialArgs(color, { side: DoubleSide, vertexColors: false }));
+
+         let mesh = new Mesh(geometry, material);
+
+         fp.toplevel.add(mesh);
+
+         mesh.painter = this; // to let use it with context menu
+      }, (isgrid, lpos) => {
+         let lcolor = this.getColor(graph.fLineColor),
+              material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
+              linemesh = createLineSegments(convertLegoBuf(this.getMainPainter(), lpos, 100, 100), material);
+         fp.toplevel.add(linemesh);
+      });
+   }
+
    /** @summary Actual drawing of TGraph2D object
      * @return {Promise} for drawing ready */
    async redraw() {
@@ -105668,14 +106721,18 @@ class TGraph2DPainter extends ObjectPainter {
           scale = fp.size_x3d / 100 * markeratt.getFullSize(),
           promises = [];
 
-      if (this.options.Circles) scale = 0.06*fp.size_x3d;
+      if (this.options.Circles)
+         scale = 0.06*fp.size_x3d;
 
       if (fp.usesvg) scale *= 0.3;
 
-      if (this.options.Color) {
-         levels = main.getContourLevels();
+      if (this.options.Color || this.options.Triangles) {
+         levels = main.getContourLevels(true);
          palette = main.getHistPalette();
       }
+
+      if (this.options.Triangles)
+         this.drawTriangles(fp, graph, levels, palette);
 
       for (let lvl = 0; lvl < levels.length-1; ++lvl) {
 
@@ -105794,9 +106851,8 @@ class TGraph2DPainter extends ObjectPainter {
          if (pnts) {
             let fcolor = 'blue';
 
-            if (!this.options.Circles)
-               fcolor = palette ? palette.calcColor(lvl, levels.length)
-                                : this.getColor(graph.fMarkerColor);
+            if (!this.options.Circles || this.options.Color)
+               fcolor = palette ? palette.calcColor(lvl, levels.length) : this.getColor(graph.fMarkerColor);
 
             let pr = pnts.createPoints({ color: fcolor, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
                mesh.graph = graph;
@@ -105825,12 +106881,13 @@ class TGraph2DPainter extends ObjectPainter {
       let painter = new TGraph2DPainter(dom, gr);
       painter.decodeOptions(opt, gr);
 
-      let promise = Promise.resolve(true);
+      let promise = Promise.resolve(null);
 
       if (!painter.getMainPainter()) {
          if (!gr.fHistogram)
             gr.fHistogram = painter.createHistogram();
-         promise = TH2Painter.draw(dom, gr.fHistogram, 'lego;axis');
+
+         promise = TH2Painter.draw(dom, gr.fHistogram, painter.options.Zscale ? 'lego2z;axis' : 'lego2;axis');
          painter.ownhisto = true;
       }
 
@@ -106702,7 +107759,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (graph.fMaximum != kNoZoom) maximum = graph.fMaximum;
       if ((minimum < 0) && (ymin >= 0)) minimum = (1 - margin)*ymin;
 
-      setHistTitle(histo, this.getObject().fTitle);
+      setHistogramTitle(histo, this.getObject().fTitle);
 
       if (set_x) {
          histo.fXaxis.fXmin = uxmin;
@@ -107968,6 +109025,7 @@ function proivdeEvalPar(obj) {
                 .replace(/\b(cos)\b/gi, 'Math.cos')
                 .replace(/\b(tan)\b/gi, 'Math.tan')
                 .replace(/\b(exp)\b/gi, 'Math.exp')
+                .replace(/\b(log)\b/gi, 'Math.log')
                 .replace(/\b(log10)\b/gi, 'Math.log10')
                 .replace(/\b(pow)\b/gi, 'Math.pow')
                 .replace(/pi/g, 'Math.PI');
@@ -108149,7 +109207,7 @@ class TF1Painter extends TH1Painter$2 {
       }
 
       hist.fName = 'Func';
-      hist.fTitle = tf1.fTitle;
+      setHistogramTitle(hist, tf1.fTitle);
       hist.fMinimum = tf1.fMinimum;
       hist.fMaximum = tf1.fMaximum;
       hist.fLineColor = tf1.fLineColor;
@@ -109601,7 +110659,7 @@ class TF2Painter extends TH2Painter {
       }
 
       hist.fName = 'Func';
-      hist.fTitle = func.fTitle;
+      setHistogramTitle(hist, func.fTitle);
       hist.fMinimum = func.fMinimum;
       hist.fMaximum = func.fMaximum;
       //fHistogram->SetContour(fContour.fN, levels);
@@ -109722,7 +110780,6 @@ class TF2Painter extends TH2Painter {
          force_saved = true;
          opt = opt.slice(0, p);
       }
-
 
       let d = new DrawOptions(opt);
       if (d.empty())
@@ -116768,7 +117825,7 @@ class RCanvasPainter extends RPadPainter {
 
             select('#ged_placeholder').text('');
 
-            sap.ui.define(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
+            sap.ui.require(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
 
                let oModel = new JSONModel({ handle: null });
 
@@ -122025,6 +123082,7 @@ exports.selectActivePad = selectActivePad;
 exports.setBatchMode = setBatchMode;
 exports.setDefaultDrawOpt = setDefaultDrawOpt;
 exports.setHPainter = setHPainter;
+exports.setHistogramTitle = setHistogramTitle;
 exports.setSaveFile = setSaveFile;
 exports.settings = settings;
 exports.svgToImage = svgToImage;

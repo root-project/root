@@ -616,7 +616,7 @@ class RCanvasPainter extends RPadPainter {
 
             d3_select('#ged_placeholder').text('');
 
-            sap.ui.define(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
+            sap.ui.require(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
 
                let oModel = new JSONModel({ handle: null });
 

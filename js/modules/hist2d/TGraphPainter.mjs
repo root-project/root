@@ -1,9 +1,9 @@
-import { gStyle, BIT, settings, create, createHistogram, isFunc, isStr,
+import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFunc, isStr,
          clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TH1Painter, setHistTitle, PadDrawOptions } from './TH1Painter.mjs';
+import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttFillHandler } from '../base/TAttFillHandler.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
@@ -335,7 +335,7 @@ class TGraphPainter extends ObjectPainter {
       if (graph.fMaximum != kNoZoom) maximum = graph.fMaximum;
       if ((minimum < 0) && (ymin >= 0)) minimum = (1 - margin)*ymin;
 
-      setHistTitle(histo, this.getObject().fTitle);
+      setHistogramTitle(histo, this.getObject().fTitle);
 
       if (set_x) {
          histo.fXaxis.fXmin = uxmin;

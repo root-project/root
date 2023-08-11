@@ -3152,7 +3152,7 @@ class TGeoPainter extends ObjectPainter {
 
       if (this._camera.isOrthographicCamera && this.isOrthoCamera() && this._scene_width && this._scene_height) {
          let screen_ratio = this._scene_width / this._scene_height,
-             szx = (this._camera.right - this._camera.left), szy = this._camera.top - this._camera.bottom;
+             szx = this._camera.right - this._camera.left, szy = this._camera.top - this._camera.bottom;
 
          if (screen_ratio > szx / szy) {
             // screen wider than actual geometry
@@ -3165,7 +3165,6 @@ class TGeoPainter extends ObjectPainter {
             this._camera.top  = m + szx / screen_ratio / 2;
             this._camera.bottom = m - szx / screen_ratio / 2;
          }
-
       }
 
       this._camera.lookAt(this._lookat);
