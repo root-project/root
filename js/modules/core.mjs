@@ -379,6 +379,7 @@ let gStyle = {
    fCandleBoxRange: 0.5,
    fCandleScaled: false,
    fViolinScaled: true,
+   fOrthoCamera: false,
    fXAxisExpXOffset: 0,
    fXAxisExpYOffset: 0,
    fYAxisExpXOffset: 0,
