@@ -27,22 +27,22 @@ sap.ui.define([
 
       renderer(oRm, oControl){
          //first up, render a div for the ShadowBox
-         oRm.write("<div");
+         oRm.write('<div');
 
          //next, render the control information, this handles your sId (you must do this for your control to be properly tracked by ui5).
          oRm.writeControlData(oControl);
 
-         oRm.addClass("sapUiSizeCompact");
-         oRm.addClass("sapMSlt");
+         oRm.addClass('sapUiSizeCompact');
+         oRm.addClass('sapMSlt');
 
          oRm.writeClasses();
 
-         oRm.addStyle("width","50%");
-         // oRm.addStyle("height","100%");
+         oRm.addStyle('width','50%');
+         // oRm.addStyle('height','100%');
 
          oRm.writeStyles();
 
-         oRm.write(">");
+         oRm.write('>');
 
          //next, iterate over the content aggregation, and call the renderer for each control
          //$(oControl.getContent()).each(function(){
@@ -50,7 +50,7 @@ sap.ui.define([
          //});
 
          //and obviously, close off our div
-         oRm.write("</div>")
+         oRm.write('</div>')
      },
 
      _setSVG: function() {
@@ -61,20 +61,20 @@ sap.ui.define([
         if (!w || !h) return;
         dom.empty();
 
-        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("width", w);
-        svg.setAttribute("height", h);
-        svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+        let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', w);
+        svg.setAttribute('height', h);
+        svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
         dom.get(0).appendChild(svg);
 
-        let attr = this.getProperty("svgsample");
-        if (attr && (typeof attr == "object") && (typeof attr.createSample == "function")) {
+        let attr = this.getProperty('svgsample');
+        if (attr && (typeof attr == 'object') && (typeof attr.createSample == 'function')) {
            attr.createSample(svg, w, h, true);
         } else {
-           let txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+           let txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
            svg.appendChild(txt);
-           txt.innerHTML = "none";
+           txt.innerHTML = 'none';
         }
      },
 
