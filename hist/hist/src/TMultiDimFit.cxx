@@ -1069,7 +1069,7 @@ void TMultiDimFit::Fit(Option_t *option)
    for (i = 0; i < fNCoefficients; i++) {
       Double_t startVal = fCoefficients(i);
       Double_t startErr = fCoefficientsRMS(i);
-      fFitter->SetParameter(i, Form("coeff%02d",i),
+      fFitter->SetParameter(i, (char *)TString::Format("coeff%02d",i).Data(),
                             startVal, startErr, 0, 0);
    }
 
@@ -1080,7 +1080,7 @@ void TMultiDimFit::Fit(Option_t *option)
 
    for (i = 0; i < fNCoefficients; i++) {
       Double_t val = 0, err = 0, low = 0, high = 0;
-      fFitter->GetParameter(i, Form("coeff%02d",i),
+      fFitter->GetParameter(i, (char *)TString::Format("coeff%02d",i).Data(),
                             val, err, low, high);
       fCoefficients(i)    = val;
       fCoefficientsRMS(i) = err;
@@ -1425,7 +1425,7 @@ void TMultiDimFit::MakeCoefficients()
 
          if (TESTBIT(fHistogramMask,HIST_RX))
             for (j = 0; j < fNVariables; j++)
-               ((TH2D*)fHistograms->FindObject(Form("res_x_%d",j)))
+               ((TH2D*)fHistograms->FindObject(TString::Format("res_x_%d",j)))
                ->Fill(fVariables(i * fNVariables + j),fResiduals(i));
       }
    } // If histograms
@@ -1607,9 +1607,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
    if (opt.Contains("x") || opt.Contains("a")) {
       SETBIT(fHistogramMask,HIST_XORIG);
       for (i = 0; i < fNVariables; i++)
-         if (!fHistograms->FindObject(Form("x_%d_orig",i)))
-            fHistograms->Add(new TH1D(Form("x_%d_orig",i),
-                                      Form("Original variable # %d",i),
+         if (!fHistograms->FindObject(TString::Format("x_%d_orig",i)))
+            fHistograms->Add(new TH1D(TString::Format("x_%d_orig",i),
+                                      TString::Format("Original variable # %d",i),
                                       fBinVarX, fMinVariables(i),
                                       fMaxVariables(i)));
    }
@@ -1626,9 +1626,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
    if (opt.Contains("n") || opt.Contains("a")) {
       SETBIT(fHistogramMask,HIST_XNORM);
       for (i = 0; i < fNVariables; i++)
-         if (!fHistograms->FindObject(Form("x_%d_norm",i)))
-            fHistograms->Add(new TH1D(Form("x_%d_norm",i),
-                                      Form("Normalized variable # %d",i),
+         if (!fHistograms->FindObject(TString::Format("x_%d_norm",i)))
+            fHistograms->Add(new TH1D(TString::Format("x_%d_norm",i),
+                                      TString::Format("Normalized variable # %d",i),
                                       fBinVarX, -1,1));
    }
 
@@ -1645,9 +1645,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
    if (opt.Contains("r1") || opt.Contains("a")) {
       SETBIT(fHistogramMask,HIST_RX);
       for (i = 0; i < fNVariables; i++)
-         if (!fHistograms->FindObject(Form("res_x_%d",i)))
-            fHistograms->Add(new TH2D(Form("res_x_%d",i),
-                                      Form("Computed residual versus x_%d", i),
+         if (!fHistograms->FindObject(TString::Format("res_x_%d",i)))
+            fHistograms->Add(new TH2D(TString::Format("res_x_%d",i),
+                                      TString::Format("Computed residual versus x_%d", i),
                                       fBinVarX, -1,    1,
                                       fBinVarY,
                                       fMinQuantity - fMeanQuantity,
@@ -1738,7 +1738,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 
 void TMultiDimFit::MakeMethod(const Char_t* classname, Option_t* option)
 {
-   MakeRealCode(Form("%sMDF.cxx", classname), classname, option);
+   MakeRealCode(TString::Format("%sMDF.cxx", classname), classname, option);
 }
 
 
@@ -1770,7 +1770,7 @@ void TMultiDimFit::MakeNormalized()
 
          // Fill histograms of original independent variables
          if (TESTBIT(fHistogramMask,HIST_XORIG))
-            ((TH1D*)fHistograms->FindObject(Form("x_%d_orig",j)))
+            ((TH1D*)fHistograms->FindObject(TString::Format("x_%d_orig",j)))
             ->Fill(fVariables(k));
 
          // Normalise independent variables
@@ -1778,7 +1778,7 @@ void TMultiDimFit::MakeNormalized()
 
          // Fill histograms of normalised independent variables
          if (TESTBIT(fHistogramMask,HIST_XNORM))
-            ((TH1D*)fHistograms->FindObject(Form("x_%d_norm",j)))
+            ((TH1D*)fHistograms->FindObject(TString::Format("x_%d_norm",j)))
             ->Fill(fVariables(k));
 
       }
@@ -1962,8 +1962,8 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    Int_t i, j;
 
    Bool_t  isMethod     = (classname[0] == '\0' ? kFALSE : kTRUE);
-   const char *prefix   = (isMethod ? Form("%s::", classname) : "");
-   const char *cv_qual  = (isMethod ? "" : "static ");
+   TString prefix       = isMethod ? TString::Format("%s::", classname) : TString("");
+   const char *cv_qual  = isMethod ? "" : "static ";
 
    std::ofstream outFile(filename,std::ios::out|std::ios::trunc);
    if (!outFile) {
