@@ -63,6 +63,7 @@ def main():
     parser.add_argument("--platform",     default="centos8", help="Platform to build on")
     parser.add_argument("--incremental",  default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",    default="Release", help="Release|Debug|RelWithDebInfo")
+    parser.add_argument("--coverage",     default="false",   help="Create Coverage report in XML")
     parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
     parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
     parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
@@ -71,7 +72,9 @@ def main():
 
     args = parser.parse_args()
 
+    # Set argument to True if matched
     args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
+    args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
 
     if not args.base_ref:
         die(os.EX_USAGE, "base_ref not specified")
@@ -126,27 +129,31 @@ def main():
         shell_log = show_node_state(shell_log, options)
 
     shell_log = build(options, args.buildtype, shell_log)
-
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental:
+
+    if not pull_request and not args.incremental and not args.coverage:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
     if testing:
         extra_ctest_flags = ""
-
         if WINDOWS:
             extra_ctest_flags += "--repeat until-pass:3 "
             extra_ctest_flags += "--build-config " + args.buildtype
 
-        shell_log = run_ctest(shell_log, extra_ctest_flags)
+        num_failed_test, shell_log = run_ctest(shell_log, extra_ctest_flags)
+
+    if args.coverage:
+        shell_log = create_coverage_xml(shell_log)
+
+    if num_failed_test != 0:
+        die(msg=f"TEST FAILURE: {num_failed_test} tests failed", log=shell_log)
 
     print_shell_log(shell_log)
-
 
 @github_log_group("Clean up from previous runs")
 def cleanup_previous_build(shell_log):
@@ -243,18 +250,14 @@ def show_node_state(shell_log: str, options: str) -> str:
 
     return shell_log
 
-
-@github_log_group("Run tests")
+# Just return the number of test failures instead of `die()`-ing; report test@github_log_group("Run tests")
 def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
-    result, shell_log = subprocess_with_log(f"""
+    num_failed_test, shell_log = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
 
-    if result != 0:
-        die(result, "Some tests failed", shell_log)
-
-    return shell_log
+    return num_failed_test, shell_log
 
 
 @github_log_group("Archive and upload")
@@ -331,6 +334,19 @@ def rebase(base_ref, head_ref, shell_log) -> str:
 
     if result != 0:
         die(result, "Rebase failed", shell_log)
+
+    return shell_log
+
+
+@github_log_group("Create Test Coverage in XML")
+def create_coverage_xml(shell_log: str) -> str:
+    result, shell_log = subprocess_with_log(f"""
+        cd '{WORKDIR}/build'
+        gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r ../src ../build -o cobertura-cov.xml
+    """, shell_log)
+
+    if result != 0:
+        die(result, "Failed to create test coverage", shell_log)
 
     return shell_log
 
