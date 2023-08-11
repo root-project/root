@@ -1,4 +1,4 @@
-import { settings, gStyle, isStr, isFunc, clTH1D, createHistogram, clTF1, clTF2, kNoStats } from '../core.mjs';
+import { settings, gStyle, isStr, isFunc, clTH1D, createHistogram, setHistogramTitle, clTF1, clTF2, kNoStats } from '../core.mjs';
 import { floatToString } from '../base/BasePainter.mjs';
 import { getElementMainPainter, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
@@ -58,6 +58,7 @@ function proivdeEvalPar(obj) {
                 .replace(/\b(cos)\b/gi, 'Math.cos')
                 .replace(/\b(tan)\b/gi, 'Math.tan')
                 .replace(/\b(exp)\b/gi, 'Math.exp')
+                .replace(/\b(log)\b/gi, 'Math.log')
                 .replace(/\b(log10)\b/gi, 'Math.log10')
                 .replace(/\b(pow)\b/gi, 'Math.pow')
                 .replace(/pi/g, 'Math.PI');
@@ -239,7 +240,7 @@ class TF1Painter extends TH1Painter {
       }
 
       hist.fName = 'Func';
-      hist.fTitle = tf1.fTitle;
+      setHistogramTitle(hist, tf1.fTitle);
       hist.fMinimum = tf1.fMinimum;
       hist.fMaximum = tf1.fMaximum;
       hist.fLineColor = tf1.fLineColor;

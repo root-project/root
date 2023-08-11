@@ -247,215 +247,257 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
    }
 }
 
+/** @summary Handle 3D triangles with color levels */
+
+class Triangles3DHandler {
+   constructor(ilevels, grz, grz_min, grz_max, dolines, donormals, dogrid) {
+
+      let levels = [grz_min, grz_max]; // just cut top/bottom parts
+
+      if (ilevels) {
+         // recalculate levels into graphical coordinates
+         levels = new Float32Array(ilevels.length);
+         for (let ll = 0; ll < ilevels.length; ++ll)
+            levels[ll] = grz(ilevels[ll]);
+      }
+
+      Object.assign(this, { grz_min, grz_max, dolines, donormals, dogrid });
+
+      this.loop = 0;
+
+      let nfaces = [], posbuf = [], posbufindx = [],    // buffers for faces
+          nsegments = 0, lpos = null, lindx = 0,  // buffer for lines
+          ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
+          normindx = [],                             // buffer to remember place of vertex for each bin
+          pntbuf = new Float32Array(6*3), pntindx = 0, // maximal 6 points
+          lastpart = 0, gridpnts = new Float32Array(2*3), gridcnt = 0,
+          levels_eps = (levels[levels.length-1] - levels[0]) / levels.length / 1e2;
+
+      function checkSide(z, level1, level2, eps) {
+         return (z < level1 - eps) ? -1 : (z > level2 + eps ? 1 : 0);
+      };
+
+      this.createNormIndex = function(handle) {
+          // for each bin maximal 8 points reserved
+         if (handle.donormals)
+            normindx = new Int32Array((handle.i2-handle.i1)*(handle.j2-handle.j1)*8).fill(-1);
+      };
+
+      this.createBuffers = function() {
+         if (!this.loop) return;
+
+         for (let lvl = 1; lvl < levels.length; ++lvl)
+            if (nfaces[lvl]) {
+               posbuf[lvl] = new Float32Array(nfaces[lvl] * 9);
+               posbufindx[lvl] = 0;
+            }
+         if (this.dolines && (nsegments > 0))
+            lpos = new Float32Array(nsegments * 6);
+         if (this.dogrid && (ngridsegments > 0))
+            grid = new Float32Array(ngridsegments * 6);
+      };
+
+      this.addLineSegment = function(x1,y1,z1, x2,y2,z2) {
+         if (!this.dolines) return;
+         let side1 = checkSide(z1, this.grz_min, this.grz_max, 0),
+             side2 = checkSide(z2, this.grz_min, this.grz_max, 0);
+         if ((side1 === side2) && (side1 !== 0))
+            return;
+         if (!this.loop)
+            return ++nsegments;
+
+         if (side1 !== 0) {
+            let diff = z2 - z1;
+            z1 = (side1 < 0) ? this.grz_min : this.grz_max;
+            x1 = x2 - (x2 - x1) / diff * (z2 - z1);
+            y1 = y2 - (y2 - y1) / diff * (z2 - z1);
+         }
+         if (side2 !== 0) {
+            let diff = z1 - z2;
+            z2 = (side2 < 0) ? this.grz_min : this.grz_max;
+            x2 = x1 - (x1 - x2) / diff * (z1 - z2);
+            y2 = y1 - (y1 - y2) / diff * (z1 - z2);
+         }
+
+         lpos[lindx] = x1; lpos[lindx+1] = y1; lpos[lindx+2] = z1; lindx+=3;
+         lpos[lindx] = x2; lpos[lindx+1] = y2; lpos[lindx+2] = z2; lindx+=3;
+      }
+
+      function addCrossingPoint(xx1,yy1,zz1, xx2,yy2,zz2, crossz, with_grid) {
+         if (pntindx >= pntbuf.length)
+            console.log('more than 6 points???');
+
+         let part = (crossz - zz1) / (zz2 - zz1), shift = 3;
+         if ((lastpart !== 0) && (Math.abs(part) < Math.abs(lastpart))) {
+            // while second crossing point closer than first to original, move it in memory
+            pntbuf[pntindx] = pntbuf[pntindx-3];
+            pntbuf[pntindx+1] = pntbuf[pntindx-2];
+            pntbuf[pntindx+2] = pntbuf[pntindx-1];
+            pntindx-=3; shift = 6;
+         }
+
+         pntbuf[pntindx] = xx1 + part*(xx2-xx1);
+         pntbuf[pntindx+1] = yy1 + part*(yy2-yy1);
+         pntbuf[pntindx+2] = crossz;
+
+         if (with_grid && grid) {
+            gridpnts[gridcnt] = pntbuf[pntindx];
+            gridpnts[gridcnt+1] = pntbuf[pntindx+1];
+            gridpnts[gridcnt+2] = pntbuf[pntindx+2];
+            gridcnt += 3;
+         }
+
+         pntindx += shift;
+         lastpart = part;
+      };
+
+      function rememberVertex(indx, handle, ii,jj) {
+         let bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1))*8;
+
+         if (normindx[bin] >= 0)
+            return console.error('More than 8 vertexes for the bin');
+
+         let pos = bin + 8 + normindx[bin]; // position where write index
+         normindx[bin]--;
+         normindx[pos] = indx; // at this moment index can be overwritten, means all 8 position are there
+      };
+
+      this.addMainTriangle = function(x1,y1,z1, x2,y2,z2, x3,y3,z3, is_first, handle, i, j) {
+
+         for (let lvl = 1; lvl < levels.length; ++lvl) {
+
+            let side1 = checkSide(z1, levels[lvl-1], levels[lvl], levels_eps),
+                side2 = checkSide(z2, levels[lvl-1], levels[lvl], levels_eps),
+                side3 = checkSide(z3, levels[lvl-1], levels[lvl], levels_eps),
+                side_sum = side1 + side2 + side3;
+
+            // always show top segments
+            if ((lvl > 1) && (lvl === levels.length - 1) && (side_sum === 3) && (z1 <= this.grz_max)) {
+               side1 = side2 =  side3 = side_sum = 0;
+            }
+
+            if (side_sum === 3) continue;
+            if (side_sum === -3) return;
+
+            if (!this.loop) {
+               let npnts = Math.abs(side2-side1) + Math.abs(side3-side2) + Math.abs(side1-side3);
+               if (side1 === 0) ++npnts;
+               if (side2 === 0) ++npnts;
+               if (side3 === 0) ++npnts;
+
+               if ((npnts === 1) || (npnts === 2)) console.error(`FOUND npnts = ${npnts}`);
+
+               if (npnts > 2) {
+                  if (nfaces[lvl] === undefined)
+                     nfaces[lvl] = 0;
+                  nfaces[lvl] += npnts-2;
+               }
+
+               // check if any(contours for given level exists
+               if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
+                      ++ngridsegments;
+
+               continue;
+            }
+
+            gridcnt = 0;
+
+            pntindx = 0;
+            if (side1 === 0) { pntbuf[pntindx] = x1; pntbuf[pntindx+1] = y1; pntbuf[pntindx+2] = z1; pntindx += 3; }
+
+            if (side1 !== side2) {
+               // order is important, should move from 1->2 point, checked via lastpart
+               lastpart = 0;
+               if ((side1 < 0) || (side2 < 0)) addCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl-1]);
+               if ((side1 > 0) || (side2 > 0)) addCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl], true);
+            }
+
+            if (side2 === 0) { pntbuf[pntindx] = x2; pntbuf[pntindx+1] = y2; pntbuf[pntindx+2] = z2; pntindx += 3; }
+
+            if (side2 !== side3) {
+               // order is important, should move from 2->3 point, checked via lastpart
+               lastpart = 0;
+               if ((side2 < 0) || (side3 < 0)) addCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl-1]);
+               if ((side2 > 0) || (side3 > 0)) addCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl], true);
+            }
+
+            if (side3 === 0) { pntbuf[pntindx] = x3; pntbuf[pntindx+1] = y3; pntbuf[pntindx+2] = z3; pntindx += 3; }
+
+            if (side3 !== side1) {
+               // order is important, should move from 3->1 point, checked via lastpart
+               lastpart = 0;
+               if ((side3 < 0) || (side1 < 0)) addCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl-1]);
+               if ((side3 > 0) || (side1 > 0)) addCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl], true);
+            }
+
+            if (pntindx === 0) continue;
+            if (pntindx < 9) { console.log(`found ${pntindx/3} points, must be at least 3`); continue; }
+
+            if (grid && (gridcnt === 6)) {
+               for (let jj = 0; jj < 6; ++jj)
+                  grid[gindx+jj] = gridpnts[jj];
+               gindx += 6;
+            }
+
+            // if three points and surf == 14, remember vertex for each point
+
+            let buf = posbuf[lvl], s = posbufindx[lvl];
+            if (this.donormals && (pntindx === 9)) {
+               rememberVertex(s, handle, i, j);
+               rememberVertex(s+3, handle, i+1, is_first ? j+1 : j);
+               rememberVertex(s+6, handle, is_first ? i : i+1, j+1);
+            }
+
+            for (let k1 = 3; k1 < pntindx - 3; k1 += 3) {
+               buf[s] = pntbuf[0]; buf[s+1] = pntbuf[1]; buf[s+2] = pntbuf[2]; s+=3;
+               buf[s] = pntbuf[k1]; buf[s+1] = pntbuf[k1+1]; buf[s+2] = pntbuf[k1+2]; s+=3;
+               buf[s] = pntbuf[k1+3]; buf[s+1] = pntbuf[k1+4]; buf[s+2] = pntbuf[k1+5]; s+=3;
+            }
+            posbufindx[lvl] = s;
+         }
+      };
+
+      this.callFuncs = function(meshFunc, linesFunc) {
+         for (let lvl = 1; lvl < levels.length; ++lvl) {
+            if (posbuf[lvl] && meshFunc)
+               meshFunc(lvl, posbuf[lvl], normindx);
+         }
+
+         if (lpos && linesFunc) {
+            if (nsegments*6 !== lindx)
+               console.error(`SURF lines mismmatch nsegm=${nsegments} lindx=${lindx} diff=${nsegments*6 - lindx}`);
+            linesFunc(false, lpos);
+         }
+
+         if (grid && linesFunc) {
+            if (ngridsegments*6 !== gindx)
+               console.error(`SURF grid draw mismatch ngridsegm=${ngridsegments} gindx=${gindx} diff=${ngridsegments*6 - gindx}`);
+            linesFunc(true, grid);
+         }
+      };
+
+    }
+
+}
+
 
 /** @summary Build 3d surface
   * @desc Make it indepependent from three.js to be able reuse it for 2d case
   * @private */
 function buildSurf3D(histo, handle, ilevels, meshFunc, linesFunc) {
-   let main_grz = handle.grz,
-       main_grz_min = handle.grz_min,
-       main_grz_max = handle.grz_max,
-       levels = null;
+   let main_grz = handle.grz;
 
-   if (ilevels) {
-      // recalculate levels into graphical coordinates
-      levels = new Float32Array(ilevels.length);
-      for (let ll = 0; ll < ilevels.length; ++ll)
-         levels[ll] = main_grz(ilevels[ll]);
-   } else {
-      levels = [main_grz_min, main_grz_max]; // just cut top/bottom parts
-   }
-
-   let loop, nfaces = [], pos = [], indx = [],    // buffers for faces
-       nsegments = 0, lpos = null, lindx = 0,     // buffer for lines
-       ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
-       normindx = [],                             // buffer to remember place of vertex for each bin
-       arrx = handle.original ? handle.origx : handle.grx,
+   let arrx = handle.original ? handle.origx : handle.grx,
        arry = handle.original ? handle.origy : handle.gry,
        i, j, x1, x2, y1, y2, z11, z12, z21, z22,
-       levels_eps = (levels[levels.length-1] - levels[0]) / levels.length / 1e2;
+       triangles = new Triangles3DHandler(ilevels, handle.grz, handle.grz_min, handle.grz_max, handle.dolines, handle.donormals, handle.dogrid);
 
-   function CheckSide(z, level1, level2, eps) {
-      return (z < level1 - eps) ? -1 : (z > level2 + eps ? 1 : 0);
-   }
+   triangles.createNormIndex(handle);
 
-   function AddLineSegment(x1,y1,z1, x2,y2,z2) {
-      if (!handle.dolines) return;
-      let side1 = CheckSide(z1, main_grz_min, main_grz_max, 0),
-          side2 = CheckSide(z2, main_grz_min, main_grz_max, 0);
-      if ((side1 === side2) && (side1 !== 0)) return;
-      if (!loop) return ++nsegments;
+   for (triangles.loop = 0; triangles.loop < 2; ++triangles.loop) {
+      triangles.createBuffers();
 
-      if (side1 !== 0) {
-         let diff = z2 - z1;
-         z1 = (side1 < 0) ? main_grz_min : main_grz_max;
-         x1 = x2 - (x2 - x1) / diff * (z2 - z1);
-         y1 = y2 - (y2 - y1) / diff * (z2 - z1);
-      }
-      if (side2 !== 0) {
-         let diff = z1 - z2;
-         z2 = (side2 < 0) ? main_grz_min : main_grz_max;
-         x2 = x1 - (x1 - x2) / diff * (z1 - z2);
-         y2 = y1 - (y1 - y2) / diff * (z1 - z2);
-      }
-
-      lpos[lindx] = x1; lpos[lindx+1] = y1; lpos[lindx+2] = z1; lindx+=3;
-      lpos[lindx] = x2; lpos[lindx+1] = y2; lpos[lindx+2] = z2; lindx+=3;
-   }
-
-   let pntbuf = new Float32Array(6*3), k = 0, lastpart = 0, // maximal 6 points
-       gridpnts = new Float32Array(2*3), gridcnt = 0;
-
-   function AddCrossingPoint(xx1,yy1,zz1, xx2,yy2,zz2, crossz, with_grid) {
-      if (k >= pntbuf.length)
-         console.log('more than 6 points???');
-
-      let part = (crossz - zz1) / (zz2 - zz1), shift = 3;
-      if ((lastpart !== 0) && (Math.abs(part) < Math.abs(lastpart))) {
-         // while second crossing point closer than first to original, move it in memory
-         pntbuf[k] = pntbuf[k-3];
-         pntbuf[k+1] = pntbuf[k-2];
-         pntbuf[k+2] = pntbuf[k-1];
-         k-=3; shift = 6;
-      }
-
-      pntbuf[k] = xx1 + part*(xx2-xx1);
-      pntbuf[k+1] = yy1 + part*(yy2-yy1);
-      pntbuf[k+2] = crossz;
-
-      if (with_grid && grid) {
-         gridpnts[gridcnt] = pntbuf[k];
-         gridpnts[gridcnt+1] = pntbuf[k+1];
-         gridpnts[gridcnt+2] = pntbuf[k+2];
-         gridcnt+=3;
-      }
-
-      k += shift;
-      lastpart = part;
-   }
-
-   function RememberVertex(indx, ii,jj) {
-      let bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1))*8;
-
-      if (normindx[bin] >= 0)
-         return console.error('More than 8 vertexes for the bin');
-
-      let pos = bin+8+normindx[bin]; // position where write index
-      normindx[bin]--;
-      normindx[pos] = indx; // at this moment index can be overwritten, means all 8 position are there
-   }
-
-   function AddMainTriangle(x1,y1,z1, x2,y2,z2, x3,y3,z3, is_first) {
-
-      for (let lvl = 1; lvl < levels.length; ++lvl) {
-
-         let side1 = CheckSide(z1, levels[lvl-1], levels[lvl], levels_eps),
-             side2 = CheckSide(z2, levels[lvl-1], levels[lvl], levels_eps),
-             side3 = CheckSide(z3, levels[lvl-1], levels[lvl], levels_eps),
-             side_sum = side1 + side2 + side3;
-
-         // always show top segments
-         if (ilevels && (lvl === levels.length - 1) && (side_sum === 3) && (z1 <= main_grz_max)) {
-            side1 = side2 =  side3 = side_sum = 0;
-         }
-
-         if (side_sum === 3) continue;
-         if (side_sum === -3) return;
-
-         if (!loop) {
-            let npnts = Math.abs(side2-side1) + Math.abs(side3-side2) + Math.abs(side1-side3);
-            if (side1 === 0) ++npnts;
-            if (side2 === 0) ++npnts;
-            if (side3 === 0) ++npnts;
-
-            if ((npnts === 1) || (npnts === 2)) console.error(`FOUND npnts = ${npnts}`);
-
-            if (npnts > 2) {
-               if (nfaces[lvl] === undefined) nfaces[lvl] = 0;
-               nfaces[lvl] += npnts-2;
-            }
-
-            // check if any(contours for given level exists
-            if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                ((side1!==side2) || (side2!==side3) || (side3!==side1))) ++ngridsegments;
-
-            continue;
-         }
-
-         gridcnt = 0;
-
-         k = 0;
-         if (side1 === 0) { pntbuf[k] = x1; pntbuf[k+1] = y1; pntbuf[k+2] = z1; k += 3; }
-
-         if (side1 !== side2) {
-            // order is important, should move from 1->2 point, checked via lastpart
-            lastpart = 0;
-            if ((side1 < 0) || (side2 < 0)) AddCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl-1]);
-            if ((side1 > 0) || (side2 > 0)) AddCrossingPoint(x1,y1,z1, x2,y2,z2, levels[lvl], true);
-         }
-
-         if (side2 === 0) { pntbuf[k] = x2; pntbuf[k+1] = y2; pntbuf[k+2] = z2; k += 3; }
-
-         if (side2 !== side3) {
-            // order is important, should move from 2->3 point, checked via lastpart
-            lastpart = 0;
-            if ((side2 < 0) || (side3 < 0)) AddCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl-1]);
-            if ((side2 > 0) || (side3 > 0)) AddCrossingPoint(x2,y2,z2, x3,y3,z3, levels[lvl], true);
-         }
-
-         if (side3 === 0) { pntbuf[k] = x3; pntbuf[k+1] = y3; pntbuf[k+2] = z3; k+=3; }
-
-         if (side3 !== side1) {
-            // order is important, should move from 3->1 point, checked via lastpart
-            lastpart = 0;
-            if ((side3 < 0) || (side1 < 0)) AddCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl-1]);
-            if ((side3 > 0) || (side1 > 0)) AddCrossingPoint(x3,y3,z3, x1,y1,z1, levels[lvl], true);
-         }
-
-         if (k === 0) continue;
-         if (k < 9) { console.log('found less than 3 points', k/3); continue; }
-
-         if (grid && (gridcnt === 6)) {
-            for (let jj = 0; jj < 6; ++jj)
-               grid[gindx+jj] = gridpnts[jj];
-            gindx += 6;
-         }
-
-         // if three points and surf == 14, remember vertex for each point
-
-         let buf = pos[lvl], s = indx[lvl];
-         if (handle.donormals && (k === 9)) {
-            RememberVertex(s, i, j);
-            RememberVertex(s+3, i+1, is_first ? j+1 : j);
-            RememberVertex(s+6, is_first ? i : i+1, j+1);
-         }
-
-         for (let k1 = 3; k1 < k-3; k1 += 3) {
-            buf[s] = pntbuf[0]; buf[s+1] = pntbuf[1]; buf[s+2] = pntbuf[2]; s+=3;
-            buf[s] = pntbuf[k1]; buf[s+1] = pntbuf[k1+1]; buf[s+2] = pntbuf[k1+2]; s+=3;
-            buf[s] = pntbuf[k1+3]; buf[s+1] = pntbuf[k1+4]; buf[s+2] = pntbuf[k1+5]; s+=3;
-         }
-         indx[lvl] = s;
-
-      }
-   }
-
-   if (handle.donormals)
-      // for each bin maximal 8 points reserved
-      normindx = new Int32Array((handle.i2-handle.i1)*(handle.j2-handle.j1)*8).fill(-1);
-
-   for (loop = 0; loop < 2; ++loop) {
-      if (loop) {
-         for (let lvl = 1; lvl < levels.length; ++lvl)
-            if (nfaces[lvl]) {
-               pos[lvl] = new Float32Array(nfaces[lvl] * 9);
-               indx[lvl] = 0;
-            }
-         if (handle.dolines && (nsegments > 0))
-            lpos = new Float32Array(nsegments * 6);
-         if (handle.dogrid && (ngridsegments > 0))
-            grid = new Float32Array(ngridsegments * 6);
-      }
       for (i = handle.i1;i < handle.i2-1; ++i) {
          x1 = handle.original ? 0.5 * (arrx[i] + arrx[i+1]) : arrx[i];
          x2 = handle.original ? 0.5 * (arrx[i+1] + arrx[i+2]) : arrx[i+1];
@@ -468,35 +510,20 @@ function buildSurf3D(histo, handle, ilevels, meshFunc, linesFunc) {
             z21 = main_grz(histo.getBinContent(i+2, j+1));
             z22 = main_grz(histo.getBinContent(i+2, j+2));
 
-            AddMainTriangle(x1,y1,z11, x2,y2,z22, x1,y2,z12, true);
+            triangles.addMainTriangle(x1,y1,z11, x2,y2,z22, x1,y2,z12, true, handle, i, j);
 
-            AddMainTriangle(x1,y1,z11, x2,y1,z21, x2,y2,z22, false);
+            triangles.addMainTriangle(x1,y1,z11, x2,y1,z21, x2,y2,z22, false, handle, i, j);
 
-            AddLineSegment(x1,y2,z12, x1,y1,z11);
-            AddLineSegment(x1,y1,z11, x2,y1,z21);
+            triangles.addLineSegment(x1,y2,z12, x1,y1,z11);
+            triangles.addLineSegment(x1,y1,z11, x2,y1,z21);
 
-            if (i === handle.i2 - 2) AddLineSegment(x2,y1,z21, x2,y2,z22);
-            if (j === handle.j2 - 2) AddLineSegment(x1,y2,z12, x2,y2,z22);
+            if (i === handle.i2 - 2) triangles.addLineSegment(x2,y1,z21, x2,y2,z22);
+            if (j === handle.j2 - 2) triangles.addLineSegment(x1,y2,z12, x2,y2,z22);
          }
       }
    }
 
-   for (let lvl = 1; lvl < levels.length; ++lvl) {
-      if (pos[lvl] && meshFunc)
-         meshFunc(lvl, pos[lvl], normindx);
-   }
-
-   if (lpos && linesFunc) {
-      if (nsegments*6 !== lindx)
-         console.error(`SURF lines mismmatch nsegm=${nsegments} lindx=${lindx} diff=${nsegments*6 - lindx}`);
-      linesFunc(false, lpos);
-   }
-
-   if (grid && linesFunc) {
-      if (ngridsegments*6 !== gindx)
-         console.error(`SURF grid draw mismatch ngridsegm=${ngridsegments} gindx=${gindx} diff=${ngridsegments*6 - gindx}`);
-      linesFunc(true, grid);
-   }
+   triangles.callFuncs(meshFunc, linesFunc);
 }
 
 
@@ -883,7 +910,7 @@ class TH2Painter extends THistPainter {
          // Paint histogram axis only
          this.draw_content = false;
       } else {
-         this.draw_content = (this.gmaxbin > 0);
+         this.draw_content = this.gmaxbin > 0;
          if (!this.draw_content  && this.options.Zero && this.isTH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
@@ -3041,7 +3068,7 @@ class TH2Painter extends THistPainter {
 
       this.clear3DScene();
 
-      let need_palette = this.options.Zscale && (this.options.Color || this.options.Contour);
+      let need_palette = this.options.Zscale && this.options.canHavePalette();
 
       // draw new palette, resize frame if required
       return this.drawColorPalette(need_palette, true).then(pp => {
@@ -3095,4 +3122,4 @@ class TH2Painter extends THistPainter {
 
 } // class TH2Painter
 
-export { TH2Painter, buildHist2dContour, buildSurf3D };
+export { TH2Painter, buildHist2dContour, buildSurf3D, Triangles3DHandler };
