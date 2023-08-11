@@ -212,7 +212,42 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName) {
-      return std::string();
+      OpName = "op_" + OpName;
+      OpName = "op_" + OpName;
+      if (fShapeInput.empty() || fShapeOutput.empty()) {
+         throw std::runtime_error("TMVA SOFIE Reshape Op called to Generate without being initialized first");
+      }
+
+      // output of reshape is same as input
+      size_t length = ConvertShapeToLength(fShapeOutput);
+      if (length != ConvertShapeToLength(fShapeInput)) {
+         throw std::runtime_error("TMVA SOFIE Reshape Op : wrong output shape - is " +
+                                  ConvertShapeToString(fShapeOutput) + " and input is " +
+                                  ConvertShapeToString(fShapeInput));
+      }
+      for (auto &i : fShapeOutput) {
+         length *= i;
+      }
+
+      std::stringstream out;
+      std::string opName = "Reshape";
+      if (fOpMode == Flatten)
+         opName = "Flatten";
+      else if (fOpMode == Squeeze)
+         opName = "Squeeze";
+      else if (fOpMode == Unsqueeze)
+         opName = "Unsquueze";
+
+      out << "\n" << SP*3 << "///--------" << opName << " operator\n" << std::endl;
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNData << " = cl::sycl::accessor{buf_tensor_" << fNData;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNOutput << " = cl::sycl::accessor{buf_tensor_" << fNOutput;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+      out << "cgh.copy(acc_tensor_" << fNData << ", acc_tensor_" << fNOutput << ");\n";
+      out << SP*3 << "}).wait();\n";
+
+      return out.str();
    }
 };
 
