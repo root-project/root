@@ -360,9 +360,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
       SetColorAlpha(light);
    }
    if (fgLineJoin)
-      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
-      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 
    //- Draw bottom&right part of the box
@@ -428,9 +428,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
       SetColorAlpha(dark);
    }
    if (fgLineJoin)
-      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
-      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 }
 
@@ -625,9 +625,9 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
       if (fgLineJoin)
-         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+         PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
       if (fgLineCap)
-         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+         PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1034,9 +1034,9 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
       if (fgLineJoin)
-         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+         PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
       if (fgLineCap)
-         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+         PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1494,9 +1494,9 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
    }
    if (fgLineJoin)
-      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
-      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 }
 
@@ -1703,7 +1703,7 @@ void TSVG::SetColorAlpha(Int_t color)
    if (col) {
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
       Float_t a = col->GetAlpha();
-      if (a<1.) PrintStr(Form(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
+      if (a<1.) PrintStr(TString::Format(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
    } else {
       SetColor(1., 1., 1.);
    }
