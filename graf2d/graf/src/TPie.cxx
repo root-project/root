@@ -987,9 +987,9 @@ void TPie::Paint(Option_t *option)
       TString tmptxt  = fLabelFormat;
 
       tmptxt.ReplaceAll("%txt",fPieSlices[i]->GetTitle());
-      tmptxt.ReplaceAll("%val",Form(fValueFormat.Data(),fPieSlices[i]->GetValue()));
-      tmptxt.ReplaceAll("%frac",Form(fFractionFormat.Data(),fPieSlices[i]->GetValue()/fSum));
-      tmptxt.ReplaceAll("%perc",Form(Form("%s %s",fPercentFormat.Data(),"%s"),(fPieSlices[i]->GetValue()/fSum)*100,"%"));
+      tmptxt.ReplaceAll("%val",TString::Format(fValueFormat.Data(),fPieSlices[i]->GetValue()));
+      tmptxt.ReplaceAll("%frac",TString::Format(fFractionFormat.Data(),fPieSlices[i]->GetValue()/fSum));
+      tmptxt.ReplaceAll("%perc",TString::Format(TString::Format("%s %s",fPercentFormat.Data(),"%s").Data(),(fPieSlices[i]->GetValue()/fSum)*100,"%"));
 
       textlabel.SetTitle(tmptxt.Data());
       Double_t h = textlabel.GetYsize();

@@ -268,9 +268,9 @@ void TPaveText::EditText()
    if (!obj->InheritsFrom(TText::Class())) return;
    TText *text = (TText*)obj;
    gROOT->SetSelectedPrimitive(text);
-   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->SetSelected((TObject*)0x%zx)",
+   gROOT->ProcessLine(TString::Format("((TCanvas*)0x%zx)->SetSelected((TObject*)0x%zx)",
                            (size_t)gPad->GetCanvas(), (size_t)text));
-   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
+   gROOT->ProcessLine(TString::Format("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
                            (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)text));
    text->SetTextAttributes();
 }
