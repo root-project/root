@@ -83,8 +83,8 @@ int main(int argc, char **argv)
    gROOT->SetBatch();
 
    // Instantiate the TApplication object to be run
-   TPluginHandler *h = 0;
-   TApplication *theApp = 0;
+   TPluginHandler *h = nullptr;
+   TApplication *theApp = nullptr;
    if ((h = gROOT->GetPluginManager()->FindHandler("TApplication","server"))) {
       if (h->LoadPlugin() == 0) {
          theApp = (TApplication *) h->ExecPlugin(4, &argc, argv, fLog, logfile.Data());
@@ -118,8 +118,8 @@ FILE *RedirectOutput(TString &logfile, const char *loc)
       fprintf(stderr,"%s: RedirectOutput: enter\n", loc);
 
    // Log file under $TEMP
-   logfile = Form("%s/roots-%d-%d.log", gSystem->TempDirectory(),
-                                        gSystem->GetUid(), gSystem->GetPid());
+   logfile = TString::Format("%s/roots-%d-%d.log", gSystem->TempDirectory(),
+                                                   gSystem->GetUid(), gSystem->GetPid());
    const char *lfn = logfile.Data();
    if (loc)
       fprintf(stderr,"%s: Path to log file: %s\n", loc, lfn);
@@ -129,14 +129,14 @@ FILE *RedirectOutput(TString &logfile, const char *loc)
    FILE *flog = freopen(lfn, "w", stdout);
    if (!flog) {
       fprintf(stderr,"%s: RedirectOutput: could not freopen stdout\n", loc);
-      return 0;
+      return nullptr;
    }
 
    if (loc)
       fprintf(stderr,"%s: RedirectOutput: dup2 ...\n", loc);
    if ((dup2(fileno(stdout), fileno(stderr))) < 0) {
       fprintf(stderr,"%s: RedirectOutput: could not redirect stderr\n", loc);
-      return 0;
+      return nullptr;
    }
 
    if (loc)
@@ -144,7 +144,7 @@ FILE *RedirectOutput(TString &logfile, const char *loc)
    FILE *fLog = fopen(lfn, "r");
    if (!fLog) {
       fprintf(stderr,"%s: RedirectOutput: could not open logfile %s\n", loc, lfn);
-      return 0;
+      return nullptr;
    }
 
    if (loc)
@@ -160,7 +160,7 @@ FILE *RedirectOutput(TString &logfile, const char *loc)
 Int_t MakeCleanupScript(Int_t loglevel)
 {
    // The file path
-   TString cleanup = Form("%s/roots-%d-%d.cleanup", gSystem->TempDirectory(),
+   TString cleanup = TString::Format("%s/roots-%d-%d.cleanup", gSystem->TempDirectory(),
                                                     gSystem->GetUid(), gSystem->GetPid());
    // Open the file
    FILE *fc = fopen(cleanup.Data(), "w");
