@@ -1191,8 +1191,8 @@ void TASImage::Draw(Option_t *option)
       h = Int_t(h*cx) + 28;
       TString rname = GetName();
       rname.ReplaceAll(".", "");
-      rname += Form("\", \"%s (%d x %d)", rname.Data(), fImage->width, fImage->height);
-      rname = "new TCanvas(\"" + rname + Form("\", %d, %d);", w, h);
+      rname += TString::Format("\", \"%s (%d x %d)", rname.Data(), fImage->width, fImage->height);
+      rname = "new TCanvas(\"" + rname + TString::Format("\", %d, %d);", w, h);
       gROOT->ProcessLineFast(rname.Data());
    }
 
