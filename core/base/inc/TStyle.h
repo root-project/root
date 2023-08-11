@@ -146,6 +146,7 @@ private:
    Float_t       fYAxisExpXOffset;   ///< Y axis exponent label X offset
    Float_t       fYAxisExpYOffset;   ///< Y axis exponent label Y offset
    Int_t         fAxisMaxDigits;     ///< Number of digits above which the 10^N notation is used for axis
+   Bool_t        fOrthoCamera;       ///< Use orthographic camera with web display
 
 public:
    enum EPaperSize { kA4, kUSLetter };
@@ -288,6 +289,7 @@ public:
    Double_t         GetCandleBoxRange() const {return fCandleBoxRange;}
    Bool_t           GetCandleScaled() const {return fCandleScaled;}
    Bool_t           GetViolinScaled() const {return fViolinScaled;}
+   Bool_t           GetOrthoCamera() const {return fOrthoCamera;}
 
    Bool_t           IsReading() const {return fIsReading;}
    void             Paint(Option_t *option="") override;
@@ -419,11 +421,12 @@ public:
    void             SetCandleBoxRange(Double_t bRange=0.5);
    void             SetCandleScaled(Bool_t on=kFALSE) {fCandleScaled=on;}
    void             SetViolinScaled(Bool_t on=kTRUE) {fViolinScaled=on;}
+   void             SetOrthoCamera(Bool_t on=kTRUE) {fOrthoCamera=on;}
 
    void             SavePrimitive(std::ostream &out, Option_t * = "") override;
    void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDefOverride(TStyle, 21);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 22);  //A collection of all graphics attributes
 };
 
 
