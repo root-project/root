@@ -3047,13 +3047,35 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    }
 
    std::string normalizedName;
-   Bool_t checkTable = kFALSE;
 
+   // Check if this is a fundamental type already in the typesystem to delay
+   // as much as possible any lookup
    if (!cl) {
       {
          TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
          TClassEdit::GetNormalizedName(normalizedName, name);
       }
+      std::string name_no_std = name;
+      TClassEdit::RemoveStd(name_no_std);
+      auto lot = reinterpret_cast<THashTable *>(gROOT->GetListOfTypes());
+      auto theType = reinterpret_cast<TDataType *>(lot->THashTable::FindObject(name_no_std.c_str()));
+      if (theType && -1 != theType->GetType()) {
+         return nullptr;
+      } else {
+         {
+            TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+            TInterpreter::SuspendAutoParsing autoparseOff(gInterpreter);
+            theType = reinterpret_cast<TDataType *>(lot->FindObject(name));
+         }
+         // If it is a typedef, check that this is not a class
+         if (theType && -1 != theType->GetType())
+            return nullptr;
+      }
+   }
+
+   Bool_t checkTable = kFALSE;
+
+   if (!cl) {
       // Try the normalized name.
       if (normalizedName != name) {
          cl = (TClass*)gROOT->GetListOfClasses()->FindObject(normalizedName.c_str());

@@ -112,7 +112,7 @@ static size_t StdLen(const std::string_view name)
 /// Remove std:: and any potential inline namespace (well compiler detail
 /// namespace.
 
-static void RemoveStd(std::string &name, size_t pos = 0)
+void TClassEdit::RemoveStd(std::string &name, size_t pos)
 {
    size_t len = StdLen({name.data()+pos,name.length()-pos});
    if (len) {
@@ -124,7 +124,7 @@ static void RemoveStd(std::string &name, size_t pos = 0)
 /// Remove std:: and any potential inline namespace (well compiler detail
 /// namespace.
 
-static void RemoveStd(std::string_view &name)
+void TClassEdit::RemoveStd(std::string_view &name)
 {
    size_t len = StdLen(name);
    if (len) {

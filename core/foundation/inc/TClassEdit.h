@@ -180,6 +180,8 @@ namespace TClassEdit {
    ROOT::ESTLType STLKind(std::string_view type);    //Kind of stl container
    inline ROOT::ESTLType STLKind(ROOT::Internal::TStringView type) { return STLKind(std::string_view(type)); }
    int         STLArgs   (int kind);            //Min number of arguments without allocator
+   void RemoveStd(std::string &name, size_t pos = 0);
+   void RemoveStd(std::string_view &name);
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    std::string ShortType (const char *typeDesc, int mode);
    std::string InsertStd(const char *tname);
