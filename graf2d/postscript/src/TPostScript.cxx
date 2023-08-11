@@ -471,7 +471,7 @@ void TPostScript::Close(Option_t *)
       }
 
       // Rename the file fFileName
-      TString tmpname = Form("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
+      TString tmpname = TString::Format("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
       if (gSystem->Rename( fFileName.Data() , tmpname.Data())) {
          Error("Text", "Cannot open temporary file: %s\n", tmpname.Data());
          return;
@@ -2762,14 +2762,14 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t vy  = (y - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
    Double_t cmy = fYsize*(gPad->GetAbsYlowNDC()+vy*gPad->GetAbsHNDC());
    WriteReal((288.*cmy)/2.54);
-   PrintStr(Form(" t %d r ", psangle));
-   if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
-   if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
+   PrintStr(TString::Format(" t %d r ", psangle));
+   if(txalh == 2) PrintStr(TString::Format(" %d 0 t ", -psCharsLength/2));
+   if(txalh == 3) PrintStr(TString::Format(" %d 0 t ", -psCharsLength));
    PrintStr(gEnv->GetValue(psfont[font-1][0], psfont[font-1][1]));
    if (font != 15) {
-      PrintStr(Form(" findfont %g sf 0 0 m ",fontsize));
+      PrintStr(TString::Format(" findfont %g sf 0 0 m ",fontsize));
    } else {
-      PrintStr(Form(" findfont %g sf 0 0 m ita ",fontsize));
+      PrintStr(TString::Format(" findfont %g sf 0 0 m ita ",fontsize));
    }
 
    if (kerning) {
@@ -2937,15 +2937,15 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    // Output text position and angle.
    WriteInteger(XtoPS(x));
    WriteInteger(YtoPS(y));
-   PrintStr(Form(" t %d r ", psangle));
-   if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
-   if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
+   PrintStr(TString::Format(" t %d r ", psangle));
+   if(txalh == 2) PrintStr(TString::Format(" %d 0 t ", -psCharsLength/2));
+   if(txalh == 3) PrintStr(TString::Format(" %d 0 t ", -psCharsLength));
    MustEmbed[font-1] = kTRUE; // This font will be embedded in the file at EOF time.
    PrintStr(gEnv->GetValue(psfont[font-1][0], psfont[font-1][1]));
-   PrintStr(Form(" findfont %g sf 0 0 m ",fontsize));
+   PrintStr(TString::Format(" findfont %g sf 0 0 m ",fontsize));
 
    // Output text.
-   if (len > 1) PrintStr(Form("%d ", len));
+   if (len > 1) PrintStr(TString::Format("%d ", len));
    for(Int_t i = 0; i < len; i++) {
       // Adobe Glyph Naming Convention
       // http://www.adobe.com/devnet/opentype/archives/glyph.html
@@ -2958,16 +2958,16 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
          // Named glyph from AGL 1.2
          const unsigned long index =
          lower - adobe_glyph_ucs;
-         PrintStr(Form("/%s ", adobe_glyph_name[index]));
+         PrintStr(TString::Format("/%s ", adobe_glyph_name[index]));
       }
       else if((unsigned int)chars[i] < 0xffff) {
          // Unicode BMP
-         PrintStr(Form("/uni%04X ",
+         PrintStr(TString::Format("/uni%04X ",
                        (unsigned int)chars[i]));
       }
       else {
          // Unicode supplemental planes
-         PrintStr(Form("/u%04X ",
+         PrintStr(TString::Format("/u%04X ",
                        (unsigned int)chars[i]));
       }
    }
