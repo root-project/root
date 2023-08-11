@@ -2140,6 +2140,11 @@ void TStyle::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<pre<<"tmpStyle->SetPadTickY("        <<GetPadTickY()         <<");"<<std::endl;
    out<<pre<<"tmpStyle->SetOrthoCamera("     <<asBool(GetOrthoCamera())<<");" <<std::endl;
 
+   out<<pre<<"tmpStyle->SetCandleWhiskerRange("<<GetCandleWhiskerRange()<<");" <<std::endl;
+   out<<pre<<"tmpStyle->SetCandleBoxRange("  <<GetCandleBoxRange()<<");" <<std::endl;
+   out<<pre<<"tmpStyle->SetCandleScaled("    <<asBool(GetCandleScaled())<<");" <<std::endl;
+   out<<pre<<"tmpStyle->SetViolinScaled("    <<asBool(GetViolinScaled())<<");" <<std::endl;
+
    // fPaperSizeX, fPaperSizeY
    out<<pre<<"tmpStyle->SetPaperSize("      <<fPaperSizeX<<", "<<fPaperSizeY<<");"<<std::endl;
 
