@@ -6,14 +6,14 @@ sap.ui.define([
 ], function (Controller, JSONModel, Fragment, HTML) {
    "use strict";
 
-   return Controller.extend("rootui5.canv.controller.Ged", {
+   return Controller.extend('rootui5.canv.controller.Ged', {
 
       currentPainter: null,
 
       gedFragments : [],
 
       onInit() {
-         let model = new JSONModel({ SelectedClass: "none" });
+         let model = new JSONModel({ SelectedClass: 'none' });
          this.getView().setModel(model);
 
          let data = this.getView().getViewData();
@@ -35,16 +35,15 @@ sap.ui.define([
       /** @summary Returns EAxisBits member
         * @private */
       getAxisBit(name) {
-         return this.jsroot?.EAxisBits ? this.jsroot?.EAxisBits[name] : 1 ;
+         return this.jsroot?.EAxisBits ? this.jsroot?.EAxisBits[name] : 1;
       },
-
 
       cleanupGed() {
          // empty fragments
-         this.getView().byId("ged_page").removeAllContent();
+         this.getView().byId('ged_page').removeAllContent();
 
          // set dummy model
-         this.getView().setModel(new JSONModel({ SelectedClass: "none" }));
+         this.getView().setModel(new JSONModel({ SelectedClass: 'none' }));
 
          // remove references
          this.currentPainter = null;
@@ -70,7 +69,7 @@ sap.ui.define([
          fragm.ged_fragment = true; // mark as ged fragment
 
          let html = new HTML();
-         html.setContent("<hr>");
+         html.setContent('<hr>');
          html.setTooltip(kind);
          page.addContent(html);
 
@@ -89,15 +88,12 @@ sap.ui.define([
          console.log('Model property changes', pars.path, pars.value, data._kind);
 
          if (data._handle) {
-            //var subname = pars.path.substr(1);
-            //if (subname in data._handle) data._handle[subname] = pars.value;
-
             if (typeof data._handle.verifyDirectChange === 'function')
                 data._handle.verifyDirectChange(data._painter);
             data._handle.changed = true;
          }
 
-         let exec = "", item = pars.path.substr(1), obj;
+         let exec = '', item = pars.path.substr(1), obj;
 
          if (data._painter) {
             obj = data._painter.snapid ? data._painter.getObject() : null;
@@ -146,15 +142,14 @@ sap.ui.define([
       getAxisHandle() {
          if (this.currentPainter)
             switch (this.currentPlace) {
-               case "xaxis": return this.currentPainter.x_handle;
-               case "yaxis": return this.currentPainter.y_handle;
-               case "zaxis": return this.currentPainter.z_handle;
+               case 'xaxis': return this.currentPainter.x_handle;
+               case 'yaxis': return this.currentPainter.y_handle;
+               case 'zaxis': return this.currentPainter.z_handle;
             }
          return null;
       },
 
       setAxisModel(model) {
-
          let obj, painter, is_gaxis = !this.currentPlace, axis_chopt = '', axis_ticksize = 0, color_title = '';
          if (is_gaxis) {
             painter = this.currentPainter;
@@ -190,7 +185,7 @@ sap.ui.define([
       processAxisModelChange(evnt /*, data */) {
          let pars = evnt.getParameters(),
              item = pars.path.substr(1),
-             exec = "",
+             exec = '',
              painter = this.currentPainter,
              kind = this.currentPlace,
              is_gaxis = !kind,
@@ -201,12 +196,10 @@ sap.ui.define([
 
          if (!this.currentPadPainter || !axis) return;
 
-         if (!is_gaxis && (typeof kind == 'string') && (kind.indexOf("axis") == 1))
+         if (!is_gaxis && (typeof kind == 'string') && (kind.indexOf('axis') == 1))
             kind = kind.slice(0,1);
          else
             kind = '';
-
-         // console.log(`Change axis ${kind} item ${item} value ${pars.value}  axis ${axis._typename}`);
 
          switch(item) {
             case 'axis/fTitle':
@@ -302,7 +295,7 @@ sap.ui.define([
          model.setData(data);
       },
 
-      processRAxisModelChange: function(evnt, data) {
+      processRAxisModelChange(evnt, data) {
          let pars = evnt.getParameters(),
              item = pars.path.substr(1);
 
@@ -310,16 +303,16 @@ sap.ui.define([
          if (!handle) return;
 
          switch(item) {
-            case "logbase": handle.changeAxisLog((pars.value == 3) ? Math.exp(1) : pars.value); break;
-            case "handle/ticksColor": handle.changeAxisAttr(1, "ticks_color_name", pars.value); break;
-            case "ticks_size": handle.changeAxisAttr(1, "ticks_size", pars.value); break;
-            case "handle/ticksSide": handle.changeAxisAttr(1, "ticks_side", pars.value); break;
-            case "labels_offset": handle.changeAxisAttr(1, "labels_offset", pars.value); break;
-            case "labels_rotate": handle.changeAxisAttr(1, "labels_angle", pars.value ? 180 : 0); break;
-            case "handle/fTitle": handle.changeAxisAttr(1, "title", pars.value); break;
-            case "title_offset": handle.changeAxisAttr(1, "title_offset", pars.value); break;
-            case "handle/titlePos": handle.changeAxisAttr(1, "title_position", pars.value); break;
-            case "title_rotate": handle.changeAxisAttr(1, "title_angle", pars.value ? 180 : 0); break;
+            case 'logbase': handle.changeAxisLog((pars.value == 3) ? Math.exp(1) : pars.value); break;
+            case 'handle/ticksColor': handle.changeAxisAttr(1, 'ticks_color_name', pars.value); break;
+            case 'ticks_size': handle.changeAxisAttr(1, 'ticks_size', pars.value); break;
+            case 'handle/ticksSide': handle.changeAxisAttr(1, 'ticks_side', pars.value); break;
+            case 'labels_offset': handle.changeAxisAttr(1, 'labels_offset', pars.value); break;
+            case 'labels_rotate': handle.changeAxisAttr(1, 'labels_angle', pars.value ? 180 : 0); break;
+            case 'handle/fTitle': handle.changeAxisAttr(1, 'title', pars.value); break;
+            case 'title_offset': handle.changeAxisAttr(1, 'title_offset', pars.value); break;
+            case 'handle/titlePos': handle.changeAxisAttr(1, 'title_position', pars.value); break;
+            case 'title_rotate': handle.changeAxisAttr(1, 'title_angle', pars.value ? 180 : 0); break;
          }
       },
 
@@ -331,16 +324,15 @@ sap.ui.define([
 
          opts.Lego = parseInt(opts.Lego);
 
-         let cl = this.getView().getModel().getProperty("/SelectedClass");
+         let cl = this.getView().getModel().getProperty('/SelectedClass');
 
-         if ((typeof cl == "string") && opts.Mode3D && (cl.indexOf("ROOT::Experimental::RHist") == 0))
+         if ((typeof cl == 'string') && opts.Mode3D && (cl.indexOf('ROOT::Experimental::RHist') == 0))
             opts.Lego = 12;
 
          opts.Contor = parseInt(opts.Contor);
          opts.ErrorKind = parseInt(opts.ErrorKind);
 
-         if (this.currentPainter)
-            this.currentPainter.interactiveRedraw("pad","drawopt");
+         this.currentPainter?.interactiveRedraw('pad', 'drawopt');
       },
 
       async onObjectSelect(padpainter, painter, place) {
@@ -351,7 +343,7 @@ sap.ui.define([
          this.currentPainter = painter;
          this.currentPlace = place;
 
-         let obj = painter.getObject(place), selectedClass = "";
+         let obj = painter.getObject(place), selectedClass = '';
 
          if (place == 'xaxis' && painter.x_handle) {
             painter = painter.x_handle;
@@ -366,15 +358,15 @@ sap.ui.define([
             selectedClass = obj ? obj._typename : painter.getObjectHint();
          }
 
-         this.getView().getModel().setProperty("/SelectedClass", selectedClass);
+         this.getView().getModel().setProperty('/SelectedClass', selectedClass);
 
-         let oPage = this.getView().byId("ged_page");
+         let oPage = this.getView().byId('ged_page');
          oPage.removeAllContent();
 
-         if (selectedClass == "RAttrAxis") {
+         if (selectedClass == 'RAttrAxis') {
             let model = new JSONModel({});
             this.setRAxisModel(model);
-            model.attachPropertyChange({ _kind: "RAttrAxis" }, this.processRAxisModelChange, this);
+            model.attachPropertyChange({ _kind: 'RAttrAxis' }, this.processRAxisModelChange, this);
             await this.addFragment(oPage, 'RAxis', model);
             return;
          }
@@ -443,10 +435,8 @@ sap.ui.define([
       onObjectRedraw(padpainter, painter) {
          if ((this.currentPadPainter !== padpainter) || (this.currentPainter !== painter)) return;
 
-         // console.log('GED sees selected object redraw');
-
-         let page = this.getView().byId("ged_page");
-         let cont = page.getContent();
+         let page = this.getView().byId('ged_page'),
+             cont = page.getContent();
 
          for (let n = 0; n < cont.length; ++n)
             if (cont[n] && cont[n].ged_fragment) {
@@ -468,11 +458,11 @@ sap.ui.define([
       padEventsReceiver(evnt) {
          if (!evnt) return;
 
-         if (evnt.what == "select")
+         if (evnt.what == 'select')
             this.onObjectSelect(evnt.padpainter, evnt.painter, evnt.place);
-         else if (evnt.what == "redraw")
+         else if (evnt.what == 'redraw')
             this.onObjectRedraw(evnt.padpainter, evnt.painter);
-         else if (evnt.what == "padredraw")
+         else if (evnt.what == 'padredraw')
             this.onPadRedraw(evnt.padpainter);
       }
 

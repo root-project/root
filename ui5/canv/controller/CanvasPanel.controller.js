@@ -104,7 +104,7 @@ sap.ui.define([
 
             if (this.canvas_painter) {
                this.canvas_painter.setDom(dom.lastChild);
-               this.canvas_painter.setPadName("");
+               this.canvas_painter.setPadName('');
             }
 
             if (this.canvas_painter && this.canvas_painter._window_handle) {

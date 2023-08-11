@@ -30,13 +30,13 @@ sap.ui.define([
    "use strict";
 
    function chk_icon(flag) {
-      return flag ? "sap-icon://accept" : "sap-icon://decline";
+      return flag ? 'sap-icon://accept' : 'sap-icon://decline';
    }
 
    return Controller.extend('rootui5.canv.controller.Canvas', {
 
       onInit() {
-         this._Page = this.getView().byId("CanvasMainPage");
+         this._Page = this.getView().byId('CanvasMainPage');
 
          this.bottomVisible = false;
 
@@ -46,7 +46,7 @@ sap.ui.define([
                                      ToolbarIcon: chk_icon(false),
                                      TooltipIcon: chk_icon(true),
                                      AutoResizeIcon: chk_icon(true),
-                                     StatusLbl1: "", StatusLbl2: "", StatusLbl3: "", StatusLbl4: "",
+                                     StatusLbl1: '', StatusLbl2: '', StatusLbl3: '', StatusLbl4: '',
                                      Standalone: true, isRoot6: true, canResize: true, FixedSize: false });
          this.getView().setModel(model);
 
@@ -56,7 +56,7 @@ sap.ui.define([
 
          if (cp) {
 
-            if (cp.embed_canvas) model.setProperty("/Standalone", false);
+            if (cp.embed_canvas) model.setProperty('/Standalone', false);
 
             this.getView().byId('MainPanel').getController().setPainter(cp);
 
@@ -82,7 +82,7 @@ sap.ui.define([
 
             cp.showUI5Panel = this.showLeftArea.bind(this);
 
-            if (cp.v7canvas) model.setProperty("/isRoot6", false);
+            if (cp.v7canvas) model.setProperty('/isRoot6', false);
 
             cp.enforceCanvasSize = !cp.embed_canvas && cp.online_canvas;
 
@@ -118,17 +118,17 @@ sap.ui.define([
             return true;
          }
 
-         if (method.fName == "Inspect") {
+         if (method.fName == 'Inspect') {
             painter.showInspector();
             return true;
          }
 
-         if (method.fName == "FitPanel") {
-            this.showLeftArea("FitPanel");
+         if (method.fName == 'FitPanel') {
+            this.showLeftArea('FitPanel');
             return true;
          }
 
-         if (method.fName == "Editor") {
+         if (method.fName == 'Editor') {
             this.activateGed(painter);
             return true;
          }
@@ -148,7 +148,7 @@ sap.ui.define([
             canvp.enforceCanvasSize = true;
 
             if (typeof canvp.processChanges == 'function')
-               canvp.processChanges("sbits", canvp);
+               canvp.processChanges('sbits', canvp);
 
             return true;
          });
@@ -173,7 +173,7 @@ sap.ui.define([
 
       closeMethodDialog(painter, method, menu_obj_id) {
 
-         let args = "";
+         let args = '';
 
          if (method) {
             let cont = this.methodDialog.getContent();
@@ -187,9 +187,9 @@ sap.ui.define([
                let arg = method.fArgs[k],
                    value = items[k].getContent()[0].getValue();
 
-               if (value === "") value = arg.fDefault;
+               if (value === '') value = arg.fDefault;
 
-               if ((arg.fTitle=="Option_t*") || (arg.fTitle=="const char*")) {
+               if ((arg.fTitle=='Option_t*') || (arg.fTitle=='const char*')) {
                   // check quotes,
                   // TODO: need to make more precise checking of escape characters
                   if (!value) value = '""';
@@ -197,7 +197,7 @@ sap.ui.define([
                   if (value[value.length-1] != '"') value += '"';
                }
 
-               args += (k > 0 ? "," : "") + value;
+               args += (k > 0 ? ',' : '') + value;
             }
          }
 
@@ -213,7 +213,7 @@ sap.ui.define([
             console.log(`execute method for object ${menu_obj_id} exec ${exec}`);
 
             let canvp = this.getCanvasPainter(),
-                p = menu_obj_id.indexOf("#");
+                p = menu_obj_id.indexOf('#');
 
             if (canvp?.v7canvas)
                canvp.submitExec(painter, exec, (p > 0) ? menu_obj_id.slice(p+1) : '');
@@ -226,15 +226,15 @@ sap.ui.define([
 
          // TODO: deliver class name together with menu items
          method.fClassName = painter.getClassName();
-         if ((menu_obj_id.indexOf("#x") > 0) || (menu_obj_id.indexOf("#y") > 0) || (menu_obj_id.indexOf("#z") > 0))
-            method.fClassName = "TAxis";
+         if ((menu_obj_id.indexOf('#x') > 0) || (menu_obj_id.indexOf('#y') > 0) || (menu_obj_id.indexOf('#z') > 0))
+            method.fClassName = 'TAxis';
 
          let items = [];
 
          for (let n = 0; n < method.fArgs.length; ++n) {
             let arg = method.fArgs[n];
             arg.fValue = arg.fDefault;
-            if (arg.fValue == '""') arg.fValue = "";
+            if (arg.fValue == '""') arg.fValue = '';
             let item = new InputListItem({
                label: arg.fName + ' (' +arg.fTitle + ')',
                content: new Input({ placeholder: arg.fName, value: arg.fValue })
@@ -255,23 +255,23 @@ sap.ui.define([
              })
          });
 
-         // this.getView().getModel().setProperty("/Method", method);
+         // this.getView().getModel().setProperty('/Method', method);
          //to get access to the global model
          // this.getView().addDependent(this.methodDialog);
 
-         this.methodDialog.addStyleClass("sapUiSizeCompact");
+         this.methodDialog.addStyleClass('sapUiSizeCompact');
 
          this.methodDialog.open();
       },
 
       onFileMenuAction(oEvent) {
-         //let oItem = oEvent.getParameter("item"),
-         //    sItemPath = "";
+         //let oItem = oEvent.getParameter('item'),
+         //    sItemPath = '';
          //while (oItem instanceof sap.m.MenuItem) {
-         //   sItemPath = oItem.getText() + " > " + sItemPath;
+         //   sItemPath = oItem.getText() + ' > ' + sItemPath;
          //   oItem = oItem.getParent();
          //}
-         //sItemPath = sItemPath.substr(0, sItemPath.lastIndexOf(" > "));
+         //sItemPath = sItemPath.substr(0, sItemPath.lastIndexOf(' > '));
 
          let p = this.getCanvasPainter();
          if (!p) return;
@@ -279,18 +279,18 @@ sap.ui.define([
          let name = oEvent.getParameter('item').getText();
 
          switch (name) {
-            case "Close canvas":
+            case 'Close canvas':
                this.onCloseCanvasPress();
                break;
-            case "Interrupt":
-               p.sendWebsocket("INTERRUPT");
+            case 'Interrupt':
+               p.sendWebsocket('INTERRUPT');
                break;
-            case "Reload":
+            case 'Reload':
                if (typeof p._websocket?.askReload == 'function')
                   p._websocket.askReload();
                break;
-            case "Quit ROOT":
-               p.sendWebsocket("QUIT");
+            case 'Quit ROOT':
+               p.sendWebsocket('QUIT');
                break;
             case 'Canvas.png':
             case 'Canvas.jpeg':
@@ -314,7 +314,7 @@ sap.ui.define([
                   title: 'Select file name to save canvas',
                   filter: 'Png files',
                   filters,
-                  // working_path: "/Home",
+                  // working_path: '/Home',
                   onOk: fname => {
                      if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg'))
                          p.saveCanvasAsFile(fname);
@@ -349,19 +349,19 @@ sap.ui.define([
       },
 
       onReloadPress() {
-         this.getCanvasPainter()?.sendWebsocket("RELOAD");
+         this.getCanvasPainter()?.sendWebsocket('RELOAD');
       },
 
       isGedEditor() {
-         return this.getView().getModel().getProperty("/LeftArea") == "Ged";
+         return this.getView().getModel().getProperty('/LeftArea') == 'Ged';
       },
 
       showGed(new_state) {
-         return this.showLeftArea(new_state ? "Ged" : "");
+         return this.showLeftArea(new_state ? 'Ged' : '');
       },
 
       cleanupIfGed() {
-         let ged = this.getLeftController("Ged"),
+         let ged = this.getLeftController('Ged'),
              p = this.getCanvasPainter();
          if (p) p.registerForPadEvents(null);
          if (ged) {
@@ -373,16 +373,16 @@ sap.ui.define([
       },
 
       getLeftController(name) {
-         if (this.getView().getModel().getProperty("/LeftArea") != name)
+         if (this.getView().getModel().getProperty('/LeftArea') != name)
             return null;
-         let split = this.getView().byId("MainAreaSplitter"),
+         let split = this.getView().byId('MainAreaSplitter'),
              cont = split ? split.getContentAreas() : [];
          return cont && cont[0] && cont[0].getController ? cont[0].getController() : null;
       },
 
       toggleGedEditor() {
          if (this.isGedEditor())
-            this.showLeftArea("");
+            this.showLeftArea('');
          else
             this.activateGed(this.getCanvasPainter());
       },
@@ -396,8 +396,8 @@ sap.ui.define([
          if (!split || (!curr && !panel_name) || (curr === panel_name))
             return Promise.resolve(null);
 
-         model.setProperty("/LeftArea", panel_name);
-         model.setProperty("/GedIcon", chk_icon(panel_name == 'Ged'));
+         model.setProperty('/LeftArea', panel_name);
+         model.setProperty('/GedIcon', chk_icon(panel_name == 'Ged'));
 
          // first need to remove existing
          if (curr) {
@@ -413,10 +413,10 @@ sap.ui.define([
 
          let viewName = panel_name;
 
-         if (panel_name == "FitPanel")
-            viewName = "rootui5.fitpanel.view.FitPanel";
-         else if (panel_name.indexOf(".") < 0)
-            viewName = "rootui5.canv.view." + panel_name;
+         if (panel_name == 'FitPanel')
+            viewName = 'rootui5.fitpanel.view.FitPanel';
+         else if (panel_name.indexOf('.') < 0)
+            viewName = 'rootui5.canv.view.' + panel_name;
 
          let viewData = canvp.getUi5PanelData(panel_name);
          viewData.masterPanel = this;
@@ -438,7 +438,7 @@ sap.ui.define([
 
             split.insertContentArea(oView, 0);
 
-            if (panel_name === "Ged") {
+            if (panel_name === 'Ged') {
                let ged = oView.getController();
                if (ged && (typeof canvp?.registerForPadEvents == 'function')) {
                   canvp.registerForPadEvents(ged.padEventsReceiver.bind(ged));
@@ -470,7 +470,7 @@ sap.ui.define([
 
          return ctrl.getRenderPromise().then(dom => {
             dom.innerHTML = ''; // delete everything
-            dom.style.overflow = "hidden";
+            dom.style.overflow = 'hidden';
             return cp.drawObject(dom, obj, opt);
          }).then(painter => {
             ctrl.setObjectPainter(painter);
@@ -544,10 +544,10 @@ sap.ui.define([
 
       showCanvasStatus(text1, text2, text3, text4) {
          let model = this.getView().getModel();
-         model.setProperty("/StatusLbl1", text1);
-         model.setProperty("/StatusLbl2", text2);
-         model.setProperty("/StatusLbl3", text3);
-         model.setProperty("/StatusLbl4", text4);
+         model.setProperty('/StatusLbl1', text1);
+         model.setProperty('/StatusLbl2', text2);
+         model.setProperty('/StatusLbl3', text3);
+         model.setProperty('/StatusLbl4', text4);
       },
 
       isStatusShown() {
@@ -555,10 +555,10 @@ sap.ui.define([
       },
 
       toggleShowStatus(new_state) {
-         if ((new_state === undefined) || (new_state == "toggle"))
+         if ((new_state === undefined) || (new_state == 'toggle'))
             new_state = !this.isStatusShown();
 
-         this.getView().getModel().setProperty("/StatusIcon", chk_icon(new_state));
+         this.getView().getModel().setProperty('/StatusIcon', chk_icon(new_state));
 
          if (this.isStatusShown() != new_state) {
 
@@ -566,17 +566,17 @@ sap.ui.define([
             let canvp = this.getCanvasPainter();
             if (canvp) {
                canvp.enforceCanvasSize = true;
-               canvp.processChanges("sbits", canvp);
+               canvp.processChanges('sbits', canvp);
             }
          }
       },
 
       toggleToolBar(new_state) {
-         if (new_state === undefined) new_state = !this.getView().getModel().getProperty("/ToolbarIcon");
+         if (new_state === undefined) new_state = !this.getView().getModel().getProperty('/ToolbarIcon');
 
          this._Page.setShowSubHeader(new_state);
 
-         this.getView().getModel().setProperty("/ToolbarIcon", chk_icon(new_state));
+         this.getView().getModel().setProperty('/ToolbarIcon', chk_icon(new_state));
       },
 
       toggleToolTip(new_state) {
@@ -585,11 +585,11 @@ sap.ui.define([
          if (new_state === undefined)
             new_state = p ? !p.isTooltipAllowed() : true;
 
-         this.getView().getModel().setProperty("/TooltipIcon", chk_icon(new_state));
+         this.getView().getModel().setProperty('/TooltipIcon', chk_icon(new_state));
 
          if (p) {
             p.setTooltipAllowed(new_state);
-            p.processChanges("sbits", p);
+            p.processChanges('sbits', p);
          }
       },
 
@@ -598,9 +598,9 @@ sap.ui.define([
       },
 
       toggleMenuBar(new_state) {
-         if ((new_state === undefined) || (new_state == "toggle"))
+         if ((new_state === undefined) || (new_state == 'toggle'))
             new_state = !this._Page.getShowHeader();
-         this.getView().getModel().setProperty("/MenuBarIcon", chk_icon(new_state));
+         this.getView().getModel().setProperty('/MenuBarIcon', chk_icon(new_state));
 
          if (this.isMenuBarShow() != new_state) {
             let canvp = this.getCanvasPainter();
@@ -613,11 +613,11 @@ sap.ui.define([
       onDivideDialog() {
          if (!this.oDivideDialog) {
             this.oDivideDialog = new Dialog({
-               title: "Divide canvas",
+               title: 'Divide canvas',
                content: new Input({ placeholder: 'input N or NxM', value: '{/divideArg}' }),
                beginButton: new Button({
                   type: ButtonType.Emphasized,
-                  text: "OK",
+                  text: 'OK',
                   press: () => {
                      let arg = this.getView().getModel().getProperty('/divideArg');
                      this.oDivideDialog.close();
@@ -627,7 +627,7 @@ sap.ui.define([
                   }
                }),
                endButton: new Button({
-                  text: "Close",
+                  text: 'Close',
                   press: () => {
                      this.oDivideDialog.close();
                   }
@@ -665,14 +665,14 @@ sap.ui.define([
       },
 
       onViewMenuAction(oEvent) {
-         let item = oEvent.getParameter("item");
+         let item = oEvent.getParameter('item');
 
          switch (item.getText()) {
-            case "Menu": this.toggleMenuBar(); break;
-            case "Editor": this.toggleGedEditor(); break;
-            case "Event statusbar": this.toggleShowStatus(); break;
-            case "Toolbar": this.toggleToolBar(); break;
-            case "Tooltip info": this.toggleToolTip(); break;
+            case 'Menu': this.toggleMenuBar(); break;
+            case 'Editor': this.toggleGedEditor(); break;
+            case 'Event statusbar': this.toggleShowStatus(); break;
+            case 'Toolbar': this.toggleToolBar(); break;
+            case 'Tooltip info': this.toggleToolTip(); break;
          }
       },
 
@@ -700,14 +700,14 @@ sap.ui.define([
       },
 
       onToolsMenuAction(oEvent) {
-         let item = oEvent.getParameter("item"),
+         let item = oEvent.getParameter('item'),
              name = item.getText();
 
-         if (name != "Fit panel") return;
+         if (name != 'Fit panel') return;
 
-         let curr = this.getView().getModel().getProperty("/LeftArea");
+         let curr = this.getView().getModel().getProperty('/LeftArea');
 
-         this.showLeftArea(curr == "FitPanel" ? "" : "FitPanel");
+         this.showLeftArea(curr == 'FitPanel' ? '' : 'FitPanel');
       },
 
       showMessage(msg) {
@@ -717,11 +717,11 @@ sap.ui.define([
       /** @summary this function call when section state changed from server side */
       showSection(that, on) {
          switch(that) {
-            case "Menu": this.toggleMenuBar(on); break;
-            case "StatusBar": this.toggleShowStatus(on); break;
-            case "Editor": return this.showGed(on);
-            case "ToolBar": this.toggleToolBar(on); break;
-            case "ToolTips": this.toggleToolTip(on); break;
+            case 'Menu': this.toggleMenuBar(on); break;
+            case 'StatusBar': this.toggleShowStatus(on); break;
+            case 'Editor': return this.showGed(on);
+            case 'ToolBar': this.toggleToolBar(on); break;
+            case 'ToolTips': this.toggleToolTip(on); break;
          }
          return Promise.resolve(true);
       }

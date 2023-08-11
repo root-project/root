@@ -7,14 +7,14 @@ sap.ui.define([
 
    "use strict";
 
-   var ColorButton = Button.extend("rootui5.canv.controller.ColorButton", {
+   let ColorButton = Button.extend('rootui5.canv.controller.ColorButton', {
       metadata: {
          properties: {
-            attrcolor : { type : "string", group : "Misc", defaultValue : null }
+            attrcolor : { type: 'string', group: 'Misc', defaultValue: null }
          }
       },
       renderer: ButtonRenderer.render,
-      init: function() {
+      init() {
          // svg images are always loaded without @2
          this.addEventDelegate({
             onAfterRendering: function() { this._setColor(); }
@@ -23,7 +23,7 @@ sap.ui.define([
    });
 
    ColorButton.prototype._setColor = function() {
-      this.$().children().css('background-color', this.getProperty("attrcolor"));
+      this.$().children().css('background-color', this.getProperty('attrcolor'));
    }
 
    ColorButton.prototype.firePress = function(args) {
@@ -41,10 +41,10 @@ sap.ui.define([
             content: this.colorPicker,
             beginButton: new Button({
                text: 'Apply',
-               press: function () {
+               press() {
                   if (that.colorPicker) {
-                     var col = that.colorPicker.getColorString();
-                      that.setProperty("attrcolor", col);
+                     let col = that.colorPicker.getColorString();
+                     that.setProperty('attrcolor', col);
                   }
                   that.colorDialog.close();
                }
@@ -58,8 +58,7 @@ sap.ui.define([
          });
       }
 
-      var col = this.getProperty("attrcolor");
-
+      let col = this.getProperty('attrcolor');
       this.colorPicker.setColorString(col);
       this.colorDialog.open();
    }
