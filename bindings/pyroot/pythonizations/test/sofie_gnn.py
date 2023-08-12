@@ -3,6 +3,10 @@ import ROOT
 
 import numpy as np
 from numpy.testing import assert_almost_equal
+
+if np.__version__ > "1.19":
+    raise RuntimeError(f"This test requires NumPy version 1.19 or lower")
+
 import graph_nets as gn
 from graph_nets import utils_tf
 import sonnet as snt
