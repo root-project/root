@@ -615,7 +615,179 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
 template<typename T>
 auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
 -> std::string {
-   return std::string();
+
+   OpName = "op_" + OpName;
+	std::stringstream out;
+
+	size_t seq_length = (fAttrLayout == 0) ? fShapeX[0] : fShapeX[1];
+	size_t batch_size = (fAttrLayout == 0) ? fShapeX[1] : fShapeX[0];
+	size_t input_size = fShapeX[2];
+   size_t num_directions = fShapeW[0];
+   
+   // set the input
+   if (fAttrLayout == 0) {
+      if (fType == "float") {
+         out << SP*3 << "float *" << OpName << "_input = fTensor_" << fNX << ".data();\n";
+         out << SP*3 << "auto buf_" << OpName << "_input = buf_tensor_" << fNX << ";\n";
+      }
+   }
+   else {
+      if (fUseSession) {
+         out << SP*3 << "auto buf_" << OpName << "_input = cl::sycl::buffer{fVec_" << OpName << "_input.data(), cl::sycl::range<1>(fVec_" << OpName << "_input.size())};\n";
+      }
+      else {
+         out << SP*3 << "std::vector<" << fType << ", " << seq_length * batch_size * input_size << "> " << OpName << "_input;\n";
+         out << SP*3 << "auto buf_" << OpName << "_input = cl::sycl::buffer{" << OpName << "_input.data(), cl::sycl::range<1>(" << OpName << "_input.size())};\n";  
+      }
+
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_" << OpName << "_input = cl::sycl::accessor{buf_" << OpName << "_input, ";
+      out << "cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+      
+      out << SP*4 << "cgh.parallel_for<class " << OpName << "_input>(cl::sycl::range<3>(" << seq_length << ", " << batch_size << ", " << input_size;
+      out << "), [=](cl::sycl::id<3> id){\n";
+      out << SP*5 << "auto seq = id[0];\n";
+      out << SP*5 << "auto batch = id[1];\n";
+      out << SP*5 << "auto i = id[2];\n";
+
+      out << SP*5 << "acc_" << OpName << "_input[seq * " << batch_size * input_size << " + batch * " << input_size << " + i] = acc_tensor_" << fNX;
+      out << "[batch * " << seq_length * input_size << " + seq * " << input_size << " + i];\n";
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+   }
+
+
+   // Set the initial hidden state
+   if (!fNInitial_h.empty()) {
+      if (fAttrLayout == 0) {
+         out << SP*3 << fType << " * " << OpName << "_initial_hidden_state = " << "tensor_" << fNInitial_h << ";\n";
+         out << SP*3 << "auto buf_" << OpName << "_initial_hidden_state = buf_tensor_" << fNInitial_h << ";\n";
+      }
+      else {
+         if (fUseSession) {
+            out << SP*3 << "auto buf_" << OpName << "_initial_hidden_state = cl::sycl::buffer{fVec_" << OpName << "_initial_hidden_state.data(), cl::sycl::range<1>(fVec_" << OpName << "_initial_hidden_state.size())};\n";
+         }
+         else {
+            out << SP*3 << "std::vector<" << fType << ", " << num_directions *  batch_size * fAttrHiddenSize << "> " << OpName << "_initial_hidden_state = {0};\n";
+            out << SP*3 << "auto buf_" << OpName << "_initial_hidden_state = cl::sycl::buffer{" << OpName << "_initial_hidden_state.data(), cl::sycl::range<1>(" << OpName << "_initial_hidden_state.size())};\n"; 
+         }
+
+         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*4 << "auto acc_tensor_" << fNInitial_h << " = cl::sycl::accessor{buf_tensor_" << fNInitial_h;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_" << OpName << "_initial_hidden_state = cl::sycl::accessor{buf_" << OpName << "_initial_hidden_state";
+         out << ", cgh, cl::sycl::write_only};\n";
+
+         out << SP*4 << "cgh.parallel_for<class " << OpName << "_initial_hidden_state>(cl::sycl::range<3>(" << num_directions << ", " << batch_size << ", " << fAttrHiddenSize;
+         out << "), [=](cl::sycl::id<3> id){\n";
+         out << SP*5 << "auto direction = id[0];\n";
+         out << SP*5 << "auto batch = id[1];\n";
+         out << SP*5 << "auto h = id[2];\n";
+
+         out << "acc_" << OpName << "_initial_hidden_state[direction * " << batch_size * fAttrHiddenSize << " + batch * " << fAttrHiddenSize << " + h] = acc_tensor_" << fNInitial_h;
+         out << "[batch * " << num_directions * fAttrHiddenSize << " + direction * " << fAttrHiddenSize << " + h];\n";
+
+         out << SP*4 << "});\n";
+         out << SP*3 << "});\n"; 
+
+      }
+   }
+
+   if (fUseSession) {
+      out << SP*3 << "auto buf_" << OpName << "_feedforward = cl::sycl::buffer{fVec_" << OpName << "_feedforward.data(), cl::sycl::range<1>(fVec_" << OpName << "_feedforward.size())};\n";
+   }
+   else {
+      out << SP*3 << "auto std::vector<" << fType << ", " << seq_length * batch_size * fAttrHiddenSize << "> " << OpName << "_feedforward = {0};\n";
+      out << SP*3 << "auto buf_" << OpName << "_feedforward = cl::sycl::buffer{" << OpName << "_feedforward.data(), cl::sycl::range<1>(" << OpName << "_feedforward.size())};\n";
+   }
+
+   if (fAttrLayout == 0 && !fNY.empty()) {
+      out << SP*3 << "auto buf_" << OpName << "_hidden_state = buf_tensor_" << fNY << ";\n";
+   }
+   else {
+      if (fUseSession) {
+         out << SP*3 << "auto buf_" << OpName << "_hidden_state = cl::sycl::buffer{fVec_" << OpName << "_hidden_state.data(), cl::sycl::range<1>(fVec_" << OpName << "_hidden_state.size())};\n";
+      }
+      else {
+         out << SP*3 << "std::vector<" << fType << ", " << seq_length * num_directions * batch_size * fAttrHiddenSize << "> " << OpName << "_hidden_state = {0};\n";
+         out << SP*3 << "auto buf_" << OpName << "_hidden_state = cl::sycl::buffer{" << OpName << "_hidden_state.data(), cl::sycl::range<1>(" << OpName << "_hidden_state.size())};\n";
+      }
+   }
+     
+   out << SP*3 << "oneapi::mkl::transpose " << OpName <<  "_transA = oneapi::mkl::transpose::nontrans;\n";
+   out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transB = oneapi::mkl::transpose::trans;\n";
+   out << SP*3 << "int " << OpName << "_m = " << seq_length * batch_size << ";\n";
+   out << SP*3 << "int " << OpName << "_n = " << fAttrHiddenSize << ";\n";
+   out << SP*3 << "int " << OpName << "_k = " << input_size << ";\n";
+   if (fType == "float") {
+      out << SP*3 << "float " << OpName << "_alpha = 1.;\n";
+      out << SP*3 << "float " << OpName << "_beta = .0;\n";
+   }
+   if (!fNB.empty()) {
+      out << SP*3 << "int " << OpName << "_bias_size = " << seq_length * batch_size * fAttrHiddenSize << ";\n";
+      out << SP*3 << "int " << OpName << "_incx = 1;\n";
+      out << SP*3 << "int " << OpName << "_incy = 1;\n";
+   }
+
+   for (size_t direction = 0; direction < num_directions; direction++) {
+      if (fType == "float") {
+         if (direction == 0) {
+            out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA";
+            out << ", " << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha";
+            out << ", buf_tensor_" << fNW << ", " << OpName << "_k, " << "buf_" << OpName << "_input";
+            out << ", " << OpName << "_k, " << OpName << "_beta, " << "buf_" << OpName << "_feedforward, ";
+            out << OpName << "_n);\n";
+         }
+         else {
+            out << SP*3 << "size_t " << OpName << "_w_offset = " << fAttrHiddenSize * input_size << ";\n";
+            out << "auto tmp_buf_tensor_" << fNW << " = cl::sycl::buffer{buf_tensor_" << fNW << ", cl::sycl::id<1>(" << OpName << "_w_offset), ";
+            out << "cl::sycl::range<1>(" << fAttrHiddenSize * input_size << ")};\n";
+            out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA";
+            out << ", " << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha";
+            out << ", tmp_buf_tensor_" << fNW << ", " << OpName << "_k, " << "buf_" << OpName << "_input";
+            out << ", " << OpName << "_k, " << OpName << "_beta, " << "buf_" << OpName << "_feedforward, ";
+            out << OpName << "_n);\n";
+         }
+      }
+
+      if (!fNB.empty()) {
+         if (fType == "float") {
+            if (direction == 0) {
+               out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
+               out << ", " << OpName << "_incx, buf_" << OpName << "_feedforward, " << OpName << "_incy);\n"; 
+            }
+            else {
+               out << SP*3 << "size_t " << OpName << "_bias_offset = " << seq_length * batch_size * fAttrHiddenSize << ";\n";
+               out << SP*3 << "auto tmp_buf_tensor_" << fNB << " = cl::sycl::buffer{buf_tensor_" << fNB << ", cl::sycl::id<1> (" << OpName << "_bias_offset), cl::sycl::range<1>(";
+               out << seq_length * batch_size * fAttrHiddenSize << ")};\n"; 
+
+               out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_bias_size, " << OpName << "_alpha, tmp_buf_tensor_" << fNB;
+               out << ", " << OpName << "_incx, buf_" << OpName << "_feedforward, " << OpName << "_incy);\n"; 
+            }
+         }
+      }
+
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_feedforward = cl::sycl::accessor{buf_" << OpName << "_feedforward, cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_hidden_state = cl::sycl::accessor{buf_" << OpName << "_hidden_state, cgh, cl::sycl::write_only};\n";
+
+      out << SP*4 << "cgh.parallel_for<class " << OpName << "_copy_feedforward_" << direction << ">(cl::sycl::range<2>(" << seq_length;
+      out << ", " << batch_size * fAttrHiddenSize << "), [=](cl::sycl::id<2> id){\n";
+      out << SP*5 << "auto seq = id[0];\n";
+      out << SP*5 << "auto s = id[1];\n";
+
+      out << SP*5 << "size_t offset = seq * " << batch_size * fAttrHiddenSize << ";\n";
+      out << SP*5 << "size_t h_offset = seq * " << num_directions * batch_size * fAttrHiddenSize << " + " << direction * batch_size * fAttrHiddenSize << ";\n";
+
+      out << SP*5 << "acc_tensor_hidden_state[h_offset + s] = acc_tensor_feedforward[offset + s];\n"; 
+            
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+   }
+
+   return out.str();
 }
 } // namespace SOFIE
 } // namespace Experimental
