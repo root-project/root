@@ -17,17 +17,39 @@ from cppyy import gbl as gbl_namespace
 if sys.version_info < (3, 7):
     raise RuntimeError("GNN Pythonizations are only supported in Python3")
 
+
 def getActivationFunction(model):
+    """
+    Get the activation function for the model.
+
+    Parameters:
+        model: The graph_nets' component model to extract the activation function from.
+               The component model can be either of the update functions for
+               nodes, edges or globals.
+
+    Returns:
+        The activation function enum value.
+    """    
     function = model._activation.__name__
     if function == 'relu':
         return gbl_namespace.TMVA.Experimental.SOFIE.Activation.RELU
     else:
         return gbl_namespace.TMVA.Experimental.SOFIE.Activation.Invalid
 
-def make_mlp_model(gin, model, target, type):
+def make_mlp_model(gin, model, function_target, type):
+    """
+    Create an MLP model and add it to the GNN Initializer.
+
+    Parameters:
+        gin: The GNN Initializer to which the model will be added.
+        model: The model extracted from graph_nets's GNN component
+        function_target: Target for the function to update either of nodes, edges or globals
+        graph_type: The type of the graph, i.e. GNN or GraphIndependent
+
+    """
     num_layers = len(model._layers)
     activation = getActivationFunction(model)
-    upd = gbl_namespace.TMVA.Experimental.SOFIE.RFunction_MLP(target, num_layers, activation, model._activate_final, type)
+    upd = gbl_namespace.TMVA.Experimental.SOFIE.RFunction_MLP(function_target, num_layers, activation, model._activate_final, type)
     kernel_tensor_names = gbl_namespace.std.vector['std::string']()
     bias_tensor_names   = gbl_namespace.std.vector['std::string']()
 
@@ -41,6 +63,16 @@ def make_mlp_model(gin, model, target, type):
     gin.createUpdateFunction(upd)
 
 def add_layer_norm(gin, module_layer, function_target):
+    """
+    Add a LayerNormalization operator to the particular function target
+    in the Graph Initializer
+
+    Parameters:
+        gin: The GNN Initializer to which the LayerNorm operator will be added
+        module_layer: Extracted LayerNorm from graph_nets' model
+        function_target: Target for the function to update either of nodes, edges or globals
+
+    """
     if function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES:
         model_block = gin.nodes_update_block
     elif function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES:
@@ -61,6 +93,15 @@ def add_layer_norm(gin, module_layer, function_target):
     model_block.GetFunctionBlock().AddOutputTensorNameList(new_output_tensors)    
 
 def add_weights(gin, weights, function_target):
+    """
+    Add weights to respective function targets, either of nodes, edges or globals
+
+    Parameters:
+        gin: The GNN Initializer to which the weights will be added
+        weights: Weight information, containing the names, shapes and values of initialized tensors
+        function_target: Target for the function to update either of nodes, edges or globals
+
+    """
     if function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES:
         model_block = gin.nodes_update_block
     elif function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES:
@@ -76,6 +117,15 @@ def add_weights(gin, weights, function_target):
         model_block.GetFunctionBlock().AddInitializedTensor['float'](i.name, gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT, shape, i.numpy())
 
 def add_aggregate_function(gin, reducer, relation):
+    """
+    Add aggregate function to the Graph Initializer
+
+    Parameters:
+        gin: The GNN Initializer to which the Aggregate function will be added
+        reducer: Specifies the means of aggregate, i.e. sum or mean of supplied values
+        relation: Specifies the relation of aggregate, i.e. Node-Edge, Global-Edge or Global-Node
+
+    """
     if(reducer == "unsorted_segment_sum"):
         agg = gbl_namespace.TMVA.Experimental.SOFIE.RFunction_Sum()
         gin.createAggregateFunction[gbl_namespace.TMVA.Experimental.SOFIE.RFunction_Sum](agg, relation)
@@ -87,6 +137,17 @@ def add_aggregate_function(gin, reducer, relation):
 
 
 def add_update_function(gin, component_model, graph_type, function_target):
+    """
+    Add update function for respective function target, either of nodes, edges or globals 
+    based on the supplied component_model
+
+    Parameters:
+        gin: The GNN Initializer to which the update function will be added
+        component_model: The update function to add, either of MLP or Sequential
+        graph_type: The type of the graph, i.e. GNN or GraphIndependent
+        function_target: Target for the function to update either of nodes, edges or globals
+
+    """
     if (component_model.name == 'mlp'):
         make_mlp_model(gin, component_model, function_target, graph_type)
     elif (component_model.name == 'sequential'):
@@ -104,8 +165,27 @@ def add_update_function(gin, component_model, graph_type, function_target):
 
 
 class RModel_GNN: 
+    """
+    Wrapper class for graph_nets' GNN model;s parsing and inference generation
+
+    graph_nets' GNN model comprises of three components, the nodes, edges and globals.
+    The entire model and its inference is based on the respective update functions,
+    and aggregate function with other components.
+    """
 
     def ParseFromMemory(graph_module, graph_data, filename = "gnn_network"):
+        """
+        Parse graph_nets' GraphNetwork model and create RModel_GNN.
+
+        Parameters:
+            graph_module: The graph module built from graph_nets
+            graph_data: Sample graph input data required for parsing of graph_nets' model
+                        containing dict with keys: {"globals", "nodes", "edges", "senders", "receivers"}
+            filename: The filename to be used for output of inference code.
+
+        Returns:
+            An instance of RModel_GNN.
+        """
         gin = gbl_namespace.TMVA.Experimental.SOFIE.GNN_Init()
         gin.num_nodes = len(graph_data['nodes'])
 
@@ -152,8 +232,31 @@ class RModel_GNN:
         gnn_model.AddBlasRoutines(blas_routines)
         return gnn_model
 
+
+
 class RModel_GraphIndependent:
+    """
+    Wrapper class for graph_nets' GraphIndependent model's parsing and inference generation
+
+    graph_nets' GraphIndependent model is similar to the GNN implementation, with the
+    difference being that it has no aggregate function. GraphIndependent is useful
+    for independent transformation on the graph data.
+
+    """
+
     def ParseFromMemory(graph_module, graph_data, filename = "graph_independent_network"):
+        """
+        Parse graph_nets' GraphIndependent model and create RModel_GraphIndependent.
+
+        Parameters:
+            graph_module: The graph module built from graph_nets
+            graph_data: Sample graph input data required for parsing of graph_nets' model
+                        containing dict with keys: {"globals", "nodes", "edges", "senders", "receivers"}
+            filename: The filename to be used for output of inference code.
+
+        Returns:
+            An instance of RModel_GraphIndependent.
+        """
         gin = gbl_namespace.TMVA.Experimental.SOFIE.GraphIndependent_Init()
         gin.num_nodes = len(graph_data['nodes'])
 

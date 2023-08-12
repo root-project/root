@@ -16,17 +16,20 @@
 #include "TMVA/ROperator.hxx"
 #include "TBuffer.h"
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
 
 enum class Options {
-   kDefault = 0x0,
-   kNoSession = 0x1,
-   kNoWeightFile = 0x2,
-   kGNN = 0x4,
-   kGNNComponent = 0x8,
+    kDefault = 0x0,
+    kNoSession = 0x1,
+    kNoWeightFile = 0x2,
+    kRootBinaryWeightFile = 0x4,
+    kGNN = 0x8,
+    kGNNComponent = 0x10,
 };
+
+enum class WeightFileType {None, RootBinary, Text};
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
 std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
@@ -36,6 +39,8 @@ class RModel_Base: public TObject {
 protected:
     std::string fFileName; //file name of original model file for identification
     std::string fParseTime; //UTC date and time string at parsing
+
+    WeightFileType fWeightFile = WeightFileType::Text;
 
     std::unordered_set<std::string> fNeededBlasRoutines;
 
@@ -51,68 +56,67 @@ protected:
     bool fIsGNNComponent = false;
 
 public:
-    RModel_Base(){}
-    
+    RModel_Base() {}
+
     RModel_Base(std::string name, std::string parsedtime);
 
     // For GNN Functions usage
-    RModel_Base(std::string function_name):fName(function_name){}
+    RModel_Base(std::string function_name):fName(function_name) {}
 
     void AddBlasRoutines(std::vector<std::string> routines) {
-      for (auto &routine : routines) {
-         fNeededBlasRoutines.insert(routine);
-      }
-   }
-   void AddNeededStdLib(std::string libname) {
-      if (fAllowedStdLib.find(libname) != fAllowedStdLib.end()) {
-         fNeededStdLib.insert(libname);
-      }
-   }
-   void AddNeededCustomHeader(std::string filename) {
-      fCustomOpHeaders.insert(filename);
-   }
+        for (auto &routine : routines) {
+            fNeededBlasRoutines.insert(routine);
+        }
+    }
+    void AddNeededStdLib(std::string libname) {
+        if (fAllowedStdLib.find(libname) != fAllowedStdLib.end()) {
+            fNeededStdLib.insert(libname);
+        }
+    }
+    void AddNeededCustomHeader(std::string filename) {
+        fCustomOpHeaders.insert(filename);
+    }
     void GenerateHeaderInfo(std::string& hgname);
-    void PrintGenerated(){
-      std::cout << fGC;
+    void PrintGenerated() {
+        std::cout << fGC;
     }
 
-    std::string ReturnGenerated(){
-      return fGC;
+    std::string ReturnGenerated() {
+        return fGC;
     }
     void OutputGenerated(std::string filename = "");
-    void SetFilename(std::string filename){
-      fName = filename;
+    void SetFilename(std::string filename) {
+        fName = filename;
     }
-    std::string GetFilename(){
-      return fName;
+    std::string GetFilename() {
+        return fName;
     }
-   
-   ClassDef(RModel_Base,1);
+
+    ClassDef(RModel_Base,1);
 
 };
 
-
-enum class GraphType{
-        INVALID=0, GNN=1, GraphIndependent=2
+enum class GraphType {
+    INVALID=0, GNN=1, GraphIndependent=2
 };
 
-enum class FunctionType{
-        UPDATE=0, AGGREGATE=1
+enum class FunctionType {
+    UPDATE=0, AGGREGATE=1
 };
-enum class FunctionTarget{
-        INVALID=0, NODES=1, EDGES=2, GLOBALS=3
+enum class FunctionTarget {
+    INVALID=0, NODES=1, EDGES=2, GLOBALS=3
 };
-enum class FunctionReducer{
-        INVALID=0, SUM=1, MEAN=2
+enum class FunctionReducer {
+    INVALID=0, SUM=1, MEAN=2
 };
-enum class FunctionRelation{
-         INVALID=0, NODES_EDGES=1, NODES_GLOBALS=2, EDGES_GLOBALS=3
+enum class FunctionRelation {
+    INVALID=0, NODES_EDGES=1, NODES_GLOBALS=2, EDGES_GLOBALS=3
 };
 
-class RModel_GNNBase: public RModel_Base{
-   public:
-      RModel_GNNBase(){}
-      virtual void Generate() = 0;
+class RModel_GNNBase: public RModel_Base {
+public:
+    RModel_GNNBase() {}
+    virtual void Generate() = 0;
 };
 
 }//SOFIE
