@@ -176,6 +176,29 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSource::Unsea
    return page;
 }
 
+void ROOT::Experimental::Detail::RPageSource::PrepareLoadCluster(
+   const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
+   std::function<void(DescriptorId_t, NTupleSize_t, RClusterDescriptor::RPageRange::RPageInfo)> perPageFunc)
+{
+   auto descriptorGuard = GetSharedDescriptorGuard();
+   const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
+
+   for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
+      const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
+      NTupleSize_t pageNo = 0;
+      for (const auto &pageInfo : pageRange.fPageInfos) {
+         if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+            pageZeroMap.Register(
+               ROnDiskPage::Key{physicalColumnId, pageNo},
+               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.fLocator.fBytesOnStorage));
+         } else {
+            perPageFunc(physicalColumnId, pageNo, pageInfo);
+         }
+         ++pageNo;
+      }
+   }
+}
+
 void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
