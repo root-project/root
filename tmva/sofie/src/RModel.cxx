@@ -719,7 +719,7 @@ namespace SOFIE{
       else {
          for (size_t i=0; i<outputSize; i++) {
             if (!fOutputTensorNames[i].empty()) {
-               fGC += SP*3 + "buf_tensor_" + fOutputTensorNames[0] + ".set_final_data(ret_" + std::to_string(i) + ".data());\n";
+               fGC += SP*3 + "buf_tensor_" + fOutputTensorNames[i] + ".set_final_data(ret_" + std::to_string(i) + ".data());\n";
             }
          }
       }
