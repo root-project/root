@@ -20,7 +20,7 @@
 
 void writeTree()
 {
-   std::unique_ptr<TFile> ofile { TFile::Open("testFile.root", "recreate") };
+   std::unique_ptr<TFile> ofile{TFile::Open("testFile.root", "recreate")};
    if (!ofile || ofile->IsZombie()) {
       throw std::runtime_error("Could not open file testFile.root");
    }
@@ -54,4 +54,3 @@ void writeTree()
 
    ofile->Write(); // This write the files and the TTree
 }
-

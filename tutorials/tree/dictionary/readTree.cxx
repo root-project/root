@@ -21,14 +21,14 @@
 void readTree()
 {
 
-   std::unique_ptr<TFile> ifile { TFile::Open("testFile.root", "read") };
-   if ( !ifile || ifile->IsZombie() )  {
+   std::unique_ptr<TFile> ifile{TFile::Open("testFile.root", "read")};
+   if (!ifile || ifile->IsZombie()) {
       std::cerr << "Problem opening the file testFile.root" << std::endl;
       return;
    }
 
    // Create a TTreeReader to read the tree named "myTree"
-   TTreeReader aReader("myTree", ifile.get() );
+   TTreeReader aReader("myTree", ifile.get());
 
    // Create TTreeReaderValues for the branches "branch1" and "branch2"
    TTreeReaderValue<myDetectorData> branch1(aReader, "branch1.");
@@ -43,6 +43,4 @@ void readTree()
       else
          std::cerr << "WARNING: entry " << aReader.GetCurrentEntry() << " is empty! " << std::endl;
    }
-
 }
-

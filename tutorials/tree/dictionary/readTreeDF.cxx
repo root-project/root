@@ -21,7 +21,5 @@ void readTreeDF()
 {
 
    ROOT::RDataFrame df{"myTree", "testFile.root"};
-   df.Display({"branch1.time","branch1.energy","branch2.time","branch2.energy"}, /*nRows*/ 10)->Print();
-
+   df.Display({"branch1.time", "branch1.energy", "branch2.time", "branch2.energy"}, /*nRows*/ 10)->Print();
 }
-
