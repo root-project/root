@@ -41,8 +41,6 @@ namespace Internal {
  */
 class RRawFile {
 public:
-
-
    /// Derived classes do not necessarily need to provide file size information but they can return "not known" instead
    static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
    /// kAuto detects the line break from the first line, kSystem picks the system's default

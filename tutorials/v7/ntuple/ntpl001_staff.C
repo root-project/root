@@ -22,7 +22,6 @@ R__LOAD_LIBRARY(ROOTNTuple)
 
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleDescriptor.hxx>
 
 #include <TCanvas.h>
 #include <TH1I.h>
@@ -38,15 +37,10 @@ R__LOAD_LIBRARY(ROOTNTuple)
 #include <sstream>
 #include <utility>
 
-#include <nlohmann/json.hpp>
-
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
-
-using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 
 constexpr char const* kNTupleFileName = "ntpl001_staff.root";
 
@@ -72,94 +66,50 @@ void Ingest() {
    auto fldDivision = model->MakeField<std::string>("Division");
    auto fldNation   = model->MakeField<std::string>("Nation");
 
-   RNTupleWriteOptions write_options;
-   write_options.SetCompression(0);
+   // We hand-over the data model to a newly created ntuple of name "Staff", stored in kNTupleFileName
+   // In return, we get a unique pointer to an ntuple that we can fill
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName);
 
-   {
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName, write_options);
-      
-      std::string record;
-      while (std::getline(fin, record)) {
-         std::istringstream iss(record);
-         iss >> *fldCategory >> *fldFlag >> *fldAge >> *fldService >> *fldChildren >> *fldGrade >> *fldStep >> *fldHrweek
-            >> *fldCost >> *fldDivision >> *fldNation;
-         ntuple->Fill();
-      }
+   std::string record;
+   while (std::getline(fin, record)) {
+      std::istringstream iss(record);
+      iss >> *fldCategory >> *fldFlag >> *fldAge >> *fldService >> *fldChildren >> *fldGrade >> *fldStep >> *fldHrweek
+          >> *fldCost >> *fldDivision >> *fldNation;
+      ntuple->Fill();
    }
 
-   auto f = TFile::Open("/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root","READ");
-   auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Staff");
-
-   // TRIGGERING FAILURES IN A PAGE
-   // Create an RNTupleReader from the ntuple
-   std::unique_ptr<RNTupleReader> ntupleReader = RNTupleReader::Open("Staff", "/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root");
-
-   // Get descriptor of the ntuple
-   const auto descriptor = ntupleReader->GetDescriptor();
-   
-   // Get field id of "category" -> Xf
-   auto fieldId = descriptor->FindFieldId("Category");
-
-   // // Physical column id (Xf,0) -> Xcol
-   //OLD auto columnId = descriptor->GetColumnId(fieldId,0);
-   auto columnId = descriptor->FindPhysicalColumnId(fieldId,0);
-
-   // // Get the cluster id (Xcol,0) -> Xcl
-   auto clusterId = descriptor->FindClusterId(columnId,0);
-
-   // // Get cluster descriptor of Xcl
-   const auto &clusterDescriptor = descriptor->GetClusterDescriptor(clusterId);
-
-   // // Get page range of Xcl
-   auto &pageRangeXcl = clusterDescriptor.GetPageRange(columnId);
-
-   // Get page info for first page
-   const auto &pageInfo = pageRangeXcl.fPageInfos[0];
-   auto loc = pageInfo.fLocator;
-   auto size = loc.fBytesOnStorage;
-   auto offset = loc.GetPosition<std::uint64_t>();
-
-   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = offset;
-   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = offset + size;
-
-   // TRIGGERING FAILURES IN HEADER
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekHeader();
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
-
-   // TRIGGERING FAILURES IN FOOTER
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekFooter();
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = ntpl->GetSeekFooter() + ntpl->GetNBytesFooter();
-
-   std::cout << "Failure Type: " << ROOT::Internal::RRawFile::GetFailureInjectionParams().failureType << std::endl;
-   std::cout << "Range Begin: " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin << std::endl;
-   std::cout << "Range End: " << ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end << std::endl;
+   // The ntuple unique pointer goes out of scope here.  On destruction, the ntuple flushes unwritten data to disk
+   // and closes the attached ROOT file.
 }
 
 void Analyze() {
-   
    // Get a unique pointer to an empty RNTuple model
    auto model = RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
-   auto fldAge = model->MakeField<int>("Category");
-   
+   std::shared_ptr<int> fldAge = model->MakeField<int>("Age");
+
    // Create an ntuple and attach the read model to it
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
 
-   //specify and open output file
-   std::ofstream file("output.txt");
-   if(file.is_open())
-   {
-      for(int idx = 0; idx < ntuple->GetNEntries(); idx++) 
-      {
-         ntuple->Show(idx,file);
-         file << std::endl;
-      }
+   // Quick overview of the ntuple and list of fields.
+   ntuple->PrintInfo();
 
-      file.close();
+   std::cout << "The first entry in JSON format:" << std::endl;
+   ntuple->Show(0);
+   // In a future version of RNTuple, there will be support for ntuple->Scan()
+
+   auto c = new TCanvas("c", "", 200, 10, 700, 500);
+   TH1I h("h", "Age Distribution CERN, 1988", 100, 0, 100);
+   h.SetFillColor(48);
+
+   for (auto entryId : *ntuple) {
+      // Populate fldAge
+      ntuple->LoadEntry(entryId);
+      h.Fill(*fldAge);
    }
 
-   std::cout << "Complete!" << std::endl;
+   h.DrawCopy();
 }
 
 void ntpl001_staff() {
