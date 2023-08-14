@@ -167,9 +167,28 @@ public:
  */
 R__EXTERN RooBatchComputeInterface *dispatchCPU, *dispatchCUDA;
 
+inline Architecture cpuArchitecture()
+{
+   init();
+   return dispatchCPU->architecture();
+}
+
+inline std::string cpuArchitectureName()
+{
+   init();
+   return dispatchCPU->architectureName();
+}
+
+inline bool hasCuda()
+{
+   init();
+   return dispatchCUDA;
+}
+
 inline void
 compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars, ArgVector &extraArgs)
 {
+   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    dispatch->compute(cfg, comp, output, size, vars, extraArgs);
 }
@@ -177,12 +196,12 @@ compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVec
 inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
 {
    ArgVector extraArgs{};
-   auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
-   dispatch->compute(cfg, comp, output, size, vars, extraArgs);
+   compute(cfg, comp, output, size, vars, extraArgs);
 }
 
 inline double reduceSum(Config cfg, InputArr input, size_t n)
 {
+   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceSum(cfg, input, n);
 }
@@ -190,6 +209,7 @@ inline double reduceSum(Config cfg, InputArr input, size_t n)
 inline ReduceNLLOutput reduceNLL(Config cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
                                  RooSpan<const double> weights, double weightSum, RooSpan<const double> binVolumes)
 {
+   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceNLL(cfg, probas, weightSpan, weights, weightSum, binVolumes);
 }
