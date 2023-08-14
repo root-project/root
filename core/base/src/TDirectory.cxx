@@ -213,7 +213,10 @@ void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
    }
 
    fList->Add(obj);
-   obj->SetBit(kMustCleanup);
+   // A priori, a `TDirectory` object is assumed to not have shared ownership.
+   // If it is, let's rely on the user to update the bit.
+   if (!dynamic_cast<TDirectory*>(obj))
+      obj->SetBit(kMustCleanup);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
