@@ -21,11 +21,6 @@
 
 namespace ROOT {
 namespace Internal {
-
-   //static int flip_offset = 0;
-   //extern int flip_size = 0;
-
-
 /**
  * \class RRawFile RRawFile.hxx
  * \ingroup IO
