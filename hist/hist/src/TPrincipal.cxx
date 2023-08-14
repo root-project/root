@@ -898,7 +898,7 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
    TString prefix;
    const char *cv_qual  = isMethod ? "" : "static ";
    if (isMethod)
-      prefix = TString::Format("%s::", classname);
+      prefix.Form("%s::", classname);
 
    std::ofstream outFile(filename,std::ios::out|std::ios::trunc);
    if (!outFile) {
