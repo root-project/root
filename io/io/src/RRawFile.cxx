@@ -232,14 +232,10 @@ void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_
 
 size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   std::cout << "REACHED 0" << std::endl;
-
+   std::cout << "readat called" << std::endl;
    size_t total_bytes = ReadTotalBytes(buffer,nbytes,offset);
 
-   std::cout << "REACHED 1" << std::endl;
-
 #ifdef TESTING_MODE
-   std::cout << "REACHED 2" << std::endl;
    PossiblyInjectFailure(buffer, total_bytes, offset);
 #endif
 

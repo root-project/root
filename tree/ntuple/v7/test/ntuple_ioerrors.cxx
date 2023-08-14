@@ -27,12 +27,20 @@ TEST(RNTuple, UncompressedShortRead)
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   auto viewPt = reader->GetView<float>("pt");
+   // auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // auto viewPt = reader->GetView<float>("pt");
 
-   for (auto i : reader->GetEntryRange()) {
-     std::cout << viewPt(i) << std::endl;
+   // for (auto i : reader->GetEntryRange()) {
+   //   std::cout << viewPt(i) << std::endl;
+   // }
+
+   //EXPECT_EQ(1.0, viewPt(0));
+
+   try {
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      auto viewPt = reader->GetView<float>("pt");
+      FAIL() << "repeated field names should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("expected RNTuple named"));
    }
-
-   EXPECT_EQ(1.0, viewPt(0));
 }

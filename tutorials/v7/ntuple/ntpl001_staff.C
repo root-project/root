@@ -116,11 +116,11 @@ void Ingest() {
    // Get page info for first page
    const auto &pageInfo = pageRangeXcl.fPageInfos[0];
    auto loc = pageInfo.fLocator;
-   auto nelem = loc.fBytesOnStorage;
+   auto size = loc.fBytesOnStorage;
    auto offset = loc.GetPosition<std::uint64_t>();
 
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = offset;
-   //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = offset + nelem;
+   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = offset;
+   ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_end = offset + size;
 
    // TRIGGERING FAILURES IN HEADER
    //ROOT::Internal::RRawFile::GetFailureInjectionParams().rng_begin = ntpl->GetSeekHeader();
@@ -141,7 +141,7 @@ void Analyze() {
    auto model = RNTupleModel::Create();
 
    // We only define the fields that are needed for reading
-   auto fldAge = model->MakeField<int>("Age");
+   auto fldAge = model->MakeField<int>("Category");
    
    // Create an ntuple and attach the read model to it
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
