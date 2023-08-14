@@ -96,7 +96,7 @@
 #include "Pow_broadcastGPU_FromONNX.hxx"
 #include "input_models/references/Pow_broadcast.ref.hxx"
 
-/*
+
 #include "RNNBatchwiseGPU_FromONNX.hxx"
 #include "input_models/references/RNNBatchwise.ref.hxx"
 
@@ -105,11 +105,10 @@
 
 #include "RNNBidirectionalBatchwiseGPU_FromONNX.hxx"
 #include "input_models/references/RNNBidirectionalBatchwise.ref.hxx"
-*/
+
 #include "RNNDefaultsGPU_FromONNX.hxx"
 #include "input_models/references/RNNDefaults.ref.hxx"
 
-/*
 #include "RNNSeqLengthGPU_FromONNX.hxx"
 #include "input_models/references/RNNSeqLength.ref.hxx"
 
@@ -118,7 +117,7 @@
 
 #include "RNNSequenceBatchwiseGPU_FromONNX.hxx"
 #include "input_models/references/RNNSequenceBatchwise.ref.hxx"
-*/
+
 
 #include "LSTMBatchwiseGPU_FromONNX.hxx"
 #include "input_models/references/LSTMBatchwise.ref.hxx"
@@ -1041,7 +1040,7 @@ TEST(ONNX, Shape){
 
 }
 
-/*
+
 TEST(ONNX, RNNBatchwise)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -1135,7 +1134,7 @@ TEST(ONNX, RNNBidirectionalBatchwise)
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
-*/
+
 TEST(ONNX, RNNDefaults)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -1161,11 +1160,6 @@ TEST(ONNX, RNNDefaults)
       EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
    }
 
-   for (size_t i = 0; i < output_y.size(); ++i) {
-      std::cout << output_y[i] <<std::endl; 
-      std::cout << correct_y[i] << std::endl;
-   }
-
    // Checking output size
    EXPECT_EQ(output_yh.size(), sizeof(RNNDefaults_ExpectedOutput::all_ones_yh) / sizeof(float));
 
@@ -1176,13 +1170,8 @@ TEST(ONNX, RNNDefaults)
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 
-   for (size_t i = 0; i < output_yh.size(); ++i) {
-      std::cout << output_yh[i] <<std::endl; 
-      std::cout << correct_yh[i] << std::endl;
-   }
-
 }
-/*
+
 TEST(ONNX, RNNSeqLength)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -1297,7 +1286,7 @@ TEST(ONNX, RNNSequenceBatchwise)
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
-*/
+
 TEST(ONNX, LSTMBatchwise)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
