@@ -1069,7 +1069,7 @@ void TMultiDimFit::Fit(Option_t *option)
    for (i = 0; i < fNCoefficients; i++) {
       Double_t startVal = fCoefficients(i);
       Double_t startErr = fCoefficientsRMS(i);
-      fFitter->SetParameter(i, (char *)TString::Format("coeff%02d",i).Data(),
+      fFitter->SetParameter(i, TString::Format("coeff%02d",i).Data(),
                             startVal, startErr, 0, 0);
    }
 
@@ -1080,12 +1080,17 @@ void TMultiDimFit::Fit(Option_t *option)
 
    for (i = 0; i < fNCoefficients; i++) {
       Double_t val = 0, err = 0, low = 0, high = 0;
-      fFitter->GetParameter(i, (char *)TString::Format("coeff%02d",i).Data(),
+
+      // use big enough string buffer to get variable name which is not used
+      char namebuf[512];
+      fFitter->GetParameter(i, namebuf,
                             val, err, low, high);
+      (void) namebuf;
       fCoefficients(i)    = val;
       fCoefficientsRMS(i) = err;
    }
    delete [] x;
+   delete [] arglist;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
