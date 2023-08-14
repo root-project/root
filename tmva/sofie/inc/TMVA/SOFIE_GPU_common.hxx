@@ -395,8 +395,8 @@ void col2im(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int chan
    const int channel_size = height * width;
 
    q.submit([&](cl::sycl::handler& cgh){
-      auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::read_only};
-      auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::write_only, cl::sycl::no_init};
+      auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::write_only};
+      auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::read_only};
 
       cgh.parallel_for<class im2col>(cl::sycl::range{static_cast<size_t>(channels * output_h * output_w)}, [=](cl::sycl::id<1> id){
          int w_out = id % output_w;
@@ -418,10 +418,10 @@ void col2im(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int chan
                int w = w_in + j * dilation_w;
 
                if ( (h >= 0) && (w >= 0) && (h < height) && (w < width) ) {
-                  acc_data_col[dest] = acc_data_im[src + i*dilation_h*width + j * dilation_w];
+                  acc_data_im[src + i*dilation_h*width + j * dilation_w] = acc_data_col[dest];
                }
                else {
-                  acc_data_col[dest] = 0;
+                  dest += output_w;
                }
 
                dest += output_h * output_w;
@@ -431,52 +431,6 @@ void col2im(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int chan
    });
 }
 
-template <typename Dtype>
-void col2im(const Dtype* data_col, const int channels,
-    const int height, const int width, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w,
-    const int stride_h, const int stride_w,
-    const int dilation_h, const int dilation_w,
-    Dtype* data_im) {
-   // note that output data_im needs to be set to zero value!!!!
-   std::fill(data_im, data_im + height * width * channels, 0.);
-  //caffe_set(height * width * channels, Dtype(0), data_im);
-  // data_im must be a zero vector
-  //const Dtype * data_col_0 = data_col;
-  const int output_h = (height + 2 * pad_h -
-    (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-  const int output_w = (width + 2 * pad_w -
-    (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-  const int channel_size = height * width;
-  for (int channel = channels; channel--; data_im += channel_size) {
-    for (int kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
-      for (int kernel_col = 0; kernel_col < kernel_w; kernel_col++) {
-        int input_row = -pad_h + kernel_row * dilation_h;
-        for (int output_rows = output_h; output_rows; output_rows--) {
-          if (!is_a_ge_zero_and_a_lt_b(input_row, height)) {
-            data_col += output_w;
-          } else {
-            int input_col = -pad_w + kernel_col * dilation_w;
-            for (int output_col = output_w; output_col; output_col--) {
-              if (is_a_ge_zero_and_a_lt_b(input_col, width)) {
-                //assert(input_row*width+input_col < height * width * channels);
-                //assert(data_col - data_col_0 < output_h*output_w*channels);
-               //  std::cout << "COL2IM: input_row" << "  " << input_row << "  " << input_col
-               //       << " <---- " << data_col - data_col_0 << " values:  "
-               //       << data_im[input_row * width + input_col] << " <--- " << *data_col << std::endl;
-                data_im[input_row * width + input_col] += *data_col;
-              }
-              data_col++;
-              input_col += stride_w;
-            }
-          }
-          input_row += stride_h;
-        }
-      }
-    }
-  }
-  //std::cout << "finishing col2imp" << std::endl;
-}
 
 
 
