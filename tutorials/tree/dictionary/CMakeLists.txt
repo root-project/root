@@ -11,7 +11,7 @@
 
 #####################################################################################################################
 
-# CMakeLists.txt for event package. It creates a library with dictionary and a main program
+# CMakeLists.txt that creates a library with dictionary and a main program
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 project(treeUsingCustomClass)
