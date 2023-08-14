@@ -83,32 +83,18 @@ public:
                              RooSpan<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
 
-// Guarantees unique access to this shared memory
-inline __device__ double atomicAddDouble(double *address, double val)
-{
-   unsigned long long int *address_as_ull = (unsigned long long int *)address;
-   unsigned long long int old = *address_as_ull, assumed;
-   do {
-      assumed = old;
-      old = atomicCAS(address_as_ull, assumed, __double_as_longlong(val + __longlong_as_double(assumed)));
-   } while (assumed != old);
-   return __longlong_as_double(old);
-}
-
 // This is the same implementation of the ROOT::Math::KahanSum::operator+=(KahanSum) but in GPU
 inline __device__ void KahanSumAlgorithm(double *shared, size_t n, double *__restrict__ result, int carry_index)
 {
-   double sum, y, t, a;
-
    // Stride in first iteration = half of the block dim. Then the half of the half...
    for (int i = blockDim.x / 2; i > 0; i >>= 1) {
       if (threadIdx.x < i && (threadIdx.x + i) < n) {
-         sum = shared[threadIdx.x];
-         a = shared[threadIdx.x + i];
+         const double sum = shared[threadIdx.x];
+         const double a = shared[threadIdx.x + i];
 
          // c is zero the first time around. Then is done a summation as the c variable is NEGATIVE
-         y = a - (shared[carry_index] + shared[carry_index + i]);
-         t = sum + y; // Alas, sum is big, y small, so low-order digits of y are lost.
+         const double y = a - (shared[carry_index] + shared[carry_index + i]);
+         const double t = sum + y; // Alas, sum is big, y small, so low-order digits of y are lost.
 
          // (t - sum) cancels the high-order part of y; subtracting y recovers NEGATIVE (low part of y)
          shared[carry_index] = (t - sum) - y;
@@ -120,12 +106,14 @@ inline __device__ void KahanSumAlgorithm(double *shared, size_t n, double *__res
    } // Next time around, the lost low part will be added to y in a fresh attempt.
      // Wait until all threads of the block have finished its work
 
-   if (threadIdx.x == 0 && shared[0] != 0.0) {
-      atomicAddDouble(result, shared[0]);
+   if (threadIdx.x == 0) {
+      result[blockIdx.x] = shared[0];
+      result[blockIdx.x + gridDim.x] = shared[carry_index];
    }
 }
 
-__global__ void kahanSum(const double *__restrict__ input, size_t n, double *__restrict__ result, bool nll)
+__global__ void kahanSum(const double *__restrict__ input, const double *__restrict__ carries, size_t n,
+                         double *__restrict__ result, bool nll)
 {
    int thIdx = threadIdx.x;
    int gthIdx = thIdx + blockIdx.x * blockSize;
@@ -134,19 +122,13 @@ __global__ void kahanSum(const double *__restrict__ input, size_t n, double *__r
    // The first half of the shared memory is for storing the summation and the second half for the carry or compensation
    extern __shared__ double shared[];
 
-   if (gthIdx == 0)
-      *result = 0.0;
-
    if (gthIdx < n) {
       // In shared memory only indexes from 0-blockDim.x are available
-      if (nll == 1)
-         shared[thIdx] = nll == 1 ? -std::log(input[gthIdx]) : 0;
-      else
-         shared[thIdx] = input[gthIdx];
-      shared[carry_index] = 0.0f; // A running compensation for lost low-order bits.
+      shared[thIdx] = nll == 1 ? -std::log(input[gthIdx]) : input[gthIdx];
+      shared[carry_index] = carries ? carries[gthIdx] : 0.0; // A running compensation for lost low-order bits.
    } else {
-      shared[thIdx] = 0.0f;
-      shared[carry_index] = 0.0f;
+      shared[thIdx] = 0.0;
+      shared[carry_index] = 0.0;
    }
 
    // Wait until all threads in each block have loaded their elements
@@ -165,17 +147,13 @@ __global__ void kahanSumWeighted(const double *__restrict__ input, const double 
    // The first half of the shared memory is for storing the summation and the second half for the carry or compensation
    extern __shared__ double shared[];
 
-   if (gthIdx == 0)
-      *result = 0.0;
-
    if (gthIdx < n) {
       // In shared memory only indexes from 0-blockDim.x are available
       shared[thIdx] = -std::log(input[gthIdx]) * weights[gthIdx];
-      shared[carry_index] = 0.0f; // A running compensation for lost low-order bits.
    } else {
-      shared[thIdx] = 0.0f;
-      shared[carry_index] = 0.0f;
+      shared[thIdx] = 0.0;
    }
+   shared[carry_index] = 0.0; // A running compensation for lost low-order bits.
 
    // Wait until all threads in each block have loaded their elements
    __syncthreads();
@@ -187,9 +165,11 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
 {
    const int gridSize = std::ceil(double(n) / blockSize);
    cudaStream_t stream = *cfg.cudaStream();
-   CudaInterface::DeviceArray<double> devOut{1};
+   CudaInterface::DeviceArray<double> devOut(2 * gridSize);
+   const int shMemSize = 2 * blockSize * sizeof(double);
+   kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(input, nullptr, n, devOut.data(), 0);
+   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut.data(), devOut.data() + gridSize, gridSize, devOut.data(), 0);
    double tmp = 0.0;
-   kahanSum<<<gridSize, blockSize, 2 * blockSize * sizeof(double), stream>>>(input, n, devOut.data(), 0);
    CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
    return tmp;
 }
@@ -200,22 +180,30 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
 {
    ReduceNLLOutput out;
    const int gridSize = std::ceil(double(probas.size()) / blockSize);
-   CudaInterface::DeviceArray<double> devOut(gridSize);
-   double tmp = 0.0;
+   CudaInterface::DeviceArray<double> devOut(2 * gridSize);
    cudaStream_t stream = *cfg.cudaStream();
+   const int shMemSize = 2 * blockSize * sizeof(double);
 
    if (weightSpan.size() == 1) {
-      kahanSum<<<gridSize, blockSize, 2 * blockSize * sizeof(double), stream>>>(probas.data(), probas.size(),
-                                                                                devOut.data(), 1);
-      CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
-      tmp *= weightSpan[0];
+      kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(probas.data(), nullptr, probas.size(), devOut.data(), 1);
    } else {
-      kahanSumWeighted<<<gridSize, blockSize, 2 * blockSize * sizeof(double), stream>>>(
-         probas.data(), weightSpan.data(), probas.size(), devOut.data());
-      CudaInterface::copyDeviceToHost(devOut.data(), &tmp, 1);
+      kahanSumWeighted<<<gridSize, blockSize, shMemSize, stream>>>(probas.data(), weightSpan.data(), probas.size(),
+                                                                   devOut.data());
    }
 
-   out.nllSum.Add(tmp);
+   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut.data(), devOut.data() + gridSize, gridSize, devOut.data(), 0);
+
+   double tmpSum = 0.0;
+   double tmpCarry = 0.0;
+   CudaInterface::copyDeviceToHost(devOut.data(), &tmpSum, 1);
+   CudaInterface::copyDeviceToHost(devOut.data() + 1, &tmpCarry, 1);
+
+   if (weightSpan.size() == 1) {
+      tmpSum *= weightSpan[0];
+      tmpCarry *= weightSpan[0];
+   }
+
+   out.nllSum = ROOT::Math::KahanSum<double>{tmpSum, tmpCarry};
    return out;
 }
 
