@@ -24,6 +24,8 @@ The TTree can be seen as a collection of objects (branches), with a number of at
 
 The class that is present in the TTree is declared in the .hpp, and the methods defined in the .cpp. 
 
+To be able to read and write objects of a particular user-defined type, ROOT I/O needs to know some information about the class/struct, e.g. the class members and their types, offset of each data member, etc.  This information is contained in a ROOT dictionary; see [I/O of custom classes](https://root.cern/manual/io_custom_classes/#generating-dictionaries) for more information.
+
 The linkdef file contains some instructions for ROOT, to specify which classes will require a dictionary:
 
 ```
