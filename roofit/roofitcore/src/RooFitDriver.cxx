@@ -76,15 +76,14 @@ void logArchitectureInfo(RooFit::BatchModeOption batchMode)
       oocxcoutI(static_cast<RooAbsArg *>(nullptr), Fitting) << message << std::endl;
    };
 
-   if (batchMode == RooFit::BatchModeOption::Cuda && !RooBatchCompute::dispatchCUDA) {
+   if (batchMode == RooFit::BatchModeOption::Cuda && !RooBatchCompute::hasCuda()) {
       throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
                                ": Cuda implementation of the computing library is not available\n");
    }
-   if (RooBatchCompute::dispatchCPU->architecture() == RooBatchCompute::Architecture::GENERIC) {
+   if (RooBatchCompute::cpuArchitecture() == RooBatchCompute::Architecture::GENERIC) {
       log("using generic CPU library compiled with no vectorizations");
    } else {
-      log(std::string("using CPU computation library compiled with -m") +
-          RooBatchCompute::dispatchCPU->architectureName());
+      log(std::string("using CPU computation library compiled with -m") + RooBatchCompute::cpuArchitectureName());
    }
    if (batchMode == RooFit::BatchModeOption::Cuda) {
       log("using CUDA computation library");
@@ -141,9 +140,6 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
          "Can't create RooFitDriver in CUDA mode because ROOT was compiled without CUDA support!");
    }
 #endif
-   // Initialize RooBatchCompute
-   RooBatchCompute::init();
-
    // Some checks and logging of used architectures
    logArchitectureInfo(_batchMode);
 
