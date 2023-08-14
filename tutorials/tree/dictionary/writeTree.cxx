@@ -53,6 +53,5 @@ void writeTree()
    myTree->Print();
 
    ofile->Write(); // This write the files and the TTree
-
 }
 
