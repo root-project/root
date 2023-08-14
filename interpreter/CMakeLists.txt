@@ -256,6 +256,8 @@ if(builtin_llvm)
     endif()
   endforeach()
   set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
+  #---Forward TARGET_TRIPLE for check-cling------------------------------------------------------------
+  get_directory_property(TARGET_TRIPLE DIRECTORY llvm/src DEFINITION TARGET_TRIPLE)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
