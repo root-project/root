@@ -894,9 +894,11 @@ void TPrincipal::MakePrincipals()
 void TPrincipal::MakeRealCode(const char *filename, const char *classname,
                               Option_t *)
 {
-   Bool_t  isMethod = (classname[0] == '\0' ? kFALSE : kTRUE);
-   TString prefix   = isMethod ? TString::Format("%s::", classname) : TString("");
+   Bool_t  isMethod = classname[0] == '\0' ? kFALSE : kTRUE;
+   TString prefix;
    const char *cv_qual  = isMethod ? "" : "static ";
+   if (isMethod)
+      prefix = TString::Format("%s::", classname);
 
    std::ofstream outFile(filename,std::ios::out|std::ios::trunc);
    if (!outFile) {
