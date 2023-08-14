@@ -197,43 +197,47 @@ function listHierarchy(folder, lst) {
 
    folder._childs = [];
    for (let i = 0; i < lst.arr.length; ++i) {
-      let obj = ismap ? lst.arr[i].first : lst.arr[i],
-          item = !obj?._typename ? {
+      let obj = ismap ? lst.arr[i].first : lst.arr[i], item;
+      if (!obj?._typename) {
+         item = {
             _name: i.toString(),
             _kind: prROOT + 'NULL',
             _title: 'NULL',
             _value: 'null',
             _obj: null
-          } : {
+          };
+      } else {
+         item =  {
             _name: obj.fName || obj.name,
             _kind: prROOT + obj._typename,
             _title: `${obj.fTitle || ''} type:${obj._typename}`,
             _obj: obj
-          };
+         };
 
-        switch(obj._typename) {
-           case clTColor: item._value = getRGBfromTColor(obj); break;
-           case clTText:
-           case clTLatex: item._value = obj.fTitle; break;
-           case clTObjString: item._value = obj.fString; break;
-           default: if (lst.opt && lst.opt[i] && lst.opt[i].length) item._value = lst.opt[i];
-        }
+         switch(obj._typename) {
+            case clTColor: item._value = getRGBfromTColor(obj); break;
+            case clTText:
+            case clTLatex: item._value = obj.fTitle; break;
+            case clTObjString: item._value = obj.fString; break;
+            default: if (lst.opt && lst.opt[i] && lst.opt[i].length) item._value = lst.opt[i];
+         }
 
-        if (do_context && canDrawHandle(obj._typename)) item._direct_context = true;
+         if (do_context && canDrawHandle(obj._typename)) item._direct_context = true;
 
-        // if name is integer value, it should match array index
-        if (!item._name || (Number.isInteger(parseInt(item._name)) && (parseInt(item._name) !== i))
-            || (lst.arr.indexOf(obj) < i)) {
-           item._name = i.toString();
-        } else {
-           // if there are several such names, add cycle number to the item name
-           let indx = names.indexOf(obj.fName);
-           if ((indx >= 0) && (cnt[indx] > 1)) {
-              item._cycle = cycle[indx]++;
-              item._keyname = item._name;
-              item._name = item._keyname + ';' + item._cycle;
-           }
-        }
+         // if name is integer value, it should match array index
+         if (!item._name || (Number.isInteger(parseInt(item._name)) && (parseInt(item._name) !== i))
+             || (lst.arr.indexOf(obj) < i)) {
+            item._name = i.toString();
+         } else {
+            // if there are several such names, add cycle number to the item name
+            let indx = names.indexOf(obj.fName);
+            if ((indx >= 0) && (cnt[indx] > 1)) {
+               item._cycle = cycle[indx]++;
+               item._keyname = item._name;
+               item._name = item._keyname + ';' + item._cycle;
+            }
+         }
+      }
 
       folder._childs.push(item);
    }

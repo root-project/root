@@ -385,6 +385,16 @@ if(roottest OR rootbench)
   set(testing ON CACHE BOOL "" FORCE)
 endif()
 
+#---tmva-gpu option implies cuda
+if(tmva-gpu)
+  set(cuda ON CACHE BOOL "" FORCE)
+endif(tmva-gpu)
+
+if(cudnn AND NOT cuda)
+  message(STATUS "Cannot select cudnn without selecting cuda or tmva-gpu. Option is ignored")
+  set(cudnn OFF)
+endif()
+
 if (NOT builtin_cling)
   if (builtin_clang OR builtin_llvm)
     message(WARNING "No need to build internal llvm or clang. Consider turning builtin_clang=Off and builtin_llvm=Off")

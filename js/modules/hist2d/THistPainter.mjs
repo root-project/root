@@ -30,7 +30,7 @@ class THistDrawOptions {
               Mark: false, Same: false, Scat: false, ScatCoef: 1., Func: true,
               Arrow: false, Box: false, BoxStyle: 0,
               Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
-              Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0,
+              Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: false,
               Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
               Candle: '', Violin: '', Scaled: null, Circular: 0,
               GLBox: 0, GLColor: false, Project: '', System: kCARTESIAN,
@@ -60,6 +60,20 @@ class THistDrawOptions {
 
       if (Number.isInteger(this.Zero) || force)
          this.Zero = isany ? 0 : 1;
+   }
+
+   /** @summary Is palette can be used with current draw options */
+   canHavePalette() {
+      if (this.ndim !== 2)
+         return false;
+
+      if (this.Mode3D)
+         return this.Lego === 12 || this.Lego === 14 || this.Surf === 11 || this.Surf === 12;
+
+      if (this.Color || this.Contour || this.Axis)
+         return true;
+
+      return !this.Scat && !this.Box && !this.Arrow && !this.Proj && !this.Candle && !this.Violin && !this.Text;
    }
 
    /** @summary Decode histogram draw options */
@@ -126,6 +140,9 @@ class THistDrawOptions {
 
       if (d.check('X3DSC', true)) this.x3dscale = d.partAsInt(0, 100) / 100;
       if (d.check('Y3DSC', true)) this.y3dscale = d.partAsInt(0, 100) / 100;
+
+      if (d.check('PERSPECTIVE') || d.check('PERSP')) this.Ortho = false;
+      if (d.check('ORTHO')) this.Ortho = true;
 
       let lx = 0, ly = 0, check3dbox = '', check3d = (hdim == 3);
       if (d.check('LOG2XY')) lx = ly = 2;
@@ -1384,6 +1401,9 @@ class THistPainter extends ObjectPainter {
        if ((func._typename === clTF1) || (func._typename === clTF2))
           return !func.TestBit(BIT(9)); // TF1::kNotDraw
 
+       if ((func._typename === 'TGraphDelaunay') || (func._typename === 'TGraphDelaunay2D'))
+          return false; // do not try to draw delaunay classes
+
        return func._typename !== clTPaletteAxis;
    }
 
@@ -1657,6 +1677,7 @@ class THistPainter extends ObjectPainter {
                main.options.BackBox = !main.options.BackBox;
                fp.render3D();
             });
+            menu.addchk(fp.camera?.isOrthographicCamera, 'Othographic camera', flag => fp.change3DCamera(flag));
          }
 
          if (this.draw_content) {
@@ -1786,7 +1807,7 @@ class THistPainter extends ObjectPainter {
       cntr.configIndicies(this.options.Zero ? -1 : 0, (cntr.colzmin != 0) || !this.options.Zero || this.isTH2Poly() ? 0 : -1);
 
       let fp = this.getFramePainter();
-      if ((this.getDimension() < 3) && fp) {
+      if (fp && (this.getDimension() < 3) && !fp.mode3d) {
          fp.zmin = cntr.colzmin;
          fp.zmax = cntr.colzmax;
       }
@@ -1854,8 +1875,8 @@ class THistPainter extends ObjectPainter {
    }
 
    /** @summary Return levels from contour object */
-   getContourLevels() {
-      return this.getContour().getLevels();
+   getContourLevels(force_recreate) {
+      return this.getContour(force_recreate).getLevels();
    }
 
    /** @summary Returns color palette associated with histogram
@@ -2095,10 +2116,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Toggle color z palette drawing */
    toggleColz() {
-      let can_toggle = this.options.Mode3D ? (this.options.Lego === 12 || this.options.Lego === 14 || this.options.Surf === 11 || this.options.Surf === 12) :
-                       this.options.Color || this.options.Contour;
-
-      if (can_toggle) {
+      if (this.options.canHavePalette()) {
          this.options.Zscale = !this.options.Zscale;
          return this.drawColorPalette(this.options.Zscale, false, true)
                     .then(() => this.processOnlineChange('drawopt'));

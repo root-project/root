@@ -524,7 +524,6 @@ CHECK_CXX_SOURCE_COMPILES("#include <string_view>
 if(found_stdstringview)
   set(hasstdstringview define)
   if(cuda)
-    if(CUDA_NVCC_EXECUTABLE)
       if (WIN32)
         set(PLATFORM_NULL_FILE "nul")
       else()
@@ -533,13 +532,12 @@ if(found_stdstringview)
       execute_process(
         COMMAND "echo"
           "-e" "#include <string_view>\nint main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}"
-        COMMAND "${CUDA_NVCC_EXECUTABLE}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "${PLATFORM_NULL_FILE}" "-x" "c++" "-"
+        COMMAND "${CMAKE_CUDA_COMPILER}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "${PLATFORM_NULL_FILE}" "-x" "c++" "-"
         RESULT_VARIABLE nvcc_compiled_string_view)
       unset(PLATFORM_NULL_FILE CACHE)
       if (nvcc_compiled_string_view EQUAL "0")
         set(cudahasstdstringview define)
       endif()
-    endif()
   endif()
 else()
   set(hasstdstringview undef)
