@@ -237,6 +237,8 @@ if(builtin_llvm)
   #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
   get_directory_property(_llvm_version DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION)
   set(LLVM_VERSION "${_llvm_version}" PARENT_SCOPE)
+  #---Forward TARGET_TRIPLE for check-cling------------------------------------------------------------
+  get_directory_property(TARGET_TRIPLE DIRECTORY llvm-project/llvm DEFINITION TARGET_TRIPLE)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
