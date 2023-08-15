@@ -29,7 +29,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
-#include <iostream>
 
 #define TESTING_MODE
 
@@ -165,7 +164,7 @@ size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
    return res;
 }
 
-size_t ROOT::Internal::RRawFile::ReadTotalBytes(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Internal::RRawFile::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    if (!fIsOpen)
       OpenImpl();
@@ -211,19 +210,67 @@ size_t ROOT::Internal::RRawFile::ReadTotalBytes(void *buffer, size_t nbytes, std
    return totalBytes;
 }
 
+void ROOT::Internal::RRawFile::TriggerShortRead(void* buffer, size_t total_bytes, std::uint64_t offset)
+{
+   uint32_t endOfBuffer = offset + total_bytes;
+   uint32_t middleOfBuffer = endOfBuffer / 2;
+   
+   // generate a random start point for the short read between middle and end (inclusive) of buffer
+   std::random_device rd;
+   std::mt19937 mt(rd()); // static + add param for seeding in FailureInjectionParams
+   std::uniform_int_distribution<std::mt19937::result_type> shortReadStartRange(middleOfBuffer, endOfBuffer);
+
+   ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeBegin = shortReadStartRange(mt);
+   ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeEnd = endOfBuffer;
+
+   auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
+
+   // for all bytes in the buffer from the random start point until the end of the buffer, make them zero
+   for (size_t byte_idx = ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeBegin; byte_idx <= ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeEnd; ++byte_idx) {
+      byte_ptr[byte_idx] = 0x00; // Set the byte to 0
+   }
+}
+
+void ROOT::Internal::RRawFile::TriggerBitFlip(void* buffer, size_t total_bytes, std::uint64_t offset)
+{    
+   // bit flip should occur randomly between the range limits defined
+   // use offset and total_bytes plus the range values defined to target a bit flip
+
+   uint32_t endOfBuffer = offset + total_bytes;
+
+   // trigger bit flip if one has not already occurred and if the buffer lies within the target range
+   if(!ROOT::Internal::RRawFile::GetFailureInjectionContext().fTriggered && offset >= ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeBegin && endOfBuffer >= ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeEnd)
+   { 
+      //std::cout << "Triggering Bit Flip" << std::endl;
+      ROOT::Internal::RRawFile::GetFailureInjectionContext().fTriggered = true;
+
+      auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
+
+      // randomly pick a byte within the buffer and a random bit to flip within that byte
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_int_distribution<std::mt19937::result_type> r_byte(0,total_bytes);
+      std::uniform_int_distribution<std::mt19937::result_type> r_bit(0,8);
+      uint32_t byte_idx = r_byte(gen);
+      uint32_t bit_idx = r_bit(gen);
+
+      // perform bit flip
+      unsigned char &chosen_byte = byte_ptr[byte_idx];
+      chosen_byte ^= (1 << bit_idx);
+   }
+}
+
 void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset)
 {
    // check probability of error occurring here
 
    // trigger particular failure
-   switch(GetFailureInjectionParams().failureType) {
-      case 0:
-         std::cout << "Triggering Bit Flip" << std::endl;
-         //TriggerBitFlip(buffer, total_bytes, offset);
+   switch(GetFailureInjectionContext().fFailureType) {
+      case kBitFlip:
+         TriggerBitFlip(buffer, total_bytes, offset);
          break;
-      case 1:
-         std::cout << "Triggering Short Read" << std::endl;
-         //TriggerShortRead(buffer, total_bytes, offset);
+      case kShortRead:
+         TriggerShortRead(buffer, total_bytes, offset);
          break;
       default:
          break;
@@ -232,8 +279,7 @@ void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_
 
 size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   std::cout << "readat called" << std::endl;
-   size_t total_bytes = ReadTotalBytes(buffer,nbytes,offset);
+   size_t total_bytes = DoReadAt(buffer,nbytes,offset);
 
 #ifdef TESTING_MODE
    PossiblyInjectFailure(buffer, total_bytes, offset);
