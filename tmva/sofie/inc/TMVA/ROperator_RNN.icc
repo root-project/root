@@ -620,6 +620,7 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
    OpName = "op_" + OpName;
 	std::stringstream out;
 
+   
    size_t seq_length = (fAttrLayout == 0) ? fShapeX[0] : fShapeX[1];
 	size_t batch_size = (fAttrLayout == 0) ? fShapeX[1] : fShapeX[0];
 	size_t input_size = fShapeX[2];
@@ -696,7 +697,6 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
 
          buf_initial_hidden_state = "buf_" + OpName + "_initial_hidden_state";
       }
-
    }
 
    // set the feedforward
@@ -740,92 +740,274 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
       out << SP*3 << "int " << OpName << "_incy = 1;\n";
    }
 
-   // X * Wxh
-   if (fType == "float") { 
-      out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA";
-      out << ", " << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha";
-      out << ", buf_tensor_" << fNW << ", " << OpName << "_k, " << buf_input;
-      out << ", " << OpName << "_k, " << OpName << "_beta, " << "buf_" << OpName << "_feedforward, ";
-      out << OpName << "_n);\n";
-   }
+   for (size_t direction = 0; direction < num_directions; direction++) {
+      if (fType == "float") { 
+         if (direction == 0) {
+            out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA";
+            out << ", " << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha";
+            out << ", buf_tensor_" << fNW << ", " << OpName << "_k, " << buf_input;
+            out << ", " << OpName << "_k, " << OpName << "_beta, " << "buf_" << OpName << "_feedforward, ";
+            out << OpName << "_n);\n";
+         }
+         else {
+            out << SP*3 << "size_t " << OpName << "_w_offset = " << fAttrHiddenSize * input_size << ";\n";
+            out << "auto buf_tensor_" << fNW << "_w_offset = cl::sycl::buffer{buf_tensor_" << fNW << ", cl::sycl::id<1>(" << OpName << "_w_offset), cl::sycl::range<1>(" << fAttrHiddenSize * input_size << ")};\n";
+            out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA";
+            out << ", " << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha";
+            out << ", buf_tensor_" << fNW << "_w_offset, " << OpName << "_k, " << buf_input;
+            out << ", " << OpName << "_k, " << OpName << "_beta, " << "buf_" << OpName << "_feedforward, ";
+            out << OpName << "_n);\n";
 
-   
-
-   if (!fNB.empty()) {
-      if (fType == "float") {
-         out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
-         out << ", " << OpName << "_incx, buf_" << OpName << "_feedforward, " << OpName << "_incy);\n"; 
+         }
       }
-   }
 
-   // Copy feedforward into hidden state
-   out << SP*3 << "oneapi::mkl::blas::copy_batch(q, " << batch_size * fAttrHiddenSize << ", buf_" << OpName << "_feedforward, ";
-   out << "1, " << batch_size * fAttrHiddenSize << ", " << buf_hidden_state << ", 1, " << num_directions * batch_size * fAttrHiddenSize << ", " << seq_length << ");\n";
+      if (!fNB.empty()) {
+         if (fType == "float") {
+            if (direction == 0) {
+               out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
+               out << ", " << OpName << "_incx, buf_" << OpName << "_feedforward, " << OpName << "_incy);\n"; 
+            }
+            else {
+               out << SP*3 << "size_t " << OpName << "_bias_offset = " << seq_length * batch_size * fAttrHiddenSize << ";\n";
+               out << SP*3 << "auto buf_tensor_" << fNB << "_bias_offset = cl::sycl::buffer{buf_tensor_" << fNB << ", cl::sycl::id<1>(" << OpName << "_bias_offset), cl::sycl::range<1>(" << seq_length * batch_size * fAttrHiddenSize << ")};\n";
+               out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
+               out << "_bias_offset, " << OpName << "_incx, buf_" << OpName << "_feedforward, " << OpName << "_incy);\n";   
+            }
+         }
+      }
+      // Copy feedforward into hidden state
+      if (direction == 0) {
+         out << SP*3 << "oneapi::mkl::blas::copy_batch(q, " << batch_size * fAttrHiddenSize << ", buf_" << OpName << "_feedforward, ";
+         out << "1, " << batch_size * fAttrHiddenSize << ", " << buf_hidden_state << ", 1, " << num_directions * batch_size * fAttrHiddenSize << ", " << seq_length << ");\n";
+      }
+      else {
+         out << SP*3 << "auto tmp_buf_cpy = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(" << batch_size * fAttrHiddenSize << "), cl::sycl::range<1>(" << seq_length * batch_size * fAttrHiddenSize << ")};\n";
+         out << SP*3 << "oneapi::mkl::blas::copy_batch(q, " << batch_size * fAttrHiddenSize << ", buf_" << OpName << "_feedforward, ";
+         out << "1, " << batch_size * fAttrHiddenSize << ", tmp_buf_cpy, 1, " << num_directions * batch_size * fAttrHiddenSize << ", " << seq_length << ");\n";
+      }
+      out << SP*3 << "for (size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
+      if (fAttrDirection == "backward" || direction == 1) {
+         out << SP*4 << "size_t index = " << seq_length - 1 << " - seq;\n";
+      }
+      else {
+         out << SP*4 << "size_t index = seq;\n";
+      }
 
-   out << SP*3 << "for (size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
-   if (fAttrDirection == "backward") {
-      out << SP*4 << "size_t index = " << seq_length - 1 << " - seq;\n";
-   }
-   else {
-      out << SP*4 << "size_t index = seq;\n";
-   }
+      out << SP*4 << "size_t offset = index * " << num_directions * batch_size * fAttrHiddenSize << " + " << direction * batch_size * fAttrHiddenSize << ";\n";
+      out << SP*4 << "if (seq == 0) {\n";
 
-   out << SP*4 << "size_t offset = index * " << num_directions * batch_size * fAttrHiddenSize << ";\n";
-   out << SP*4 << "if (seq == 0) {\n";
-   out << SP*4 << " } else {\n";
-   out << SP*5 << "size_t r_offset = 0;\n";
-   // << direction * fAttrHiddenSize * fAttrHiddenSize << ";\n";
+      if (!fNInitial_h.empty()) {
+         out << SP*5 << "size_t r_offset = " << direction * fAttrHiddenSize * fAttrHiddenSize << ";\n";
+         out << SP*5 << "size_t initial_hidden_state_offset = " << direction * batch_size * fAttrHiddenSize << ";\n";
+      
+         if (fType == "float") {
+            out << SP*5 << "auto buf_tensor_" << fNR << "_r_offset = cl::sycl::buffer{buf_tensor_" << fNR << ", cl::sycl::id<1>(r_offset), cl::sycl::range<1>(" << fAttrHiddenSize * fAttrHiddenSize << ")};\n";
+            out << SP*5 << "auto buf_" << OpName << "_hidden_state_previous_offset = cl::sycl::buffer{" << buf_initial_hidden_state << ", cl::sycl::id<1>(initial_hidden_state_offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
+            out << SP*5 << "auto buf_" << OpName << "_hidden_state_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
+            out << SP*5 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, " << OpName << "_n, " << batch_size << ", " << OpName << "_n, " << OpName << "_alpha, ";
+            out << "buf_tensor_" << fNR << "_r_offset, " << OpName << "_n, " << "buf_" << OpName << "_hidden_state_previous_offset, " << OpName << "_n, " << OpName << "_alpha, ";
+            out << "buf_" << OpName << "_hidden_state_offset, " << OpName << "_n);\n";
+         }
+      }
+      out << SP*4 << " } else {\n";
+      out << SP*5 << "size_t r_offset = " << direction * fAttrHiddenSize * fAttrHiddenSize << ";\n";
+      
+      if (fAttrDirection == "backward" || direction == 1) {
+         out << SP*5 << "size_t previous_offset = (index + 1) * " << num_directions * batch_size * fAttrHiddenSize << " + " << direction * batch_size * fAttrHiddenSize << ";\n";
+      }
+      else {
+         out << SP*5 << "size_t previous_offset = (seq - 1) * " << num_directions * batch_size * fAttrHiddenSize << " + " << direction * batch_size * fAttrHiddenSize << ";\n";
+      }
+
+      if (fType == "float") {
+         out << SP*5 << "auto buf_tensor_" << fNR << "_r_offset = cl::sycl::buffer{buf_tensor_" << fNR << ", cl::sycl::id<1>(r_offset), cl::sycl::range<1>(" << fAttrHiddenSize * fAttrHiddenSize << ")};\n";
+         out << SP*5 << "auto buf_" << OpName << "_hidden_state_previous_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(previous_offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
+         out << SP*5 << "auto buf_" << OpName << "_hidden_state_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
+      
+         out << SP*5 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, " << OpName << "_n, " << batch_size << ", " << OpName << "_n, " << OpName << "_alpha, ";
+         out << "buf_tensor_" << fNR << "_r_offset, " << OpName << "_n, " << "buf_" << OpName << "_hidden_state_previous_offset, " << OpName << "_n, " << OpName << "_alpha, ";
+         out << "buf_" << OpName << "_hidden_state_offset, " << OpName << "_n);\n";
+      }
+      out << SP*4 << "}\n\n";
+
+      out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*5 << "auto acc_hidden_state = " << buf_hidden_state << ".get_access<cl::sycl::access_mode::read_write>(cgh, cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << "), cl::sycl::id<1>(offset));\n";
+
+      out << "\n" << SP*5 << "cgh.parallel_for<class activation_" << direction << ">(cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << "), [=](cl::sycl::id<1> id){\n";
+      
+      if (fAttrClip > .0) {
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::clamp(acc_hidden_state[id], " << -fAttrClip << ", " << fAttrClip << ");\n";
+      }
+
+      if (fAttrActivations[direction] == "Relu") {
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::max(acc_hidden_state[id], 0.0f);\n";
+      }
+      else if (fAttrActivations[direction] == "Tanh"){
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::tanh(acc_hidden_state[id]);\n";
+      }
+      else if (fAttrActivations[direction] == "Sigmoid") {
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::recip(1 + cl::sycl::exp(-acc_hidden_state[id]));\n";
+      }
+      else if (fAttrActivations[direction] == "Affine") {
+         out << SP*6 << "acc_hidden_state[id] = " << fAttrActivationAlpha[direction] << " * acc_hidden_state[id] + " << fAttrActivationBeta[direction] << ";\n";
+      }
+      else if (fAttrActivations[direction] == "ScaledTanh") {
+         out << SP*6 << "acc_hidden_state[id] = " << fAttrActivationAlpha[direction] << " * cl::sycl::tanh(" << fAttrActivationBeta[direction] << " * acc_hidden_state[id]);\n";
+      }
+      else if (fAttrActivations[direction] == "HardSigmoid") {
+         out << SP*6 << "auto a = " << fAttrActivationAlpha[direction] << " * acc_hidden_state[id] + " << fAttrActivationBeta[direction] << ";\n";
+         out << SP*6 << "auto b = cl::sycl::max(a, 0.0f);\n";
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::min(b, 1.0f);\n";
+      }
+      else if (fAttrActivations[direction] == "LeakyRelu") {
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::max(acc_hidden_state[id], 0.0f) + cl::sycl::min(acc_hidden_state[id], 0.0f) * " << fAttrActivationAlpha[direction] << ";\n";
+      }
+      else if (fAttrActivations[direction] == "ThresholdRelu") {
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::max(acc_hidden_state[id], " << fAttrActivationAlpha[direction] << ");\n";
+      }
+      else if (fAttrActivations[direction] == "Elu") {
+         out << SP*6 << "acc_hidden_state[id] = (acc_hidden_state[id] > 0) ? acc_hidden_state[id] : " << fAttrActivationAlpha[direction] << " * cl::sycl::exp(acc_hidden_state[id] - 1);\n";
+      }
+      else if (fAttrActivations[direction] == "Softsign") {
+         out << SP*6 << "acc_hidden_state[id] = acc_hidden_state[id] * cl::sycl::native::recip(cl::sycl::abs(acc_hidde_state[id]) + 1);\n";
+      }
+      else {
+         out << SP*6 << "acc_hidden_state[id] = cl::sycl::log(1 + acc_hidden_state[id]);\n";
+      }
+      out << SP*5 << "});\n";
+      out << SP*4 << "});\n";
+
+      out << SP*3 << "}\n";
    
-   if (fAttrDirection == "backward") {
-      out << SP*5 << "size_t previous_offset = (index + 1) * " << num_directions * batch_size * fAttrHiddenSize << ";\n";
-   }
-   else {
-      out << SP*5 << "size_t previous_offset = (seq - 1) * " << num_directions * batch_size * fAttrHiddenSize << ";\n";
    }
 
-   if (fType == "float") {
-      out << SP*5 << "auto buf_tensor_" << fNR << "_r_offset = cl::sycl::buffer{buf_tensor_" << fNR << ", cl::sycl::id<1>(r_offset), cl::sycl::range<1>(" << fAttrHiddenSize * fAttrHiddenSize << ")};\n";
-      out << SP*5 << "auto buf_" << OpName << "_hidden_state_previous_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(previous_offset), cl::sycl::range<1>(" << num_directions * batch_size * fAttrHiddenSize << ")};\n";
-      out << SP*5 << "auto buf_" << OpName << "_hidden_state_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(offset), cl::sycl::range<1>(" << num_directions * batch_size * fAttrHiddenSize << ")};\n";
-   
-      out << SP*5 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, " << OpName << "_n, " << batch_size << ", " << OpName << "_n, " << OpName << "_alpha, ";
-      out << "buf_tensor_" << fNR << "_r_offset, " << OpName << "_n, " << "buf_" << OpName << "_hidden_state_previous_offset, " << OpName << "_n, " << OpName << "_alpha, ";
-      out << "buf_" << OpName << "_hidden_state_offset, " << OpName << "_n);\n";
-   }
-   out << SP*4 << "}\n\n";
+  // Padding the hidden state for RNN with different sequence lengths
+	if (!fNSequence_lens.empty()) {
+		out << SP*3 << "for (size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
+		out << SP*4 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+		out << SP*5 << "if (seq >= tensor_" << fNSequence_lens << "[batch]) {\n";
+		out << SP*6 << "for (size_t h = 0; h < " << fAttrHiddenSize << "; h++) {\n";
+      out << SP*7 << "auto acc_hidden_state = " << buf_hidden_state << ".get_host_access(cl::sycl::write_only);\n";
 
-   out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
-   out << SP*5 << "auto acc_hidden_state = " << buf_hidden_state << ".get_access<cl::sycl::access_mode::read_write>(cgh, cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << "), cl::sycl::id<1>(offset));\n";
+		if (num_directions == 1) {
+			out << SP*7 << "acc_hidden_state[seq * "
+				<< num_directions * batch_size * fAttrHiddenSize << " + batch * "
+				<< fAttrHiddenSize << " + h] = 0.;\n";
+		} else {
+			out << SP*7 << "acc_hidden_state[seq * "
+				<< num_directions * batch_size * fAttrHiddenSize << " + batch * "
+				<< fAttrHiddenSize << " + h] = 0.;\n";
+			out << SP*7 << "acc_hidden_state[seq * "
+				<< num_directions * batch_size * fAttrHiddenSize << " + " << batch_size * fAttrHiddenSize
+				<< " + batch * " << fAttrHiddenSize << " + h] = 0.;\n";
+		}
+		out << SP*6 << "}\n";
+		out << SP*5 << "}\n";
+		out << SP*4 << "}\n";
+		out << SP*3 << "}\n";
+	}
 
-   out << "\n" << SP*5 << "cgh.parallel_for<class activation>(cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << "), [=](cl::sycl::id<1> id){\n";
-   if (fAttrActivations[0] == "Relu") {
-      out << SP*6 << "acc_hidden_state[id] = cl::sycl::max(acc_hidden_state[id], 0.0f);\n";
-   }
-   else if (fAttrActivations[0] == "Tanh"){
-      out << SP*6 << "acc_hidden_state[id] = cl::sycl::tanh(acc_hidden_state[id]);\n";
-   }
-   out << SP*5 << "});\n";
-   out << SP*4 << "});\n";
-
-   out << SP*3 << "}\n";
-
-   // copy the hidden state into y and y_h
+   // Copy the hidden state into y and y_h
    if (fAttrLayout == 0) {
       if (!fNY_h.empty()) {
          if (fNSequence_lens.empty()) {
             size_t yh_size = batch_size * fAttrHiddenSize;
             if (fAttrDirection == "backward") {
-
-            }
-            else {
+               out << SP*3 << "auto acc_hidden_state_cpy = " << buf_hidden_state << ".get_host_access(cl::sycl::read_only);\n";
+               out << SP*3 << "auto acc_tensor_" << fNY_h << " = buf_tensor_" << fNY_h << ".get_host_access(cl::sycl::write_only);\n";
+               out << SP*3 << "for (size_t i=0; i<" << yh_size << "; i++) { acc_tensor_" << fNY_h << "[i] = acc_hidden_state_cpy[i]; }\n";
+            } else {
                size_t offset = (seq_length - 1) * num_directions * batch_size * fAttrHiddenSize;
-               out << SP*3 << "auto cpy_buf = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(" << offset << "), cl::sycl::range<1>(" << yh_size << ")};\n";
-               out << SP*3 << "oneapi::mkl::blas::copy(q, " << yh_size << ", " << "cpy_buf" << ", 1, buf_tensor_" << fNY_h << ", 1);\n";
+               out << SP*3 << "auto acc_hidden_state_cpy = " << buf_hidden_state << ".get_host_access(cl::sycl::read_only);\n";
+               out << SP*3 << "auto acc_tensor_" << fNY_h << " = buf_tensor_" << fNY_h << ".get_host_access(cl::sycl::write_only);\n";
+               out << SP*3 << "for (size_t i=0; i < " << yh_size << "; i++) { acc_tensor_" << fNY_h << "[i] = acc_hidden_state_cpy[i + " << offset << "]; }\n";
+            }
+            if (num_directions == 2) {
+               out << SP*3 << "for (size_t i=" << yh_size << "; i<" << 2*yh_size << "; i++) { acc_tensor_" << fNY_h << "[i] = acc_hidden_state_cpy[i]; }\n";
+            }
+         }
+         else { // RNN with different sequence lengths
+            if (fAttrDirection == "backward") {
+               out << SP*3 << "auto acc_hidden_state_cpy = " << buf_hidden_state << ".get_host_access(cl::sycl::read_only);\n";
+               out << SP*3 << "auto acc_tensor_" << fNY_h << " = buf_tensor_" << fNY_h << ".get_host_access(cl::sycl::write_only);\n";
+               out << SP*3 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+               out << SP*4 << "size_t offset = batch * " << fAttrHiddenSize << ";\n";
+               out << SP*5 << "for (size_t i=0; i < " << fAttrHiddenSize << "; i++) { acc_tensor_" << fNY_h << "[offset + i] = acc_hidden_state_cpy[offset + i]; }\n";
+               out << SP*3 << "}\n";
+            } else {
+               out << SP*3 << "auto acc_hidden_state_cpy = " << buf_hidden_state << ".get_host_access(cl::sycl::read_only);\n";
+               out << SP*3 << "auto acc_tensor_" << fNY_h << " = buf_tensor_" << fNY_h << ".get_host_access(cl::sycl::write_only);\n";
+               out << SP*3 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+               out << SP*4 << SP << "size_t seq = " << "tensor_" << fNSequence_lens << "[batch] - 1;\n";
+               out << SP*4 << SP << "size_t offset = seq * " << num_directions * batch_size * fAttrHiddenSize
+                   << " + batch * " << fAttrHiddenSize << ";\n";
+               out << SP*4 << "size_t yh_offset = batch * " << fAttrHiddenSize << ";\n";
+               out << SP*4 << "for (size_t i=0; i < " << fAttrHiddenSize << "; i++) {acc_tensor_" << fNY_h << "[i+yh_offset] = acc_hidden_state_cpy[i+offset];}\n";
+               out << SP*3 << "}\n";
+            }
+            if (num_directions == 2) {
+               out << SP*3 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+               out << SP*4 << "size_t offset = " << batch_size * fAttrHiddenSize
+                   << " + batch * " << fAttrHiddenSize << ";\n";
+               out << SP*4 << "size_t yh_offset = " << batch_size * fAttrHiddenSize
+                   << " + batch * " << fAttrHiddenSize << ";\n";
+               out << SP*4 << "for (size_t i=0; i < " << fAttrHiddenSize << "; i++) {acc_tensor_" << fNY_h << "[i+yh_offset] = acc_hidden_state_cpy[i+offset];}\n";
+               out << SP*3 << "}\n";
             }
          }
       }
-
+   } else { // fAttrLayout=1
+      if (!fNY.empty()) {
+         out << SP*3 << "auto acc_hidden_state_cpy = " << buf_hidden_state << ".get_host_access(cl::sycl::read_only);\n";
+         out << SP*3 << "auto acc_tensor_" << fNY << " = buf_tensor_" << fNY << ".get_host_access(cl::sycl::write_only);\n";
+         for (size_t direction = 0; direction < num_directions; direction++) {
+            out << SP*3 << "for (size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
+            out << SP*4 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+            out << SP*5 << "size_t offset = seq * " << num_directions * batch_size * fAttrHiddenSize
+                << " + " << direction * batch_size * fAttrHiddenSize << " + batch * " << fAttrHiddenSize << ";\n";
+            out << SP*5 << "size_t y_offset = batch * " << seq_length * num_directions * fAttrHiddenSize
+                << " + seq * " << num_directions * fAttrHiddenSize << " + " << direction * fAttrHiddenSize << ";\n";
+            out << SP*5 << "for (size_t i=0; i < " << fAttrHiddenSize << "; i++) {acc_tensor_" << fNY << "[i+y_offset] = acc_hidden_state_cpy[i+offset];}\n";
+            out << SP*4 << "}\n";
+            out << SP*3 << "}\n";
+         }
+      }
+      if (!fNY_h.empty()) {
+         out << SP*3 << "auto acc_hidden_state_cpy_fny_h = " << buf_hidden_state << ".get_host_access(cl::sycl::read_only);\n";
+         out << SP*3 << "auto acc_tensor_" << fNY_h << " = buf_tensor_" << fNY_h << ".get_host_access(cl::sycl::write_only);\n";
+         if (fAttrDirection == "backward") {
+            out << SP*3 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+            out << SP*4 << "size_t offset = batch * " << fAttrHiddenSize << ";\n";
+            out << SP*4 << "size_t yh_offset = batch * " << num_directions * fAttrHiddenSize << ";\n";
+            out << SP*4 << "for (size_t i=0; i < " << fAttrHiddenSize << "; i++) {acc_tensor_" << fNY_h << "[i+yh_offset] = acc_hidden_state_cpy_fny_h[i+offset];}\n";
+            out << SP*3 << "}\n";
+         } else {
+            out << SP*3 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+            if (fNSequence_lens.empty()) {
+               out << SP*4 << "size_t seq = " << seq_length - 1 << ";\n";
+            } else {
+               out << SP*4 << "size_t seq = " << "tensor_" << fNSequence_lens << "[batch] - 1;\n";
+            }
+            out << SP*4 << "size_t offset = seq * " << num_directions * batch_size * fAttrHiddenSize
+                << " + batch * " << fAttrHiddenSize << ";\n";
+            out << SP*4 << "size_t yh_offset = batch * " << num_directions * fAttrHiddenSize << ";\n";
+            out << SP*4 << "for (size_t i=0; i < " << fAttrHiddenSize << "; i++) {acc_tensor_" << fNY_h << "[i+yh_offset] = acc_hidden_state_cpy_fny_h[i+offset];}\n";
+            out << SP*3 << "}\n";
+         }
+         if (num_directions == 2) {
+            out << SP*3 << "for (size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
+            out << SP*4 << "size_t offset = " << batch_size * fAttrHiddenSize << " + batch * "
+                << fAttrHiddenSize << ";\n";
+            out << SP*4 << "size_t yh_offset = batch * " << num_directions * fAttrHiddenSize << " + "
+                << fAttrHiddenSize << ";\n";
+            out << SP*4 << "for (size_t i=0; i < " << fAttrHiddenSize << "; i++) {acc_tensor_" << fNY_h << "[i+yh_offset] = acc_hidden_state_cpy_fny_h[i+offset];}\n";
+            out << SP*3 << "}\n";
+         }
+         
+      }
    }
+   
+
    return out.str();
 }
 

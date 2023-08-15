@@ -1085,8 +1085,12 @@ TEST(ONNX, RNNBidirectional)
    float *correct_y = RNNBidirectional_ExpectedOutput::all_ones_y;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_y.size(); ++i) {
       EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
+   }
+
+   for (size_t i=0; i<output_y.size(); i++) {
+      std::cout << "at i: " << i << ", " << output_y[i] << ", " << correct_y[i] << std::endl;
    }
 
    // Checking output size
@@ -1095,8 +1099,12 @@ TEST(ONNX, RNNBidirectional)
    float *correct_yh = RNNBidirectional_ExpectedOutput::all_ones_yh;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
+   }
+
+   for (size_t i=0; i<output_yh.size(); i++) {
+      std::cout << "at i: " << i << ", " << output_yh[i] << ", " << correct_yh[i] << std::endl;
    }
 }
 
@@ -1120,7 +1128,7 @@ TEST(ONNX, RNNBidirectionalBatchwise)
    float *correct_y = RNNBidirectionalBatchwise_ExpectedOutput::all_ones_y;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_y.size(); ++i) {
       EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
    }
 
@@ -1130,7 +1138,7 @@ TEST(ONNX, RNNBidirectionalBatchwise)
    float *correct_yh = RNNBidirectionalBatchwise_ExpectedOutput::all_ones_yh;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
@@ -1190,7 +1198,7 @@ TEST(ONNX, RNNSeqLength)
    float *correct_y = RNNSeqLength_ExpectedOutput::all_ones_y;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_y.size(); ++i) {
       EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
    }
 
@@ -1200,7 +1208,7 @@ TEST(ONNX, RNNSeqLength)
    float *correct_yh = RNNSeqLength_ExpectedOutput::all_ones_yh;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
@@ -1231,7 +1239,7 @@ TEST(ONNX, RNNSequence)
    float *correct_y = RNNSequence_ExpectedOutput::all_ones_y;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_y.size(); ++i) {
       EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
    }
 
@@ -1241,7 +1249,7 @@ TEST(ONNX, RNNSequence)
    float *correct_yh = RNNSequence_ExpectedOutput::all_ones_yh;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
@@ -1272,7 +1280,7 @@ TEST(ONNX, RNNSequenceBatchwise)
    float *correct_y = RNNSequenceBatchwise_ExpectedOutput::all_ones_y;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_y.size(); ++i) {
       EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
    }
 
@@ -1282,7 +1290,7 @@ TEST(ONNX, RNNSequenceBatchwise)
    float *correct_yh = RNNSequenceBatchwise_ExpectedOutput::all_ones_yh;
 
    // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
