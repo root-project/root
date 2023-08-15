@@ -9,7 +9,9 @@ TEST(RNTuple, UncompressedShortRead)
    FileRaii fileGuard("test_ntuple.root");
 
    // enable short read v2
-   RRawFile::GetFailureInjectionParams().failureType = RRawFile::SetFailureType(RRawFile::FailureType::ShortRead);
+   auto &params = RRawFile::GetFailureInjectionContext();
+   params.fFailureType = RRawFile::EFailureType::kShortRead;
+   params.fRangeBegin = 0;
    
    {
       // create an RNTuple instance with 2 fields and no compression and fill with data
