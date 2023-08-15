@@ -396,6 +396,8 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
    TestProg("/usr/bin/chromium");
    TestProg("/usr/bin/chromium-browser");
    TestProg("/usr/bin/chrome-browser");
+   TestProg("/usr/bin/google-chrome-stable");
+   TestProg("/usr/bin/google-chrome");
 #endif
 
 #ifdef _MSC_VER
@@ -484,6 +486,7 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 #endif
 #ifdef R__LINUX
    TestProg("/usr/bin/firefox");
+   TestProg("/usr/bin/firefox-bin");
 #endif
 
 #ifdef _MSC_VER
