@@ -103,6 +103,8 @@ TEST(TestStatisticsPlot, RooRealL)
 
    RooUnitTest::setMemDir(gDirectory);
 
+   gErrorIgnoreLevel = kWarning;
+
    TFile fref("TestStatistics_ref.root");
 
    TestRooRealLPlot plotTest{fref, false, 0};
