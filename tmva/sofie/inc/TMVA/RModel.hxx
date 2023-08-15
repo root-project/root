@@ -24,8 +24,7 @@ enum class Options {
    kDefault = 0x0,
    kNoSession = 0x1,
    kNoWeightFile = 0x2,
-   kTextWeightFile = 0x4,
-   kRootBinaryWeightFile = 0x8
+   kRootBinaryWeightFile = 0x4
 };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
@@ -36,7 +35,7 @@ enum class WeightFileType {None, RootBinary, Text};
 class RModel: public TObject{
 
 private:
-   WeightFileType fWeightFile = WeightFileType::None;
+   WeightFileType fWeightFile = WeightFileType::Text;
 
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //graph input only; not including operator input (intermediate tensors)
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
@@ -108,7 +107,7 @@ public:
 
    void Initialize(int batchSize=1);
    void Generate(std::underlying_type_t<Options> options, int batchSize = 1);
-   void Generate(Options options = Options::kTextWeightFile, int batchSize = 1) {
+   void Generate(Options options = Options::kDefault, int batchSize = 1) {
       Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize);
    }
 

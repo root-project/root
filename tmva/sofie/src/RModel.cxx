@@ -240,17 +240,15 @@ namespace SOFIE{
       // session flag is used in operator initialize
       if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
          fUseSession = false;
+         fWeightFile = WeightFileType::None;
       }
       if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
          fUseWeightFile = false;
-      }
-      if (static_cast<std::underlying_type_t<Options>>(Options::kTextWeightFile) & options) {
-         fWeightFile = WeightFileType::Text;
-         fUseWeightFile = true;
+         fWeightFile = WeightFileType::None;
       }
       if (static_cast<std::underlying_type_t<Options>>(Options::kRootBinaryWeightFile) & options) {
-         fWeightFile = WeightFileType::RootBinary;
          fUseWeightFile = true;
+         fWeightFile = WeightFileType::RootBinary;
       }
       if (fUseWeightFile && !fUseSession) {
          throw
