@@ -149,8 +149,8 @@ public:
    };
 
    static RFailureInjectionContext& GetFailureInjectionContext(){
-      static RFailureInjectionContext params {};
-      return params;
+      static RFailureInjectionContext context {};
+      return context;
    }
 
    RRawFile(std::string_view url, ROptions options);
