@@ -178,7 +178,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSource::Unsea
 
 void ROOT::Experimental::Detail::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-   std::function<void(DescriptorId_t, NTupleSize_t, RClusterDescriptor::RPageRange::RPageInfo)> perPageFunc)
+   std::function<void(DescriptorId_t, NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)> perPageFunc)
 {
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);

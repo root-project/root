@@ -425,7 +425,7 @@ protected:
    /// commonly used as part of `LoadClusters()` in derived classes.
    void PrepareLoadCluster(
       const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-      std::function<void(DescriptorId_t, NTupleSize_t, RClusterDescriptor::RPageRange::RPageInfo)> perPageFunc);
+      std::function<void(DescriptorId_t, NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)> perPageFunc);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
