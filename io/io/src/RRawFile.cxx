@@ -30,7 +30,7 @@
 #include <stdexcept>
 #include <string>
 
-#define TESTING_MODE
+#include <iostream> // remove
 
 namespace {
 const char *kTransportSeparator = "://";
@@ -212,23 +212,19 @@ size_t ROOT::Internal::RRawFile::DoReadAt(void *buffer, size_t nbytes, std::uint
 
 void ROOT::Internal::RRawFile::TriggerShortRead(void* buffer, size_t total_bytes, std::uint64_t offset)
 {
-   uint32_t endOfBuffer = offset + total_bytes;
-   uint32_t middleOfBuffer = endOfBuffer / 2;
+   auto &context = GetFailureInjectionContext();
    
-   // generate a random start point for the short read between middle and end (inclusive) of buffer
-   std::random_device rd;
-   std::mt19937 mt(rd()); // static + add param for seeding in FailureInjectionParams
-   std::uniform_int_distribution<std::mt19937::result_type> shortReadStartRange(middleOfBuffer, endOfBuffer);
+   //uint32_t endOfBuffer = offset + total_bytes;
+   //uint32_t middleOfBuffer = endOfBuffer / 2;
 
-   ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeBegin = shortReadStartRange(mt);
-   ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeEnd = endOfBuffer;
-
+   //std::cout << "end of buffer " << endOfBuffer << " and middle of buffer " << middleOfBuffer << std::endl;
+   
    auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
 
    // for all bytes in the buffer from the random start point until the end of the buffer, make them zero
-   for (size_t byte_idx = ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeBegin; byte_idx <= ROOT::Internal::RRawFile::GetFailureInjectionContext().fRangeEnd; ++byte_idx) {
-      byte_ptr[byte_idx] = 0x00; // Set the byte to 0
-   }
+   // for (size_t byte_idx = context.fRangeBegin; byte_idx <= context.fRangeEnd; ++byte_idx) {
+   //    byte_ptr[byte_idx] = 0x00; // Set the byte to 0
+   // }
 }
 
 void ROOT::Internal::RRawFile::TriggerBitFlip(void* buffer, size_t total_bytes, std::uint64_t offset)
@@ -247,12 +243,12 @@ void ROOT::Internal::RRawFile::TriggerBitFlip(void* buffer, size_t total_bytes, 
       auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
 
       // randomly pick a byte within the buffer and a random bit to flip within that byte
-      std::random_device rd;
-      std::mt19937 gen(rd());
-      std::uniform_int_distribution<std::mt19937::result_type> r_byte(0,total_bytes);
-      std::uniform_int_distribution<std::mt19937::result_type> r_bit(0,8);
-      uint32_t byte_idx = r_byte(gen);
-      uint32_t bit_idx = r_bit(gen);
+      //std::random_device rd;
+      //std::mt19937 gen(rd());
+      //std::uniform_int_distribution<std::mt19937::result_type> r_byte(0,total_bytes);
+      //std::uniform_int_distribution<std::mt19937::result_type> r_bit(0,8);
+      uint32_t byte_idx = 0;//r_byte(gen);
+      uint32_t bit_idx = 0;//r_bit(gen);
 
       // perform bit flip
       unsigned char &chosen_byte = byte_ptr[byte_idx];
@@ -270,6 +266,7 @@ void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_
          TriggerBitFlip(buffer, total_bytes, offset);
          break;
       case kShortRead:
+         std::cout << "trigger short read" << std::endl;
          TriggerShortRead(buffer, total_bytes, offset);
          break;
       default:
@@ -281,7 +278,7 @@ size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64
 {
    size_t total_bytes = DoReadAt(buffer,nbytes,offset);
 
-#ifdef TESTING_MODE
+#ifdef R__TESTING_MODE
    PossiblyInjectFailure(buffer, total_bytes, offset);
 #endif
 
