@@ -27,9 +27,13 @@ void writeTree()
 
    std::unique_ptr<TTree> myTree = std::make_unique<TTree>("myTree", "");
    myDetectorData obj_for_branch1;
-   myTree->Branch("branch1.", &obj_for_branch1);
-
    myDetectorData obj_for_branch2;
+
+   // NOTE: the dot at the end of the branch name is semantically relevant and recommended
+   // because it causes the sub-branch names to be prefixed by the name of the top level branch.
+   // Without the dot, the prefix is not there. 
+   // Here, objects of the same class appear in multiple branches, adding the dot removes ambiguities.
+   myTree->Branch("branch1.", &obj_for_branch1);
    myTree->Branch("branch2.", &obj_for_branch2);
 
    for (int i = 0; i < 10; ++i) {
