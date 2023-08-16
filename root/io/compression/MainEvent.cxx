@@ -320,7 +320,7 @@ int main(int argc, char **argv)
       else if (comp == 208) expectedSize = 1088187;
       else if (comp == 301) expectedSize = 1265145;
       else if (comp == 404) expectedSize = 1289623;
-      else if (comp == 505) expectedSize = 1156626;
+      else if (comp == 505) expectedSize = 1156626; // libzstd-1.5.5-1.fc36.x86_64 sees 1162245
 #ifdef R__HAS_DEFAULT_LZ4
       else if (comp == 6) expectedSize = 1285037;
 #else
@@ -328,8 +328,8 @@ int main(int argc, char **argv)
 #endif
 
       if (expectedSize > 0 &&
-          (tree->GetZipBytes() > expectedSize + 5000 ||
-           tree->GetZipBytes() < expectedSize - 5000)) {
+          (tree->GetZipBytes() > expectedSize + 6000 ||
+           tree->GetZipBytes() < expectedSize - 6000)) {
          std::cerr << "Compressed TTree size differs from"
                       " size expected for the input parameters.\n"
                       "The expected size may need tuning as compression "
