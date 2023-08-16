@@ -28,6 +28,7 @@
 #include "TThread.h"
 #include "THttpServer.h"
 #include "TSystem.h"
+#include "TDirectory.h"
 
 #include "rootwebview.h"
 #include "rootwebpage.h"
@@ -42,15 +43,25 @@
 QWebEngineUrlScheme gRootScheme("rootscheme");
 QApplication *gOwnApplication = nullptr;
 int gQt5HandleCounts = 0;
-bool gProcEvents = false;
+bool gProcEvents = false, gDoingShutdown = false;
 
 void TestQt5Cleanup()
 {
-   if (gQt5HandleCounts == 0 && gOwnApplication && !gProcEvents) {
+   if (gQt5HandleCounts == 0 && gOwnApplication && !gProcEvents && gDoingShutdown) {
       delete gOwnApplication;
       gOwnApplication = nullptr;
    }
 }
+
+class DummyObject : public TObject {
+public:
+   ~DummyObject() override
+   {
+      gDoingShutdown = true;
+      TestQt5Cleanup();
+   }
+
+};
 
 /** \class TQt5Timer
 \ingroup qt5webdisplay
@@ -121,10 +132,16 @@ protected:
             qargv[1] = nullptr;
 
             gOwnApplication = new QApplication(qargc, qargv);
+
+            // this is workaround to detect ROOT shutdown
+            TDirectory::TContext ctxt; // preserve gDirectory
+            auto dir = new TDirectory("dummy_qt5web_dir", "cleanup instance for qt5web");
+            dir->GetList()->Add(new DummyObject());
+            gROOT->GetListOfClosedObjects()->Add(dir);
          }
 
          // create timer to process Qt events from inside ROOT process events
-         // very much improve performance, even when Qt even loop runs by QApplication normally
+         // very much improve performance, even when Qt event loop runs by QApplication normally
          if (!fTimer && !args.IsHeadless()) {
             Int_t interval = gEnv->GetValue("WebGui.Qt5Timer", 1);
             if (interval > 0) {
