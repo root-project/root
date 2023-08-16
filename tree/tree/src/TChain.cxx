@@ -374,6 +374,12 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
    Int_t nf = 0;
    std::vector<std::string> expanded_glob;
    try {
+      // the LOCKGUARD is needed on Windows to fix random crashes
+      // (due to file name corruption) with the MT part of
+      // gtest-tree-dataframe-test-datasource-root
+#ifdef _MSC_VER
+      R__LOCKGUARD(gROOTMutex);
+#endif
       expanded_glob = ROOT::Internal::TreeUtils::ExpandGlob(std::string(basename));
    } catch (const std::runtime_error &) {
       // The 'ExpandGlob' function may throw in case the directory from the glob
