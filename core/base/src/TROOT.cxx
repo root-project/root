@@ -1165,11 +1165,13 @@ namespace {
 
 void TROOT::CloseFiles()
 {
+   // Close files without deleting the objects (`ResetGlobals` will be called
+   // next; see `EndOfProcessCleanups()` below.)
    if (fFiles && fFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
    // and Close TROOT itself.
-   Close("slow");
+   Close("nodelete");
    // Now sockets.
    if (fSockets && fSockets->First()) {
       if (0==fCleanups->FindObject(fSockets) ) {
@@ -1248,14 +1250,17 @@ void TROOT::EndOfProcessCleanups()
    CloseFiles();
 
    if (gInterpreter) {
+      // This might delete some of the objects 'held' by the TFiles (hence
+      // `CloseFiles` must not delete them)
       gInterpreter->ResetGlobals();
    }
 
-   // Now delete the objects 'held' by the TFiles so that it
+   // Now delete the objects still 'held' by the TFiles so that it
    // is done before the tear down of the libraries.
    if (fClosedObjects && fClosedObjects->First()) {
       R__ListSlowDeleteContent(static_cast<TList*>(fClosedObjects));
    }
+   fList->Delete("slow");
 
    // Now a set of simpler things to delete.  See the same ordering in
    // TROOT::~TROOT
