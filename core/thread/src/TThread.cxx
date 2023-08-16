@@ -354,7 +354,8 @@ void TThread::Init()
 #endif
      }
      gInterpreterMutex = ROOT::gCoreMutex;
-     gROOTMutex = gInterpreterMutex;
+     gROOTMutex = ROOT::gCoreMutex;
+     gSystemMutex = ROOT::gCoreMutex;
    }
 }
 
