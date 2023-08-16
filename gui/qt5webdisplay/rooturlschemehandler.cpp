@@ -2,9 +2,8 @@
 // Date: 2017-06-29
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
-
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -120,12 +119,12 @@ public:
       QWebEngineUrlRequestJob *req = fRequest.req();
 
       if (!req) {
-         R__LOG_ERROR(QtWebDisplayLog()) << "Qt5 request already processed path " << GetPathName() << " file " << GetFileName();
+         R__LOG_ERROR(QtWebDisplayLog()) << "Qt " << QT_VERSION_STR << " request already processed path " << GetPathName() << " file " << GetFileName();
          return;
       }
 
       if (Is404()) {
-         R__LOG_ERROR(QtWebDisplayLog()) << "Qt5 request FAIL path " << GetPathName() << " file " << GetFileName();
+         R__LOG_ERROR(QtWebDisplayLog()) << "Qt " << QT_VERSION_STR << " request FAIL path " << GetPathName() << " file " << GetFileName();
 
          req->fail(QWebEngineUrlRequestJob::UrlNotFound);
          // abort request
