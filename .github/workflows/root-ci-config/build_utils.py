@@ -83,7 +83,7 @@ def die(code: int = 1, msg: str = "", log: str = "") -> None:
     sys.exit(code)
 
 
-def print_shell_log(log: str) -> None:
+def print_shell_log(log: str, image: str) -> None:
     if log != "":
         shell_log = f"""\
 ######################################
@@ -91,7 +91,7 @@ def print_shell_log(log: str) -> None:
 ######################################
 
 For Linux, grab the image:
-$ docker run --rm -it registry.cern.ch/root-ci/<image>:buildready
+$ docker run --rm -it registry.cern.ch/root-ci/{image}:buildready
 Then:
 
 {log}
