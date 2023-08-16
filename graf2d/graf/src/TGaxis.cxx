@@ -1539,7 +1539,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   if (angle == 0) textaxis.SetTextAlign(21);
                   s = 3;
                }
-               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
+               strlcpy(chtemp, fAxis->GetBinLabel(i), 255);
                if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, i, 0.1);
                textaxis.PaintLatex(fAxis->GetBinCenter(i),
                                    ymin + s*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
@@ -1561,7 +1561,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   double scale=gPad->GetWw()*gPad->GetWNDC();
                   if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
-               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
+               strlcpy(chtemp, fAxis->GetBinLabel(i), 255);
                if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, i, 0.1);
                textaxis.PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                    fAxis->GetBinCenter(i),
@@ -1570,7 +1570,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                                    chtemp);
                if (fNModLabs) ResetLabelAttributes(&textaxis);
             } else {
-               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
+               strlcpy(chtemp, fAxis->GetBinLabel(i), 255);
                if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, i, 0.1);
                textaxis.PaintLatex(xmin - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                    ymin +(i-0.5)*(ymax-ymin)/nl,
@@ -1980,15 +1980,15 @@ L110:
                   LabelsLimits(label,first,last);  //Eliminate blanks
 
                   if (label[first] == '.') { //check if '.' is preceded by a digit
-                     strncpy(chtemp, "0",256);
+                     strncpy(chtemp, "0", 256);
                      strlcat(chtemp, &label[first],256);
-                     strncpy(label, chtemp,256);
+                     strlcpy(label, chtemp, 256);
                      first = 1; last = strlen(label);
                   }
                   if (label[first] == '-' && label[first+1] == '.') {
                      strncpy(chtemp, "-0",256);
                      strlcat(chtemp, &label[first+1],256);
-                     strncpy(label, chtemp, 256);
+                     strlcpy(label, chtemp, 256);
                      first = 1; last = strlen(label);
                   }
 
@@ -2050,7 +2050,7 @@ L110:
                   } else {
                      strncpy(label, "invalid", 256);
                   }
-                  strncpy(chtemp, &label[0], 256);
+                  strlcpy(chtemp, &label[0], 256);
                   first = 0; last=strlen(label)-1;
                   wlabel = wTimeIni + (k+1)*dwlabel;
                }
@@ -2075,7 +2075,7 @@ L110:
                if (!optionY || (x0 == x1)) {
                   if (!optionText) {
                      if (first > last)  strncpy(chtemp, " ", 256);
-                     else               strncpy(chtemp, &label[first], 255);
+                     else               strlcpy(chtemp, &label[first], 255);
                      if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, &textaxis, chtemp, axis_value, dwlabel*0.01);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
@@ -2093,7 +2093,7 @@ L110:
                            typolabel.Data());
                      if (fNModLabs) ResetLabelAttributes(&textaxis);
                   } else  {
-                     strncpy(chtemp, fAxis->GetBinLabel(k+fAxis->GetFirst()), 255);
+                     strlcpy(chtemp, fAxis->GetBinLabel(k+fAxis->GetFirst()), 255);
                      if (fNModLabs) ChangeLabelAttributes(k+fAxis->GetFirst(), fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, k+fAxis->GetFirst(), 0.1);
                      if (optionText == 1) textaxis.PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                                    gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
@@ -2869,7 +2869,7 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c, D
       if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());
       if (ml->GetColor()>=0)  t->SetTextColor(ml->GetColor());
       if (ml->GetFont()>0)    t->SetTextFont(ml->GetFont());
-      if (!ml->GetText().IsNull()) strncpy(c, ml->GetText().Data(), 256);
+      if (!ml->GetText().IsNull()) strlcpy(c, ml->GetText().Data(), 256);
    }
 }
 
