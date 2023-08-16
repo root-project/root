@@ -34,7 +34,7 @@ void annotation3d()
    f->GetXaxis()->SetNdivisions(505);
    f->GetXaxis()->SetTitleOffset(1.3);
    f->GetXaxis()->SetLabelSize(0.03);
-   f->GetXaxis()->ChangeLabel(2,-1,-1,-1,kRed,-1,"X_{0}");
+   f->GetXaxis()->ChangeLabelByValue(-0.5,-1,-1,-1,kRed,-1,"X_{0}");
 
    f->GetYaxis()->SetTitle("y");
    f->GetYaxis()->CenterTitle();
