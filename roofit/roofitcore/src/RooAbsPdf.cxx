@@ -515,7 +515,6 @@ double RooAbsPdf::getNorm(const RooArgSet* nset) const
 
 const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* iset, const TNamed* rangeName) const
 {
-
   // Check normalization is already stored
   CacheElem* cache = (CacheElem*) _normMgr.getObj(nset,iset,0,rangeName) ;
   if (cache) {
@@ -525,6 +524,11 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   // If not create it now
   RooArgSet depList;
   getObservables(iset, depList);
+
+  // Normalization is always over all pdf components. Overriding the global
+  // component selection temporarily makes all RooRealIntegrals created during
+  // that time always include all components.
+  GlobalSelectComponentRAII globalSelComp(true);
   RooAbsReal* norm = std::unique_ptr<RooAbsReal>{createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName))}.release();
 
   // Store it in the cache
@@ -601,7 +605,15 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
 
 //     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
-    RooAbsReal* normInt = std::unique_ptr<RooAbsReal>{createIntegral(depList,*getIntegratorConfig(),nr)}.release();
+    RooAbsReal* normInt;
+    {
+      // Normalization is always over all pdf components. Overriding the global
+      // component selection temporarily makes all RooRealIntegrals created during
+      // that time always include all components.
+      GlobalSelectComponentRAII selCompRAII(true);
+      normInt = std::unique_ptr<RooAbsReal>{createIntegral(depList,*getIntegratorConfig(),nr)}.release();
+    }
+    static_cast<RooRealIntegral*>(normInt)->setAllowComponentSelection(false);
     normInt->getVal() ;
 //     cout << "resulting normInt = " << normInt->GetName() << endl ;
 
