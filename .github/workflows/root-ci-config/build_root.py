@@ -153,7 +153,7 @@ def main():
     if num_failed_test != 0:
         die(msg=f"TEST FAILURE: {num_failed_test} tests failed", log=shell_log)
 
-    print_shell_log(shell_log)
+    print_shell_log(shell_log, args.platform)
 
 @github_log_group("Clean up from previous runs")
 def cleanup_previous_build(shell_log):
