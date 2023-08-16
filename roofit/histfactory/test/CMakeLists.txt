@@ -17,3 +17,4 @@ if(clad)
 endif(clad)
 
 ROOT_ADD_GTEST(testParamHistFunc testParamHistFunc.cxx LIBRARIES RooFitCore HistFactory)
+ROOT_ADD_GTEST(testHistFactoryPlotting testHistFactoryPlotting.cxx LIBRARIES RooFitCore HistFactory)
