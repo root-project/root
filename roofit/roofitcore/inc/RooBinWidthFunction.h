@@ -24,34 +24,24 @@
 
 class RooBinWidthFunction : public RooAbsReal {
   static bool _enabled;
-  
-public:  
+
+public:
   static void enableClass();
   static void disableClass();
-  static bool isClassEnabled();    
-   
+  static bool isClassEnabled();
+
   /// Create an empty instance.
   RooBinWidthFunction() :
     _histFunc("HistFuncForBinWidth", "Handle to a RooHistFunc, whose bin volumes should be returned.", this,
         /*valueServer=*/true, /*shapeServer=*/true) { }
 
-  /// Create an instance.
-  /// \param name Name to identify the object.
-  /// \param title Title for e.g. plotting.
-  /// \param histFunc RooHistFunc object whose bin widths should be returned.
-  /// \param divideByBinWidth If true, return inverse bin width.
-  RooBinWidthFunction(const char* name, const char* title, const RooHistFunc& histFunc, bool divideByBinWidth) :
-    RooAbsReal(name, title),
-    _histFunc("HistFuncForBinWidth", "Handle to a RooHistFunc, whose bin volumes should be returned.", this, histFunc, /*valueServer=*/true, /*shapeServer=*/true),
-    _divideByBinWidth(divideByBinWidth) { }
+  RooBinWidthFunction(const char* name, const char* title, const RooHistFunc& histFunc, bool divideByBinWidth);
 
   /// Copy an existing object.
   RooBinWidthFunction(const RooBinWidthFunction& other, const char* newname = nullptr) :
     RooAbsReal(other, newname),
     _histFunc("HistFuncForBinWidth", this, other._histFunc),
     _divideByBinWidth(other._divideByBinWidth) { }
-
-  ~RooBinWidthFunction() override { }
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
