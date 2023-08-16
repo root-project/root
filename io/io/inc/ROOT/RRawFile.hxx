@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <random>
 
 namespace ROOT {
 namespace Internal {
@@ -146,6 +147,8 @@ public:
       EFailureType fFailureType = kNone;
       float fFailureProbability = 0.0;
       bool fTriggered = false;
+      std::random_device fRandomDevice;
+      std::mt19937 fSeed {fRandomDevice()};
    };
 
    static RFailureInjectionContext& GetFailureInjectionContext(){
@@ -173,8 +176,8 @@ public:
     * Short reads indicate the end of the file
     */
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
-   void TriggerBitFlip(void* buffer, size_t total_bytes, std::uint64_t offset);
-   void TriggerShortRead(void* buffer, size_t total_bytes, std::uint64_t offset);
+   void TriggerBitFlip(void* buffer);
+   void TriggerShortRead(void* buffer, uint32_t endByteOfBuffer);
    void PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset);
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
 
