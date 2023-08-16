@@ -293,7 +293,7 @@ void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, std::vector<doub
       RooAbsReal::GlobalSelectComponentRAII compRAII(true);
 
       for (std::size_t i = 0; i < pdfList.size(); i++) {
-         coefCache[i] *= cache.projVal(i) / cache.projSuppNormVal(i) * cache.rangeProjScaleFactor(i);
+         coefCache[i] *= cache.coefProjectionFactor(i);
          coefSum += coefCache[i];
       }
    }
