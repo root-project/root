@@ -52,7 +52,7 @@ protected:
    Bool_t IsOwnedModLabs() const;
    void CleanupModLabs();
 
-   TAxisModLab *FindModLab(Int_t num, Double_t v = 0., Double_t eps = 0.) const;
+   TAxisModLab *FindModLab(Int_t indx, Int_t numlabels = 0, Double_t v = 0., Double_t eps = -1.) const;
 
 public:
 
@@ -69,7 +69,7 @@ public:
                                     ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth);
    virtual void        CenterLabels(Bool_t center=kTRUE);
    virtual void        CenterTitle(Bool_t center=kTRUE);
-   void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c);
+   void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c, Double_t value = 0., Double_t eps = -1.);
    virtual TGaxis     *DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                 Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
                                 Double_t gridlength = 0);
