@@ -713,6 +713,7 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName)
                throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not supported");
             } 
          }
+         out << SP*3 << "}\n"; // end of batch size loop
 
          if (fNBroadcastedB != "") {
             out << SP*3 << "int " << OpName << "_size = " << fShapeY[0] * fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
@@ -724,7 +725,7 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName)
             out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
          }
 
-         out << SP*3 << "}\n"; // end of batch size loop
+         
 
    return out.str();
 }

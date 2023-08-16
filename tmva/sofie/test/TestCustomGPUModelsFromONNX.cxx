@@ -1726,10 +1726,7 @@ TEST(ONNX, ConvTranspose1d)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 
-   for (size_t i = 0; i < output.size(); ++i) {
-      std::cout << output[i] << std::endl;
-      std::cout << correct[i] << std::endl;
-   }
+   
 }
 
 TEST(ONNX, ConvTranspose2d)
@@ -1813,6 +1810,11 @@ TEST(ONNX, ConvTransposeBias2dBatched)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+   for (size_t i = 0; i < output.size(); ++i) {
+      std::cout << output[i] << std::endl;
+      std::cout << correct[i] << std::endl;
    }
 }
 
