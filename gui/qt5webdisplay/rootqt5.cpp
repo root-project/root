@@ -39,7 +39,20 @@
 #include <memory>
 
 #include <ROOT/RWebDisplayHandle.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RLogger.hxx>
+
+QApplication *gOwnApplication = nullptr;
+int gQt5HandleCounts = 0;
+bool gProcEvents = false;
+
+void TestQt5Cleanup()
+{
+   if (gQt5HandleCounts == 0 && gOwnApplication && !gProcEvents) {
+      delete gOwnApplication;
+      gOwnApplication = nullptr;
+   }
+}
 
 /** \class TQt5Timer
 \ingroup qt5webdisplay
@@ -53,8 +66,11 @@ public:
    /// used to process all qt5 events in main ROOT thread
    void Timeout() override
    {
+      gProcEvents = true;
       QApplication::sendPostedEvents();
       QApplication::processEvents();
+      gProcEvents = false;
+
    }
 };
 
@@ -71,7 +87,6 @@ protected:
    RootWebView *fView{nullptr};  ///< pointer on widget, need to release when handle is destroyed
 
    class Qt5Creator : public Creator {
-      QApplication *qapp{nullptr};  ///< created QApplication
       int qargc{1};                 ///< arg counter
       char *qargv[2];               ///< arg values
       std::unique_ptr<TQt5Timer> fTimer; ///< timer to process ROOT events
@@ -94,7 +109,7 @@ protected:
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
-         if (!qapp && !QApplication::instance()) {
+         if (!gOwnApplication && !QApplication::instance()) {
 
             if (!gApplication) {
                R__LOG_ERROR(QtWebDisplayLog()) << "Not found gApplication to create QApplication";
@@ -115,7 +130,7 @@ protected:
             qargv[0] = gApplication->Argv(0);
             qargv[1] = nullptr;
 
-            qapp = new QApplication(qargc, qargv);
+            gOwnApplication = new QApplication(qargc, qargv);
          }
 
          // create timer to process Qt events from inside ROOT process events
@@ -183,8 +198,10 @@ protected:
 
                if (gSystem->ProcessEvents()) break; // interrupted, has to return
 
+               gProcEvents = true;
                QApplication::sendPostedEvents();
                QApplication::processEvents();
+               gProcEvents = false;
 
                if (load_finished && !did_try) {
                   did_try = true;
@@ -212,8 +229,10 @@ protected:
             delete view;
 
             for (expired=0;expired<100;++expired) {
+               gProcEvents = true;
                QApplication::sendPostedEvents();
                QApplication::processEvents();
+               gProcEvents = false;
             }
 
          }
@@ -224,7 +243,7 @@ protected:
    };
 
 public:
-   RQt5WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
+   RQt5WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) { gQt5HandleCounts++; }
 
    ~RQt5WebDisplayHandle() override
    {
@@ -233,6 +252,10 @@ public:
          delete fView;
          fView = nullptr;
       }
+
+      gQt5HandleCounts--;
+
+      TestQt5Cleanup();
    }
 
    bool Resize(int width, int height) override
