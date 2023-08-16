@@ -26,6 +26,11 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
                            const RooArgSet *nset, const RooArgSet *iset, RooArgSet const &refCoefNormSet,
                            std::string const &refCoefNormRange, int verboseEval)
 {
+   // Projection integrals are always over all pdf components. Overriding the
+   // global component selection temporarily makes all RooRealIntegrals created
+   // during that time always include all components.
+   RooAbsReal::GlobalSelectComponentRAII compRAII(true);
+
    // We put the normRange into a std::string to not have to deal with
    // nullptr vs. "" ambiguities
    const std::string normRange = addPdf.normRange() ? addPdf.normRange() : "";
@@ -289,13 +294,9 @@ void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, std::vector<doub
 
    // Adjust coefficients for given projection
    double coefSum(0);
-   {
-      RooAbsReal::GlobalSelectComponentRAII compRAII(true);
-
-      for (std::size_t i = 0; i < pdfList.size(); i++) {
-         coefCache[i] *= cache.projVal(i) / cache.projSuppNormVal(i) * cache.rangeProjScaleFactor(i);
-         coefSum += coefCache[i];
-      }
+   for (std::size_t i = 0; i < pdfList.size(); i++) {
+      coefCache[i] *= cache.projVal(i) / cache.projSuppNormVal(i) * cache.rangeProjScaleFactor(i);
+      coefSum += coefCache[i];
    }
 
    if ((RooMsgService::_debugCount > 0) &&

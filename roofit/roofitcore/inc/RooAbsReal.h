@@ -419,6 +419,7 @@ protected:
   friend class RooAddHelpers;
   friend class RooAddPdf;
   friend class RooAddModel;
+  friend class AddCacheElem;
   friend class RooFit::Detail::DataMap;
 
   // Hook for objects with normalization-dependent parameters interpretation

@@ -239,13 +239,18 @@ RooRealIntegral::RooRealIntegral()
 /// The other integrations are performed numerically. The optional
 /// config object prescribes how these numeric integrations are configured.
 ///
-
+/// \Note If pdf component selection was globally overridden to always include
+/// all components (either with RooAbsReal::globalSelectComp(bool) or a
+/// RooAbsReal::GlobalSelectComponentRAII), then any created integral will
+/// ignore component selections during its lifetime. This is especially useful
+/// when creating normalization or projection integrals.
 RooRealIntegral::RooRealIntegral(const char *name, const char *title,
              const RooAbsReal& function, const RooArgSet& depList,
              const RooArgSet* funcNormSet, const RooNumIntConfig* config,
              const char* rangeName) :
   RooAbsReal(name,title),
   _valid(true),
+  _respectCompSelect{!_globalSelectComp},
   _sumList("!sumList","Categories to be summed numerically",this,false,false),
   _intList("!intList","Variables to be integrated numerically",this,false,false),
   _anaList("!anaList","Variables to be integrated analytically",this,false,false),
@@ -836,7 +841,7 @@ double RooRealIntegral::getValV(const RooArgSet* nset) const
 
 double RooRealIntegral::evaluate() const
 {
-  GlobalSelectComponentRAII selCompRAII(_globalSelectComp || !_respectCompSelect);
+  GlobalSelectComponentRAII selCompRAII(!_respectCompSelect);
 
   double retVal(0) ;
   switch (_intOperMode) {
