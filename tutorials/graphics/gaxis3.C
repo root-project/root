@@ -30,7 +30,7 @@ void gaxis3() {
    axis->SetTitleFont(42);
 
    // Change the  1st label color to red.
-   axis->ChangeLabel(1,-1,-1,-1,2);
+   axis->ChangeLabel(1,-1,-1,-1,kRed);
 
    // Erase the 3rd label
    axis->ChangeLabel(3,-1,0.);
@@ -39,10 +39,14 @@ void gaxis3() {
    axis->ChangeLabel(5,30.,-1,0);
 
    // Change the text of the 6th label.
-   axis->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
+   axis->ChangeLabel(6,-1,-1,-1,kGreen,-1,"6th label");
 
    // Change the text of the 2nd label to the end.
-   axis->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
+   axis->ChangeLabel(-2,-1,-1,-1,kGreen,-1,"2nd to last label");
+
+   // Change the text of value 30 by "value of 30"
+   axis->ChangeLabelByValue(30.,-1,-1,-1,kBlue,-1,"value of 30");
+
 
    axis->Draw();
 }

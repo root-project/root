@@ -247,6 +247,9 @@ Some of these classes are now removed from the public interface:
 
 ## 2D Graphics Libraries
 
+- Introduce `TAxis::ChangeLabelByValue` to set custom label defined by axis value. It works also
+  when axis zooming changes and position and index of correspondent axis label changes as well.
+  `TAxis::ChangeLabel` method to change axis label by index works as before.
 
 ## 3D Graphics Libraries
 
