@@ -2843,11 +2843,7 @@ void TGaxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t l
 }
 
 
-static Double_t SavedTextAngle; ///< Global variable saving the current label's text angle. Used by TGaxis::ChangeLabelAttributes.
-static Double_t SavedTextSize;  ///< Global variable saving the current label's text size. Used by TGaxis::ChangeLabelAttributes.
-static Int_t    SavedTextAlign; ///< Global variable saving the current label's text alignment. Used by TGaxis::ChangeLabelAttributes.
-static Int_t    SavedTextColor; ///< Global variable saving the current label's text color. Used by TGaxis::ChangeLabelAttributes.
-static Int_t    SavedTextFont;  ///< Global variable saving the current label's text font. Used by TGaxis::ChangeLabelAttributes.
+static TAttText SavedAttText;  ///< Global variable saving the current label's text angle. Used by TGaxis::ChangeLabelAttributes.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper method used by TGaxis::ChangeLabel.
@@ -2863,13 +2859,7 @@ static Int_t    SavedTextFont;  ///< Global variable saving the current label's 
 
 void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c, Double_t value, Double_t eps)
 {
-   if (!fModLabs) return;
-
-   SavedTextAngle = t->GetTextAngle();
-   SavedTextSize  = t->GetTextSize();
-   SavedTextAlign = t->GetTextAlign();
-   SavedTextColor = t->GetTextColor();
-   SavedTextFont  = t->GetTextFont();
+   t->TAttText::Copy(SavedAttText);
 
    auto ml = FindModLab(i, nlabels, value, eps);
 
@@ -2890,11 +2880,7 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c, D
 
 void TGaxis::ResetLabelAttributes(TLatex* t)
 {
-   t->SetTextAngle(SavedTextAngle);
-   t->SetTextSize(SavedTextSize);
-   t->SetTextAlign(SavedTextAlign);
-   t->SetTextColor(SavedTextColor);
-   t->SetTextFont(SavedTextFont);
+   SavedAttText.Copy(*t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
