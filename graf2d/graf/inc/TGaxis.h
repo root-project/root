@@ -19,6 +19,7 @@
 class TF1;
 class TAxis;
 class TLatex;
+class TAxisModLab;
 
 class TGaxis : public TLine, public TAttText {
 
@@ -50,6 +51,8 @@ protected:
 
    Bool_t IsOwnedModLabs() const;
    void CleanupModLabs();
+
+   TAxisModLab *FindModLab(Int_t num, Double_t v = 0., Double_t eps = 0.) const;
 
 public:
 
