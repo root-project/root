@@ -26,6 +26,7 @@
 #include "TArrayD.h"
 
 class THashList;
+class TAxisModLab;
 
 class TAxis : public TNamed, public TAttAxis {
 
@@ -51,6 +52,9 @@ private:
    };
 
    Bool_t       HasBinWithoutLabel() const;
+
+
+   TAxisModLab *FindModLab(Int_t num, Double_t v = 0., Double_t eps = 0.) const;
 
 public:
    /// TAxis status bits
