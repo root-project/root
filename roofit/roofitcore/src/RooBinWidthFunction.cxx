@@ -18,6 +18,7 @@
 
 /**
  * \class RooBinWidthFunction
+ *  \ingroup Roofitcore
  *
  * RooBinWidthFunction is a class that returns the bin width (or volume) given a RooHistFunc.
  * It can be used to normalise by bin width or to compute event densities. Using the extra
@@ -45,6 +46,38 @@ bool RooBinWidthFunction::isClassEnabled() {
 /// Globally disable bin-width corrections by this class.
 void RooBinWidthFunction::disableClass() {
   _enabled = false;
+}
+
+/// Create an instance.
+/// \param name Name to identify the object.
+/// \param title Title for e.g. plotting.
+/// \param histFunc RooHistFunc object whose bin widths should be returned.
+/// \param divideByBinWidth If true, return inverse bin width.
+RooBinWidthFunction::RooBinWidthFunction(const char *name, const char *title, const RooHistFunc &histFunc, bool divideByBinWidth)
+   : RooAbsReal(name, title),
+     _histFunc("HistFuncForBinWidth", "Handle to a RooHistFunc, whose bin volumes should be returned.", this, histFunc,
+               /*valueServer=*/false, /*shapeServer=*/false),
+     _divideByBinWidth(divideByBinWidth)
+{
+   // The RooHistFunc is only used to access this histogram observables in a
+   // convenient way. That's why this proxy is not "serving" this
+   // RooBinWidthFunction in any way (see proxy constructor arguments in the
+   // initializer list above).
+   //
+   // However, the variables of the histFunc **need to be** value servers,
+   // because the width of the current bin depends on the values of the
+   // observables:
+   for (RooAbsArg * server : histFunc.servers()) {
+      addServer(*server, /*valueServer=*/true, /*shapeServer=*/false);
+   }
+   // The reason why we can't simply use the histFunc as an "indirect proxy" is
+   // the way HistFactory is implemented. The same RooBinWidthFunction is used
+   // for all samples (e.g. signal and backgrounds), but uses the RooHistFunc
+   // of only one of the samples (this is okay because the binnings for all
+   // samples in the template histogram stack is the same). This entangling of
+   // the computation graph for the different samples messes up the component
+   // selection when plotting only some samples with
+   // `plotOn(..., RooFit::Components(...))`.
 }
 
 /// Compute current bin of observable, and return its volume or inverse volume, depending
@@ -76,11 +109,11 @@ void RooBinWidthFunction::computeBatch(double* output, size_t, RooFit::Detail::D
   } else {
     if (_divideByBinWidth) {
       for (std::size_t i=0; i < bins.size(); ++i) {
-	output[i] = bins[i] >= 0 ? 1./volumes[bins[i]] : 1.;
+        output[i] = bins[i] >= 0 ? 1./volumes[bins[i]] : 1.;
       }
     } else {
       for (std::size_t i=0; i < bins.size(); ++i) {
-	output[i] = bins[i] >= 0 ? volumes[bins[i]] : 1.;
+        output[i] = bins[i] >= 0 ? volumes[bins[i]] : 1.;
       }
     }
   }
