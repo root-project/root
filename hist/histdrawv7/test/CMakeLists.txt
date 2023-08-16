@@ -4,4 +4,5 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_ADD_UNITTEST_DIR(ROOTHistDraw ROOTGpadv7)
+ROOT_ADD_GTEST(drawUnit draw.cxx LIBRARIES ROOTHistDraw)
+ROOT_ADD_GTEST(ioUnit io.cxx LIBRARIES ROOTHistDraw)
