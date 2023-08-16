@@ -1529,19 +1529,19 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
   }
 
 
-  // Add all nodes below selected nodes
+  // Add all nodes below selected nodes that are value servers
   RooArgSet tmp;
   for (const auto arg : branchNodeSet) {
     for (const auto selNode : *selNodes) {
-      if (selNode->dependsOn(*arg)) {
+      if (selNode->dependsOn(*arg, nullptr, /*valueOnly=*/true)) {
         tmp.add(*arg,true);
       }
     }
   }
 
-  // Add all nodes that depend on selected nodes
+  // Add all nodes that depend on selected nodes by value
   for (const auto arg : branchNodeSet) {
-    if (arg->dependsOn(*selNodes)) {
+    if (arg->dependsOn(*selNodes, nullptr, /*valueOnly=*/true)) {
       tmp.add(*arg,true);
     }
   }
