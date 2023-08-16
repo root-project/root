@@ -19,10 +19,7 @@
 #include <QWebEngineSettings>
 #include <QWebEngineProfile>
 #include <QtGlobal>
-
-#if QT_VERSION >= 0x050C00
 #include <QWebEngineUrlScheme>
-#endif
 
 #include "TROOT.h"
 #include "TApplication.h"
@@ -42,6 +39,7 @@
 #include <ROOT/RWebWindowsManager.hxx>
 #include <ROOT/RLogger.hxx>
 
+QWebEngineUrlScheme gRootScheme("rootscheme");
 QApplication *gOwnApplication = nullptr;
 int gQt5HandleCounts = 0;
 bool gProcEvents = false;
@@ -118,14 +116,6 @@ protected:
 
             // initialize web engine only before creating QApplication
             QtWebEngine::initialize();
-
-            #if QT_VERSION >= 0x050C00
-            QWebEngineUrlScheme scheme("rootscheme");
-            scheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
-            scheme.setDefaultPort(2345);
-            scheme.setFlags(QWebEngineUrlScheme::SecureScheme);
-            QWebEngineUrlScheme::registerScheme(scheme);
-            #endif
 
             qargv[0] = gApplication->Argv(0);
             qargv[1] = nullptr;
@@ -276,7 +266,15 @@ public:
 };
 
 struct RQt5CreatorReg {
-   RQt5CreatorReg() { RQt5WebDisplayHandle::AddCreator(); }
+   RQt5CreatorReg() {
+      RQt5WebDisplayHandle::AddCreator();
+
+      gRootScheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
+      gRootScheme.setDefaultPort(2345);
+      gRootScheme.setFlags(QWebEngineUrlScheme::SecureScheme);
+      QWebEngineUrlScheme::registerScheme(gRootScheme);
+
+   }
 } newRQt5CreatorReg;
 
 }
