@@ -49,7 +49,10 @@ void load_unload(const std::string &basename, unsigned int n)
 
    for (int i = 0; i < 100; i++) {
       gInterpreter->LoadFile(library_so.c_str());
-      gInterpreter->UnloadFile(library_so.c_str());
+      if (gInterpreter->UnloadFile(library_so.c_str())) {
+         std::cerr << "Failed to unload " << library_so << std::endl;
+         exit(1);
+      }
    }
 }
 
