@@ -253,11 +253,7 @@ namespace SOFIE{
                if (fNC2 == fNC)
                   // case broadcasting was not needed or done outside of session
                   assert(length == ConvertShapeToLength(fShapeC));
-               out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
-               out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
-               out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-               out << SP*4 << "cgh.copy(tensor_" << fNC2 << ", acc_tensor_" << fNY << ");\n";
-               out << SP*3 << "}).wait();\n";
+               out << SP*3 << "oneapi::mkl::blas::copy(q, " << length << ", buf_tensor_" << fNC2 << ", 1, buf_tensor_" << fNY << ", 1);\n";
             } else {
                //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
                // the previous result

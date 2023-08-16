@@ -497,7 +497,236 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
 template <typename T>
 std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName)
 {
-   return std::string();
+    OpName = "op_" + OpName;
+
+   if (fShapeX.empty() || fShapeW.empty() || (fNB != "" && fShapeB.empty()) || fShapeY.empty()) {
+      throw std::runtime_error("TMVA SOFIE Conv Op called to Generate without being initialized first");
+   }
+
+   std::stringstream out;
+
+   size_t bsize = fShapeX[0];
+   size_t kDepth = (fDim > 2) ? fShapeW[2] : 1;     // kernel depth
+   size_t kHeight = (fDim > 1) ? fShapeW[fDim] : 1; // kernel height
+   size_t kWidth = fShapeW[fDim + 1];               // kernel width
+
+   size_t iDepth = (fDim > 2) ? fShapeX[2] : 1;     // input depth
+   size_t iHeight = (fDim > 1) ? fShapeX[fDim] : 1; // input height
+   size_t iWidth = fShapeX[fDim + 1];               // input width
+
+   size_t oDepth = (fDim > 2) ? fShapeY[2] : 1;     // output depth
+   size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1; // ouput height
+   size_t oWidth = fShapeY[fDim + 1];    
+
+   out << "\n" << SP*3 << "//----  operator ConvTranspose " << OpName << "\n";
+
+   // create first matrix with convolution kernels
+   if (fUseSession)
+      out << SP*3 << fType << " * " << OpName << "_f = fVec_" << OpName << "_f.data();\n";
+   else {
+      size_t kernelSize = fAttrKernelShape[0];
+      if (fDim > 1)
+         kernelSize *= fAttrKernelShape[1];
+      out << SP*3 << fType << " " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * kernelSize << "] = {0};\n";
+   }
+   
+   out << SP*3 << "auto buf_" << OpName << "_f = cl::sycl::buffer{fVec_" << OpName << "_f.data(), cl::sycl::range{fVec_" << OpName << "_f.size()}};\n";
+
+   // vectorize the (dilated)convolution kernels into a matrix
+   // The shape of the kernel is W for 1d image, H x W for 2d image and D x H x W
+   // for 3d image
+   size_t id = (fDim > 2) ? fDim - 3 : 2;
+   size_t ih = (fDim > 1) ? fDim - 2 : 1;
+   size_t iw = fDim - 1;
+   size_t wstrideDil = fAttrDilations[iw];
+   size_t hstride = kWidth;
+   size_t hstrideDil = fAttrKernelShape[iw];
+   if (fDim > 1) 
+      hstrideDil *= fAttrDilations[ih];
+   // stride dilated in the height
+   size_t dstride = kHeight * kWidth;
+   size_t dstrideDil = fAttrKernelShape[iw];
+   if (fDim > 1)
+      dstrideDil *= fAttrKernelShape[ih];
+   if (fDim > 2)
+      dstrideDil *= fAttrDilations[id];
+   size_t icstride = kHeight * kWidth * kDepth;
+   size_t icstrideDil = 1;
+   for (size_t i = 0; i < fDim; i++)
+      icstrideDil *= fAttrKernelShape[i];
+   size_t ocstride = fShapeW[1] * icstride;
+   size_t ocstrideDil = fShapeW[1] * icstrideDil;
+
+   size_t num_threads = fShapeW[0] * fShapeW[1];
+   if (fDim > 2) 
+      num_threads *= kDepth;
+   if (fDim > 1)
+      num_threads *= kHeight;
+   num_threads *= kWidth;
+
+   out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*4 << "auto acc_tensor_" << fNW << " = cl::sycl::accessor{buf_tensor_" << fNW;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_" << OpName << "_f = cl::sycl::accessor{buf_" << OpName << "_f, cgh, ";
+         out << "cl::sycl::write_only, cl::sycl::no_init};\n";
+         
+         
+         out << SP*4 << "cgh.parallel_for<class " << OpName <<">(cl::sycl::range<1>{" << num_threads << "}, ";
+         out << "[=](cl::sycl::id<1> id){\n";
+         out << SP*5 << "auto tid = id;\n";
+         out << SP*5 << "auto kw = tid % " << kWidth << ";\n";
+         out << SP*5 << "tid /= " << kWidth << ";\n";
+
+         if (fDim > 2) {
+            out << SP*5 << "auto kd = tid % " << kDepth << ";\n";
+            out << SP*5 << "tid /= " << kDepth << ";\n";
+         }
+
+         if (fDim > 1) {
+            out << SP*5 << "auto kh = tid % " << kHeight << ";\n";
+            out << SP*5 << "tid /= " << kHeight << ";\n";
+         }
+
+         out << SP*5 << "auto oc = tid % " << fShapeW[1] << ";\n";
+         out << SP*5 << "auto ic = tid / " << fShapeW[1] << ";\n";
+
+         out << SP*5 << "acc_" << OpName << "_f[ic * " << ocstrideDil << " + oc * " << icstrideDil;
+         if (fDim > 2)
+            out << " + kd * " << dstrideDil;
+         if (fDim > 1) 
+            out << "+ kh * " << hstrideDil;
+         out << " + kw * " << wstrideDil << "] = acc_tensor_" << fNW << "[ic * ";
+         out << ocstride << " + oc * " << icstride;
+         if (fDim > 2) out << "+ kd * " << dstride;
+         if (fDim > 1) out << " + kh * " << hstride;
+         out << " + kw];\n";
+         out << SP*4 << "});\n";
+         out << SP*3 << "});\n";
+
+         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transA = oneapi::mkl::transpose::nontrans;\n";
+         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transB = oneapi::mkl::transpose::trans;\n";
+         out << SP*3 << "int " << OpName << "_m = " << iHeight * iWidth * iDepth << ";\n";
+         out << SP*3 << "int " << OpName << "_n = " << fShapeW[1]*icstrideDil << ";\n";
+         out << SP*3 << "int " << OpName << "_k = " << fShapeW[0] << ";\n";
+         out << SP*3 << "float " << OpName << "_alpha = 1.0;\n";
+         out << SP*3 << "float " << OpName << "_beta = 0.0;\n";
+
+         if (fUseSession) {
+            out << SP*3 << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n"; 
+         }
+         else {
+            out << SP*3 << fType << " " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] * oDepth * oHeight * oWidth
+            << "] = {0};\n";
+         }
+
+         out << SP*3 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), cl::sycl::range{fVec_" << OpName << "_xcol.size()}};\n";
+
+         // Loop on batch size
+         out << SP*3 << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
+         if (fDim ==1) {
+         if (fAttrPads[0] != fAttrPads[1] ) {
+            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
+                      << std::endl;
+            fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
+         }
+         fAttrPads[1] = 0;
+         fAttrStrides[1] = 1;
+         }
+         if (fDim == 2) {
+            if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
+               std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+               fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
+               fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
+            }
+         }
+         if (fDim == 3) {
+            if (fAttrPads[0] != fAttrPads[3] || fAttrPads[1] != fAttrPads[4] || fAttrPads[2] != fAttrPads[5]) {
+               std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+               fAttrPads[0] = (fAttrPads[0] + fAttrPads[3]) / 2;
+               fAttrPads[1] = (fAttrPads[1] + fAttrPads[4]) / 2;
+               fAttrPads[2] = (fAttrPads[2] + fAttrPads[5]) / 2;
+            }
+         }
+
+         if (fAttrGroup == 1) {
+            out << SP*4 << "size_t out_offset = n * " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
+            out << SP*4 << "size_t x_offset = n * " << fShapeX[1] * iDepth * iHeight * iWidth << ";\n";
+
+            out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
+            out <<  fShapeX[1] * iHeight * iWidth << ")};\n";
+            out << SP*4 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transA, " << OpName << "_transB, " << OpName;
+            out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, tmp_buf_tensor_" << fNX << ", " << OpName;
+            out << "_m, buf_" << OpName << "_f, " << OpName << "_n, " << OpName << "_beta, buf_" << OpName << "_xcol";
+            out << ", " << OpName << "_m);\n";
+
+            if (fDim < 3) {
+               out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
+               out <<  fShapeY[1] * oDepth * oHeight * oWidth<< ")};\n";
+            
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::col2im<float, 1>(q, buf_" << OpName << "_xcol";
+               out << ", " << fShapeW[1] << ", " << oHeight << ", " << oWidth << ",";
+            
+               if (fDim == 1)
+               out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
+                   << fAttrDilations[0];
+               else // dim ==2
+                  out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
+                     << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
+                     << fAttrDilations[1];
+               out << ", tmp_buf_tensor_" << fNY << ");\n\n ";
+            }
+            else {
+               throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not supported");
+            }
+         }
+         else {
+            out << SP*4 << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
+            out << SP*5 << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth  << " + g * "
+          << fShapeX[1] * iHeight * iWidth / fAttrGroup << ";\n ";
+            out << SP*5 << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << " + g * "
+          << fShapeY[1] * oHeight * oWidth / fAttrGroup << ";\n ";
+
+            out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
+            out <<  fShapeX[1] * iDepth * iHeight * iWidth<< ")};\n";
+            out << SP*4 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transA, " << OpName << "_transB, " << OpName;
+            out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, tmp_buf_tensor_" << fNX << ", " << OpName;
+            out << "_m, buf_" << OpName << "_f, " << OpName << "_n, " << OpName << "_beta, buf_" << OpName << "_xcol";
+            out << ", " << OpName << "_m);\n";
+
+            if (fDim < 3) {
+               out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
+               out <<  fShapeW[0] * oDepth * oHeight * oWidth / fAttrGroup << ")};\n";
+            
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::col2im<float, 1>(q, buf_" << OpName << "_xcol";
+               out << ", " << fShapeW[1] << ", " << oHeight << ", " << oWidth << ",";
+            
+               if (fDim == 1)
+               out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
+                   << fAttrDilations[0];
+               else // dim ==2
+                  out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
+                     << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
+                     << fAttrDilations[1];
+               out << ", tmp_buf_tensor_" << fNY << ");\n\n ";
+            }
+             else {
+               throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not supported");
+            } 
+         }
+
+         if (fNBroadcastedB != "") {
+            out << SP*3 << "int " << OpName << "_size = " << fShapeY[0] * fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
+            out << SP*3 << "float " << OpName << "_gamma = 1.0;\n";
+            out << SP*3 << "int " << OpName << "_incx = 1;\n";
+            out << SP*3 << "int " << OpName << "_incy = 1;\n";
+
+            out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNBroadcastedB;
+            out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
+         }
+
+         out << SP*3 << "}\n"; // end of batch size loop
+
+   return out.str();
 }
 } // namespace SOFIE
 } // namespace Experimental

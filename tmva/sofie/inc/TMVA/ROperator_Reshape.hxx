@@ -239,13 +239,7 @@ public:
          opName = "Unsquueze";
 
       out << "\n" << SP*3 << "///--------" << opName << " operator\n" << std::endl;
-      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
-      out << SP*4 << "auto acc_tensor_" << fNData << " = cl::sycl::accessor{buf_tensor_" << fNData;
-      out << ", cgh, cl::sycl::read_only};\n";
-      out << SP*4 << "auto acc_tensor_" << fNOutput << " = cl::sycl::accessor{buf_tensor_" << fNOutput;
-      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-      out << "cgh.copy(acc_tensor_" << fNData << ", acc_tensor_" << fNOutput << ");\n";
-      out << SP*3 << "}).wait();\n";
+      out << SP*3 << "oneapi::mkl::blas::copy(q, " << length << ", buf_tensor_" << fNData << ", 1, buf_tensor_" << fNOutput << ", 1);\n";
 
       return out.str();
    }

@@ -63,14 +63,9 @@ public:
          throw std::runtime_error("TMVA SOFIE Operator Identity called to Generate without being initialized first");
       }
       std::stringstream out;
+      size_t length = ConvertShapeToLength(fShape);
       out << "\n" << SP*3 << "//------ IDENTITY\n";
-      out << SP*3 << "q.submit([&](cl::sycl::handler &cgh){\n";
-      out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
-      out << ", cgh, cl::sycl::read_only};\n";
-      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
-      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n\n";
-      out << SP*4 << "cgh.copy(acc_tensor_" << fNX << ", acc_tensor_" << fNY << ");\n";
-      out << SP*3 << "});\n";
+      out << SP*3 << "oneapi::mkl::blas::copy(q, " << length << ", buf_tensor_" << fNX << ", 1, buf_tensor_" << fNY << ", 1);\n"; 
    
       return out.str();
    }

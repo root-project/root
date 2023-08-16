@@ -119,23 +119,15 @@ public:
       // No need to broadcast A if it's an initialized tensor
       if (fInitialized) {
          out << SP*3 << "// Copying initialized tensor " << fNX << " to " << fNY << "\n";
-         out << SP*3 << "q.submit([&](cl::sycl::handler &cgh){\n";
-         out << SP*4 << "auto acc_tensor_" << fNX << " = cl::sycl::accessor{buf_tensor_" << fNX;
-         out << ", cgh, cl::sycl::read_only};\n";
-         out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
-         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n\n";
-         out << SP*4 << "cgh.copy(acc_tensor_" << fNX << ", acc_tensor_" << fNY << ");\n";
-         out << SP*3 << "}).wait();\n";
+         out << SP*3 << "oneapi::mkl::blas::copy(q, " << length << ", buf_tensor_" << fNX << ", 1, buf_tensor_" << fNY << ", 1);\n";
       }
       else {
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNX << "\n";
          out << SP*3 << "{\n";
          out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNX << ".data(), " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_";
-         out << fNY << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-         out << SP*6 << "cgh.copy(data, acc_tensor_" << fNY << ");\n";
-         out << SP*5 << "}).wait();\n";
+         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << ")};\n";
+         out << SP*4 << "buf_data.set_final_data(nullptr);\n";
+         out << SP*3 << "oneapi::mkl::blas::copy(q, " << length << ", buf_data , 1, buf_tensor_" << fNY << ", 1);\n";
          out << SP*4 << "delete[] data;\n";
          out << SP << "}\n";
       }

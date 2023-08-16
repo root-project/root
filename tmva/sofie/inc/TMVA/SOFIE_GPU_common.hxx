@@ -386,9 +386,9 @@ void Im2col_3d(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int c
 }
 
 template <typename T, int dims>
-void col2im(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int channels, const int height, const int width,
+void col2im(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_col, const int channels, const int height, const int width,
                         const int kernel_h, const int kernel_w, const int pad_h, const int pad_w, 
-                        const int stride_h, const int stride_w, const int dilation_h, const int dilation_w, cl::sycl::buffer<T, dims> data_col)
+                        const int stride_h, const int stride_w, const int dilation_h, const int dilation_w, cl::sycl::buffer<T, dims> data_im)
 {
    const int output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
    const int output_w = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
@@ -398,35 +398,38 @@ void col2im(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_im, const int chan
       auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::write_only};
       auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::read_only};
 
-      cgh.parallel_for<class im2col>(cl::sycl::range{static_cast<size_t>(channels * output_h * output_w)}, [=](cl::sycl::id<1> id){
-         int w_out = id % output_w;
-         int idx = id / output_w;
+      cgh.parallel_for<class col2im>(cl::sycl::range{static_cast<size_t>(channels * height * width)}, [=](cl::sycl::id<1> id){
+         T val = static_cast<T>(0);
+         auto w_im = static_cast<int>(id % width + pad_w);
+         auto h_im = static_cast<int>(id / width) % height + pad_h;
+         auto c_im = static_cast<int>(id / (width * height));
 
-         int h_out = idx % output_h;
-         int channel_in = idx / output_h;
+         auto kernel_extent_w = (kernel_w - 1) * dilation_w + 1;
+         auto kernel_extent_h = (kernel_h - 1) * dilation_h + 1;
 
-         int channel_out = channel_in * kernel_h * kernel_w;
-         int h_in = h_out * stride_h - pad_h;
-         int w_in = w_out * stride_w - pad_w;
+         auto w_col_start = (w_im < kernel_extent_w) ? 0 : (w_im - kernel_extent_w) / stride_w + 1;
+         auto w_col_end = cl::sycl::min(w_im / stride_w + 1, output_w);
 
-         int dest = (channel_out * output_h + h_out) * output_w + w_out;
-         const int src = (channel_in * height + h_in) * width + w_in;
+         auto h_col_start = (h_im < kernel_extent_h) ? 0 : (h_im - kernel_extent_h) / stride_h + 1;
+         auto h_col_end = cl::sycl::min(h_im / stride_h + 1, output_h);
 
-         for (int i=0; i<kernel_h; i++) {
-            for (int j=0; j<kernel_w; j++) {
-               int h = h_in + i * dilation_h;
-               int w = w_in + j * dilation_w;
+         for (auto h_col = h_col_start; h_col < h_col_end; h_col++) {
+            for (auto w_col = w_col_start; w_col < w_col_end; w_col++) {
+               auto h_k = (h_im - h_col*stride_h);
+               auto w_k = (w_im - w_col*stride_w);
 
-               if ( (h >= 0) && (w >= 0) && (h < height) && (w < width) ) {
-                  acc_data_im[src + i*dilation_h*width + j * dilation_w] = acc_data_col[dest];
+               if (h_k % dilation_h == 0 && w_k % dilation_w == 0) {
+                  h_k /= dilation_h;
+                  w_k /= dilation_w;
+
+                  int64_t data_col_index = (((c_im * kernel_h + h_k) * kernel_w + w_k) * output_h + h_col) * output_w + w_col; 
+                  val += acc_data_col[data_col_index]; 
                }
-               else {
-                  dest += output_w;
-               }
 
-               dest += output_h * output_w;
             }
          }
+
+         acc_data_im[id] = static_cast<T>(val);
       });
    });
 }

@@ -187,14 +187,7 @@
                   out << SP*3 << "auto buf_tensor_" << fOutput << "_" << i << " = cl::sycl::buffer{buf_tensor_" << fOutput << ", cl::sycl::id<1>(" << offset << ")";
                   out << ", cl::sycl::range<1>(" << ConvertShapeToLength(fInputShapes[i]) << ")};\n";
                   
-                  out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
-                  out << SP*4 << "auto acc_tensor_" << fInputs[i] << "= cl::sycl::accessor{buf_tensor_" << fInputs[i];
-                  out << ", cgh, cl::sycl::read_only};\n";
-                  out << SP*4 << "auto acc_tensor_" << fOutput << "_" << i << " = cl::sycl::accessor{buf_tensor_" << fOutput << "_" << i;
-                  out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-
-                  out << SP*4 << "cgh.copy(acc_tensor_" << fInputs[i] << ", acc_tensor_" << fOutput << "_" << i << ");\n";
-                  out << SP*3 << "}).wait();\n";
+                  out << SP*3 << "oneapi::mkl::blas::copy(q, " << ConvertShapeToLength(fInputShapes[i]) << ", buf_tensor_" << fInputs[i] << ", 1, buf_tensor_" << fOutput << "_" << i << ", 1);\n";
 
                   offset+=ConvertShapeToLength(fInputShapes[i]);
                }
