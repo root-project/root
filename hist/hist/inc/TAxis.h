@@ -151,7 +151,11 @@ public:
    void               ChangeLabel(Int_t labNum=0, Double_t labAngle = -1.,
                                   Double_t labSize = -1., Int_t labAlign = -1,
                                   Int_t labColor = -1 , Int_t labFont = -1,
-                                  TString labText = ""); // *MENU*
+                                  const TString &labText = ""); // *MENU*
+   void               ChangeLabelByValue(Double_t labValue, Double_t labAngle = -1.,
+                                  Double_t labSize = -1., Int_t labAlign = -1,
+                                  Int_t labColor = -1 , Int_t labFont = -1,
+                                  const TString &labText = ""); // *MENU*
    virtual void       SetLimits(Double_t xmin, Double_t xmax) { /* set axis limits */ fXmin = xmin; fXmax = xmax; } // *MENU*
            void       SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
            void       SetNoExponent(Bool_t noExponent=kTRUE);  // *TOGGLE* *GETTER=GetNoExponent

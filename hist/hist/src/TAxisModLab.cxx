@@ -27,6 +27,7 @@ TAxis helper class used to store the modified labels.
 TAxisModLab::TAxisModLab()
 {
    fLabNum    = 0;
+   fLabValue  = 0.;
    fTextAngle = -1.;
    fTextSize  = -1.;
    fTextAlign = -1;
@@ -41,6 +42,15 @@ TAxisModLab::TAxisModLab()
 void TAxisModLab::SetLabNum(Int_t l)
 {
    if (l != 0) fLabNum = l;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set modified label value.
+
+void TAxisModLab::SetLabValue(Double_t v)
+{
+   fLabNum = 0;
+   fLabValue = v;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

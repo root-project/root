@@ -103,9 +103,13 @@ public:
    void                SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
    void                SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
    void                ChangeLabel(Int_t labNum=0, Double_t labAngle = -1.,
-                                          Double_t labSize = -1., Int_t labAlign = -1,
-                                          Int_t labColor = -1 , Int_t labFont = -1,
-                                          TString labText = ""); // *MENU*
+                                   Double_t labSize = -1., Int_t labAlign = -1,
+                                   Int_t labColor = -1 , Int_t labFont = -1,
+                                   const TString &labText = ""); // *MENU*
+   void                ChangeLabelByValue(Double_t labValue, Double_t labAngle = -1.,
+                                        Double_t labSize = -1., Int_t labAlign = -1,
+                                        Int_t labColor = -1 , Int_t labFont = -1,
+                                        const TString &labText = ""); // *MENU*
    static void         SetMaxDigits(Int_t maxd=5);
    virtual void        SetName(const char *name); // *MENU*
    virtual void        SetNdivisions(Int_t ndiv) {fNdiv = ndiv;} // *MENU*

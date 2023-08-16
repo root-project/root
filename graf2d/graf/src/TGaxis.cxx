@@ -2603,9 +2603,11 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    if (fModLabs) {
       TIter next(fModLabs);
       while (auto ml = (TAxisModLab*)next()) {
-         out<<"   gaxis->ChangeLabel("
-            <<ml->GetLabNum()<<","
-            <<ml->GetAngle()<<","
+         if (ml->GetLabNum() == 0)
+            out<<"   gaxis->ChangeLabelByValue("<<ml->GetLabValue()<<",";
+         else
+            out<<"   gaxis->ChangeLabel("<<ml->GetLabNum()<<",";
+         out<<ml->GetAngle()<<","
             <<ml->GetSize()<<","
             <<ml->GetAlign()<<","
             <<ml->GetColor()<<","
@@ -2694,7 +2696,7 @@ void TGaxis::SetFunction(const char *funcname)
 
 void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
                          Int_t labAlign, Int_t labColor, Int_t labFont,
-                         TString labText)
+                         const TString &labText)
 {
    // special situation when mod labs taken from axis - one have to reset pointer
    if (fModLabs && !IsOwnedModLabs()) {
@@ -2725,6 +2727,78 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 
    fModLabs->Add(ml);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label value "labValue". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed, even the
+/// label text itself.
+///
+/// \param[in] labValue  Axis value to be changed
+/// \param[in] labAngle  New angle value
+/// \param[in] labSize   New size (0 erase the label)
+/// \param[in] labAlign  New alignment value
+/// \param[in] labColor  New label color
+/// \param[in] labFont   New label font
+/// \param[in] labText   New label text
+///
+/// #### Example:
+///
+/// Begin_Macro(source)
+/// {
+///   auto c = new TCanvas("c1","Examples of TGaxis",900,100);
+///   c->Range(-6,-0.1,6,0.1);
+///   auto *axis = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"S");
+///   axis->SetName("axis1");
+///   axis->SetTitle("Axis Title");
+///   axis->SetTitleSize(0.2);
+///   axis->SetLabelSize(0.2);
+///   axis->SetTickSize(0.15);
+///   axis->SetTitleColor(kBlue);
+///   axis->SetTitleFont(42);
+///   axis->ChangeLabelByValue(-5.,-1,-1,-1,2);
+///   axis->ChangeLabelByValue(-3.,-1,0.);
+///   axis->ChangeLabelByValue(0.,30.,-1,0);
+///   axis->ChangeLabelByValue(3.,-1,-1,-1,3,-1,"label for 3.");
+///   axis->ChangeValue(5.,-2,-1,-1,-1,3,-1,"label for 5.");
+///   axis->Draw();
+/// }
+/// End_Macro
+///
+///  #### Notes:
+///
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
+
+void TGaxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t labSize,
+                              Int_t labAlign, Int_t labColor, Int_t labFont,
+                              const TString &labText)
+{
+   // special situation when mod labs taken from axis - one have to reset pointer
+   if (fModLabs && !IsOwnedModLabs()) {
+      fModLabs = nullptr;
+      fNModLabs = 0;
+   }
+
+   fNModLabs++;
+   if (!fModLabs) {
+      fModLabs = new TList();
+      fModLabs->SetOwner(kTRUE);
+   }
+
+   TAxisModLab *ml = new TAxisModLab();
+   ml->SetLabValue(labValue);
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
+
+   fModLabs->Add(ml);
+}
+
 
 static Double_t SavedTextAngle; ///< Global variable saving the current label's text angle. Used by TGaxis::ChangeLabelAttributes.
 static Double_t SavedTextSize;  ///< Global variable saving the current label's text size. Used by TGaxis::ChangeLabelAttributes.
