@@ -2652,6 +2652,27 @@ void TGaxis::SetFunction(const char *funcname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Search for axis modifier by index or value
+
+TAxisModLab *TGaxis::FindModLab(Int_t num, Double_t v, Double_t eps) const
+{
+   if (!fModLabs)
+      return nullptr;
+
+   TIter next(fModLabs);
+   while (auto ml = (TAxisModLab*)next()) {
+      if (ml->GetLabNum() != num)
+         continue;
+
+      if ((num != 0) || (TMath::Abs(v - ml->GetLabValue()) <= eps))
+         return ml;
+   }
+
+   return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Define new text attributes for the label number "labNum". It allows to do a
 /// fine tuning of the labels. All the attributes can be changed, even the
 /// label text itself.
@@ -2716,16 +2737,19 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
       fModLabs->SetOwner(kTRUE);
    }
 
-   TAxisModLab *ml = new TAxisModLab();
-   ml->SetLabNum(labNum);
+   TAxisModLab *ml = FindModLab(labNum);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabNum(labNum);
+      fModLabs->Add(ml);
+   }
+
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
    ml->SetAlign(labAlign);
    ml->SetColor(labColor);
    ml->SetFont(labFont);
    ml->SetText(labText);
-
-   fModLabs->Add(ml);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2787,16 +2811,19 @@ void TGaxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t l
       fModLabs->SetOwner(kTRUE);
    }
 
-   TAxisModLab *ml = new TAxisModLab();
-   ml->SetLabValue(labValue);
+   TAxisModLab *ml = FindModLab(0, labValue, 0.);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabValue(labValue);
+      fModLabs->Add(ml);
+   }
+
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
    ml->SetAlign(labAlign);
    ml->SetColor(labColor);
    ml->SetFont(labFont);
    ml->SetText(labText);
-
-   fModLabs->Add(ml);
 }
 
 
