@@ -647,7 +647,7 @@ class TAxisPainter extends ObjectPainter {
       };
 
       handle.get_modifier = function() {
-         return this.painter.findLabelModifier(this.painter.getObject(), this.nmajor-1, this.major.length);
+         return this.painter.findLabelModifier(this.painter.getObject(), this.nmajor-1, this.major);
       };
 
       this.order = 0;
@@ -899,12 +899,20 @@ class TAxisPainter extends ObjectPainter {
    }
 
    /** @summary Returns modifier for axis label */
-   findLabelModifier(axis, nlabel, num_labels) {
+   findLabelModifier(axis, nlabel, positions) {
       if (!axis.fModLabs) return null;
       for (let n = 0; n < axis.fModLabs.arr.length; ++n) {
          let mod = axis.fModLabs.arr[n];
+
+         if ((mod.fLabValue !== undefined) && (mod.fLabNum == 0)) {
+            let eps = this.log ? positions[nlabel]*1e-6 : (this.scale_max - this.scale_min)*1e-6;
+            if (Math.abs(mod.fLabValue - positions[nlabel]) < eps)
+               return mod;
+         }
+
          if ((mod.fLabNum === nlabel + 1) ||
-             ((mod.fLabNum < 0) && (nlabel === num_labels + mod.fLabNum))) return mod;
+             ((mod.fLabNum < 0) && (nlabel === positions.length + mod.fLabNum)))
+                return mod;
       }
       return null;
    }
@@ -961,7 +969,7 @@ class TAxisPainter extends ObjectPainter {
             let text = this.format(lbl_pos[nmajor], true);
             if (text === null) continue;
 
-            let mod = this.findLabelModifier(axis, nmajor, lbl_pos.length);
+            let mod = this.findLabelModifier(axis, nmajor, lbl_pos);
             if (mod?.fTextSize === 0) continue;
 
             if (mod) any_modified = true;
