@@ -5534,9 +5534,9 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
             const char *lib = ((TObjString *)tokens->At(0))->GetName();
             const char *wlib = gSystem->DynamicPathName(lib, kTRUE);
             if (wlib) {
-               Info("ReadRootmapFile", "new section for %s", lib_nameTstr.Data());
+               Info("ReadRootmapFile", "%s: New section for %s", rootmapfile, lib_nameTstr.Data());
             } else {
-               Info("ReadRootmapFile", "section for %s (library does not exist)", lib_nameTstr.Data());
+               Info("ReadRootmapFile", "%s: Section for %s (library does not exist)", rootmapfile, lib_nameTstr.Data());
             }
             delete[] wlib;
             delete tokens;
@@ -5549,25 +5549,31 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
          // Do not make a copy, just start after the key
          const char *keyname = line.c_str() + keyLen;
          if (gDebug > 6)
-            Info("ReadRootmapFile", "class %s in %s", keyname, lib_name.c_str());
+            Info("ReadRootmapFile", "%s: class %s in %s", rootmapfile, keyname, lib_name.c_str());
          TEnvRec *isThere = fMapfile->Lookup(keyname);
          if (isThere) {
             if (lib_name != isThere->GetValue()) { // the same key for two different libs
                if (firstChar == 'n') {
                   if (gDebug > 3)
-                     Info("ReadRootmapFile", "namespace %s found in %s is already in %s", keyname, lib_name.c_str(),
-                          isThere->GetValue());
+                     Info("ReadRootmapFile",
+                          "While processing %s, namespace %s was found to be associated to %s although it is already "
+                          "associated to %s",
+                          rootmapfile, keyname, lib_name.c_str(), isThere->GetValue());
                } else if (firstChar == 'h') { // it is a header: add the libname to the list of libs to be loaded.
                   lib_name += " ";
                   lib_name += isThere->GetValue();
                   fMapfile->SetValue(keyname, lib_name.c_str());
                } else if (!TClassEdit::IsSTLCont(keyname)) {
-                  Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
-                          keyname, lib_name.c_str(), isThere->GetValue());
+                  Warning("ReadRootmapFile",
+                          "While processing %s, %s %s was found to be associated to %s although it is already "
+                          "associated to %s",
+                          rootmapfile, line.substr(0, keyLen - 1).c_str(), keyname, lib_name.c_str(),
+                          isThere->GetValue());
                }
             } else { // the same key for the same lib
                if (gDebug > 3)
-                  Info("ReadRootmapFile", "Key %s was already defined for %s", keyname, lib_name.c_str());
+                  Info("ReadRootmapFile", "While processing %s, key %s was found to be already defined for %s",
+                       rootmapfile, keyname, lib_name.c_str());
             }
          } else {
             fMapfile->SetValue(keyname, lib_name.c_str());
