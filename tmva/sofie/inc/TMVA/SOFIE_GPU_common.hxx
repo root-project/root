@@ -434,6 +434,67 @@ void col2im(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_col, const int cha
    });
 }
 
+template <typename T, int dims>
+void col2im_3d(cl::sycl::queue q, cl::sycl::buffer<T, dims> data_col, const int channels, 
+                        const int depth, const int height, const int width,
+                        const int kernel_d, const int kernel_h, const int kernel_w, 
+                        const int pad_d, const int pad_h, const int pad_w, 
+                        const int stride_d, const int stride_h, const int stride_w, 
+                        const int dilation_d, const int dilation_h, const int dilation_w, 
+                        cl::sycl::buffer<T, dims> data_im)
+{
+   const int output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
+   const int output_w = (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
+   const int output_d = (depth + 2 * pad_d - (dilation_d * (kernel_d - 1) + 1)) / stride_d + 1;
+   const int channel_size = height * width * depth;
+
+   q.submit([&](cl::sycl::handler& cgh){
+      auto acc_data_im = cl::sycl::accessor{data_im, cgh, cl::sycl::write_only};
+      auto acc_data_col = cl::sycl::accessor{data_col, cgh, cl::sycl::read_only};
+
+      cgh.parallel_for<class col2im_3d>(cl::sycl::range{static_cast<size_t>(channels * depth * height * width)}, [=](cl::sycl::id<1> id){
+         T val = static_cast<T>(0);
+         auto w_im = static_cast<int>(id % width + pad_w);
+         auto h_im = static_cast<int>(id / width) % height + pad_h;
+         auto d_im = static_cast<int>(id / width / height) % depth + pad_d;
+         auto c_im = static_cast<int>(id / (width * height * depth));
+
+         auto kernel_extent_w = (kernel_w - 1) * dilation_w + 1;
+         auto kernel_extent_h = (kernel_h - 1) * dilation_h + 1;
+         auto kernel_extent_d = (kernel_d - 1) * dilation_d + 1;
+
+         auto w_col_start = (w_im < kernel_extent_w) ? 0 : (w_im - kernel_extent_w) / stride_w + 1;
+         auto w_col_end = cl::sycl::min(w_im / stride_w + 1, output_w);
+
+         auto h_col_start = (h_im < kernel_extent_h) ? 0 : (h_im - kernel_extent_h) / stride_h + 1;
+         auto h_col_end = cl::sycl::min(h_im / stride_h + 1, output_h);
+
+         auto d_col_start = (d_im < kernel_extent_d) ? 0 : (d_im - kernel_extent_d) / stride_d + 1;
+         auto d_col_end = cl::sycl::min(d_im / stride_d + 1, output_d);
+
+         for (auto d_col = d_col_start; d_col < d_col_end; d_col ++) {
+            for (auto h_col = h_col_start; h_col < h_col_end; h_col++) {
+               for (auto w_col = w_col_start; w_col < w_col_end; w_col++) {
+                  auto d_k = (d_im - d_col*stride_d);
+                  auto h_k = (h_im - h_col*stride_h);
+                  auto w_k = (w_im - w_col*stride_w);
+
+                  if (h_k % dilation_h == 0 && w_k % dilation_w == 0 && d_k % dilation_d == 0) {
+                     h_k /= dilation_h;
+                     w_k /= dilation_w;
+                     d_k /= dilation_d;
+                     int64_t idx_k = ( (c_im * kernel_d + d_k) * kernel_h + h_k ) * kernel_w + w_k;
+                     int64_t data_col_index = ((idx_k * output_d + d_col) * output_h + h_col) * output_w + w_col;
+                     val += acc_data_col[data_col_index]; 
+                  }
+               }
+            }
+         }
+         acc_data_im[id] = static_cast<T>(val);
+      });
+   });
+}
+
 
 
 

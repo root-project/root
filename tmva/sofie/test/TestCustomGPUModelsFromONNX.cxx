@@ -167,9 +167,10 @@
 #include "ConvTranspose2dGPU_FromONNX.hxx"
 #include "input_models/references/ConvTranspose2d.ref.hxx"
 
-//#include "ConvTranspose3dGPU_FromONNX.hxx"
-//#include "input_models/references/ConvTranspose3d.ref.hxx"
-
+/*
+#include "ConvTranspose3dGPU_FromONNX.hxx"
+#include "input_models/references/ConvTranspose3d.ref.hxx"
+*/
 #include "ConvTransposeBias2dGPU_FromONNX.hxx"
 #include "input_models/references/ConvTransposeBias2d.ref.hxx"
 
@@ -1750,7 +1751,8 @@ TEST(ONNX, ConvTranspose2d)
    }
 }
 
-/*TEST(ONNX, ConvTranspose3d)
+/*
+TEST(ONNX, ConvTranspose3d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
@@ -1771,6 +1773,7 @@ TEST(ONNX, ConvTranspose2d)
    }
 }
 */
+
 TEST(ONNX, ConvTransposeBias2d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;

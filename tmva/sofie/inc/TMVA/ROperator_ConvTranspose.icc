@@ -676,7 +676,15 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName)
                out << ", tmp_buf_tensor_" << fNY << ");\n\n ";
             }
             else {
-               throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not supported");
+               out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
+               out << fShapeY[1] * oDepth * oHeight * oWidth << ")};\n";
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::col2im_3d<float, 1>(q, buf_" << OpName << "_xcol";
+               out << ", " << fShapeW[1] << ", " << oDepth << ", " << oHeight << ", " << oWidth << ", ";
+               out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
+               out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
+               out << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", ";
+               out << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", ";
+               out << "tmp_buf_tensor_" << fNY << ");\n\n";
             }
          }
          else {
@@ -710,7 +718,15 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName)
                out << ", tmp_buf_tensor_" << fNY << ");\n\n ";
             }
              else {
-               throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not supported");
+               out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
+               out << fShapeY[1] * oDepth * oHeight * oWidth << ")};\n";
+               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::col2im_3d<float, 1>(q, buf_" << OpName << "_xcol";
+               out << ", " << fShapeW[1] << ", " << oDepth << ", " << oHeight << ", " << oWidth << ", ";
+               out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
+               out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
+               out << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", ";
+               out << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", ";
+               out << "tmp_buf_tensor_" << fNY << ");\n\n";
             } 
          }
          out << SP*3 << "}\n"; // end of batch size loop
