@@ -5523,11 +5523,9 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
          if (brpos == string::npos)
             continue;
          lib_name = line.substr(1, brpos - 1);
-         size_t nspaces = 0;
-         while (lib_name[nspaces] == ' ')
-            ++nspaces;
-         if (nspaces)
-            lib_name.replace(0, nspaces, "");
+         // Remove spaces at the beginning and at the end of the library name
+         lib_name.erase(lib_name.find_last_not_of(' ') + 1);
+         lib_name.erase(0, lib_name.find_first_not_of(' '));
          if (gDebug > 3) {
             TString lib_nameTstr(lib_name.c_str());
             TObjArray *tokens = lib_nameTstr.Tokenize(" ");
