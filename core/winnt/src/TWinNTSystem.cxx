@@ -1936,7 +1936,7 @@ void TWinNTSystem::FreeDirectory(void *dirp)
    }
    auto tsfd = static_cast<FindFileData_t *>(dirp);
    ::FindClose(tsfd->fSearchFile);
-   delete tsfd;
+   delete dirp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
