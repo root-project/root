@@ -2103,6 +2103,7 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       FindFileData_t *dirp = new FindFileData_t;
       dirp->fSearchFile = ::FindFirstFile(entry, &dirp->fFindFileData);
       if (dirp->fSearchFile == INVALID_HANDLE_VALUE) {
+         delete dirp;
          ((TWinNTSystem *)gSystem)->Error( "Unable to find' for reading:", entry);
          delete [] entry;
          delete [] dir;
