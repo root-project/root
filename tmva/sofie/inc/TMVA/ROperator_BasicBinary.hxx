@@ -189,13 +189,13 @@ public:
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNA << "\n";
          out << SP*3 << "{\n";
          out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNA << ".data(), " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << ")};\n";
+         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), sycl::property::buffer::use_host_ptr()};\n";
          out << SP*4 << "buf_data.set_final_data(nullptr);\n";
          out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*6 << "auto acc_" << fNBroadcastedA << " = cl::sycl::accessor{buf_";
-         out << fNBroadcastedA<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-         out << SP*6 << "cgh.copy(data, acc_" << fNBroadcastedA << ");\n";
-         out << SP*5 << "});\n";
+         out << SP*6 << "auto acc_" << fNBroadcadstedA << " = cl::sycl::accessor{buf_tensor_";
+         out << fNBroadcadstedA<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << SP*6 << "cgh.copy(data, acc_" << fNBroadcadstedA << ");\n";
+         out << SP*5 << "}).wait();\n";
          out << SP*4 << "delete[] data;\n";
          out << SP*3 << "}\n";
       }
@@ -205,19 +205,16 @@ public:
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNB << "\n";
          out << SP*3 << "{\n";
          out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNB << ".data(), " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << ")};\n";
+         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), sycl::property::buffer::use_host_ptr()};\n";
          out << SP*4 << "buf_data.set_final_data(nullptr);\n";
          out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*6 << "auto acc_" << fNBroadcastedB << " = cl::sycl::accessor{buf_";
-         out << fNBroadcastedB << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
-         out << SP*6 << "cgh.copy(data, acc_" << fNBroadcastedB << ");\n";
-         out << SP*5 << "});\n";
+         out << SP*6 << "auto acc_" << fNBroadcadstedB << " = cl::sycl::accessor{buf_tensor_";
+         out << fNBroadcadstedB << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << SP*6 << "cgh.copy(data, acc_" << fNBroadcadstedB << ");\n";
+         out << SP*5 << "}).wait();\n";
          out << SP*4 << "delete[] data;\n";
          out << SP*3 << "}\n";
       }
-
-      out << SP*3 << "q.wait();\n";
-
       const std::string& nameA = fNBroadcadstedA.empty()? fNA : fNBroadcadstedA;
       const std::string& nameB = fNBroadcadstedB.empty()? fNB : fNBroadcadstedB;
 

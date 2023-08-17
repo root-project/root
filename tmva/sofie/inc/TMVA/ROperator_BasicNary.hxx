@@ -218,7 +218,7 @@ public:
                out << SP*4 << "{\n";
                out << SP*5 << fType << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(fTensor_" + fNInputs[i] << ".data(), " << ConvertShapeToString(fShapeInputs[i]);
                out << ", " << ConvertShapeToString(fShapeY) << ");\n";
-               out << SP*5 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}};\n";
+               out << SP*5 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}, sycl::property::buffer::use_host_ptr()};\n";
                out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
                out << SP*6 << "auto acc_" << fNBroadcastedInputs[i] << " = cl::sycl::accessor{buf_";
                out << fNBroadcastedInputs[i]<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";

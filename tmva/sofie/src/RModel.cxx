@@ -681,7 +681,8 @@ namespace SOFIE{
       // Create queue
       fGC += SP + "// Create In-order Queue\n";
       fGC += SP*2 + "auto q = cl::sycl::queue{cl::sycl::gpu_selector_v, [=](cl::sycl::exception_list eL){\n";
-      fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}, cl::sycl::property::queue::in_order{}};\n";
+      //fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}, cl::sycl::property::queue::in_order{}};\n";
+      fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}};\n";
 
       // Buffer Creation
       fGC += SP*2 + "{\n"; // start of buffer creation
