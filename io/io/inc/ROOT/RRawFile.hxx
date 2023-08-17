@@ -145,10 +145,9 @@ public:
       std::uint32_t fRangeBegin {0};
       std::uint32_t fRangeEnd {0};
       EFailureType fFailureType = kNone;
-      float fFailureProbability = 0.0;
       bool fTriggered = false;
-      std::random_device fRandomDevice;
-      std::mt19937 fSeed {fRandomDevice()};
+      std::random_device fSeed;
+      std::mt19937 fGenerator {fSeed()};
    };
 
    static RFailureInjectionContext& GetFailureInjectionContext(){
@@ -176,11 +175,13 @@ public:
     * Short reads indicate the end of the file
     */
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
-   void TriggerBitFlip(void* buffer);
-   void TriggerShortRead(void* buffer, uint32_t endByteOfBuffer);
+  
+#ifdef R__TESTING_MODE
+   void TriggerBitFlip(void* buffer, size_t total_bytes);
+   void TriggerShortRead(void* buffer, size_t total_bytes);
    void PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset);
+#endif  
    size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
-
    /// Read from fFilePos offset. Returns the actual number of bytes read.
    size_t Read(void *buffer, size_t nbytes);
    /// Change the cursor fFilePos

@@ -212,71 +212,59 @@ size_t ROOT::Internal::RRawFile::DoReadAt(void *buffer, size_t nbytes, std::uint
 }
 
 #ifdef R__TESTING_MODE
-   void ROOT::Internal::RRawFile::TriggerShortRead(void* buffer, uint32_t endByteOfBuffer)
+   void ROOT::Internal::RRawFile::TriggerShortRead(void* buffer, size_t total_bytes)
    {
+      std::cout << "Short Read Triggered" << std::endl;
       auto &context = GetFailureInjectionContext();
 
-      std::uniform_int_distribution<std::mt19937::result_type> start_point_dist((endByteOfBuffer / 2), (endByteOfBuffer + 1));
-      uint32_t startPosition = start_point_dist(context.fSeed);
+      std::uniform_int_distribution<std::mt19937::result_type> start_point_dist(0, total_bytes);
+      uint32_t startPosition = start_point_dist(context.fGenerator);
 
       auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
 
-      // remove
-      std::cout << "buffer BEFORE short read" << std::endl;
-      for (size_t byte_idx = startPosition; byte_idx <= endByteOfBuffer; ++byte_idx) 
-      { 
-         std::cout << "byte_ptr[" << byte_idx << "] = " << static_cast<int>(byte_ptr[byte_idx]) << std::endl; 
-      }
-
       // for all bytes in the buffer from the random start point until the end of the buffer, make them zero
-      for (size_t byte_idx = startPosition; byte_idx <= endByteOfBuffer; ++byte_idx) {
+      for (size_t byte_idx = startPosition; byte_idx < total_bytes; ++byte_idx) {
          byte_ptr[byte_idx] = 0x00;
-      }
-
-      // remove
-      std::cout << "buffer AFTER short read" << std::endl;
-      for (size_t byte_idx = startPosition; byte_idx <= endByteOfBuffer; ++byte_idx) 
-      { 
-         std::cout << "byte_ptr[" << byte_idx << "] = " << static_cast<int>(byte_ptr[byte_idx]) << std::endl; 
       }
    }
 
-   void ROOT::Internal::RRawFile::TriggerBitFlip(void* buffer)
+   void ROOT::Internal::RRawFile::TriggerBitFlip(void* buffer, size_t total_bytes)
    {    
       auto &context = GetFailureInjectionContext();
 
       if (!context.fTriggered)
       {
+         std::cout << "Bit Flip Triggered" << std::endl;
          context.fTriggered = true;
          auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
 
-         std::uniform_int_distribution<std::mt19937::result_type> byte_dist(0,(total_bytes + 1));
-         std::uniform_int_distribution<std::mt19937::result_type> bit_dist(0,8);
+         std::uniform_int_distribution<std::mt19937::result_type> byte_dist(0, total_bytes);
+         std::uniform_int_distribution<std::mt19937::result_type> bit_dist(0, 8);
 
-         unsigned char &chosen_byte = byte_ptr[byte_dist(context.fSeed)];
-         chosen_byte ^= (1 << bit_dist(context.fSeed));
+         unsigned char &chosen_byte = byte_ptr[byte_dist(context.fGenerator)];
+         chosen_byte ^= (1 << bit_dist(context.fGenerator));
       }
    }
 
    void ROOT::Internal::RRawFile::PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset)
    {
       auto &context = GetFailureInjectionContext();
-      uint32_t endByteOfBuffer = offset + total_bytes;
-
-      // check probability of error occurring here
+      
+      std::cout << " " << std::endl;
+      std::cout << "Failure Injection Reached" << std::endl;
+      std::cout << "range begin: " << context.fRangeBegin << " buffer begin: " << offset << std::endl;
+      std::cout << "range end: " << context.fRangeEnd << " buffer end: " << total_bytes << std::endl;
 
       // check if current buffer lies within the required range
-      if (offset >= context.fRangeBegin && endByteOfBuffer <= context.fRangeEnd)
+      if (offset >= context.fRangeBegin && total_bytes <= context.fRangeEnd)
       {
          // trigger failure
          switch(GetFailureInjectionContext().fFailureType) {
             case kBitFlip:
-               std::cout << "Triggering Bit Flip" << std::endl;
-               TriggerBitFlip(buffer);
+               TriggerBitFlip(buffer, total_bytes);
                break;
             case kShortRead:
-               std::cout << "Triggering Short Read" << std::endl;
-               TriggerShortRead(buffer, endByteOfBuffer);
+               TriggerShortRead(buffer, total_bytes);
                break;
             default:
                break;
