@@ -76,13 +76,11 @@ private:
    int               fNbGroups{0};               // Number of groups on local computer
    int               fActUser{-1};               // Index of actual user in User list
    Bool_t            fGroupsInitDone{kFALSE};    // Flag used for Users and Groups initialization
-   Bool_t            fFirstFile{kFALSE};         // Flag used by OpenDirectory/GetDirEntry
 
    HANDLE            fhProcess;                  // Handle of the current process
    void             *fGUIThreadHandle{nullptr};  // handle of GUI server (aka command) thread
    ULong_t           fGUIThreadId{0};            // id of GUI server (aka command) thread
    std::string       fDirNameBuffer;             // The string buffer to hold path name
-   WIN32_FIND_DATA   fFindFileData;              // Structure to look for files (aka OpenDir under UNIX)
 
    Bool_t            DispatchTimers(Bool_t mode);
    Bool_t            CheckDescriptors();
