@@ -13,6 +13,12 @@
 #include "TROOT.h"
 #include "TSystem.h"
 
+#if defined(_WIN32)
+   const char *suffix = ".dll";
+#else
+   const char *suffix = ".so";
+#endif
+
 const static std::string code_template{R"(
 #ifndef TCLINGLOADUNLOADFILETESTS_HELPER_%s
 #define TCLINGLOADUNLOADFILETESTS_HELPER_%s
@@ -45,11 +51,11 @@ void compile_n_macros(const std::string &basename, unsigned int n)
 
 void load_unload(const std::string &basename, unsigned int n)
 {
-   std::string library_so{basename + "_" + std::to_string(n) + "_cpp.so"};
+   std::string library_so{basename + "_" + std::to_string(n) + "_cpp" + suffix};
 
    for (int i = 0; i < 100; i++) {
-      gInterpreter->LoadFile(library_so.c_str());
-      gInterpreter->UnloadFile(library_so.c_str());
+      EXPECT_EQ(gInterpreter->LoadFile(library_so.c_str()), 0) << "Failed to load " << library_so << std::endl;
+      EXPECT_EQ(gInterpreter->UnloadFile(library_so.c_str()), 0) << "Failed to unload " << library_so << std::endl;
    }
 }
 
