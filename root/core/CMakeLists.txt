@@ -1,5 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(lifetime
+                  MACRO lifetime.C
+                  OUTREF lifetime.ref)
+
 ROOTTEST_ADD_TEST(TEnv
                   MACRO  testTEnv.C
                   OUTREF testTEnv.ref)
