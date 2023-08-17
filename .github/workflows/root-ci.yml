@@ -260,6 +260,9 @@ jobs:
           - image: alma8
             config: Release
 
+          - image: alma9
+            config: Release
+
           - image: ubuntu20
             config: Release
 
