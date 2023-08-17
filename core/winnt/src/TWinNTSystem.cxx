@@ -1931,8 +1931,8 @@ void TWinNTSystem::FreeDirectory(void *dirp)
    if (!dirp)
       return;
    auto tsfd = static_cast<FindFileData_t *>(dirp);
-   if (TSystem *helper = FindHelper(0, tsfd->fSearchFile)) {
-      helper->FreeDirectory(tsfd->fSearchFile);
+   if (TSystem *helper = FindHelper(0, dirp)) {
+      helper->FreeDirectory(dirp);
       return;
    }
    ::FindClose(tsfd->fSearchFile);
@@ -1947,8 +1947,8 @@ const char *TWinNTSystem::GetDirEntry(void *dirp)
    if (!dirp)
       return nullptr;
    auto tsfd = static_cast<FindFileData_t *>(dirp);
-   if (TSystem *helper = FindHelper(0, tsfd->fSearchFile)) {
-      return helper->GetDirEntry(tsfd->fSearchFile);
+   if (TSystem *helper = FindHelper(0, dirp)) {
+      return helper->GetDirEntry(dirp);
    }
    if (tsfd->fFirstFile) {
       // when calling TWinNTSystem::OpenDirectory(), the fFindFileData
