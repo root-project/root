@@ -260,7 +260,7 @@ namespace SOFIE{
       // add header guards
       std::string hgname = fName;
       std::transform(hgname.begin(), hgname.end(), hgname.begin(), [](unsigned char c){ return std::toupper(c);} );
-      hgname = "TMVA_SOFIE_" + hgname;
+      hgname = "ROOT_TMVA_SOFIE_" + hgname;
       fGC += "\n#ifndef " + hgname + "\n";
       fGC += "#define " + hgname + "\n\n";
       for (auto& i: fNeededStdLib) {
@@ -514,24 +514,29 @@ namespace SOFIE{
 
    // generate the code to read initialized tensors from a ROOT data file
    if(fWeightFile == WeightFileType::RootBinary) {
-      fGC += "  {\n";
+      fGC += "   {\n";
       fGC += "   std::unique_ptr<TFile> rootFile(TFile::Open(filename.c_str(), \"READ\"));\n";
       fGC += "   if (!rootFile->IsOpen()) {\n";
       fGC += "      throw std::runtime_error(\"tmva-sofie failed to open ROOT file for input weights\");\n";
+      fGC += "   }\n";
+
+      std::string dirName = fName + "_weights";
+      fGC += "   if (!rootFile->GetKey(\"" + dirName + "\")) {\n";
+      fGC += "      throw std::runtime_error(\"tmva-sofie failed to open ROOT directory for input weights\");\n";
       fGC += "   }\n";
 
       for (auto &i : fInitializedTensors) {
          fGC += "  {\n";
          std::string tensor_name = "tensor_" + i.first;
          if (i.second.fType == ETensorType::FLOAT) {
-            fGC += "fTensor_" + i.first + " = *reinterpret_cast<std::vector<float>*>(rootFile->Get(";
-            fGC += "\"" + tensor_name + "\"));\n";
+            fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<float>*>(rootFile->Get(\"";
+            fGC += dirName + "/" + tensor_name + "\"));\n";
          } else if (i.second.fType == ETensorType::DOUBLE) {
-            fGC += "fTensor_" + i.first + " = *reinterpret_cast<std::vector<double>*>(rootFile->Get(";
-            fGC += "\"" + tensor_name + "\"));\n";
+            fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<double>*>(rootFile->Get(\"";
+            fGC += dirName + + "/" + tensor_name + "\"));\n";
          } else if (i.second.fType == ETensorType::INT64) {
-            fGC += "fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(";
-            fGC += "\"" + tensor_name + "\"));\n";
+            fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(\"";
+            fGC += dirName + "/" + tensor_name + "\"));\n";
          }
          fGC += "  }\n";
       }
@@ -561,7 +566,14 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
 
   // Write the initialized tensors to the file
   if (fWeightFile == WeightFileType::RootBinary) {
-    std::unique_ptr<TFile> outputFile(TFile::Open(filename.c_str(), "RECREATE"));
+      std::unique_ptr<TFile> outputFile(TFile::Open(filename.c_str(), "UPDATE"));
+
+      std::string dirName = fName + "_weights";
+    // check if directory exists, in case delete to replace with new one
+    if (outputFile->GetKey(dirName.c_str()))
+      outputFile->rmdir(dirName.c_str());
+
+      auto outputDir = outputFile->mkdir(dirName.c_str());
 
     for (const auto& item : fInitializedTensors) {
       std::string tensorName = "tensor_" + item.first;
@@ -571,19 +583,19 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
          const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
          const float* data = (std::static_pointer_cast<float>(item.second.fData)).get();
          std::vector<float> tensorDataVector(data , data + length);
-         outputFile->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
+         outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
       }
       else if(item.second.fType == ETensorType::DOUBLE){
          const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
          const double* data = (std::static_pointer_cast<double>(item.second.fData)).get();
          std::vector<double> tensorDataVector(data , data + length);
-         outputFile->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
+         outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
       }
       else if(item.second.fType == ETensorType::INT64) {
          const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
          const int64_t* data = (std::static_pointer_cast<int64_t>(item.second.fData)).get();
          std::vector<int64_t> tensorDataVector(data , data + length);
-         outputFile->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
+         outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
       }
     }
     outputFile->Write(filename.c_str());
@@ -714,12 +726,22 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
 
    }
 
-   void RModel::OutputGenerated(std::string filename) {
+   void RModel::OutputGenerated(std::string filename, bool append) {
+      // the model can be appended only if a file name is provided
       if (filename.empty()) {
+         // if a file is pr
          filename = fName + ".hxx";
+         append = false;
+      }
+      if (append && fWeightFile != WeightFileType::RootBinary) {
+         std::cout << "weights can be appended only when using ROOT binary files" << std::endl;
+         append = false;
       }
       std::ofstream f;
-      f.open(filename);
+      if (append)
+         f.open(filename, std::ios_base::app);
+      else
+         f.open(filename);
       if (!f.is_open()) {
          throw
             std::runtime_error("tmva-sofie failed to open file for output generated inference code");
