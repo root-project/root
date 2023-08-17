@@ -1,39 +1,35 @@
 FROM ubuntu:22.04
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN ln -snf /usr/share/zoneinfo/Europe/Athens /etc/localtime && echo Europe/Athens > /etc/timezone
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils sudo
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y keyboard-configuration
-RUN apt-get update && apt-get -y install sudo
 
-RUN adduser --disabled-password --gecos '' ioanna
-RUN adduser ioanna sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN  apt-get update &&  apt-get -y upgrade
+RUN  apt-get install -y git
 
-USER ioanna
-RUN sudo apt-get update && sudo apt-get -y upgrade
-RUN sudo apt-get install -y git
-
-RUN sudo apt-get install -y --no-install-recommends \
+RUN  apt-get install -y --no-install-recommends \
     curl ca-certificates gpg-agent software-properties-common && \
-    sudo rm -rf /var/lib/apt/lists/*
+     rm -rf /var/lib/apt/lists/*
 
 # repository to install Intel(R) oneAPI Libraries
-RUN sudo curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB | sudo gpg --dearmor | sudo tee /usr/share/keyrings/intel-oneapi-archive-keyring.gpg
-RUN sudo sh -c "echo 'deb [signed-by=/usr/share/keyrings/intel-oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main'  > /etc/apt/sources.list.d/oneAPI.list"
+RUN  curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB |  gpg --dearmor |  tee /usr/share/keyrings/intel-oneapi-archive-keyring.gpg
+RUN  sh -c "echo 'deb [signed-by=/usr/share/keyrings/intel-oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main'  > /etc/apt/sources.list.d/oneAPI.list"
 
-RUN sudo apt-get update && sudo apt-get upgrade -y && \
-    sudo apt-get install -y --no-install-recommends \
+RUN  apt-get update &&  apt-get upgrade -y && \
+     apt-get install -y --no-install-recommends \
     curl ca-certificates gpg-agent software-properties-common && \
-    sudo rm -rf /var/lib/apt/lists/*
+     rm -rf /var/lib/apt/lists/*
+
 # repository to install Intel(R) GPU drivers
-RUN sudo curl -fsSL https://repositories.intel.com/graphics/intel-graphics.key | sudo gpg --dearmor | sudo tee /usr/share/keyrings/intel-graphics-archive-keyring.gpg
-RUN sudo sh -c "echo 'deb [signed-by=/usr/share/keyrings/intel-graphics-archive-keyring.gpg arch=amd64] https://repositories.intel.com/graphics/ubuntu jammy flex'  > /etc/apt/sources.list.d/intel-graphics.list"
+RUN  curl -fsSL https://repositories.intel.com/graphics/intel-graphics.key |  gpg --dearmor |  tee /usr/share/keyrings/intel-graphics-archive-keyring.gpg
+RUN  sh -c "echo 'deb [signed-by=/usr/share/keyrings/intel-graphics-archive-keyring.gpg arch=amd64] https://repositories.intel.com/graphics/ubuntu jammy flex'  > /etc/apt/sources.list.d/intel-graphics.list"
 
-RUN sudo apt-get update && sudo apt-get upgrade -y && \
-    sudo apt-get install -y --no-install-recommends \
+RUN  apt-get update &&  apt-get upgrade -y && \
+     apt-get install -y --no-install-recommends \
     ca-certificates build-essential pkg-config gnupg libarchive13 openssh-server openssh-client wget net-tools git intel-basekit-getting-started intel-oneapi-advisor intel-oneapi-ccl-devel intel-oneapi-common-licensing intel-oneapi-common-vars intel-oneapi-compiler-dpcpp-cpp intel-oneapi-dal-devel intel-oneapi-dev-utilities intel-oneapi-dnnl-devel intel-oneapi-dpcpp-debugger intel-oneapi-ipp-devel intel-oneapi-ippcp-devel intel-oneapi-libdpstd-devel intel-oneapi-mkl-devel intel-oneapi-tbb-devel intel-oneapi-vtune intel-level-zero-gpu level-zero  && \
-    sudo rm -rf /var/lib/apt/lists/*
+     rm -rf /var/lib/apt/lists/*
 
+# env paths
 ENV LANG=C.UTF-8
 ENV ACL_BOARD_VENDOR_PATH='/opt/Intel/OpenCLFPGA/oneAPI/Boards'
 ENV ADVISOR_2023_DIR='/opt/intel/oneapi/advisor/2023.2.0'
@@ -78,19 +74,20 @@ ENV TBBROOT='/opt/intel/oneapi/tbb/2021.10.0/env/..'
 ENV VTUNE_PROFILER_2023_DIR='/opt/intel/oneapi/vtune/2023.2.0'
 ENV VTUNE_PROFILER_DIR='/opt/intel/oneapi/vtune/2023.2.0'
 
-WORKDIR /home/ioanna
+WORKDIR /home/root
 
-RUN sudo apt-get update && sudo apt-get upgrade -y
+RUN  apt-get update &&  apt-get upgrade -y
+
 # Install python, pip
-RUN sudo apt-get install -y python3
-RUN sudo apt-get install -y pip
+RUN  apt-get install -y python3
+RUN  apt-get install -y pip
 RUN pip install --upgrade pip
 
 # Install ROOT prerequisites
-RUN sudo apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
+RUN  apt-get install -y dpkg-dev cmake g++ gcc binutils libx11-dev libxpm-dev \
 libxft-dev libxext-dev libssl-dev
 
-RUN sudo apt-get install -y gfortran libpcre3-dev \
+RUN  apt-get install -y gfortran libpcre3-dev \
 xlibmesa-glu-dev libglew-dev libftgl-dev \
 libmysqlclient-dev libfftw3-dev libcfitsio-dev \
 graphviz-dev libavahi-compat-libdnssd-dev \
@@ -98,10 +95,10 @@ libldap2-dev libxml2-dev libkrb5-dev \
 libgsl0-dev qtwebengine5-dev
 
 # Install BLAS
-RUN sudo apt-get install -y libblas-dev liblapack-dev
+RUN  apt-get install -y libblas-dev liblapack-dev
 
 # Install Protobuf
-RUN sudo apt-get install -y libprotobuf-dev protobuf-compiler
+RUN  apt-get install -y libprotobuf-dev protobuf-compiler
 
 # Install pip packages
 RUN pip3 install numpy
@@ -112,35 +109,38 @@ RUN pip3 install protobuf==3.20.3
 # Create build, install directories
 RUN mkdir root_build
 RUN mkdir root_install
-RUN mkdir root_src
 
-RUN echo "source /opt/intel/oneapi/setvars.sh" >> /home/ioanna/.bashrc
-RUN echo "export PATH=/home/ioanna/.local/bin:$PATH" >> /home/ioanna/.bashrc
+# for pip packages
+RUN echo "export PATH=/home/root/.local/bin:$PATH" >> /home/root/.bashrc
 
-WORKDIR /home/ioanna
-ENV PATH=/home/ioanna/.local/bin:$PATH
+ENV PATH=/home/root/.local/bin:$PATH
 
+# Install newer version of cmake, so that it is compatible with icx
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.27.1/cmake-3.27.1-linux-x86_64.sh
-RUN sudo chmod +x cmake-3.27.1-linux-x86_64.sh
+RUN  chmod +x cmake-3.27.1-linux-x86_64.sh
 RUN echo "y" | echo "y" | ./cmake-3.27.1-linux-x86_64.sh
-RUN sudo apt-get purge cmake -y
-RUN echo "export PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH" >> /home/ioanna/.bashrc
-RUN export PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH
-ENV PATH=/home/ioanna/cmake-3.27.1-linux-x86_64/bin:$PATH
-RUN sudo chown ioanna:ioanna root_build
-RUN sudo chmod +w root_build
-# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On 
+RUN  apt-get purge cmake -y
+RUN echo "export PATH=/home/root/cmake-3.27.1-linux-x86_64/bin:$PATH" >> /home/root/.bashrc
+RUN export PATH=/home/root/cmake-3.27.1-linux-x86_64/bin:$PATH
+ENV PATH=/home/root/cmake-3.27.1-linux-x86_64/bin:$PATH
+
+#RUN  chown root:root root_build
+#RUN  chmod +w root_build
+# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/root/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On 
 # -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx 
 # -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx 
 # -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ 
 # -Dxrootd=Off -Dbuiltin_xrootd=Off -DTBB_LIBRARY=/opt/intel/oneapi/tbb/2021.10.0/lib/intel64/gcc4.8/libtbb.so
-# /home/ioanna/root_src
-# && cmake --build . -j96 --target install
+# /home/root/root_src
+# && cmake --build . -j16 --target install
 
-# RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/ioanna/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On  -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx  -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx  -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/  -Dxrootd=Off -Dbuiltin_xrootd=Off -DTBB_LIBRARY=/opt/intel/oneapi/tbb/2021.10.0/lib/intel64/gcc4.8/libtbb.so /home/ioanna/root_src && cmake --build . -j96 --target install
+# install ROOT from source
+RUN git clone --branch sofie-sycl https://github.com/joannapng/root.git root_src
+RUN cd root_build && cmake -DCMAKE_INSTALL_PREFIX=/home/root/root_install -Dtmva-sofie=On -Dtmva-pymva=Off -DPython3_executable=/usr/bin/python3 -Dtesting=On -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -Dtmva-sycl=On  -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx  -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx  -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/  -Dxrootd=Off -Dbuiltin_xrootd=Off -DTBB_LIBRARY=/opt/intel/oneapi/tbb/2021.10.0/lib/intel64/gcc4.8/libtbb.so /home/root/root_src && cmake --build . -j16 --target install
 
+# install intel gpu drivers
 RUN mkdir neo && cd neo
-WORKDIR /home/ioanna/neo
+WORKDIR /home/root/neo
 RUN wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-core_1.0.12149.1_amd64.deb
 RUN wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.12149.1/intel-igc-opencl_1.0.12149.1_amd64.deb
 RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-level-zero-gpu-dbgsym_1.3.24347_amd64.ddeb
@@ -149,17 +149,25 @@ RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/
 RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/intel-opencl-icd_22.39.24347_amd64.deb
 RUN wget https://github.com/intel/compute-runtime/releases/download/22.39.24347/libigdgmm12_22.2.0_amd64.deb
 
-RUN sudo chmod +x *.deb
-RUN sudo dpkg -i *.deb
-# add user to video group
-RUN sudo usermod -a -G video ioanna
+RUN  chmod +x *.deb
+RUN  dpkg -i *.deb
 
-WORKDIR /home/ioanna
+# add user to video group
+RUN  usermod -a -G video root
+
+WORKDIR /home/root
 # install onnxruntime
 RUN git clone --recursive https://github.com/Microsoft/onnxruntime.git
-RUN cd onnxruntime && ./build.sh --config RelWithDebInfo --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync
+RUN cd onnxruntime && ./build.sh --config RelWithDebInfo --build_shared_lib --parallel --compile_no_warning_as_error --skip_submodule_sync --allow_running_as_root
 
-RUN git clone --branch tmva_sofie_benchmark https://github.com/lmoneta/rootbench.git
+RUN git clone --branch tmva_sofie_gpu_benchmark https://github.com/joannapng/rootbench.git
 RUN cd rootbench && pip install -r requirements.txt
-#cmake -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx  -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DONNXRuntime_INCLUDE_DIR=/home/ioanna/onnxruntime/include/onnxruntime/core/session -DONNXRuntime_LIBRARY=/home/ioanna/onnxruntime/build/Linux/RelWithDebInfo/libonnxruntime.so -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ ../rootbench
+RUN mkdir rootbench_build && cd rootbench_build && cmake -DROOT_DIR=/home/root/root_install/cmake -DROOTSYS=/home/root/root_install -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx  -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DONNXRuntime_INCLUDE_DIR=/home/root/onnxruntime/include/onnxruntime/core/session -DONNXRuntime_LIBRARY=/home/root/onnxruntime/build/Linux/RelWithDebInfo/libonnxruntime.so -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ ../rootbench && cmake --build . -j16
 
+# install intel metrics
+RUN git clone https://github.com/intel/metrics-discovery.git
+RUN apt-get install libdrm-dev -y
+RUN cd metrics-discovery && mkdir build && cd build && cmake ../ && make -j16 && make install
+EXPOSE 22
+
+RUN apt-get install vim -y
