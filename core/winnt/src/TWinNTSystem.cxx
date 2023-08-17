@@ -1917,30 +1917,26 @@ int  TWinNTSystem::MakeDirectory(const char *name)
 /// Struct used to pass information between OpenDirectory and GetDirEntry in a
 /// thread safe way (each thread creates a new instance of it).
 
-typedef struct {
+struct FindFileData_t {
    HANDLE          fSearchFile;         // HANDLE returned by FindFirstFile and used by FindNextFile
    WIN32_FIND_DATA fFindFileData;       // Structure to look for files (aka OpenDir under UNIX)
    Bool_t          fFirstFile{kFALSE};  // Flag used by OpenDirectory/GetDirEntry
-} THREAD_SAFE_FIND_DATA;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close a WinNT file system directory.
 
 void TWinNTSystem::FreeDirectory(void *dirp)
 {
-   THREAD_SAFE_FIND_DATA *tsfd = (THREAD_SAFE_FIND_DATA *)dirp;
-   if (tsfd) {
-      TSystem *helper = FindHelper(0, tsfd->fSearchFile);
-      if (helper) {
-         helper->FreeDirectory(tsfd->fSearchFile);
-         return;
-      }
+   if (!dirp)
+      return;
+   auto tsfd = static_cast<FindFileData_t *>(dirp);
+   if (TSystem *helper = FindHelper(0, tsfd->fSearchFile)) {
+      helper->FreeDirectory(tsfd->fSearchFile);
+      return;
    }
-
-   if (tsfd) {
-      ::FindClose(tsfd->fSearchFile);
-      delete tsfd;
-   }
+   ::FindClose(tsfd->fSearchFile);
+   delete tsfd;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1948,25 +1944,21 @@ void TWinNTSystem::FreeDirectory(void *dirp)
 
 const char *TWinNTSystem::GetDirEntry(void *dirp)
 {
-   THREAD_SAFE_FIND_DATA *tsfd = (THREAD_SAFE_FIND_DATA *)dirp;
-   if (tsfd) {
-      TSystem *helper = FindHelper(0, tsfd->fSearchFile);
-      if (helper) {
-         return helper->GetDirEntry(tsfd->fSearchFile);
-      }
+   if (!dirp)
+      return nullptr;
+   auto tsfd = static_cast<FindFileData_t *>(dirp);
+   if (TSystem *helper = FindHelper(0, tsfd->fSearchFile)) {
+      return helper->GetDirEntry(tsfd->fSearchFile);
    }
-
-   if (tsfd) {
-      if (tsfd->fFirstFile) {
-         // when calling TWinNTSystem::OpenDirectory(), the fFindFileData
-         // structure is filled by a call to FindFirstFile().
-         // So first returns this one, before calling FindNextFile()
-         tsfd->fFirstFile = kFALSE;
-         return (const char *)tsfd->fFindFileData.cFileName;
-      }
-      if (::FindNextFile(tsfd->fSearchFile, &tsfd->fFindFileData)) {
-         return (const char *)tsfd->fFindFileData.cFileName;
-      }
+   if (tsfd->fFirstFile) {
+      // when calling TWinNTSystem::OpenDirectory(), the fFindFileData
+      // structure is filled by a call to FindFirstFile().
+      // So first returns this one, before calling FindNextFile()
+      tsfd->fFirstFile = kFALSE;
+      return (const char *)tsfd->fFindFileData.cFileName;
+   }
+   if (::FindNextFile(tsfd->fSearchFile, &tsfd->fFindFileData)) {
+      return (const char *)tsfd->fFindFileData.cFileName;
    }
    return nullptr;
 }
@@ -2100,7 +2092,7 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
    }
 
    if (finfo.st_mode & S_IFDIR) {
-      THREAD_SAFE_FIND_DATA *dirp = new THREAD_SAFE_FIND_DATA;
+      FindFileData_t *dirp = new FindFileData_t;
       strlcpy(entry, dir,nche);
       if (!(entry[strlen(dir)-1] == '/' || entry[strlen(dir)-1] == '\\' )) {
          strlcat(entry,"\\",nche);
