@@ -1,0 +1,2 @@
+Warning in <TInterpreter::ReadRootmapFile>: While processing ./rfile2.rootmap, class myclassduplicated was found to be associated to libdup2.so although it is already associated to libdup1.so
+
