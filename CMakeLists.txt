@@ -29,6 +29,11 @@ foreach(policy ${policy_new})
   endif()
 endforeach()
 
+# ignore JAVA_ROOT when find_package(Java 1.8 ...) called
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
+  cmake_policy(SET CMP0144 OLD)
+endif()
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
   cmake_policy(SET CMP0135 OLD)
 endif()
@@ -176,7 +181,7 @@ function(relatedrepo_GetClosestMatch)
   cmake_parse_arguments(_ "" "REPO_NAME;ORIGIN_PREFIX;UPSTREAM_PREFIX;FETCHURL_VARIABLE;FETCHREF_VARIABLE" "" ${ARGN})
 
   set(${__FETCHURL_VARIABLE} ${__UPSTREAM_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
-  
+
   if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
     set(${__FETCHREF_VARIABLE} v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION} PARENT_SCOPE)
     return()
