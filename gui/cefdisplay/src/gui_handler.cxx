@@ -138,12 +138,14 @@ void GuiHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> 
       return;
 
    // Display a load error message.
+   /*
    std::stringstream ss;
    ss << "<html><body bgcolor=\"white\">"
          "<h2>Failed to load URL "
       << failedUrl.ToString().substr(0,100) << " with error " << errorText.ToString() << " (" << errorCode
       << ").</h2></body></html>";
-   // frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+   */
 
    printf("Fail to load URL %s\n", failedUrl.ToString().substr(0,100).c_str());
 }
@@ -152,11 +154,7 @@ void GuiHandler::CloseAllBrowsers(bool force_close)
 {
    if (!CefCurrentlyOn(TID_UI)) {
       // Execute on the UI thread.
-#if CEF_VERSION_MAJOR < 95
-      CefPostTask(TID_UI, base::Bind(&GuiHandler::CloseAllBrowsers, this, force_close));
-#else
       CefPostTask(TID_UI, base::BindOnce(&GuiHandler::CloseAllBrowsers, this, force_close));
-#endif
       return;
    }
 
@@ -196,16 +194,12 @@ cef_return_value_t GuiHandler::OnBeforeResourceLoad(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
     CefRefPtr<CefRequest> request,
-    CefRefPtr<CefResourceLoadCallBack> callback) {
+    CefRefPtr<CefCallback> callback) {
   CEF_REQUIRE_IO_THREAD();
-
-  // std::string url = request->GetURL().ToString();
-  // printf("OnBeforeResourceLoad url %s\n", url.c_str());
 
   return fResourceManager->OnBeforeResourceLoad(browser, frame, request,
                                                  callback);
 }
-
 
 
 class TCefHttpCallArg : public THttpCallArg {
