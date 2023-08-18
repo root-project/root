@@ -123,9 +123,8 @@ void GuiHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
 // Returns a data: URI with the specified contents.
 std::string GuiHandler::GetDataURI(const std::string& data, const std::string& mime_type)
 {
-    return "data:" + mime_type + ";base64," +
-           CefURIEncode(CefBase64Encode(data.data(), data.size()), false)
-            .ToString();
+    return std::string("data:") + mime_type + ";base64," +
+           CefURIEncode(CefBase64Encode(data.data(), data.size()), false).ToString();
 }
 
 
@@ -256,7 +255,7 @@ public:
          fArg = std::make_shared<TCefHttpCallArg>();
    }
 
-   virtual ~TGuiResourceHandler() {}
+   ~TGuiResourceHandler() override {}
 
    void Cancel() override { CEF_REQUIRE_IO_THREAD(); }
 
@@ -291,19 +290,14 @@ public:
          response_length = fArg->GetContentLength();
 
          if (fArg->NumHeader() > 0) {
-            // printf("******* Response with extra headers\n");
             CefResponse::HeaderMap headers;
             for (Int_t n = 0; n < fArg->NumHeader(); ++n) {
                TString name = fArg->GetHeaderName(n);
                TString value = fArg->GetHeader(name.Data());
                headers.emplace(CefString(name.Data()), CefString(value.Data()));
-               // printf("   header %s %s\n", name.Data(), value.Data());
             }
             response->SetHeaderMap(headers);
          }
-//         if (strstr(fArg->GetQuery(),"connection="))
-//            printf("Reply %s %s %s  len: %d %s\n", fArg->GetPathName(), fArg->GetFileName(), fArg->GetQuery(),
-//                  fArg->GetContentLength(), (const char *) fArg->GetContent() );
       }
       // DCHECK(!fArg->Is404());
    }
@@ -391,8 +385,6 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
   }
 
   std::string inp_method = request->GetMethod().ToString();
-
-  // printf("REQUEST METHOD %s\n", inp_method.c_str());
 
   TGuiResourceHandler *handler = new TGuiResourceHandler(serv);
   handler->fArg->SetMethod(inp_method.c_str());
