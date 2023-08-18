@@ -15,11 +15,11 @@ endforeach()
 if(WIN32)
   if(winrtdebug)
     set(PCRE_POSTFIX $<$<CONFIG:Debug>:d>)
-    set(pcre_config "Debug")
+    set(pcre_config_kind "Debug")
   else()
-    set(pcre_config "Release")
+    set(pcre_config_kind "Release")
   endif()
-  set(pcre_build_config "--config ${pcre_config}")
+  set(pcre_config "--config")
 endif()
 
 set(PCRE_VERSION "8.43" CACHE INTERNAL "" FORCE)
@@ -52,7 +52,7 @@ ExternalProject_Add(PCRE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
 
   BUILD_COMMAND
-    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_build_config} --target pcre
+    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_config} ${pcre_config_kind} --target pcre
 
   BUILD_BYPRODUCTS
     ${PCRE_BYPRODUCTS}
@@ -66,7 +66,7 @@ ExternalProject_Get_Property(PCRE BINARY_DIR)
 set(PCRE_FOUND TRUE CACHE INTERNAL "" FORCE)
 set(PCRE_INCLUDE_DIR "${BINARY_DIR}" CACHE INTERNAL "" FORCE)
 if(WIN32)
-  set(PCRE_PCRE_LIBRARY "${BINARY_DIR}/${pcre_config}/${PCRE_LIBNAME}" CACHE INTERNAL "" FORCE)
+  set(PCRE_PCRE_LIBRARY "${BINARY_DIR}/${pcre_config_kind}/${PCRE_LIBNAME}" CACHE INTERNAL "" FORCE)
 else()
   set(PCRE_PCRE_LIBRARY "${BINARY_DIR}/${CMAKE_CFG_INTDIR}/${PCRE_LIBNAME}" CACHE INTERNAL "" FORCE)
 endif()
