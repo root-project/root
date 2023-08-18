@@ -273,8 +273,11 @@ public:
 
       return true;
    }
-
+#if CEF_VERSION_MAJOR > 114
+   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64_t &response_length, CefString &redirectUrl) override
+#else
    void GetResponseHeaders(CefRefPtr<CefResponse> response, int64 &response_length, CefString &redirectUrl) override
+#endif
    {
       CEF_REQUIRE_IO_THREAD();
 
