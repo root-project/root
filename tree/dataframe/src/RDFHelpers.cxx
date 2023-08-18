@@ -46,10 +46,12 @@
 int get_tty_size()
 {
 #if defined(_WIN32) || defined(_WIN64)
+   if (!_isatty(_fileno(stdout)))
+      return 0;
    int width = 0;
    CONSOLE_SCREEN_BUFFER_INFO csbi;
-   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-   width = (int)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
+   if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+      width = (int)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
    return width;
 #elif defined(__linux__)
    int width = 0;
@@ -148,7 +150,7 @@ ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, u
      fBarWidth{progressBarWidth = int(get_tty_size() / 4)},
      fTotalFiles{totalFiles},
 #if defined(_WIN32) || defined(_WIN64)
-     fIsTTY{_isatty(_fileno(stdout)) == 1},
+     fIsTTY{_isatty(_fileno(stdout)) != 0},
      fUseShellColours{false && useColors}
 #else
      fIsTTY{isatty(fileno(stdout)) == 1},

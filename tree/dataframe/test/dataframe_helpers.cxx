@@ -689,9 +689,9 @@ TEST(RDFHelpers, ProgressHelper_Existence_ST)
    std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
-   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "f1.root");
-   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "f2.root");
-   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"f1.root", "f2.root"});
+   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "fh1.root");
+   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "fh2.root");
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root", "fh2.root"});
    ROOT::RDF::Experimental::AddProgressbar(d);
    d.Count().GetValue();
    // Restore old cout.
@@ -711,9 +711,9 @@ TEST(RDFHelpers, ProgressHelper_Existence_MT)
    std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
-   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "f1.root");
-   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "f2.root");
-   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"f1.root", "f2.root"});
+   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "fh1.root");
+   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "fh2.root");
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root", "fh2.root"});
    ROOT::RDF::Experimental::AddProgressbar(d);
    d.Count().GetValue();
    // Restore old cout.
@@ -729,8 +729,8 @@ TEST(RDFHelpers, ProgressHelper_existence_singleTTreeInput)
    std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
-   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "f1.root");
-   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"f1.root"});
+   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "fh1.root");
+   ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root"});
    ROOT::RDF::Experimental::AddProgressbar(d);
    d.Count().GetValue();
    // Restore old cout.
