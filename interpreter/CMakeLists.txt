@@ -170,6 +170,9 @@ endif()
 
 # We will not fix llvm or clang.
 string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+# Turn off coverage - we don't need this for llvm.
+string(REPLACE "${GCC_COVERAGE_COMPILE_FLAGS}" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 
 if(LLVM_SHARED_LINKER_FLAGS)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LLVM_SHARED_LINKER_FLAGS}")
