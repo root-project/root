@@ -4365,6 +4365,22 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          maxs = TMath::Max(maxs,theSize[i]);
       }
    }
+   if (minx == maxx) {
+      minx = 0.9*theX[0];
+      maxx = 1.1*theX[0];
+   }
+   if (miny == maxy) {
+      miny = 0.9*theY[0];
+      maxy = 1.1*theY[0];
+   }
+   if (minc == maxc) {
+      minc = 0.9*theColor[0];
+      maxc = 1.1*theColor[0];
+   }
+   if (mins == maxs) {
+      mins = 0.9*theSize[0];
+      maxs = 1.1*theSize[0];
+   }
 
    TH2F *h = theScatter->GetHistogram();
    if (optionAxis) h->Paint(" ");
