@@ -223,6 +223,15 @@ else()
     message(WARNING "No supported Python 2 or 3 development packages were found; PyROOT will not be built.")
   endif()
 
+  # if development parts not found, one still need python executable to run some scripts
+  if(NOT PYTHON_EXECUTABLE)
+    find_package(Python3)
+    if(Python3_FOUND)
+       message(STATUS "Found python3 executable ${Python3_EXECUTABLE}, required only for ROOT compilation.")
+       set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+    endif()
+  endif()
+
 endif()
 
 # Create lists of Python 2 and 3 useful variables used to build PyROOT with both versions
