@@ -3,7 +3,7 @@
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -37,7 +37,6 @@ public:
    {
       // just let run loop
       CefDoMessageLoopWork();
-
    }
 };
 
@@ -50,7 +49,7 @@ public:
 
    FrameSourceVisitor(RCefWebDisplayHandle *handle) : CefStringVisitor(), fHandle(handle) {}
 
-   virtual ~FrameSourceVisitor() = default;
+   ~FrameSourceVisitor() override = default;
 
    void Visit(const CefString &str) override
    {
@@ -69,9 +68,9 @@ class HeadlessPrintCallback : public CefPdfPrintCallback {
    bool *fFlag{nullptr};
 public:
    HeadlessPrintCallback(bool *flag) : CefPdfPrintCallback(), fFlag(flag) {}
-   virtual ~HeadlessPrintCallback() = default;
+   ~HeadlessPrintCallback() override = default;
 
-   void OnPdfPrintFinished(const CefString&, bool ok ) override
+   void OnPdfPrintFinished(const CefString&, bool ok) override
    {
       if (fFlag) *fFlag = true;
    }

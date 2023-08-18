@@ -3,7 +3,7 @@
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,7 +28,7 @@ protected:
       CefRefPtr<SimpleApp> fCefApp;
    public:
       CefCreator() = default;
-      virtual ~CefCreator() = default;
+      ~CefCreator() override = default;
 
       std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> Display(const ROOT::Experimental::RWebDisplayArgs &args) override;
    };
@@ -42,7 +42,7 @@ protected:
 public:
    RCefWebDisplayHandle(const std::string &url) : ROOT::Experimental::RWebDisplayHandle(url) {}
 
-   virtual ~RCefWebDisplayHandle();
+   ~RCefWebDisplayHandle() override;
 
    bool IsValid() const { return fValid == kValid; }
 
