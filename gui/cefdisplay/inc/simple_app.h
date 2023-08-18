@@ -55,12 +55,8 @@ public:
    // CefApp methods:
    CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() override { return this; }
 
-#if defined(OS_LINUX)
-#if CEF_VERSION_MAJOR < 95
    // only on Linux special print handler is required to return PDF size
-   CefRefPtr<CefPrintHandler> GetPrintHandler() override { return this; }
-#endif
-#endif
+   // CefRefPtr<CefPrintHandler> GetPrintHandler() override { return this; }
    // virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() override { return this; }
 
    void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) override;
@@ -74,11 +70,7 @@ public:
 
 #if defined(OS_LINUX)
    // CefPrintHandler methods
-#if CEF_VERSION_MAJOR < 95
-   CefSize GetPdfPaperSize(int device_units_per_inch) override { return CefSize(device_units_per_inch*8.25, device_units_per_inch*11.75); }
-#else
    CefSize GetPdfPaperSize(CefRefPtr<CefBrowser>, int device_units_per_inch) override { return CefSize(device_units_per_inch*8.25, device_units_per_inch*11.75); }
-#endif
    bool OnPrintDialog( CefRefPtr< CefBrowser > browser, bool has_selection, CefRefPtr< CefPrintDialogCallback > callback ) override { return false; }
    bool OnPrintJob( CefRefPtr< CefBrowser > browser, const CefString& document_name, const CefString& pdf_file_path, CefRefPtr< CefPrintJobCallback > callback ) override { return false; }
    void OnPrintReset( CefRefPtr< CefBrowser > browser ) override {}
