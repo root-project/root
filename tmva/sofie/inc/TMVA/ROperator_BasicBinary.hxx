@@ -189,7 +189,7 @@ public:
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNA << "\n";
          out << SP*3 << "{\n";
          out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNA << ".data(), " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), sycl::property::buffer::use_host_ptr()};\n";
+         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), props};\n";
          out << SP*4 << "buf_data.set_final_data(nullptr);\n";
          out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*6 << "auto acc_" << fNBroadcadstedA << " = cl::sycl::accessor{buf_tensor_";
@@ -205,7 +205,7 @@ public:
          out << SP*3 << "// Broadcasting uninitialized tensor " << fNB << "\n";
          out << SP*3 << "{\n";
          out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNB << ".data(), " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), sycl::property::buffer::use_host_ptr()};\n";
+         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), props};\n";
          out << SP*4 << "buf_data.set_final_data(nullptr);\n";
          out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*6 << "auto acc_" << fNBroadcadstedB << " = cl::sycl::accessor{buf_tensor_";
@@ -215,6 +215,7 @@ public:
          out << SP*4 << "delete[] data;\n";
          out << SP*3 << "}\n";
       }
+
       const std::string& nameA = fNBroadcadstedA.empty()? fNA : fNBroadcadstedA;
       const std::string& nameB = fNBroadcadstedB.empty()? fNB : fNBroadcadstedB;
 

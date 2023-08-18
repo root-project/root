@@ -684,20 +684,22 @@ namespace SOFIE{
       //fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}, cl::sycl::property::queue::in_order{}};\n";
       fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}};\n";
 
+      fGC += SP*3 + "const sycl::property_list props = {sycl::property::buffer::use_host_ptr()};\n";
       // Buffer Creation
       fGC += SP*2 + "{\n"; // start of buffer creation
 
+      
       // Create buffers for inputs
       for (size_t i=0; i<fInputTensorNames.size(); ++i) {
          fGC += SP*3 + "auto buf_tensor_" + fInputTensorNames[i] + " = cl::sycl::buffer{fTensor_" + fInputTensorNames[i];
-         fGC += ".data(), cl::sycl::range{fTensor_" + fInputTensorNames[i] + ".size()}};\n";
+         fGC += ".data(), cl::sycl::range{fTensor_" + fInputTensorNames[i] + ".size()}, props};\n";
          fGC += SP*3 + "buf_tensor_" + fInputTensorNames[i] + ".set_final_data(nullptr);\n";
       }
 
       // Create buffers for initialized tensors
       for (auto& i : fInitializedTensors) {
          if (i.second.fType == ETensorType::FLOAT){
-            fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}};\n";
+            fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}, props};\n";
             fGC += SP*3 + "buf_tensor_" + i.first + ".set_final_data(nullptr);\n";
          }
       }
@@ -706,7 +708,7 @@ namespace SOFIE{
 
       // Create buffers for intermediate tensors
       for (auto& i : fIntermediateTensorInfos) {
-         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}};\n";
+         fGC += SP*3 + "auto buf_tensor_" + i.first + " = cl::sycl::buffer{fTensor_" + i.first + ".data(), cl::sycl::range{fTensor_" + i.first + ".size()}, props};\n";
          
          // if the intermediate tensor is not an output
          if (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end()) {

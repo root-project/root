@@ -96,7 +96,7 @@ public:
       out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
       out << SP*4 << "cgh.copy(acc_shape, acc_tensor_" << fNY << ");\n";
-      out << SP*3 << "}).wait();\n";
+      out << SP*3 << "});\n";
 
       return out.str();
    }
