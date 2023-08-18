@@ -7,11 +7,47 @@ import sys
 import textwrap
 from functools import wraps
 from http import HTTPStatus
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict
 
 from openstack.connection import Connection
 from requests import get
 
+class Tracer:
+    """
+    Trace command invocations and print them to reproduce builds.
+    """
+
+    image = ""
+    docker_opts = []
+    trace = ""
+
+    def __init__(self, image: str, docker_opts: str):
+        self.image = image
+        if docker_opts:
+            self.docker_opts = docker_opts.split(' ')
+        if '--rm' in self.docker_opts:
+            self.docker_opts.remove('--rm')
+
+    def add(self, command: str) -> None:
+        self.trace += '\n(\n' + textwrap.dedent(command.strip()) + '\n)'
+
+    def print(self) -> None:
+        if self.trace != "":
+            print("""\
+######################################
+#    To replicate build locally     #
+######################################
+""")
+            if self.image:
+                print(f"""\
+Grab the image:
+$ docker run -it {self.image} {' '.join(self.docker_opts)}
+Then:
+""")
+            print(self.trace)
+
+
+log = Tracer("", "")
 
 def github_log_group(title: str):
     """ decorator that places function's stdout/stderr output in a
@@ -23,9 +59,9 @@ def github_log_group(title: str):
 
             try:
                 result = func(*args, **kwargs)
-            except Exception as e:
+            except Exception as exc:
                 print("::endgroup::")
-                raise e
+                raise exc
 
             print("::endgroup::")
 
@@ -57,7 +93,7 @@ def print_error(*values, **kwargs):
     print_fancy("Fatal error: ", *values, sgr=31, **kwargs)
 
 
-def subprocess_with_log(command: str, log="") -> Tuple[int, str]:
+def subprocess_with_log(command: str) -> int:
     """Runs <command> in shell and appends <command> to log"""
 
     print_fancy(textwrap.dedent(command), sgr=1)
@@ -71,33 +107,18 @@ def subprocess_with_log(command: str, log="") -> Tuple[int, str]:
 
     print("\033[0m", end='')
 
-    return (result.returncode,
-            log + '\n(\n' + textwrap.dedent(command.strip()) + '\n)')
+    log.add(command)
+
+    return result.returncode
 
 
-def die(code: int = 1, msg: str = "", log: str = "") -> None:
+
+def die(code: int = 1, msg: str = "") -> None:
     print_error(f"({code}) {msg}")
 
-    print_shell_log(log)
+    log.print()
 
     sys.exit(code)
-
-
-def print_shell_log(log: str, image: str) -> None:
-    if log != "":
-        shell_log = f"""\
-######################################
-#    To replicate build locally     #
-######################################
-
-For Linux, grab the image:
-$ docker run --rm -it registry.cern.ch/root-ci/{image}:buildready
-Then:
-
-{log}
-"""
-
-        print(shell_log)
 
 
 def load_config(filename) -> dict:
@@ -178,20 +199,20 @@ def download_file(url: str, dest: str) -> None:
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
 
-    with open(dest, 'wb') as f, get(url, timeout=300) as r:
-        f.write(r.content)
+    with open(dest, 'wb') as fout, get(url, timeout=300) as req:
+        fout.write(req.content)
 
 
-def download_latest(url: str, prefix: str, destination: str, shell_log: str) -> Tuple[str, str]:
+def download_latest(url: str, prefix: str, destination: str) -> str:
     """Downloads latest build artifact starting with <prefix>,
        and returns the file path to the downloaded file and shell_log."""
 
     # https://docs.openstack.org/api-ref/object-store/#show-container-details-and-list-objects
-    with get(f"{url}/?prefix={prefix}&format=json", timeout=20) as r:
-        if r.status_code == HTTPStatus.NO_CONTENT or r.content == b'[]':
+    with get(f"{url}/?prefix={prefix}&format=json", timeout=20) as req:
+        if req.status_code == HTTPStatus.NO_CONTENT or req.content == b'[]':
             raise Exception(f"No object found with prefix: {prefix}")
 
-        result = json.loads(r.content)
+        result = json.loads(req.content)
         artifacts = [x['name'] for x in result if 'content_type' in x]
 
     latest = max(artifacts)
@@ -199,8 +220,8 @@ def download_latest(url: str, prefix: str, destination: str, shell_log: str) -> 
     download_file(f"{url}/{latest}", f"{destination}/artifacts.tar.gz")
 
     if os.name == 'nt':
-        shell_log += f"\nInvoke-WebRequest {url}/{latest} -OutFile {destination}\\artifacts.tar.gz"
+        log.add(f"\nInvoke-WebRequest {url}/{latest} -OutFile {destination}\\artifacts.tar.gz")
     else:
-        shell_log += f"\nwget -x -O {destination}/artifacts.tar.gz {url}/{latest}\n"
+        log.add(f"\nwget -x -O {destination}/artifacts.tar.gz {url}/{latest}\n")
 
-    return f"{destination}/artifacts.tar.gz", shell_log
+    return f"{destination}/artifacts.tar.gz"
