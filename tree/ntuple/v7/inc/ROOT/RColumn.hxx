@@ -167,7 +167,6 @@ public:
    {
       if (!fReadPage.Contains(globalIndex)) {
          MapPage(globalIndex);
-         R__ASSERT(fReadPage.Contains(globalIndex));
       }
       const auto elemSize = fElement->GetSize();
       void *from = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
@@ -188,7 +187,6 @@ public:
 
    void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, void *to)
    {
-      R__ASSERT(count > 0);
       if (!fReadPage.Contains(globalIndex)) {
          MapPage(globalIndex);
       }

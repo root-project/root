@@ -93,10 +93,12 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
 {
    fPageSource->ReleasePage(fReadPage);
    fReadPage = fPageSource->PopulatePage(fHandleSource, index);
+   R__ASSERT(fReadPage.Contains(index));
 }
 
 void ROOT::Experimental::Detail::RColumn::MapPage(const RClusterIndex &clusterIndex)
 {
    fPageSource->ReleasePage(fReadPage);
    fReadPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
+   R__ASSERT(fReadPage.Contains(clusterIndex));
 }
