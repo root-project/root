@@ -5,7 +5,7 @@
 See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumembedded/cef)
 
 1. Current code tested with CEF3 branch 5845, Chromium 116 (August 2023)
-   Some older CEF versions (like 5304 or 4692) may also be supported.
+   Some older CEF versions (like 95 or 107) may also be supported.
 
 2. Download binary code from [https://cef-builds.spotifycdn.com/index.html](https://cef-builds.spotifycdn.com/index.html)
    and unpack it in directory without spaces and special symbols:

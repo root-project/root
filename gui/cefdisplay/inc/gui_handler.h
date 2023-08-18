@@ -28,13 +28,6 @@ class RLogChannel;
 
 ROOT::Experimental::RLogChannel &CefWebDisplayLog();
 
-#if CEF_VERSION_MAJOR < 95
-typedef CefRequestCallback CefResourceLoadCallBack ;
-#else
-typedef CefCallback CefResourceLoadCallBack;
-#endif
-
-
 class THttpServer;
 
 /** \class GuiHandler
@@ -107,7 +100,7 @@ public:
          CefRefPtr<CefBrowser> browser,
          CefRefPtr<CefFrame> frame,
          CefRefPtr<CefRequest> request,
-         CefRefPtr<CefResourceLoadCallBack> callback) override;
+         CefRefPtr<CefCallback> callback) override;
 
    CefRefPtr<CefResourceHandler> GetResourceHandler(
          CefRefPtr<CefBrowser> browser,
