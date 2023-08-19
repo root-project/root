@@ -4373,13 +4373,17 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
       miny = 0.9*theY[0];
       maxy = 1.1*theY[0];
    }
-   if (minc == maxc) {
-      minc = 0.9*theColor[0];
-      maxc = 1.1*theColor[0];
+   if (theColor) {
+      if (minc == maxc) {
+         minc = 0.9*theColor[0];
+         maxc = 1.1*theColor[0];
+      }
    }
-   if (mins == maxs) {
-      mins = 0.9*theSize[0];
-      maxs = 1.1*theSize[0];
+   if (theSize) {
+      if (mins == maxs) {
+         mins = 0.9*theSize[0];
+         maxs = 1.1*theSize[0];
+      }
    }
 
    TH2F *h = theScatter->GetHistogram();
