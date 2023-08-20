@@ -61,13 +61,15 @@ jobs:
       options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        # Handle up to 256 profiles being generated concurrently and merged
+        LLVM_PROFILE_FILE: 'llvm_profile_out_%256m.profraw'
         PYTHONUNBUFFERED: true
 
     steps:
-      - name: Install cov packages
+      - name: Install clang and coverage packages
         run: |
           sudo dnf -y update
-          sudo dnf -y install lcov
+          sudo dnf -y install clang llvm
           pip3 install gcovr
 
       - name: Checkout
@@ -86,7 +88,11 @@ jobs:
 
       - name: Apply option override from matrix for this job
         env:
-          OVERRIDE: "coverage=On"
+          OVERRIDE: |
+            coverage=On
+            CMAKE_CXX_COMPILER=clang++
+            CMAKE_C_COMPILER=clang
+            CMAKE_BUILD_TYPE=Release
           FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
         shell: bash
         run: |
@@ -133,13 +139,17 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
+      - name: Merge raw coverage reports
+        run: |
+          find . -name '*.profraw' > input-profraw.txt
+          llvm-profdata merge -sparse --input-files=input-profraw.txt --output=merged.profdata
+          llvm-cov export -format=lcov -instr-profile merged.profdata
+          ls -ltr
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v3
         with:
           env_vars: OS,PYTHON
           fail_ci_if_error: true
-          files: /github/home/ROOT-CI/build/cobertura-cov.xml
-          flags: unittests
-          name: codecov-umbrella
+          files: /github/home/ROOT-CI/build/merged.profdata.lcov
           verbose: true
