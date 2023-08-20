@@ -159,7 +159,6 @@ def parse_args():
     return args
 
 
-@github_log_group("To reproduce")
 def print_trace():
     build_utils.log.print()
 
@@ -250,7 +249,9 @@ def show_node_state() -> None:
     if result != 0:
         build_utils.print_warning("Failed to extract node state")
 
-# Just return the exit code in case of test failures instead of `die()`-ing; report test@github_log_group("Run tests")
+# Just return the exit code in case of test failures instead of `die()`-ing; report test
+# failures in main().
+@github_log_group("Run tests")
 def run_ctest(extra_ctest_flags: str) -> int:
     ctest_result = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
@@ -278,33 +279,35 @@ def archive_and_upload(archive_name, prefix):
     )
 
 
-@github_log_group("Build")
-def build(options, buildtype):
-    generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
+@github_log_group("Configure")
+def cmake_configure(options, buildtype):
+   result = subprocess_with_log(f"""
+       cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
+   """)
 
-    if not os.path.isdir(f'{WORKDIR}/build'):
-        result = subprocess_with_log(f"mkdir {WORKDIR}/build")
+   if result != 0:
+       die(result, "Failed cmake generation step")
 
-        if result != 0:
-            die(result, "Failed to create build directory")
 
-    if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
-        result = subprocess_with_log(f"""
-            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
-        """)
+@github_log_group("Dump existing configuration")
+def cmake_dump_config():
+    # Print CMake cached config
+    result = subprocess_with_log(f"""
+        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -N -L
+    """)
 
-        if result != 0:
-            die(result, "Failed cmake generation step")
-    else:
-        # Print CMake cached config
-        result = subprocess_with_log(f"""
-            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -N -L
-        """)
+    if result != 0:
+        die(result, "Failed cmake cache print step")
 
-        if result != 0:
-            die(result, "Failed cmake cache print step")
 
+@github_log_group("Dump requested build configuration")
+def dump_requested_config(options):
     print(f"\nBUILD OPTIONS: {options}")
+
+
+@github_log_group("Build")
+def cmake_build(buildtype):
+    generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
 
     result = subprocess_with_log(f"""
         cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
@@ -313,6 +316,22 @@ def build(options, buildtype):
     if result != 0:
         die(result, "Failed to build")
 
+
+def build(options, buildtype):
+    if not os.path.isdir(f'{WORKDIR}/build'):
+        result = subprocess_with_log(f"mkdir {WORKDIR}/build")
+
+        if result != 0:
+            die(result, "Failed to create build directory")
+
+    if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
+        cmake_configure(options, buildtype)
+    else:
+        cmake_dump_config()
+
+    dump_requested_config(options)
+
+    cmake_build(buildtype)
 
 @github_log_group("Rebase")
 def rebase(base_ref, head_ref) -> None:

@@ -12,42 +12,6 @@ from typing import Callable, Dict
 from openstack.connection import Connection
 from requests import get
 
-class Tracer:
-    """
-    Trace command invocations and print them to reproduce builds.
-    """
-
-    image = ""
-    docker_opts = []
-    trace = ""
-
-    def __init__(self, image: str, docker_opts: str):
-        self.image = image
-        if docker_opts:
-            self.docker_opts = docker_opts.split(' ')
-        if '--rm' in self.docker_opts:
-            self.docker_opts.remove('--rm')
-
-    def add(self, command: str) -> None:
-        self.trace += '\n(\n' + textwrap.dedent(command.strip()) + '\n)'
-
-    def print(self) -> None:
-        if self.trace != "":
-            print("""\
-######################################
-#    To replicate build locally     #
-######################################
-""")
-            if self.image:
-                print(f"""\
-Grab the image:
-$ docker run -it {self.image} {' '.join(self.docker_opts)}
-Then:
-""")
-            print(self.trace)
-
-
-log = Tracer("", "")
 
 def github_log_group(title: str):
     """ decorator that places function's stdout/stderr output in a
@@ -70,6 +34,40 @@ def github_log_group(title: str):
         return wrapper if os.getenv("GITHUB_ACTIONS") else func
 
     return group
+
+
+class Tracer:
+    """
+    Trace command invocations and print them to reproduce builds.
+    """
+
+    image = ""
+    docker_opts = []
+    trace = ""
+
+    def __init__(self, image: str, docker_opts: str):
+        self.image = image
+        if docker_opts:
+            self.docker_opts = docker_opts.split(' ')
+        if '--rm' in self.docker_opts:
+            self.docker_opts.remove('--rm')
+
+    def add(self, command: str) -> None:
+        self.trace += '\n(\n' + textwrap.dedent(command.strip()) + '\n)'
+
+    @github_log_group("To replicate this build locally")
+    def print(self) -> None:
+        if self.trace != "":
+            if self.image:
+                print(f"""\
+Grab the image:
+$ docker run -it {self.image} {' '.join(self.docker_opts)}
+Then:
+""")
+            print(self.trace)
+
+
+log = Tracer("", "")
 
 
 def print_fancy(*values, sgr=1, **kwargs) -> None:
@@ -112,11 +110,10 @@ def subprocess_with_log(command: str) -> int:
     return result.returncode
 
 
-
 def die(code: int = 1, msg: str = "") -> None:
-    print_error(f"({code}) {msg}")
-
     log.print()
+
+    print_error(f"({code}) {msg}")
 
     sys.exit(code)
 
