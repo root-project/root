@@ -13,16 +13,16 @@
   code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = std::make_unique<TRefArray>(onfile._proxyList); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _serverList" target="_serverList" \
-  code="{ _serverList = RooFit::STLRefCountListHelpers::convert(onfile._serverList); }"
+  code="{ _serverList = RooSTLRefCountList<RooAbsArg>::convert(onfile._serverList); }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientList" target="_clientList" \
-  code="{ _clientList = RooFit::STLRefCountListHelpers::convert(onfile._clientList); }"
+  code="{ _clientList = RooSTLRefCountList<RooAbsArg>::convert(onfile._clientList); }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientListValue" target="_clientListValue" \
-  code="{ _clientListValue = RooFit::STLRefCountListHelpers::convert(onfile._clientListValue); }"
+  code="{ _clientListValue = RooSTLRefCountList<RooAbsArg>::convert(onfile._clientListValue); }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientListShape" target="_clientListShape" \
-  code="{ _clientListShape = RooFit::STLRefCountListHelpers::convert(onfile._clientListShape); }"
+  code="{ _clientListShape = RooSTLRefCountList<RooAbsArg>::convert(onfile._clientListShape); }"
 #pragma link C++ class RooSTLRefCountList<RooAbsArg>+;
 #pragma link C++ class RooStringVar+ ;
 #pragma read sourceClass="RooAbsString" targetClass="RooStringVar" version="[1]" source="Int_t _len; char *_value" target="_string" code="{_string.assign(onfile._value, onfile._len);}"

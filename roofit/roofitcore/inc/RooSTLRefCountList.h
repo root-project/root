@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cassert>
 
+class RooLinkedList;
 
 /**
  * \class RooSTLRefCountList
@@ -258,6 +259,7 @@ class RooSTLRefCountList {
       Remove(obj, true);
     }
 
+    static RooSTLRefCountList<T> convert(const RooLinkedList& old);
 
   private:
     //Return an iterator to the last element in this sorted collection with a
@@ -316,16 +318,6 @@ class RooSTLRefCountList {
 
 template<class T>
 std::size_t const* RooSTLRefCountList<T>::_renameCounter = nullptr;
-
-class RooAbsArg;
-class RooRefCountList;
-
-namespace RooFit {
-namespace STLRefCountListHelpers {
-  /// Converter from the old RooRefCountList to RooSTLRefCountList.
-  RooSTLRefCountList<RooAbsArg> convert(const RooRefCountList& old);
-}
-}
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_ */
 
