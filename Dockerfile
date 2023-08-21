@@ -164,10 +164,12 @@ RUN git clone --branch tmva_sofie_gpu_benchmark https://github.com/joannapng/roo
 RUN cd rootbench && pip install -r requirements.txt
 RUN mkdir rootbench_build && cd rootbench_build && cmake -DROOT_DIR=/home/root/root_install/cmake -DROOTSYS=/home/root/root_install -DBLAS_LIBRARIES=/usr/lib/x86_64-linux-gnu/blas/libblas.so -DProtobuf_LIBRARIES=/usr/lib/x86_64-linux-gnu/libprotobuf.so -DCMAKE_C_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icx  -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.2.1/linux/bin/icpx -DONNXRuntime_INCLUDE_DIR=/home/root/onnxruntime/include/onnxruntime/core/session -DONNXRuntime_LIBRARY=/home/root/onnxruntime/build/Linux/RelWithDebInfo/libonnxruntime.so -DIntelSYCL_DIR=/opt/intel/oneapi/compiler/2023.2.1/linux/IntelSYCL/ ../rootbench && cmake --build . -j16
 
+# Setup system for GPU Analysis
 # install intel metrics
 RUN git clone https://github.com/intel/metrics-discovery.git
 RUN apt-get install libdrm-dev -y
 RUN cd metrics-discovery && mkdir build && cd build && cmake ../ && make -j16 && make install
+echo dev.i915.perf_stream_paranoid=0 > /etc/sysctl.d/60-mdapi.conf
 EXPOSE 22
 
 RUN apt-get install vim -y

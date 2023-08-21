@@ -39,9 +39,11 @@ add_executable(emitFromONNX
    EmitFromONNX_all.cxx
 )
 
-add_executable(emitFromONNX_GPU
-  EmitFromONNX_GPU_all.cxx  
-)
+if (tmva-sycl)
+  add_executable(emitFromONNX_GPU
+    EmitFromONNX_GPU_all.cxx  
+  )
+endif()
 
 target_include_directories(emitFromONNX PRIVATE
    ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
@@ -52,39 +54,47 @@ target_include_directories(emitFromONNX PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 
-target_include_directories(emitFromONNX_GPU PRIVATE
-   ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
-   ${SOFIE_PARSERS_DIR}/inc
-   ${CMAKE_SOURCE_DIR}/tmva/inc
-   ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
-)
+if (tmva-sycl)
+  target_include_directories(emitFromONNX_GPU PRIVATE
+    ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
+    ${SOFIE_PARSERS_DIR}/inc
+    ${CMAKE_SOURCE_DIR}/tmva/inc
+    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
+    ${CMAKE_SOURCE_DIR}/core/foundation/inc
+    ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+  )
+endif()
 
 target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromONNX PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
+if (tmva-sycl)
 target_link_libraries(emitFromONNX_GPU ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromONNX_GPU PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX_GPU PRIVATE -Wno-unused-parameter -Wno-array-bounds)
+endif()
 
 # Automatic compilation of headers from onnx files
 add_custom_target(SofieCompileModels_ONNX)
 add_dependencies(SofieCompileModels_ONNX emitFromONNX)
 
-add_custom_target(SofieCompileGPUModels_ONNX)
-add_dependencies(SofieCompileGPUModels_ONNX emitFromONNX_GPU)
+if (tmva-sycl)
+  add_custom_target(SofieCompileGPUModels_ONNX)
+  add_dependencies(SofieCompileGPUModels_ONNX emitFromONNX_GPU)
+endif()
 
 add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
 		USES_TERMINAL )
 
-add_custom_command(TARGET SofieCompileGPUModels_ONNX POST_BUILD
-COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX_GPU ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
-USES_TERMINAL )
+if (tmva-sycl)
+  add_custom_command(TARGET SofieCompileGPUModels_ONNX POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX_GPU ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
+  USES_TERMINAL )
+endif()
 
 # Creating a Google Test
 if (tmva-cpu)  # we need BLAS for compiling the models
@@ -185,16 +195,19 @@ if (tmva-cpu)
   )
  endif()
 
- if (tmva-cpu)
-  ROOT_ADD_GTEST(TestSofieGPUModels TestSofieGPUModels.cxx
-    LIBRARIES
-      ROOTTMVASofie
-      ROOTTMVASofieParser
-      ${BLAS_LINKER_FLAGS}
-      ${BLAS_LIBRARIES}
-    INCLUDE_DIRS
-      ${CMAKE_CURRENT_BINARY_DIR}
-  )
- endif()
+ #if (tmva-sycl)
+ #   ROOT_ADD_GTEST(TestSofieGPUModels TestSofieGPUModels.cxx
+ #   LIBRARIES
+ #     ROOTTMVASofie
+ #     ROOTTMVASofieParser
+ #   INCLUDE_DIRS
+ #     ${CMAKE_CURRENT_BINARY_DIR}
+ #   COMPILE_OPTIONS
+ #     -fsycl -DMKL_ILP64  -I"${MKLROOT}/include"
+ #   LINK_OPTIONS
+ #     -fsycl  -L${MKLROOT}/lib/intel64 -lmkl_sycl -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lsycl -lpthread -lm -ldl
+ # )
+ # add_sycl_to_target(TARGET TestSofieGPUModels SOURCES TestSofieGPUModels.cxx)
+ #endif()
 
 endif()

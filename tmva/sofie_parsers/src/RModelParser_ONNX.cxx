@@ -339,7 +339,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       if (verbose)
          std::cout << "\t initializer " << i << " name " << input_name << " type " << graph.initializer(i).data_type()
                    << std::endl;
-
       switch (static_cast<ETensorType>(graph.initializer(i).data_type())) {
       case ETensorType::FLOAT: {
          std::shared_ptr<void> data(malloc(fLength * sizeof(float)), free);

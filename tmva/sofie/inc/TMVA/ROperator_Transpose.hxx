@@ -139,39 +139,47 @@ public:
 
       std::stringstream out;
       out << "\n" << SP*3 << "///------- Transpose operator\n";
-      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
-      out << SP*4 << "auto acc_tensor_" << fNData << " = cl::sycl::accessor{buf_tensor_" << fNData;
-      out << ", cgh, cl::sycl::read_only};\n";
-      out << SP*4 << "auto acc_tensor_" << fNOutput << " = cl::sycl::accessor{buf_tensor_" << fNOutput;
-      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
-      out << "), [=](cl::sycl::id<1> id){\n";
-      out << SP*5 << "acc_tensor_" << fNOutput << "[id] = acc_tensor_" << fNData << "[";
-      std::vector<std::string> i_out(dim);
-      for (int k =0; k < dim; k++){
-         if (k == 0)
-            i_out[k] = "id";
-         else
-            i_out[k] = "(id % " + std::to_string(outStrides[k-1]) + ")";
-         if (k < dim-1)
-            i_out[k] += " / " + std::to_string(outStrides[k]);
+      if (dim == 2) {
+         out << SP*3 << "oneapi::mkl::tranpose trans = transpose::trans;\n";
+         out << SP*3 << "oneapi::mkl::blas::omatcopy(q, trans, " << fShapeData[0] << ", " << fShapeData[1] << ", 1, buf_tensor_" << fNData << ", " << fShapeData[1];
+         out << ", " << "buf_tensor_" << fNOutput << ", " << fShapeData[0] << ");\n";
       }
+      else {
+         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*4 << "auto acc_tensor_" << fNData << " = cl::sycl::accessor{buf_tensor_" << fNData;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*4 << "auto acc_tensor_" << fNOutput << " = cl::sycl::accessor{buf_tensor_" << fNOutput;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
 
-      for (int k = 0; k < dim; k++) {
-         // find value in fAtrrPerm corresponding to k
-         int l = std::find(fAttrPerm.begin(), fAttrPerm.end(), k) - fAttrPerm.begin();
-         assert(l >= 0 && l < dim);
-         out << "( " << i_out[l] << " )";
-         if (k < dim-1) {
-            out << " * " << inStrides[k];
-            out << " + ";
+         out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
+         out << "), [=](cl::sycl::id<1> id){\n";
+         out << SP*5 << "acc_tensor_" << fNOutput << "[id] = acc_tensor_" << fNData << "[";
+         std::vector<std::string> i_out(dim);
+         for (int k =0; k < dim; k++){
+            if (k == 0)
+               i_out[k] = "id";
+            else
+               i_out[k] = "(id % " + std::to_string(outStrides[k-1]) + ")";
+            if (k < dim-1)
+               i_out[k] += " / " + std::to_string(outStrides[k]);
          }
-      }
 
-      out << "];\n";
-      out << SP*4 << "});\n";
-      out << SP*3 << "});\n";
+         for (int k = 0; k < dim; k++) {
+            // find value in fAtrrPerm corresponding to k
+            int l = std::find(fAttrPerm.begin(), fAttrPerm.end(), k) - fAttrPerm.begin();
+            assert(l >= 0 && l < dim);
+            out << "( " << i_out[l] << " )";
+            if (k < dim-1) {
+               out << " * " << inStrides[k];
+               out << " + ";
+            }
+         }
+
+         out << "];\n";
+         out << SP*4 << "});\n";
+         out << SP*3 << "});\n";
+      }
       return out.str();
    }
 

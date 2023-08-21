@@ -201,7 +201,10 @@ public:
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
 
-         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*3 << "oneapi::mkl::blas::scal(q, " << length << ", " << "1 / sum_buf.get_host_access()[0], buf_tensor_" << fNY << ", 1);\n";
+         
+
+         /*out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
          out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
          out << ", cgh, cl::sycl::read_write};\n";
          out << SP*4 << "auto acc_sum_buf = cl::sycl::accessor{sum_buf, cgh, cl::sycl::read_only};\n";
@@ -209,7 +212,7 @@ public:
          out << "), [=](cl::sycl::id<1> id){\n";
          out << SP*5 << "acc_tensor_" << fNY << "[id] /= acc_sum_buf[0];\n";
          out << SP*4 << "});\n";
-         out << SP*3 << "});\n";
+         out << SP*3 << "});\n";*/
       }
       else {
          size_t batch = fShape[0];

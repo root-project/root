@@ -566,12 +566,11 @@ public:
             }
          }
 
-         out << SP*6 << "for (int l = i; l < i + kh; l++) {\n";
-         out << SP*7 << "if (l < 0 || l >= hsize) continue;\n";
+         out << SP*6 << "for (int l = cl::sycl::max(i, 0); l < cl::sycl::min(i + kh, hsize); l++) {\n";
          out << SP*7 << "int index = inputOffset + l;\n";
          if (fPoolMode == MaxPool) {
             out << SP*7 << "auto xval = acc_tensor_" << fNX << "[index];\n";
-            out << SP*7 << "if (xval > value) value = xval;\n";
+            out << SP*7 << "value = cl::sycl::max(xval, value);\n";
          }
          else if (fPoolMode == AveragePool) {
             out << SP*7 << "value += acc_tensor_" << fNX << "[index];\n";
@@ -620,15 +619,13 @@ public:
             }
          }
 
-         out << SP*6 << "for (int l = i; l < i + kh; l++) {\n";
-         out << SP*7 << "if (l < 0 || l >= hsize) continue;\n";
-         out << SP*7 << "for (int m = j; m < j + kw; m++) {\n";
-         out << SP*8 << "if (m < 0 || m >= wsize) continue;\n";
+         out << SP*6 << "for (int l = cl::sycl::max(i, 0); l < cl::sycl::min(i + kh, hsize); l++) {\n";
+         out << SP*7 << "for (int m = cl::sycl::max(j, 0); m < cl::sycl::min(j + kw, wsize); m++) {\n";
          out << SP*8 << "int index = inputOffset + l*wsize + m;\n";
 
          if (fPoolMode == MaxPool) {
             out << SP*8 << "auto xval = acc_tensor_" << fNX << "[index];\n";
-            out << SP*8 << "if (xval > value) value = xval;\n";
+            out << SP*8 << "value = cl::sycl::max(xval, value);\n";
          }
          else if (fPoolMode == AveragePool) {
             out << SP*8 << "value += acc_tensor_" << fNX <<"[index];\n";
@@ -681,17 +678,14 @@ public:
             }
          }
 
-         out << SP*6 << "for (int l = i; l < i + kh; l++) {\n";
-         out << SP*7 << "if (l < 0 || l >= hsize) continue;\n";
-         out << SP*7 << "for (int m = j; m < j + kw; m++) {\n";
-         out << SP*8 << "if (m < 0 || m >= wsize) continue;\n";
-         out << SP*8 << "for (int p = k; p < k + kd; p++) {\n";
-         out << SP*9 << "if (p < 0 || p >= dsize) continue;\n";
+         out << SP*6 << "for (int l = cl::sycl::max(i, 0); l < cl::sycl::min(i + kh, hsize); l++) {\n";
+         out << SP*7 << "for (int m = cl::sycl::max(j, 0); m < cl::sycl::min(j + kw, wsize); m++) {\n";
+         out << SP*8 << "for (int p = cl::sycl::max(k, 0); p < cl::sycl::min(k + kd, dsize); p++) {\n";
          out << SP*9 << "int index = inputOffset + l*dwsize + m*dsize + p;\n";
 
          if (fPoolMode == MaxPool) {
             out << SP*9 << "auto xval = acc_tensor_" << fNX << "[index];\n";
-            out << SP*9 << "if (xval > value) value = xval;\n";
+            out << SP*9 << "value = cl::sycl::max(xval, value);\n";
          }
          else if (fPoolMode == AveragePool) {
             out << SP*9 << "value += acc_tensor_" << fNX <<"[index];\n";

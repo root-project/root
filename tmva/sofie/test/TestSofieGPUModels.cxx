@@ -26,7 +26,7 @@ void ExecuteSofieParser(std::string modelName) {
    model.GenerateGPU();
    std::string outputName = modelName + "_GPU.hxx";
    std::cout << "writing model as header .....\n";
-   model.OutputGeneratedGPU(); // outputName);
+   model.OutputGeneratedGPU(outputName); // outputName);
    std::cout << "output written in  " << outputName << std::endl;
 }
 
@@ -39,17 +39,17 @@ int DeclareCode(std::string modelName)
    // one could also use TMacro build with correct signature
    // TMacro m("testSofie"); m.AddLine("std::vector<float> testSofie(float *x) { return s.infer(x);}")
    // std::vector<float> * result = (std::vector<float> *)m.Exec(Form(float*)0x%lx , xinput.data));
-   std::string code = std::string("#include \"") + modelName + ".hxx\"\n";
+   std::string code = std::string("#include \"") + modelName + "_GPU.hxx\"\n";
    code += "TMVA_SOFIE_" + modelName + "::Session s" + std::to_string(sessionId) + ";\n";
 
    gInterpreter->Declare(code.c_str());
    return sessionId;
 }
 
-std::vector<float> RunInference(float * x, int sId) {
+std::vector<float> RunInference(std::vector<float> x, int sId) {
    // run inference code using gROOT->ProcessLine
    printf("doing inference.....");
-   TString cmd = TString::Format("s%d.infer( (float*)0x%lx )", sId,(ULong_t)x);
+   TString cmd = TString::Format("s%d.infer( 0x%lx )", sId, &x[0]);
    if (!verbose)  cmd += ";";
    std::vector<float> *result = (std::vector<float> *)gROOT->ProcessLine(cmd);
    return *result;
@@ -84,7 +84,7 @@ void TestLinear(int nbatches, bool useBN = false, int inputSize = 10, int nlayer
       std::copy(x1.begin(), x1.end(), xinput.begin() + ib * inputSize);
    }
 
-   auto result = RunInference(xinput.data(), id);
+   auto result = RunInference(xinput, id);
 
    // read reference value from test file
    std::vector<float> refValue(result.size());
@@ -167,7 +167,7 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
          std::copy(x2.begin(), x2.end(), xinput.begin() + ib * inputSize + x1.size());
    }
 
-   auto result = RunInference(xinput.data(), id);
+   auto result = RunInference(xinput, id);
 
 
    // read reference value from test file
@@ -243,7 +243,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
       }
    }
 
-   auto result = RunInference(xinput.data(), id);
+   auto result = RunInference(xinput, id);
 
    // read reference value from test file
    std::vector<float> refValue(result.size());
@@ -326,7 +326,7 @@ void TestConvTranspose( std::string type, int nbatches, bool useBN = false, int 
          std::copy(x2.begin(), x2.end(), xinput.begin() + ib * inputSize + x1.size());
    }
 
-   auto result = RunInference(xinput.data(), id);
+   auto result = RunInference(xinput, id);
 
 
    // read reference value from test file
