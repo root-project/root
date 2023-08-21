@@ -194,7 +194,7 @@ function(relatedrepo_GetClosestMatch)
 
   # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
   # upstream as the fork repository may be out-of-sync
-  string(REGEX MATCH "(master|latest-stable|v[0-9]+-[0-9]+-[0-9]+(-patches)?)" known_head ${current_head})
+  string(REGEX MATCH "^(master|latest-stable|v[0-9]+-[0-9]+-[0-9]+(-patches)?)$" known_head ${current_head})
   if(NOT "${known_head}" STREQUAL "")
     if("${current_head}" STREQUAL "latest-stable")
       # Resolve the 'latest-stable' branch to the latest merged head/tag
