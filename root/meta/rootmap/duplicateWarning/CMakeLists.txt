@@ -3,4 +3,4 @@ configure_file(rfile2.rootmap . COPYONLY)
 
 ROOTTEST_ADD_TEST(myclassduplicated
                   COMMAND root -b -q -l
-                  OUTREF  warning_duplicate_autoload_key.ref)
+                  PASSREGEX  "Warning in <TInterpreter::ReadRootmapFile>: While processing ./rfile[12]\.rootmap, class myclassduplicated was found to be associated to libdup[12]\.so although it is already associated to libdup[12]\.so")
