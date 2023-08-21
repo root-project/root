@@ -1518,13 +1518,27 @@ RooFit::OwningPtr<TList> splitImpl(RooAbsData const &data, const RooAbsCategory 
 } // namespace
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Split dataset into subsets based on states of given splitCat in this dataset.
-/// A TList of RooDataSets is returned in which each RooDataSet is named
-/// after the state name of splitCat of which it contains the dataset subset.
-/// The observables splitCat itself is no longer present in the sub datasets.
-/// If createEmptyDataSets is false (default) this method only creates datasets for states
-/// which have at least one entry The caller takes ownership of the returned list and its contents
+/**
+ * \brief Split the dataset into subsets based on states of a categorical variable in this dataset.
+ *
+ * Returns a list of sub-datasets, which each dataset named after a given state
+ * name in the `splitCat`. The observables `splitCat` itself is no longer present
+ * in the sub-datasets.
+ *
+ * \note If you mean to split a dataset into sub-datasets that correspond to
+ * the individual channels of a RooSimultaneous, it is better to use
+ * RooAbsData::split(const RooSimultaneous &, bool), because then the
+ * sub-datasets only contain variables that the pdf for the corresponding
+ * channel depends on. This is much faster in case of many channels, and the
+ * resulting sub-datasets don't waste memory for unused columns.
+ *
+ * \param splitCat The categorical variable used for splitting the dataset.
+ * \param createEmptyDataSets Flag indicating whether to create empty datasets
+ *                            for missing categories (`false` by default).
+ *
+ * \return An owning pointer to a TList of subsets of the dataset.
+ *         Returns `nullptr` if an error occurs.
+ */
 
 RooFit::OwningPtr<TList> RooAbsData::split(const RooAbsCategory &splitCat, bool createEmptyDataSets) const
 {
@@ -1542,18 +1556,25 @@ RooFit::OwningPtr<TList> RooAbsData::split(const RooAbsCategory &splitCat, bool 
    return splitImpl(*this, *setup.cloneCat, createEmptyDataSets, createEmptyData);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Split dataset into subsets based on the categorisation of the RooSimultaneous
-/// A TList of RooDataSets is returned in which each RooDataSet is named
-/// after the state name of splitCat of which it contains the dataset subset.
-/// The observables splitCat itself is no longer present in the sub datasets, as well as the
-/// observables of the other categories.
-/// If createEmptyDataSets is false (default) this method only creates datasets for states
-/// which have at least one entry The caller takes ownership of the returned list and its contents
-
-RooFit::OwningPtr<TList> RooAbsData::split(const RooSimultaneous &simpdf, bool createEmptyDataSets) const
+/**
+ * \brief Split the dataset into subsets based on the channels of a RooSimultaneous.
+ *
+ * Returns a list of sub-datasets, which each dataset named after the
+ * applicable state name of the RooSimultaneous index category. The index
+ * category itself is no longer present in the sub-datasets. The sub-datasets
+ * only contain variables that the pdf for the corresponding channel depends
+ * on.
+ *
+ * \param simPdf The simultaneous pdf used for splitting the dataset.
+ * \param createEmptyDataSets Flag indicating whether to create empty datasets
+ *                            for missing categories (`false` by default).
+ *
+ * \return An owning pointer to a TList of subsets of the dataset.
+ *         Returns `nullptr` if an error occurs.
+ */
+RooFit::OwningPtr<TList> RooAbsData::split(const RooSimultaneous &simPdf, bool createEmptyDataSets) const
 {
-   auto &splitCat = const_cast<RooAbsCategoryLValue &>(simpdf.indexCat());
+   auto &splitCat = const_cast<RooAbsCategoryLValue &>(simPdf.indexCat());
 
    SplittingSetup setup = initSplit(*this, splitCat);
 
@@ -1563,9 +1584,9 @@ RooFit::OwningPtr<TList> RooAbsData::split(const RooSimultaneous &simpdf, bool c
 
    // Get the observables for a given pdf in the RooSimultaneous, or an empty
    // RooArgSet if no pdf is set
-   auto getPdfObservables = [this, &simpdf](const char *label) {
+   auto getPdfObservables = [this, &simPdf](const char *label) {
       RooArgSet obsSet;
-      if (RooAbsPdf *catPdf = simpdf.getPdf(label)) {
+      if (RooAbsPdf *catPdf = simPdf.getPdf(label)) {
          catPdf->getObservables(this->get(), obsSet);
       }
       return obsSet;
