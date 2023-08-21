@@ -356,6 +356,8 @@ protected:
   mutable const TNamed * _namePtr = nullptr; ///<! De-duplicated name pointer. This will be equal for all objects with the same name.
 
 private:
+  void copyImpl(const RooAbsData& other, const char* newname);
+
   void copyGlobalObservables(const RooAbsData& other);
 
   const RooFit::UniqueId<RooAbsData> _uniqueId; ///<!
