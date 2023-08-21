@@ -545,69 +545,68 @@ namespace SOFIE{
 }
 
 void RModel::WriteInitializedTensorsToFile(std::string filename) {
-  // Determine the file extension based on the weight file type
-  std::string fileExtension;
-  switch (fWeightFile) {
-    case WeightFileType::None:
-      fileExtension = ".dat";
-      break;
-    case WeightFileType::RootBinary:
-      fileExtension = ".root";
-      break;
-    case WeightFileType::Text:
-      fileExtension = ".dat";
-      break;
-  }
+   // Determine the file extension based on the weight file type
+   std::string fileExtension;
+   switch (fWeightFile) {
+      case WeightFileType::None:
+         fileExtension = ".dat";
+         break;
+      case WeightFileType::RootBinary:
+         fileExtension = ".root";
+         break;
+      case WeightFileType::Text:
+         fileExtension = ".dat";
+         break;
+   }
 
-  // If filename is empty, use the model name as the base filename
-  if (filename.empty()) {
-    filename = fFileName + fileExtension;
-  }
+   // If filename is empty, use the model name as the base filename
+   if (filename.empty()) {
+      filename = fFileName + fileExtension;
+   }
 
-  // Write the initialized tensors to the file
-  if (fWeightFile == WeightFileType::RootBinary) {
+   // Write the initialized tensors to the file
+   if (fWeightFile == WeightFileType::RootBinary) {
       std::unique_ptr<TFile> outputFile(TFile::Open(filename.c_str(), "UPDATE"));
 
       std::string dirName = fName + "_weights";
-    // check if directory exists, in case delete to replace with new one
-    if (outputFile->GetKey(dirName.c_str()))
-      outputFile->rmdir(dirName.c_str());
+      // check if directory exists, in case delete to replace with new one
+      if (outputFile->GetKey(dirName.c_str()))
+         outputFile->rmdir(dirName.c_str());
 
       auto outputDir = outputFile->mkdir(dirName.c_str());
 
-    for (const auto& item : fInitializedTensors) {
-      std::string tensorName = "tensor_" + item.first;
-      size_t length = 1;
-      length = ConvertShapeToLength(item.second.fShape);
-      if(item.second.fType == ETensorType::FLOAT){
-         const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
-         const float* data = (std::static_pointer_cast<float>(item.second.fData)).get();
-         std::vector<float> tensorDataVector(data , data + length);
-         outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
+      for (const auto& item : fInitializedTensors) {
+         std::string tensorName = "tensor_" + item.first;
+         size_t length = 1;
+         length = ConvertShapeToLength(item.second.fShape);
+         if(item.second.fType == ETensorType::FLOAT){
+            const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
+            const float* data = (std::static_pointer_cast<float>(item.second.fData)).get();
+            std::vector<float> tensorDataVector(data , data + length);
+            outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
+         }
+         else if(item.second.fType == ETensorType::DOUBLE){
+            const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
+            const double* data = (std::static_pointer_cast<double>(item.second.fData)).get();
+            std::vector<double> tensorDataVector(data , data + length);
+            outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
+         }
+         else if(item.second.fType == ETensorType::INT64) {
+            const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
+            const int64_t* data = (std::static_pointer_cast<int64_t>(item.second.fData)).get();
+            std::vector<int64_t> tensorDataVector(data , data + length);
+            outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
+         }
       }
-      else if(item.second.fType == ETensorType::DOUBLE){
-         const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
-         const double* data = (std::static_pointer_cast<double>(item.second.fData)).get();
-         std::vector<double> tensorDataVector(data , data + length);
-         outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
-      }
-      else if(item.second.fType == ETensorType::INT64) {
-         const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
-         const int64_t* data = (std::static_pointer_cast<int64_t>(item.second.fData)).get();
-         std::vector<int64_t> tensorDataVector(data , data + length);
-         outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
-      }
-    }
-    outputFile->Write(filename.c_str());
-  }
+      outputFile->Write(filename.c_str());
+   }
 
-  // Write the initialized tensors to a text file
-  if (fWeightFile == WeightFileType::Text) {
+   // Write the initialized tensors to a text file
+   if (fWeightFile == WeightFileType::Text) {
       std::ofstream f;
       f.open(filename);
       if (!f.is_open())
-         throw
-            std::runtime_error("tmva-sofie failed to open file for tensor weight data");
+         throw std::runtime_error("tmva-sofie failed to open file for tensor weight data");
       for (auto& i: fInitializedTensors){
          if (i.second.fType == ETensorType::FLOAT){
             size_t length = 1;
