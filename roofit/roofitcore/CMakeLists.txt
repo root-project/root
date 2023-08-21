@@ -415,7 +415,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRealSumPdf.cxx
     src/RooRealVar.cxx
     src/RooRecursiveFraction.cxx
-    src/RooRefCountList.cxx
     src/RooSTLRefCountList.cxx
     src/RooResolutionModel.cxx
     src/RooSecondMoment.cxx
