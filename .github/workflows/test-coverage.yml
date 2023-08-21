@@ -6,12 +6,13 @@ on:
     - cron: '0 1 * * *'
 
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
-  pull_request:
-    branches:
-      - 'master'
-    paths-ignore:
-      - 'doc/**'
-      - 'documentation/**'
+  # DISABLED: takes 4 hours! Might clang-coverage be a solution?
+  #pull_request:
+  #  branches:
+  #    - 'master'
+  #  paths-ignore:
+  #    - 'doc/**'
+  #    - 'documentation/**'
 
   workflow_call:
     inputs:
