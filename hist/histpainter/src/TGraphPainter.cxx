@@ -4365,24 +4365,51 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          maxs = TMath::Max(maxs,theSize[i]);
       }
    }
+
+   // Make sure minimum and maximum values are different
+   Double_t d, e = 0.1;
    if (minx == maxx) {
-      minx = 0.9*theX[0];
-      maxx = 1.1*theX[0];
+      if (theX[0] == 0.) {
+         minx = -e;
+         maxx = e;
+      } else {
+         d = TMath::Abs(theX[0]*e);
+         minx = theX[0] - d;
+         maxx = theX[0] + d;
+      }
    }
    if (miny == maxy) {
-      miny = 0.9*theY[0];
-      maxy = 1.1*theY[0];
+      if (theY[0] == 0.) {
+         miny = -e;
+         maxy = e;
+      } else {
+         d = TMath::Abs(theY[0]*e);
+         miny = theY[0] - d;
+         maxy = theY[0] + d;
+      }
    }
    if (theColor) {
       if (minc == maxc) {
-         minc = 0.9*theColor[0];
-         maxc = 1.1*theColor[0];
+         if (theColor[0] == 0.) {
+            minc = -e;
+            maxc = e;
+         } else {
+            d = TMath::Abs(theColor[0]*e);
+            minc = theColor[0] - d;
+            maxc = theColor[0] + d;
+         }
       }
    }
    if (theSize) {
       if (mins == maxs) {
-         mins = 0.9*theSize[0];
-         maxs = 1.1*theSize[0];
+         if (theSize[0] == 0.) {
+            mins = -e;
+            maxs = e;
+         } else {
+            d = TMath::Abs(theSize[0]*e);
+            mins = theSize[0] - d;
+            maxs = theSize[0] + d;
+         }
       }
    }
 
