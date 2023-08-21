@@ -223,7 +223,7 @@ def download_artifacts(obj_prefix: str):
         with tarfile.open(tar_path) as tar:
             tar.extractall(WORKDIR)
 
-        build_utils.log.add(f'\ntar -xf {tar_path}\n')
+        build_utils.log.add(f'\ncd {WORKDIR} && tar -xf {tar_path}\n')
 
     except Exception as err:
         build_utils.print_warning("failed to download/extract:", err)
