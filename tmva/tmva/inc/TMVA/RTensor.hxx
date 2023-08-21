@@ -214,7 +214,7 @@ public:
    {
       fSize = Internal::GetSizeFromShape(shape);
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
-      fData = &(*container->begin());
+      fData = fContainer->data();
    }
 
    /// \brief Construct a tensor owning data initialized with new container
