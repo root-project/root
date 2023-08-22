@@ -2046,9 +2046,10 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create images for several pads using batch (headless) capability of Chrome or Firefox browsers
-/// Supported png, jpeg, svg, pdf formats
-/// For png/jpeg/svg filename can include % symbol which will be replaced by image index.
-/// For pdf format all images will be stored in single PDF file
+/// Supported png, jpeg, svg, pdf, webp formats
+/// One can include %d qualifier which will be replaced by image index using printf functionality.
+/// If for pdf format %d qualifier not specified, all images will be stored in single PDF file.
+/// For all other formats %d qualifier will be add before extension automatically
 
 bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width, Int_t height)
 {
@@ -2058,7 +2059,12 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
    std::vector<std::string> jsons;
    std::vector<Int_t> widths, heights;
 
-   for (auto pad: pads) {
+   bool isMultiPdf = (strstr(filename, ".pdf") || strstr(filename, ".PDF")) && strstr(filename, "%");
+   bool is_multipdf_ok = true;
+
+   for (unsigned n = 0; n < pads.size(); ++n) {
+      auto pad = pads[n];
+
       auto json = CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE);
       if (!json.Length())
          continue;
@@ -2075,10 +2081,19 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
          }
       }
 
-      jsons.emplace_back(json.Data());
-      widths.emplace_back(w);
-      heights.emplace_back(h);
+      if (isMultiPdf) {
+         TString pdfname = TString::Format(filename, (int)n);
+         if (!ROOT::Experimental::RWebDisplayHandle::ProduceImage(pdfname.Data(), json.Data(), w, h))
+            is_multipdf_ok = false;
+      } else {
+         jsons.emplace_back(json.Data());
+         widths.emplace_back(w);
+         heights.emplace_back(h);
+      }
    }
+
+   if (isMultiPdf)
+      return is_multipdf_ok;
 
    return ROOT::Experimental::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
 }
