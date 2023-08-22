@@ -13,7 +13,6 @@
 #include <ROOT/Browsable/RLevelIter.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class RWrapper
@@ -59,13 +58,10 @@ public:
 
    bool IsExpandByDefault() const override { return fExapndByDefault || fElem->IsExpandByDefault(); }
    void SetExpandByDefault(bool on = true) { fExapndByDefault = on; }
-
-
 };
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

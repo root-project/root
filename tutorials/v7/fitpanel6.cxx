@@ -19,8 +19,6 @@
 #include "TH1.h"
 #include "TFile.h"
 
-using namespace ROOT::Experimental;
-
 void fitpanel6()
 {
    TFile::Open("hsimple.root");
@@ -31,7 +29,7 @@ void fitpanel6()
    }
 
    // create panel
-   auto panel = std::make_shared<RFitPanel>("FitPanel");
+   auto panel = std::make_shared<ROOT::Experimental::RFitPanel>("FitPanel");
 
    TH1F *test = new TH1F("test","This is test histogram",100,-4,4);
    test->FillRandom("gaus", 10000);

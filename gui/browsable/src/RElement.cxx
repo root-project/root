@@ -14,11 +14,12 @@
 
 #include "TBufferJSON.h"
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 using namespace std::string_literals;
 
-ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowsableLog() {
-   static RLogChannel sLog("ROOT.Browsable");
+ROOT::Experimental::RLogChannel &ROOT::BrowsableLog()
+{
+   static ROOT::Experimental::RLogChannel sLog("ROOT.Browsable");
    return sLog;
 }
 

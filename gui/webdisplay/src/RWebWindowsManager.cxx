@@ -34,7 +34,7 @@
 #include <chrono>
 #include <iostream>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 ///////////////////////////////////////////////////////////////
 /// Parse boolean gEnv variable which should be "yes" or "no"
@@ -58,7 +58,7 @@ int RWebWindowWSHandler::GetBoolEnv(const std::string &name, int dflt)
 }
 
 
-/** \class ROOT::Experimental::RWebWindowsManager
+/** \class ROOT::RWebWindowsManager
 \ingroup webdisplay
 
 Central instance to create and show web-based windows like Canvas or FitPanel.
@@ -124,7 +124,7 @@ RWebWindowsManager::RWebWindowsManager()
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
    if (fExternalProcessEvents) {
       gWebWinMainThrdSet = false;
-      fAssgnExec = std::make_unique<TExec>("init_threadid", "ROOT::Experimental::RWebWindowsManager::AssignMainThrd();");
+      fAssgnExec = std::make_unique<TExec>("init_threadid", "ROOT::RWebWindowsManager::AssignMainThrd();");
       TTimer::SingleShot(0, "TExec",  fAssgnExec.get(), "Exec()");
    }
 }

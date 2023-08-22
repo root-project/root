@@ -14,11 +14,13 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 
+namespace Experimental {
 class RLogChannel;
+} // namespace Experimental
+
 /// Log channel for Browsable diagnostics.
-RLogChannel &BrowsableLog(); // implemented in RElement.cxx
+ROOT::Experimental::RLogChannel &BrowsableLog(); // implemented in RElement.cxx
 
 namespace Browsable {
 
@@ -129,7 +131,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

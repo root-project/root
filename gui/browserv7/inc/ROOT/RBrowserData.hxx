@@ -24,11 +24,13 @@
 #include <utility>
 
 namespace ROOT {
-namespace Experimental {
 
+namespace Experimental {
 class RLogChannel;
+} // namespace Experimental
+
 /// Log channel for Browser diagnostics.
-RLogChannel &BrowserLog();
+ROOT::Experimental::RLogChannel &BrowserLog();
 
 class RBrowserDataCleanup;
 
@@ -87,7 +89,6 @@ public:
 };
 
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

@@ -29,8 +29,6 @@ class THttpCallArg;
 class THttpServer;
 
 namespace ROOT {
-namespace Experimental {
-
 
 /// function signature for connect/disconnect call-backs
 /// argument is connection id
@@ -399,7 +397,6 @@ public:
    static bool EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args);
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

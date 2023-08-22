@@ -46,14 +46,14 @@
 #include <algorithm>
 #include <array>
 
-namespace ROOT {
-namespace Experimental {
-
-RLogChannel &RGeomLog()
+ROOT::Experimental::RLogChannel &ROOT::RGeomLog()
 {
-   static RLogChannel sLog("ROOT.Geom");
+   static ROOT::Experimental::RLogChannel sLog("ROOT.Geom");
    return sLog;
 }
+
+
+namespace ROOT {
 
 /** Iterator of hierarchical geometry structures */
 
@@ -259,10 +259,9 @@ public:
    }
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 using namespace std::string_literals;
 
@@ -1219,7 +1218,7 @@ void RGeomDescription::ResetRndrInfos()
 /// void geom() {
 ///    auto f = TFile::Open("file_name.root");
 ///    auto vol = f->Get<TGeoVolume>("object_name");
-///    ROOT::Experimental::RGeomDescription desc;
+///    ROOT::RGeomDescription desc;
 ///    desc.Build(vol);
 ///    std::ofstream fout("geom.json");
 ///    fout << desc.ProduceJson();

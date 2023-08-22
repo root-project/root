@@ -12,7 +12,6 @@
 #include <ROOT/Browsable/RItem.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 
@@ -89,7 +88,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

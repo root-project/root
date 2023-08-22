@@ -43,7 +43,6 @@
 using namespace std::string_literals;
 
 namespace ROOT {
-namespace Experimental {
 
 class RBrowserTimer : public TTimer {
 public:
@@ -255,13 +254,12 @@ public:
    }
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 
-/** \class ROOT::Experimental::RBrowser
+/** \class ROOT::RBrowser
 \ingroup rbrowser
 \brief Web-based %ROOT files and objects browser
 

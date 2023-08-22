@@ -60,7 +60,6 @@ public:
 };
 
 namespace ROOT {
-namespace Experimental {
 
 /** \class RQt6WebDisplayHandle
 \ingroup qt6webdisplay
@@ -254,5 +253,4 @@ struct RQt6CreatorReg {
    }
 } newRQt6CreatorReg;
 
-}
-}
+} // namespace ROOT

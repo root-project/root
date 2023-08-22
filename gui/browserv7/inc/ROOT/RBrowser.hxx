@@ -20,7 +20,6 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 
 class RBrowserWidget;
 class RBrowserTimer;
@@ -106,7 +105,6 @@ public:
 
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

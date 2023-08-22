@@ -19,7 +19,7 @@
 #include "TBranchElement.h"
 #include "TBranchBrowsable.h"
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 using namespace std::string_literals;
 
 

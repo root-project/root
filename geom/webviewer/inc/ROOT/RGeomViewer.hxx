@@ -20,7 +20,6 @@ class TGeoManager;
 class TGeoVolume;
 
 namespace ROOT {
-namespace Experimental {
 
 class RWebWindow;
 class RGeomHierarchy;
@@ -111,7 +110,6 @@ public:
 
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

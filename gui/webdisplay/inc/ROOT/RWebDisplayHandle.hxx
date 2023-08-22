@@ -21,7 +21,6 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
 class RWebDisplayHandle {
 
@@ -114,7 +113,6 @@ public:
    static bool ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
 };
 
-}
-}
+} // namespace ROOT
 
 #endif

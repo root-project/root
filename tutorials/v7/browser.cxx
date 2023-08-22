@@ -20,12 +20,10 @@ R__LOAD_LIBRARY(libROOTBrowserv7)
 
 #include <ROOT/RBrowser.hxx>
 
-using namespace ROOT::Experimental;
-
 void browser()
 {
    // create browser
-   auto br = std::make_shared<RBrowser>();
+   auto br = std::make_shared<ROOT::RBrowser>();
 
    // clear when connection to client closed
    br->ClearOnClose(br);

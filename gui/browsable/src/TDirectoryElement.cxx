@@ -29,7 +29,7 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 
 /** \class TDirectoryLevelIter
@@ -147,7 +147,7 @@ public:
             else if (svalue == "no")
                fOnlyLastCycle = false;
             else
-               R__LOG_ERROR(ROOT::Experimental::BrowsableLog()) << "WebGui.LastCycle must be yes or no";
+               R__LOG_ERROR(ROOT::BrowsableLog()) << "WebGui.LastCycle must be yes or no";
          }
       }
 
@@ -431,7 +431,7 @@ public:
          return nullptr;
 
       if (!obj_class->HasDictionary()) {
-         R__LOG_ERROR(ROOT::Experimental::BrowsableLog()) << "Class " << fKeyClass << " does not have dictionary, object " << fKeyName << " cannot be read";
+         R__LOG_ERROR(ROOT::BrowsableLog()) << "Class " << fKeyClass << " does not have dictionary, object " << fKeyName << " cannot be read";
          return nullptr;
       }
       auto dir = GetDir();
