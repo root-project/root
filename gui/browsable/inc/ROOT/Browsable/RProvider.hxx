@@ -18,9 +18,10 @@
 class TVirtualPad;
 
 namespace ROOT {
-namespace Experimental {
 
+namespace Experimental {
 class RPadBase;
+} // namespace Experimental
 
 namespace Browsable {
 
@@ -157,7 +158,6 @@ private:
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

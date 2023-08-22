@@ -80,7 +80,7 @@ private:
    DISALLOW_COPY_AND_ASSIGN(HeadlessPrintCallback);
 };
 
-std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::Experimental::RWebDisplayArgs &args)
+std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::RWebDisplayArgs &args)
 {
 
    auto handle = std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());

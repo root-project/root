@@ -11,7 +11,7 @@
 #include "TROOT.h"
 #include <sstream>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 ///////////////////////////////////////////////////////////////////////////
 /// Check if object is not registered in some global lists

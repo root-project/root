@@ -14,7 +14,6 @@
 class TDirectory;
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class TKeyItem
@@ -38,7 +37,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

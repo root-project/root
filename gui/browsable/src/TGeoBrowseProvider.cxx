@@ -20,7 +20,6 @@
 
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 ////////////////////////////////////////////////////////////
@@ -106,7 +105,7 @@ public:
       fIter.SetType(1); // iterate only current level
    }
 
-   virtual ~TGeoVolumeIter() = default;
+   ~TGeoVolumeIter() override = default;
 
    bool Next() override
    {
@@ -230,5 +229,4 @@ public:
 } newTGeoBrowseProvider;
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT

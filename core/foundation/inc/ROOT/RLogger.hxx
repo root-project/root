@@ -205,7 +205,7 @@ namespace Detail {
 ~~~ {.cpp}
      R__LOG_INFO(ROOT::Experimental::HistLog()) << "all we know is " << 42;
      const int decreasedInfoLevel = 5;
-     R__LOG_XDEBUG(ROOT::Experimental::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
+     R__LOG_XDEBUG(ROOT::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
 ~~~
  This will automatically capture the current class and function name, the file and line number.
  */
@@ -355,7 +355,7 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
 ///
 ///     RLogScopedVerbosity verbose(kDebug + 5);
 ///     const int decreasedInfoLevel = 5;
-///     R__LOG_DEBUG(ROOT::Experimental::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
+///     R__LOG_DEBUG(ROOT::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
 /// ~~~
 ///\{
 #define R__LOG_FATAL(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kFatal, __VA_ARGS__)

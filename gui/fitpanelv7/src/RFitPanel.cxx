@@ -98,10 +98,10 @@ RFitPanel::~RFitPanel()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns RWebWindow instance, used to display FitPanel
 
-std::shared_ptr<RWebWindow> RFitPanel::GetWindow()
+std::shared_ptr<ROOT::RWebWindow> RFitPanel::GetWindow()
 {
    if (!fWindow) {
-      fWindow = RWebWindow::Create();
+      fWindow = ROOT::RWebWindow::Create();
 
       fWindow->SetPanelName("rootui5.fitpanel.view.FitPanel");
 

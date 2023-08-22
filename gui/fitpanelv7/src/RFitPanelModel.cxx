@@ -19,7 +19,8 @@
 #include "TFitResult.h"
 #include "TF1.h"
 
-ROOT::Experimental::RLogChannel &ROOT::Experimental::FitPanelLog() {
+ROOT::Experimental::RLogChannel &ROOT::Experimental::FitPanelLog()
+{
    static RLogChannel sLog("ROOT.FitPanel");
    return sLog;
 }

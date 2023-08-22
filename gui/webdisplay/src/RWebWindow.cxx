@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <fstream>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 using namespace std::string_literals;
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ RWebWindow::WebConn::~WebConn()
 }
 
 
-/** \class ROOT::Experimental::RWebWindow
+/** \class ROOT::RWebWindow
 \ingroup webdisplay
 
 Represents web window, which can be shown in web browser or any other supported environment
@@ -171,7 +171,7 @@ THttpServer *RWebWindow::GetServer()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
-/// \see ROOT::Experimental::RWebWindowsManager::Show for more info
+/// \see ROOT::RWebWindowsManager::Show for more info
 /// \return (future) connection id (or 0 when fails)
 
 unsigned RWebWindow::Show(const RWebDisplayArgs &args)
@@ -182,7 +182,7 @@ unsigned RWebWindow::Show(const RWebDisplayArgs &args)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Start headless browser for specified window
 /// Normally only single instance is used, but many can be created
-/// See ROOT::Experimental::RWebWindowsManager::Show() docu for more info
+/// See ROOT::RWebWindowsManager::Show() docu for more info
 /// returns (future) connection id (or 0 when fails)
 
 unsigned RWebWindow::MakeHeadless(bool create_new)
