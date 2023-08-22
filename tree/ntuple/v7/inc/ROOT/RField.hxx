@@ -465,6 +465,9 @@ protected:
    size_t AddReadCallback(ReadCallback_t func);
    void RemoveReadCallback(size_t idx);
 
+   // Perform housekeeping tasks for global to cluster-local index translation
+   virtual void CommitClusterImpl() {}
+
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
@@ -576,10 +579,8 @@ public:
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
-   /// Ensure that all received items are written from page buffers to the storage.
-   void Flush() const;
-   /// Perform housekeeping tasks for global to cluster-local index translation
-   virtual void CommitCluster() {}
+   /// Flushes data from active columns to disk and calls CommitClusterImpl
+   void CommitCluster();
 
    std::string GetName() const { return fName; }
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
@@ -850,6 +851,8 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
+   void CommitClusterImpl() final { fNWritten = 0; }
+
 public:
    RProxiedCollectionField(std::string_view fieldName, std::string_view typeName);
    RProxiedCollectionField(RProxiedCollectionField &&other) = default;
@@ -860,7 +863,6 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
    size_t GetAlignment() const override { return alignof(std::max_align_t); }
-   void CommitCluster() final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
@@ -946,6 +948,8 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
+   void CommitClusterImpl() final { fNWritten = 0; }
+
 public:
    RVectorField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
    RVectorField(RVectorField&& other) = default;
@@ -956,7 +960,6 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
-   void CommitCluster() final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
@@ -990,6 +993,8 @@ protected:
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
 
+   void CommitClusterImpl() final { fNWritten = 0; }
+
 public:
    RRVecField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
    RRVecField(RRVecField &&) = default;
@@ -1002,7 +1007,6 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const override;
-   void CommitCluster() final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
@@ -1112,6 +1116,8 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
+   void CommitClusterImpl() final;
+
 public:
    // TODO(jblomer): use std::span in signature
    RVariantField(std::string_view fieldName, const std::vector<Detail::RFieldBase *> &itemFields);
@@ -1122,7 +1128,6 @@ public:
    using Detail::RFieldBase::GenerateValue;
    size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
-   void CommitCluster() final;
 };
 
 /// The generic field for a std::set<Type>
@@ -1160,6 +1165,8 @@ protected:
 
    std::size_t AppendNull();
    std::size_t AppendValue(const void *from);
+   void CommitClusterImpl() final { fNWritten = 0; }
+
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns kInvalidClusterIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
@@ -1175,8 +1182,6 @@ public:
    bool IsSparse() const { return !IsDense(); }
    void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
    void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex32}); }
-
-   void CommitCluster() final { fNWritten = 0; }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
@@ -1335,6 +1340,8 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    void GenerateValue(void *) const final {}
 
+   void CommitClusterImpl() final;
+
 public:
    static std::string TypeName() { return ""; }
    RCollectionField(std::string_view name,
@@ -1347,7 +1354,6 @@ public:
    using Detail::RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
    size_t GetAlignment() const final { return alignof(ClusterSize_t); }
-   void CommitCluster() final;
 };
 
 /// The generic field for `std::pair<T1, T2>` types
@@ -2072,6 +2078,8 @@ private:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
 
+   void CommitClusterImpl() final { fIndex = 0; }
+
 public:
    static std::string TypeName() { return "std::string"; }
    explicit RField(std::string_view name)
@@ -2085,7 +2093,6 @@ public:
    using Detail::RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
-   void CommitCluster() final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -2223,6 +2230,8 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
+   void CommitClusterImpl() final { fNWritten = 0; }
+
 public:
    static std::string TypeName() { return "std::vector<bool>"; }
    explicit RField(std::string_view name);
@@ -2235,7 +2244,6 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
-   void CommitCluster() final { fNWritten = 0; }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
