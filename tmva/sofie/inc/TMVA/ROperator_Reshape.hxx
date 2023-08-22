@@ -239,7 +239,7 @@ public:
          opName = "Unsquueze";
 
       out << "\n" << SP*3 << "///--------" << opName << " operator\n" << std::endl;
-      out << SP*3 << "oneapi::mkl::blas::copy(q, " << length << ", buf_tensor_" << fNData << ", 1, buf_tensor_" << fNOutput << ", 1);\n";
+      out << SP*3 << "oneapi::mkl::blas::copy(q, buf_tensor_" << fNData << ".size(), buf_tensor_" << fNData << ", 1, buf_tensor_" << fNOutput << ", 1);\n";
 
       return out.str();
    }
