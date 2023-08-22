@@ -1568,8 +1568,10 @@ void TDirectoryFile::Save()
 ////////////////////////////////////////////////////////////////////////////////
 /// Save object in filename.
 ///
-/// If filename is 0 or "", a file with "objectname.root" is created.
+/// If filename is `nullptr` or "", a file with "<objectname>.root" is created.
 /// The name of the key is the object name.
+/// By default new file will be created. Using option "a", one can append object
+/// to the existing ROOT file.
 /// If the operation is successful, it returns the number of bytes written to the file
 /// otherwise it returns 0.
 /// By default a message is printed. Use option "q" to not print the message.
@@ -1580,27 +1582,28 @@ void TDirectoryFile::Save()
 
 Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Option_t *option) const
 {
+   // option can contain single letter args: "a" for append, "q" for quiet in any combinations
+
    if (!obj) return 0;
-   TDirectory *dirsav = gDirectory;
-   TString fname = filename;
-   if (!filename || !filename[0]) {
-      fname.Form("%s.root",obj->GetName());
-   }
+   TString fname, opt = option;
+   if (filename && *filename)
+      fname = filename;
+   else
+      fname.Form("%s.root", obj->GetName());
+   opt.ToLower();
+
    Int_t nbytes = 0;
    if (fname.Index(".json") > 0) {
       nbytes = TBufferJSON::ExportToFile(fname, obj, option);
    } else {
-      TFile *local = TFile::Open(fname.Data(),"recreate");
+      TContext ctxt; // The TFile::Open will change the current directory.
+      auto *local = TFile::Open(fname.Data(), opt.Contains("a") ? "update" : "recreate");
       if (!local) return 0;
       nbytes = obj->Write();
       delete local;
-      if (dirsav) dirsav->cd();
    }
-   TString opt = option;
-   opt.ToLower();
-   if (!opt.Contains("q")) {
-      if (!gSystem->AccessPathName(fname.Data())) obj->Info("SaveAs", "ROOT file %s has been created", fname.Data());
-   }
+   if (!opt.Contains("q") && !gSystem->AccessPathName(fname.Data()))
+      obj->Info("SaveAs", "ROOT file %s has been created", fname.Data());
    return nbytes;
 }
 
