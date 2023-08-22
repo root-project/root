@@ -4366,6 +4366,53 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
       }
    }
 
+   // Make sure minimum and maximum values are different
+   Double_t d, e = 0.1;
+   if (minx == maxx) {
+      if (theX[0] == 0.) {
+         minx = -e;
+         maxx = e;
+      } else {
+         d = TMath::Abs(theX[0]*e);
+         minx = theX[0] - d;
+         maxx = theX[0] + d;
+      }
+   }
+   if (miny == maxy) {
+      if (theY[0] == 0.) {
+         miny = -e;
+         maxy = e;
+      } else {
+         d = TMath::Abs(theY[0]*e);
+         miny = theY[0] - d;
+         maxy = theY[0] + d;
+      }
+   }
+   if (theColor) {
+      if (minc == maxc) {
+         if (theColor[0] == 0.) {
+            minc = -e;
+            maxc = e;
+         } else {
+            d = TMath::Abs(theColor[0]*e);
+            minc = theColor[0] - d;
+            maxc = theColor[0] + d;
+         }
+      }
+   }
+   if (theSize) {
+      if (mins == maxs) {
+         if (theSize[0] == 0.) {
+            mins = -e;
+            maxs = e;
+         } else {
+            d = TMath::Abs(theSize[0]*e);
+            mins = theSize[0] - d;
+            maxs = theSize[0] + d;
+         }
+      }
+   }
+
    TH2F *h = theScatter->GetHistogram();
    if (optionAxis) h->Paint(" ");
 
