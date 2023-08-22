@@ -83,7 +83,7 @@ protected:
 
    std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
 
-   std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
+   std::shared_ptr<ROOT::RWebWindow> fWindow; ///!< configured display
 
    Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
@@ -167,9 +167,9 @@ public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
    ~TWebCanvas() override;
 
-   void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
+   void ShowWebWindow(const ROOT::RWebDisplayArgs &user_args = "");
 
-   const std::shared_ptr<ROOT::Experimental::RWebWindow> &GetWebWindow() const { return fWindow; }
+   const std::shared_ptr<ROOT::RWebWindow> &GetWebWindow() const { return fWindow; }
 
    virtual Bool_t IsReadOnly() const { return fReadOnly; }
 

@@ -8,7 +8,7 @@
 /// \author Sergey Linev <S.Linev@gsi.de>
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,17 +28,15 @@ R__LOAD_LIBRARY(libROOTBrowserv7)
 #include <ROOT/RFileDialog.hxx>
 
 
-using namespace ROOT::Experimental;
-
 void filedialog(int kind = 0)
 {
    std::string fileName;
 
    // example of sync methods, blocks until name is selected
    switch (kind) {
-      case 1: fileName = RFileDialog::OpenFile("OpenFile title"); break;
-      case 2: fileName = RFileDialog::SaveAs("SaveAs title", "newfile.xml"); break;
-      case 3: fileName = RFileDialog::NewFile("NewFile title", "test.txt"); break;
+      case 1: fileName = ROOT::RFileDialog::OpenFile("OpenFile title"); break;
+      case 2: fileName = ROOT::RFileDialog::SaveAs("SaveAs title", "newfile.xml"); break;
+      case 3: fileName = ROOT::RFileDialog::NewFile("NewFile title", "test.txt"); break;
    }
 
    if (kind > 0) {
@@ -46,7 +44,7 @@ void filedialog(int kind = 0)
       return;
    }
 
-   auto dialog = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "OpenFile dialog in async mode");
+   auto dialog = std::make_shared<ROOT::RFileDialog>(ROOT::RFileDialog::kOpenFile, "OpenFile dialog in async mode");
 
    dialog->SetNameFilters({ "C++ files (*.cxx *.cpp *.c *.C)", "ROOT files (*.root)", "Image files (*.png *.jpg *.jpeg)", "Text files (*.txt)", "Any files (*)" });
 

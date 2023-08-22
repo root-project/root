@@ -15,7 +15,7 @@
 #include "TClass.h"
 #include "TSystem.h"
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 using namespace std::string_literals;
 
 RProvider::BrowseNTupleFunc_t RProvider::gNTupleFunc = nullptr;

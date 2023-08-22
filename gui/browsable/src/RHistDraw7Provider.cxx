@@ -19,7 +19,7 @@
 
 #include <ROOT/RCanvas.hxx>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 class RV7HistDrawProvider : public RProvider {
    template<class HistClass>

@@ -26,11 +26,11 @@ RGeomViewerWidget::RGeomViewerWidget(QWidget *parent) : QWidget(parent)
 
    setAcceptDrops(true);
 
-   fGeomViewer = std::make_shared<ROOT::Experimental::RGeomViewer>();
+   fGeomViewer = std::make_shared<ROOT::RGeomViewer>();
 
    fGeomViewer->SetShowHierarchy(false);
 
-   auto where = ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(this, "", QT_VERSION);
+   auto where = ROOT::RWebDisplayArgs::GetQt5EmbedQualifier(this, "", QT_VERSION);
 
    fGeomViewer->Show(where);
 

@@ -19,11 +19,14 @@
 class THttpServer;
 
 namespace ROOT {
-namespace Experimental {
 
+namespace Experimental {
 class RLogChannel;
+} // namespace Experimental
+
 /// Log channel for WebGUI diagnostics.
-RLogChannel &WebGUILog();
+ROOT::Experimental::RLogChannel &WebGUILog();
+
 
 class RWebWindow;
 
@@ -210,7 +213,6 @@ public:
    static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x50000);
 };
 
-}
-}
+} // namespace ROOT
 
 #endif

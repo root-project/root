@@ -21,7 +21,7 @@
 \ingroup cefwebdisplay
 */
 
-class RCefWebDisplayHandle : public ROOT::Experimental::RWebDisplayHandle {
+class RCefWebDisplayHandle : public ROOT::RWebDisplayHandle {
 protected:
    class CefCreator : public Creator {
 
@@ -30,7 +30,7 @@ protected:
       CefCreator() = default;
       ~CefCreator() override = default;
 
-      std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> Display(const ROOT::Experimental::RWebDisplayArgs &args) override;
+      std::unique_ptr<ROOT::RWebDisplayHandle> Display(const ROOT::RWebDisplayArgs &args) override;
    };
 
    enum EValidValues { kValid = 0x3C3C3C3C, kInvalid = 0x92929292 };
@@ -40,7 +40,7 @@ protected:
    CefRefPtr<CefBrowser> fBrowser; ///< associated browser
 
 public:
-   RCefWebDisplayHandle(const std::string &url) : ROOT::Experimental::RWebDisplayHandle(url) {}
+   RCefWebDisplayHandle(const std::string &url) : ROOT::RWebDisplayHandle(url) {}
 
    ~RCefWebDisplayHandle() override;
 

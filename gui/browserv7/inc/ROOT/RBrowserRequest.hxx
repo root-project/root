@@ -17,9 +17,8 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
-/** \class ROOT::Experimental::RBrowserRequest
+/** \class ROOT::RBrowserRequest
 \ingroup rbrowser
 \brief Request send from client to get content of path element
 */
@@ -37,7 +36,6 @@ public:
    std::string regex;     ///< applied regex
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

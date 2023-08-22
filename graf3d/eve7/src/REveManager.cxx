@@ -153,7 +153,7 @@ REveManager::REveManager()
    // !!! AMT increase threshold to enable color pick on client
    TColor::SetColorThreshold(0.1);
 
-   fWebWindow = RWebWindow::Create();
+   fWebWindow = ROOT::RWebWindow::Create();
    fWebWindow->UseServerThreads();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
@@ -848,11 +848,11 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
       return;
    }
-   else if (RWebWindow::IsFileDialogMessage(arg))
+   else if (ROOT::RWebWindow::IsFileDialogMessage(arg))
    {
       // file dialog
-      RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
-       return;
+      ROOT::RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
+      return;
    }
 
    nlohmann::json cj = nlohmann::json::parse(arg);

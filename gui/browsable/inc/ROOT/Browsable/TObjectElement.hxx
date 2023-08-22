@@ -15,7 +15,6 @@ class TObject;
 class TCollection;
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 
@@ -93,7 +92,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

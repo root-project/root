@@ -20,11 +20,10 @@
 #include <ROOT/Browsable/RElement.hxx>
 
 namespace ROOT {
-namespace Experimental {
 
 class RBrowser;
 
-/** \class ROOT::Experimental::RBrowserWidget
+/** \class ROOT::RBrowserWidget
 \ingroup rbrowser
 Abstract Web-based widget, which can be used in the RBrowser
 Used to embed canvas, geometry viewer and potentially any other widgets
@@ -88,8 +87,6 @@ public:
    static std::shared_ptr<RBrowserWidget> CreateWidgetFor(const std::string &kind, const std::string &name, std::shared_ptr<Browsable::RElement> &element);
 };
 
-
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

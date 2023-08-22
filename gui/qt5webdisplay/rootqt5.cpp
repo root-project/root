@@ -84,7 +84,6 @@ public:
 };
 
 namespace ROOT {
-namespace Experimental {
 
 /** \class RQt5WebDisplayHandle
 \ingroup qt5webdisplay
@@ -294,5 +293,4 @@ struct RQt5CreatorReg {
    }
 } newRQt5CreatorReg;
 
-}
-}
+} // namespace ROOT

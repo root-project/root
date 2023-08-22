@@ -20,7 +20,6 @@ class TGeoManager;
 class TGeoVolume;
 
 namespace ROOT {
-namespace Experimental {
 
 class RWebWindow;
 
@@ -51,7 +50,6 @@ public:
    void ClearOnClose(const std::shared_ptr<void> &handle);
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

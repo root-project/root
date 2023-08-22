@@ -27,7 +27,7 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 
 /** \class TObjectLevelIter

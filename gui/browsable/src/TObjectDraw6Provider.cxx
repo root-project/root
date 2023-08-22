@@ -11,7 +11,7 @@
 #include "TObject.h"
 #include "TVirtualPad.h"
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 /** Provider for drawing of ROOT6 classes */
 

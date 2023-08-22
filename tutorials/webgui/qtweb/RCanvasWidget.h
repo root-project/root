@@ -36,11 +36,10 @@ protected:
 
 public:
    RCanvasWidget(QWidget *parent = nullptr);
-   virtual ~RCanvasWidget();
+   ~RCanvasWidget() override;
 
    /// returns canvas shown in the widget
    auto getCanvas() { return fCanvas; }
-
 
 };
 

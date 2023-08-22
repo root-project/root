@@ -27,7 +27,7 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -409,9 +409,7 @@ void RGeomViewer::SaveAsMacro(const std::string &fname)
 
    fs << std::endl;
 
-   fs << prefix << "using namespace ROOT::Experimental;" << std::endl << std::endl;
-
-   fs << prefix << "auto viewer = std::make_shared<RGeomViewer>(gGeoManager";
+   fs << prefix << "auto viewer = std::make_shared<ROOT::RGeomViewer>(gGeoManager";
    if (!fSelectedVolume.empty())
       fs << ", \"" << fSelectedVolume << "\"";
    fs << ");" << std::endl;
@@ -425,7 +423,7 @@ void RGeomViewer::SaveAsMacro(const std::string &fname)
 
    fs << prefix << "viewer->Show();" << std::endl << std::endl;
 
-   fs << prefix << "RDirectory::Heap().Add(\"geom_viewer\", viewer);" << std::endl;
+   fs << prefix << "ROOT::Experimental::RDirectory::Heap().Add(\"geom_viewer\", viewer);" << std::endl;
 
    fs << "}" << std::endl;
 }

@@ -13,7 +13,7 @@
 #include <iostream>
 #include <chrono>
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> window;
+std::shared_ptr<ROOT::RWebWindow> window;
 
 int num_clients = 1;
 bool window_terminated = false;
@@ -115,7 +115,7 @@ void ping(int nclients = 1, int test_mode = 0)
    // gEnv->SetValue("WebGui.SenderThrds", "yes");
 
    // create window
-   window = ROOT::Experimental::RWebWindow::Create();
+   window = ROOT::RWebWindow::Create();
 
    // configure maximal number of clients which allowed to connect
    window->SetConnLimit(num_clients);

@@ -24,7 +24,7 @@ class RPageSource;
 }
 }
 
-class RFieldHolder : public ROOT::Experimental::Browsable::RHolder {
+class RFieldHolder : public ROOT::Browsable::RHolder {
    std::shared_ptr<ROOT::Experimental::Detail::RPageSource> fNtplSource;
    std::string fParentName;
 

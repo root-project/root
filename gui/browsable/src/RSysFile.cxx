@@ -39,10 +39,9 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 
@@ -348,7 +347,6 @@ public:
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

@@ -16,7 +16,6 @@
 #include <string>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 class RSysDirLevelIter;
@@ -66,7 +65,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

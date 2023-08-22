@@ -24,7 +24,6 @@
 using namespace std::string_literals;
 
 namespace ROOT {
-namespace Experimental {
 
 /// just wrapper to deliver websockets call-backs to the RWebWindow class
 
@@ -145,7 +144,6 @@ public:
    static int GetBoolEnv(const std::string &name, int dfl = -1);
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

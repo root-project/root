@@ -21,13 +21,12 @@
 #include <stdint.h>
 
 namespace ROOT {
-namespace Experimental {
 
 namespace Details {
    class RWebWindowPlugin;
 }
 
-/** \class ROOT::Experimental::RFileDialog
+/** \class ROOT::RFileDialog
 \ingroup rbrowser
 Initial message send to client to configure layout
 */
@@ -122,7 +121,6 @@ public:
 
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

@@ -19,7 +19,7 @@
 #include "TSystem.h"
 #include "TVirtualMonitoring.h"
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 class TTreeDrawMonitoring : public TVirtualMonitoringWriter {
 

@@ -24,11 +24,9 @@
 #include "TAxis.h"
 #include "TSystem.h"
 
-
 #include "TBufferJSON.h"
 
 namespace ROOT {
-namespace Experimental {
 
 class RTreeDrawMonitoring : public TVirtualMonitoringWriter {
 
@@ -98,11 +96,9 @@ public:
 };
 
 
+} // namespace ROOT
 
-}
-}
-
-using namespace ROOT::Experimental;
+using namespace ROOT;
 using namespace std::string_literals;
 
 
@@ -111,7 +107,7 @@ using namespace std::string_literals;
 
 RTreeViewer::RTreeViewer(TTree *tree)
 {
-   fWebWindow = RWebWindow::Create();
+   fWebWindow = ROOT::RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/tree/index.html");
 
    // this is call-back, invoked when message received via websocket

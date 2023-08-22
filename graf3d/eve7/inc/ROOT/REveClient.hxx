@@ -15,9 +15,11 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 
 class RWebWindow;
+
+namespace Experimental {
+
 class REveScene;
 
 class REveClient {
@@ -25,11 +27,11 @@ class REveClient {
    friend class REveScene;
 
    unsigned fId{0};
-   std::shared_ptr<RWebWindow> fWebWindow;
+   std::shared_ptr<ROOT::RWebWindow> fWebWindow;
 
 public:
    REveClient() = default;
-   REveClient(unsigned int cId, std::shared_ptr<RWebWindow> &win) : fId(cId), fWebWindow(win) {}
+   REveClient(unsigned int cId, std::shared_ptr<ROOT::RWebWindow> &win) : fId(cId), fWebWindow(win) {}
 };
 
 } // namespace Experimental

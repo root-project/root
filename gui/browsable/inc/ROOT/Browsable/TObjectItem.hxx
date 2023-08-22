@@ -14,7 +14,6 @@
 class TObject;
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class TObjectItem
@@ -41,7 +40,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

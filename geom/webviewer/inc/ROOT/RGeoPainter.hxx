@@ -16,7 +16,6 @@
 #include <ROOT/RGeomViewer.hxx>
 
 namespace ROOT {
-namespace Experimental {
 
 class RGeoPainter : public TVirtualGeoPainter {
 
@@ -113,7 +112,6 @@ public:
    ClassDefOverride(RGeoPainter,0)  // Web-based geo painter
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 

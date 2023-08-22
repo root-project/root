@@ -19,7 +19,7 @@ class TWebControlBar : public TControlBarImp {
 
 protected:
 
-   std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
+   std::shared_ptr<ROOT::RWebWindow> fWindow; ///!< configured display
 
    void SendInitMsg(unsigned connid);
    Bool_t ProcessData(unsigned connid, const std::string &arg);

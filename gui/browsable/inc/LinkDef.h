@@ -12,23 +12,23 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ namespace ROOT::Experimental::Browsable;
+#pragma link C++ namespace ROOT::Browsable;
 
-#pragma link C++ class ROOT::Experimental::Browsable::RHolder+;
-#pragma link C++ class ROOT::Experimental::Browsable::RAnyObjectHolder+;
-#pragma link C++ class ROOT::Experimental::Browsable::RProvider+;
-#pragma link C++ class ROOT::Experimental::Browsable::RElement+;
-#pragma link C++ class ROOT::Experimental::Browsable::RLevelIter+;
-#pragma link C++ class ROOT::Experimental::Browsable::RGroup+;
-#pragma link C++ class ROOT::Experimental::Browsable::RWrapper+;
+#pragma link C++ class ROOT::Browsable::RHolder+;
+#pragma link C++ class ROOT::Browsable::RAnyObjectHolder+;
+#pragma link C++ class ROOT::Browsable::RProvider+;
+#pragma link C++ class ROOT::Browsable::RElement+;
+#pragma link C++ class ROOT::Browsable::RLevelIter+;
+#pragma link C++ class ROOT::Browsable::RGroup+;
+#pragma link C++ class ROOT::Browsable::RWrapper+;
 
-#pragma link C++ class ROOT::Experimental::Browsable::RSysFile+;
+#pragma link C++ class ROOT::Browsable::RSysFile+;
 
-#pragma link C++ class ROOT::Experimental::Browsable::TObjectHolder+;
-#pragma link C++ class ROOT::Experimental::Browsable::TObjectItem+;
-#pragma link C++ class ROOT::Experimental::Browsable::TKeyItem+;
+#pragma link C++ class ROOT::Browsable::TObjectHolder+;
+#pragma link C++ class ROOT::Browsable::TObjectItem+;
+#pragma link C++ class ROOT::Browsable::TKeyItem+;
 
-#pragma link C++ class ROOT::Experimental::Browsable::RItem+;
-#pragma link C++ class ROOT::Experimental::Browsable::RSysFileItem+;
+#pragma link C++ class ROOT::Browsable::RItem+;
+#pragma link C++ class ROOT::Browsable::RSysFileItem+;
 
 #endif

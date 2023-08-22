@@ -35,9 +35,7 @@ void web_cms(bool split = false)
    gGeoManager->GetVolume("EAP4")->SetLineColor(7);
    gGeoManager->GetVolume("HTC1")->SetLineColor(2);
 
-   using namespace ROOT::Experimental;
-
-   auto viewer = std::make_shared<RGeomViewer>(gGeoManager);
+   auto viewer = std::make_shared<ROOT::RGeomViewer>(gGeoManager);
 
    // select volume to draw
    viewer->SelectVolume("CMSE");
@@ -59,7 +57,7 @@ void web_cms(bool split = false)
 
    if (split) {
       // create separate widget with geometry hierarchy only
-      auto hier = std::make_shared<RGeomHierarchy>(viewer->Description());
+      auto hier = std::make_shared<ROOT::RGeomHierarchy>(viewer->Description());
 
       // start web browser with hierarchy
       hier->Show();

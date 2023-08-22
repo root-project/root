@@ -40,10 +40,10 @@
 #include <spawn.h>
 #endif
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 using namespace std::string_literals;
 
-/** \class ROOT::Experimental::RWebDisplayHandle
+/** \class ROOT::RWebDisplayHandle
 \ingroup webdisplay
 
 Handle of created web-based display
@@ -94,7 +94,6 @@ std::unique_ptr<RWebDisplayHandle::Creator> &RWebDisplayHandle::FindCreator(cons
 }
 
 namespace ROOT {
-namespace Experimental {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Specialized handle to hold information about running browser process
@@ -139,7 +138,6 @@ public:
 
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

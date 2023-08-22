@@ -12,7 +12,6 @@
 #include <ROOT/Browsable/RHolder.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class TObjectHolder
@@ -63,7 +62,6 @@ public:
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

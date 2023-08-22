@@ -27,7 +27,7 @@ struct TestPanelModel {
    std::string fButtonText;
 };
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> window;
+std::shared_ptr<ROOT::RWebWindow> window;
 std::unique_ptr<TestPanelModel> model;
 int sendcnt = 0;
 
@@ -73,7 +73,7 @@ void server()
    model->fButtonText = "Custom button";
 
    // create window
-   window = ROOT::Experimental::RWebWindow::Create();
+   window = ROOT::RWebWindow::Create();
 
    // Important - defines name of openui5 widget
    // "localapp" prefix will be point on current directory, where script executed

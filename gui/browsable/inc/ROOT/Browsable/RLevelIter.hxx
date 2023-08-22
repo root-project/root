@@ -13,7 +13,6 @@
 #include <string>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 class RElement;
@@ -51,7 +50,6 @@ public:
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

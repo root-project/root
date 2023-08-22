@@ -14,12 +14,14 @@
 #include <string>
 
 namespace ROOT {
+
+class RWebWindow;
+
 namespace Experimental {
 
 using CanvasCallback_t = std::function<void(bool)>;
 
 class RCanvas;
-class RWebWindow;
 
 namespace Internal {
 
@@ -72,7 +74,7 @@ public:
    /// run canvas functionality in caller thread, not needed when main thread is used
    virtual void Run(double tm = 0.) = 0;
 
-   virtual bool AddPanel(std::shared_ptr<RWebWindow>) { return false; }
+   virtual bool AddPanel(std::shared_ptr<ROOT::RWebWindow>) { return false; }
 
    virtual void SetClearOnClose(const std::shared_ptr<void> &) {}
 

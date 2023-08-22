@@ -14,19 +14,19 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class ROOT::Experimental::RGeomNodeBase + ;
-#pragma link C++ class ROOT::Experimental::RGeomNode + ;
-#pragma link C++ class ROOT::Experimental::RGeoItem + ;
-#pragma link C++ class ROOT::Experimental::RGeomVisible + ;
-#pragma link C++ class ROOT::Experimental::RGeomRenderInfo + ;
-#pragma link C++ class ROOT::Experimental::RGeomRawRenderInfo + ;
-#pragma link C++ class ROOT::Experimental::RGeomShapeRenderInfo;
-#pragma link C++ class ROOT::Experimental::RGeomDescription + ;
-#pragma link C++ class ROOT::Experimental::RGeomDrawing + ;
-#pragma link C++ class ROOT::Experimental::RGeomNodeInfo + ;
-#pragma link C++ class ROOT::Experimental::RGeomConfig + ;
-#pragma link C++ class ROOT::Experimental::RGeoPainter + ;
-#pragma link C++ class ROOT::Experimental::RGeomHierarchy + ;
-#pragma link C++ class ROOT::Experimental::RGeomViewer + ;
+#pragma link C++ class ROOT::RGeomNodeBase+;
+#pragma link C++ class ROOT::RGeomNode+;
+#pragma link C++ class ROOT::RGeoItem+;
+#pragma link C++ class ROOT::RGeomVisible+;
+#pragma link C++ class ROOT::RGeomRenderInfo+;
+#pragma link C++ class ROOT::RGeomRawRenderInfo+;
+#pragma link C++ class ROOT::RGeomShapeRenderInfo+;
+#pragma link C++ class ROOT::RGeomDescription+;
+#pragma link C++ class ROOT::RGeomDrawing+;
+#pragma link C++ class ROOT::RGeomNodeInfo+;
+#pragma link C++ class ROOT::RGeomConfig+;
+#pragma link C++ class ROOT::RGeoPainter+;
+#pragma link C++ class ROOT::RGeomHierarchy+;
+#pragma link C++ class ROOT::RGeomViewer+;
 
 #endif

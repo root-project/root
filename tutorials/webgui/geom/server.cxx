@@ -15,7 +15,7 @@
 #include <ROOT/RWebWindow.hxx>
 
 
-std::shared_ptr<ROOT::Experimental::RWebWindow> window;
+std::shared_ptr<ROOT::RWebWindow> window;
 
 std::string json;
 
@@ -57,7 +57,7 @@ void server()
    gGeoManager->GetVolume("EAP4")->SetLineColor(7);
    gGeoManager->GetVolume("HTC1")->SetLineColor(2);
 
-   ROOT::Experimental::RGeomDescription data;
+   ROOT::RGeomDescription data;
 
    data.Build(gGeoManager, "CMSE");
 
@@ -66,7 +66,7 @@ void server()
    base64 = TBase64::Encode(json.c_str());
 
    // create window
-   window = ROOT::Experimental::RWebWindow::Create();
+   window = ROOT::RWebWindow::Create();
 
    // configure default html page
    // either HTML code can be specified or just name of file after 'file:' prefix

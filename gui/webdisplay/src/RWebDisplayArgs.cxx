@@ -19,16 +19,16 @@
 #include "TROOT.h"
 #include <string>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
-RLogChannel &ROOT::Experimental::WebGUILog()
+ROOT::Experimental::RLogChannel &ROOT::WebGUILog()
 {
-   static RLogChannel sLog("ROOT.WebGUI");
+   static ROOT::Experimental::RLogChannel sLog("ROOT.WebGUI");
    return sLog;
 }
 
 
-/** \class ROOT::Experimental::RWebDisplayArgs
+/** \class ROOT::RWebDisplayArgs
 \ingroup webdisplay
 
 Holds different arguments for starting browser with RWebDisplayHandle::Display() method

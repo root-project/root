@@ -13,7 +13,7 @@
 
 #include <ROOT/RLogger.hxx>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 class RGroupIter : public RLevelIter {
    int fIndx{-1};

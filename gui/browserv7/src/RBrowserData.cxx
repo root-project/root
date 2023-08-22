@@ -29,16 +29,16 @@
 #include <algorithm>
 #include <regex>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 using namespace std::string_literals;
 
-ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
-   static RLogChannel sLog("ROOT.Browser");
+ROOT::Experimental::RLogChannel &ROOT::BrowserLog()
+{
+   static ROOT::Experimental::RLogChannel sLog("ROOT.Browser");
    return sLog;
 }
 
 namespace ROOT {
-namespace Experimental {
 
 class RBrowserDataCleanup : public TObject {
 
@@ -52,11 +52,11 @@ public:
       fData.RemoveFromCache(obj);
    }
 };
-}
-}
+
+} // namespace ROOT
 
 
-/** \class ROOT::Experimental::RBrowserData
+/** \class ROOT::RBrowserData
 \ingroup rbrowser
 \brief Way to browse (hopefully) everything in %ROOT
 */

@@ -12,7 +12,6 @@
 #include <ROOT/Browsable/RElement.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class RGroup
@@ -49,9 +48,7 @@ public:
    auto &GetChilds() const { return fChilds; }
 };
 
-
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

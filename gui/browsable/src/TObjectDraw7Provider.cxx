@@ -12,7 +12,7 @@
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/TObjectDrawable.hxx>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 /** Provider for drawing of ROOT7 classes */
 

@@ -29,10 +29,15 @@ class TGeoVolume;
 // do not use namespace to avoid too long JSON
 
 namespace ROOT {
-namespace Experimental {
 
 class RGeomBrowserIter;
+
+namespace Experimental {
 class RLogChannel;
+} // namespace Experimental
+
+/// Log channel for Geomviewer diagnostics.
+Experimental::RLogChannel &RGeomLog();
 
 /** Base description of geometry node, required only to build hierarchy */
 
@@ -460,12 +465,6 @@ public:
    void SavePrimitive(std::ostream &fs, const std::string &name);
 };
 
-
-/// Log channel for Eve diagnostics.
-RLogChannel &RGeomLog();
-
-
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
