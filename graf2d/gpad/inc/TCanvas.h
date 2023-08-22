@@ -229,6 +229,8 @@ public:
    static TCanvas   *MakeDefCanvas();
    static Bool_t     SupportAlpha();
 
+   static Bool_t     SaveAll(std::vector<TPad *>, const char *filename, Option_t *option = "");
+
    ClassDefOverride(TCanvas,8)  //Graphics canvas
 };
 
