@@ -122,6 +122,7 @@ protected:
    // 3D Viewer support
    TVirtualViewer3D *fViewer3D{nullptr};///<! Current 3D viewer
 
+   void          ClearPrimitives(Option_t *option = "");
    void          DestroyExternalViewer3D();
    Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;
    void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;

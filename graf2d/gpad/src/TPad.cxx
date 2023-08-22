@@ -631,7 +631,7 @@ void TPad::Clear(Option_t *option)
 
    if (!fPadPaint) {
       SafeDelete(fView);
-      if (fPrimitives) fPrimitives->Clear(option);
+      ClearPrimitives(option);
       if (fFrame) {
          if (! ROOT::Detail::HasBeenDeleted(fFrame)) delete fFrame;
          fFrame = nullptr;
@@ -658,6 +658,36 @@ void TPad::Clear(Option_t *option)
    fCGny = 0;
    ResetBit(TGraph::kClipFrame);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear pad primitives
+/// Takes care about objects duplication before calling fPrimitives->Clear()
+
+void TPad::ClearPrimitives(Option_t *option)
+{
+   if (!fPrimitives) return;
+
+   // avoid long execution
+   if (fPrimitives->GetSize() > 10000) {
+      Warning("ClearPrimitives", "Too many primitives %d in the pad %s, not possible to check for duplications", (int) fPrimitives->GetSize(), GetName());
+   } else {
+      auto lnk = fPrimitives->FirstLink();
+      while (lnk) {
+         auto chklnk = lnk->Next();
+         while (chklnk && lnk->GetObject()) {
+            auto nextlnk = chklnk->Next();
+            if (lnk->GetObject() == chklnk->GetObject())
+               fPrimitives->Remove(chklnk);
+            chklnk = nextlnk;
+         }
+         lnk = lnk->Next();
+      }
+   }
+
+   // Finally call TList::Clear
+   fPrimitives->Clear(option);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clipping routine: Cohen Sutherland algorithm.
@@ -977,8 +1007,8 @@ void TPad::Close(Option_t *)
    if (!fMother) return;
    if (ROOT::Detail::HasBeenDeleted(fMother)) return;
 
-   if (fPrimitives)
-      fPrimitives->Clear();
+   ClearPrimitives();
+
    if (fView) {
       if (!ROOT::Detail::HasBeenDeleted(fView)) delete fView;
       fView = nullptr;
