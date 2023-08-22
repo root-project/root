@@ -602,12 +602,12 @@ std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail
    return result;
 }
 
-
-void ROOT::Experimental::Detail::RFieldBase::Flush() const
+void ROOT::Experimental::Detail::RFieldBase::CommitCluster()
 {
    for (auto& column : fColumns) {
       column->Flush();
    }
+   CommitClusterImpl();
 }
 
 void ROOT::Experimental::Detail::RFieldBase::SetDescription(std::string_view description)
@@ -1229,11 +1229,6 @@ void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::Experimental:
    }
 }
 
-void ROOT::Experimental::RField<std::string>::CommitCluster()
-{
-   fIndex = 0;
-}
-
 void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitStringField(*this);
@@ -1669,11 +1664,6 @@ ROOT::Experimental::RProxiedCollectionField::SplitValue(const RValue &value) con
    return result;
 }
 
-void ROOT::Experimental::RProxiedCollectionField::CommitCluster()
-{
-   fNWritten = 0;
-}
-
 void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitProxiedCollectionField(*this);
@@ -1906,11 +1896,6 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
       result.emplace_back(fSubFields[0]->BindValue(vec->data() + (i * fItemSize)));
    }
    return result;
-}
-
-void ROOT::Experimental::RVectorField::CommitCluster()
-{
-   fNWritten = 0;
 }
 
 void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -2212,11 +2197,6 @@ size_t ROOT::Experimental::RRVecField::GetAlignment() const
    // the alignment of an RVec<T> is the largest among the alignments of its data members
    // (including the inline buffer which has the same alignment as the RVec::value_type)
    return std::max({alignof(void *), alignof(std::int32_t), fSubFields[0]->GetAlignment()});
-}
-
-void ROOT::Experimental::RRVecField::CommitCluster()
-{
-   fNWritten = 0;
 }
 
 void ROOT::Experimental::RRVecField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -2583,7 +2563,7 @@ size_t ROOT::Experimental::RVariantField::GetValueSize() const
    return fMaxItemSize + fMaxAlignment;  // TODO: fix for more than 255 items
 }
 
-void ROOT::Experimental::RVariantField::CommitCluster()
+void ROOT::Experimental::RVariantField::CommitClusterImpl()
 {
    std::fill(fNWritten.begin(), fNWritten.end(), 0);
 }
@@ -2937,7 +2917,7 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
    return result;
 }
 
-
-void ROOT::Experimental::RCollectionField::CommitCluster() {
+void ROOT::Experimental::RCollectionField::CommitClusterImpl()
+{
    *fCollectionNTuple->GetOffsetPtr() = 0;
 }
