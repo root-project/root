@@ -2611,16 +2611,25 @@ void TCanvas::DeleteCanvasPainter()
 /// Save provided pads/canvases into the image file(s)
 /// Filename can include printf argument for image number - like "image%03d.png".
 /// In this case images: "image000.png", "image001.png", "image002.png" will be created.
-/// If pattern is not provided - it will be automatically inserted before extension
-/// In case when pdf file name provided without pattern - all images will be stored in single PDF file
-/// In case ROOT or XML file name is provided - all pads/canvases will be stored in this file as individual keys
+/// If pattern is not provided - it will be automatically inserted before extension except PDF and ROOT files.
+/// In last case PDF or ROOT file will contain all pads.
 /// Parameter option only used when output into PDF/PS files
+/// If TCanvas::SaveAll() called without arguments - all existing canvases will be stored in allcanvases.pdf file.
 
-Bool_t TCanvas::SaveAll(std::vector<TPad *> pads, const char *filename, Option_t *option)
+Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, Option_t *option)
 {
    if (pads.size() == 0) {
-      ::Warning("TCanvas::SaveAll", "No pads are provided");
-      return kFALSE;
+      std::vector<TPad *> canvases;
+      TIter iter(gROOT->GetListOfCanvases());
+      while (auto c = dynamic_cast<TCanvas *>(iter()))
+         canvases.emplace_back(c);
+
+      if (canvases.size() == 0) {
+         ::Warning("TCanvas::SaveAll", "No pads are provided");
+         return kFALSE;
+      }
+
+      return TCanvas::SaveAll(canvases, filename && *filename ? filename : "allcanvases.pdf", option);
    }
 
    TString fname = filename, ext;

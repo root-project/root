@@ -30,8 +30,7 @@ void saveall()
 
    TCanvas::SaveAll(pads, "image.svg"); // create 100 SVG images, %d pattern will be automatically append
 
-   TCanvas::SaveAll(pads, "images.pdf"); // create one PDF file with all canvases
-
    TCanvas::SaveAll(pads, "images.root"); // create single ROOT file with all canvases
 
+   TCanvas::SaveAll(); // save all existing canvases in allcanvases.pdf file
 }
