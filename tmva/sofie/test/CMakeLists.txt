@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun AND Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -16,12 +16,12 @@ if (NOT ONNX_MODELS_DIR)
   set(ONNX_MODELS_DIR input_models)
 endif()
 
-#Finding .onnx files to be parsed and creating the appropriate code to
+#Finding .onnx files to be parsed AND creating the appropriate code to
 # parse all file. It is much faster to combine all parsing in a single executable
 # which will avoid initialization time (especially when using ROOT)
 set(CAPTURE_STR "EmitModel( \"@1\", \"@2\");")
 set(ALL_CAPTURES "")
-# Finding .onnx files to be parsed and creating the appropriate command
+# Finding .onnx files to be parsed AND creating the appropriate commAND
 file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
 foreach(onnx_file ${ONNX_FILES})
 	get_filename_component(fname ${onnx_file} NAME_WE)
@@ -39,7 +39,7 @@ add_executable(emitFromONNX
    EmitFromONNX_all.cxx
 )
 
-if (tmva-sycl and testing)
+if (tmva-sycl AND testing)
   add_executable(emitFromONNX_GPU
     EmitFromONNX_GPU_all.cxx  
   )
@@ -54,7 +54,7 @@ target_include_directories(emitFromONNX PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 
-if (tmva-sycl and testing)
+if (tmva-sycl AND testing)
   target_include_directories(emitFromONNX_GPU PRIVATE
     ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
     ${SOFIE_PARSERS_DIR}/inc
@@ -67,13 +67,13 @@ endif()
 
 target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromONNX PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
+## silence protobuf warnings seen in version 3.0 AND 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
-if (tmva-sycl and testing)
+if (tmva-sycl AND testing)
 target_link_libraries(emitFromONNX_GPU ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromONNX_GPU PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
+## silence protobuf warnings seen in version 3.0 AND 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX_GPU PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 endif()
 
@@ -81,17 +81,17 @@ endif()
 add_custom_target(SofieCompileModels_ONNX)
 add_dependencies(SofieCompileModels_ONNX emitFromONNX)
 
-if (tmva-sycl and testing)
+if (tmva-sycl AND testing)
   add_custom_target(SofieCompileGPUModels_ONNX)
   add_dependencies(SofieCompileGPUModels_ONNX emitFromONNX_GPU)
 endif()
 
-add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
+add_custom_commAND(TARGET SofieCompileModels_ONNX POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
 		USES_TERMINAL )
 
-if (tmva-sycl and testing)
-  add_custom_command(TARGET SofieCompileGPUModels_ONNX POST_BUILD
+if (tmva-sycl AND testing)
+  add_custom_commAND(TARGET SofieCompileGPUModels_ONNX POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX_GPU ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
   USES_TERMINAL )
 endif()
@@ -111,7 +111,7 @@ add_dependencies(TestCustomModelsFromONNX SofieCompileModels_ONNX)
 endif()
 
 # Creating a Google Test
-if (tmva-sycl and testing)  # we need oneapi math kernel library to compile the models
+if (tmva-sycl AND testing)  # we need oneapi math kernel library to compile the models
 find_package(IntelSYCL REQUIRED)
 find_package(MKL REQUIRED)
 ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
@@ -143,7 +143,7 @@ target_include_directories(emitFromROOT PRIVATE
 )
 target_link_libraries(emitFromROOT ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromROOT PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
+## silence protobuf warnings seen in version 3.0 AND 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
 # Automatic compilation of headers from root files
@@ -155,7 +155,7 @@ else()
   add_dependencies(SofieCompileModels_ROOT emitFromROOT onepcm)
 endif()
 
-add_custom_command(TARGET SofieCompileModels_ROOT POST_BUILD
+add_custom_commAND(TARGET SofieCompileModels_ROOT POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT
 		USES_TERMINAL )
 
@@ -195,7 +195,7 @@ if (tmva-cpu)
   )
  endif()
 
- #if (tmva-sycl and testing)
+ #if (tmva-sycl AND testing)
  #   ROOT_ADD_GTEST(TestSofieGPUModels TestSofieGPUModels.cxx
  #   LIBRARIES
  #     ROOTTMVASofie
