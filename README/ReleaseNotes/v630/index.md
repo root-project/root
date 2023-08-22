@@ -252,6 +252,11 @@ Some of these classes are now removed from the public interface:
   when axis zooming changes and position and index of correspondent axis label changes as well.
   `TAxis::ChangeLabel` method to change axis label by index works as before.
 
+- Introduce `TCanvas::SaveAll` method. Allows to store several pads at once into different image file formats.
+  File name can include printf qualifier to code pad number. Also allows to store all pads in single PDF
+  or single ROOT file. Significantly improves performance when creating many image files using web graphics.
+
+
 ## 3D Graphics Libraries
 
 
