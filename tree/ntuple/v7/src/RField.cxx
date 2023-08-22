@@ -574,6 +574,8 @@ ROOT::Experimental::Detail::RFieldBase::SplitValue(const RValue & /*value*/) con
 void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
    child->fParent = this;
    fSubFields.emplace_back(std::move(child));
 }
@@ -608,6 +610,20 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    }
 }
 
+void ROOT::Experimental::Detail::RFieldBase::SetDescription(std::string_view description)
+{
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("cannot set field description once field is connected"));
+   fDescription = std::string(description);
+}
+
+void ROOT::Experimental::Detail::RFieldBase::SetOnDiskId(DescriptorId_t id)
+{
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("cannot set field ID once field is connected"));
+   fOnDiskId = id;
+}
+
 const ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t &
 ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentative() const
 {
@@ -618,7 +634,7 @@ ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentative() const
 
 void ROOT::Experimental::Detail::RFieldBase::SetColumnRepresentative(const ColumnRepresentation_t &representative)
 {
-   if (!fColumns.empty())
+   if (fState != EState::kUnconnected)
       throw RException(R__FAIL("cannot set column representative once field is connected"));
    const auto &validTypes = GetColumnRepresentations().GetSerializationTypes();
    auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), representative);
@@ -702,7 +718,8 @@ void ROOT::Experimental::Detail::RFieldBase::AutoAdjustColumnTypes(const RNTuple
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry)
 {
-   R__ASSERT(fColumns.empty());
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("invalid attempt to connect an already connected field to a page sink"));
 
    AutoAdjustColumnTypes(pageSink.GetWriteOptions());
 
@@ -713,14 +730,20 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
       auto firstElementIndex = (column.get() == fPrincipalColumn) ? EntryToColumnElementIndex(firstEntry) : 0;
       column->Connect(fOnDiskId, &pageSink, firstElementIndex);
    }
+
+   fState = EState::kConnectedToSink;
 }
 
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &pageSource)
 {
-   R__ASSERT(fColumns.empty());
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("invalid attempt to connect an already connected field to a page source"));
+
    if (fColumnRepresentative)
       throw RException(R__FAIL("fixed column representative only valid when connecting to a page sink"));
+   if (!fDescription.empty())
+      throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
    {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
@@ -743,6 +766,8 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
    for (auto& column : fColumns)
       column->Connect(fOnDiskId, &pageSource);
    OnConnectPageSource();
+
+   fState = EState::kConnectedToSource;
 }
 
 
