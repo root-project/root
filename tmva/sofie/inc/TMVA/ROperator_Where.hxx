@@ -61,7 +61,6 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
 };
 
 }//SOFIE
