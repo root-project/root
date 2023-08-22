@@ -465,6 +465,9 @@ protected:
    size_t AddReadCallback(ReadCallback_t func);
    void RemoveReadCallback(size_t idx);
 
+   /// Add a new subfield to the list of nested fields
+   void Attach(std::unique_ptr<Detail::RFieldBase> child);
+
    /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
    virtual void OnConnectPageSource() {}
@@ -578,9 +581,6 @@ public:
    /// Perform housekeeping tasks for global to cluster-local index translation
    virtual void CommitCluster() {}
 
-   /// Add a new subfield to the list of nested fields
-   void Attach(std::unique_ptr<Detail::RFieldBase> child);
-
    std::string GetName() const { return fName; }
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
@@ -651,6 +651,7 @@ protected:
 public:
    RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
 
+   using Detail::RFieldBase::Attach;
    using Detail::RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
