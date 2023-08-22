@@ -100,6 +100,15 @@ public:
 
    using ColumnRepresentation_t = std::vector<EColumnType>;
 
+   /// During its lifetime, a field undergoes the following possible state transitions:
+   ///
+   ///  [*] --> Unconnected --> ConnectedToSink ----
+   ///               |      |                      |
+   ///               |      --> ConnectedToSource ---> [*]
+   ///               |                             |
+   ///               -------------------------------
+   enum class EState { kUnconnected, kConnectedToSink, kConnectedToSource };
+
    /// Some fields have multiple possible column representations, e.g. with or without split encoding.
    /// All column representations supported for writing also need to be supported for reading. In addition,
    /// fields can support extra column representations for reading only, e.g. a 64bit integer reading from a
@@ -278,6 +287,8 @@ private:
    DescriptorId_t fOnDiskId = kInvalidDescriptorId;
    /// Free text set by the user
    std::string fDescription;
+   /// Changed by ConnectTo[Sink,Source], reset by Clone()
+   EState fState = EState::kUnconnected;
 
    void InvokeReadCallbacks(void *target)
    {
@@ -583,10 +594,11 @@ public:
    bool IsSimple() const { return fIsSimple; }
    /// Get the field's description
    std::string GetDescription() const { return fDescription; }
-   void SetDescription(std::string_view description) { fDescription = std::string(description); }
+   void SetDescription(std::string_view description);
+   EState GetState() const { return fState; }
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
-   void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
+   void SetOnDiskId(DescriptorId_t id);
 
    /// Returns the fColumnRepresentative pointee or, if unset, the field's default representative
    const ColumnRepresentation_t &GetColumnRepresentative() const;
