@@ -32,6 +32,7 @@
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TColor.h"
+#include "TSystem.h"
 #include "TObjArray.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
@@ -2603,4 +2604,124 @@ void TCanvas::DeleteCanvasPainter()
       gGLManager->DeleteGLContext(fGLDevice);//?
       fGLDevice = -1;
    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save provided pads/canvases into the image file(s)
+/// Filename can include printf argument for image number - like "image%03d.png".
+/// In this case images: "image000.png", "image001.png", "image002.png" will be created.
+/// If pattern is not provided - it will be automatically inserted before extension
+/// In case when pdf file name provided without pattern - all images will be stored in single PDF file
+/// In case ROOT or XML file name is provided - all pads/canvases will be stored in this file as individual keys
+/// Parameter option only used when output into PDF/PS files
+
+Bool_t TCanvas::SaveAll(std::vector<TPad *> pads, const char *filename, Option_t *option)
+{
+   if (pads.size() == 0) {
+      ::Warning("TCanvas::SaveAll", "No pads are provided");
+      return kFALSE;
+   }
+
+   TString fname = filename, ext;
+
+   Bool_t hasArg = fname.Contains("%");
+
+   if ((pads.size() == 1) && !hasArg) {
+      pads[0]->SaveAs(filename);
+      return kTRUE;
+   }
+
+   auto p = fname.Last('.');
+   if (p != kNPOS) {
+      ext = fname(p+1, fname.Length() - p - 1);
+      ext.ToLower();
+   } else {
+      p = fname.Length();
+      ::Warning("TCanvas::SaveAll", "Extension is not provided in file name %s, append .png", filename);
+      fname.Append(".png");
+      ext = "png";
+   }
+
+   if (ext != "pdf" && ext != "ps" && ext != "root" && ext != "xml" && !hasArg) {
+      fname.Insert(p, "%d");
+      hasArg = kTRUE;
+   }
+
+   static std::vector<TString> webExtensions = { "png", "json", "svg", "pdf", "jpg", "jpeg", "webp" };
+
+   if (gROOT->IsWebDisplay()) {
+      Bool_t isSupported = kFALSE;
+      for (auto &wext : webExtensions) {
+         if ((isSupported = (wext == ext)))
+            break;
+      }
+
+      if (isSupported) {
+         auto cmd = TString::Format("TWebCanvas::ProduceImages( *((std::vector<TPad *> *) 0x%zx), \"%s\")", (size_t) &pads, fname.Data());
+
+         return (Bool_t) gROOT->ProcessLine(cmd);
+      }
+
+      ::Warning("TCanvas::SaveAll", "TWebCanvas does not support image format %s - use normal ROOT functionality", fname.Data());
+   }
+
+   // store all pads into single PDF/PS files
+   if (ext == "pdf" || ext == "ps") {
+      for (unsigned n = 0; n < pads.size(); ++n) {
+         TString fn = fname;
+         if (hasArg)
+            fn = TString::Format(fname.Data(), (int) n);
+         else if (n == 0)
+            fn.Append("(");
+         else if (n == pads.size() - 1)
+            fn.Append(")");
+
+         pads[n]->Print(fn.Data(), option && *option ? option : ext.Data());
+      }
+
+      return kTRUE;
+   }
+
+   // store all pads in single ROOT file
+   if ((ext == "root" || ext == "xml") && !hasArg) {
+      TString fn = fname;
+      gSystem->ExpandPathName(fn);
+      if (fn.IsNull()) {
+         fn.Form("%s.%s", pads[0]->GetName(), ext.Data());
+         ::Warning("TCanvas::SaveAll", "Filename %s cannot be used - use pad name %s as pattern", fname.Data(), fn.Data());
+      }
+
+      Bool_t isError = kFALSE;
+
+      if (!gDirectory) {
+         isError = kTRUE;
+      } else {
+         for (unsigned n = 0; n < pads.size(); ++n) {
+            auto sz = gDirectory->SaveObjectAs(pads[n], fn.Data(), n==0 ? "q" : "qa");
+            if (!sz) { isError = kTRUE; break; }
+         }
+      }
+
+      if (isError)
+         ::Error("TCanvas::SaveAll", "Failure to store pads in %s", filename);
+      else
+         ::Info("TCanvas::SaveAll", "ROOT file %s has been created", filename);
+
+      return !isError;
+   }
+
+   for (unsigned n = 0; n < pads.size(); ++n) {
+      TString fn = TString::Format(fname.Data(), (int) n);
+      gSystem->ExpandPathName(fn);
+      if (fn.IsNull()) {
+         fn.Form("%s%d.%s", pads[n]->GetName(), (int) n, ext.Data());
+         ::Warning("TCanvas::SaveAll", "Filename %s cannot be used - use pad name %s as pattern", fname.Data(), fn.Data());
+      }
+
+      pads[n]->SaveAs(fn.Data());
+   }
+
+   return kTRUE;
+
 }
