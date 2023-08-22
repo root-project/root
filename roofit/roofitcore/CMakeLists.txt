@@ -506,7 +506,7 @@ target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURREN
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
-if(NOT MSVC)
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFitCore PUBLIC -fno-math-errno)
 endif()
 
