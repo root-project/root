@@ -1304,7 +1304,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let ib_len = rnr_data.idxBuff.length;
 
          let fcol = RcCol(psp.fMainColor);
-         let mop = Math.min( 1, 1.3 *(1 - psp.fMainTransparency/100));
+         let mop = Math.min( 1, 1 - psp.fMainTransparency/100);
 
          let material = this.RcFlatMaterial(fcol, mop);
          material.side = RC.FRONT_AND_BACK_SIDE;
