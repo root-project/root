@@ -76,7 +76,7 @@ public:
        // assume dimension of output shape is SAME AS INPUT !
       std::vector<std::vector<size_t>> ret(1, input_shape);
       auto & output_shape = ret[0];
-      for (size_t i = 0; i < input_shape.size(); i++) { 
+      for (size_t i = 0; i < input_shape.size(); i++) {
           output_shape[i] = (fEnd[i]-fStart[i])/ fSteps[i];
       }
       return ret;
@@ -97,7 +97,7 @@ public:
       // loop on the extra 2 or 3 or 4 inputs
       for (size_t i = 0; i < fNames.size(); ++i) {
         if (!fNames[i].empty()) { 
-         std::cout << " i " << i << " getting data for tensor " << fNames[i] << std::endl;
+         // std::cout << " i " << i << " getting data for tensor " << fNames[i] << std::endl;
          auto dptr = model.GetInitializedTensorData(fNames[i]);
          auto tensor = static_cast<IType *>(dptr.get());
          auto vec = model.GetTensorShape(fNames[i]);
@@ -132,17 +132,17 @@ public:
             assert(jaxis < dim - 1);
             size_t imax = fShapeInput[jaxis];
             // find start/end/step for given axis
-            IType start = (istart[i] > 0) ? istart[i] : imax + istart[i];
+            IType start = (istart[i] >= 0) ? istart[i] : imax + istart[i];
             if (start < 0) start = 0;
             if (start > static_cast<IType>(imax))
                start = imax;
             fStart[jaxis] = start;
-            IType ie = (iend[i] > 0) ? iend[i] : imax + iend[i];
+            IType ie = (iend[i] >= 0) ? iend[i] : imax + iend[i];
             if (ie < 0)  ie = 0;
             if (ie > static_cast<IType>(imax))
                ie = imax;
             fEnd[jaxis] = ie;
-            //std::cout << " iaxis " << jaxis << " start " << start << " end " << ie << std::endl;
+         
             if (isteps.size() > 0) {
                if (isteps[i] < 0) {
                   // to be done
@@ -187,7 +187,7 @@ public:
       for (size_t idim = 0; idim < ndim-1; idim++) out << " stride" << idim << " + ";
       // here should be step size ?
       out << "i" << ndim-1 << ";\n";
-      out << MSP << "fTensor_" << fNOutput << "[iOut++] = fTensor_" <<fNData << "[iInput];\n";
+      out << MSP << "tensor_" << fNOutput << "[iOut++] = tensor_" <<fNData << "[iInput];\n";
       for (size_t idim = 0; idim < ndim; idim++) {
           MSP = MSP.replace(0,SP.length(),"");
           out << MSP << "}\n";

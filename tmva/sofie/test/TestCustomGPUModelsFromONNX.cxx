@@ -242,6 +242,9 @@
 #include "GatherNegativeIndicesGPU_FromONNX.hxx"
 #include "input_models/references/GatherNegativeIndices.ref.hxx"
 
+#include "SliceGPU_FromONNX.hxx"
+#include "input_models/references/Slice.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2330,4 +2333,20 @@ TEST(ONNX, GatherNegativeIndices) {
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
+
+TEST(ONNX, Slice) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = std::vector<float>(Slice::input);
+   TMVA_SOFIE_Slice::Session s("Slice.dat");
+   std::vector<float> output(s.infer(input));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice::output) / sizeof(float));
+   float *correct = Slice::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
 }

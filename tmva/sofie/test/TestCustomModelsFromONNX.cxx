@@ -239,6 +239,9 @@
 #include "GatherNegativeIndices_FromONNX.hxx"
 #include "input_models/references/GatherNegativeIndices.ref.hxx"
 
+#include "Slice_FromONNX.hxx"
+#include "input_models/references/Slice.ref.hxx"
+
 #include "gtest/gtest.h"
 
 
@@ -2306,4 +2309,20 @@ TEST(ONNX, GatherNegativeIndices) {
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
+
+TEST(ONNX, Slice) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = Slice::input;
+   TMVA_SOFIE_Slice::Session s("Slice.dat");
+   std::vector<float> output(s.infer(input.data()));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice::output) / sizeof(float));
+   float *correct = Slice::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
 }
