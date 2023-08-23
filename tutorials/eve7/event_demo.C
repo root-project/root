@@ -161,6 +161,7 @@ void makeGeometryScene()
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
    b1->SetNSegments(80);
+   b1->SetMainTransparency(70);
    eveMng->GetGlobalScene()->AddElement(b1);
 
    // Debug of surface fill in RPhi (index buffer screwed).
