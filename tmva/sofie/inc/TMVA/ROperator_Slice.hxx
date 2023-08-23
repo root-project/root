@@ -197,7 +197,53 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName)  {
-      return std::string();
+      OpName = "op_" + OpName;
+      if (fShapeInput.empty() || fShapeOutput.empty()){
+         throw std::runtime_error("TMVA SOFIE Slice Op called to Generate without being initialized first");
+      }
+
+      std::stringstream out;
+      //std::string opName = "Slice";
+
+      out << "\n" << SP*3 << "///------- Slice operator\n" << std::endl;
+      size_t ndim = fShapeInput.size();
+      std::vector<size_t> strides(ndim,1);
+      for (int i = int(ndim-2); i >=0 ; i--) {
+          strides[i] = strides[i+1]*fShapeInput[i+1];
+      }
+
+      out << SP*3 << "size_t iOut = 0;\n";
+      size_t num_items = 1;
+
+      for (size_t idim  = 0; idim < ndim; idim++) {
+         num_items *= static_cast<size_t>(std::ceil((fEnd[idim] - fStart[idim] / float(fSteps[idim]))));
+      }
+
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNData << " = cl::sycl::accessor{buf_tensor_" << fNData;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNOutput << " = cl::sycl::accessor{buf_tensor_" << fNOutput;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << num_items << "), [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "auto tid = id;\n";
+
+      for (size_t idim = ndim-1; idim > 0; idim--) {
+         out << SP*5 << "auto i" << idim << " = ( tid % " << static_cast<size_t>(std::ceil((fEnd[idim] - fStart[idim] / float(fSteps[idim])))) << " ) * " << fSteps[idim] << " + " << fStart[idim] << ";\n";
+         out << SP*5 << "tid /= " << static_cast<size_t>(std::ceil((fEnd[idim] - fStart[idim] / float(fSteps[idim])))) << ";\n";
+      }
+
+      out << SP*5 << "auto i0 = tid;\n";
+      out << SP*5 << "size_t iInput = ";
+      for (size_t idim = 0; idim < ndim-1; idim++) out << strides[idim] << " * i" << idim << " + ";
+      // here should be step size ?
+      out << "i" << ndim-1 << ";\n";
+      out << SP*5 << "acc_tensor_" << fNOutput << "[id] = acc_tensor_" << fNData << "[iInput];\n";
+
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+      
+      return out.str();
    }
 
 
