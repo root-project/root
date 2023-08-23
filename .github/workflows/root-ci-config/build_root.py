@@ -132,15 +132,15 @@ def main():
     print_trace()
 
 def handle_test_failure(ctest_returncode):
-    logloc = f'{WORKDIR}/Testing/Temporary/LastTestsFailed.log'
+    logloc = f'{WORKDIR}/build/Testing/Temporary/LastTestsFailed.log'
     if os.path.isfile(logloc):
         with open(logloc, 'r') as logf:
             print(logf.read())
     else:
         print(f'Internal error: cannot find {logloc}\nAdding some debug output:')
-        subprocess.run(f'ls -l {WORKDIR}', shell=True, check=False, stderr=subprocess.STDOUT)
-        subprocess.run(f'ls -l {WORKDIR}/Testing', shell=True, check=False, stderr=subprocess.STDOUT)
-        subprocess.run(f'ls -l {WORKDIR}/Testing/Temporary', shell=True, check=False, stderr=subprocess.STDOUT)
+        subprocess.run(f'ls -l {WORKDIR}/build', shell=True, check=False, stderr=subprocess.STDOUT)
+        subprocess.run(f'ls -l {WORKDIR}/build/Testing', shell=True, check=False, stderr=subprocess.STDOUT)
+        subprocess.run(f'ls -l {WORKDIR}/build/Testing/Temporary', shell=True, check=False, stderr=subprocess.STDOUT)
 
     die(msg=f"TEST FAILURE: ctest exited with code {ctest_returncode}")
 
