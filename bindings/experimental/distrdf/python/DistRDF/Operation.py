@@ -95,6 +95,7 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "DefinePerSample": Transformation,
     "Filter": Transformation,
     "Graph": Action,
+    "GraphAsymmErrors": Action,
     "Histo1D": Histo,
     "Histo2D": Histo,
     "Histo3D": Histo,
