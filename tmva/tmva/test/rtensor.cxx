@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <TMVA/RTensor.hxx>
-#include <iostream>
+
 using namespace TMVA::Experimental;
 
 TEST(RTensor, GetElement)

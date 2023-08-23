@@ -4,12 +4,13 @@ import ROOT
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-if np.__version__ > "1.19":
-    raise RuntimeError(f"This test requires NumPy version 1.19 or lower")
+if np.__version__ >= "1.20" and np.__version__ < "1.24":
+    raise RuntimeError(f"This test requires NumPy version <=1.19 or >=1.24")
 
 import graph_nets as gn
 from graph_nets import utils_tf
 import sonnet as snt
+import os
 
 
 
@@ -21,9 +22,22 @@ def get_graph_data_dict(num_nodes, num_edges, GLOBAL_FEATURE_SIZE=2, NODE_FEATUR
       "nodes": np.random.rand(num_nodes, NODE_FEATURE_SIZE).astype(np.float32),
       "edges": np.random.rand(num_edges, EDGE_FEATURE_SIZE).astype(np.float32),
       "senders": np.random.randint(num_nodes, size=num_edges, dtype=np.int32),
-      "receivers": np.random.randint(num_nodes, size=num_edges, dtype=np.int32),
+      "receivers": np.random.randint(num_nodes, size=num_edges, dtype=np.int32)
   }
 
+def resize_graph_data(input_data, GLOBAL_FEATURE_SIZE=2, NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2) :
+    n = input_data["nodes"]
+    e = input_data["edges"]
+    s = input_data["senders"]
+    r = input_data["receivers"]
+    return {
+      "globals" : np.zeros((GLOBAL_FEATURE_SIZE )),
+      "nodes"   : np.zeros((n.shape[0],NODE_FEATURE_SIZE )),
+      "edges"   : np.zeros((e.shape[0],EDGE_FEATURE_SIZE )),
+      "senders" : s, "receivers" : r
+    }
+
+LATENT_SIZE = 2
 def make_mlp_model():
   """Instantiates a new MLP, followed by LayerNorm.
 
@@ -34,7 +48,7 @@ def make_mlp_model():
     A Sonnet module which contains the MLP and LayerNorm.
   """
   return snt.Sequential([
-      snt.nets.MLP([2,2], activate_final=True),
+      snt.nets.MLP([LATENT_SIZE]*2, activate_final=True),
       snt.LayerNorm(axis=-1, create_offset=True, create_scale=True)
   ])
 
@@ -48,9 +62,9 @@ class MLPGraphIndependent(snt.Module):
   def __init__(self, name="MLPGraphIndependent"):
     super(MLPGraphIndependent, self).__init__(name=name)
     self._network = gn.modules.GraphIndependent(
-        edge_model_fn = lambda: snt.nets.MLP([2,2], activate_final=True),
-        node_model_fn = lambda: snt.nets.MLP([2,2], activate_final=True),
-        global_model_fn = lambda: snt.nets.MLP([2,2], activate_final=True))
+        edge_model_fn = lambda: snt.nets.MLP([LATENT_SIZE]*2, activate_final=True),
+        node_model_fn = lambda: snt.nets.MLP([LATENT_SIZE]*2, activate_final=True),
+        global_model_fn = lambda: snt.nets.MLP([LATENT_SIZE]*2, activate_final=True))
 
   def __call__(self, inputs):
     return self._network(inputs)
@@ -69,12 +83,19 @@ class MLPGraphNetwork(snt.Module):
   def __call__(self, inputs):
     return self._network(inputs)
 
+def PrintGData(data, printShape = True):
+  n = data.nodes.numpy()
+  e = data.edges.numpy()
+  g = data.globals.numpy()
+  if (printShape) :
+    print("GNet data ... shapes",n.shape,e.shape,g.shape)
+  print(" node data", n.reshape(n.size,))
+  print(" edge data", e.reshape(e.size,))
+  print(" global data",g.reshape(g.size,))
+
 class EncodeProcessDecode(snt.Module):
 
   def __init__(self,
-               edge_output_size=None,
-               node_output_size=None,
-               global_output_size=None,
                name="EncodeProcessDecode"):
     super(EncodeProcessDecode, self).__init__(name=name)
     self._encoder = MLPGraphIndependent()
@@ -103,12 +124,15 @@ class SOFIE_GNN(unittest.TestCase):
         Test that parsed GNN model from a graphnets model generates correct
         inference code
         '''
+
+        print('\nRun Graph parsing test')
+
         GraphModule = gn.modules.GraphNetwork(
             edge_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
             node_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
             global_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True))
 
-        GraphData = get_graph_data_dict(2,1)
+        GraphData = get_graph_data_dict(2,1,2,2,2)
         input_graphs = utils_tf.data_dicts_to_graphs_tuple([GraphData])
         output = GraphModule(input_graphs)
 
@@ -135,18 +159,26 @@ class SOFIE_GNN(unittest.TestCase):
         assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
         assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
 
+        fname = "gnn_network"
+        os.remove(fname + '.dat')
+        os.remove(fname + '.hxx')
+
 
     def test_parse_graph_independent(self):
         '''
         Test that parsed GraphIndependent model from a graphnets model generates correct
         inference code
         '''
+
+        print('\nRun Graph Independent parsing test')
+
+
         GraphModule = gn.modules.GraphIndependent(
             edge_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
             node_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True),
             global_model_fn=lambda: snt.nets.MLP([2,2], activate_final=True))
 
-        GraphData = get_graph_data_dict(2,1)
+        GraphData = get_graph_data_dict(2,1,2,2,2)
         input_graphs = utils_tf.data_dicts_to_graphs_tuple([GraphData])
         output = GraphModule(input_graphs)
 
@@ -173,27 +205,46 @@ class SOFIE_GNN(unittest.TestCase):
         assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
         assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
 
+        fname = "graph_independent_network"
+        os.remove(fname + '.dat')
+        os.remove(fname + '.hxx')
+
     def test_lhcb_toy_inference(self):
         '''
         Test that parsed stack of SOFIE GNN and GraphIndependent modules generate the correct
         inference code
         '''
+
+        print('Run LHCb test')
+
         # Instantiating EncodeProcessDecode Model
-        ep_model = EncodeProcessDecode(2,2,2)
+
+        #number of features for node. edge, globals
+        nsize = 3
+        esize = 3
+        gsize = 2
+        lsize = LATENT_SIZE  #hard-coded latent size in definition of GNET model (for node edge and globals)
+
+        ep_model = EncodeProcessDecode()
 
         # Initializing randomized input data
-        GraphData = get_graph_data_dict(2,1)
-        input_graphs = utils_tf.data_dicts_to_graphs_tuple([GraphData])
+        InputGraphData = get_graph_data_dict(2,1, gsize, nsize, esize)
+        input_graphs = utils_tf.data_dicts_to_graphs_tuple([InputGraphData])
 
-        # Initializing randomized input data for core
-        CoreGraphData = get_graph_data_dict(2, 1, 4, 4, 4)
-        input_graphs_2 = utils_tf.data_dicts_to_graphs_tuple([CoreGraphData])
+        # Make data for core networks (number of features for node/edge global is 2 * lsize)
+        CoreGraphData = resize_graph_data(InputGraphData, 2 * lsize, 2 * lsize, 2 * lsize)
+
+
+        OutputGraphData = resize_graph_data(InputGraphData, lsize, lsize, lsize)
+
 
         # Collecting output from GraphNets model stack
         output_gn = ep_model(input_graphs, 2)
 
+        print("senders and receivers ",InputGraphData['senders'],InputGraphData['receivers'])
+
         # Declaring sofie models
-        encoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._encoder._network, GraphData, filename = "encoder")
+        encoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._encoder._network, InputGraphData, filename = "encoder")
         encoder.Generate()
         encoder.OutputGenerated()
 
@@ -201,11 +252,11 @@ class SOFIE_GNN(unittest.TestCase):
         core.Generate()
         core.OutputGenerated()
 
-        decoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._decoder._network, GraphData, filename = "decoder")
+        decoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._decoder._network, OutputGraphData, filename = "decoder")
         decoder.Generate()
         decoder.OutputGenerated()
 
-        output_transform = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._output_transform._network, GraphData, filename = "output_transform")
+        output_transform = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._output_transform._network, OutputGraphData, filename = "output_transform")
         output_transform.Generate()
         output_transform.OutputGenerated()
 
@@ -222,14 +273,18 @@ class SOFIE_GNN(unittest.TestCase):
 
         # Preparing the input data for running inference on sofie
         input_data = ROOT.TMVA.Experimental.SOFIE.GNN_Data()
-        input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['nodes'])
-        input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['edges'])
-        input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['globals'])
+        input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['nodes'])
+        input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['edges'])
+        input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['globals'])
+
+        output_gn = ep_model(input_graphs, 2)
 
         # running inference on sofie
-        encoder_session.infer(input_data)
-        latent0 = CopyData(input_data)
-        latent = input_data
+        data = CopyData(input_data)
+
+        encoder_session.infer(data)
+        latent0 = CopyData(data)
+        latent = data
         output_ops = []
         for _ in range(2):
             core_input = ROOT.TMVA.Experimental.SOFIE.Concatenate(latent0, latent, axis=1)
@@ -246,10 +301,16 @@ class SOFIE_GNN(unittest.TestCase):
           output_global_data = output_gn[i].globals.numpy().flatten()
 
           assert_almost_equal(output_node_data, np.asarray(output_ops[i].node_data))
+
           assert_almost_equal(output_edge_data, np.asarray(output_ops[i].edge_data))
+
           assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data))
 
-
+        #remove header files after being used
+        filesToRemove = ['core','encoder','decoder','output_transform']
+        for fname in filesToRemove:
+          os.remove(fname + '.hxx')
+          os.remove(fname + '.dat')
 
 
 if __name__ == '__main__':

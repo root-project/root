@@ -2,8 +2,6 @@
 // Description:
 //    This program generates a RModel_GNN for testing
 
-#include <iostream>
-
 #include "TMVA/RModel_GNN.hxx"
 #include "TMVA/FunctionList.hxx"
 #include "TMVA/SOFIE_common.hxx"

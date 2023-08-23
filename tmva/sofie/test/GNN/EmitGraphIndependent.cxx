@@ -2,8 +2,6 @@
 // Description:
 //    This program generates a RModel_GraphIndependent for testing
 
-#include <iostream>
-
 #include "TMVA/RModel_GraphIndependent.hxx"
 #include "TMVA/FunctionList.hxx"
 #include "TMVA/SOFIE_common.hxx"

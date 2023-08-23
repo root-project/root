@@ -5,7 +5,6 @@
 #include <unordered_set>
 #include <vector>
 #include <unordered_map>
-#include <iostream>
 #include <memory>
 #include <ctime>
 #include <set>
@@ -84,7 +83,7 @@ public:
     std::string ReturnGenerated() {
         return fGC;
     }
-    void OutputGenerated(std::string filename = "");
+    void OutputGenerated(std::string filename = "", bool append = false);
     void SetFilename(std::string filename) {
         fName = filename;
     }

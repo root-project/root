@@ -2,7 +2,6 @@
 #define TMVA_SOFIE_SOFIE_COMMON
 
 #include "TMVA/RTensor.hxx"
-// #include "TMVA/Types.h"
 
 #include <stdexcept>
 #include <type_traits>

@@ -128,12 +128,16 @@ endif()
 # SOFIE-GNN pythonizations
 if (dataframe AND tmva)
     if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3 )
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
+        find_python_module(sonnet QUIET)
+        find_python_module(graph_nets QUIET)
+        if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
+            ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
+        endif()
     endif()
 endif()
 
 # RTensor pythonizations
-if (tmva AND sofie)
+if (tmva)
     if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
     endif()

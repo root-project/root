@@ -6,7 +6,6 @@
 #include "TMVA/RModel.hxx"
 
 #include <sstream>
-#include <iostream>
 #include<sstream>
 #include<vector>
 #include <iterator>

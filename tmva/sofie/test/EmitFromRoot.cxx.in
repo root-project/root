@@ -6,8 +6,6 @@
 //           generates the required .hxx file after reading a written
 //           ROOT file which stores the object of the RModel class.
 
-#include <iostream>
-
 #include "TMVA/RModel.hxx"
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "TFile.h"

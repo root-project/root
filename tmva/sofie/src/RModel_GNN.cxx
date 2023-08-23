@@ -3,7 +3,6 @@
 #include <fstream>
 #include <limits>
 
-#include <iostream>
 #include "TMVA/RModel_GNN.hxx"
 #include "TMVA/RFunction.hxx"
 
@@ -129,10 +128,10 @@ void RModel_GNN::Generate() {
     next_pos = globals_update_block->GetFunctionBlock()->WriteInitializedTensorsToFile(fName+".dat");
     fGC+="};\n}\n";
 
-    // correct for difference in global size
+    // correct for difference in global size  (check shape[1] of output og globals update)
     auto num_global_features_input = num_global_features;
-    if(globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[0] != num_global_features) {
-        num_global_features = globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[0];
+    if(globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1] != num_global_features) {
+        num_global_features = globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1];
     }
 
     fGC+=edge_node_agg_block->GenerateModel();
@@ -225,10 +224,21 @@ void RModel_GNN::Generate() {
            ", input_graph.node_data.GetData() + (k + 1) * " + n_size_input +
            ", fNodeInputs.begin() + k * " + n_size_input + ");\n";
     fGC += "}\n";
-    std::vector<std::string> Node_Edge_Aggregate_String;
+    // reset initial aggregate edge vector to zero
+    fGC += "\nstd::fill(fNodeEdgeAggregate.begin(), fNodeEdgeAggregate.end(), 0.);\n";
+    // fGlobInputs is size { nedges, ngloblas}. It needs to be here { nnodes, nglobals}
+    // if number of nodes is larger than edges we need to resize it and copy values
+    if (num_nodes > num_edges) {
+        fGC += "\n// resize global vector feature to number of nodes\n";
+        fGC += "fGlobInputs.resize( " + std::to_string(num_nodes * num_global_features_input) + ");";
+        fGC += "for (size_t k = " + std::to_string(num_edges) + "; k < " + std::to_string(num_nodes) + "; k++)";
+            fGC += "   std::copy(fGlobInputs.begin(), fGlobInputs.begin() + " + std::to_string(num_global_features_input) +
+                   " , fGlobInputs.begin() + k * " + std::to_string(num_global_features_input) + ");\n";
+    }
 
     // aggregating edge if it's a receiver node and then updating corresponding node
     for(int i=0; i<num_nodes; ++i) {
+        std::vector<std::string> Node_Edge_Aggregate_String;
         for(int k=0; k<num_edges; ++k) {
             if(receivers[k] == i) {
                 Node_Edge_Aggregate_String.emplace_back("input_graph.edge_data.GetData()+"+std::to_string(k*num_edge_features));
@@ -236,12 +246,11 @@ void RModel_GNN::Generate() {
         }
 
         // when node is not a receiver, fill the aggregated vector with 0 values
-        if(Node_Edge_Aggregate_String.size()==0) {
-            fGC+="fNodeEdgeAggregate.insert(fNodeEdgeAggregate.end(), "+std::to_string(num_edge_features)+", 0);";
-        } else {
+        if(Node_Edge_Aggregate_String.size()!=0) {
             fGC+="\nfNodeAggregateTemp = ";
             fGC+=edge_node_agg_block->Generate(num_edge_features, {Node_Edge_Aggregate_String});                     // aggregating edge attributes per node
-            fGC+="\nfNodeEdgeAggregate.insert(fNodeEdgeAggregate.begin(), fNodeAggregateTemp.begin(), fNodeAggregateTemp.end());";
+            fGC += "\nstd::copy(fNodeAggregateTemp.begin(), fNodeAggregateTemp.end(), fNodeEdgeAggregate.begin() + " +
+                   std::to_string(num_edge_features * i) + ");";
         }
     }
 
@@ -249,7 +258,6 @@ void RModel_GNN::Generate() {
     fGC+="fNodeUpdates = ";
     fGC+=nodes_update_block->Generate({"fNodeEdgeAggregate.data()","fNodeInputs.data()","fGlobInputs.data()"});    // computing updated node attributes
     fGC+="\n";
-    Node_Edge_Aggregate_String.clear();
 
     if(num_node_features != num_node_features_input) {
         fGC += "\n//  resize node graph data since output feature size is not equal to input size\n";
@@ -285,9 +293,9 @@ void RModel_GNN::Generate() {
     // computing updated global attributes
     fGC += "std::vector<float> Global_Data = ";
     fGC += globals_update_block->Generate({"Edge_Global_Aggregate.data()","Node_Global_Aggregate.data()", "input_graph.global_data.GetData()"});
-    if(globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1] != num_global_features) {
-        num_global_features = globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1];
-        fGC+="\ninput_graph.global_data = input_graph.global_data.Resize({"+std::to_string(num_global_features)+"});";
+    if(num_global_features != num_global_features_input) {
+        fGC += "\n//  resize global graph data since output feature size is not equal to input size\n";
+        fGC+="input_graph.global_data = input_graph.global_data.Resize({"+std::to_string(num_global_features)+"});\n";
     }
     fGC += "\nstd::copy(Global_Data.begin(), Global_Data.end(), input_graph.global_data.GetData());";
     fGC+="\n}\n";

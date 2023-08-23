@@ -536,70 +536,68 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
 }
 
 long RModel::WriteInitializedTensorsToFile(std::string filename) {
-   // Determine the file extension based on the weight file type
-   std::string fileExtension;
-   switch (fWeightFile) {
-      case WeightFileType::None:
-         fileExtension = ".dat";
-         break;
-      case WeightFileType::RootBinary:
-         fileExtension = ".root";
-         break;
-      case WeightFileType::Text:
-         fileExtension = ".dat";
-         break;
-   }
+    // Determine the file extension based on the weight file type
+    std::string fileExtension;
+    switch (fWeightFile) {
+    case WeightFileType::None:
+        fileExtension = ".dat";
+        break;
+    case WeightFileType::RootBinary:
+        fileExtension = ".root";
+        break;
+    case WeightFileType::Text:
+        fileExtension = ".dat";
+        break;
+    }
 
-   // If filename is empty, use the model name as the base filename
-   if (filename.empty()) {
-      filename = fFileName + fileExtension;
-   }
+    // If filename is empty, use the model name as the base filename
+    if (filename.empty()) {
+        filename = fFileName + fileExtension;
+    }
 
-   // Write the initialized tensors to the file
-   if (fWeightFile == WeightFileType::RootBinary) {
+    // Write the initialized tensors to the file
+    if (fWeightFile == WeightFileType::RootBinary) {
         if(fIsGNNComponent || fIsGNN) {
-            throw std::runtime_error("SOFIE-GNN yet not supports writing to a ROOT file.")
+            throw std::runtime_error("SOFIE-GNN yet not supports writing to a ROOT file.");
         }
-      std::unique_ptr<TFile> outputFile(TFile::Open(filename.c_str(), "UPDATE"));
+        std::unique_ptr<TFile> outputFile(TFile::Open(filename.c_str(), "UPDATE"));
 
-      std::string dirName = fName + "_weights";
-      // check if directory exists, in case delete to replace with new one
-      if (outputFile->GetKey(dirName.c_str()))
-         outputFile->rmdir(dirName.c_str());
+        std::string dirName = fName + "_weights";
+        // check if directory exists, in case delete to replace with new one
+        if (outputFile->GetKey(dirName.c_str()))
+            outputFile->rmdir(dirName.c_str());
 
-      auto outputDir = outputFile->mkdir(dirName.c_str());
+        auto outputDir = outputFile->mkdir(dirName.c_str());
 
-      for (const auto& item : fInitializedTensors) {
-         std::string tensorName = "tensor_" + item.first;
-         size_t length = 1;
-         length = ConvertShapeToLength(item.second.fShape);
-         if(item.second.fType == ETensorType::FLOAT){
-            const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
-            const float* data = (std::static_pointer_cast<float>(item.second.fData)).get();
-            std::vector<float> tensorDataVector(data , data + length);
-            outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
-         }
-         else if(item.second.fType == ETensorType::DOUBLE){
-            const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
-            const double* data = (std::static_pointer_cast<double>(item.second.fData)).get();
-            std::vector<double> tensorDataVector(data , data + length);
-            outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
-         }
-         else if(item.second.fType == ETensorType::INT64) {
-            const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
-            const int64_t* data = (std::static_pointer_cast<int64_t>(item.second.fData)).get();
-            std::vector<int64_t> tensorDataVector(data , data + length);
-            outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
-         }
-      }
-      outputFile->Write(filename.c_str());
-    
+        for (const auto& item : fInitializedTensors) {
+            std::string tensorName = "tensor_" + item.first;
+            size_t length = 1;
+            length = ConvertShapeToLength(item.second.fShape);
+            if(item.second.fType == ETensorType::FLOAT) {
+                const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
+                const float* data = (std::static_pointer_cast<float>(item.second.fData)).get();
+                std::vector<float> tensorDataVector(data, data + length);
+                outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
+            }
+            else if(item.second.fType == ETensorType::DOUBLE) {
+                const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
+                const double* data = (std::static_pointer_cast<double>(item.second.fData)).get();
+                std::vector<double> tensorDataVector(data, data + length);
+                outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
+            }
+            else if(item.second.fType == ETensorType::INT64) {
+                const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
+                const int64_t* data = (std::static_pointer_cast<int64_t>(item.second.fData)).get();
+                std::vector<int64_t> tensorDataVector(data, data + length);
+                outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
+            }
+        }
+        outputFile->Write(filename.c_str());
+
         // this needs to be changed, similar to the text file
-        return 0;
-   }
-
-   // Write the initialized tensors to a text file
-   if (fWeightFile == WeightFileType::Text) {
+        return -1;
+   
+    } else if (fWeightFile == WeightFileType::Text) {
         std::ofstream f;
         if(fIsGNNComponent) {
             // appending all GNN components into the same file
@@ -629,6 +627,8 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
         long curr_pos = f.tellp();
         f.close();
         return curr_pos;
+    } else {
+        return -1;
     }
 }
 
@@ -714,16 +714,12 @@ void RModel::HeadInitializedTensors(std::string name, int n_print) {
     }
 
     std::cout << "data: [" << std::endl;
-    //switch(it->second.type){
-    //   case ETensorType::FLOAT : {
     if (it->second.fType == ETensorType::FLOAT) {
         auto converted_data = std::static_pointer_cast<float>(it->second.fData).get();
         for (int i =0; i < n_print; i++) {
             std::cout << converted_data[i];
             if (i < n_print - 1) std::cout << " ,";
         }
-        //   break;
-        // }
     }
     if (ellipsis) std::cout << ", ...";
     std::cout << "]" << std::endl;
@@ -731,7 +727,7 @@ void RModel::HeadInitializedTensors(std::string name, int n_print) {
 }
 
 void RModel::OutputGenerated(std::string filename, bool append) {
-    
+
     RModel_Base::OutputGenerated(filename, append);
 
     // write weights in a text file

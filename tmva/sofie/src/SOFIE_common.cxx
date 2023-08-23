@@ -1,7 +1,6 @@
 #include "TMVA/SOFIE_common.hxx"
 #include<cctype>
 #include <sstream>
-#include <iostream>
 #include <stdexcept>
 
 namespace TMVA{
