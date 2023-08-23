@@ -61,7 +61,7 @@ class Tracer:
             if self.image:
                 print(f"""\
 Grab the image:
-$ docker run -it {self.image} {' '.join(self.docker_opts)}
+$ docker run {' '.join(self.docker_opts)} -it {self.image}
 Then:
 """)
             print(self.trace)
