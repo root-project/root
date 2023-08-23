@@ -41,8 +41,8 @@ if sys.version_info >= (3, 8):
             setattr(ns.Experimental, func_name, python_func)
 
         return ns
-    
-from ._gnn import RModel_GNN, RModel_GraphIndependent
+
+    from ._gnn import RModel_GNN, RModel_GraphIndependent
 
 hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
 if hasRDF:

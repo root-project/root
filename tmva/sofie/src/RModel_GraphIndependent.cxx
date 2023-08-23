@@ -106,6 +106,14 @@ void RModel_GraphIndependent::Generate() {
     next_pos = globals_update_block->GetFunctionBlock()->WriteInitializedTensorsToFile(fName+".dat");
     fGC+="};\n}\n";
 
+    // we need to correct the output number of global features
+    auto num_global_features_input = num_global_features;
+    // global features are in shape[1]
+    if(globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1] != num_global_features) {
+        num_global_features = globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[1];
+    }
+
+
     // computing inplace on input graph
     fGC += "struct Session {\n";
     fGC += "\n// Instantiating session objects for graph components\n";
@@ -176,6 +184,13 @@ void RModel_GraphIndependent::Generate() {
     fGC += "\n// --- Global Update ---\n";
     fGC += "std::vector<float> Global_Data = ";
     fGC += globals_update_block->Generate({"input_graph.global_data.GetData()"});
+    fGC += "\n";
+
+    if(num_global_features != num_global_features_input) {
+        fGC += "\n//  resize global graph data since output feature size is not equal to input size\n";
+        fGC+="input_graph.global_data = input_graph.global_data.Resize({"+std::to_string(num_global_features)+"});\n";
+    }
+
     fGC += "\nstd::copy(Global_Data.begin(), Global_Data.end(), input_graph.global_data.GetData());";
     fGC += "\n";
 

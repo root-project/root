@@ -14,7 +14,7 @@ from .. import pythonization
 import sys
 from cppyy import gbl as gbl_namespace
 
-if sys.version_info < (3, 7):
+if sys.version_info < (3, 8):
     raise RuntimeError("GNN Pythonizations are only supported in Python3")
 
 
@@ -29,7 +29,7 @@ def getActivationFunction(model):
 
     Returns:
         The activation function enum value.
-    """    
+    """
     function = model._activation.__name__
     if function == 'relu':
         return gbl_namespace.TMVA.Experimental.SOFIE.Activation.RELU
@@ -80,7 +80,7 @@ def add_layer_norm(gin, module_layer, function_target):
     else:
         model_block = gin.globals_update_block
     axis = module_layer._axis
-    eps  = module_layer._eps 
+    eps  = module_layer._eps
     stash_type = 1
     name_x = model_block.GetFunctionBlock().GetOutputTensorNames()[0]
     name_bias = module_layer.offset.name
@@ -90,7 +90,7 @@ def add_layer_norm(gin, module_layer, function_target):
     current_output_tensors = model_block.GetFunctionBlock().GetOutputTensorNames()
     new_output_tensors = gbl_namespace.std.vector['std::string']()
     new_output_tensors.push_back(name_Y)
-    model_block.GetFunctionBlock().AddOutputTensorNameList(new_output_tensors)    
+    model_block.GetFunctionBlock().AddOutputTensorNameList(new_output_tensors)
 
 def add_weights(gin, weights, function_target):
     """
@@ -133,12 +133,12 @@ def add_aggregate_function(gin, reducer, relation):
         agg = gbl_namespace.TMVA.Experimental.SOFIE.RFunction_Mean()
         gin.createAggregateFunction[gbl_namespace.TMVA.Experimental.SOFIE.RFunction_Mean](agg, relation)
     else:
-        raise RuntimeError("Invalid aggregate function for reduction")    
+        raise RuntimeError("Invalid aggregate function for reduction")
 
 
 def add_update_function(gin, component_model, graph_type, function_target):
     """
-    Add update function for respective function target, either of nodes, edges or globals 
+    Add update function for respective function target, either of nodes, edges or globals
     based on the supplied component_model
 
     Parameters:
@@ -164,7 +164,7 @@ def add_update_function(gin, component_model, graph_type, function_target):
 
 
 
-class RModel_GNN: 
+class RModel_GNN:
     """
     Wrapper class for graph_nets' GNN model;s parsing and inference generation
 
@@ -199,21 +199,21 @@ class RModel_GNN:
         gin.num_global_features = len(graph_data['globals'])
 
         gin.filename = filename
-        
+
         # adding the node update function
         node_model = graph_module._node_block._node_model
-        add_update_function(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN, 
+        add_update_function(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN,
                                          gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES)
 
         # adding the edge update function
         edge_model = graph_module._edge_block._edge_model
-        add_update_function(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN, 
+        add_update_function(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN,
                                              gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES)
 
         # adding the global update function
         global_model = graph_module._global_block._global_model
-        add_update_function(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN, 
-                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS) 
+        add_update_function(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN,
+                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS)
 
         # adding edge-node aggregate function
         add_aggregate_function(gin, graph_module._node_block._received_edges_aggregator._reducer.__qualname__, gbl_namespace.TMVA.Experimental.SOFIE.FunctionRelation.NODES_EDGES)
@@ -274,18 +274,18 @@ class RModel_GraphIndependent:
 
         # adding the node update function
         node_model = graph_module._node_model._model
-        add_update_function(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent, 
+        add_update_function(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
                                          gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES)
 
         # adding the edge update function
         edge_model = graph_module._edge_model._model
-        add_update_function(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent, 
+        add_update_function(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
                                              gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES)
 
         # adding the global update function
         global_model = graph_module._global_model._model
-        add_update_function(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent, 
-                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS) 
+        add_update_function(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent,
+                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS)
 
         graph_independent_model = gbl_namespace.TMVA.Experimental.SOFIE.RModel_GraphIndependent(gin)
         blas_routines = gbl_namespace.std.vector['std::string']()

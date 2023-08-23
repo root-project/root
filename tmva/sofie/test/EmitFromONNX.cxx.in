@@ -5,8 +5,6 @@
 //    This program is automatically run when the target 'TestCustomModelsFromONNX' is built.
 //    Usage example: $./sofiec indir/mymodel.onnx outdir/myname.hxx
 
-#include <iostream>
-
 #include "TMVA/RModel_Base.hxx"
 #include "TMVA/RModel.hxx"
 #include "TMVA/RModelParser_ONNX.hxx"
