@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import logging
-import sys
 import types
 
 import concurrent.futures
@@ -20,6 +19,7 @@ import concurrent.futures
 from typing import Iterable, TYPE_CHECKING
 
 from DistRDF.Backends import build_backends_submodules
+from DistRDF.LiveVisualize import LiveVisualize
 
 if TYPE_CHECKING:
     from DistRDF.Proxy import ResultPtrProxy, ResultMapProxy
@@ -135,5 +135,6 @@ def create_distributed_module(parentmodule):
     distributed.initialize = initialize
     distributed.RunGraphs = RunGraphs
     distributed.VariationsFor = VariationsFor
+    distributed.LiveVisualize = LiveVisualize
 
     return distributed
