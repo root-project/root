@@ -67,6 +67,9 @@ ETensorType ConvertStringToType(std::string type){
    else if (type == "double" || type == "float64"){
       return ETensorType::DOUBLE;
    }
+   else if (type == "bool" ){
+      return ETensorType::BOOL;
+   }
    else{
       return ETensorType::UNDEFINED;
    }

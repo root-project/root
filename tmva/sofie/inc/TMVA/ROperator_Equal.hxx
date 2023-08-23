@@ -39,7 +39,7 @@ public:
 
    // shape of output tensors given input tensors
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
-      auto ret = std::vector<std::vector<size_t>>(1, input[0]); // return vector size 1 with first input
+      auto ret = input; // return vector size 1 with first input
       return ret;
    }
 
