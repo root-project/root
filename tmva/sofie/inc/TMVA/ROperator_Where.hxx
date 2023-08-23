@@ -42,7 +42,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Where Op Input Tensor is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
+      model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNX), fShape);
    }
 
 
@@ -55,8 +55,8 @@ public:
       int length = 1;
       length = ConvertShapeToLength(fShape);
       out << "\t" << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << "\t\t" << "if(tensor_" << fNCondition << "[id] != 0) { tensor_" << fNOutput << "[id] = tensor_"  << fNX << "[id])};\n";
-      out << "\t\t" << "else {tensor_" << fNOutput << "[id] = tensor_"  << fNY << "[id]};\n";
+      out << "\t\t" << "if(tensor_" << fNCondition << "[id] != false) { tensor_" << fNOutput << "[id] = tensor_"  << fNX << "[id];}\n";
+      out << "\t\t" << "else {tensor_" << fNOutput << "[id] = tensor_"  << fNY << "[id];}\n";
       out << "\t}\n";
       return out.str();
    }

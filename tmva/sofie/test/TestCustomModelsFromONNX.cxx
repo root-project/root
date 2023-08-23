@@ -613,7 +613,7 @@ TEST(ONNX, Where)
    std::vector<float> Y({
      5.0, 6.0, 7.0, 8.0
    });
-   TMVA_SOFIE_where::Session s("where_FromONNX.dat");
+   TMVA_SOFIE_Where::Session s("Where_FromONNX.dat");
 
    std::vector<float> output = s.infer(condition.data(), X.data(), Y.data());
 

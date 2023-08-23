@@ -14,15 +14,22 @@ ParserFuncSignature ParseWhere = [](RModelParser_ONNX &parser, const onnx::NodeP
       if (parser.IsRegisteredTensorType(input_name)) {
          // according to ONNX both inputs have same type
          if(i == 0){
-            input_type = ETensorType::BOOL;
+            if(parser.GetTensorType(input_name) == ETensorType::BOOL)
+               input_type = ETensorType::BOOL;
+            else{
+               throw
+                  std::runtime_error("TMVA::SOFIE ONNX parser Where op condition is not of Boolean datatype");
+            }
          }
          if (i == 1)
             input_type = parser.GetTensorType(input_name);
-         else if(i == 2)
+         else if(i == 2){
             if (input_type != parser.GetTensorType(input_name)) {
                throw
                   std::runtime_error("TMVA::SOFIE ONNX parser Where op has input tensors of different types");
             }
+         }
+            
       } else {
          throw std::runtime_error("TMVA::SOFIE ONNX Parser Where op has input tensor " + input_name +
                                   " but its type is not yet registered");
@@ -35,6 +42,7 @@ ParserFuncSignature ParseWhere = [](RModelParser_ONNX &parser, const onnx::NodeP
 
    switch (input_type) {
    case ETensorType::FLOAT:
+   case ETensorType::BOOL:
       op.reset(new ROperator_Where<float>(nodeproto.input(0), nodeproto.input(1), nodeproto.input(2), output_name));
       break;
    default:
