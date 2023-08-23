@@ -17,6 +17,7 @@ import argparse
 import datetime
 import os
 import shutil
+import subprocess
 import tarfile
 from hashlib import sha1
 
@@ -125,10 +126,23 @@ def main():
     if args.coverage:
         create_coverage_xml()
 
-    if ctest_returncode != 0:
-        die(msg=f"TEST FAILURE: ctest exited with code {ctest_returncode}")
+    if testing and ctest_returncode != 0:
+        handle_test_failure(ctest_returncode)
 
     print_trace()
+
+def handle_test_failure(ctest_returncode):
+    logloc = f'{WORKDIR}/Testing/Temporary/LastTestsFailed.log'
+    if os.path.isfile(logloc):
+        with open(logloc, 'r') as logf:
+            print(logf.read())
+    else:
+        print(f'Internal error: cannot find {logloc}\nAdding some debug output:')
+        subprocess.run(f'ls -l {WORKDIR}', shell=True, check=False, stderr=subprocess.STDOUT)
+        subprocess.run(f'ls -l {WORKDIR}/Testing', shell=True, check=False, stderr=subprocess.STDOUT)
+        subprocess.run(f'ls -l {WORKDIR}/Testing/Temporary', shell=True, check=False, stderr=subprocess.STDOUT)
+
+    die(msg=f"TEST FAILURE: ctest exited with code {ctest_returncode}")
 
 
 def parse_args():
@@ -281,12 +295,12 @@ def archive_and_upload(archive_name, prefix):
 
 @github_log_group("Configure")
 def cmake_configure(options, buildtype):
-   result = subprocess_with_log(f"""
-       cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
-   """)
+    result = subprocess_with_log(f"""
+        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
+    """)
 
-   if result != 0:
-       die(result, "Failed cmake generation step")
+    if result != 0:
+        die(result, "Failed cmake generation step")
 
 
 @github_log_group("Dump existing configuration")
