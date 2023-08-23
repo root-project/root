@@ -764,7 +764,7 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
 
       // Optionally multiply with fractional normalization. I this case, we
       // replace the original factor stored in "out".
-      if (_normRange) {
+      if (!_normRange.IsNull()) {
          std::unique_ptr<RooAbsReal> owner;
          RooArgList terms;
          // The integrals own each other in a chain. We do this because it's
@@ -934,7 +934,7 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    //   1. p(x, y) = p(x | y) * p(y)
    //   2. p(y) = Integral of p(x, y) over x
    //
-   // We conculde:
+   // We conclude:
    //                      p(x, y)
    //   p(x | y) = --------------------------
    //              Integral of p(x, y) over x
