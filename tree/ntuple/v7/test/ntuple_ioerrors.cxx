@@ -1,8 +1,10 @@
 #include "ntuple_test.hxx"
 #include <TFile.h>
+#include <fstream>
 
 using RRawFile = ROOT::Internal::RRawFile;
 
+// these should not be global
 auto &context = RRawFile::GetFailureInjectionContext();
 constexpr char const* kNTupleFileName = "test_ntuple.root";
 constexpr char const* kNTupleName = "ntuple";
@@ -30,9 +32,11 @@ void setUpNtuple(int compression) {
    options.SetCompression(compression);
    auto writer = RNTupleWriter::Recreate(std::move(model), kNTupleName, fileGuard.GetPath(), options);
 
-   *ptrPt = 1.0;
-   *ptrE = 2.0;
-   writer->Fill();  
+   for (size_t i = 0; i < 1000; ++i){
+      *ptrPt = i;
+      *ptrE = i;
+      writer->Fill(); 
+   }
 }
 
 RNTuple readNTuple(){
@@ -67,160 +71,90 @@ void getPageRange(std::string fieldName, uint32_t columnIndex, uint32_t entryInd
    *offset = loc.GetPosition<std::uint64_t>();
 }
 
-TEST(RNTuple, UncompressedShortReadPage)
+TEST(RNTuple, TriggerBitFlip)
 {
-   try {
-      uint32_t size;
-      uint64_t offset;
+   constexpr char const* kNTupleFileName = "bitFlipTest.root";
+   constexpr char const* kNTupleName = "ntuple";
+   FileRaii fileGuard(kNTupleFileName);
 
-      setUpNtuple(0);
-      getPageRange("pt", 0, 0, &size, &offset);
+   std::ofstream ostrm(fileGuard.GetPath(), std::ios::binary);
+   std::string s = "Hello, this is a test message.";
+   ostrm.write(s.c_str(), s.length());
+   ostrm.close();
 
-      context.fFailureType = RRawFile::EFailureType::kShortRead;
-      context.fRangeBegin = offset;
-      context.fRangeEnd = offset + size;
-      
-      openNTuple();      
-      FAIL() << "short reads in pages should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
-   }
-}
+   size_t bufferSize = s.length();
+   char buffer[bufferSize];
 
-TEST(RNTuple, CompressedShortReadPage)
-{
-   try {
-      uint32_t size;
-      uint64_t offset;
-
-      setUpNtuple(505);
-      getPageRange("pt", 0, 0, &size, &offset);
-
-      context.fFailureType = RRawFile::EFailureType::kShortRead;
-      context.fRangeBegin = offset;
-      context.fRangeEnd = offset + size;
-      
-      openNTuple();      
-      FAIL() << "short reads in pages should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
-   }
-}
-
-TEST(RNTuple, UncompressedShortReadHeader)
-{
-   try {
-      setUpNtuple(0);
-      RNTupleTester tester = getTester();
-
-      context.fFailureType = RRawFile::EFailureType::kShortRead;
-      context.fRangeBegin = tester.GetSeekHeader(tester);
-      context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
-      
-      openNTuple();      
-      FAIL() << "short reads in header should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
-   }
-}
-
-TEST(RNTuple, CompressedShortReadHeader)
-{
-   try {
-      setUpNtuple(505);
-      RNTupleTester tester = getTester();
-
-      context.fFailureType = RRawFile::EFailureType::kShortRead;
-      context.fRangeBegin = tester.GetSeekHeader(tester);
-      context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
-      
-      openNTuple();      
-      FAIL() << "short reads in header should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
-   }
-}
-
-TEST(RNTuple, UncompressedShortReadFooter)
-{
-   try {
-      setUpNtuple(0);
-      RNTupleTester tester = getTester();
-
-      context.fFailureType = RRawFile::EFailureType::kShortRead;
-      context.fRangeBegin = tester.GetSeekFooter(tester);
-      context.fRangeEnd = tester.GetSeekFooter(tester) + tester.GetNBytesFooter(tester);
-      
-      openNTuple();      
-      FAIL() << "short reads in footer should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
-   }
-}
-
-TEST(RNTuple, CompressedShortReadFooter)
-{
-   try {
-      setUpNtuple(505);
-      RNTupleTester tester = getTester();
-
-      context.fFailureType = RRawFile::EFailureType::kShortRead;
-      context.fRangeBegin = tester.GetSeekFooter(tester);
-      context.fRangeEnd = tester.GetSeekFooter(tester) + tester.GetNBytesFooter(tester);
-      
-      openNTuple();      
-      FAIL() << "short reads in footer should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
-   }
-}
-
-// RRawFile tests should check that the buffer has actually changed
-
-// TEST(RNTuple, UncompressedShortRead)
-// {
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard("test_ntuple.root");
-
-//    //auto &params = RRawFile::GetFailureInjectionContext();
-//    //params.fFailureType = RRawFile::EFailureType::kShortRead;
+   context.fFailureType = RRawFile::EFailureType::kBitFlip;
+   context.fRangeBegin = 0;
+   context.fRangeEnd = s.length();
    
-//    //params.fRangeBegin = 0;
-//    //params.fRangeEnd = 0;
+   RRawFile::ROptions options;   
+   auto rrawfileinstance = RRawFile::Create(fileGuard.GetPath(), options);
    
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
+   size_t bytesRead = rrawfileinstance->ReadAt(&buffer, bufferSize, 0);
 
-//       RNTupleWriteOptions options;
-//       options.SetCompression(0);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+   EXPECT_FALSE(bytesRead == bufferSize && memcmp(buffer, s.c_str(), bufferSize) == 0);
+}
 
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
-//    }
+TEST(RNTuple, NoErrorTriggered)
+{
+   constexpr char const* kNTupleFileName = "noErrorTest.root";
+   constexpr char const* kNTupleName = "ntuple";
+   FileRaii fileGuard(kNTupleFileName);
 
-//    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-//    auto viewPt = reader->GetView<float>("pt");
+   std::ofstream ostrm(fileGuard.GetPath(), std::ios::binary);
+   std::string s = "Hello, this is a test message.";
+   ostrm.write(s.c_str(), s.length());
+   ostrm.close();
 
-//    // for (auto i : reader->GetEntryRange()) {
-//    //   std::cout << viewPt(i) << std::endl;
-//    // }
+   size_t bufferSize = s.length();
+   char buffer[bufferSize];
 
-//    EXPECT_EQ(1.0, viewPt(0));
+   // set context including a range to show that no error is triggered
+   context.fFailureType = RRawFile::EFailureType::kNone;
+   context.fRangeBegin = 0;
+   context.fRangeEnd = s.length();
+   
+   RRawFile::ROptions options;   
+   auto rrawfileinstance = RRawFile::Create(fileGuard.GetPath(), options);
+   
+   size_t bytesRead = rrawfileinstance->ReadAt(&buffer, bufferSize, 0);
 
-//    // try {
-//    //    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-//    //    auto viewPt = reader->GetView<float>("pt");
-//    //    FAIL() << "repeated field names should throw";
-//    // } catch (const RException& err) {
-//    //    EXPECT_THAT(err.what(), testing::HasSubstr("expected RNTuple named"));
-//    // }
-// }
+   EXPECT_TRUE(bytesRead == bufferSize && memcmp(buffer, s.c_str(), bufferSize) == 0);
+}
+
+TEST(RNTuple, TriggerShortRead)
+{
+   constexpr char const* kNTupleFileName = "shortReadTest.root";
+   constexpr char const* kNTupleName = "ntuple";
+   FileRaii fileGuard(kNTupleFileName);
+
+   std::ofstream ostrm(fileGuard.GetPath(), std::ios::binary);
+   std::string s = "Hello, this is a test message.";
+   ostrm.write(s.c_str(), s.length());
+   ostrm.close();
+
+   size_t bufferSize = s.length();
+   char buffer[bufferSize];
+
+   context.fFailureType = RRawFile::EFailureType::kShortRead;
+   context.fRangeBegin = 0;
+   context.fRangeEnd = s.length();
+   
+   RRawFile::ROptions options;   
+   auto rrawfileinstance = RRawFile::Create(fileGuard.GetPath(), options);
+   
+   size_t bytesRead = rrawfileinstance->ReadAt(&buffer, bufferSize, 0);
+
+   EXPECT_FALSE(bytesRead == bufferSize && memcmp(buffer, s.c_str(), bufferSize) == 0);
+}
+
+// bit flip tests
+// expect checksum errors OR failures - run tutorial file to see what the errors are
+
+// short read tests
+// require more data to be written
 
 
 
@@ -229,295 +163,288 @@ TEST(RNTuple, CompressedShortReadFooter)
 
 
 
-
-// // bit flip in footer. compressed file
-// TEST(RNTuple, BitFlipInPageCompressedFile)
+// TEST(RNTuple, UncompressedBitFlipHeader)
 // {
-//    constexpr char const* kNTupleFileName = "test_ntuple_compression_bitflips.root";
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard(kNTupleFileName);
-
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
-
-//       RNTupleWriteOptions options;
-//       options.SetCompression(505);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
-//    }
-
-//    // open file and inject bit flip
-//    {
-//       auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-//       auto ntpl = f->Get<ROOT::Experimental::RNTuple>("ntuple");
-
-//       std::unique_ptr<RNTupleReader> ntupleReader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-//       const auto descriptor = ntupleReader->GetDescriptor();
-//       auto fieldId = descriptor->FindFieldId("pt");
-//       auto columnId = descriptor->FindPhysicalColumnId(fieldId,0);
-//       auto clusterId = descriptor->FindClusterId(columnId,0);
-//       const auto &clusterDescriptor = descriptor->GetClusterDescriptor(clusterId);
-//       auto &pageRangeXcl = clusterDescriptor.GetPageRange(clusterId);
-//       const auto &pageInfo = pageRangeXcl.fPageInfos[0];
-//       auto loc = pageInfo.fLocator;
-//       auto nelem = pageInfo.fNElements;
-//       auto offset = loc.GetPosition<std::uint64_t>();
-
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
-//    }
-
-//    auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ_COMPRESS");
-
-// }
-
-
-
-// // bit flip in footer. uncompressed file
-// TEST(RNTuple, BitFlipInPageUncompressedFile)
-// {
-//    constexpr char const* kNTupleFileName = "test_ntuple_compression_bitflips.root";
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard(kNTupleFileName);
-
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
-
-//       RNTupleWriteOptions options;
-//       options.SetCompression(0);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
-//    }
-
-//    // open file and inject bit flip
-//    {
-//       auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-//       auto ntpl = f->Get<ROOT::Experimental::RNTuple>("ntuple");
-
-//       std::unique_ptr<RNTupleReader> ntupleReader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-//       const auto descriptor = ntupleReader->GetDescriptor();
-//       auto fieldId = descriptor->FindFieldId("pt");
-//       auto columnId = descriptor->FindPhysicalColumnId(fieldId,0);
-//       auto clusterId = descriptor->FindClusterId(columnId,0);
-//       const auto &clusterDescriptor = descriptor->GetClusterDescriptor(clusterId);
-//       auto &pageRangeXcl = clusterDescriptor.GetPageRange(clusterId);
-//       const auto &pageInfo = pageRangeXcl.fPageInfos[0];
-//       auto loc = pageInfo.fLocator;
-//       auto nelem = pageInfo.fNElements;
-//       auto offset = loc.GetPosition<std::uint64_t>();
-
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = offset;
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = nelem;
-//    }
-
-//    // attempt to open file again
 //    try {
-//       auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-//    }
-//    catch (const std::exception& ex){
+//       setUpNtuple(0);
+//       RNTupleTester tester = getTester();
 
-//       FAIL() << "Operation failed: " << ex.what();
+//       context.fFailureType = RRawFile::EFailureType::kBitFlip;
+//       context.fRangeBegin = tester.GetSeekHeader(tester);
+//       context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
+
+//       // test fails when bit and byte are both set to 0
+//       // context.fByteIndex = 800;
+//       // context.fBitIndex = 1;
+      
+//       openNTuple();      
+//       FAIL() << "bit flips in header should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32 checksum mismatch"));
 //    }
+
+// reference test from ntuple_types.cxx
+// TEST(RNTuple, TClassReadRules)
+// {
+//    ROOT::TestSupport::CheckDiagsRAII diags;
+//    diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+//    diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile",
+//                       "The RNTuple file format will change.", false);
+//    diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+
+//    FileRaii fileGuard("test_ntuple_tclassrules.ntuple");
+//    char c[4] = {'R', 'O', 'O', 'T'};
+//    {
+//       auto model = RNTupleModel::Create();
+//       auto fieldKlass = model->MakeField<StructWithIORules>("klass");
+//       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+//       for (int i = 0; i < 20; i++) {
+//          *fieldKlass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
+//          ntuple->Fill();
+//       }
+//    }
+
+//    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+//    EXPECT_EQ(20U, ntuple->GetNEntries());
+//    auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
+//    for (auto i : ntuple->GetEntryRange()) {
+//       float fi = static_cast<float>(i);
+//       EXPECT_EQ(fi, viewKlass(i).a);
+//       EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
+
+//       // The following values are set from a read rule; see CustomStructLinkDef.h
+//       EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
+//       EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+//       EXPECT_EQ("ROOT", viewKlass(i).s.str);
+//    }
+// }
+
+      // assert failures and also assert checksum
+   // ROOT::TestSupport::CheckDiagsRAII diags;
+   // diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+   // diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile",
+   //                    "The RNTuple file format will change.", false);
+   // diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
 // }
 
 
 
-// // bit flip in footer. compressed file
-// TEST(RNTuple, BitFlipInFooterCompressedFile)
+
+
+
+
+// https://en.cppreference.com/w/cpp/io/basic_ofstream
+
+// std::string filename = "Test.b";
+// FileRaii fileGuard(kNTupleFileName);
+// std::ofstream ostrm(filename, std::ios::binary);
+// write some data (maybe string instead): ostrm.write(reinterpret_cast<char*>(&d), sizeof d); 
+// create an instance of rrawfile: RRawFile(std::string_view url, ROptions options);
+// call readat / read v
+// use memcmp to test if the failure occurred
+// none, shortread, bitflip need tested
+
+
+
+// also short reads
+
+// TEST(RNTuple, UncompressedShortReadPage)
 // {
-//    constexpr char const* kNTupleFileName = "test_ntuple_compression_bitflips.root";
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard(kNTupleFileName);
-
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
-
-//       RNTupleWriteOptions options;
-//       options.SetCompression(505);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
-//    }
-
-//    // open file and inject bit flip
-//    {
-//       auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-//       auto ntpl = f->Get<ROOT::Experimental::RNTuple>("ntuple");
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = ntpl->GetSeekFooter();
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = ntpl->GetSeekFooter() + ntpl->GetSeekFooter();
-//    }
-
-//    auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ_COMPRESS");
-
-// }
-
-
-// // bit flip in footer. uncompressed file
-// TEST(RNTuple, BitFlipInFooterUncompressedFile)
-// {
-//    constexpr char const* kNTupleFileName = "test_ntuple_compression_bitflips.root";
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard(kNTupleFileName);
-
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
-
-//       RNTupleWriteOptions options;
-//       options.SetCompression(0);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
-//    }
-
-//    // open file and inject bit flip
-//    {
-//       auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-//       auto ntpl = f->Get<ROOT::Experimental::RNTuple>("ntuple");
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = ntpl->GetSeekFooter();
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = ntpl->GetSeekFooter() + ntpl->GetNBytesFooter();
-//    }
-
-//    // attempt to open file again
 //    try {
-//       auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-//    }
-//    catch (const std::exception& ex){
+//       uint32_t size;
+//       uint64_t offset;
 
-//       FAIL() << "Operation failed: " << ex.what();
+//       setUpNtuple(0);
+//       getPageRange("pt", 0, 0, &size, &offset);
+
+//       context.fFailureType = RRawFile::EFailureType::kShortRead;
+//       context.fRangeBegin = offset;
+//       context.fRangeEnd = offset + size;
+      
+//       openNTuple();      
+//       FAIL() << "short reads in pages should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
+//    }
+// }
+
+// TEST(RNTuple, CompressedShortReadPage)
+// {
+//    try {
+//       uint32_t size;
+//       uint64_t offset;
+
+//       setUpNtuple(505);
+//       getPageRange("pt", 0, 0, &size, &offset);
+
+//       context.fFailureType = RRawFile::EFailureType::kShortRead;
+//       context.fRangeBegin = offset;
+//       context.fRangeEnd = offset + size;
+      
+//       openNTuple();      
+//       FAIL() << "short reads in pages should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
+//    }
+// }
+
+// TEST(RNTuple, UncompressedShortReadHeader)
+// {
+//    try {
+//       setUpNtuple(0);
+//       RNTupleTester tester = getTester();
+
+//       context.fFailureType = RRawFile::EFailureType::kShortRead;
+//       context.fRangeBegin = tester.GetSeekHeader(tester);
+//       context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
+      
+//       openNTuple();      
+//       FAIL() << "short reads in header should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
+//    }
+// }
+
+// TEST(RNTuple, CompressedShortReadHeader)
+// {
+//    try {
+//       setUpNtuple(505);
+//       RNTupleTester tester = getTester();
+
+//       context.fFailureType = RRawFile::EFailureType::kShortRead;
+//       context.fRangeBegin = tester.GetSeekHeader(tester);
+//       context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
+      
+//       openNTuple();      
+//       FAIL() << "short reads in header should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
+//    }
+// }
+
+// TEST(RNTuple, UncompressedShortReadFooter)
+// {
+//    try {
+//       setUpNtuple(0);
+//       RNTupleTester tester = getTester();
+
+//       context.fFailureType = RRawFile::EFailureType::kShortRead;
+//       context.fRangeBegin = tester.GetSeekFooter(tester);
+//       context.fRangeEnd = tester.GetSeekFooter(tester) + tester.GetNBytesFooter(tester);
+      
+//       openNTuple();      
+//       FAIL() << "short reads in footer should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
+//    }
+// }
+
+// TEST(RNTuple, CompressedShortReadFooter)
+// {
+//    try {
+//       setUpNtuple(505);
+//       RNTupleTester tester = getTester();
+
+//       context.fFailureType = RRawFile::EFailureType::kShortRead;
+//       context.fRangeBegin = tester.GetSeekFooter(tester);
+//       context.fRangeEnd = tester.GetSeekFooter(tester) + tester.GetNBytesFooter(tester);
+      
+//       openNTuple();      
+//       FAIL() << "short reads in footer should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named '"+std::string(kNTupleName)+"' in file '"+std::string(kNTupleFileName)+"'"));
 //    }
 // }
 
 
 
-// // bit flip in header. compressed file
-// TEST(RNTuple, BitFlipInHeaderCompressedFile)
+// TEST(RNTuple, CompressedBitFlipHeader)
 // {
-//    constexpr char const* kNTupleFileName = "test_ntuple_compression_bitflips.root";
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard(kNTupleFileName);
+//    try {
+//       setUpNtuple(505);
+//       RNTupleTester tester = getTester();
 
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
-
-//       RNTupleWriteOptions options;
-//       options.SetCompression(505);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
+//       context.fFailureType = RRawFile::EFailureType::kBitFlip;
+//       context.fRangeBegin = tester.GetSeekHeader(tester);
+//       context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
+      
+//       openNTuple();      
+//       FAIL() << "bit flips in header should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32 checksum mismatch"));
 //    }
-
-//    // open file and inject bit flip
-//    {
-//       auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
-//       auto ntpl = f->Get<ROOT::Experimental::RNTuple>("ntuple");
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = ntpl->GetSeekHeader();
-//       ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
-//    }
-
-//    auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ_COMPRESS");
-
 // }
 
-
-
-
-
-
-// // no error injection. uncompressed file
-// TEST(RNTuple, UncompressedAndNoBitFlip)
+// TEST(RNTuple, UncompressedBitFlipFooter)
 // {
-//    //test
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard("test_ntuple_uncompressed_bitflips.root");
-   
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
+//    try {
+//       setUpNtuple(0);
+//       RNTupleTester tester = getTester();
 
-//       RNTupleWriteOptions options;
-//       options.SetCompression(0);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
+//       context.fFailureType = RRawFile::EFailureType::kBitFlip;
+//       context.fRangeBegin = tester.GetSeekHeader(tester);
+//       context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
+      
+//       openNTuple();      
+//       FAIL() << "bit flips in footer should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32 checksum mismatch"));
 //    }
-
-//    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-//    auto viewPt = reader->GetView<float>("pt");
-
-//    for (auto i : reader->GetEntryRange()) {
-//      std::cout << viewPt(i) << std::endl;
-//    }
-
-//    EXPECT_EQ(1.0, viewPt(0));
 // }
 
-
-
-// // no error injection. compressed file
-// TEST(RNTuple, CompressedAndNoBitFlip)
+// TEST(RNTuple, CompressedBitFlipFooter)
 // {
-//    // ensure file clean-up after test completes
-//    FileRaii fileGuard("test_ntuple_compression_bitflips.root");
-   
-//    {
-//       // create an RNTuple instance with 2 fields and no compression and fill with data
-//       auto model = RNTupleModel::Create();
-//       auto ptrPt = model->MakeField<float>("pt");
-//       auto ptrE = model->MakeField<float>("energy");
+//    try {
+//       setUpNtuple(505);
+//       RNTupleTester tester = getTester();
 
-//       RNTupleWriteOptions options;
-//       options.SetCompression(505);
-//       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-
-//       // TODO: add more content to the file than just one entry
-//       *ptrPt = 1.0;
-//       *ptrE = 2.0;
-//       writer->Fill();
+//       context.fFailureType = RRawFile::EFailureType::kBitFlip;
+//       context.fRangeBegin = tester.GetSeekHeader(tester);
+//       context.fRangeEnd = tester.GetSeekHeader(tester) + tester.GetNBytesHeader(tester);
+      
+//       openNTuple();      
+//       FAIL() << "bit flips in footer should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32 checksum mismatch"));
 //    }
+// }
 
-//    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-//    auto viewPt = reader->GetView<float>("pt");
+// TEST(RNTuple, UncompressedBitFlipPage)
+// {
+//    try {
+//       uint32_t size;
+//       uint64_t offset;
 
-//    for (auto i : reader->GetEntryRange()) {
-//      std::cout << viewPt(i) << std::endl;
+//       setUpNtuple(0);
+//       getPageRange("pt", 0, 0, &size, &offset);
+
+//       context.fFailureType = RRawFile::EFailureType::kBitFlip;
+//       context.fRangeBegin = offset;
+//       context.fRangeEnd = offset + size;
+      
+//       openNTuple();      
+//       FAIL() << "bit flips in pages should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("")); // what is expected?
 //    }
+// }
 
-//    EXPECT_EQ(1.0, viewPt(0));
+// TEST(RNTuple, CompressedBitFlipPage)
+// {
+//    try {
+//       uint32_t size;
+//       uint64_t offset;
+
+//       setUpNtuple(505);
+//       getPageRange("pt", 0, 0, &size, &offset);
+
+//       context.fFailureType = RRawFile::EFailureType::kBitFlip;
+//       context.fRangeBegin = offset;
+//       context.fRangeEnd = offset + size;
+      
+//       openNTuple();      
+//       FAIL() << "bit flips in pages should throw";
+//    } catch (const RException& err) {
+//       EXPECT_THAT(err.what(), testing::HasSubstr("")); // what is expected?
+//    }
 // }
