@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import ntpath  # Filename from path (should be platform-independent)
+import warnings
 
 from DistRDF import DataFrame
 from DistRDF import HeadNode
@@ -133,6 +134,14 @@ class SparkBackend(Base.BaseBackend):
 
         # Map-Reduce using Spark
         return parallel_collection.map(spark_mapper).treeReduce(reducer)
+
+    def ProcessAndMergeLive(self, ranges, mapper, reducer, drawables_info_dict):
+        """
+        Informs the user that the live visualization feature is not supported for the Spark backend 
+        and refers to ProcessAndMerge to proceed with the standard map-reduce workflow.
+        """
+        warnings.warn("The live visualization feature is not supported for the Spark backend. Skipping LiveVisualize.")
+        return self.ProcessAndMerge(ranges, mapper, reducer)
 
     def distribute_unique_paths(self, paths):
         """

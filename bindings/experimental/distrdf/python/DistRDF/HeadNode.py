@@ -106,6 +106,11 @@ class HeadNode(Node, ABC):
         # column names.
         self._localdf = localdf
 
+        # A dictionary where the keys are the IDs of the objects to live visualize
+        # and the values are the corresponding callback functions 
+        # This attribute only gets set in case the LiveVisualize() function is called
+        self.drawables_dict: Optional[Dict[int, List[Optional[Callable]]]] = None
+
     @property
     def npartitions(self) -> Optional[int]:
         return self._npartitions
@@ -204,14 +209,36 @@ class HeadNode(Node, ABC):
                          computation_graph_callable=computation_graph_callable,
                          initialization_fn=self.backend.initialization)
 
-        # Execute graph distributedly and return the aggregated results from all
-        # tasks
-        returned_values = self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer)
+        # List of action nodes in the same order as values
+        local_nodes = self._get_action_nodes()
+
+        # Execute graph distributedly and return the aggregated results from all tasks
+        # using the appropriate backend method based on whether or not live visualization is enabled
+        if self.drawables_dict is not None:
+            # Prepare a dictionary with additional information for live visualization
+            drawables_info_dict = {
+                # Key: node_id
+                node.node_id: (
+                    # Tuple containing:
+                    # 1. Callback functions passed by the user
+                    self.drawables_dict[node.node_id],
+                    # 2. Index of the node in the local_nodes list
+                    i,
+                    # 3. Name of the operation associated with the node
+                    node.operation.name
+                )
+                for i, node in enumerate(local_nodes)
+                # Filter: Only include nodes requested by the user
+                if node.node_id in self.drawables_dict
+            }
+            returned_values = self.backend.ProcessAndMergeLive(self._build_ranges(), mapper, distrdf_reducer, drawables_info_dict)
+        else:
+            returned_values = self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer)
+
         # Perform any extra checks that may be needed according to the
         # type of the head node
         final_values = self._handle_returned_values(returned_values)
-        # List of action nodes in the same order as values
-        local_nodes = self._get_action_nodes()
+        
         # Set the value of every action node
         for node, value in zip(local_nodes, final_values):
             Utils.set_value_on_node(value, node, self.backend)
