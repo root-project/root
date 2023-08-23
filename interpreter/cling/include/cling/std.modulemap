@@ -456,7 +456,7 @@ module "std" [system] {
     export *
     header "bits/exception_defines.h"
   }
-  module "bits_invoke_h" {
+  module "bits_invoke_h" [optional] {
     export *
     export bits_move_h
     header "bits/invoke.h"
