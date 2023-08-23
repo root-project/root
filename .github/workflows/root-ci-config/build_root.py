@@ -296,7 +296,7 @@ def archive_and_upload(archive_name, prefix):
 @github_log_group("Configure")
 def cmake_configure(options, buildtype):
     result = subprocess_with_log(f"""
-        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
+        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype} -G Ninja
     """)
 
     if result != 0:
