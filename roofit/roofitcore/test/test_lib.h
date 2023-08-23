@@ -13,37 +13,37 @@
 #ifndef ROOT_TEST_LIB_H
 #define ROOT_TEST_LIB_H
 
-#include "RooWorkspace.h"
-#include "RooRandom.h"
-#include "RooAddPdf.h"
-#include "RooDataSet.h"
-#include "RooRealVar.h" // for the dynamic cast to have a complete type
+#include <RooAddPdf.h>
+#include <RooDataSet.h>
+#include <RooProdPdf.h>
+#include <RooRandom.h>
+#include <RooRealVar.h> // for the dynamic cast to have a complete type
+#include <RooWorkspace.h>
 
 #include <sstream>
-#include <memory>  // make_unique
+#include <memory> // make_unique
 #include <vector>
 
-RooAbsPdf * generate_1D_gaussian_pdf(RooWorkspace &w)
+RooAbsPdf *generate_1D_gaussian_pdf(RooWorkspace &ws)
 {
-   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-   RooAbsPdf *pdf = w.pdf("g");
+   ws.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+   RooAbsPdf *pdf = ws.pdf("g");
    return pdf;
 }
 
-std::unique_ptr<RooDataSet> generate_1D_dataset(RooWorkspace &w, RooAbsPdf *pdf, unsigned long N_events)
+std::unique_ptr<RooDataSet> generate_1D_dataset(RooWorkspace &ws, RooAbsPdf *pdf, unsigned long nEvents)
 {
-   return std::unique_ptr<RooDataSet>{pdf->generate(RooArgSet(*w.var("x")), N_events)};
+   return std::unique_ptr<RooDataSet>{pdf->generate(RooArgSet(*ws.var("x")), nEvents)};
 }
 
-
 std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
-generate_1D_gaussian_pdf_nll(RooWorkspace &w, unsigned long N_events)
+generate_1D_gaussian_pdf_nll(RooWorkspace &ws, unsigned long nEvents)
 {
-   RooAbsPdf *pdf = generate_1D_gaussian_pdf(w);
+   RooAbsPdf *pdf = generate_1D_gaussian_pdf(ws);
 
-   std::unique_ptr<RooDataSet> data{generate_1D_dataset(w, pdf, N_events)};
+   std::unique_ptr<RooDataSet> data{generate_1D_dataset(ws, pdf, nEvents)};
 
-   RooRealVar *mu = w.var("mu");
+   RooRealVar *mu = ws.var("mu");
    mu->setVal(-2.9);
 
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
@@ -51,116 +51,98 @@ generate_1D_gaussian_pdf_nll(RooWorkspace &w, unsigned long N_events)
    // save initial values for the start of all minimizations
    auto values = std::make_unique<RooArgSet>(*mu, *pdf, *nll, "values");
 
-   return std::make_tuple(std::move(nll), pdf, std::move(data), std::move(values));
+   return {std::move(nll), pdf, std::move(data), std::move(values)};
 }
 
 // return two unique_ptrs, the first because nll is a pointer,
 // the second because RooArgSet doesn't have a move ctor
 std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
-generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_events, bool batch_mode = false) {
-  RooArgSet obs_set;
+generate_ND_gaussian_pdf_nll(RooWorkspace &ws, unsigned int n, unsigned long nEvents, bool batch_mode = false)
+{
+   RooArgSet obs_set;
 
-  // create gaussian parameters
-  std::vector<double> mean(n), sigma(n);
-  for (unsigned ix = 0; ix < n; ++ix) {
-    mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
-    sigma[ix] = 0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2));
-  }
+   // create gaussian parameters
+   std::vector<double> mean(n);
+   std::vector<double> sigma(n);
+   for (unsigned ix = 0; ix < n; ++ix) {
+      mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
+      sigma[ix] = 0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2));
+   }
 
-  // create gaussians and also the observables and parameters they depend on
-  for (unsigned ix = 0; ix < n; ++ix) {
-    std::ostringstream os;
-    os << "Gaussian::g" << ix
-       << "(x" << ix << "[-10,10],"
-       << "m" << ix << "[" << mean[ix] << ",-10,10],"
-       << "s" << ix << "[" << sigma[ix] << ",0.1,10])";
-    w.factory(os.str());
-  }
-
-  // create uniform background signals on each observable
-  for (unsigned ix = 0; ix < n; ++ix) {
-    {
+   // create gaussians and also the observables and parameters they depend on
+   RooArgSet signals;
+   for (unsigned ix = 0; ix < n; ++ix) {
       std::ostringstream os;
-      os << "Uniform::u" << ix << "(x" << ix << ")";
-      w.factory(os.str());
-    }
+      os << "Gaussian::g" << ix << "(x" << ix << "[-10,10],"
+         << "m" << ix << "[" << mean[ix] << ",-10,10],"
+         << "s" << ix << "[" << sigma[ix] << ",0.1,10])";
+      signals.add(*ws.factory(os.str()));
+   }
 
-    // gather the observables in a list for data generation below
-    {
-      std::ostringstream os;
-      os << "x" << ix;
-      obs_set.add(*w.arg(os.str()));
-    }
-  }
+   // create uniform background signals on each observable
+   RooArgSet backgrounds;
+   for (unsigned ix = 0; ix < n; ++ix) {
+      {
+         std::ostringstream os;
+         os << "Uniform::u" << ix << "(x" << ix << ")";
+         backgrounds.add(*ws.factory(os.str()));
+      }
 
-  RooArgSet pdf_set = w.allPdfs();
+      // gather the observables in a list for data generation below
+      {
+         std::ostringstream os;
+         os << "x" << ix;
+         obs_set.add(*ws.arg(os.str()));
+      }
+   }
 
-  // create event counts for all pdfs
-  RooArgSet count_set;
+   // The ND signal and background pdfs
+   RooProdPdf sigPdf{"sig_pdf", "sig_pdf", signals};
+   RooProdPdf bkgPdf{"bkg_pdf", "bkg_pdf", backgrounds};
 
-  // ... for the gaussians
-  for (unsigned ix = 0; ix < n; ++ix) {
-    std::stringstream os, os2;
-    os << "Nsig" << ix;
-    os2 << "#signal events comp " << ix;
-    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
-    w.import(a);
-    // gather in count_set
-    count_set.add(*w.arg(os.str()));
-  }
-  // ... and for the uniform background components
-  for (unsigned ix = 0; ix < n; ++ix) {
-    std::stringstream os, os2;
-    os << "Nbkg" << ix;
-    os2 << "#background events comp " << ix;
-    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
-    w.import(a);
-    // gather in count_set
-    count_set.add(*w.arg(os.str()));
-  }
+   // Signal and background yields
+   RooRealVar nSig{"n_sig", "n_sig", nEvents / 2., 0., 5. * nEvents};
+   RooRealVar nBkg{"n_bkg", "n_bkg", nEvents / 2., 0., 5. * nEvents};
 
-  RooAddPdf* sum = new RooAddPdf("sum", "gaussians+uniforms", pdf_set, count_set);
-  w.import(*sum);  // keep sum around after returning
+   ws.import(RooAddPdf("sum", "gaussians+uniforms", {sigPdf, bkgPdf}, {nSig, nBkg}));
+   RooAbsPdf *sum = ws.pdf("sum");
 
-  // --- Generate a toyMC sample from composite PDF ---
-  std::unique_ptr<RooDataSet> data{sum->generate(obs_set, N_events)};
+   // --- Generate a toyMC sample from composite PDF ---
+   std::unique_ptr<RooDataSet> data{sum->generate(obs_set)};
 
-  std::unique_ptr<RooAbsReal> nll {sum->createNLL(*data, RooFit::BatchMode(batch_mode))};
+   std::unique_ptr<RooAbsReal> nll{sum->createNLL(*data, RooFit::BatchMode(batch_mode))};
 
-  // set values randomly so that they actually need to do some fitting
-  for (unsigned ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "m" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str()))->setVal(RooRandom::randomGenerator()->Gaus(0, 2));
-    }
-    {
-      std::ostringstream os;
-      os << "s" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str()))->setVal(0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2)));
-    }
-  }
+   // set values randomly so that they actually need to do some fitting
+   for (unsigned ix = 0; ix < n; ++ix) {
+      {
+         std::ostringstream os;
+         os << "m" << ix;
+         dynamic_cast<RooRealVar *>(ws.arg(os.str()))->setVal(RooRandom::randomGenerator()->Gaus(0, 2));
+      }
+      {
+         std::ostringstream os;
+         os << "s" << ix;
+         dynamic_cast<RooRealVar *>(ws.arg(os.str()))->setVal(0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2)));
+      }
+   }
 
-  // gather all values of parameters, pdfs and nll here for easy
-  // saving and restoring
-  auto all_values = std::make_unique<RooArgSet>(pdf_set, count_set, "all_values");
-  all_values->add(*nll);
-  all_values->add(*sum);
-  for (unsigned ix = 0; ix < n; ++ix) {
-    {
-      std::ostringstream os;
-      os << "m" << ix;
-      all_values->add(*w.arg(os.str()));
-    }
-    {
-      std::ostringstream os;
-      os << "s" << ix;
-      all_values->add(*w.arg(os.str()));
-    }
-  }
+   // gather all values of parameters, pdfs and nll here for easy
+   // saving and restoring
+   auto all_values = std::make_unique<RooArgSet>(*ws.arg("n_sig"), *ws.arg("n_bkg"), "all_values");
+   for (unsigned ix = 0; ix < n; ++ix) {
+      {
+         std::ostringstream os;
+         os << "m" << ix;
+         all_values->add(*ws.arg(os.str()));
+      }
+      {
+         std::ostringstream os;
+         os << "s" << ix;
+         all_values->add(*ws.arg(os.str()));
+      }
+   }
 
-  return std::make_tuple(std::move(nll), sum, std::move(data), std::move(all_values));
+   return {std::move(nll), sum, std::move(data), std::move(all_values)};
 }
 
-
-#endif //ROOT_TEST_LIB_H
+#endif // ROOT_TEST_LIB_H
