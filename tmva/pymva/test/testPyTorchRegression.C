@@ -49,7 +49,7 @@ int testPyTorchRegression(){
 
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyTorch, "PyTorch",
-      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelRegression.pt:FilenameTrainedModel=trainedPyTorchModelRegression.h5:NumEpochs=10:BatchSize=32:SaveBestOnly=false:UserCode=generatePyTorchModelRegression.py");
+      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelRegression.pt:FilenameTrainedModel=trainedPyTorchModelRegression.pt:NumEpochs=10:BatchSize=32:SaveBestOnly=false:UserCode=generatePyTorchModelRegression.py");
    std::cout << "Train model..." << std::endl;
    factory->TrainAllMethods();
 
