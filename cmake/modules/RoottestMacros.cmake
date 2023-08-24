@@ -352,7 +352,11 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 # macro ROOTTEST_GENERATE_REFLEX_DICTIONARY(<targetname> <dictionary>
 #                                              [SELECTION sel...]
-#                                              [headerfiles...]     )
+#                                              [headerfiles...]
+#                                              [LIBNAME lib...]
+#                                              [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
+#                                              [LIBRARIES lib1 lib2 ...]
+#                                              [OPTIONS opt1 opt2 ...])
 #
 # This macro generates a reflexion dictionary and creates a shared library.
 # A test that performs the dictionary generation is created.  The target name of
@@ -361,7 +365,7 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME" "LIBRARIES;OPTIONS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LIBRARIES;OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -425,6 +429,21 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY RUN_SERIAL true)
+  endif()
+
+  if (ARG_FIXTURES_SETUP)
+    set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
+      FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
+      FIXTURES_CLEANUP ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
+      FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
   endif()
 
   if(MSVC)
