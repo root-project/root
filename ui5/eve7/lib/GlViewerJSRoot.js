@@ -49,6 +49,7 @@ sap.ui.define([
       {
          let options = "outline";
          options += ", mouse_click"; // process mouse click events
+         options += ", ambient"; // use ambient light
          // options += " black, ";
          if (!this.controller.isEveCameraPerspective()) options += ", ortho_camera";
 
@@ -71,7 +72,6 @@ sap.ui.define([
             this.outline_pass.usePatternTexture = false;
             this.outline_pass.downSampleRatio = 1;
             this.outline_pass.glowDownSampleRatio = 3;
-
             this._effectComposer.addPass( this.outline_pass );
 
             this.fxaa_pass = new THREE.ShaderPass( THREE.FXAAShader );
