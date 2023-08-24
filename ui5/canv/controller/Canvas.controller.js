@@ -710,7 +710,10 @@ sap.ui.define([
             } else {
                this.getCanvasPainter()?.sendWebsocket('FITPANEL');
             }
+         } else if (name == 'Start browser') {
+            this.getCanvasPainter()?.sendWebsocket('START_BROWSER');
          }
+
       },
 
       showMessage(msg) {

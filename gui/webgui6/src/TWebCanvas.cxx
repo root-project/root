@@ -1531,6 +1531,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       gROOT->ProcessLine(cmd.Data());
 
+   } else if (arg == "START_BROWSER"s) {
+
+      gROOT->ProcessLine("new TBrowser;");
+
    } else if (IsReadOnly()) {
 
       // all following messages are not allowed in readonly mode
