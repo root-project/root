@@ -37,7 +37,7 @@ class ModelConfig;
 
 class RooJSONFactoryWSTool {
 public:
-   static constexpr bool useListsInsteadOfDicts = true;
+   static bool useListsInsteadOfDicts;
    static constexpr bool useImplicitConstraints = false;
 
    struct CombinedData {

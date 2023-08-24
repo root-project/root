@@ -97,6 +97,8 @@ tool.writedoc("hs3.tex")
 
 constexpr auto hs3VersionTag = "0.1.90";
 
+bool RooJSONFactoryWSTool::useListsInsteadOfDicts = true;
+
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
 
