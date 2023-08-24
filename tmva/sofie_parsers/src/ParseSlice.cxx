@@ -22,7 +22,7 @@ ParserFuncSignature ParseSlice = [](RModelParser_ONNX &parser, const onnx::NodeP
    if (nodeproto.input_size() > 1)
       axisTensorNames.push_back(nodeproto.input(1));
    if (nodeproto.input_size() > 2)
-      axisTensorNames.push_back(nodeproto.input(1));
+      axisTensorNames.push_back(nodeproto.input(2));
    if (nodeproto.input_size() > 3)
       axisTensorNames.push_back(nodeproto.input(3));
    if (nodeproto.input_size() > 4)
