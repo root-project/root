@@ -837,6 +837,7 @@ RModel Parse(std::string filename){
    // For each layer: type,name,activation,dtype,input tensor's name,
    // output tensor's name, kernel's name, bias's name
    // None object is returned for if property doesn't belong to layer
+   PyRunString("import tensorflow",fGlobalNS,fLocalNS);
    PyRunString("import tensorflow.keras as keras",fGlobalNS,fLocalNS);
    PyRunString("from tensorflow.keras.models import load_model",fGlobalNS,fLocalNS);
    PyRunString("print('TF/Keras Version: '+ tensorflow.__version__)",fGlobalNS,fLocalNS);
