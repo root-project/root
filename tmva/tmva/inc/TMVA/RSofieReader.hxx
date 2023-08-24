@@ -48,7 +48,7 @@ class RSofieReader  {
 public:
    /// Create TMVA model from ONNX file
    /// print level can be 0 (minimal) 1 with info , 2 with all ONNX parsing info
-    RSofieReader(const std::string &path, std::vector<std::vector<size_t>> inputShape = {}, int verbose = 0)
+    RSofieReader(const std::string &path, std::vector<std::vector<size_t>> inputShapes = {}, int verbose = 0)
    {
 
       enum EModelType {kONNX, kKeras, kPt, kROOT, kNotDef}; // type of model
@@ -113,22 +113,22 @@ public:
          if (gSystem->Load("libPyMVA") < 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since libPyMVA is missing");
          }
-         if (inputShape.size() == 0) {
+         if (inputShapes.size() == 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since the input tensor shape is missing and is needed by the PyTorch parser");
          }
-         std::string inputShapeStr = "{";
-         for (unsigned int i = 0; i < inputShape.size(); i++) {
-            inputShapeStr += "{ ";
-            for (unsigned int j = 0; j < inputShape[i].size(); j++) {
-               inputShapeStr += ROOT::Math::Util::ToString(inputShape[i][j]);
-               if (j < inputShape[i].size()-1) inputShapeStr += ", ";
+         std::string inputShapesStr = "{";
+         for (unsigned int i = 0; i < inputShapes.size(); i++) {
+            inputShapesStr += "{ ";
+            for (unsigned int j = 0; j < inputShapes[i].size(); j++) {
+               inputShapesStr += ROOT::Math::Util::ToString(inputShapes[i][j]);
+               if (j < inputShapes[i].size()-1) inputShapesStr += ", ";
             }
-            inputShapeStr += "}";
-            if (i < inputShape.size()-1) inputShapeStr += ", ";
+            inputShapesStr += "}";
+            if (i < inputShapes.size()-1) inputShapesStr += ", ";
          }
-         inputShapeStr += "}";
+         inputShapesStr += "}";
          parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyTorch::Parse(\"" + path + "\", "
-                    + inputShapeStr + "); \n";
+                    + inputShapesStr + "); \n";
       }
       else if (type == kROOT) {
          // use  parser from ROOT
@@ -142,8 +142,8 @@ public:
       }
 
       int batchSize = 1;
-      if (inputShape.size() > 0 && inputShape[0].size() > 0) {
-         batchSize = inputShape[0][0];
+      if (inputShapes.size() > 0 && inputShapes[0].size() > 0) {
+         batchSize = inputShapes[0][0];
          if (batchSize < 1) batchSize = 1;
       }
       if (verbose) std::cout << "generating the code with batch size = " << batchSize << " ...\n";
