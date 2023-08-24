@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <numeric>
 
 namespace TMVA{
 namespace Experimental{
@@ -47,11 +48,15 @@ public:
     for (size_t i = 0; i < names.size(); ++i) {
         fNames[i] = UTILITY::Clean_name(names[i]);
     }
-    // case names size is 3 check if steps is provided
-    // instead of axis. Keep in fNames always the same order 
-    if (names.size() == 3 && names[2] != "axes") {
-        fNames[3] = fNames[2];
-        fNames[2] = "";
+
+    if (names.size() == 3) { 
+      if (names[2] != "axes") { //steps provided instead of axis
+         fNames[3] = fNames[2];
+         fNames[2] = "";
+      }
+      else { // steps not provided
+         fNames[3] = "";
+      }
     }
    }
    // ctor for versions < 10
@@ -103,6 +108,19 @@ public:
          auto vec = model.GetTensorShape(fNames[i]);
          assert(vec.size() == 1);
          itensors[i] = std::vector<IType>(tensor, tensor + vec[0]);
+        }
+        else {
+         switch (i)
+         {
+         case 2: // missing axes
+            itensors[2] = std::vector<IType>(fShapeInput.size());
+            std::iota(itensors[2].begin(), itensors[2].end(), 0);
+            break;
+         case 3: // missing steps
+            itensors[3] = std::vector<IType>(itensors[0].size(), 1);
+         default:
+            break;
+         }
         }
       }
       } else {

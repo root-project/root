@@ -245,6 +245,16 @@
 #include "SliceGPU_FromONNX.hxx"
 #include "input_models/references/Slice.ref.hxx"
 
+#include "Slice_Default_AxisGPU_FromONNX.hxx"
+#include "input_models/references/Slice_Default_Axis.ref.hxx"
+
+#include "Slice_Default_StepsGPU_FromONNX.hxx"
+#include "input_models/references/Slice_Default_Steps.ref.hxx"
+
+
+#include "Slice_NegGPU_FromONNX.hxx"
+#include "input_models/references/Slice_Neg.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2350,3 +2360,53 @@ TEST(ONNX, Slice) {
    }
    
 }
+
+TEST(ONNX, Slice_Default_Axis) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = std::vector<float>(Slice_Default_Axis::input);
+   TMVA_SOFIE_Slice_Default_Axis::Session s("Slice_Default_Axis.dat");
+   std::vector<float> output(s.infer(input));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice_Default_Axis::output) / sizeof(float));
+   float *correct = Slice_Default_Axis::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+TEST(ONNX, Slice_Default_Steps) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = std::vector<float>(Slice_Default_Steps::input);
+   TMVA_SOFIE_Slice_Default_Steps::Session s("Slice_Default_Steps.dat");
+   std::vector<float> output(s.infer(input));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice_Default_Steps::output) / sizeof(float));
+   float *correct = Slice_Default_Steps::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+TEST(ONNX, Slice_Neg) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = std::vector<float>(Slice_Neg::input);
+   TMVA_SOFIE_Slice_Neg::Session s("Slice_Neg.dat");
+   std::vector<float> output(s.infer(input));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice_Neg::output) / sizeof(float));
+   float *correct = Slice_Neg::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+

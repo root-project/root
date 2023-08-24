@@ -27,18 +27,18 @@ if __name__=="__main__":
     
     
     x = np.random.randn(20, 10, 5).astype(np.float32)
-    y = x[0:3, 0:10]
+    y = x[:, 0:-1]
     
     print(x.shape)
     print(y.shape)
-    """
+    
     input = ""
-    input = "float input[] = {"
+    input = "std::vector<float> input = {"
     for x_ in np.nditer(x):
         input += str(x_) + ", "
     input = input[:-2]
     input += "};"
-    #print(input)
+    print(input)
 
     output = ""
     output = "float output[] = {"
@@ -46,16 +46,14 @@ if __name__=="__main__":
         output += str(y_) + ", "
     output = output[:-2]
     output += "};"
-    #print(output)
-
-    """
+    print(output)
 
     x = onnx.helper.make_tensor_value_info("x", onnx.TensorProto.FLOAT, [20, 10, 5])
-    y = onnx.helper.make_tensor_value_info("y", onnx.TensorProto.FLOAT, [3, 10, 5])
-    starts = onnx.numpy_helper.from_array(np.array([0, 0], dtype = np.int32), name="starts")
-    ends = onnx.numpy_helper.from_array(np.array([3, 10], dtype = np.int32), name="ends")
-    axes = onnx.numpy_helper.from_array(np.array([0, 1], dtype = np.int32), name="axes")
-    steps = onnx.numpy_helper.from_array(np.array([1, 1], dtype = np.int32), name="steps")
+    y = onnx.helper.make_tensor_value_info("y", onnx.TensorProto.FLOAT, [20, 9, 5])
+    starts = onnx.numpy_helper.from_array(np.array([0], dtype = np.int64), name="starts")
+    ends = onnx.numpy_helper.from_array(np.array([-1], dtype = np.int64), name="ends")
+    axes = onnx.numpy_helper.from_array(np.array([1], dtype = np.int64), name="axes")
+    steps = onnx.numpy_helper.from_array(np.array([1], dtype = np.int64), name="steps")
 
 
     node = onnx.helper.make_node(
@@ -68,12 +66,12 @@ if __name__=="__main__":
         nodes=[node], name="Slice", inputs=[x], outputs=[y], initializer=[starts, ends, axes, steps]
     )
 
-    model = onnx.helper.make_model(graph, producer_name = "Slice")
+    model = onnx.helper.make_model(graph, producer_name = "Slice_Neg")
     model = onnx.shape_inference.infer_shapes(model)
     onnx.checker.check_model(model)
     print(model)
 
-    onnx.save(model, "Slice.onnx")
+    onnx.save(model, "Slice_Neg.onnx")
 
 
 
