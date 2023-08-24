@@ -51,7 +51,7 @@ void TMVA::DrawNetworkMovie(TString dataset, TFile* file, const TString& methodT
       epochList.push_back( es );
 
       // create bulk file name
-      TString bulkname  = Form( "epochmonitoring___epoch_%s_weights_hist", es.Data() );
+      TString bulkname  = TString::Format( "epochmonitoring___epoch_%s_weights_hist", es.Data() );
 
       // draw the network
       if (ic <= 60) draw_network(dataset, file, epochDir, bulkname, kTRUE, es );
@@ -106,11 +106,11 @@ void TMVA::DrawMLPoutputMovie(TString dataset, TFile* file, const TString& metho
 
       // create canvas
       countCanvas++;
-      TString ctitle = Form("TMVA response %s",methodTitle.Data());
-      c = new TCanvas( Form("canvas%d", countCanvas), ctitle, 0, 0, width, (Int_t)width*0.78 );
+      TString ctitle = TString::Format("TMVA response %s",methodTitle.Data());
+      c = new TCanvas( TString::Format("canvas%d", countCanvas), ctitle, 0, 0, width, (Int_t)width*0.78 );
 
       TH1F* sig = (TH1F*)titkeyTit->ReadObj();
-      sig->SetTitle( Form("TMVA response for classifier: %s", methodTitle.Data()) );
+      sig->SetTitle( TString::Format("TMVA response for classifier: %s", methodTitle.Data()) );
 
       TString dataType = (name.Contains("_train_") ? "(training sample)" : "(test sample)");
 
@@ -186,7 +186,7 @@ void TMVA::DrawMLPoutputMovie(TString dataset, TFile* file, const TString& metho
       t.SetTextSize( 0.04 );
       t.SetTextColor( 1 );
       t.SetTextAlign( 31 );
-      t.DrawTextNDC( 1 - c->GetRightMargin(), 1 - c->GetTopMargin() + 0.015, Form( "Epoch: %i", epoch) );
+      t.DrawTextNDC( 1 - c->GetRightMargin(), 1 - c->GetTopMargin() + 0.015, TString::Format( "Epoch: %i", epoch) );
 
       // overlay signal and background histograms
       sig->Draw("samehist");

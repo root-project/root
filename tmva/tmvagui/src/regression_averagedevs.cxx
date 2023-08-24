@@ -40,8 +40,8 @@ void TMVA::regression_averagedevs(TString dataset,TString fin, Int_t Nevt, Bool_
       if (debug) cout << "loop targets " << itrgt<<endl;
       TString xtit = "Method";
       TString ytit = "Average Quadratic Deviation";
-      TString ftit = ytit + " versus " + xtit + Form(" for target %d",itrgt);
-      c = new TCanvas( Form("c%d",itrgt), ftit , 50+20*itrgt, 10*itrgt, 750, 650 );
+      TString ftit = ytit + " versus " + xtit + TString::Format(" for target %d",itrgt);
+      c = new TCanvas( TString::Format("c%d",itrgt), ftit , 50+20*itrgt, 10*itrgt, 750, 650 );
 
       // global style settings
       c->SetGrid();
@@ -50,7 +50,7 @@ void TMVA::regression_averagedevs(TString dataset,TString fin, Int_t Nevt, Bool_
       c->SetTopMargin(0.28);
       c->SetBottomMargin(0.1);
 
-      TString hNameRef(Form("regression_average_devs_target%d",itrgt));
+      TString hNameRef = TString::Format("regression_average_devs_target%d",itrgt);
 
       const Int_t maxMethods = 100;
       //     const Int_t maxTargets = 100;
@@ -76,7 +76,7 @@ void TMVA::regression_averagedevs(TString dataset,TString fin, Int_t Nevt, Bool_
             if (histKey->ReadObj()->InheritsFrom("TH1F") ){
                TString s(histKey->ReadObj()->GetName());
                if( !s.Contains("Quadr_Dev") ) continue;
-               if( !s.Contains(Form("target_%d_",itrgt))) continue;
+               if( !s.Contains(TString::Format("target_%d_",itrgt))) continue;
                Int_t ihist = 0 ;
                if( !s.Contains("best90perc") && s.Contains("train")) ihist=0;
                if( s.Contains("best90perc") && s.Contains("train")) ihist=1;
@@ -95,7 +95,7 @@ void TMVA::regression_averagedevs(TString dataset,TString fin, Int_t Nevt, Bool_
          }
          nMethods++;
       }
-      TH1F* haveragedevs= new TH1F(Form("haveragedevs%d",itrgt),ftit,nMethods,0.,nMethods);
+      TH1F* haveragedevs= new TH1F(TString::Format("haveragedevs%d",itrgt),ftit,nMethods,0.,nMethods);
       for (int i=0;i<nMethods;i++) haveragedevs->GetXaxis()->SetBinLabel(i+1, mvaNames[i]);
       haveragedevs->SetStats(0);
       TGraphErrors* graphTrainAv= new TGraphErrors(nMethods,x[0],m[0],ex[0],em[0]);
@@ -126,18 +126,18 @@ void TMVA::regression_averagedevs(TString dataset,TString fin, Int_t Nevt, Bool_
       TH1F *hr = c->DrawFrame(-1.,0.,nMethods+1, xmax);
       cout << endl;
       cout << "Training: Average Deviation between target " << itrgt <<" and estimate" << endl;
-      cout << Form("%-15s%-15s%-15s", "Method","Average Dev.","trunc. Aver.(90%)") <<endl;
+      cout << TString::Format("%-15s%-15s%-15s", "Method","Average Dev.","trunc. Aver.(90%)") <<endl;
       for (int i=0;i<nMethods;i++){
-         cout << Form("%-15s:%#10.3g%#10.3g",
+         cout << TString::Format("%-15s:%#10.3g%#10.3g",
                       (const char*)mvaNames[i], m[0][i],m[1][i])<<endl;
          //       cout << mvaNames[i] << "  " << m[0][i]<< "  "<< m[1][i]<<endl;
          hr->GetXaxis()->SetBinLabel(i+1," ");
       }
       cout << endl;
       cout << "Testing: Average Deviation between target " << itrgt <<" and estimate" << endl;
-      cout << Form("%-15s%-15s%-15s", "Method","Average Dev.","trunc. Aver.(90%)") <<endl;
+      cout << TString::Format("%-15s%-15s%-15s", "Method","Average Dev.","trunc. Aver.(90%)") <<endl;
       for (int i=0;i<nMethods;i++){
-         cout << Form("%-15s:%#10.3g%#10.3g",
+         cout << TString::Format("%-15s:%#10.3g%#10.3g",
                       (const char*)mvaNames[i], m[2][i],m[3][i])<<endl;
          //cout << mvaNames[i] << "  " << m[2][i]<< "  "<< m[3][i]<<endl;
       }

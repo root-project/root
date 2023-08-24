@@ -703,11 +703,17 @@ sap.ui.define([
          let item = oEvent.getParameter('item'),
              name = item.getText();
 
-         if (name != 'Fit panel') return;
+         if (name == 'Fit panel') {
+            if (this.isv7()) {
+               let curr = this.getView().getModel().getProperty('/LeftArea');
+               this.showLeftArea(curr == 'FitPanel' ? '' : 'FitPanel');
+            } else {
+               this.getCanvasPainter()?.sendWebsocket('FITPANEL');
+            }
+         } else if (name == 'Start browser') {
+            this.getCanvasPainter()?.sendWebsocket('START_BROWSER');
+         }
 
-         let curr = this.getView().getModel().getProperty('/LeftArea');
-
-         this.showLeftArea(curr == 'FitPanel' ? '' : 'FitPanel');
       },
 
       showMessage(msg) {

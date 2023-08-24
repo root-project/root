@@ -13,6 +13,9 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
+/// \cond ROOFIT_INTERNAL
+
 #ifndef ROO_TFOAM_BINDING
 #define ROO_TFOAM_BINDING
 
@@ -37,3 +40,5 @@ protected:
 };
 
 #endif
+
+/// \endcond

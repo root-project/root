@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /** @file BidirMMapPipe.h
  *
  * header file for BidirMMapPipe, a class which forks off a child process and
@@ -992,3 +994,5 @@ END_NAMESPACE_ROOFIT
 #endif // BIDIRMMAPPIPE_H
 
 // vim: ft=cpp:sw=4:tw=78:et
+
+/// \endcond

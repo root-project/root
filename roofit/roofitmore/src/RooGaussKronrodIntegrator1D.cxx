@@ -74,6 +74,8 @@ int gsl_integration_qng (const gsl_function * f,
                          size_t * neval);
 //-------------------------------------------------------------------
 
+/// \cond ROOFIT_INTERNAL
+
 // register integrator class
 // create a derived class in order to call the protected method of the
 // RoodaptiveGaussKronrodIntegrator1D
@@ -92,7 +94,9 @@ struct Roo_reg_GKInteg1D {
 };
 
 static Roo_reg_GKInteg1D instance;
-}
+} // namespace RooFit_internal
+
+/// \endcond
 
 
 ////////////////////////////////////////////////////////////////////////////////

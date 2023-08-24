@@ -327,7 +327,9 @@ TEST(RNTuple, ModelExtensionRealWorld1)
 TEST(RNTuple, ModelExtensionComplex)
 {
    using doubleAoA_t = std::array<std::array<double, 2>, 2>;
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    FileRaii fileGuard("test_ntuple_modelext_complex.root");
 
    TRandom3 rnd(42);

@@ -275,7 +275,7 @@ void TMVA::rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrd
          // save canvas to file
          if (countPad > noPad) {
             c[countCanvas]->Update();
-            TString fname = Form( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
+            TString fname = TString::Format( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
             TMVAGlob::imgconv( c[countCanvas], fname );
             //        TMVAGlob::plot_logo(); // don't understand why this doesn't work ... :-(
             countCanvas++;
@@ -285,7 +285,7 @@ void TMVA::rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrd
 
    if (countPad <= noPad) {
       c[countCanvas]->Update();
-      TString fname = Form( "plots/%s_c%i", outfname[type].Data(), countCanvas+1 );
+      TString fname = TString::Format( "plots/%s_c%i", outfname[type].Data(), countCanvas+1 );
       TMVAGlob::imgconv( c[countCanvas], fname );
    }
 }

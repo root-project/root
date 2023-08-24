@@ -419,9 +419,11 @@ double RooFormula::eval(const RooArgSet* nset) const
 void RooFormula::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   const int nPars=_origList.size();
-  std::vector<RooSpan<const double>> inputSpans(nPars);
-  for (int i=0; i<nPars; i++)
-    inputSpans[i] = dataMap.at( static_cast<const RooAbsReal*>(&_origList[i]) );
+  std::vector<std::span<const double>> inputSpans(nPars);
+  for (int i=0; i<nPars; i++) {
+    std::span<const double> rhs = dataMap.at( static_cast<const RooAbsReal*>(&_origList[i]) );
+    inputSpans[i] = rhs;
+  }
 
   std::vector<double> pars(nPars);
   for (size_t i=0; i<nEvents; i++)

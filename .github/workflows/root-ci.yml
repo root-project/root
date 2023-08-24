@@ -260,10 +260,13 @@ jobs:
           - image: alma8
             config: Release
 
+          - image: alma9
+            config: Release
+
           - image: ubuntu20
             config: Release
 
-          - image: ubuntu2210
+          - image: ubuntu2304
             config: Release
 
           - image: ubuntu22
@@ -278,8 +281,8 @@ jobs:
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
-      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-      options: '--security-opt label=disable --rm'
+      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
+      options: '--shm-size=1g -m 16g --security-opt label=disable --rm' # ALSO UPDATE BELOW!
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -291,6 +294,12 @@ jobs:
         PYTHONUNBUFFERED: true
 
     steps:
+      - name: Set up Python Virtual Env
+        # if the `if` expr is false, `if` still has exit code 0.
+        # if the `if` block is entered, the block's exit code becomes the exit
+        # code of the `if`.
+        run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -308,26 +317,26 @@ jobs:
         if: ${{ matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-          FILE: .github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt
+          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
         shell: bash
         run: |
           set -x
 
-          echo '' >> "$FILE"
+          echo '' >> "$CONFIGFILE"
 
           for ENTRY in $OVERRIDES; do
               KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
 
               # Add entry to file if not exists, otherwise replace
 
-              if grep -q "$KEY=" "$FILE"; then
-                  sed -i "s/$KEY=.*\$/$ENTRY/" "$FILE"
+              if grep -q "$KEY=" "$CONFIGFILE"; then
+                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
               else
-                  echo "$ENTRY" >> "$FILE"
+                  echo "$ENTRY" >> "$CONFIGFILE"
               fi
           done
 
-          cat "$FILE" || true
+          cat "$CONFIGFILE" || true
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
@@ -341,6 +350,8 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
+                    --image          registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+                    --dockeropts     '--shm-size=1g -m 16g --security-opt label=disable --rm'
                     --incremental    $INCREMENTAL
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}

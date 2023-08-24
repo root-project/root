@@ -752,9 +752,11 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
    if (fModLabs) {
       TIter next(fModLabs);
       while (auto ml = (TAxisModLab*)next()) {
-         out<<"   "<<name<<subname<<"->ChangeLabel("
-            <<ml->GetLabNum()<<","
-            <<ml->GetAngle()<<","
+         if (ml->GetLabNum() == 0)
+            out<<"   "<<name<<subname<<"->ChangeLabelByValue("<<ml->GetLabValue()<<",";
+         else
+            out<<"   "<<name<<subname<<"->ChangeLabel("<<ml->GetLabNum()<<",";
+         out<<ml->GetAngle()<<","
             <<ml->GetSize()<<","
             <<ml->GetAlign()<<","
             <<ml->GetColor()<<","
@@ -894,6 +896,27 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Search for axis modifier by index or value
+
+TAxisModLab *TAxis::FindModLab(Int_t num, Double_t v, Double_t eps) const
+{
+   if (!fModLabs)
+      return nullptr;
+
+   TIter next(fModLabs);
+   while (auto ml = (TAxisModLab*)next()) {
+      if (ml->GetLabNum() != num)
+         continue;
+
+      if ((num != 0) || (TMath::Abs(v - ml->GetLabValue()) <= eps))
+         return ml;
+   }
+
+   return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Define new text attributes for the label number "labNum". It allows to do a
 /// fine tuning of the labels. All the attributes can be changed, even the
 /// label text itself.
@@ -915,28 +938,72 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 ///  - To retrieve the number of axis labels use TAxis::GetNlabels.
 
 void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
-                               Int_t labAlign, Int_t labColor, Int_t labFont,
-                               TString labText)
+                        Int_t labAlign, Int_t labColor, Int_t labFont,
+                        const TString &labText)
 {
-   if (!fModLabs) fModLabs = new TList();
-
    // Reset the list of modified labels.
    if (labNum == 0) {
-      delete fModLabs;
-      fModLabs  = 0;
+      SafeDelete(fModLabs);
       return;
    }
 
-   TAxisModLab *ml = new TAxisModLab();
-   ml->SetLabNum(labNum);
+   if (!fModLabs) fModLabs = new TList();
+
+   TAxisModLab *ml = FindModLab(labNum);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabNum(labNum);
+      fModLabs->Add(ml);
+   }
+
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
    ml->SetAlign(labAlign);
    ml->SetColor(labColor);
    ml->SetFont(labFont);
    ml->SetText(labText);
+}
 
-   fModLabs->Add((TObject*)ml);
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label value "labValue". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed, even the
+/// label text itself.
+///
+/// \param[in] labValue  Axis value to be changed
+/// \param[in] labAngle  New angle value
+/// \param[in] labSize   New size (0 erase the label)
+/// \param[in] labAlign  New alignment value
+/// \param[in] labColor  New label color
+/// \param[in] labFont   New label font
+/// \param[in] labText   New label text
+///
+///  #### Notes:
+///
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
+///  - To retrieve the number of axis labels use TAxis::GetNlabels.
+
+void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t labSize,
+                             Int_t labAlign, Int_t labColor, Int_t labFont,
+                             const TString &labText)
+{
+   if (!fModLabs) fModLabs = new TList();
+
+   TAxisModLab *ml = FindModLab(0, labValue, 0.);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabValue(labValue);
+      fModLabs->Add(ml);
+   }
+
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
 }
 
 

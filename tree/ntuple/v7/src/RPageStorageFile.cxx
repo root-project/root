@@ -437,30 +437,14 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
-   {
-      auto descriptorGuard = GetSharedDescriptorGuard();
-      const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
-
-      // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
-      for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
-         const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
-         NTupleSize_t pageNo = 0;
-         for (const auto &pageInfo : pageRange.fPageInfos) {
-            const auto &pageLocator = pageInfo.fLocator;
-            if (pageLocator.fType == RNTupleLocator::kTypePageZero) {
-               // Zero pages can be directly inserted into a page map that will be adopted below
-               ROnDiskPage::Key key(physicalColumnId, pageNo);
-               pageZeroMap->Register(
-                  key, ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageLocator.fBytesOnStorage));
-            } else {
-               activeSize += pageLocator.fBytesOnStorage;
-               onDiskPages.push_back(
-                  {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), pageLocator.fBytesOnStorage, 0});
-            }
-            ++pageNo;
-         }
-      }
-   }
+   PrepareLoadCluster(clusterKey, *pageZeroMap,
+                      [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
+                          const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
+                         const auto &pageLocator = pageInfo.fLocator;
+                         activeSize += pageLocator.fBytesOnStorage;
+                         onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(),
+                                                pageLocator.fBytesOnStorage, 0});
+                      });
 
    // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),

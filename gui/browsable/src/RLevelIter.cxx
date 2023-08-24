@@ -11,7 +11,7 @@
 #include <ROOT/Browsable/RElement.hxx>
 #include <ROOT/Browsable/RItem.hxx>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name

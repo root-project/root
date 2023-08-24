@@ -21,10 +21,6 @@
 #include <vector>
 #include <list>
 
-namespace RooBatchCompute {
-struct RunContext;
-}
-
 class RooBinIntegrator : public RooAbsIntegrator {
 public:
 
@@ -55,9 +51,6 @@ protected:
   mutable Int_t _numBins = 0;             ///<! Size of integration range
 
   bool _useIntegrandLimits = false;       ///< If true limits of function binding are ued
-
-  std::unique_ptr<RooBatchCompute::RunContext> _evalData;     ///<! Run context for evaluating a function.
-  std::unique_ptr<RooBatchCompute::RunContext> _evalDataOrig; ///<! Run context to save bin centres in between invocations.
 
   double* xvec(double xx) { _x[0] = xx ; return _x.data(); }
   double* xvec(double xx, double yy) { _x[0] = xx ; _x[1] = yy ; return _x.data(); }

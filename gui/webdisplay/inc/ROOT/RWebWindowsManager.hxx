@@ -28,7 +28,6 @@ class THttpWSHandler;
 class TExec;
 
 namespace ROOT {
-namespace Experimental {
 
 /// function signature for catching show calls of arbitrary RWebWindow
 /// if returns true, normal show procedure will not be invoked
@@ -98,7 +97,6 @@ public:
    static void AssignMainThrd();
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

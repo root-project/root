@@ -2509,7 +2509,8 @@ void TF1::InitStandardFunctions()
       f1 = new TF1("expo", "expo", -1, 1);
       f1->SetParameters(1, 1);
       for (Int_t i = 0; i < 10; i++) {
-         f1 = new TF1(Form("pol%d", i), Form("pol%d", i), -1, 1);
+         auto f1name = TString::Format("pol%d", i);
+         f1 = new TF1(f1name.Data(), f1name.Data(), -1, 1);
          f1->SetParameters(1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
          // create also chebyshev polynomial
          // (note polynomial object will not be deleted)

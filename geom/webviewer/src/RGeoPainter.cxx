@@ -14,7 +14,7 @@
 #include "TGeoManager.h"
 #include "TVirtualPad.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 RGeoPainter::RGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 {

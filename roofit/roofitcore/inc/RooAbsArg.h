@@ -737,7 +737,7 @@ private:
 
   std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
-  /// \cond Internal
+  /// \cond ROOFIT_INTERNAL
   // Legacy streamers need the following statics:
   friend class RooFitResult;
 

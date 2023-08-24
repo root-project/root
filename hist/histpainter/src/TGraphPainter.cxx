@@ -802,8 +802,8 @@ void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
    }
    TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
    editor->Show();
-   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
-                           (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)theGraph));
+   gROOT->ProcessLine(TString::Format("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
+                                      (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)theGraph));
 }
 
 
@@ -1400,7 +1400,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          rwxmax = uxmax;
          npt = 100;
          if (theNpoints > npt) npt = theNpoints;
-         TH1F *h = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+         TH1F *h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
          theGraph->SetHistogram(h);
          if (!theGraph->GetHistogram()) return;
          theGraph->GetHistogram()->SetMinimum(rwymin);
@@ -4363,6 +4363,53 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
       if (theSize) {
          mins = TMath::Min(mins,theSize[i]);
          maxs = TMath::Max(maxs,theSize[i]);
+      }
+   }
+
+   // Make sure minimum and maximum values are different
+   Double_t d, e = 0.1;
+   if (minx == maxx) {
+      if (theX[0] == 0.) {
+         minx = -e;
+         maxx = e;
+      } else {
+         d = TMath::Abs(theX[0]*e);
+         minx = theX[0] - d;
+         maxx = theX[0] + d;
+      }
+   }
+   if (miny == maxy) {
+      if (theY[0] == 0.) {
+         miny = -e;
+         maxy = e;
+      } else {
+         d = TMath::Abs(theY[0]*e);
+         miny = theY[0] - d;
+         maxy = theY[0] + d;
+      }
+   }
+   if (theColor) {
+      if (minc == maxc) {
+         if (theColor[0] == 0.) {
+            minc = -e;
+            maxc = e;
+         } else {
+            d = TMath::Abs(theColor[0]*e);
+            minc = theColor[0] - d;
+            maxc = theColor[0] + d;
+         }
+      }
+   }
+   if (theSize) {
+      if (mins == maxs) {
+         if (theSize[0] == 0.) {
+            mins = -e;
+            maxs = e;
+         } else {
+            d = TMath::Abs(theSize[0]*e);
+            mins = theSize[0] - d;
+            maxs = theSize[0] + d;
+         }
       }
    }
 

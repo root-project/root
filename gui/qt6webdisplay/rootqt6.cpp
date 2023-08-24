@@ -3,7 +3,7 @@
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,7 +14,6 @@
 #include <QWebEngineView>
 #include <qtwebenginecoreglobal.h>
 #include <QWebEngineDownloadRequest>
-// #include <qtwebenginequickglobal.h>
 
 #include <QThread>
 #include <QWebEngineSettings>
@@ -40,6 +39,9 @@
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RLogger.hxx>
 
+QWebEngineUrlScheme gRootScheme("rootscheme");
+
+
 /** \class TQt6Timer
 \ingroup qt6webdisplay
 */
@@ -58,7 +60,6 @@ public:
 };
 
 namespace ROOT {
-namespace Experimental {
 
 /** \class RQt6WebDisplayHandle
 \ingroup qt6webdisplay
@@ -100,12 +101,6 @@ protected:
 
             // initialize web engine only before creating QApplication
             // QtWebEngineQuick::initialize();
-
-            QWebEngineUrlScheme scheme("rootscheme");
-            scheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
-            scheme.setDefaultPort(2345);
-            scheme.setFlags(QWebEngineUrlScheme::SecureScheme);
-            QWebEngineUrlScheme::registerScheme(scheme);
 
             qargv[0] = gApplication->Argv(0);
             qargv[1] = nullptr;
@@ -246,8 +241,16 @@ public:
 };
 
 struct RQt6CreatorReg {
-   RQt6CreatorReg() { RQt6WebDisplayHandle::AddCreator(); }
+   RQt6CreatorReg()
+   {
+      RQt6WebDisplayHandle::AddCreator();
+
+      gRootScheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
+      gRootScheme.setDefaultPort(2345);
+      gRootScheme.setFlags(QWebEngineUrlScheme::SecureScheme);
+      QWebEngineUrlScheme::registerScheme(gRootScheme);
+
+   }
 } newRQt6CreatorReg;
 
-}
-}
+} // namespace ROOT

@@ -198,7 +198,10 @@ void TScatter::Print(Option_t *) const
    Double_t *X = fGraph->GetX();
    Double_t *Y = fGraph->GetY();
    for (Int_t i = 0; i < fNpoints; i++) {
-      printf("x[%d]=%g, y[%d]=%g, color[%d]=%g, size[%d]=%g\n", i, X[i], i, Y[i], i, fColor[i], i, fSize[i]);
+      printf("x[%d]=%g, y[%d]=%g", i, X[i], i, Y[i]);
+      if (fColor) printf(", color[%d]=%g", i, fColor[i]);
+      if (fSize) printf(", size[%d]=%g", i, fSize[i]);
+      printf("\n");
    }
 }
 

@@ -1,4 +1,4 @@
-\defgroup Roostats Roostats
+\defgroup Roostats RooStats
 \brief  RooStats is a toolkit for statistical tests built on top of RooFit.
 \ingroup Roofitmain
 

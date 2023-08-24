@@ -1029,7 +1029,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t xtick = 0;
    Double_t xtick0, xtick1, dxtick=0;
    Double_t ytick, ytick0, ytick1;
-   Double_t wlabel, dwlabel;
+   Double_t wlabel, dwlabel, axis_value;
    Double_t xfactor, yfactor;
    Double_t xlabel, ylabel, dxlabel;
    Double_t xone, xtwo;
@@ -1539,8 +1539,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   if (angle == 0) textaxis.SetTextAlign(21);
                   s = 3;
                }
-               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
-               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp);
+               strlcpy(chtemp, fAxis->GetBinLabel(i), 255);
+               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, i, 0.1);
                textaxis.PaintLatex(fAxis->GetBinCenter(i),
                                    ymin + s*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
                                    textaxis.GetTextAngle(),
@@ -1561,8 +1561,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   double scale=gPad->GetWw()*gPad->GetWNDC();
                   if (scale>0.0) toffset = TMath::Max(toffset,(double)w/scale);
                }
-               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
-               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp);
+               strlcpy(chtemp, fAxis->GetBinLabel(i), 255);
+               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, i, 0.1);
                textaxis.PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                    fAxis->GetBinCenter(i),
                                    0,
@@ -1570,8 +1570,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                                    chtemp);
                if (fNModLabs) ResetLabelAttributes(&textaxis);
             } else {
-               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
-               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp);
+               strlcpy(chtemp, fAxis->GetBinLabel(i), 255);
+               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, i, 0.1);
                textaxis.PaintLatex(xmin - 3*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                    ymin +(i-0.5)*(ymax-ymin)/nl,
                                    0,
@@ -1969,23 +1969,26 @@ L110:
                }
                if (optionM)    xlabel += 0.5*dxlabel;
 
+               axis_value = wlabel;
+
                if (!optionText && !optionTime) {
                   snprintf(label,256,chcoded,wlabel);
+
                   label[28] = 0;
                   wlabel += dwlabel;
 
                   LabelsLimits(label,first,last);  //Eliminate blanks
 
                   if (label[first] == '.') { //check if '.' is preceded by a digit
-                     strncpy(chtemp, "0",256);
+                     strncpy(chtemp, "0", 256);
                      strlcat(chtemp, &label[first],256);
-                     strncpy(label, chtemp,256);
+                     strlcpy(label, chtemp, 256);
                      first = 1; last = strlen(label);
                   }
                   if (label[first] == '-' && label[first+1] == '.') {
                      strncpy(chtemp, "-0",256);
                      strlcat(chtemp, &label[first+1],256);
-                     strncpy(label, chtemp, 256);
+                     strlcpy(label, chtemp, 256);
                      first = 1; last = strlen(label);
                   }
 
@@ -2047,7 +2050,7 @@ L110:
                   } else {
                      strncpy(label, "invalid", 256);
                   }
-                  strncpy(chtemp, &label[0], 256);
+                  strlcpy(chtemp, &label[0], 256);
                   first = 0; last=strlen(label)-1;
                   wlabel = wTimeIni + (k+1)*dwlabel;
                }
@@ -2072,8 +2075,8 @@ L110:
                if (!optionY || (x0 == x1)) {
                   if (!optionText) {
                      if (first > last)  strncpy(chtemp, " ", 256);
-                     else               strncpy(chtemp, &label[first], 255);
-                     if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, &textaxis, chtemp);
+                     else               strlcpy(chtemp, &label[first], 255);
+                     if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, &textaxis, chtemp, axis_value, dwlabel*0.01);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
                      if (autotoff) {
@@ -2090,8 +2093,8 @@ L110:
                            typolabel.Data());
                      if (fNModLabs) ResetLabelAttributes(&textaxis);
                   } else  {
-                     strncpy(chtemp, fAxis->GetBinLabel(k+fAxis->GetFirst()), 255);
-                     if (fNModLabs) ChangeLabelAttributes(k+fAxis->GetFirst(), fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp);
+                     strlcpy(chtemp, fAxis->GetBinLabel(k+fAxis->GetFirst()), 255);
+                     if (fNModLabs) ChangeLabelAttributes(k+fAxis->GetFirst(), fAxis->GetLabels()->GetSize()-1, &textaxis, chtemp, k+fAxis->GetFirst(), 0.1);
                      if (optionText == 1) textaxis.PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                                    gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                                                    0,
@@ -2238,6 +2241,7 @@ L110:
          if (!drawGridOnly && !optionUnlab)  {
 
 // We generate labels (numeric only).
+            axis_value = TMath::Power(10,labelnumber);
             if (noExponent) {
                rlab = TMath::Power(10,labelnumber);
                snprintf(label,256, "%f", rlab);
@@ -2286,7 +2290,7 @@ L110:
                if (fNModLabs) {
                   if (changelablogid  == 0) changelablognum = nbinin-j;
                   changelablogid++;
-                  ChangeLabelAttributes(changelablogid, changelablognum, &textaxis, chtemp);
+                  ChangeLabelAttributes(changelablogid, changelablognum, &textaxis, chtemp, axis_value, axis_value*1e-6);
                }
                typolabel = chtemp;
                typolabel.ReplaceAll("-", "#minus");
@@ -2338,8 +2342,9 @@ L160:
 // Draw the intermediate LOG labels if requested
 
                if (moreLogLabels && !optionUnlab && !drawGridOnly && !overlap) {
+                  axis_value = Double_t(k)*TMath::Power(10,labelnumber-1);
                   if (noExponent) {
-                     rlab = Double_t(k)*TMath::Power(10,labelnumber-1);
+                     rlab = axis_value;
                      snprintf(chtemp,256, "%g", rlab);
                   } else {
                      if (labelnumber-1 == 0) {
@@ -2384,7 +2389,7 @@ L160:
                      firstintlab = kFALSE;
                      if (fNModLabs) {
                         changelablogid++;
-                        ChangeLabelAttributes(changelablogid, 0, &textaxis, chtemp);
+                        ChangeLabelAttributes(changelablogid, 0, &textaxis, chtemp, axis_value, axis_value*1e-6);
                      }
                      typolabel = chtemp;
                      typolabel.ReplaceAll("-", "#minus");
@@ -2403,7 +2408,7 @@ L160:
                         textaxis.GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi=(UInt_t)(hi*1.3);
                         if (fNModLabs) {
                            changelablogid++;
-                           ChangeLabelAttributes(changelablogid, 0, &textaxis, chtemp);
+                           ChangeLabelAttributes(changelablogid, 0, &textaxis, chtemp, axis_value, axis_value*1e-6);
                         }
                         typolabel = chtemp;
                         typolabel.ReplaceAll("-", "#minus");
@@ -2603,9 +2608,11 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    if (fModLabs) {
       TIter next(fModLabs);
       while (auto ml = (TAxisModLab*)next()) {
-         out<<"   gaxis->ChangeLabel("
-            <<ml->GetLabNum()<<","
-            <<ml->GetAngle()<<","
+         if (ml->GetLabNum() == 0)
+            out<<"   gaxis->ChangeLabelByValue("<<ml->GetLabValue()<<",";
+         else
+            out<<"   gaxis->ChangeLabel("<<ml->GetLabNum()<<",";
+         out<<ml->GetAngle()<<","
             <<ml->GetSize()<<","
             <<ml->GetAlign()<<","
             <<ml->GetColor()<<","
@@ -2648,6 +2655,38 @@ void TGaxis::SetFunction(const char *funcname)
       fWmax = fFunction->GetXmax();
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Search for axis modifier by index or value
+
+TAxisModLab *TGaxis::FindModLab(Int_t indx, Int_t numlabels, Double_t v, Double_t eps) const
+{
+   if (!fModLabs)
+      return nullptr;
+
+   TIter next(fModLabs);
+   while (auto ml = (TAxisModLab*)next()) {
+
+      if (ml->GetLabNum() == 0) {
+         if (TMath::Abs(v - ml->GetLabValue()) <= eps)
+            return ml;
+      } else if (indx != 0) {
+         Bool_t match = ml->GetLabNum() == indx;
+         if (!match && (ml->GetLabNum() < 0) && (indx > 0) && (numlabels > 0)) {
+            if (TestBit(TAxis::kMoreLogLabels)) {
+               Error("FindModLab", "reverse numbering in ChangeLabel doesn't work when more log labels are requested");
+               return nullptr;
+            }
+
+            match = indx == (ml->GetLabNum() + 2 + numlabels);
+         }
+         if (match) return ml;
+      }
+   }
+
+   return nullptr;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Define new text attributes for the label number "labNum". It allows to do a
@@ -2694,7 +2733,7 @@ void TGaxis::SetFunction(const char *funcname)
 
 void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
                          Int_t labAlign, Int_t labColor, Int_t labFont,
-                         TString labText)
+                         const TString &labText)
 {
    // special situation when mod labs taken from axis - one have to reset pointer
    if (fModLabs && !IsOwnedModLabs()) {
@@ -2714,23 +2753,97 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
       fModLabs->SetOwner(kTRUE);
    }
 
-   TAxisModLab *ml = new TAxisModLab();
-   ml->SetLabNum(labNum);
+   TAxisModLab *ml = FindModLab(labNum);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabNum(labNum);
+      fModLabs->Add(ml);
+   }
+
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
    ml->SetAlign(labAlign);
    ml->SetColor(labColor);
    ml->SetFont(labFont);
    ml->SetText(labText);
-
-   fModLabs->Add(ml);
 }
 
-static Double_t SavedTextAngle; ///< Global variable saving the current label's text angle. Used by TGaxis::ChangeLabelAttributes.
-static Double_t SavedTextSize;  ///< Global variable saving the current label's text size. Used by TGaxis::ChangeLabelAttributes.
-static Int_t    SavedTextAlign; ///< Global variable saving the current label's text alignment. Used by TGaxis::ChangeLabelAttributes.
-static Int_t    SavedTextColor; ///< Global variable saving the current label's text color. Used by TGaxis::ChangeLabelAttributes.
-static Int_t    SavedTextFont;  ///< Global variable saving the current label's text font. Used by TGaxis::ChangeLabelAttributes.
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label value "labValue". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed, even the
+/// label text itself.
+///
+/// \param[in] labValue  Axis value to be changed
+/// \param[in] labAngle  New angle value
+/// \param[in] labSize   New size (0 erase the label)
+/// \param[in] labAlign  New alignment value
+/// \param[in] labColor  New label color
+/// \param[in] labFont   New label font
+/// \param[in] labText   New label text
+///
+/// #### Example:
+///
+/// Begin_Macro(source)
+/// {
+///   auto c = new TCanvas("c1","Examples of TGaxis",900,100);
+///   c->Range(-6,-0.1,6,0.1);
+///   auto *axis = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"S");
+///   axis->SetName("axis1");
+///   axis->SetTitle("Axis Title");
+///   axis->SetTitleSize(0.2);
+///   axis->SetLabelSize(0.2);
+///   axis->SetTickSize(0.15);
+///   axis->SetTitleColor(kBlue);
+///   axis->SetTitleFont(42);
+///   axis->ChangeLabelByValue(-5.,-1,-1,-1,2);
+///   axis->ChangeLabelByValue(-3.,-1,0.);
+///   axis->ChangeLabelByValue(0.,30.,-1,0);
+///   axis->ChangeLabelByValue(3.,-1,-1,-1,3,-1,"label for 3.");
+///   axis->ChangeValue(5.,-2,-1,-1,-1,3,-1,"label for 5.");
+///   axis->Draw();
+/// }
+/// End_Macro
+///
+///  #### Notes:
+///
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
+
+void TGaxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t labSize,
+                              Int_t labAlign, Int_t labColor, Int_t labFont,
+                              const TString &labText)
+{
+   // special situation when mod labs taken from axis - one have to reset pointer
+   if (fModLabs && !IsOwnedModLabs()) {
+      fModLabs = nullptr;
+      fNModLabs = 0;
+   }
+
+   fNModLabs++;
+   if (!fModLabs) {
+      fModLabs = new TList();
+      fModLabs->SetOwner(kTRUE);
+   }
+
+   TAxisModLab *ml = FindModLab(0, 0, labValue, 0.);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabValue(labValue);
+      fModLabs->Add(ml);
+   }
+
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
+}
+
+
+static TAttText SavedAttText;  ///< Global variable saving the current label's text angle. Used by TGaxis::ChangeLabelAttributes.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper method used by TGaxis::ChangeLabel.
@@ -2740,35 +2853,23 @@ static Int_t    SavedTextFont;  ///< Global variable saving the current label's 
 /// \param[in] nlabels  Totals number of labels for this axis (useful when i is counted from the end)
 /// \param[in] t        Original TLatex string holding the label to be changed
 /// \param[in] c        Text string to be drawn
+/// \param[in] value    Axis value which should be changed
+/// \param[in] eps      Epsilon parameter for axis value, -1 means ignore axis value at all
 
-void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
+
+void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c, Double_t value, Double_t eps)
 {
-   if (!fModLabs) return;
+   t->TAttText::Copy(SavedAttText);
 
-   TIter next(fModLabs);
-   while (auto ml = (TAxisModLab*)next()) {
-      SavedTextAngle = t->GetTextAngle();
-      SavedTextSize  = t->GetTextSize();
-      SavedTextAlign = t->GetTextAlign();
-      SavedTextColor = t->GetTextColor();
-      SavedTextFont  = t->GetTextFont();
-      Int_t labNum = ml->GetLabNum();
-      if (labNum < 0) {
-         if (TestBit(TAxis::kMoreLogLabels)) {
-            Error("ChangeLabelAttributes", "reverse numbering in ChangeLabel doesn't work when more log labels are requested");
-            return;
-         }
-         labNum = nlabels + labNum + 2;
-      }
-      if (i == labNum) {
-         if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
-         if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
-         if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());
-         if (ml->GetColor()>=0)  t->SetTextColor(ml->GetColor());
-         if (ml->GetFont()>0)    t->SetTextFont(ml->GetFont());
-         if (!(ml->GetText().IsNull())) strncpy(c, (ml->GetText()).Data(), 256);
-         return;
-      }
+   auto ml = FindModLab(i, nlabels, value, eps);
+
+   if (ml) {
+      if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
+      if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
+      if (ml->GetAlign()>0)   t->SetTextAlign(ml->GetAlign());
+      if (ml->GetColor()>=0)  t->SetTextColor(ml->GetColor());
+      if (ml->GetFont()>0)    t->SetTextFont(ml->GetFont());
+      if (!ml->GetText().IsNull()) strlcpy(c, ml->GetText().Data(), 256);
    }
 }
 
@@ -2779,11 +2880,7 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
 
 void TGaxis::ResetLabelAttributes(TLatex* t)
 {
-   t->SetTextAngle(SavedTextAngle);
-   t->SetTextSize(SavedTextSize);
-   t->SetTextAlign(SavedTextAlign);
-   t->SetTextColor(SavedTextColor);
-   t->SetTextFont(SavedTextFont);
+   SavedAttText.Copy(*t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

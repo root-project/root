@@ -95,7 +95,7 @@ TEST(ROOT, Linear16)
    // Preparing the standard all-ones input
    std::vector<float> input(1600);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_Linear_16::Session s("Linear_16_FromROOT.dat");
+   TMVA_SOFIE_Linear_16::Session s("Linear_16_FromROOT.root");
    std::vector<float> output = s.infer(input.data());
 
    // Testing the actual and expected output sizes

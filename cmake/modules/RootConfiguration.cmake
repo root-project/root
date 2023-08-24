@@ -332,16 +332,13 @@ set(dicttype ${ROOT_DICTTYPE})
 find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
-# --- workaround for Ubuntu 20.04, where snap chrome has problem with arguments translation, to be remove once problem fixed
-find_program(CHROME_EXECUTABLE NAMES chrome PATHS "/snap/chromium/current/usr/lib/chromium-browser/" NO_DEFAULT_PATH)
-
-find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser Google\ Chrome
+find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser google-chrome-stable Google\ Chrome
              PATH_SUFFIXES "Google/Chrome/Application")
 if(CHROME_EXECUTABLE)
   set(chromeexe ${CHROME_EXECUTABLE})
 endif()
 
-find_program(FIREFOX_EXECUTABLE NAMES firefox firefox.exe
+find_program(FIREFOX_EXECUTABLE NAMES firefox firefox-bin firefox.exe
              PATH_SUFFIXES "Mozilla Firefox")
 if(FIREFOX_EXECUTABLE)
   set(firefoxexe ${FIREFOX_EXECUTABLE})
@@ -654,7 +651,7 @@ else()
 endif()
 
 if(root7 AND webgui)
-   set(root_browser_class "ROOT::Experimental::RWebBrowserImp")
+   set(root_browser_class "ROOT::RWebBrowserImp")
 else()
    set(root_browser_class "TRootBrowser")
 endif()

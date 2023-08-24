@@ -3,7 +3,7 @@
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -27,14 +27,6 @@ class RLogChannel;
 }
 
 ROOT::Experimental::RLogChannel &CefWebDisplayLog();
-
-
-#if CEF_VERSION_MAJOR < 95
-typedef CefRequestCallback CefResourceLoadCallBack ;
-#else
-typedef CefCallback CefResourceLoadCallBack;
-#endif
-
 
 class THttpServer;
 
@@ -66,15 +58,15 @@ public:
    // static BaseHandler *GetInstance();
 
    // CefClient methods:
-   virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }
-   virtual CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
-   virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
-   virtual CefRefPtr<CefRequestHandler> GetRequestHandler() override { return this; }
+   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }
+   CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
+   CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
+   CefRefPtr<CefRequestHandler> GetRequestHandler() override { return this; }
 
    // CefLifeSpanHandler methods:
-   virtual void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
-   virtual bool DoClose(CefRefPtr<CefBrowser> browser) override;
-   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
+   void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
+   bool DoClose(CefRefPtr<CefBrowser> browser) override;
+   void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 
    // CefLoadHandler methods:
    void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
@@ -108,7 +100,7 @@ public:
          CefRefPtr<CefBrowser> browser,
          CefRefPtr<CefFrame> frame,
          CefRefPtr<CefRequest> request,
-         CefRefPtr<CefResourceLoadCallBack> callback) override;
+         CefRefPtr<CefCallback> callback) override;
 
    CefRefPtr<CefResourceHandler> GetResourceHandler(
          CefRefPtr<CefBrowser> browser,

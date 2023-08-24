@@ -21,6 +21,7 @@
 #include "TObjArray.h"
 #include "THttpServer.h"
 #include "TEnv.h"
+#include "TError.h"
 #include "TROOT.h"
 #include "TBase64.h"
 #include "TBufferJSON.h"
@@ -39,10 +40,10 @@
 #include <spawn.h>
 #endif
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 using namespace std::string_literals;
 
-/** \class ROOT::Experimental::RWebDisplayHandle
+/** \class ROOT::RWebDisplayHandle
 \ingroup webdisplay
 
 Handle of created web-based display
@@ -93,7 +94,6 @@ std::unique_ptr<RWebDisplayHandle::Creator> &RWebDisplayHandle::FindCreator(cons
 }
 
 namespace ROOT {
-namespace Experimental {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Specialized handle to hold information about running browser process
@@ -138,7 +138,6 @@ public:
 
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,6 +395,8 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
    TestProg("/usr/bin/chromium");
    TestProg("/usr/bin/chromium-browser");
    TestProg("/usr/bin/chrome-browser");
+   TestProg("/usr/bin/google-chrome-stable");
+   TestProg("/usr/bin/google-chrome");
 #endif
 
 #ifdef _MSC_VER
@@ -484,6 +485,7 @@ RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 #endif
 #ifdef R__LINUX
    TestProg("/usr/bin/firefox");
+   TestProg("/usr/bin/firefox-bin");
 #endif
 
 #ifdef _MSC_VER
@@ -735,27 +737,20 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
 
    std::string _fname = fname;
    std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
-   auto EndsWith = [_fname](const std::string &suffix) {
+   auto EndsWith = [&_fname](const std::string &suffix) {
       return (_fname.length() > suffix.length()) ? (0 == _fname.compare(_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
    std::vector<std::string> fnames;
 
    if (!EndsWith(".pdf")) {
-      std::string fname2 = fname;
-      auto p = fname2.find("%");
-      if (p != std::string::npos) {
-         fname2.erase(p, 1); // remove percent
-      } else if (jsons.size() > 1) {
-         p = fname2.rfind(".");
-      }
+      // add missing percent
+      if (_fname.find("%") == std::string::npos)
+         _fname.insert(_fname.rfind("."), "%d");
 
       for (unsigned n = 0; n < jsons.size(); n++) {
-         auto suff = TString::Format("%03u", n);
-         std::string fname3 = fname2;
-         if (p != std::string::npos)
-            fname3.insert(p, suff.Data());
-         fnames.emplace_back(fname3);
+         auto expand_name = TString::Format(_fname.c_str(), (int) n);
+         fnames.emplace_back(expand_name.Data());
       }
    }
 
@@ -992,6 +987,7 @@ try_again:
             std::ofstream ofs(fn);
             if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
                ofs << dumpcont.substr(p1, p2-p1+6);
+               ::Info("ProduceImage", "SVG file %s size %d bytes has been created", fn.c_str(), (int) (p2-p1+6));
             } else {
                R__LOG_ERROR(WebGUILog()) << "Fail to extract SVG from HTML dump " << dump_name;
                ofs << "Failure!!!\n" << dumpcont;
@@ -1015,6 +1011,8 @@ try_again:
 
                std::ofstream ofs(fn, std::ios::binary);
                ofs.write(binary.Data(), binary.Length());
+
+               ::Info("ProduceImage", "Image file %s size %d bytes has been created", fn.c_str(), (int) binary.Length());
             } else {
                R__LOG_ERROR(WebGUILog()) << "Fail to extract image from dump HTML code " << dump_name;
 
@@ -1022,6 +1020,8 @@ try_again:
             }
          }
       }
+   } else if (EndsWith(".pdf")) {
+      ::Info("ProduceImage", "PDF file %s with %d pages has been created", fname.c_str(), (int) jsons.size());
    }
 
    if (fnames.size() == 1)

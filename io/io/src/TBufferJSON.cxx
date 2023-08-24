@@ -1196,7 +1196,7 @@ TJSONStackObj *TBufferJSON::JsonStartObjectWrite(const TClass *obj_class, TStrea
          AppendOutput(fTypeVersionTag.Data());
          AppendOutput("\"");
          AppendOutput(fSemicolon.Data());
-         AppendOutput(Form("%d", (int)(info ? info->GetClassVersion() : obj_class->GetClassVersion())));
+         AppendOutput(TString::Format("%d", (int)(info ? info->GetClassVersion() : obj_class->GetClassVersion())));
       }
    } else {
       stack->fMemberCnt = 0; // exclude typename
@@ -1367,9 +1367,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          Long64_t refid = GetObjectTag(obj);
          if (refid > 0) {
             // old-style refs, coded into string like "$ref12"
-            // AppendOutput(Form("\"$ref:%u\"", iter->second));
+            // AppendOutput(TString::Format("\"$ref:%u\"", iter->second));
             // new-style refs, coded into extra object {"$ref":12}, auto-detected by JSROOT 4.8 and higher
-            AppendOutput(Form("{\"$ref\":%u}", (unsigned)(refid - 1)));
+            AppendOutput(TString::Format("{\"$ref\":%u}", (unsigned)(refid - 1)));
             goto post_process;
          }
          MapObject(obj, cl, fJsonrCnt + 1); // +1 used

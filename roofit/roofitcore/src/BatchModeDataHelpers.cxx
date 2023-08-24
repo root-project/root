@@ -24,15 +24,22 @@
 
 namespace {
 
-std::map<RooFit::Detail::DataKey, RooSpan<const double>>
+// To avoid deleted move assignment.
+template <class T>
+void assignSpan(std::span<T> &to, std::span<T> const &from)
+{
+   to = from;
+}
+
+std::map<RooFit::Detail::DataKey, std::span<const double>>
 getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::string const &prefix,
                    std::stack<std::vector<double>> &buffers, bool skipZeroWeights)
 {
-   std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans; // output variable
+   std::map<RooFit::Detail::DataKey, std::span<const double>> dataSpans; // output variable
 
    auto &nameReg = RooNameReg::instance();
 
-   auto insert = [&](const char *key, RooSpan<const double> span) {
+   auto insert = [&](const char *key, std::span<const double> span) {
       const TNamed *namePtr = nameReg.constPtr((prefix + key).c_str());
       dataSpans[namePtr] = span;
    };
@@ -71,8 +78,8 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
          // later in the likelihood.
          buffer.push_back(1.0);
          bufferSumW2.push_back(1.0);
-         weight = RooSpan<const double>(buffer.data(), 1);
-         weightSumW2 = RooSpan<const double>(bufferSumW2.data(), 1);
+         assignSpan(weight, {buffer.data(), 1});
+         assignSpan(weightSumW2, {bufferSumW2.data(), 1});
          nNonZeroWeight = nEvents;
       } else {
          buffer.reserve(nEvents);
@@ -86,8 +93,8 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
                hasZeroWeight[i] = true;
             }
          }
-         weight = RooSpan<const double>(buffer.data(), nNonZeroWeight);
-         weightSumW2 = RooSpan<const double>(bufferSumW2.data(), nNonZeroWeight);
+         assignSpan(weight, {buffer.data(), nNonZeroWeight});
+         assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
       }
       using namespace ROOT::Experimental;
       insert(RooNLLVarNew::weightVarName, weight);
@@ -113,7 +120,7 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
    // the data map
    for (auto const &item : data.getBatches(0, nEvents)) {
 
-      RooSpan<const double> span{item.second};
+      std::span<const double> span{item.second};
 
       buffers.emplace();
       auto &buffer = buffers.top();
@@ -131,7 +138,7 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
    // the data map
    for (auto const &item : data.getCategoryBatches(0, nEvents)) {
 
-      RooSpan<const RooAbsCategory::value_type> intSpan{item.second};
+      std::span<const RooAbsCategory::value_type> intSpan{item.second};
 
       buffers.emplace();
       auto &buffer = buffers.top();
@@ -182,7 +189,7 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
                ++j;
             }
          }
-         dataSpans[item.first] = RooSpan<const double>{buffer, nEvents};
+         assignSpan(dataSpans[item.first], {buffer, nEvents});
       }
    }
 
@@ -217,7 +224,7 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
 ///            be used as memory for the data if the memory in the dataset
 ///            object can't be used directly (e.g. because you used the range
 ///            selection or the splitting by categories).
-std::map<RooFit::Detail::DataKey, RooSpan<const double>>
+std::map<RooFit::Detail::DataKey, std::span<const double>>
 RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string const &rangeName,
                                            RooSimultaneous const *simPdf, bool skipZeroWeights,
                                            bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers)
@@ -246,7 +253,7 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
       isBinnedL.emplace_back(false);
    }
 
-   std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans; // output variable
+   std::map<RooFit::Detail::DataKey, std::span<const double>> dataSpans; // output variable
 
    for (std::size_t iData = 0; iData < datas.size(); ++iData) {
       auto const &toAdd = datas[iData];
@@ -264,7 +271,7 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
       buffer.reserve(data.getGlobalObservables()->size());
       for (auto *arg : static_range_cast<RooRealVar const *>(*data.getGlobalObservables())) {
          buffer.push_back(arg->getVal());
-         dataSpans[arg] = RooSpan<const double>{&buffer.back(), 1};
+         assignSpan(dataSpans[arg], {&buffer.back(), 1});
       }
    }
 
@@ -279,9 +286,9 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
 ///
 /// \return A `std::map` with output sizes for each node in the computation graph.
 /// \param[in] topNode The top node of the computation graph.
-/// \param[in] dataSpans The input data spans.
+/// \param[in] inputSizeFunc A function to get the input sizes.
 std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::determineOutputSizes(
-   RooAbsArg const &topNode, std::map<RooFit::Detail::DataKey, RooSpan<const double>> const &dataSpans)
+   RooAbsArg const &topNode, std::function<std::size_t(RooFit::Detail::DataKey)> const &inputSizeFunc)
 {
    std::map<RooFit::Detail::DataKey, std::size_t> output;
 
@@ -289,9 +296,9 @@ std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::det
    RooHelpers::getSortedComputationGraph(topNode, serverSet);
 
    for (RooAbsArg *arg : serverSet) {
-      auto found = dataSpans.find(arg->namePtr());
-      if (found != dataSpans.end()) {
-         output[arg] = found->second.size();
+      std::size_t inputSize = inputSizeFunc(arg);
+      if (inputSize > 0) {
+         output[arg] = inputSize;
       }
    }
 

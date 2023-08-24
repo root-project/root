@@ -242,7 +242,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/RooRealL.h
     RooFit/TestStatistics/RooUnbinnedL.h
     RooFit/TestStatistics/buildLikelihood.h
-    RunContext.h
   SOURCES
     src/ConstraintHelpers.cxx
     src/BatchModeHelpers.cxx
@@ -374,6 +373,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMultiVarGaussian.cxx
     src/RooNameReg.cxx
     src/RooFitDriver.cxx
+    src/RooFitDriverWrapper.cxx
     src/RooNLLVar.cxx
     src/RooNLLVarNew.cxx
     src/RooNormSetCache.cxx
@@ -415,7 +415,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRealSumPdf.cxx
     src/RooRealVar.cxx
     src/RooRecursiveFraction.cxx
-    src/RooRefCountList.cxx
     src/RooSTLRefCountList.cxx
     src/RooResolutionModel.cxx
     src/RooSecondMoment.cxx
@@ -449,7 +448,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooBinSamplingPdf.cxx
     src/RooBinWidthFunction.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
-    src/RunContext.cxx
     src/RooFit/Detail/CodeSquashContext.cxx
     src/RooFit/Detail/DataMap.cxx
     src/TestStatistics/ConstantTermsOptimizer.cxx

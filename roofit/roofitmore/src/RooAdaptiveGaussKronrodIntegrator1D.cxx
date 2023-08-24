@@ -130,6 +130,8 @@ gsl_integration_qagiu (gsl_function * f,
 
 //-------------------------------------------------------------------
 
+/// \cond ROOFIT_INTERNAL
+
 // register integrator class
 // create a derived class in order to call the protected method of the
 // RoodaptiveGaussKronrodIntegrator1D
@@ -146,6 +148,8 @@ struct Roo_internal_AGKInteg1D : public RooAdaptiveGaussKronrodIntegrator1D {
 struct Roo_reg_AGKInteg1D {
    Roo_reg_AGKInteg1D() { Roo_internal_AGKInteg1D::registerIntegrator(); }
 };
+
+/// \endcond
 
 static Roo_reg_AGKInteg1D instance;
 } // namespace RooFit_internal

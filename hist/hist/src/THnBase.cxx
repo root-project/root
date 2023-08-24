@@ -1186,7 +1186,7 @@ THnBase* THnBase::RebinBase(const Int_t* group) const
    Int_t ndim = GetNdimensions();
    TString name(GetName());
    for (Int_t d = 0; d < ndim; ++d)
-      name += Form("_%d", group[d]);
+      name += TString::Format("_%d", group[d]);
 
 
    TString title(GetTitle());
@@ -1194,10 +1194,10 @@ THnBase* THnBase::RebinBase(const Int_t* group) const
    if (posInsert == kNPOS) {
       title += " rebin ";
       for (Int_t d = 0; d < ndim; ++d)
-         title += Form("{%d}", group[d]);
+         title += TString::Format("{%d}", group[d]);
    } else {
       for (Int_t d = ndim - 1; d >= 0; --d)
-         title.Insert(posInsert, Form("{%d}", group[d]));
+         title.Insert(posInsert, TString::Format("{%d}", group[d]));
       title.Insert(posInsert, " rebin ");
    }
 

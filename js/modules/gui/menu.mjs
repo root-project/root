@@ -755,7 +755,6 @@ class JSRootMenu {
       addStyleIntField('Log X', 'fOptLogx', ['off', 'on', 'log 2']);
       addStyleIntField('Log Y', 'fOptLogy', ['off', 'on', 'log 2']);
       addStyleIntField('Log Z', 'fOptLogz', ['off', 'on', 'log 2']);
-      this.addchk(gStyle.fOptTitle == 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
       this.add('endsub:');
 
       this.add('sub:Frame');
@@ -809,6 +808,8 @@ class JSRootMenu {
       this.add('endsub:');
 
       this.add('sub:Histogram');
+      this.addchk(gStyle.fOptTitle == 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
+      this.addchk(gStyle.fOrthoCamera, 'Orthographic camera', flag => { gStyle.fOrthoCamera = flag; });
       this.addchk(gStyle.fHistMinimumZero, 'Base0', flag => { gStyle.fHistMinimumZero = flag; }, 'when true, BAR and LEGO drawing using base = 0');
       this.add('Text format', () => this.input('Paint text format', gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
       this.add('Time offset', () => this.input('Time offset in seconds, default is 788918400 for 1/1/1995', gStyle.fTimeOffset, 'int').then(ofset => { gStyle.fTimeOffset = ofset; }));

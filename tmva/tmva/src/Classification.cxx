@@ -129,9 +129,9 @@ void TMVA::Experimental::ClassificationResult::Show()
    fLogger << kINFO << "DataSet              MVA                            :" << Endl;
    fLogger << kINFO << "Name:                Method/Title:    ROC-integ     :" << Endl;
    fLogger << kINFO << hLine << Endl;
-   fLogger << kINFO << Form("%-20s %-15s  %#1.3f         :", fDataLoaderName.Data(),
-                            Form("%s/%s", fMethod.GetValue<TString>("MethodName").Data(),
-                                 fMethod.GetValue<TString>("MethodTitle").Data()),
+   fLogger << kINFO << TString::Format("%-20s %-15s  %#1.3f         :", fDataLoaderName.Data(),
+                                 TString::Format("%s/%s", fMethod.GetValue<TString>("MethodName").Data(),
+                                 fMethod.GetValue<TString>("MethodTitle").Data()).Data(),
                             GetROCIntegral())
            << Endl;
    fLogger << kINFO << hLine << Endl;
@@ -149,8 +149,8 @@ void TMVA::Experimental::ClassificationResult::Show()
 TGraph *TMVA::Experimental::ClassificationResult::GetROCGraph(UInt_t iClass, TMVA::Types::ETreeType type)
 {
    TGraph *roc = GetROC(iClass, type)->GetROCCurve();
-   roc->SetName(Form("%s/%s", GetMethodName().Data(), GetMethodTitle().Data()));
-   roc->SetTitle(Form("%s/%s", GetMethodName().Data(), GetMethodTitle().Data()));
+   roc->SetName(TString::Format("%s/%s", GetMethodName().Data(), GetMethodTitle().Data()).Data());
+   roc->SetTitle(TString::Format("%s/%s", GetMethodName().Data(), GetMethodTitle().Data()).Data());
    roc->GetXaxis()->SetTitle(" Signal Efficiency ");
    roc->GetYaxis()->SetTitle(" Background Rejection ");
    return roc;
@@ -271,8 +271,8 @@ void TMVA::Experimental::Classification::Evaluate()
          auto methodtitle = fMethods[workerID].GetValue<TString>("MethodTitle");
          auto meth = GetMethod(methodname, methodtitle);
          if (!IsSilentFile()) {
-            auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
-            auto f = new TFile(fname, "RECREATE");
+            auto fname = TString::Format(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+            auto f = new TFile(fname.Data(), "RECREATE");
             f->mkdir(fDataLoader->GetName());
             SetFile(f);
             meth->SetFile(f);
@@ -302,15 +302,16 @@ void TMVA::Experimental::Classification::Evaluate()
    Log() << kINFO << hLine << Endl;
    for (auto &r : fResults) {
 
-      Log() << kINFO << Form("%-20s %-15s  %#1.3f         :", r.GetDataLoaderName().Data(),
-                             Form("%s/%s", r.GetMethodName().Data(), r.GetMethodTitle().Data()), r.GetROCIntegral())
+      Log() << kINFO << TString::Format("%-20s %-15s  %#1.3f         :", r.GetDataLoaderName().Data(),
+                                TString::Format("%s/%s", r.GetMethodName().Data(), r.GetMethodTitle().Data()).Data(),
+                                r.GetROCIntegral())
             << Endl;
    }
    Log() << kINFO << hLine << Endl;
 
    Log() << kINFO << "-----------------------------------------------------" << Endl;
    Log() << kHEADER << "Evaluation done." << Endl << Endl;
-   Log() << kINFO << Form("Jobs = %d Real Time = %lf ", fJobs, fTimer.RealTime()) << Endl;
+   Log() << kINFO << TString::Format("Jobs = %d Real Time = %lf ", fJobs, fTimer.RealTime()) << Endl;
    Log() << kINFO << "-----------------------------------------------------" << Endl;
    Log() << kINFO << "Evaluation done." << Endl;
    TMVA::gConfig().SetSilent(kTRUE);
@@ -338,10 +339,10 @@ void TMVA::Experimental::Classification::TrainMethod(TString methodname, TString
    auto method = GetMethod(methodname, methodtitle);
    if (!method) {
       Log() << kFATAL
-            << Form("Trying to train method %s %s that maybe is not booked.", methodname.Data(), methodtitle.Data())
+            << TString::Format("Trying to train method %s %s that maybe is not booked.", methodname.Data(), methodtitle.Data())
             << Endl;
    }
-   Log() << kHEADER << gTools().Color("bold") << Form("Training method %s %s", methodname.Data(), methodtitle.Data())
+   Log() << kHEADER << gTools().Color("bold") << TString::Format("Training method %s %s", methodname.Data(), methodtitle.Data())
          << gTools().Color("reset") << Endl;
 
    Event::SetIsTraining(kTRUE);
@@ -527,7 +528,7 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
    auto method = GetMethod(methodname, methodtitle);
    if (!method) {
       Log() << kFATAL
-            << Form("Trying to train method %s %s that maybe is not booked.", methodname.Data(), methodtitle.Data())
+            << TString::Format("Trying to train method %s %s that maybe is not booked.", methodname.Data(), methodtitle.Data())
             << Endl;
    }
 
@@ -743,54 +744,54 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
 
             if (nmeth > 1) {
                Log() << kINFO << Endl;
-               Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+               Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                      << "Inter-MVA correlation matrix (signal):" << Endl;
                gTools().FormattedOutput(mvaMatS, *theVars, Log());
                Log() << kINFO << Endl;
 
-               Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+               Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                      << "Inter-MVA correlation matrix (background):" << Endl;
                gTools().FormattedOutput(mvaMatB, *theVars, Log());
                Log() << kINFO << Endl;
             }
 
-            Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+            Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                   << "Correlations between input variables and MVA response (signal):" << Endl;
             gTools().FormattedOutput(varmvaMatS, theInputVars, *theVars, Log());
             Log() << kINFO << Endl;
 
-            Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+            Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                   << "Correlations between input variables and MVA response (background):" << Endl;
             gTools().FormattedOutput(varmvaMatB, theInputVars, *theVars, Log());
             Log() << kINFO << Endl;
          } else
-            Log() << kWARNING << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+            Log() << kWARNING << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                   << "<TestAllMethods> cannot compute correlation matrices" << Endl;
 
          //              print overlap matrices
-         Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+         Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                << "The following \"overlap\" matrices contain the fraction of events for which " << Endl;
-         Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+         Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                << "the MVAs 'i' and 'j' have returned conform answers about \"signal-likeness\"" << Endl;
-         Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+         Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                << "An event is signal-like, if its MVA output exceeds the following value:" << Endl;
          gTools().FormattedOutput(rvec, *theVars, "Method", "Cut value", Log());
-         Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+         Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                << "which correspond to the working point: eff(signal) = 1 - eff(background)" << Endl;
 
          //              give notice that cut method has been excluded from this test
          if (nmeth != 1)
-            Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+            Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                   << "Note: no correlations and overlap with cut method are provided at present" << Endl;
 
          if (nmeth > 1) {
             Log() << kINFO << Endl;
-            Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+            Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                   << "Inter-MVA overlap matrix (signal):" << Endl;
             gTools().FormattedOutput(*overlapS, *theVars, Log());
             Log() << kINFO << Endl;
 
-            Log() << kINFO << Form("Dataset[%s] : ", method->fDataSetInfo.GetName())
+            Log() << kINFO << TString::Format("Dataset[%s] : ", method->fDataSetInfo.GetName())
                   << "Inter-MVA overlap matrix (background):" << Endl;
             gTools().FormattedOutput(*overlapB, *theVars, Log());
          }
@@ -853,11 +854,11 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
                // cannot compute separation/significance -> no MVA (usually for Cuts)
                fResult.fROCIntegral = effArea[k][i];
                Log() << kINFO
-                     << Form("%-13s %-15s: %#1.3f", fDataLoader->GetName(), methodName.Data(), fResult.fROCIntegral)
+                     << TString::Format("%-13s %-15s: %#1.3f", fDataLoader->GetName(), methodName.Data(), fResult.fROCIntegral)
                      << Endl;
             } else {
                fResult.fROCIntegral = rocIntegral;
-               Log() << kINFO << Form("%-13s %-15s: %#1.3f", datasetName.Data(), methodName.Data(), rocIntegral)
+               Log() << kINFO << TString::Format("%-13s %-15s: %#1.3f", datasetName.Data(), methodName.Data(), rocIntegral)
                      << Endl;
             }
          }
@@ -881,8 +882,8 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
             if (k == 1)
                mname[k][i].ReplaceAll("Variable_", "");
 
-            Log() << kINFO << Form("%-20s %-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
-                                   method->fDataSetInfo.GetName(), (const char *)mname[k][i], eff01[k][i],
+            Log() << kINFO << TString::Format("%-20s %-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
+                                   method->fDataSetInfo.GetName(), mname[k][i].Data(), eff01[k][i],
                                    trainEff01[k][i], eff10[k][i], trainEff10[k][i], eff30[k][i], trainEff30[k][i])
                   << Endl;
          }
@@ -997,7 +998,7 @@ TMVA::Experimental::Classification::GetROC(TMVA::MethodBase *method, UInt_t iCla
 
    UInt_t nClasses = method->DataInfo().GetNClasses();
    if (this->fAnalysisType == Types::kMulticlass && iClass >= nClasses) {
-      Log() << kERROR << Form("Given class number (iClass = %i) does not exist. There are %i classes in dataset.",
+      Log() << kERROR << TString::Format("Given class number (iClass = %i) does not exist. There are %i classes in dataset.",
                               iClass, nClasses)
             << Endl;
       return nullptr;
@@ -1075,7 +1076,7 @@ Double_t TMVA::Experimental::Classification::GetROCIntegral(TString methodname, 
    TMVA::ROCCurve *rocCurve = GetROC(methodname, methodtitle, iClass);
    if (!rocCurve) {
       Log() << kFATAL
-            << Form("ROCCurve object was not created in MethodName = %s MethodTitle = %s not found with Dataset = %s ",
+            << TString::Format("ROCCurve object was not created in MethodName = %s MethodTitle = %s not found with Dataset = %s ",
                     methodname.Data(), methodtitle.Data(), fDataLoader->GetName())
             << Endl;
       return 0;
@@ -1130,20 +1131,20 @@ void TMVA::Experimental::Classification::MergeFiles()
 {
 
    auto dsdir = fFile->mkdir(fDataLoader->GetName()); // dataset dir
-   TTree *TrainTree = 0;
-   TTree *TestTree = 0;
-   TFile *ifile = 0;
-   TFile *ofile = 0;
+   TTree *TrainTree = nullptr;
+   TTree *TestTree = nullptr;
+   TFile *ifile = nullptr;
+   TFile *ofile = nullptr;
    for (UInt_t i = 0; i < fMethods.size(); i++) {
       auto methodname = fMethods[i].GetValue<TString>("MethodName");
       auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
-      auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
-      TDirectoryFile *ds = 0;
+      auto fname = TString::Format(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+      TDirectoryFile *ds = nullptr;
       if (i == 0) {
-         ifile = new TFile(fname);
+         ifile = new TFile(fname.Data());
          ds = (TDirectoryFile *)ifile->Get(fDataLoader->GetName());
       } else {
-         ofile = new TFile(fname);
+         ofile = new TFile(fname.Data());
          ds = (TDirectoryFile *)ofile->Get(fDataLoader->GetName());
       }
       auto tmptrain = (TTree *)ds->Get("TrainTree");
@@ -1151,10 +1152,10 @@ void TMVA::Experimental::Classification::MergeFiles()
       fFile->cd();
       fFile->cd(fDataLoader->GetName());
 
-      auto methdirname = Form("Method_%s", methodtitle.Data());
-      auto methdir = dsdir->mkdir(methdirname, methdirname);
+      auto methdirname = TString::Format("Method_%s", methodtitle.Data());
+      auto methdir = dsdir->mkdir(methdirname.Data(), methdirname.Data());
       auto methdirbase = methdir->mkdir(methodtitle.Data(), methodtitle.Data());
-      auto mfdir = (TDirectoryFile *)ds->Get(methdirname);
+      auto mfdir = (TDirectoryFile *)ds->Get(methdirname.Data());
       auto mfdirbase = (TDirectoryFile *)mfdir->Get(methodtitle.Data());
 
       CopyFrom(mfdirbase, (TFile *)methdirbase);
@@ -1188,7 +1189,7 @@ void TMVA::Experimental::Classification::MergeFiles()
    for (UInt_t i = 0; i < fMethods.size(); i++) {
       auto methodname = fMethods[i].GetValue<TString>("MethodName");
       auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
-      auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
-      gSystem->Unlink(fname);
+      auto fname = TString::Format(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+      gSystem->Unlink(fname.Data());
    }
 }

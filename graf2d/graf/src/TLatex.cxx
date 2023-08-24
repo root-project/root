@@ -1993,8 +1993,8 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
       angle = Double_t(i)*dphi;
       dx    = r*TMath::Cos(angle) +x1 -xOrigin;
       dy    = r*TMath::Sin(angle) +y1 -yOrigin;
-      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+ dy*sinang +xOrigin));
-      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+ dy*cosang +yOrigin));
+      x[i]  = gPad->AbsPixeltoX(TMath::Nint( dx*cosang+ dy*sinang +xOrigin));
+      y[i]  = gPad->AbsPixeltoY(TMath::Nint(-dx*sinang+ dy*cosang +yOrigin));
    }
    gPad->PaintPolyLine(np+1,x,y);
 }

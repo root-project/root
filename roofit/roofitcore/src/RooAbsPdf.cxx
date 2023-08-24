@@ -173,9 +173,9 @@ called for each data event.
 #include "RooFit/BatchModeHelpers.h"
 #include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/TestStatistics/RooRealL.h"
-#include "RunContext.h"
 #include "ConstraintHelpers.h"
 #include "RooFitDriver.h"
+#include "RooFitDriverWrapper.h"
 #include "RooSimultaneous.h"
 #include "RooFuncWrapper.h"
 
@@ -515,7 +515,6 @@ double RooAbsPdf::getNorm(const RooArgSet* nset) const
 
 const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* iset, const TNamed* rangeName) const
 {
-
   // Check normalization is already stored
   CacheElem* cache = (CacheElem*) _normMgr.getObj(nset,iset,0,rangeName) ;
   if (cache) {
@@ -525,6 +524,11 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   // If not create it now
   RooArgSet depList;
   getObservables(iset, depList);
+
+  // Normalization is always over all pdf components. Overriding the global
+  // component selection temporarily makes all RooRealIntegrals created during
+  // that time always include all components.
+  GlobalSelectComponentRAII globalSelComp(true);
   RooAbsReal* norm = std::unique_ptr<RooAbsReal>{createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName))}.release();
 
   // Store it in the cache
@@ -601,7 +605,15 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
 
 //     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
-    RooAbsReal* normInt = std::unique_ptr<RooAbsReal>{createIntegral(depList,*getIntegratorConfig(),nr)}.release();
+    RooAbsReal* normInt;
+    {
+      // Normalization is always over all pdf components. Overriding the global
+      // component selection temporarily makes all RooRealIntegrals created during
+      // that time always include all components.
+      GlobalSelectComponentRAII selCompRAII(true);
+      normInt = std::unique_ptr<RooAbsReal>{createIntegral(depList,*getIntegratorConfig(),nr)}.release();
+    }
+    static_cast<RooRealIntegral*>(normInt)->setAllowComponentSelection(false);
     normInt->getVal() ;
 //     cout << "resulting normInt = " << normInt->GetName() << endl ;
 
@@ -713,7 +725,7 @@ bool checkInfNaNNeg(const T& inputs) {
 /// \param[in,out] outputs Array to be scanned & fixed.
 /// \param[in] begin Begin of event range. Only needed to print the correct event number
 /// where the error occurred.
-void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const {
+void RooAbsPdf::logBatchComputationErrors(std::span<const double>& outputs, std::size_t begin) const {
   for (unsigned int i=0; i<outputs.size(); ++i) {
     const double value = outputs[i];
     if (TMath::IsNaN(outputs[i])) {
@@ -730,7 +742,7 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 }
 
 
-void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * output) const {
+void RooAbsPdf::getLogProbabilities(std::span<const double> pdfValues, double * output) const {
   for (std::size_t i = 0; i < pdfValues.size(); ++i) {
      output[i] = getLog(pdfValues[i], this);
   }
@@ -1166,7 +1178,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
                                                      dynamic_cast<RooSimultaneous const *>(pdfClone.get()));
     } else {
       auto driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*nll, batchMode);
-      nllWrapper = std::make_unique<ROOT::Experimental::RooAbsRealWrapper>(
+      nllWrapper = std::make_unique<RooFitDriverWrapper>(*nll,
          std::move(driver), rangeName ? rangeName : "", dynamic_cast<RooSimultaneous *>(pdfClone.get()), takeGlobalObservablesFromData);
       nllWrapper->setData(data, false);
     }

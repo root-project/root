@@ -191,7 +191,7 @@ public:
    /// Commits pending elements in a staging area (see Allocate() for more information).
    virtual void      Commit(void*) = 0;
 
-   /// Insert elements into the proxied containe.  `data` is a C-style array of the value type of the given `size`.
+   /// Insert elements into the proxied container.  `data` is a C-style array of the value type of the given `size`.
    /// For associative containers, e.g. `std::map`, the data type should be `std::pair<Key_t, Value_t>`.
    virtual void Insert(const void *data, void *container, size_t size) = 0;
 
@@ -209,7 +209,7 @@ public:
    /// `*begin_arena` and `*end_arena` should contain the location of a memory arena of size `fgIteratorArenaSize`.
    /// If iterator-specific information is of that size or less, the iterators will be constructed in place in the given
    /// locations.  Otherwise, iterators will be allocated via `new` and their address returned by modifying the value
-   /// of `*begin_arena and `*end_arena`.
+   /// of `*begin_arena` and `*end_arena`.
    /// As a special case, given that iterators for array-backed containers are just pointers, the required information
    /// will be directly stored in `*(begin|end)_arena`.
    typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy *proxy);
@@ -223,7 +223,7 @@ public:
    /// `fgIteratorArenaSize`.
    /// If iterator-specific information is of that size or less, the iterators will be constructed in place in the given
    /// locations.  Otherwise, iterators will be allocated via `new` and their address returned by modifying the value
-   /// of `*begin_arena and `*end_arena`.  The actual address of the iterator is returned in any case.
+   /// of `*begin_arena` and `*end_arena`.  The actual address of the iterator is returned in any case.
    typedef void* (*CopyIterator_t)(void *dest, const void *source);
 
    /// Return a pointer to a function that can copy an iterator (see CopyIterator_t).  If `read == kTRUE`, data is to be

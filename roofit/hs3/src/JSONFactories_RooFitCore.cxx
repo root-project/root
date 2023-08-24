@@ -26,7 +26,6 @@
 #include <RooTFnBinding.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
-#include <RooProdPdf.h>
 #include <RooPolynomial.h>
 #include <RooRealSumFunc.h>
 #include <RooRealSumPdf.h>
@@ -343,7 +342,8 @@ public:
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
-      std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
+      std::unique_ptr<RooDataHist> dataHist =
+         RooJSONFactoryWSTool::readBinnedData(p["data"], name, RooJSONFactoryWSTool::readAxes(p["data"]));
       tool->wsEmplace<RooHistFunc>(name, *dataHist->get(), *dataHist);
       return true;
    }
@@ -370,7 +370,8 @@ public:
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
-      std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
+      std::unique_ptr<RooDataHist> dataHist =
+         RooJSONFactoryWSTool::readBinnedData(p["data"], name, RooJSONFactoryWSTool::readAxes(p["data"]));
       tool->wsEmplace<RooHistPdf>(name, *dataHist->get(), *dataHist);
       return true;
    }

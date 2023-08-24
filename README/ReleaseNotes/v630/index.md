@@ -42,6 +42,7 @@ The following people have contributed to this new version:
 - The `RooCatType` class was deprecated in ROOT 6.22 and its original `RooCatType.h` header is now removed. If you still need access to this class, please include `RooFitLegacy/RooCatTypeLegacy.h`.
 - The `RooAbsString` that was only an alias for `RooStringVar` got removed.
 - The `RooDataWeightedAverage` is now deprecated and will be removed in 6.32. It was only supposed to be an implementation detail of RooFits plotting that is now not necessary anymore.
+- The `RooSpan` class was removed and its place in the implementation details of RooFit is now taken by `std::span`.
 
 ## Core Libraries
 
@@ -246,6 +247,14 @@ Some of these classes are now removed from the public interface:
    `RooRealIntegral` class.
 
 ## 2D Graphics Libraries
+
+- Introduce `TAxis::ChangeLabelByValue` to set custom label defined by axis value. It works also
+  when axis zooming changes and position and index of correspondent axis label changes as well.
+  `TAxis::ChangeLabel` method to change axis label by index works as before.
+
+- Introduce `TCanvas::SaveAll` method. Allows to store several pads at once into different image file formats.
+  File name can include printf qualifier to code pad number. Also allows to store all pads in single PDF
+  or single ROOT file. Significantly improves performance when creating many image files using web graphics.
 
 
 ## 3D Graphics Libraries

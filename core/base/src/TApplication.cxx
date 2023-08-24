@@ -1551,7 +1551,7 @@ Longptr_t TApplication::ProcessRemote(const char *line, Int_t *)
    }
    // Attach or start a remote application
    if (user.Length() > 0)
-      hostdir.Insert(0,Form("%s@", user.Data()));
+      hostdir.Insert(0, TString::Format("%s@", user.Data()));
    const char *sc = (script.Length() > 0) ? script.Data() : nullptr;
    TApplication *ap = TApplication::Open(hostdir, dbg, sc);
    if (ap) {

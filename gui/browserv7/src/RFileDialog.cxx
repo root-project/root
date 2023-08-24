@@ -27,10 +27,10 @@
 #include <thread>
 #include <fstream>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 using namespace std::string_literals;
 
-/** \class ROOT::Experimental::RFileDialog
+/** \class ROOT::RFileDialog
 \ingroup rbrowser
 
 web-based FileDialog.
@@ -502,7 +502,6 @@ void RFileDialog::SetStartFunc(bool on)
 /////////////////////////////////////////////////////////////////////////////////////
 
 namespace ROOT {
-namespace Experimental {
 namespace Details {
 
 class RWebWindowPlugin {
@@ -512,7 +511,6 @@ public:
    ~RWebWindowPlugin() { RFileDialog::SetStartFunc(false); }
 } sRWebWindowPlugin;
 
-}
 }
 }
 

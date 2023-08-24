@@ -48,9 +48,9 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    RooArgSet paramSet;
    obj.getParameters(data ? data->get() : nullptr, paramSet);
    RooArgSet floatingParamSet;
-   for (RooAbsArg * param : paramSet) {
-      if(!param->isConstant()) {
-        floatingParamSet.add(*param);
+   for (RooAbsArg *param : paramSet) {
+      if (!param->isConstant()) {
+         floatingParamSet.add(*param);
       }
    }
 
@@ -78,7 +78,7 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
 {
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
-   std::map<RooFit::Detail::DataKey, RooSpan<const double>> spans;
+   std::map<RooFit::Detail::DataKey, std::span<const double>> spans;
 
    if (data) {
       spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);
@@ -111,7 +111,11 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
    _gradientVarBuffer.resize(_params.size());
 
    if (head) {
-      _nodeOutputSizes = RooFit::BatchModeDataHelpers::determineOutputSizes(*head, spans);
+      _nodeOutputSizes =
+         RooFit::BatchModeDataHelpers::determineOutputSizes(*head, [&spans](RooFit::Detail::DataKey key) {
+            auto found = spans.find(key);
+            return found != spans.end() ? found->second.size() : 0;
+         });
    }
 }
 

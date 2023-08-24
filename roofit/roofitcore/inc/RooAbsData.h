@@ -20,10 +20,11 @@
 #include "RooAbsCategory.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
-#include "RooSpan.h"
 #include "RooNameReg.h"
 #include "RooFit/UniqueId.h"
 #include "RooFit/Detail/DataMap.h"
+
+#include <ROOT/RSpan.hxx>
 
 #include <TMatrixDSym.h>
 #include <TNamed.h>
@@ -127,8 +128,8 @@ public:
 
   virtual const RooArgSet* get(Int_t index) const ;
 
-  using RealSpans = std::map<RooFit::Detail::DataKey, RooSpan<const double>>;
-  using CategorySpans = std::map<RooFit::Detail::DataKey, RooSpan<const RooAbsCategory::value_type>>;
+  using RealSpans = std::map<RooFit::Detail::DataKey, std::span<const double>>;
+  using CategorySpans = std::map<RooFit::Detail::DataKey, std::span<const RooAbsCategory::value_type>>;
 
   RealSpans getBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
   CategorySpans getCategoryBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
@@ -137,7 +138,7 @@ public:
   /// Return event weights of all events in range [first, first+len).
   /// If no contiguous structure of weights is stored, an empty batch can be returned.
   /// This indicates that the weight is constant. Use weight() to retrieve it.
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const = 0;
+  virtual std::span<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const = 0;
 
   /// Return number of entries in dataset, i.e., count unweighted entries.
   virtual Int_t numEntries() const ;
@@ -356,6 +357,8 @@ protected:
   mutable const TNamed * _namePtr = nullptr; ///<! De-duplicated name pointer. This will be equal for all objects with the same name.
 
 private:
+  void copyImpl(const RooAbsData& other, const char* newname);
+
   void copyGlobalObservables(const RooAbsData& other);
 
   const RooFit::UniqueId<RooAbsData> _uniqueId; ///<!

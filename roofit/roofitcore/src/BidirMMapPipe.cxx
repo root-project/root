@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /** @file BidirMMapPipe.cxx
  *
  * implementation of BidirMMapPipe, a class which forks off a child process
@@ -6,6 +8,7 @@
  * @author Manuel Schiller <manuel.schiller@nikhef.nl>
  * @date 2013-07-07
  */
+
 #ifndef _WIN32
 
 #include "BidirMMapPipe.h"
@@ -1998,3 +2001,5 @@ childcloses:
 #endif // _WIN32
 
 // vim: ft=cpp:sw=4:tw=78:et
+
+/// \endcond

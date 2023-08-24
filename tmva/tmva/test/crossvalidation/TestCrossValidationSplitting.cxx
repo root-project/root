@@ -300,7 +300,7 @@ TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator)
    d->AddVariable("x", 'D');
    d->AddSpectator("id", "id", "");
    d->PrepareTrainingAndTestTree(
-      "", Form("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
+      "", TString::Format("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
 
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();
@@ -338,7 +338,7 @@ TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator2)
    d->AddVariable("x", 'D');
    d->AddSpectator("id", "id", "");
    d->PrepareTrainingAndTestTree(
-      "", Form("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
+      "", TString::Format("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
 
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();
@@ -374,7 +374,7 @@ TEST(CrossValidationSplitting, TrainingSetSplitRandomStratified)
    d->AddVariable("x", 'D');
    d->AddSpectator("id", "id", "");
    d->PrepareTrainingAndTestTree(
-      "", Form("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
+      "", TString::Format("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
 
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();

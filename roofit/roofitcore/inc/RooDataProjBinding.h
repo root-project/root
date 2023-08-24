@@ -29,8 +29,6 @@ public:
 
   double operator()(const double xvector[]) const override;
 
-  RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const override;
-
 protected:
 
   mutable bool _first   ;  ///< Bit indicating if operator() has been called yet
@@ -40,7 +38,6 @@ protected:
 
   RooSuperCategory* _superCat ;  ///< Supercategory constructed from _data's category variables
   Roo1DTable* _catTable ;        ///< Supercategory table generated from _data
-  mutable std::unique_ptr<std::vector<double>> _batchBuffer; ///<! Storage for handing out spans.
 
   ClassDefOverride(RooDataProjBinding,0) // RealFunc/Dataset binding for data projection of a real function
 };

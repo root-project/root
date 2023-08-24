@@ -74,9 +74,9 @@
 #include "RooVectorDataStore.h"
 #include "RooCachedReal.h"
 #include "RooHelpers.h"
-#include "RunContext.h"
 #include "TreeReadBuffer.h"
 #include "ValueChecking.h"
+#include "RooFit/BatchModeDataHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "Compression.h"
@@ -118,7 +118,13 @@ public:
       _arg = RooFit::Detail::compileForNormSet(arg, *data.get());
       _arg->recursiveRedirectServers(RooArgList{var});
       _driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*_arg, RooFit::BatchModeOption::Cpu);
-      _driver->setData(data, "");
+      std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+      auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
+                                                                   /*takeGlobalObservablesFromData=*/true,
+                                                                   _vectorBuffers);
+      for (auto const& item : dataSpans) {
+         _driver->setInput(item.first->GetName(), item.second, false);
+      }
    }
 
    double operator()(const double xvector[]) const override
@@ -127,7 +133,7 @@ public:
       _var.setVal(xvector[0]);
 
       double out = 0.0;
-      auto pdfValues = _driver->getValues();
+      std::span<const double> pdfValues = _driver->run();
       if (_dataWeights.empty()) {
          out = std::accumulate(pdfValues.begin(), pdfValues.end(), 0.0) / pdfValues.size();
       } else {
@@ -149,9 +155,10 @@ public:
 private:
    RooAbsRealLValue &_var;
    std::unique_ptr<RooAbsReal> _arg;
-   RooSpan<const double> _dataWeights;
+   std::span<const double> _dataWeights;
    double _scaleFactor;
    std::unique_ptr<ROOT::Experimental::RooFitDriver> _driver;
+   std::stack<std::vector<double>> _vectorBuffers;
 };
 
 } // namespace
@@ -255,8 +262,8 @@ bool RooAbsReal::isIdentical(const RooAbsArg& other, bool assumeSameType) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return this variable's title std::string. If appendUnit is true and
-/// this variable has units, also append a std::string " (<unit>)".
+/// Return this variable's title string. If appendUnit is true and
+/// this variable has units, also append a string " (<unit>)".
 
 TString RooAbsReal::getTitle(bool appendUnit) const
 {
@@ -292,51 +299,6 @@ double RooAbsReal::getValV(const RooArgSet* nset) const
   return hideOffset() ? _value + offset() : _value;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute batch of values for input data stored in `evalData`.
-///
-/// This is a faster, multi-value version of getVal(). It calls computeBatch() to trigger computations, and
-/// finalises those (e.g. error checking or automatic normalisation) before returning a span with the results.
-/// This span will also be stored in `evalData`, so subsquent calls of getValues() will return immediately.
-///
-/// If `evalData` is empty, a single value will be returned, which is the result of evaluating the current value
-/// of each object that's serving values to us. If `evalData` contains a batch of values for one or more of the
-/// objects serving values to us, a batch of values for each entry stored in `evalData` is returned. To fill a
-/// RunContext with values from a dataset, use RooAbsData::getBatches().
-///
-/// \param[in] evalData  Object holding spans of input data. The results are also stored here.
-/// \param[in] normSet   Use these variables for normalisation (relevant for PDFs), and pass this normalisation
-/// on to object serving values to us.
-/// \return RooSpan pointing to the computation results. The memory this span points to is owned by `evalData`.
-RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  auto item = evalData.spans.find(this);
-  if (item != evalData.spans.end()) {
-    return item->second;
-  }
-
-  std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans;
-  for (auto const &evalDataItem : evalData.spans) {
-    dataSpans[evalDataItem.first] = evalDataItem.second;
-  }
-
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, normSet ? *normSet : RooArgSet{});
-  ROOT::Experimental::RooFitDriver driver(*clone);
-  driver.setData(dataSpans);
-  auto& results = evalData.ownedMemory[this];
-  results = driver.getValues(); // the compiler should use the move assignment here
-  evalData.spans[this] = results;
-  return results;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::vector<double> RooAbsReal::getValues(RooAbsData const& data) const {
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *data.get());
-  ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
-  driver.setData(data, "");
-  return driver.getValues();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -792,7 +754,7 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct std::string with unique suffix name to give to integral object that encodes
+/// Construct string with unique suffix name to give to integral object that encodes
 /// integrated observables, normalization observables and the integration range name
 
 TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset, const char* rangeName, bool omitEmpty) const
@@ -1529,19 +1491,19 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
   }
 
 
-  // Add all nodes below selected nodes
+  // Add all nodes below selected nodes that are value servers
   RooArgSet tmp;
   for (const auto arg : branchNodeSet) {
     for (const auto selNode : *selNodes) {
-      if (selNode->dependsOn(*arg)) {
+      if (selNode->dependsOn(*arg, nullptr, /*valueOnly=*/true)) {
         tmp.add(*arg,true);
       }
     }
   }
 
-  // Add all nodes that depend on selected nodes
+  // Add all nodes that depend on selected nodes by value
   for (const auto arg : branchNodeSet) {
-    if (arg->dependsOn(*selNodes)) {
+    if (arg->dependsOn(*selNodes, nullptr, /*valueOnly=*/true)) {
       tmp.add(*arg,true);
     }
   }
@@ -2220,7 +2182,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       // Evaluate fractional correction integral always on full p.d.f, not component.
       GlobalSelectComponentRAII selectCompRAII(true);
       std::unique_ptr<RooAbsReal> intFrac{projection->createIntegral(*plotVar,*plotVar,o.normRangeName)};
-      _globalSelectComp = true; //It's unclear why this is done a second time. Maybe unnecessary.
       if(o.stype != RooAbsReal::Raw || this->InheritsFrom(RooAbsPdf::Class())){
         // this scaling should only be !=1  when plotting partial ranges
         // still, raw means raw
@@ -2581,17 +2542,19 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate error on self by *linearly* propagating errors on parameters using the covariance matrix
-/// from a fit result.
-/// The error is calculated as follows
-/// \f[
-///     \mathrm{error}^2(x) = F_\mathbf{a}(x) \cdot \mathrm{Cov}(\mathbf{a},\mathbf{a}') \cdot F_{\mathbf{a}'}^{\mathrm{T}}(x)
-/// \f]
-/// where \f$ F_mathbf{a}(x) = \frac{ f(x, mathbf{a} + \mathrm{d}mathbf{a}) - f(x, mathbf{a} - \mathrm{d}mathbf{a}) }{2} \f$,
-/// with \f$ f(x) = \f$ `this` and \f$ \mathrm{d}mathbf{a} \f$ the vector of one-sigma uncertainties of all
-/// fit parameters taken from the fit result and
-/// \f$ \mathrm{Cov}(mathbf{a},mathbf{a}') \f$ = the covariance matrix from the fit result.
+/// \brief Propagates parameter uncertainties to an uncertainty estimate for this RooAbsReal.
 ///
+/// Estimates the uncertainty \f$\sigma_f(x;\theta)\f$ on a function \f$f(x;\theta)\f$ represented by this RooAbsReal.
+/// Here, \f$\theta\f$ is a vector of parameters with uncertainties \f$\sigma_\theta\f$, and \f$x\f$ are usually observables.
+/// The uncertainty is estimated by *linearly* propagating the parameter uncertainties using the correlation matrix from a fit result.
+///
+/// The square of the uncertainty on \f$f(x;\theta)\f$ is calculated as follows:
+/// \f[
+///     \sigma_f(x)^2 = \Delta f_i(x) \cdot \mathrm{Corr}_{i, j} \cdot \Delta f_j(x),
+/// \f]
+/// where \f$ \Delta f_i(x) = \frac{1}{2} \left(f(x;\theta_i + \sigma_{\theta_i}) - f(x; \theta_i - \sigma_{\theta_i}) \right) \f$
+/// is the vector of function variations when changing the parameters one at a time, and
+/// \f$ \mathrm{Corr}_{i,j} = \left(\sigma_{\theta_i} \sigma_{\theta_j}\right)^{-1} \cdot \mathrm{Cov}_{i,j}  \f$ is the correlation matrix from the fit result.
 
 double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset) const
 {
@@ -3577,8 +3540,8 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
 /// to truncate the std::list by printEvalErrors. This is the standard mode of error logging
 /// during MINUIT operations. If enableEvalErrorLogging() is false, all errors
 /// reported through this method are passed for immediate printing through RooMsgService.
-/// A std::string with server names and values is constructed automatically for error logging
-/// purposes, unless a custom std::string with similar information is passed as argument.
+/// A string with server names and values is constructed automatically for error logging
+/// purposes, unless a custom string with similar information is passed as argument.
 
 void RooAbsReal::logEvalError(const char* message, const char* serverValueString) const
 {
@@ -4584,7 +4547,7 @@ void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::Da
   // and switch them into "always clean" operating mode, so they return always the last-set value.
   struct ServerData {
     RooAbsArg* server;
-    RooSpan<const double> batch;
+    std::span<const double> batch;
     double oldValue;
     RooAbsArg::OperMode oldOperMode;
     bool oldValueDirty;
@@ -4704,78 +4667,6 @@ double RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
   }
 
   return ret;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Walk through expression tree headed by the `this` object, and check a batch computation.
-///
-/// Check if the results in `evalData` for event `evtNo` are identical to the current value of the nodes.
-/// If a difference is found, an exception is thrown, and propagates up the expression tree. The tree is formatted
-/// to see where the computation error happened.
-/// @param evalData Data with results of batch computation. This is checked against the current value of the expression tree.
-/// @param evtNo    Event from `evalData` to check for.
-/// @param normSet  Optional normalisation set that was used in computation.
-/// @param relAccuracy Accuracy required for passing the check.
-void RooAbsReal::checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet, double relAccuracy) const {
-  for (const auto server : _serverList) {
-    try {
-      auto realServer = dynamic_cast<RooAbsReal*>(server);
-      if (realServer)
-        realServer->checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
-    } catch (CachingError& error) {
-      throw CachingError(std::move(error),
-          FormatPdfTree() << *this);
-    }
-  }
-
-  const auto item = evalData.spans.find(this);
-  if (item == evalData.spans.end())
-    return;
-
-  auto batch = item->second;
-  const double value = getVal(normSet);
-  const double batchVal = batch.size() == 1 ? batch[0] : batch[evtNo];
-  const double relDiff = value != 0. ? (value - batchVal)/value : value - batchVal;
-
-  if (std::abs(relDiff) > relAccuracy && std::abs(value) > 1.E-300) {
-    FormatPdfTree formatter;
-    formatter << "--> (Batch computation wrong:)\n";
-    printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);
-    formatter << "\n batch=" << batch.data() << " size=" << batch.size() << std::setprecision(17)
-    << "\n batch[" << std::setw(7) << evtNo-1 << "]=     " << (evtNo > 0 && evtNo - 1 < batch.size() ? std::to_string(batch[evtNo-1]) : "---")
-    << "\n batch[" << std::setw(7) << evtNo   << "]=     " << batchVal << " !!!"
-    << "\n expected ('value'): " << value
-    << "\n eval(unnorm.)     : " << evaluate()
-    << "\n delta         " <<                     " =     " << value - batchVal
-    << "\n rel delta     " <<                     " =     " << relDiff
-    << "\n _batch[" << std::setw(7) << evtNo+1 << "]=     " << (batch.size() > evtNo+1 ? std::to_string(batch[evtNo+1]) : "---");
-
-
-
-    formatter << "\nServers: ";
-    for (const auto server : _serverList) {
-      formatter << "\n - ";
-      server->printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress | kValue, kInline);
-      formatter << std::setprecision(17);
-
-      auto serverAsReal = dynamic_cast<RooAbsReal*>(server);
-      if (serverAsReal) {
-        auto serverBatch = evalData.spans.count(serverAsReal) != 0 ? evalData.spans.find(serverAsReal)->second : RooSpan<const double>();
-        if (serverBatch.size() > evtNo) {
-          formatter << "\n   _batch[" << evtNo-1 << "]=" << (serverBatch.size() > evtNo-1 ? std::to_string(serverBatch[evtNo-1]) : "---")
-                    << "\n   _batch[" << evtNo << "]=" << serverBatch[evtNo]
-                    << "\n   _batch[" << evtNo+1 << "]=" << (serverBatch.size() > evtNo+1 ? std::to_string(serverBatch[evtNo+1]) : "---");
-        }
-        else {
-          formatter << std::setprecision(17)
-          << "\n   getVal()=" << serverAsReal->getVal(normSet);
-        }
-      }
-    }
-
-    throw CachingError(formatter);
-  }
 }
 
 

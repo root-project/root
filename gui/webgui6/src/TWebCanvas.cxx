@@ -917,10 +917,10 @@ void TWebCanvas::Close()
 /// Show canvas in specified place.
 /// If parameter args not specified, default ROOT web display will be used
 
-void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
+void TWebCanvas::ShowWebWindow(const ROOT::RWebDisplayArgs &args)
 {
    if (!fWindow) {
-      fWindow = ROOT::Experimental::RWebWindow::Create();
+      fWindow = ROOT::RWebWindow::Create();
 
       fWindow->SetConnLimit(0); // configure connections limit
 
@@ -954,9 +954,9 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
    if ((w > 0) && (w < 50000) && (h > 0) && (h < 30000))
       fWindow->SetGeometry(w, h);
 
-   if ((args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt5) ||
-       (args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt6) ||
-       (args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kCEF))
+   if ((args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt5) ||
+       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kQt6) ||
+       (args.GetBrowserKind() == ROOT::RWebDisplayArgs::kCEF))
       SetLongerPolling(kTRUE);
 
    fWindow->Show(args);
@@ -970,7 +970,7 @@ void TWebCanvas::Show()
    if (gROOT->IsWebDisplayBatch())
       return;
 
-   ROOT::Experimental::RWebDisplayArgs args;
+   ROOT::RWebDisplayArgs args;
    args.SetWidgetKind("TCanvas");
    args.SetSize(Canvas()->GetWindowWidth(), Canvas()->GetWindowHeight());
    args.SetPos(Canvas()->GetWindowTopX(), Canvas()->GetWindowTopY());
@@ -1510,9 +1510,30 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             }
          }
       }
-   } else if (ROOT::Experimental::RWebWindow::IsFileDialogMessage(arg)) {
+   } else if (ROOT::RWebWindow::IsFileDialogMessage(arg)) {
 
-      ROOT::Experimental::RWebWindow::EmbedFileDialog(fWindow, connid, arg);
+      ROOT::RWebWindow::EmbedFileDialog(fWindow, connid, arg);
+
+   } else if (arg == "FITPANEL"s) {
+
+      TH1 *hist = nullptr;
+      TIter iter(Canvas()->GetListOfPrimitives());
+      while (auto obj = iter()) {
+         hist = dynamic_cast<TH1 *>(obj);
+         if (hist) break;
+      }
+
+      TString cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
+                                    "panel->AssignCanvas(\"%s\");"
+                                    "panel->AssignHistogram((TH1 *)0x%zx);"
+                                    "panel->Show();"
+                                    "panel->ClearOnClose(panel);", Canvas()->GetName(), (size_t) hist);
+
+      gROOT->ProcessLine(cmd.Data());
+
+   } else if (arg == "START_BROWSER"s) {
+
+      gROOT->ProcessLine("new TBrowser;");
 
    } else if (IsReadOnly()) {
 
@@ -2041,14 +2062,15 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
       }
    }
 
-   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
+   return ROOT::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create images for several pads using batch (headless) capability of Chrome or Firefox browsers
-/// Supported png, jpeg, svg, pdf formats
-/// For png/jpeg/svg filename can include % symbol which will be replaced by image index.
-/// For pdf format all images will be stored in single PDF file
+/// Supported png, jpeg, svg, pdf, webp formats
+/// One can include %d qualifier which will be replaced by image index using printf functionality.
+/// If for pdf format %d qualifier not specified, all images will be stored in single PDF file.
+/// For all other formats %d qualifier will be add before extension automatically
 
 bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width, Int_t height)
 {
@@ -2058,7 +2080,12 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
    std::vector<std::string> jsons;
    std::vector<Int_t> widths, heights;
 
-   for (auto pad: pads) {
+   bool isMultiPdf = (strstr(filename, ".pdf") || strstr(filename, ".PDF")) && strstr(filename, "%");
+   bool is_multipdf_ok = true;
+
+   for (unsigned n = 0; n < pads.size(); ++n) {
+      auto pad = pads[n];
+
       auto json = CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE);
       if (!json.Length())
          continue;
@@ -2075,12 +2102,21 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
          }
       }
 
-      jsons.emplace_back(json.Data());
-      widths.emplace_back(w);
-      heights.emplace_back(h);
+      if (isMultiPdf) {
+         TString pdfname = TString::Format(filename, (int)n);
+         if (!ROOT::RWebDisplayHandle::ProduceImage(pdfname.Data(), json.Data(), w, h))
+            is_multipdf_ok = false;
+      } else {
+         jsons.emplace_back(json.Data());
+         widths.emplace_back(w);
+         heights.emplace_back(h);
+      }
    }
 
-   return ROOT::Experimental::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
+   if (isMultiPdf)
+      return is_multipdf_ok;
+
+   return ROOT::RWebDisplayHandle::ProduceImages(filename, jsons, widths, heights);
 }
 
 

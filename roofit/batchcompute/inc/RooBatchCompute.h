@@ -13,7 +13,7 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include <RooSpan.h>
+#include <ROOT/RSpan.hxx>
 
 #include <RConfig.h>
 
@@ -25,6 +25,7 @@
 
 #include <Math/Util.h>
 
+#include <cassert>
 #include <functional>
 #include <string>
 #include <vector>
@@ -43,9 +44,7 @@
  */
 namespace RooBatchCompute {
 
-struct RunContext;
-
-typedef std::vector<RooSpan<const double>> VarVector;
+typedef std::vector<std::span<const double>> VarVector;
 typedef std::vector<double> ArgVector;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
@@ -150,9 +149,9 @@ public:
    }
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
-   virtual ReduceNLLOutput reduceNLL(Config const &cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
-                                     RooSpan<const double> weights, double weightSum,
-                                     RooSpan<const double> binVolumes) = 0;
+   virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weightSpan,
+                                     std::span<const double> weights, double weightSum,
+                                     std::span<const double> binVolumes) = 0;
 
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
@@ -167,9 +166,28 @@ public:
  */
 R__EXTERN RooBatchComputeInterface *dispatchCPU, *dispatchCUDA;
 
+inline Architecture cpuArchitecture()
+{
+   init();
+   return dispatchCPU->architecture();
+}
+
+inline std::string cpuArchitectureName()
+{
+   init();
+   return dispatchCPU->architectureName();
+}
+
+inline bool hasCuda()
+{
+   init();
+   return dispatchCUDA;
+}
+
 inline void
 compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars, ArgVector &extraArgs)
 {
+   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    dispatch->compute(cfg, comp, output, size, vars, extraArgs);
 }
@@ -177,19 +195,20 @@ compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVec
 inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
 {
    ArgVector extraArgs{};
-   auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
-   dispatch->compute(cfg, comp, output, size, vars, extraArgs);
+   compute(cfg, comp, output, size, vars, extraArgs);
 }
 
 inline double reduceSum(Config cfg, InputArr input, size_t n)
 {
+   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceSum(cfg, input, n);
 }
 
-inline ReduceNLLOutput reduceNLL(Config cfg, RooSpan<const double> probas, RooSpan<const double> weightSpan,
-                                 RooSpan<const double> weights, double weightSum, RooSpan<const double> binVolumes)
+inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std::span<const double> weightSpan,
+                                 std::span<const double> weights, double weightSum, std::span<const double> binVolumes)
 {
+   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceNLL(cfg, probas, weightSpan, weights, weightSum, binVolumes);
 }

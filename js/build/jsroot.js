@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '11/08/2023';
+let version_date = '17/08/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -384,6 +384,7 @@ let gStyle = {
    fCandleBoxRange: 0.5,
    fCandleScaled: false,
    fViolinScaled: true,
+   fOrthoCamera: false,
    fXAxisExpXOffset: 0,
    fXAxisExpYOffset: 0,
    fYAxisExpXOffset: 0,
@@ -58724,7 +58725,6 @@ class JSRootMenu {
       addStyleIntField('Log X', 'fOptLogx', ['off', 'on', 'log 2']);
       addStyleIntField('Log Y', 'fOptLogy', ['off', 'on', 'log 2']);
       addStyleIntField('Log Z', 'fOptLogz', ['off', 'on', 'log 2']);
-      this.addchk(gStyle.fOptTitle == 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
       this.add('endsub:');
 
       this.add('sub:Frame');
@@ -58778,6 +58778,8 @@ class JSRootMenu {
       this.add('endsub:');
 
       this.add('sub:Histogram');
+      this.addchk(gStyle.fOptTitle == 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
+      this.addchk(gStyle.fOrthoCamera, 'Orthographic camera', flag => { gStyle.fOrthoCamera = flag; });
       this.addchk(gStyle.fHistMinimumZero, 'Base0', flag => { gStyle.fHistMinimumZero = flag; }, 'when true, BAR and LEGO drawing using base = 0');
       this.add('Text format', () => this.input('Paint text format', gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
       this.add('Time offset', () => this.input('Time offset in seconds, default is 788918400 for 1/1/1995', gStyle.fTimeOffset, 'int').then(ofset => { gStyle.fTimeOffset = ofset; }));
@@ -60023,7 +60025,7 @@ class TAxisPainter extends ObjectPainter {
       };
 
       handle.get_modifier = function() {
-         return this.painter.findLabelModifier(this.painter.getObject(), this.nmajor-1, this.major.length);
+         return this.painter.findLabelModifier(this.painter.getObject(), this.nmajor-1, this.major);
       };
 
       this.order = 0;
@@ -60275,12 +60277,20 @@ class TAxisPainter extends ObjectPainter {
    }
 
    /** @summary Returns modifier for axis label */
-   findLabelModifier(axis, nlabel, num_labels) {
+   findLabelModifier(axis, nlabel, positions) {
       if (!axis.fModLabs) return null;
       for (let n = 0; n < axis.fModLabs.arr.length; ++n) {
          let mod = axis.fModLabs.arr[n];
+
+         if ((mod.fLabValue !== undefined) && (mod.fLabNum == 0)) {
+            let eps = this.log ? positions[nlabel]*1e-6 : (this.scale_max - this.scale_min)*1e-6;
+            if (Math.abs(mod.fLabValue - positions[nlabel]) < eps)
+               return mod;
+         }
+
          if ((mod.fLabNum === nlabel + 1) ||
-             ((mod.fLabNum < 0) && (nlabel === num_labels + mod.fLabNum))) return mod;
+             ((mod.fLabNum < 0) && (nlabel === positions.length + mod.fLabNum)))
+                return mod;
       }
       return null;
    }
@@ -60337,7 +60347,7 @@ class TAxisPainter extends ObjectPainter {
             let text = this.format(lbl_pos[nmajor], true);
             if (text === null) continue;
 
-            let mod = this.findLabelModifier(axis, nmajor, lbl_pos.length);
+            let mod = this.findLabelModifier(axis, nmajor, lbl_pos);
             if (mod?.fTextSize === 0) continue;
 
             if (mod) any_modified = true;
@@ -62724,7 +62734,7 @@ class TFramePainter extends ObjectPainter {
      * @desc Called immediately after axes drawing */
    drawGrids() {
 
-      let layer = this.getFrameSvg().selectChild('.grid_layer');
+      let layer = this.getFrameSvg().selectChild('.axis_layer');
 
       layer.selectAll('.xgrid').remove();
       layer.selectAll('.ygrid').remove();
@@ -63007,7 +63017,6 @@ class TFramePainter extends ObjectPainter {
       this.x2_handle?.removeG();
       this.y2_handle?.removeG();
 
-      this.draw_g?.selectChild('.grid_layer').selectAll('*').remove();
       this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
       this.axes_drawn = false;
    }
@@ -63125,9 +63134,6 @@ class TFramePainter extends ObjectPainter {
             this.draw_g.append('svg:title').text('');
 
          top_rect = this.draw_g.append('svg:path');
-
-         // append for the moment three layers - for drawing and axis
-         this.draw_g.append('svg:g').attr('class','grid_layer');
 
          main_svg = this.draw_g.append('svg:svg')
                            .attr('class','main_layer')
@@ -69896,7 +69902,7 @@ class THistDrawOptions {
               Mark: false, Same: false, Scat: false, ScatCoef: 1., Func: true,
               Arrow: false, Box: false, BoxStyle: 0,
               Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
-              Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: false,
+              Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: gStyle.fOrthoCamera,
               Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
               Candle: '', Violin: '', Scaled: null, Circular: 0,
               GLBox: 0, GLColor: false, Project: '', System: kCARTESIAN,
@@ -73688,10 +73694,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             if (!draw_lines) continue;
             colindx = 0;
          }
-         if (bin.fContent === 0) {
-            if (!this.options.Zero && !draw_lines) continue;
-            colindx = 0; // make dummy fill color to draw only line
-         }
+         // contrary to TH2 col drawing always, empty bins not drawn only when Zero option is specified
+         if ((bin.fContent === 0) && !this.options.Zero) continue;
 
          // check if bin outside visible range
          if ((bin.fXmin > funcs.scale_xmax) || (bin.fXmax < funcs.scale_xmin) ||
@@ -75607,7 +75611,7 @@ function create3DCamera(fp, orthographic) {
    }
 
    if (orthographic)
-      fp.camera = new OrthographicCamera(-fp.scene_width/2, fp.scene_width/2, fp.scene_height/2, -fp.scene_height/2, 0.001, 40*fp.size_z3d);
+      fp.camera = new OrthographicCamera(-1.3*fp.size_x3d, 1.3*fp.size_x3d, 2.3*fp.size_z3d, -0.7*fp.size_z3d, 0.001, 40*fp.size_z3d);
    else
       fp.camera = new PerspectiveCamera(45, fp.scene_width / fp.scene_height, 1, 40*fp.size_z3d);
 
@@ -75616,7 +75620,7 @@ function create3DCamera(fp, orthographic) {
    fp.pointLight = new PointLight(0xffffff,1);
    fp.pointLight.position.set(fp.size_x3d/2, fp.size_y3d/2, fp.size_z3d/2);
    fp.camera.add(fp.pointLight);
-   fp.lookat = new Vector3(0,0,0.8*fp.size_z3d);
+   fp.lookat = new Vector3(0,0,orthographic ? 0.3*fp.size_z3d : 0.8*fp.size_z3d);
    fp.scene.add(fp.camera);
 }
 
@@ -75626,17 +75630,15 @@ function setCameraPosition(fp, first_time) {
    let pad = fp.getPadPainter().getRootPad(true),
        max3dx = Math.max(0.75*fp.size_x3d, fp.size_z3d),
        max3dy = Math.max(0.75*fp.size_y3d, fp.size_z3d),
-       k = fp.camera.isOrthographicCamera ? 0.5 : 1;
+       kz = fp.camera.isOrthographicCamera ? 1 : 1.4;
 
    if (first_time) {
       if (max3dx === max3dy)
-         fp.camera.position.set(-1.6*max3dx*k, -3.5*max3dy*k, 1.4*fp.size_z3d);
+         fp.camera.position.set(-1.6*max3dx, -3.5*max3dy, kz*fp.size_z3d);
       else if (max3dx > max3dy)
-         fp.camera.position.set(-2*max3dx*k, -3.5*max3dy*k, 1.4*fp.size_z3d);
+         fp.camera.position.set(-2*max3dx, -3.5*max3dy, kz*fp.size_z3d);
       else
-         fp.camera.position.set(-3.5*max3dx*k, -2*max3dy*k, 1.4*fp.size_z3d);
-      if (fp.camera.isOrthographicCamera && fp.scene_width > 5 && fp.scene_height > 5)
-         fp.camera.zoom = (isNodeJs() ? 3 : 5) * fp.scene_height / fp.scene_width;
+         fp.camera.position.set(-3.5*max3dx, -2*max3dy, kz*fp.size_z3d);
    }
 
    if (pad && (first_time || !fp.zoomChangedInteractive()))
@@ -75646,9 +75648,9 @@ function setCameraPosition(fp, first_time) {
          max3dx = 3*Math.max(fp.size_x3d, fp.size_z3d);
          max3dy = 3*Math.max(fp.size_y3d, fp.size_z3d);
          let phi = (270-pad.fPhi)/180*Math.PI, theta = (pad.fTheta-10)/180*Math.PI;
-         fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta)*k,
-                                max3dy*Math.sin(phi)*Math.cos(theta)*k,
-                                fp.size_z3d + (max3dx+max3dy)*0.5*Math.sin(theta))*k;
+         fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta),
+                                max3dy*Math.sin(phi)*Math.cos(theta),
+                                fp.size_z3d + (kz-0.9)*(max3dx+max3dy)*Math.sin(theta));
          first_time = true;
       }
 
@@ -113919,7 +113921,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Draw axes grids
      * @desc Called immediately after axes drawing */
    drawGrids() {
-      let layer = this.getFrameSvg().selectChild('.grid_layer');
+      let layer = this.getFrameSvg().selectChild('.axis_layer');
 
       layer.selectAll('.xgrid').remove();
       layer.selectAll('.ygrid').remove();
@@ -114372,7 +114374,6 @@ class RFramePainter extends RObjectPainter {
    cleanupAxes() {
       this.cleanXY();
 
-      this.draw_g?.selectChild('.grid_layer').selectAll('*').remove();
       this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
       this.axes_drawn = false;
    }
@@ -114494,9 +114495,6 @@ class RFramePainter extends RObjectPainter {
             this.draw_g.append('svg:title').text('');
 
          top_rect = this.draw_g.append('svg:rect');
-
-         // append for the moment three layers - for drawing and axis
-         this.draw_g.append('svg:g').attr('class','grid_layer');
 
          main_svg = this.draw_g.append('svg:svg')
                            .attr('class','main_layer')

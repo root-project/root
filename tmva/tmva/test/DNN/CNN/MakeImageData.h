@@ -19,8 +19,8 @@ void makeImages(int n = 10000, int npx = 8, int npy = 8, TString fileName = "ima
    TTree bkg("bkg","bkg");
    TFile f(fileName,"RECREATE");
 
-   bkg.Branch("ximage",x1.data(),Form("ximage[%d]/F",np));
-   sgn.Branch("ximage",x2.data(),Form("ximage[%d]/F",np));
+   bkg.Branch("ximage",x1.data(),TString::Format("ximage[%d]/F",np).Data());
+   sgn.Branch("ximage",x2.data(),TString::Format("ximage[%d]/F",np).Data());
 
    sgn.SetDirectory(&f);
    bkg.SetDirectory(&f);

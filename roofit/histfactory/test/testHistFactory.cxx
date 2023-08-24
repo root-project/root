@@ -12,6 +12,7 @@
 #include <RooFitHS3/HistFactoryJSONTool.h>
 
 #include <RooFit/Common.h>
+#include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooDataHist.h>
 #include <RooWorkspace.h>
 #include <RooArgSet.h>
@@ -21,6 +22,9 @@
 #include <RooHelpers.h>
 #include <RooFitResult.h>
 #include <RooPlot.h>
+
+#include "../src/RooFit/BatchModeDataHelpers.h"
+#include "../src/RooFitDriver.h"
 
 #include <TROOT.h>
 #include <TFile.h>
@@ -38,6 +42,22 @@ namespace {
 
 // If the JSON files should be written out for debugging purpose.
 const bool writeJsonFiles = false;
+
+std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
+{
+   std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, *data.get());
+   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
+   std::stack<std::vector<double>> vectorBuffers;
+   auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
+                                                               /*takeGlobalObservablesFromData=*/true, vectorBuffers);
+   for (auto const &item : dataSpans) {
+      driver.setInput(item.first->GetName(), item.second, false);
+   }
+   std::vector<double> out;
+   std::span<const double> results = driver.run();
+   out.assign(results.begin(), results.end());
+   return out;
+}
 
 } // namespace
 
@@ -61,6 +81,8 @@ TEST(Sample, CopyAssignment)
 
 TEST(HistFactory, Read_ROOT6_16_Model)
 {
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
    std::string filename = "./ref_6.16_example_UsingC_channel1_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
    if (!file || !file->IsOpen()) {
@@ -88,6 +110,8 @@ TEST(HistFactory, Read_ROOT6_16_Model)
 
 TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 {
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
    std::string filename = "./ref_6.16_example_UsingC_combined_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
    if (!file || !file->IsOpen()) {
@@ -478,7 +502,7 @@ TEST_P(HFFixture, BatchEvaluation)
    // Test evaluating the model:
    RooDataHist dataHist{"dataHist", "dataHist", *obs};
 
-   std::vector<double> normResults = channelPdf->getValues(dataHist);
+   std::vector<double> normResults = getValues(*channelPdf, dataHist);
 
    for (unsigned int i = 0; i < 2; ++i) {
       obs->setBin(i);
@@ -495,7 +519,7 @@ TEST_P(HFFixture, BatchEvaluation)
 
       // Test syst up:
       var->setVal(1.);
-      std::vector<double> normResultsSyst = channelPdf->getValues(dataHist);
+      std::vector<double> normResultsSyst = getValues(*channelPdf, dataHist);
       for (unsigned int i = 0; i < 2; ++i) {
          EXPECT_NEAR(normResultsSyst[i], _targetSysUp[i] / obs->getBinWidth(i) / (_targetSysUp[0] + _targetSysUp[1]),
                      1.E-6);
@@ -503,7 +527,7 @@ TEST_P(HFFixture, BatchEvaluation)
 
       // Test syst down:
       var->setVal(-1.);
-      normResultsSyst = channelPdf->getValues(dataHist);
+      normResultsSyst = getValues(*channelPdf, dataHist);
       for (unsigned int i = 0; i < 2; ++i) {
          obs->setBin(i);
          EXPECT_NEAR(normResultsSyst[i], _targetSysDo[i] / obs->getBinWidth(i) / (_targetSysDo[0] + _targetSysDo[1]),

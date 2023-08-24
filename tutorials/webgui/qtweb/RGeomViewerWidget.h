@@ -17,9 +17,7 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 class RGeomViewer;
-}
 }
 
 class RGeomViewerWidget : public QWidget {
@@ -32,7 +30,7 @@ protected:
 
    QWebEngineView *fView{nullptr};  ///< qt webwidget to show
 
-   std::shared_ptr<ROOT::Experimental::RGeomViewer> fGeomViewer;
+   std::shared_ptr<ROOT::RGeomViewer> fGeomViewer;
 
 public:
    RGeomViewerWidget(QWidget *parent = nullptr);

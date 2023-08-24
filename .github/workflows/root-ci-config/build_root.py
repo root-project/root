@@ -17,23 +17,20 @@ import argparse
 import datetime
 import os
 import shutil
+import subprocess
 import tarfile
 from hashlib import sha1
 
 import openstack
 
 from build_utils import (
-    cmake_options_from_dict,
     die,
-    download_latest,
     github_log_group,
-    print_info,
     load_config,
-    print_shell_log,
     subprocess_with_log,
-    upload_file,
-    print_warning,
+    upload_file
 )
+import build_utils
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
@@ -51,40 +48,19 @@ COMPRESSIONLEVEL = 6 if not WINDOWS else 1
 def main():
     # openstack.enable_logging(debug=True)
 
-    # accumulates commands executed so they can be displayed as a script on build failure
-    shell_log = ""
-
     # used when uploading artifacts, calculate early since build times are inconsistent
     yyyy_mm_dd = datetime.datetime.today().strftime('%Y-%m-%d')
 
-    # it is difficult to use boolean flags from github actions, use strings to convey
-    # true/false for boolean arguments instead.
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--platform",     default="centos8", help="Platform to build on")
-    parser.add_argument("--incremental",  default="false",   help="Do incremental build")
-    parser.add_argument("--buildtype",    default="Release", help="Release|Debug|RelWithDebInfo")
-    parser.add_argument("--coverage",     default="false",   help="Create Coverage report in XML")
-    parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
-    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
-    parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
-    parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
-                        help="url to repository")
+    args = parse_args()
 
-    args = parser.parse_args()
-
-    # Set argument to True if matched
-    args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
-    args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
-
-    if not args.base_ref:
-        die(os.EX_USAGE, "base_ref not specified")
+    build_utils.log = build_utils.Tracer(args.image, args.dockeropts)
 
     pull_request = args.head_ref and args.head_ref != args.base_ref
 
     if not pull_request:
-        print_info("head_ref same as base_ref, assuming non-PR build")
+        build_utils.print_info("head_ref same as base_ref, assuming non-PR build")
 
-    shell_log = cleanup_previous_build(shell_log)
+    cleanup_previous_build()
 
     # Load CMake options from .github/workflows/root-ci-config/buildconfig/[platform].txt
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -95,7 +71,7 @@ def main():
         **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
     }
 
-    options = cmake_options_from_dict(options_dict)
+    options = build_utils.cmake_options_from_dict(options_dict)
 
     if WINDOWS:
         options = "-Thost=x64 " + options
@@ -115,25 +91,25 @@ def main():
 
     if args.incremental:
         try:
-            shell_log += download_artifacts(obj_prefix, shell_log)
+            download_artifacts(obj_prefix)
         except Exception as err:
-            print_warning(f'Failed to download: {err}')
+            build_utils.print_warning(f'Failed to download: {err}')
             args.incremental = False
 
-    shell_log = git_pull(args.repository, args.base_ref, shell_log)
+    git_pull(args.repository, args.base_ref)
 
     if pull_request:
-        shell_log = rebase(args.base_ref, args.head_ref, shell_log)
+        rebase(args.base_ref, args.head_ref)
 
     if not WINDOWS:
-        shell_log = show_node_state(shell_log, options)
+        show_node_state()
 
-    shell_log = build(options, args.buildtype, shell_log)
+    build(options, args.buildtype)
+
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-
     if not pull_request and not args.incremental and not args.coverage:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
@@ -145,95 +121,134 @@ def main():
             extra_ctest_flags += "--repeat until-pass:3 "
             extra_ctest_flags += "--build-config " + args.buildtype
 
-        num_failed_test, shell_log = run_ctest(shell_log, extra_ctest_flags)
+        ctest_returncode = run_ctest(extra_ctest_flags)
 
     if args.coverage:
-        shell_log = create_coverage_xml(shell_log)
+        create_coverage_xml()
 
-    if num_failed_test != 0:
-        die(msg=f"TEST FAILURE: {num_failed_test} tests failed", log=shell_log)
+    if testing and ctest_returncode != 0:
+        handle_test_failure(ctest_returncode)
 
-    print_shell_log(shell_log)
+    print_trace()
+
+def handle_test_failure(ctest_returncode):
+    logloc = f'{WORKDIR}/build/Testing/Temporary/LastTestsFailed.log'
+    if os.path.isfile(logloc):
+        with open(logloc, 'r') as logf:
+            print(logf.read())
+    else:
+        print(f'Internal error: cannot find {logloc}\nAdding some debug output:')
+        subprocess.run(f'ls -l {WORKDIR}/build', shell=True, check=False, stderr=subprocess.STDOUT)
+        subprocess.run(f'ls -l {WORKDIR}/build/Testing', shell=True, check=False, stderr=subprocess.STDOUT)
+        subprocess.run(f'ls -l {WORKDIR}/build/Testing/Temporary', shell=True, check=False, stderr=subprocess.STDOUT)
+
+    die(msg=f"TEST FAILURE: ctest exited with code {ctest_returncode}")
+
+
+def parse_args():
+        # it is difficult to use boolean flags from github actions, use strings to convey
+    # true/false for boolean arguments instead.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--platform",                        help="Platform to build on")
+    parser.add_argument("--image",        default=None,      help="Container image, if any")
+    parser.add_argument("--dockeropts",   default=None,      help="Extra docker options, if any")
+    parser.add_argument("--incremental",  default="false",   help="Do incremental build")
+    parser.add_argument("--buildtype",    default="Release", help="Release|Debug|RelWithDebInfo")
+    parser.add_argument("--coverage",     default="false",   help="Create Coverage report in XML")
+    parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
+    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
+    parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
+    parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
+                        help="url to repository")
+
+    args = parser.parse_args()
+
+    # Set argument to True if matched
+    args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
+    args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
+
+    if not args.base_ref:
+        die(os.EX_USAGE, "base_ref not specified")
+
+    return args
+
+
+def print_trace():
+    build_utils.log.print()
 
 @github_log_group("Clean up from previous runs")
-def cleanup_previous_build(shell_log):
+def cleanup_previous_build():
     # runners should never have root permissions but be on the safe side
-    if WORKDIR == "" or WORKDIR == "/":
-        die(1, "WORKDIR not set", "")
+    if WORKDIR in ("", "/"):
+        die(1, "WORKDIR not set")
 
     if WINDOWS:
         # windows
         os.environ['COMSPEC'] = 'powershell.exe'
-        result, shell_log = subprocess_with_log(f"""
+        result = subprocess_with_log(f"""
             $ErrorActionPreference = 'Stop'
             if (Test-Path {WORKDIR}) {{
                 Remove-Item -Recurse -Force -Path {WORKDIR}
             }}
             New-Item -Force -Type directory -Path {WORKDIR}
-        """, shell_log)
+        """)
     else:
         # mac/linux/POSIX
-        result, shell_log = subprocess_with_log(f"""
+        result = subprocess_with_log(f"""
             rm -rf {WORKDIR}
             mkdir -p {WORKDIR}
-        """, shell_log)
+        """)
 
     if result != 0:
-        die(result, "Failed to clean up previous artifacts", shell_log)
-
-    return shell_log
+        die(result, "Failed to clean up previous artifacts")
 
 
 @github_log_group("Pull/clone branch")
-def git_pull(repository: str, branch: str, shell_log: str):
+def git_pull(repository: str, branch: str):
     returncode = 1
 
-    for attempts in range(5):
+    for _ in range(5):
         if returncode == 0:
             break
 
         if os.path.exists(f"{WORKDIR}/src/.git"):
-            returncode, shell_log = subprocess_with_log(f"""
+            returncode = subprocess_with_log(f"""
                 cd '{WORKDIR}/src'
                 git checkout {branch}
                 git fetch
                 git reset --hard @{{u}}
-            """, shell_log)
+            """)
         else:
-            returncode, shell_log = subprocess_with_log(f"""
+            returncode = subprocess_with_log(f"""
                 git clone --branch {branch} --single-branch {repository} "{WORKDIR}/src"
-            """, shell_log)
+            """)
 
     if returncode != 0:
-        die(returncode, f"Failed to pull {branch}", shell_log)
-
-    return shell_log
+        die(returncode, f"Failed to pull {branch}")
 
 
 @github_log_group("Download previous build artifacts")
-def download_artifacts(obj_prefix: str, shell_log: str):
+def download_artifacts(obj_prefix: str):
     try:
-        tar_path, shell_log = download_latest(S3URL, obj_prefix, WORKDIR, shell_log)
+        tar_path = build_utils.download_latest(S3URL, obj_prefix, WORKDIR)
 
         print(f"\nExtracting archive {tar_path}")
 
         with tarfile.open(tar_path) as tar:
             tar.extractall(WORKDIR)
 
-        shell_log += f'\ntar -xf {tar_path}\n'
+        build_utils.log.add(f'\ncd {WORKDIR} && tar -xf {tar_path}\n')
 
     except Exception as err:
-        print_warning("failed to download/extract:", err)
+        build_utils.print_warning("failed to download/extract:", err)
         shutil.rmtree(f'{WORKDIR}/src', ignore_errors=True)
         shutil.rmtree(f'{WORKDIR}/build', ignore_errors=True)
         raise err
 
-    return shell_log
-
 
 @github_log_group("Node state")
-def show_node_state(shell_log: str, options: str) -> str:
-    result, shell_log = subprocess_with_log("""
+def show_node_state() -> None:
+    result = subprocess_with_log("""
         which cmake
         cmake --version
         which c++ || true
@@ -243,21 +258,21 @@ def show_node_state(shell_log: str, options: str) -> str:
         sw_vers || true
         uptime || true
         df || true
-    """, shell_log)
+    """)
 
     if result != 0:
-        print_warning("Failed to extract node state")
+        build_utils.print_warning("Failed to extract node state")
 
-    return shell_log
-
-# Just return the number of test failures instead of `die()`-ing; report test@github_log_group("Run tests")
-def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
-    num_failed_test, shell_log = subprocess_with_log(f"""
+# Just return the exit code in case of test failures instead of `die()`-ing; report test
+# failures in main().
+@github_log_group("Run tests")
+def run_ctest(extra_ctest_flags: str) -> int:
+    ctest_result = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
-    """, shell_log)
+    """)
 
-    return num_failed_test, shell_log
+    return ctest_result
 
 
 @github_log_group("Archive and upload")
@@ -278,50 +293,66 @@ def archive_and_upload(archive_name, prefix):
     )
 
 
-@github_log_group("Build")
-def build(options, buildtype, shell_log):
-    generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
-
-    if not os.path.isdir(f'{WORKDIR}/build'):
-        result, shell_log = subprocess_with_log(f"mkdir {WORKDIR}/build", shell_log)
-
-        if result != 0:
-            die(result, "Failed to create build directory", shell_log)
-
-    if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
-        result, shell_log = subprocess_with_log(f"""
-            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
-        """, shell_log)
-
-        if result != 0:
-            die(result, "Failed cmake generation step", shell_log)
-    else:
-        # Print CMake cached config
-        result, shell_log = subprocess_with_log(f"""
-            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -N -L
-        """, shell_log)
-
-        if result != 0:
-            die(result, "Failed cmake cache print step", shell_log)
-
-    shell_log += f"\nBUILD OPTIONS: {options}"
-
-    result, shell_log = subprocess_with_log(f"""
-        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
-    """, shell_log)
+@github_log_group("Configure")
+def cmake_configure(options, buildtype):
+    result = subprocess_with_log(f"""
+        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
+    """)
 
     if result != 0:
-        die(result, "Failed to build", shell_log)
+        die(result, "Failed cmake generation step")
 
-    return shell_log
 
+@github_log_group("Dump existing configuration")
+def cmake_dump_config():
+    # Print CMake cached config
+    result = subprocess_with_log(f"""
+        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -N -L
+    """)
+
+    if result != 0:
+        die(result, "Failed cmake cache print step")
+
+
+@github_log_group("Dump requested build configuration")
+def dump_requested_config(options):
+    print(f"\nBUILD OPTIONS: {options}")
+
+
+@github_log_group("Build")
+def cmake_build(buildtype):
+    generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
+
+    result = subprocess_with_log(f"""
+        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
+    """)
+
+    if result != 0:
+        die(result, "Failed to build")
+
+
+def build(options, buildtype):
+    if not os.path.isdir(f'{WORKDIR}/build'):
+        result = subprocess_with_log(f"mkdir {WORKDIR}/build")
+
+        if result != 0:
+            die(result, "Failed to create build directory")
+
+    if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
+        cmake_configure(options, buildtype)
+    else:
+        cmake_dump_config()
+
+    dump_requested_config(options)
+
+    cmake_build(buildtype)
 
 @github_log_group("Rebase")
-def rebase(base_ref, head_ref, shell_log) -> str:
+def rebase(base_ref, head_ref) -> None:
     head_ref_src, _, head_ref_dst = head_ref.partition(":")
     head_ref_dst = head_ref_dst or "__tmp"
     # rebase fails unless user.email and user.name is set
-    result, shell_log = subprocess_with_log(f"""
+    result = subprocess_with_log(f"""
         cd '{WORKDIR}/src'
 
         git config user.email "rootci@root.cern"
@@ -330,25 +361,21 @@ def rebase(base_ref, head_ref, shell_log) -> str:
         git fetch origin {head_ref_src}:{head_ref_dst}
         git checkout {head_ref_dst}
         git rebase {base_ref}
-    """, shell_log)
+    """)
 
     if result != 0:
-        die(result, "Rebase failed", shell_log)
-
-    return shell_log
+        die(result, "Rebase failed")
 
 
 @github_log_group("Create Test Coverage in XML")
-def create_coverage_xml(shell_log: str) -> str:
-    result, shell_log = subprocess_with_log(f"""
+def create_coverage_xml() -> None:
+    result = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
         gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r ../src ../build -o cobertura-cov.xml
-    """, shell_log)
+    """)
 
     if result != 0:
-        die(result, "Failed to create test coverage", shell_log)
-
-    return shell_log
+        die(result, "Failed to create test coverage")
 
 
 if __name__ == "__main__":
