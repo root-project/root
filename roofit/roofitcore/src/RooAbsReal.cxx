@@ -30,9 +30,8 @@
 */
 
 
-#include "RooFitDriver.h"
+#include "RooFit/Evaluator.h"
 #include "RooMsgService.h"
-
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -109,7 +108,7 @@
 namespace {
 
 // Internal helper RooAbsFunc that evalutes the scaled data-weighted average of
-// given RooAbsReal as a function of a single variable using the RooFitDriver.
+// given RooAbsReal as a function of a single variable using the RooFit::Evaluator.
 class ScaledDataWeightedAverage : public RooAbsFunc {
 public:
    ScaledDataWeightedAverage(RooAbsReal const &arg, RooAbsData const &data, double scaleFactor, RooAbsRealLValue &var)
@@ -117,13 +116,13 @@ public:
    {
       _arg = RooFit::Detail::compileForNormSet(arg, *data.get());
       _arg->recursiveRedirectServers(RooArgList{var});
-      _driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*_arg, RooFit::BatchModeOption::Cpu);
+      _evaluator = std::make_unique<RooFit::Evaluator>(*_arg);
       std::stack<std::vector<double>>{}.swap(_vectorBuffers);
       auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
                                                                    /*takeGlobalObservablesFromData=*/true,
                                                                    _vectorBuffers);
       for (auto const& item : dataSpans) {
-         _driver->setInput(item.first->GetName(), item.second, false);
+         _evaluator->setInput(item.first->GetName(), item.second, false);
       }
    }
 
@@ -133,7 +132,7 @@ public:
       _var.setVal(xvector[0]);
 
       double out = 0.0;
-      std::span<const double> pdfValues = _driver->run();
+      std::span<const double> pdfValues = _evaluator->run();
       if (_dataWeights.empty()) {
          out = std::accumulate(pdfValues.begin(), pdfValues.end(), 0.0) / pdfValues.size();
       } else {
@@ -157,7 +156,7 @@ private:
    std::unique_ptr<RooAbsReal> _arg;
    std::span<const double> _dataWeights;
    double _scaleFactor;
-   std::unique_ptr<ROOT::Experimental::RooFitDriver> _driver;
+   std::unique_ptr<RooFit::Evaluator> _evaluator;
    std::stack<std::vector<double>> _vectorBuffers;
 };
 
