@@ -574,6 +574,8 @@ ROOT::Experimental::Detail::RFieldBase::SplitValue(const RValue & /*value*/) con
 void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
+   // Note that during a model update, new fields will be attached to the zero field. The zero field, however,
+   // does not change its inital state because only its sub fields get connected by RPageSink::UpdateSchema.
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
    child->fParent = this;
