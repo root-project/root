@@ -1,5 +1,5 @@
 import { gStyle, browser, settings, clone, create, isObject, isFunc, isStr,
-         clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTDiamond, clTLegend, clTLegendEntry, clTPaletteAxis,
+         clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTLegendEntry, clTPaletteAxis,
          clTText, clTLatex, clTLine, clTBox } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
 import { Prob } from '../base/math.mjs';
@@ -1202,6 +1202,7 @@ class TPavePainter extends ObjectPainter {
             pave.fNpaves = obj.fNpaves;
             return true;
          case clTPaveLabel:
+         case clTPaveClass:
             pave.fLabel = obj.fLabel;
             return true;
          case clTPaveStats:
@@ -1251,7 +1252,7 @@ class TPavePainter extends ObjectPainter {
    /** @summary Returns true if object is supported */
    static canDraw(obj) {
       let typ = obj?._typename;
-      return typ == clTPave || typ == clTPaveLabel || typ == clTPaveStats || typ == clTPaveText ||
+      return typ == clTPave || typ == clTPaveLabel || typ == clTPaveClass || typ == clTPaveStats || typ == clTPaveText ||
              typ == clTPavesText || typ == clTDiamond || typ == clTLegend || typ == clTPaletteAxis;
    }
 
@@ -1304,6 +1305,7 @@ class TPavePainter extends ObjectPainter {
 
          switch (pave._typename) {
             case clTPaveLabel:
+            case clTPaveClass:
                painter.paveDrawFunc = painter.drawPaveLabel;
                break;
             case clTPaveStats:

@@ -66,44 +66,53 @@ class TScatterPainter extends TGraphPainter {
    async drawGraph() {
       let fpainter = this.get_main(),
           hpainter = this.getMainPainter(),
-          scatter = this.getObject();
+          scatter = this.getObject(),
+          scale = 1, offset = 0;
       if (!fpainter || !hpainter || !scatter) return;
 
-      let pal = this.getPalette();
-      if (pal)
-         pal.$main_painter = this;
 
-      if (!this.fPalette) {
-         let pp = this.getPadPainter();
-         if (isFunc(pp?.getCustomPalette))
-            this.fPalette = pp.getCustomPalette();
+      if (scatter.fColor) {
+         let pal = this.getPalette();
+         if (pal)
+            pal.$main_painter = this;
+
+         if (!this.fPalette) {
+            let pp = this.getPadPainter();
+            if (isFunc(pp?.getCustomPalette))
+               this.fPalette = pp.getCustomPalette();
+         }
+         if (!this.fPalette)
+            this.fPalette = getColorPalette(this.options.Palette);
+
+         let minc = scatter.fColor[0], maxc = scatter.fColor[0];
+         for (let i = 1; i < scatter.fColor.length; ++i) {
+             minc = Math.min(minc, scatter.fColor[i]);
+             maxc = Math.max(maxc, scatter.fColor[i]);
+         }
+         if (maxc <= minc)
+            maxc = minc < 0 ? 0.9*minc : (minc > 0 ? 1.1*minc : 1);
+         this.fContour = new HistContour(minc, maxc);
+         this.fContour.createNormal(30);
+         this.fContour.configIndicies(0, 0);
+
+         fpainter.zmin = minc;
+         fpainter.zmax = maxc;
       }
-      if (!this.fPalette)
-         this.fPalette = getColorPalette(this.options.Palette);
 
-      let minc = scatter.fColor[0], maxc = scatter.fColor[0],
-          mins = scatter.fSize[0], maxs = scatter.fSize[0];
-      for (let i = 1; i < scatter.fColor.length; ++i) {
-          minc = Math.min(minc, scatter.fColor[i]);
-          maxc = Math.max(maxc, scatter.fColor[i]);
+      if (scatter.fSize) {
+         let mins = scatter.fSize[0], maxs = scatter.fSize[0];
+
+         for (let i = 1; i < scatter.fSize.length; ++i) {
+             mins = Math.min(mins, scatter.fSize[i]);
+             maxs = Math.max(maxs, scatter.fSize[i]);
+         }
+
+         if (maxs <= mins)
+            maxs = mins > 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
+
+         scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
+         offset = mins;
       }
-
-      for (let i = 1; i < scatter.fSize.length; ++i) {
-          mins = Math.min(mins, scatter.fSize[i]);
-          maxs = Math.max(maxs, scatter.fSize[i]);
-      }
-
-      if (maxc <= minc) maxc = minc + 1;
-      if (maxs <= mins) maxs = mins + 1;
-
-      let scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
-
-      fpainter.zmin = minc;
-      fpainter.zmax = maxc;
-
-      this.fContour = new HistContour(minc, maxc);
-      this.fContour.createNormal(30);
-      this.fContour.configIndicies(0, 0);
 
       this.createG(!fpainter.pad_layer);
 
@@ -113,10 +122,9 @@ class TScatterPainter extends TGraphPainter {
          let pnt = this.bins[i],
              grx = funcs.grx(pnt.x),
              gry = funcs.gry(pnt.y),
-             size = scatter.fMinMarkerSize + scale * (scatter.fSize[i] - mins),
-             color = this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]);
-
-          let handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
+             size = scatter.fSize ? scatter.fMinMarkerSize + scale * (scatter.fSize[i] - offset) : scatter.fMarkerSize,
+             color = scatter.fColor ? this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
+             handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
 
           this.draw_g.append('svg:path')
                      .attr('d', handle.create(grx, gry))
