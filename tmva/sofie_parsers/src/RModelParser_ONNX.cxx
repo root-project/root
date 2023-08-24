@@ -173,7 +173,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    int idx = (nodes.size() > i) ? nodes[i] : (int)i;
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
-   // if (fVerbose)
+   if (fVerbose)
       std::cout << "Parsing an operator " << op_type << std::endl;
 
 
@@ -208,9 +208,9 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
       throw std::runtime_error("TMVA::SOFIE Operator type " + op_type + " is not yet supported");
    }
-   //if (fVerbose) {
+   if (fVerbose) {
       std::cout << "\tCreating operator " << op_type << std::endl;
-   //}
+   }
    return it->second(*this, nodeproto);
 }
 
@@ -351,7 +351,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
                                                                static_cast<float *>(data.get()));
          }
 
-         std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         // std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
          allInitializedTensors[input_name] = i;
          break;
