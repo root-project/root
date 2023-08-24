@@ -34,6 +34,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/Detail/CodeSquashContext.h
     RooFit/Detail/DataMap.h
     RooFit/Detail/NormalizationHelpers.h
+    RooFit/Evaluator.h
     RooFit/Floats.h
     RooFit/ModelConfig.h
     Roo1DTable.h
@@ -372,8 +373,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMultiCategory.cxx
     src/RooMultiVarGaussian.cxx
     src/RooNameReg.cxx
-    src/RooFitDriver.cxx
-    src/RooFitDriverWrapper.cxx
+    src/RooFit/Evaluator.cxx
+    src/RooEvaluatorWrapper.cxx
     src/RooNLLVar.cxx
     src/RooNLLVarNew.cxx
     src/RooNormSetCache.cxx

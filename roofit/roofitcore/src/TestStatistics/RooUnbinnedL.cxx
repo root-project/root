@@ -26,14 +26,15 @@ In extended mode, a
 
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 
-#include "RooAbsData.h"
-#include "RooAbsPdf.h"
-#include "RooAbsDataStore.h"
-#include "RooNLLVar.h" // RooNLLVar::ComputeScalar
-#include "RooChangeTracker.h"
-#include "RooNaNPacker.h"
+#include <RooAbsData.h>
+#include <RooAbsPdf.h>
+#include <RooAbsDataStore.h>
+#include <RooNLLVar.h> // RooNLLVar::ComputeScalar
+#include <RooChangeTracker.h>
+#include <RooNaNPacker.h>
+#include <RooFit/Evaluator.h>
+
 #include "../RooFit/BatchModeDataHelpers.h"
-#include "../RooFitDriver.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -60,13 +61,13 @@ RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended e
    paramTracker_ = std::make_unique<RooChangeTracker>("chtracker", "change tracker", *params, true);
 
    if (batchMode != RooFit::BatchModeOption::Off) {
-      driver_ = std::make_unique<ROOT::Experimental::RooFitDriver>(*pdf_, batchMode);
+      evaluator_ = std::make_unique<RooFit::Evaluator>(*pdf_, batchMode == RooFit::BatchModeOption::Cuda);
       std::stack<std::vector<double>>{}.swap(_vectorBuffers);
       auto dataSpans =
          RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, /*skipZeroWeights=*/true,
                                                     /*takeGlobalObservablesFromData=*/false, _vectorBuffers);
       for (auto const &item : dataSpans) {
-         driver_->setInput(item.first->GetName(), item.second, false);
+         evaluator_->setInput(item.first->GetName(), item.second, false);
       }
    }
 }
@@ -77,7 +78,7 @@ RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
      _first(other._first),
      lastSection_(other.lastSection_),
      cachedResult_(other.cachedResult_),
-     driver_(other.driver_)
+     evaluator_(other.evaluator_)
 {
    paramTracker_ = std::make_unique<RooChangeTracker>(*other.paramTracker_);
 }
@@ -156,10 +157,10 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
        (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0))
       return cachedResult_;
 
-   if (driver_) {
+   if (evaluator_) {
       // Here, we have a memory allocation that should be avoided when this
       // code needs to be optimized.
-      std::span<const double> probas = driver_->run();
+      std::span<const double> probas = evaluator_->run();
       std::tie(result, sumWeight) =
          computeBatchFunc(probas, data_.get(), apply_weight_squared, 1, events.begin(N_events_), events.end(N_events_));
    } else {
@@ -182,7 +183,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
 
    // At the end of the first full calculation, wire the caches. This doesn't
    // need to be done in BatchMode with the RooFit driver.
-   if (_first && !driver_) {
+   if (_first && !evaluator_) {
       _first = false;
       pdf_->wireAllCaches();
    }

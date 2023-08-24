@@ -41,11 +41,6 @@ class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
 struct TreeReadBuffer; /// A space to attach TBranches
-namespace ROOT {
-namespace Experimental {
-class RooFitDriver ;
-}
-}
 namespace RooBatchCompute {
 struct RunContext;
 }

@@ -17,9 +17,8 @@
 \ingroup Roofitcore
 
 This is a simple class designed to produce the nll values needed by the fitter.
-In contrast to the `RooNLLVar` class, any logic except the bare minimum has been
-transfered away to other classes, like the `RooFitDriver`. This class also calls
-functions from `RooBatchCompute` library to provide faster computation times.
+This class calls functions from `RooBatchCompute` library to provide faster
+computation times.
 **/
 
 #include "RooNLLVarNew.h"

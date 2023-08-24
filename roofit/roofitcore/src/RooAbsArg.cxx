@@ -2600,7 +2600,7 @@ void RooAbsArg::setDataToken(std::size_t index)
    if (_dataToken != std::numeric_limits<std::size_t>::max()) {
       std::stringstream errMsg;
       errMsg << "The data token for \"" << GetName() << "\" is already set!"
-             << " Are you trying to evaluate the same object by multiple RooFitDriver instances?"
+             << " Are you trying to evaluate the same object by multiple RooFit::Evaluator instances?"
              << " This is not allowed.";
       throw std::runtime_error(errMsg.str());
    }
