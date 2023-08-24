@@ -257,14 +257,14 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       initializer_names.insert(graph.initializer(i).name());
    }
 
-   // if (verbose)
+   if (verbose)
       std::cout << "Parsing model inputs...." << std::endl;
    /// Loop on model inputs
    for (int i = 0; i < graph.input_size(); i++) {
       RegisterTensorType(graph.input(i).name(),
                          static_cast<ETensorType>(graph.input(i).type().tensor_type().elem_type()));
 
-      // if (verbose)
+      if (verbose)
          std::cout << "\tgraph input " << i << " name " << graph.input(i).name() << " type "
                    << graph.input(i).type().tensor_type().elem_type() << std::endl;
 
@@ -321,7 +321,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
    std::map<std::string, int> allInitializedTensors;
 
-   // if (verbose)
+   if (verbose)
       std::cout << "\nParsing graph initializer list and fill model initialized tensors" << std::endl;
 
    for (int i = 0; i < graph.initializer_size(); i++) {
@@ -336,7 +336,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
       std::string input_name = graph.initializer(i).name();
 
-      // if (verbose)
+      if (verbose)
          std::cout << "\t initializer " << i << " name " << input_name << " type " << graph.initializer(i).data_type()
                    << std::endl;
       switch (static_cast<ETensorType>(graph.initializer(i).data_type())) {
@@ -491,7 +491,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    }
 
    std::vector<std::string> outputnames;
-   // /if (verbose)
+   if (verbose)
       std::cout << "\nParsing Graph output list\n";
    for (int i = 0; i < graph.output_size(); i++) {
       if (verbose)
