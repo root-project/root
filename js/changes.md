@@ -4,7 +4,7 @@
 1. Correctly implement TH2 projections like MERCATOR or PARABOLIC
 2. Use https://github.com/georgealways/lil-gui/ instead of dat.GUI
 3. Let configure material and scene properties in geom control gui
-4. Upgrade three.js r151 -> r153
+4. Upgrade three.js r151 -> r155
 5. Let toggle vertical/horizontal flag for color palette via context menu
 6. Provide "Bring to front" menu command for different objects like pave, box, marker, ...
 7. Handle "dark mode" in geom painter - automatically adjust background
@@ -17,6 +17,9 @@
 14. Support orthographic camera for lego and surface plots
 15. Implement "tri1", "tri2", "triw" draw options for TGraph2D with Delaunay algorithm
 16. Draw axes grids in front of objects - making it equivalent to original ROOT
+17. Fix very old problem of correct use of GMT time format
+18. Put `gl` in "devDependencies" of package.json. One can skip it installation with `npm i --production`.
+19. Add support of `TPaveClass`
 
 
 ## Changes in 7.4.2

@@ -1,9 +1,9 @@
-import { constants, isFunc, isStr, getDocument, isNodeJs } from '../core.mjs';
+import { constants, isFunc, isStr, getDocument } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { REVISION, DoubleSide, Object3D, Color, Vector2, Vector3, Matrix4, Line3,
          BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
-         TextGeometry, Plane, Scene, PerspectiveCamera, OrthographicCamera, PointLight, ShapeUtils } from '../three.mjs';
+         TextGeometry, Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
 import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createLineSegments, Box3D, getMaterialArgs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
@@ -318,7 +318,7 @@ function create3DCamera(fp, orthographic) {
 
    fp.camera.up.set(0,0,1);
 
-   fp.pointLight = new PointLight(0xffffff,1);
+   fp.pointLight = new DirectionalLight(0xffffff, 3);
    fp.pointLight.position.set(fp.size_x3d/2, fp.size_y3d/2, fp.size_z3d/2);
    fp.camera.add(fp.pointLight);
    fp.lookat = new Vector3(0,0,orthographic ? 0.3*fp.size_z3d : 0.8*fp.size_z3d);

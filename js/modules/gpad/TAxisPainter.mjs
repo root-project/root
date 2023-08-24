@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, clTAxis, clTGaxis } from '../core.mjs';
-import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat,
+import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat, utcFormat as d3_utcFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
 import { floatToString, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
@@ -43,7 +43,6 @@ function getTimeOffset(axis) {
    sof = sof.toUpperCase();
 
    if (sof.indexOf('GMT') == 0) {
-      offset += dt.getTimezoneOffset() * 60000;
       sof = sof.slice(4).trim();
       if (sof.length > 3) {
          let p = 0, sign = 1000;
@@ -55,6 +54,12 @@ function getTimeOffset(axis) {
    return offset;
 }
 
+/** @summary Return true when GMT option configured in time format
+  * @private */
+function getTimeGMT(axis) {
+   let fmt = axis?.fTimeFormat ?? '';
+   return (fmt.indexOf('gmt') > 0) || (fmt.indexOf('GMT') > 0);
+}
 
 /** @summary Tries to choose time format for provided time interval
   * @private */
@@ -403,6 +408,7 @@ class TAxisPainter extends ObjectPainter {
       if (opts.time_scale || axis.fTimeDisplay) {
          this.kind = 'time';
          this.timeoffset = getTimeOffset(axis);
+         this.timegmt = getTimeGMT(axis);
       } else if (opts.axis_func) {
          this.kind = 'func';
       } else {
@@ -494,9 +500,9 @@ class TAxisPainter extends ObjectPainter {
          if (!tf1 || (scale_range < 0.1 * (this.full_max - this.full_min)))
             tf1 = chooseTimeFormat(scale_range / this.nticks, true);
 
-         this.tfunc1 = this.tfunc2 = d3_timeFormat(tf1);
+         this.tfunc1 = this.tfunc2 = this.timegmt ? d3_utcFormat(tf1) : d3_timeFormat(tf1);
          if (tf2 !== tf1)
-            this.tfunc2 = d3_timeFormat(tf2);
+            this.tfunc2 = this.timegmt ? d3_utcFormat(tf2) : d3_timeFormat(tf2);
 
          this.format = this.formatTime;
 

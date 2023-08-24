@@ -99,7 +99,7 @@ class TH1Painter extends THistPainter {
 
       let set_zoom = false;
 
-      if (this.draw_content) {
+      if (this.draw_content || (this.isMainPainter() && (this.options.Axis > 0) && !this.options.ohmin && !this.options.ohmax && histo.fMinimum === kNoZoom && histo.fMaximum === kNoZoom)) {
          if (hmin >= hmax) {
             if (hmin == 0) {
                this.ymin = 0; this.ymax = 1;

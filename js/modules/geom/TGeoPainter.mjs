@@ -8,7 +8,7 @@ import { REVISION, DoubleSide, FrontSide,
          LineSegments, LineBasicMaterial, LineDashedMaterial, BufferAttribute,
          TextGeometry, BufferGeometry, BoxGeometry, CircleGeometry, SphereGeometry,
          Scene, Fog, OrthographicCamera, PerspectiveCamera,
-         PointLight, AmbientLight, HemisphereLight,
+         DirectionalLight, AmbientLight, HemisphereLight,
          EffectComposer, RenderPass, UnrealBloomPass } from '../three.mjs';
 import { showProgress, injectStyle, ToolbarIcons } from '../gui/utils.mjs';
 import { GUI } from '../gui/lil-gui.mjs';
@@ -534,7 +534,7 @@ class TGeoPainter extends ObjectPainter {
          light: { kind: 'points', top: false, bottom: false, left: false, right: false, front: false, specular: true, power: 1 },
          lightKindItems: [
             { name: 'AmbientLight', value: 'ambient' },
-            { name: 'PointLight', value: 'points' },
+            { name: 'DirectionalLight', value: 'points' },
             { name: 'HemisphereLight', value: 'hemisphere' },
             { name: 'Ambient + Point', value: 'mix' }
          ],
@@ -2637,9 +2637,7 @@ class TGeoPainter extends ObjectPainter {
       let sizex = box.max.x - box.min.x,
           sizey = box.max.y - box.min.y,
           sizez = box.max.z - box.min.z,
-          plights = [], p = this.ctrl.light.power;
-
-      if (p === undefined) p = 1;
+          plights = [], p = (this.ctrl.light.power ?? 1) * 0.5;
 
       if (this._camera._lights != this.ctrl.light.kind) {
          // remove all childs and recreate only necessary lights
@@ -2654,7 +2652,7 @@ class TGeoPainter extends ObjectPainter {
 
             default: // 6 point lights
                for (let n = 0; n < 6; ++n) {
-                  let l = new PointLight(0xefefef, p);
+                  let l = new DirectionalLight(0xefefef, p);
                   this._camera.add(l);
                   l._id = n;
                }
@@ -2667,7 +2665,7 @@ class TGeoPainter extends ObjectPainter {
             light.intensity = p;
             continue;
          }
-         if (!light.isPointLight) continue;
+         if (!light.isDirectionalLight) continue;
          switch (light._id) {
             case 0: light.position.set(sizex/5, sizey/5, sizez/5); enabled = this.ctrl.light.specular; break;
             case 1: light.position.set(0, 0, sizez/2); enabled = this.ctrl.light.front; break;
@@ -2707,8 +2705,8 @@ class TGeoPainter extends ObjectPainter {
          this._camera.up = this.ctrl._yup ? new Vector3(0,1,0) : new Vector3(0,0,1);
       }
 
-      // Light - add default point light, adjust later
-      let light = new PointLight(0xefefef, 1);
+      // Light - add default directional light, adjust later
+      let light = new DirectionalLight(0xefefef, 0.1);
       light.position.set(10, 10, 10);
       this._camera.add(light);
 
