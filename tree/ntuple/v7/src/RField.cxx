@@ -720,6 +720,8 @@ void ROOT::Experimental::Detail::RFieldBase::AutoAdjustColumnTypes(const RNTuple
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry)
 {
+   if (dynamic_cast<ROOT::Experimental::RFieldZero *>(this))
+      throw RException(R__FAIL("invalid attempt to connect zero field to page sink"));
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to connect an already connected field to a page sink"));
 
@@ -739,6 +741,8 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &pageSource)
 {
+   if (dynamic_cast<ROOT::Experimental::RFieldZero *>(this))
+      throw RException(R__FAIL("invalid attempt to connect zero field to page source"));
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to connect an already connected field to a page source"));
 
