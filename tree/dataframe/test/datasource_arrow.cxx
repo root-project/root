@@ -11,8 +11,7 @@
 #include <arrow/memory_pool.h>
 #include <arrow/record_batch.h>
 #include <arrow/table.h>
-#include <arrow/testing/builder.h>
-#include <arrow/testing/gtest_util.h>
+#include <arrow/type.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -20,6 +19,68 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
+using namespace arrow;
+
+#define ASSERT_OK(expr)                                                               \
+   for (::arrow::Status _st = ::arrow::internal::GenericToStatus((expr)); !_st.ok();) \
+   FAIL() << "'" ARROW_STRINGIFY(expr) "' failed with " << _st.ToString()
+
+// Copied from arrow/testing/builder.h
+template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
+void ArrayFromVector(const std::shared_ptr<DataType> &type, const std::vector<bool> &is_valid,
+                     const std::vector<C_TYPE> &values, std::shared_ptr<Array> *out)
+{
+   auto type_id = TYPE::type_id;
+   ASSERT_EQ(type_id, type->id()) << "template parameter and concrete DataType instance don't agree";
+
+   std::unique_ptr<ArrayBuilder> builder_ptr;
+   ASSERT_OK(MakeBuilder(default_memory_pool(), type, &builder_ptr));
+   // Get the concrete builder class to access its Append() specializations
+   auto &builder = dynamic_cast<typename TypeTraits<TYPE>::BuilderType &>(*builder_ptr);
+
+   for (size_t i = 0; i < values.size(); ++i) {
+      if (is_valid[i]) {
+         ASSERT_OK(builder.Append(values[i]));
+      } else {
+         ASSERT_OK(builder.AppendNull());
+      }
+   }
+   ASSERT_OK(builder.Finish(out));
+}
+
+template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
+void ArrayFromVector(const std::shared_ptr<DataType> &type, const std::vector<C_TYPE> &values,
+                     std::shared_ptr<Array> *out)
+{
+   auto type_id = TYPE::type_id;
+   ASSERT_EQ(type_id, type->id()) << "template parameter and concrete DataType instance don't agree";
+
+   std::unique_ptr<ArrayBuilder> builder_ptr;
+   ASSERT_OK(MakeBuilder(default_memory_pool(), type, &builder_ptr));
+   // Get the concrete builder class to access its Append() specializations
+   auto &builder = dynamic_cast<typename TypeTraits<TYPE>::BuilderType &>(*builder_ptr);
+
+   for (size_t i = 0; i < values.size(); ++i) {
+      ASSERT_OK(builder.Append(values[i]));
+   }
+   ASSERT_OK(builder.Finish(out));
+}
+
+// Overloads without a DataType argument, for parameterless types
+
+template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
+void ArrayFromVector(const std::vector<bool> &is_valid, const std::vector<C_TYPE> &values, std::shared_ptr<Array> *out)
+{
+   auto type = TypeTraits<TYPE>::type_singleton();
+   ArrayFromVector<TYPE, C_TYPE>(type, is_valid, values, out);
+}
+
+template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
+void ArrayFromVector(const std::vector<C_TYPE> &values, std::shared_ptr<Array> *out)
+{
+   auto type = TypeTraits<TYPE>::type_singleton();
+   ArrayFromVector<TYPE, C_TYPE>(type, values, out);
+}
 
 using namespace ROOT;
 using namespace ROOT::RDF;
@@ -54,11 +115,11 @@ std::shared_ptr<Table> createTestTable()
 
    std::shared_ptr<Array> arrays_[5];
 
-   arrow::ArrayFromVector<StringType, std::string>(names, &arrays_[0]);
-   arrow::ArrayFromVector<Int64Type, int64_t>(ages, &arrays_[1]);
-   arrow::ArrayFromVector<DoubleType, double>(heights, &arrays_[2]);
-   arrow::ArrayFromVector<BooleanType, bool>(marriageStatus, &arrays_[3]);
-   arrow::ArrayFromVector<UInt32Type, unsigned int>(babies, &arrays_[4]);
+   ArrayFromVector<StringType, std::string>(names, &arrays_[0]);
+   ArrayFromVector<Int64Type, int64_t>(ages, &arrays_[1]);
+   ArrayFromVector<DoubleType, double>(heights, &arrays_[2]);
+   ArrayFromVector<BooleanType, bool>(marriageStatus, &arrays_[3]);
+   ArrayFromVector<UInt32Type, unsigned int>(babies, &arrays_[4]);
 
    using ColumnType = typename decltype(std::declval<arrow::Table>().column(0))::element_type;
 
