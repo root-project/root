@@ -22,15 +22,16 @@
 #include "RooFitResult.h"
 #include "RooAbsRealLValue.h"
 #include "RooGaussian.h"
-#include "TCanvas.h"
 #include "RooPlot.h"
 #include "RooRandom.h"
 #include "RooConstVar.h"
-#include "Math/Util.h"
 #include "RooHelpers.h"
+#include "RooFit/Evaluator.h"
 
 #include "../src/RooFit/BatchModeDataHelpers.h"
-#include "../src/RooFitDriver.h"
+
+#include <Math/Util.h>
+#include <TCanvas.h>
 
 #include <numeric>
 #include <ctime>
@@ -46,15 +47,15 @@ void __itt_pause() {}
 std::vector<double> getValues(RooAbsReal const &real, RooAbsData const &data)
 {
    std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(real, *data.get());
-   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
+   RooFit::Evaluator evaluator(*clone);
    std::stack<std::vector<double>> vectorBuffers;
    auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/false,
                                                                /*takeGlobalObservablesFromData=*/true, vectorBuffers);
    for (auto const &item : dataSpans) {
-      driver.setInput(item.first->GetName(), item.second, false);
+      evaluator.setInput(item.first->GetName(), item.second, false);
    }
    std::vector<double> out;
-   std::span<const double> results = driver.run();
+   std::span<const double> results = evaluator.run();
    out.assign(results.begin(), results.end());
    return out;
 }
