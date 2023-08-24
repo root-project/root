@@ -1,10 +1,11 @@
 #include <numeric>
 
-#include "PyTorchModuleModel.hxx"
-#include "PyTorchSequentialModel.hxx"
-#include "PyTorchConvolutionModel.hxx"
+#include "TMVA/RSofieReader.hxx"
+//#include "PyTorchSequentialModel.hxx"
+//#include "PyTorchConvolutionModel.hxx"
 
 #include <Python.h>
+#include "TSystem.h"
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
@@ -13,17 +14,38 @@
 
 constexpr float DEFAULT_TOLERANCE = 1e-6f;
 
+void GenerateModels() {
+    FILE* fPyTorchModels;
+    fPyTorchModels = fopen("generatePyTorchModels.py", "r");
+    PyRun_SimpleFile(fPyTorchModels, "generatePyTorchModels.py");
+
+    std::cout << "PyTorch models are generated\n";
+}
+
 TEST(RModelParser_PyTorch, SEQUENTIAL_MODEL)
 {
-   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-   float inputSequential[]={-1.6207,  0.6133,
-                             0.5058, -1.2560,
-                            -0.7750, -1.6701,
-                             0.8171, -0.2858};
-    TMVA_SOFIE_PyTorchModelSequential::Session s("PyTorchSequentialModel.dat");
-    std::vector<float> outputSequential = s.infer(inputSequential);
+    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+    std::vector<float> inputSequential ={-1.6207,  0.6133,
+                                        0.5058, -1.2560,
+                                        -0.7750, -1.6701,
+                                        0.8171, -0.2858};
 
+
+    // Generating PyTorch models for testing
     Py_Initialize();
+    if (gSystem->AccessPathName("PyTorchModelSequential.pt",kFileExists))
+        GenerateModels();
+
+    // use RSofieReader to parse and evaluate the model
+    // need first the input shape
+    std::vector<size_t> inputTensorShapeSequential{2,4};
+    std::vector<std::vector<size_t>> inputShapesSequential{inputTensorShapeSequential};
+
+    TMVA::Experimental::RSofieReader s("PyTorchModelSequential.pt", inputShapesSequential);
+
+    std::vector<float> outputSequential = s.Compute(inputSequential);
+
+
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
@@ -53,21 +75,29 @@ TEST(RModelParser_PyTorch, SEQUENTIAL_MODEL)
     for (size_t i = 0; i < outputSequential.size(); ++i) {
       EXPECT_LE(std::abs(outputSequential[i] - pOutputSequential[i]), TOLERANCE);
     }
+
 }
 
 TEST(RModelParser_PyTorch, MODULE_MODEL)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
-   float inputModule[]={0.5516,  0.3585,
+   std::vector<float> inputModule={0.5516,  0.3585,
                        -0.4854, -1.3884,
                         0.8057, -0.9449,
                         0.5626, -0.6466,
                        -1.8818,  0.4736,
                         1.1102,  1.8694};
-    TMVA_SOFIE_PyTorchModelModule::Session s("PyTorchModuleModel.dat");
-    std::vector<float> outputModule = s.infer(inputModule);
 
     Py_Initialize();
+    if (gSystem->AccessPathName("PyTorchModelModule.pt",kFileExists))
+        GenerateModels();
+
+    std::vector<size_t> inputTensorShapeModule{2,6};
+    std::vector<std::vector<size_t>> inputShapesModule{inputTensorShapeModule};
+    TMVA::Experimental::RSofieReader s("PyTorchModelModule.pt", inputShapesModule);
+    std::vector<float> outputModule = s.Compute(inputModule);
+
+
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
@@ -107,10 +137,16 @@ TEST(RModelParser_PyTorch, CONVOLUTION_MODEL)
     std::vector<float> inputConv(5*6*5*5);
     std::iota(inputConv.begin(), inputConv.end(), 1.0f);
 
-    TMVA_SOFIE_PyTorchModelConvolution::Session s("PyTorchConvolutionModel.dat");
-    std::vector<float> outputConv = s.infer(inputConv.data());
-
     Py_Initialize();
+    if (gSystem->AccessPathName("PyTorchModelConvolution.pt",kFileExists))
+        GenerateModels();
+
+    std::vector<size_t> inputTensorShapeConvolution{5, 6, 5, 5};
+    std::vector<std::vector<size_t>> inputShapesConvolution{inputTensorShapeConvolution};
+    TMVA::Experimental::RSofieReader s("PyTorchModelConvolution.pt", inputShapesConvolution);
+    std::vector<float> outputConv = s.Compute(inputConv);
+
+
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
