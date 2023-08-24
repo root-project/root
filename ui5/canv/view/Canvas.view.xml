@@ -92,7 +92,7 @@
                   <Menu itemSelected="onToolsMenuAction">
                      <items>
                         <MenuItem text="Fit panel" enabled="{/isRoot6}"/>
-                        <MenuItem text="Browser" enabled="false" />
+                        <MenuItem text="Start browser" enabled="{/isRoot6}"/>
                      </items>
                   </Menu>
                </menu>
