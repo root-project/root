@@ -525,6 +525,9 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       // use window manager to correctly terminate http server and ROOT session
       fWindow->TerminateROOT();
       return;
+   } else if (arg == "START_BROWSER") {
+      gROOT->ProcessLine("auto br = std::make_shared<ROOT::RBrowser>();br->ClearOnClose(br);");
+
    } else if (arg == "RELOAD") {
       conn->fSend = 0; // reset send version, causes new data sending
    } else if (arg == "INTERRUPT") {
