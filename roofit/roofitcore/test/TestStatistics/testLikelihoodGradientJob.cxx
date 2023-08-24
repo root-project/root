@@ -385,8 +385,7 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
    RooAbsData *data = w.data("data");
 
    // do a minimization, but now using GradMinimizer and its MP version
-   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_obs_A")),
-                                                  GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset(true))};
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")), Offset(true))};
 
    // parameters
    std::size_t NWorkers = 2;
@@ -417,8 +416,8 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
 
-   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(
-      *data, Constrain(*w.var("alpha_bkg_obs_A")), GlobalObservables(*w.var("alpha_bkg_obs_B")), ModularL(true))};
+   std::unique_ptr<RooAbsReal> likelihoodAbsReal{
+      pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")), ModularL(true))};
 
    RooMinimizer::Config cfg1;
    cfg1.parallelize = -1;

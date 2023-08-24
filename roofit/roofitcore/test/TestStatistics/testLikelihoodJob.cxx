@@ -417,18 +417,14 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
 TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
    // a variation to test some additional parameters (ConstrainedParameters and offsetting)
-   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
-                                                    RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true))};
+   nll = std::unique_ptr<RooAbsReal>{
+      pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_A")), RooFit::Offset(true))};
 
    // --------
 
    auto nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
-                   .ConstrainedParameters(*w.var("alpha_bkg_obs_A"))
-                   .GlobalObservables(*w.var("alpha_bkg_obs_B"))
-                   .build();
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.ConstrainedParameters(*w.var("alpha_bkg_A")).build();
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
    nll_ts->enableOffsetting(true);
@@ -478,18 +474,15 @@ class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTes
 TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
 {
    // based on ConstrainedAndOffset, this test tests different parallelization strategies
-   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
-                                                    RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true))};
+   nll = std::unique_ptr<RooAbsReal>{
+      pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_A")), RooFit::Offset(true), RooFit::BatchMode(true))};
 
    // --------
 
    auto nll0 = nll->getVal();
+   nll->Print("v");
 
-   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
-                   .ConstrainedParameters(*w.var("alpha_bkg_obs_A"))
-                   .GlobalObservables(*w.var("alpha_bkg_obs_B"))
-                   .build();
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.ConstrainedParameters(*w.var("alpha_bkg_A")).build();
 
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = std::get<0>(GetParam());
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = std::get<1>(GetParam());
