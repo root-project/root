@@ -651,7 +651,7 @@ else()
 endif()
 
 if(root7 AND webgui)
-   set(root_browser_class "ROOT::Experimental::RWebBrowserImp")
+   set(root_browser_class "ROOT::RWebBrowserImp")
 else()
    set(root_browser_class "TRootBrowser")
 endif()
