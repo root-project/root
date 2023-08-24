@@ -270,7 +270,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
 
       for (const auto &mod : p["modifiers"].children()) {
          std::string const &modtype = mod["type"].val();
-         std::string const &sysname = RooJSONFactoryWSTool::name(mod);
+         std::string const &sysname = mod["name"].val();
          if (modtype == "staterror") {
             // this is dealt with at a different place, ignore it for now
          } else if (modtype == "normfactor") {
@@ -851,9 +851,12 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       auto &s = RooJSONFactoryWSTool::appendNamedChild(elem["samples"], sample.name);
 
       auto &modifiers = s["modifiers"];
+      modifiers.set_seq();
 
       for (const auto &nf : sample.normfactors) {
-         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.name);
+         auto &mod = modifiers.append_child();
+         mod.set_map();
+         mod["name"] << nf.name;
          mod["parameter"] << nf.param->GetName();
          mod["type"] << "normfactor";
          if (nf.constraint) {
@@ -863,7 +866,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
 
       for (const auto &sys : sample.normsys) {
-         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.name);
+         auto &mod = modifiers.append_child();
+         mod.set_map();
+         mod["name"] << sys.name;
          mod["type"] << "normsys";
          mod["parameter"] << sys.param->GetName();
          mod["constraint"] << toString(sys.constraint);
@@ -873,7 +878,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
 
       for (const auto &sys : sample.histosys) {
-         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.name);
+         auto &mod = modifiers.append_child();
+         mod.set_map();
+         mod["name"] << sys.name;
          mod["type"] << "histosys";
          mod["parameter"] << sys.param->GetName();
          mod["constraint"] << toString(sys.constraint);
@@ -889,7 +896,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
 
       for (const auto &sys : sample.shapesys) {
-         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.name);
+         auto &mod = modifiers.append_child();
+         mod.set_map();
+         mod["name"] << sys.name;
          mod["type"] << "shapesys";
          mod["constraint"] << toString(sys.constraint);
          if (sys.constraint) {
@@ -900,13 +909,17 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
 
       for (const auto &other : sample.otherElements) {
-         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, other->GetName());
+         auto &mod = modifiers.append_child();
+         mod.set_map();
+         mod["name"] << other->GetName();
          customModifiers.add(*other);
          mod["type"] << "custom";
       }
 
       if (sample.useBarlowBeestonLight) {
-         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, ::Literals::staterror);
+         auto &mod = modifiers.append_child();
+         mod.set_map();
+         mod["name"] << ::Literals::staterror;
          mod["type"] << ::Literals::staterror;
          mod["constraint"] << toString(sample.barlowBeestonLightConstraint);
       }
