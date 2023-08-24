@@ -257,6 +257,9 @@
 #include "Log_FromONNX.hxx"
 #include "input_models/references/Log.ref.hxx"
 
+#include "Elu_FromONNX.hxx"
+#include "input_models/references/Elu.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
