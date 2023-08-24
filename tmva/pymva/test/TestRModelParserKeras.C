@@ -48,7 +48,7 @@ TEST(RModelParser_Keras, SEQUENTIAL)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelSequential.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelSequential.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([0.12107884, 0.89718615, 0.89123899, 0.32197549,"
                                     "0.17891638, 0.83555135, 0.98680066, 0.14496809,"
                                     "0.07255503, 0.55386989, 0.6628149 , 0.29843291,"
@@ -95,7 +95,7 @@ TEST(RModelParser_Keras, FUNCTIONAL)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelFunctional.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelFunctional.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([0.60828574, 0.50069386, 0.75186709, 0.14968806, 0.7692464 ,0.77027585, 0.75095316, 0.96651197,"
                                     "0.38536308, 0.95565917, 0.62796356, 0.13818375, 0.65484891,0.89220363, 0.23879365, 0.00635323]).reshape(2,8)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
@@ -136,7 +136,7 @@ TEST(RModelParser_Keras, BATCH_NORM)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelBatchNorm.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelBatchNorm.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([0.22308163, 0.95274901, 0.44712538, 0.84640867,"
                                     "0.69947928, 0.29743695, 0.81379782, 0.39650574]).reshape(2,4)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
@@ -183,7 +183,7 @@ TEST(DISABLED_RModelParser_Keras, CONV_VALID)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelConv2D_Valid.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelConv2D_Valid.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -229,7 +229,7 @@ TEST(DISABLED_RModelParser_Keras, CONV_SAME)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelConv2D_Same.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelConv2D_Same.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -271,7 +271,7 @@ TEST(RModelParser_Keras, RESHAPE)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelReshape.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelReshape.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -312,7 +312,7 @@ TEST(RModelParser_Keras, CONCATENATE)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelConcatenate.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelConcatenate.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input_1=numpy.ones((1,2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input_2=numpy.ones((1,2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model([input_1,input_2]).numpy()",Py_single_input,fGlobalNS,fLocalNS);
@@ -354,7 +354,7 @@ TEST(RModelParser_Keras, BINARY_OP)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelBinaryOp.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelBinaryOp.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input1=numpy.array([1,1])",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input2=numpy.array([1,1])",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model([input1,input2]).numpy()",Py_single_input,fGlobalNS,fLocalNS);
@@ -394,7 +394,7 @@ TEST(RModelParser_Keras, ACTIVATIONS)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelActivations.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelActivations.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -433,7 +433,7 @@ TEST(RModelParser_Keras, SWISH)
     PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('swish_model.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('swish_model.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
@@ -476,7 +476,7 @@ TEST(RModel, CUSTOM_OP)
 
     PyRun_String("from tensorflow.keras.layers import Lambda",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("model=load_model('KerasModelForCustomOp.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelForCustomOp.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("model.add(Lambda(lambda x: x * 2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([1,1,1,1,1,1,1,1]).reshape(1,8)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
