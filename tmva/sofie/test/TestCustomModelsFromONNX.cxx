@@ -1749,7 +1749,7 @@ TEST(ONNX, ConvTranspose3d) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    std::vector<float> input = ConvTranspose3d::input;
-   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3d.dat");
+   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3d_FromONNX.dat");
    std::vector<float> output(s.infer(input.data()));
    
    EXPECT_EQ(output.size(), sizeof(ConvTranspose3d::output) / sizeof(float));
