@@ -174,8 +174,8 @@ called for each data event.
 #include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/TestStatistics/RooRealL.h"
 #include "ConstraintHelpers.h"
-#include "RooFitDriver.h"
-#include "RooFitDriverWrapper.h"
+#include "RooFit/Evaluator.h"
+#include "RooEvaluatorWrapper.h"
 #include "RooSimultaneous.h"
 #include "RooFuncWrapper.h"
 
@@ -1177,9 +1177,9 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
        nllWrapper = std::make_unique<RooFuncWrapper>(wrapperName.c_str(), wrapperName.c_str(), *nll, normSet, &data,
                                                      dynamic_cast<RooSimultaneous const *>(pdfClone.get()));
     } else {
-      auto driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*nll, batchMode);
-      nllWrapper = std::make_unique<RooFitDriverWrapper>(*nll,
-         std::move(driver), rangeName ? rangeName : "", dynamic_cast<RooSimultaneous *>(pdfClone.get()), takeGlobalObservablesFromData);
+      auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, batchMode == RooFit::BatchModeOption::Cuda);
+      nllWrapper = std::make_unique<RooEvaluatorWrapper>(*nll,
+         std::move(evaluator), rangeName ? rangeName : "", dynamic_cast<RooSimultaneous *>(pdfClone.get()), takeGlobalObservablesFromData);
       nllWrapper->setData(data, false);
     }
 

@@ -22,8 +22,7 @@ namespace CudaInterface = RooFit::Detail::CudaInterface;
 using CudaInterface::CudaStream;
 #endif
 
-namespace ROOT {
-namespace Experimental {
+namespace RooFit {
 namespace Detail {
 
 class ScalarBufferContainer {
@@ -219,5 +218,4 @@ std::unique_ptr<AbsBuffer> BufferManager::makePinnedBuffer(std::size_t size, Cud
 #endif // R__HAS_CUDA
 
 } // end namespace Detail
-} // end namespace Experimental
-} // end namespace ROOT
+} // end namespace RooFit

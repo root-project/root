@@ -12,8 +12,8 @@
  */
 
 /**
-\file RooFitDriver.cxx
-\class RooFitDriver
+\file Evaluator.cxx
+\class Evaluator
 \ingroup Roofitcore
 
 This class can evaluate a RooAbsReal object in other ways than recursive graph
@@ -21,12 +21,12 @@ traversal. Currently, it is being used for evaluating a RooAbsReal object and
 supplying the value to the minimizer, during a fit. The class scans the
 dependencies and schedules the computations in a secure and efficient way. The
 computations take place in the RooBatchCompute library and can be carried off
-by either the CPU or a CUDA-supporting GPU. The RooFitDriver class takes care
+by either the CPU or a CUDA-supporting GPU. The Evaluator class takes care
 of data transfers. An instance of this class is created every time
 RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 **/
 
-#include "RooFitDriver.h"
+#include <RooFit/Evaluator.h>
 
 #include <RooAbsCategory.h>
 #include <RooAbsData.h>
@@ -36,11 +36,11 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
-#include "RooFit/BatchModeDataHelpers.h"
-#include "RooFit/BatchModeHelpers.h"
 #include <RooSimultaneous.h>
 
-#include "RooFit/Detail/Buffers.h"
+#include "BatchModeDataHelpers.h"
+#include "BatchModeHelpers.h"
+#include "Detail/Buffers.h"
 
 #include <chrono>
 #include <iomanip>
@@ -55,12 +55,11 @@ namespace CudaInterface = RooFit::Detail::CudaInterface;
 
 #endif
 
-namespace ROOT {
-namespace Experimental {
+namespace RooFit {
 
 namespace {
 
-void logArchitectureInfo(RooFit::BatchModeOption batchMode)
+void logArchitectureInfo(bool useGPU)
 {
    // We have to exit early if the message stream is not active. Otherwise it's
    // possible that this function skips logging because it thinks it has
@@ -69,20 +68,20 @@ void logArchitectureInfo(RooFit::BatchModeOption batchMode)
       return;
    }
 
-   // Don't repeat logging architecture info if the batchMode option didn't change
+   // Don't repeat logging architecture info if the useGPU option didn't change
    {
       // Second element of pair tracks whether this function has already been called
-      static std::pair<RooFit::BatchModeOption, bool> lastBatchMode;
-      if (lastBatchMode.second && lastBatchMode.first == batchMode)
+      static std::pair<bool, bool> lastUseGPU;
+      if (lastUseGPU.second && lastUseGPU.first == useGPU)
          return;
-      lastBatchMode = {batchMode, true};
+      lastUseGPU = {useGPU, true};
    }
 
    auto log = [](std::string_view message) {
       oocxcoutI(static_cast<RooAbsArg *>(nullptr), Fitting) << message << std::endl;
    };
 
-   if (batchMode == RooFit::BatchModeOption::Cuda && !RooBatchCompute::hasCuda()) {
+   if (useGPU && !RooBatchCompute::hasCuda()) {
       throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
                                ": Cuda implementation of the computing library is not available\n");
    }
@@ -91,14 +90,14 @@ void logArchitectureInfo(RooFit::BatchModeOption batchMode)
    } else {
       log(std::string("using CPU computation library compiled with -m") + RooBatchCompute::cpuArchitectureName());
    }
-   if (batchMode == RooFit::BatchModeOption::Cuda) {
+   if (useGPU) {
       log("using CUDA computation library");
    }
 }
 
 } // namespace
 
-/// A struct used by the RooFitDriver to store information on the RooAbsArgs in
+/// A struct used by the Evaluator to store information on the RooAbsArgs in
 /// the computation graph.
 struct NodeInfo {
 
@@ -144,27 +143,25 @@ struct NodeInfo {
 #endif // R__HAS_CUDA
 };
 
-/// Construct a new RooFitDriver. The constructor analyzes and saves metadata about the graph,
+/// Construct a new Evaluator. The constructor analyzes and saves metadata about the graph,
 /// useful for the evaluation of it that will be done later. In case the CUDA mode is selected,
 /// there's also some CUDA-related initialization.
 ///
 /// \param[in] absReal The RooAbsReal object that sits on top of the
 ///            computation graph that we want to evaluate.
-/// \param[in] batchMode The computation mode, accepted values are
-///            `RooBatchCompute::Cpu` and `RooBatchCompute::Cuda`.
-RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption batchMode)
+/// \param[in] useGPU Whether the evaluation should be preferrably done on the GPU.
+Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    : _bufferManager{std::make_unique<Detail::BufferManager>()},
      _topNode{const_cast<RooAbsReal &>(absReal)},
-     _batchMode{batchMode}
+     _useGPU{useGPU}
 {
 #ifndef R__HAS_CUDA
-   if (_batchMode == RooFit::BatchModeOption::Cuda) {
-      throw std::runtime_error(
-         "Can't create RooFitDriver in CUDA mode because ROOT was compiled without CUDA support!");
+   if (useGPU) {
+      throw std::runtime_error("Can't create Evaluator in CUDA mode because ROOT was compiled without CUDA support!");
    }
 #endif
    // Some checks and logging of used architectures
-   logArchitectureInfo(_batchMode);
+   logArchitectureInfo(_useGPU);
 
    RooArgSet serverSet;
    RooHelpers::getSortedComputationGraph(_topNode, serverSet);
@@ -214,7 +211,7 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
    syncDataTokens();
 
 #ifdef R__HAS_CUDA
-   if (_batchMode == RooFit::BatchModeOption::Cuda) {
+   if (_useGPU) {
       // create events and streams for every node
       for (auto &info : _nodes) {
          info.event = std::make_unique<CudaInterface::CudaEvent>(false);
@@ -230,7 +227,7 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
 /// If there are servers with the same name that got de-duplicated in the
 /// `_nodes` list, we need to set their data tokens too. We find such nodes by
 /// visiting the servers of every known node.
-void RooFitDriver::syncDataTokens()
+void Evaluator::syncDataTokens()
 {
    for (NodeInfo &info : _nodes) {
       std::size_t iValueServer = 0;
@@ -246,10 +243,10 @@ void RooFitDriver::syncDataTokens()
    }
 }
 
-void RooFitDriver::setInput(std::string const &name, std::span<const double> inputArray, bool isOnDevice)
+void Evaluator::setInput(std::string const &name, std::span<const double> inputArray, bool isOnDevice)
 {
-   if (isOnDevice && _batchMode != RooFit::BatchModeOption::Cuda) {
-      throw std::runtime_error("RooFitDriver can only take device array as input in CUDA mode!");
+   if (isOnDevice && !_useGPU) {
+      throw std::runtime_error("Evaluator can only take device array as input in CUDA mode!");
    }
 
    auto namePtr = RooNameReg::ptr(name.c_str());
@@ -264,14 +261,14 @@ void RooFitDriver::setInput(std::string const &name, std::span<const double> inp
          info.fromArrayInput = true;
          info.absArg->setDataToken(iNode);
          info.outputSize = inputArray.size();
-         if (_batchMode == RooFit::BatchModeOption::Cuda) {
+         if (_useGPU) {
 #ifdef R__HAS_CUDA
             if (info.outputSize == 1) {
                // Scalar observables from the data don't need to be copied to the GPU
                _dataMapCPU.set(info.absArg, inputArray);
                _dataMapCUDA.set(info.absArg, inputArray);
             } else {
-               if (_batchMode == RooFit::BatchModeOption::Cuda) {
+               if (_useGPU) {
                   // For simplicity, we put the data on both host and device for
                   // now. This could be optimized by inspecting the clients of the
                   // variable.
@@ -304,11 +301,11 @@ void RooFitDriver::setInput(std::string const &name, std::span<const double> inp
    _needToUpdateOutputSizes = true;
 }
 
-void RooFitDriver::updateOutputSizes()
+void Evaluator::updateOutputSizes()
 {
    std::map<RooFit::Detail::DataKey, std::size_t> sizeMap;
    for (auto &info : _nodes) {
-      if(info.fromArrayInput) {
+      if (info.fromArrayInput) {
          sizeMap[info.absArg] = info.outputSize;
       } else {
          // any buffer for temporary results is invalidated by resetting the output sizes
@@ -337,7 +334,7 @@ void RooFitDriver::updateOutputSizes()
    }
 
 #ifdef R__HAS_CUDA
-   if (_batchMode == RooFit::BatchModeOption::Cuda) {
+   if (_useGPU) {
       markGPUNodes();
    }
 #endif
@@ -345,14 +342,14 @@ void RooFitDriver::updateOutputSizes()
    _needToUpdateOutputSizes = false;
 }
 
-RooFitDriver::~RooFitDriver()
+Evaluator::~Evaluator()
 {
    for (auto &info : _nodes) {
       info.absArg->resetDataToken();
    }
 }
 
-void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
+void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 {
    using namespace Detail;
 
@@ -364,13 +361,13 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    if (nOut == 1) {
       buffer = &info.scalarBuffer;
 #ifdef R__HAS_CUDA
-      if (_batchMode == RooFit::BatchModeOption::Cuda) {
+      if (_useGPU) {
          _dataMapCUDA.set(node, {buffer, nOut});
       }
 #endif
    } else {
 #ifdef R__HAS_CUDA
-      if (!info.hasLogged && _batchMode == RooFit::BatchModeOption::Cuda) {
+      if (!info.hasLogged && _useGPU) {
          RooAbsArg const &arg = *info.absArg;
          oocoutI(&arg, FastEvaluations) << "The argument " << arg.ClassName() << "::" << arg.GetName()
                                         << " could not be evaluated on the GPU because the class doesn't support it. "
@@ -403,7 +400,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 
 /// Process a variable in the computation graph. This is a separate non-inlined
 /// function such that we can see in performance profiles how long this takes.
-void RooFitDriver::processVariable(NodeInfo &nodeInfo)
+void Evaluator::processVariable(NodeInfo &nodeInfo)
 {
    RooAbsArg *node = nodeInfo.absArg;
    auto *var = static_cast<RooRealVar const *>(node);
@@ -419,7 +416,7 @@ void RooFitDriver::processVariable(NodeInfo &nodeInfo)
 
 /// Flags all the clients of a given node dirty. This is a separate non-inlined
 /// function such that we can see in performance profiles how long this takes.
-void RooFitDriver::setClientsDirty(NodeInfo &nodeInfo)
+void Evaluator::setClientsDirty(NodeInfo &nodeInfo)
 {
    for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
       clientInfo->isDirty = true;
@@ -427,7 +424,7 @@ void RooFitDriver::setClientsDirty(NodeInfo &nodeInfo)
 }
 
 /// Returns the value of the top node in the computation graph
-std::span<const double> RooFitDriver::run()
+std::span<const double> Evaluator::run()
 {
    if (_needToUpdateOutputSizes)
       updateOutputSizes();
@@ -435,7 +432,7 @@ std::span<const double> RooFitDriver::run()
    ++_nEvaluations;
 
 #ifdef R__HAS_CUDA
-   if (_batchMode == RooFit::BatchModeOption::Cuda) {
+   if (_useGPU) {
       return getValHeterogeneous();
    }
 #endif
@@ -461,7 +458,7 @@ std::span<const double> RooFitDriver::run()
 #ifdef R__HAS_CUDA
 
 /// Returns the value of the top node in the computation graph
-std::span<const double> RooFitDriver::getValHeterogeneous()
+std::span<const double> Evaluator::getValHeterogeneous()
 {
    for (auto &info : _nodes) {
       info.remClients = info.clientInfos.size();
@@ -536,7 +533,7 @@ std::span<const double> RooFitDriver::getValHeterogeneous()
 
 /// Assign a node to be computed in the GPU. Scan it's clients and also assign them
 /// in case they only depend on GPU nodes.
-void RooFitDriver::assignToGPU(NodeInfo &info)
+void Evaluator::assignToGPU(NodeInfo &info)
 {
    using namespace Detail;
 
@@ -569,7 +566,7 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
 }
 
 /// Decides which nodes are assigned to the GPU in a CUDA fit.
-void RooFitDriver::markGPUNodes()
+void Evaluator::markGPUNodes()
 {
    for (auto &info : _nodes) {
       info.copyAfterEvaluation = false;
@@ -588,15 +585,15 @@ void RooFitDriver::markGPUNodes()
 #endif // R__HAS_CUDA
 
 /// Temporarily change the operation mode of a RooAbsArg until the
-/// RooFitDriver gets deleted.
-void RooFitDriver::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
+/// Evaluator gets deleted.
+void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 {
    if (opMode != arg->operMode()) {
       _changeOperModeRAIIs.emplace(arg, opMode);
    }
 }
 
-void RooFitDriver::print(std::ostream &os) const
+void Evaluator::print(std::ostream &os) const
 {
    std::cout << "--- RooFit BatchMode evaluation ---\n";
 
@@ -654,11 +651,11 @@ void RooFitDriver::print(std::ostream &os) const
 
 /// Gets all the parameters of the RooAbsReal. This is in principle not
 /// necessary, because we can always ask the RooAbsReal itself, but the
-/// RooFitDriver has the cached information to get the answer quicker.
+/// Evaluator has the cached information to get the answer quicker.
 /// Therefore, this is not meant to be used in general, just where it matters.
 /// \warning If we find another solution to get the parameters efficiently,
 /// this function might be removed without notice.
-RooArgSet RooFitDriver::getParameters() const
+RooArgSet Evaluator::getParameters() const
 {
    RooArgSet parameters;
    for (auto &nodeInfo : _nodes) {
@@ -671,5 +668,4 @@ RooArgSet RooFitDriver::getParameters() const
    return parameters;
 }
 
-} // namespace Experimental
-} // namespace ROOT
+} // namespace RooFit
