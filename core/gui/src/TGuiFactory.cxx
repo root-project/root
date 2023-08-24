@@ -94,7 +94,7 @@ TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_
    const char *browserName = nullptr;
 
    if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
-      browserName = "ROOT::Experimental::RWebBrowserImp";
+      browserName = "ROOT::RWebBrowserImp";
    else if (!gROOT->IsBatch())
       browserName = gEnv->GetValue("Browser.Name", "");
 
@@ -118,7 +118,7 @@ TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t
    const char *browserName = nullptr;
 
    if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
-      browserName = "ROOT::Experimental::RWebBrowserImp";
+      browserName = "ROOT::RWebBrowserImp";
    else if (!gROOT->IsBatch())
       browserName = gEnv->GetValue("Browser.Name", "");
 
