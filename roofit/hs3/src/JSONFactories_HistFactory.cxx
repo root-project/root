@@ -160,7 +160,9 @@ std::string constraintName(std::string const &sysname)
 
 RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &sysname, const std::string &pname)
 {
-   return getOrCreate<RooGaussian>(ws, constraintName(sysname), *ws.var(pname), *ws.var("nom_" + pname), 1.);
+   RooRealVar *constrParam = ws.var(pname);
+   constrParam->setError(1.0);
+   return getOrCreate<RooGaussian>(ws, constraintName(sysname), *constrParam, *ws.var("nom_" + pname), 1.);
 }
 
 void setMCStatGammaRanges(RooArgList const &gammas, std::vector<double> const &errs, double statErrThresh)
@@ -186,22 +188,23 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
    gammas.add(ParamHistFunc::createParamSet(ws, "gamma_" + sysname, observables, gamma_min, gamma_max));
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
    for (size_t i = 0; i < gammas.size(); ++i) {
-      RooRealVar *v = dynamic_cast<RooRealVar *>(&gammas[i]);
-      if (!v)
+      auto *constrParam = dynamic_cast<RooRealVar *>(&gammas[i]);
+      if (!constrParam)
          continue;
-      std::string basename = v->GetName();
-      v->setConstant(false);
+      std::string basename = constrParam->GetName();
+      constrParam->setConstant(false);
       if (constraintType == "Const" || vals[i] == 0.) {
-         v->setConstant(true);
+         constrParam->setConstant(true);
       } else if (constraintType == "Gauss") {
          auto &nom = createNominal(ws, basename, 1.0, 0, std::max(10., gamma_max));
          auto &sigma = tool.wsEmplace<RooConstVar>(basename + "_sigma", vals[i]);
-         constraints.add(tool.wsEmplace<RooGaussian>(constraintName(basename), nom, *v, sigma), true);
+         constrParam->setError(sigma.getVal());
+         constraints.add(tool.wsEmplace<RooGaussian>(constraintName(basename), nom, *constrParam, sigma), true);
       } else if (constraintType == "Poisson") {
          double tau_float = vals[i];
          auto &tau = tool.wsEmplace<RooConstVar>(basename + "_tau", tau_float);
          auto &nom = createNominal(ws, basename, tau_float, 0, RooNumber::infinity());
-         auto &prod = tool.wsEmplace<RooProduct>(basename + "_poisMean", *v, tau);
+         auto &prod = tool.wsEmplace<RooProduct>(basename + "_poisMean", *constrParam, tau);
          auto &pois = tool.wsEmplace<RooPoisson>(constraintName(basename), nom, prod);
          pois.setNoRounding(true);
          constraints.add(pois, true);
@@ -271,9 +274,14 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
          if (modtype == "staterror") {
             // this is dealt with at a different place, ignore it for now
          } else if (modtype == "normfactor") {
-            normElems.add(getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5));
+            RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5);
+            normElems.add(constrParam);
             if (auto constrInfo = mod.find("constraint_name")) {
-               constraints.add(*tool.request<RooAbsReal>(constrInfo->val(), name));
+               auto constraint = tool.request<RooAbsReal>(constrInfo->val(), name);
+               if (auto gauss = dynamic_cast<RooGaussian const *>(constraint)) {
+                  constrParam.setError(gauss->getSigma().getVal());
+               }
+               constraints.add(*constraint);
             }
          } else if (modtype == "normsys") {
             auto *parameter = mod.find("parameter");
