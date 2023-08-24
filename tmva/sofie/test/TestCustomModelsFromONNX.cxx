@@ -165,8 +165,8 @@
 #include "ConvTranspose2d_FromONNX.hxx"
 #include "input_models/references/ConvTranspose2d.ref.hxx"
 
-//#include "ConvTranspose3d_FromONNX.hxx"
-//#include "input_models/references/ConvTranspose3d.ref.hxx"
+#include "ConvTranspose3d_FromONNX.hxx"
+#include "input_models/references/ConvTranspose3d.ref.hxx"
 
 #include "ConvTransposeBias2d_FromONNX.hxx"
 #include "input_models/references/ConvTransposeBias2d.ref.hxx"
@@ -1745,28 +1745,22 @@ TEST(ONNX, ConvTranspose2d)
    }
 }
 
-/*
-TEST(ONNX, ConvTranspose3d)
-{
+TEST(ONNX, ConvTranspose3d) {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
-   // Preparing the standard all-ones input
-   std::vector<float> input(8);
-   std::iota(input.begin(), input.end(), 0.0f);
-   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3d_FromONNX.dat");
+   std::vector<float> input = ConvTranspose3d::input;
+   TMVA_SOFIE_ConvTranspose3d::Session s("ConvTranspose3d.dat");
    std::vector<float> output(s.infer(input.data()));
+   
+   EXPECT_EQ(output.size(), sizeof(ConvTranspose3d::output) / sizeof(float));
+   float *correct = ConvTranspose3d::output;
 
-   // Checking output size
-   EXPECT_EQ(output.size(), sizeof(ConvTranspose3d_ExpectedOutput::output) / sizeof(float));
-
-   float *correct = ConvTranspose3d_ExpectedOutput::output;
-
-   // Checking every output value, one by one
-   for (size_t i = 0; i < output.size(); ++i) {
+   for (size_t i=0; i<output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+   
 }
-*/
+
 
 TEST(ONNX, ConvTransposeBias2d)
 {

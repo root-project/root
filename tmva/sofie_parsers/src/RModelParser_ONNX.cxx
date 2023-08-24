@@ -173,7 +173,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    int idx = (nodes.size() > i) ? nodes[i] : (int)i;
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
-   if (fVerbose)
+   // if (fVerbose)
       std::cout << "Parsing an operator " << op_type << std::endl;
 
 
@@ -208,9 +208,9 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
       throw std::runtime_error("TMVA::SOFIE Operator type " + op_type + " is not yet supported");
    }
-   if (fVerbose) {
+   //if (fVerbose) {
       std::cout << "\tCreating operator " << op_type << std::endl;
-   }
+   //}
    return it->second(*this, nodeproto);
 }
 
@@ -257,14 +257,14 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       initializer_names.insert(graph.initializer(i).name());
    }
 
-   if (verbose)
+   // if (verbose)
       std::cout << "Parsing model inputs...." << std::endl;
    /// Loop on model inputs
    for (int i = 0; i < graph.input_size(); i++) {
       RegisterTensorType(graph.input(i).name(),
                          static_cast<ETensorType>(graph.input(i).type().tensor_type().elem_type()));
 
-      if (verbose)
+      // if (verbose)
          std::cout << "\tgraph input " << i << " name " << graph.input(i).name() << " type "
                    << graph.input(i).type().tensor_type().elem_type() << std::endl;
 
@@ -321,7 +321,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
    std::map<std::string, int> allInitializedTensors;
 
-   if (verbose)
+   // if (verbose)
       std::cout << "\nParsing graph initializer list and fill model initialized tensors" << std::endl;
 
    for (int i = 0; i < graph.initializer_size(); i++) {
@@ -336,7 +336,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
       std::string input_name = graph.initializer(i).name();
 
-      if (verbose)
+      // if (verbose)
          std::cout << "\t initializer " << i << " name " << input_name << " type " << graph.initializer(i).data_type()
                    << std::endl;
       switch (static_cast<ETensorType>(graph.initializer(i).data_type())) {
@@ -351,7 +351,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
                                                                static_cast<float *>(data.get()));
          }
 
-         if (verbose) std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
          allInitializedTensors[input_name] = i;
          break;
@@ -491,7 +491,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    }
 
    std::vector<std::string> outputnames;
-   if (verbose)
+   // /if (verbose)
       std::cout << "\nParsing Graph output list\n";
    for (int i = 0; i < graph.output_size(); i++) {
       if (verbose)

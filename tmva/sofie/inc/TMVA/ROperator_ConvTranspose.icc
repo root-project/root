@@ -400,25 +400,14 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
                 << fAttrDilations[1];
          out << ", tensor_" << fNY << " + out_offset);\n\n ";
       } else {
-         // 3d : needs a col2im for 3d
-         throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not yet supported");
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
-             << " + x_offset,"
-             //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
-             //  dilation_d, dilation_h, dilation_w,
-             //
-             << fShapeX[1] << "," << oDepth << "," << oHeight << "," << oWidth << "," << fAttrKernelShape[0] << ","
-             << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[1] << ","
-             << fAttrPads[2] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
-             << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << "," << OpName
-             << "_xcol);\n\n ";
+         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::col2im_3d<float>(" << OpName <<"_xcol, "
+         << fShapeW[1] << ", " << oDepth << ", " << oHeight << ", " << oWidth << ", "
+         << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", "
+         << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", "
+         << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", "
+         << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", "
+         << "tensor_" << fNY << " + out_offset);\n";
       }
-      // // BLAS
-      // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &" << OpName
-      //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      // out << SP << SP << SP << OpName << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
-      //     << " + out_offset, &" << OpName << "_m);\n";
    } else {
       // case of group transposed convolution
       // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each
@@ -451,30 +440,14 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
                 << fAttrDilations[1];
          out << ", tensor_" << fNY << " + out_offset);\n\n ";
       } else {
-         // 3d im2col
-         throw std::runtime_error("TMVA SOFIE 3D Conv Transpose not yet supported");
-
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
-             << " + x_offset,"
-             //  channels, d, h, w, k_d, k_h, k_w, pad_d, pad_h, pad_w, stride_d, stride_h, stride_w,
-             //  dilation_d, dilation_h, dilation_w,
-             //
-             << fShapeX[1] << "," << oDepth << "," << oHeight << "," << oWidth << "," << fAttrKernelShape[0] << ","
-             << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[1] << ","
-             << fAttrPads[2] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
-             << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << "," << OpName
-             << "_xcol);\n\n ";
+         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::col2im_3d<float>(" << OpName << "_xcol, "
+         << fShapeY[1] << ", " << oDepth << ", " << oHeight << ", " << oWidth << ", "
+         << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", "
+         << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", "
+         << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", "
+         << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", "
+         << "tensor_" << fNY << " + out_offset);\n\n";  
       }
-
-      // // BLAS
-      // // offset g must be  g * k * n
-      // out << SP << SP << SP << "size_t offset_f = g * " << fShapeW[0] * fShapeW[1] * icstrideDil / fAttrGroup << ";\n";
-      // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &" << OpName
-      //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      // out << SP << SP << SP << OpName << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
-      //     << " + out_offset"
-      //     << ", &" << OpName << "_m);\n";
 
       out << SP << SP << "}\n"; // end of group loop
    }
@@ -729,6 +702,7 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName)
                out << "tmp_buf_tensor_" << fNY << ");\n\n";
             } 
          }
+
          out << SP*3 << "}\n"; // end of batch size loop
 
          if (fNBroadcastedB != "") {
