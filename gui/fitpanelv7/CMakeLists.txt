@@ -25,8 +25,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTFitPanelv7
   DEPENDENCIES
     Hist
     Gpad
+    WebGui6
     ROOTGpadv7
     ROOTHistDraw
-    ROOTWebDisplay
+    ROOTHistDraw
   ${EXTRA_DICT_OPTS}
 )

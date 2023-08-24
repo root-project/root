@@ -91,7 +91,7 @@
                <menu>
                   <Menu itemSelected="onToolsMenuAction">
                      <items>
-                        <MenuItem text="Fit panel" enabled="false" />
+                        <MenuItem text="Fit panel" enabled="{/isRoot6}"/>
                         <MenuItem text="Browser" enabled="false" />
                      </items>
                   </Menu>

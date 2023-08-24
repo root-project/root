@@ -34,6 +34,7 @@
 #include "TList.h"
 #include "TVirtualPad.h"
 #include "TCanvas.h"
+#include "TWebCanvas.h"
 #include "TDirectory.h"
 #include "TBufferJSON.h"
 #include "Math/Minimizer.h"
@@ -767,10 +768,7 @@ bool RFitPanel::DoFit()
       copy->Draw("same");
    }
 
-   if (pad) {
-      pad->Modified();
-      pad->Update();
-   }
+   DoPadUpdate(pad);
 
    std::string funcname = f1->GetName();
    if ((funcname.compare(0,4,"prev") == 0) && (funcname.find("-") > 4))
@@ -968,10 +966,30 @@ bool RFitPanel::DoDraw()
 
    drawobj->Draw(drawopt.c_str());
 
-   pad->Modified();
-   pad->Update();
+   DoPadUpdate(pad);
 
    return true;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Mark pad modified and do update
+/// For web canvas set async mode first to avoid blocking here
+
+void RFitPanel::DoPadUpdate(TPad *pad)
+{
+   if (!pad) return;
+
+   pad->Modified();
+
+   auto web = dynamic_cast<TWebCanvas *> (pad->GetCanvas()->GetCanvasImp());
+
+   Bool_t iswebsync = web ? !web->IsAsyncMode() : kFALSE;
+   if (iswebsync) web->SetAsyncMode(kTRUE);
+
+   pad->Update();
+
+   if (iswebsync) web->SetAsyncMode(kFALSE);
 }
 
 
