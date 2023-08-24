@@ -110,9 +110,10 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
    auto &s = RooJSONFactoryWSTool::appendNamedChild(channelNode["samples"], sample.GetName());
 
    if (!sample.GetOverallSysList().empty()) {
-      auto &modifiers = s["modifiers"];
+      auto &modifiers = s["modifiers"].set_seq();
       for (const auto &sys : sample.GetOverallSysList()) {
-         auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
+         auto &node = modifiers.append_child().set_map();
+         node["name"] << sys.GetName();
          node["type"] << "normsys";
          auto &data = node["data"];
          data.set_map();
@@ -122,24 +123,28 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
    }
 
    if (!sample.GetNormFactorList().empty()) {
-      auto &modifiers = s["modifiers"];
+      auto &modifiers = s["modifiers"].set_seq();
       for (const auto &nf : sample.GetNormFactorList()) {
-         RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.GetName())["type"] << "normfactor";
+         auto &mod = modifiers.append_child().set_map();
+         mod["name"] << nf.GetName();
+         mod["type"] << "normfactor";
       }
-      auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, "Lumi");
+      auto &mod = modifiers.append_child().set_map();
+      mod["name"] << "Lumi";
       mod["type"] << "normfactor";
       mod["constraint_name"] << "lumiConstraint";
    }
 
    if (!sample.GetHistoSysList().empty()) {
-      auto &modifiers = s["modifiers"];
+      auto &modifiers = s["modifiers"].set_seq();
       for (size_t i = 0; i < sample.GetHistoSysList().size(); ++i) {
          auto &sys = sample.GetHistoSysList()[i];
-         auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
+         auto &node = modifiers.append_child().set_map();
+         node["name"] << sys.GetName();
          node["type"] << "histosys";
          auto &data = node["data"].set_map();
-         exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames, nullptr, false);
-         exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames, nullptr, false);
+         exportHistogram(*sys.GetHistoLow(), data["lo"], obsnames, nullptr, false);
+         exportHistogram(*sys.GetHistoHigh(), data["hi"], obsnames, nullptr, false);
       }
    }
 
@@ -385,6 +390,7 @@ void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)
 
 void RooStats::HistFactory::JSONTool::activateStatError(JSONNode &sampleNode)
 {
-   auto &node = RooJSONFactoryWSTool::appendNamedChild(sampleNode["modifiers"], "mcstat");
+   auto &node = sampleNode["modifiers"].set_seq().append_child().set_map();
+   node["name"] << "mcstat";
    node["type"] << "staterror";
 }
