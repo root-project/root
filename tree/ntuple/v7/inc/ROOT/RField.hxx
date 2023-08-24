@@ -641,7 +641,8 @@ public:
 
 
 
-/// The container field for an ntuple model, which itself has no physical representation
+/// The container field for an ntuple model, which itself has no physical representation.
+/// Therefore, the zero field must not be connected to a page source or sink.
 class RFieldZero : public Detail::RFieldBase {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
