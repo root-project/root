@@ -88,6 +88,8 @@ class RFitPanel {
 
    TPad *GetDrawPad(TObject *obj, bool force = false);
 
+   void DoPadUpdate(TPad *pad);
+
    void SendModel();
 
    bool DoFit();

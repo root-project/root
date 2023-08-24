@@ -1514,6 +1514,23 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       ROOT::RWebWindow::EmbedFileDialog(fWindow, connid, arg);
 
+   } else if (arg == "FITPANEL"s) {
+
+      TH1 *hist = nullptr;
+      TIter iter(Canvas()->GetListOfPrimitives());
+      while (auto obj = iter()) {
+         hist = dynamic_cast<TH1 *>(obj);
+         if (hist) break;
+      }
+
+      TString cmd = TString::Format("auto panel = std::make_shared<ROOT::Experimental::RFitPanel>(\"FitPanel\");"
+                                    "panel->AssignCanvas(\"%s\");"
+                                    "panel->AssignHistogram((TH1 *)0x%zx);"
+                                    "panel->Show();"
+                                    "panel->ClearOnClose(panel);", Canvas()->GetName(), (size_t) hist);
+
+      gROOT->ProcessLine(cmd.Data());
+
    } else if (IsReadOnly()) {
 
       // all following messages are not allowed in readonly mode
