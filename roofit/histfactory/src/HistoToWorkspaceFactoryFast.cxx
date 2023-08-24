@@ -355,6 +355,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       command << "Gaussian::" << constraintName << "(" << paramName << ",nom_" << paramName << "[0.,-10,10],"
               << gaussSigma << ")";
       constraintTermNames.emplace_back(proto.factory(command.str())->GetName());
+      proto.var(paramName)->setError(gaussSigma); // give param initial error to match gaussSigma
       auto * normParam = proto.var(std::string("nom_") + paramName);
       normParam->setConstant();
       const_cast<RooArgSet*>(proto.set("globalObservables"))->add(*normParam);
@@ -797,14 +798,19 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // this is ratio of lumi to nominal lumi.  We will include relative uncertainty in model
     getOrCreate<RooRealVar>(*proto, "Lumi", fNomLumi, 0.0, 10 * fNomLumi);
 
-    std::stringstream lumiErrorStr;
-    lumiErrorStr << "nominalLumi["<<fNomLumi << ",0,"<<fNomLumi+10*fLumiError<<"]," << fLumiError ;
-    proto->factory("Gaussian::lumiConstraint(Lumi,"+lumiErrorStr.str()+")");
-    proto->var("nominalLumi")->setConstant();
-    proto->defineSet("globalObservables","nominalLumi");
-    //likelihoodTermNames.push_back("lumiConstraint");
-    constraintTermNames.push_back("lumiConstraint");
-
+    // only include a lumiConstraint if there's a lumi uncert, otherwise just set the lumi constant
+    if(fLumiError != 0) {
+      std::stringstream lumiErrorStr;
+      lumiErrorStr << "nominalLumi["<<fNomLumi << ",0,"<<fNomLumi+10*fLumiError<<"]," << fLumiError ;
+      proto->factory("Gaussian::lumiConstraint(Lumi,"+lumiErrorStr.str()+")");
+      proto->var("Lumi")->setError(fLumiError/fNomLumi); // give initial error value
+      proto->var("nominalLumi")->setConstant();
+      proto->defineSet("globalObservables","nominalLumi");
+      //likelihoodTermNames.push_back("lumiConstraint");
+      constraintTermNames.push_back("lumiConstraint");
+    } else {
+      proto->var("Lumi")->setConstant();
+    }
     //proto->factory("SigXsecOverSM[1.,0.5,1..8]");
     ///////////////////////////////////
     // loop through estimates, add expectation, floating bin predictions,
