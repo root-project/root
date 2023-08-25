@@ -1217,11 +1217,10 @@ void RooJSONFactoryWSTool::importFunction(const std::string &jsonString, bool im
  */
 void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, JSONNode &output)
 {
-   auto &observablesNode = output["axes"].set_seq();
+   auto &observablesNode = output["axes"];
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(vars)) {
-      JSONNode &obsNode = observablesNode.append_child().set_map();
-      obsNode["name"] << var->GetName();
+      auto &obsNode = appendNamedChild(observablesNode, var->GetName());
       if (var->getBinning().isUniform()) {
          obsNode["min"] << var->getMin();
          obsNode["max"] << var->getMax();
@@ -1452,13 +1451,14 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
    RooArgSet vars;
 
    for (JSONNode const &nd : node["axes"].children()) {
+      std::string nameStr{RooJSONFactoryWSTool::name(nd)};
+      auto name = nameStr.c_str();
       if (nd.has_child("bounds")) {
          std::vector<double> bounds;
          for (auto const &bound : nd["bounds"].children()) {
             bounds.push_back(bound.val_double());
          }
-         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(), bounds[0],
-                                                 bounds[bounds.size() - 1]);
+         auto obs = std::make_unique<RooRealVar>(name, name, bounds[0], bounds[bounds.size() - 1]);
          RooBinning bins(obs->getMin(), obs->getMax());
          ;
          for (auto b : bounds) {
@@ -1467,8 +1467,7 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
          obs->setBinning(bins);
          vars.addOwned(std::move(obs));
       } else {
-         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(),
-                                                 nd["min"].val_double(), nd["max"].val_double());
+         auto obs = std::make_unique<RooRealVar>(name, name, nd["min"].val_double(), nd["max"].val_double());
          obs->setBins(nd["nbins"].val_int());
          vars.addOwned(std::move(obs));
       }
