@@ -377,22 +377,22 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
                            RooHistFunc* nominalFunc,
                            RooWorkspace* proto, const std::vector<HistoSys>& histoSysList,
                            const string& prefix,
-                           const RooArgList& observables) {
+                           const RooArgList& obsList) {
 
     // now make function that linearly interpolates expectation between variations
     // get low/high variations to interpolate between
-    vector<double> low, high;
-    RooArgSet lowSet, highSet;
-    //ES// for(unsigned int j=0; j<lowHist.size(); ++j){
+    std::vector<double> low;
+    std::vector<double> high;
+    RooArgSet lowSet;
+    RooArgSet highSet;
     for(unsigned int j=0; j<histoSysList.size(); ++j){
-      std::stringstream str;
-      str<<"_"<<j;
+      std::string str = prefix + "_" + std::to_string(j);
 
       const HistoSys& histoSys = histoSysList.at(j);
-      RooDataHist* lowDHist = new RooDataHist((prefix+str.str()+"lowDHist").c_str(),"",observables, histoSys.GetHistoLow());
-      RooDataHist* highDHist = new RooDataHist((prefix+str.str()+"highDHist").c_str(),"",observables, histoSys.GetHistoHigh());
-      lowSet.add(*new RooHistFunc((prefix+str.str()+"low").c_str(),"",observables,*lowDHist,0));
-      highSet.add(*new RooHistFunc((prefix+str.str()+"high").c_str(),"",observables,*highDHist,0));
+      auto lowDHist = std::make_unique<RooDataHist>((str+"lowDHist").c_str(),"",obsList, histoSys.GetHistoLow());
+      auto highDHist = std::make_unique<RooDataHist>((str+"highDHist").c_str(),"",obsList, histoSys.GetHistoHigh());
+      lowSet.addOwned(std::make_unique<RooHistFunc>((str+"low").c_str(),"",obsList,std::move(lowDHist),0));
+      highSet.addOwned(std::make_unique<RooHistFunc>((str+"high").c_str(),"",obsList,std::move(highDHist),0));
     }
 
     // this is sigma(params), a piece-wise linear interpolation
@@ -400,8 +400,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     interp.setPositiveDefinite();
     interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
     // KC: interpo codes 1 etc. don't have proper analytic integral.
-    RooArgSet observableSet(observables);
-    interp.setBinIntegrator(observableSet);
+    RooArgSet obsSet(obsList);
+    interp.setBinIntegrator(obsSet);
     interp.forceNumInt();
 
     proto->import(interp, RecycleConflictNodes()); // individual params have already been imported in first loop of this function
