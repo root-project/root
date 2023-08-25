@@ -786,9 +786,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       {
          if (this.TestRnr("hit", hit, rnr_data)) return null;
 
+         let txName;
+         if (hit.fMarkerStyle == 3)
+            txName = "star5-32a.png";
+         else if (hit.fMarkerStyle == 2)
+            txName = "square-32a.png";
+         else
+            txName = "dot-32a.png"
+
          let s = this.RcMakeZSprite(hit.fMarkerColor, hit.fMarkerSize, hit.fSize,
             rnr_data.vtxBuff, hit.fTexX, hit.fTexY,
-            "star5-32a.png");
+            txName);
 
          this.RcPickable(hit, s);
 
