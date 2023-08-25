@@ -33,8 +33,18 @@ void points()
    auto eveMng = REX::REveManager::Create();
 
    REX::REveElement *event = eveMng->GetEventScene();
-   auto ps = createPointSet(100, 300);
-   event->AddElement(ps);
+
+   auto psDot = createPointSet(100, 300);
+   psDot->SetMarkerStyle(1);
+   event->AddElement(psDot);
+
+   auto psSquare = createPointSet(100, 300);
+   psSquare->SetMarkerStyle(2);
+   event->AddElement(psSquare);
+
+   auto psStar = createPointSet(10, 300);
+   psStar->SetMarkerStyle(3);
+   event->AddElement(psStar);
 
    eveMng->Show();
 }
