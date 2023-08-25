@@ -42,6 +42,9 @@
 #include "TanhGPU_FromONNX.hxx"
 #include "input_models/references/Tanh.ref.hxx"
 
+#include "ErfGPU_FromONNX.hxx"
+#include "input_models/references/Erf.ref.hxx"
+
 #include "LinearWithSigmoidGPU_FromONNX.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
 
@@ -515,6 +518,33 @@ TEST(ONNX, Tanh)
    EXPECT_EQ(output.size(), sizeof(Tanh_ExpectedOutput::outputs) / sizeof(float));
 
    float *correct = Tanh_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Erf)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   // Preparing the random input
+   std::vector<float> input({
+     -1.0412,  0.1918,  0.9985, -0.5959,  0.6842, -2.4718,  0.1804,  0.6851,
+      1.5646, -1.4981,  0.4248, -0.8504
+   });
+   
+
+   TMVA_SOFIE_Erf::Session s("ErfGPU_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Erf_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Erf_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -1102,10 +1132,6 @@ TEST(ONNX, RNNBidirectional)
       EXPECT_LE(std::abs(output_y[i] - correct_y[i]), TOLERANCE);
    }
 
-   for (size_t i=0; i<output_y.size(); i++) {
-      std::cout << "at i: " << i << ", " << output_y[i] << ", " << correct_y[i] << std::endl;
-   }
-
    // Checking output size
    EXPECT_EQ(output_yh.size(), sizeof(RNNBidirectional_ExpectedOutput::all_ones_yh) / sizeof(float));
 
@@ -1114,10 +1140,6 @@ TEST(ONNX, RNNBidirectional)
    // Checking every output value, one by one
    for (size_t i = 0; i < output_yh.size(); ++i) {
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
-   }
-
-   for (size_t i=0; i<output_yh.size(); i++) {
-      std::cout << "at i: " << i << ", " << output_yh[i] << ", " << correct_yh[i] << std::endl;
    }
 }
 
@@ -1163,9 +1185,6 @@ TEST(ONNX, RNNDefaults)
    // Preparing the standard all-ones input
    std::vector<float> input(9);
    std::iota(input.begin(), input.end(), 1.0f);
-   for (size_t i; i < input.size(); i++) {
-      std::cout << input[i] << std::endl;
-   }
    TMVA_SOFIE_RNNDefaults::Session s("RNNDefaultsGPU_FromONNX.dat");
    std::vector<std::vector<float>> output = s.infer(input);
    std::vector<float> output_y = output[0];
@@ -1820,10 +1839,6 @@ TEST(ONNX, ConvTransposeBias2dBatched)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 
-   for (size_t i = 0; i < output.size(); ++i) {
-      std::cout << output[i] << std::endl;
-      std::cout << correct[i] << std::endl;
-   }
 }
 
 TEST(ONNX, Sqrt)
