@@ -39,7 +39,7 @@ protected:
 public:
    TCivetwebWSEngine(struct mg_connection *conn) : THttpWSEngine(), fWSconn(conn) {}
 
-   virtual ~TCivetwebWSEngine() = default;
+   ~TCivetwebWSEngine() override = default;
 
    UInt_t GetId() const override { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 
@@ -76,6 +76,24 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////
+/// Check if engine has enough threads to process connect to new websocket handle
+
+Bool_t CheckEngineThreads(TCivetweb *engine, const char *uri, Bool_t longpoll)
+{
+   Int_t num_avail = engine->GetNumAvailableThreads();
+   if (longpoll) num_avail++;
+
+   if ((num_avail <= 0.1 * engine->GetNumThreads()) || (num_avail <= 2)) {
+      const char *cfg = engine->IsWebGui() ? "WebGui.HttpThreads parameter in rootrc" : "thrds=N parameter in config URL";
+      const char *place = longpoll ? "TCivetweb::LongpollHandler" : "TCivetweb::WebSocketHandler";
+      ::Error(place, "Only %d threads are available, reject connection request for %s. Increase %s, now it is %d", num_avail, uri, cfg, engine->GetNumThreads());
+      return kFALSE;
+   }
+
+   return kTRUE;
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 int websocket_connect_handler(const struct mg_connection *conn, void *)
 {
@@ -90,19 +108,14 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    if (!serv)
       return 1;
 
-   Int_t num_avail = engine->GetNumAvailableThreads();
-
-   if ((num_avail <= 0.1 * engine->GetNumThreads()) || (num_avail <= 2)) {
-      const char *cfg = "thrds=N parameter in config URL";
-      ::Error("TCivetweb::WebSocketHandler", "Only %d threads are available, reject connection request for %s. Increase %s, now it is %d", num_avail, request_info->local_uri, cfg, engine->GetNumThreads());
-      return 1;
-   }
-
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
    arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CONNECT");
+
+   if (!CheckEngineThreads(engine, arg->GetPathName(), kFALSE))
+      return 1;
 
    Bool_t execres = serv->ExecuteWS(arg, kTRUE, kTRUE);
 
@@ -272,6 +285,24 @@ struct TEngineHolder {
 };
 
 //////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE in case of longpoll connection request - or at least looks like that
+
+Bool_t IsBadLongPollConnect(TCivetweb *engine, const std::shared_ptr<THttpCallArg> &arg)
+{
+   if (strcmp(arg->GetFileName(), "root.longpoll") != 0)
+      return kFALSE;
+
+   const char *q = arg->GetQuery();
+   if (!q || !*q)
+      return kFALSE;
+
+   if ((strstr(q, "raw_connect") != q) && (strstr(q, "txt_connect") != q))
+      return kFALSE;
+
+   return !CheckEngineThreads(engine, arg->GetPathName(), kTRUE);
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 static int begin_request_handler(struct mg_connection *conn, void *)
 {
@@ -362,6 +393,9 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 
          arg->SetContent(cont);
 
+      } else if (IsBadLongPollConnect(engine, arg)) {
+         execres = kFALSE;
+         arg->Set404();
       } else {
          execres = serv->ExecuteHttp(arg);
       }
@@ -594,6 +628,8 @@ Bool_t TCivetweb::Create(const char *args)
 
          if (url.IsValid()) {
             url.ParseOptions();
+
+            fWebGui = url.HasOption("webgui");
 
             const char *top = url.GetValueFromOptions("top");
             if (top)

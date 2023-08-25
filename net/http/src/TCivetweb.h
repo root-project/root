@@ -26,6 +26,7 @@ protected:
    Int_t fNumActiveThreads{0};  ///<! number of active threads - used in request and websocket handling
    std::mutex fMutex;           ///<! mutex to read/write fNumActiveThreads
    TString fTopName;            ///<! name of top item
+   Bool_t fWebGui{kFALSE};      ///<! if server used for webgui
    Bool_t fDebug{kFALSE};       ///<! debug mode
    Bool_t fTerminating{kFALSE}; ///<! server doing shutdown and not react on requests
    Bool_t fOnlySecured{kFALSE}; ///<! if server should run only https protocol
@@ -49,6 +50,8 @@ public:
    Int_t ChangeNumActiveThrerads(int cnt = 0);
 
    const char *GetTopName() const { return fTopName.Data(); }
+
+   Bool_t IsWebGui() const { return fWebGui; }
 
    Bool_t IsDebugMode() const { return fDebug; }
 
