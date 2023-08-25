@@ -44,7 +44,7 @@ public:
 
    Int_t GetNumThreads() const { return fNumThreads; }
 
-   Int_t GetNumActiveThreads();
+   Int_t GetNumAvailableThreads();
 
    Int_t ChangeNumActiveThrerads(int cnt = 0);
 

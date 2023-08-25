@@ -22,6 +22,7 @@
 #include "THttpWSEngine.h"
 #include "TUrl.h"
 #include "TSystem.h"
+#include "TError.h"
 
 //////////////////////////////////////////////////////////////////////////
 /// TCivetwebWSEngine
@@ -88,6 +89,14 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    THttpServer *serv = engine->GetServer();
    if (!serv)
       return 1;
+
+   Int_t num_avail = engine->GetNumAvailableThreads();
+
+   if ((num_avail <= 0.1 * engine->GetNumThreads()) || (num_avail <= 2)) {
+      const char *cfg = "thrds=N parameter in config URL";
+      ::Error("TCivetweb::WebSocketHandler", "Only %d threads are available, reject connection request for %s. Increase %s, now it is %d", num_avail, request_info->local_uri, cfg, engine->GetNumThreads());
+      return 1;
+   }
 
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
@@ -497,10 +506,10 @@ Int_t TCivetweb::ProcessLog(const char *message)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns number of actively used threads
 
-Int_t TCivetweb::GetNumActiveThreads()
+Int_t TCivetweb::GetNumAvailableThreads()
 {
    std::lock_guard<std::mutex> guard(fMutex);
-   return fNumActiveThreads;
+   return fNumThreads - fNumActiveThreads;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
