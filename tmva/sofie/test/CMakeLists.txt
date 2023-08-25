@@ -16,6 +16,27 @@ if (NOT ONNX_MODELS_DIR)
   set(ONNX_MODELS_DIR input_models)
 endif()
 
+if (tmva-sycl AND testing)
+  set (KNOWN_SYCL_IMPLEMENTATIONS "IntelSYCL;IntelDPCPP;hipSYCL")
+  
+  if (NOT ${SYCL_IMPLEMENTATION} IN_LIST KNOWN_SYCL_IMPLEMENTATIONS OR NOT SYCL_IMPLEMENTATION)
+      message(FATAL_ERROR
+          "Building SOFIE-SYCL tests requires specifying a SYCL implementation with "
+          "-DSYCL_IMPLEMENTATION=[IntelSYCL,IntelDPCPP;hipSYCL]")
+  endif()
+
+  if (${SYCL_IMPLEMENTATION} STREQUAL "IntelSYCL" OR ${SYCL_IMPLEMENTATION} STREQUAL "IntelDPCPP")
+    if( NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND
+    NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+      message(FATAL_ERROR "Set -DCMAKE_CXX_COMPILER or environment variable to a SYCL compatible compiler: icx, clang++, icpx") 
+      return()
+    else()
+      find_package(${SYCL_IMPLEMENTATION} REQUIRED)
+    endif()
+  endif()
+endif()
+
+
 #Finding .onnx files to be parsed AND creating the appropriate code to
 # parse all file. It is much faster to combine all parsing in a single executable
 # which will avoid initialization time (especially when using ROOT)
@@ -128,7 +149,6 @@ endif()
 
 # Creating a Google Test
 if (tmva-sycl AND testing)  # we need oneapi math kernel library to compile the models
-find_package(IntelSYCL REQUIRED)
 find_package(MKL REQUIRED)
 ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
   LIBRARIES
