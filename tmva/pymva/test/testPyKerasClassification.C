@@ -18,7 +18,7 @@ model = Sequential()\n\
 model.add(Dense(64, activation=\"relu\", input_dim=4))\n\
 model.add(Dense(2, activation=\"softmax\"))\n\
 model.compile(loss=\"categorical_crossentropy\", optimizer=\"Adam\", weighted_metrics=[\"accuracy\",])\n\
-model.save(\"kerasModelClassification.keras\")\n";
+model.save(\"kerasModelClassification.h5\")\n";
 
 int testPyKerasClassification(){
 
@@ -68,7 +68,7 @@ int testPyKerasClassification(){
 
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyKeras, "PyKeras",
-      "!H:!V:VarTransform=D,G:FilenameModel=kerasModelClassification.keras:FilenameTrainedModel=trainedKerasModelClassification.keras:NumEpochs=10:BatchSize=32:SaveBestOnly=false:Verbose=0:NumThreads=1:tf.keras");
+      "!H:!V:VarTransform=D,G:FilenameModel=kerasModelClassification.h5:FilenameTrainedModel=trainedKerasModelClassification.h5:NumEpochs=10:BatchSize=32:SaveBestOnly=false:Verbose=0:NumThreads=1:tf.keras");
    std::cout << "Train model..." << std::endl;
    factory->TrainAllMethods();
 
