@@ -526,12 +526,10 @@ void RooAddPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::Dat
 
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
-  auto normAndCache = getNormAndCache(nullptr);
-  const RooArgSet* nset = normAndCache.first;
-  AddCacheElem* cache = normAndCache.second;
+  AddCacheElem* cache = getProjCache(nullptr);
   // We don't sync the coefficient values from the _coefList to the _coefCache
   // because we have already done it using the dataMap.
-  updateCoefficients(*cache, nset, /*syncCoefValues=*/false);
+  updateCoefficients(*cache, nullptr, /*syncCoefValues=*/false);
 
   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo)
   {

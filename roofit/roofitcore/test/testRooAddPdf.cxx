@@ -4,8 +4,8 @@
 #include <RooAddPdf.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
-#include <RooExponential.h>
-#include <RooGaussian.h>
+#include <RooFit/Evaluator.h>
+#include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
 #include <RooMsgService.h>
@@ -26,87 +26,60 @@ TEST(RooAddPdf, TestSPlot)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   double lowRange = 0.;
-   double highRange = 200.;
-   RooRealVar invMass("invMass", "M_{inv}", lowRange, highRange, "GeV");
-   RooRealVar isolation("isolation", "isolation", 0., 20., "GeV");
+   RooWorkspace ws;
 
    // mass model: linear combination of two Gaussians of different widths
-   RooRealVar mZ("mZ", "Z Mass", 91.2, lowRange, highRange);
-   RooRealVar sigmaZ("sigmaZ", "Width of Gaussian", 2, 0.1, 10, "GeV");
-   RooGaussian mZModel1("mZModel1", "Z+jets Model", invMass, mZ, sigmaZ);
-
-   RooRealVar sigmaZ2("sigmaZ2", "Width of Gaussian", 1.5, 0.01, 10, "GeV");
-   RooGaussian mZModel2("mZModel2", "Z+jets Model", invMass, mZ, sigmaZ2);
-
-   RooRealVar frac_1a("frac_1a", "frac_1a", 0.5); // fraction of the first Gaussian
-
-   RooArgList shapes_DCB;
-   shapes_DCB.add(mZModel1);
-   shapes_DCB.add(mZModel2);
-
-   RooArgList yields_DCB;
-   yields_DCB.add(frac_1a);
-
-   RooArgSet normSet(invMass);
-
-   RooAddPdf mZModel("mZModel", "mZModel", shapes_DCB, yields_DCB);
+   ws.factory("Gaussian::mZModel1(invMass[0., 200.], mZ[91.2, 0., 200.], sigmaZ[2, 0.1, 10])");
+   ws.factory("Gaussian::mZModel2(invMass[0., 200.], mZ[91.2, 0., 200.], sigmaZ2[1.5, 0.01, 10])");
+   ws.factory("SUM::mZModel(frac_1a[0.5] * mZModel1, mZModel2)");
 
    // isolation model for Z-boson.  Only used to generate toy MC.
-
-   RooConstVar zIsolDecayConst("zIsolDecayConst", "z isolation decay  constant", -1);
-   RooExponential zIsolationModel("zIsolationModel", "z isolation model", isolation, zIsolDecayConst);
+   ws.factory("Exponential::zIsolationModel(isolation[0., 20.], zIsolDecayConst[-1])");
 
    // make the combined Z model
-   RooProdPdf zModel("zModel", "2-d model for Z", {mZModel, zIsolationModel});
-
-   // make the QCD model
+   ws.factory("PROD::zModel(mZModel, zIsolationModel)");
 
    // mass model for QCD.
-
-   RooRealVar qcdMassDecayConst("qcdMassDecayConst", "Decay const for QCD mass spectrum", -0.01, -100, 100, "1/GeV");
-   RooExponential qcdMassModel("qcdMassModel", "qcd Mass Model", invMass, qcdMassDecayConst);
+   ws.factory("Exponential::qcdMassModel(invMass, qcdMassDecayConst[-0.01, -100, 100])");
 
    // isolation model for QCD.
-   RooConstVar qcdIsolDecayConst("qcdIsolDecayConst", "Et resolution constant", -.1);
-   RooExponential qcdIsolationModel("qcdIsolationModel", "QCD isolation model", isolation, qcdIsolDecayConst);
+   ws.factory("Exponential::qcdIsolationModel(isolation, qcdIsolDecayConst[-0.1])");
 
-   // make the 2D model
-   RooProdPdf qcdModel("qcdModel", "2-d model for QCD", {qcdMassModel, qcdIsolationModel});
-
-   // --------------------------------------
-   // combined model
-
-   // These variables represent the number of Z or QCD events
-   // They will be fitted.
-   RooRealVar zYield("zYield", "fitted yield for Z", 300, 0., 10000);
-   RooRealVar qcdYield("qcdYield", "fitted yield for QCD", 2700, 0., 10000);
+   // make the 2D QCD model
+   ws.factory("PROD::qcdModel(qcdMassModel, qcdIsolationModel)");
 
    // now make the combined model
    // this is the 2D model for generation only
-   RooAddPdf model_gen("model_gen", "mygreatmodel_gen", {zModel, qcdModel}, {zYield, qcdYield});
+   ws.factory("SUM::model_gen(zYield[300, 0., 10000] * zModel, qcdYield[2700, 0., 10000] * qcdModel)");
    // this is the mass model for the fit only
-   RooAddPdf model("model", "mygreatmodel", {mZModel, qcdMassModel}, {zYield, qcdYield});
+   ws.factory("SUM::model(zYield[300, 0., 10000] * mZModel, qcdYield[2700, 0., 10000] * qcdMassModel)");
 
-   int nEvents = zYield.getVal() + qcdYield.getVal();
+   RooRealVar &invMass = *ws.var("invMass");
+   RooRealVar &isolation = *ws.var("isolation");
+   RooRealVar &zYield = *ws.var("zYield");
+   RooRealVar &qcdYield = *ws.var("qcdYield");
+   RooAbsPdf &model_gen = *ws.pdf("model_gen");
+   RooAbsPdf &model = *ws.pdf("model");
+
+   RooArgSet normSet{invMass};
 
    // make the toy data
-   std::unique_ptr<RooDataSet> data{model_gen.generate({invMass, isolation}, nEvents, RooFit::Name("mygendataset"))};
+   std::unique_ptr<RooDataSet> data{model_gen.generate({invMass, isolation}, RooFit::Name("mygendataset"))};
 
    // fit the model to the data.
    model.fitTo(*data, RooFit::Extended(), RooFit::PrintLevel(-1));
 
-   double valYieldBefore = zYield.getVal();
+   const double valYieldBefore = zYield.getVal();
 
    // fix the parameters that are not yields before doing the sPlot
-   qcdMassDecayConst.setConstant(true);
-   sigmaZ.setConstant(true);
-   sigmaZ2.setConstant(true);
-   mZ.setConstant(true);
+   ws.var("qcdMassDecayConst")->setConstant(true);
+   ws.var("sigmaZ")->setConstant(true);
+   ws.var("sigmaZ2")->setConstant(true);
+   ws.var("mZ")->setConstant(true);
 
    RooStats::SPlot("sData", "An SPlot", *data, &model, {zYield, qcdYield});
 
-   double valYieldAfter = zYield.getVal();
+   const double valYieldAfter = zYield.getVal();
 
    EXPECT_NEAR(valYieldAfter, valYieldBefore, 1e-1)
       << "Doing the SPlot should not change parameter values by orders of magnitudes!";
@@ -197,6 +170,7 @@ class ProjCacheTest : public testing::TestWithParam<std::tuple<bool>> {
 
 protected:
    bool _fixCoefNormalization = false;
+
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
@@ -368,4 +342,43 @@ TEST(RooAddPdf, ROOT10483)
    // the plot will be good (i.e. less than one) as the data was directly
    // sampled from the model.
    EXPECT_LE(frame->chiSquare(), 1.0);
+}
+
+/// If you add components where each component only depends on a subset of the
+/// union set of the observables, the RooAddPdf should understand that the
+/// component is uniform in the missing observables. This is validated in the
+/// following test for both the getVal() interface and evaluation with the
+/// RooFit::Evaluator.
+TEST(RooAddPdf, ImplicitDimensions)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", 5, 0, 10};
+   RooRealVar y{"y", "y", 5, 0, 10};
+
+   // Define the PDFs such that they explicitly depend on only one of the
+   // observables each. This means the RooAddPdf needs to figure out iteself
+   // that in the other dimensions (y for uniformX and x for uniformY), the
+   // distribution is implicitly uniform.
+   RooGenericPdf uniformX{"uniform_x", "x - x + 1.0", x};
+   RooGenericPdf uniformY{"uniform_y", "y - y + 1.0", y};
+
+   RooAddPdf pdf{"pdf", "pdf", {uniformX, uniformY}, {RooConst(0.5)}};
+
+   RooArgSet normSet{x, y};
+
+   std::unique_ptr<RooAbsReal> pdfCompiled{RooFit::Detail::compileForNormSet(pdf, normSet)};
+   RooFit::Evaluator evaluator{*pdfCompiled};
+
+   pdf.fixAddCoefNormalization(normSet);
+   pdfCompiled->fixAddCoefNormalization(normSet);
+
+   // A uniform distribution in x and y should have this value everywhere,
+   // given our limits for x and y.
+   const double refVal = 0.01;
+
+   EXPECT_DOUBLE_EQ(pdf.getVal(normSet), refVal);
+   EXPECT_DOUBLE_EQ(evaluator.run()[0], refVal);
 }

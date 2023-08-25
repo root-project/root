@@ -377,8 +377,7 @@ double RooAddModel::evaluate() const
   return value ;
 }
 
-void RooAddModel::computeBatch(double *output, size_t nEvents,
-                               RooFit::Detail::DataMap const &dataMap) const
+void RooAddModel::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
    // Like many other functions in this class, the implementation was copy-pasted from the RooAddPdf
    RooBatchCompute::Config config = dataMap.config(this);
@@ -402,11 +401,8 @@ void RooAddModel::computeBatch(double *output, size_t nEvents,
 
    RooBatchCompute::VarVector pdfs;
    RooBatchCompute::ArgVector coefs;
-   const RooArgSet *nset = nullptr;
    AddCacheElem *cache = getProjCache(nullptr);
-   // We don't sync the coefficient values from the _coefList to the _coefCache
-   // because we have already done it using the dataMap.
-   updateCoefficients(*cache, nset);
+   updateCoefficients(*cache, nullptr);
 
    for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo) {
       auto pdf = static_cast<RooAbsPdf *>(&_pdfList[pdfNo]);
