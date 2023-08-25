@@ -257,6 +257,13 @@
 #include "Slice_NegGPU_FromONNX.hxx"
 #include "input_models/references/Slice_Neg.ref.hxx"
 
+
+#include "TransposeGPU_FromONNX.hxx"
+#include "input_models/references/Transpose.ref.hxx"
+
+#include "Transpose_permutationGPU_FromONNX.hxx"
+#include "input_models/references/Transpose_permutation.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2409,6 +2416,38 @@ TEST(ONNX, Slice_Neg) {
    
    EXPECT_EQ(output.size(), sizeof(Slice_Neg::output) / sizeof(float));
    float *correct = Slice_Neg::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+TEST(ONNX, Transpose) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = std::vector<float>(Transpose::input);
+   TMVA_SOFIE_Transpose::Session s("Transpose.dat");
+   std::vector<float> output(s.infer(input));
+   
+   EXPECT_EQ(output.size(), sizeof(Transpose::output) / sizeof(float));
+   float *correct = Transpose::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+TEST(ONNX, Transpose_permutation) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = std::vector<float>(Transpose_permutation::input);
+   TMVA_SOFIE_Transpose_permutation::Session s("Transpose_permutation.dat");
+   std::vector<float> output(s.infer(input));
+   
+   EXPECT_EQ(output.size(), sizeof(Transpose_permutation::output) / sizeof(float));
+   float *correct = Transpose_permutation::output;
 
    for (size_t i=0; i<output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
