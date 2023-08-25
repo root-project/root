@@ -37,7 +37,5 @@ endif()
                  ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
                  )
 
-  if(NOT MSVC OR win_broken_tests)
-    add_subdirectory(vectorisedPDFs)
-  endif()
+  add_subdirectory(vectorisedPDFs)
 endif()
