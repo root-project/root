@@ -425,7 +425,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             }
          }
 
-         engine.Append(TString::Format("thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
+         engine.Append(TString::Format("webgui&thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
 
          if (http_maxage >= 0)
             engine.Append(TString::Format("&max_age=%d", http_maxage));
