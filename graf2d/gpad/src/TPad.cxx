@@ -6583,9 +6583,12 @@ void TPad::Streamer(TBuffer &b)
 
          //Set the kCanDelete bit in all objects in the pad such that when the pad
          //is deleted all objects in the pad are deleted too.
+         //Also set must cleanup bit which normally set for all primitives add to pad,
+         // but may be reset in IO like TH1::Streamer does
          TIter next(fPrimitives);
          while ((obj = next())) {
             obj->SetBit(kCanDelete);
+            obj->SetBit(kMustCleanup);
          }
 
          fModified = kTRUE;
