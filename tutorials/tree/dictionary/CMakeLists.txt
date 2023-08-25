@@ -19,7 +19,9 @@ project(treeUsingCustomClass)
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
 find_package(ROOT REQUIRED COMPONENTS Tree TreePlayer ROOTDataFrame)
 
-#---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
+#---Include a CMake module which makes use of the previous variables and loads modules 
+#   with useful macros or functions such as ROOT_GENERATE_DICTIONARY
+#   For further details: https://root-forum.cern.ch/t/how-to-integrate-root-into-my-project-with-cmake/37175
 include(${ROOT_USE_FILE})
 
 #---Add include directory of ROOT to the build
