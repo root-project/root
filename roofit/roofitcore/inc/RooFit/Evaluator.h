@@ -11,8 +11,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_RooFitDriver_h
-#define RooFit_RooFitDriver_h
+#ifndef RooFit_Evaluator_h
+#define RooFit_Evaluator_h
 
 #include <RooFit/Detail/DataMap.h>
 #include <RooHelpers.h>
@@ -24,8 +24,7 @@
 
 class RooAbsArg;
 
-namespace ROOT {
-namespace Experimental {
+namespace RooFit {
 
 namespace Detail {
 class BufferManager;
@@ -37,10 +36,10 @@ namespace Detail {
 class BufferManager;
 }
 
-class RooFitDriver {
+class Evaluator {
 public:
-   RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption batchMode = RooFit::BatchModeOption::Cpu);
-   ~RooFitDriver();
+   Evaluator(const RooAbsReal &absReal, bool useGPU=false);
+   ~Evaluator();
 
    std::span<const double> run();
    void setInput(std::string const &name, std::span<const double> inputArray, bool isOnDevice);
@@ -62,7 +61,7 @@ private:
 
    std::unique_ptr<Detail::BufferManager> _bufferManager;
    RooAbsReal &_topNode;
-   const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
+   const bool _useGPU = false;
    int _nEvaluations = 0;
    bool _needToUpdateOutputSizes = false;
    RooFit::Detail::DataMap _dataMapCPU;
@@ -73,7 +72,6 @@ private:
    std::stack<RooHelpers::ChangeOperModeRAII> _changeOperModeRAIIs; // for resetting state of computation graph
 };
 
-} // end namespace Experimental
-} // end namespace ROOT
+} // end namespace RooFit
 
 #endif

@@ -12,16 +12,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_RooFitDriverWrapper_h
-#define RooFit_RooFitDriverWrapper_h
+#ifndef RooFit_RooEvaluatorWrapper_h
+#define RooFit_RooEvaluatorWrapper_h
 
 #include <RooAbsData.h>
 #include "RooFit/Detail/DataMap.h"
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooRealProxy.h>
+#include <RooFit/Evaluator.h>
+
 #include "RooFit/Detail/Buffers.h"
-#include "RooFitDriver.h"
 
 #include <chrono>
 #include <memory>
@@ -31,14 +32,14 @@ class RooAbsArg;
 class RooAbsCategory;
 class RooSimultaneous;
 
-class RooFitDriverWrapper final : public RooAbsReal {
+class RooEvaluatorWrapper final : public RooAbsReal {
 public:
-   RooFitDriverWrapper(RooAbsReal &topNode, std::unique_ptr<ROOT::Experimental::RooFitDriver> driver,
-                       std::string const &rangeName, RooSimultaneous const *simPdf, bool takeGlobalObservablesFromData);
+   RooEvaluatorWrapper(RooAbsReal &topNode, std::unique_ptr<RooFit::Evaluator> evaluator, std::string const &rangeName,
+                       RooSimultaneous const *simPdf, bool takeGlobalObservablesFromData);
 
-   RooFitDriverWrapper(const RooFitDriverWrapper &other, const char *name = nullptr);
+   RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const char *name = nullptr);
 
-   TObject *clone(const char *newname) const override { return new RooFitDriverWrapper(*this, newname); }
+   TObject *clone(const char *newname) const override { return new RooEvaluatorWrapper(*this, newname); }
 
    double defaultErrorLevel() const override { return _topNode->defaultErrorLevel(); }
 
@@ -53,14 +54,14 @@ public:
    void printMultiline(std::ostream &os, Int_t /*contents*/, bool /*verbose*/ = false,
                        TString /*indent*/ = "") const override
    {
-      _driver->print(os);
+      _evaluator->print(os);
    }
 
 protected:
-   double evaluate() const override { return _driver ? _driver->run()[0] : 0.0; }
+   double evaluate() const override { return _evaluator ? _evaluator->run()[0] : 0.0; }
 
 private:
-   std::shared_ptr<ROOT::Experimental::RooFitDriver> _driver;
+   std::shared_ptr<RooFit::Evaluator> _evaluator;
    RooRealProxy _topNode;
    RooAbsData *_data = nullptr;
    RooArgSet _parameters;

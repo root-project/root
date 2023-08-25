@@ -14,14 +14,14 @@
 
 /**
 \internal
-\file RooFitDriverWrapper.cxx
-\class RooFitDriverWrapper
+\file RooEvaluatorWrapper.cxx
+\class RooEvaluatorWrapper
 \ingroup Roofitcore
 
-Wraps a RooFitDriver that evaluates a RooAbsReal back into a RooAbsReal.
+Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 **/
 
-#include "RooFitDriverWrapper.h"
+#include "RooEvaluatorWrapper.h"
 
 #include <RooAbsData.h>
 #include <RooAbsReal.h>
@@ -33,11 +33,11 @@ Wraps a RooFitDriver that evaluates a RooAbsReal back into a RooAbsReal.
 
 #include <TList.h>
 
-RooFitDriverWrapper::RooFitDriverWrapper(RooAbsReal &topNode, std::unique_ptr<ROOT::Experimental::RooFitDriver> driver,
+RooEvaluatorWrapper::RooEvaluatorWrapper(RooAbsReal &topNode, std::unique_ptr<RooFit::Evaluator> evaluator,
                                          std::string const &rangeName, RooSimultaneous const *simPdf,
                                          bool takeGlobalObservablesFromData)
-   : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"},
-     _driver{std::move(driver)},
+   : RooAbsReal{"RooEvaluatorWrapper", "RooEvaluatorWrapper"},
+     _evaluator{std::move(evaluator)},
      _topNode("topNode", "top node", this, topNode),
      _rangeName{rangeName},
      _simPdf{simPdf},
@@ -45,9 +45,9 @@ RooFitDriverWrapper::RooFitDriverWrapper(RooAbsReal &topNode, std::unique_ptr<RO
 {
 }
 
-RooFitDriverWrapper::RooFitDriverWrapper(const RooFitDriverWrapper &other, const char *name)
+RooEvaluatorWrapper::RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const char *name)
    : RooAbsReal{other, name},
-     _driver{other._driver},
+     _evaluator{other._evaluator},
      _topNode("topNode", this, other._topNode),
      _data{other._data},
      _rangeName{other._rangeName},
@@ -56,10 +56,10 @@ RooFitDriverWrapper::RooFitDriverWrapper(const RooFitDriverWrapper &other, const
 {
 }
 
-bool RooFitDriverWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
+bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
                                         bool /*stripDisconnected*/) const
 {
-   outputSet.add(_driver->getParameters());
+   outputSet.add(_evaluator->getParameters());
    if (observables) {
       outputSet.remove(*observables);
    }
@@ -73,14 +73,14 @@ bool RooFitDriverWrapper::getParameters(const RooArgSet *observables, RooArgSet 
    return false;
 }
 
-bool RooFitDriverWrapper::setData(RooAbsData &data, bool /*cloneData*/)
+bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
 {
    _data = &data;
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
    auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, _simPdf, /*skipZeroWeights=*/true,
                                                                _takeGlobalObservablesFromData, _vectorBuffers);
    for (auto const &item : dataSpans) {
-      _driver->setInput(item.first->GetName(), item.second, false);
+      _evaluator->setInput(item.first->GetName(), item.second, false);
    }
    return true;
 }

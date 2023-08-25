@@ -24,8 +24,7 @@
 
 #include <memory>
 
-namespace ROOT {
-namespace Experimental {
+namespace RooFit {
 namespace Detail {
 
 class AbsBuffer {
@@ -60,7 +59,6 @@ private:
 };
 
 } // end namespace Detail
-} // end namespace Experimental
-} // end namespace ROOT
+} // end namespace RooFit
 
 #endif

@@ -9,9 +9,9 @@
 #include <RooRealVar.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooFit/Detail/NormalizationHelpers.h>
+#include <RooFit/Evaluator.h>
 
 #include "../src/RooFit/BatchModeDataHelpers.h"
-#include "../src/RooFitDriver.h"
 
 #include <gtest/gtest.h>
 #include <array>
@@ -72,14 +72,14 @@ TEST(ParamHistFunc, ValidateND)
 
    // Get the results in BatchMode using the dataset
    std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(paramHistFunc, *data.get());
-   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
+   RooFit::Evaluator evaluator(*clone);
    std::stack<std::vector<double>> vectorBuffers;
    auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/true,
                                                                /*takeGlobalObservablesFromData=*/false, vectorBuffers);
    for (auto const &item : dataSpans) {
-      driver.setInput(item.first->GetName(), item.second, false);
+      evaluator.setInput(item.first->GetName(), item.second, false);
    }
-   std::span<const double> resultsBatch = driver.run();
+   std::span<const double> resultsBatch = evaluator.run();
 
    // Validate the results
    for (std::size_t i = 0; i < nEntries; ++i) {

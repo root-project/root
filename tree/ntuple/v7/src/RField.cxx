@@ -574,6 +574,10 @@ ROOT::Experimental::Detail::RFieldBase::SplitValue(const RValue & /*value*/) con
 void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
+   // Note that during a model update, new fields will be attached to the zero field. The zero field, however,
+   // does not change its inital state because only its sub fields get connected by RPageSink::UpdateSchema.
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
    child->fParent = this;
    fSubFields.emplace_back(std::move(child));
 }
@@ -600,12 +604,26 @@ std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail
    return result;
 }
 
-
-void ROOT::Experimental::Detail::RFieldBase::Flush() const
+void ROOT::Experimental::Detail::RFieldBase::CommitCluster()
 {
    for (auto& column : fColumns) {
       column->Flush();
    }
+   CommitClusterImpl();
+}
+
+void ROOT::Experimental::Detail::RFieldBase::SetDescription(std::string_view description)
+{
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("cannot set field description once field is connected"));
+   fDescription = std::string(description);
+}
+
+void ROOT::Experimental::Detail::RFieldBase::SetOnDiskId(DescriptorId_t id)
+{
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("cannot set field ID once field is connected"));
+   fOnDiskId = id;
 }
 
 const ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t &
@@ -618,7 +636,7 @@ ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentative() const
 
 void ROOT::Experimental::Detail::RFieldBase::SetColumnRepresentative(const ColumnRepresentation_t &representative)
 {
-   if (!fColumns.empty())
+   if (fState != EState::kUnconnected)
       throw RException(R__FAIL("cannot set column representative once field is connected"));
    const auto &validTypes = GetColumnRepresentations().GetSerializationTypes();
    auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), representative);
@@ -702,7 +720,10 @@ void ROOT::Experimental::Detail::RFieldBase::AutoAdjustColumnTypes(const RNTuple
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry)
 {
-   R__ASSERT(fColumns.empty());
+   if (dynamic_cast<ROOT::Experimental::RFieldZero *>(this))
+      throw RException(R__FAIL("invalid attempt to connect zero field to page sink"));
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("invalid attempt to connect an already connected field to a page sink"));
 
    AutoAdjustColumnTypes(pageSink.GetWriteOptions());
 
@@ -713,14 +734,22 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
       auto firstElementIndex = (column.get() == fPrincipalColumn) ? EntryToColumnElementIndex(firstEntry) : 0;
       column->Connect(fOnDiskId, &pageSink, firstElementIndex);
    }
+
+   fState = EState::kConnectedToSink;
 }
 
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &pageSource)
 {
-   R__ASSERT(fColumns.empty());
+   if (dynamic_cast<ROOT::Experimental::RFieldZero *>(this))
+      throw RException(R__FAIL("invalid attempt to connect zero field to page source"));
+   if (fState != EState::kUnconnected)
+      throw RException(R__FAIL("invalid attempt to connect an already connected field to a page source"));
+
    if (fColumnRepresentative)
       throw RException(R__FAIL("fixed column representative only valid when connecting to a page sink"));
+   if (!fDescription.empty())
+      throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
    {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
@@ -743,6 +772,8 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
    for (auto& column : fColumns)
       column->Connect(fOnDiskId, &pageSource);
    OnConnectPageSource();
+
+   fState = EState::kConnectedToSource;
 }
 
 
@@ -1204,11 +1235,6 @@ void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::Experimental:
    }
 }
 
-void ROOT::Experimental::RField<std::string>::CommitCluster()
-{
-   fIndex = 0;
-}
-
 void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitStringField(*this);
@@ -1644,11 +1670,6 @@ ROOT::Experimental::RProxiedCollectionField::SplitValue(const RValue &value) con
    return result;
 }
 
-void ROOT::Experimental::RProxiedCollectionField::CommitCluster()
-{
-   fNWritten = 0;
-}
-
 void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitProxiedCollectionField(*this);
@@ -1881,11 +1902,6 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
       result.emplace_back(fSubFields[0]->BindValue(vec->data() + (i * fItemSize)));
    }
    return result;
-}
-
-void ROOT::Experimental::RVectorField::CommitCluster()
-{
-   fNWritten = 0;
 }
 
 void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -2187,11 +2203,6 @@ size_t ROOT::Experimental::RRVecField::GetAlignment() const
    // the alignment of an RVec<T> is the largest among the alignments of its data members
    // (including the inline buffer which has the same alignment as the RVec::value_type)
    return std::max({alignof(void *), alignof(std::int32_t), fSubFields[0]->GetAlignment()});
-}
-
-void ROOT::Experimental::RRVecField::CommitCluster()
-{
-   fNWritten = 0;
 }
 
 void ROOT::Experimental::RRVecField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -2558,7 +2569,7 @@ size_t ROOT::Experimental::RVariantField::GetValueSize() const
    return fMaxItemSize + fMaxAlignment;  // TODO: fix for more than 255 items
 }
 
-void ROOT::Experimental::RVariantField::CommitCluster()
+void ROOT::Experimental::RVariantField::CommitClusterImpl()
 {
    std::fill(fNWritten.begin(), fNWritten.end(), 0);
 }
@@ -2912,7 +2923,7 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
    return result;
 }
 
-
-void ROOT::Experimental::RCollectionField::CommitCluster() {
+void ROOT::Experimental::RCollectionField::CommitClusterImpl()
+{
    *fCollectionNTuple->GetOffsetPtr() = 0;
 }
