@@ -1,8 +1,6 @@
 #include <numeric>
 
 #include "TMVA/RSofieReader.hxx"
-//#include "PyTorchSequentialModel.hxx"
-//#include "PyTorchConvolutionModel.hxx"
 
 #include <Python.h>
 #include "TSystem.h"
