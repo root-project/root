@@ -41,7 +41,8 @@ private:
    std::string fType;
 
 public:
-   ROperator_BatchNormalization() = delete;
+   ROperator_BatchNormalization() {}
+   //ROperator_BatchNormalization() = delete;
 
    /* Constructor */
    ROperator_BatchNormalization( float epsilon, float momentum, std::size_t training_mode,
@@ -243,7 +244,19 @@ public:
       out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_N, " << OpName << "_alpha, buf_tensor_" << fNMean;
       out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
 
-      out << SP*3 << "oneapi::mkl::blas::scal(q, " << n << ", " << "tensor_" << fNVar << "[0] * tensor_" << fNScale << "[0], buf_tensor_" << fNY << ", 1);\n";
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNVar << " = cl::sycl::accessor{buf_tensor_" << fNVar;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNScale << " = cl::sycl::accessor{buf_tensor_" << fNScale;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::read_write};\n";
+
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << n;
+      out << "), [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "acc_tensor_" << fNY << "[id] *= acc_tensor_" << fNVar << "[id] * acc_tensor_" << fNScale << "[id];\n";
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
 
       // blas axpy Y = Bbias + Y = (X - Bmean) * Scale * Var + Bbias
       out << SP*3 << OpName << "_alpha = 1;\n";

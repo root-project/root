@@ -48,6 +48,9 @@
 #include "LinearWithSigmoid_FromONNX.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
 
+#include "BatchNormalization_FromONNX.hxx"
+#include "input_models/references/BatchNormalization.ref.hxx"
+
 #include "ConvWithPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
 
@@ -622,6 +625,26 @@ TEST(ONNX, LinearWithSigmoid)
    }
 }
 
+TEST(ONNX, BatchNormalization)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input = std::vector<float>(BatchNormalization::input);
+   TMVA_SOFIE_BatchNormalization::Session s("BatchNormalization_FromONNX.dat");
+   auto output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(BatchNormalization::output) / sizeof(float));
+
+   float *correct = BatchNormalization::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
 
 TEST(ONNX, ConvWithPadding)
 {
