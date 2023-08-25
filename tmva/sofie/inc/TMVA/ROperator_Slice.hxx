@@ -147,7 +147,7 @@ public:
             // negative axes - they count from the back
             if (iaxes[i] < 0) iaxes[i] = dim + iaxes[i];
             size_t jaxis = static_cast<size_t>(iaxes[i]);
-            assert(jaxis < dim - 1);
+            assert(jaxis < dim);
             size_t imax = fShapeInput[jaxis];
             // find start/end/step for given axis
             IType start = (istart[i] >= 0) ? istart[i] : imax + istart[i];
