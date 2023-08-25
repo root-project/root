@@ -46,6 +46,15 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
       fullDepList.remove(*iset, true, true);
    }
 
+   // Reduce iset/nset to actual dependents of this PDF
+   RooArgSet nset2;
+   addPdf.getObservables(nset, nset2);
+
+   if (nset2.empty() && !refCoefNormSet.empty()) {
+      // Evaluating RooAddPdf without normalization, but have reference normalization for coefficient definition
+      nset2.add(refCoefNormSet);
+   }
+
    bool hasPdfWithCustomRange = false;
 
    // Fill with dummy unit RRVs for now
@@ -79,7 +88,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
       }
 
       if (!normRange.empty()) {
-         auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(*nset, *nset, normRange.c_str()));
+         auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(nset2, nset2, normRange.c_str()));
          if (snorm) {
             auto oldSnorm = std::move(snorm);
             snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm.get());
@@ -104,21 +113,6 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
    // If no projections required stop here
    if (refCoefNormSet.empty() && !projectCoefsForRangeReasons) {
       return;
-   }
-
-   // Reduce iset/nset to actual dependents of this PDF
-   RooArgSet nset2;
-   if (nset)
-      addPdf.getObservables(nset, nset2);
-   oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "(" << addPdf.GetName()
-                               << ")::getPC nset = " << (nset ? *nset : RooArgSet()) << " nset2 = " << nset2
-                               << std::endl;
-
-   if (nset2.empty() && !refCoefNormSet.empty()) {
-      // cout << "WVE: evaluating RooAddPdf without normalization, but have reference normalization for coefficient
-      // definition" << std::endl ;
-
-      nset2.add(refCoefNormSet);
    }
 
    if (!nset2.equals(refCoefNormSet) || projectCoefsForRangeReasons) {
