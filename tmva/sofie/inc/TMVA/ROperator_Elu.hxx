@@ -49,7 +49,7 @@ public:
 
    void Initialize(RModel& model){
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
-         throw std::runtime_error("TMVA SOFIE Leaky Relu Op Input Tensor is not found in model");
+         throw std::runtime_error("TMVA SOFIE Elu Op Input Tensor is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
@@ -59,7 +59,7 @@ public:
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
       if (fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Operator Leaky Relu called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Operator Elu called to Generate without being initialized first");
       }
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
@@ -80,4 +80,4 @@ public:
 }//TMVA
 
 
-#endif //TMVA_SOFIE_ROPERATOR_LeakyRelu
+#endif //TMVA_SOFIE_ROPERATOR_Elu
