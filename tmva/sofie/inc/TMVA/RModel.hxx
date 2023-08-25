@@ -131,7 +131,7 @@ public:
    }
 
    void PrintIntermediateTensors();
-   void OutputGenerated(std::string filename = "");
+   void OutputGenerated(std::string filename = "", bool append = false);
    void OutputGeneratedGPU(std::string filename = "");
    std::vector<std::string> GetOutputTensorNames(){
       return fOutputTensorNames;
