@@ -99,7 +99,6 @@ if(PY_TORCH_FOUND)
    if(APPLE)
       target_link_options(TestRModelParserPyTorch PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
    endif()
-      #add_dependencies(TestRModelParserPyTorch SofieCompileModels_PyTorch)
 
 endif(PY_TORCH_FOUND)
 
