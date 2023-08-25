@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -12,7 +12,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooPolynomial.h"
@@ -36,8 +35,8 @@ void rf312_multirangefit()
    RooRealVar mx("mx", "mx", 1, -10, 10);
    RooRealVar my("my", "my", 1, -10, 10);
 
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
-   RooGaussian gy("gy", "gy", y, my, RooConst(1));
+   RooGaussian gx("gx", "gx", x, mx, 1.0);
+   RooGaussian gy("gy", "gy", y, my, 1.0);
 
    RooProdPdf sig("sig", "sig", gx, gy);
 
@@ -51,7 +50,7 @@ void rf312_multirangefit()
    RooAddPdf model("model", "model", RooArgList(sig, bkg), f);
 
    // Sample 10000 events in (x,y) from the model
-   RooDataSet *modelData = model.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> modelData{model.generate({x, y}, 10000)};
 
    // D e f i n e   s i g n a l   a n d   s i d e b a n d   r e g i o n s
    // -------------------------------------------------------------------
@@ -88,17 +87,17 @@ void rf312_multirangefit()
    // -------------------------------------------------------------------------------------
 
    // Perform fit in SideBand1 region (RooAddPdf coefficients will be interpreted in full range)
-   RooFitResult *r_sb1 = model.fitTo(*modelData, Range("SB1"), Save());
+   std::unique_ptr<RooFitResult> r_sb1{model.fitTo(*modelData, Range("SB1"), Save(), PrintLevel(-1))};
 
    // Perform fit in SideBand2 region (RooAddPdf coefficients will be interpreted in full range)
-   RooFitResult *r_sb2 = model.fitTo(*modelData, Range("SB2"), Save());
+   std::unique_ptr<RooFitResult> r_sb2{model.fitTo(*modelData, Range("SB2"), Save(), PrintLevel(-1))};
 
    // P e r f o r m   f i t s   i n   j o i n t    s i d e b a n d   r e g i o n s
    // -----------------------------------------------------------------------------
 
    // Now perform fit to joint 'L-shaped' sideband region 'SB1|SB2'
    // (RooAddPdf coefficients will be interpreted in full range)
-   RooFitResult *r_sb12 = model.fitTo(*modelData, Range("SB1,SB2"), Save());
+   std::unique_ptr<RooFitResult> r_sb12{model.fitTo(*modelData, Range("SB1,SB2"), Save(), PrintLevel(-1))};
 
    // Print results for comparison
    r_sb1->Print();

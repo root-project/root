@@ -43,9 +43,9 @@ protected:
 
 public:
    TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms=kFALSE, Bool_t cols=kFALSE);
-   ~TEveTriangleSet();
+   ~TEveTriangleSet() override;
 
-   virtual Bool_t CanEditMainTransparency() const { return kTRUE; }
+   Bool_t CanEditMainTransparency() const override { return kTRUE; }
 
    Int_t GetNVerts()  const { return fNVerts;  }
    Int_t GetNTrings() const { return fNTrings; }
@@ -67,14 +67,14 @@ public:
    void GenerateZNormalColors(Float_t fac=20, Int_t min=-20, Int_t max=20,
                               Bool_t interp=kFALSE, Bool_t wrap=kFALSE);
 
-   virtual void ComputeBBox();
-   virtual void Paint(Option_t* option="");
+   void ComputeBBox() override;
+   void Paint(Option_t* option="") override;
 
    void SetTransparency(Char_t tr) { SetMainTransparency(tr); } // *MENU*
 
    static TEveTriangleSet* ReadTrivialFile(const char* file);
 
-   ClassDef(TEveTriangleSet, 0); // Generic mesh or soup of triangles with per-triangle normals and colors.
+   ClassDefOverride(TEveTriangleSet, 0); // Generic mesh or soup of triangles with per-triangle normals and colors.
 };
 
 #endif

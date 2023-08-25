@@ -220,6 +220,20 @@ static inline CPyCppyy::CPPInstance* GetCppInstance(PyObject* pyobject)
         return (CPPInstance*)pyobject;
     if (CPPExcInstance_Check(pyobject))
         return (CPPInstance*)((CPPExcInstance*)pyobject)->fCppInstance;
+
+#if PY_VERSION_HEX < 0x03090000
+// this is not a C++ proxy; allow custom cast to C++
+    PyObject* castobj = PyObject_CallMethodNoArgs(pyobject, PyStrings::gCastCpp);
+    if (castobj) {
+        if (CPPInstance_Check(castobj))
+            return (CPPInstance*)castobj;
+        Py_DECREF(castobj);
+        return nullptr;
+    }
+
+    PyErr_Clear();
+#endif
+
     return nullptr;
 }
 
@@ -1794,7 +1808,13 @@ bool CPyCppyy::InstancePtrConverter::SetArg(
         return false;
     }
 
-    if (pyobj->ObjectIsA() && Cppyy::IsSubtype(pyobj->ObjectIsA(), fClass)) {
+    // smart pointers should only extract the pointer if this is NOT an implicit
+    // conversion to another smart pointer
+    if (pyobj->IsSmart() && IsConstructor(ctxt->fFlags) && Cppyy::IsSmartPtr(ctxt->fCurScope))
+        return false;
+
+    Cppyy::TCppType_t oisa = pyobj->ObjectIsA();
+    if (oisa && (oisa == fClass || Cppyy::IsSubtype(oisa, fClass))) {
     // depending on memory policy, some objects need releasing when passed into functions
         if (!KeepControl() && !UseStrictOwnership(ctxt))
             pyobj->CppOwns();
@@ -2372,49 +2392,15 @@ bool CPyCppyy::FunctionPointerConverter::SetArg(
     return false;
 }
 
-static std::map<void*, std::string> sFuncWrapperLookup;
-static const char* FPCFM_ERRMSG = "conversion to std::function failed";
 PyObject* CPyCppyy::FunctionPointerConverter::FromMemory(void* address)
 {
 // A function pointer in clang is represented by a Type, not a FunctionDecl and it's
 // not possible to get the latter from the former: the backend will need to support
 // both. Since that is far in the future, we'll use a std::function instead.
-    static int func_count = 0;
-
-    if (!(address && *(void**)address)) {
-        PyErr_SetString(PyExc_TypeError, FPCFM_ERRMSG);
-        return nullptr;
-    }
-
-    void* faddr = *(void**)address;
-    auto cached = sFuncWrapperLookup.find(faddr);
-    if (cached == sFuncWrapperLookup.end()) {
-        std::ostringstream fname;
-        fname << "ptr2func" << ++func_count;
-
-        std::ostringstream code;
-        code << "namespace __cppyy_internal {\n  std::function<"
-             << fRetType << fSignature << "> " << fname.str()
-             << " = (" << fRetType << "(*)" << fSignature << ")" << (intptr_t)faddr
-             << ";\n}";
-
-        if (!Cppyy::Compile(code.str())) {
-            PyErr_SetString(PyExc_TypeError, FPCFM_ERRMSG);
-            return nullptr;
-        }
-
-     // cache the new wrapper (TODO: does it make sense to use weakrefs on the data
-     // member?)
-        sFuncWrapperLookup[faddr] = fname.str();
-        cached = sFuncWrapperLookup.find(faddr);
-    }
-
-    static Cppyy::TCppScope_t scope = Cppyy::GetScope("__cppyy_internal");
-    PyObject* pyscope = CreateScopeProxy(scope);
-    PyObject* func = PyObject_GetAttrString(pyscope, cached->second.c_str());
-    Py_DECREF(pyscope);
-
-    return func;
+    if (address)
+        return Utility::FuncPtr2StdFunction(fRetType, fSignature, *(void**)address);
+    PyErr_SetString(PyExc_TypeError, "can not convert null function pointer");
+    return nullptr;
 }
 
 bool CPyCppyy::FunctionPointerConverter::ToMemory(PyObject* pyobject, void* address, PyObject* /* ctxt */)

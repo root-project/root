@@ -84,6 +84,8 @@ protected:
    TApplication();
 
    virtual Longptr_t  ProcessRemote(const char *line, Int_t *error = nullptr);
+   virtual void       Forum(const char *line);
+   virtual void       GitHub(const char *line);
    virtual void       Help(const char *line);
    virtual void       LoadGraphicsLibs();
    virtual void       MakeBatch();
@@ -104,6 +106,9 @@ public:
    virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    SetEchoMode(Bool_t mode);
+   TString GetSetup();
+   void OpenForumTopic(const TString & type);
+   void OpenGitHubIssue(const TString & type);
    void OpenInBrowser(const TString & url);
    void OpenReferenceGuideFor(const TString & strippedClass);
    virtual void    HandleException(Int_t sig);

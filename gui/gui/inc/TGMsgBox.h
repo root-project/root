@@ -82,7 +82,7 @@ public:
             Int_t buttons = kMBDismiss, Int_t *ret_code = nullptr,
             UInt_t options = kVerticalFrame,
             Int_t text_align = kTextCenterX | kTextCenterY);
-   virtual ~TGMsgBox();
+   ~TGMsgBox() override;
 
    void CloseWindow() override;
    Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;

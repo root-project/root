@@ -89,9 +89,9 @@ TEST(RooSimultaneous, MultiRangeNLL)
    simPdf.addPdf(pdfCat2, "cat2");
 
    // Generate datasets
-   std::map<std::string, RooDataSet *> datasetMap{};
-   datasetMap["cat1"] = pdfCat1.generate(RooArgSet(x), 11000);
-   datasetMap["cat2"] = pdfCat2.generate(RooArgSet(x), 11000);
+   std::map<std::string, std::unique_ptr<RooDataSet>> datasetMap{};
+   datasetMap["cat1"] = std::unique_ptr<RooDataSet>{pdfCat1.generate(RooArgSet(x), 11000)};
+   datasetMap["cat2"] = std::unique_ptr<RooDataSet>{pdfCat2.generate(RooArgSet(x), 11000)};
    RooDataSet combData("combData", "", RooArgSet(x), Index(indexCat), Import(datasetMap));
 
    std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(combData, Range("range1,range2"))};
@@ -116,7 +116,7 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
    RooGenericPdf rndPdf("rndPdf", "", "1", {});
    RooProdPdf pdf("pdf", "", RooArgSet(g0, rndPdf));
 
-   auto ds = pdf.generate(RooArgSet(x, rnd), RooFit::Name("ds"), RooFit::NumEvents(100));
+   std::unique_ptr<RooDataSet> ds{pdf.generate(RooArgSet(x, rnd), RooFit::Name("ds"), RooFit::NumEvents(100))};
    auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThr));
 
    RooSimultaneous sim("sim", "", *cat);

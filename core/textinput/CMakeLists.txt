@@ -8,12 +8,9 @@
 # CMakeLists.txt file for building ROOT core/textinout package
 ############################################################################
 
-set(TextInput_dict_headers
-  Getline.h
-  PARENT_SCOPE
-)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS Getline.h)
 
-ROOT_OBJECT_LIBRARY(TextInput
+target_sources(Core PRIVATE
   src/Getline_color.cxx
   src/Getline.cxx
   src/textinput/Editor.cpp
@@ -32,16 +29,11 @@ ROOT_OBJECT_LIBRARY(TextInput
   src/textinput/TextInput.cpp
 )
 
-target_include_directories(TextInput PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/textinput/src
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+target_include_directories(Core
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  PRIVATE
+    src
 )
 
 ROOT_INSTALL_HEADERS()

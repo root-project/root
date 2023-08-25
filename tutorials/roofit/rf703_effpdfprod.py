@@ -3,7 +3,9 @@
 ## \notebook
 ## Special pdf's: using a product of an (acceptance) efficiency and a pdf as pdf
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -52,7 +54,7 @@ modelEff.plotOn(frame2)
 data = modelEff.generate({t}, 10000)
 
 # Fit pdf. The normalization integral is calculated numerically.
-modelEff.fitTo(data)
+modelEff.fitTo(data, PrintLevel=-1)
 
 # Plot generated data and overlay fitted pdf
 frame3 = t.frame(Title="Fitted pdf with efficiency")

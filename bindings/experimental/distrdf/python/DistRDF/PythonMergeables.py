@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Union, List, TYPE_CHECKING
 
 import ROOT
+from ROOT._pythonization._rdataframe import AsNumpyResult
 
 if TYPE_CHECKING:
     from DistRDF.Backends.Base import BaseBackend
@@ -14,9 +15,13 @@ class SnapshotResult(object):
     merge it with other objects of this type.
     """
 
-    def __init__(self, treename: str, filenames: list[str]) -> None:
+    def __init__(self, treename: str, filenames: List[str], resultptr: ROOT.RDF.RResultPtr = None) -> None:
         self.treename = treename
         self.filenames = filenames
+        # Transient attribute, it will be discarded before the end of the mapper
+        # function (in `Utils.get_mergeablevalue`) so that we don't incur in
+        # serialization of the RResultPtr
+        self._resultptr = resultptr
 
     def Merge(self, other: SnapshotResult) -> None:
         """
@@ -48,3 +53,7 @@ class SnapshotResult(object):
             snapshot_chain.Add(filename)
         # Create a new rdf with the chain and return that to user
         return backend.make_dataframe(snapshot_chain)
+
+
+# A type alias to signify any type of result that can be returned from the RDataFrame API
+RDataFrameFutureResult = Union[ROOT.RDF.RResultPtr, ROOT.RDF.Experimental.RResultMap, SnapshotResult, AsNumpyResult]

@@ -79,7 +79,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
    double eps2 = Precision().Eps2();
    double eps = Precision().Eps();
 
-   print.Debug("Assumed precision eps", eps, "eps2", eps2);
+   //print.Trace("Assumed precision eps", eps, "eps2", eps2);
 
    double dfmin = 8. * eps2 * (std::fabs(fcnmin) + Fcn().Up());
    double vrysml = 8. * eps * eps;
@@ -95,7 +95,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
 
-   print.Debug("Calculating gradient around value", fcnmin, "at point", par.Vec());
+   print.Debug("Calculating gradient around function value", fcnmin, "\n\t at point", par.Vec());
 
 #ifndef _OPENMP
 
@@ -179,9 +179,9 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 #endif
             if (i == 0 && j == 0) {
 #ifdef _OPENMP
-               printtl.Debug([&](std::ostream &os) {
+               printtl.Trace([&](std::ostream &os) {
 #else
-               print.Debug([&](std::ostream &os) {
+               print.Trace([&](std::ostream &os) {
 #endif
                   os << std::setw(10) << "parameter" << std::setw(6) << "cycle" << std::setw(15) << "x" << std::setw(15)
                      << "step" << std::setw(15) << "f1" << std::setw(15) << "f2" << std::setw(15) << "grd"
@@ -189,9 +189,9 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
                });
             }
 #ifdef _OPENMP
-            printtl.Debug([&](std::ostream &os) {
+            printtl.Trace([&](std::ostream &os) {
 #else
-            print.Debug([&](std::ostream &os) {
+            print.Trace([&](std::ostream &os) {
 #endif
                const int pr = os.precision(13);
                const int iext = Trafo().ExtOfInt(i);

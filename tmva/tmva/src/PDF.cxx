@@ -291,8 +291,8 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
    fHist        ->SetTitle( fHist->GetName() );
 
    // do not store in current target file
-   fHistOriginal->SetDirectory(0);
-   fHist        ->SetDirectory(0);
+   fHistOriginal->SetDirectory(nullptr);
+   fHist        ->SetDirectory(nullptr);
    fUseHistogram = kFALSE;
 
    if (fInterpolMethod == PDF::kKDE) BuildKDEPDF();
@@ -377,7 +377,7 @@ void TMVA::PDF::BuildSplinePDF()
    if (fNormalize)
       if (integral>0) fPDFHist->Scale( 1.0/integral );
 
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,7 +447,7 @@ void TMVA::PDF::BuildKDEPDF()
    // normalize
    if (fNormalize)
       if (integral>0) fPDFHist->Scale( 1.0/integral );
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -544,7 +544,7 @@ void TMVA::PDF::FillSplineToHist()
          fPDFHist->SetBinContent( bin, TMath::Max(y, fgEpsilon) );
       }
    }
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -616,14 +616,14 @@ void TMVA::PDF::ValidatePDF( TH1* originalHist ) const
    }
 
    Log() << kDEBUG << "Validation result for PDF \"" << originalHist->GetTitle() << "\"" << ": " << Endl;
-   Log() << kDEBUG << Form( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)",
+   Log() << kDEBUG << TString::Format( "    chi2/ndof(!=0) = %.1f/%i = %.2f (Prob = %.2f)",
                   chi2, ndof, chi2/ndof, TMath::Prob( chi2, ndof ) ) << Endl;
    if ((1.0 - TMath::Prob( chi2, ndof )) > 0.9999994) {
       Log() << kDEBUG << "Comparison of the original histogram \"" << originalHist->GetTitle() << "\"" << Endl;
       Log() << kDEBUG << "with the corresponding PDF gave a chi2/ndof of " << chi2/ndof << "," << Endl;
       Log() << kDEBUG << "which corresponds to a deviation of more than 5 sigma! Please check!" << Endl;
    }
-   Log() << kDEBUG << Form( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
+   Log() << kDEBUG << TString::Format( "    #bins-found(#expected-bins) deviating > [1,2,3,6] sigmas: " \
                   "[%i(%i),%i(%i),%i(%i),%i(%i)]",
                   nc1, Int_t(TMath::Prob(1.0,1)*ndof), nc2, Int_t(TMath::Prob(4.0,1)*ndof),
                   nc3, Int_t(TMath::Prob(9.0,1)*ndof), nc6, Int_t(TMath::Prob(36.0,1)*ndof) ) << Endl;
@@ -819,24 +819,24 @@ void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& hi
 
 void TMVA::PDF::DeclareOptions()
 {
-   DeclareOptionRef( fNsmooth, Form("NSmooth%s",fSuffix.Data()),
+   DeclareOptionRef( fNsmooth, TString::Format("NSmooth%s",fSuffix.Data()),
                      "Number of smoothing iterations for the input histograms" );
-   DeclareOptionRef( fMinNsmooth, Form("MinNSmooth%s",fSuffix.Data()),
+   DeclareOptionRef( fMinNsmooth, TString::Format("MinNSmooth%s",fSuffix.Data()),
                      "Min number of smoothing iterations, for bins with most data" );
 
-   DeclareOptionRef( fMaxNsmooth, Form("MaxNSmooth%s",fSuffix.Data()),
+   DeclareOptionRef( fMaxNsmooth, TString::Format("MaxNSmooth%s",fSuffix.Data()),
                      "Max number of smoothing iterations, for bins with least data" );
 
-   DeclareOptionRef( fHistAvgEvtPerBin, Form("NAvEvtPerBin%s",fSuffix.Data()),
+   DeclareOptionRef( fHistAvgEvtPerBin, TString::Format("NAvEvtPerBin%s",fSuffix.Data()),
                      "Average number of events per PDF bin" );
 
-   DeclareOptionRef( fHistDefinedNBins, Form("Nbins%s",fSuffix.Data()),
+   DeclareOptionRef( fHistDefinedNBins, TString::Format("Nbins%s",fSuffix.Data()),
                      "Defined number of bins for the histogram from which the PDF is created" );
 
-   DeclareOptionRef( fCheckHist, Form("CheckHist%s",fSuffix.Data()),
+   DeclareOptionRef( fCheckHist, TString::Format("CheckHist%s",fSuffix.Data()),
                      "Whether or not to check the source histogram of the PDF" );
 
-   DeclareOptionRef( fInterpolateString, Form("PDFInterpol%s",fSuffix.Data()),
+   DeclareOptionRef( fInterpolateString, TString::Format("PDFInterpol%s",fSuffix.Data()),
                      "Interpolation method for reference histograms (e.g. Spline2 or KDE)" );
    AddPreDefVal(TString("Spline0")); // take histogram
    AddPreDefVal(TString("Spline1")); // linear interpolation between bins
@@ -845,17 +845,17 @@ void TMVA::PDF::DeclareOptions()
    AddPreDefVal(TString("Spline5")); // fifth order polynom interpolation
    AddPreDefVal(TString("KDE"));     // use kernel density estimator
 
-   DeclareOptionRef( fKDEtypeString, Form("KDEtype%s",fSuffix.Data()), "KDE kernel type (1=Gauss)" );
+   DeclareOptionRef( fKDEtypeString, TString::Format("KDEtype%s",fSuffix.Data()), "KDE kernel type (1=Gauss)" );
    AddPreDefVal(TString("Gauss"));
 
-   DeclareOptionRef( fKDEiterString, Form("KDEiter%s",fSuffix.Data()), "Number of iterations (1=non-adaptive, 2=adaptive)" );
+   DeclareOptionRef( fKDEiterString, TString::Format("KDEiter%s",fSuffix.Data()), "Number of iterations (1=non-adaptive, 2=adaptive)" );
    AddPreDefVal(TString("Nonadaptive"));
    AddPreDefVal(TString("Adaptive"));
 
-   DeclareOptionRef( fFineFactor , Form("KDEFineFactor%s",fSuffix.Data()),
+   DeclareOptionRef( fFineFactor , TString::Format("KDEFineFactor%s",fSuffix.Data()),
                      "Fine tuning factor for Adaptive KDE: Factor to multiply the width of the kernel");
 
-   DeclareOptionRef( fBorderMethodString, Form("KDEborder%s",fSuffix.Data()),
+   DeclareOptionRef( fBorderMethodString, TString::Format("KDEborder%s",fSuffix.Data()),
                      "Border effects treatment (1=no treatment , 2=kernel renormalization, 3=sample mirroring)" );
    AddPreDefVal(TString("None"));
    AddPreDefVal(TString("Renorm"));
@@ -986,7 +986,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    TH1* newhist = 0;
    if (hasEquidistantBinning) {
       newhist = new TH1F( hname, hname, nbins, xmin, xmax );
-      newhist->SetDirectory(0);
+      newhist->SetDirectory(nullptr);
       const char* content = gTools().GetContent(histch);
       std::stringstream s(content);
       Double_t val;
@@ -1010,7 +1010,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
       std::stringstream sb(binString);
       for (UInt_t i=0; i<=nbins; i++) sb >> binns[i];
       newhist =  new TH1F( hname, hname, nbins, binns.GetMatrixArray() );
-      newhist->SetDirectory(0);
+      newhist->SetDirectory(nullptr);
       for (UInt_t i=0; i<nbins; i++) {
          s >> val;
          newhist->SetBinContent(i+1,val);
@@ -1024,7 +1024,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    fHistOriginal = newhist;
    fHist = (TH1F*)fHistOriginal->Clone( hnameSmooth );
    fHist->SetTitle( hnameSmooth );
-   fHist->SetDirectory(0);
+   fHist->SetDirectory(nullptr);
 
    if (fInterpolMethod == PDF::kKDE) BuildKDEPDF();
    else                              BuildSplinePDF();
@@ -1111,7 +1111,7 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
       std::exit(1);
    }
    TH1* newhist = new TH1F( hname,hname, nbins, xmin, xmax );
-   newhist->SetDirectory(0);
+   newhist->SetDirectory(nullptr);
    Float_t val;
    for (Int_t i=0; i<nbins; i++) {
       istr >> val;
@@ -1122,7 +1122,7 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
    pdf.fHistOriginal = newhist;
    pdf.fHist = (TH1F*)pdf.fHistOriginal->Clone( hnameSmooth );
    pdf.fHist->SetTitle( hnameSmooth );
-   pdf.fHist->SetDirectory(0);
+   pdf.fHist->SetDirectory(nullptr);
 
    if (pdf.fMinNsmooth>=0) pdf.BuildSplinePDF();
    else {

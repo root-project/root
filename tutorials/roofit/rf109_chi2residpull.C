@@ -5,8 +5,8 @@
 /// histogram of residual and pull distributions
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -14,7 +14,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -33,10 +32,10 @@ void rf109_chi2residpull()
    // Create Gaussian
    RooRealVar sigma("sigma", "sigma", 3, 0.1, 10);
    RooRealVar mean("mean", "mean", 0, -10, 10);
-   RooGaussian gauss("gauss", "gauss", x, RooConst(0), sigma);
+   RooGaussian gauss("gauss", "gauss", x, 0.0, sigma);
 
    // Generate a sample of 1000 events with sigma=3
-   RooDataSet *data = gauss.generate(x, 10000);
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 10000)};
 
    // Change sigma to 3.15
    sigma.setVal(3.15);

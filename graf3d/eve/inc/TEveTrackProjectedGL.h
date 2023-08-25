@@ -30,12 +30,12 @@ protected:
 
 public:
    TEveTrackProjectedGL();
-   virtual ~TEveTrackProjectedGL() {}
+   ~TEveTrackProjectedGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   ClassDef(TEveTrackProjectedGL, 0); // GL-renderer for TEveTrackProjected class.
+   ClassDefOverride(TEveTrackProjectedGL, 0); // GL-renderer for TEveTrackProjected class.
 };
 
 #endif

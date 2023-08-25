@@ -4,7 +4,9 @@
 ## Multidimensional models: utility functions classes available for use in tailoring of
 ## composite (multidimensional) pdfs
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

@@ -77,7 +77,6 @@ PdfProposal::PdfProposal() : ProposalFunction()
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +89,6 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,15 +116,15 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
       fLastX.addClone(x);
       // generate initial cache
       RooStats::SetParameters(&x, &fMaster);
-      if (fMap.size() > 0) {
+      if (!fMap.empty()) {
          for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
             fIt->first->setVal(fIt->second->getVal(&x));
       }
-      fCache = fPdf->generate(xPrime, fCacheSize);
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)};
    }
 
    bool moved = false;
-   if (fMap.size() > 0) {
+   if (!fMap.empty()) {
       moved = !Equals(fLastX, x);
 
       // if we've moved, set the values of the variables in the PDF to the
@@ -147,8 +145,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 
    // generate new cache if necessary
    if (moved || fCachePosition >= fCacheSize) {
-      delete fCache;
-      fCache = fPdf->generate(xPrime, fCacheSize);
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)};
       fCachePosition = 0;
    }
 
@@ -177,9 +174,8 @@ double PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
    RooStats::SetParameters(&x2, &fMaster);
    for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
       fIt->first->setVal(fIt->second->getVal(&x2));
-   RooArgSet* temp = fPdf->getObservables(x1);
-   RooStats::SetParameters(&x1, temp);
-   delete temp;
+   std::unique_ptr<RooArgSet> temp{fPdf->getObservables(x1)};
+   RooStats::SetParameters(&x1, temp.get());
    return fPdf->getVal(&x1); // could just as well use x2
 }
 
@@ -197,5 +193,5 @@ void PdfProposal::AddMapping(RooRealVar& proposalParam, RooAbsReal& update)
    fMaster.add(*update.getParameters(static_cast<RooAbsData const*>(nullptr)));
    if (update.getParameters(static_cast<RooAbsData const*>(nullptr))->empty())
       fMaster.add(update);
-   fMap.insert(pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
+   fMap.insert(std::pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
 }

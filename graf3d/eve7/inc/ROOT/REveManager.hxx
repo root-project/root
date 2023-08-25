@@ -65,7 +65,7 @@ public:
 
    struct Conn
    {
-      enum EConnState {Free, Processing, WaitingResponse };
+      enum EConnState {Free, WaitingResponse };
       unsigned fId{0};
       EConnState   fState{Free};
 
@@ -87,12 +87,13 @@ public:
    class MIR
    {
       public:
-       MIR(const std::string& cmd, ElementId_t id, const std::string& ctype)
-       :fCmd(cmd), fId(id), fCtype(ctype){}
+       MIR(const std::string& cmd, ElementId_t id, const std::string& ctype, unsigned connid)
+       :fCmd(cmd), fId(id), fCtype(ctype), fConnId(connid){}
 
        std::string fCmd;
        ElementId_t fId;
        std::string fCtype;
+       unsigned    fConnId;
    };
 
    struct Logger {
@@ -144,9 +145,9 @@ protected:
    REveSelection            *fSelection{nullptr};
    REveSelection            *fHighlight{nullptr};
 
-   std::shared_ptr<ROOT::Experimental::RWebWindow>  fWebWindow;
-   std::vector<Conn>                                fConnList;
-   std::queue<std::shared_ptr<MIR> >                fMIRqueue;
+   std::shared_ptr<ROOT::RWebWindow>       fWebWindow;
+   std::vector<Conn>                       fConnList;
+   std::queue<std::shared_ptr<MIR> >       fMIRqueue;
 
    // MIR execution
    std::thread       fMIRExecThread;
@@ -163,7 +164,9 @@ protected:
 
    void MIRExecThread();
    void ExecuteMIR(std::shared_ptr<MIR> mir);
-   void PublishChanges();
+
+   void StreamSceneChangesToJson();
+   void SendSceneChanges();
 
 public:
    REveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
@@ -247,7 +250,7 @@ public:
    void SetDefaultHtmlPage(const std::string& path);
    void SetClientVersion(const std::string& version);
 
-   void ScheduleMIR(const std::string &cmd, ElementId_t i, const std::string& ctype);
+   void ScheduleMIR(const std::string &cmd, ElementId_t i, const std::string& ctype, unsigned connid);
 
    static REveManager* Create();
    static void         Terminate();
@@ -261,13 +264,16 @@ public:
    // Access to internals, needed for low-level control in advanced
    // applications.
 
-   std::shared_ptr<RWebWindow> GetWebWindow() const { return fWebWindow; }
+   std::shared_ptr<ROOT::RWebWindow> GetWebWindow() const { return fWebWindow; }
 
    // void Send(void* buff, unsigned connid);
    void Send(unsigned connid, const std::string &data);
    void SendBinary(unsigned connid, const void *data, std::size_t len);
 
    void Show(const RWebDisplayArgs &args = "");
+
+   void DisconnectEveViewer(REveViewer*);
+   void ConnectEveViewer(REveViewer*);
 
    void GetServerStatus(REveServerStatus&);
    bool IsRCore() const { return fIsRCore; }

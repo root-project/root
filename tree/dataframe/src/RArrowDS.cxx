@@ -17,7 +17,7 @@ The RArrowDS implements a proxy RDataSource to be able to use Apache Arrow
 tables with RDataFrame.
 
 A RDataFrame that adapts an arrow::Table class can be constructed using the factory method
-ROOT::RDF::MakeArrowDataFrame, which accepts one parameter:
+ROOT::RDF::FromArrow, which accepts one parameter:
 1. An arrow::Table smart pointer.
 
 The types of the columns are derived from the types in the associated
@@ -607,14 +607,6 @@ RDataFrame FromArrow(std::shared_ptr<arrow::Table> table, std::vector<std::strin
 {
    ROOT::RDataFrame tdf(std::make_unique<RArrowDS>(table, columnNames));
    return tdf;
-}
-
-/// \brief Factory method to create a Apache Arrow RDataFrame.
-///
-/// Deprecated in favor of FromArrow().
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
-{
-   return FromArrow(table, columnNames);
 }
 
 } // namespace RDF

@@ -1,5 +1,5 @@
-import { settings, isBatchMode, isFunc, isStr, gStyle } from '../core.mjs';
-import { floatToString } from '../base/BasePainter.mjs';
+import { settings, isFunc, isStr, gStyle, nsREX } from '../core.mjs';
+import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
@@ -66,7 +66,7 @@ class RPavePainter extends RObjectPainter {
             pave_y = fr.y + offsety;
       }
 
-      this.draw_g.attr('transform', `translate(${pave_x},${pave_y})`);
+      makeTranslate(this.draw_g, pave_x, pave_y);
 
       this.draw_g.append('svg:rect')
                  .attr('x', 0)
@@ -83,14 +83,15 @@ class RPavePainter extends RObjectPainter {
 
       return this.drawContent().then(() => {
 
-         if (isBatchMode()) return this;
+         if (!this.isBatchMode()) {
 
-         // TODO: provide pave context menu as in v6
-         if (settings.ContextMenu && this.paveContextMenu)
-            this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
+            // TODO: provide pave context menu as in v6
+            if (settings.ContextMenu && this.paveContextMenu)
+               this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
 
-         addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
-                                minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
+            addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
+                                   minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
+         }
 
          return this;
       });
@@ -132,7 +133,7 @@ class RPavePainter extends RObjectPainter {
       this.v7AttrChange(changes, 'height', this.pave_height / rect.height);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
-      this.draw_g.select('rect')
+      this.draw_g.selectChild('rect')
                  .attr('width', this.pave_width)
                  .attr('height', this.pave_height);
 
@@ -197,25 +198,25 @@ class RLegendPainter extends RPavePainter {
             if (entry.fMarker) objp.createv7AttMarker();
          }
 
-         if (objp && entry.fFill && objp.fillatt)
+         if (entry.fFill && objp?.fillatt)
             this.draw_g
               .append('svg:path')
               .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
               .call(objp.fillatt.func);
 
-         if (objp && entry.fLine && objp.lineatt)
+         if (entry.fLine && objp?.lineatt)
             this.draw_g
               .append('svg:path')
               .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
               .call(objp.lineatt.func);
 
-         if (objp && entry.fError && objp.lineatt)
+         if (entry.fError && objp?.lineatt)
             this.draw_g
               .append('svg:path')
               .attr('d', `M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
               .call(objp.lineatt.func);
 
-         if (objp && entry.fMarker && objp.markeratt)
+         if (entry.fMarker && objp?.markeratt)
             this.draw_g.append('svg:path')
                 .attr('d', objp.markeratt.create(margin_x + width/8, posy + stepy/2))
                 .call(objp.markeratt.func);
@@ -406,14 +407,14 @@ class RHistStatsPainter extends RPavePainter {
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       let stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
 
-      let text_g = this.draw_g.select('.statlines');
+      let text_g = this.draw_g.selectChild('.statlines');
       if (text_g.empty())
          text_g = this.draw_g.append('svg:g').attr('class', 'statlines');
       else
          text_g.selectAll('*').remove();
 
       textFont.setSize(height/(nlines * 1.2));
-      this.startTextDrawing(textFont, 'font' , text_g);
+      this.startTextDrawing(textFont, 'font', text_g);
 
       if (nlines == 1) {
          this.drawText({ width: width, height: height, text: lines[0], latex: 1, draw_g: text_g });
@@ -477,7 +478,7 @@ class RHistStatsPainter extends RPavePainter {
    async redraw(reason) {
       if (reason && isStr(reason) && (reason.indexOf('zoom') == 0) && this.v7NormalMode()) {
          let req = {
-            _typename: 'ROOT::Experimental::RHistStatBoxBase::RRequest',
+            _typename: `${nsREX}RHistStatBoxBase::RRequest`,
             mask: this.getObject().fShowMask // lines to show in stat box
          };
 
@@ -494,6 +495,5 @@ class RHistStatsPainter extends RPavePainter {
    }
 
 } // class RHistStatsPainter
-
 
 export { RPavePainter, RLegendPainter, RPaveTextPainter, RHistStatsPainter };

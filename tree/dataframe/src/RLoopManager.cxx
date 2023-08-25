@@ -351,9 +351,12 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fNewSampleNotifier(fNSlots),
-     fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+   : fEmptyEntryRange(0, nEmptyEntries),
+     fNSlots(RDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles),
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
 }
 
@@ -366,20 +369,44 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.GetEntryRangeBegin()),
-     fEndEntry(spec.GetEntryRangeEnd()),
-     fSamples(spec.MoveOutSamples()),
-     fNSlots(RDFInternal::GetNSlots()),
+   : fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
      fDatasetColumnReaders(fNSlots)
 {
-   auto chain = std::make_shared<TChain>("");
+   ChangeSpec(std::move(spec));
+}
+
+/**
+ * @brief Changes the internal TTree held by the RLoopManager.
+ *
+ * @warning This method may lead to potentially dangerous interactions if used
+ *     after the construction of the RDataFrame. Changing the specification makes
+ *     sense *if and only if* the schema of the dataset is *unchanged*, i.e. the
+ *     new specification refers to exactly the same number of columns, with the
+ *     same names and types. The actual use case of this method is moving the
+ *     processing of the same RDataFrame to a different range of entries of the
+ *     same dataset (which may be stored in a different set of files).
+ *
+ * @param spec The specification of the dataset to be adopted.
+ */
+void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
+{
+   // Change the range of entries to be processed
+   fBeginEntry = spec.GetEntryRangeBegin();
+   fEndEntry = spec.GetEntryRangeEnd();
+
+   // Store the samples
+   fSamples = spec.MoveOutSamples();
+   fSampleMap.clear();
+
+   // Create the internal main chain
+   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT();
    for (auto &sample : fSamples) {
       const auto &trees = sample.GetTreeNames();
       const auto &files = sample.GetFileNameGlobs();
-      for (auto i = 0u; i < files.size(); ++i) {
+      for (std::size_t i = 0ul; i < files.size(); ++i) {
          // We need to use `<filename>?#<treename>` as an argument to TChain::Add
          // (see https://github.com/root-project/root/pull/8820 for why)
          const auto fullpath = files[i] + "?#" + trees[i];
@@ -391,44 +418,14 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
          fSampleMap.insert({sampleId, &sample});
       }
    }
-
    SetTree(std::move(chain));
 
-   // Create the friends from the list of friends
+   // Create friends from the specification and connect them to the main chain
    const auto &friendInfo = spec.GetFriendInfo();
-   const auto &friendNames = friendInfo.fFriendNames;
-   const auto &friendFileNames = friendInfo.fFriendFileNames;
-   const auto &friendChainSubNames = friendInfo.fFriendChainSubNames;
-   const auto nFriends = friendNames.size();
-
-   for (auto i = 0u; i < nFriends; ++i) {
-      const auto &thisFriendName = friendNames[i].first;
-      const auto &thisFriendAlias = friendNames[i].second;
-      const auto &thisFriendFiles = friendFileNames[i];
-      const auto &thisFriendChainSubNames = friendChainSubNames[i];
-
-      // Build a friend chain
-      auto frChain = std::make_unique<TChain>(thisFriendName.c_str());
-      const auto nFileNames = friendFileNames[i].size();
-      if (thisFriendChainSubNames.empty()) {
-         // If there are no chain subnames, the friend was a TTree. It's safe
-         // to add to the chain the filename directly.
-         for (auto j = 0u; j < nFileNames; ++j) {
-            frChain->Add(thisFriendFiles[j].c_str());
-         }
-      } else {
-         // Otherwise, the new friend chain needs to be built using the nomenclature
-         // "filename#?treename" as argument to `TChain::Add`.
-         // See https://github.com/root-project/root/pull/8820 for why "filename#?treename"
-         // is better than "filename#?treename".
-         for (auto j = 0u; j < nFileNames; ++j)
-            frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str());
-      }
-
-      // Make it friends with the main chain
-      fTree->AddFriend(frChain.get(), thisFriendAlias.c_str());
-      // the friend trees must have same lifetime as fTree
-      fFriends.emplace_back(std::move(frChain));
+   fFriends = ROOT::Internal::TreeUtils::MakeFriends(friendInfo);
+   for (std::size_t i = 0ul; i < fFriends.size(); i++) {
+      const auto &thisFriendAlias = friendInfo.fFriendNames[i].second;
+      fTree->AddFriend(fFriends[i].get(), thisFriendAlias.c_str());
    }
 }
 
@@ -439,18 +436,19 @@ void RLoopManager::RunEmptySourceMT()
    ROOT::Internal::RSlotStack slotStack(fNSlots);
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
-   const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
-   auto remainder = fNEmptyEntries % (fNSlots * 2);
+   const auto nEmptyEntries = GetNEmptyEntries();
+   const auto nEntriesPerSlot = nEmptyEntries / (fNSlots * 2);
+   auto remainder = nEmptyEntries % (fNSlots * 2);
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
-   ULong64_t start = 0;
-   while (start < fNEmptyEntries) {
-      ULong64_t end = start + nEntriesPerSlot;
+   ULong64_t begin = fEmptyEntryRange.first;
+   while (begin < fEmptyEntryRange.second) {
+      ULong64_t end = begin + nEntriesPerSlot;
       if (remainder > 0) {
          ++end;
          --remainder;
       }
-      entryRanges.emplace_back(start, end);
-      start = end;
+      entryRanges.emplace_back(begin, end);
+      begin = end;
    }
 
    // Each task will generate a subrange of entries
@@ -482,11 +480,13 @@ void RLoopManager::RunEmptySourceMT()
 void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
-   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(
+      {"an empty source", fEmptyEntryRange.first, fEmptyEntryRange.second, 0u});
    RCallCleanUpTask cleanup(*this);
    try {
-      UpdateSampleInfo(/*slot*/0, {0, fNEmptyEntries});
-      for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
+      UpdateSampleInfo(/*slot*/ 0, fEmptyEntryRange);
+      for (ULong64_t currEntry = fEmptyEntryRange.first;
+           currEntry < fEmptyEntryRange.second && fNStopsReceived < fNChildren; ++currEntry) {
          RunAndCheckFilters(0, currEntry);
       }
    } catch (...) {
@@ -582,7 +582,7 @@ void RLoopManager::RunTreeReader()
 void RLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   fDataSource->CallInitialize();
+   fDataSource->Initialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
@@ -603,10 +603,10 @@ void RLoopManager::RunDataSource()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->CallFinalizeSlot(0u);
+      fDataSource->FinalizeSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->CallFinalize();
+   fDataSource->Finalize();
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -637,16 +637,16 @@ void RLoopManager::RunDataSourceMT()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->CallFinalizeSlot(slot);
+      fDataSource->FinalizeSlot(slot);
    };
 
-   fDataSource->CallInitialize();
+   fDataSource->Initialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       pool.Foreach(runOnRange, ranges);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->CallFinalize();
+   fDataSource->Finalize();
 #endif // not implemented otherwise (never called)
 }
 
@@ -661,9 +661,9 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
       fNewSampleNotifier.UnsetFlag(slot);
    }
 
-   for (auto &actionPtr : fBookedActions)
+   for (auto *actionPtr : fBookedActions)
       actionPtr->Run(slot, entry);
-   for (auto &namedFilterPtr : fBookedNamedFilters)
+   for (auto *namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->CheckFilters(slot, entry);
    for (auto &callback : fCallbacks)
       callback(slot);
@@ -675,13 +675,13 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
    SetupSampleCallbacks(r, slot);
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedFilters)
+   for (auto *ptr : fBookedFilters)
       ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedDefines)
+   for (auto *ptr : fBookedDefines)
       ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedVariations)
+   for (auto *ptr : fBookedVariations)
       ptr->InitSlot(r, slot);
 
    for (auto &callback : fCallbacksOnce)
@@ -731,11 +731,11 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
 void RLoopManager::InitNodes()
 {
    EvalChildrenCounts();
-   for (auto &filter : fBookedFilters)
+   for (auto *filter : fBookedFilters)
       filter->InitNode();
-   for (auto &range : fBookedRanges)
+   for (auto *range : fBookedRanges)
       range->InitNode();
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->Initialize();
 }
 
@@ -745,7 +745,7 @@ void RLoopManager::CleanUpNodes()
    fMustRunNamedFilters = false;
 
    // forget RActions and detach TResultProxies
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->Finalize();
 
    fRunActions.insert(fRunActions.begin(), fBookedActions.begin(), fBookedActions.end());
@@ -754,9 +754,9 @@ void RLoopManager::CleanUpNodes()
    // reset children counts
    fNChildren = 0;
    fNStopsReceived = 0;
-   for (auto &ptr : fBookedFilters)
+   for (auto *ptr : fBookedFilters)
       ptr->ResetChildrenCount();
-   for (auto &ptr : fBookedRanges)
+   for (auto *ptr : fBookedRanges)
       ptr->ResetChildrenCount();
 
    fCallbacks.clear();
@@ -769,11 +769,11 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
 {
    if (r != nullptr)
       fNewSampleNotifier.GetChainNotifyLink(slot).RemoveLink(*r->GetTree());
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
-   for (auto &ptr : fBookedFilters)
+   for (auto *ptr : fBookedFilters)
       ptr->FinalizeSlot(slot);
-   for (auto &ptr : fBookedDefines)
+   for (auto *ptr : fBookedDefines)
       ptr->FinalizeSlot(slot);
 
    if (fLoopType == ELoopType::kROOTFiles || fLoopType == ELoopType::kROOTFilesMT) {
@@ -814,9 +814,9 @@ void RLoopManager::Jit()
 /// the event loop so the graph branch they belong to must count as active even if it does not end in an action.
 void RLoopManager::EvalChildrenCounts()
 {
-   for (auto &actionPtr : fBookedActions)
+   for (auto *actionPtr : fBookedActions)
       actionPtr->TriggerChildrenCount();
-   for (auto &namedFilterPtr : fBookedNamedFilters)
+   for (auto *namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->TriggerChildrenCount();
 }
 
@@ -936,7 +936,7 @@ bool RLoopManager::CheckFilters(unsigned int, Long64_t)
 /// Call `FillReport` on all booked filters
 void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 {
-   for (const auto &fPtr : fBookedNamedFilters)
+   for (const auto *fPtr : fBookedNamedFilters)
       fPtr->FillReport(rep);
 }
 
@@ -966,7 +966,7 @@ void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(u
 std::vector<std::string> RLoopManager::GetFiltersNames()
 {
    std::vector<std::string> filters;
-   for (auto &filter : fBookedFilters) {
+   for (auto *filter : fBookedFilters) {
       auto name = (filter->HasName() ? filter->GetName() : "Unnamed Filter");
       filters.push_back(name);
    }
@@ -1003,7 +1003,7 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    } else if (fTree) {
       name = fTree->GetName();
    } else {
-      name = "Empty source\\nEntries: " + std::to_string(fNEmptyEntries);
+      name = "Empty source\\nEntries: " + std::to_string(GetNEmptyEntries());
    }
    auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(
       name, visitedMap.size(), ROOT::Internal::RDF::GraphDrawing::ENodeType::kRoot);
@@ -1076,4 +1076,9 @@ void RLoopManager::AddSampleCallback(void *nodePtr, SampleCallback_t &&callback)
 {
    if (callback)
       fSampleCallbacks.insert({nodePtr, std::move(callback)});
+}
+
+void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange)
+{
+   fEmptyEntryRange = std::move(newRange);
 }

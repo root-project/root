@@ -193,8 +193,8 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
          result.emplace_back(xmidcr + (aopt)*xdircr, ymidcr + (aopt)*ydircr);
          print.Info(result.back());
       } else {
-         result.insert(idist2, {xmidcr + (aopt)*xdircr, ymidcr + (aopt)*ydircr});
          print.Info(*idist2);
+         result.insert(idist2, {xmidcr + (aopt)*xdircr, ymidcr + (aopt)*ydircr});
       }
    }
 

@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -13,6 +15,7 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
 #ifndef ROO_TOBJ_WRAP
 #define ROO_TOBJ_WRAP
 
@@ -48,3 +51,5 @@ protected:
 };
 
 #endif
+
+/// \endcond

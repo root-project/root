@@ -42,6 +42,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraph.h
     TGraphSmooth.h
     TGraphTime.h
+    TScatter.h
     TH1C.h
     TH1D.h
     TH1F.h
@@ -131,6 +132,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraph2DAsymmErrors.cxx
     TGraphSmooth.cxx
     TGraphTime.cxx
+    TScatter.cxx
     TH1.cxx
     TH1K.cxx
     TH1Merger.cxx

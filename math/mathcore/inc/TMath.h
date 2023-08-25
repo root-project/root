@@ -416,14 +416,16 @@ struct Limits {
    /// Comparing floating points.
    /// Returns `kTRUE` if the absolute difference between `af` and `bf` is less than `epsilon`.
    inline Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
-      return TMath::Abs(af-bf) < epsilon ||
+      return af == bf || // shortcut for exact equality (necessary because otherwise (inf != inf))
+             TMath::Abs(af-bf) < epsilon ||
              TMath::Abs(af - bf) < Limits<Double_t>::Min(); // handle 0 < 0 case
 
    }
    /// Comparing floating points.
    /// Returns `kTRUE` if the relative difference between `af` and `bf` is less than `relPrec`.
    inline Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
-      return TMath::Abs(af - bf) <= 0.5 * relPrec * (TMath::Abs(af) + TMath::Abs(bf)) ||
+      return af == bf || // shortcut for exact equality (necessary because otherwise (inf != inf))
+             TMath::Abs(af - bf) <= 0.5 * relPrec * (TMath::Abs(af) + TMath::Abs(bf)) ||
              TMath::Abs(af - bf) < Limits<Double_t>::Min(); // handle denormals
    }
 

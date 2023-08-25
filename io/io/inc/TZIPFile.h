@@ -134,7 +134,7 @@ protected:
 public:
    TZIPFile();
    TZIPFile(const char *archive, const char *member, TFile *file);
-   virtual ~TZIPFile() { }
+   ~TZIPFile() override { }
 
    Int_t      OpenArchive() override;
    Int_t      SetCurrentMember() override;
@@ -173,7 +173,7 @@ public:
    TZIPMember(const char *name);
    TZIPMember(const TZIPMember &member);
    TZIPMember &operator=(const TZIPMember &rhs);
-   virtual ~TZIPMember();
+   ~TZIPMember() override;
 
    void     *GetLocal() const { return fLocal; }
    UInt_t    GetLocalLen() const { return fLocalLen; }

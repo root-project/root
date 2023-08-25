@@ -31,6 +31,23 @@ PyObject* CPyCppyy::CPPConstructor::GetDocString()
 }
 
 //----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPConstructor::Reflex(
+    Cppyy::Reflex::RequestId_t request, Cppyy::Reflex::FormatId_t format)
+{
+// C++ reflection tooling for constructors.
+
+    if (request == Cppyy::Reflex::RETURN_TYPE) {
+        std::string fn = Cppyy::GetScopedFinalName(this->GetScope());
+        if (format == Cppyy::Reflex::OPTIMAL || format == Cppyy::Reflex::AS_TYPE)
+            return CreateScopeProxy(fn);
+        else if (format == Cppyy::Reflex::AS_STRING)
+            return CPyCppyy_PyText_FromString(fn.c_str());
+    }
+
+    return PyCallable::Reflex(request, format);
+}
+
+//----------------------------------------------------------------------------
 PyObject* CPyCppyy::CPPConstructor::Call(
     CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
 {

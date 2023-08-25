@@ -13,16 +13,16 @@
   code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = std::make_unique<TRefArray>(onfile._proxyList); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _serverList" target="_serverList" \
-  code="{ _serverList = RooFit::STLRefCountListHelpers::convert(onfile._serverList); }"
+  code="{ _serverList = RooSTLRefCountList<RooAbsArg>::convert(onfile._serverList); }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientList" target="_clientList" \
-  code="{ _clientList = RooFit::STLRefCountListHelpers::convert(onfile._clientList); }"
+  code="{ _clientList = RooSTLRefCountList<RooAbsArg>::convert(onfile._clientList); }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientListValue" target="_clientListValue" \
-  code="{ _clientListValue = RooFit::STLRefCountListHelpers::convert(onfile._clientListValue); }"
+  code="{ _clientListValue = RooSTLRefCountList<RooAbsArg>::convert(onfile._clientListValue); }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _clientListShape" target="_clientListShape" \
-  code="{ _clientListShape = RooFit::STLRefCountListHelpers::convert(onfile._clientListShape); }"
+  code="{ _clientListShape = RooSTLRefCountList<RooAbsArg>::convert(onfile._clientListShape); }"
 #pragma link C++ class RooSTLRefCountList<RooAbsArg>+;
 #pragma link C++ class RooStringVar+ ;
 #pragma read sourceClass="RooAbsString" targetClass="RooStringVar" version="[1]" source="Int_t _len; char *_value" target="_string" code="{_string.assign(onfile._value, onfile._len);}"
@@ -64,7 +64,6 @@
 #pragma link C++ class RooAbsProxy+ ;
 #pragma link C++ class RooAbsReal+ ;
 #pragma link C++ class RooAbsRealLValue+ ;
-#pragma link C++ class RooAbsRootFinder+ ;
 #pragma link C++ class RooAddGenContext+ ;
 #pragma link C++ class RooAddition+ ;
 #pragma link C++ class RooAddModel+ ;
@@ -91,7 +90,6 @@
              }"
 #pragma link C++ class RooConvCoefVar+ ;
 #pragma link C++ class RooConvGenContext+ ;
-#pragma link C++ class RooConvIntegrandBinding+ ;
 #pragma link C++ class RooCurve+ ;
 #pragma link C++ class RooDataHist- ;
 #pragma link C++ class RooDataProjBinding+ ;
@@ -119,19 +117,14 @@
 #pragma link C++ class RooErrorVar+ ;
 #pragma link C++ class RooFitResult- ;
 #pragma link C++ class RooFIter+ ;
-#pragma link C++ class RooFormula+ ;
 #pragma link C++ class RooFormulaVar+ ;
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
-#pragma link C++ class RooGenProdProj+ ;
-#pragma link C++ class RooHistError+ ;
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
 #pragma link C++ class RooIntegrator1D+ ;
 #pragma link C++ class RooBinIntegrator+ ;
 #pragma link C++ class RooIntegrator2D+ ;
-#pragma link C++ class RooIntegratorBinding+ ;
-#pragma link C++ class RooInt+ ;
 #pragma link C++ class RooInvTransform+ ;
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinearCombination+ ;
@@ -185,7 +178,6 @@
 #pragma link C++ class RooCacheManager<RooAbsCacheElement>+ ;
 #pragma link C++ class RooRandomizeParamMCSModule+ ;
 #pragma link C++ class RooRangeBinning+ ;
-#pragma link C++ class RooRealAnalytic+ ;
 #pragma link C++ class RooRealBinding+ ;
 #pragma link C++ class RooRealConstant+ ;
 #pragma link C++ class RooRealIntegral+ ;
@@ -214,7 +206,6 @@
     for (TObject * binning : onfile._altBinning) { _altBinning[binning->GetName()] = static_cast<RooAbsBinning*>(binning); } \
   }"
 #pragma link C++ class RooRefCountList+ ;
-#pragma link C++ class RooScaledFunc+ ;
 #pragma link C++ class RooSegmentedIntegrator1D+ ;
 #pragma link C++ class RooSegmentedIntegrator2D+ ;
 #pragma link C++ class RooSetProxy+ ;
@@ -312,9 +303,6 @@
 #pragma link C++ class RooBinningCategory+ ;
 #pragma link C++ class RooDerivative+ ;
 #pragma link C++ class RooFunctor+ ;
-#pragma link C++ class RooGenFunction+ ;
-#pragma link C++ class RooMultiGenFunction+ ;
-#pragma link C++ class RooTFoamBinding+ ;
 #pragma link C++ class RooAdaptiveIntegratorND+ ;
 #pragma link C++ class RooNumGenConfig+ ;
 #pragma link C++ class RooMultiVarGaussian+ ;

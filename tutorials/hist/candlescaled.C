@@ -13,20 +13,15 @@ void candlescaled()
 {
    TCanvas *c1 = new TCanvas("c1","TCandle Scaled",800,600);
    c1->Divide(2,2);
-   TRandom *rng = new TRandom();
    TH2I *h1 = new TH2I("h1","GausXY",20,-5,5,100,-5,5);
    TH2I *h3 = new TH2I("h3","GausXY",100,-5,5,20,-5,5);
 
-   float myRand1;
-   float myRand2;
-
    for (int j = 0; j < 100000; j++) {
-      myRand1 = rng->Gaus(0,1);
-      myRand2 = rng->Gaus(0,1);
+      auto myRand1 = gRandom->Gaus(0,1);
+      auto myRand2 = gRandom->Gaus(0,1);
       h1->Fill(myRand1, myRand2);
       h3->Fill(myRand1, myRand2);
    }
-
 
    c1->cd(1);
 
@@ -39,7 +34,7 @@ void candlescaled()
    h3->SetTitle("CandleY scaled");
    h3->DrawCopy("candleY2");
 
-   TCandle::SetScaledViolin(true); /* This is a global option for all existing violin, default is true */
+   TCandle::SetScaledViolin(false); /* This is a global option for all existing violin, default is true */
    TH2I *h2 = (TH2I*)h1->Clone();
    h2->SetFillStyle(0);
    h2->SetFillColor(kGray+2);
@@ -55,6 +50,4 @@ void candlescaled()
    c1->cd(4);
    h4->SetTitle("ViolinY unscaled");
    h4->DrawCopy("ViolinY");
-
-
 }

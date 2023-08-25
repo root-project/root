@@ -131,7 +131,6 @@ private:
     Int_t _N1 ;
   } ;
 
-  ClassDef(RooHistError,1) // Utility class for calculating histogram errors
 };
 
 #endif

@@ -78,7 +78,7 @@ void RooBinningCategory::initialize(const char* catTypeName)
 {
   const int nbins = _inputVar->getBinning(_bname.Length() > 0 ? _bname.Data() : nullptr).numBins();
   for (Int_t i=0 ; i<nbins ; i++) {
-    string name = catTypeName!=0 ? Form("%s%d",catTypeName,i)
+    string name = catTypeName!=nullptr ? Form("%s%d",catTypeName,i)
             : (_bname.Length()>0 ? Form("%s_%s_bin%d",_inputVar.arg().GetName(),_bname.Data(),i)
             : Form("%s_bin%d",_inputVar.arg().GetName(),i)) ;
     defineState(name,i);

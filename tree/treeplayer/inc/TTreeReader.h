@@ -166,7 +166,7 @@ public:
    TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
    TTreeReader(const char *keyname, TEntryList *entryList = nullptr) : TTreeReader(keyname, nullptr, entryList) {}
 
-   ~TTreeReader();
+   ~TTreeReader() override;
 
    void SetTree(TTree* tree, TEntryList* entryList = nullptr);
    void SetTree(const char* keyname, TEntryList* entryList = nullptr) {
@@ -234,7 +234,7 @@ public:
    /// through `reader.GetEntryList()->GetEntry(reader.GetCurrentEntry())`.
    Long64_t GetCurrentEntry() const { return fEntry; }
 
-   Bool_t Notify();
+   Bool_t Notify() override;
 
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
@@ -291,7 +291,8 @@ private:
    TEntryList* fEntryList = nullptr; ///< entry list to be used
    EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
    ELoadTreeStatus fLoadTreeStatus = kNoTree;   ///< Indicator on how LoadTree was called 'last' time.
-   TNotifyLink<TTreeReader> fNotify; // Callback object used by the TChain to update this proxy
+   /// TTree and TChain will notify this object upon LoadTree, leading to a call to TTreeReader::Notify().
+   TNotifyLink<TTreeReader> fNotify;
    ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
    std::deque<ROOT::Internal::TFriendProxy*> fFriendProxies; ///< proxying for friend TTrees, owned
    std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
@@ -310,7 +311,7 @@ private:
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
 
-   ClassDef(TTreeReader, 0); // A simple interface to read trees
+   ClassDefOverride(TTreeReader, 0); // A simple interface to read trees
 };
 
 #endif // defined TTreeReader

@@ -4,6 +4,7 @@
 ## Likelihood and minimization: fitting with constraints
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -37,7 +38,7 @@ d = model.generate({x}, 50)
 
 # Construct Gaussian constraint pdf on parameter f at 0.8 with
 # resolution of 0.1
-fconstraint = ROOT.RooGaussian("fconstraint", "fconstraint", f, ROOT.RooFit.RooConst(0.8), ROOT.RooFit.RooConst(0.1))
+fconstraint = ROOT.RooGaussian("fconstraint", "fconstraint", f, 0.8, 0.1)
 
 # Method 1 - add internal constraint to model
 # -------------------------------------------------------------------------------------
@@ -59,7 +60,7 @@ r2 = modelc.fitTo(d, Constrain={f}, Save=True, PrintLevel=-1)
 
 # Construct another Gaussian constraint pdf on parameter f at 0.8 with
 # resolution of 0.1
-fconstext = ROOT.RooGaussian("fconstext", "fconstext", f, ROOT.RooFit.RooConst(0.2), ROOT.RooFit.RooConst(0.1))
+fconstext = ROOT.RooGaussian("fconstext", "fconstext", f, 0.2, 0.1)
 
 # Fit with external constraint
 r3 = model.fitTo(d, ExternalConstraints={fconstext}, Save=True, PrintLevel=-1)

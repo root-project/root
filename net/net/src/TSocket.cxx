@@ -523,7 +523,7 @@ Int_t TSocket::Send(const TMessage &mess)
 {
    TSystem::ResetErrno();
 
-   if (!IsValid()) return -1;
+   if (fSocket < 0) return -1;
 
    if (mess.IsReading()) {
       Error("Send", "cannot send a message used for reading");

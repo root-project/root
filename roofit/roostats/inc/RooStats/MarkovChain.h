@@ -64,15 +64,15 @@ namespace RooStats {
       /// of whichVars.  Call with whichVars = nullptr (default) to get values of
       /// all variables (including NLL value and weight);
       /// Note: caller owns the returned data set
-      virtual RooDataSet* GetAsDataSet(RooArgSet* whichVars = nullptr) const;
+      virtual RooFit::OwningPtr<RooDataSet> GetAsDataSet(RooArgSet* whichVars = nullptr) const;
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataSet.  You own the returned RooDataSet*
-      virtual RooDataSet* GetAsDataSet(const RooCmdArg& arg1,
-                                       const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-                                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-                                       const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(),
-                                       const RooCmdArg& arg8=RooCmdArg::none() ) const;
+      virtual RooFit::OwningPtr<RooDataSet> GetAsDataSet(const RooCmdArg& arg1,
+                                       const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
+                                       const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+                                       const RooCmdArg& arg6={}, const RooCmdArg& arg7={},
+                                       const RooCmdArg& arg8={} ) const;
 
       virtual const RooDataSet* GetAsConstDataSet() const { return fChain; }
 
@@ -80,15 +80,15 @@ namespace RooStats {
       /// of whichVars.  Call with whichVars = nullptr (default) to get values of
       /// all variables (including NLL value and weight);
       /// Note: caller owns the returned data hist
-      virtual RooDataHist* GetAsDataHist(RooArgSet* whichVars = nullptr) const;
+      virtual RooFit::OwningPtr<RooDataHist> GetAsDataHist(RooArgSet* whichVars = nullptr) const;
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a RooDataHist.  You own the returned RooDataHist*
-      virtual RooDataHist* GetAsDataHist(const RooCmdArg & arg1,
-                                         const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-                                         const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-                                         const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(),
-                                         const RooCmdArg& arg8=RooCmdArg::none() ) const;
+      virtual RooFit::OwningPtr<RooDataHist> GetAsDataHist(const RooCmdArg & arg1,
+                                         const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
+                                         const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+                                         const RooCmdArg& arg6={}, const RooCmdArg& arg7={},
+                                         const RooCmdArg& arg8={} ) const;
 
       /// Get a clone of the markov chain on which this interval is based
       /// as a sparse histogram.  You own the returned THnSparse*

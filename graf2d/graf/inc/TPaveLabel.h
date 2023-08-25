@@ -27,7 +27,7 @@ public:
    TPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, Option_t *option="br");
    TPaveLabel(const TPaveLabel &pavelabel);
    TPaveLabel& operator=(const TPaveLabel &pavelabel);
-   virtual ~TPaveLabel();
+   ~TPaveLabel() override;
 
    void                Copy(TObject &pavelabel) const override;
    void                Draw(Option_t *option="") override;

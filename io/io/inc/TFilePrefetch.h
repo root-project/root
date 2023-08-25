@@ -51,7 +51,7 @@ private:
 
 public:
    TFilePrefetch(TFile*);
-   virtual ~TFilePrefetch();
+   ~TFilePrefetch() override;
 
    void      ReadAsync(TFPBlock*, Bool_t&);
    void      ReadListOfBlocks();

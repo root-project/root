@@ -12,3 +12,5 @@ ROOT_LINKER_LIBRARY(RooFitCommon
   DEPENDENCIES
     Core
 )
+
+target_include_directories(RooFitCommon PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res/>)

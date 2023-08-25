@@ -31,6 +31,14 @@
 
 namespace ROOT {
 namespace Experimental {
+
+namespace Internal {
+enum EDaosLocatorFlags {
+   // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
+   kCagedPage = 0x01,
+};
+}
+
 namespace Detail {
 
 class RCluster;
@@ -107,8 +115,8 @@ struct RDaosContainerNTupleLocator {
    static ntuple_index_t Hash(const std::string &ntupleName)
    {
       // Convert string to numeric representation via `std::hash`.
-      std::size_t h = std::hash<std::string>{}(ntupleName);
-      // Fold `std::size_t` bits into 32-bit using `boost::hash_combine()` algorithm and magic number.
+      uint64_t h = std::hash<std::string>{}(ntupleName);
+      // Fold the hash into 32-bit using `boost::hash_combine()` algorithm and magic number.
       auto seed = static_cast<uint32_t>(h >> 32);
       seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
       auto hash = static_cast<ntuple_index_t>(seed);
@@ -128,7 +136,7 @@ struct RDaosContainerNTupleLocator {
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
 
-Currently, an object is allocated for ntuple metadata (anchor/header/footer). 
+Currently, an object is allocated for ntuple metadata (anchor/header/footer).
 Objects can correspond to pages or clusters of pages depending on the RNTuple-DAOS mapping strategy.
 */
 // clang-format on
@@ -152,11 +160,13 @@ private:
 
    RDaosNTupleAnchor fNTupleAnchor;
    ntuple_index_t fNTupleIndex{0};
+   uint32_t fCageSizeLimit{};
 
 protected:
    void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
+   RNTupleLocator
+   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
@@ -171,19 +181,6 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RPageAllocatorDaos
-\ingroup NTuple
-\brief Manages pages read from a DAOS container
-*/
-// clang-format on
-class RPageAllocatorDaos {
-public:
-   static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage &page);
 };
 
 // clang-format off
@@ -207,10 +204,7 @@ private:
 
    ntuple_index_t fNTupleIndex{0};
 
-   /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
-   std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
-   // TODO: the page pool should probably be handled by the base class.
-   /// The page pool might, at some point, be used by multiple page sources
+   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
@@ -241,7 +235,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
+   void
+   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 

@@ -60,74 +60,74 @@ protected:
 
 public:
    TTreePlayer();
-   virtual ~TTreePlayer();
-   virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname);
-   virtual TTree    *CopyTree(const char *selection, Option_t *option
-                              ,Long64_t nentries, Long64_t firstentry);
-   virtual Long64_t  DrawScript(const char* wrapperPrefix,
+   ~TTreePlayer() override;
+   TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) override;
+   TTree    *CopyTree(const char *selection, Option_t *option
+                              ,Long64_t nentries, Long64_t firstentry) override;
+   Long64_t  DrawScript(const char* wrapperPrefix,
                                 const char *macrofilename, const char *cutfilename,
-                                Option_t *option, Long64_t nentries, Long64_t firstentry);
-   virtual Long64_t  DrawSelect(const char *varexp, const char *selection, Option_t *option
-                                ,Long64_t nentries, Long64_t firstentry);
-   virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
-                         Option_t *goption ,Long64_t nentries, Long64_t firstentry);
-   virtual Int_t     GetDimension() const {return fDimension;}
-   TH1              *GetHistogram() const {return fHistogram;}
-   virtual Long64_t  GetEntries(const char *selection);
+                                Option_t *option, Long64_t nentries, Long64_t firstentry) override;
+   Long64_t  DrawSelect(const char *varexp, const char *selection, Option_t *option
+                                ,Long64_t nentries, Long64_t firstentry) override;
+   Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
+                         Option_t *goption ,Long64_t nentries, Long64_t firstentry) override;
+   Int_t     GetDimension() const override {return fDimension;}
+   TH1              *GetHistogram() const override {return fHistogram;}
+   Long64_t  GetEntries(const char *selection) override;
    virtual Long64_t  GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) const;
-   virtual Int_t     GetNfill() const {return fSelector->GetNfill();}
+   Int_t     GetNfill() const override {return fSelector->GetNfill();}
    const char       *GetScanFileName() const {return fScanFileName;}
-   TTreeFormula     *GetSelect() const    {return fSelector->GetSelect();}
-   virtual Long64_t  GetSelectedRows() const {return fSelectedRows;}
-   virtual TSelector *GetSelector() const {return fSelector;}
-   virtual TSelector *GetSelectorFromFile() const {return fSelectorFromFile;}
+   TTreeFormula     *GetSelect() const override    {return fSelector->GetSelect();}
+   Long64_t  GetSelectedRows() const override {return fSelectedRows;}
+   TSelector *GetSelector() const override {return fSelector;}
+   TSelector *GetSelectorFromFile() const override {return fSelectorFromFile;}
    /// See TSelectorDraw::GetVar
-   TTreeFormula     *GetVar(Int_t i) const {return fSelector->GetVar(i);};
+   TTreeFormula     *GetVar(Int_t i) const override {return fSelector->GetVar(i);};
    /// See TSelectorDraw::GetVar
-   TTreeFormula     *GetVar1() const {return fSelector->GetVar1();}
+   TTreeFormula     *GetVar1() const override {return fSelector->GetVar1();}
    /// See TSelectorDraw::GetVar
-   TTreeFormula     *GetVar2() const {return fSelector->GetVar2();}
+   TTreeFormula     *GetVar2() const override {return fSelector->GetVar2();}
    /// See TSelectorDraw::GetVar
-   TTreeFormula     *GetVar3() const {return fSelector->GetVar3();}
+   TTreeFormula     *GetVar3() const override {return fSelector->GetVar3();}
    /// See TSelectorDraw::GetVar
-   TTreeFormula     *GetVar4() const {return fSelector->GetVar4();}
+   TTreeFormula     *GetVar4() const override {return fSelector->GetVar4();}
    /// See TSelectorDraw::GetVal
-   virtual Double_t *GetVal(Int_t i) const {return fSelector->GetVal(i);};
+   Double_t *GetVal(Int_t i) const override {return fSelector->GetVal(i);};
    /// See TSelectorDraw::GetVal
-   virtual Double_t *GetV1() const   {return fSelector->GetV1();}
+   Double_t *GetV1() const override   {return fSelector->GetV1();}
    /// See TSelectorDraw::GetVal
-   virtual Double_t *GetV2() const   {return fSelector->GetV2();}
+   Double_t *GetV2() const override   {return fSelector->GetV2();}
    /// See TSelectorDraw::GetVal
-   virtual Double_t *GetV3() const   {return fSelector->GetV3();}
+   Double_t *GetV3() const override   {return fSelector->GetV3();}
    /// See TSelectorDraw::GetVal
-   virtual Double_t *GetV4() const   {return fSelector->GetV4();}
-   virtual Double_t *GetW() const    {return fSelector->GetW();}
-   virtual Int_t     MakeClass(const char *classname, Option_t *option);
-   virtual Int_t     MakeCode(const char *filename);
-   virtual Int_t     MakeProxy(const char *classname,
+   Double_t *GetV4() const override   {return fSelector->GetV4();}
+   Double_t *GetW() const override    {return fSelector->GetW();}
+   Int_t     MakeClass(const char *classname, Option_t *option) override;
+   Int_t     MakeCode(const char *filename) override;
+   Int_t     MakeProxy(const char *classname,
                                const char *macrofilename = nullptr, const char *cutfilename = nullptr,
-                               const char *option = nullptr, Int_t maxUnrolling = 3);
-   virtual Int_t     MakeReader(const char *classname, Option_t *option);
+                               const char *option = nullptr, Int_t maxUnrolling = 3) override;
+   Int_t     MakeReader(const char *classname, Option_t *option) override;
    TPrincipal       *Principal(const char *varexp, const char *selection, Option_t *option
-                               ,Long64_t nentries, Long64_t firstentry);
-   virtual Long64_t  Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry);
-   virtual Long64_t  Process(TSelector *selector,Option_t *option,  Long64_t nentries, Long64_t firstentry);
-   virtual void      RecursiveRemove(TObject *obj);
-   virtual Long64_t  Scan(const char *varexp, const char *selection, Option_t *option
-                          ,Long64_t nentries, Long64_t firstentry);
+                               ,Long64_t nentries, Long64_t firstentry) override;
+   Long64_t  Process(const char *filename,Option_t *option, Long64_t nentries, Long64_t firstentry) override;
+   Long64_t  Process(TSelector *selector,Option_t *option,  Long64_t nentries, Long64_t firstentry) override;
+   void      RecursiveRemove(TObject *obj) override;
+   Long64_t  Scan(const char *varexp, const char *selection, Option_t *option
+                          ,Long64_t nentries, Long64_t firstentry) override;
    Bool_t            ScanRedirected() {return fScanRedirect;}
-   virtual TSQLResult *Query(const char *varexp, const char *selection, Option_t *option
-                             ,Long64_t nentries, Long64_t firstentry);
-   virtual void      SetEstimate(Long64_t n);
+   TSQLResult *Query(const char *varexp, const char *selection, Option_t *option
+                             ,Long64_t nentries, Long64_t firstentry) override;
+   void      SetEstimate(Long64_t n) override;
    void              SetScanRedirect(Bool_t on=kFALSE) {fScanRedirect = on;}
    void              SetScanFileName(const char *name) {fScanFileName=name;}
-   virtual void      SetTree(TTree *t) {fTree = t;}
-   virtual void      StartViewer(Int_t ww, Int_t wh);
-   virtual Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
-                                 ,Long64_t nentries, Long64_t firstentry);
-   virtual void      UpdateFormulaLeaves();
+   void      SetTree(TTree *t) override {fTree = t;}
+   void      StartViewer(Int_t ww, Int_t wh) override;
+   Int_t     UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
+                                 ,Long64_t nentries, Long64_t firstentry) override;
+   void      UpdateFormulaLeaves() override;
 
-   ClassDef(TTreePlayer,3);  //Manager class to play with TTrees
+   ClassDefOverride(TTreePlayer,3);  //Manager class to play with TTrees
 };
 
 #endif

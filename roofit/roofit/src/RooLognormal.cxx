@@ -78,12 +78,16 @@ double RooLognormal::evaluate() const
   return ret ;
 }
 
+void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::logNormalEvaluate", x, k, m0));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.
-void RooLognormal::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooLognormal::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Lognormal, output, nEvents,
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Lognormal, output, nEvents,
           {dataMap.at(x), dataMap.at(m0), dataMap.at(k)});
 }
 
@@ -109,6 +113,15 @@ double RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) const
   return ret ;
 }
 
+std::string
+RooLognormal::buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const
+{
+   R__ASSERT(code == 1);
+
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::logNormalIntegral", x.min(rangeName), x.max(rangeName),
+                        m0, k);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooLognormal::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
@@ -124,7 +137,7 @@ void RooLognormal::generateEvent(Int_t code)
   R__ASSERT(code==1) ;
 
   double xgen ;
-  while(1) {
+  while(true) {
     xgen = TMath::Exp(RooRandom::randomGenerator()->Gaus(TMath::Log(m0),TMath::Log(k)));
     if (xgen<=x.max() && xgen>=x.min()) {
       x = xgen ;

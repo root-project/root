@@ -14,8 +14,8 @@
 /// ~~~
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -82,8 +82,8 @@ void rf104_classfactory()
 
    // Generate toy data from pdf and plot data and pdf on frame
    RooPlot *frame1 = y.frame(Title("Compiled class MyPdfV3"));
-   RooDataSet *data = pdf->generate(y, 1000);
-   pdf->fitTo(*data);
+   std::unique_ptr<RooDataSet> data{pdf->generate(y, 1000)};
+   pdf->fitTo(*data, PrintLevel(-1));
    data->plotOn(frame1);
    pdf->plotOn(frame1);
 
@@ -102,10 +102,10 @@ void rf104_classfactory()
       RooClassFactory::makePdfInstance("GenPdf", "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))", RooArgSet(x, alpha));
 
    // Generate a toy dataset from the interpreted pdf
-   RooDataSet *data2 = genpdf->generate(x, 50000);
+   std::unique_ptr<RooDataSet> data2{genpdf->generate(x, 50000)};
 
    // Fit the interpreted pdf to the generated data
-   genpdf->fitTo(*data2);
+   genpdf->fitTo(*data2, PrintLevel(-1));
 
    // Make a plot of the data and the pdf overlaid
    RooPlot *frame2 = x.frame(Title("Compiled version of pdf of rf103"));

@@ -135,6 +135,12 @@ TJSONTree::Node &TJSONTree::Node::operator<<(double d)
    return *this;
 }
 
+TJSONTree::Node &TJSONTree::Node::operator<<(bool b)
+{
+   node->get() = b;
+   return *this;
+}
+
 const TJSONTree::Node &TJSONTree::Node::operator>>(std::string &v) const
 {
    v = node->get().get<std::string>();
@@ -146,19 +152,9 @@ TJSONTree::Node &TJSONTree::Node::operator[](std::string const &k)
    return Impl::mkNode(tree, k, node->get()[k]);
 }
 
-TJSONTree::Node &TJSONTree::Node::operator[](size_t pos)
-{
-   return Impl::mkNode(tree, "", node->get()[pos]);
-}
-
 const TJSONTree::Node &TJSONTree::Node::operator[](std::string const &k) const
 {
    return Impl::mkNode(tree, k, node->get()[k]);
-}
-
-const TJSONTree::Node &TJSONTree::Node::operator[](size_t pos) const
-{
-   return Impl::mkNode(tree, "", node->get()[pos]);
 }
 
 bool TJSONTree::Node::is_container() const
@@ -188,7 +184,7 @@ bool isResettingPossible(nlohmann::json const &node)
    }
 
    if (node.type() == nlohmann::json::value_t::string) {
-      if (node.get<std::string>() == "") {
+      if (node.get<std::string>().empty()) {
          return true;
       }
    }

@@ -18,7 +18,6 @@
 #include "ROOT/RBrowser.hxx"
 
 namespace ROOT {
-namespace Experimental {
 
 class RWebBrowserImp : public TBrowserImp {
 
@@ -44,7 +43,6 @@ public:
    ClassDefOverride(RWebBrowserImp,0)  // browser implementation for RBrowser
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

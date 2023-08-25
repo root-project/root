@@ -30,6 +30,8 @@ the member functions of the ABS TGuiFactory.
 #include "TPluginManager.h"
 #include "TEnv.h"
 
+#include <iostream>
+
 ClassImp(TRootGuiFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,9 +51,28 @@ TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
    TRootApplication *app = new TRootApplication(classname, argc, argv);
    if (!app->Client()) {
       delete app;
-      app = 0;
+      app = nullptr;
    }
    return app;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+/// Show warning that TWebCanvas will be started by default
+
+void TRootGuiFactory::ShowWebCanvasWarning()
+{
+   static bool show_warn = true;
+   if (!show_warn || gROOT->IsWebDisplay()) return;
+   show_warn = false;
+
+   std::cout << "\n"
+                "   !!! ATTENTION !!! \n"
+                "\n"
+                "ROOT comes with a web-based canvas, which is now being started. \n"
+                "Revert to the legacy canvas by setting \"Canvas.Name: TRootCanvas\" in rootrc file or\n"
+                "by starting \"root --web=off\".\n"
+                "Find more info on https://root.cern/for_developers/root7/#twebcanvas\n"
+                "\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +81,17 @@ TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                              UInt_t width, UInt_t height)
 {
+   TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
+   if (canvName == "TWebCanvas") {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         ShowWebCanvasWarning();
+         auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, 0, 0, width, height);
+         if (imp) return imp;
+      }
+   }
+
    return new TRootCanvas(c, title, width, height);
 }
 
@@ -69,6 +101,17 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                   Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
+   if (canvName == "TWebCanvas") {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         ShowWebCanvasWarning();
+         auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, x, y, width, height);
+         if (imp) return imp;
+      }
+   }
+
    return new TRootCanvas(c, title, x, y, width, height);
 }
 
@@ -140,6 +183,9 @@ TContextMenuImp *TRootGuiFactory::CreateContextMenuImp(TContextMenu *c,
 
 TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char *title)
 {
+   if (gROOT->IsWebDisplay())
+      return TGuiFactory::CreateControlBarImp(c, title);
+
    return new TRootControlBar(c, title);
 }
 
@@ -149,5 +195,8 @@ TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char 
 TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char *title,
                                                      Int_t x, Int_t y)
 {
+   if (gROOT->IsWebDisplay())
+      return TGuiFactory::CreateControlBarImp(c, title, x, y);
+
    return new TRootControlBar(c, title, x, y);
 }

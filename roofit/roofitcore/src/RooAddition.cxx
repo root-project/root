@@ -52,19 +52,25 @@ ClassImp(RooAddition);
 /// \param[in] sumSet The value of the function will be the sum of the values in this set
 /// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in `sumSet`
 
-RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet, bool takeOwnership)
+RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+                         , bool takeOwnership
+#endif
+  )
   : RooAbsReal(name, title)
   , _set("!set","set of components",this)
   , _cacheMgr(this,10)
 {
-  for (const auto comp : sumSet) {
+  for (RooAbsArg *comp : sumSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " is not of type RooAbsReal" << std::endl;
       RooErrorHandler::softAbort() ;
     }
     _set.add(*comp) ;
-    if (takeOwnership) _ownedList.addOwned(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+    if (takeOwnership) _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
+#endif
   }
 
 }
@@ -85,7 +91,11 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 /// \param[in] sumSet2 Right-hand element of the pair-wise products
 /// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
 ///
-RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2, bool takeOwnership)
+RooAddition::RooAddition(const char* name, const char* title, const RooArgList& sumSet1, const RooArgList& sumSet2
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+                         , bool takeOwnership
+#endif
+  )
     : RooAbsReal(name, title)
     , _set("!set","set of components",this)
     , _cacheMgr(this,10)
@@ -110,20 +120,21 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
              << " in first list is not of type RooAbsReal" << std::endl;
       RooErrorHandler::softAbort() ;
     }
-    // TODO: add flag to RooProduct c'tor to make it assume ownership...
     TString _name(name);
     _name.Append( "_[");
     _name.Append(comp1->GetName());
     _name.Append( "_x_");
     _name.Append(comp2->GetName());
     _name.Append( "]");
-    RooProduct  *prod = new RooProduct( _name, _name , RooArgSet(*comp1, *comp2) /*, takeOwnership */ ) ;
+    auto prod = std::make_unique<RooProduct>( _name, _name , RooArgSet(*comp1, *comp2));
     _set.add(*prod);
-    _ownedList.addOwned(*prod) ;
+    _ownedList.addOwned(std::move(prod));
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
-        _ownedList.addOwned(*comp1) ;
-        _ownedList.addOwned(*comp2) ;
+        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp1});
+        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp2});
     }
+#endif
   }
 }
 
@@ -158,7 +169,7 @@ double RooAddition::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAddition::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   RooBatchCompute::VarVector pdfs;
   RooBatchCompute::ArgVector coefs;
@@ -169,10 +180,49 @@ void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEve
     pdfs.push_back(dataMap.at(arg));
     coefs.push_back(1.0);
   }
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // If the number of elements to sum is less than 3, just build a sum expression.
+   // else build a loop to sum over the values.
+   unsigned int eleSize = _set.size();
+   std::string result;
+   if (eleSize > 3) {
+      std::string className = GetName();
+      std::string varName = "elements" + className;
+      std::string sumName = "sum" + className;
+      std::string code = "";
+      std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
+      int idx = 0;
+      for (RooAbsArg *it : _set) {
+         decl += ctx.getResult(*it) + ",";
+         ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
+         idx++;
+      }
+      decl.back() = '}';
+      code += decl + ";\n";
+
+      ctx.addToGlobalScope("double " + sumName + " = 0;\n");
+      std::string iterator = "i_" + className;
+      code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
+              "++) {\n" + sumName + " += " + varName + "[" + iterator + "];\n}\n";
+      result = sumName;
+      ctx.addResult(this, result);
+
+      ctx.addToCodeBody(this, code);
+   }
+
+   result = "(";
+   for (RooAbsArg *it : _set) {
+      result += ctx.getResult(*it) + '+';
+   }
+   result.back() = ')';
+   ctx.addResult(this, result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the default error level for MINUIT error analysis
@@ -185,8 +235,8 @@ void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEve
 
 double RooAddition::defaultErrorLevel() const
 {
-  RooAbsReal* nllArg(0) ;
-  RooAbsReal* chi2Arg(0) ;
+  RooAbsReal* nllArg(nullptr) ;
+  RooAbsReal* chi2Arg(nullptr) ;
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
@@ -250,16 +300,15 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
-  if (cache!=0) {
+  if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code+1;
   }
 
   // we don't, so we make it right here....
   cache = new CacheElem;
-  for (const auto arg : _set) {// checked in c'tor that this will work...
-      RooAbsReal *I = static_cast<const RooAbsReal*>(arg)->createIntegral(analVars,rangeName);
-      cache->_I.addOwned(*I);
+  for (auto *arg : static_range_cast<RooAbsReal const*>(_set)) {// checked in c'tor that this will work...
+      cache->_I.addOwned(std::unique_ptr<RooAbsReal>{arg->createIntegral(analVars,rangeName)});
   }
 
   Int_t code = _cacheMgr.setObj(&analVars,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName));
@@ -273,7 +322,7 @@ double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
+  if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
     RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1);
@@ -282,7 +331,7 @@ double RooAddition::analyticalIntegral(Int_t code, const char* rangeName) const
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
-  assert(cache!=0);
+  assert(cache!=nullptr);
 
   // loop over cache, and sum...
   double result(0);

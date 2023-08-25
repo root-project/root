@@ -44,10 +44,10 @@
 #  define R__NULLPTR
 # endif
 #else
-# if defined(__cplusplus) && (__cplusplus < 201402L)
-#  error "ROOT requires support for C++14 or higher."
+#if defined(__cplusplus) && (__cplusplus < 201703L)
+#error "ROOT requires support for C++17 or higher."
 #  if defined(__GNUC__) || defined(__clang__)
-#   error "Pass `-std=c++14` as compiler argument."
+#error "Pass `-std=c++17` as compiler argument."
 #  endif
 # endif
 #endif
@@ -146,6 +146,9 @@
 #      define R__USESTHROW
 #      define R__SEEK64
 #   endif
+#   if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 38)
+#      define HAS_STRLCPY
+#   endif
 #endif
 
 #if defined(linux) && defined(__i386__)
@@ -224,6 +227,16 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define R__B64
+#   define NEED_SIGJMP
+#endif
+
+#if defined(linux) && defined(__riscv)
+#   define R__LINUX
+#   define R__UNIX
+#   define R__BYTESWAP
+#   if __riscv_xlen >= 64
+#      define R__B64
+#   endif
 #   define NEED_SIGJMP
 #endif
 
@@ -370,7 +383,7 @@
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
 #      define R__GLOBALSTL       /* STL in global name space */
-#      error "ROOT requires proper support for C++11 or higher"
+#error "ROOT requires proper support for C++17 or higher"
 #   else
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__TMPLTSTREAM     /* std::iostream implemented with templates */
@@ -495,12 +508,12 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* USE AS `R__DEPRECATED(6,30, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.30 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,29,0)
-# define _R__DEPRECATED_630(REASON) _R__DEPRECATED_LATER(REASON)
+/* USE AS `R__DEPRECATED(6,32, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.32 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,31,0)
+# define _R__DEPRECATED_632(REASON) _R__DEPRECATED_LATER(REASON)
 #else
-# define _R__DEPRECATED_630(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+# define _R__DEPRECATED_632(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`

@@ -32,24 +32,24 @@ protected:
 public:
    TEveCompound(const char* n="TEveCompound", const char* t="",
                 Bool_t doColor=kTRUE, Bool_t doTransparency=kFALSE);
-   virtual ~TEveCompound() {}
+   ~TEveCompound() override {}
 
    void   OpenCompound()         { ++fCompoundOpen;  }
    void   CloseCompound()        { --fCompoundOpen; }
    Bool_t IsCompoundOpen() const { return fCompoundOpen > 0; }
 
-   virtual void SetMainColor(Color_t color);
-   virtual void SetMainTransparency(Char_t t);
+   void SetMainColor(Color_t color) override;
+   void SetMainTransparency(Char_t t) override;
 
-   virtual void AddElement(TEveElement* el);
-   virtual void RemoveElementLocal(TEveElement* el);
-   virtual void RemoveElementsLocal();
+   void AddElement(TEveElement* el) override;
+   void RemoveElementLocal(TEveElement* el) override;
+   void RemoveElementsLocal() override;
 
-   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
+   void FillImpliedSelectedSet(Set_t& impSelSet) override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
-   ClassDef(TEveCompound, 0); // Container for managing compounds of TEveElements.
+   ClassDefOverride(TEveCompound, 0); // Container for managing compounds of TEveElements.
 };
 
 
@@ -66,14 +66,14 @@ private:
 
 public:
    TEveCompoundProjected();
-   virtual ~TEveCompoundProjected() {}
+   ~TEveCompoundProjected() override {}
 
-   virtual void SetMainColor(Color_t color);
+   void SetMainColor(Color_t color) override;
 
-   virtual void UpdateProjection()      {}
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   void UpdateProjection() override      {}
+   TEveElement* GetProjectedAsElement() override { return this; }
 
-   ClassDef(TEveCompoundProjected, 0); // Projected TEveCompund container.
+   ClassDefOverride(TEveCompoundProjected, 0); // Projected TEveCompund container.
 };
 
 #endif

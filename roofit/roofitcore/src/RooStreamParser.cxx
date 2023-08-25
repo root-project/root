@@ -35,7 +35,7 @@
 
 
 #include "Riostream.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifndef _WIN32
 #include <strings.h>
@@ -149,7 +149,7 @@ TString RooStreamParser::readToken()
     }
   }
 
-  while(1) {
+  while(true) {
     // Buffer overflow protection
     if (bufptr >= 63999) {
       oocoutW(nullptr, InputArguments)
@@ -426,7 +426,7 @@ bool RooStreamParser::readDouble(double& value, bool /*zapOnError*/)
 
 bool RooStreamParser::convertToDouble(const TString& token, double& value)
 {
-  char* endptr = 0;
+  char* endptr = nullptr;
   const char* data=token.Data() ;
 
   // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
@@ -466,7 +466,7 @@ bool RooStreamParser::readInteger(Int_t& value, bool /*zapOnError*/)
 
 bool RooStreamParser::convertToInteger(const TString& token, Int_t& value)
 {
-  char* endptr = 0;
+  char* endptr = nullptr;
   const char* data=token.Data() ;
   value = strtol(data,&endptr,10) ;
   bool error = (endptr-data!=token.Length()) ;

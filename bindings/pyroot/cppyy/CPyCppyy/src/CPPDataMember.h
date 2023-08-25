@@ -27,6 +27,7 @@ public:                 // public, as the python C-API works with C structs
     Converter*         fConverter;
     Cppyy::TCppScope_t fEnclosingScope;
     PyObject*          fName;
+    std::string        fFullType;
 
 private:                // private, as the python C-API will handle creation
     CPPDataMember() = delete;

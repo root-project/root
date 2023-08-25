@@ -77,10 +77,8 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
 {
    if (fPdf == nullptr)
       CreatePdf();
-   // kbelasco: check here for memory leaks: does RooAddPdf make copies or
-   // take ownership of components, coeffs
-   RooArgList* components = new RooArgList();
-   RooArgList* coeffs = new RooArgList();
+   RooArgList components;
+   RooArgList coeffs;
    if (fCluesPdf == nullptr)
       CreateCluesPdf();
    if (fCluesPdf != nullptr) {
@@ -88,17 +86,17 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
          fCluesFrac = DEFAULT_CLUES_FRAC;
       printf("added clues from dataset %s with fraction %g\n",
             fClues->GetName(), fCluesFrac);
-      components->add(*fCluesPdf);
-      coeffs->add(RooConst(fCluesFrac));
+      components.add(*fCluesPdf);
+      coeffs.add(RooConst(fCluesFrac));
    }
    if (fUniFrac > 0.) {
       CreateUniformPdf();
-      components->add(*fUniformPdf);
-      coeffs->add(RooConst(fUniFrac));
+      components.add(*fUniformPdf);
+      coeffs.add(RooConst(fUniFrac));
    }
-   components->add(*fPdf);
+   components.add(*fPdf);
    RooAddPdf* addPdf = new RooAddPdf("proposalFunction", "Proposal Density",
-         *components, *coeffs);
+         components, coeffs);
    fPdfProp->SetPdf(*addPdf);
    fPdfProp->SetOwnsPdf(true);
    if (fCacheSize > 0)
@@ -111,31 +109,26 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
 
 void ProposalHelper::CreatePdf()
 {
-   // kbelasco: check here for memory leaks:
-   // does RooMultiVarGaussian make copies of xVec and muVec?
-   // or should we delete them?
    if (fVars == nullptr) {
       coutE(InputArguments) << "ProposalHelper::CreatePdf(): " <<
          "Variables to create proposal function for are not set." << endl;
       return;
    }
-   RooArgList* xVec = new RooArgList();
-   RooArgList* muVec = new RooArgList();
+   RooArgList xVec{};
+   RooArgList muVec{};
    RooRealVar* clone; 
    for (auto *r : static_range_cast<RooRealVar *> (*fVars)){
-      xVec->add(*r);
+      xVec.add(*r);
       TString cloneName = TString::Format("%s%s", "mu__", r->GetName());
       clone = static_cast<RooRealVar*>(r->clone(cloneName.Data()));
-      muVec->add(*clone);
+      muVec.add(*clone);
       if (fUseUpdates)
          fPdfProp->AddMapping(*clone, *r);
    }
    if (fCovMatrix == nullptr)
-      CreateCovMatrix(*xVec);
-   fPdf = new RooMultiVarGaussian("mvg", "MVG Proposal", *xVec, *muVec,
+      CreateCovMatrix(xVec);
+   fPdf = new RooMultiVarGaussian("mvg", "MVG Proposal", xVec, muVec,
                                   *fCovMatrix);
-   delete xVec;
-   delete muVec;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -352,6 +352,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 void TArrow::PaintArrowNDC(Double_t u1, Double_t v1,Double_t u2 ,Double_t v2,
                            Float_t arrowsize, Option_t *option)
 {
+   if (!gPad) return;
    PaintArrow(gPad->GetX1() + u1 * (gPad->GetX2() - gPad->GetX1()),
               gPad->GetY1() + v1 * (gPad->GetY2() - gPad->GetY1()),
               gPad->GetX1() + u2 * (gPad->GetX2() - gPad->GetX1()),

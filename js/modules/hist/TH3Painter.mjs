@@ -1,6 +1,5 @@
 import { gStyle, settings } from '../core.mjs';
-import { REVISION, Matrix4,
-         BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
+import { Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -56,7 +55,7 @@ class TH3Painter extends THistPainter {
           k1 = this.getSelectIndex('z', 'left'),
           k2 = this.getSelectIndex('z', 'right'),
           fp = this.getFramePainter(),
-          res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
+          res = {name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0},
           xi, yi, zi, xx, xside, yy, yside, zz, zside, cont,
           has_counted_stat = (Math.abs(histo.fTsumw) > 1e-300) && !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && !fp.isAxisZoomed('z');
 
@@ -125,6 +124,8 @@ class TH3Painter extends THistPainter {
       if (this.isIgnoreStatsFill())
          return false;
 
+      if (dostat == 1) dostat = 1111;
+
       let data = this.countStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
@@ -169,17 +170,16 @@ class TH3Painter extends THistPainter {
    getBinTooltips(ix, iy, iz) {
       let lines = [], histo = this.getHisto();
 
-      lines.push(this.getObjectHint());
-
-      lines.push(`x = ${this.getAxisBinTip('x', histo.fXaxis, ix)}  xbin=${ix+1}`);
-      lines.push(`y = ${this.getAxisBinTip('y', histo.fYaxis, iy)}  ybin=${iy+1}`);
-      lines.push(`z = ${this.getAxisBinTip('z', histo.fZaxis, iz)}  zbin=${iz+1}`);
+      lines.push(this.getObjectHint(),
+                 `x = ${this.getAxisBinTip('x', histo.fXaxis, ix)}  xbin=${ix+1}`,
+                 `y = ${this.getAxisBinTip('y', histo.fYaxis, iy)}  ybin=${iy+1}`,
+                 `z = ${this.getAxisBinTip('z', histo.fZaxis, iz)}  zbin=${iz+1}`);
 
       let binz = histo.getBinContent(ix+1, iy+1, iz+1);
       if (binz === Math.round(binz))
-         lines.push('entries = ' + binz);
+         lines.push(`entries = ${binz}`);
       else
-         lines.push('entries = ' + floatToString(binz, gStyle.fStatFormat));
+         lines.push(`entries = ${floatToString(binz, gStyle.fStatFormat)}`);
 
       return lines;
    }
@@ -232,7 +232,7 @@ class TH3Painter extends THistPainter {
                if (bin_content <= content_lmt) continue;
                let num = Math.round(bin_content*coef);
 
-               for (let n=0;n<num;++n) {
+               for (let n = 0; n < num; ++n) {
                   let binx = histo.fXaxis.GetBinCoord(i + rnd.random()),
                       biny = histo.fYaxis.GetBinCoord(j + rnd.random()),
                       binz = histo.fZaxis.GetBinCoord(k + rnd.random());
@@ -251,14 +251,9 @@ class TH3Painter extends THistPainter {
 
          mesh.bins = bins;
          mesh.painter = this;
-         mesh.tip_color = (histo.fMarkerColor===3) ? 0xFF0000 : 0x00FF00;
+         mesh.tip_color = histo.fMarkerColor === 3 ? 0xFF0000 : 0x00FF00;
 
          mesh.tooltip = function(intersect) {
-            if (!Number.isInteger(intersect.index)) {
-               console.error(`intersect.index not provided, three.js version ${REVISION}`);
-               return null;
-            }
-
             let indx = Math.floor(intersect.index / this.nvertex);
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
@@ -290,10 +285,12 @@ class TH3Painter extends THistPainter {
 
       let box_option = this.options.Box ? this.options.BoxStyle : 0;
 
-      if (!box_option && !this.options.GLBox && !this.options.GLColor && !this.options.Lego) {
+      if (!box_option && this.options.Scat) {
          let promise = this.draw3DScatter();
          if (promise !== false) return promise;
          box_option = 12; // fall back to box2 draw option
+      } else if (!box_option && !this.options.GLBox && !this.options.GLColor && !this.options.Lego) {
+         box_option = 12; // default draw option
       }
 
       let histo = this.getHisto(),
@@ -315,7 +312,7 @@ class TH3Painter extends THistPainter {
          if (this.options.GLBox === 12) use_colors = true;
 
          let geom = main.webgl ? new SphereGeometry(0.5, 16, 12) : new SphereGeometry(0.5, 8, 6);
-         geom.applyMatrix4( new Matrix4().makeRotationX( Math.PI / 2 ) );
+         geom.applyMatrix4(new Matrix4().makeRotationX(Math.PI/2));
          geom.computeVertexNormals();
 
          let indx = geom.getIndex().array,
@@ -538,8 +535,8 @@ class TH3Painter extends THistPainter {
 
          if (use_colors) fillcolor = this.fPalette.getColor(ncol);
 
-         const material = use_lambert ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: (use_opacity < 1), vertexColors: false })
-                                      : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, vertexColors: false }),
+         const material = use_lambert ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
+                                      : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false }),
               combined_bins = new Mesh(all_bins_buffgeom, material);
 
          combined_bins.bins = bin_tooltips[nseq];
@@ -553,10 +550,6 @@ class TH3Painter extends THistPainter {
          combined_bins.use_scale = use_scale;
 
          combined_bins.tooltip = function(intersect) {
-            if (!Number.isInteger(intersect.faceIndex)) {
-               console.error(`intersect.faceIndex not provided, three.js version ${REVISION}`);
-               return null;
-            }
             let indx = Math.floor(intersect.faceIndex / this.bins_faces);
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
@@ -581,16 +574,11 @@ class TH3Painter extends THistPainter {
          main.toplevel.add(combined_bins);
 
          if (helper_kind[nseq] > 0) {
-            let lcolor = this.getColor(histo.fLineColor),
-                helper_material = new LineBasicMaterial({ color: lcolor }),
-                lines = null;
-
-            if (helper_kind[nseq] === 1) {
-               // reuse positions from the mesh - only special index was created
-               lines = createLineSegments(bin_verts[nseq], helper_material, helper_indexes[nseq]);
-            } else {
-               lines = createLineSegments(helper_positions[nseq], helper_material);
-            }
+            let helper_material = new LineBasicMaterial({ color: this.getColor(histo.fLineColor) }),
+                lines = (helper_kind[nseq] === 1)
+                   // reuse positions from the mesh - only special index was created
+                   ? createLineSegments(bin_verts[nseq], helper_material, helper_indexes[nseq])
+                   : createLineSegments(helper_positions[nseq], helper_material);
 
             main.toplevel.add(lines);
          }
@@ -612,10 +600,11 @@ class TH3Painter extends THistPainter {
 
       } else {
          assignFrame3DMethods(main);
-         pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+         pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
             main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3, draw: this.options.Axis !== -1 });
+            main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3,
+                   draw: this.options.Axis !== -1, drawany: this.options.isCartesian() });
             return this.draw3DBins();
          }).then(() => {
             main.render3D();
@@ -641,7 +630,7 @@ class TH3Painter extends THistPainter {
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
       let obj = this.getHisto();
-      if (obj) obj = obj['f'+axis.toUpperCase()+'axis'];
+      if (obj) obj = obj[`f${axis.toUpperCase()}axis`];
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
@@ -658,7 +647,7 @@ class TH3Painter extends THistPainter {
       if ((i1 === i2) || (j1 === j2) || (k1 === k2)) return;
 
       // first find minimum
-      let min = histo.getBinContent(i1 + 1, j1 + 1, k1+1);
+      let min = histo.getBinContent(i1+1, j1+1, k1+1);
       for (i = i1; i < i2; ++i)
          for (j = j1; j < j2; ++j)
             for (k = k1; k < k2; ++k)

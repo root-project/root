@@ -17,7 +17,6 @@
 #define ROO_TREE_DATA_STORE
 
 #include "RooAbsDataStore.h"
-#include "RunContext.h"
 
 #include "ROOT/RStringView.hxx"
 
@@ -81,7 +80,7 @@ public:
     (void)first; (void)len;
     return {};
   }
-  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
+  std::span<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
   bool changeObservableName(const char* from, const char* to) override ;

@@ -62,7 +62,7 @@ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
    // servers are. Integration observables will be shape servers, the other
    // servers are value servers.
    int code;
-   auto proj = getProjection(&intObs, nullptr, 0, code);
+   auto proj = getProjection(&intObs, nullptr, nullptr, code);
    for(RooAbsArg* server : proj->servers()) {
      if(server->isShapeServer(*proj)) {
        intobs.add(*server);
@@ -124,7 +124,7 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   }
 
   auto cache = new CacheElem ;
-  cache->_projection = std::unique_ptr<RooAbsReal>{intpdf.arg().createIntegral(iset?*iset:RooArgSet(),&nset2,0,rangeName)};
+  cache->_projection = std::unique_ptr<RooAbsReal>{intpdf.arg().createIntegral(iset?*iset:RooArgSet(),&nset2,nullptr,rangeName)};
 
   code = _cacheMgr.setObj(iset, nset, cache, RooNameReg::ptr(rangeName)) ;
 
@@ -279,13 +279,14 @@ void RooProjectedPdf::CacheElem::printCompactTreeHook(std::ostream& os, const ch
 }
 
 
-std::unique_ptr<RooAbsArg> RooProjectedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & /*ctx*/) const
+std::unique_ptr<RooAbsArg>
+RooProjectedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
-  RooArgSet nset2;
-  intpdf->getObservables(&normSet, nset2);
-  nset2.add(intobs);
+   RooArgSet nset2;
+   intpdf->getObservables(&normSet, nset2);
+   nset2.add(intobs);
 
-  auto newArg = std::unique_ptr<RooAbsReal>{intpdf->createIntegral(intobs,&nset2)};
-  newArg->setAttribute("_COMPILED");
-  return newArg;
+   auto newArg = std::unique_ptr<RooAbsReal>{intpdf->createIntegral(intobs, &nset2)};
+   ctx.markAsCompiled(*newArg);
+   return newArg;
 }

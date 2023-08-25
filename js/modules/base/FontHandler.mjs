@@ -63,7 +63,7 @@ class FontHandler {
 
       if ((this.name == 'Symbol') || (this.name == 'Wingdings')) {
          this.isSymbol = this.name;
-         this.name = "Times New Roman";
+         this.name = 'Times New Roman';
       } else {
          this.isSymbol = '';
       }
@@ -73,12 +73,12 @@ class FontHandler {
 
    /** @summary Assigns font-related attributes */
    setFont(selection, arg) {
-      selection.attr("font-family", this.name);
+      selection.attr('font-family', this.name);
       if (arg != 'without-size')
-         selection.attr("font-size", this.size)
-                  .attr("xml:space", "preserve");
-      selection.attr("font-weight", this.weight || null);
-      selection.attr("font-style", this.style || null);
+         selection.attr('font-size', this.size)
+                  .attr('xml:space', 'preserve');
+      selection.attr('font-weight', this.weight || null);
+      selection.attr('font-style', this.style || null);
    }
 
    /** @summary Set font size (optional) */
@@ -106,26 +106,26 @@ class FontHandler {
 
    /** @summary Clears all font-related attributes */
    clearFont(selection) {
-      selection.attr("font-family", null)
-               .attr("font-size", null)
-               .attr("xml:space", null)
-               .attr("font-weight", null)
-               .attr("font-style", null);
+      selection.attr('font-family', null)
+               .attr('font-size', null)
+               .attr('xml:space', null)
+               .attr('font-weight', null)
+               .attr('font-style', null);
    }
 
    /** @summary Returns true in case of monospace font
      * @private */
    isMonospace() {
       let n = this.name.toLowerCase();
-      return (n.indexOf("courier") == 0) || (n == "monospace") || (n == "monaco");
+      return (n.indexOf('courier') == 0) || (n == 'monospace') || (n == 'monaco');
    }
 
-   /** @summary Return full font declaration which can be set as font property like "12pt Arial bold"
+   /** @summary Return full font declaration which can be set as font property like '12pt Arial bold'
      * @private */
    getFontHtml() {
-      let res = Math.round(this.size) + "pt " + this.name;
-      if (this.weight) res += " " + this.weight;
-      if (this.style) res += " " + this.style;
+      let res = Math.round(this.size) + 'pt ' + this.name;
+      if (this.weight) res += ' ' + this.weight;
+      if (this.style) res += ' ' + this.style;
       return res;
    }
 

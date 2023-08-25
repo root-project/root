@@ -357,9 +357,6 @@ using TRangeStaticCast = TRangeCast<T, false>;
 template <typename T>
 using TRangeDynCast = ROOT::Detail::TRangeCast<T, true>;
 
-// Zero overhead macros in case not compiled with thread support
-#if defined (_REENTRANT) || defined (WIN32)
-
 #define R__COLL_COND_MUTEX(mutex) this->IsUsingRWLock() ? mutex : nullptr
 
 #define R__COLLECTION_READ_LOCKGUARD(mutex) ::ROOT::TReadLockGuard _R__UNIQUE_(R__readguard)(R__COLL_COND_MUTEX(mutex))
@@ -367,16 +364,6 @@ using TRangeDynCast = ROOT::Detail::TRangeCast<T, true>;
 
 #define R__COLLECTION_WRITE_LOCKGUARD(mutex) ::ROOT::TWriteLockGuard _R__UNIQUE_(R__readguard)(R__COLL_COND_MUTEX(mutex))
 #define R__COLLECTION_WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(R__COLL_COND_MUTEX(mutex))
-
-#else
-
-#define R__COLLECTION_READ_LOCKGUARD(mutex) (void)mutex
-#define R__COLLECTION_COLLECTION_READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
-
-#define R__COLLECTION_WRITE_LOCKGUARD(mutex) (void)mutex
-#define R__COLLECTION_WRITE_LOCKGUARD_NAMED(name,mutex) (void)mutex
-
-#endif
 
 //---- R__FOR_EACH macro -------------------------------------------------------
 

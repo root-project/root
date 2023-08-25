@@ -1,4 +1,4 @@
-import { BIT, create, createHistogram, isStr, clTH1, clTH2 } from '../core.mjs';
+import { BIT, create, createHistogram, isStr, clTH1, clTH2, clTH2F, kNoStats } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TGraphPainter, clTGraphAsymmErrors } from '../hist2d/TGraphPainter.mjs';
 import { TF1Painter } from '../hist/TF1Painter.mjs';
@@ -46,7 +46,7 @@ class TEfficiencyPainter extends ObjectPainter {
 
          let aa,bb;
          if(obj.TestBit(kUseWeights)) {
-            let tw =  total, // fTotalHistogram->GetBinContent(bin);
+            let tw = total, // fTotalHistogram->GetBinContent(bin);
                 tw2 = obj.fTotalHistogram.fSumw2 ? obj.fTotalHistogram.fSumw2[bin] : Math.abs(total),
                 pw = passed; // fPassedHistogram->GetBinContent(bin);
 
@@ -54,14 +54,14 @@ class TEfficiencyPainter extends ObjectPainter {
 
             // tw/tw2 renormalize the weights
             let norm = tw/tw2;
-            aa =  pw * norm + alpha;
-            bb =  (tw - pw) * norm + beta;
+            aa = pw * norm + alpha;
+            bb = (tw - pw) * norm + beta;
          } else {
             aa = passed + alpha;
             bb = total - passed + beta;
          }
 
-         if (!obj.TestBit(kPosteriorMode) )
+         if (!obj.TestBit(kPosteriorMode))
             return BetaMean(aa,bb);
          else
             return BetaMode(aa,bb);
@@ -112,7 +112,7 @@ class TEfficiencyPainter extends ObjectPainter {
    createHisto(eff) {
       const nbinsx = eff.fTotalHistogram.fXaxis.fNbins,
             nbinsy = eff.fTotalHistogram.fYaxis.fNbins,
-            hist = createHistogram('TH2F', nbinsx, nbinsy);
+            hist = createHistogram(clTH2F, nbinsx, nbinsy);
       Object.assign(hist.fXaxis, eff.fTotalHistogram.fXaxis);
       Object.assign(hist.fYaxis, eff.fTotalHistogram.fYaxis);
       hist.fName = 'eff_histo';
@@ -149,8 +149,7 @@ class TEfficiencyPainter extends ObjectPainter {
    fillHisto(hist) {
       const eff = this.getObject(),
             nbinsx = hist.fXaxis.fNbins,
-            nbinsy = hist.fYaxis.fNbins,
-            kNoStats = BIT(9);
+            nbinsy = hist.fYaxis.fNbins;
 
       for (let i = 0; i < nbinsx+2; ++i)
          for (let j = 0; j < nbinsy+2; ++j) {
@@ -168,7 +167,7 @@ class TEfficiencyPainter extends ObjectPainter {
    drawFunction(indx) {
       const eff = this.getObject();
 
-      if (!eff || !eff.fFunctions || indx >= eff.fFunctions.arr.length)
+      if (!eff?.fFunctions || (indx >= eff.fFunctions.arr.length))
          return this;
 
        return TF1Painter.draw(this.getDom(), eff.fFunctions.arr[indx], eff.fFunctions.opt[indx]).then(() => this.drawFunction(indx+1));

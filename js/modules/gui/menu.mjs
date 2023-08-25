@@ -1,10 +1,12 @@
-import { loadScript, source_dir, settings, gStyle, internals, isObject, isFunc, isStr, clTGaxis } from '../core.mjs';
+import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-import { injectStyle, selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
+import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
+
+const kToFront = '__front__';
 
 /**
  * @summary Abstract class for creating context menu
@@ -18,7 +20,7 @@ class JSRootMenu {
       this.painter = painter;
       this.menuname = menuname;
       if (isObject(show_event) && (show_event.clientX !== undefined) && (show_event.clientY !== undefined))
-         this.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY };
+         this.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY, skip_close: show_event.skip_close };
 
       this.remove_handler = () => this.remove();
       this.element = null;
@@ -42,15 +44,22 @@ class JSRootMenu {
 
    /** @summary Close and remove menu */
    remove() {
-      if (this.element !== null) {
-         this.element.remove();
-         if (this.resolveFunc) {
-            this.resolveFunc();
-            delete this.resolveFunc;
-         }
-         document.body.removeEventListener('click', this.remove_handler);
+      if (!this.element)
+         return;
+
+      if (this.show_evnt?.skip_close) {
+         this.show_evnt.skip_close = 0;
+         return;
       }
+
+      this.element.remove();
       this.element = null;
+      if (isFunc(this.resolveFunc)) {
+         let func = this.resolveFunc;
+         delete this.resolveFunc;
+         func();
+      }
+      document.body.removeEventListener('click', this.remove_handler);
    }
 
    show(/*event*/) {
@@ -74,7 +83,7 @@ class JSRootMenu {
 
    /** @summary Add draw sub-menu with draw options
      * @protected */
-   addDrawMenu(top_name, opts, call_back) {
+   addDrawMenu(top_name, opts, call_back, title) {
       if (!opts || !opts.length)
          return;
 
@@ -91,7 +100,11 @@ class JSRootMenu {
          return;
       }
 
-      if (!without_sub) this.add('sub:' + top_name, opts[0], call_back);
+      if (!without_sub)
+         this.add('sub:' + top_name, () => {
+            let opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+            this.input('Provide draw option', opt, 'text').then(call_back);
+         }, title);
 
       for (let i = 0; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
@@ -101,7 +114,8 @@ class JSRootMenu {
             while ((group < opts.length) && (opts[group].indexOf(name) == 0)) group++;
          }
 
-         if (without_sub) name = top_name + ' ' + name;
+         if (without_sub)
+            name = top_name + ' ' + name;
 
          if (group < i+2) {
             this.add(name, opts[i], call_back);
@@ -113,7 +127,8 @@ class JSRootMenu {
             i = group-1;
          }
       }
-      if (!without_sub) this.add('endsub:');
+      if (!without_sub)
+         this.add('endsub:');
    }
 
    /** @summary Add color selection menu entries
@@ -350,52 +365,22 @@ class JSRootMenu {
      * @protected */
    addRAttrTextItems(fontHandler, opts, set_func) {
       if (!opts) opts = {};
-      this.addRColorMenu('color', fontHandler.color, sel => set_func({ name: 'color', value: sel }));
+      this.addRColorMenu('color', fontHandler.color, value => set_func({ name: 'color', value }));
       if (fontHandler.scaled)
-         this.addSizeMenu('size', 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, sz => set_func({ name: 'size', value: sz }));
+         this.addSizeMenu('size', 0.01, 0.10, 0.01, fontHandler.size /fontHandler.scale, value => set_func({ name: 'size', value }));
       else
-         this.addSizeMenu('size', 6, 20, 2, fontHandler.size, sz => set_func({ name: 'size', value: sz }));
+         this.addSizeMenu('size', 6, 20, 2, fontHandler.size, value => set_func({ name: 'size', value }));
 
-      this.addSelectMenu('family', ['Arial', 'Times New Roman', 'Courier New', 'Symbol'], fontHandler.name, res => set_func( {name: 'font_family', value: res }));
+      this.addSelectMenu('family', ['Arial', 'Times New Roman', 'Courier New', 'Symbol'], fontHandler.name, value => set_func({ name: 'font_family', value }));
 
-      this.addSelectMenu('style', ['normal', 'italic', 'oblique'], fontHandler.style || 'normal', res => set_func( {name: 'font_style', value: res == 'normal' ? null : res }));
+      this.addSelectMenu('style', ['normal', 'italic', 'oblique'], fontHandler.style || 'normal', res => set_func({ name: 'font_style', value: res == 'normal' ? null : res }));
 
-      this.addSelectMenu('weight', ['normal', 'lighter', 'bold', 'bolder'], fontHandler.weight || 'normal', res => set_func( {name: 'font_weight', value: res == 'normal' ? null : res }));
+      this.addSelectMenu('weight', ['normal', 'lighter', 'bold', 'bolder'], fontHandler.weight || 'normal', res => set_func({ name: 'font_weight', value: res == 'normal' ? null : res }));
 
       if (!opts.noalign)
          this.add('align');
       if (!opts.noangle)
          this.add('angle');
-   }
-
-   /** @summary Fill context menu for text attributes
-     * @private */
-   addTextAttributesMenu(painter, prefix) {
-      // for the moment, text attributes accessed directly from objects
-
-      let obj = painter.getObject();
-      if ((obj?.fTextColor === undefined) || (obj?.fTextAlign == undefined)) return;
-
-      this.add('sub:' + (prefix || 'Text'));
-      this.addColorMenu('color', obj.fTextColor,
-         arg => { obj.fTextColor = arg; painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor')); });
-
-      let align = [11, 12, 13, 21, 22, 23, 31, 32, 33];
-
-      this.add('sub:align');
-      for (let n = 0; n < align.length; ++n) {
-         this.addchk(align[n] == obj.fTextAlign,
-            align[n], align[n],
-            // align[n].toString() + '_h:' + hnames[Math.floor(align[n]/10) - 1] + '_v:' + vnames[align[n]%10-1], align[n],
-            function(arg) { this.getObject().fTextAlign = parseInt(arg); this.interactiveRedraw('pad', `exec:SetTextAlign(${arg})`); }.bind(painter));
-      }
-      this.add('endsub:');
-
-      this.addFontMenu('font', obj.fTextFont, function(fnt) {
-         this.getObject().fTextFont = fnt; this.interactiveRedraw(true, `exec:SetTextFont(${fnt})`); }.bind(painter)
-      );
-
-      this.add('endsub:');
    }
 
    /** @summary Add line style menu
@@ -406,7 +391,7 @@ class JSRootMenu {
       }));
       for (let n = 1; n < 11; ++n) {
          let dash = getSvgLineStyle(n),
-             svg = `<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>${n}</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='${dash}'></line></svg>`;
+             svg = `<svg width='100' height='14'><text x='2' y='13' style='font-size:12px'>${n}</text><line x1='30' y1='7' x2='100' y2='7' stroke='black' stroke-width='3' stroke-dasharray='${dash}'></line></svg>`;
 
          this.addchk((value == n), svg, n, arg => set_func(parseInt(arg)));
       }
@@ -438,27 +423,30 @@ class JSRootMenu {
    /** @summary Add font selection menu
      * @private */
    addFontMenu(name, value, set_func) {
+      let prec = value && Number.isInteger(value) ? value % 10 : 2;
+
       this.add('sub:' + name, () => {
          this.input('Enter font id from [0..20]', Math.floor(value/10), 'int', 0, 20).then(id => {
-            if ((id >= 0) && (id <= 20)) set_func(id*10 + 2);
+            if ((id >= 0) && (id <= 20)) set_func(id*10 + prec);
          });
       });
 
       this.add('column:');
 
       for (let n = 1; n < 20; ++n) {
-         let handler = new FontHandler(n*10+2, 14),
+         let id = n*10 + prec,
+             handler = new FontHandler(id, 14),
              txt = d3_select(document.createElementNS('http://www.w3.org/2000/svg', 'text')),
-             fullname = handler.getFontName(),
-             name = ' ' + fullname.split(' ')[0] + ' ';
-         if (handler.weight) { name = 'b' + name; fullname += ' ' + handler.weight; }
-         if (handler.style) { name = handler.style[0] + name; fullname += ' ' + handler.style; }
-         txt.attr('x', 1).attr('y',15).text(name);
+             fullname = handler.getFontName(), qual = '';
+         if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
+         if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
+         if (qual) qual = ' ' + qual;
+         txt.attr('x', 1).attr('y',15).text(fullname.split(' ')[0] + qual);
          handler.setFont(txt);
 
-         let rect = (value != n*10+2) ? '' : `<rect width='90' height='18' style='fill:none;stroke:black'></rect>`,
+         let rect = (value != id) ? '' : `<rect width='90' height='18' style='fill:none;stroke:black'></rect>`,
              svg = `<svg width='90' height='18'>${txt.node().outerHTML}${rect}</svg>`;
-         this.add(svg, n, arg => set_func(parseInt(arg)*10+2), fullname);
+         this.add(svg, id, arg => set_func(parseInt(arg)), `${id}: ${fullname}`);
 
          if (n == 10) {
             this.add('endcolumn:');
@@ -467,6 +455,26 @@ class JSRootMenu {
       }
 
       this.add('endcolumn:');
+      this.add('endsub:');
+   }
+
+   /** @summary Add align selection menu
+     * @private */
+   addAlignMenu(name, value, set_func) {
+      this.add(`sub:${name}`, () => {
+         this.input('Enter align like 12 or 31', value).then(arg => {
+            let id = parseInt(arg);
+            if ((id < 11) || (id > 33)) return;
+            let h = Math.floor(id/10), v = id % 10;
+            if ((h > 0) && (h < 4) && (v > 0) && (v < 4)) set_func(id);
+         });
+      });
+
+      const hnames = ['left', 'middle', 'right'], vnames = ['bottom', 'centered', 'top'];
+      for (let h = 1; h < 4; ++h)
+         for (let v = 1; v < 4; ++v)
+            this.addchk(h*10+v == value, `${h*10+v}: ${hnames[h-1]} ${vnames[h-1]}`, h*10+v, arg => set_func(parseInt(arg)));
+
       this.add('endsub:');
    }
 
@@ -480,7 +488,7 @@ class JSRootMenu {
       if (!preffix) preffix = '';
 
       if (painter.lineatt?.used) {
-         this.add('sub:' + preffix + 'Line att');
+         this.add(`sub:${preffix}Line att`);
          this.addSizeMenu('width', 1, 10, 1, painter.lineatt.width,
             arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`); });
          this.addColorMenu('color', painter.lineatt.color,
@@ -495,10 +503,8 @@ class JSRootMenu {
             this.add('sub:Exclusion');
             this.add('sub:side');
             for (let side = -1; side <= 1; ++side)
-               this.addchk((painter.lineatt.excl_side == side), side, side, function(arg) {
-                  this.lineatt.changeExcl(parseInt(arg));
-                  this.interactiveRedraw();
-               }.bind(painter));
+               this.addchk((painter.lineatt.excl_side == side), side, side,
+                  arg => { painter.lineatt.changeExcl(parseInt(arg)); painter.interactiveRedraw(); });
             this.add('endsub:');
 
             this.addSizeMenu('width', 10, 100, 10, painter.lineatt.excl_width,
@@ -509,7 +515,7 @@ class JSRootMenu {
       }
 
       if (painter.fillatt?.used) {
-         this.add('sub:' + preffix + 'Fill att');
+         this.add(`sub:${preffix}Fill att`);
          this.addColorMenu('color', painter.fillatt.colorindx, arg => {
             painter.fillatt.change(arg, undefined, painter.getCanvSvg());
             painter.interactiveRedraw(true, getColorExec(arg, 'SetFillColor'));
@@ -522,7 +528,7 @@ class JSRootMenu {
       }
 
       if (painter.markeratt?.used) {
-         this.add('sub:' + preffix + 'Marker att');
+         this.add(`sub:${preffix}Marker att`);
          this.addColorMenu('color', painter.markeratt.color,
             arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetMarkerColor'));});
          this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size,
@@ -532,24 +538,49 @@ class JSRootMenu {
          let supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
 
          for (let n = 0; n < supported.length; ++n) {
-
             let clone = new TAttMarkerHandler({ style: supported[n], color: painter.markeratt.color, size: 1.7 }),
                 svg = `<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><path stroke='black' fill='${clone.fill?'black':'none'}' d='${clone.create(40, 8)}'></path></svg>`;
 
             this.addchk(painter.markeratt.style == supported[n], svg, supported[n],
-               function(arg) { this.markeratt.change(undefined, parseInt(arg)); this.interactiveRedraw(true, `exec:SetMarkerStyle(${arg})`); }.bind(painter));
+               arg => { painter.markeratt.change(undefined, parseInt(arg)); painter.interactiveRedraw(true, `exec:SetMarkerStyle(${arg})`); });
          }
          this.add('endsub:');
          this.add('endsub:');
       }
+
+      if (painter.textatt?.used) {
+         this.add(`sub:${preffix}Text att`);
+
+         this.addFontMenu('font', painter.textatt.font,
+                         arg => { painter.textatt.change(arg); painter.interactiveRedraw(true, `exec:SetTextFont(${arg})`); });
+
+         let rel = painter.textatt.size < 1.;
+
+         this.addSizeMenu('size', rel ? 0.03 : 6, rel ? 0.20 : 26, rel ? 0.01 : 2, painter.textatt.size,
+            arg => { painter.textatt.change(undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextSize(${arg})`); });
+
+         this.addColorMenu('color', painter.textatt.color,
+            arg => { painter.textatt.change(undefined, undefined, arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor')); });
+
+         this.addAlignMenu('align', painter.textatt.align, arg => {
+            painter.textatt.change(undefined, undefined, undefined, arg); painter.interactiveRedraw(true, `exec:SetTextAlign(${arg})`);
+         });
+
+         this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle,
+            arg => { painter.textatt.change(undefined,  undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
+
+         this.add('endsub:');
+      }
+
    }
 
    /** @summary Fill context menu for axis
      * @private */
    addTAxisMenu(EAxisBits, painter, faxis, kind) {
+      let is_gaxis = faxis._typename == clTGaxis;
+
       this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val;
-         painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+         faxis.fNdivisions = val;  painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
       this.add('sub:Labels');
@@ -577,9 +608,14 @@ class JSRootMenu {
       this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
              () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
       this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
-            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', `exec:RotateTitle(${arg})`, kind); });
-      this.addColorMenu('Color', faxis.fTitleColor,
-            arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg ? true : false})` : `exec:RotateTitle(${arg})`, kind); });
+      if (is_gaxis) {
+         this.addColorMenu('Color', faxis.fTextColor,
+               arg => { faxis.fTextColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+      } else {
+         this.addColorMenu('Color', faxis.fTitleColor,
+               arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+      }
       this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
                       arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
       a = faxis.fTitleSize >= 1;
@@ -587,11 +623,11 @@ class JSRootMenu {
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Ticks');
-      if (faxis._typename == clTGaxis) {
+      if (is_gaxis) {
          this.addColorMenu('Color', faxis.fLineColor,
-                  arg => { faxis.fLineColor = arg; painter.interactiveRedraw('pad'); });
+                  arg => { faxis.fLineColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLineColor'), kind); });
          this.addSizeMenu('Size', -0.05, 0.055, 0.01, faxis.fTickSize,
-                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad'); });
+                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
       } else {
          this.addColorMenu('Color', faxis.fAxisColor,
                   arg => { faxis.fAxisColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetAxisColor'), kind); });
@@ -599,6 +635,11 @@ class JSRootMenu {
                   arg => { faxis.fTickLength = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
       }
       this.add('endsub:');
+
+      if (is_gaxis)
+         this.add('Options', () => this.input('Enter TGaxis options like +L or -G', faxis.fChopt, 'string').then(arg => {
+             faxis.fChopt = arg; painter.interactiveRedraw('pad', `exec:SetOption("${arg}")`, kind);
+         }));
    }
 
    /** @summary Fill menu to edit settings properties
@@ -627,6 +668,7 @@ class JSRootMenu {
       this.addSizeMenu('Max ranges', 1, 1000, [1, 10, 20, 50, 200, 1000], settings.MaxRanges, value => { settings.MaxRanges = value; }, 'Maximal number of ranges in single http request');
 
       this.addchk(settings.HandleWrongHttpResponse, 'Handle wrong http response', flag => { settings.HandleWrongHttpResponse = flag; });
+      this.addchk(settings.WithCredentials, 'With credentials', flag => { settings.WithCredentials = flag; }, 'Submit http request with user credentials');
 
       this.add('endsub:');
 
@@ -643,16 +685,16 @@ class JSRootMenu {
       this.addchk(settings.Tooltip, 'Tooltip', flag => { settings.Tooltip = flag; });
       this.addchk(settings.ContextMenu, 'Context menus', flag => { settings.ContextMenu = flag; });
       this.add('sub:Zooming');
-      this.addchk(settings.Zooming, 'Global', flag => { settings.Zooming = flag; });
-      this.addchk(settings.ZoomMouse, 'Mouse', flag => { settings.ZoomMouse = flag; });
-      this.addchk(settings.ZoomWheel, 'Wheel', flag => { settings.ZoomWheel = flag; });
-      this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
+      this.addchk(settings.Zooming,   'Global', flag => { settings.Zooming = flag; });
+      this.addchk(settings.ZoomMouse, 'Mouse',  flag => { settings.ZoomMouse = flag; });
+      this.addchk(settings.ZoomWheel, 'Wheel',  flag => { settings.ZoomWheel = flag; });
+      this.addchk(settings.ZoomTouch, 'Touch',  flag => { settings.ZoomTouch = flag; });
       this.add('endsub:');
       this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
-      this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
+      this.addchk(settings.DragAndDrop,'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
-      this.addchk(settings.ProgressBox, 'Progress box', flag => { settings.ProgressBox = flag; });
+      this.addchk(settings.ProgressBox,'Progress box', flag => { settings.ProgressBox = flag; });
       this.add('endsub:');
 
       this.add('sub:Drawing');
@@ -713,7 +755,6 @@ class JSRootMenu {
       addStyleIntField('Log X', 'fOptLogx', ['off', 'on', 'log 2']);
       addStyleIntField('Log Y', 'fOptLogy', ['off', 'on', 'log 2']);
       addStyleIntField('Log Z', 'fOptLogz', ['off', 'on', 'log 2']);
-      this.addchk(gStyle.fOptTitle == 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
       this.add('endsub:');
 
       this.add('sub:Frame');
@@ -767,6 +808,8 @@ class JSRootMenu {
       this.add('endsub:');
 
       this.add('sub:Histogram');
+      this.addchk(gStyle.fOptTitle == 1, 'Hist title', flag => { gStyle.fOptTitle = flag ? 1 : 0; });
+      this.addchk(gStyle.fOrthoCamera, 'Orthographic camera', flag => { gStyle.fOrthoCamera = flag; });
       this.addchk(gStyle.fHistMinimumZero, 'Base0', flag => { gStyle.fHistMinimumZero = flag; }, 'when true, BAR and LEGO drawing using base = 0');
       this.add('Text format', () => this.input('Paint text format', gStyle.fPaintTextFormat).then(fmt => { gStyle.fPaintTextFormat = fmt; }));
       this.add('Time offset', () => this.input('Time offset in seconds, default is 788918400 for 1/1/1995', gStyle.fTimeOffset, 'int').then(ofset => { gStyle.fTimeOffset = ofset; }));
@@ -969,8 +1012,17 @@ class StandaloneMenu extends JSRootMenu {
       if (name.indexOf('header:') == 0)
          return curr.push({ text: name.slice(7), header: true });
 
-      if ((name == 'endsub:') || (name == 'endcolumn:'))
+      if (name == 'endsub:') {
+         this.stack.pop();
+         curr = this.stack[this.stack.length-1];
+         if (curr[curr.length-1].sub.length == 0)
+            curr[curr.length-1].sub = undefined;
+         return;
+      }
+
+      if (name == 'endcolumn:')
          return this.stack.pop();
+
 
       if (isFunc(arg)) { title = func; func = arg; arg = name; }
 
@@ -1012,7 +1064,11 @@ class StandaloneMenu extends JSRootMenu {
    _buildContextmenu(menu, left, top, loc) {
 
       let outer = document.createElement('div');
-      outer.className = 'jsroot_ctxt_container';
+
+      const container_style =
+         'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
+         'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
+         'font-size: 13px; color: rgb(0, 0, 0, 0.8); line-height: 15px;';
 
       //if loc !== document.body then its a submenu, so it needs to have position: relative;
       if (loc === document.body) {
@@ -1021,28 +1077,20 @@ class StandaloneMenu extends JSRootMenu {
          while (deleteElems.length > 0)
             deleteElems[0].parentNode.removeChild(deleteElems[0]);
 
+         outer.className = 'jsroot_ctxt_container';
+         outer.style = container_style;
          outer.style.position = 'fixed';
          outer.style.left = left + 'px';
          outer.style.top = top + 'px';
 
-         injectStyle(
-            `.jsroot_ctxt_container {
-                position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;
-                min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;
-                font-size: 13px; color: rgb(0, 0, 0, 0.8);
-             }
-             .jsroot_ctxt_column { float: left; }
-             .jsroot_ctxt_divider { width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15); }
-             .jsroot_ctxt_header { background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px; }
-             .jsroot_ctxt_text { margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap; }
-             .jsroot_ctxt_extraText { margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6); }
-             .jsroot_ctxt_focus { background-color: rgb(220, 220, 220); }
-             .jsroot_ctxt_item:hover { background-color: rgb(235, 235, 235); }`, this.element);
       } else if ((left < 0) && (top == left)) {
          // column
          outer.className = 'jsroot_ctxt_column';
+         outer.style.float = 'left';
          outer.style.width = (100/-left).toFixed(1) + '%';
       } else {
+         outer.className = 'jsroot_ctxt_container';
+         outer.style = container_style;
          outer.style.left = -loc.offsetLeft + loc.offsetWidth + 'px';
       }
 
@@ -1061,7 +1109,7 @@ class StandaloneMenu extends JSRootMenu {
 
          if (d.divider) {
             let hr = document.createElement('hr');
-            hr.className = 'jsroot_ctxt_divider';
+            hr.style = 'width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15)';
             outer.appendChild(hr);
             return;
          }
@@ -1071,7 +1119,7 @@ class StandaloneMenu extends JSRootMenu {
          outer.appendChild(item);
 
          if (d.header) {
-            item.className = 'jsroot_ctxt_header';
+            item.style = 'background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px;';
             item.innerHTML = d.text;
             return;
          }
@@ -1079,7 +1127,6 @@ class StandaloneMenu extends JSRootMenu {
          let hovArea = document.createElement('div');
          hovArea.style.width = '100%';
          hovArea.style.height = '100%';
-         hovArea.className = 'jsroot_ctxt_item';
          hovArea.style.display = 'flex';
          hovArea.style.justifyContent = 'space-between';
          hovArea.style.cursor = 'pointer';
@@ -1089,7 +1136,7 @@ class StandaloneMenu extends JSRootMenu {
          if (!d.text) d.text = 'item';
 
          let text = document.createElement('div');
-         text.className = 'jsroot_ctxt_text';
+         text.style = 'margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap';
 
          if (d.text.indexOf('<svg') >= 0) {
             if (need_check_area) {
@@ -1128,29 +1175,55 @@ class StandaloneMenu extends JSRootMenu {
 
          hovArea.appendChild(text);
 
-         if (d.hasOwnProperty('extraText') || d.sub) {
-            let extraText = document.createElement('span');
-            extraText.className = 'jsroot_ctxt_extraText jsroot_ctxt_text';
-            extraText.textContent = d.sub ? '\u25B6' : d.extraText;
-            hovArea.appendChild(extraText);
+         function changeFocus(item, on) {
+            if (on) {
+               item.classList.add('jsroot_ctxt_focus');
+               item.style['background-color'] = 'rgb(220, 220, 220)';
+            } else if (item.classList.contains('jsroot_ctxt_focus')) {
+               item.style['background-color'] = null;
+               item.classList.remove('jsroot_ctxt_focus');
+               item.querySelector('.jsroot_ctxt_container')?.remove()
+            }
          }
 
+         if (d.hasOwnProperty('extraText') || d.sub) {
+            let extraText = document.createElement('span');
+            extraText.className = 'jsroot_ctxt_extraText';
+            extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
+            extraText.textContent = d.sub ? '\u25B6' : d.extraText;
+            hovArea.appendChild(extraText);
+
+            if (d.sub && browser.touches)
+               extraText.addEventListener('click', evnt => {
+                  evnt.preventDefault();
+                  evnt.stopPropagation();
+                  let was_active = item.parentNode.querySelector('.jsroot_ctxt_focus');
+
+                  if (was_active)
+                     changeFocus(was_active, false);
+
+                  if (item !== was_active) {
+                     changeFocus(item, true);
+                     this._buildContextmenu(d.sub, 0, 0, item);
+                  }
+               });
+         }
+
+         if (!browser.touches)
          hovArea.addEventListener('mouseenter', () => {
-            let focused = outer.childNodes;
-            focused.forEach(d => {
-               if (d.classList.contains('jsroot_ctxt_focus')) {
-                  d.removeChild(d.getElementsByClassName('jsroot_ctxt_container')[0]);
-                  d.classList.remove('jsroot_ctxt_focus');
-               }
-            })
-         });
 
-         if (d.sub)
-            hovArea.addEventListener('mouseenter', () => {
-               item.classList.add('jsroot_ctxt_focus');
+            if (this.prevHovArea)
+               this.prevHovArea.style['background-color'] = null;
+            hovArea.style['background-color'] = 'rgb(235, 235, 235)';
+            this.prevHovArea = hovArea;
+
+            outer.childNodes.forEach(chld => changeFocus(chld, false));
+
+            if (d.sub) {
+               changeFocus(item, true);
                this._buildContextmenu(d.sub, 0, 0, item);
-            });
-
+            }
+         });
 
          if (d.func)
             item.addEventListener('click', evnt => {
@@ -1184,7 +1257,7 @@ class StandaloneMenu extends JSRootMenu {
 
       } else if (outer.className != 'jsroot_ctxt_column') {
 
-         //if its sub-contextmenu
+         // if its sub-contextmenu
          let dimensionsLoc = loc.getBoundingClientRect(), dimensionsOuter = outer.getBoundingClientRect();
 
          //Does sub-contextmenu overflow window width?
@@ -1238,31 +1311,29 @@ class StandaloneMenu extends JSRootMenu {
       d3_select(`#${dlg_id}`).remove();
       d3_select(`#${dlg_id}_block`).remove();
 
-      let block = d3_select('body').append('div').attr('id', dlg_id+'_block').attr('class', 'jsroot_dialog_block');
-
-      let element = d3_select('body')
+      let w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth)),
+          block = d3_select('body').append('div')
+                                   .attr('id', `${dlg_id}_block`)
+                                   .attr('class', 'jsroot_dialog_block')
+                                   .attr('style', 'z-index: 100000; position: absolute; inset: 0px; opacity: 0.2; background-color: white'),
+          element = d3_select('body')
                       .append('div')
-                      .attr('id',dlg_id)
-                      .attr('class','jsroot_dialog').style('width',(args.width || 450) + 'px')
+                      .attr('id', dlg_id)
+                      .attr('class', 'jsroot_dialog')
+                      .style('position', 'absolute')
+                      .style('width', `${w}px`)
+                      .style('left', '50%')
+                      .style('top', '50%')
+                      .style('z-index', 100001)
                       .attr('tabindex', '0')
                       .html(
-         `<div class="jsroot_dialog_body">
-            <div class="jsroot_dialog_header">${title}</div>
-            <div class="jsroot_dialog_content">${main_content}</div>
-            <div class="jsroot_dialog_footer">
-               <button class="jsroot_dialog_button">Ok</button>
-               ${args.btns ? '<button class="jsroot_dialog_button">Cancel</button>' : ''}
-           </div>
-          </div>`);
-
-      injectStyle(
-         `.jsroot_dialog_block { z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white; }
-          .jsroot_dialog { z-index: 100001; position: absolute; left: 50%; top: 50%; }
-          .jsroot_dialog_body { position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white; }
-          .jsroot_dialog_header { flex: 0 1 auto; padding: 5px; }
-          .jsroot_dialog_content { flex: 1 1 auto; padding: 5px; }
-          .jsroot_dialog_footer { flex: 0 1 auto; padding: 5px; }
-          .jsroot_dialog_button { float: right; margin-right: 1em; }`, element.node());
+         `<div style='position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white'>`+
+           `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
+           `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
+           `<div class='jsroot_dialog_footer' style='flex: 0 1 auto; padding: 5px'>`+
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>Ok</button>`+
+              (args.btns ? `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>Cancel</button>` : '') +
+         `</div></div>`);
 
       return new Promise(resolveFunc => {
          element.on('keyup', evnt => {
@@ -1294,258 +1365,54 @@ class StandaloneMenu extends JSRootMenu {
 
 } // class StandaloneMenu
 
-/**
- * @summary Context menu class using Bootstrap
- *
- * @desc Use {@link createMenu} to create instance of the menu
- * @private
- */
-
-class BootstrapMenu extends JSRootMenu {
-
-   constructor(painter, menuname, show_event) {
-      super(painter, menuname, show_event);
-
-      this.code = '';
-      this.funcs = {};
-      this.lvl = 0;
-   }
-
-   /** @summary Load bootstrap functionality, required for menu
-     * @private */
-   loadBS(with_js) {
-      let ext = 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.2/';
-
-      let promise = internals.bs_path ? Promise.resolve(true) :
-                      loadScript(source_dir + 'style/bootstrap.min.css')
-                            .then(() => { internals.bs_path = source_dir + 'scripts/'; })
-                            .catch(() => { internals.bs_path = ext + 'js/'; return loadScript(ext + 'css/bootstrap.min.css'); });
-      return promise.then(() => (!with_js || (typeof bootstrap != 'undefined')) ? true : loadScript(internals.bs_path + 'bootstrap.bundle.min.js'));
-   }
-
-   /** @summary Load bootstrap functionality */
-   load() { return this.loadBS().then(() => this); }
-
-   /** @summary Add menu item
-     * @param {string} name - item name
-     * @param {function} func - func called when item is selected */
-   add(name, arg, func, title) {
-      if (name == 'separator') {
-         this.code += '<hr class="dropdown-divider">';
-         return;
-      }
-
-      if ((name == 'column:') || (name == 'endcolumn:'))
-         return;
-
-      if (name.indexOf('header:') == 0) {
-         this.code += `<h6 class="dropdown-header">${name.slice(7)}</h6>`;
-         return;
-      }
-
-      let newlevel = false, extras = '', cl = 'dropdown-item btn-sm', checked = '';
-
-      if (name == 'endsub:') {
-         this.lvl--;
-         this.code += '</li>';
-         this.code += '</ul>';
-         return;
-      }
-      if (name.indexOf('sub:') == 0) { name = name.slice(4); newlevel = true; }
-
-      if (isFunc(arg)) { func = arg; arg = name; }
-
-      if (name.indexOf('chk:') == 0) {
-         checked = '\u2713';
-         name  = name.slice(4);
-      } else if (name.indexOf('unk:') == 0) {
-         name = name.slice(4);
-      }
-
-      if (title) extras += ` title="${title}"`;
-      if (arg !== undefined) extras += ` arg="${arg}"`;
-      if (newlevel) { extras += ` data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded='false'`; cl += ' dropdown-toggle'; }
-
-      let item = `<button id="${this.menuname}${this.cnt}" ${extras} class="${cl}" type="button"><span style="width:1em;display:inline-block">${checked}</span>${name}</button>`;
-
-      if (newlevel) item = `<li class="dropend">${item}`;
-               else item = `<li>${item}</li>`;
-
-      this.code += item;
-
-      if (newlevel) {
-         this.code += `<ul class="dropdown-menu" aria-labelledby="${this.menuname}${this.cnt}">`;
-         this.lvl++;
-      }
-
-      if (isFunc(func)) this.funcs[this.cnt] = func; // keep call-back function
-
-      this.cnt++;
-   }
-
-   /** @summary Show menu */
-   async show(event) {
-      this.remove();
-
-      if (!event && this.show_evnt) event = this.show_evnt;
-
-      document.body.addEventListener('click', this.remove_handler);
-
-      let oldmenu = document.getElementById(this.menuname);
-      if (oldmenu) oldmenu.parentNode.removeChild(oldmenu);
-
-      return this.loadBS().then(() => {
-
-         let ww = window.innerWidth, wh = window.innerHeight;
-
-         this.element = document.createElement('div');
-         this.element.id = this.menuname;
-         this.element.setAttribute('class', 'dropdown');
-         this.element.innerHTML = `<ul class="dropdown-menu dropend" style="display:block">${this.code}</ul>`;
-
-         document.body.appendChild(this.element);
-
-         this.element.style.position = 'absolute';
-         this.element.style.background = 'white';
-         this.element.style.display = 'block';
-         this.element.style.left = (event.clientX + window.pageXOffset) + 'px';
-         this.element.style.top = (event.clientY + window.pageYOffset) + 'px';
-
-         let menu = this;
-
-         let myItems = this.element.getElementsByClassName('dropdown-item');
-
-         for (let i = 0; i < myItems.length; i++)
-            myItems[i].addEventListener('click', function() {
-               let arg = this.getAttribute('arg'),
-                   cnt = this.getAttribute('id').slice(menu.menuname.length),
-                   func = cnt ? menu.funcs[cnt] : null;
-               menu.remove();
-               if (isFunc(func)) {
-                  if (menu.painter)
-                     func.bind(menu.painter)(arg); // if 'painter' field set, returned as this to callback
-                  else
-                     func(arg);
-               }
-            });
-
-         let myDropdown = this.element.getElementsByClassName('dropdown-toggle');
-         for (let i=0; i < myDropdown.length; i++) {
-            myDropdown[i].addEventListener('mouseenter', function() {
-               let el = this.nextElementSibling;
-               el.style.display = (el.style.display == 'block') ? 'none' : 'block';
-               el.style.left = this.scrollWidth + 'px';
-               let rect = el.getBoundingClientRect();
-               if (rect.bottom > wh) el.style.top = (wh - rect.bottom - 5) + 'px';
-               if (rect.right > ww) el.style.left = (-rect.width) + 'px';
-            });
-            myDropdown[i].addEventListener('mouseleave', function() {
-               let el = this.nextElementSibling;
-               el.was_entered = false;
-               setTimeout(function() { if (!el.was_entered) el.style.display = 'none'; }, 200);
-            });
-         }
-
-         let myMenus = this.element.getElementsByClassName('dropdown-menu');
-         for (let i = 0; i < myMenus.length; i++)
-            myMenus[i].addEventListener('mouseenter', function() {
-               this.was_entered = true;
-            });
-
-
-         let newx = null, newy = null, rect = this.element.firstChild.getBoundingClientRect();
-
-         if (event.clientX + rect.width > ww) newx = ww - rect.width - 10;
-         if (event.clientY + rect.height > wh) newy = wh - rect.height - 10;
-
-         if (newx !== null) this.element.style.left = ((newx > 0 ? newx : 0) + window.pageXOffset) + 'px';
-         if (newy !== null) this.element.style.top = ((newy > 0 ? newy : 0) + window.pageYOffset) + 'px';
-
-         return new Promise(resolve => {
-            this.resolveFunc = resolve;
-         });
-      });
-   }
-
-   /** @summary Run modal elements with bootstrap code */
-   async runModal(title, main_content, args) {
-      if (!args) args = {};
-
-      let dlg_id = this.menuname + '_dialog',
-          old_dlg = document.getElementById(dlg_id);
-      if (old_dlg) old_dlg.remove();
-
-      return this.loadBS(true).then(() => {
-
-         let myModalEl = document.createElement('div');
-         myModalEl.setAttribute('id', dlg_id);
-         myModalEl.setAttribute('class', 'modal fade');
-         myModalEl.setAttribute('role', 'dialog');
-         myModalEl.setAttribute('tabindex', '-1');
-         myModalEl.setAttribute('aria-hidden', 'true');
-         let close_btn = args.btns ? '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' : '';
-
-         myModalEl.innerHTML =
-            `<div class="modal-dialog">`+
-              `<div class="modal-content">`+
-               `<div class="modal-header">`+
-                `<h5 class="modal-title">${title}</h5>`+
-                `<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>`+
-               `</div>`+
-               `<div class="modal-body">${main_content}</div>`+
-               `<div class="modal-footer">`+
-                  `${close_btn}`+
-                  `<button type="button" class="btn btn-primary jsroot_okbtn" data-bs-dismiss="modal">Ok</button>`+
-               `</div>`+
-              `</div>`+
-             `</div>`;
-
-         document.body.appendChild(myModalEl);
-
-         let myModal = new bootstrap.Modal(myModalEl, { keyboard: true, backdrop: 'static' });
-         myModal.show();
-
-         return new Promise(resolveFunc => {
-            let pressOk = false;
-            myModalEl.querySelector(`.jsroot_okbtn`).addEventListener('click', () => { pressOk = true; });
-
-            myModalEl.addEventListener('hidden.bs.modal', () => {
-               if (pressOk) resolveFunc(myModalEl);
-               myModalEl.remove();
-            });
-         });
-
-     });
-   }
-
-} // class BootstrapMenu
-
-
 /** @summary Create JSROOT menu
   * @desc See {@link JSRootMenu} class for detailed list of methods
   * @param {object} [evnt] - event object like mouse context menu event
   * @param {object} [handler] - object with handling function, in this case one not need to bind function
   * @param {string} [menuname] - optional menu name
   * @example
-  * import { createMenu } from 'path_to_jsroot/modules/gui/menu.mjs';
+  * import { createMenu } from 'https://root.cern/js/latest/modules/gui/menu.mjs';
   * let menu = await createMenu());
   * menu.add('First', () => console.log('Click first'));
   * let flag = true;
   * menu.addchk(flag, 'Checked', arg => console.log(`Now flag is ${arg}`));
   * menu.show(); */
 function createMenu(evnt, handler, menuname) {
-   let menu = settings.Bootstrap ? new BootstrapMenu(handler, menuname || 'root_ctx_menu', evnt)
-                                 : new StandaloneMenu(handler, menuname || 'root_ctx_menu', evnt);
+   let menu = new StandaloneMenu(handler, menuname || 'root_ctx_menu', evnt);
    return menu.load();
 }
 
 /** @summary Close previousely created and shown JSROOT menu
   * @param {string} [menuname] - optional menu name */
 function closeMenu(menuname) {
-   let x = document.getElementById(menuname || 'root_ctx_menu');
-   if (x) { x.parentNode.removeChild(x); return true; }
-   return false;
+   let element = document.getElementById(menuname || 'root_ctx_menu');
+   element?.remove();
+   return !!element;
 }
 
-export { createMenu, closeMenu };
+/** @summary Fill and show context menu for painter object
+  * @private */
+function showPainterMenu(evnt, painter, kind) {
+   if (isFunc(evnt.stopPropagation)) {
+      evnt.stopPropagation(); // disable main context menu
+      evnt.preventDefault();  // disable browser context menu
+   }
 
+   createMenu(evnt, painter).then(menu => {
+      painter.fillContextMenu(menu);
+      if ((kind === kToFront) && isFunc(painter.bringToFront)) {
+         menu.add('Bring to front', () => painter.bringToFront(true));
+         kind = undefined;
+      }
+      return painter.fillObjectExecMenu(menu, kind);
+   }).then(menu => menu.show());
+}
+
+/** @summary Assign handler for context menu for painter draw element
+  * @private */
+function assignContextMenu(painter, kind) {
+   if (!painter?.isBatchMode() && painter?.draw_g)
+      painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
+}
+
+export { createMenu, closeMenu, showPainterMenu, assignContextMenu, kToFront };

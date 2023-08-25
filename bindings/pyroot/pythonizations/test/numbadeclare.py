@@ -128,6 +128,23 @@ class NumbaDeclareSimple(unittest.TestCase):
         self.assertEqual(mean_x.GetValue(), 1.5)
         self.assertEqual(mean_y.GetValue(), 3.0)
 
+    @unittest.skipIf(skip, skip_reason)
+    def test_rdataframe_temporary(self):
+        """
+        Test passing a temporary from an RDataFrame operation
+        """
+        @ROOT.Numba.Declare(["const RVecF"], "RVecF")
+        def pass_temporary(v):
+            return v*np.array([2.]).astype(np.float32)
+
+        df = ROOT.RDataFrame(1)\
+                 .Define("v", "ROOT::RVecF{0.f,2.f}")\
+                 .Define("v2", "Numba::pass_temporary(v[v > 0])")
+
+        rvecf = df.Take['RVecF']('v2').GetValue()[0]
+
+        self.assertTrue(np.array_equal(rvecf, np.array([4.])))
+
     # Test wrappings
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_void(self):
@@ -536,7 +553,7 @@ class NumbaDeclareArray(unittest.TestCase):
             return x[::-1]
 
         for v in [[True, False]]:
-            x1 = g2b(np.array(v, dtype=np.bool))
+            x1 = g2b(np.array(v, dtype=bool))
             x2 = ROOT.Numba.g2b(ROOT.VecOps.RVec('bool')(v))
             self.assertEqual(x1[0], bool(x2[0]))
             self.assertEqual(x1[1], bool(x2[1]))
@@ -551,10 +568,36 @@ class NumbaDeclareArray(unittest.TestCase):
             return (x > 1) | y
 
         for vf, vb in [[[1.0, 2.0], [True, False]]]:
-            x1 = g2fb(np.array(vf, dtype=np.float32), np.array(vb, dtype=np.bool))
+            x1 = g2fb(np.array(vf, dtype=np.float32), np.array(vb, dtype=bool))
             x2 = ROOT.Numba.g2fb(ROOT.VecOps.RVec('float')(vf), ROOT.VecOps.RVec('bool')(vb))
             self.assertEqual(x1[0], bool(x2[0]))
             self.assertEqual(x1[1], bool(x2[1]))
+
+    @unittest.skipIf(skip, skip_reason)
+    def test_const_modifier(self):
+        """
+        Test const modifier in input argument type
+        """
+        @ROOT.Numba.Declare(["const ROOT::VecOps::RVec<float>"], "RVecF")
+        def const_mod(v):
+            return v*np.array([1.,2.]).astype(np.float32)
+
+        rvecf = ROOT.Numba.const_mod(ROOT.RVecF([1.,2.]))
+
+        self.assertTrue(np.array_equal(rvecf, np.array([1.,4.])))
+
+    @unittest.skipIf(skip, skip_reason)
+    def test_reference(self):
+        """
+        Test passing a reference as input argument
+        """
+        @ROOT.Numba.Declare(["RVec<float>&"], "RVecF")
+        def pass_reference(v):
+            return v*np.array([1.,2.]).astype(np.float32)
+
+        rvecf = ROOT.Numba.pass_reference(ROOT.RVecF([1.,2.]))
+
+        self.assertTrue(np.array_equal(rvecf, np.array([1.,4.])))
 
 
 if __name__ == '__main__':

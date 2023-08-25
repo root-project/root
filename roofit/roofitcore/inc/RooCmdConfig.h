@@ -18,6 +18,7 @@
 #define ROO_CMD_CONFIG
 
 #include <RooCmdArg.h>
+#include <RooStringView.h>
 
 #include <TList.h>
 #include <TObjString.h>
@@ -31,7 +32,7 @@ class RooArgSet;
 class RooCmdConfig : public TObject {
 public:
 
-  RooCmdConfig(const char* methodName);
+  RooCmdConfig(RooStringView methodName);
   RooCmdConfig(const RooCmdConfig& other) ;
 
   /// If flag is true verbose messaging is activated
@@ -113,7 +114,7 @@ protected:
     int num;
   };
 
-  TString _name ;
+  std::string _name;
 
   bool _verbose = false;
   bool _error = false;

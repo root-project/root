@@ -1,5 +1,6 @@
-import { addMethods, settings, isBatchMode } from '../core.mjs';
+import { addMethods, settings, nsREX } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
+import { makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
@@ -104,7 +105,7 @@ class RPalettePainter extends RObjectPainter {
           pal = drawable ? drawable.fPalette : null;
 
       if (pal && !pal.getColor)
-         addMethods(pal, 'ROOT::Experimental::RPalette');
+         addMethods(pal, `${nsREX}RPalette`);
 
       return pal;
    }
@@ -163,10 +164,10 @@ class RPalettePainter extends RObjectPainter {
           }
 
           // x,y,width,height attributes used for drag functionality
-          this.draw_g.attr('transform',`translate(${palette_x},${palette_y})`);
+          makeTranslate(this.draw_g, palette_x, palette_y);
       }
 
-      let g_btns = this.draw_g.select('.colbtns');
+      let g_btns = this.draw_g.selectChild('.colbtns');
       if (g_btns.empty())
          g_btns = this.draw_g.append('svg:g').attr('class', 'colbtns');
       else
@@ -211,9 +212,9 @@ class RPalettePainter extends RObjectPainter {
 
       framep.z_handle.maxTickSize = Math.round(palette_width*0.3);
 
-      let promise = framep.z_handle.drawAxis(this.draw_g, vertical ? `translate(${palette_width},${palette_height})` : `translate(0,${palette_height})`, vertical ? -1 : 1);
+      let promise = framep.z_handle.drawAxis(this.draw_g, makeTranslate(vertical ? palette_width : 0, palette_height), vertical ? -1 : 1);
 
-      if (isBatchMode() || drag)
+      if (this.isBatchMode() || drag)
          return promise;
 
       return promise.then(() => {

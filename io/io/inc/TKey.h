@@ -66,7 +66,7 @@ protected:
    TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
    TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
    TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = nullptr);
-   virtual ~TKey();
+   ~TKey() override;
 
            void        Browse(TBrowser *b) override;
            void        Delete(Option_t *option="") override;

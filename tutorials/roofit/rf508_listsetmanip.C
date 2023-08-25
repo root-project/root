@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Organization and simultaneous fits: RooArgSet and RooArgList tools and tricks
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

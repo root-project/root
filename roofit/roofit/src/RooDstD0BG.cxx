@@ -79,10 +79,9 @@ double RooDstD0BG::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of D*-D0 mass difference distribution.
-void RooDstD0BG::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooDstD0BG::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::DstD0BG, output, nEvents,
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::DstD0BG, output, nEvents,
           {dataMap.at(dm), dataMap.at(dm0), dataMap.at(C), dataMap.at(A), dataMap.at(B)});
 }
 
@@ -126,7 +125,7 @@ double RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
    // not stable for m/c >> 1.
    // Do numerical integral
    RooArgSet vset(dm.arg(),"vset");
-   RooAbsFunc *func= bindVars(vset);
+   std::unique_ptr<RooAbsFunc> func{bindVars(vset)};
    RooIntegrator1D integrator(*func,min,max);
    return integrator.integral();
       }

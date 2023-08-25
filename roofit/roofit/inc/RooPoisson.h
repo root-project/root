@@ -19,7 +19,10 @@
 class RooPoisson : public RooAbsPdf {
 public:
   RooPoisson() { _noRounding = false ;   } ;
-  RooPoisson(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, bool noRounding=false);
+  // Original constructor without RooAbsReal::Ref for backwards compatibility.
+  inline RooPoisson(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, bool noRounding=false)
+      : RooPoisson{name, title, RooAbsReal::Ref{_x}, RooAbsReal::Ref{_mean}, noRounding} {}
+  RooPoisson(const char *name, const char *title, RooAbsReal::Ref _x, RooAbsReal::Ref _mean, bool noRounding=false);
   RooPoisson(const RooPoisson& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooPoisson(*this,newname); }
   inline ~RooPoisson() override {  }
@@ -41,6 +44,10 @@ public:
   /// Get the mean parameter.
   RooAbsReal const& getMean() const { return mean.arg(); }
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   RooRealProxy x ;
@@ -49,7 +56,7 @@ protected:
   bool  _protectNegative{true};
 
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooPoisson,3) // A Poisson PDF

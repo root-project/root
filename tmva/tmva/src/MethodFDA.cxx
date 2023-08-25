@@ -189,14 +189,14 @@ void TMVA::MethodFDA::CreateFormula()
 
    // replace the parameters "(i)" by the TFormula style "[i]"
    for (UInt_t ipar=0; ipar<fNPars; ipar++) {
-      fFormulaStringT.ReplaceAll( Form("(%i)",ipar), Form("[%i]",ipar) );
+      fFormulaStringT.ReplaceAll( TString::Format("(%i)",ipar), TString::Format("[%i]",ipar) );
    }
 
    // sanity check, there should be no "(i)", with 'i' a number anymore
    for (Int_t ipar=fNPars; ipar<1000; ipar++) {
-      if (fFormulaStringT.Contains( Form("(%i)",ipar) ))
+      if (fFormulaStringT.Contains( TString::Format("(%i)",ipar) ))
          Log() << kFATAL
-               << "<CreateFormula> Formula contains expression: \"" << Form("(%i)",ipar) << "\", "
+               << "<CreateFormula> Formula contains expression: \"" << TString::Format("(%i)",ipar) << "\", "
                << "which cannot be attributed to a parameter; "
                << "it may be that the number of variable ranges given via \"ParRanges\" "
                << "does not match the number of parameters in the formula expression, please verify!"
@@ -205,14 +205,14 @@ void TMVA::MethodFDA::CreateFormula()
 
    // write the variables "xi" as additional parameters "[npar+i]"
    for (Int_t ivar=GetNvar()-1; ivar >= 0; ivar--) {
-      fFormulaStringT.ReplaceAll( Form("x%i",ivar), Form("[%i]",ivar+fNPars) );
+      fFormulaStringT.ReplaceAll( TString::Format("x%i",ivar), TString::Format("[%i]",ivar+fNPars) );
    }
 
    // sanity check, there should be no "xi", with 'i' a number anymore
    for (UInt_t ivar=GetNvar(); ivar<1000; ivar++) {
-      if (fFormulaStringT.Contains( Form("x%i",ivar) ))
+      if (fFormulaStringT.Contains( TString::Format("x%i",ivar) ))
          Log() << kFATAL
-               << "<CreateFormula> Formula contains expression: \"" << Form("x%i",ivar) << "\", "
+               << "<CreateFormula> Formula contains expression: \"" << TString::Format("x%i",ivar) << "\", "
                << "which cannot be attributed to an input variable" << Endl;
    }
 
@@ -301,18 +301,18 @@ void TMVA::MethodFDA::ProcessOptions()
    // create minimiser
    fConvergerFitter = (IFitterTarget*)this;
    if (fConverger == "MINUIT") {
-      fConvergerFitter = new MinuitFitter( *this, Form("%s_Converger_Minuit", GetName()), fParRange, GetOptions() );
+      fConvergerFitter = new MinuitFitter( *this, TString::Format("%s_Converger_Minuit", GetName()), fParRange, GetOptions() );
       SetOptions(dynamic_cast<Configurable*>(fConvergerFitter)->GetOptions());
    }
 
    if(fFitMethod == "MC")
-      fFitter = new MCFitter( *fConvergerFitter, Form("%s_Fitter_MC", GetName()), fParRange, GetOptions() );
+      fFitter = new MCFitter( *fConvergerFitter, TString::Format("%s_Fitter_MC", GetName()), fParRange, GetOptions() );
    else if (fFitMethod == "GA")
-      fFitter = new GeneticFitter( *fConvergerFitter, Form("%s_Fitter_GA", GetName()), fParRange, GetOptions() );
+      fFitter = new GeneticFitter( *fConvergerFitter, TString::Format("%s_Fitter_GA", GetName()), fParRange, GetOptions() );
    else if (fFitMethod == "SA")
-      fFitter = new SimulatedAnnealingFitter( *fConvergerFitter, Form("%s_Fitter_SA", GetName()), fParRange, GetOptions() );
+      fFitter = new SimulatedAnnealingFitter( *fConvergerFitter, TString::Format("%s_Fitter_SA", GetName()), fParRange, GetOptions() );
    else if (fFitMethod == "MINUIT")
-      fFitter = new MinuitFitter( *fConvergerFitter, Form("%s_Fitter_Minuit", GetName()), fParRange, GetOptions() );
+      fFitter = new MinuitFitter( *fConvergerFitter, TString::Format("%s_Fitter_Minuit", GetName()), fParRange, GetOptions() );
    else {
       Log() << kFATAL << "<Train> Do not understand fit method:" << fFitMethod << Endl;
    }
@@ -423,7 +423,7 @@ void TMVA::MethodFDA::PrintResults( const TString& fitter, std::vector<Double_t>
    Log() << kINFO;
    Log() << kHEADER << "Results for parameter fit using \"" << fitter << "\" fitter:" << Endl;
    std::vector<TString>  parNames;
-   for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( Form("Par(%i)",ipar ) );
+   for (UInt_t ipar=0; ipar<pars.size(); ipar++) parNames.push_back( TString::Format("Par(%i)",ipar ) );
    gTools().FormattedOutput( pars, parNames, "Parameter" , "Fit result", Log(), "%g" );
    Log() << "Discriminator expression: \"" << fFormulaStringP << "\"" << Endl;
    Log() << "Value of estimator at minimum: " << estimator << Endl;
@@ -690,12 +690,12 @@ void TMVA::MethodFDA::MakeClassSpecific( std::ostream& fout, const TString& clas
    // replace parameters
    TString str = fFormulaStringT;
    for (UInt_t ipar=0; ipar<fNPars; ipar++) {
-      str.ReplaceAll( Form("[%i]", ipar), Form("fParameter[%i]", ipar) );
+      str.ReplaceAll( TString::Format("[%i]", ipar), TString::Format("fParameter[%i]", ipar) );
    }
 
    // replace input variables
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      str.ReplaceAll( Form("[%i]", ivar+fNPars), Form("inputValues[%i]", ivar) );
+      str.ReplaceAll( TString::Format("[%i]", ivar+fNPars), TString::Format("inputValues[%i]", ivar) );
    }
 
    fout << "   double retval = " << str << ";" << std::endl;

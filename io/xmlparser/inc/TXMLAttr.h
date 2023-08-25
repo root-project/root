@@ -26,7 +26,7 @@ private:
 
 public:
    TXMLAttr(const char *key, const char *value) : fKey(key), fValue(value) {}
-   virtual ~TXMLAttr() {}
+   ~TXMLAttr() override {}
 
    const char *GetName() const override { return fKey; }
    const char *Key() const { return fKey; }

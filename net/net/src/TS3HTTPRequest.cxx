@@ -159,14 +159,9 @@ TS3HTTPRequest& TS3HTTPRequest::SetTimeStamp()
 {
    time_t now = time(NULL);
    char result[128];
-#ifdef _REENTRANT
    struct tm dateFormat;
    strftime(result, sizeof(result), "%a, %d %b %Y %H:%M:%S GMT",
       gmtime_r(&now, &dateFormat));
-#else
-   strftime(result, sizeof(result), "%a, %d %b %Y %H:%M:%S GMT",
-      gmtime(&now));
-#endif
    fTimeStamp = result;
    return *this;
 }

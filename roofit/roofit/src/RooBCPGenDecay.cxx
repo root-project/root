@@ -33,20 +33,35 @@ using namespace std;
 
 ClassImp(RooBCPGenDecay);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// \brief Constructor for RooBCPGenDecay.
+///
+/// Creates an instance of RooBCPGenDecay with the specified parameters.
+///
+/// \param[in] name       The name of the PDF.
+/// \param[in] title      The title of the PDF.
+/// \param[in] t          The time variable.
+/// \param[in] tag        The CP state category.
+/// \param[in] tau        The decay time parameter.
+/// \param[in] dm         The mixing frequency parameter.
+/// \param[in] avgMistag  The average mistag rate parameter.
+/// \param[in] avgC       Coefficient of cos term.
+/// \param[in] avgS       Coefficient of sin term.
+/// \param[in] delMistag  Delta mistag rate parameter.
+/// \param[in] mu         Tag efficiency difference parameter.
+/// \param[in] model      The resolution model.
+/// \param[in] type       The decay type.
 
 RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
                 RooRealVar& t, RooAbsCategory& tag,
                 RooAbsReal& tau, RooAbsReal& dm,
                 RooAbsReal& avgMistag,
-                RooAbsReal& a, RooAbsReal& b,
+                RooAbsReal& avgC, RooAbsReal& avgS,
                 RooAbsReal& delMistag,
                                RooAbsReal& mu,
                 const RooResolutionModel& model, DecayType type) :
   RooAbsAnaConvPdf(name,title,model,t),
-  _avgC("C","Coefficient of cos term",this,a),
-  _avgS("S","Coefficient of sin term",this,b),
+  _avgC("C","Coefficient of cos term",this,avgC),
+  _avgS("S","Coefficient of sin term",this,avgS),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),
   _mu("mu","Tag efficiency difference",this,mu),
@@ -95,13 +110,6 @@ RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
   _basisExp(other._basisExp),
   _basisSin(other._basisSin),
   _basisCos(other._basisCos)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBCPGenDecay::~RooBCPGenDecay()
 {
 }
 
@@ -205,7 +213,7 @@ void RooBCPGenDecay::generateEvent(Int_t code)
   }
 
   // Generate delta-t dependent
-  while(1) {
+  while(true) {
     double rand = RooRandom::uniform() ;
     double tval(0) ;
 

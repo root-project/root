@@ -35,8 +35,8 @@ ClassImp(RooRandom);
   ;
 
 
-TRandom* RooRandom::_theGenerator = 0;
-RooQuasiRandomGenerator* RooRandom::_theQuasiGenerator = 0;
+TRandom* RooRandom::_theGenerator = nullptr;
+RooQuasiRandomGenerator* RooRandom::_theQuasiGenerator = nullptr;
 RooRandom::Guard RooRandom::guard;
 
 ////////////////////////////////////////////////////////////////////////////////

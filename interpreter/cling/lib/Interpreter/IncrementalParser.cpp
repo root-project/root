@@ -162,15 +162,15 @@ namespace {
 
     void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
                           const Diagnostic &Info) override {
+      if (Info.getID() == diag::warn_falloff_nonvoid_function) {
+        DiagLevel = DiagnosticsEngine::Error;
+      }
       if (Ignoring()) {
         if (Info.getID() == diag::warn_unused_expr
             || Info.getID() == diag::warn_unused_result
             || Info.getID() == diag::warn_unused_call
             || Info.getID() == diag::warn_unused_comparison)
           return; // ignore!
-        if (Info.getID() == diag::warn_falloff_nonvoid_function) {
-          DiagLevel = DiagnosticsEngine::Error;
-        }
         if (Info.getID() == diag::ext_return_has_expr) {
           // An error that we need to suppress.
           auto Diags = const_cast<DiagnosticsEngine*>(Info.getDiags());
@@ -361,7 +361,7 @@ namespace cling {
       m_CI->createPCHExternalASTSource(PCHFileName,
                                        DisableValidationForModuleKind::All,
                                        true /*AllowPCHWithCompilerErrors*/,
-                                       0 /*DeserializationListener*/,
+                                       nullptr /*DeserializationListener*/,
                                        true /*OwnsDeserializationListener*/);
       result.push_back(endTransaction(PchT));
       if (Trap.hasErrorOccurred()) {
@@ -767,13 +767,13 @@ namespace cling {
 
     if (Transaction* Parent = T.getParent()) {
       Parent->removeNestedTransaction(&T);
-      T.setParent(0);
+      T.setParent(nullptr);
     } else {
       if (&T == m_Transactions.back()) {
         // Remove from the queue
         m_Transactions.pop_back();
         if (!m_Transactions.empty())
-          m_Transactions.back()->setNext(0);
+          m_Transactions.back()->setNext(nullptr);
       } else {
         // If T is not the last transaction it must not be a previous
         // transaction either, but a "disconnected" one, i.e. one that
@@ -866,7 +866,7 @@ namespace cling {
     Preprocessor& PP = m_CI->getPreprocessor();
     if (!PP.getCurrentLexer()) {
        PP.EnterSourceFile(m_CI->getSourceManager().getMainFileID(),
-                          0, SourceLocation());
+             nullptr, SourceLocation());
     }
     assert(PP.isIncrementalProcessingEnabled() && "Not in incremental mode!?");
     PP.enableIncrementalProcessing();
@@ -911,7 +911,7 @@ namespace cling {
     m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
     // NewLoc only used for diags.
-    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+    PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);
 
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();

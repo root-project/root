@@ -38,14 +38,14 @@ protected:
 
 public:
    TProofResources() : fValid(kFALSE) { }
-   virtual ~TProofResources() { }
+   ~TProofResources() override { }
 
    virtual TProofNodeInfo *GetMaster() = 0;
    virtual TList          *GetSubmasters() = 0;
    virtual TList          *GetWorkers() = 0;
    virtual Bool_t          IsValid() const { return fValid; }
 
-   ClassDef(TProofResources,0)  // Abstract class describing PROOF resources
+   ClassDefOverride(TProofResources,0)  // Abstract class describing PROOF resources
 };
 
 #endif

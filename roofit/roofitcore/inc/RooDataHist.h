@@ -47,8 +47,8 @@ public:
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, double initWgt=1.0) ;
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dhistMap, double wgt=1.0) ;
   //RooDataHist(const char *name, const char *title, const RooArgList& vars, double initWgt=1.0) ;
-  RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),
-        const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
+  RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
+        const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
   RooDataHist& operator=(const RooDataHist&) = delete;
 
   RooDataHist(const RooDataHist& other, const char* newname = nullptr) ;
@@ -58,13 +58,13 @@ public:
   ~RooDataHist() override ;
 
   /// Return empty clone of this RooDataHist.
-  RooAbsData* emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet*vars=nullptr, const char* /*wgtVarName*/=nullptr) const override {
-    return new RooDataHist(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()) ;
+  RooFit::OwningPtr<RooAbsData> emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet*vars=nullptr, const char* /*wgtVarName*/=nullptr) const override {
+    return RooFit::Detail::owningPtr(std::make_unique<RooDataHist>(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()));
   }
 
   /// Add `wgt` to the bin content enclosed by the coordinates passed in `row`.
-  virtual void add(const RooArgSet& row, double wgt=1.0) { add(row,wgt,-1.); }
-  void add(const RooArgSet& row, double weight, double sumw2) override ;
+  void add(const RooArgSet& row, double wgt=1.0) override { add(row,wgt,-1.); }
+  void add(const RooArgSet& row, double weight, double sumw2);
   void set(std::size_t binNumber, double weight, double wgtErr);
   void set(const RooArgSet& row, double weight, double wgtErr=-1.) ;
   void set(const RooArgSet& row, double weight, double wgtErrLo, double wgtErrHi) ;
@@ -83,10 +83,10 @@ public:
   bool isWeighted() const override { return true; }
   bool isNonPoissonWeighted() const override ;
 
-  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const override;
+  std::span<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const override;
 
   /// Retrieve all bin volumes. Bins are indexed according to getIndex().
-  RooSpan<const double> binVolumes(std::size_t first, std::size_t len) const {
+  std::span<const double> binVolumes(std::size_t first, std::size_t len) const {
     return {_binv + first, len};
   }
 
@@ -99,7 +99,7 @@ public:
                const std::map<const RooAbsArg*, std::pair<double, double> >& ranges,
                std::function<double(int)> getBinScale = [](int){ return 1.0; } );
 
-  void weights(double* output, RooSpan<double const> xVals, int intOrder, bool correctForBinSize, bool cdfBoundaries);
+  void weights(double* output, std::span<double const> xVals, int intOrder, bool correctForBinSize, bool cdfBoundaries);
   /// Return weight of i-th bin. \see getIndex()
   double weight(std::size_t i) const { return _wgt[i]; }
   double weightFast(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
@@ -210,8 +210,12 @@ public:
   double const* wgtErrHiArray() const { return _errHi; }
   double const* sumW2Array()    const { return _sumw2; }
 
-protected:
+  std::string calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+                                              const RooAbsCollection &coords, bool reverse = false) const;
+  std::string declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+                                           bool correctForBinSize) const;
 
+  protected:
   friend class RooDataHistSliceIter ;
 
   std::size_t calcTreeIndex(const RooAbsCollection& coords, bool fast) const;
@@ -220,7 +224,7 @@ protected:
   Int_t calcTreeIndex() const { return static_cast<Int_t>(calcTreeIndex(_vars, true)); }
 
   void initialize(const char* binningName=nullptr,bool fillTree=true) ;
-  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
+  std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                   std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) override;
   double interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) ;
   const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;
@@ -252,8 +256,8 @@ protected:
   mutable double _cache_sum{0.};          ///<! Cache for sum of entries ;
 
 private:
-  void interpolateQuadratic(double* output, RooSpan<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
-  void interpolateLinear(double* output, RooSpan<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
+  void interpolateQuadratic(double* output, std::span<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
+  void interpolateLinear(double* output, std::span<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
   double weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
 
   void _adjustBinning(RooRealVar &theirVar, const TAxis &axis, RooRealVar *ourVar, Int_t *offset);

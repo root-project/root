@@ -48,12 +48,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseSoftmax.cxx
     src/ParseTanh.cxx
     src/ParseTranspose.cxx
+    src/ParseErf.cxx
     src/ParseLayerNormalization.cxx
     src/ParseExpand.cxx
     src/ParseGather.cxx
     src/ParseFuseConvAdd.cxx
     src/ParseFuseConvTransposeAdd.cxx
     src/ParseFuseMatMulAdd.cxx
+    src/ParseMatMul.cxx
     ${PROTO_SRCS}
   LIBRARIES
     ${Protobuf_LIBRARIES}

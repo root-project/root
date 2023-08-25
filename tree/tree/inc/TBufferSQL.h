@@ -45,7 +45,7 @@ public:
    TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
    TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
    TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr,void *buf, Bool_t adopt = kTRUE);
-   ~TBufferSQL();
+   ~TBufferSQL() override;
 
    void ResetOffset();
 

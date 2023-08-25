@@ -98,18 +98,17 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
                                                         RooFit::GlobalObservables(globalObs),
                                                         RooFit::ConditionalObservables(conditionalObs),
                                                         RooFit::Offset(config.useLikelihoodOffset))};
-      std::unique_ptr<RooProfileLL> profile{dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance))};
+      std::unique_ptr<RooAbsArg> profileOwner{nll->createProfile(allButNuisance)};
+      auto profile = dynamic_cast<RooProfileLL*>(profileOwner.get());
       // set minimier options
       profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1);
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
-         RooFitResult *result = profile->minimizer()->save();
-         RooArgSet * detOutput = DetailedOutputAggregator::GetAsArgSet(result, "fitNull_");
+         std::unique_ptr<RooFitResult> result {profile->minimizer()->save()};
+         std::unique_ptr<RooArgSet> detOutput {DetailedOutputAggregator::GetAsArgSet(result.get(), "fitNull_")};
          fFitInfo->addOwned(*detOutput);
-         delete detOutput;
-         delete result;
       }
 
       RooMsgService::instance().setGlobalKillBelow(msglevel);
@@ -206,18 +205,17 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
                                                        RooFit::ConditionalObservables(conditionalObs),
                                                        RooFit::Offset(config.useLikelihoodOffset))};
 
-      std::unique_ptr<RooProfileLL> profile{dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance))};
+      std::unique_ptr<RooAbsReal> profileOwner{nll->createProfile(allButNuisance)};
+      auto profile = dynamic_cast<RooProfileLL*>(profileOwner.get());
       // set minimizer options
       profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); // use -1 to make more silent
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
-         RooFitResult *result = profile->minimizer()->save();
-         RooArgSet * detOutput =  DetailedOutputAggregator::GetAsArgSet(result, "fitAlt_");
+         std::unique_ptr<RooFitResult> result {profile->minimizer()->save()};
+         std::unique_ptr<RooArgSet> detOutput {DetailedOutputAggregator::GetAsArgSet(result.get(), "fitAlt_")};
          fFitInfo->addOwned(*detOutput);
-         delete detOutput;
-         delete result;
       }
 
       RooMsgService::instance().setGlobalKillBelow(msglevel);

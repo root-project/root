@@ -89,9 +89,6 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction &func) override;
 
-   /// set the function to minimize using an interface with gradient computation capabilities
-   void SetFunction(const ROOT::Math::IMultiGradFunction &func) override;
-
    /// set the function implementing Hessian computation
    void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc) override;
 

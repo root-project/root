@@ -17,7 +17,6 @@
 #define ROOT7_RFieldVisitor
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <algorithm>
@@ -46,18 +45,22 @@ public:
    virtual void VisitField(const Detail::RFieldBase &field) = 0;
    virtual void VisitFieldZero(const RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
+   virtual void VisitBitsetField(const RBitsetField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
-   virtual void VisitCollectionClassField(const RCollectionClassField &field) { VisitField(field); }
+   virtual void VisitProxiedCollectionField(const RProxiedCollectionField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
+   virtual void VisitCardinalityField(const RCardinalityField &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
+   virtual void VisitEnumField(const REnumField &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
    virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
    virtual void VisitInt8Field(const RField<std::int8_t> &field) { VisitField(field); }
    virtual void VisitInt16Field(const RField<std::int16_t> &field) { VisitField(field); }
    virtual void VisitIntField(const RField<int> &field) { VisitField(field); }
    virtual void VisitInt64Field(const RField<std::int64_t> &field) { VisitField(field); }
+   virtual void VisitNullableField(const RNullableField &field) { VisitField(field); }
    virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
    virtual void VisitUInt16Field(const RField<std::uint16_t> &field) { VisitField(field); }
    virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
@@ -174,7 +177,7 @@ public:
    };
 
 private:
-   Detail::RFieldValue fValue;
+   Detail::RFieldBase::RValue fValue;
    /// The output is directed to fOutput which may differ from std::cout.
    std::ostream &fOutput;
    unsigned int fLevel;
@@ -185,11 +188,11 @@ private:
    void PrintCollection(const Detail::RFieldBase &field);
 
 public:
-   RPrintValueVisitor(const Detail::RFieldValue &value,
-                      std::ostream &output,
-                      unsigned int level = 0,
+   RPrintValueVisitor(Detail::RFieldBase::RValue &&value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
-      : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options) {}
+      : fValue(std::move(value)), fOutput{output}, fLevel(level), fPrintOptions(options)
+   {
+   }
 
    void VisitField(const Detail::RFieldBase &field) final;
 
@@ -207,13 +210,17 @@ public:
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;
    void VisitUInt64Field(const RField<std::uint64_t> &field) final;
 
+   void VisitCardinalityField(const RCardinalityField &field) final;
    void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitRecordField(const RRecordField &field) final;
-   void VisitCollectionClassField(const RCollectionClassField &field) final;
+   void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
    void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
    void VisitRVecField(const RRVecField &field) final;
+   void VisitBitsetField(const RBitsetField &field) final;
+   void VisitNullableField(const RNullableField &field) final;
+   void VisitEnumField(const REnumField &field) final;
 };
 
 

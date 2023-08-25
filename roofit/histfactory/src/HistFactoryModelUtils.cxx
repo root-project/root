@@ -44,7 +44,8 @@ namespace HistFactory{
 
     RooAbsPdf* sum_pdf = nullptr;
     bool FoundSumPdf=false;
-    for (auto *sum_pdf_arg : *sim_channel->getComponents()) {
+    std::unique_ptr<RooArgSet> components{sim_channel->getComponents()};
+    for (auto *sum_pdf_arg : *components) {
         std::string NodeClassName = sum_pdf_arg->ClassName();
         if( NodeClassName == std::string("RooRealSumPdf") ) {
             FoundSumPdf=true;
@@ -83,7 +84,7 @@ namespace HistFactory{
       } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
          std::unique_ptr<RooAbsCategoryLValue> cat{static_cast<RooAbsCategoryLValue *>(sim->indexCat().Clone())};
-         for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
+         for (int ic = 0, nc = cat->numBins((const char *)nullptr); ic < nc; ++ic) {
             cat->setBin(ic);
             FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getCurrentLabel()), obsTerms, constraints);
          }
@@ -101,7 +102,8 @@ namespace HistFactory{
 
     // Find the servers of this channel
     bool FoundParamHistFunc=false;
-    for( auto *paramfunc_arg : *channel->getComponents() ) {
+    std::unique_ptr<RooArgSet> components{channel->getComponents()};
+    for( auto *paramfunc_arg : *components) {
       std::string NodeName = paramfunc_arg->GetName();
       std::string NodeClassName = paramfunc_arg->ClassName();
       if( NodeClassName != std::string("ParamHistFunc") ) continue;
@@ -171,7 +173,7 @@ namespace HistFactory{
       if(verbose) dataForChan->Print();
 
       // Generate observables defined by the pdf associated with this state
-      RooArgSet* obstmp = pdftmp->getObservables(*dataForChan->get()) ;
+      std::unique_ptr<RooArgSet> obstmp{pdftmp->getObservables(*dataForChan->get())};
       RooRealVar* obs = ((RooRealVar*)obstmp->first());
       if(verbose) obs->Print();
 

@@ -54,12 +54,10 @@ Check the tutorial rf506_msgservice.C for details.
 **/
 
 #include "RooFormula.h"
-#include "BracketAdapters.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-#include "RunContext.h"
 #include "RooBatchCompute.h"
 
 #include "TObjString.h"
@@ -70,8 +68,6 @@ Check the tutorial rf506_msgservice.C for details.
 #include <cctype>
 
 using namespace std;
-
-ClassImp(RooFormula);
 
 namespace {
 
@@ -182,18 +178,10 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
 
       oocxcoutD(static_cast<TObject *>(nullptr), InputArguments)
          << "Preprocessing formula: replace named references: " << varName << " --> " << replacement << "\n\t"
-         << formula << endl;
+         << formula << std::endl;
    }
 }
 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-/// coverity[UNINIT_CTOR]
-
-RooFormula::RooFormula() : TNamed()
-{
 }
 
 
@@ -242,13 +230,6 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
 }
 
 
-#ifndef _MSC_VER
-#if !defined(__GNUC__) || defined(__clang__) || (__GNUC__ > 4) || ( __GNUC__ == 4 && __GNUC_MINOR__ > 8)
-#define ROOFORMULA_HAVE_STD_REGEX
-#endif //GCC < 4.9 Check
-#endif //_MSC_VER
-
-#ifdef ROOFORMULA_HAVE_STD_REGEX
 ////////////////////////////////////////////////////////////////////////////////
 /// Process given formula by replacing all ordinal and name references by
 /// `x[i]`, where `i` matches the position of the argument in `_origList`.
@@ -262,7 +243,7 @@ std::string RooFormula::processFormula(std::string formula) const {
   // compilation.
 
   cxcoutD(InputArguments) << "Preprocessing formula step 1: find category tags (catName::catState) in "
-      << formula << endl;
+      << formula << std::endl;
 
   // Step 1: Find all category tags and the corresponding index numbers
   static const std::regex categoryReg("(\\w+)::(\\w+)");
@@ -277,13 +258,13 @@ std::string RooFormula::processFormula(std::string formula) const {
     const auto catVariable = dynamic_cast<const RooAbsCategory*>(_origList.find(catName.c_str()));
     if (!catVariable) {
       cxcoutD(InputArguments) << "Formula " << GetName() << " uses '::' to reference a category state as '" << fullMatch
-          << "' but a category '" << catName << "' cannot be found in the input variables." << endl;
+          << "' but a category '" << catName << "' cannot be found in the input variables." << std::endl;
       continue;
     }
 
     if (!catVariable->hasLabel(catState)) {
       coutE(InputArguments) << "Formula " << GetName() << " uses '::' to reference a category state as '" << fullMatch
-          << "' but the category '" << catName << "' does not seem to have the state '" << catState << "'." << endl;
+          << "' but the category '" << catName << "' does not seem to have the state '" << catState << "'." << std::endl;
       throw std::invalid_argument(formula);
     }
     const int catNum = catVariable->lookupIndex(catState);
@@ -291,24 +272,24 @@ std::string RooFormula::processFormula(std::string formula) const {
     categoryStates[fullMatch] = catNum;
     cxcoutD(InputArguments) << "\n\t" << fullMatch << "\tname=" << catName << "\tstate=" << catState << "=" << catNum;
   }
-  cxcoutD(InputArguments) << "-- End of category tags --"<< endl;
+  cxcoutD(InputArguments) << "-- End of category tags --"<< std::endl;
 
   // Step 2: Replace all category tags
   for (const auto& catState : categoryStates) {
     replaceAll(formula, catState.first, std::to_string(catState.second));
   }
 
-  cxcoutD(InputArguments) << "Preprocessing formula step 2: replace category tags\n\t" << formula << endl;
+  cxcoutD(InputArguments) << "Preprocessing formula step 2: replace category tags\n\t" << formula << std::endl;
 
   // Step 3: Convert `@i`-style references to `x[i]`
   convertArobaseReferences(formula);
 
-  cxcoutD(InputArguments) << "Preprocessing formula step 3: replace '@'-references\n\t" << formula << endl;
+  cxcoutD(InputArguments) << "Preprocessing formula step 3: replace '@'-references\n\t" << formula << std::endl;
 
   // Step 4: Replace all named references with "x[i]"-style
   replaceVarNamesWithIndexStyle(formula, _origList);
 
-  cxcoutD(InputArguments) << "Final formula:\n\t" << formula << endl;
+  cxcoutD(InputArguments) << "Final formula:\n\t" << formula << std::endl;
 
   return formula;
 }
@@ -359,27 +340,7 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
 
   return internalRepr;
 }
-#endif //ROOFORMULA_HAVE_STD_REGEX
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Recompile formula with new expression. In case of error, the old formula is
-/// retained.
-bool RooFormula::reCompile(const char* newFormula)
-{
-  try {
-    installFormulaOrThrow(newFormula);
-  } catch (std::runtime_error& e) {
-    coutE(InputArguments) << __func__ << ": new equation doesn't compile, formula unchanged."
-        << "\n" << e.what() << endl;
-    return true;
-  }
-
-  SetTitle(newFormula);
-  return false;
-}
 
 void RooFormula::dump() const
 {
@@ -397,7 +358,9 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
   //Change current servers to new servers with the same name given in list
   bool errorStat = false;
 
-  for (const auto arg : _origList) {
+  // We only consider the usedVariables() for replacement, because only these
+  // are registered as servers.
+  for (const auto arg : usedVariables()) {
     RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
     if (replace) {
       _origList.replace(*arg, *replace);
@@ -409,7 +372,7 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
       }
 
     } else if (mustReplaceAll) {
-      coutE(LinkStateMgmt) << __func__ << ": cannot find replacement for " << arg->GetName() << endl;
+      coutE(LinkStateMgmt) << __func__ << ": cannot find replacement for " << arg->GetName() << std::endl;
       errorStat = true;
     }
   }
@@ -431,7 +394,7 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
 double RooFormula::eval(const RooArgSet* nset) const
 {
   if (!_tFormula) {
-    coutF(Eval) << __func__ << " (" << GetName() << "): Formula didn't compile: " << GetTitle() << endl;
+    coutF(Eval) << __func__ << " (" << GetName() << "): Formula didn't compile: " << GetTitle() << std::endl;
     std::string what = "Formula ";
     what += GetTitle();
     what += " didn't compile.";
@@ -453,56 +416,14 @@ double RooFormula::eval(const RooArgSet* nset) const
   return _tFormula->EvalPar(pars.data());
 }
 
-
-RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset) const {
-  if (!_tFormula) {
-    coutF(Eval) << __func__ << " (" << GetName() << "): Formula didn't compile: " << GetTitle() << endl;
-    std::string what = "Formula ";
-    what += GetTitle();
-    what += " didn't compile.";
-    throw std::runtime_error(what);
-  }
-
-  std::vector<RooBatchCompute::BracketAdapterWithMask> valueAdapters;
-  std::vector<RooSpan<const double>> inputSpans;
-  size_t nData=1;
-  for (const auto arg : _origList) {
-    auto realArg = static_cast<const RooAbsReal*>(arg);
-    auto batch = realArg->getValues(inputData, nset);
-    assert(!batch.empty());
-    nData = std::max(nData, batch.size());
-    valueAdapters.emplace_back(batch[0], batch);
-    inputSpans.push_back(std::move(batch));
-  }
-
-  auto output = inputData.makeBatch(dataOwner, nData);
-  std::vector<double> pars(_origList.size());
-
-
-  for (std::size_t i=0; i < nData; ++i) {
-    for (unsigned int j=0; j < _origList.size(); ++j) {
-      if (_isCategory[j]) {
-        // TODO: As long as category states cannot be passed in the RunContext,
-        // the current state has to be used.
-        const auto& cat = static_cast<RooAbsCategory&>(_origList[j]);
-        pars[j] = cat.getCurrentIndex();
-      } else {
-        pars[j] = valueAdapters[j][i];
-      }
-    }
-
-    output[i] = _tFormula->EvalPar(pars.data());
-  }
-
-  return output;
-}
-
-void RooFormula::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooFormula::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   const int nPars=_origList.size();
-  std::vector<RooSpan<const double>> inputSpans(nPars);
-  for (int i=0; i<nPars; i++)
-    inputSpans[i] = dataMap.at( static_cast<const RooAbsReal*>(&_origList[i]) );
+  std::vector<std::span<const double>> inputSpans(nPars);
+  for (int i=0; i<nPars; i++) {
+    std::span<const double> rhs = dataMap.at( static_cast<const RooAbsReal*>(&_origList[i]) );
+    inputSpans[i] = rhs;
+  }
 
   std::vector<double> pars(nPars);
   for (size_t i=0; i<nEvents; i++)
@@ -517,12 +438,12 @@ void RooFormula::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
 
 void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/, TString indent) const
 {
-  os << indent << "--- RooFormula ---" << endl;
-  os << indent << " Formula:        '" << GetTitle() << "'" << endl;
-  os << indent << " Interpretation: '" << reconstructFormula(GetTitle()) << "'" << endl;
+  os << indent << "--- RooFormula ---" << std::endl;
+  os << indent << " Formula:        '" << GetTitle() << "'" << std::endl;
+  os << indent << " Interpretation: '" << reconstructFormula(GetTitle()) << "'" << std::endl;
   indent.Append("  ");
   os << indent << "Servers: " << _origList << "\n";
-  os << indent << "In use : " << actualDependents() << endl;
+  os << indent << "In use : " << actualDependents() << std::endl;
 }
 
 
@@ -531,7 +452,7 @@ void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*
 
 void RooFormula::printValue(ostream& os) const
 {
-  os << const_cast<RooFormula*>(this)->eval(0) ;
+  os << const_cast<RooFormula*>(this)->eval(nullptr) ;
 }
 
 
@@ -585,7 +506,7 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
       << "\n\t" << processedFormula
       << "\n  and used as"
       << "\n\t" << reconstructFormula(processedFormula)
-      << "\n  with the parameters " << _origList << endl;
+      << "\n  with the parameters " << _origList << std::endl;
 
   auto theFormula = std::make_unique<TFormula>(GetName(), processedFormula.c_str(), false);
 
@@ -622,158 +543,3 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
 
   _tFormula = std::move(theFormula);
 }
-
-
-#ifndef ROOFORMULA_HAVE_STD_REGEX
-/*
- * g++ 4.8 doesn't support the std::regex. It has headers, but no implementations of the standard, leading to linker
- * errors. As long as centos 7 needs to be supported, this forces us to have a legacy implementation.
- */
-
-#include "TPRegexp.h"
-
-////////////////////////////////////////////////////////////////////////////////
-/// Process given formula by replacing all ordinal and name references by
-/// `x[i]`, where `i` matches the position of the argument in `_origList`.
-/// Further, references to category states such as `leptonMulti:one` are replaced
-/// by the category index.
-std::string RooFormula::processFormula(std::string formula) const {
-  TString formulaTString = formula.c_str();
-
-  cxcoutD(InputArguments) << "Preprocessing formula step 1: find category tags (catName::catState) in "
-      << formulaTString.Data() << endl;
-
-  // Step 1: Find all category tags and the corresponding index numbers
-  TPRegexp categoryReg("(\\w+)::(\\w+)");
-  std::map<std::string, int> categoryStates;
-  int offset = 0;
-  do {
-    std::unique_ptr<TObjArray> matches(categoryReg.MatchS(formulaTString, "", offset, 3));
-    if (matches->GetEntries() == 0)
-      break;
-
-    std::string fullMatch = static_cast<TObjString*>(matches->At(0))->GetString().Data();
-    std::string catName = static_cast<TObjString*>(matches->At(1))->GetString().Data();
-    std::string catState = static_cast<TObjString*>(matches->At(2))->GetString().Data();
-    offset = formulaTString.Index(categoryReg, offset) + fullMatch.size();
-
-    const auto catVariable = dynamic_cast<const RooAbsCategory*>(_origList.find(catName.c_str()));
-    if (!catVariable) {
-      cxcoutD(InputArguments) << "Formula " << GetName() << " uses '::' to reference a category state as '" << fullMatch
-          << "' but a category '" << catName << "' cannot be found in the input variables." << endl;
-      continue;
-    }
-
-    const RooCatType* catType = catVariable->lookupType(catState.c_str(), false);
-    if (!catType) {
-      coutE(InputArguments) << "Formula " << GetName() << " uses '::' to reference a category state as '" << fullMatch
-          << "' but the category '" << catName << "' does not seem to have the state '" << catState << "'." << endl;
-      throw std::invalid_argument(formula);
-    }
-    const int catNum = catType->getVal();
-
-    categoryStates[fullMatch] = catNum;
-    cxcoutD(InputArguments) << "\n\t" << fullMatch << "\tname=" << catName << "\tstate=" << catState << "=" << catNum;
-  } while (offset != -1);
-  cxcoutD(InputArguments) << "-- End of category tags --"<< endl;
-
-  // Step 2: Replace all category tags
-  for (const auto& catState : categoryStates) {
-    std::stringstream replacement;
-    replacement << catState.second;
-    formulaTString.ReplaceAll(catState.first.c_str(), replacement.str().c_str());
-  }
-
-  cxcoutD(InputArguments) << "Preprocessing formula step 2: replace category tags\n\t" << formulaTString.Data() << endl;
-
-  // Step 3: Convert `@i`-style references to `x[i]`
-  TPRegexp ordinalRegex("@([0-9]+)");
-  int nsub = 0;
-  do {
-    nsub = ordinalRegex.Substitute(formulaTString, "x[$1]");
-  } while (nsub > 0);
-
-  cxcoutD(InputArguments) << "Preprocessing formula step 3: replace '@'-references\n\t" << formulaTString.Data() << endl;
-
-  // Step 4: Replace all named references with "x[i]"-style
-  for (unsigned int i = 0; i < _origList.size(); ++i) {
-    const auto& var = _origList[i];
-    TString regex = "\\b";
-    regex += var.GetName();
-    regex += "\\b([^\\[\\]]|$)"; //Negative lookahead. If the variable is called `x` or `0`, this might otherwise replace `x[0]`.
-    TPRegexp findParameterRegex(regex);
-
-    std::stringstream replacement;
-    replacement << "x[" << i << "]$1";
-    int nsub2 = 0;
-    do {
-      nsub2 = findParameterRegex.Substitute(formulaTString, replacement.str().c_str());
-    } while (nsub2 > 0);
-
-    cxcoutD(InputArguments) << "Preprocessing formula step 4: replace named references: "
-        << var.GetName() << " --> " << replacement.str()
-        << "\n\t" << formulaTString.Data() << endl;
-  }
-
-  cxcoutD(InputArguments) << "Final formula:\n\t" << formulaTString << endl;
-
-  return formulaTString.Data();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Analyse internal formula to find out which variables are actually in use.
-RooArgList RooFormula::usedVariables() const {
-  RooArgList useList;
-  if (_tFormula == nullptr)
-    return useList;
-
-  const TString formulaTString = _tFormula->GetTitle();
-
-  std::set<unsigned int> matchedOrdinals;
-  TPRegexp newOrdinalRegex("\\bx\\[([0-9]+)\\]");
-  int offset = 0;
-  do {
-    std::unique_ptr<TObjArray> matches(newOrdinalRegex.MatchS(formulaTString, "", offset, 2));
-    if (matches->GetEntries() == 0)
-      break;
-
-    std::string fullMatch = static_cast<TObjString*>(matches->At(0))->GetString().Data();
-    std::string ordinal   = static_cast<TObjString*>(matches->At(1))->GetString().Data();
-    offset = formulaTString.Index(newOrdinalRegex, offset) + fullMatch.size();
-
-    std::stringstream matchString(ordinal.c_str());
-    unsigned int i;
-    matchString >> i;
-
-    matchedOrdinals.insert(i);
-  } while (offset != -1);
-
-  for (unsigned int i : matchedOrdinals) {
-    useList.add(_origList[i]);
-  }
-
-  return useList;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// From the internal representation, construct a formula by replacing all index place holders
-/// with the names of the variables that are being used to evaluate it.
-std::string RooFormula::reconstructFormula(std::string internalRepr) const {
-  TString internalReprT = internalRepr.c_str();
-
-  for (unsigned int i = 0; i < _origList.size(); ++i) {
-    const auto& var = _origList[i];
-    std::stringstream regexStr;
-    regexStr << "x\\[" << i << "\\]|@" << i;
-    TPRegexp regex(regexStr.str().c_str());
-
-    std::string replacement = std::string("[") + var.GetName() + "]";
-    regex.Substitute(internalReprT, replacement.c_str());
-  }
-
-  return internalReprT.Data();
-}
-#endif //ROOFORMULA_HAVE_STD_REGEX

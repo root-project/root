@@ -354,7 +354,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    for (formIt = fTargetFormulas.begin(), formItEnd = fTargetFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fTargetFormulas.clear();
    for (UInt_t i=0; i<dsi.GetNTargets(); i++) {
-      ttf = new TTreeFormula( Form( "Formula%s", dsi.GetTargetInfo(i).GetInternalName().Data() ),
+      ttf = new TTreeFormula( TString::Format( "Formula%s", dsi.GetTargetInfo(i).GetInternalName().Data() ),
                               dsi.GetTargetInfo(i).GetExpression().Data(), tr );
       CheckTTreeFormula( ttf, dsi.GetTargetInfo(i).GetExpression(), hasDollar );
       fTargetFormulas.push_back( ttf );
@@ -367,7 +367,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    for (formIt = fSpectatorFormulas.begin(), formItEnd = fSpectatorFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fSpectatorFormulas.clear();
    for (UInt_t i=0; i<dsi.GetNSpectators(); i++) {
-      ttf = new TTreeFormula( Form( "Formula%s", dsi.GetSpectatorInfo(i).GetInternalName().Data() ),
+      ttf = new TTreeFormula( TString::Format( "Formula%s", dsi.GetSpectatorInfo(i).GetInternalName().Data() ),
                               dsi.GetSpectatorInfo(i).GetExpression().Data(), tr );
       CheckTTreeFormula( ttf, dsi.GetSpectatorInfo(i).GetExpression(), hasDollar );
       fSpectatorFormulas.push_back( ttf );

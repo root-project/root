@@ -290,7 +290,7 @@ function normal_cdf_c(x, sigma, x0 = 0) {
   * @memberof Math */
 function normal_cdf(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
-   if (z < -1.) return erfc(-z);
+   if (z < -1.) return 0.5*erfc(-z);
    else         return 0.5*(1.0 + erf(z));
 }
 
@@ -336,13 +336,13 @@ function gamma(x) {
             p += 1.0;
             z = q - p;
          }
-         z = q * Math.sin( Math.PI * z );
+         z = q * Math.sin(Math.PI * z);
          if( z == 0 )
          {
             return sgngam > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
          }
          z = Math.abs(z);
-         z = Math.PI / (z * stirf(q) );
+         z = Math.PI / (z * stirf(q));
       }
       else
       {
@@ -479,7 +479,7 @@ function ndtri(y0) {
 
    let code = 1, y = y0, x, z, y2, x0, x1;
 
-   if ( y > (1.0 - dd) ) {
+   if (y > (1.0 - dd)) {
       y = 1.0 - y;
       code = 0;
    }
@@ -490,7 +490,7 @@ function ndtri(y0) {
       x = x * s2pi;
       return x;
    }
-   x = Math.sqrt( -2.0 * Math.log(y) );
+   x = Math.sqrt(-2.0 * Math.log(y));
    x0 = x - Math.log(x)/x;
    z = 1.0/x;
    if ( x < 8.0 )
@@ -581,11 +581,11 @@ function igam(a, x) {
 
    // LM: for negative values returns 1.0 instead of zero
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
-   if (a <= 0)  return 1.0;
+   if (a <= 0) return 1.0;
 
-   if (x <= 0)  return 0.0;
+   if (x <= 0) return 0.0;
 
-   if( (x > 1.0) && (x > a ) )
+   if ((x > 1.0) && (x > a))
       return 1.0 - igamc(a,x);
 
    /* Compute  x**a * exp(-x) / gamma(a)  */
@@ -613,7 +613,7 @@ function igam(a, x) {
 function igami(a, y0) {
    // check the domain
    if (a <= 0) {
-      console.error('igami : Wrong domain for parameter a (must be > 0)');
+      console.error(`igami : Wrong domain for parameter a = ${a} (must be > 0)`);
       return 0;
    }
    if (y0 <= 0) {
@@ -627,7 +627,7 @@ function igami(a, y0) {
 
    /* approximation to inverse function */
    d = 1.0/(9.0*a);
-   y = ( 1.0 - d - ndtri(y0) * Math.sqrt(d) );
+   y = 1.0 - d - ndtri(y0) * Math.sqrt(d);
    x = a * y * y * y;
 
    lgm = lgam(a);
@@ -830,7 +830,7 @@ function beta(x,y) {
 /** @summary chisquared_cdf_c
   * @memberof Math */
 function chisquared_cdf_c(x,r,x0 = 0) {
-   return inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
+   return inc_gamma_c(0.5 * r, 0.5*(x-x0));
 }
 
 /** @summary Continued fraction expansion #1 for incomplete beta integral
@@ -898,15 +898,13 @@ function incbcf(a,b,x) {
       k7 += 2.0;
       k8 += 2.0;
 
-      if( (Math.abs(qk) + Math.abs(pk)) > kBig )
-      {
+      if((Math.abs(qk) + Math.abs(pk)) > kBig) {
          pkm2 *= kBiginv;
          pkm1 *= kBiginv;
          qkm2 *= kBiginv;
          qkm1 *= kBiginv;
       }
-      if( (Math.abs(qk) < kBiginv) || (Math.abs(pk) < kBiginv) )
-      {
+      if((Math.abs(qk) < kBiginv) || (Math.abs(pk) < kBiginv)) {
          pkm2 *= kBig;
          pkm1 *= kBig;
          qkm2 *= kBig;
@@ -985,15 +983,13 @@ function incbd(a,b,x) {
       k7 += 2.0;
       k8 += 2.0;
 
-      if( (Math.abs(qk) + Math.abs(pk)) > kBig )
-      {
+      if ((Math.abs(qk) + Math.abs(pk)) > kBig) {
          pkm2 *= kBiginv;
          pkm1 *= kBiginv;
          qkm2 *= kBiginv;
          qkm1 *= kBiginv;
       }
-      if( (Math.abs(qk) < kBiginv) || (Math.abs(pk) < kBiginv) )
-      {
+      if ((Math.abs(qk) < kBiginv) || (Math.abs(pk) < kBiginv)) {
          pkm2 *= kBig;
          pkm1 *= kBig;
          qkm2 *= kBig;
@@ -1072,7 +1068,7 @@ function incbet(aa,bb,xx) {
 
 /* Reverse a and b if x is greater than the mean. */
 /* aa,bb > 1 -> sharp rise at x=aa/(aa+bb) */
-   if( xx > (aa/(aa+bb)) )
+   if(xx > (aa/(aa+bb)))
    {
       flag = 1;
       a = bb;
@@ -1103,7 +1099,7 @@ function incbet(aa,bb,xx) {
 
    /* Multiply w by the factor
       a      b   _             _     _
-      x  (1-x)   | (a+b) / ( a | (a) | (b) ) .   */
+      x  (1-x)   | (a+b) / (a | (a) | (b)) .   */
 
       y = a * Math.log(x);
       t = b * Math.log(xc);
@@ -1210,9 +1206,9 @@ function incbi(aa,bb,yy0) {
       }
 
       lgm = (yp * yp - 3.0)/6.0;
-      x = 2.0/( 1.0/(2.0*a-1.0)  +  1.0/(2.0*b-1.0) );
+      x = 2.0/(1.0/(2.0*a-1.0) + 1.0/(2.0*b-1.0));
       d = yp * Math.sqrt( x + lgm ) / x
-         - ( 1.0/(2.0*b-1.0) - 1.0/(2.0*a-1.0) )
+         - (1.0/(2.0*b-1.0) - 1.0/(2.0*a-1.0))
          * (lgm + 5.0/6.0 - 2.0/(3.0*x));
       d = 2.0 * d;
       if( d < kMINLOG )
@@ -1222,7 +1218,7 @@ function incbi(aa,bb,yy0) {
          x = 0.0;
          return process_done();
       }
-      x = a/( a + b * Math.exp(d) );
+      x = a/(a + b * Math.exp(d));
       y = incbet( a, b, x );
       yp = (y - y0)/y0;
       if( Math.abs(yp) < 0.2 )
@@ -1437,7 +1433,7 @@ function beta_cdf_c(x,a,b) {
 /** @summary chisquared_cdf
   * @memberof Math */
 function chisquared_cdf(x,r,x0=0) {
-   return inc_gamma ( 0.5 * r , 0.5*(x-x0) );
+   return inc_gamma(0.5 * r, 0.5*(x-x0));
 }
 
 /** @summary gamma_quantile_c function
@@ -1557,7 +1553,7 @@ function fdistribution_pdf(x, n, m, x0 = 0) {
       return 0.0;
 
    return Math.exp((n/2) * Math.log(n) + (m/2) * Math.log(m) + lgamma((n+m)/2) - lgamma(n/2) - lgamma(m/2)
-                 + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m +  n*(x-x0)) );
+                 + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m +  n*(x-x0)));
 }
 
 /** @summary fdistribution_cdf_c function
@@ -1601,8 +1597,12 @@ function Prob(chi2, ndf) {
 
 /** @summary Gaus function
   * @memberof Math */
-function Gaus(x, mean, sigma) {
-   return Math.exp(-0.5 * Math.pow((x-mean) / sigma, 2));
+function Gaus(x, mean, sigma, norm) {
+   if (!sigma) return 1e30;
+   let arg = (x - mean) / sigma;
+   if (arg < -39 || arg > 39) return 0;
+   let res = Math.exp(-0.5*arg*arg);
+   return norm ? res/(2.50662827463100024*sigma) : res; //sqrt(2*Pi)=2.50662827463100024
 }
 
 /** @summary BreitWigner function
@@ -1772,13 +1772,13 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
          // for n=1 the primitive of 1/x is log(x)
          intpow = -A * Math.log( n / abs_alpha ) + A * Math.log( B -z );
       }
-      intgaus =  sqrtpiover2*(1. + erf(abs_alpha*oneoversqrt2));
+      intgaus = sqrtpiover2*(1. + erf(abs_alpha*oneoversqrt2));
    }
    else
    {
       intgaus = normal_cdf_c(z, 1);
       intgaus *= sqrt2pi;
-      intpow  =  0;
+      intpow  = 0;
    }
    return sigma * (intgaus + intpow);
 }
@@ -1825,6 +1825,12 @@ function ChebyshevN(n, x, c) {
    }
 
    return x * d1 - d2 + c[0];
+}
+
+/** @summary Chebyshev0 function
+  * @memberof Math */
+function Chebyshev0(x, c0) {
+   return c0;
 }
 
 /** @summary Chebyshev1 function
@@ -1954,8 +1960,8 @@ function eff_MidPInterval(total,passed,level,bUpper) {
    // treat special case for 0<passed<1
    // do a linear interpolation of the upper limit values
    if ( passed > 0 && passed < 1) {
-      let p0 =  eff_MidPInterval(total,0.0,level,bUpper);
-      let p1 =  eff_MidPInterval(total,1.0,level,bUpper);
+      let p0 = eff_MidPInterval(total, 0.0, level, bUpper);
+      let p1 = eff_MidPInterval(total, 1.0, level, bUpper);
       p = (p1 - p0) * passed + p0;
       return p;
    }
@@ -2050,8 +2056,8 @@ export {
    gaus, gausn, gausxy, expo,
    Prob, Gaus, BreitWigner, BetaDist, BetaDistI, landau, landaun,
 
-   ChebyshevN, Chebyshev1, Chebyshev2, Chebyshev3, Chebyshev4, Chebyshev5,
-   Chebyshev6, Chebyshev7, Chebyshev8, Chebyshev9, Chebyshev10,
+   ChebyshevN, Chebyshev0, Chebyshev1, Chebyshev2, Chebyshev3, Chebyshev4,
+   Chebyshev5, Chebyshev6, Chebyshev7, Chebyshev8, Chebyshev9, Chebyshev10,
 
    getTEfficiencyBoundaryFunc
 };

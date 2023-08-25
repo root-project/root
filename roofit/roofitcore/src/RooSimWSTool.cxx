@@ -218,7 +218,7 @@ std::unique_ptr<RooSimWSTool::ObjBuildConfig> RooSimWSTool::validateConfig(Build
       return nullptr;
     }
   } else {
-    obc->_masterCat = 0 ;
+    obc->_masterCat = nullptr ;
   }
 
   map<string,SplitRule>::iterator pdfiter ;
@@ -301,7 +301,7 @@ std::unique_ptr<RooSimWSTool::ObjBuildConfig> RooSimWSTool::validateConfig(Build
    list<string>::iterator misi ;
    for (misi=sr._miStateNameList.begin() ; misi!=sr._miStateNameList.end() ; ++misi) {
      const RooCatType* ctype = obc->_masterCat->lookupType(misi->c_str(),false) ;
-     if (ctype==0) {
+     if (ctype==nullptr) {
        oocoutE(nullptr, ObjectHandling) << "RooSimWSTool::build() ERROR: master index category " << obc->_masterCat->GetName()
               << " does not have a state named " << *misi << " which was specified as state associated with p.d.f "
               << sr.GetName() << endl ;
@@ -322,7 +322,7 @@ std::unique_ptr<RooSimWSTool::ObjBuildConfig> RooSimWSTool::validateConfig(Build
    list<string>::iterator misi ;
    for (misi=sr._miStateNameList.begin() ; misi!=sr._miStateNameList.end() ; ++misi) {
      const RooCatType* ctype = obc->_masterCat->lookupType(misi->c_str(),false) ;
-     if (ctype==0) {
+     if (ctype==nullptr) {
        oocoutE(nullptr, ObjectHandling) << "RooSimWSTool::build() ERROR: master index category " << obc->_masterCat->GetName()
               << " does not have a state named " << *misi << " which was specified as state associated with p.d.f "
               << sr.GetName() << endl ;
@@ -361,7 +361,7 @@ std::unique_ptr<RooSimWSTool::ObjBuildConfig> RooSimWSTool::validateConfig(Build
    return nullptr;
       }
       rlist.push_back(ctype) ;
-      tok = strtok(0,"{,}") ;
+      tok = strtok(nullptr,"{,}") ;
     }
 
     obc->_restr[cat] = rlist ;
@@ -580,7 +580,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     RooCustomizer* physCustomizer ;
     if (physCat) {
       RooAbsPdf* pdf = stateMap[physCat->getCurrentLabel()] ;
-      if (pdf==0) {
+      if (pdf==nullptr) {
    continue ;
       }
       const std::string pdfName = pdf->GetName();
@@ -648,14 +648,14 @@ void RooSimWSTool::SplitRule::splitParameter(const char* paramNameList, const ch
   char* cat = strtok(catBuf,"{,}") ;
   while(cat) {
     catList.push_back(cat) ;
-    cat = strtok(0,"{,}") ;
+    cat = strtok(nullptr,"{,}") ;
   }
 
   // Now parse parameter list
   char* param = strtok(paramBuf,"{,}") ;
   while(param) {
     _paramSplitMap[param] = pair<list<string>,string>(catList,"") ;
-    param = strtok(0,"{,}") ;
+    param = strtok(nullptr,"{,}") ;
   }
 }
 
@@ -676,14 +676,14 @@ void RooSimWSTool::SplitRule::splitParameterConstrained(const char* paramNameLis
   char* cat = strtok(catBuf,"{,}") ;
   while(cat) {
     catList.push_back(cat) ;
-    cat = strtok(0,"{,}") ;
+    cat = strtok(nullptr,"{,}") ;
   }
 
   // Now parse parameter list
   char* param = strtok(paramBuf,"{,}") ;
   while(param) {
     _paramSplitMap[param] = pair<list<string>,string>(catList,remainderStateName) ;
-    param = strtok(0,"{,}") ;
+    param = strtok(nullptr,"{,}") ;
   }
 }
 
@@ -703,7 +703,7 @@ void RooSimWSTool::SplitRule::configure(const RooCmdArg& arg1,const RooCmdArg& a
   list<const RooCmdArg*>::iterator iter ;
   for (iter=cmdList.begin() ; iter!=cmdList.end() ; ++iter) {
 
-    if ((*iter)->opcode()==0) continue ;
+    if ((*iter)->opcode()==nullptr) continue ;
 
     string name = (*iter)->opcode() ;
 
@@ -747,7 +747,7 @@ RooSimWSTool::BuildConfig::BuildConfig(const char* pdfName, const RooCmdArg& arg
 
   list<const RooCmdArg*>::iterator iter ;
   for (iter=cmdList.begin() ; iter!=cmdList.end() ; ++iter) {
-    if ((*iter)->opcode()==0) continue ;
+    if ((*iter)->opcode()==nullptr) continue ;
     string name = (*iter)->opcode() ;
     if (name=="Restrict") {
       restrictBuild((*iter)->getString(0),(*iter)->getString(1)) ;
@@ -780,7 +780,7 @@ void RooSimWSTool::BuildConfig::internalAddPdf(const char* pdfName, const char* 
   char* tok = strtok(buf,",") ;
   while(tok) {
     sr._miStateNameList.push_back(tok) ;
-    tok = strtok(0,",") ;
+    tok = strtok(nullptr,",") ;
   }
 
   _pdfmap[pdfName] = sr ;

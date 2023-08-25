@@ -554,6 +554,25 @@ static int meta_setattro(PyObject* pyclass, PyObject* pyname, PyObject* pyval)
 
 
 //----------------------------------------------------------------------------
+static PyObject* meta_reflex(CPPScope* klass, PyObject* args)
+{
+// Provide the requested reflection information.
+    Cppyy::Reflex::RequestId_t request = -1;
+    Cppyy::Reflex::FormatId_t  format  = Cppyy::Reflex::OPTIMAL;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("i|i:__cpp_reflex__"), &request, &format))
+        return nullptr;
+
+    if (request == Cppyy::Reflex::IS_NAMESPACE) {
+        if (klass->fFlags & CPPScope::kIsNamespace)
+            Py_RETURN_TRUE;
+        Py_RETURN_FALSE;
+    }
+
+    PyErr_Format(PyExc_ValueError, "unsupported reflex request %d or format %d", request, format);
+    return nullptr;
+}
+
+//----------------------------------------------------------------------------
 // p2.7 does not have a __dir__ in object, and object.__dir__ in p3 does not
 // quite what I'd expected of it, so the following pulls in the internal code
 #include "PyObjectDir27.inc"
@@ -597,6 +616,8 @@ static PyObject* meta_dir(CPPScope* klass)
 
 //-----------------------------------------------------------------------------
 static PyMethodDef meta_methods[] = {
+    {(char*)"__cpp_reflex__", (PyCFunction)meta_reflex, METH_VARARGS,
+      (char*)"C++ datamember reflection information" },
     {(char*)"__dir__", (PyCFunction)meta_dir, METH_NOARGS, nullptr},
     {(char*)nullptr, nullptr, 0, nullptr}
 };

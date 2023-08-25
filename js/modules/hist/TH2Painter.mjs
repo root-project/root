@@ -1,9 +1,10 @@
-import { settings, gStyle, clTMultiGraph } from '../core.mjs';
+import { settings, gStyle, clTMultiGraph, kNoZoom } from '../core.mjs';
 import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
+import { getMaterialArgs } from '../base/base3d.mjs';
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
-import { TH2Painter as TH2Painter2D  } from '../hist2d/TH2Painter.mjs';
+import { TH2Painter as TH2Painter2D } from '../hist2d/TH2Painter.mjs';
 
 
 /** @summary Draw TH2Poly histogram as lego
@@ -75,12 +76,12 @@ function drawTH2PolyLego(painter) {
 
             try {
                if (pnts.length > 2)
-                  faces = ShapeUtils.triangulateShape(pnts , []);
+                  faces = ShapeUtils.triangulateShape(pnts, []);
             } catch(e) {
                faces = null;
             }
 
-            if (faces && (faces.length>pnts.length-3)) break;
+            if (faces && (faces.length > pnts.length-3)) break;
          }
 
          if (faces && faces.length && pnts) {
@@ -88,7 +89,7 @@ function drawTH2PolyLego(painter) {
             all_faces.push(faces);
 
             nfaces += faces.length * 2;
-            if (z1>z0) nfaces += pnts.length*2;
+            if (z1 > z0) nfaces += pnts.length*2;
          }
       }
 
@@ -163,8 +164,7 @@ function drawTH2PolyLego(painter) {
       geometry.setAttribute('position', new BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      let color = painter.fPalette.getColor(colindx),
-          material = new MeshBasicMaterial({ color, vertexColors: false }),
+      let material = new MeshBasicMaterial(getMaterialArgs(painter.fPalette.getColor(colindx), { vertexColors: false })),
           mesh = new Mesh(geometry, material);
 
       pmain.toplevel.add(mesh);
@@ -220,13 +220,15 @@ class TH2Painter extends TH2Painter2D {
       } else {
 
          let pad = this.getPadPainter().getRootPad(true),
-             zmult = 1 + 2*gStyle.fHistTopMargin;
+             zmult = 1;
 
-         if (this.draw_content || (this.gmaxbin != 0)) {
+         if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
+            this.zmin = this.options.minimum;
+            this.zmax = this.options.maximum;
+         } else if (this.draw_content || (this.gmaxbin != 0)) {
             this.zmin = pad?.fLogz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
-         } else {
-            zmult = 1;
+            zmult = 1 + 2*gStyle.fHistTopMargin;
          }
 
          if (pad?.fLogz && (this.zmin <= 0))
@@ -236,10 +238,12 @@ class TH2Painter extends TH2Painter2D {
 
          if (is_main) {
             assignFrame3DMethods(main);
-            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
+            pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
                main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2, draw: this.options.Axis !== -1 });
+               main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2,
+                  draw: this.options.Axis !== -1, drawany: this.options.isCartesian(),
+                  reverse_x: this.options.RevX, reverse_y: this.options.RevY });
             });
          }
 
@@ -256,6 +260,9 @@ class TH2Painter extends TH2Painter2D {
                      drawBinsError3D(this);
                   else
                      drawBinsLego(this);
+               } else if (this.options.Axis && this.options.Zscale) {
+                  this.getContourLevels(true);
+                  this.getHistPalette();
                }
                main.render3D();
                this.updateStatWebCanvas();
@@ -266,7 +273,7 @@ class TH2Painter extends TH2Painter2D {
       //  (re)draw palette by resize while canvas may change dimension
       if (is_main)
          pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego == 12) || (this.options.Lego == 14) ||
-                                     (this.options.Surf == 11) || (this.options.Surf == 12)))).then(() => this.drawHistTitle());
+                                                  (this.options.Surf == 11) || (this.options.Surf == 12)))).then(() => this.drawHistTitle());
 
       return pr.then(() => this);
    }

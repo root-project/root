@@ -41,7 +41,7 @@ public:
    TGToolTip(const TGWindow *p, const TBox *b, const char *text, Long_t delayms);
    TGToolTip(const TBox *b, const char *text, Long_t delayms);
    TGToolTip(Int_t x, Int_t y, const char *text, Long_t delayms);
-   virtual ~TGToolTip();
+   ~TGToolTip() override;
 
    void DrawBorder() override;
 

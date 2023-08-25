@@ -30,20 +30,20 @@ protected:
 
 public:
    TEveStraightLineSetGL();
-   virtual ~TEveStraightLineSetGL() {}
+   ~TEveStraightLineSetGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
-   virtual void   Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
+   void   Draw(TGLRnrCtx& rnrCtx) const override;
+   void   DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual void ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
+   Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const override;
+   Bool_t SupportsSecondarySelect() const override { return kTRUE; }
+   void ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec) override;
 
-   ClassDef(TEveStraightLineSetGL, 0); // GL-renderer for TEveStraightLineSet class.
+   ClassDefOverride(TEveStraightLineSetGL, 0); // GL-renderer for TEveStraightLineSet class.
 };
 
 #endif

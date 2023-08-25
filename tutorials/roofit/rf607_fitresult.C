@@ -4,8 +4,8 @@
 /// Likelihood and minimization: demonstration of options of the RooFitResult class
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -56,13 +56,13 @@ void rf607_fitresult()
    RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // F i t   p d f   t o   d a t a ,   s a v e   f i t r e s u l t
    // -------------------------------------------------------------
 
    // Perform fit and save result
-   RooFitResult *r = model.fitTo(*data, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*data, Save(), PrintLevel(-1))};
 
    // P r i n t   f i t   r e s u l t s
    // ---------------------------------

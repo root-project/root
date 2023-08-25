@@ -78,7 +78,7 @@ public:
    \param nEvents The number of events to be processed.
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
+   void compute(Config const&, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
                 ArgVector &extraArgs) override
    {
       static std::vector<double> buffer;
@@ -138,10 +138,10 @@ public:
       }
    }
    /// Return the sum of an input array
-   double reduceSum(cudaStream_t *, InputArr input, size_t n) override;
-   ReduceNLLOutput reduceNLL(cudaStream_t *, RooSpan<const double> probas, RooSpan<const double> weightSpan,
-                             RooSpan<const double> weights, double weightSum,
-                             RooSpan<const double> binVolumes) override;
+   double reduceSum(Config const&, InputArr input, size_t n) override;
+   ReduceNLLOutput reduceNLL(Config const&, std::span<const double> probas, std::span<const double> weightSpan,
+                             std::span<const double> weights, double weightSum,
+                             std::span<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
 
 namespace {
@@ -167,14 +167,14 @@ inline std::pair<double, double> getLog(double prob, ReduceNLLOutput &out)
 
 } // namespace
 
-double RooBatchComputeClass::reduceSum(cudaStream_t *, InputArr input, size_t n)
+double RooBatchComputeClass::reduceSum(Config const&, InputArr input, size_t n)
 {
    return ROOT::Math::KahanSum<double, 4u>::Accumulate(input, input + n).Sum();
 }
 
-ReduceNLLOutput RooBatchComputeClass::reduceNLL(cudaStream_t *, RooSpan<const double> probas,
-                                                RooSpan<const double> weightSpan, RooSpan<const double> weights,
-                                                double weightSum, RooSpan<const double> binVolumes)
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const&, std::span<const double> probas,
+                                                std::span<const double> weightSpan, std::span<const double> weights,
+                                                double weightSum, std::span<const double> binVolumes)
 {
    ReduceNLLOutput out;
 
@@ -229,7 +229,7 @@ Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgV
 {
    _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
-      const RooSpan<const double> &span = vars[i];
+      const std::span<const double> &span = vars[i];
       if (span.empty()) {
          std::stringstream ss;
          ss << "The span number " << i << " passed to Batches::Batches() is empty!";

@@ -3,7 +3,9 @@
 ## \notebook
 ## Addition and convolution: fitting and plotting in sub ranges
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -19,7 +21,7 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 
 # Construct gaussx(x,mx,1)
 mx = ROOT.RooRealVar("mx", "mx", 0, -10, 10)
-gx = ROOT.RooGaussian("gx", "gx", x, mx, ROOT.RooFit.RooConst(1))
+gx = ROOT.RooGaussian("gx", "gx", x, mx, 1.0)
 
 # px = 1 (flat in x)
 px = ROOT.RooPolynomial("px", "px", x)
@@ -35,7 +37,7 @@ modelData = model.generate({x}, 10000)
 # ---------------------------
 
 # Fit pdf to all data
-r_full = model.fitTo(modelData, Save=True)
+r_full = model.fitTo(modelData, Save=True, PrintLevel=-1)
 
 # Fit partial range
 # ----------------------------------
@@ -44,7 +46,7 @@ r_full = model.fitTo(modelData, Save=True)
 x.setRange("signal", -3, 3)
 
 # Fit pdf only to data in "signal" range
-r_sig = model.fitTo(modelData, Save=True, Range="signal")
+r_sig = model.fitTo(modelData, Save=True, Range="signal", PrintLevel=-1)
 
 # Plot/print results
 # ---------------------------------------

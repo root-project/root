@@ -13,7 +13,6 @@ from .._rvec import _array_interface_dtype_map
 from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
 import cppyy
 
-
 def get_array_interface(self):
     """
     Return the array interface dictionary
@@ -114,6 +113,26 @@ def RTensorGetitem(self, idx):
         idxVec[i] = x
     return self(idxVec)
 
+def RTensorInit(self, *args):
+
+    if (len(args) == 1) :
+        try:
+            import numpy as np
+        except ImportError:
+            raise ImportError("Failed to import numpy in RTensor constructor")
+
+        if isinstance(args[0], np.ndarray):
+            data = args[0]
+            #conversion from numpy to buffer float/double * works only if C order
+            if (data.flags.c_contiguous):
+                shape = data.shape
+                from cppyy.gbl import TMVA
+                layout = TMVA.Experimental.MemoryLayout.RowMajor
+                return self._original_init_(data,shape,layout)
+            else:
+                raise ValueError("Can only convert C-contiguous Numpy arrays to RTensor but input array is Fortran-contiguous")
+
+    return self._original_init_(*args)
 
 @pythonization("RTensor<", ns="TMVA::Experimental", is_prefix=True)
 def pythonize_rtensor(klass, name):
@@ -125,3 +144,6 @@ def pythonize_rtensor(klass, name):
     add_array_interface_property(klass, name)
     # Get elements, including slices
     klass.__getitem__ = RTensorGetitem
+    # add initialization of RTensor (pythonization of constructor)
+    klass._original_init_ = klass.__init__
+    klass.__init__ = RTensorInit

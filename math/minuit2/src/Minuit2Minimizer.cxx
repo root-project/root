@@ -104,7 +104,7 @@ Minuit2Minimizer::Minuit2Minimizer(const char *type) : Minimizer(), fDim(0), fMi
       algoType = kCombined;
    if (algoname == "scan")
       algoType = kScan;
-   if (algoname == "fumili")
+   if (algoname == "fumili" || algoname == "fumili2")
       algoType = kFumili;
    if (algoname == "bfgs")
       algoType = kMigradBFGS;
@@ -381,37 +381,30 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
    if (fMinuitFCN)
       delete fMinuitFCN;
    fDim = func.NDim();
+   const bool hasGrad = func.HasGradient();
    if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>(func, ErrorDef());
+      fMinuitFCN = hasGrad ? static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>(dynamic_cast<ROOT::Math::IMultiGradFunction const&>(func), ErrorDef()))
+                           : static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>(func, ErrorDef()));
    } else {
-      // for Fumili the fit method function interface is required
-      const ROOT::Math::FitMethodFunction *fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
-      if (!fcnfunc) {
-         MnPrint print("Minuit2Minimizer", PrintLevel());
-         print.Error("Wrong Fit method function for Fumili");
-         return;
+      if(hasGrad) {
+         // for Fumili the fit method function interface is required
+         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
+         if (!fcnfunc) {
+            MnPrint print("Minuit2Minimizer", PrintLevel());
+            print.Error("Wrong Fit method function for Fumili");
+            return;
+         }
+         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>(*fcnfunc, fDim, ErrorDef());
+      } else {
+         // for Fumili the fit method function interface is required
+         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
+         if (!fcnfunc) {
+            MnPrint print("Minuit2Minimizer", PrintLevel());
+            print.Error("Wrong Fit method function for Fumili");
+            return;
+         }
+         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>(*fcnfunc, fDim, ErrorDef());
       }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>(*fcnfunc, fDim, ErrorDef());
-   }
-}
-
-void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGradFunction &func)
-{
-   // set function to be minimized
-   fDim = func.NDim();
-   if (fMinuitFCN)
-      delete fMinuitFCN;
-   if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>(func, ErrorDef());
-   } else {
-      // for Fumili the fit method function interface is required
-      const ROOT::Math::FitMethodGradFunction *fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
-      if (!fcnfunc) {
-         MnPrint print("Minuit2Minimizer", PrintLevel());
-         print.Error("Wrong Fit method function for Fumili");
-         return;
-      }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>(*fcnfunc, fDim, ErrorDef());
    }
 }
 
@@ -557,7 +550,10 @@ bool Minuit2Minimizer::Minimize()
       fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
    }
 
-   // check if Hesse needs to be run
+   // check if Hesse needs to be run. We do it when is requested (IsValidError() == true)
+   // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
+   // AND when we have a valid minimum,
+   // AND  when the the current covariance matrix is estimated using the iterative approximation (Dcovar != 0 , i.e. Hesse has not computed  before)
    if (fMinimum->IsValid() && IsValidError() && fMinimum->State().Error().Dcovar() != 0) {
       // run Hesse (Hesse will add results in the last state of fMinimum
       ROOT::Minuit2::MnHesse hesse(strategy);

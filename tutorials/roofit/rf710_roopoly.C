@@ -4,8 +4,8 @@
 /// Taylor expansion of RooFit functions using the taylorExpand function with RooPolyFunc
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date December 2021
 /// \author Rahul Balasubramanian

@@ -93,7 +93,7 @@ ROOT_BUILD_OPTION(builtin_ftgl OFF "Build bundled copy of FTGL")
 ROOT_BUILD_OPTION(builtin_gl2ps OFF "Build bundled copy of gl2ps")
 ROOT_BUILD_OPTION(builtin_glew OFF "Build bundled copy of GLEW")
 ROOT_BUILD_OPTION(builtin_gsl OFF "Build GSL internally (requires network)")
-ROOT_BUILD_OPTION(builtin_gtest ON "Build googletest internally (requires network)")
+ROOT_BUILD_OPTION(builtin_gtest OFF "Build googletest internally (requires network)")
 ROOT_BUILD_OPTION(builtin_llvm ON "Build bundled copy of LLVM")
 ROOT_BUILD_OPTION(builtin_lz4 OFF "Build bundled copy of lz4")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build bundled copy of lzma")
@@ -119,7 +119,7 @@ ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X o
 ROOT_BUILD_OPTION(coverage OFF "Enable compile flags for coverage testing")
 ROOT_BUILD_OPTION(cuda OFF "Enable support for CUDA (requires CUDA toolkit >= 7.5)")
 ROOT_BUILD_OPTION(cudnn ON "Enable support for cuDNN (default when Cuda is enabled)")
-ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules")
+ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules (deprecated)")
 ROOT_BUILD_OPTION(daos OFF "Enable RNTuple support for Intel DAOS")
 ROOT_BUILD_OPTION(dataframe ON "Enable ROOT RDataFrame")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
@@ -132,7 +132,7 @@ ROOT_BUILD_OPTION(fftw3 ON "Enable support for FFTW3")
 ROOT_BUILD_OPTION(fitsio ON "Enable support for reading FITS images")
 ROOT_BUILD_OPTION(fortran OFF "Build Fortran components of ROOT")
 ROOT_BUILD_OPTION(gdml ON "Enable support for GDML (Geometry Description Markup Language)")
-ROOT_BUILD_OPTION(gfal ON "Enable support for GFAL (Grid File Access Library), deprecated")
+ROOT_BUILD_OPTION(gfal OFF "Enable support for GFAL (Grid File Access Library), deprecated")
 ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GSL (default no), deprecated")
 ROOT_BUILD_OPTION(gviz OFF "Enable support for Graphviz (graph visualization software)")
@@ -165,7 +165,6 @@ ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ with zmq_ppoll and cppzmq).")
-ROOT_BUILD_OPTION(roofit_hs3_ryml OFF "Try to find RapidYML on the system and use it for RooFit JSON/YAML convertes")
 ROOT_BUILD_OPTION(webgui ON "Build Web-based UI components of ROOT (requires C++17 standard or higher)")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT (requires C++17 standard or higher)")
 ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search path)")
@@ -223,7 +222,7 @@ else()
     "Known values are zlib, lzma, lz4, zstd (case-insensitive).")
 endif()
 
-#--- The 'all' option swithes ON major options---------------------------------------------------
+#--- The 'all' option switches ON major options---------------------------------------------------
 if(all)
  set(alien_defvalue ON)
  set(arrow_defvalue ON)
@@ -258,6 +257,7 @@ if(all)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
  set(qt5web_defvalue ON)
+ set(qt6web_defvalue ON)
  set(r_defvalue ON)
  set(roofit_defvalue ON)
  set(roofit_multiprocess_defvalue ON)
@@ -369,11 +369,6 @@ foreach(opt ${root_build_options})
   endif()
 endforeach()
 
-#---ROOT 7 requires C++17 standard or higher---------------------------------------------------
-if(NOT CMAKE_CXX_STANDARD GREATER 14)
-  set(root7_defvalue OFF)
-endif()
-
 #---webgui by default always build together with root7-----------------------------------------
 set(webgui_defvalue ${root7_defvalue})
 
@@ -390,28 +385,26 @@ if(roottest OR rootbench)
   set(testing ON CACHE BOOL "" FORCE)
 endif()
 
+#---tmva-gpu option implies cuda
+if(tmva-gpu)
+  set(cuda ON CACHE BOOL "" FORCE)
+endif(tmva-gpu)
+
+if(cudnn AND NOT cuda)
+  message(STATUS "Cannot select cudnn without selecting cuda or tmva-gpu. Option is ignored")
+  set(cudnn OFF)
+endif()
+
 if (NOT builtin_cling)
   if (builtin_clang OR builtin_llvm)
     message(WARNING "No need to build internal llvm or clang. Consider turning builtin_clang=Off and builtin_llvm=Off")
   endif()
 endif(NOT builtin_cling)
 
-if(root7)
-  if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++17 standard used with root7")
-    message(STATUS "Enabling C++17 for compilation of root7 components")
-  elseif(NOT CMAKE_CXX_STANDARD GREATER 14)
-    message(FATAL_ERROR ">>> At least C++17 standard required with root7, please enable it using CMake option: -DCMAKE_CXX_STANDARD=17")
-  endif()
-endif()
-
-#---check if webgui can be built-------------------------------
-if(webgui)
-  if(NOT CMAKE_CXX_STANDARD GREATER 11)
-    set(webgui OFF CACHE BOOL "(WebGUI requires at least C++14)" FORCE)
-  elseif(NOT http)
-    set(http ON CACHE BOOL "(Enabled since it's needed by webgui)" FORCE)
-  endif()
+if(NOT webgui)
+   set(qt5web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(qt6web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(cefweb OFF CACHE BOOL "Disabled because webgui not build" FORCE)
 endif()
 
 #---Removed options------------------------------------------------------------
@@ -423,9 +416,15 @@ foreach(opt afdsmgrd afs alien bonjour castor chirp geocad glite globus hdfs ios
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt gfal gsl_shared jemalloc monalisa pyroot_legacy tcmalloc xproofd)
+foreach(opt cxxmodules gfal gsl_shared jemalloc monalisa pyroot_legacy tcmalloc xproofd)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
+  endif()
+endforeach()
+
+foreach(opt minuit2_omp minuit2_mpi)
+  if(${opt})
+      message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with OpenMP or MPI support, it is better to build Minuit2 as a standalone library.")
   endif()
 endforeach()
 

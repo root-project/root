@@ -2409,7 +2409,8 @@ Int_t TFormula::Compile(const char *expression)
       }
       // if formula is a polynom, set parameter names
       if (GetNumber() == 300+fNpar) {
-         for (i=0;i<fNpar;i++) SetParName(i,Form("p%d",i));
+         for (i=0;i<fNpar;i++)
+            SetParName(i, TString::Format("p%d",i));
       }
       // if formula is a landau, set parameter names
       if (GetNumber() == 400) {

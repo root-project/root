@@ -4,8 +4,8 @@
 /// Likelihood and minimization: understanding and customizing error handling in likelihood evaluations
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -34,7 +34,7 @@ void rf606_nllerrorhandling()
    RooArgusBG argus("argus", "argus", m, m0, k);
 
    // Sample 1000 events in m from argus
-   RooDataSet *data = argus.generate(m, 1000);
+   std::unique_ptr<RooDataSet> data{argus.generate(m, 1000)};
 
    // P l o t   m o d e l   a n d   d a t a
    // --------------------------------------

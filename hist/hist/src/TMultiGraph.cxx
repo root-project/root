@@ -702,7 +702,7 @@ TFitResultPtr TMultiGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axi
 {
    // internal multigraph fitting methods
    Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph,option,fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kGraph,option,fitOption);
 
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(rxmin,rxmax);
@@ -1050,8 +1050,15 @@ TH1F *TMultiGraph::GetHistogram()
    if (rwymin == rwymax) rwymax += 1.;
    double dx = 0.05*(rwxmax-rwxmin);
    double dy = 0.05*(rwymax-rwymin);
-   rwxmin = rwxmin - dx;
-   rwxmax = rwxmax + dx;
+   if (gPad && gPad->GetLogx()) {
+      if (rwxmin <= 0) rwxmin = 0.001*rwxmax;
+      double r = rwxmax/rwxmin;
+      rwxmin = rwxmin/(1+0.5*TMath::Log10(r));
+      rwxmax = rwxmax*(1+0.2*TMath::Log10(r));
+   } else {
+      rwxmin = rwxmin - dx;
+      rwxmax = rwxmax + dx;
+   }
    if (gPad && gPad->GetLogy()) {
       if (rwymin <= 0) rwymin = 0.001*rwymax;
       double r = rwymax/rwymin;
@@ -1589,9 +1596,9 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMultiGraph::Class())) 
+   if (gROOT->ClassSaved(TMultiGraph::Class()))
       out<<"   ";
-   else 
+   else
       out<<"   TMultiGraph *";
    out<<"multigraph = new TMultiGraph();"<<std::endl;
    out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;

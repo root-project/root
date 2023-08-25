@@ -18,9 +18,8 @@
 #include <ROOT/Browsable/RItem.hxx>
 
 namespace ROOT {
-namespace Experimental {
 
-/** \class ROOT::Experimental::RBrowserReply
+/** \class ROOT::RBrowserReply
 \ingroup rbrowser
 \brief Reply on browser request
 */
@@ -33,7 +32,6 @@ public:
    std::vector<const Browsable::RItem *> nodes; ///< list of pointers, no ownership!
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

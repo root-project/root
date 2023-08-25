@@ -72,11 +72,13 @@ public:
       this->PrependLink(c);
    }
 
-   ClassDef(RNoCleanupNotifier, 0);
+   ClassDefOverride(RNoCleanupNotifier, 0);
 };
 
 std::unique_ptr<TChain> MakeChainForMT(const std::string &name = "", const std::string &title = "");
 std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendInfo &finfo);
+
+std::vector<std::string> ExpandGlob(const std::string &glob);
 
 } // namespace TreeUtils
 } // namespace Internal

@@ -546,15 +546,6 @@ RDataFrame FromSqlite(std::string_view fileName, std::string_view query)
    return rdf;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-/// \brief Factory method to create a SQlite RDataFrame.
-///
-/// Deprecated in favor of FromSqlite().
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
-{
-   return FromSqlite(fileName, query);
-}
-
 ////////////////////////////////////////////////////////////////////////////
 /// Stores the result of the current active sqlite query row as a C++ value.
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)

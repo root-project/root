@@ -216,12 +216,12 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,iset,&sterileIndex,RooNameReg::ptr(isetRange));
-  if (cache!=0) {
+  if (cache!=nullptr) {
     Int_t code = _cacheMgr.lastIndex();
     return code;
   }
 
-  ProdMap* map = groupProductTerms(*iset);
+  std::unique_ptr<ProdMap> map{groupProductTerms(*iset)};
 
   cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") groupProductTerms returned map" ;
   if (dologD(Integration)) {
@@ -237,31 +237,31 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       delete iter->second ;
     }
 
-    delete map ;
     return -1; // RRI caller will zero analVars if return code = 0....
   }
   cache = new CacheElem();
 
   for (ProdMap::const_iterator i = map->begin();i!=map->end();++i) {
-    RooAbsReal *term(0);
+    RooAbsReal *term(nullptr);
     if (i->second->getSize()>1) { // create a RooProd for this subexpression
       const char *name = makeFPName("SUBPROD_",*i->second);
-      term = new RooProduct(name,name,*i->second);
-      cache->_ownedList.addOwned(*term);
+      auto ownedTerm = std::make_unique<RooProduct>(name,name,*i->second);
+      term = ownedTerm.get();
+      cache->_ownedList.addOwned(std::move(ownedTerm));
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << endl;
     } else {
       assert(i->second->getSize()==1);
       term = static_cast<RooAbsReal*>(i->second->at(0));
     }
-    assert(term!=0);
+    assert(term!=nullptr);
     if (i->first->empty()) { // check whether we need to integrate over this term or not...
       cache->_prodList.add(*term);
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding simple factor " << term->GetName() << endl;
     } else {
-      RooAbsReal *integral = term->createIntegral(*i->first,isetRange);
+      std::unique_ptr<RooAbsReal> integral{term->createIntegral(*i->first,isetRange)};
       cache->_prodList.add(*integral);
-      cache->_ownedList.addOwned(*integral);
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding integral for " << term->GetName() << " : " << integral->GetName() << endl;
+      cache->_ownedList.addOwned(std::move(integral));
     }
   }
   // add current set-up to cache, and return index..
@@ -274,7 +274,6 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
     delete iter->first ;
     delete iter->second ;
   }
-  delete map ;
   return code;
 }
 
@@ -305,7 +304,7 @@ double RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
+  if (cache==nullptr) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
     RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1);
@@ -313,7 +312,7 @@ double RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
-  assert(cache!=0);
+  assert(cache!=nullptr);
 
   return calculate(cache->_prodList);
 }
@@ -376,7 +375,7 @@ double RooProduct::evaluate() const
 }
 
 
-void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProduct::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   for (unsigned int i = 0; i < nEvents; ++i) {
     output[i] = 1.;
@@ -416,7 +415,7 @@ std::list<double>* RooProduct::binBoundaries(RooAbsRealLValue& obs, double xlo, 
     }
   }
 
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -452,7 +451,7 @@ std::list<double>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, double xl
     }
   }
 
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -493,9 +492,19 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-
+void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::string result;
+   // Build a (node1 * node2 * node3 * ...) like expression.
+   result = '(';
+   for (RooAbsArg* item : _compRSet) {
+      result += ctx.getResult(*item) + "*";
+   }
+   result.back() = ')';
+   ctx.addResult(this, result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the

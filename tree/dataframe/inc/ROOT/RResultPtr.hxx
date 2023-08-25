@@ -41,7 +41,38 @@ class RInterface;
 namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
+/**
+ * \brief Creates a new RResultPtr with a cloned action.
+ *
+ * \tparam T The type of the result held by the RResultPtr.
+ * \param inptr The pointer.
+ * \return A new pointer with a cloned action.
+ */
+template <typename T>
+ROOT::RDF::RResultPtr<T> CloneResultAndAction(const ROOT::RDF::RResultPtr<T> &inptr)
+{
+   // We call the copy constructor, to copy also the metadata of certain
+   // result types, e.g. a for a TH1D we have to create a new histogram with
+   // the same binning and axis limits.
+   std::shared_ptr<T> copiedResult{new T{*inptr.fObjPtr}};
+   return ROOT::RDF::RResultPtr<T>(copiedResult, inptr.fLoopManager,
+                                   inptr.fActionPtr->CloneAction(reinterpret_cast<void *>(&copiedResult)));
 }
+
+using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
+/**
+ * \brief Creates a new RResultPtr with a cloned Snapshot action.
+ *
+ * \param inptr The pointer.
+ * \param outputFileName A new name for the output file of the cloned action.
+ * \return A new pointer with a cloned action.
+ *
+ * This overload is needed since cloning a Snapshot node usually also involves
+ * changing the name of the output file, otherwise the cloned Snapshot would
+ * overwrite the same file.
+ */
+SnapshotPtr_t CloneResultAndAction(const SnapshotPtr_t &inptr, const std::string &outputFileName);
+} // namespace RDF
 } // namespace Internal
 
 namespace Detail {
@@ -118,6 +149,10 @@ class RResultPtr {
 
    friend class RResultHandle;
 
+   friend RResultPtr<T> ROOT::Internal::RDF::CloneResultAndAction<T>(const RResultPtr<T> &inptr);
+   friend ROOT::Internal::RDF::SnapshotPtr_t
+   ROOT::Internal::RDF::CloneResultAndAction(const ROOT::Internal::RDF::SnapshotPtr_t &inptr,
+                                             const std::string &outputFileName);
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool hasBeginEnd = TTraits::HasBeginAndEnd<V>::value>
    struct RIterationHelper {

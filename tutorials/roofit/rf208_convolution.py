@@ -7,7 +7,9 @@
 ##
 ## pdf = landau(t) (x) gauss(t)
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -46,7 +48,7 @@ lxg = ROOT.RooFFTConvPdf("lxg", "landau (X) gauss", t, landau, gauss)
 data = lxg.generate({t}, 10000)
 
 # Fit gxlx to data
-lxg.fitTo(data)
+lxg.fitTo(data, PrintLevel=-1)
 
 # Plot data, pdf, landau (X) gauss pdf
 frame = t.frame(Title="landau (x) gauss convolution")

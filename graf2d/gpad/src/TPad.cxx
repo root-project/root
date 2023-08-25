@@ -2267,7 +2267,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    static Int_t axisNumber;
    static Double_t ratio1, ratio2;
    static Int_t px1old, py1old, px2old, py2old;
-   Int_t bin1, bin2, first, last;
+   Int_t nbd, inc, bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
    static std::unique_ptr<TBox> zoombox;
@@ -2403,8 +2403,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    break;
 
    case kWheelUp:
-      bin1 = axis->GetFirst()+1;
-      bin2 = axis->GetLast()-1;
+      nbd  = (axis->GetLast()-axis->GetFirst());
+      inc  = TMath::Max(nbd/100,1);
+      bin1 = axis->GetFirst()+inc;
+      bin2 = axis->GetLast()-inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
@@ -2415,8 +2417,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    break;
 
    case kWheelDown:
-      bin1 = axis->GetFirst()-1;
-      bin2 = axis->GetLast()+1;
+      nbd  = (axis->GetLast()-axis->GetFirst());
+      inc  = TMath::Max(nbd/100,1);
+      bin1 = axis->GetFirst()-inc;
+      bin2 = axis->GetLast()+inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
@@ -5691,22 +5695,31 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitives in this pad on the C++ source file out.
 
-void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 {
    TContext ctxt(this, kFALSE); // not interactive
 
    char quote = '"';
-   char lcname[100];
-   const char *cname = GetName();
-   size_t nch = strlen(cname);
-   if (nch < sizeof(lcname)) {
-      strlcpy(lcname, cname, sizeof(lcname));
-      for(size_t k = 0; k < nch; k++)
-         if (lcname[k] == ' ')
-            lcname[k] = 0;
-      if (lcname[0] != 0)
-         cname = lcname;
-      else if (this == gPad->GetCanvas())
+
+   TString padName = GetName();
+
+   // check for space in the pad name
+   auto p = padName.Index(" ");
+   if (p != kNPOS) padName.Resize(p);
+
+   TString opt = option;
+   if (!opt.Contains("toplevel")) {
+      static Int_t pcounter = 0;
+      padName += TString::Format("__%d", pcounter++);
+      padName = gInterpreter->MapCppName(padName);
+   }
+
+   const char *pname = padName.Data();
+   const char *cname = padName.Data();
+
+   if (padName.Length() == 0) {
+      pname = "unnamed";
+      if (this == gPad->GetCanvas())
          cname = "c1";
       else
          cname = "pad";
@@ -5717,8 +5730,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out <<"  "<<std::endl;
       out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
 
-      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-      <<quote
+      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
@@ -5854,9 +5866,14 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
          if (!strcmp(obj->GetName(),"Graph"))
             ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
+      if (obj->InheritsFrom(TPad::Class())) {
+         if (opt.Contains("toplevel"))
+            out<<"   "<<pname<<"->cd();"<<std::endl;
+         else
+            out<<"   "<<cname<<"->cd();"<<std::endl;
+      }
    }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
-   out<<"   "<<GetMother()->GetName()<<"->cd();"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6217,13 +6234,11 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
 
    //delete all existing Guidelines and create new invisible pad
    if (tmpGuideLinePad) {
-      if (object == tmpGuideLinePad) { // in case of funny button click combination.
-         tmpGuideLinePad->Delete();
-         tmpGuideLinePad = nullptr;
-         return;
-      }
+      ctxt.PadDeleted(tmpGuideLinePad);
+      auto guidePadClicked = (object == tmpGuideLinePad); // in case of funny button click combination.
       tmpGuideLinePad->Delete();
       tmpGuideLinePad = nullptr;
+      if (guidePadClicked) return;
    }
 
    // Get Primitives

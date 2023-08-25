@@ -72,7 +72,7 @@ public:
          FontStruct_t font = GetDefaultFontStruct(),
          UInt_t options = kChildFrame,
          Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGTab();
+   ~TGTab() override;
 
    virtual TGCompositeFrame *AddTab(TGString *text);
    virtual TGCompositeFrame *AddTab(const char *text);
@@ -138,7 +138,7 @@ public:
                 FontStruct_t font = TGTab::GetDefaultFontStruct(),
                 UInt_t options = kRaisedFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGTabElement();
+   ~TGTabElement() override;
 
    void             DrawBorder() override;
    TGDimension      GetDefaultSize() const override;

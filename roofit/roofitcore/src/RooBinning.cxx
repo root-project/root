@@ -51,7 +51,7 @@ ClassImp(RooBinning);
 RooBinning::RooBinning(double xlo, double xhi, const char* name) :
   RooAbsBinning(name),
   _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
-  _array(0), _blo(0)
+  _array(nullptr), _blo(0)
 {
   setRange(xlo,xhi);
 }
@@ -62,7 +62,7 @@ RooBinning::RooBinning(double xlo, double xhi, const char* name) :
 RooBinning::RooBinning(Int_t nbins, double xlo, double xhi, const char* name) :
   RooAbsBinning(name),
   _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
-  _array(0), _blo(0)
+  _array(nullptr), _blo(0)
 {
   _boundaries.reserve(1 + nbins);
   setRange(xlo, xhi);
@@ -76,7 +76,7 @@ RooBinning::RooBinning(Int_t nbins, double xlo, double xhi, const char* name) :
 RooBinning::RooBinning(Int_t nbins, const double* boundaries, const char* name) :
   RooAbsBinning(name),
   _xlo(0), _xhi(0), _ownBoundLo(true), _ownBoundHi(true),
-  _array(0), _blo(0)
+  _array(nullptr), _blo(0)
 {
   // Variable bin size constructor
   _boundaries.reserve(1 + nbins);
@@ -90,7 +90,7 @@ RooBinning::RooBinning(Int_t nbins, const double* boundaries, const char* name) 
 RooBinning::RooBinning(const RooBinning& other, const char* name) :
   RooAbsBinning(name), _xlo(other._xlo), _xhi(other._xhi),
   _ownBoundLo(other._ownBoundLo), _ownBoundHi(other._ownBoundHi),
-  _nbins(other._nbins), _boundaries(other._boundaries), _array(0),
+  _nbins(other._nbins), _boundaries(other._boundaries), _array(nullptr),
   _blo(other._blo)
 {
 }

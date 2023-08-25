@@ -18,7 +18,7 @@ class TGSimpleTable : public TGTable {
 public:
    TGSimpleTable(TGWindow *p, Int_t id, Double_t **data,
                  UInt_t nrows, UInt_t ncolumns);
-   virtual ~TGSimpleTable();
+   ~TGSimpleTable() override;
 
    ClassDefOverride(TGSimpleTable, 0) // A simple table that owns it's interface.
 };

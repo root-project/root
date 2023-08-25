@@ -94,20 +94,18 @@ endif()
    target_include_directories(emitFromPyTorch PRIVATE
                               ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                               ${CMAKE_SOURCE_DIR}/tmva/inc
-                              ${CMAKE_SOURCE_DIR}/core/foundation/inc
-                              ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
                )
    set_target_properties(emitFromPyTorch PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_PyTorch)
    add_dependencies(SofieCompileModels_PyTorch emitFromPyTorch)
    if(MSVC)
       add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
-         COMMAND $<CONFIG>/emitFromPyTorch.exe
+         COMMAND ${CMAKE_COMMAND} -E env "PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}" $<CONFIG>/emitFromPyTorch.exe
          USES_TERMINAL
       )
    else()
       add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
-         COMMAND ./emitFromPyTorch
+         COMMAND ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" ./emitFromPyTorch
          USES_TERMINAL
       )
       ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
@@ -167,14 +165,12 @@ endif()
    target_include_directories(emitFromKeras PRIVATE
                  ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                  ${CMAKE_SOURCE_DIR}/tmva/inc
-                 ${CMAKE_SOURCE_DIR}/core/foundation/inc
-                 ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
                )
    set_target_properties(emitFromKeras PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_Keras)
    add_dependencies(SofieCompileModels_Keras emitFromKeras)
    add_custom_command(TARGET SofieCompileModels_Keras POST_BUILD
-		COMMAND ./emitFromKeras
+		COMMAND ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" ./emitFromKeras
 		USES_TERMINAL
 	)
 

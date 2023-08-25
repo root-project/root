@@ -5,8 +5,8 @@
 /// regions for fitting and integration
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -14,7 +14,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
@@ -35,8 +34,8 @@ void rf313_paramranges()
 
    // Define 3 dimensional pdf
    RooRealVar z0("z0", "z0", -0.1, 1);
-   RooPolynomial px("px", "px", x, RooConst(0));
-   RooPolynomial py("py", "py", y, RooConst(0));
+   RooPolynomial px("px", "px", x, RooConst(0.0));
+   RooPolynomial py("py", "py", y, RooConst(0.0));
    RooPolynomial pz("pz", "pz", z, z0);
    RooProdPdf pxyz("pxyz", "pxyz", RooArgSet(px, py, pz));
 
@@ -61,7 +60,7 @@ void rf313_paramranges()
    // ----------------------------------------------------------------------------------
 
    // Create integral over normalized pdf model over x,y,z in "R" region
-   RooAbsReal *intPdf = pxyz.createIntegral(RooArgSet(x, y, z), RooArgSet(x, y, z), "R");
+   std::unique_ptr<RooAbsReal> intPdf{pxyz.createIntegral(RooArgSet(x, y, z), RooArgSet(x, y, z), "R")};
 
    // Plot value of integral as function of pdf parameter z0
    RooPlot *frame = z0.frame(Title("Integral of pxyz over x,y,z in region R"));

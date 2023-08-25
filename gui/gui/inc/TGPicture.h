@@ -46,7 +46,7 @@ protected:
    void Draw(Option_t * = "") override { MayNotUse("Draw(Option_t*)"); }
 
 public:
-   virtual ~TGPicture();
+   ~TGPicture() override;
 
    const char *GetName() const override { return fName.Data(); }
    UInt_t      GetWidth() const { return fAttributes.fWidth; }
@@ -80,7 +80,7 @@ protected:
 
 public:
    TGSelectedPicture(const TGClient *client, const TGPicture *p);
-   virtual ~TGSelectedPicture();
+   ~TGSelectedPicture() override;
 
    ClassDefOverride(TGSelectedPicture,0)  // Selected looking picture
 };
@@ -99,7 +99,7 @@ protected:
 public:
    TGPicturePool(const TGClient *client, const char *path):
       fClient(client), fPath(path), fPicList(nullptr) { }
-   virtual ~TGPicturePool();
+   ~TGPicturePool() override;
 
    const char      *GetPath() const { return fPath; }
    const TGPicture *GetPicture(const char *name);

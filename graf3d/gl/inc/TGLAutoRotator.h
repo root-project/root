@@ -53,7 +53,7 @@ protected:
 
 public:
    TGLAutoRotator(TGLViewer* v);
-   virtual ~TGLAutoRotator();
+   ~TGLAutoRotator() override;
 
    TGLViewer* GetViewer() const { return fViewer; }
    TGLCamera* GetCamera() const { return fCamera; }
@@ -111,7 +111,7 @@ public:
 
    void     StartImageAutoSaveWithGUISettings();
 
-   ClassDef(TGLAutoRotator, 0); // Automatic, timer-based, rotation of GL-viewer's camera.
+   ClassDefOverride(TGLAutoRotator, 0); // Automatic, timer-based, rotation of GL-viewer's camera.
 };
 
 #endif

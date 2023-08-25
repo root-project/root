@@ -114,7 +114,7 @@ const RooAbsBinning& RooErrorVar::getBinning(const char* name, bool verbose, boo
 RooAbsBinning& RooErrorVar::getBinning(const char* name, bool /*verbose*/, bool createOnTheFly)
 {
   // Return default (normalization) binning and range if no name is specified
-  if (name==0) {
+  if (name==nullptr) {
     return *_binning ;
   }
 
@@ -225,7 +225,7 @@ void RooErrorVar::setMin(const char* name, double value)
   // Clip current value in window if it fell out
   if (!name) {
     double clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
+    if (!inRange(_value,nullptr,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -255,7 +255,7 @@ void RooErrorVar::setMax(const char* name, double value)
   // Clip current value in window if it fell out
   if (!name) {
     double clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
+    if (!inRange(_value,nullptr,&clipValue)) {
       setVal(clipValue) ;
     }
   }

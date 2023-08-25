@@ -36,19 +36,7 @@ class RooJSONFactoryWSTool(object):
                 if not "export" in hs3[key]:
                     hs3[key]["export"] = []
                 hs3[key]["export"].append({"native": True})
-        for key, importer in jio.pdfImportExpressions():
-            if not key in hs3.keys():
-                hs3[key] = {}
-            if not "import" in hs3[key]:
-                hs3[key]["import"] = []
-            hs3[key]["import"].append(
-                {
-                    "class": str(importer.tclass.GetName()),
-                    "args": [str(e) for e in importer.arguments],
-                    "native": False,
-                }
-            )
-        for key, importer in jio.functionImportExpressions():
+        for key, importer in jio.importExpressions():
             if not key in hs3.keys():
                 hs3[key] = {}
             if not "import" in hs3[key]:

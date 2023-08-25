@@ -46,7 +46,7 @@ ClassImp(RooArgProxy);
 
 RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
           bool valueServer, bool shapeServer, bool proxyOwnsArg) :
-  TNamed(inName,desc), _owner(owner), _arg(0),
+  TNamed(inName,desc), _owner(owner), _arg(nullptr),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
   _owner->registerProxy(*this) ;
@@ -79,7 +79,7 @@ RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy
   _isFund(other._isFund), _ownArg(other._ownArg)
 {
   if (_ownArg) {
-    _arg = _arg ? (RooAbsArg*) _arg->Clone() : 0 ;
+    _arg = _arg ? (RooAbsArg*) _arg->Clone() : nullptr ;
   }
 
   _owner->registerProxy(*this) ;
@@ -131,6 +131,31 @@ bool RooArgProxy::changePointer(const RooAbsCollection& newServerList, bool name
   return newArg != nullptr;
 }
 
+bool RooArgProxy::changePointer(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements)
+{
+   if (!_arg)
+      return true;
+
+   RooAbsArg *newArg = nullptr;
+
+   auto newArgFound = replacements.find(_arg);
+   if (newArgFound != replacements.end()) {
+      newArg = newArgFound->second;
+   }
+
+   if (newArg) {
+      if (_ownArg) {
+         // We refer to an object that somebody gave to us. Now, we are not owning it, any more.
+         delete _arg;
+         _ownArg = false;
+      }
+
+      _arg = newArg;
+      _isFund = _arg->isFundamental();
+   }
+
+   return newArg != nullptr;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

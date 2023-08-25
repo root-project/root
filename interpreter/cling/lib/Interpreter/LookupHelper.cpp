@@ -519,7 +519,7 @@ namespace cling {
 
   const Decl* LookupHelper::findScope(llvm::StringRef className,
                                       DiagSetting diagOnOff,
-                                      const Type** resultType /* = 0 */,
+                                      const Type** resultType /* = nullptr */,
                                       bool instantiateTemplate/*=true*/) const {
 
     //
@@ -1674,6 +1674,8 @@ namespace cling {
                                     llvm::StringRef("func.prototype.file"),
                                     diagOnOff);
 
+      // ParseTypeName might trigger deserialization.
+      Interpreter::PushTransactionRAII TforDeser(Interp);
       unsigned int nargs = 0;
       while (P.getCurToken().isNot(tok::eof)) {
         TypeResult Res(P.ParseTypeName());

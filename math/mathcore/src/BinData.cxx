@@ -822,7 +822,9 @@ namespace ROOT {
              double y = Value(i);
              double err = Error(i);
              fSumContent += y;
-             if (y != 0 || err != 1.0)  fSumError2 += err*err;
+             if (fErrorType != kNoError) {
+               if (y != 0 || err != 1.0 )  fSumError2 += err*err;
+             }
           }
        }
        else {
@@ -836,7 +838,8 @@ namespace ROOT {
           }
        }
        // set the weight flag
-       fIsWeighted =  (fSumContent != fSumError2);
+       if (fErrorType != kNoError)
+        fIsWeighted =  (fSumContent != fSumError2);
     }
 
   } // end namespace Fit

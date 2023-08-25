@@ -3,7 +3,9 @@
 ## \notebook
 ## Addition and convolution: options for plotting components of composite pdfs.
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

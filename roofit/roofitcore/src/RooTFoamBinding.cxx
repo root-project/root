@@ -14,6 +14,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+/// \cond ROOFIT_INTERNAL
+
 /**
 \file RooTFoamBinding.cxx
 \class RooTFoamBinding
@@ -31,14 +33,11 @@ Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 
-#include <assert.h>
+#include <cassert>
 
 
 
 using namespace std;
-
-ClassImp(RooTFoamBinding);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +45,7 @@ ClassImp(RooTFoamBinding);
 RooTFoamBinding::RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observables)
 {
   _nset.add(observables) ;
-  _binding = new RooRealBinding(pdf,observables,&_nset,false,0) ;
+  _binding = new RooRealBinding(pdf,observables,&_nset,false,nullptr) ;
 }
 
 
@@ -72,3 +71,5 @@ double RooTFoamBinding::Density(Int_t ndim, double *xvec)
   double ret = (*_binding)(x) ;
   return ret<0?0:ret ;
 }
+
+/// \endcond

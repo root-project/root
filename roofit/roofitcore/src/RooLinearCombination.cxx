@@ -37,14 +37,14 @@ namespace {
 
 RooLinearCombination::RooLinearCombination()
     : _actualVars("actualVars", "Variables used by formula expression", this),
-      _nset(0) {
+      _nset(nullptr) {
   // constructor
 }
 
 RooLinearCombination::RooLinearCombination(const char *name)
     : RooAbsReal(name, name),
       _actualVars("actualVars", "Variables used by formula expression", this),
-      _nset(0) {
+      _nset(nullptr) {
   // constructor
 }
 
@@ -52,7 +52,7 @@ RooLinearCombination::RooLinearCombination(const RooLinearCombination &other,
                                      const char *name)
     : RooAbsReal(other, name),
       _actualVars("actualVars", this, other._actualVars),
-      _coefficients(other._coefficients), _nset(0) {
+      _coefficients(other._coefficients), _nset(nullptr) {
   // copy constructor
 }
 
@@ -140,7 +140,7 @@ std::list<double> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
       return binb;
     }
   }
-  return 0;
+  return nullptr;
 }
 
 std::list<double> *RooLinearCombination::plotSamplingHint(RooAbsRealLValue &obs,
@@ -154,5 +154,5 @@ std::list<double> *RooLinearCombination::plotSamplingHint(RooAbsRealLValue &obs,
       return hint;
     }
   }
-  return 0;
+  return nullptr;
 }

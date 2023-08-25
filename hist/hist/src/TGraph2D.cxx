@@ -820,7 +820,7 @@ TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    // internal graph2D fitting methods
    Foption_t fitOption;
    Option_t *goption = "";
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph, option, fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kGraph, option, fitOption);
 
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(2);

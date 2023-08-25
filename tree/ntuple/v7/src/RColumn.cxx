@@ -15,11 +15,10 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <TError.h>
-
-#include <iostream>
 
 ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
    : fModel(model), fIndex(index)
@@ -40,10 +39,12 @@ ROOT::Experimental::Detail::RColumn::~RColumn()
       fPageSource->DropColumn(fHandleSource);
 }
 
-void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage)
+void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage,
+                                                  NTupleSize_t firstElementIndex)
 {
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
+      fFirstElementIndex = firstElementIndex;
       fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fWritePage on AddColumn
       fHandleSink = fPageSink->AddColumn(fieldId, *this);
       fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
@@ -58,6 +59,10 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
       fHandleSource = fPageSource->AddColumn(fieldId, *this);
       fNElements = fPageSource->GetNElements(fHandleSource);
       fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
+      {
+         auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+         fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fColumnIdSource).GetFirstElementIndex();
+      }
       break;
    default:
       R__ASSERT(false);
@@ -72,10 +77,10 @@ void ROOT::Experimental::Detail::RColumn::Flush()
 
    if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) && !fWritePage[otherIdx].IsEmpty()) {
       // Small tail page: merge with previously used page; we know that there is enough space in the shadow page
-      void *dst = fWritePage[otherIdx].GrowUnchecked(fWritePage[fWritePageIdx].GetNElements());
-      RColumnElementBase elem(fWritePage[fWritePageIdx].GetBuffer(), fWritePage[fWritePageIdx].GetElementSize());
-      elem.WriteTo(dst, fWritePage[fWritePageIdx].GetNElements());
-      fWritePage[fWritePageIdx].Reset(0);
+      auto &thisPage = fWritePage[fWritePageIdx];
+      void *dst = fWritePage[otherIdx].GrowUnchecked(thisPage.GetNElements());
+      memcpy(dst, thisPage.GetBuffer(), thisPage.GetElementSize() * thisPage.GetNElements());
+      thisPage.Reset(0);
       std::swap(fWritePageIdx, otherIdx);
    }
 
@@ -88,10 +93,12 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
 {
    fPageSource->ReleasePage(fReadPage);
    fReadPage = fPageSource->PopulatePage(fHandleSource, index);
+   R__ASSERT(fReadPage.Contains(index));
 }
 
 void ROOT::Experimental::Detail::RColumn::MapPage(const RClusterIndex &clusterIndex)
 {
    fPageSource->ReleasePage(fReadPage);
    fReadPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
+   R__ASSERT(fReadPage.Contains(clusterIndex));
 }

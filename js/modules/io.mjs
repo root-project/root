@@ -1,7 +1,7 @@
-import { httpRequest, createHttpRequest, BIT, loadScript, internals, settings,
+import { createHttpRequest, BIT, loadScript, internals, settings, browser,
          create, getMethods, addMethods, isNodeJs, isObject, isFunc, isStr,
          clTObject, clTNamed, clTString, clTObjString, clTList, clTMap, clTObjArray, clTClonesArray,
-         clTAttLine, clTAttFill, clTAttMarker, clTStyle,
+         clTAttLine, clTAttFill, clTAttMarker, clTStyle, clTImagePalette,
          clTPad, clTCanvas, clTAttCanvas, clTPolyMarker3D, clTF1, clTF2 } from './core.mjs';
 
 const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObject',
@@ -339,7 +339,7 @@ const CustomStreamers = {
 
    THashList: clTList,
 
-   TStreamerLoop(buf, elem)  {
+   TStreamerLoop(buf, elem) {
       if (buf.last_read_version > 1) {
          buf.classStreamer(elem, clTStreamerElement);
          elem.fCountVersion = buf.ntou4();
@@ -414,7 +414,7 @@ const CustomStreamers = {
    TImagePalette: [
       {
          basename: clTObject, base: 1, func(buf, obj) {
-            if (!obj._typename) obj._typename = 'TImagePalette';
+            if (!obj._typename) obj._typename = clTImagePalette;
             buf.classStreamer(obj, clTObject);
          }
       },
@@ -430,7 +430,7 @@ const CustomStreamers = {
       { name: 'fImageQuality', func(buf, obj) { obj.fImageQuality = buf.ntoi4(); } },
       { name: 'fImageCompression', func(buf, obj) { obj.fImageCompression = buf.ntou4(); } },
       { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = (buf.ntou1() != 0); } },
-      { name: 'fPalette', func(buf, obj) { obj.fPalette = buf.classStreamer({}, 'TImagePalette'); } }
+      { name: 'fPalette', func(buf, obj) { obj.fPalette = buf.classStreamer({}, clTImagePalette); } }
    ],
 
    TASImage(buf, obj) {
@@ -1258,7 +1258,7 @@ function createMemberStreamer(element, file) {
       default:
          console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
 
-         member.func = function(/*buf, obj*/) { };  // do nothing, fix in the future
+         member.func = function(/*buf, obj*/) {};  // do nothing, fix in the future
    }
 
    return member;
@@ -2061,11 +2061,10 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
             return Promise.resolve(null);
          }
 
-         const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16));
+         const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
+               uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
 
-         const uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
-
-         if (fmt === 'ZSTD')  {
+         if (fmt === 'ZSTD') {
             const handleZsdt = ZstdCodec => {
 
                return new Promise((resolveFunc, rejectFunc) => {
@@ -2619,7 +2618,7 @@ class TDirectory {
       let bestkey = null;
       for (let i = 0; i < this.fKeys.length; ++i) {
          const key = this.fKeys[i];
-         if (!key || (key.fName!==keyname)) continue;
+         if (!key || (key.fName !== keyname)) continue;
          if (key.fCycle == cycle) { bestkey = key; break; }
          if ((cycle < 0) && (!bestkey || (key.fCycle > bestkey.fCycle))) bestkey = key;
       }
@@ -2745,22 +2744,10 @@ class TFile {
       this.fEND = this.fFileContent.length;
    }
 
-   /** @summary Open file
-     * @return {Promise} after file keys are read
+   /** @summary Actual file open
+     * @return {Promise} when file keys are read
      * @private */
-   async _open() {
-      if (!this.fAcceptRanges || this.fSkipHeadRequest)
-         return this.readKeys();
-
-      return httpRequest(this.fURL, 'head').then(res => {
-         const accept_ranges = res.getResponseHeader('Accept-Ranges');
-         if (!accept_ranges) this.fAcceptRanges = false;
-         const len = res.getResponseHeader('Content-Length');
-         if (len) this.fEND = parseInt(len);
-             else this.fAcceptRanges = false;
-         return this.readKeys();
-      });
-   }
+   async _open() { return this.readKeys(); }
 
    /** @summary read buffer(s) from the file
     * @return {Promise} with read buffers
@@ -2772,7 +2759,9 @@ class TFile {
 
       let file = this, fileurl = file.fURL, resolveFunc, rejectFunc,
           promise = new Promise((resolve,reject) => { resolveFunc = resolve; rejectFunc = reject; }),
-          first = 0, last = 0, blobs = [], read_callback; // array of requested segments
+          first = 0, last = 0, blobs = [], // array of requested segments
+          read_callback, first_req,
+          first_block = (place[0] === 0) && (place.length === 2), first_block_retry = false;
 
       if (isStr(filename) && filename) {
          const pos = fileurl.lastIndexOf('/');
@@ -2789,14 +2778,19 @@ class TFile {
 
          let fullurl = fileurl, ranges = 'bytes', totalsz = 0;
          // try to avoid browser caching by adding stamp parameter to URL
-         if (file.fUseStampPar) fullurl += ((fullurl.indexOf('?') < 0) ? '?' : '&') + file.fUseStampPar;
+         if (file.fUseStampPar)
+            fullurl += ((fullurl.indexOf('?') < 0) ? '?' : '&') + file.fUseStampPar;
 
          for (let n = first; n < last; n += 2) {
-            ranges += (n > first ? ',' : '=') + (place[n] + '-' + (place[n] + place[n + 1] - 1));
+            ranges += (n > first ? ',' : '=') + `${place[n]}-${place[n]+place[n+1]-1}`;
             totalsz += place[n + 1]; // accumulated total size
          }
          if (last - first > 2)
             totalsz += (last - first) * 60; // for multi-range ~100 bytes/per request
+
+         // when read first block, allow to read more - maybe ranges are not supported and full file content will be returned
+         if (file.fAcceptRanges && first_block)
+            totalsz = Math.max(totalsz, 1e7);
 
          return createHttpRequest(fullurl, 'buf', read_callback, undefined, true).then(xhr => {
 
@@ -2805,7 +2799,7 @@ class TFile {
                xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
 
-            if (progress_callback && isFunc(xhr.addEventListener)) {
+            if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
                let sum1 = 0, sum2 = 0, sum_total = 0;
                for (let n = 1; n < place.length; n += 2) {
                   sum_total += place[n];
@@ -2815,25 +2809,61 @@ class TFile {
                if (!sum_total) sum_total = 1;
 
                let progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
-               xhr.addEventListener('progress', function(oEvent) {
+               xhr.addEventListener('progress', oEvent => {
                   if (oEvent.lengthComputable)
                      progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
                });
+            } else if (first_block_retry && isFunc(xhr.addEventListener)) {
+               xhr.addEventListener('progress', oEvent => {
+                  if (!oEvent.total) {
+                     console.warn(`Fail to get file size information`);
+                     // xhr.abort();
+                  } else if (oEvent.total > 5e7) {
+                     console.error(`Try to load very large file ${oEvent.total} at once - abort`);
+                     xhr.abort();
+                  }
+               });
             }
 
+            first_req = first_block ? xhr : null;
             xhr.send(null);
          });
       }
 
       read_callback = function(res) {
 
-         if (!res && file.fUseStampPar && (place[0] === 0) && (place.length === 2)) {
+         if (!res && first_block) {
             // if fail to read file with stamp parameter, try once again without it
-            file.fUseStampPar = false;
-            return send_new_request();
+            if (file.fUseStampPar) {
+               file.fUseStampPar = false;
+               return send_new_request();
+            }
+            if (file.fAcceptRanges) {
+               file.fAcceptRanges = false;
+               first_block_retry = true;
+               return send_new_request();
+            }
          }
 
-         if (res && (place[0] === 0) && (place.length === 2) && !file.fFileContent) {
+         if (res && first_req) {
+            if (file.fAcceptRanges && !first_req.getResponseHeader('Accept-Ranges')) {
+               file.fAcceptRanges = false;
+               if (res?.byteLength === place[1]) {
+                  // special case with cernbox, let try to get full size content
+                  console.warn(`First block is ${place[1]} bytes but browser does not provides access to header - try to read full file`);
+                  first_block_retry = true;
+                  return send_new_request();
+               }
+            }
+
+            const kind = browser.isFirefox ? first_req.getResponseHeader('Server') : '';
+            if (isStr(kind) && kind.indexOf('SimpleHTTP') == 0) {
+               file.fMaxRanges = 1;
+               file.fUseStampPar = false;
+            }
+         }
+
+         if (res && first_block && !file.fFileContent) {
             // special case - keep content of first request (could be complete file) in memory
 
             file.fFileContent = new TBuffer(isStr(res) ? res : new DataView(res));
@@ -2884,7 +2914,7 @@ class TFile {
 
             let hdr_range = this.getResponseHeader('Content-Range'), segm_start = 0, segm_last = -1;
 
-            if (hdr_range && hdr_range.indexOf('bytes') >= 0) {
+            if (isStr(hdr_range) && hdr_range.indexOf('bytes') >= 0) {
                let parts = hdr_range.slice(hdr_range.indexOf('bytes') + 6).split(/[\s-\/]+/);
                if (parts.length === 3) {
                   segm_start = parseInt(parts[0]);
@@ -3077,6 +3107,7 @@ class TFile {
      * @param {number} [cycle] - cycle number, also can be included in obj_name
      * @return {Promise} promise with object read
      * @example
+     * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
      * let f = await openFile('https://root.cern/js/files/hsimple.root');
      * let obj = await f.readObject('hpxpy;1');
      * console.log(`Read object of type ${obj._typename}`); */
@@ -3160,7 +3191,7 @@ class TFile {
 
       this.fStreamerInfos = lst;
 
-      if (internals.addStreamerInfosForPainter)
+      if (isFunc(internals.addStreamerInfosForPainter))
          internals.addStreamerInfosForPainter(lst);
 
       for (let k = 0; k < lst.arr.length; ++k) {
@@ -3739,11 +3770,13 @@ class TNodejsFile extends TFile {
 /**
   * @summary Proxy to read file contenxt
   *
-  * @desc Should implement followinf methods
-  *        openFile() - return Promise with true when file can be open normally
-  *        getFileName() - returns string with file name
-  *        getFileSize() - returns size of file
-  *        readBuffer(pos, len) - return promise with DataView for requested position and length
+  * @desc Should implement following methods:
+  *
+  * - openFile() - return Promise with true when file can be open normally
+  * - getFileName() - returns string with file name
+  * - getFileSize() - returns size of file
+  * - readBuffer(pos, len) - return promise with DataView for requested position and length
+  *
   * @private
   */
 
@@ -3823,7 +3856,7 @@ class TProxyFile extends TFile {
   * @return {object} - Promise with {@link TFile} instance when file is opened
   * @example
   *
-  * import { openFile } from '/path_to_jsroot/modules/io.mjs';
+  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
   * let f = await openFile('https://root.cern/js/files/hsimple.root');
   * console.log(`Open file ${f.getFileName()}`); */
 function openFile(arg) {

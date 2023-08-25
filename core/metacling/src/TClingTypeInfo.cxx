@@ -236,7 +236,7 @@ int TClingTypeInfo::Size() const
 const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    // Note: This *must* be static because we are returning a pointer inside it.
    TTHREAD_TLS_DECL( std::string, buf);
@@ -262,4 +262,13 @@ std::string TClingTypeInfo::NormalizedName(const ROOT::TMetaUtils::TNormalizedCt
    // in C++11 this will be efficient thanks to the move constructor.
    return buf;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the QualType as a void pointer
+
+void *TClingTypeInfo::QualTypePtr() const
+{
+   return fQualType.getAsOpaquePtr();
+}
+
 

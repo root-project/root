@@ -64,6 +64,8 @@ TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 
 TASPluginGS::~TASPluginGS()
 {
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+
    delete [] fInterpreter;
    fInterpreter = nullptr;
 }
@@ -120,7 +122,7 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    // command line to execute
    TString cmd = fInterpreter;
    if (eps) {
-      cmd += Form(" -g%dx%d", width, height);
+      cmd += TString::Format(" -g%dx%d", width, height);
    }
    cmd += " -dSAFER -dBATCH -dNOPAUSE -dQUIET -sDEVICE=png16m -dGraphicsAlphaBits=4 -sOutputFile=- ";
    cmd += filename;

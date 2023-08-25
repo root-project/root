@@ -44,7 +44,7 @@ ClassImp(RooChi2MCSModule);
 
 RooChi2MCSModule::RooChi2MCSModule() :
   RooAbsMCStudyModule("RooChi2MCSModule","RooChi2Module"),
-  _data(0), _chi2(0), _ndof(0), _chi2red(0), _prob(0)
+  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
 
 {
   // Constructor of module
@@ -55,7 +55,7 @@ RooChi2MCSModule::RooChi2MCSModule() :
 
 RooChi2MCSModule::RooChi2MCSModule(const RooChi2MCSModule& other) :
   RooAbsMCStudyModule(other),
-  _data(0), _chi2(0), _ndof(0), _chi2red(0), _prob(0)
+  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
 {
 }
 
@@ -123,16 +123,16 @@ RooDataSet* RooChi2MCSModule::finalizeRun()
 bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
 {
   RooAbsData* data = genSample() ;
+  std::unique_ptr<RooDataHist> binnedDataOwned;
   RooDataHist* binnedData = dynamic_cast<RooDataHist*>(data) ;
-  bool deleteData(false) ;
   if (!binnedData) {
-    deleteData = true ;
-    binnedData = ((RooDataSet*)data)->binnedClone() ;
+    binnedDataOwned = std::unique_ptr<RooDataHist>{static_cast<RooDataSet*>(data)->binnedClone()};
+    binnedData = binnedDataOwned.get();
   }
 
   std::unique_ptr<RooAbsReal> chi2Var{fitModel()->createChi2(*binnedData,RooFit::Extended(extendedGen()),RooFit::DataError(RooAbsData::SumW2))};
 
-  RooArgSet* floatPars = (RooArgSet*) fitParams()->selectByAttrib("Constant",false) ;
+  std::unique_ptr<RooArgSet> floatPars{static_cast<RooArgSet*>(fitParams()->selectByAttrib("Constant",false))};
 
   _chi2->setVal(chi2Var->getVal()) ;
   _ndof->setVal(binnedData->numEntries()-floatPars->getSize()-1) ;
@@ -140,11 +140,6 @@ bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
   _prob->setVal(TMath::Prob(_chi2->getVal(),static_cast<int>(_ndof->getVal()))) ;
 
   _data->add(RooArgSet(*_chi2,*_ndof,*_chi2red,*_prob)) ;
-
-  if (deleteData) {
-    delete binnedData ;
-  }
-  delete floatPars ;
 
   return true ;
 }

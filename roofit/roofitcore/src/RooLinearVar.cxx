@@ -206,7 +206,7 @@ void RooLinearVar::writeToStream(std::ostream& os, bool compact) const
  RooAbsBinning& RooLinearVar::getBinning(const char* name, bool verbose, bool createOnTheFly)
 {
   // Normalization binning
-  if (name==0) {
+  if (name==nullptr) {
     _binning.updateInput(_var->getBinning(),_slope,_offset) ;
     return _binning ;
   }

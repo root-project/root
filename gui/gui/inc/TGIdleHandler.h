@@ -23,7 +23,7 @@ private:
 
 public:
    TGIdleHandler(TGWindow *w);
-   virtual ~TGIdleHandler();
+   ~TGIdleHandler() override;
 
    virtual Bool_t HandleEvent();
 

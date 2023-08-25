@@ -23,7 +23,7 @@ protected:
 
 public:
    TEveEventManager(const char* n="TEveEventManager", const char* t="");
-   virtual ~TEveEventManager() {}
+   ~TEveEventManager() override {}
 
    std::vector<TString>& GetNewEventCommands() { return fNewEventCommands; }
 
@@ -39,7 +39,7 @@ public:
    virtual void RemoveNewEventCommand(const TString& cmd);
    virtual void ClearNewEventCommands();
 
-   ClassDef(TEveEventManager, 0); // Base class for event management and navigation.
+   ClassDefOverride(TEveEventManager, 0); // Base class for event management and navigation.
 };
 
 #endif

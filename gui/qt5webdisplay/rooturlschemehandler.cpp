@@ -2,9 +2,8 @@
 // Date: 2017-06-29
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
-
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -98,14 +97,7 @@ public:
       QFile file(fname);
       buffer->open(QIODevice::WriteOnly);
       if (file.open(QIODevice::ReadOnly)) {
-         QByteArray arr = file.readAll();
-         if (strstr(fname, ".mjs") && !strcmp(mime, "text/javascript")) {
-            const char *mark1 = "///_begin_exclude_in_qt5web_", *mark2 = "///_end_exclude_in_qt5web_";
-            auto p1 = arr.indexOf(mark1);
-            auto p2 = arr.indexOf(mark2);
-            if ((p1 > 0) && (p2 > p1)) arr.remove(p1, p2 - p1 + strlen(mark2));
-         }
-
+         auto arr = file.readAll();
          buffer->write(arr);
       }
       file.close();
@@ -127,12 +119,12 @@ public:
       QWebEngineUrlRequestJob *req = fRequest.req();
 
       if (!req) {
-         R__LOG_ERROR(QtWebDisplayLog()) << "Qt5 request already processed path " << GetPathName() << " file " << GetFileName();
+         R__LOG_ERROR(QtWebDisplayLog()) << "Qt " << QT_VERSION_STR << " request already processed path " << GetPathName() << " file " << GetFileName();
          return;
       }
 
       if (Is404()) {
-         R__LOG_ERROR(QtWebDisplayLog()) << "Qt5 request FAIL path " << GetPathName() << " file " << GetFileName();
+         R__LOG_ERROR(QtWebDisplayLog()) << "Qt " << QT_VERSION_STR << " request FAIL path " << GetPathName() << " file " << GetFileName();
 
          req->fail(QWebEngineUrlRequestJob::UrlNotFound);
          // abort request

@@ -6,7 +6,7 @@ int macro2(){
                                 "%lg %lg %lg");
     graph_expected.SetTitle(
        "Measurement XYZ and Expectation;"
-       "lenght [cm];"
+       "length [cm];"
        "Arb.Units");
     graph_expected.SetFillColor(kYellow);
     graph_expected.DrawClone("E3AL"); // E3 draws the band

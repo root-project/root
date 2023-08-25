@@ -1,0 +1,35 @@
+From 0c6ccd79f92b89f139c3a766b8a6f6f77673be0d Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Mon, 5 Sep 2022 14:22:26 +0200
+Subject: [PATCH 29/34] [PyROOT] Enable use of the new overload for
+ FindOverload
+
+---
+ bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
+index b27ffb75df..bffa0e933f 100644
+--- a/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
++++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
+@@ -124,7 +124,7 @@ class CppFunctionNumbaType(nb_types.Callable):
+         except KeyError:
+             pass
+ 
+-        ol = CppFunctionNumbaType(self._func.__overload__(*(numba2cpp(x) for x in args)), self._is_method)
++        ol = CppFunctionNumbaType(self._func.__overload__(tuple(numba2cpp(x) for x in args)), self._is_method)
+ 
+         if self._is_method:
+             args = (nb_types.voidptr, *args)
+@@ -158,7 +158,7 @@ class CppFunctionNumbaType(nb_types.Callable):
+ 
+     def get_pointer(self, func):
+         if func is None: func = self._func
+-        ol = func.__overload__(*(numba2cpp(x) for x in self.sig.args[int(self._is_method):]))
++        ol = func.__overload__(tuple(numba2cpp(x) for x in self.sig.args[int(self._is_method):]))
+         address = cppyy.addressof(ol)
+         if not address:
+             raise RuntimeError("unresolved address for %s" % str(ol))
+-- 
+2.39.0
+

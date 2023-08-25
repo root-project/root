@@ -1,9 +1,10 @@
-import { gStyle, internals, isStr, createTPolyLine, kNoZoom } from '../core.mjs';
+import { gStyle, isStr, kNoZoom } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-import { floatToString, TRandom } from '../base/BasePainter.mjs';
+import { floatToString, TRandom, addHighlightStyle } from '../base/BasePainter.mjs';
 import { RHistPainter } from './RHistPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
+import { buildHist2dContour } from '../hist2d/TH2Painter.mjs';
 
 /**
  * @summary Painter for RH2 classes
@@ -33,20 +34,40 @@ class RH2Painter extends RHistPainter {
    /** @summary Toggle projection */
    toggleProjection(kind, width) {
 
-      if (kind == 'Projections') kind = '';
+      if ((kind == 'Projections') || (kind == 'Off'))
+         kind = '';
 
-      if (isStr(kind) && (kind.length > 1)) {
-          width = parseInt(kind.slice(1));
-          kind = kind[0];
+      let widthX = width, widthY = width;
+
+      if (isStr(kind) && (kind.indexOf('XY') == 0)) {
+         let ws = kind.length > 2 ? kind.slice(2) : '';
+         kind = 'XY';
+         widthX = widthY = parseInt(ws);
+      } else if (isStr(kind) && (kind.length > 1)) {
+         let ps = kind.indexOf('_');
+         if ((ps > 0) && (kind[0] == 'X') && (kind[ps+1] == 'Y')) {
+            widthX = parseInt(kind.slice(1, ps)) || 1;
+            widthY = parseInt(kind.slice(ps+2)) || 1;
+            kind = 'XY';
+         } else if ((ps > 0) && (kind[0] == 'Y') && (kind[ps+1] == 'X')) {
+            widthY = parseInt(kind.slice(1, ps)) || 1;
+            widthX = parseInt(kind.slice(ps+2)) || 1;
+            kind = 'XY';
+         } else {
+            widthX = widthY = parseInt(kind.slice(1)) || 1;
+            kind = kind[0];
+         }
       }
 
-      if (!width) width = 1;
+      if (!widthX && !widthY)
+         widthX = widthY = 1;
 
-      if (kind && (this.is_projection==kind)) {
-         if (this.projection_width === width) {
+      if (kind && (this.is_projection == kind)) {
+         if ((this.projection_widthX === widthX) && (this.projection_widthY === widthY)) {
             kind = '';
          } else {
-            this.projection_width = width;
+            this.projection_widthX = widthX;
+            this.projection_widthY = widthY;
             return;
          }
       }
@@ -54,14 +75,15 @@ class RH2Painter extends RHistPainter {
       delete this.proj_hist;
 
       let new_proj = (this.is_projection === kind) ? '' : kind;
-      this.is_projection = ''; // disable projection redraw until callback
-      this.projection_width = width;
+      this.projection_widthX = widthX;
+      this.projection_widthY = widthY;
+      this.is_projection = ''; // avoid projection handling until area is created
 
       this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
    }
 
    /** @summary Readraw projections */
-   redrawProjection(/* ii1, ii2 , jj1, jj2*/) {
+   redrawProjection(/* ii1, ii2, jj1, jj2 */) {
       // do nothing for the moment
 
       if (!this.is_projection) return;
@@ -81,13 +103,19 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Fill histogram context menu */
    fillHistContextMenu(menu) {
-      menu.add('sub:Projections', () => this.toggleProjection());
-      let kind = this.is_projection || '';
-      if (kind) kind += this.projection_width;
-      let kinds = ['X1', 'X2', 'X3', 'X5', 'X10', 'Y1', 'Y2', 'Y3', 'Y5', 'Y10'];
-      for (let k = 0; k < kinds.length; ++k)
-         menu.addchk(kind == kinds[k], kinds[k], kinds[k], arg => this.toggleProjection(arg));
-      menu.add('endsub:');
+      if (this.getPadPainter()?.iscan) {
+         let kind = this.is_projection || '';
+         if (kind) kind += this.projection_widthX;
+         if ((this.projection_widthX != this.projection_widthY) && (this.is_projection == 'XY'))
+            kind = `X${this.projection_widthX}_Y${this.projection_widthY}`;
+         let kinds = ['X1', 'X2', 'X3', 'X5', 'X10', 'Y1', 'Y2', 'Y3', 'Y5', 'Y10', 'XY1', 'XY2', 'XY3', 'XY5', 'XY10'];
+         if (kind) kinds.unshift('Off');
+
+         menu.add('sub:Projections', () => menu.input('Input projection kind X1 or XY2 or X3_Y4', kind, 'string').then(val => this.toggleProjection(val)));
+         for (let k = 0; k < kinds.length; ++k)
+            menu.addchk(kind == kinds[k], kinds[k], kinds[k], arg => this.toggleProjection(arg));
+         menu.add('endsub:');
+      }
 
       menu.add('Auto zoom-in', () => this.autoZoom());
 
@@ -419,225 +447,9 @@ class RH2Painter extends RHistPainter {
       return handle;
    }
 
-   /** @summary Build histogram contour lines */
-   buildContour(handle, levels, palette, contour_func) {
-      let histo = this.getHisto(),
-          kMAXCONTOUR = 2004,
-          kMAXCOUNT = 2000,
-          // arguments used in the PaintContourLine
-          xarr = new Float32Array(2*kMAXCONTOUR),
-          yarr = new Float32Array(2*kMAXCONTOUR),
-          itarr = new Int32Array(2*kMAXCONTOUR),
-          lj = 0, ipoly, poly, polys = [], np, npmax = 0,
-          x = [0.,0.,0.,0.], y = [0.,0.,0.,0.], zc = [0.,0.,0.,0.], ir = [0,0,0,0],
-          i, j, k, n, m, ix, ljfill, count,
-          xsave, ysave, itars, jx,
-          di = handle.stepi, dj = handle.stepj;
-
-      function BinarySearch(zc) {
-         for (let kk=0;kk<levels.length;++kk)
-            if (zc<levels[kk]) return kk-1;
-         return levels.length-1;
-      }
-
-      function PaintContourLine(elev1, icont1, x1, y1,  elev2, icont2, x2, y2) {
-         /* Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels */
-         let vert = (x1 === x2),
-             tlen = vert ? (y2 - y1) : (x2 - x1),
-             n = icont1 +1,
-             tdif = elev2 - elev1,
-             ii = lj-1,
-             maxii = kMAXCONTOUR/2 -3 + lj,
-             icount = 0,
-             xlen, pdif, diff, elev;
-
-         while (n <= icont2 && ii <= maxii) {
-            elev = levels[n];
-            diff = elev - elev1;
-            pdif = diff/tdif;
-            xlen = tlen*pdif;
-            if (vert) {
-               xarr[ii] = x1;
-               yarr[ii] = y1 + xlen;
-            } else {
-               xarr[ii] = x1 + xlen;
-               yarr[ii] = y1;
-            }
-            itarr[ii] = n;
-            icount++;
-            ii +=2;
-            n++;
-         }
-         return icount;
-      }
-
-      let arrx = handle.original ? handle.origx : handle.grx,
-          arry = handle.original ? handle.origy : handle.gry;
-
-      for (j = handle.j1; j < handle.j2-dj; j += dj) {
-
-         y[1] = y[0] = (arry[j] + arry[j+dj])/2;
-         y[3] = y[2] = (arry[j+dj] + arry[j+2*dj])/2;
-
-         for (i = handle.i1; i < handle.i2-di; i += di) {
-
-            zc[0] = histo.getBinContent(i+1, j+1);
-            zc[1] = histo.getBinContent(i+1+di, j+1);
-            zc[2] = histo.getBinContent(i+1+di, j+1+dj);
-            zc[3] = histo.getBinContent(i+1, j+1+dj);
-
-            for (k=0;k<4;k++)
-               ir[k] = BinarySearch(zc[k]);
-
-            if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
-               x[3] = x[0] = (arrx[i] + arrx[i+1])/2;
-               x[2] = x[1] = (arrx[i+1] + arrx[i+2])/2;
-
-               if (zc[0] <= zc[1]) n = 0; else n = 1;
-               if (zc[2] <= zc[3]) m = 2; else m = 3;
-               if (zc[n] > zc[m]) n = m;
-               n++;
-               lj=1;
-               for (ix=1;ix<=4;ix++) {
-                  m = n%4 + 1;
-                  ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],
-                        zc[m-1],ir[m-1],x[m-1],y[m-1]);
-                  lj += 2*ljfill;
-                  n = m;
-               }
-
-               if (zc[0] <= zc[1]) n = 0; else n = 1;
-               if (zc[2] <= zc[3]) m = 2; else m = 3;
-               if (zc[n] > zc[m]) n = m;
-               n++;
-               lj=2;
-               for (ix=1;ix<=4;ix++) {
-                  if (n == 1) m = 4;
-                  else        m = n-1;
-                  ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],
-                        zc[m-1],ir[m-1],x[m-1],y[m-1]);
-                  lj += 2*ljfill;
-                  n = m;
-               }
-               //     Re-order endpoints
-
-               count = 0;
-               for (ix=1; ix<=lj-5; ix +=2) {
-                  //count = 0;
-                  while (itarr[ix-1] != itarr[ix]) {
-                     xsave = xarr[ix];
-                     ysave = yarr[ix];
-                     itars = itarr[ix];
-                     for (jx=ix; jx<=lj-5; jx +=2) {
-                        xarr[jx]  = xarr[jx+2];
-                        yarr[jx]  = yarr[jx+2];
-                        itarr[jx] = itarr[jx+2];
-                     }
-                     xarr[lj-3]  = xsave;
-                     yarr[lj-3]  = ysave;
-                     itarr[lj-3] = itars;
-                     if (count > kMAXCOUNT) break;
-                     count++;
-                  }
-               }
-
-               if (count > kMAXCOUNT) continue;
-
-               for (ix=1; ix<=lj-2; ix +=2) {
-
-                  ipoly = itarr[ix-1];
-
-                  if ((ipoly >= 0) && (ipoly < levels.length)) {
-                     poly = polys[ipoly];
-                     if (!poly)
-                        poly = polys[ipoly] = createTPolyLine(kMAXCONTOUR*4, true);
-
-                     np = poly.fLastPoint;
-                     if (np < poly.fN-2) {
-                        poly.fX[np+1] = Math.round(xarr[ix-1]); poly.fY[np+1] = Math.round(yarr[ix-1]);
-                        poly.fX[np+2] = Math.round(xarr[ix]); poly.fY[np+2] = Math.round(yarr[ix]);
-                        poly.fLastPoint = np+2;
-                        npmax = Math.max(npmax, poly.fLastPoint+1);
-                     } else {
-                        // console.log(`reject point ${poly.fLastPoint}`);
-                     }
-                  }
-               }
-            } // end of if (ir[0]
-         } // end of j
-      } // end of i
-
-      let polysort = new Int32Array(levels.length), first = 0;
-      // find first positive contour
-      for (ipoly=0;ipoly<levels.length;ipoly++) {
-         if (levels[ipoly] >= 0) { first = ipoly; break; }
-      }
-      //store negative contours from 0 to minimum, then all positive contours
-      k = 0;
-      for (ipoly = first - 1; ipoly >= 0; ipoly--) { polysort[k] = ipoly; k++; }
-      for (ipoly = first; ipoly < levels.length; ipoly++) { polysort[k] = ipoly; k++; }
-
-      let xp = new Float32Array(2*npmax),
-          yp = new Float32Array(2*npmax);
-
-      for (k=0;k<levels.length;++k) {
-
-         ipoly = polysort[k];
-         poly = polys[ipoly];
-         if (!poly) continue;
-
-         let colindx = ipoly,
-             xx = poly.fX, yy = poly.fY, np = poly.fLastPoint+1,
-             istart = 0, iminus, iplus, xmin = 0, ymin = 0, nadd;
-
-         while (true) {
-
-            iminus = npmax;
-            iplus  = iminus+1;
-            xp[iminus]= xx[istart];   yp[iminus] = yy[istart];
-            xp[iplus] = xx[istart+1]; yp[iplus]  = yy[istart+1];
-            xx[istart] = xx[istart+1] = xmin;
-            yy[istart] = yy[istart+1] = ymin;
-            while (true) {
-               nadd = 0;
-               for (i = 2; i < np; i += 2) {
-                  if ((iplus < 2*npmax-1) && (xx[i] === xp[iplus]) && (yy[i] === yp[iplus])) {
-                     iplus++;
-                     xp[iplus] = xx[i+1]; yp[iplus] = yy[i+1];
-                     xx[i] = xx[i+1] = xmin;
-                     yy[i] = yy[i+1] = ymin;
-                     nadd++;
-                  }
-                  if ((iminus > 0) && (xx[i+1] === xp[iminus]) && (yy[i+1] === yp[iminus])) {
-                     iminus--;
-                     xp[iminus] = xx[i]; yp[iminus] = yy[i];
-                     xx[i] = xx[i+1] = xmin;
-                     yy[i] = yy[i+1] = ymin;
-                     nadd++;
-                  }
-               }
-               if (nadd == 0) break;
-            }
-
-            if ((iminus+1 < iplus) && (iminus >= 0))
-               contour_func(colindx, xp, yp, iminus, iplus, ipoly);
-
-            istart = 0;
-            for (i=2;i<np;i+=2) {
-               if (xx[i] !== xmin && yy[i] !== ymin) {
-                  istart = i;
-                  break;
-               }
-            }
-
-            if (istart === 0) break;
-         }
-      }
-   }
-
    /** @summary Draw histogram bins as contour */
    drawBinsContour(funcs, frame_w,frame_h) {
-      let handle = this.prepareDraw({ rounding: false, extra: 100, original: this.options.Proj != 0 }),
+      let handle = this.prepareDraw({ rounding: false, extra: 100 }),
           main = this.getFramePainter(),
           palette = main.getHistPalette(),
           levels = palette.getContour(),
@@ -654,16 +466,16 @@ class RH2Painter extends RHistPainter {
                pnt = { x: Math.round(xp[i]), y: Math.round(yp[i]) };
             }
             if (!cmd) {
-               cmd = 'M' + pnt.x + ',' + pnt.y; first = pnt;
+               cmd = `M${pnt.x},${pnt.y}`; first = pnt;
             } else if ((i == iplus) && first && (pnt.x == first.x) && (pnt.y == first.y)) {
                if (!isany) return ''; // all same points
                cmd += 'z'; do_close = false;
             } else if ((pnt.x != last.x) && (pnt.y != last.y)) {
-               cmd +=  'l' + (pnt.x - last.x) + ',' + (pnt.y - last.y); isany = true;
+               cmd += `l${pnt.x - last.x},${pnt.y - last.y}`; isany = true;
             } else if (pnt.x != last.x) {
-               cmd +=  'h' + (pnt.x - last.x); isany = true;
+               cmd += `h${pnt.x - last.x}`; isany = true;
             } else if (pnt.y != last.y) {
-               cmd +=  'v' + (pnt.y - last.y); isany = true;
+               cmd += `v${pnt.y - last.y}`; isany = true;
             }
             last = pnt;
          }
@@ -671,27 +483,13 @@ class RH2Painter extends RHistPainter {
          return cmd;
       };
 
-      if (this.options.Contour === 14) {
-         let dd = `M0,0h${frame_w}v${frame_h}h${-frame_w}z`;
-         if (this.options.Proj) {
-            let dj = handle.stepj, sz = parseInt((handle.j2 - handle.j1)/dj),
-                xd = new Float32Array(sz*2), yd = new Float32Array(sz*2);
-            for (let i=0;i<sz;++i) {
-               xd[i] = handle.origx[handle.i1];
-               yd[i] = (handle.origy[handle.j1]*(i*dj+0.5) + handle.origy[handle.j2]*(sz-0.5-i*dj))/sz;
-               xd[i+sz] = handle.origx[handle.i2];
-               yd[i+sz] = (handle.origy[handle.j2]*(i*dj+0.5) + handle.origy[handle.j1]*(sz-0.5-i*dj))/sz;
-            }
-            dd = BuildPath(xd,yd,0,2*sz-1,true);
-         }
-
+      if (this.options.Contour === 14)
          this.draw_g
              .append('svg:path')
-             .attr('d', dd)
+             .attr('d', `M0,0h${frame_w}v${frame_h}h${-frame_w}z`)
              .style('fill', palette.getColor(0));
-      }
 
-      this.buildContour(handle, levels, palette,
+      buildHist2dContour(this.getHisto(), handle, levels, palette,
          (colindx,xp,yp,iminus,iplus) => {
             let icol = palette.getColor(colindx),
                 fillcolor = icol, lineatt;
@@ -709,7 +507,6 @@ class RH2Painter extends RHistPainter {
 
             let elem = this.draw_g
                           .append('svg:path')
-                          .attr('class','th2_contour')
                           .attr('d', dd)
                           .style('fill', fillcolor);
 
@@ -1031,7 +828,7 @@ class RH2Painter extends RHistPainter {
                cell_w[colindx] = cw;
                cell_h[colindx] = ch;
             } else{
-               cmd2 = `m${handle.grx[i]-currx[colindx]},${handle.gry[j+dj] - curry[colindx]}`;
+               cmd2 = `m${handle.grx[i]-currx[colindx]},${handle.gry[j+dj]-curry[colindx]}`;
                colPaths[colindx] += (cmd2.length < cmd1.length) ? cmd2 : cmd1;
                cell_w[colindx] = Math.max(cell_w[colindx], cw);
                cell_h[colindx] = Math.max(cell_h[colindx], ch);
@@ -1044,8 +841,8 @@ class RH2Painter extends RHistPainter {
          }
       }
 
-      let layer = this.getFrameSvg().select('.main_layer'),
-          defs = layer.select('def');
+      let layer = this.getFrameSvg().selectChild('.main_layer'),
+          defs = layer.selectChild('def');
       if (defs.empty() && (colPaths.length > 0))
          defs = layer.insert('svg:defs', ':first-child');
 
@@ -1055,12 +852,11 @@ class RH2Painter extends RHistPainter {
 
       for (colindx = 0; colindx < colPaths.length; ++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<cntr.length)) {
-           let pattern_class = 'scatter_' + colindx,
-               pattern = defs.select('.' + pattern_class);
+           let pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`,
+               pattern = defs.selectChild(`#${pattern_id}`);
            if (pattern.empty())
               pattern = defs.append('svg:pattern')
-                            .attr('class', pattern_class)
-                            .attr('id', 'jsroot_scatter_pattern_' + internals.id_counter++)
+                            .attr('id', pattern_id)
                             .attr('patternUnits','userSpaceOnUse');
            else
               pattern.selectAll('*').remove();
@@ -1079,8 +875,6 @@ class RH2Painter extends RHistPainter {
               }
            }
 
-           // arrx.sort();
-
            this.markeratt.resetPos();
 
            let path = '';
@@ -1097,7 +891,7 @@ class RH2Painter extends RHistPainter {
            this.draw_g
                .append('svg:path')
                .attr('scatter-index', colindx)
-               .style('fill', `url(#${pattern.attr('id')})`)
+               .style('fill', `url(#${pattern_id})`)
                .attr('d', colPaths[colindx]);
         }
 
@@ -1160,11 +954,10 @@ class RH2Painter extends RHistPainter {
          dj = histo.stepy || 1;
       }
 
-      lines.push(this.getObjectHint() || 'histo<2>');
-      lines.push('x = ' + this.getAxisBinTip('x', i, di),
-                 'y = ' + this.getAxisBinTip('y', j, dj));
-
-      lines.push(`bin = ${i+1}, ${j+1}`);
+      lines.push(this.getObjectHint() || 'histo<2>',
+                 'x = ' + this.getAxisBinTip('x', i, di),
+                 'y = ' + this.getAxisBinTip('y', j, dj),
+                 `bin = ${i+1}, ${j+1}`);
 
       if (histo.$baseh) binz -= histo.$baseh.getBinContent(i+1,j+1);
 
@@ -1186,15 +979,14 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
-      if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
-         return null;
-      }
-
       let histo = this.getHisto(),
           h = this.tt_handle,
-          ttrect = this.draw_g.select('.tooltip_bin');
+          ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!pnt || !this.draw_content || !this.draw_g || !h || this.options.Proj) {
+         ttrect?.remove();
+         return null;
+      }
 
       if (h.poly) {
          // process tooltips from TH2Poly - see TH2Painter
@@ -1229,54 +1021,63 @@ class RH2Painter extends RHistPainter {
 
       let res = { name: 'histo', title: histo.fTitle || 'title',
                   x: pnt.x, y: pnt.y,
-                  color1: this.lineatt ? this.lineatt.color : 'green',
-                  color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
+                  color1: this.lineatt?.color ?? 'green',
+                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
                   lines: this.getBinTooltips(i, j), exact: true, menu: true };
 
-      if (this.options.Color) res.color2 = h.palette.getColor(colindx);
+      if (this.options.Color)
+         res.color2 = h.palette.getColor(colindx);
 
       if (pnt.disabled && !this.is_projection) {
          ttrect.remove();
          res.changed = true;
       } else {
          if (ttrect.empty())
-            ttrect = this.draw_g.append('svg:rect')
-                                .attr('class','tooltip_bin h1bin')
-                                .style('pointer-events','none');
+            ttrect = this.draw_g.append('svg:path')
+                                .attr('class', 'tooltip_bin')
+                                .style('pointer-events', 'none')
+                                .call(addHighlightStyle);
 
          let i1 = i, i2 = i+1,
              j1 = j, j2 = j+1,
              x1 = h.grx[i1], x2 = h.grx[i2],
              y1 = h.gry[j2], y2 = h.gry[j1],
-             binid = i*10000 + j;
+             binid = i*10000 + j,
+             pmain = this.getFramePainter(),
+             path;
+
+         if (this.is_projection) {
+            let pwx = this.projection_widthX || 1, ddx = (pwx - 1) / 2;
+            if ((this.is_projection.indexOf('X')) >= 0 && (pwx > 1)) {
+               if (j2+ddx >= h.j2) { j2 = Math.min(Math.round(j2+ddx), h.j2); j1 = Math.max(j2-pwx, h.j1); }
+                              else { j1 = Math.max(Math.round(j1-ddx), h.j1); j2 = Math.min(j1+pwx, h.j2); }
+            }
+            let pwy = this.projection_widthY || 1, ddy = (pwy - 1) / 2;
+            if ((this.is_projection.indexOf('Y')) >= 0 && (pwy > 1)) {
+               if (i2+ddy >= h.i2) { i2 = Math.min(Math.round(i2+ddy), h.i2); i1 = Math.max(i2-pwy, h.i1); }
+                              else { i1 = Math.max(Math.round(i1-ddy), h.i1); i2 = Math.min(i1+pwy, h.i2); }
+            }
+         }
 
          if (this.is_projection == 'X') {
-            x1 = 0; x2 = this.getFramePainter().getFrameWidth();
-            if (this.projection_width > 1) {
-               let dd = (this.projection_width-1)/2;
-               if (j2+dd >= h.j2) { j2 = Math.min(Math.round(j2+dd), h.j2); j1 = Math.max(j2 - this.projection_width, h.j1); }
-                             else { j1 = Math.max(Math.round(j1-dd), h.j1); j2 = Math.min(j1 + this.projection_width, h.j2); }
-            }
+            x1 = 0; x2 = pmain.getFrameWidth();
             y1 = h.gry[j2]; y2 = h.gry[j1];
             binid = j1*777 + j2*333;
          } else if (this.is_projection == 'Y') {
-            y1 = 0; y2 = this.getFramePainter().getFrameHeight();
-            if (this.projection_width > 1) {
-               let dd = (this.projection_width-1)/2;
-               if (i2+dd >= h.i2) { i2 = Math.min(Math.round(i2+dd), h.i2); i1 = Math.max(i2 - this.projection_width, h.i1); }
-                             else { i1 = Math.max(Math.round(i1-dd), h.i1); i2 = Math.min(i1 + this.projection_width, h.i2); }
-            }
-            x1 = h.grx[i1], x2 = h.grx[i2],
+            y1 = 0; y2 = pmain.getFrameHeight();
+            x1 = h.grx[i1]; x2 = h.grx[i2];
             binid = i1*777 + i2*333;
+         } else if (this.is_projection == 'XY') {
+            y1 = h.gry[j2]; y2 = h.gry[j1];
+            x1 = h.grx[i1]; x2 = h.grx[i2];
+            binid = i1*789 + i2*653 + j1*12345 + j2*654321;
+            path = `M${x1},0H${x2}V${y1}H${pmain.getFrameWidth()}V${y2}H${x2}V${pmain.getFrameHeight()}H${x1}V${y2}H0V${y1}H${x1}Z`;
          }
 
          res.changed = ttrect.property('current_bin') !== binid;
 
          if (res.changed)
-            ttrect.attr('x', x1)
-                  .attr('width', x2 - x1)
-                  .attr('y', y1)
-                  .attr('height', y2 - y1)
+            ttrect.attr('d', path || `M${x1},${y1}H${x2}V${y2}H${x1}Z`)
                   .style('opacity', '0.7')
                   .property('current_bin', binid);
 
@@ -1383,6 +1184,5 @@ class RH2Painter extends RHistPainter {
    }
 
 } //  class RH2Painter
-
 
 export { RH2Painter };

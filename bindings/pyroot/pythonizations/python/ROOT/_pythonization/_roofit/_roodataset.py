@@ -28,9 +28,9 @@ class RooDataSet(object):
     """
 
     @cpp_signature(
-        "RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(),"
-        "    const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),"
-        "    const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;"
+        "RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},const RooCmdArg& arg5={},"
+        "    const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;"
     )
     def __init__(self, *args, **kwargs):
         r"""The RooDataSet constructor is pythonized with the command argument pythonization.
@@ -42,10 +42,10 @@ class RooDataSet(object):
 
     @cpp_signature(
         "RooPlot *RooDataSet::plotOnXY(RooPlot* frame,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+        "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;"
     )
     def plotOnXY(self, *args, **kwargs):
         r"""The RooDataSet::plotOnXY() function is pythonized with the command argument pythonization.

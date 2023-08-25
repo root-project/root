@@ -24,13 +24,13 @@ public:
    TEveMacro();
    TEveMacro(const TEveMacro&);
    TEveMacro(const char* name);
-   virtual ~TEveMacro() {}
+   ~TEveMacro() override {}
 
-   virtual Longptr_t Exec(const char* params = "0", Int_t* error = nullptr);
+   Longptr_t Exec(const char* params = "0", Int_t* error = nullptr) override;
 
    void ResetRoot();
 
-   ClassDef(TEveMacro, 1); // TMacro wrapper (attempting to fix issues with different macro loading and execution schemes).
+   ClassDefOverride(TEveMacro, 1); // TMacro wrapper (attempting to fix issues with different macro loading and execution schemes).
 };
 
 #endif

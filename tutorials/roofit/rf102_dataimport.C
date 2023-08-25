@@ -4,8 +4,8 @@
 /// Basic functionality: importing data from ROOT TTrees and THx histograms.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -53,7 +53,7 @@ void rf102_dataimport()
    RooRealVar mean("mean", "mean", 0, -10, 10);
    RooRealVar sigma("sigma", "sigma", 3, 0.1, 10);
    RooGaussian gauss("gauss", "gauss", x, mean, sigma);
-   gauss.fitTo(dh);
+   gauss.fitTo(dh, PrintLevel(-1));
    gauss.plotOn(frame);
 
    // P l o t   a n d   f i t   a   R o o D a t a H i s t   w i t h   i n t e r n a l   e r r o r s

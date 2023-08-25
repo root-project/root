@@ -39,18 +39,18 @@ public:
    TProofMonSenderSQL(const char *serv, const char *user, const char *pass,
                       const char *table = "proof.proofquerylog",
                       const char *dstab = 0, const char *filestab = 0);
-   virtual ~TProofMonSenderSQL();
+   ~TProofMonSenderSQL() override;
 
    // Summary record
-   Int_t SendSummary(TList *, const char *);
+   Int_t SendSummary(TList *, const char *) override;
 
    // Information about the dataset(s) processed
-   Int_t SendDataSetInfo(TDSet *, TList *, const char *, const char *);
+   Int_t SendDataSetInfo(TDSet *, TList *, const char *, const char *) override;
 
    // Detailed information about files
-   Int_t SendFileInfo(TDSet *, TList *, const char *, const char *);
+   Int_t SendFileInfo(TDSet *, TList *, const char *, const char *) override;
 
-   ClassDef(TProofMonSenderSQL, 0); // Interface for PROOF monitoring
+   ClassDefOverride(TProofMonSenderSQL, 0); // Interface for PROOF monitoring
 };
 
 #endif

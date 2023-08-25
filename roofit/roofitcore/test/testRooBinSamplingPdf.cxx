@@ -11,7 +11,7 @@
 #include <RooRandom.h>
 #include <RooRealVar.h>
 
-#include <gtest/gtest.h>
+#include "gtest_wrapper.h"
 
 // Backward compatibility for gtest version < 1.10.0
 #ifndef INSTANTIATE_TEST_SUITE_P

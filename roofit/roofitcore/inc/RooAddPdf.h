@@ -20,7 +20,6 @@
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
-#include "RooNormSetCache.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
 #include "RooTrace.h"
@@ -66,6 +65,8 @@ public:
   /// is the sum of all coefficients.
   double expectedEvents(const RooArgSet* nset) const override;
 
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
+
   const RooArgList& pdfList() const {
     // Return list of component p.d.fs
     return _pdfList ;
@@ -92,8 +93,11 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; };
   void setCacheAndTrackHints(RooArgSet&) override;
 
-protected:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
+
+  protected:
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override;
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override;
 
@@ -118,7 +122,7 @@ protected:
       return getValV(nullptr);
   }
   double getValV(const RooArgSet* set=nullptr) const override ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 

@@ -126,7 +126,7 @@ public:
    TGTable(const TGWindow *p = nullptr, Int_t id = 0,
            TVirtualTableInterface *interface = nullptr, UInt_t nrows = 50,
            UInt_t ncolumns = 20);
-   virtual ~TGTable();
+   ~TGTable() override;
 
    virtual TObjArray *GetRow(UInt_t row);
    virtual TObjArray *GetColumn(UInt_t columns);

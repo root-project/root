@@ -148,7 +148,7 @@ public:
    TGListTreeItemStd(TGClient *fClient = gClient, const char *name = nullptr,
                      const TGPicture *opened = nullptr, const TGPicture *closed = nullptr,
                      Bool_t checkbox = kFALSE);
-   virtual ~TGListTreeItemStd();
+   ~TGListTreeItemStd() override;
 
    Pixel_t         GetActiveColor() const override;
    Bool_t          IsActive() const override { return fActive; }
@@ -308,7 +308,7 @@ public:
               UInt_t options = 0, Pixel_t back = GetWhitePixel());
    TGListTree(TGCanvas *p, UInt_t options, Pixel_t back = GetWhitePixel());
 
-   virtual ~TGListTree();
+   ~TGListTree() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleDoubleClick(Event_t *event) override;

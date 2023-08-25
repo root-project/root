@@ -40,15 +40,15 @@ namespace {
 
       static void SetClass(const TClass* cl) { fgClass = cl; }
 
-      const char* GetName() const { return fMeth->GetName(); }
-      ULong_t Hash() const { return fMeth->Hash();}
+      const char* GetName() const override { return fMeth->GetName(); }
+      ULong_t Hash() const override { return fMeth->Hash();}
       Int_t GetNargs() const { return fMeth->GetNargs(); }
-      virtual TMethod* GetMethod() const { return fMeth; }
-      Bool_t IsSortable() const { return kTRUE; }
+      TMethod* GetMethod() const override { return fMeth; }
+      Bool_t IsSortable() const override { return kTRUE; }
 
-      Int_t GetOverloadIdx() const { return fOverloadIdx; }
+      Int_t GetOverloadIdx() const override { return fOverloadIdx; }
 
-      Int_t Compare(const TObject *obj) const {
+      Int_t Compare(const TObject *obj) const override {
          const TMethodWrapperImpl* m = dynamic_cast<const TMethodWrapperImpl*>(obj);
          if (!m) return 1;
 
@@ -1127,7 +1127,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
          if (fParseContext.size()>1)
             fParseContext.pop_back();
          if (isInCxxComment && !InContext(kComment)) {
-            fParseContext.push_back(kComment | kCXXComment);
+            fParseContext.push_back((int)kComment | (int)kCXXComment);
             fDocOutput->DecorateEntityBegin(line, pos, kComment);
          }
       }

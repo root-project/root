@@ -64,7 +64,8 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
             << " for generation of observable(s) " << vars << endl ;
 
   // Clone PDF and change model to internal truth model
-  _pdfCloneSet.reset(RooArgSet(model).snapshot(true));
+  _pdfCloneSet = std::make_unique<RooArgSet>();
+  RooArgSet(model).snapshot(*_pdfCloneSet, true);
   if (!_pdfCloneSet) {
     coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     RooErrorHandler::softAbort() ;
@@ -80,18 +81,18 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   convV->removeRange();
 
   // Create generator for physics X truth model
-  _pdfVars.reset(pdfClone->getObservables(&vars));
+  _pdfVars = std::unique_ptr<RooArgSet>{pdfClone->getObservables(&vars)};
   _pdfGen.reset(pdfClone->genContext(*_pdfVars,prototype,auxProto,verbose));
 
   // Clone resolution model and use as normal PDF
-  _modelCloneSet.reset(RooArgSet(*model._convSet.at(0)).snapshot(true));
+  _modelCloneSet = std::make_unique<RooArgSet>();
+  RooArgSet(*model._convSet.at(0)).snapshot(*_modelCloneSet, true);
   if (!_modelCloneSet) {
     coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone resolution model, abort," << std::endl;
     RooErrorHandler::softAbort() ;
   }
-  auto modelClone = static_cast<RooResolutionModel*>(_modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing"));
-  _modelCloneSet->addOwned(*modelClone) ;
-  modelClone->changeBasis(0) ;
+  std::unique_ptr<RooResolutionModel> modelClone{static_cast<RooResolutionModel*>(_modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing"))};
+  modelClone->changeBasis(nullptr) ;
   convV = dynamic_cast<RooRealVar*>(&modelClone->convVar());
   if (!convV) {
     throw std::runtime_error("RooConvGenContext only works with convolution variables of type RooRealVar.");
@@ -99,11 +100,13 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   convV->removeRange();
 
   // Create generator for resolution model as PDF
-  _modelVars.reset(modelClone->getObservables(&vars));
+  _modelVars = std::unique_ptr<RooArgSet>{modelClone->getObservables(&vars)};
 
   _modelVars->add(modelClone->convVar()) ;
   _convVarName = modelClone->convVar().GetName() ;
   _modelGen.reset(modelClone->genContext(*_modelVars,prototype,auxProto,verbose));
+
+  _modelCloneSet->addOwned(std::move(modelClone));
 
   if (prototype) {
     _pdfVars->add(*prototype->get()) ;
@@ -141,7 +144,8 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
   {
     RooArgSet clonedPdfObservables;
     model.conv().clonePdf().getObservables(&vars, clonedPdfObservables);
-    _pdfVarsOwned.reset(clonedPdfObservables.snapshot(true));
+    _pdfVarsOwned = std::make_unique<RooArgSet>();
+    clonedPdfObservables.snapshot(*_pdfVarsOwned, true);
   }
   _pdfVars = std::make_unique<RooArgSet>(*_pdfVarsOwned) ;
   _pdfGen.reset(static_cast<RooAbsPdf&>(model.conv().clonePdf()).genContext(*_pdfVars,prototype,auxProto,verbose));
@@ -150,7 +154,8 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
   {
     RooArgSet clonedModelObservables;
     model.conv().cloneModel().getObservables(&vars, clonedModelObservables);
-    _modelVarsOwned.reset(clonedModelObservables.snapshot(true));
+    _modelVarsOwned = std::make_unique<RooArgSet>();
+    clonedModelObservables.snapshot(*_modelVarsOwned, true);
   }
   _modelVars = std::make_unique<RooArgSet>(*_modelVarsOwned) ;
   _convVarName = model.conv().cloneVar().GetName() ;
@@ -187,24 +192,28 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
   _convVarName = model._x.arg().GetName() ;
 
   // Create generator for physics model
-  _pdfCloneSet.reset(RooArgSet(model._pdf1.arg()).snapshot(true));
+  _pdfCloneSet = std::make_unique<RooArgSet>();
+  RooArgSet(model._pdf1.arg()).snapshot(*_pdfCloneSet, true);
   RooAbsPdf* pdfClone = (RooAbsPdf*) _pdfCloneSet->find(model._pdf1.arg().GetName()) ;
   RooRealVar* cvPdf = (RooRealVar*) _pdfCloneSet->find(model._x.arg().GetName()) ;
   cvPdf->removeRange() ;
   RooArgSet tmp1;
   pdfClone->getObservables(&vars, tmp1) ;
-  _pdfVarsOwned.reset(tmp1.snapshot(true));
+  _pdfVarsOwned = std::make_unique<RooArgSet>();
+  tmp1.snapshot(*_pdfVarsOwned, true);
   _pdfVars = std::make_unique<RooArgSet>(*_pdfVarsOwned) ;
   _pdfGen.reset(pdfClone->genContext(*_pdfVars,prototype,auxProto,verbose));
 
   // Create generator for resolution model
-  _modelCloneSet.reset(RooArgSet(model._pdf2.arg()).snapshot(true));
+  _modelCloneSet = std::make_unique<RooArgSet>();
+  RooArgSet(model._pdf2.arg()).snapshot(*_modelCloneSet, true);
   RooAbsPdf* modelClone = (RooAbsPdf*) _modelCloneSet->find(model._pdf2.arg().GetName()) ;
   RooRealVar* cvModel = (RooRealVar*) _modelCloneSet->find(model._x.arg().GetName()) ;
   cvModel->removeRange() ;
   RooArgSet tmp2;
   modelClone->getObservables(&vars, tmp2) ;
-  _modelVarsOwned.reset(tmp2.snapshot(true));
+  _modelVarsOwned = std::make_unique<RooArgSet>();
+  tmp2.snapshot(*_modelVarsOwned, true);
   _modelVars = std::make_unique<RooArgSet>(*_modelVarsOwned) ;
   _modelGen.reset(modelClone->genContext(*_pdfVars,prototype,auxProto,verbose));
 
@@ -269,7 +278,7 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
 
 void RooConvGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-  while(1) {
+  while(true) {
 
     // Generate pdf and model data
     _modelGen->generateEvent(*_modelVars,remaining) ;

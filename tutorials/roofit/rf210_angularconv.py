@@ -11,7 +11,9 @@
 ## pdf(theta)    = ROOT.T(theta)          (x) gauss(theta)
 ## pdf(cosTheta) = ROOT.T(acos(cosTheta)) (x) gauss(acos(cosTheta))
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -56,7 +58,7 @@ Mpsi.setBufferFraction(0)
 data_psi = Mpsi.generate({psi}, 10000)
 
 # Fit convoluted model as function of angle psi
-Mpsi.fitTo(data_psi)
+Mpsi.fitTo(data_psi, PrintLevel=-1)
 
 # Plot cos(psi) frame with Mf(cpsi)
 frame1 = psi.frame(Title="Cyclical convolution in angle psi")
@@ -89,7 +91,7 @@ data_cpsi = Mcpsi.generate({cpsi}, 10000)
 psi.setConstant(True)
 
 # Fit convoluted model as function of cos(psi)
-Mcpsi.fitTo(data_cpsi)
+Mcpsi.fitTo(data_cpsi, PrintLevel=-1)
 
 # Plot cos(psi) frame with Mf(cpsi)
 frame2 = cpsi.frame(Title="Same convolution in psi, in cos(psi)")

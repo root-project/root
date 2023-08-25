@@ -4,8 +4,8 @@
 /// Special pdf's: using a product of an (acceptance) efficiency and a pdf as pdf
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -62,10 +62,10 @@ void rf703_effpdfprod()
 
    // Generate events. If the input pdf has an internal generator, the internal generator
    // is used and an accept/reject sampling on the efficiency is applied.
-   RooDataSet *data = modelEff.generate(t, 10000);
+   std::unique_ptr<RooDataSet> data{modelEff.generate(t, 10000)};
 
    // Fit pdf. The normalization integral is calculated numerically.
-   modelEff.fitTo(*data);
+   modelEff.fitTo(*data, PrintLevel(-1));
 
    // Plot generated data and overlay fitted pdf
    RooPlot *frame3 = t.frame(Title("Fitted pdf with efficiency"));

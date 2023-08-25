@@ -49,7 +49,7 @@ private:
 
 public:
    TGStatusBarPart(const TGWindow *p, Int_t h, Int_t y, ULong_t back = GetDefaultFrameBackground());
-   ~TGStatusBarPart() { delete fStatusInfo; DestroyWindow(); }
+   ~TGStatusBarPart() override { delete fStatusInfo; DestroyWindow(); }
    void SetText(TGString *text);
    const TGString *GetText() const { return fStatusInfo; }
 };

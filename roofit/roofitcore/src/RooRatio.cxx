@@ -32,7 +32,7 @@ A RooRatio represents the ratio of two given RooAbsReal objects.
 
 #include "TMath.h"
 
-#include <math.h>
+#include <cmath>
 
 ClassImp(RooRatio);
 
@@ -109,8 +109,7 @@ RooRatio::RooRatio(const RooRatio &other, const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate in batch mode.
-void RooRatio::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooRatio::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Ratio, output, nEvents, {dataMap.at(_numerator), dataMap.at(_denominator)});
+  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Ratio, output, nEvents, {dataMap.at(_numerator), dataMap.at(_denominator)});
 }

@@ -95,7 +95,7 @@ protected:
 
   double evaluate() const override { RooArgSet dummy(_x.arg()) ; return getVal(&dummy) ; } ; // dummy
   const char* inputBaseName() const override ;
-  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooFit::OwningPtr<RooArgSet> actualObservables(const RooArgSet& nset) const override ;
   RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   RooAbsArg& pdfObservable(RooAbsArg& histObservable) const override ;
   void fillCacheObject(PdfCacheElem& cache) const override ;

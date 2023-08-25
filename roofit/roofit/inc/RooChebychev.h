@@ -38,14 +38,17 @@ public:
 
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
-private:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  private:
   RooRealProxy _x;
   RooListProxy _coefList ;
   mutable TNamed* _refRangeName ;
 
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   double evalAnaInt(const double a, const double b) const;

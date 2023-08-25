@@ -77,6 +77,13 @@ if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
 endif()
 
+if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
+  list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
+endif()
+
 if (NOT dataframe)
     # RDataFrame
     list(APPEND dataframe_veto dataframe/*.C dataframe/*.py)
@@ -87,6 +94,10 @@ if (NOT dataframe)
     list(APPEND dataframe_veto tmva/TMVA_SOFIE_RDataFrame*.C)
     list(APPEND dataframe_veto tmva/TMVA_SOFIE_RDataFrame*.py)
     list(APPEND dataframe_veto tmva/TMVA_SOFIE_Inference.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
+    list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
     # RooFit tutorial depending on RDataFrame
     list(APPEND dataframe_veto roofit/rf408*)
 elseif(MSVC AND NOT win_broken_tests)
@@ -95,12 +106,11 @@ elseif(MSVC AND NOT win_broken_tests)
       list(APPEND dataframe_veto dataframe/df016_vecOps.py)
       list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.py)
     endif()
-    if(CMAKE_CXX_STANDARD GREATER 14)
-        list(APPEND dataframe_veto dataframe/df032_RDFFromNumpy.py)
-        list(APPEND dataframe_veto dataframe/df033_Describe.py)
-    else()
-        list(APPEND dataframe_veto dataframe/*.py)
-    endif()
+
+    # Why do we need to veto these tutorials on Windows with C++17?
+    list(APPEND dataframe_veto dataframe/df032_RDFFromNumpy.py)
+    list(APPEND dataframe_veto dataframe/df033_Describe.py)
+
 endif()
 
 if(NOT sqlite)
@@ -139,9 +149,6 @@ if(NOT ROOT_roofit_FOUND)
 else()
   if(MSVC AND NOT win_broken_tests)
     set(roofit_veto roofit/rf401_importttreethx.py roofit/rf708_bphysics.py roofit/rf501_simultaneouspdf.py)
-    if(CMAKE_CXX_STANDARD LESS 17)
-      list(APPEND roofit_veto roofit/rf408_RDataFrameToRooFit.py)
-    endif()
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       list(APPEND roofit_veto roofit/rf409_NumPyPandasToRooFit.py)
     endif()
@@ -252,11 +259,10 @@ endif()
 
 if(NOT ROOT_imt_FOUND)
   set(imt_veto multicore/imt*.C multicore/mt*.C)
-else()
-  if(MSVC)
-    #---Multiproc is not supported on Windows
-    set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
-  endif()
+endif()
+if(MSVC)
+  #---Multiproc is not supported on Windows
+  set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
@@ -302,11 +308,14 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RDataFrame.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RDataFrame_JIT.C)
+    list(APPEND tmva_veto tmva/TMVA_SOFIE_Models.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Inference.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
+    list(APPEND tmva_veto tmva/RBatchGenerator_TensorFlow.py)
   endif()
   if (NOT PY_TORCH_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_PyTorch.C)
+    list(APPEND tmva_veto tmva/RBatchGenerator_PyTorch.py)
   endif()
   if (NOT tmva-sofie)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
@@ -332,6 +341,10 @@ else()
   endif()
 endif()
 
+if (NOT ROOT_vecgeom_FOUND)
+  set(vecgeom_veto geom/tessellatedNav.C)
+endif()
+
 if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C
                  v7/browser.cxx
@@ -347,6 +360,7 @@ if(root7)
   if(NOT dataframe)
     list(APPEND root7_veto v7/global_temperatures.cxx)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto v7/ntuple/ntpl008_import.C)
     list(APPEND root7_veto rcanvas/df104.py)
     list(APPEND root7_veto rcanvas/df105.py)
   endif()
@@ -357,7 +371,7 @@ if(root7)
     list(APPEND root7_veto rcanvas/rbox.py)
   endif()
 else()
-  if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
+  if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto dataframe/df013_InspectAnalysis.C)
   endif()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.py v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C rcanvas/*.py rcanvas/*.cxx)
@@ -396,7 +410,7 @@ set(extra_veto
   eve7/*.C
   r/rootlogon.C)
 
-if(MSVC AND ${LLVM_VERSION} VERSION_GREATER_EQUAL 13.0.0 AND NOT llvm13_broken_tests)
+if(MSVC AND NOT llvm13_broken_tests)
  list(APPEND extra_veto
       dataframe/df002_dataModel.C
       dataframe/df007_snapshot.C
@@ -408,6 +422,7 @@ if(MSVC AND ${LLVM_VERSION} VERSION_GREATER_EQUAL 13.0.0 AND NOT llvm13_broken_t
       fit/fit2dHist.C
       graphics/earth.C
       graphs/motorcycle.C
+      math/exampleFunction.py
       math/multidimSampling.C
       math/multivarGaus.C
       tree/basic.C
@@ -420,9 +435,6 @@ if(MSVC AND ${LLVM_VERSION} VERSION_GREATER_EQUAL 13.0.0 AND NOT llvm13_broken_t
       dataframe/df002_dataModel.py
       dataframe/df016_vecOps.py
       dataframe/df017_vecOpsHEP.py)
-  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    list(APPEND extra_veto math/exampleFunction.py)
-  endif()
 endif()
 
 set(all_veto hsimple.C
@@ -448,6 +460,7 @@ set(all_veto hsimple.C
              ${imt_veto}
              ${classic_veto}
              ${pythia_veto}
+             ${vecgeom_veto}
              ${root7_veto}
              ${xrootd_veto}
              ${mlp_veto}
@@ -456,6 +469,13 @@ set(all_veto hsimple.C
              ${macm1_veto}
              ${clad_veto}
              )
+
+# These tutorials seem to trigger segfaults related to TClass* and RDataFrame
+# JITting on many platforms. Disable for now and revert once the issue is fixed
+list(APPEND all_veto tmva/RBatchGenerator_NumPy.py)
+list(APPEND all_veto tmva/RBatchGenerator_TensorFlow.py)
+list(APPEND all_veto tmva/RBatchGenerator_PyTorch.py)
+list(APPEND all_veto tmva/RBatchGenerator_filters_vectors.py)
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(root7 AND webgui)
@@ -568,6 +588,10 @@ if (PY_KERAS_FOUND)
   set (tmva-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
   set (tmva-TMVA_SOFIE_Inference-depends tutorial-tmva-TMVA_Higgs_Classification)
   set (tmva-TMVA_SOFIE_RSofieReader-depends tutorial-tmva-TMVA_Higgs_Classification)
+  if (PY_TORCH_FOUND)
+    set (tmva-keras-RegressionKeras-depends tutorial-tmva-pytorch-RegressionPyTorch-py)
+    set (tmva-keras-ClassificationKeras-depends tutorial-tmva-pytorch-ClassificationPyTorch-py)
+  endif()
   set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
   set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
 endif()
@@ -719,11 +743,10 @@ if(ROOT_pyroot_FOUND)
 
   # Rules specific to distributed RDataFrame
   # Disable distributed RDF tutorials if we didn't check dependencies in the environment first
-  # They are always disabled on Mac ARM, until #10061 is fixed
-  if(NOT test_distrdf_pyspark OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64))
+  if(NOT test_distrdf_pyspark)
     list(APPEND pyveto dataframe/distrdf001_spark_connection.py)
   endif()
-  if(NOT test_distrdf_dask OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64))
+  if(NOT test_distrdf_dask)
     list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors
@@ -798,6 +821,7 @@ if(ROOT_pyroot_FOUND)
   # and add it to the list "fixtureLists" below.
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       dataframe/df026_AsNumpyArrays.py
+      dataframe/df032_RDFFromNumpy.py
       fit/combinedFit.py
       fit/multifit.py
       roofit/rf409_NumPyPandasToRooFit.py)

@@ -5,15 +5,14 @@
 /// monodimensional functions
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooAbsReal.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
@@ -29,7 +28,7 @@ void rf110_normintegration()
    RooRealVar x("x", "x", -10, 10);
 
    // Create pdf gaussx(x,-2,3)
-   RooGaussian gx("gx", "gx", x, RooConst(-2), RooConst(3));
+   RooGaussian gx("gx", "gx", x, -2.0, 3.0);
 
    // R e t r i e v e   r a w  &   n o r m a l i z e d   v a l u e s   o f   R o o F i t   p . d . f . s
    // --------------------------------------------------------------------------------------------------
@@ -43,7 +42,7 @@ void rf110_normintegration()
 
    // Create object representing integral over gx
    // which is used to calculate  gx_Norm[x] == gx / gx_Int[x]
-   RooAbsReal *igx = gx.createIntegral(x);
+   std::unique_ptr<RooAbsReal> igx{gx.createIntegral(x)};
    cout << "gx_Int[x] = " << igx->getVal() << endl;
 
    // I n t e g r a t e   n o r m a l i z e d   p d f   o v e r   s u b r a n g e
@@ -55,7 +54,7 @@ void rf110_normintegration()
    // Create an integral of gx_Norm[x] over x in range "signal"
    // This is the fraction of of pdf gx_Norm[x] which is in the
    // range named "signal"
-   RooAbsReal *igx_sig = gx.createIntegral(x, NormSet(x), Range("signal"));
+   std::unique_ptr<RooAbsReal> igx_sig{gx.createIntegral(x, NormSet(x), Range("signal"))};
    cout << "gx_Int[x|signal]_Norm[x] = " << igx_sig->getVal() << endl;
 
    // C o n s t r u c t   c u m u l a t i v e   d i s t r i b u t i o n   f u n c t i o n   f r o m   p d f
@@ -63,7 +62,7 @@ void rf110_normintegration()
 
    // Create the cumulative distribution function of gx
    // i.e. calculate Int[-10,x] gx(x') dx'
-   RooAbsReal *gx_cdf = gx.createCdf(x);
+   std::unique_ptr<RooAbsReal> gx_cdf{gx.createCdf(x)};
 
    // Plot cdf of gx versus x
    RooPlot *frame = x.frame(Title("cdf of Gaussian pdf"));

@@ -30,7 +30,6 @@ class RooXYChi2Var : public RooAbsOptTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooXYChi2Var() ;
   RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& data, bool integrate=false) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& data, RooRealVar& yvar, bool integrate=false) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, bool integrate=false) ;
@@ -80,7 +79,7 @@ protected:
   double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
   RooNumIntConfig   _intConfig ; ///< Numeric integrator configuration for integration of function over bin
-  RooAbsReal*       _funcInt = nullptr; ///<! Function integral
+  std::unique_ptr<RooAbsReal>    _funcInt; ///<! Function integral
   std::list<RooAbsBinning*> _binList ; ///<! Bin ranges
 
   ClassDefOverride(RooXYChi2Var,0) // Chi^2 function of p.d.f w.r.t a unbinned dataset with X and Y values

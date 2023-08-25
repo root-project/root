@@ -6,8 +6,8 @@
 /// `pdf = gauss(x,f(y),sx | y )` with `f(y) = a0 + a1*y`
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -56,13 +56,13 @@ void rf303_conditional()
    RooDataSet *expDataY = (RooDataSet *)expDataXY->reduce(y);
 
    // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
-   RooDataSet *data = model.generate(x, ProtoData(*expDataY));
+   std::unique_ptr<RooDataSet> data{model.generate(x, ProtoData(*expDataY))};
    data->Print();
 
    // F i t   c o n d i t i o n a l   p . d . f   m o d e l ( x | y )   t o   d a t a
    // ---------------------------------------------------------------------------------------------
 
-   model.fitTo(*expDataXY, ConditionalObservables(y));
+   model.fitTo(*expDataXY, ConditionalObservables(y), PrintLevel(-1));
 
    // P r o j e c t   c o n d i t i o n a l   p . d . f   o n   x   a n d   y   d i m e n s i o n s
    // ---------------------------------------------------------------------------------------------

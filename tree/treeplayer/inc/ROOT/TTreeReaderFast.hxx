@@ -130,7 +130,7 @@ public:
    TTreeReaderFast(TTree* tree);
    TTreeReaderFast(const char* keyname, TDirectory* dir = NULL );
 
-   ~TTreeReaderFast();
+   ~TTreeReaderFast() override;
 
    TTreeReader::EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
 
@@ -171,7 +171,7 @@ private:
 
    friend class ROOT::Experimental::Internal::TTreeReaderValueFastBase;
 
-   ClassDef(TTreeReaderFast, 0); // A simple interface to read trees via bulk I/O
+   ClassDefOverride(TTreeReaderFast, 0); // A simple interface to read trees via bulk I/O
 };
 
 }  // Experimental

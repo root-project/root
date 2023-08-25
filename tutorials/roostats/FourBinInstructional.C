@@ -212,7 +212,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    // generate toy data assuming current value of the parameters
    // import into workspace.
    // add Verbose() to see how it's being generated
-   RooDataSet *data = wspace->pdf("model")->generate(*wspace->set("obs"), 1);
+   std::unique_ptr<RooDataSet> data{wspace->pdf("model")->generate(*wspace->set("obs"), 1)};
    //  data->Print("v");
    wspace->import(*data);
 
@@ -266,7 +266,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    // use MCMCCalculator  (takes about 1 min)
    // Want an efficient proposal function, so derive it from covariance
    // matrix of fit
-   RooFitResult *fit = wspace->pdf("model")->fitTo(*data, Save());
+   std::unique_ptr<RooFitResult> fit{wspace->pdf("model")->fitTo(*data, Save())};
    ProposalHelper ph;
    ph.SetVariables((RooArgSet &)fit->floatParsFinal());
    ph.SetCovMatrix(fit->covarianceMatrix());

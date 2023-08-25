@@ -1,10 +1,37 @@
 {
-    "gaussian_dist": {
-        "class": "RooGaussian",
+    "ARGUS_dist": {
+        "class": "RooArgusBG",
+        "arguments": [
+            "mass",
+            "resonance",
+            "slope",
+            "power"
+        ]
+    },
+    "bernstein_poly_dist": {
+        "class": "RooBernstein",
+        "arguments": [
+            "x",
+            "coefficients"
+        ]
+    },
+    "bifurkated_gaussian_dist": {
+        "class": "RooBifurGauss",
         "arguments": [
             "x",
             "mean",
-            "sigma"
+            "sigmaL",
+            "sigmaR"
+        ]
+    },
+    "crystalball_dist": {
+        "class": "RooCBShape",
+        "arguments": [
+            "m",
+            "m0",
+            "sigma",
+            "alpha",
+            "n"
         ]
     },
     "exponential_dist": {
@@ -14,17 +41,21 @@
             "c"
         ]
     },
-    "poisson_dist": {
-        "class": "RooPoisson",
+    "gamma_dist": {
+        "class": "RooGamma",
         "arguments": [
             "x",
-            "mean"
+            "gamma",
+            "beta",
+            "mu"
         ]
     },
-    "product": {
-        "class": "RooProduct",
+    "gaussian_dist": {
+        "class": "RooGaussian",
         "arguments": [
-            "factors"
+            "x",
+            "mean",
+            "sigma"
         ]
     },
     "product_dist": {
@@ -42,10 +73,47 @@
             "high"
         ]
     },
-    "sum": {
-        "class": "RooAddition",
+    "landau_dist": {
+        "class": "RooLandau",
         "arguments": [
-            "summands"
+            "x",
+            "mean",
+            "sigma"
+        ]
+    },
+    "lognormal_dist": {
+        "class": "RooLognormal",
+        "arguments": [
+            "x",
+            "m0",
+            "k"
+        ]
+    },
+    "poisson_dist": {
+        "class": "RooPoisson",
+        "arguments": [
+            "x",
+            "mean"
+        ]
+    },
+    "power_dist": {
+        "class": "RooPower",
+        "arguments": [
+            "x",
+            "coefficients",
+            "exponents"
+        ]
+    },
+    "product": {
+        "class": "RooProduct",
+        "arguments": [
+            "factors"
+        ]
+    },
+    "product_dist": {
+        "class": "RooProdPdf",
+        "arguments": [
+            "factors"
         ]
     },
     "step": {
@@ -55,39 +123,16 @@
             "parameters"
         ]
     },
-    "ARGUS_dist": {
-        "class": "RooArgusBG",
+    "sum": {
+        "class": "RooAddition",
         "arguments": [
-            "mass",
-            "resonance",
-            "slope",
-            "power"
+            "summands"
         ]
     },
-    "bernstein_poly_dist": {
-        "class": "RooBernstein",
+    "uniform_dist": {
+        "class": "RooUniform",
         "arguments": [
-            "x",
-            "coefficients"
-        ]
-    },
-    "crystalball_dist": {
-        "class": "RooCBShape",
-        "arguments": [
-            "m",
-            "m0",
-            "sigma",
-            "alpha",
-            "n"
-        ]
-    },
-    "bifurkated_gaussian_dist": {
-        "class": "RooBifurGauss",
-        "arguments": [
-            "x",
-            "mean",
-            "sigmaL",
-            "sigmaR"
+            "x"
         ]
     }
 }

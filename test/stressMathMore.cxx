@@ -469,10 +469,12 @@ int testGammaFunction(int n = 100) {
       PrintStatus(ret);
       iret |= ret;
 
+#if !defined(_MSC_VER) || !defined(__CLING__) || defined(R__ENABLE_BROKEN_WIN_TESTS)
       PrintTest("\t test inverse with Steffenson algo");
       ret = dist.TestInverse2(RootFinder::kGSL_STEFFENSON);
       PrintStatus(ret);
       iret |= ret;
+#endif
 
       PrintTest("\t test inverse with Brent method");
       ret = dist.TestInverse1(RootFinder::kBRENT);
@@ -534,12 +536,14 @@ int testBetaFunction(int n = 100) {
       PrintStatus(ret);
       iret |= ret;
 
+#if !defined(_MSC_VER) || !defined(__CLING__) || defined(R__ENABLE_BROKEN_WIN_TESTS)
       if (i < 5) {  // test failed for k=5
          PrintTest("\t test inverse with Steffenson algo");
          ret = dist.TestInverse2(RootFinder::kGSL_STEFFENSON);
          PrintStatus(ret);
          iret |= ret;
       }
+#endif
    }
 
    return iret;

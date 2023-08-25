@@ -1,4 +1,3 @@
-import { REVISION } from '../three.mjs';
 import { settings, isObject } from '../core.mjs';
 import { PointsCreator } from '../base/base3d.mjs';
 
@@ -60,10 +59,6 @@ async function drawPolyMarker3D() {
       fp.toplevel.add(mesh);
 
       mesh.tooltip = function(intersect) {
-         if (!Number.isInteger(intersect.index)) {
-            console.error(`intersect.index not provided, three.js version ${REVISION}`);
-            return null;
-         }
          let indx = Math.floor(intersect.index / this.nvertex);
          if ((indx < 0) || (indx >= this.index.length)) return null;
 

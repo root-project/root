@@ -111,15 +111,6 @@ class CheckDiagsRAII {
       }
 
    private:
-      struct Diag_t {
-         int severity;
-         std::string location;
-         std::string message;
-         bool matchFullString = true;
-         bool optional = false;
-         int receivedCount = -1;
-      };
-
       /// Message handler that hands over all diagnostics to the currently active instance.
       static void callback(int severity, bool abort, const char * location, const char * msg) {
          if (sActiveInstance) {
@@ -136,9 +127,17 @@ class CheckDiagsRAII {
       }
 
       /// Check all received diags against list of expected ones.
-      void checkDiag(int severity, const char * location, const char * msg);
-      /// Print the diags in `diags` to the terminal.
-      void printDiags(std::vector<Diag_t> const & diags) const;
+      void checkDiag(int severity, const char *location, const char *msg);
+
+      struct Diag_t {
+         int severity;
+         std::string location;
+         std::string message;
+         bool matchFullString = true;
+         bool optional = false;
+         int receivedCount = -1;
+      };
+      friend std::ostream &operator<<(std::ostream &stream, Diag_t const &diag);
 
       std::vector<Diag_t> fExpectedDiags;
       std::vector<Diag_t> fUnexpectedDiags;

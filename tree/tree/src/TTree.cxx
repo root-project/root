@@ -89,7 +89,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   assumed of type F by default. The list of currently supported
   types is given below:
    - `C` : a character string terminated by the 0 character
-   - `B` : an 8 bit signed integer (`Char_t`)
+   - `B` : an 8 bit signed integer (`Char_t`); Treated as a character when in an array.
    - `b` : an 8 bit unsigned integer (`UChar_t`)
    - `S` : a 16 bit signed integer (`Short_t`)
    - `s` : a 16 bit unsigned integer (`UShort_t`)
@@ -110,6 +110,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
    - A float array with fixed size: "myArrfloat[42]/F"
    - An double array with variable size, held by the `myvar` column: "myArrdouble[myvar]/D"
    - An Double32_t array with variable size, held by the `myvar` column , with values between 0 and 16: "myArr[myvar]/d[0,10]"
+   - The `myvar` column, which holds the variable size, **MUST** be an `Int_t` (/I).
 
 - If the address points to a single numerical variable, the leaflist is optional:
 ~~~ {.cpp}
@@ -124,8 +125,8 @@ It is strongly recommended to persistify those as objects rather than lists of l
 - In case of the truncated floating point types (Float16_t and Double32_t) you can
   furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
   the type character. For example, for storing a variable size array `myArr` of
-  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is
-  stored in a branch called `myArrSize`, the syntax for the `leaflist` string would
+  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is stored
+  in an `Int_t` (/I) branch called `myArrSize`, the syntax for the `leaflist` string would
   be: `myArr[myArrSize]/d[0,twopi]`. Of course the number of bits could be specified,
   the standard rules of opaque typedefs annotation are valid. For example, if only
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
@@ -1248,9 +1249,10 @@ bool CheckReshuffling(TTree &mainTree, TTree &friendTree)
 
    if ((isMainReshuffled || isFriendReshuffled) && !friendHasValidIndex) {
       const auto reshuffledTreeName = isMainReshuffled ? mainTree.GetName() : friendTree.GetName();
-      const auto msg = "Tree '%s' has the kEntriesReshuffled bit set, and cannot be used as friend nor can be added as "
-                       "a friend unless the main tree has a TTreeIndex on the friend tree '%s'. You can also unset the "
-                       "bit manually if you know what you are doing.";
+      const auto msg =
+         "Tree '%s' has the kEntriesReshuffled bit set and cannot have friends nor can be added as a friend unless the "
+         "main tree has a TTreeIndex on the friend tree '%s'. You can also unset the bit manually if you know what you "
+         "are doing; note that you risk associating wrong TTree entries of the friend with those of the main TTree!";
       Error("AddFriend", msg, reshuffledTreeName, friendTree.GetName());
       return false;
    }
@@ -1938,7 +1940,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      variable. If the first variable does not have a type, it is assumed
 ///      of type F by default. The list of currently supported types is given below:
 ///         - `C` : a character string terminated by the 0 character
-///         - `B` : an 8 bit signed integer (`Char_t`)
+///         - `B` : an 8 bit signed integer (`Char_t`); Treated as a character when in an array.
 ///         - `b` : an 8 bit unsigned integer (`UChar_t`)
 ///         - `S` : a 16 bit signed integer (`Short_t`)
 ///         - `s` : a 16 bit unsigned integer (`UShort_t`)
@@ -1958,6 +1960,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///         - If leaf name has the form var[nelem], where nelem is alphanumeric, then
 ///           if nelem is a leaf name, it is used as the variable size of the array,
 ///           otherwise return 0.
+///           The leaf referred to by nelem **MUST** be an int (/I),
 ///         - If leaf name has the form var[nelem], where nelem is a non-negative integer, then
 ///           it is used as the fixed size of the array.
 ///         - If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2])
@@ -3869,6 +3872,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///                   vs "e2" vs "e3" and "e4" mapped on the current color palette.
 ///                   (to create histograms in the 2, 3, and 4 dimensional case,
 ///                   see section "Saving the result of Draw to an histogram")
+///   - "e1:e2:e3:e4:e5" with option "GL5D" produces a 5D plot using OpenGL. `gStyle->SetCanvasPreferGL(true)` is needed.
+///   - Any number of variables no fewer than two can be used with the options "CANDLE" and "PARA"
+///   - An arbitrary number of variables can be used with the option "GOFF"
 ///
 ///   Examples:
 ///    - "x": the simplest case, it draws a 1-Dim histogram of column x
@@ -5398,7 +5404,7 @@ Int_t TTree::GetBranchStyle()
 
 Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
-   auto calculateCacheSize = [=](Double_t cacheFactor)
+   auto calculateCacheSize = [this](Double_t cacheFactor)
    {
       Long64_t cacheSize = 0;
       if (fAutoFlush < 0) {
@@ -6459,9 +6465,9 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
 /// Returns -2 if entry does not exist (just as TChain::LoadTree()).
 /// Returns -6 if an error occurs in the notification callback (just as TChain::LoadTree()).
 ///
-/// Note: This function is overloaded in TChain.
+/// Calls fNotify->Notify() (if fNotify is not null) when starting the processing of a new tree.
 ///
-
+/// \note This function is overloaded in TChain.
 Long64_t TTree::LoadTree(Long64_t entry)
 {
    // We have already been visited while recursively looking
@@ -9208,6 +9214,32 @@ void TTree::SetName(const char* name)
          file->SetCacheRead(pf,this,TFile::kDoNotDisconnect);
       }
    }
+}
+
+void TTree::SetNotify(TObject *obj)
+{
+   if (obj && fNotify && dynamic_cast<TNotifyLinkBase *>(fNotify)) {
+      auto *oldLink = static_cast<TNotifyLinkBase *>(fNotify);
+      auto *newLink = dynamic_cast<TNotifyLinkBase *>(obj);
+      if (!newLink) {
+         Warning("TTree::SetNotify",
+                 "The tree or chain already has a fNotify registered and it is a TNotifyLink, while the new object is "
+                 "not a TNotifyLink. Setting fNotify to the new value will lead to an orphan linked list of "
+                 "TNotifyLinks and it is most likely not intended. If this is the intended goal, please call "
+                 "SetNotify(nullptr) first to silence this warning.");
+      } else if (newLink->GetNext() != oldLink && oldLink->GetNext() != newLink) {
+         // If newLink->GetNext() == oldLink then we are prepending the new head, as in TNotifyLink::PrependLink
+         // If oldLink->GetNext() == newLink then we are removing the head of the list, as in TNotifyLink::RemoveLink
+         // Otherwise newLink and oldLink are unrelated:
+         Warning("TTree::SetNotify",
+                 "The tree or chain already has a TNotifyLink registered, and the new TNotifyLink `obj` does not link "
+                 "to it. Setting fNotify to the new value will lead to an orphan linked list of TNotifyLinks and it is "
+                 "most likely not intended. If this is the intended goal, please call SetNotify(nullptr) first to "
+                 "silence this warning.");
+      }
+   }
+
+   fNotify = obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

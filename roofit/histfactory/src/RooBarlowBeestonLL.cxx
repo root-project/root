@@ -137,7 +137,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
   // Get a list of constraint terms
   RooArgList obsTerms;
   RooArgList constraints;
-  RooArgSet* obsSet = _pdf->getObservables(*_data);
+  RooArgSet* obsSet = std::unique_ptr<RooArgSet>{_pdf->getObservables(*_data)}.release();
   FactorizeHistFactoryPdf(*obsSet, *_pdf, obsTerms, constraints);
 
   if( obsTerms.empty() ) {

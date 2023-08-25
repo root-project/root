@@ -3,7 +3,9 @@
 ## \notebook
 ## Multidimensional models: making 2/3 dimensional plots of pdfs and datasets
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -48,7 +50,7 @@ hh_pdf.SetLineColor(ROOT.kBlue)
 # Create observables
 z = ROOT.RooRealVar("z", "z", -5, 5)
 
-gz = ROOT.RooGaussian("gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
+gz = ROOT.RooGaussian("gz", "gz", z, 0.0, 2.0)
 model3 = ROOT.RooProdPdf("model3", "model3", [model, gz])
 
 data3 = model3.generate({x, y, z}, 10000)

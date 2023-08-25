@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Likelihood and minimization: setting up a chi^2 fit to a binned dataset
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -52,15 +52,15 @@ void rf602_chi2fit()
    // C r e a t e   b i n n e d   d a t a s e t
    // -----------------------------------------
 
-   RooDataSet *d = model.generate(x, 10000);
-   RooDataHist *dh = d->binnedClone();
+   std::unique_ptr<RooDataSet> d{model.generate(x, 10000)};
+   std::unique_ptr<RooDataHist> dh{d->binnedClone()};
 
    // Construct a chi^2 of the data and the model.
    // When a pdf is used in a chi^2 fit, the probability density scaled
    // by the number of events in the dataset to obtain the fit function
    // If model is an extended pdf, the expected number events is used
    // instead of the observed number of events.
-   model.chi2FitTo(*dh);
+   model.chi2FitTo(*dh, {PrintLevel(-1)});
 
    // NB: It is also possible to fit a RooAbsReal function to a RooDataHist
    // using chi2FitTo().

@@ -16,13 +16,13 @@
 #ifndef ROO_ABS_PDF
 #define ROO_ABS_PDF
 
-#include "RooAbsReal.h"
-#include "RooObjCacheManager.h"
-#include "RooGlobalFunc.h"
-#include "RooFit/UniqueId.h"
+#include <RooAbsReal.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooFit/UniqueId.h>
+#include <RooGlobalFunc.h>
+#include <RooObjCacheManager.h>
 
-class RooDataSet;
-class RooDataHist ;
 class RooArgSet ;
 class RooAbsGenContext ;
 class RooFitResult ;
@@ -36,9 +36,6 @@ class RooMinimizer ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
 
-namespace RooBatchCompute {
-struct RunContext;
-}
 
 class RooAbsPdf : public RooAbsReal {
 public:
@@ -57,18 +54,18 @@ public:
   /// \param[in] whatVars Set of observables to generate for each event according to this model.
   /// \param[in] nEvents How many events to generate
   /// \param arg1,arg2,arg3,arg4,arg5 Optional command arguments.
-  RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
-                       const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-                       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) {
+  RooFit::OwningPtr<RooDataSet> generate(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
+                       const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
+                       const RooCmdArg& arg4={}, const RooCmdArg& arg5={}) {
     return generate(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5) ;
   }
-  RooDataSet *generate(const RooArgSet &whatVars,
-                       const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-                       const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                       const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
-  RooDataSet *generate(const RooArgSet &whatVars, double nEvents = 0, bool verbose=false, bool autoBinned=true,
+  RooFit::OwningPtr<RooDataSet> generate(const RooArgSet &whatVars,
+                       const RooCmdArg& arg1={},const RooCmdArg& arg2={},
+                       const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                       const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
+  RooFit::OwningPtr<RooDataSet> generate(const RooArgSet &whatVars, double nEvents = 0, bool verbose=false, bool autoBinned=true,
              const char* binnedTag="", bool expectedData=false, bool extended = false) const;
-  RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
+  RooFit::OwningPtr<RooDataSet> generate(const RooArgSet &whatVars, const RooDataSet &prototype, Int_t nEvents= 0,
              bool verbose=false, bool randProtoOrder=false, bool resampleProto=false) const;
 
 
@@ -97,11 +94,11 @@ public:
 
   ///Prepare GenSpec configuration object for efficient generation of multiple datasets from identical specification.
   GenSpec* prepareMultiGen(const RooArgSet &whatVars,
-            const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-            const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-            const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+            const RooCmdArg& arg1={},const RooCmdArg& arg2={},
+            const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+            const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
   ///Generate according to GenSpec obtained from prepareMultiGen().
-  RooDataSet* generate(GenSpec&) const ;
+  RooFit::OwningPtr<RooDataSet> generate(GenSpec&) const ;
 
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -109,26 +106,26 @@ public:
   /// \param[in] whatVars set
   /// \param[in] nEvents How many events to generate
   /// \param arg1,arg2,arg3,arg4,arg5 ordered arguments
-  virtual RooDataHist *generateBinned(const RooArgSet &whatVars, double nEvents, const RooCmdArg& arg1,
-               const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
-               const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) const {
+  virtual RooFit::OwningPtr<RooDataHist> generateBinned(const RooArgSet &whatVars, double nEvents, const RooCmdArg& arg1,
+               const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
+               const RooCmdArg& arg4={}, const RooCmdArg& arg5={}) const {
     return generateBinned(whatVars,RooFit::NumEvents(nEvents),arg1,arg2,arg3,arg4,arg5);
   }
-  virtual RooDataHist *generateBinned(const RooArgSet &whatVars,
-               const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-               const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-               const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) const;
-  virtual RooDataHist *generateBinned(const RooArgSet &whatVars, double nEvents, bool expectedData=false, bool extended=false) const;
+  virtual RooFit::OwningPtr<RooDataHist> generateBinned(const RooArgSet &whatVars,
+               const RooCmdArg& arg1={},const RooCmdArg& arg2={},
+               const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+               const RooCmdArg& arg5={},const RooCmdArg& arg6={}) const;
+  virtual RooFit::OwningPtr<RooDataHist> generateBinned(const RooArgSet &whatVars, double nEvents, bool expectedData=false, bool extended=false) const;
 
-  virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
+  virtual RooFit::OwningPtr<RooDataSet> generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
 
   ///Helper calling plotOn(RooPlot*, RooLinkedList&) const
   RooPlot* plotOn(RooPlot* frame,
-           const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-           const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-           const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-           const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),
-           const RooCmdArg& arg9=RooCmdArg::none(), const RooCmdArg& arg10=RooCmdArg::none()
+           const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+           const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+           const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+           const RooCmdArg& arg7={}, const RooCmdArg& arg8={},
+           const RooCmdArg& arg9={}, const RooCmdArg& arg10={}
               ) const override {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
@@ -136,14 +133,10 @@ public:
 
   /// Add a box with parameter values (and errors) to the specified frame
   virtual RooPlot* paramOn(RooPlot* frame,
-                           const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                           const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-                           const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-                           const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-
-  virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
-            Option_t *options = "NELU", double xmin=0.65,
-            double xmax = 0.9, double ymax = 0.9) ;
+                           const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                           const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+                           const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+                           const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const;
@@ -212,13 +205,13 @@ public:
   // Chi^2 fits to histograms
   using RooAbsReal::chi2FitTo ;
   using RooAbsReal::createChi2 ;
-  RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
-  RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
-             const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-             const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) override ;
+  RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
+  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
+             const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+             const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) override ;
 
   // Chi^2 fits to X-Y datasets
-  RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
+  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
 
 
   // Constraint management
@@ -236,20 +229,17 @@ public:
 
   // Create cumulative density function from p.d.f
   RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
-  RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
-         const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-         const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-         const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},
+         const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+         const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+         const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
   RooFit::OwningPtr<RooAbsReal> createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
   // Function evaluation support
   double getValV(const RooArgSet* set=nullptr) const override ;
   virtual double getLogVal(const RooArgSet* set=nullptr) const ;
 
-  RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
-      const RooArgSet* normSet = nullptr) const;
-  RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
-  void getLogProbabilities(RooSpan<const double> pdfValues, double * output) const;
+  void getLogProbabilities(std::span<const double> pdfValues, double * output) const;
 
   /// \copydoc getNorm(const RooArgSet*) const
   double getNorm(const RooArgSet& nset) const {
@@ -293,6 +283,8 @@ public:
     return expectedEvents(&nset) ;
   }
 
+  virtual std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const;
+
   // Printing interface (human readable)
   void printValue(std::ostream& os) const override ;
   void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
@@ -326,16 +318,16 @@ public:
 
 private:
 
-  RooDataSet *generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
+  std::unique_ptr<RooDataSet> generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
              double nEvents, bool verbose, bool randProtoOrder, bool resampleProto, bool skipInit=false,
              bool extended=false) const ;
 
   // Implementation version
   virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, bool showConstants=false,
-                           const char *label= "", Int_t sigDigits = 2, Option_t *options = "NELU", double xmin=0.65,
-            double xmax= 0.99,double ymax=0.95, const RooCmdArg* formatCmd=nullptr) ;
+                           const char *label= "", double xmin=0.65,
+                           double xmax= 0.99,double ymax=0.95, const RooCmdArg* formatCmd=nullptr) ;
 
-  void logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const;
+  void logBatchComputationErrors(std::span<const double>& outputs, std::size_t begin) const;
   bool traceEvalPdf(double value) const;
 
   /// Setter for the _normSet member, which should never be set directly.

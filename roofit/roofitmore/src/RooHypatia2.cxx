@@ -93,7 +93,6 @@
 #include "BracketAdapters.h"
 #include "RooAbsReal.h"
 #include "RooHelpers.h"
-#include "RunContext.h"
 
 #include "TMath.h"
 #include "Math/SpecFunc.h"
@@ -336,7 +335,7 @@ namespace {
 /// This is only needed in the rare case where a parameter is used as an observable.
 template<typename Tx, typename Tl, typename Tz, typename Tb, typename Ts, typename Tm, typename Ta, typename Tn,
 typename Ta2, typename Tn2>
-void compute(RooSpan<double> output, Tx x, Tl lambda, Tz zeta, Tb beta, Ts sigma, Tm mu, Ta a, Tn n, Ta2 a2, Tn2 n2) {
+void compute(std::span<double> output, Tx x, Tl lambda, Tz zeta, Tb beta, Ts sigma, Tm mu, Ta a, Tn n, Ta2 a2, Tn2 n2) {
   const auto N = output.size();
   const bool zetaIsAlwaysLargerZero = !zeta.isBatch() && zeta[0] > 0.;
   const bool zetaIsAlwaysZero = !zeta.isBatch() && zeta[0] == 0.;
@@ -432,7 +431,7 @@ using RooBatchCompute::BracketAdapter;
 //////////////////////////////////////////////////////////////////////////////////////////
 /// A specialised compute function where x is an observable, and all parameters are used as
 /// parameters. Since many things can be calculated outside of the loop, it is faster.
-void compute(RooSpan<double> output, RooSpan<const double> x,
+void compute(std::span<double> output, std::span<const double> x,
     BracketAdapter<double> lambda, BracketAdapter<double> zeta, BracketAdapter<double> beta,
     BracketAdapter<double> sigma, BracketAdapter<double> mu,
     BracketAdapter<double> a, BracketAdapter<double> n, BracketAdapter<double> a2, BracketAdapter<double> n2) {
@@ -488,43 +487,42 @@ void compute(RooSpan<double> output, RooSpan<const double> x,
 
 }
 
-RooSpan<double> RooHypatia2::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+void RooHypatia2::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
+{
   using namespace RooBatchCompute;
 
-  auto x = _x->getValues(evalData, normSet);
-  auto lambda = _lambda->getValues(evalData, normSet);
-  auto zeta = _zeta->getValues(evalData, normSet);
-  auto beta = _beta->getValues(evalData, normSet);
-  auto sig = _sigma->getValues(evalData, normSet);
-  auto mu = _mu->getValues(evalData, normSet);
-  auto a = _a->getValues(evalData, normSet);
-  auto n = _n->getValues(evalData, normSet);
-  auto a2 = _a2->getValues(evalData, normSet);
-  auto n2 = _n2->getValues(evalData, normSet);
+  auto x = dataMap.at(_x);
+  auto lambda = dataMap.at(_lambda);
+  auto zeta = dataMap.at(_zeta);
+  auto beta = dataMap.at(_beta);
+  auto sig = dataMap.at(_sigma);
+  auto mu = dataMap.at(_mu);
+  auto a = dataMap.at(_a);
+  auto n = dataMap.at(_n);
+  auto a2 = dataMap.at(_a2);
+  auto n2 = dataMap.at(_n2);
 
-  size_t paramSizeSum=0, batchSize = x.size();
+  size_t paramSizeSum=0;
   for (const auto& i:{lambda, zeta, beta, sig, mu, a, n, a2, n2}) {
     paramSizeSum += i.size();
-    batchSize = std::max(batchSize, i.size());
   }
-  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+  std::span<double> outputSpan{output, size};
 
   // Run high performance compute if only x has multiple values
   if (x.size()>1 && paramSizeSum==9) {
-    compute(output, x,
+    compute(outputSpan, x,
         BracketAdapter<double>(_lambda), BracketAdapter<double>(_zeta),
         BracketAdapter<double>(_beta), BracketAdapter<double>(_sigma), BracketAdapter<double>(_mu),
         BracketAdapter<double>(_a), BracketAdapter<double>(_n),
         BracketAdapter<double>(_a2), BracketAdapter<double>(_n2));
   } else {
-    compute(output, BracketAdapterWithMask(_x, x),
+    compute(outputSpan, BracketAdapterWithMask(_x, x),
         BracketAdapterWithMask(_lambda, lambda), BracketAdapterWithMask(_zeta, zeta),
         BracketAdapterWithMask(_beta, beta), BracketAdapterWithMask(_sigma, sig),
         BracketAdapterWithMask(_mu, mu),
         BracketAdapterWithMask(_a, a), BracketAdapterWithMask(_n, n),
         BracketAdapterWithMask(_a2, a2), BracketAdapterWithMask(_n2, n2));
   }
-  return output;
 }
 
 

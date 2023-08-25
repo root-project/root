@@ -19,11 +19,14 @@
 class THttpServer;
 
 namespace ROOT {
-namespace Experimental {
 
+namespace Experimental {
 class RLogChannel;
+} // namespace Experimental
+
 /// Log channel for WebGUI diagnostics.
-RLogChannel &WebGUILog();
+ROOT::Experimental::RLogChannel &WebGUILog();
+
 
 class RWebWindow;
 
@@ -68,6 +71,7 @@ protected:
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
 
    std::shared_ptr<RWebWindow> fMaster; ///<!  master window
+   unsigned fMasterConnection{0};       ///<!  used master connection
    int fMasterChannel{-1};              ///<!  used master channel
 
    bool SetSizeAsStr(const std::string &str);
@@ -82,7 +86,7 @@ public:
 
    RWebDisplayArgs(int width, int height, int x = -1, int y = -1, const std::string &browser = "");
 
-   RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel = -1);
+   RWebDisplayArgs(std::shared_ptr<RWebWindow> master, unsigned conndid = 0, int channel = -1);
 
    virtual ~RWebDisplayArgs();
 
@@ -93,7 +97,7 @@ public:
    EBrowserKind GetBrowserKind() const { return fKind; }
    std::string GetBrowserName() const;
 
-   void SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel = -1);
+   void SetMasterWindow(std::shared_ptr<RWebWindow> master, unsigned connid = 0, int channel = -1);
 
    /// returns true if interactive browser window supposed to be started
    bool IsInteractiveBrowser() const
@@ -206,10 +210,9 @@ public:
    /// [internal] returns web-driver data, used to start window
    void *GetDriverData() const { return fDriverData; }
 
-   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "");
+   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x50000);
 };
 
-}
-}
+} // namespace ROOT
 
 #endif

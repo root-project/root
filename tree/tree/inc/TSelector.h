@@ -47,7 +47,7 @@ private:
 
 public:
    TSelector();
-   virtual            ~TSelector();
+              ~TSelector() override;
 
    virtual int         Version() const { return 0; }
    virtual void        Init(TTree *) { }

@@ -203,7 +203,7 @@ RETURN_METHOD_ARG1(VirtualX,const char*,DisplayName,const char*,dpyName)
 RETURN_METHOD_ARG1(VirtualX,Bool_t,Init,void*,display)
 RETURN_METHOD_ARG1(VirtualX,Int_t,GetDoubleBuffer,Int_t,wid)
 RETURN_METHOD_ARG1(VirtualX,Window_t,GetWindowID,Int_t,wid)
-RETURN_METHOD_ARG1(VirtualX,Int_t,InitWindow,ULong_t,window)
+RETURN_METHOD_ARG1(VirtualX,Int_t,InitWindow,ULongptr_t,window)
 RETURN_METHOD_ARG1(VirtualX,Int_t,WriteGIF,char*,name)
 RETURN_METHOD_ARG1(VirtualX,FontStruct_t,LoadQueryFont,const char*,font_name)
 RETURN_METHOD_ARG1(VirtualX,FontH_t,GetFontHandle,FontStruct_t,fs)
@@ -237,8 +237,8 @@ RETURN_METHOD_ARG3(VirtualX,Pixmap_t,CreatePixmap,Drawable_t,wid,UInt_t,w,UInt_t
 RETURN_METHOD_ARG1(VirtualX,ULong_t,GetPixel,Color_t,cindex)
 RETURN_METHOD_ARG5(VirtualX,unsigned char*,GetColorBits,Drawable_t,wid,Int_t,x,Int_t,y,UInt_t,width,UInt_t,height)
 RETURN_METHOD_ARG3(VirtualX,Pixmap_t,CreatePixmapFromData,unsigned char*,bits,UInt_t,width,UInt_t,height)
-RETURN_METHOD_ARG3(VirtualX,Int_t,AddWindow,ULong_t,qwid,UInt_t,w,UInt_t,h)
-VOID_METHOD_ARG1(VirtualX,RemoveWindow,ULong_t,qwid,1)
+RETURN_METHOD_ARG3(VirtualX,Int_t,AddWindow,ULongptr_t,qwid,UInt_t,w,UInt_t,h)
+VOID_METHOD_ARG1(VirtualX,RemoveWindow,ULongptr_t,qwid,1)
 VOID_METHOD_ARG4(VirtualX,ShapeCombineMask,Window_t,id,Int_t,x,Int_t,y,Pixmap_t,mask,1)
 
 VOID_METHOD_ARG2(VirtualX,DeleteProperty,Window_t,win,Atom_t&,prop,1)
@@ -254,9 +254,9 @@ RETURN_METHOD_ARG2(VirtualX,Bool_t,IsDNDAware,Window_t,win,Atom_t*,typelist);
 
 //VOID_METHOD_ARG1(VirtualX,CreateOpenGLContext,Int_t,wid,1)
 //VOID_METHOD_ARG1(VirtualX,DeleteOpenGLContext,Int_t,wid,1)
-//VOID_METHOD_ARG1(VirtualX,RemoveWindow,ULong_t,qwid,1)
+//VOID_METHOD_ARG1(VirtualX,RemoveWindow,ULongptr_t,qwid,1)
 //RETURN_METHOD_ARG1(VirtualX,ExecCommand,UInt_t,TGWin32Command*,code)
-//RETURN_METHOD_ARG3(VirtualX,Int_t,AddWindow,ULong_t,qwid,UInt_t,w,UInt_t,h)
+//RETURN_METHOD_ARG3(VirtualX,Int_t,AddWindow,ULongptr_t,qwid,UInt_t,w,UInt_t,h)
 
 //////////////////////// some non-standard methods /////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

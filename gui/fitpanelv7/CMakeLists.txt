@@ -8,6 +8,11 @@
 # CMakeLists.txt file for building ROOT gui/fitpanelv7
 ############################################################################
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTFitPanelv7
   HEADERS
     ROOT/RFitPanel.hxx
@@ -23,4 +28,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTFitPanelv7
     ROOTGpadv7
     ROOTHistDraw
     ROOTWebDisplay
+  ${EXTRA_DICT_OPTS}
 )

@@ -44,7 +44,7 @@ public:
    TImagePalette(const TImagePalette &palette);
    TImagePalette(UInt_t numPoints);
    TImagePalette(Int_t ncolors, Int_t *colors);
-   virtual ~TImagePalette();
+   ~TImagePalette() override;
    virtual Int_t FindColor(UShort_t r, UShort_t g, UShort_t b);
    virtual Int_t *GetRootColors();
 

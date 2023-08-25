@@ -82,7 +82,7 @@ public:
    };
 
    TFileMerger(Bool_t isLocal = kTRUE, Bool_t histoOneGo = kTRUE);
-   virtual ~TFileMerger();
+   ~TFileMerger() override;
 
    Int_t       GetPrintLevel() const { return fPrintLevel; }
    void        SetPrintLevel(Int_t level) { fPrintLevel = level; }

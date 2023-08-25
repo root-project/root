@@ -136,6 +136,8 @@ protected:
 
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
+   virtual Bool_t CallProduceImage(const std::string &kind, const std::string &path, const std::string &options, std::string &res);
+
    void
    ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = nullptr, TCollection *keys_lst = nullptr);
 

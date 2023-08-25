@@ -68,7 +68,7 @@ protected:
 
   RooNumIntConfig _convIntConfig ; ///< Configuration of numeric convolution integral ;
   mutable RooConvIntegrandBinding* _integrand ; ///<! Binding of Convolution Integrand function
-  mutable RooAbsIntegrator* _integrator ;  ///<! Numeric integrator of convolution integrand
+  mutable std::unique_ptr<RooAbsIntegrator> _integrator ;  ///<! Numeric integrator of convolution integrand
 
   RooRealProxy _origVar ;         ///< Original convolution variable
   RooRealProxy _origPdf ;         ///< Original input PDF

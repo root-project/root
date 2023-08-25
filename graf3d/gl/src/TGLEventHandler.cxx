@@ -509,7 +509,8 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
          fGLViewer->RequestSelect(event->fX, event->fY);
          if (fGLViewer->fSelRec.GetN() > 0)
          {
-            TGLVector3 v(event->fX, event->fY, 0.5*fGLViewer->fSelRec.GetMinZ());
+            auto scaling = TGLUtil::GetScreenScalingFactor();
+            TGLVector3 v(scaling * event->fX, scaling * event->fY, 0.5*fGLViewer->fSelRec.GetMinZ());
             fGLViewer->CurrentCamera().WindowToViewport(v);
             v = fGLViewer->CurrentCamera().ViewportToWorld(v);
             if (fGLViewer->GetPushAction() == TGLViewer::kPushCamCenter)

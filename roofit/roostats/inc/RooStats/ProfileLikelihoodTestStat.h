@@ -131,7 +131,7 @@ namespace RooStats {
 
   private:
 
-     RooFitResult* GetMinNLL();
+     std::unique_ptr<RooFitResult> GetMinNLL();
 
    private:
 

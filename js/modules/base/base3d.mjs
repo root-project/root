@@ -1,14 +1,31 @@
-import { select as d3_select } from '../d3.mjs';
+import { select as d3_select, color as d3_color } from '../d3.mjs';
 import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          CanvasTexture, TextureLoader,
          BufferGeometry, BufferAttribute, Float32BufferAttribute,
          Vector2, Vector3, Color, Points, PointsMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          OrbitControls, Raycaster, SVGRenderer } from '../three.mjs';
-import { browser, settings, constants, internals, isBatchMode, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
-import { getElementRect, getAbsPosInCanvas } from './BasePainter.mjs';
+import { browser, settings, constants, isBatchMode, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
+import { getElementRect, getAbsPosInCanvas, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
+
+
+/** @ummary Create three.js Color instance, handles optional opacity
+  * @private */
+function getMaterialArgs(color, args) {
+   if (!args || !isObject(args)) args = {};
+
+   if (isStr(color) && ((color[0] == '#' && (color.length === 9)) || (color.indexOf('rgba') >= 0))) {
+      let col = d3_color(color);
+      args.color = new Color(col.r, col.g, col.b);
+      args.opacity = col.opacity ?? 1;
+      args.transparent = args.opacity < 1;
+   } else {
+      args.color = new Color(color);
+   }
+   return args;
+}
 
 
 const HelveticerRegularFont = new Font(HelveticerRegularJson);
@@ -30,7 +47,7 @@ function createSVGRenderer(as_is, precision, doc) {
      svg_style: {},
      path_attr: {},
      accPath: '',
-     createElementNS(ns,kind) {
+     createElementNS(ns, kind) {
         if (kind == 'path')
            return {
               _wrapper: this,
@@ -71,24 +88,31 @@ function createSVGRenderer(as_is, precision, doc) {
      }
    };
 
-   let originalDocument = globalThis.document;
-   globalThis.document = doc_wrapper;
+   let originalDocument;
+
+   if (isNodeJs()) {
+      originalDocument = globalThis.document;
+      globalThis.document = doc_wrapper;
+   }
 
    let rndr = new SVGRenderer();
 
-   globalThis.document = originalDocument;
+   if (isNodeJs())
+      globalThis.document = originalDocument;
 
    rndr.doc_wrapper = doc_wrapper; // use it to get final SVG code
 
    rndr.originalRender = rndr.render;
 
-   rndr.render = function (scene, camera) {
+   rndr.render = function(scene, camera) {
       let originalDocument = globalThis.document;
-      globalThis.document = this.doc_wrapper;
+      if (isNodeJs())
+         globalThis.document = this.doc_wrapper;
 
       this.originalRender(scene, camera);
 
-      globalThis.document = originalDocument;
+      if (isNodeJs())
+         globalThis.document = originalDocument;
    }
 
    rndr.clearHTML = function() {
@@ -104,6 +128,35 @@ function createSVGRenderer(as_is, precision, doc) {
       return `<svg xmlns="http://www.w3.org/2000/svg" ${_textSizeAttr}${_textClearAttr}>${wrap.accPath}</svg>`;
    }
 
+   rndr.fillTargetSVG = function(svg) {
+
+      if (isNodeJs()) {
+
+         let wrap = this.doc_wrapper;
+
+         svg.setAttribute('viewBox', wrap.svg_attr['viewBox']);
+         svg.setAttribute('width', wrap.svg_attr['width']);
+         svg.setAttribute('height', wrap.svg_attr['height']);
+         svg.style.background = wrap.svg_style.backgroundColor || '';
+
+         svg.innerHTML = wrap.accPath;
+      } else {
+         let src = this.domElement;
+
+         svg.setAttribute('viewBox', src.getAttribute('viewBox'));
+         svg.setAttribute('width', src.getAttribute('width'));
+         svg.setAttribute('height', src.getAttribute('height'));
+         svg.style.background = src.style.backgroundColor;
+
+         while (src.firstChild) {
+            let elem = src.firstChild;
+            src.removeChild(elem);
+            svg.appendChild(elem);
+         }
+
+      }
+   }
+
    rndr.setPrecision(precision);
 
    return rndr;
@@ -112,14 +165,18 @@ function createSVGRenderer(as_is, precision, doc) {
 
 /** @ummary Define rendering kind which will be used for rendering of 3D elements
   * @param {value} [render3d] - preconfigured value, will be used if applicable
+  * @param {value} [is_batch] - is batch mode is configured
   * @return {value} - rendering kind, see constants.Render3D
   * @private */
-function getRender3DKind(render3d) {
-   if (!render3d) render3d = isBatchMode() ? settings.Render3DBatch : settings.Render3D;
+function getRender3DKind(render3d, is_batch) {
+   if (is_batch === undefined)
+      is_batch = isBatchMode();
+
+   if (!render3d) render3d = is_batch ? settings.Render3DBatch : settings.Render3D;
    let rc = constants.Render3D;
 
-   if (render3d == rc.Default) render3d = isBatchMode() ? rc.WebGLImage : rc.WebGL;
-   if (isBatchMode() && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
+   if (render3d == rc.Default) render3d = is_batch ? rc.WebGLImage : rc.WebGL;
+   if (is_batch && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
 
    return render3d;
 }
@@ -223,12 +280,12 @@ let Handling3DDrawings = {
       if (can3d < 0) {
          // remove first child from main element - if it is canvas
          let main = this.selectDom().node(),
-             chld = main ? main.firstChild : null;
+             chld = main?.firstChild;
 
          if (chld && !chld.$jsroot)
             chld = chld.nextSibling;
 
-         if (chld && chld.$jsroot) {
+         if (chld?.$jsroot) {
             delete chld.painter;
             main.removeChild(chld);
          }
@@ -294,16 +351,16 @@ let Handling3DDrawings = {
      * @private */
    apply3dSize(size, onlyget) {
 
-      if (size.can3d < 0) return d3_select(null);
+      if (size.can3d < 0)
+         return d3_select(null);
 
       let elem;
 
       if (size.can3d > 1) {
 
          elem = this.getLayerSvg(size.clname);
-
-         // elem = layer.select('.' + size.clname);
-         if (onlyget) return elem;
+         if (onlyget)
+            return elem;
 
          let svg = this.getPadSvg();
 
@@ -313,7 +370,7 @@ let Handling3DDrawings = {
             if (elem.empty())
                elem = svg.insert('g', '.primitives_layer').attr('class', size.clname);
 
-            elem.attr('transform', `translate(${size.x},${size.y})`);
+            makeTranslate(elem, size.x, size.y);
 
          } else {
 
@@ -332,7 +389,8 @@ let Handling3DDrawings = {
          let prnt = this.getCanvSvg().node().parentNode;
 
          elem = d3_select(prnt).select('.' + size.clname);
-         if (onlyget) return elem;
+         if (onlyget)
+            return elem;
 
          // force redraw by resize
          this.getCanvSvg().property('redraw_by_resize', true);
@@ -384,10 +442,9 @@ function assign3DHandler(painter) {
   * @param {object} args - different arguments for creating 3D renderer
   * @return {Promise} with renderer object
   * @private */
-
 async function createRender3D(width, height, render3d, args) {
 
-   let rc = constants.Render3D, promise, need_workaround = false, doc = getDocument();
+   let rc = constants.Render3D, promise, doc = getDocument();
 
    render3d = getRender3DKind(render3d);
 
@@ -401,19 +458,15 @@ async function createRender3D(width, height, render3d, args) {
       // SVG rendering
       let r = createSVGRenderer(false, 0, doc);
 
-      if (isBatchMode()) {
-         need_workaround = true;
-      } else {
-         r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-         // d3_select(r.jsroot_dom).attr('width', width).attr('height', height);
-      }
+      r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+
       promise = Promise.resolve(r);
    } else if (isNodeJs()) {
       // try to use WebGL inside node.js - need to create headless context
       promise = import('canvas').then(node_canvas => {
          args.canvas = node_canvas.default.createCanvas(width, height);
-         args.canvas.addEventListener = function() { }; // dummy
-         args.canvas.removeEventListener = function() { }; // dummy
+         args.canvas.addEventListener = () => {}; // dummy
+         args.canvas.removeEventListener = () => {}; // dummy
          args.canvas.style = {};
          return import('gl');
       }).then(node_gl => {
@@ -422,46 +475,48 @@ async function createRender3D(width, height, render3d, args) {
          args.context = gl;
          gl.canvas = args.canvas;
 
+         globalThis.WebGLRenderingContext = function() {}; // workaround to prevent crash in three.js constructor
+
          let r = new WebGLRenderer(args);
 
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
-         need_workaround = true;
+         r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
          return r;
       });
-
    } else {
       // rendering with WebGL directly into svg image
       let r = new WebGLRenderer(args);
       r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
-      d3_select(r.jsroot_dom).attr('width', width).attr('height', height);
       promise = Promise.resolve(r);
    }
 
    return promise.then(renderer => {
-
-      if (need_workaround) {
-          if (!internals.svg_3ds) internals.svg_3ds = [];
-         renderer.workaround_id = internals.svg_3ds.length;
-         internals.svg_3ds[renderer.workaround_id] = '<svg></svg>'; // dummy, provided in afterRender3D
-
-         // replace DOM element in renderer
-         renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
-         renderer.jsroot_dom.setAttribute('jsroot_svg_workaround', renderer.workaround_id);
-      } else if (!renderer.jsroot_dom) {
+      if (!renderer.jsroot_dom)
          renderer.jsroot_dom = renderer.domElement;
-      }
+      else
+         renderer.jsroot_custom_dom = true;
 
       // res.renderer.setClearColor('#000000', 1);
       // res.renderer.setClearColor(0x0, 0);
-      renderer.setSize(width, height);
       renderer.jsroot_render3d = render3d;
 
+      // which format used to convert into images
+      renderer.jsroot_image_format = 'png';
+
+      renderer.originalSetSize = renderer.setSize;
+
       // apply size to dom element
-      renderer.setJSROOTSize = function(width, height) {
-         if ((this.jsroot_render3d === constants.Render3D.WebGLImage) && !isBatchMode() && !isNodeJs())
-            return d3_select(this.jsroot_dom).attr('width', width).attr('height', height);
+      renderer.setSize = function(width, height, updateStyle) {
+         if (this.jsroot_custom_dom) {
+            this.jsroot_dom.setAttribute('width', width);
+            this.jsroot_dom.setAttribute('height', height);
+         }
+
+         this.originalSetSize(width, height, updateStyle);
       };
+
+      renderer.setSize(width, height);
 
       return renderer;
    });
@@ -476,7 +531,8 @@ function cleanupRender3D(renderer) {
    if (isNodeJs()) {
       let ctxt = isFunc(renderer.getContext) ? renderer.getContext() : null,
           ext = ctxt?.getExtension('STACKGL_destroy_context');
-      if (ext) ext.destroy();
+      if (isFunc(ext?.destroy))
+          ext.destroy();
    } else {
       // suppress warnings in Chrome about lost webgl context, not required in firefox
       if (browser.isChrome && isFunc(renderer.forceContextLoss))
@@ -491,7 +547,8 @@ function cleanupRender3D(renderer) {
   * @desc used together with SVG
   * @private */
 function beforeRender3D(renderer) {
-   if (renderer.clearHTML) renderer.clearHTML();
+   if (isFunc(renderer.clearHTML))
+      renderer.clearHTML();
 }
 
 /** @summary Post-process result of rendering
@@ -500,19 +557,13 @@ function beforeRender3D(renderer) {
 function afterRender3D(renderer) {
 
    let rc = constants.Render3D;
-   if (renderer.jsroot_render3d == rc.WebGL) return;
+
+   if (renderer.jsroot_render3d == rc.WebGL)
+      return;
 
    if (renderer.jsroot_render3d == rc.SVG) {
       // case of SVGRenderer
-      if (isBatchMode()) {
-         internals.svg_3ds[renderer.workaround_id] = renderer.makeOuterHTML();
-      } else {
-         let parent = renderer.jsroot_dom.parentNode;
-         if (parent) {
-            parent.innerHTML = renderer.makeOuterHTML();
-            renderer.jsroot_dom = parent.firstChild;
-         }
-      }
+      renderer.fillTargetSVG(renderer.jsroot_dom);
    } else if (isNodeJs()) {
       // this is WebGL rendering in node.js
       let canvas = renderer.domElement,
@@ -535,25 +586,15 @@ function afterRender3D(renderer) {
       imageData.data.set(pixels);
       context.putImageData(imageData, 0, 0);
 
-      let dataUrl = canvas.toDataURL('image/png'),
-          svg = `<image width="${canvas.width}" height="${canvas.height}" xlink:href="${dataUrl}"></image>`;
-      internals.svg_3ds[renderer.workaround_id] = svg;
-   } else {
-      let dataUrl = renderer.domElement.toDataURL('image/png');
-      d3_select(renderer.jsroot_dom).attr('xlink:href', dataUrl);
-   }
-}
+      let format = 'image/' + renderer.jsroot_image_format,
+          dataUrl = canvas.toDataURL(format);
 
-/** @summary Special way to insert WebGL drawing into produced SVG batch code
-  * @desc Used only in batch mode for SVG images generation
-  * @private */
-internals.processSvgWorkarounds = function(svg, keep_workarounds) {
-   if (!internals.svg_3ds) return svg;
-   for (let k = 0;  k < internals.svg_3ds.length; ++k)
-      svg = svg.replace(`<path jsroot_svg_workaround="${k}"></path>`, internals.svg_3ds[k]);
-   if (!keep_workarounds)
-      internals.svg_3ds = undefined;
-   return svg;
+      renderer.jsroot_dom.setAttribute('href', dataUrl);
+
+   } else {
+      let dataUrl = renderer.domElement.toDataURL('image/' + renderer.jsroot_image_format);
+      renderer.jsroot_dom.setAttribute('href', dataUrl);
+   }
 }
 
 // ========================================================================================================
@@ -614,9 +655,11 @@ class TooltipFor3D {
          let rect1 = this.parent.getBoundingClientRect(),
              rect2 = this.canvas.getBoundingClientRect();
 
-         if ((rect1.left !== undefined) && (rect2.left!== undefined)) pos.l += (rect2.left-rect1.left);
+         if ((rect1.left !== undefined) && (rect2.left!== undefined))
+            pos.l += (rect2.left-rect1.left);
 
-         if ((rect1.top !== undefined) && (rect2.top!== undefined)) pos.u += rect2.top-rect1.top;
+         if ((rect1.top !== undefined) && (rect2.top!== undefined))
+            pos.u += rect2.top-rect1.top;
 
          if (pos.l + this.tt.offsetWidth + 3 >= this.parent.offsetWidth)
             pos.l = this.parent.offsetWidth - this.tt.offsetWidth - 3;
@@ -641,8 +684,8 @@ class TooltipFor3D {
          }
       }
 
-      this.tt.style.top = (pos.u + 15) + 'px';
-      this.tt.style.left = (pos.l + 3) + 'px';
+      this.tt.style.top = `${pos.u+15}px`;
+      this.tt.style.left = `${pos.l+3}px`;
    }
 
    /** @summary Show tooltip */
@@ -656,7 +699,8 @@ class TooltipFor3D {
             v = v.line;
          } else {
             let res = v.lines[0];
-            for (let n=1;n<v.lines.length;++n) res+= '<br/>' + v.lines[n];
+            for (let n = 1; n < v.lines.length; ++n)
+               res += '<br/>' + v.lines[n];
             v = res;
          }
       }
@@ -733,7 +777,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
              pos1 = control.painter.get3dZoomCoord(control.mouse_zoom_mesh.point, kind),
              pos2 = control.painter.get3dZoomCoord(control.mouse_zoom_mesh.point2, kind);
 
-         if (pos1 > pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
+         if (pos1 > pos2)
+            [pos1, pos2] = [pos2, pos1];
 
          if ((kind === 'z') && control.mouse_zoom_mesh.object.use_y_for_z) kind = 'y';
 
@@ -901,7 +946,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
       if (!this.renderer) return [];
 
-      let sz = (this.renderer instanceof WebGLRenderer) ? this.renderer.getSize(new Vector2()) : this.renderer.domElement,
+      let sz = (this.renderer instanceof SVGRenderer) ? this.renderer.domElement : this.renderer.getSize(new Vector2()),
           pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
 
       this.camera.updateMatrix();
@@ -921,7 +966,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
           intersects = this.getMouseIntersects(mouse);
       if (intersects)
          for (let n = 0; n < intersects.length; ++n)
-            if (intersects[n].object.zoom)
+            if (intersects[n].object.zoom && !intersects[n].object.zoom_disabled)
                return intersects[n];
 
       return null;
@@ -954,7 +999,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       // then check if double-click handler assigned
-      let fp = this.painter ? this.painter.getFramePainter() : null;
+      let fp = this.painter?.getFramePainter();
       if (isFunc(fp?._dblclick_handler)) {
          let info = this.getInfoAtMousePosition(this.getMousePos(evnt, {}));
          if (info) {
@@ -1019,7 +1064,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
    }
 
    control.removeZoomMesh = function() {
-      if (this.mouse_zoom_mesh && this.mouse_zoom_mesh.object.showSelection())
+      if (this.mouse_zoom_mesh?.object.showSelection())
          this.painter.render3D();
       this.mouse_zoom_mesh = null; // in any case clear mesh, enable orbit control again
    }
@@ -1052,7 +1097,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       // extract mouse position
       this.tmout_mouse = this.getMousePos(evnt, {});
-      this.tmout_ttpos =  this.tooltip ? this.tooltip.extract_pos(evnt) : null;
+      this.tmout_ttpos = this.tooltip?.extract_pos(evnt);
 
       if (this.tmout_handle) {
          clearTimeout(this.tmout_handle);
@@ -1097,7 +1142,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          this.tooltip.hide();
          if (intersects)
             for (let n = 0; n < intersects.length; ++n)
-               if (intersects[n].object.zoom) this.cursor_changed = true;
+               if (intersects[n].object.zoom && !intersects[n].object.zoom_disabled)
+                  this.cursor_changed = true;
       }
 
       document.body.style.cursor = this.cursor_changed ? 'pointer' : 'auto';
@@ -1133,7 +1179,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       delete this.single_click_tm;
 
       if (kind == 1) {
-         let fp = this.painter ? this.painter.getFramePainter() : null;
+         let fp = this.painter?.getFramePainter();
          if (isFunc(fp?._click_handler)) {
             let info = this.getInfoAtMousePosition(mouse_pos);
             if (info) {
@@ -1259,8 +1305,8 @@ function createLineSegments(arr, material, index = undefined, only_geometry = fa
       } else {
          distances = new Float32Array(arr.length/3);
          for (let n = 0; n < arr.length; n += 6) {
-            v1.set(arr[n],arr[n+1],arr[n+2]);
-            v2.set(arr[n+3],arr[n+4],arr[n+5]);
+            v1.set(arr[n], arr[n+1], arr[n+2]);
+            v2.set(arr[n+3], arr[n+4], arr[n+5]);
             distances[n/3] = d;
             d += v2.distanceTo(v1);
             distances[n/3+1] = d;
@@ -1281,7 +1327,8 @@ const Box3D = {
                 new Vector3(0, 0, 0), new Vector3(0, 0, 1) ],
     Indexes: [ 0,2,1, 2,3,1, 4,6,5, 6,7,5, 4,5,1, 5,0,1, 7,6,2, 6,3,2, 5,7,0, 7,2,0, 1,3,4, 3,6,4 ],
     Normals: [ 1,0,0, -1,0,0, 0,1,0, 0,-1,0, 0,0,1, 0,0,-1 ],
-    Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5]  // segments addresses Vertices
+    Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
+    MeshSegments: undefined
 };
 
 // these segments address vertices from the mesh, we can use positions from box mesh
@@ -1500,13 +1547,13 @@ class PointsCreator {
 function create3DLineMaterial(painter, arg, is_v7 = false) {
    if (!painter || !arg) return null;
 
-   let lcolor, lstyle, lwidth;
+   let color, lstyle, lwidth;
    if (isStr(arg) || is_v7) {
-      lcolor = painter.v7EvalColor(arg+'color', 'black');
+      color = painter.v7EvalColor(arg+'color', 'black');
       lstyle = parseInt(painter.v7EvalAttr(arg+'style', 0));
       lwidth = parseInt(painter.v7EvalAttr(arg+'width', 1));
    } else {
-      lcolor = painter.getColor(arg.fLineColor);
+      color = painter.getColor(arg.fLineColor);
       lstyle = arg.fLineStyle;
       lwidth = arg.fLineWidth;
    }
@@ -1515,9 +1562,9 @@ function create3DLineMaterial(painter, arg, is_v7 = false) {
        dash = style ? style.split(',') : [], material;
 
    if (dash && dash.length >= 2)
-      material = new LineDashedMaterial({ color: lcolor, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
+      material = new LineDashedMaterial({ color, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
    else
-      material = new LineBasicMaterial({ color: lcolor });
+      material = new LineBasicMaterial({ color });
 
    if (lwidth && (lwidth > 1)) material.linewidth = lwidth;
 
@@ -1525,6 +1572,6 @@ function create3DLineMaterial(painter, arg, is_v7 = false) {
 }
 
 export { assign3DHandler, disposeThreejsObject, createOrbitControl,
-         createLineSegments, create3DLineMaterial, Box3D,
+         createLineSegments, create3DLineMaterial, Box3D, getMaterialArgs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind, cleanupRender3D,
          HelveticerRegularFont, InteractiveControl, PointsControl, PointsCreator, createSVGRenderer };

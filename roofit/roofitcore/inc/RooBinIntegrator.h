@@ -21,20 +21,14 @@
 #include <vector>
 #include <list>
 
-namespace RooBatchCompute {
-struct RunContext;
-}
-
 class RooBinIntegrator : public RooAbsIntegrator {
 public:
 
   // Constructors, assignment etc
-  RooBinIntegrator() ;
 
   RooBinIntegrator(const RooAbsFunc& function, int numBins=100) ;
   RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooBinIntegrator() override;
 
   bool checkLimits() const override;
@@ -43,11 +37,6 @@ public:
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
-
-  bool canIntegrate1D() const override { return true ; }
-  bool canIntegrate2D() const override { return true ; }
-  bool canIntegrateND() const override { return true ; }
-  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 
@@ -62,9 +51,6 @@ protected:
   mutable Int_t _numBins = 0;             ///<! Size of integration range
 
   bool _useIntegrandLimits = false;       ///< If true limits of function binding are ued
-
-  std::unique_ptr<RooBatchCompute::RunContext> _evalData;     ///<! Run context for evaluating a function.
-  std::unique_ptr<RooBatchCompute::RunContext> _evalDataOrig; ///<! Run context to save bin centres in between invocations.
 
   double* xvec(double xx) { _x[0] = xx ; return _x.data(); }
   double* xvec(double xx, double yy) { _x[0] = xx ; _x[1] = yy ; return _x.data(); }

@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /** @file BidirMMapPipe.h
  *
  * header file for BidirMMapPipe, a class which forks off a child process and
@@ -142,7 +144,7 @@ namespace BidirMMapPipe_impl {
             } impl;
         public:
             /// default constructor
-            Pages() : m_pimpl(0) { }
+            Pages() : m_pimpl(nullptr) { }
 
             /// destructor
             ~Pages();
@@ -992,3 +994,5 @@ END_NAMESPACE_ROOFIT
 #endif // BIDIRMMAPPIPE_H
 
 // vim: ft=cpp:sw=4:tw=78:et
+
+/// \endcond

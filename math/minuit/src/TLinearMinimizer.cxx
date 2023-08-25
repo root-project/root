@@ -118,21 +118,19 @@ TLinearMinimizer & TLinearMinimizer::operator = (const TLinearMinimizer &rhs)
 }
 
 
-void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & ) {
-   // Set function to be minimized. Flag an error since only support Gradient objective functions
-
-   Error("TLinearMinimizer::SetFunction(IMultiGenFunction)","Wrong type of function used for Linear fitter");
-}
-
-
-void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfunc) {
+void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfunc) {
    // Set the function to be minimized. The function must be a Chi2 gradient function
    // When performing a linear fit we need the basis functions, which are the partial derivatives with respect to the parameters of the model function.
+
+   if(!objfunc.HasGradient()) {
+      // Set function to be minimized. Flag an error since only support Gradient objective functions
+      Error("TLinearMinimizer::SetFunction(IMultiGenFunction)","Wrong type of function used for Linear fitter");
+   }
 
    typedef ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGradFunction> Chi2Func;
    const Chi2Func * chi2func = dynamic_cast<const Chi2Func *>(&objfunc);
    if (chi2func ==0) {
-      Error("TLinearMinimizer::SetFunction(IMultiGradFunction)","Wrong type of function used for Linear fitter");
+      Error("TLinearMinimizer::SetFunction(IMultiGenFunction)","Wrong type of function used for Linear fitter");
       return;
    }
    fObjFunc = chi2func;
@@ -171,15 +169,35 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    // get the fitter data
    const ROOT::Fit::BinData & data = chi2func->Data();
    // add the data but not store them
+   std::vector<double> xc(data.NDim());
    for (unsigned int i = 0; i < data.Size(); ++i) {
       double y = 0;
-      const double * x = data.GetPoint(i,y);
+      const double * x1 = data.GetPoint(i,y);
       double ey = 1;
       if (! data.Opt().fErrors1) {
          ey = data.Error(i);
       }
-      // interface should take a double *
-      fFitter->AddPoint( const_cast<double *>(x) , y, ey);
+      // in case of bin volume- scale the data according to the bin volume
+      double binVolume = 1.;
+      double * x = nullptr;
+      if (data.Opt().fBinVolume) {
+         // compute the bin volume
+         const double * x2 = data.BinUpEdge(i);
+         for (unsigned int j  = 0; j < data.NDim(); ++j) {
+            binVolume *= (x2[j]-x1[j]);
+            // we are alwyas using bin centers
+            xc[j] = 0.5 * (x2[j]+ x1[j]);
+         }
+         if (data.Opt().fNormBinVolume) binVolume /= data.RefVolume();
+         // we cannot scale f so we scale the points
+         y /= binVolume;
+         ey /= binVolume;
+         x = xc.data();
+      } else {
+         x = const_cast<double*>(x1);
+      }
+      //std::cout << "adding point " << i << " x " << x[0] << " y " << y << " e " << ey << std::endl;
+      fFitter->AddPoint( x , y, ey);
    }
 
 }

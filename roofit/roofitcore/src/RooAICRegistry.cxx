@@ -34,7 +34,19 @@ associated normalization and integration sets.
 using namespace std;
 
 ClassImp(RooAICRegistry);
-;
+
+namespace {
+
+RooArgSet * makeSnapshot(RooArgSet const* set) {
+  if(!set) {
+    return nullptr;
+  }
+  auto out = new RooArgSet;
+  set->snapshot(*out, false);
+  return out;
+}
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,21 +64,21 @@ RooAICRegistry::RooAICRegistry(UInt_t size)
 /// Copy constructor
 
 RooAICRegistry::RooAICRegistry(const RooAICRegistry& other)
-  : _clArr(other._clArr), _asArr1(other._clArr.size(), 0), _asArr2(other._clArr.size(), 0),
-    _asArr3(other._clArr.size(), 0), _asArr4(other._clArr.size(), 0)
+  : _clArr(other._clArr), _asArr1(other._clArr.size(), nullptr), _asArr2(other._clArr.size(), nullptr),
+    _asArr3(other._clArr.size(), nullptr), _asArr4(other._clArr.size(), nullptr)
 {
   // Copy code-list array if other PDF has one
   UInt_t size = other._clArr.size();
   if (size) {
-    _asArr1.resize(size, 0);
-    _asArr2.resize(size, 0);
-    _asArr3.resize(size, 0);
-    _asArr4.resize(size, 0);
+    _asArr1.resize(size, nullptr);
+    _asArr2.resize(size, nullptr);
+    _asArr3.resize(size, nullptr);
+    _asArr4.resize(size, nullptr);
     for(UInt_t i = 0; i < size; ++i) {
-      _asArr1[i] = other._asArr1[i] ? ((RooArgSet*)other._asArr1[i]->snapshot(false)) : 0;
-      _asArr2[i] = other._asArr2[i] ? ((RooArgSet*)other._asArr2[i]->snapshot(false)) : 0;
-      _asArr3[i] = other._asArr3[i] ? ((RooArgSet*)other._asArr3[i]->snapshot(false)) : 0;
-      _asArr4[i] = other._asArr4[i] ? ((RooArgSet*)other._asArr4[i]->snapshot(false)) : 0;
+      _asArr1[i] = makeSnapshot(other._asArr1[i]);
+      _asArr2[i] = makeSnapshot(other._asArr2[i]);
+      _asArr3[i] = makeSnapshot(other._asArr3[i]);
+      _asArr4[i] = makeSnapshot(other._asArr4[i]);
     }
   }
 }
@@ -133,10 +145,10 @@ Int_t RooAICRegistry::store(const std::vector<Int_t>& codeList, RooArgSet* set1,
 
   // Store code list and return index
   _clArr.push_back(codeList);
-  _asArr1.push_back(set1 ? (RooArgSet*)set1->snapshot(false) : 0);
-  _asArr2.push_back(set2 ? (RooArgSet*)set2->snapshot(false) : 0);
-  _asArr3.push_back(set3 ? (RooArgSet*)set3->snapshot(false) : 0);
-  _asArr4.push_back(set4 ? (RooArgSet*)set4->snapshot(false) : 0);
+  _asArr1.emplace_back(makeSnapshot(set1));
+  _asArr2.emplace_back(makeSnapshot(set2));
+  _asArr3.emplace_back(makeSnapshot(set3));
+  _asArr4.emplace_back(makeSnapshot(set4));
 
   if (set1) delete set1 ;
   if (set2) delete set2 ;

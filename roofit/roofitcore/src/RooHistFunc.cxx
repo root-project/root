@@ -183,7 +183,7 @@ double RooHistFunc::evaluate() const
       if (harg != parg) {
         parg->syncCache() ;
         harg->copyCache(parg,true) ;
-        if (!harg->inRange(0)) {
+        if (!harg->inRange(nullptr)) {
           return 0 ;
         }
       }
@@ -194,15 +194,19 @@ double RooHistFunc::evaluate() const
   return ret ;
 }
 
+void RooHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   RooHistPdf::rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _depList, false);
+}
 
-void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
   if (_depList.size() == 1) {
     auto xVals = dataMap.at(_depList[0]);
     _dataHist->weights(output, xVals, _intOrder, false, _cdfBoundaries);
     return;
   }
 
-  std::vector<RooSpan<const double>> inputValues;
+  std::vector<std::span<const double>> inputValues;
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
     if (realObs) {
@@ -314,6 +318,16 @@ double RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const
     return RooHistPdf::analyticalIntegral(code, rangeName, _histObsList, _depList, *_dataHist, true);
 }
 
+bool RooHistFunc::forceAnalyticalInt(const RooAbsArg& dep) const
+{
+   return RooHistPdf::forceAnalyticalInt(_depList, dep);
+}
+
+std::string RooHistFunc::buildCallToAnalyticIntegral(int code, const char * /* rangeName */,
+                                                     RooFit::Detail::CodeSquashContext & /* ctx */) const
+{
+   return RooHistPdf::rooHistIntegralTranslateImpl(code, this, _dataHist, _depList, true);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sampling hint for making curves of (projections) of this function
@@ -335,11 +349,11 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
 {
   // No hints are required when interpolation is used
   if (_intOrder>1) {
-    return 0 ;
+    return nullptr ;
   }
 
   // Find histogram observable corresponding to pdf observable
-  RooAbsArg* hobs(0) ;
+  RooAbsArg* hobs(nullptr) ;
   for (auto i = 0u; i < _histObsList.size(); ++i) {
     const auto harg = _histObsList[i];
     const auto parg = _depList[i];
@@ -368,7 +382,7 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
     // Not found, or check that matching pdf observable is an l-value dependent on histogram observable fails
     if (!hobs || !(pobs->dependsOn(obs) && dynamic_cast<RooAbsRealLValue*>(pobs))) {
       std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << std::endl ;
-      return 0 ;
+      return nullptr ;
     }
 
     // Now we are in business - we are in a situation where the pdf observable LV(x), mapping to a histogram observable x
@@ -385,12 +399,12 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
   if (!xtmp) {
     std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " is not found in dataset?" << std::endl ;
     _dataHist->get()->Print("v") ;
-    return 0 ;
+    return nullptr ;
   }
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
   if (!lvarg) {
     std::cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " but is not an LV, returning null" << std::endl ;
-    return 0 ;
+    return nullptr ;
   }
 
   // Retrieve position of all bin boundaries
@@ -555,18 +569,18 @@ Int_t RooHistFunc::getBin() const {
 /// Compute bin numbers corresponding to all coordinates in `evalData`.
 /// \return Vector of bin numbers. If a bin is not in the current range of the observables, return -1.
 std::vector<Int_t> RooHistFunc::getBins(RooFit::Detail::DataMap const& dataMap) const {
-  std::vector<RooSpan<const double>> depData;
+  std::vector<std::span<const double>> depData;
   for (const auto dep : _depList) {
     auto real = dynamic_cast<const RooAbsReal*>(dep);
     if (real) {
       depData.push_back(dataMap.at(real));
     } else {
-      depData.emplace_back(nullptr, 0);
+      depData.emplace_back();
     }
   }
 
   const auto batchSize = std::max_element(depData.begin(), depData.end(),
-      [](const RooSpan<const double>& a, const RooSpan<const double>& b){ return a.size() < b.size(); })->size();
+      [](const std::span<const double>& a, const std::span<const double>& b){ return a.size() < b.size(); })->size();
   std::vector<Int_t> results;
 
   for (std::size_t evt = 0; evt < batchSize; ++evt) {

@@ -4,8 +4,8 @@
 /// Setting up an extended maximum likelihood fit.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -64,10 +64,10 @@ void rf202_extendedmlfit()
 
    // Generate a data sample of expected number events in x from model
    // = model.expectedEvents() = nsig+nbkg
-   RooDataSet *data = model.generate(x);
+   std::unique_ptr<RooDataSet> data{model.generate(x)};
 
    // Fit model to data, extended ML term automatically included
-   model.fitTo(*data);
+   model.fitTo(*data, PrintLevel(-1));
 
    // Plot data and PDF overlaid, use expected number of events for pdf projection normalization
    // rather than observed number of events (==data->numEntries())

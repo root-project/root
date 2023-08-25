@@ -14,7 +14,6 @@
 #define ROOT_ROOFIT_TESTSTATISTICS_RooSumL
 
 #include <RooFit/TestStatistics/RooAbsL.h>
-#include <RooFit/TestStatistics/optional_parameter_types.h>
 
 #include "Math/Util.h" // KahanSum
 

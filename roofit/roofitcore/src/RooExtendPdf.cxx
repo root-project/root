@@ -42,6 +42,9 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
 #include "RooNameReg.h"
+#include "RooConstVar.h"
+#include "RooProduct.h"
+#include "RooRatio.h"
 #include "RooMsgService.h"
 
 
@@ -49,13 +52,10 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 using namespace std;
 
 ClassImp(RooExtendPdf);
-;
 
-
-RooExtendPdf::RooExtendPdf() : _rangeName(0)
-{
-  // Default constructor
-}
+RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
+                    RooAbsReal& norm, const char* rangeName)
+    : RooExtendPdf{name, title, pdf, RooAbsReal::Ref{norm}, rangeName} {}
 
 /// Constructor. The ExtendPdf behaves identical to the supplied input pdf,
 /// but adds an extended likelihood term. expectedEvents() will return
@@ -69,7 +69,7 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
 /// \param[in] rangeName  If given, the number of events denoted by `norm` is interpreted as
 /// the number of events in this range only
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-            RooAbsReal& norm, const char* rangeName) :
+            RooAbsReal::Ref norm, const char* rangeName) :
   RooAbsPdf(name,title),
   _pdf("pdf", "PDF", this, pdf),
   _n("n","Normalization",this,norm),
@@ -90,13 +90,6 @@ RooExtendPdf::RooExtendPdf(const RooExtendPdf& other, const char* name) :
   _rangeName(other._rangeName)
 {
   // Copy constructor
-}
-
-
-RooExtendPdf::~RooExtendPdf()
-{
-  // Destructor
-
 }
 
 
@@ -126,11 +119,7 @@ double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
   // Optionally multiply with fractional normalization
   if (_rangeName) {
 
-    double fracInt;
-    {
-      GlobalSelectComponentRAII globalSelComp(true);
-      fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal();
-    }
+    double fracInt = pdf.getNormObj(nset,nset,_rangeName)->getVal();
 
 
     if ( fracInt == 0. || _n == 0.) {
@@ -139,10 +128,6 @@ double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
     }
 
     nExp /= fracInt ;
-
-
-    // cout << "RooExtendPdf::expectedEvents(" << GetName() << ") fracInt = " << fracInt << " _n = " << _n << " nExpect = " << nExp << endl ;
-
   }
 
   // Multiply with original Nexpected, if defined
@@ -152,4 +137,45 @@ double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 }
 
 
+std::unique_ptr<RooAbsReal> RooExtendPdf::createExpectedEventsFunc(const RooArgSet *nset) const
+{
+   const RooAbsPdf& pdf = *_pdf;
 
+   RooArgList prodList;
+   prodList.add(*_n);
+
+   // Optionally multiply with fractional normalization
+   std::unique_ptr<RooAbsReal> rangeFactor;
+   if (_rangeName) {
+      std::unique_ptr<RooAbsReal> fracInteg{pdf.createIntegral(*nset, *nset, RooNameReg::str(_rangeName))};
+      // Create one over integral term
+      auto rangeFactorName = std::string("one_over_") + fracInteg->GetName();
+      rangeFactor = std::make_unique<RooRatio>(rangeFactorName.c_str(), rangeFactorName.c_str(), RooFit::RooConst(1.0), *fracInteg);
+      rangeFactor->addOwnedComponents(std::move(fracInteg));
+      prodList.add(*rangeFactor);
+   }
+
+   // Multiply with original Nexpected, if defined
+   std::unique_ptr<RooAbsReal> pdfExpectedEvents;
+   if (pdf.canBeExtended()) {
+      pdfExpectedEvents = pdf.createExpectedEventsFunc(nset);
+      prodList.add(*pdfExpectedEvents);
+   }
+
+   auto name = std::string(GetName()) + "_expectedEvents";
+   auto out = std::make_unique<RooProduct>(name.c_str(), name.c_str(), prodList);
+   if(rangeFactor) {
+      out->addOwnedComponents(std::move(rangeFactor));
+   }
+   if(pdfExpectedEvents) {
+      out->addOwnedComponents(std::move(pdfExpectedEvents));
+   }
+   return out;
+}
+
+
+void RooExtendPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Use the result of the underlying pdf.
+   ctx.addResult(this, ctx.getResult(_pdf));
+}

@@ -11,7 +11,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/MessageToast',
                'sap/m/MessageBox',
                'sap/m/Text',
-               'sap/m/TextArea',
+               'sap/m/VBox',
+               'sap/m/ProgressIndicator',
                'sap/m/Page',
                'sap/ui/core/mvc/XMLView',
                'sap/ui/core/Icon',
@@ -40,7 +41,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            MessageToast,
            MessageBox,
            mText,
-           mTextArea,
+           mVBox,
+           mProgressIndicator,
            mPage,
            XMLView,
            CoreIcon,
@@ -315,10 +317,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             kind: this.websocket.kind,
             href: this.websocket.getHRef(url),
             user_args: { nobrowser: true }
-         }).then(handle => XMLView.create({
-            viewName: "rootui5.tree.view.TreeViewer",
-            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-         })).then(oView => item.addContent(oView));
+         }).then(handle => {
+            item._jsroot_conn = handle;
+            return XMLView.create({
+               viewName: "rootui5.tree.view.TreeViewer",
+               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+            });
+         }).then(oView => item.addContent(oView));
 
          return item;
       },
@@ -886,6 +891,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let oTabContainer = this.byId("tabContainer");
          if (item.getKey())
             this.websocket.send("CLOSE_TAB:" + item.getKey());
+         // force connection to close
+         item._jsroot_conn?.close(true);
+         item._jsroot_painter?.cleanup();
          oTabContainer.removeItem(item);
       },
 
@@ -1035,14 +1043,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (!this.warn_timeout) return;
             delete this.warn_timeout;
 
+            let content = new mVBox;
+            content.addItem(new mText({ text: msg }));
+            this.oWarningProgress = new mProgressIndicator({ percentValue: 0, displayValue: '0', showValue: true, visible: false });
+            content.addItem(this.oWarningProgress);
+
             this.oWarningDialog = new Dialog({
                type: DialogType.Message,
                title: "Warning",
                state: ValueState.Warning,
-               content: new mText({ text: msg }),
+               content,
                beginButton: new Button({
                   type: ButtonType.Emphasized,
-                  text: "OK",
+                  text: 'OK',
                   press: () => this.cancelWarning()
                })
             });
@@ -1061,6 +1074,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (this.oWarningDialog) {
             this.oWarningDialog.close();
             delete this.oWarningDialog;
+            delete this.oWarningProgress;
          }
 
       },
@@ -1084,9 +1098,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
      /** @summary Entry point for all data from server */
      onWebsocketMsg(handle, msg, offset) {
 
-         // any message from server clear all warnings
-         this.cancelWarning();
-
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
 
@@ -1100,6 +1111,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             mhdr = msg;
             msg = '';
          }
+
+         // any message from server clear all warnings
+         if (mhdr === 'PROGRESS') {
+            let progr = Number.parseFloat(msg);
+            if (this.oWarningProgress && Number.isFinite(progr)) {
+               this.oWarningProgress.setVisible(true);
+               this.oWarningProgress.setPercentValue(progr*100);
+               this.oWarningProgress.setDisplayValue((progr*100).toFixed(1) + '%');
+            }
+            return;
+         }
+
+         this.cancelWarning();
 
          switch (mhdr) {
          case "INMSG":
@@ -1333,10 +1357,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             kind: this.websocket.kind,
             href: this.websocket.getHRef(url),
             user_args: { nobrowser: true }
-         }).then(handle => XMLView.create({
-            viewName: "rootui5.geom.view.GeomViewer",
-            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-         })).then(oView => item.addContent(oView));
+         }).then(handle => {
+            item._jsroot_conn = handle;
+            return XMLView.create({
+               viewName: "rootui5.geom.view.GeomViewer",
+               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+            });
+         }).then(oView => item.addContent(oView));
 
          return item;
       },
@@ -1357,6 +1384,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let conn = new this.jsroot.WebWindowHandle(this.websocket.kind);
          conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
 
+         item._jsroot_conn = conn;
+
          import(this.jsroot.source_dir + 'modules/draw.mjs').then(draw => {
             if (kind == "rcanvas")
                return import(this.jsroot.source_dir + 'modules/gpad/RCanvasPainter.mjs').then(h => {
@@ -1369,6 +1398,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return new h.TCanvasPainter(null, null);
             });
          }).then(painter => {
+            item._jsroot_painter = painter;
+
             painter.online_canvas = true; // indicates that canvas gets data from running server
             painter.embed_canvas = true;  // use to indicate that canvas ui should not close complete window when closing
             painter.use_openui = true;

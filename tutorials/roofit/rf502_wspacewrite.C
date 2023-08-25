@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: creating and writing a workspace
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -52,7 +52,7 @@ void rf502_wspacewrite()
    RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
 
    // Generate a data sample of 1000 events in x from model
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // C r e a t e   w o r k s p a c e ,   i m p o r t   d a t a   a n d   m o d e l
    // -----------------------------------------------------------------------------

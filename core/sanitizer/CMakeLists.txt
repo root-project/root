@@ -1,3 +1,7 @@
+if(NOT asan)
+  return()
+endif()
+
 # Make a shared library that holds the ROOT default config for address sanitizer.
 # This is can be used with LD_PRELOAD
 add_library(ROOTSanitizerConfig SHARED SanitizerSetup.cxx)

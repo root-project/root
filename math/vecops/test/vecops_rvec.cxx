@@ -818,6 +818,26 @@ TEST(VecOps, TakeLast)
    CheckEqual(v2, none);
 }
 
+TEST(VecOps, TakeN)
+{
+   RVec<int> x = {1,2,3,4};
+   auto res = Take(x,5,1);
+   RVec<int> expected = {1,2,3,4,1};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
+    
+   res = Take(x,-5,1);
+   expected = {1,1,2,3,4};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
+    
+   res = Take(x,-1,1);
+   expected = {4};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
+    
+   res = Take(x,4,1);
+   expected = {1,2,3,4};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
+}
+
 TEST(VecOps, TakeWithDefault)
 {
    RVec<int> v0{1, 2, 3};

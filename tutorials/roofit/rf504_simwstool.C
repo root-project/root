@@ -4,8 +4,8 @@
 /// Organisation and simultaneous fits: using RooSimWSTool to construct a simultaneous pdf
 /// that is built of variations of an input pdf
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

@@ -47,7 +47,7 @@
 using namespace std;
 
 ClassImp(RooXYChi2Var);
-;
+
 
 namespace {
   RooAbsTestStatistic::Configuration makeRooAbsTestStatisticCfg() {
@@ -55,14 +55,6 @@ namespace {
     cfg.verbose = false;
     return cfg;
   }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
-
-RooXYChi2Var::RooXYChi2Var()
-{
 }
 
 
@@ -88,7 +80,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
   _intConfig(*defaultIntegratorConfig())
 {
   _extended = false ;
-  _yvar = 0 ;
+  _yvar = nullptr ;
 
   initialize() ;
 }
@@ -147,7 +139,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
   if (!extPdf.canBeExtended()) {
     throw std::runtime_error(Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible",GetName()));
   }
-  _yvar = 0 ;
+  _yvar = nullptr ;
   initialize() ;
 }
 
@@ -196,7 +188,7 @@ RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
   _integrate(other._integrate),
   _intConfig(other._intConfig)
 {
-  _yvar = other._yvar ? (RooRealVar*) _dataClone->get()->find(other._yvar->GetName()) : 0 ;
+  _yvar = other._yvar ? (RooRealVar*) _dataClone->get()->find(other._yvar->GetName()) : nullptr ;
   initialize() ;
 
 }
@@ -245,7 +237,7 @@ void RooXYChi2Var::initialize()
 void RooXYChi2Var::initIntegrator()
 {
   if (!_funcInt) {
-    _funcInt = _funcClone->createIntegral(_rrvArgs,_rrvArgs,_intConfig,"bin") ;
+    _funcInt = std::unique_ptr<RooAbsReal>{_funcClone->createIntegral(_rrvArgs,_rrvArgs,_intConfig,"bin")};
     for(auto * x : static_range_cast<RooRealVar*>(_rrvArgs)) {
       _binList.push_back(&x->getBinning("bin",false,true)) ;
     }
@@ -254,16 +246,7 @@ void RooXYChi2Var::initIntegrator()
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooXYChi2Var::~RooXYChi2Var()
-{
-  if (_funcInt) delete _funcInt ;
-}
-
-
+RooXYChi2Var::~RooXYChi2Var() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////

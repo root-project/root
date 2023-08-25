@@ -65,6 +65,8 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 
 #include "RooAddPdf.h"
 
+#include "RooAddition.h"
+#include "RooRealSumFunc.h"
 #include "RooAddHelpers.h"
 #include "RooAddGenContext.h"
 #include "RooBatchCompute.h"
@@ -75,6 +77,9 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooRealConstant.h"
 #include "RooRealSumPdf.h"
 #include "RooRecursiveFraction.h"
+#include "RooGenericPdf.h"
+#include "RooProduct.h"
+#include "RooRatio.h"
 
 #include <algorithm>
 #include <memory>
@@ -355,7 +360,7 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset) const
 {
   // Check if cache already exists
-  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,normRange()));
+  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,nullptr,normRange()));
   if (cache) {
     return cache ;
   }
@@ -467,7 +472,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
 
   // Process change in last data set used
   bool nsetChanged(false) ;
-  if (!isActiveNormSet(nset) || _norm==0) {
+  if (!isActiveNormSet(nset) || _norm==nullptr) {
     nsetChanged = syncNormalization(nset) ;
   }
 
@@ -491,11 +496,17 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
   return _value;
 }
 
+void RooAddPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   RooRealSumPdf::translateImpl(ctx, this, _pdfList, _coefList);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.
-void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAddPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
+  RooBatchCompute::Config config = dataMap.config(this);
+
   _coefCache.resize(_pdfList.size());
   for(std::size_t i = 0; i < _coefList.size(); ++i) {
     auto coefVals = dataMap.at(&_coefList[i]);
@@ -504,10 +515,10 @@ void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
     // With CUDA, we can't do that because the inputs might be on the device.
     // That's why we throw an exception then.
     if(coefVals.size() > 1) {
-      if(stream) {
+      if (config.useCuda()) {
         throw std::runtime_error("The RooAddPdf doesn't support per-event coefficients in CUDA mode yet!");
       }
-      RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
+      RooAbsReal::computeBatch(output, nEvents, dataMap);
       return;
     }
     _coefCache[i] = coefVals[0];
@@ -531,8 +542,7 @@ void RooAddPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
       coefs.push_back(_coefCache[pdfNo] / cache->suppNormVal(pdfNo) );
     }
   }
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+  RooBatchCompute::compute(config, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
 
@@ -653,7 +663,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
 
   cxcoutD(Caching) << "RooAddPdf::aiWN(" << GetName() << ") calling getProjCache with nset = " << (normSet?*normSet:RooArgSet()) << std::endl ;
 
-  if ((normSet==0 || normSet->empty()) && !_refCoefNorm.empty()) {
+  if ((normSet==nullptr || normSet->empty()) && !_refCoefNorm.empty()) {
 //     cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << std::endl ;
     normSet = &_refCoefNorm ;
   }
@@ -725,6 +735,71 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
   return expectedTotal ;
 }
 
+
+std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet *nset) const
+{
+   std::unique_ptr<RooAbsReal> out;
+
+   auto name = std::string(GetName()) + "_expectedEvents";
+   if (_allExtendable) {
+      RooArgSet sumSet;
+      for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
+         sumSet.addOwned(pdf->createExpectedEventsFunc(nset));
+      }
+      out = std::make_unique<RooAddition>(name.c_str(), name.c_str(), sumSet);
+      out->addOwnedComponents(std::move(sumSet));
+   } else {
+      out = std::make_unique<RooAddition>(name.c_str(), name.c_str(), _coefList);
+   }
+
+   RooArgList prodList;
+
+   if (!_allExtendable) {
+      // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
+      // a conditional pdf and we don't need to do any transformation. See also
+      // RooAddPdf::compleForNormSet() for more explanations on a similar logic.
+      if (!_refCoefNorm.empty() && !nset->equals(_refCoefNorm)) {
+         prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
+      }
+
+      // Optionally multiply with fractional normalization. I this case, we
+      // replace the original factor stored in "out".
+      if (_normRange) {
+         std::unique_ptr<RooAbsReal> owner;
+         RooArgList terms;
+         // The integrals own each other in a chain. We do this because it's
+         // not possible to add two objects with the same name via
+         // addOwnedComponents(), and it happens in some user models that some
+         // component pdfs are the same. Hence, the integrals might share names
+         // too and we can't add them all in one go as owned objects of the
+         // final integral sum.
+         for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
+            auto next = std::unique_ptr<RooAbsReal>{pdf->createIntegral(*nset, *nset, _normRange)};
+            terms.add(*next);
+            if (owner)
+               next->addOwnedComponents(std::move(owner));
+            owner = std::move(next);
+         }
+         auto fracIntegName = std::string(GetName()) + "_integSum";
+         auto fracInteg =
+            std::make_unique<RooRealSumFunc>(fracIntegName.c_str(), fracIntegName.c_str(), _coefList, terms);
+         fracInteg->addOwnedComponents(std::move(owner));
+
+         out = std::move(fracInteg);
+      }
+   }
+
+   std::string finalName = std::string(out->GetName()) + "_finalized";
+   if (prodList.empty()) {
+      // If there are no additional factors, just return the single factor we have
+      return out;
+   } else {
+      prodList.addOwned(std::move(out));
+   }
+   auto finalOut = std::make_unique<RooProduct>(finalName.c_str(), finalName.c_str(), prodList);
+   finalOut->addOwnedComponents(std::move(prodList));
+   return finalOut;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -828,4 +903,54 @@ bool RooAddPdf::redirectServersHook(const RooAbsCollection & newServerList, bool
   // to the right observables anymore. We need to reset it.
   _copyOfLastNormSet.reset();
   return RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
+}
+
+
+std::unique_ptr<RooAbsArg>
+RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   auto newArg = std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(Clone())};
+   ctx.markAsCompiled(*newArg);
+
+   // In case conditional observables, e.g. p(x|y), the _refCoefNorm is set to
+   // all observables (x, y) and the normSet doesn't contain the condidional
+   // observables (so it only contains x in this example).
+
+   // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
+   // a conditional pdf and we don't need to do any transformation.
+   if(_refCoefNorm.empty() || normSet.equals(_refCoefNorm)) {
+     ctx.compileServers(*newArg, normSet);
+     return newArg;
+   }
+
+   // In the conditional case, things become more complicated. The original
+   // getValV() method is covering this case with very complicated logic,
+   // caching multiple new RooFit objects to scale the individual coefficients
+   // of the RooAddPdf.
+   //
+   // However, it's not complicated what we need to do mathematically:
+   //
+   // Since:
+   //   1. p(x, y) = p(x | y) * p(y)
+   //   2. p(y) = Integral of p(x, y) over x
+   //
+   // We conculde:
+   //                      p(x, y)
+   //   p(x | y) = --------------------------
+   //              Integral of p(x, y) over x
+   //
+   // What follows is the implementation of this formula in RooFit. By doing
+   // this here in complieForNormSet(), we don't invoke the old RooAddPdf
+   // projection caches (note that no conditional pdfs are on the right hand
+   // side of the equation).
+   std::string finalName = std::string(GetName()) + "_conditional";
+   std::unique_ptr<RooAbsReal> denom{newArg->createIntegral(normSet, _refCoefNorm)};
+   auto finalArg = std::make_unique<RooGenericPdf>(finalName.c_str(), "@0/@1", RooArgList{*newArg, *denom});
+   ctx.compileServers(*denom, _refCoefNorm);
+   ctx.markAsCompiled(*denom);
+   ctx.markAsCompiled(*finalArg);
+   ctx.compileServers(*newArg, _refCoefNorm);
+   finalArg->addOwnedComponents(std::move(newArg));
+   finalArg->addOwnedComponents(std::move(denom));
+   return finalArg;
 }

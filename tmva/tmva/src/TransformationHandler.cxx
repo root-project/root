@@ -173,6 +173,7 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    // the inverse transformation
    TListIter trIt(&fTransformations, kIterBackward);
    std::vector< Int_t >::const_iterator rClsIt = fTransformationsReferenceClasses.end();
+   std::vector<Int_t>::const_iterator rClsBegin = fTransformationsReferenceClasses.begin();
    --rClsIt;
    const Event* trEv = ev;
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
@@ -183,7 +184,8 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
             trEv = trf->InverseTransform(ev, (*rClsIt) );
       }
       else break;
-      --rClsIt;
+      if (rClsIt > rClsBegin)
+         --rClsIt;
    }
    return trEv;
 
@@ -550,7 +552,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                Int_t xmax = TMath::Nint( GetMax( ( var_tgt*nvar )+ivar) + 1 );
                Int_t nbins = xmax - xmin;
 
-               h = new TH1F( Form("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()),
+               h = new TH1F( TString::Format("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()).Data(),
                              info.GetTitle(), nbins, xmin, xmax );
             }
             else {
@@ -564,7 +566,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                // safety margin for values equal to the maximum within the histogram
                xmax += (xmax - xmin)/nbins1D;
 
-               h = new TH1F( Form("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()),
+               h = new TH1F( TString::Format("%s__%s%s", myVari.Data(), className.Data(), transfType.Data()).Data(),
                              info.GetTitle(), nbins1D, xmin, xmax );
             }
 
@@ -589,9 +591,9 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                      Double_t rymax = fVariableStats.at(fNumC-1).at( ( v_t*nvar )+j).fMax;
 
                      // scatter plot
-                     TH2F* h2 = new TH2F( Form( "scat_%s_vs_%s_%s%s" , myVarj.Data(), myVari.Data(),
+                     TH2F* h2 = new TH2F( TString::Format( "scat_%s_vs_%s_%s%s" , myVarj.Data(), myVari.Data(),
                                                 className.Data(), transfType.Data() ),
-                                          Form( "%s versus %s (%s)%s", infoj.GetTitle(), info.GetTitle(),
+                                          TString::Format( "%s versus %s (%s)%s", infoj.GetTitle(), info.GetTitle(),
                                                 className.Data(), transfType.Data() ),
                                           nbins2D, rxmin , rxmax,
                                           nbins2D, rymin , rymax );
@@ -601,10 +603,10 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
                      mycorr.at(cls).at((var_tgt*nvar)+ivar).at((v_t*nvar)+j) = h2;
 
                      // profile plot
-                     TProfile* p = new TProfile( Form( "prof_%s_vs_%s_%s%s", myVarj.Data(),
+                     TProfile* p = new TProfile( TString::Format( "prof_%s_vs_%s_%s%s", myVarj.Data(),
                                                        myVari.Data(), className.Data(),
                                                        transfType.Data() ),
-                                                 Form( "profile %s versus %s (%s)%s",
+                                                 TString::Format( "profile %s versus %s (%s)%s",
                                                        infoj.GetTitle(), info.GetTitle(),
                                                        className.Data(), transfType.Data() ), nbins1D,
                                                  rxmin, rxmax );
@@ -749,9 +751,9 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 
       TString uniqueOutputDir = outputDir;
       Int_t counter = 0;
-      TObject* o = NULL;
-      while( (o = fRootBaseDir->FindObject(uniqueOutputDir)) != 0 ){
-         uniqueOutputDir = outputDir+Form("_%d",counter);
+      TObject* o = nullptr;
+      while( (o = fRootBaseDir->FindObject(uniqueOutputDir)) != nullptr ){
+         uniqueOutputDir = outputDir + TString::Format("_%d",counter);
          Log() << kINFO << "A " << o->ClassName() << " with name " << o->GetName() << " already exists in "
                << fRootBaseDir->GetPath() << ", I will try with "<<uniqueOutputDir<<"." << Endl;
          ++counter;
@@ -775,7 +777,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
       for (Int_t cls = 0; cls < ncls; cls++) {
          if (hVars.at(cls).at(i) != 0) {
             hVars.at(cls).at(i)->Write();
-            hVars.at(cls).at(i)->SetDirectory(0);
+            hVars.at(cls).at(i)->SetDirectory(nullptr);
             delete hVars.at(cls).at(i);
          }
       }
@@ -795,12 +797,12 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
             for (Int_t cls = 0; cls < ncls; cls++) {
                if (mycorr.at(cls).at(i).at(j) != 0 ) {
                   mycorr.at(cls).at(i).at(j)->Write();
-                  mycorr.at(cls).at(i).at(j)->SetDirectory(0);
+                  mycorr.at(cls).at(i).at(j)->SetDirectory(nullptr);
                   delete mycorr.at(cls).at(i).at(j);
                }
                if (myprof.at(cls).at(i).at(j) != 0) {
                   myprof.at(cls).at(i).at(j)->Write();
-                  myprof.at(cls).at(i).at(j)->SetDirectory(0);
+                  myprof.at(cls).at(i).at(j)->SetDirectory(nullptr);
                   delete myprof.at(cls).at(i).at(j);
                }
             }

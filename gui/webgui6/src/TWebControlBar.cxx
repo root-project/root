@@ -117,7 +117,7 @@ void TWebControlBar::Show()
       return;
 
    if (!fWindow) {
-      fWindow = ROOT::Experimental::RWebWindow::Create();
+      fWindow = ROOT::RWebWindow::Create();
 
       fWindow->SetConnLimit(1); // configure connections limit
 
@@ -134,7 +134,7 @@ void TWebControlBar::Show()
          });
    }
 
-   ROOT::Experimental::RWebDisplayArgs args;
+   ROOT::RWebDisplayArgs args;
    args.SetWidgetKind("TControlBar");
 
    auto lst = fControlBar->GetListOfButtons();

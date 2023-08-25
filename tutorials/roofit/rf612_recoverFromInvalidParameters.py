@@ -11,8 +11,8 @@
 ## this function can be negative, and hence, it cannot be used as a PDF. In this case, RooFit passes
 ## an error to the minimiser, which might try to recover.
 ##
-## \macro_output
 ## \macro_code
+## \macro_output
 ##
 ## \date June 2021
 ## \author Harshal Shende, Stephan Hageboeck (C++ version)

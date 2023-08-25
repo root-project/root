@@ -21,7 +21,7 @@
 /html/ @Axel-Naumann
 /icons/ @bellenot
 /interpreter/ @Axel-Naumann
-/interpreter/llvm/ @vgvassilev
+/interpreter/llvm-project/ @vgvassilev
 interpreter/cling/tools/packaging @vgvassilev
 /io/ @pcanal
 /io/xml/ @pcanal @linev
@@ -38,9 +38,10 @@ interpreter/cling/tools/packaging @vgvassilev
 /tmva/ @lmoneta @sitongan
 /tree/ @pcanal
 /tutorials/ @couet
-/tree/dataframe/ @eguiraud
+/tree/dataframe/ @eguiraud @vepadulano
 /tree/readspeed/ @eguiraud
 /tree/ntuple/v7/ @jblomer
+/tree/ntupleutil/v7/ @jblomer
 
 # Projects that span over several code modules:
 /bindings/r/ @omazapa

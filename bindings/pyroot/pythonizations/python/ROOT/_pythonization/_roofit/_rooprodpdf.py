@@ -32,10 +32,10 @@ class RooProdPdf(object):
 
     @cpp_signature(
         "RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,"
-        "    const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),"
-        "    const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),"
-        "    const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),"
-        "    const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;"
+        "    const RooCmdArg& arg1            , const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def __init__(self, *args, **kwargs):
         r"""The RooProdPdf constructor is pythonized with the command argument pythonization.

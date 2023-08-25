@@ -41,7 +41,7 @@ protected:
 
 public:
    TEveGridStepper(Int_t sm=kSM_XYZ);
-   virtual ~TEveGridStepper() {}
+   ~TEveGridStepper() override {}
 
    void Reset();
    void Subtract(TEveGridStepper& s);
@@ -72,7 +72,7 @@ public:
    Float_t GetOy() const { return fOy; }
    Float_t GetOz() const { return fOz; }
 
-   ClassDef(TEveGridStepper, 1); // Provide discrete position coordinates for placement of objects on regular grids.
+   ClassDefOverride(TEveGridStepper, 1); // Provide discrete position coordinates for placement of objects on regular grids.
 }; // end class TEveGridStepper
 
 #endif

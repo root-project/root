@@ -1591,9 +1591,9 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
       //            }
       //        }
       title += TString::Format("%s' = %g", fPOIName(), (isAlt) ? fAltVal() : fNullVal());
-      title += TString::Format(" , N_{toys}=%lu", (isAlt) ? altToys.size() : nullToys.size());
+      title += (std::string(" , N_{toys}=") + ((isAlt) ? altToys.size() : nullToys.size()));
       if (nBadOrZero > 0)
-         title += TString::Format(" (N_{bad/0}=%lu)", nBadOrZero);
+         title += (std::string(" (N_{bad/0}=") + nBadOrZero + ')');
       title += ";";
       title += tsTitle();
       title += TString::Format(";Probability Mass");

@@ -137,6 +137,16 @@ private:
    Double_t      fTimeOffset;        ///< Time offset to the beginning of an axis
    Bool_t        fIsReading;         ///<! Set to FALSE when userclass::UseCurrentStyle is called by the style manager
    Float_t       fImageScaling;      ///< Image scaling to produce high definition bitmap images
+   Double_t      fCandleWhiskerRange;///< Candle plot, the fraction which is covered by the whiskers (0 < x < 1), default 1
+   Double_t      fCandleBoxRange;    ///< Candle plot, The fraction which is covered by the box (0 < x < 1), default 0.5
+   Bool_t        fCandleScaled;      ///< Candle plot, shall the box-width be scaled to each other by the integral of a box?
+   Bool_t        fViolinScaled;      ///< Violin plot, shall the violin or histos be scaled to each other by the maximum height?
+   Float_t       fXAxisExpXOffset;   ///< X axis exponent label X offset
+   Float_t       fXAxisExpYOffset;   ///< X axis exponent label Y offset
+   Float_t       fYAxisExpXOffset;   ///< Y axis exponent label X offset
+   Float_t       fYAxisExpYOffset;   ///< Y axis exponent label Y offset
+   Int_t         fAxisMaxDigits;     ///< Number of digits above which the 10^N notation is used for axis
+   Bool_t        fOrthoCamera;       ///< Use orthographic camera with web display
 
 public:
    enum EPaperSize { kA4, kUSLetter };
@@ -146,13 +156,7 @@ public:
    TStyle(const TStyle &style);
    TStyle& operator=(const TStyle& style);
    virtual          ~TStyle();
-   inline Int_t     AxisChoice(Option_t *axis) const
-   {
-      // Return axis number (1 for X, 2 for Y, 3 for Z)
-      UChar_t a = *axis;
-      a -= (a >= 'x') ? 'x' : 'X'; // toupper and a-='X'; intentional underflow
-      return (a > 2) ? 0 : (Int_t)(a+1);
-   }
+   Int_t            AxisChoice(Option_t *axis) const;
    void             Browse(TBrowser *b) override;
    static  void     BuildStyles();
    void             Copy(TObject &style) const override;
@@ -171,6 +175,8 @@ public:
    Float_t          GetTitleOffset(Option_t *axis="X") const; //return axis title offset
    Float_t          GetTitleSize(Option_t *axis="X") const;   //return axis title size
    Float_t          GetTickLength(Option_t *axis="X") const;
+   void             GetExponentOffset(Float_t &xoff, Float_t &yoff, Option_t *axis = "X") const;
+   Int_t            GetAxisMaxDigits() const;
 
    Float_t          GetBarOffset() const {return fBarOffset;}
    Float_t          GetBarWidth() const {return fBarWidth;}
@@ -187,15 +193,15 @@ public:
    Int_t            GetCanvasDefY() const      {return fCanvasDefY;}
    Int_t            GetColorPalette(Int_t i) const;
    Int_t            GetColorModelPS() const    {return fColorModelPS;}
-   Float_t          GetDateX()  const          {return fDateX;}
+   Float_t          GetDateX() const           {return fDateX;}
    Float_t          GetDateY() const           {return fDateY;}
-   const char      *GetFitFormat()       const {return fFitFormat.Data();}
+   const char      *GetFitFormat() const       {return fFitFormat.Data();}
    Int_t            GetHatchesLineWidth() const {return fHatchesLineWidth;}
    Double_t         GetHatchesSpacing() const  {return fHatchesSpacing;}
-   Width_t          GetLegendBorderSize() const   {return fLegendBorderSize;}
+   Width_t          GetLegendBorderSize() const {return fLegendBorderSize;}
    Color_t          GetLegendFillColor() const {return fLegendFillColor;}
-   Style_t          GetLegendFont() const {return fLegendFont;}
-   Double_t         GetLegendTextSize() const {return fLegendTextSize;}
+   Style_t          GetLegendFont() const      {return fLegendFont;}
+   Double_t         GetLegendTextSize() const  {return fLegendTextSize;}
    Int_t            GetNumberOfColors() const;
    Color_t          GetPadColor() const        {return fPadColor;}
    Width_t          GetPadBorderSize() const   {return fPadBorderSize;}
@@ -214,21 +220,21 @@ public:
    Color_t          GetGridColor() const       {return fGridColor;}
    Style_t          GetGridStyle() const       {return fGridStyle;}
    Width_t          GetGridWidth() const       {return fGridWidth;}
-   Color_t          GetFrameFillColor()  const {return fFrameFillColor;}
-   Color_t          GetFrameLineColor()  const {return fFrameLineColor;}
-   Style_t          GetFrameFillStyle()  const {return fFrameFillStyle;}
-   Style_t          GetFrameLineStyle()  const {return fFrameLineStyle;}
-   Width_t          GetFrameLineWidth()  const {return fFrameLineWidth;}
+   Color_t          GetFrameFillColor() const  {return fFrameFillColor;}
+   Color_t          GetFrameLineColor() const  {return fFrameLineColor;}
+   Style_t          GetFrameFillStyle() const  {return fFrameFillStyle;}
+   Style_t          GetFrameLineStyle() const  {return fFrameLineStyle;}
+   Width_t          GetFrameLineWidth() const  {return fFrameLineWidth;}
    Width_t          GetFrameBorderSize() const {return fFrameBorderSize;}
    Int_t            GetFrameBorderMode() const {return fFrameBorderMode;}
-   Color_t          GetHistFillColor()   const {return fHistFillColor;}
-   Color_t          GetHistLineColor()   const {return fHistLineColor;}
-   Style_t          GetHistFillStyle()   const {return fHistFillStyle;}
-   Style_t          GetHistLineStyle()   const {return fHistLineStyle;}
-   Width_t          GetHistLineWidth()   const {return fHistLineWidth;}
+   Color_t          GetHistFillColor() const   {return fHistFillColor;}
+   Color_t          GetHistLineColor() const   {return fHistLineColor;}
+   Style_t          GetHistFillStyle() const   {return fHistFillStyle;}
+   Style_t          GetHistLineStyle() const   {return fHistLineStyle;}
+   Width_t          GetHistLineWidth() const   {return fHistLineWidth;}
    Bool_t           GetHistMinimumZero() const {return fHistMinimumZero;}
-   Double_t         GetHistTopMargin()   const {return fHistTopMargin;}
-   Float_t          GetImageScaling()    const {return fImageScaling;}
+   Double_t         GetHistTopMargin() const {return fHistTopMargin;}
+   Float_t          GetImageScaling() const {return fImageScaling;}
    Float_t          GetLegoInnerR() const {return fLegoInnerR;}
    Int_t            GetNumberContours() const {return fNumberContours;}
    Int_t            GetOptDate() const {return fOptDate;}
@@ -259,7 +265,7 @@ public:
    Float_t          GetStatH() const     {return fStatH;}
    Int_t            GetStripDecimals() const {return fStripDecimals;}
    Double_t         GetTimeOffset() const {return fTimeOffset;} //return axis time offset
-   Int_t            GetTitleAlign() {return fTitleAlign;} // return the histogram title TPaveLabel alignment
+   Int_t            GetTitleAlign() const {return fTitleAlign;} // return the histogram title TPaveLabel alignment
    Color_t          GetTitleFillColor() const {return fTitleColor;}  //return histogram title fill area color
    Color_t          GetTitleTextColor() const {return fTitleTextColor;}  //return histogram title text color
    Style_t          GetTitleStyle() const  {return fTitleStyle;}
@@ -274,11 +280,16 @@ public:
    Float_t          GetTitleW() const     {return fTitleW;}  //return width of histogram title TPaveLabel
    Float_t          GetTitleH() const     {return fTitleH;}  //return height of histogram title TPavelabel
    const char      *GetHeaderPS() const {return fHeaderPS.Data();}
-   const char      *GetTitlePS()  const {return fTitlePS.Data();}
+   const char      *GetTitlePS() const {return fTitlePS.Data();}
    const char      *GetLineStyleString(Int_t i=1) const;
    Int_t            GetJoinLinePS() const {return fJoinLinePS;} ///< Returns the line join method used for PostScript, PDF and SVG output. See `TPostScript::SetLineJoin` for details.
-   Int_t            GetCapLinePS()  const {return fCapLinePS;}  ///< Returns the line cap method used for PostScript, PDF and SVG output. See `TPostScript::SetLineCap` for details.
+   Int_t            GetCapLinePS() const  {return fCapLinePS;}  ///< Returns the line cap method used for PostScript, PDF and SVG output. See `TPostScript::SetLineCap` for details.
    Float_t          GetLineScalePS() const {return fLineScalePS;}
+   Double_t         GetCandleWhiskerRange() const {return fCandleWhiskerRange;}
+   Double_t         GetCandleBoxRange() const {return fCandleBoxRange;}
+   Bool_t           GetCandleScaled() const {return fCandleScaled;}
+   Bool_t           GetViolinScaled() const {return fViolinScaled;}
+   Bool_t           GetOrthoCamera() const {return fOrthoCamera;}
 
    Bool_t           IsReading() const {return fIsReading;}
    void             Paint(Option_t *option="") override;
@@ -307,6 +318,8 @@ public:
    void             SetTitleFont(Style_t font=62, Option_t *axis="X"); //set axis title font or pad title font
    void             SetTitleOffset(Float_t offset=1, Option_t *axis="X"); //set axis title offset
    void             SetTitleSize(Float_t size=0.02, Option_t *axis="X");  //set axis title size or pad title size
+   void             SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="XY");
+   void             SetAxisMaxDigits(Int_t maxd=5);
    void             SetNumberContours(Int_t number=20);
    void             SetOptDate(Int_t datefl=1);
    void             SetOptFile(Int_t file=1) {fOptFile = file;}
@@ -404,10 +417,16 @@ public:
    void             SetIsReading(Bool_t reading=kTRUE);
    void             SetPalette(Int_t ncolors = kBird, Int_t *colors = nullptr, Float_t alpha = 1.);
    void             SetPalette(TString fileName, Float_t alpha = 1.);
+   void             SetCandleWhiskerRange(Double_t wRange=1.0);
+   void             SetCandleBoxRange(Double_t bRange=0.5);
+   void             SetCandleScaled(Bool_t on=kFALSE) {fCandleScaled=on;}
+   void             SetViolinScaled(Bool_t on=kTRUE) {fViolinScaled=on;}
+   void             SetOrthoCamera(Bool_t on=kTRUE) {fOrthoCamera=on;}
+
    void             SavePrimitive(std::ostream &out, Option_t * = "") override;
    void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDefOverride(TStyle, 19);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 22);  //A collection of all graphics attributes
 };
 
 

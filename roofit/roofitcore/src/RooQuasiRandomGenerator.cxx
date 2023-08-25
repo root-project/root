@@ -93,7 +93,7 @@ bool RooQuasiRandomGenerator::generate(UInt_t dimension, double vector[])
    * the count is advanced.
    */
   Int_t r(0),c(_sequenceCount);
-  while(1) {
+  while(true) {
     if((c % 2) == 1) {
       ++r;
       c /= 2;

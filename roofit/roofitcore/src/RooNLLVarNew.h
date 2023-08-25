@@ -21,8 +21,6 @@
 
 #include <Math/Util.h>
 
-#include "RooBatchComputeTypes.h"
-
 namespace ROOT {
 namespace Experimental {
 
@@ -44,7 +42,7 @@ public:
    /// Return default level for MINUIT error analysis.
    double defaultErrorLevel() const override { return 0.5; }
 
-   void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
+   void computeBatch(double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
    bool canComputeBatchWithCuda() const override { return !_binnedL; }
    bool isReducerNode() const override { return true; }
 
@@ -58,27 +56,28 @@ public:
 
    void setSimCount(int simCount) { _simCount = simCount; }
 
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
    double finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const;
-   void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf);
-   double computeBatchBinnedL(RooSpan<const double> preds, RooSpan<const double> weights) const;
+   void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables);
+   double computeBatchBinnedL(std::span<const double> preds, std::span<const double> weights) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
-   RooArgSet _observables;
+   RooTemplateProxy<RooAbsReal> _weightVar;
+   RooTemplateProxy<RooAbsReal> _weightSquaredVar;
+   RooTemplateProxy<RooAbsReal> _binVolumeVar;
+   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _expectedEvents;
    mutable double _sumWeight = 0.0;  //!
    mutable double _sumWeight2 = 0.0; //!
-   bool _isExtended;
    bool _weightSquared = false;
    bool _binnedL = false;
    bool _doOffset = false;
    bool _doBinOffset = false;
    int _simCount = 1;
    std::string _prefix;
-   RooTemplateProxy<RooAbsReal> _weightVar;
-   RooTemplateProxy<RooAbsReal> _weightSquaredVar;
-   RooTemplateProxy<RooAbsReal> _binVolumeVar;
    std::vector<double> _binw;
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
 

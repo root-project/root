@@ -18,6 +18,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TF1.h"
 #include "TPaveStats.h"
 #include "TGaxis.h"
@@ -27,6 +28,8 @@
 #include "TGraphPolargram.h"
 #include "TGraphPolar.h"
 #include "TGraphQQ.h"
+#include "TScatter.h"
+#include "TPaletteAxis.h"
 #include "TLatex.h"
 #include "TArrow.h"
 #include "TFrame.h"
@@ -107,7 +110,7 @@ Graphs can be drawn with the following options:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "A"      | Axis are drawn around the graph |
+| "A"      | Produce a new plot with Axis around the graph |
 | "I"      | Combine with option 'A' it draws invisible axis |
 | "L"      | A simple polyline is drawn |
 | "F"      | A fill area is drawn ('CF' draw a smoothed fill area) |
@@ -724,16 +727,6 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
    // Somewhere on the graph points?
    const Int_t big = 9999;
    const Int_t kMaxDiff = 10;
-   Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
-   Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
-   Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
-   Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
-
-   // return if point is not in the graph area
-   if (px <= puxmin) return big;
-   if (py >= puymin) return big;
-   if (px >= puxmax) return big;
-   if (py <= puymax) return big;
 
    // check if point is near one of the graph points
    Int_t i, pxp, pyp, d;
@@ -785,10 +778,9 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
    TList *functions = theGraph->GetListOfFunctions();
    TIter   next(functions);
    while ((f = (TObject*) next())) {
-      Int_t dist;
-      if (f->InheritsFrom(TF1::Class())) dist = f->DistancetoPrimitive(-px,py);
-      else                               dist = f->DistancetoPrimitive(px,py);
-      if (dist < kMaxDiff) {
+      if (f->InheritsFrom(TF1::Class())) distance = f->DistancetoPrimitive(-px,py);
+      else                               distance = f->DistancetoPrimitive(px,py);
+      if (distance < kMaxDiff) {
          gPad->SetSelected(f);
          return 0; //must be o and not dist in case of TMultiGraph
       }
@@ -810,8 +802,8 @@ void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
    }
    TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
    editor->Show();
-   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
-                           (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)theGraph));
+   gROOT->ProcessLine(TString::Format("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
+                                      (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)theGraph));
 }
 
 
@@ -1277,9 +1269,10 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
                break;
             }
          }
+         TPaletteAxis *palette = (TPaletteAxis*)functions->FindObject("palette");
+         if (palette) palette->Paint();
       }
       if (fit && !theGraph->TestBit(TGraph::kNoStats)) PaintStats(theGraph, fit);
-
    }
 }
 
@@ -1407,7 +1400,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          rwxmax = uxmax;
          npt = 100;
          if (theNpoints > npt) npt = theNpoints;
-         TH1F *h = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+         TH1F *h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
          theGraph->SetHistogram(h);
          if (!theGraph->GetHistogram()) return;
          theGraph->GetHistogram()->SetMinimum(rwymin);
@@ -2441,8 +2434,6 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER=8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
@@ -2483,6 +2474,12 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
    if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
+   // special flags in case of "reverse plot" and "log scale"
+   Bool_t xrevlog = kFALSE;
+   Bool_t yrevlog = kFALSE;
+   if (strstr(option,"-N")) xrevlog = kTRUE; // along X
+   if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
+
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
@@ -2508,8 +2505,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(theGraph->GetFillColor());
    box.SetFillStyle(theGraph->GetFillStyle());
 
-   symbolsize  = theGraph->GetMarkerSize();
-   sbase       = symbolsize*kBASEMARKER;
+   Double_t symbolsize = theGraph->GetMarkerSize();
+   Double_t sbase = symbolsize*kBASEMARKER;
    Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
    Double_t cx  = 0;
    Double_t cy  = 0;
@@ -2519,17 +2516,21 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    }
 
    // Define the offset of the error bars due to the symbol size
-   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
-   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
-   tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Double_t s2x  =  gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   Double_t s2y  = -gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   Int_t dxend   = Int_t(gStyle->GetEndErrorSize());
+   Double_t tx   =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty   = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
+
+   // loop over all the graph points
+   Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
+
       if (!option0) {
          if (option3) {
             if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
@@ -2543,15 +2544,52 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
             if (y > gPad->GetUymax()) continue;
          }
       }
-      xl1 = x - s2x*cx;
-      xl2 = gPad->XtoPad(theX[i] - theEXlow[i]);
+      exl = theEXlow[i];
+      exh = theEXhigh[i];
+      eyl = theEYlow[i];
+      eyh = theEYhigh[i];
+
+      if (xrevlog) {
+         xl1 = x + s2x*cx;
+         xl2 = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               - exh);
+         xr1 = x - s2x*cx;
+         xr2 = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               + exl);
+         tx = -tx;
+      } else {
+         xl1 = x - s2x*cx;
+         xl2 = gPad->XtoPad(theX[i] - exl);
+         xr1 = x + s2x*cx;
+         xr2 = gPad->XtoPad(theX[i] + exh);
+      }
+
+      if (yrevlog) {
+         yup1 = y - s2y*cy;
+         yup2 = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               + eyl);
+         ylow1 = y + s2y*cy;
+         ylow2 = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               - eyh);
+      } else {
+         yup1  = y + s2y*cy;
+         yup2  = gPad->YtoPad(theY[i] + eyh);
+         ylow1 = y - s2y*cy;
+         ylow2 = gPad->YtoPad(theY[i] - eyl);
+      }
+      if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
+      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
 
       //  draw the error rectangles
       if (option2) {
-         x1b = gPad->XtoPad(theX[i] - theEXlow[i]);
-         y1b = gPad->YtoPad(theY[i] - theEYlow[i]);
-         x2b = gPad->XtoPad(theX[i] + theEXhigh[i]);
-         y2b = gPad->YtoPad(theY[i] + theEYhigh[i]);
+         x1b = xl2;
+         y1b = ylow2;
+         x2b = xr2;
+         y2b = yup2;
          if (x1b < gPad->GetUxmin()) x1b = gPad->GetUxmin();
          if (x1b > gPad->GetUxmax()) x1b = gPad->GetUxmax();
          if (y1b < gPad->GetUymin()) y1b = gPad->GetUymin();
@@ -2569,89 +2607,74 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
       if (option3) {
          xline[if1-1] = x;
          xline[if2-1] = x;
-         yline[if1-1] = gPad->YtoPad(theY[i] + theEYhigh[i]);
-         yline[if2-1] = gPad->YtoPad(theY[i] - theEYlow[i]);
+         yline[if1-1] = yup2;
+         yline[if2-1] = ylow2;
          if1++;
          if2--;
          continue;
       }
 
-      if (xl1 > xl2) {
+      if (exl != 0. || exh != 0.) {
          if (arrowOpt) {
-            arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+            if (exl != 0.) arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+            if (exh != 0.) arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
-            if (!brackets) gPad->PaintLine(xl1,y,xl2,y);
+            if (!brackets) {
+               if (exl != 0.) gPad->PaintLine(xl1,y,xl2,y);
+               if (exh != 0.) gPad->PaintLine(xr1,y,xr2,y);
+            }
             if (endLines) {
                if (braticks) {
-                  xb[0] = xl2+tx; yb[0] = y-ty;
-                  xb[1] = xl2;    yb[1] = y-ty;
-                  xb[2] = xl2;    yb[2] = y+ty;
-                  xb[3] = xl2+tx; yb[3] = y+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
+                  if (exl != 0.) {
+                     xb[0] = xl2+tx; yb[0] = y-ty;
+                     xb[1] = xl2;    yb[1] = y-ty;
+                     xb[2] = xl2;    yb[2] = y+ty;
+                     xb[3] = xl2+tx; yb[3] = y+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
+                  if (exh != 0.) {
+                     xb[0] = xr2-tx; yb[0] = y-ty;
+                     xb[1] = xr2;    yb[1] = y-ty;
+                     xb[2] = xr2;    yb[2] = y+ty;
+                     xb[3] = xr2-tx; yb[3] = y+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
                } else {
                   gPad->PaintLine(xl2,y-ty,xl2,y+ty);
-               }
-            }
-         }
-      }
-      xr1 = x + s2x*cx;
-      xr2 = gPad->XtoPad(theX[i] + theEXhigh[i]);
-      if (xr1 < xr2) {
-         if (arrowOpt) {
-            arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
-         } else {
-            if (!brackets) gPad->PaintLine(xr1,y,xr2,y);
-            if (endLines) {
-               if (braticks) {
-                  xb[0] = xr2-tx; yb[0] = y-ty;
-                  xb[1] = xr2;    yb[1] = y-ty;
-                  xb[2] = xr2;    yb[2] = y+ty;
-                  xb[3] = xr2-tx; yb[3] = y+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
-               } else {
                   gPad->PaintLine(xr2,y-ty,xr2,y+ty);
                }
             }
          }
       }
-      yup1 = y + s2y*cy;
-      yup2 = gPad->YtoPad(theY[i] + theEYhigh[i]);
-      if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
-      if (yup2 > yup1) {
+
+      if (eyl != 0. || eyh != 0.) {
          if (arrowOpt) {
-            arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
+            if (eyh != 0.) arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
+            if (eyl != 0.) arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
          } else {
-            if (!brackets) gPad->PaintLine(x,yup1,x,yup2);
-            if (endLines) {
-               if (braticks) {
-                  xb[0] = x-tx; yb[0] = yup2-ty;
-                  xb[1] = x-tx; yb[1] = yup2;
-                  xb[2] = x+tx; yb[2] = yup2;
-                  xb[3] = x+tx; yb[3] = yup2-ty;
-                  gPad->PaintPolyLine(4, xb, yb);
-               } else {
-                  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
-               }
+            if (!brackets) {
+               if (eyh != 0.) gPad->PaintLine(x,yup1,x,yup2);
+               if (eyl != 0.) gPad->PaintLine(x,ylow1,x,ylow2);
             }
-         }
-      }
-      ylow1 = y - s2y*cy;
-      ylow2 = gPad->YtoPad(theY[i] - theEYlow[i]);
-      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
-      if (ylow2 < ylow1) {
-         if (arrowOpt) {
-            arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
-         } else {
-            if (!brackets) gPad->PaintLine(x,ylow1,x,ylow2);
             if (endLines) {
                if (braticks) {
-                  xb[0] = x-tx; yb[0] = ylow2+ty;
-                  xb[1] = x-tx; yb[1] = ylow2;
-                  xb[2] = x+tx; yb[2] = ylow2;
-                  xb[3] = x+tx; yb[3] = ylow2+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
+                  if (eyh != 0.) {
+                     xb[0] = x-tx; yb[0] = yup2-ty;
+                     xb[1] = x-tx; yb[1] = yup2;
+                     xb[2] = x+tx; yb[2] = yup2;
+                     xb[3] = x+tx; yb[3] = yup2-ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
+                  if (eyl != 0.) {
+                     xb[0] = x-tx; yb[0] = ylow2+ty;
+                     xb[1] = x-tx; yb[1] = ylow2;
+                     xb[2] = x+tx; yb[2] = ylow2;
+                     xb[3] = x+tx; yb[3] = ylow2+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
                } else {
-                  gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
+                  if (eyh != 0.) gPad->PaintLine(x-tx,yup2,x+tx,yup2);
+                  if (eyl != 0.) gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
                }
             }
          }
@@ -2723,8 +2746,6 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER = 8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = tg->GetN();
@@ -2833,6 +2854,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    Int_t NPointsInside = AnyOption0 ? theNpoints : 0;
 
+   Double_t x,y;
    for (Int_t i = 0; i < theNpoints && !AnyOption0; i++) {
       x = gPad->XtoPad(theX[i]);
       y = gPad->YtoPad(theY[i]);
@@ -2879,8 +2901,8 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(tg->GetFillColor());
    box.SetFillStyle(tg->GetFillStyle());
 
-   symbolsize = tg->GetMarkerSize();
-   sbase = symbolsize * kBASEMARKER;
+   Double_t symbolsize = tg->GetMarkerSize();
+   Double_t sbase = symbolsize * kBASEMARKER;
    Int_t mark = TAttMarker::GetMarkerStyleBase(tg->GetMarkerStyle());
    Double_t cx = 0.;
    Double_t cy = 0.;
@@ -2891,15 +2913,17 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    }
 
    // Define the offset of the error bars due to the symbol size
-   s2x = gPad->PixeltoX(Int_t(0.5 * sbase)) - gPad->PixeltoX(0);
-   s2y = -gPad->PixeltoY(Int_t(0.5 * sbase)) + gPad->PixeltoY(0);
+   Double_t s2x = gPad->PixeltoX(Int_t(0.5 * sbase)) - gPad->PixeltoX(0);
+   Double_t s2y = -gPad->PixeltoY(Int_t(0.5 * sbase)) + gPad->PixeltoY(0);
    auto dxend = Int_t(gStyle->GetEndErrorSize());
-   tx = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Double_t tx = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6 * symbolsize * kBASEMARKER / gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, tg->TestBit(TGraph::kClipFrame));
 
+   // loop over all the graph points
+   Double_t xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
    for (Int_t i = 0; i < theNpoints; i++) {
       x = gPad->XtoPad(theX[i]);
       y = gPad->YtoPad(theY[i]);
@@ -3145,9 +3169,6 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER=8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
-   Double_t bxl, bxh, byl, byh;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
@@ -3192,6 +3213,12 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
    if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
+   // special flags in case of "reverse plot" and "log scale"
+   Bool_t xrevlog = kFALSE;
+   Bool_t yrevlog = kFALSE;
+   if (strstr(option,"-N")) xrevlog = kTRUE; // along X
+   if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
+
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
@@ -3217,32 +3244,37 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(theGraph->GetFillColor());
    box.SetFillStyle(theGraph->GetFillStyle());
 
-   symbolsize  = theGraph->GetMarkerSize();
-   sbase       = symbolsize*kBASEMARKER;
-   Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
-   Double_t cx  = 0;
-   Double_t cy  = 0;
+   Double_t symbolsize = theGraph->GetMarkerSize();
+   Double_t sbase = symbolsize*kBASEMARKER;
+   Int_t mark = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
+   Double_t cx = 0;
+   Double_t cy = 0;
    if (mark >= 20 && mark <= 49) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
    }
 
    // define the offset of the error bars due to the symbol size
-   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
-   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
-   tx   = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty   =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Double_t s2x =  gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   Double_t s2y = -gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   Int_t dxend  = Int_t(gStyle->GetEndErrorSize());
+   Double_t tx  =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty  = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
+
+   // loop over all the graph points
+   Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
+   Double_t bxl, bxh, byl, byh, bs;
    for (Int_t i=0;i<theNpoints;i++) {
-      x  = gPad->XtoPad(theX[i]);
-      y  = gPad->YtoPad(theY[i]);
+      x   = gPad->XtoPad(theX[i]);
+      y   = gPad->YtoPad(theY[i]);
       bxl = gPad->YtoPad(theY[i]+theEXlowd[i]);
       bxh = gPad->YtoPad(theY[i]+theEXhighd[i]);
       byl = gPad->XtoPad(theX[i]+theEYlowd[i]);
       byh = gPad->XtoPad(theX[i]+theEYhighd[i]);
+
       if (!option0) {
          if (option3) {
             if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
@@ -3256,13 +3288,67 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
             if (y > gPad->GetUymax()) continue;
          }
       }
+      exl = theEXlow[i];
+      exh = theEXhigh[i];
+      eyl = theEYlow[i];
+      eyh = theEYhigh[i];
+
+      if (xrevlog) {
+         xl1 = x + s2x*cx;
+         xl2 = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               - exh);
+         xr1 = x - s2x*cx;
+         xr2 = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               + exl);
+         tx = -tx;
+         byl = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               - theEYlowd[i]);
+         byh = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               - theEYhighd[i]);
+      } else {
+         xl1 = x - s2x*cx;
+         xl2 = gPad->XtoPad(theX[i] - exl);
+         xr1 = x + s2x*cx;
+         xr2 = gPad->XtoPad(theX[i] + exh);
+      }
+
+      if (yrevlog) {
+         yup1 = y - s2y*cy;
+         yup2 = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               + eyl);
+         ylow1 = y + s2y*cy;
+         ylow2 = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               - eyh);
+         bxl = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               - theEXlowd[i]);
+         bxh = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               - theEXhighd[i]);
+      } else {
+         yup1  = y + s2y*cy;
+         yup2  = gPad->YtoPad(theY[i] + eyh);
+         ylow1 = y - s2y*cy;
+         ylow2 = gPad->YtoPad(theY[i] - eyl);
+      }
+      if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
+      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
+
+      if (xrevlog) {bs = bxl; bxl = bxh; bxh = bs;}
+      if (yrevlog) {bs = byl; byl = byh; byh = bs;}
 
       //  draw the error rectangles
       if (option2) {
-         x1b = gPad->XtoPad(theX[i] - theEXlow[i]);
-         y1b = gPad->YtoPad(theY[i] - theEYlow[i]);
-         x2b = gPad->XtoPad(theX[i] + theEXhigh[i]);
-         y2b = gPad->YtoPad(theY[i] + theEYhigh[i]);
+         x1b = xl2;
+         y1b = ylow2;
+         x2b = xr2;
+         y2b = yup2;
          if (x1b < gPad->GetUxmin()) x1b = gPad->GetUxmin();
          if (x1b > gPad->GetUxmax()) x1b = gPad->GetUxmax();
          if (y1b < gPad->GetUymin()) y1b = gPad->GetUymin();
@@ -3280,96 +3366,80 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
       if (option3) {
          xline[if1-1] = byh;
          xline[if2-1] = byl;
-         yline[if1-1] = gPad->YtoPad(theY[i] + theEYhigh[i]);
-         yline[if2-1] = gPad->YtoPad(theY[i] - theEYlow[i]);
+         yline[if1-1] = yup2;
+         yline[if2-1] = ylow2;
          if1++;
          if2--;
          continue;
       }
 
-      xl1 = x - s2x*cx;
-      xl2 = gPad->XtoPad(theX[i] - theEXlow[i]);
-      if (xl1 > xl2) {
+      if (exl != 0. || exh != 0.) {
          if (arrowOpt) {
-            arrow.PaintArrow(xl1,y,xl2,bxl,asize,arrowOpt);
+            if (exl != 0.) arrow.PaintArrow(xl1,y,xl2,bxl,asize,arrowOpt);
+            if (exh != 0.) arrow.PaintArrow(xr1,y,xr2,bxh,asize,arrowOpt);
          } else {
-            if (!brackets) gPad->PaintLine(xl1,y,xl2,bxl);
+            if (!brackets) {
+               if (exl != 0.) gPad->PaintLine(xl1,y,xl2,bxl);
+               if (exh != 0.) gPad->PaintLine(xr1,y,xr2,bxh);
+            }
             if (endLines) {
                if (braticks) {
-                  xb[0] = xl2+tx; yb[0] = bxl-ty;
-                  xb[1] = xl2;    yb[1] = bxl-ty;
-                  xb[2] = xl2;    yb[2] = bxl+ty;
-                  xb[3] = xl2+tx; yb[3] = bxl+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
+                  if (exl != 0.) {
+                     xb[0] = xl2+tx; yb[0] = bxl-ty;
+                     xb[1] = xl2;    yb[1] = bxl-ty;
+                     xb[2] = xl2;    yb[2] = bxl+ty;
+                     xb[3] = xl2+tx; yb[3] = bxl+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
+                  if (exh != 0.) {
+                     xb[0] = xr2-tx; yb[0] = bxh-ty;
+                     xb[1] = xr2;    yb[1] = bxh-ty;
+                     xb[2] = xr2;    yb[2] = bxh+ty;
+                     xb[3] = xr2-tx; yb[3] = bxh+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
                } else {
                   gPad->PaintLine(xl2,bxl-ty,xl2,bxl+ty);
-               }
-            }
-         }
-      }
-      xr1 = x + s2x*cx;
-      xr2 = gPad->XtoPad(theX[i] + theEXhigh[i]);
-      if (xr1 < xr2) {
-         if (arrowOpt) {
-            arrow.PaintArrow(xr1,y,xr2,bxh,asize,arrowOpt);
-         } else {
-            if (!brackets) gPad->PaintLine(xr1,y,xr2,bxh);
-            if (endLines) {
-               if (braticks) {
-                  xb[0] = xr2-tx; yb[0] = bxh-ty;
-                  xb[1] = xr2;    yb[1] = bxh-ty;
-                  xb[2] = xr2;    yb[2] = bxh+ty;
-                  xb[3] = xr2-tx; yb[3] = bxh+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
-               } else {
                   gPad->PaintLine(xr2,bxh-ty,xr2,bxh+ty);
                }
             }
          }
       }
-      yup1 = y + s2y*cy;
-      yup2 = gPad->YtoPad(theY[i] + theEYhigh[i]);
-      if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
-      if (yup2 > yup1) {
+
+      if (eyl != 0. || eyh != 0.) {
          if (arrowOpt) {
-            arrow.PaintArrow(x,yup1,byh,yup2,asize,arrowOpt);
+            if (eyh != 0.) arrow.PaintArrow(x,yup1,byh,yup2,asize,arrowOpt);
+            if (eyl != 0.) arrow.PaintArrow(x,ylow1,byl,ylow2,asize,arrowOpt);
          } else {
-            if (!brackets) gPad->PaintLine(x,yup1,byh,yup2);
-            if (endLines) {
-               if (braticks) {
-                  xb[0] = byh-tx; yb[0] = yup2-ty;
-                  xb[1] = byh-tx; yb[1] = yup2;
-                  xb[2] = byh+tx; yb[2] = yup2;
-                  xb[3] = byh+tx; yb[3] = yup2-ty;
-                  gPad->PaintPolyLine(4, xb, yb);
-               } else {
-                  gPad->PaintLine(byh-tx,yup2,byh+tx,yup2);
-               }
+            if (!brackets) {
+               if (eyh != 0.) gPad->PaintLine(x,yup1,byh,yup2);
+               if (eyl != 0.) gPad->PaintLine(x,ylow1,byl,ylow2);
             }
-         }
-      }
-      ylow1 = y - s2y*cy;
-      ylow2 = gPad->YtoPad(theY[i] - theEYlow[i]);
-      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
-      if (ylow2 < ylow1) {
-         if (arrowOpt) {
-            arrow.PaintArrow(x,ylow1,byl,ylow2,asize,arrowOpt);
-         } else {
-            if (!brackets) gPad->PaintLine(x,ylow1,byl,ylow2);
             if (endLines) {
                if (braticks) {
-                  xb[0] = byl-tx; yb[0] = ylow2+ty;
-                  xb[1] = byl-tx; yb[1] = ylow2;
-                  xb[2] = byl+tx; yb[2] = ylow2;
-                  xb[3] = byl+tx; yb[3] = ylow2+ty;
-                  gPad->PaintPolyLine(4, xb, yb);
+                  if (eyh != 0.) {
+                     xb[0] = byh-tx; yb[0] = yup2-ty;
+                     xb[1] = byh-tx; yb[1] = yup2;
+                     xb[2] = byh+tx; yb[2] = yup2;
+                     xb[3] = byh+tx; yb[3] = yup2-ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
+                  if (eyl != 0.) {
+                     xb[0] = byl-tx; yb[0] = ylow2+ty;
+                     xb[1] = byl-tx; yb[1] = ylow2;
+                     xb[2] = byl+tx; yb[2] = ylow2;
+                     xb[3] = byl+tx; yb[3] = ylow2+ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  }
                } else {
-                  gPad->PaintLine(byl-tx,ylow2,byl+tx,ylow2);
+                  if (eyh != 0.) gPad->PaintLine(byh-tx,yup2,byh+tx,yup2);
+                  if (eyl != 0.) gPad->PaintLine(byl-tx,ylow2,byl+tx,ylow2);
                }
             }
          }
       }
    }
+
    if (!brackets && !axis) PaintGraphSimple(theGraph, option);
    gPad->ResetBit(TGraph::kClipFrame);
 
@@ -3398,8 +3468,6 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER=8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
@@ -3438,11 +3506,17 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    if (strchr(option,'4')) {option3 = kTRUE; option4 = kTRUE;}
    if (strchr(option,'5')) {option2 = kTRUE; option5 = kTRUE;}
 
+   // special flags in case of "reverse plot" and "log scale"
+   Bool_t xrevlog = kFALSE;
+   Bool_t yrevlog = kFALSE;
+   if (strstr(option,"-N")) xrevlog = kTRUE; // along X
+   if (strstr(option,"-M")) yrevlog = kTRUE; // along Y
+
    if (option3) {
       xline.resize(2*theNpoints);
       yline.resize(2*theNpoints);
       if (xline.empty() || yline.empty()) {
-         Error("Paint", "too many points, out of memory");
+         Error("PaintGraphErrors", "too many points, out of memory");
          return;
       }
       if1 = 1;
@@ -3463,28 +3537,32 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(theGraph->GetFillColor());
    box.SetFillStyle(theGraph->GetFillStyle());
 
-   symbolsize  = theGraph->GetMarkerSize();
-   sbase       = symbolsize*kBASEMARKER;
-   Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
-   Double_t cx  = 0;
-   Double_t cy  = 0;
+   Double_t symbolsize = theGraph->GetMarkerSize();
+   Double_t sbase = symbolsize*kBASEMARKER;
+   Int_t mark = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
+   Double_t cx = 0;
+   Double_t cy = 0;
    if (mark >= 20 && mark <= 49) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
    }
 
-   //      define the offset of the error bars due to the symbol size
-   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
-   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
-   tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   // define the offset of the error bars due to the symbol size
+   Double_t s2x =  gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   Double_t s2y = -gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   Int_t dxend  = Int_t(gStyle->GetEndErrorSize());
+   Double_t tx  =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty  = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
+
+   // loop over all the graph points
+   Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
+
       if (!option0) {
          if (option3) {
             if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
@@ -3501,12 +3579,47 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
       ex = theEX[i];
       ey = theEY[i];
 
+      if (xrevlog) {
+         xl1 = x + s2x*cx;
+         xl2 = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               - ex);
+         xr1 = x - s2x*cx;
+         xr2 = gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theX[i])-gPad->GetUxmax()-gPad->GetUxmin()))
+               + ex);
+         tx = -tx;
+      } else {
+         xl1 = x - s2x*cx;
+         xl2 = gPad->XtoPad(theX[i] - ex);
+         xr1 = x + s2x*cx;
+         xr2 = gPad->XtoPad(theX[i] + ex);
+      }
+
+      if (yrevlog) {
+         yup1 = y - s2y*cy;
+         yup2 = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               + ey);
+         ylow1 = y + s2y*cy;
+         ylow2 = gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(
+               TMath::Power(10,-(TMath::Log10(theY[i])-gPad->GetUymax()-gPad->GetUymin()))
+               - ey);
+      } else {
+         yup1 = y + s2y*cy;
+         yup2 = gPad->YtoPad(theY[i] + ey);
+         ylow1 = y - s2y*cy;
+         ylow2 = gPad->YtoPad(theY[i] - ey);
+      }
+      if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
+      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
+
       //  draw the error rectangles
       if (option2) {
-         x1b = gPad->XtoPad(theX[i] - ex);
-         y1b = gPad->YtoPad(theY[i] - ey);
-         x2b = gPad->XtoPad(theX[i] + ex);
-         y2b = gPad->YtoPad(theY[i] + ey);
+         x1b = xl2;
+         x2b = xr2;
+         y1b = ylow2;
+         y2b = yup2;
          if (x1b < gPad->GetUxmin()) x1b = gPad->GetUxmin();
          if (x1b > gPad->GetUxmax()) x1b = gPad->GetUxmax();
          if (y1b < gPad->GetUymin()) y1b = gPad->GetUymin();
@@ -3524,20 +3637,22 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
       if (option3) {
          xline[if1-1] = x;
          xline[if2-1] = x;
-         yline[if1-1] = gPad->YtoPad(theY[i] + ey);
-         yline[if2-1] = gPad->YtoPad(theY[i] - ey);
+         yline[if1-1] = yup2;
+         yline[if2-1] = ylow2;
          if1++;
          if2--;
          continue;
       }
 
-      xl1 = x - s2x*cx;
-      xl2 = gPad->XtoPad(theX[i] - ex);
-      if (xl1 > xl2) {
+      if (ex != 0.) {
          if (arrowOpt) {
             arrow.PaintArrow(xl1,y,xl2,y,asize,arrowOpt);
+            arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
          } else {
-            if (!brackets) gPad->PaintLine(xl1,y,xl2,y);
+            if (!brackets) {
+               gPad->PaintLine(xl1,y,xl2,y);
+               gPad->PaintLine(xr1,y,xr2,y);
+            }
             if (endLines) {
                if (braticks) {
                   xb[0] = xl2+tx; yb[0] = y-ty;
@@ -3545,40 +3660,28 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
                   xb[2] = xl2;    yb[2] = y+ty;
                   xb[3] = xl2+tx; yb[3] = y+ty;
                   gPad->PaintPolyLine(4, xb, yb);
-               } else {
-                  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
-               }
-            }
-         }
-      }
-      xr1 = x + s2x*cx;
-      xr2 = gPad->XtoPad(theX[i] + ex);
-      if (xr1 < xr2) {
-         if (arrowOpt) {
-            arrow.PaintArrow(xr1,y,xr2,y,asize,arrowOpt);
-         } else {
-            if (!brackets) gPad->PaintLine(xr1,y,xr2,y);
-            if (endLines) {
-               if (braticks) {
                   xb[0] = xr2-tx; yb[0] = y-ty;
                   xb[1] = xr2;    yb[1] = y-ty;
                   xb[2] = xr2;    yb[2] = y+ty;
                   xb[3] = xr2-tx; yb[3] = y+ty;
                   gPad->PaintPolyLine(4, xb, yb);
                } else {
+                  gPad->PaintLine(xl2,y-ty,xl2,y+ty);
                   gPad->PaintLine(xr2,y-ty,xr2,y+ty);
                }
             }
          }
       }
-      yup1 = y + s2y*cy;
-      yup2 = gPad->YtoPad(theY[i] + ey);
-      if (yup2 > gPad->GetUymax()) yup2 =  gPad->GetUymax();
-      if (yup2 > yup1) {
+
+      if (ey != 0.) {
          if (arrowOpt) {
             arrow.PaintArrow(x,yup1,x,yup2,asize,arrowOpt);
+            arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
          } else {
-            if (!brackets) gPad->PaintLine(x,yup1,x,yup2);
+            if (!brackets) {
+               gPad->PaintLine(x,yup1,x,yup2);
+               gPad->PaintLine(x,ylow1,x,ylow2);
+            }
             if (endLines) {
                if (braticks) {
                   xb[0] = x-tx; yb[0] = yup2-ty;
@@ -3586,34 +3689,20 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
                   xb[2] = x+tx; yb[2] = yup2;
                   xb[3] = x+tx; yb[3] = yup2-ty;
                   gPad->PaintPolyLine(4, xb, yb);
-               } else {
-                  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
-               }
-            }
-         }
-      }
-      ylow1 = y - s2y*cy;
-      ylow2 = gPad->YtoPad(theY[i] - ey);
-      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
-      if (ylow2 < ylow1) {
-         if (arrowOpt) {
-            arrow.PaintArrow(x,ylow1,x,ylow2,asize,arrowOpt);
-         } else {
-            if (!brackets) gPad->PaintLine(x,ylow1,x,ylow2);
-            if (endLines) {
-               if (braticks) {
                   xb[0] = x-tx; yb[0] = ylow2+ty;
                   xb[1] = x-tx; yb[1] = ylow2;
                   xb[2] = x+tx; yb[2] = ylow2;
                   xb[3] = x+tx; yb[3] = ylow2+ty;
                   gPad->PaintPolyLine(4, xb, yb);
-               } else {
+                } else {
+                  gPad->PaintLine(x-tx,yup2,x+tx,yup2);
                   gPad->PaintLine(x-tx,ylow2,x+tx,ylow2);
                }
             }
          }
       }
    }
+
    if (!brackets && !axis) PaintGraphSimple(theGraph, option);
    gPad->ResetBit(TGraph::kClipFrame);
 
@@ -4025,9 +4114,20 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
       theHist->Paint(opth.Data());
    }
 
-   Int_t     N  = theGraph->GetN();
-   Double_t *X  = theGraph->GetX();
-   Double_t *Y  = theGraph->GetY();
+   Int_t     N = theGraph->GetN();
+
+   Double_t *X       = theGraph->GetX();
+   Double_t *EXhigh  = theGraph->GetEXhigh();
+   Double_t *EXhighd = theGraph->GetEXhighd();
+   Double_t *EXlow   = theGraph->GetEXlow();
+   Double_t *EXlowd  = theGraph->GetEXlowd();
+
+   Double_t *Y       = theGraph->GetY();
+   Double_t *EYhigh  = theGraph->GetEYhigh();
+   Double_t *EYhighd = theGraph->GetEYhighd();
+   Double_t *EYlow   = theGraph->GetEYlow();
+   Double_t *EYlowd  = theGraph->GetEYlowd();
+
    Double_t XA1, XA2, YA1, YA2;
    if (axis) {
       XA1 = theGraph->GetXaxis()->GetXmin();
@@ -4043,92 +4143,175 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    Double_t dX  = XA1+XA2;
    Double_t dY  = YA1+YA2;
 
-   std::vector<Double_t> newX(N);
-   std::vector<Double_t> newY(N);
+   // Create the new reversed graph
+   TGraph *theReversedGraph   = (TGraph*)theGraph->Clone();
 
+   Double_t *rX       = theReversedGraph->GetX();
+   Double_t *rEXhigh  = theReversedGraph->GetEXhigh();
+   Double_t *rEXhighd = theReversedGraph->GetEXhighd();
+   Double_t *rEXlow   = theReversedGraph->GetEXlow();
+   Double_t *rEXlowd  = theReversedGraph->GetEXlowd();
+
+   Double_t *rY       = theReversedGraph->GetY();
+   Double_t *rEYhigh  = theReversedGraph->GetEYhigh();
+   Double_t *rEYhighd = theReversedGraph->GetEYhighd();
+   Double_t *rEYlow   = theReversedGraph->GetEYlow();
+   Double_t *rEYlowd  = theReversedGraph->GetEYlowd();
+
+   theReversedGraph->SetMarkerStyle(theGraph->GetMarkerStyle());
+   theReversedGraph->SetMarkerColor(theGraph->GetMarkerColor());
+   theReversedGraph->SetLineStyle(theGraph->GetLineStyle());
+   theReversedGraph->SetLineColor(theGraph->GetLineColor());
+
+   Int_t i; // loop index
+
+   // Reserve the TGraph along the X axis
    if (lrx) {
       opt.ReplaceAll("rx", "");
       if (axis) {
+         // Reverse the X axis
          Double_t GL = 0.;
          theHist->GetXaxis()->SetTickLength(0.);
          theHist->GetXaxis()->SetLabelOffset(999.);
-
-         // Redraw the new X axis
          gPad->Update();
          TString optax = "-SDH";
          if (gPad->GetGridx()) {
-            GL = (YA2 - YA1) / (gPad->GetY2() - gPad->GetY1());
+            if (gPad->GetLogy()) {
+               GL = (TMath::Log10(YA2) - TMath::Log10(YA1)) / (gPad->GetY2() - gPad->GetY1());
+            } else  {
+               GL = (YA2 - YA1) / (gPad->GetY2() - gPad->GetY1());
+            }
             optax.Append("W");
          }
          Double_t ypos;
          if (lxp) ypos = gPad->GetUymax();
          else     ypos = gPad->GetUymin();
-         auto *theNewAxis = new TGaxis(gPad->GetUxmax(),
-                                       ypos,
-                                       gPad->GetUxmin(),
-                                       ypos,
-                                       theGraph->GetXaxis()->GetXmin(),
-                                       theGraph->GetXaxis()->GetXmax(),
-                                       theHist->GetNdivisions("X"),
-                                       optax.Data(), -GL);
-         theNewAxis->SetLabelFont(theGraph->GetXaxis()->GetLabelFont());
-         theNewAxis->SetLabelSize(theGraph->GetXaxis()->GetLabelSize());
-         theNewAxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
-         theNewAxis->SetTickLength(TLX);
-         theNewAxis->SetLabelOffset(LOX - theGraph->GetXaxis()->GetLabelSize());
-         theNewAxis->Paint();
+         if (gPad->GetLogy()) ypos = TMath::Power(10,ypos);
+         TGaxis *theReversedXaxis;
+         if (gPad->GetLogx()) {
+            optax.Append("G");
+            theReversedXaxis = new TGaxis(TMath::Power(10,gPad->GetUxmax()),
+                                    ypos,
+                                    TMath::Power(10,gPad->GetUxmin()),
+                                    ypos,
+                                    theGraph->GetXaxis()->GetXmin(),
+                                    theGraph->GetXaxis()->GetXmax(),
+                                    theHist->GetNdivisions("X"),
+                                    optax.Data(), -GL);
+            if (theHist->GetXaxis()->GetMoreLogLabels()) theReversedXaxis->SetMoreLogLabels();
+            theReversedXaxis->SetLabelOffset(LOX + theGraph->GetXaxis()->GetLabelSize());
+         } else {
+            theReversedXaxis = new TGaxis(gPad->GetUxmax(),
+                                    ypos,
+                                    gPad->GetUxmin(),
+                                    ypos,
+                                    theGraph->GetXaxis()->GetXmin(),
+                                    theGraph->GetXaxis()->GetXmax(),
+                                    theHist->GetNdivisions("X"),
+                                    optax.Data(), -GL);
+            theReversedXaxis->SetLabelOffset(LOX - theGraph->GetXaxis()->GetLabelSize());
+         }
+         theReversedXaxis->SetLabelFont(theGraph->GetXaxis()->GetLabelFont());
+         theReversedXaxis->SetLabelSize(theGraph->GetXaxis()->GetLabelSize());
+         theReversedXaxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
+         theReversedXaxis->SetTickLength(TLX);
+         theReversedXaxis->Paint();
       }
+
       // Reverse X coordinates
-      for (Int_t i=0; i<N; i++) newX[i] = dX-X[i];
-   } else {
-      for (Int_t i=0; i<N; i++) newX[i] = X[i];
+      if (gPad->GetLogx()) {
+         for (i=0; i<N; i++) rX[i] = TMath::Power(10,gPad->GetUxmax()+gPad->GetUxmin()-TMath::Log10(X[i]));
+         opt.Append("-N");
+      } else {
+         for (i=0; i<N; i++) rX[i] = dX-X[i];
+      }
+
+      // Reverse X asymmetric errors
+      if (rEXhigh && EXlow) for (i=0; i<N; i++) rEXhigh[i] = EXlow[i];
+      if (rEXlow && EXhigh) for (i=0; i<N; i++) rEXlow[i]  = EXhigh[i];
+
+      // Reverse X bent parameters
+      if (rEXhighd && EXlowd) for (i=0; i<N; i++) rEXhighd[i] = EXlowd[i];
+      if (rEXlowd && EXhighd) for (i=0; i<N; i++) rEXlowd[i]  = EXhighd[i];
    }
 
+   // Reserve the TGraph along the Y axis
    if (lry) {
       opt.ReplaceAll("ry", "");
       if (axis) {
+         // Reverse the Y axis
          Double_t GL = 0.;
-         // Redraw the new Y axis
          gPad->Update();
          TString optax = "-SDH";
-
          if (gPad->GetGridy()) {
-            GL = (XA2 - XA1) / (gPad->GetX2() - gPad->GetX1());
+            if (gPad->GetLogx()) {
+               GL = (TMath::Log10(XA2) - TMath::Log10(XA1)) / (gPad->GetX2() - gPad->GetX1());
+            } else  {
+               GL = (XA2 - XA1) / (gPad->GetX2() - gPad->GetX1());
+            }
             optax.Append("W");
          }
          Double_t xpos;
          if (lyp) xpos = gPad->GetUxmax();
          else     xpos = gPad->GetUxmin();
-         auto *theNewAxis = new TGaxis(xpos,
-                                       gPad->GetUymax(),
-                                       xpos,
-                                       gPad->GetUymin(),
-                                       theGraph->GetYaxis()->GetXmin(),
-                                       theGraph->GetYaxis()->GetXmax(),
-                                       theHist->GetNdivisions("Y"),
-                                       optax.Data(), GL);
-         theNewAxis->SetLabelFont(theGraph->GetYaxis()->GetLabelFont());
-         theNewAxis->SetLabelSize(theGraph->GetYaxis()->GetLabelSize());
-         theNewAxis->SetLabelColor(theGraph->GetYaxis()->GetLabelColor());
-         theNewAxis->SetTickLength(-TLY);
-         theNewAxis->SetLabelOffset(LOY-TLY);
-         theNewAxis->Paint();
+         if (gPad->GetLogx()) xpos = TMath::Power(10,xpos);
+         TGaxis *theReversedYaxis;
+         if (gPad->GetLogy()) {
+            optax.Append("G");
+            theReversedYaxis = new TGaxis(xpos,
+                                    TMath::Power(10,gPad->GetUymax()),
+                                    xpos,
+                                    TMath::Power(10,gPad->GetUymin()),
+                                    theGraph->GetYaxis()->GetXmin(),
+                                    theGraph->GetYaxis()->GetXmax(),
+                                    theHist->GetNdivisions("Y"),
+                                    optax.Data(), GL);
+            if (theHist->GetYaxis()->GetMoreLogLabels()) theReversedYaxis->SetMoreLogLabels();
+         } else {
+            theReversedYaxis = new TGaxis(xpos,
+                                    gPad->GetUymax(),
+                                    xpos,
+                                    gPad->GetUymin(),
+                                    theGraph->GetYaxis()->GetXmin(),
+                                    theGraph->GetYaxis()->GetXmax(),
+                                    theHist->GetNdivisions("Y"),
+                                    optax.Data(), GL);
+         }
+         theReversedYaxis->SetLabelFont(theGraph->GetYaxis()->GetLabelFont());
+         theReversedYaxis->SetLabelSize(theGraph->GetYaxis()->GetLabelSize());
+         theReversedYaxis->SetLabelColor(theGraph->GetYaxis()->GetLabelColor());
+         theReversedYaxis->SetTickLength(-TLY);
+         theReversedYaxis->SetLabelOffset(LOY-TLY);
+         theReversedYaxis->Paint();
       }
+
       // Reverse Y coordinates
-      for (Int_t i=0; i<N; i++) newY[i] = dY-Y[i];
-   } else {
-      for (Int_t i=0; i<N; i++) newY[i] = Y[i];
+      if (gPad->GetLogy()) {
+         for (i=0; i<N; i++) rY[i] = TMath::Power(10,gPad->GetUymax()+gPad->GetUymin()-TMath::Log10(Y[i]));
+         opt.Append("-M");
+      } else {
+         for (i=0; i<N; i++) rY[i] = dY-Y[i];
+      }
+
+      // Reverse Y asymmetric errors
+      if (rEYhigh && EYlow) for (i=0; i<N; i++) rEYhigh[i] = EYlow[i];
+      if (rEYlow && EYhigh) for (i=0; i<N; i++) rEYlow[i]  = EYhigh[i];
+
+      // Reverse Y bent parameters
+      if (rEYhighd && EYlowd) for (i=0; i<N; i++) rEYhighd[i] = EYlowd[i];
+      if (rEYlowd && EYhighd) for (i=0; i<N; i++) rEYlowd[i]  = EYhighd[i];
    }
 
-   // Create the new reversed graph
-   TGraph *theNewGraph = (TGraph*)theGraph->Clone();
-   for (Int_t i=0; i<N; i++) theNewGraph->SetPoint(i, newX[i], newY[i]);
-   theNewGraph->SetMarkerStyle(theGraph->GetMarkerStyle());
-   theNewGraph->SetMarkerColor(theGraph->GetMarkerColor());
-   theNewGraph->SetLineStyle(theGraph->GetLineStyle());
-   theNewGraph->SetLineColor(theGraph->GetLineColor());
+   if (lrx) {
+      if (rEYlowd)  for (i=0; i<N; i++) rEYlowd[i]  = -rEYlowd[i];
+      if (rEYhighd) for (i=0; i<N; i++) rEYhighd[i] = -rEYhighd[i];
+   }
+   if (lry) {
+      if (rEXlowd)  for (i=0; i<N; i++) rEXlowd[i]  = -rEXlowd[i];
+      if (rEXhighd) for (i=0; i<N; i++) rEXhighd[i] = -rEXhighd[i];
+   }
 
-   PaintHelper(theNewGraph,opt.Data());
+   PaintHelper(theReversedGraph,opt.Data());
 
    theHist->GetXaxis()->SetLabelOffset(LOX);
    theHist->GetXaxis()->SetTickLength(TLX);
@@ -4136,6 +4319,188 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    theHist->GetYaxis()->SetTickLength(TLY);
    theHist->GetXaxis()->SetAxisColor(XACOL);
    theHist->GetYaxis()->SetAxisColor(YACOL);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a scatter plot
+
+void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
+{
+
+   Int_t optionAxis;
+
+   TString opt = chopt;
+   opt.ToUpper();
+
+   if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
+
+   double *theX         = theScatter->GetGraph()->GetX();
+   double *theY         = theScatter->GetGraph()->GetY();
+   int n                = theScatter->GetGraph()->GetN();
+   double *theColor     = theScatter->GetColor();
+   double *theSize      = theScatter->GetSize();
+   double MinMarkerSize = theScatter->GetMinMarkerSize();
+   double MaxMarkerSize = theScatter->GetMaxMarkerSize();
+
+   double minx =  DBL_MAX;
+   double maxx = -DBL_MAX;
+   double miny =  DBL_MAX;
+   double maxy = -DBL_MAX;
+   double minc =  DBL_MAX;
+   double maxc = -DBL_MAX;
+   double mins =  DBL_MAX;
+   double maxs = -DBL_MAX;
+   for (int i=0; i<n; i++) {
+      minx = TMath::Min(minx,theX[i]);
+      maxx = TMath::Max(maxx,theX[i]);
+      miny = TMath::Min(miny,theY[i]);
+      maxy = TMath::Max(maxy,theY[i]);
+      if (theColor) {
+         minc = TMath::Min(minc,theColor[i]);
+         maxc = TMath::Max(maxc,theColor[i]);
+      }
+      if (theSize) {
+         mins = TMath::Min(mins,theSize[i]);
+         maxs = TMath::Max(maxs,theSize[i]);
+      }
+   }
+
+   // Make sure minimum and maximum values are different
+   Double_t d, e = 0.1;
+   if (minx == maxx) {
+      if (theX[0] == 0.) {
+         minx = -e;
+         maxx = e;
+      } else {
+         d = TMath::Abs(theX[0]*e);
+         minx = theX[0] - d;
+         maxx = theX[0] + d;
+      }
+   }
+   if (miny == maxy) {
+      if (theY[0] == 0.) {
+         miny = -e;
+         maxy = e;
+      } else {
+         d = TMath::Abs(theY[0]*e);
+         miny = theY[0] - d;
+         maxy = theY[0] + d;
+      }
+   }
+   if (theColor) {
+      if (minc == maxc) {
+         if (theColor[0] == 0.) {
+            minc = -e;
+            maxc = e;
+         } else {
+            d = TMath::Abs(theColor[0]*e);
+            minc = theColor[0] - d;
+            maxc = theColor[0] + d;
+         }
+      }
+   }
+   if (theSize) {
+      if (mins == maxs) {
+         if (theSize[0] == 0.) {
+            mins = -e;
+            maxs = e;
+         } else {
+            d = TMath::Abs(theSize[0]*e);
+            mins = theSize[0] - d;
+            maxs = theSize[0] + d;
+         }
+      }
+   }
+
+   TH2F *h = theScatter->GetHistogram();
+   if (optionAxis) h->Paint(" ");
+
+   // Define and paint palette
+   if (theColor) {
+      TPaletteAxis *palette;
+      TList *functions = theScatter->GetGraph()->GetListOfFunctions();
+      palette = (TPaletteAxis*)functions->FindObject("palette");
+      TView *view = gPad->GetView();
+      if (palette) {
+         if (view) {
+            if (!palette->TestBit(TPaletteAxis::kHasView)) {
+               functions->Remove(palette);
+               delete palette; palette = 0;
+            }
+         } else {
+            if (palette->TestBit(TPaletteAxis::kHasView)) {
+               functions->Remove(palette);
+               delete palette; palette = 0;
+            }
+         }
+      }
+      if (!palette) {
+         Double_t xup  = gPad->GetUxmax();
+         Double_t x2   = gPad->PadtoX(gPad->GetX2());
+         Double_t ymin = gPad->PadtoY(gPad->GetUymin());
+         Double_t ymax = gPad->PadtoY(gPad->GetUymax());
+         Double_t xr   = 0.05*(gPad->GetX2() - gPad->GetX1());
+         Double_t xmin = gPad->PadtoX(xup +0.1*xr);
+         Double_t xmax = gPad->PadtoX(xup + xr);
+         if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
+         palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
+         palette->SetLabelColor(h->GetLabelColor());
+         palette->SetLabelFont(h->GetLabelFont());
+         palette->SetLabelOffset(h->GetLabelOffset());
+         palette->SetLabelSize(h->GetLabelSize());
+         palette->SetTitleOffset(h->GetTitleOffset());
+         palette->SetTitleSize(h->GetTitleSize());
+         palette->SetNdivisions(h->GetNdivisions());
+         functions->AddFirst(palette);
+      }
+      if (palette) palette->Paint();
+   }
+
+   // Draw markers
+   auto nbcol = gStyle->GetNumberOfColors();
+   int logx = gPad->GetLogx();
+   int logy = gPad->GetLogy();
+   int logz = gPad->GetLogz();
+   if (theColor && logz) {
+      if (minc>0) minc = log10(minc);
+      if (maxc>0) maxc = log10(maxc);
+   }
+   theScatter->SetMarkerColor(theScatter->GetMarkerColor());
+   theScatter->TAttMarker::Modify();
+   double x,y,c,ms;
+   int nc;
+   for (int i=0; i<n; i++) {
+      if (theColor) {
+         if (logz) {
+            if (theColor[i]>0) c = log10(theColor[i]);
+            else continue;
+         } else {
+            c = theColor[i];
+         }
+         nc = TMath::Nint(((c-minc)/(maxc-minc))*(nbcol-1));
+         if (nc > nbcol-1) nc = nbcol-1;
+         theScatter->SetMarkerColor(gStyle->GetColorPalette(nc));
+      }
+      if (theSize)  {
+         ms = (MaxMarkerSize-MinMarkerSize)*((theSize[i]-mins)/(maxs-mins))+MinMarkerSize;
+         theScatter->SetMarkerSize(ms);
+      }
+      if (theColor || theSize) theScatter->TAttMarker::Modify();
+      if (logx) {
+        if (theX[i]>0) x = log10(theX[i]);
+        else break;
+      } else {
+        x = theX[i];
+      }
+      if (logy) {
+        if (theY[i]>0) y = log10(theY[i]);
+        else break;
+      } else {
+        y = theY[i];
+      }
+      gPad->PaintPolyMarker(1,&x,&y);
+   }
 }
 
 
@@ -4444,11 +4809,11 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    char textstats[50];
    Int_t ndf = fit->GetNDF();
    snprintf(textstats,50,"#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
-   snprintf(t,64,textstats,(Float_t)fit->GetChisquare());
+   snprintf(t,64,textstats,fit->GetChisquare());
    if (print_fchi2) stats->AddText(t);
    if (print_fprob) {
       snprintf(textstats,50,"Prob  = %s%s","%",stats->GetFitFormat());
-      snprintf(t,64,textstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
+      snprintf(t,64,textstats,TMath::Prob(fit->GetChisquare(),ndf));
       stats->AddText(t);
    }
    if (print_fval || print_ferrors) {
@@ -4458,11 +4823,11 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
          if (print_fval < 2 && parmin*parmax != 0 && parmin >= parmax) continue;
          if (print_ferrors) {
             snprintf(textstats,50,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
-            snprintf(t,64,textstats,(Float_t)fit->GetParameter(ipar)
-                            ,(Float_t)fit->GetParError(ipar));
+            snprintf(t,64,textstats,fit->GetParameter(ipar)
+                            ,fit->GetParError(ipar));
          } else {
             snprintf(textstats,50,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
-            snprintf(t,64,textstats,(Float_t)fit->GetParameter(ipar));
+            snprintf(t,64,textstats,fit->GetParameter(ipar));
          }
          t[63] = 0;
          stats->AddText(t);

@@ -66,6 +66,12 @@ public:
     Jit->getMainJITDylib().addGenerator(std::move(G));
   }
 
+  /// Return a `DefinitionGenerator` that can provide addresses for symbols
+  /// reachable from this IncrementalJIT object.  This function can be used in
+  /// conjunction with `addGenerator()` to provide symbol resolution across
+  /// diferent IncrementalJIT instances.
+  std::unique_ptr<llvm::orc::DefinitionGenerator> getGenerator();
+
   // FIXME: Accept a LLVMContext as well, e.g. the one that was used for the
   // particular module in Interpreter, CIFactory or BackendPasses (would be
   // more efficient)
@@ -93,7 +99,7 @@ public:
 
   /// @brief Get the TargetMachine used by the JIT.
   /// Non-const because BackendPasses need to update OptLevel.
-  llvm::TargetMachine &getTargetMachine() { return *TM; }
+  llvm::TargetMachine &getTargetMachine() { return *m_TM; }
 
 private:
   std::unique_ptr<llvm::orc::LLJIT> Jit;
@@ -109,8 +115,9 @@ private:
   std::map<const Transaction*, llvm::orc::ResourceTrackerSP> m_ResourceTrackers;
   std::map<const llvm::Module *, llvm::orc::ThreadSafeModule> m_CompiledModules;
 
+  bool m_JITLink;
   // FIXME: Move TargetMachine ownership to BackendPasses
-  std::unique_ptr<llvm::TargetMachine> TM;
+  std::unique_ptr<llvm::TargetMachine> m_TM;
 
   // TODO: We only need the context for materialization. Instead of defining it
   // here we might want to pass one in on a per-module basis.

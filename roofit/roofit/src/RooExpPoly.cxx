@@ -30,6 +30,7 @@ RooExpPoly::RooExpPoly(const char*, const char*, RooAbsReal&, const RooArgList&,
 #include <RooMath.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
+#include "RooBatchCompute.h"
 
 #include <TMath.h>
 #include <TError.h>
@@ -62,7 +63,9 @@ ClassImp(RooExpPoly);
 /// \f]
 
 RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, int lowestOrder)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
+   : RooAbsPdf(name, title),
+     _x("x", "Dependent", this, x),
+     _coefList("coefList", "List of coefficients", this),
      _lowestOrder(lowestOrder)
 {
    // Check lowest order
@@ -83,18 +86,12 @@ RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
-     _lowestOrder(1)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooExpPoly::RooExpPoly(const RooExpPoly &other, const char *name)
-   : RooAbsPdf(other, name), _x("x", this, other._x), _coefList("coefList", this, other._coefList),
+   : RooAbsPdf(other, name),
+     _x("x", this, other._x),
+     _coefList("coefList", this, other._coefList),
      _lowestOrder(other._lowestOrder)
 {
 }
@@ -135,6 +132,27 @@ double RooExpPoly::evaluateLog() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Compute multiple values of ExpPoly distribution.
+void RooExpPoly::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+{
+   RooBatchCompute::VarVector vars;
+   vars.reserve(_coefList.size() + 1);
+   vars.push_back(dataMap.at(_x));
+
+   std::vector<double> coefVals;
+   for (RooAbsArg *coef : _coefList) {
+      vars.push_back(dataMap.at(coef));
+   }
+
+   RooBatchCompute::ArgVector args;
+   args.push_back(_lowestOrder);
+   args.push_back(_coefList.size());
+
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ExpPoly, output, nEvents, vars, args);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void RooExpPoly::adjustLimits()
 {
    // Adjust the limits of all the coefficients to reflect the numeric boundaries
@@ -168,7 +186,7 @@ double RooExpPoly::evaluate() const
    // Calculate and return value of function
 
    const double logval = this->evaluateLog();
-   const double val = exp(logval);
+   const double val = std::exp(logval);
    if (std::isinf(val)) {
       coutE(InputArguments) << "RooExpPoly::evaluate(" << GetName()
                             << ") ERROR: result of exponentiation is infinite! exponent was " << logval << std::endl;

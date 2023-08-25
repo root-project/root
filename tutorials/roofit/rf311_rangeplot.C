@@ -4,8 +4,8 @@
 /// Multidimensional models: projecting pdf and data ranges in continuous observables
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -34,9 +34,9 @@ void rf311_rangeplot()
    RooRealVar z("z", "z", -5, 5);
 
    // Create signal pdf gauss(x)*gauss(y)*gauss(z)
-   RooGaussian gx("gx", "gx", x, RooConst(0), RooConst(1));
-   RooGaussian gy("gy", "gy", y, RooConst(0), RooConst(1));
-   RooGaussian gz("gz", "gz", z, RooConst(0), RooConst(1));
+   RooGaussian gx("gx", "gx", x, 0.0, 1.0);
+   RooGaussian gy("gy", "gy", y, 0.0, 1.0);
+   RooGaussian gz("gz", "gz", z, 0.0, 1.0);
    RooProdPdf sig("sig", "sig", RooArgSet(gx, gy, gz));
 
    // Create background pdf poly(x)*poly(y)*poly(z)
@@ -49,7 +49,7 @@ void rf311_rangeplot()
    RooRealVar fsig("fsig", "signal fraction", 0.1, 0., 1.);
    RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
-   RooDataSet *data = model.generate(RooArgSet(x, y, z), 20000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 20000)};
 
    // P r o j e c t   p d f   a n d   d a t a   o n   x
    // -------------------------------------------------

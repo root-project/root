@@ -528,7 +528,7 @@ void RooAbsCategory::setTreeBranchStatus(TTree& t, bool active)
 {
   TBranch* branch = t.GetBranch(Form("%s_idx",GetName())) ;
   if (branch) {
-    t.SetBranchStatus(Form("%s_idx",GetName()),active?1:0) ;
+    t.SetBranchStatus(Form("%s_idx",GetName()),active?true:false) ;
   }
 }
 
@@ -632,17 +632,17 @@ unsigned int RooAbsCategory::getCurrentOrdinalNumber() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooCategory fundamental object with our properties.
 
-RooAbsArg *RooAbsCategory::createFundamental(const char* newname) const
+RooFit::OwningPtr<RooAbsArg> RooAbsCategory::createFundamental(const char* newname) const
 {
   // Add and precalculate new category column
-  RooCategory *fund= new RooCategory(newname?newname:GetName(),GetTitle()) ;
+  auto fund = std::make_unique<RooCategory>(newname?newname:GetName(),GetTitle()) ;
 
   // Copy states
   for (const auto& type : stateNames()) {
     fund->defineStateUnchecked(type.first, type.second);
   }
 
-  return fund;
+  return RooFit::Detail::owningPtr<RooAbsArg>(std::move(fund));
 }
 
 

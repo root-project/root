@@ -30,7 +30,7 @@ protected:
 public:
    TInspectCanvas();
    TInspectCanvas(UInt_t ww, UInt_t wh);
-   virtual        ~TInspectCanvas();
+          ~TInspectCanvas() override;
    TButton       *GetBackward() const  { return fBackward; }
    TButton       *GetForward() const   { return fForward; }
    TObject       *GetCurObject() const { return fCurObject; }

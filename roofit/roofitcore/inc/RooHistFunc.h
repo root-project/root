@@ -74,6 +74,8 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override;
+
   /// Set use of special boundary conditions for c.d.f.s
   void setCdfBoundaries(bool flag) {
     _cdfBoundaries = flag ;
@@ -97,13 +99,16 @@ public:
   Int_t getBin() const;
   std::vector<Int_t> getBins(RooFit::Detail::DataMap const& dataMap) const;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:
 
   bool importWorkspaceHook(RooWorkspace& ws) override ;
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
   friend class RooAbsCachedReal ;
 
   void ioStreamerPass2() override ;

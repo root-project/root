@@ -54,8 +54,8 @@ ClassImp(RooDataProjBinding);
 
 RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data,
                    const RooArgSet &vars, const RooArgSet* nset) :
-  RooRealBinding(real,vars,0), _first(true), _real(&real), _data(&data), _nset(nset),
-  _superCat(0), _catTable(0)
+  RooRealBinding(real,vars,nullptr), _first(true), _real(&real), _data(&data), _nset(nset),
+  _superCat(nullptr), _catTable(nullptr)
 {
   // Determine if dataset contains only categories
   bool allCat(true) ;
@@ -152,27 +152,4 @@ double RooDataProjBinding::operator()(const double xvector[]) const
 
   if (wgtSum==0) return 0 ;
   return result / wgtSum ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate the function at the specified values of the dependents.
-RooSpan<const double> RooDataProjBinding::getValues(std::vector<RooSpan<const double>> coordinates) const {
-  assert(isValid());
-
-  if (!_batchBuffer)
-    _batchBuffer = std::make_unique<std::vector<double>>();
-  _batchBuffer->resize(coordinates.front().size());
-
-  std::vector<double> xVec(coordinates.size());
-
-  for (std::size_t i=0; i < coordinates.front().size(); ++i) {
-    for (unsigned int dim=0; dim < coordinates.size(); ++dim) {
-      xVec[dim] = coordinates[dim][i];
-    }
-
-    (*_batchBuffer)[i] = this->operator()(xVec.data());
-  }
-
-  return {*_batchBuffer};
 }

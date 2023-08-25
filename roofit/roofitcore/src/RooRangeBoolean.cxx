@@ -23,7 +23,7 @@ RooRangeBoolean
 **/
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooRangeBoolean.h"
 #include "RooAbsReal.h"
@@ -97,7 +97,7 @@ double RooRangeBoolean::evaluate() const
 std::list<double>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, double /*xlo*/, double /*xhi*/) const
 {
   if (string(obs.GetName())!=_x.arg().GetName()) {
-    return 0 ;
+    return nullptr ;
   }
 
   list<double>* hint = new list<double> ;

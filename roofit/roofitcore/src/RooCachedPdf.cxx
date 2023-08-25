@@ -139,13 +139,13 @@ void RooCachedPdf::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet&
 /// of the external input p.d.f given the choice of observables defined
 /// in nset
 
-RooArgSet* RooCachedPdf::actualObservables(const RooArgSet& nset) const
+RooFit::OwningPtr<RooArgSet> RooCachedPdf::actualObservables(const RooArgSet& nset) const
 {
-  if (_cacheObs.getSize()>0) {
-    return pdf.arg().getObservables(_cacheObs) ;
+  if (!_cacheObs.empty()) {
+    return pdf->getObservables(_cacheObs);
   }
 
-  return pdf.arg().getObservables(nset) ;
+  return pdf->getObservables(nset);
 }
 
 

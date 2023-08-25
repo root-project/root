@@ -49,10 +49,10 @@ class RooAbsCollection(object):
         SetOwnership(arg, False)
 
     @cpp_signature(
-        "RooAbsCollection::printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),"
-        "                        const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),"
-        "                        const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),"
-        "                        const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;"
+        "RooAbsCollection::printLatex(const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "                        const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "                        const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "                        const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;"
     )
     def printLatex(self, *args, **kwargs):
         r"""The RooAbsCollection::printLatex() function is pythonized with the command argument pythonization.

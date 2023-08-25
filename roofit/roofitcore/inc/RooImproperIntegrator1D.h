@@ -25,22 +25,15 @@ class RooIntegrator1D;
 class RooImproperIntegrator1D : public RooAbsIntegrator {
 public:
 
-  RooImproperIntegrator1D() ;
   RooImproperIntegrator1D(const RooAbsFunc& function);
   RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config);
   RooImproperIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config);
-  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
 
   bool checkLimits() const override;
   using RooAbsIntegrator::setLimits ;
   bool setLimits(double* xmin, double* xmax) override;
   bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
   double integral(const double* yvec=nullptr) override ;
-
-  bool canIntegrate1D() const override { return true ; }
-  bool canIntegrate2D() const override { return false ; }
-  bool canIntegrateND() const override { return false ; }
-  bool canIntegrateOpenEnded() const override { return true ; }
 
 protected:
 

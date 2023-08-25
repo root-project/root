@@ -44,14 +44,14 @@ protected:
 
 public:
    TDrawFeedback(TProof *proof = 0, TSeqCollection *names = 0);
-   ~TDrawFeedback();
+   ~TDrawFeedback() override;
 
    void Feedback(TList *objs);
-   const char *GetName() const { return fName.Data(); }
-   ULong_t  Hash() const { return fName.Hash(); }
+   const char *GetName() const override { return fName.Data(); }
+   ULong_t  Hash() const override { return fName.Hash(); }
    void SetOption(Option_t *option) { fOption = option; }
 
-   ClassDef(TDrawFeedback,0)  // Present PROOF query feedback
+   ClassDefOverride(TDrawFeedback,0)  // Present PROOF query feedback
 };
 
 #endif

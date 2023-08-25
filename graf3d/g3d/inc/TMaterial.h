@@ -38,7 +38,7 @@ public:
    TMaterial();
    TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density);
    TMaterial(const char *name, const char *title, Float_t a, Float_t z, Float_t density, Float_t radl, Float_t inter);
-   virtual ~TMaterial();
+   ~TMaterial() override;
    virtual Int_t     GetNumber() const      {return fNumber;}
    virtual Float_t   GetA() const           {return fA;}
    virtual Float_t   GetZ() const           {return fZ;}
@@ -46,7 +46,7 @@ public:
    virtual Float_t   GetRadLength() const   {return fRadLength;}
    virtual Float_t   GetInterLength() const {return fInterLength;}
 
-   ClassDef(TMaterial,3)  //Materials used in the Geometry Shapes
+   ClassDefOverride(TMaterial,3)  //Materials used in the Geometry Shapes
 };
 
 #endif

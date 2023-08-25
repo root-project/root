@@ -14,11 +14,13 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 
+namespace Experimental {
 class RLogChannel;
+} // namespace Experimental
+
 /// Log channel for Browsable diagnostics.
-RLogChannel &BrowsableLog(); // implemented in RElement.cxx
+ROOT::Experimental::RLogChannel &BrowsableLog(); // implemented in RElement.cxx
 
 namespace Browsable {
 
@@ -53,6 +55,9 @@ public:
 
    /** Returns direct (temporary) object pointer */
    virtual const void *GetObject() const = 0;
+
+   /** Clear all pointers without performing cleanup */
+   virtual void Forget() {}
 
    template <class T>
    bool InheritsFrom() const
@@ -126,7 +131,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

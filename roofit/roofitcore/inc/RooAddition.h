@@ -28,8 +28,16 @@ class RooAddition : public RooAbsReal {
 public:
 
   RooAddition() : _cacheMgr(this,10) {}
-  RooAddition(const char *name, const char *title, const RooArgList& sumSet, bool takeOwnerShip=false) ;
-  RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, bool takeOwnerShip=false) ;
+  RooAddition(const char *name, const char *title, const RooArgList& sumSet
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+              , bool takeOwnership=false
+#endif
+  );
+  RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+              , bool takeOwnership=false
+#endif
+  );
 
   RooAddition(const RooAddition& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooAddition(*this, newname); }
@@ -54,7 +62,9 @@ public:
   std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override  ;
 
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 

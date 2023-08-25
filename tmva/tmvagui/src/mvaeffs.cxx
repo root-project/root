@@ -58,7 +58,7 @@ void TMVA::MethodInfo::SetResultHists()
    effpurS = new TH1F(epname, epname, nbins, low, high);
 
    // chop off useless stuff
-   sigE->SetTitle( Form("Cut efficiencies for %s classifier", methodTitle.Data()) );
+   sigE->SetTitle( TString::Format("Cut efficiencies for %s classifier", methodTitle.Data()) );
 
    // set the histogram style
    TMVAGlob::SetSignalAndBackgroundStyle( sigE, bgdE );
@@ -253,7 +253,7 @@ void TMVA::StatDialogMVAEffs::UpdateSignificanceHists()
    MethodInfo* info(0);
    TString cname = "Classifier";
    if (cname.Length() >  maxLenTitle)  maxLenTitle = cname.Length();
-   TString str = Form( "%*s   (  #signal, #backgr.)  Optimal-cut  %s      NSig      NBkg   EffSig   EffBkg",
+   TString str = TString::Format( "%*s   (  #signal, #backgr.)  Optimal-cut  %s      NSig      NBkg   EffSig   EffBkg",
                        maxLenTitle, cname.Data(), GetFormulaString().Data() );
    cout << "--- " << setfill('=') << setw(str.Length()) << "" << setfill(' ') << endl;
    cout << "--- " << str << endl;
@@ -351,12 +351,12 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
    Int_t signifColor = TColor::GetColor( "#00aa00" );
 
    TIter next(fInfoList);
-   MethodInfo* info(0);
+   MethodInfo* info = nullptr;
    while ( (info = (MethodInfo*)next()) ) {
 
       // create new canvas
-      TCanvas *c = new TCanvas( Form("canvas%d", countCanvas+1),
-                                Form("Cut efficiencies for %s classifier",info->methodTitle.Data()),
+      TCanvas *c = new TCanvas( TString::Format("canvas%d", countCanvas+1),
+                                TString::Format("Cut efficiencies for %s classifier",info->methodTitle.Data()),
                                 countCanvas*50+200, countCanvas*20, width, Int_t(width*0.78) );
       info->canvas = c;
 
@@ -431,17 +431,17 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       tl.SetNDC();
       tl.SetTextSize( 0.033 );
       Int_t maxbin = info->sSig->GetMaximumBin();
-      info->line1 = tl.DrawLatex( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
+      info->line1 = tl.DrawLatex( 0.15, 0.23, TString::Format("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
       tl.DrawLatex( 0.15, 0.19, "events the maximum "+GetLatexFormula()+" is");
 
       if (info->maxSignificanceErr > 0) {
-         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%5.2f +- %4.2f when cutting at %5.2f",
+         info->line2 = tl.DrawLatex( 0.15, 0.15, TString::Format("%5.2f +- %4.2f when cutting at %5.2f",
                                                       info->maxSignificance,
                                                       info->maxSignificanceErr,
                                                       info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
       else {
-         info->line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f",
+         info->line2 = tl.DrawLatex( 0.15, 0.15, TString::Format("%4.2f when cutting at %5.2f",
                                                       info->maxSignificance,
                                                       info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
@@ -471,7 +471,7 @@ void TMVA::StatDialogMVAEffs::DrawHistograms()
       const Bool_t Save_Images = kTRUE;
 
       if (Save_Images) {
-         TMVAGlob::imgconv( c, Form("%s/plots/mvaeffs_%s",dataset.Data(), info->methodTitle.Data()) );
+         TMVAGlob::imgconv( c, TString::Format("%s/plots/mvaeffs_%s",dataset.Data(), info->methodTitle.Data()) );
       }
       countCanvas++;
    }
@@ -481,24 +481,24 @@ void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
 {
    Int_t maxbin = info->sSig->GetMaximumBin();
    if (info->line1 !=0 )
-      info->line1->SetText( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
+      info->line1->SetText( 0.15, 0.23, TString::Format("For %1.0f signal and %1.0f background", fNSignal, fNBackground));
 
    if (info->line2 !=0 ) {
       if (info->maxSignificanceErr > 0) {
-         info->line2->SetText( 0.15, 0.15, Form("%3.2g +- %3.2g when cutting at %3.2g",
+         info->line2->SetText( 0.15, 0.15, TString::Format("%3.2g +- %3.2g when cutting at %3.2g",
                                                 info->maxSignificance,
                                                 info->maxSignificanceErr,
                                                 info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
       else {
-         info->line2->SetText( 0.15, 0.15, Form("%3.4f when cutting at %3.4f", info->maxSignificance,
+         info->line2->SetText( 0.15, 0.15, TString::Format("%3.4f when cutting at %3.4f", info->maxSignificance,
                                                 info->sSig->GetXaxis()->GetBinCenter(maxbin)) );
       }
 
    }
 
    if (info->maxSignificanceErr <= 0) {
-      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   %%10.6g  %%8.7g  %%8.7g %%8.4g %%8.4g",
+      TString opt = TString::Format( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   %%10.6g  %%8.7g  %%8.7g %%8.4g %%8.4g",
                           maxLenTitle );
       cout << "--- "
            << Form( opt.Data(),
@@ -512,7 +512,7 @@ void TMVA::StatDialogMVAEffs::PrintResults( const MethodInfo* info )
            << endl;
    }
    else {
-      TString opt = Form( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   (%%8.3g  +-%%6.3g)  %%8.7g  %%8.7g %%8.4g %%8.4g",
+      TString opt = TString::Format( "%%%is:  (%%9.8g,%%9.8g)    %%9.4f   (%%8.3g  +-%%6.3g)  %%8.7g  %%8.7g %%8.4g %%8.4g",
                           maxLenTitle );
       cout << "--- "
            << Form( opt.Data(),

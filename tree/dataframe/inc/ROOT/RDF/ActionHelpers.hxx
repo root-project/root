@@ -262,7 +262,7 @@ public:
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
-   template <typename T, std::enable_if_t<IsDataContainer<T>::value || std::is_same<T, std::string>::value, int> = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       auto &thisBuf = fBuffers[slot];
@@ -302,12 +302,15 @@ public:
       thisWBuf.insert(thisWBuf.end(), vs.size(), w);
    }
 
-   // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
    template <typename T, typename W, std::enable_if_t<IsDataContainer<W>::value && !IsDataContainer<T>::value, int> = 0>
-   void Exec(unsigned int, const T &, const W &)
+   void Exec(unsigned int slot, const T v, const W &ws)
    {
-      throw std::runtime_error(
-        "Cannot fill object if the type of the first column is a scalar and the one of the second a container.");
+      UpdateMinMax(slot, v);
+      auto &thisBuf = fBuffers[slot];
+      thisBuf.insert(thisBuf.end(), ws.size(), v);
+
+      auto &thisWBuf = fWBuffers[slot];
+      thisWBuf.insert(thisWBuf.end(), ws.begin(), ws.end());
    }
 
    Hist_t &PartialUpdate(unsigned int);
@@ -335,18 +338,6 @@ public:
       return BufferedFillHelper(result, fNSlots);
    }
 };
-
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-extern template void
-BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
@@ -1647,6 +1638,24 @@ public:
    {
       return [this](unsigned int, const RSampleInfo &) mutable { fBranchAddressesNeedReset = true; };
    }
+
+   /**
+    * @brief Create a new SnapshotHelper with a different output file name
+    *
+    * @param newName A type-erased string with the output file name
+    * @return SnapshotHelper
+    *
+    * This MakeNew implementation is tied to the cloning feature of actions
+    * of the computation graph. In particular, cloning a Snapshot node usually
+    * also involves changing the name of the output file, otherwise the cloned
+    * Snapshot would overwrite the same file.
+    */
+   SnapshotHelper MakeNew(void *newName)
+   {
+      const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+      return SnapshotHelper{
+         finalName, fDirName, fTreeName, fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
+   }
 };
 
 /// Helper object for a multi-thread Snapshot action
@@ -1813,6 +1822,24 @@ public:
    ROOT::RDF::SampleCallback_t GetSampleCallback() final
    {
       return [this](unsigned int slot, const RSampleInfo &) mutable { fBranchAddressesNeedReset[slot] = 1; };
+   }
+
+   /**
+    * @brief Create a new SnapshotHelperMT with a different output file name
+    *
+    * @param newName A type-erased string with the output file name
+    * @return SnapshotHelperMT
+    *
+    * This MakeNew implementation is tied to the cloning feature of actions
+    * of the computation graph. In particular, cloning a Snapshot node usually
+    * also involves changing the name of the output file, otherwise the cloned
+    * Snapshot would overwrite the same file.
+    */
+   SnapshotHelperMT MakeNew(void *newName)
+   {
+      const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+      return SnapshotHelperMT{fNSlots,           finalName,          fDirName, fTreeName,
+                              fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
    }
 };
 

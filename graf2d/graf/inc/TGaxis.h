@@ -19,6 +19,7 @@
 class TF1;
 class TAxis;
 class TLatex;
+class TAxisModLab;
 
 class TGaxis : public TLine, public TAttText {
 
@@ -45,17 +46,13 @@ protected:
    TAxis     *fAxis;                ///<! Pointer to original TAxis axis (if any)
    TList     *fModLabs;             ///<  List of modified labels.
 
-   static Int_t fgMaxDigits;        ///<! Number of digits above which the 10>N notation is used
-   static Float_t fXAxisExpXOffset; ///<! Exponent X offset for the X axis
-   static Float_t fXAxisExpYOffset; ///<! Exponent Y offset for the X axis
-   static Float_t fYAxisExpXOffset; ///<! Exponent X offset for the Y axis
-   static Float_t fYAxisExpYOffset; ///<! Exponent Y offset for the Y axis
-
    TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
 
    Bool_t IsOwnedModLabs() const;
    void CleanupModLabs();
+
+   TAxisModLab *FindModLab(Int_t indx, Int_t numlabels = 0, Double_t v = 0., Double_t eps = -1.) const;
 
 public:
 
@@ -66,13 +63,13 @@ public:
    TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
           const char *funcname, Int_t ndiv=510, Option_t *chopt="",
           Double_t gridlength = 0);
-   virtual ~TGaxis();
+   ~TGaxis() override;
 
    virtual void        AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
                                     ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth);
    virtual void        CenterLabels(Bool_t center=kTRUE);
    virtual void        CenterTitle(Bool_t center=kTRUE);
-   void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c);
+   void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c, Double_t value = 0., Double_t eps = -1.);
    virtual TGaxis     *DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                 Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
                                 Double_t gridlength = 0);
@@ -109,9 +106,13 @@ public:
    void                SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
    void                SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
    void                ChangeLabel(Int_t labNum=0, Double_t labAngle = -1.,
-                                          Double_t labSize = -1., Int_t labAlign = -1,
-                                          Int_t labColor = -1 , Int_t labFont = -1,
-                                          TString labText = ""); // *MENU*
+                                   Double_t labSize = -1., Int_t labAlign = -1,
+                                   Int_t labColor = -1 , Int_t labFont = -1,
+                                   const TString &labText = ""); // *MENU*
+   void                ChangeLabelByValue(Double_t labValue, Double_t labAngle = -1.,
+                                        Double_t labSize = -1., Int_t labAlign = -1,
+                                        Int_t labColor = -1 , Int_t labFont = -1,
+                                        const TString &labText = ""); // *MENU*
    static void         SetMaxDigits(Int_t maxd=5);
    virtual void        SetName(const char *name); // *MENU*
    virtual void        SetNdivisions(Int_t ndiv) {fNdiv = ndiv;} // *MENU*

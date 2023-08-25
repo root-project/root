@@ -64,9 +64,9 @@ public:
    TFunctionParametersDialog(const TGWindow *p, const TGWindow *main,
                              TF1 *func, TVirtualPad *pad,
                              Double_t rmin, Double_t rmax);
-   virtual ~TFunctionParametersDialog();
+   ~TFunctionParametersDialog() override;
 
-   virtual void  CloseWindow();
+   void  CloseWindow() override;
    virtual void  DoApply();
    virtual void  DoCancel();
    virtual void  DoFix(Bool_t on);
@@ -79,7 +79,7 @@ public:
    virtual void  HandleButtons(Bool_t update);
    virtual void  RedrawFunction();
 
-   ClassDef(TFunctionParametersDialog, 0)  // Function parameters dialog
+   ClassDefOverride(TFunctionParametersDialog, 0)  // Function parameters dialog
 };
 
 #endif

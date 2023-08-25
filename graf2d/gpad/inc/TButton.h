@@ -30,7 +30,7 @@ protected:
 public:
    TButton();
    TButton(const char *title, const char *method, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
-   virtual ~TButton();
+   ~TButton() override;
    void Divide(Int_t = 1, Int_t = 1, Float_t = 0.01, Float_t = 0.01, Int_t = 0) override {}
    void Draw(Option_t *option = "") override;
    void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;

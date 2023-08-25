@@ -167,7 +167,7 @@ RooCacheManager<T>::RooCacheManager(const RooCacheManager& other, RooAbsArg* own
 
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {
-    _nsetCache[i].initialize(other._nsetCache[i]) ;
+    _nsetCache[i] = other._nsetCache[i];
     _object[i] = nullptr ;
   }
 

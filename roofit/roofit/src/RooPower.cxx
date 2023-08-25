@@ -22,6 +22,7 @@ RooPower implements a power law PDF of the form
 #include <RooAbsReal.h>
 #include <RooArgList.h>
 #include <RooMsgService.h>
+#include "RooBatchCompute.h"
 
 #include <TError.h>
 
@@ -53,7 +54,9 @@ ClassImp(RooPower);
 
 RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList,
                    const RooArgList &expList)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
+   : RooAbsPdf(name, title),
+     _x("x", "Dependent", this, x),
+     _coefList("coefList", "List of coefficients", this),
      _expList("expList", "List of exponents", this)
 {
    if (coefList.size() != expList.size()) {
@@ -80,20 +83,36 @@ RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const Roo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
 
-RooPower::RooPower(const char *name, const char *title, RooAbsReal &x)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
-     _expList("expList", "List of exponents", this)
+RooPower::RooPower(const RooPower &other, const char *name)
+   : RooAbsPdf(other, name),
+     _x("x", this, other._x),
+     _coefList("coefList", this, other._coefList),
+     _expList("expList", this, other._expList)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
 
-RooPower::RooPower(const RooPower &other, const char *name)
-   : RooAbsPdf(other, name), _x("x", this, other._x), _coefList("coefList", this, other._coefList),
-     _expList("expList", this, other._expList)
+/// Compute multiple values of Power distribution.
+void RooPower::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
+    RooBatchCompute::VarVector vars;
+    vars.reserve(2 *  _coefList.size() + 1);
+    vars.push_back(dataMap.at(_x));
+
+    assert(_coefList.size() == _expList.size());
+
+   for (std::size_t i = 0; i < _coefList.size(); ++i) {
+     vars.push_back(dataMap.at(&_coefList[i]));
+     vars.push_back(dataMap.at(&_expList[i]));
+   }
+
+    RooBatchCompute::ArgVector args;
+    args.push_back(_coefList.size());
+
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Power, output, nEvents, vars, args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +140,7 @@ double RooPower::evaluate() const
    double x = this->_x;
    double retval = 0;
    for (unsigned int i = 0; i < sz; ++i) {
-      retval += coefs[i] * pow(x, exps[i]);
+      retval += coefs[i] * std::pow(x, exps[i]);
    }
    return retval;
 }
@@ -186,5 +205,5 @@ std::string RooPower::getFormulaExpression(bool expand) const
          ss << _expList.at(i)->GetName();
       ss << ")";
    }
-   return ss.str().c_str();
+   return ss.str();
 }

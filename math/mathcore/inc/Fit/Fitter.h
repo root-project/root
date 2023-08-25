@@ -318,35 +318,10 @@ public:
    bool SetFCN(const ROOT::Math::FitMethodFunction & fcn, const double *params = nullptr);
 
    /**
-      Fit using the given FCN function representing a multi-dimensional gradient function
-      interface (ROOT::Math::IMultiGradFunction). In this case the minimizer will use the
-      gradient information provided by the function.
-      For the options same consideration as in the previous method
-    */
-   bool FitFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
-
-   /**
        Fit using a FitMethodGradFunction interface. Same as method above, but now extra information
        can be taken from the function class
    */
    bool FitFCN(const ROOT::Math::FitMethodGradFunction & fcn, const double *params = nullptr);
-
-   /**
-      Set the FCN function represented by a multi-dimensional gradient function interface
-      (ROOT::Math::IMultiGradFunction) and optionally the initial parameters
-      See also note above for the initial parameters for FitFCN
-    */
-   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
-
-   /**
-      Set the FCN function represented by a multi-dimensional gradient function interface
-     (ROOT::Math::IMultiGradFunction) and optionally the initial parameters
-      See also note above for the initial parameters for FitFCN
-      With this interface we pass in addition a ModelFunction that will be attached to the FitResult and
-      used to compute confidence interval of the fit
-   */
-   bool SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const IModelFunction &func, const double *params = nullptr,
-               unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
        Set the objective function (FCN)  using a FitMethodGradFunction interface.
@@ -491,6 +466,21 @@ public:
    */
    bool ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2, bool minimizeW2L=false);
 
+   /// Set number of fit points when using an external FCN function
+   /// This function can be called after Fit to set the correct number of Ndf in FitResult
+   void SetNumberOfFitPoints(unsigned int npoints) {
+      if (fExtObjFunction) fDataSize = npoints;
+      if (!fResult->IsEmpty()) fResult->SetChi2AndNdf(-1,npoints);
+   }
+
+   /// Set the type of fit when using an external FCN
+   /// possible types are : 1 (least-square), 2 (unbinned-likelihood), 3 (binned-likelihood)
+   /// Note that in case of binned likelihood fit the chi2 will be computed as 2 * MinFCN()
+   /// Note this function should be called before fitting to have effect on th FitResult
+   void SetFitType(int type) {
+      if (fExtObjFunction) fFitType = type;
+   }
+
 
 protected:
 
@@ -564,7 +554,7 @@ private:
                             ///< in case of false the fit is unbinned or undefined)
                             ///< flag it is used to compute chi2 for binned likelihood fit
 
-   int fFitType = 0;   ///< type of fit   (0 undefined, 1 least square, 2 likelihood)
+   int fFitType = 0;   ///< type of fit   (0 undefined, 1 least square, 2 likelihood, 3 binned likelihood)
 
    int fDataSize = 0;  ///< size of data sets (need for Fumili or LM fitters)
 

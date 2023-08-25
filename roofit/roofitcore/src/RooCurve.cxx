@@ -43,8 +43,9 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "RooRealVar.h"
 #include "RooRealIntegral.h"
 #include "RooRealBinding.h"
-#include "RooScaledFunc.h"
 #include "RooMsgService.h"
+#include "RooProduct.h"
+#include "RooConstVar.h"
 
 #include "Riostream.h"
 #include "TMath.h"
@@ -64,7 +65,7 @@ ClassImp(RooCurve);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-RooCurve::RooCurve() : _showProgress(false)
+RooCurve::RooCurve()
 {
   initialize();
 }
@@ -108,28 +109,16 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
   }
   setYAxisLabel(title.Data());
 
-  RooAbsFunc *funcPtr = 0;
-  RooAbsFunc *rawPtr  = 0;
-  funcPtr= f.bindVars(x,normVars,true);
-
-  // apply a scale factor if necessary
-  if(scaleFactor != 1) {
-    rawPtr= funcPtr;
-    funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
-  }
-  assert(0 != funcPtr);
+  RooProduct scaledFunc{"scaled_func", "scaled_func", {f, RooFit::RooConst(scaleFactor)}};
+  std::unique_ptr<RooAbsFunc> funcPtr{scaledFunc.bindVars(x, normVars, true)};
 
   // calculate the points to add to our curve
-  double prevYMax = getYAxisMax() ;
   if(xbins > 0){
     // regular mode - use the sampling hint to decide where to evaluate the pdf
-    list<double>* hint = f.plotSamplingHint(x,xlo,xhi) ;
-    addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
+    std::unique_ptr<std::list<double>> hint{f.plotSamplingHint(x,xlo,xhi)};
+    addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint.get());
     if (_showProgress) {
       ccoutP(Plotting) << endl ;
-    }
-    if (hint) {
-      delete hint ;
     }
   } else {
     // if number of bins is set to <= 0, skip any interpolation and just evaluate the pdf at the bin centers
@@ -142,10 +131,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
   }
   initialize();
 
-  // cleanup
-  delete funcPtr;
-  if(rawPtr) delete rawPtr;
-  if (shiftToZero) shiftCurveToZero(prevYMax) ;
+  if (shiftToZero) shiftCurveToZero() ;
 
   // Adjust limits
   for (int i=0 ; i<GetN() ; i++) {
@@ -165,15 +151,13 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
          double xlo, double xhi, UInt_t minPoints, double prec, double resolution,
-         bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, double eeVal) :
-  _showProgress(false)
+         bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, double eeVal)
 {
   SetName(name);
   SetTitle(title);
-  double prevYMax = getYAxisMax() ;
   addPoints(func,xlo,xhi,minPoints+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal);
   initialize();
-  if (shiftToZero) shiftCurveToZero(prevYMax) ;
+  if (shiftToZero) shiftCurveToZero() ;
 
   // Adjust limits
   for (int i=0 ; i<GetN() ; i++) {
@@ -197,8 +181,7 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 /// \param[in] scale1 Scale y values for c1 by this factor.
 /// \param[in] scale2 Scale y values for c2 by this factor.
 
-RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, double scale1, double scale2) :
-  _showProgress(false)
+RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, double scale1, double scale2)
 {
   initialize() ;
   SetName(name) ;
@@ -240,14 +223,7 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooCurve::~RooCurve()
-{
-}
-
+RooCurve::~RooCurve() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,32 +243,29 @@ void RooCurve::initialize()
 /// Find lowest point in curve and move all points in curve so that
 /// lowest point will go exactly through zero
 
-void RooCurve::shiftCurveToZero(double prevYMax)
+void RooCurve::shiftCurveToZero()
 {
-  Int_t i ;
-  double minVal(1e30) ;
-  double maxVal(-1e30) ;
+   double minVal = std::numeric_limits<double>::infinity();
+   double maxVal = -std::numeric_limits<double>::infinity();
 
-  // First iteration, find current lowest point
-  for (i=1 ; i<GetN()-1 ; i++) {
-    double x,y ;
-    GetPoint(i,x,y) ;
-    if (y<minVal) minVal=y ;
-    if (y>maxVal) maxVal=y ;
-  }
+   // First iteration, find current lowest point
+   for (int i = 1; i < GetN() - 1; i++) {
+      double x;
+      double y;
+      GetPoint(i, x, y);
+      minVal = std::min(y, minVal);
+      maxVal = std::max(y, maxVal);
+   }
 
-  // Second iteration, lower all points by minVal
-  for (i=1 ; i<GetN()-1 ; i++) {
-    double x,y ;
-    GetPoint(i,x,y) ;
-    SetPoint(i,x,y-minVal) ;
-  }
+   // Second iteration, lower all points by minVal
+   for (int i = 1; i < GetN() - 1; i++) {
+      double x;
+      double y;
+      GetPoint(i, x, y);
+      SetPoint(i, x, y - minVal);
+   }
 
-  // Check if y-axis range needs readjustment
-  if (getYAxisMax()>prevYMax) {
-    double newMax = maxVal - minVal ;
-    setYAxisLimits(getYAxisMin(), newMax<prevYMax ? prevYMax : newMax) ;
-  }
+   setYAxisLimits(0, maxVal - minVal);
 }
 
 
@@ -326,6 +299,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
   }
 
   double dx= (xhi-xlo)/(minPoints-1.);
+  const double epsilon = (xhi - xlo) * relativeXEpsilon();;
   std::vector<double> yval(minPoints);
 
   // Get list of initial x values. If function provides sampling hint use that,
@@ -342,7 +316,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
   for (unsigned int step=0; step < xval.size(); ++step) {
     double xx = xval[step];
     if (step == static_cast<unsigned int>(minPoints-1))
-      xx -= 1e-15;
+      xx -= 1e-9 * dx;
 
     yval[step]= func(&xx);
     if (_showProgress) {
@@ -396,7 +370,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
       // If precision is <0, no attempt at recursive interpolation is made
       addPoint(x2,yval[step]) ;
     } else {
-      addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal);
+      addRange(func,x1,x2,yval[step-1],yval[step],prec*yrangeEst,minDx,numee,doEEVal,eeVal,epsilon);
     }
     step++ ;
   }
@@ -421,10 +395,10 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
 
 void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
          double y1, double y2, double minDy, double minDx,
-         Int_t numee, bool doEEVal, double eeVal)
+         int numee, bool doEEVal, double eeVal, double epsilon)
 {
   // Explicitly skip empty ranges to eliminate point duplication
-  if (std::abs(x2-x1)<1e-20) {
+  if (std::abs(x2-x1) <= epsilon) {
     return ;
   }
 
@@ -451,8 +425,8 @@ void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
   double dy= ymid - 0.5*(y1+y2);
   if((xmid - x1 >= minDx) && std::abs(dy)>0 && std::abs(dy) >= minDy) {
     // fill in each subrange
-    addRange(func,x1,xmid,y1,ymid,minDy,minDx,numee,doEEVal,eeVal);
-    addRange(func,xmid,x2,ymid,y2,minDy,minDx,numee,doEEVal,eeVal);
+    addRange(func,x1,xmid,y1,ymid,minDy,minDx,numee,doEEVal,eeVal,epsilon);
+    addRange(func,xmid,x2,ymid,y2,minDy,minDx,numee,doEEVal,eeVal,epsilon);
   }
   else {
     // add the endpoint
@@ -736,7 +710,7 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
 RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, double Z) const
 {
   RooCurve* band = new RooCurve ;
-  band->SetName(Form("%s_errorband",GetName())) ;
+  band->SetName((std::string(GetName()) + "_errorband").c_str());
   band->SetLineWidth(1) ;
   band->SetFillColor(kCyan) ;
   band->SetLineColor(kCyan) ;
@@ -776,7 +750,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector
 {
 
   RooCurve* band = new RooCurve ;
-  band->SetName(Form("%s_errorband",GetName())) ;
+  band->SetName((std::string(GetName()) + "_errorband").c_str());
   band->SetLineWidth(1) ;
   band->SetFillColor(kCyan) ;
   band->SetLineColor(kCyan) ;
@@ -913,3 +887,37 @@ bool RooCurve::isIdentical(const RooCurve& other, double tol, bool verbose) cons
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns sampling hints for a histogram with given boundaries. This helper
+/// function is meant to be used by binned RooAbsReals to produce sampling
+/// hints that are working well with RooFits plotting.
+
+std::list<double> *
+RooCurve::plotSamplingHintForBinBoundaries(std::span<const double> boundaries, double xlo, double xhi)
+{
+   auto hint = new std::list<double>;
+
+   // Make sure the difference between two points around a bin boundary is
+   // larger than the relative epsilon for which the RooCurve considers two
+   // points as the same. Otherwise, the points right of the bin boundary would
+   // be skipped.
+   const double delta = (xhi - xlo) * RooCurve::relativeXEpsilon();
+
+   // Sample points right next to the plot limits
+   hint->push_back(xlo + delta);
+   hint->push_back(xhi - delta);
+
+   // Sample points very close to the left and right of the bin boundaries that
+   // are strictly in between the plot limits.
+   for (const double x : boundaries) {
+      if (x - xlo > delta && xhi - x > delta) {
+         hint->push_back(x - delta);
+         hint->push_back(x + delta);
+      }
+   }
+
+   hint->sort();
+
+   return hint;
+}

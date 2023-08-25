@@ -19,6 +19,7 @@
 #include "TBranchObject.h"
 #include "TBranchProxyDirector.h"
 #include "TClassEdit.h"
+#include "TEnum.h"
 #include "TFriendElement.h"
 #include "TFriendProxy.h"
 #include "TLeaf.h"
@@ -557,6 +558,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       if (fDict != branchActualType && !inheritance) {
          TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
          TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
+         TEnum *dictenum = dynamic_cast<TEnum*>(fDict);
+         TEnum *actualenum = dynamic_cast<TEnum*>(branchActualType);
          bool complainAboutMismatch = true;
          if (dictdt && actualdt) {
             if (dictdt->GetType() > 0 && dictdt->GetType() == actualdt->GetType()) {
@@ -568,6 +571,10 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
                // we need to identify them manually here (ROOT-8731).
                complainAboutMismatch = false;
             }
+         } else if ( (dictdt || dictenum) && (actualdt || actualenum) ) {
+            if ((dictdt && dictdt->GetType() == kInt_t && actualenum)
+                ||(actualdt && actualdt->GetType() == kInt_t && dictenum))
+               complainAboutMismatch = false;
          }
          if (complainAboutMismatch) {
             Error(errPrefix,

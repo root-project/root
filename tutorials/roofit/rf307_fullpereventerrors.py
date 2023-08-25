@@ -31,7 +31,7 @@ decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, type="DoubleSided")
 # -----------------------------------------------------------------
 
 # Use landau pdf to get empirical distribution with long tail
-pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(1), ROOT.RooFit.RooConst(0.25))
+pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25)
 expDataDterr = pdfDtErr.generate({dterr}, 10000)
 
 # Construct a histogram pdf to describe the shape of the dtErr distribution
@@ -60,7 +60,7 @@ data = model.generate({dt, dterr}, 10000)
 # ---------------------------------------------------------------------
 
 # Specify dterr as conditional observable
-model.fitTo(data)
+model.fitTo(data, PrintLevel=-1)
 
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------

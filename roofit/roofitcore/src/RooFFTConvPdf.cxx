@@ -686,7 +686,7 @@ std::vector<double>  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, con
 ///    - all member of nset that are observables of this p.d.f.
 ///
 
-RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const
+RooFit::OwningPtr<RooArgSet> RooFFTConvPdf::actualObservables(const RooArgSet& nset) const
 {
   // Get complete list of observables
   auto obs1 = new RooArgSet{};
@@ -731,7 +731,7 @@ RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const
 
   }
 
-  return obs1 ;
+  return RooFit::OwningPtr<RooArgSet>{obs1};
 }
 
 

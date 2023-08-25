@@ -267,7 +267,7 @@ void sha256_final(sha256_t *p, unsigned char *digest)
 void Sha256(const unsigned char *data, int len, ULong64_t *fDigest)
 {
    // Here the final cast is to match the interface of the C code and
-   // the data member. The lenght is the same!
+   // the data member. The length is the same!
    SHA256::sha256_t hash;
    SHA256::sha256_init(&hash);
    SHA256::sha256_update(&hash, data, len);

@@ -41,14 +41,14 @@ protected:
    Float_t fTl2;       // half length in x at high z and y high edge
    Float_t fAlpha2;    // angle w.r.t. the y axis
 
-   virtual void     SetPoints(Double_t *points) const;
+   void     SetPoints(Double_t *points) const override;
 
 public:
    TTRAP();
    TTRAP(const char *name, const char *title, const char *material, Float_t dz, Float_t theta, Float_t phi, Float_t h1,
          Float_t bl1, Float_t tl1, Float_t alpha1, Float_t h2, Float_t bl2, Float_t tl2,
          Float_t alpha2);
-   virtual ~TTRAP();
+   ~TTRAP() override;
 
    virtual Float_t  GetH1() const     {return fH1;}
    virtual Float_t  GetBl1() const    {return fBl1;}
@@ -59,7 +59,7 @@ public:
    virtual Float_t  GetTl2() const    {return fTl2;}
    virtual Float_t  GetAlpha2() const {return fAlpha2;}
 
-   ClassDef(TTRAP,1)  //TRAP shape
+   ClassDefOverride(TTRAP,1)  //TRAP shape
 };
 
 #endif

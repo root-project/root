@@ -36,7 +36,7 @@ protected:
 public:
    TLeafF16();
    TLeafF16(TBranch *parent, const char *name, const char *type);
-   virtual ~TLeafF16();
+   ~TLeafF16() override;
 
    DeserializeType GetDeserializeType() const override { return DeserializeType::kExternal; }
    void            Export(TClonesArray *list, Int_t n) override;

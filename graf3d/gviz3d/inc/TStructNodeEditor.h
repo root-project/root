@@ -46,7 +46,7 @@ protected:
 public:
    TStructNodeEditor(TList* colors, const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
-   ~TStructNodeEditor();
+   ~TStructNodeEditor() override;
 
    void  ApplyButtonSlot();
    void  AutoRefreshButtonSlot(Bool_t on);
@@ -54,11 +54,11 @@ public:
    void  DefaultButtonSlot();
    void  MaxLevelsValueSetSlot(Long_t);
    void  MaxObjectsValueSetSlot(Long_t);
-   void  SetModel(TObject* obj);
+   void  SetModel(TObject* obj) override;
    void  Update(Bool_t resetCamera);
-   void  Update();
+   void  Update() override;
 
-   ClassDef(TStructNodeEditor, 0); // GUI fo editing TStructNode
+   ClassDefOverride(TStructNodeEditor, 0); // GUI fo editing TStructNode
 };
 #endif // ROOT_TStructNodeEditor
 

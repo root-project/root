@@ -55,8 +55,8 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   ccxcoutI(Generation) << endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF
-  _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(true) ;
-  _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
+  RooArgSet(model).snapshot(_pdfSet, true);
+  _pdf = (RooAbsPdf*) _pdfSet.find(model.GetName()) ;
   _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Fix normalization set of this RooAddPdf
@@ -68,34 +68,16 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
     }
 
   _pdf->recursiveRedirectServers(_theEvent) ;
-  _vars = _pdf->getObservables(vars) ;
-
-  // If pdf has boundary definitions, follow those for the binning
-  for (auto* rvar: dynamic_range_cast<RooRealVar*>(*_vars)) {
-    if (rvar) {
-      list<double>* binb = model.binBoundaries(*rvar,rvar->getMin(),rvar->getMax()) ;
-      delete binb ;
-    }
-  }
-
+  _vars = std::unique_ptr<RooArgSet>{_pdf->getObservables(vars)};
 
   // Create empty RooDataHist
-  _hist = new RooDataHist("genData","genData",*_vars) ;
+  _hist = std::make_unique<RooDataHist>("genData","genData",*_vars);
 
   _expectedData = false ;
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor. Delete all owned subgenerator contexts
-
-RooBinnedGenContext::~RooBinnedGenContext()
-{
-  delete _vars ;
-  delete _pdfSet ;
-  delete _hist ;
-}
-
+RooBinnedGenContext::~RooBinnedGenContext() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,19 +123,19 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
     if (!_pdf->canBeExtended()) {
       coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName()
              << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
-      return 0 ;
+      return nullptr ;
     } else {
       // Don't round in expectedData mode
       if (_expectedData || extended) {
-   nEvents = _pdf->expectedEvents(_vars) ;
+   nEvents = _pdf->expectedEvents(_vars.get());
       } else {
-   nEvents = Int_t(_pdf->expectedEvents(_vars)+0.5) ;
+   nEvents = Int_t(_pdf->expectedEvents(_vars.get())+0.5) ;
       }
     }
   }
 
   // Sample p.d.f. distribution
-  _pdf->fillDataHist(_hist,_vars,1,true) ;
+  _pdf->fillDataHist(_hist.get(),_vars.get(),1,true) ;
 
   // Output container
   RooDataSet* wudata = new RooDataSet("wu","wu",*_vars,RooFit::WeightVar()) ;

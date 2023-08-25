@@ -108,9 +108,9 @@ public:
    TObject       *fChain;           // dataset on which to process selector
    TQueryResult  *fResult;          // query result received back
 
-   const char    *GetName() const { return fQueryName; }
+   const char    *GetName() const override { return fQueryName; }
 
-   ClassDef(TQueryDescription, 1)  // Query description
+   ClassDefOverride(TQueryDescription, 1)  // Query description
 };
 
 
@@ -146,9 +146,9 @@ public:
    TProofMgr         *fProofMgr;    // Proof sessions manager
    Int_t              fNbHistos;    // number of feedback histos
 
-   const char        *GetName() const { return fName; }
+   const char        *GetName() const override { return fName; }
 
-   ClassDef(TSessionDescription, 1) // Session description
+   ClassDefOverride(TSessionDescription, 1) // Session description
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -164,9 +164,9 @@ public:
    Bool_t         fUploaded;     // package has been uploaded
    Bool_t         fEnabled;      // package has been enabled
 
-   const char    *GetName() const { return fName; }
+   const char    *GetName() const override { return fName; }
 
-   ClassDef(TPackageDescription, 1) // Package description
+   ClassDefOverride(TPackageDescription, 1) // Package description
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -194,11 +194,11 @@ private:
 
 public:
    TSessionServerFrame(TGWindow *parent, Int_t w, Int_t h);
-   virtual ~TSessionServerFrame();
+   ~TSessionServerFrame() override;
 
    void        Build(TSessionViewer *gui);
 
-   const char *GetName() const { return fTxtName->GetText(); }
+   const char *GetName() const override { return fTxtName->GetText(); }
    const char *GetAddress() const { return fTxtAddress->GetText(); }
    Int_t       GetPortNumber() const { return fNumPort->GetIntNumber(); }
    Int_t       GetLogLevel() const { return fLogLevel->GetIntNumber(); }
@@ -210,7 +210,7 @@ public:
                on == kTRUE ? ShowFrame(fBtnAdd) : HideFrame(fBtnAdd); }
    void        SetConnectEnabled(Bool_t on = kTRUE) {
                on == kTRUE ? ShowFrame(fBtnConnect) : HideFrame(fBtnConnect); }
-   void        SetName(const char *str) { fTxtName->SetText(str); }
+   void        SetName(const char *str) override { fTxtName->SetText(str); }
    void        SetAddress(const char *str) { fTxtAddress->SetText(str); }
    void        SetPortNumber(Int_t port) { fNumPort->SetIntNumber(port); }
    void        SetLogLevel(Int_t log) { fLogLevel->SetIntNumber(log); }
@@ -227,10 +227,10 @@ public:
    void        OnBtnAddClicked();
    void        OnConfigFileClicked();
    void        Update(TSessionDescription* desc);
-   virtual Bool_t HandleExpose(Event_t *event);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t HandleExpose(Event_t *event) override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   ClassDef(TSessionServerFrame, 0) // Server frame
+   ClassDefOverride(TSessionServerFrame, 0) // Server frame
 };
 
 
@@ -289,7 +289,7 @@ private:
 
 public:
    TSessionFrame(TGWindow* parent, Int_t w, Int_t h);
-   virtual ~TSessionFrame();
+   ~TSessionFrame() override;
 
    void     Build(TSessionViewer *gui);
    void     CheckAutoEnPack(Bool_t checked = kTRUE) {
@@ -325,7 +325,7 @@ public:
    void     OnBtnVerifyDSet();
    void     UpdateListOfDataSets();
 
-   ClassDef(TSessionFrame, 0) // Session frame
+   ClassDefOverride(TSessionFrame, 0) // Session frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -352,7 +352,7 @@ private:
 
 public:
    TEditQueryFrame(TGWindow* p, Int_t w, Int_t h);
-   virtual ~TEditQueryFrame();
+   ~TEditQueryFrame() override;
    void     Build(TSessionViewer *gui);
    void     OnNewQueryMore();
    void     OnBrowseChain();
@@ -363,7 +363,7 @@ public:
    void     SettingsChanged();
    void     UpdateFields(TQueryDescription *desc);
 
-   ClassDef(TEditQueryFrame, 0) // Edit query frame
+   ClassDefOverride(TEditQueryFrame, 0) // Edit query frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -411,7 +411,7 @@ private:
 
 public:
    TSessionQueryFrame(TGWindow* parent, Int_t w, Int_t h);
-   virtual ~TSessionQueryFrame();
+   ~TSessionQueryFrame() override;
 
    void     Build(TSessionViewer *gui);
 
@@ -445,7 +445,7 @@ public:
    void     UpdateButtons(TQueryDescription *desc);
    void     UpdateHistos(TList *objs);
 
-   ClassDef(TSessionQueryFrame, 0) // Query frame
+   ClassDefOverride(TSessionQueryFrame, 0) // Query frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -465,16 +465,16 @@ private:
 
 public:
    TSessionOutputFrame(TGWindow* parent, Int_t w, Int_t h);
-   virtual ~TSessionOutputFrame();
+   ~TSessionOutputFrame() override;
 
    void           AddObject(TObject *obj);
    void           Build(TSessionViewer *gui);
    TGLVContainer  *GetLVContainer() { return fLVContainer; }
    void           OnElementClicked(TGLVEntry* entry, Int_t btn, Int_t x, Int_t y);
    void           OnElementDblClicked(TGLVEntry *entry ,Int_t btn, Int_t x, Int_t y);
-   void           RemoveAll() { fLVContainer->RemoveAll(); }
+   void           RemoveAll() override { fLVContainer->RemoveAll(); }
 
-   ClassDef(TSessionOutputFrame, 0) // Output frame
+   ClassDefOverride(TSessionOutputFrame, 0) // Output frame
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -493,14 +493,14 @@ private:
 
 public:
    TSessionInputFrame(TGWindow* parent, Int_t w, Int_t h);
-   virtual ~TSessionInputFrame();
+   ~TSessionInputFrame() override;
 
    void           AddObject(TObject *obj);
    void           Build(TSessionViewer *gui);
-   void           RemoveAll() { fLVContainer->RemoveAll(); }
+   void           RemoveAll() override { fLVContainer->RemoveAll(); }
    TGLVContainer  *GetLVContainer() { return fLVContainer; }
 
-   ClassDef(TSessionInputFrame, 0) // Input frame
+   ClassDefOverride(TSessionInputFrame, 0) // Input frame
 };
 
 
@@ -567,9 +567,9 @@ public:
 
    TSessionViewer(const char *title = "ROOT Session Viewer", UInt_t w = 550, UInt_t h = 320);
    TSessionViewer(const char *title, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual ~TSessionViewer();
+   ~TSessionViewer() override;
    virtual void Build();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t) override;
 
    TSessionServerFrame    *GetServerFrame() const { return fServerFrame; }
    TSessionFrame          *GetSessionFrame() const { return fSessionFrame; }
@@ -596,11 +596,11 @@ public:
 
    void     ChangeRightLogo(const char *name);
    void     CleanupSession();
-   void     CloseWindow();
+   void     CloseWindow() override;
    void     DisableTimer();
    void     EditQuery();
    void     EnableTimer();
-   Bool_t   HandleTimer(TTimer *);
+   Bool_t   HandleTimer(TTimer *) override;
    Bool_t   IsBusy() const { return fBusy; }
    Bool_t   IsAutoSave() const { return fAutoSave; }
    void     LogMessage(const char *msg, Bool_t all);
@@ -628,7 +628,7 @@ public:
    void     StartViewer();
    void     Terminate();
 
-   ClassDef(TSessionViewer, 0) // Session Viewer
+   ClassDefOverride(TSessionViewer, 0) // Session Viewer
 };
 
 R__EXTERN TSessionViewer *gSessionViewer;

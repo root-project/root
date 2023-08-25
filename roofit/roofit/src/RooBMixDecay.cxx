@@ -34,8 +34,21 @@ using namespace std;
 
 ClassImp(RooBMixDecay);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// \brief Constructor for RooBMixDecay.
+///
+/// Creates an instance of RooBMixDecay with the specified parameters.
+///
+/// \param[in] name         The name of the PDF.
+/// \param[in] title        The title of the PDF.
+/// \param[in] t            The time variable.
+/// \param[in] mixState     The mixing state category.
+/// \param[in] tagFlav      The flavour of tagged B0 category.
+/// \param[in] tau          The mixing life time parameter.
+/// \param[in] dm           The mixing frequency parameter.
+/// \param[in] mistag       The mistag rate parameter.
+/// \param[in] delMistag    The delta mistag rate parameter.
+/// \param[in] model        The resolution model.
+/// \param[in] type         The decay type.
 
 RooBMixDecay::RooBMixDecay(const char *name, const char *title,
             RooRealVar& t, RooAbsCategory& mixState,
@@ -93,13 +106,6 @@ RooBMixDecay::RooBMixDecay(const RooBMixDecay& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBMixDecay::~RooBMixDecay()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Comp with tFit MC: must be (1 - tagFlav*...)
 
 double RooBMixDecay::coefficient(Int_t basisIndex) const
@@ -115,13 +121,11 @@ double RooBMixDecay::coefficient(Int_t basisIndex) const
   return 0 ;
 }
 
-void RooBMixDecay::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
-                                RooFit::Detail::DataMap const &dataMap) const
+void RooBMixDecay::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-   dispatch->compute(stream, RooBatchCompute::BMixDecay, output, nEvents,
-                     {dataMap.at(&_convSet[0]), dataMap.at(&_convSet[1]), dataMap.at(_tagFlav), dataMap.at(_delMistag),
-                      dataMap.at(_mixState), dataMap.at(_mistag)});
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::BMixDecay, output, nEvents,
+                            {dataMap.at(&_convSet[0]), dataMap.at(&_convSet[1]), dataMap.at(_tagFlav),
+                             dataMap.at(_delMistag), dataMap.at(_mixState), dataMap.at(_mistag)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,7 +277,7 @@ void RooBMixDecay::generateEvent(Int_t code)
   }
 
   // Generate delta-t dependent
-  while(1) {
+  while(true) {
     double rand = RooRandom::uniform() ;
     double tval(0) ;
 

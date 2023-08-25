@@ -167,7 +167,7 @@ protected:
    /// std::length_error or calls report_fatal_error.
    static void report_at_maximum_capacity();
 
-   /// If true, the RVec is in "memory adoption" mode, i.e. it is acting as a view on a memory buffer it does not own.
+   /// If false, the RVec is in "memory adoption" mode, i.e. it is acting as a view on a memory buffer it does not own.
    bool Owns() const { return fCapacity != -1; }
 
 public:
@@ -535,6 +535,18 @@ void UninitializedValueConstruct(ForwardIt first, ForwardIt last)
 #else
    std::uninitialized_value_construct(first, last);
 #endif
+}
+
+/// An unsafe function to reset the buffer for which this RVec is acting as a view.
+///
+/// \note This is a low-level method that _must_ be called on RVecs that are already non-owning:
+/// - it does not put the RVec in "non-owning mode" (fCapacity == -1)
+/// - it does not free any owned buffer
+template <typename T>
+void ResetView(RVec<T> &v, T* addr, std::size_t sz)
+{
+   v.fBeginX = addr;
+   v.fSize = sz;
 }
 
 } // namespace VecOps
@@ -1479,6 +1491,9 @@ hpt->Draw();
 template <typename T>
 class R__CLING_PTRCHECK(off) RVec : public RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value> {
    using SuperClass = RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value>;
+
+   friend void Internal::VecOps::ResetView<>(RVec<T> &v, T *addr, std::size_t sz);
+
 public:
    using reference = typename SuperClass::reference;
    using const_reference = typename SuperClass::const_reference;
@@ -2313,10 +2328,7 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i, const
    return r;
 }
 
-
-/// Return first or last `n` elements of an RVec
-///
-/// if `n > 0` and last elements if `n < 0`.
+/// Return first `n` elements of an RVec if `n > 0` and last `n` elements if `n < 0`.
 ///
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
@@ -2336,9 +2348,9 @@ RVec<T> Take(const RVec<T> &v, const int n)
    const size_type size = v.size();
    const size_type absn = std::abs(n);
    if (absn > size) {
-      std::stringstream ss;
-      ss << "Try to take " << absn << " elements but vector has only size " << size << ".";
-      throw std::runtime_error(ss.str());
+      const auto msg = std::to_string(absn) + " elements requested from Take but input contains only " +
+                       std::to_string(size) + " elements.";
+      throw std::runtime_error(msg);
    }
    RVec<T> r(absn);
    if (n < 0) {
@@ -2349,6 +2361,47 @@ RVec<T> Take(const RVec<T> &v, const int n)
          r[k] = v[k];
    }
    return r;
+}
+
+/// Return first `n` elements of an RVec if `n > 0` and last `n` elements if `n < 0`.
+///
+/// This Take version defaults to a user-specified value
+/// `default_val` if the absolute value of `n` is
+/// greater than the size of the RVec `v`
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using ROOT::VecOps::RVec;
+/// RVec<int> x{1,2,3,4};
+/// Take(x,-5,1)
+/// // (ROOT::VecOps::RVec<int>) { 1, 1, 2, 3, 4 }
+/// Take(x,5,20)
+/// // (ROOT::VecOps::RVec<int>) { 1, 2, 3, 4, 20 }
+/// Take(x,-1,1)
+/// // (ROOT::VecOps::RVec<int>) { 4 }
+/// Take(x,4,1)
+/// // (ROOT::VecOps::RVec<int>) { 1, 2, 3, 4 }
+/// ~~~
+template <typename T>
+RVec<T> Take(const RVec<T> &v, const int n, const T default_val)
+{
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = v.size();
+   const size_type absn = std::abs(n);
+   // Base case, can be handled by another overload of Take
+   if (absn <= size) {
+      return Take(v, n);
+   }
+   RVec<T> temp = v;
+   // Case when n is positive and n > v.size()
+   if (n > 0) {
+      temp.resize(n, default_val);
+      return temp;
+   }
+   // Case when n is negative and abs(n) > v.size()
+   const auto num_to_fill = absn - size;
+   ROOT::VecOps::RVec<T> fill_front(num_to_fill, default_val);
+   return Concatenate(fill_front, temp);
 }
 
 /// Return a copy of the container without the elements at the specified indices.

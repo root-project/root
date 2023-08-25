@@ -110,8 +110,8 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, b
   _verboseServer(false),
   _inlineMode(calcInline),
   _remoteEvalErrorLoggingState(RooAbsReal::PrintErrors),
-  _pipe(0),
-  _updateMaster(0),
+  _pipe(nullptr),
+  _updateMaster(nullptr),
   _retrieveDispatched(false), _evalCarry(0.)
 {
 #ifdef _WIN32
@@ -139,8 +139,8 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _inlineMode(other._inlineMode),
   _forceCalc(other._forceCalc),
   _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
-  _pipe(0),
-  _updateMaster(0),
+  _pipe(nullptr),
+  _updateMaster(nullptr),
   _retrieveDispatched(false), _evalCarry(other._evalCarry)
 {
   initVars() ;
@@ -325,7 +325,7 @@ void RooRealMPFE::serverLoop()
        objidstr = oss2.str();
      }
      std::map<const RooAbsArg*,pair<string,list<EvalError> > >::const_iterator iter = evalErrorIter();
-     const RooAbsArg* ptr = 0;
+     const RooAbsArg* ptr = nullptr;
      for (int i = 0; i < numEvalErrorItems(); ++i) {
        list<EvalError>::const_iterator iter2 = iter->second.second.begin();
        for (; iter->second.second.end() != iter2; ++iter2) {
@@ -336,7 +336,7 @@ void RooRealMPFE::serverLoop()
        }
      }
      // let other end know that we're done with the list of errors
-     ptr = 0;
+     ptr = nullptr;
      *_pipe << ptr;
      // Clear error list on local side
      clearEvalErrorLog();
@@ -601,8 +601,8 @@ double RooRealMPFE::evaluate() const
               << ") IPC fromServer> NumErrors " << numError << endl ;
     if (numError) {
       // Retrieve remote errors and feed into local error queue
-      char *msgbuf1 = 0, *msgbuf2 = 0, *msgbuf3 = 0;
-      RooAbsArg *ptr = 0;
+      char *msgbuf1 = nullptr, *msgbuf2 = nullptr, *msgbuf3 = nullptr;
+      RooAbsArg *ptr = nullptr;
       while (true) {
    *_pipe >> ptr;
    if (!ptr) break;
@@ -659,7 +659,7 @@ void RooRealMPFE::standby()
     }
     // Close pipes
     delete _pipe;
-    _pipe = 0;
+    _pipe = nullptr;
 
     // Revert to initialize state
     _state = Initialize;

@@ -2,15 +2,12 @@
 #define ROOT7_RNTuple_Test
 
 #include <ROOT/RColumnModel.hxx>
-#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
-#include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -24,15 +21,20 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RVec.hxx>
+#include <ROOT/TestSupport.hxx>
 
 #include <RZip.h>
 #include <TClass.h>
 #include <TFile.h>
-#include <TRandom3.h>
+#include <TROOT.h>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+
+// Backward compatibility for gtest version < 1.10.0
+#ifndef TYPED_TEST_SUITE
+#define TYPED_TEST_SUITE TYPED_TEST_CASE
+#endif
 
 #include "CustomStruct.hxx"
 
@@ -59,6 +61,7 @@ using RColumnModel = ROOT::Experimental::RColumnModel;
 using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RClusterDescriptorBuilder = ROOT::Experimental::RClusterDescriptorBuilder;
 using RClusterGroupDescriptorBuilder = ROOT::Experimental::RClusterGroupDescriptorBuilder;
+using RColumnDescriptorBuilder = ROOT::Experimental::RColumnDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
 template <class T>
@@ -66,7 +69,6 @@ using RField = ROOT::Experimental::RField<T>;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RFieldMerger = ROOT::Experimental::RFieldMerger;
-using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
 using RNTupleLocatorObject64 = ROOT::Experimental::RNTupleLocatorObject64;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;

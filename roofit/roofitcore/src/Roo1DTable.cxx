@@ -263,14 +263,14 @@ double Roo1DTable::get(const char* label, bool silent) const
 
 double Roo1DTable::get(const int index, bool silent) const
 {
-  const RooCatType* cat = 0;
+  const RooCatType* cat = nullptr;
   int i = 0;
   for (; i < _types.GetEntries(); ++i) {
      cat = static_cast<const RooCatType*>(_types[i]);
      if (cat->getVal() == index) {
         break;
      } else {
-        cat = 0;
+        cat = nullptr;
      }
   }
   if (!cat) {

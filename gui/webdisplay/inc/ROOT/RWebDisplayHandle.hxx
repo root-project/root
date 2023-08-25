@@ -18,9 +18,9 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
 class RWebDisplayHandle {
 
@@ -55,7 +55,7 @@ protected:
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override;
 
-      virtual ~BrowserCreator() = default;
+      ~BrowserCreator() override = default;
    };
 
    class ChromeCreator : public BrowserCreator {
@@ -63,7 +63,7 @@ protected:
       std::string fEnvPrefix; // rc parameters prefix
    public:
       ChromeCreator(bool is_edge = false);
-      virtual ~ChromeCreator() = default;
+      ~ChromeCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &args) override;
       std::string MakeProfile(std::string &exec, bool) override;
@@ -72,7 +72,7 @@ protected:
    class FirefoxCreator : public BrowserCreator {
    public:
       FirefoxCreator();
-      virtual ~FirefoxCreator() = default;
+      ~FirefoxCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
       std::string MakeProfile(std::string &exec, bool batch) override;
    };
@@ -80,6 +80,8 @@ protected:
    static std::map<std::string, std::unique_ptr<Creator>> &GetMap();
 
    static std::unique_ptr<Creator> &FindCreator(const std::string &name, const std::string &libname = "");
+
+   static bool CheckIfCanProduceImages(RWebDisplayArgs &args);
 
 public:
 
@@ -97,14 +99,20 @@ public:
    /// get content
    const std::string &GetContent() const { return fContent; }
 
+   /// resize web window - if possible
+   virtual bool Resize(int, int) { return false; }
+
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);
 
+   static bool CanProduceImages(const std::string &browser = "");
+
    static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600, const char *batch_file = nullptr);
+
+   static bool ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file = nullptr);
 };
 
-}
-}
+} // namespace ROOT
 
 #endif

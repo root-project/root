@@ -7,8 +7,8 @@
 /// efficiency as function of x should be described by eff(x)
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -59,13 +59,13 @@ void rf701_efficiencyfit()
    RooProdPdf model("model", "model", shapePdf, Conditional(effPdf, cut));
 
    // Generate some toy data from model
-   RooDataSet *data = model.generate(RooArgSet(x, cut), 10000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, cut}, 10000)};
 
    // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a
    // --------------------------------------------------------------------------
 
    // Fit conditional efficiency pdf to data
-   effPdf.fitTo(*data, ConditionalObservables(x));
+   effPdf.fitTo(*data, ConditionalObservables(x), PrintLevel(-1));
 
    // P l o t   f i t t e d ,   d a t a   e f f i c i e n c y
    // --------------------------------------------------------

@@ -25,6 +25,11 @@ if(x11)
       ${X11_Xpm_LIB}
       ${X11_LIBRARIES}
   )
+
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  target_link_libraries(root PRIVATE util procstat)
+endif()
+
 elseif(cocoa)
   if (cxxmodules)
     # FIXME: Disable modules for ObjC/ObjC++. It has problems when compiling

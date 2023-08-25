@@ -43,7 +43,7 @@ namespace Internal {
       Bool_t IsDuplicate() { return fDuplicate; }
       void   SetDuplicate() { fDuplicate = kTRUE; }
 
-      ClassDef(TFriendProxyDescriptor,0); // Describe a branch from a TTreeFriend.
+      ClassDefOverride(TFriendProxyDescriptor,0); // Describe a branch from a TTreeFriend.
    };
 }
 }

@@ -262,7 +262,6 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
   return value < 0 && doFloor ? 0.0 : value;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the current value
 
@@ -272,7 +271,7 @@ double RooRealSumPdf::evaluate() const
 }
 
 
-void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooRealSumPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
   // Do running sum of coef/func pairs, calculate lastCoef.
   for (unsigned int j = 0; j < nEvents; ++j) {
     output[j] = 0.0;
@@ -300,7 +299,7 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
     // Warn about degeneration of last coefficient
     if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
       if (!_haveWarned) {
-        coutW(Eval) << "RooRealSumPdf::evaluateSpan(" << GetName()
+        coutW(Eval) << "RooRealSumPdf::computeBatch(" << GetName()
             << ") WARNING: sum of FUNC coefficients not in range [0-1], value="
             << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
         _haveWarned = true;
@@ -320,6 +319,62 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
   }
 }
 
+void RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
+                                  RooArgList const &funcList, RooArgList const &coefList)
+{
+   bool noLastCoeff = funcList.size() != coefList.size();
+   std::string sum;
+   std::string lastCoeff;
+
+   if (funcList.size() < 3) {
+      lastCoeff = "(1";
+
+      std::size_t i;
+      for (i = 0; i < coefList.size(); ++i) {
+         auto coeff = ctx.getResult(coefList[i]);
+         sum += "(" + ctx.getResult(funcList[i]) + " * " + coeff + ") +";
+         if (noLastCoeff)
+            lastCoeff += " - " + coeff;
+      }
+      lastCoeff += ")";
+
+      if (noLastCoeff) {
+         sum += "(" + ctx.getResult(funcList[i]) + " * " + lastCoeff + ")";
+      } else {
+         sum.pop_back();
+      }
+
+   } else {
+      std::string const &funcName = ctx.buildArg(funcList);
+      std::string const &coeffName = ctx.buildArg(coefList);
+      std::string const &coeffSize = std::to_string(coefList.size());
+      std::string const &className = klass->GetName();
+
+      sum = ctx.getTmpVarName();
+      lastCoeff = ctx.getTmpVarName();
+      ctx.addToCodeBody(klass, "double " + sum + " = 0, " + lastCoeff + "= 0;\n");
+
+      std::string iterator = "i_" + className;
+      std::string subscriptExpr = "[" + iterator + "]";
+
+      std::string code = "for(int " + iterator + " = 0; " + iterator + " < " + coeffSize + "; " + iterator + "++) {\n" +
+                         sum + " += " + funcName + subscriptExpr + " * " + coeffName + subscriptExpr + ";\n";
+      if (noLastCoeff)
+         code += lastCoeff + " += " + coeffName + subscriptExpr + ";\n";
+      code += "}\n";
+
+      if (noLastCoeff)
+         code += sum + " += " + funcName + "[" + coeffSize + "]" + " * (1 - " + lastCoeff + ");\n";
+      ctx.addToCodeBody(klass, code);
+   }
+
+   ctx.addResult(klass, sum);
+}
+
+void RooRealSumPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   translateImpl(ctx, this, _funcList, _coefList);
+}
 
 bool RooRealSumPdf::checkObservables(RooAbsReal const& caller, RooArgSet const* nset,
                                      RooArgList const& funcList, RooArgList const& coefList)
@@ -405,12 +460,11 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
   for (const auto elm : funcList) {
     const auto func = static_cast<RooAbsReal*>(elm);
 
-    RooAbsReal* funcInt = func->createIntegral(analVars,rangeName) ;
-    if(funcInt->InheritsFrom(RooRealIntegral::Class())) ((RooRealIntegral*)funcInt)->setAllowComponentSelection(true);
-    cache->_funcIntList.addOwned(*funcInt) ;
+    std::unique_ptr<RooAbsReal> funcInt{func->createIntegral(analVars,rangeName)};
+    if(auto funcRealInt = dynamic_cast<RooRealIntegral*>(funcInt.get())) funcRealInt->setAllowComponentSelection(true);
+    cache->_funcIntList.addOwned(std::move(funcInt));
     if (normSet && !normSet->empty()) {
-      RooAbsReal* funcNorm = func->createIntegral(*normSet) ;
-      cache->_funcNormList.addOwned(*funcNorm) ;
+      cache->_funcNormList.addOwned(std::unique_ptr<RooAbsReal>{func->createIntegral(*normSet)});
     }
   }
 
@@ -643,6 +697,9 @@ std::list<double>* RooRealSumPdf::plotSamplingHint(RooArgList const& funcList, R
 
    auto* newSumHint = new std::list<double>(sumHint->size()+funcHint->size()) ;
 
+   // the lists must be sorted before merging them
+   funcHint->sort();
+   sumHint->sort();
    // Merge hints into temporary array
    merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
 
@@ -731,25 +788,59 @@ void RooRealSumPdf::printMetaArgs(RooArgList const& funcList, RooArgList const& 
   os << " " ;
 }
 
-std::unique_ptr<RooAbsArg> RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const
+std::unique_ptr<RooAbsArg>
+RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
-   if(normSet.empty() || selfNormalized()) {
+   if (normSet.empty() || selfNormalized()) {
       return RooAbsPdf::compileForNormSet({}, ctx);
    }
-   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf*>(this->Clone()));
+   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
+
+   if (ctx.likelihoodMode() && pdfClone->getAttribute("BinnedLikelihood")) {
+
+      // This has to be done before compiling the servers, such that the
+      // RooBinWidthFunctions know to disable themselves.
+      ctx.setBinnedLikelihoodMode(true);
+
+      ctx.markAsCompiled(*pdfClone);
+      ctx.compileServers(*pdfClone, {});
+
+      pdfClone->setAttribute("BinnedLikelihoodActive");
+      // If this is a binned likelihood, we're flagging it in the context.
+      // Then, the RooBinWidthFunctions know that they should not put
+      // themselves in the computation graph. Like this, the pdf values can
+      // directly be interpreted as yields, without multiplying them with the
+      // bin widths again in the NLL. However, the NLL class has to be careful
+      // to only skip the bin with multiplication when there actually were
+      // RooBinWidthFunctions! This is not the case for old workspace before
+      // ROOT 6.26. Therefore, we use the "BinnedLikelihoodActiveYields"
+      // attribute to let the NLL know what it should do.
+      if (ctx.binWidthFuncFlag()) {
+         pdfClone->setAttribute("BinnedLikelihoodActiveYields");
+      }
+      return pdfClone;
+   }
+
    ctx.compileServers(*pdfClone, {});
 
-   auto depList = new RooArgSet; // INTENTIONAL LEAK FOR NOW!
-   pdfClone->getObservables(&normSet, *depList);
+   RooArgSet depList;
+   pdfClone->getObservables(&normSet, depList);
 
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, *depList);
+   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, depList);
 
    // The direct servers are this pdf and the normalization integral, which
    // don't need to be compiled further.
-   for(RooAbsArg * server : newArg->servers()) {
-      server->setAttribute("_COMPILED");
+   for (RooAbsArg *server : newArg->servers()) {
+      ctx.markAsCompiled(*server);
    }
-   newArg->setAttribute("_COMPILED");
+   ctx.markAsCompiled(*newArg);
    newArg->addOwnedComponents(std::move(pdfClone));
    return newArg;
+}
+
+std::unique_ptr<RooAbsReal> RooRealSumPdf::createExpectedEventsFunc(const RooArgSet *nset) const
+{
+   if (nset == nullptr)
+      return nullptr;
+   return std::unique_ptr<RooAbsReal>{createIntegral(*nset, *getIntegratorConfig(), normRange())};
 }

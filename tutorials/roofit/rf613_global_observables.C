@@ -94,7 +94,7 @@ void rf613_global_observables()
    // note: alternatively, one can create a constant with default limits using `RooRealVar("mu_obs", "mu_obs", 1.0)`
 
    // constraint pdf
-   RooGaussian constraint("constraint", "constraint", mu_obs, mu, RooConst(0.1));
+   RooGaussian constraint("constraint", "constraint", mu_obs, mu, 0.1);
 
    // full pdf including constraint pdf
    RooProdPdf model("model", "model", {gauss, constraint});

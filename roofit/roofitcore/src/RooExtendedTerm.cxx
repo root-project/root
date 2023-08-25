@@ -24,21 +24,10 @@ an extended ML term for a given number of expected events term when an extended 
 is constructed.
 **/
 
-#include "RooExtendedTerm.h"
-
-using namespace std;
+#include <RooExtendedTerm.h>
+#include <RooProduct.h>
 
 ClassImp(RooExtendedTerm);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooExtendedTerm::RooExtendedTerm()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,16 +52,6 @@ RooExtendedTerm::RooExtendedTerm(const RooExtendedTerm& other, const char* name)
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooExtendedTerm::~RooExtendedTerm()
-{
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of expected events from associated event count variable
 
@@ -81,5 +60,8 @@ double RooExtendedTerm::expectedEvents(const RooArgSet* /*nset*/) const
   return _n ;
 }
 
-
-
+std::unique_ptr<RooAbsReal> RooExtendedTerm::createExpectedEventsFunc(const RooArgSet * /*nset*/) const
+{
+   auto name = std::string(GetName()) + "_expectedEvents";
+   return std::make_unique<RooProduct>(name.c_str(), name.c_str(), *_n);
+}

@@ -32,7 +32,7 @@
    from sidebands (or MC), and
    the signal efficiency was determined from Monte Carlo
 
-2: SetPoissonBkgGaussEff(x,y,em,sde,tau)
+2: SetPoissonBkgGaussEff(x,y,em,tau,sde)
 ~~~
    Background: Poisson
    Efficiency: Gaussian

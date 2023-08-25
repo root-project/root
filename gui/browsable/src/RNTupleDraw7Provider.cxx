@@ -13,7 +13,7 @@
 
 #include "RFieldProvider.hxx"
 
-using namespace ROOT::Experimental;
+using namespace ROOT::Browsable;
 
 // ==============================================================================================
 
@@ -31,7 +31,7 @@ public:
 
    RNTupleDraw7Provider()
    {
-      RegisterDraw7(TClass::GetClass<ROOT::Experimental::RNTuple>(), [this](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw7(TClass::GetClass<ROOT::Experimental::RNTuple>(), [this](std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
 
          auto h1 = DrawField(dynamic_cast<RFieldHolder*> (obj.get()));
          if (!h1) return false;

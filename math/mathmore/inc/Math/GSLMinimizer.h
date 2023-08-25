@@ -116,8 +116,6 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
-   /// set the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override { BasicMinimizer::SetFunction(func);}
 
    /// method to perform the minimization
     bool Minimize() override;

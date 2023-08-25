@@ -1,7 +1,7 @@
 import { create, clTPad, clTLine, isFunc } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-import { drawTLine } from './more.mjs';
+import { TLinePainter } from './TLinePainter.mjs';
 
 
 /**
@@ -120,7 +120,7 @@ class TRatioPlotPainter extends ObjectPainter {
                   ratio.fGridlines.push(line);
                   if (currpad === undefined)
                      currpad = this.selectCurrentPad(ratio.fLowerPad.fName);
-                  arr.push(drawTLine(this.getDom(), line));
+                  arr.push(TLinePainter.draw(this.getDom(), line));
                }
             });
          }

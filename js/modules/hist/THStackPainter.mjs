@@ -1,4 +1,4 @@
-import { clone, create, createHistogram, isFunc, gStyle, clTList, clTH2, kNoZoom } from '../core.mjs';
+import { clone, create, createHistogram, setHistogramTitle, isFunc, gStyle, clTList, clTH1I, clTH2, clTH2I, kNoZoom } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
@@ -175,7 +175,8 @@ class THStackPainter extends ObjectPainter {
 
       let rindx = this.options.horder ? indx : nhists-indx-1,
           hist = hlst.arr[rindx],
-          hopt = hlst.opt[rindx] || hist.fOption || this.options.hopt;
+          hopt = hlst.opt[rindx] || hist.fOption || this.options.hopt,
+          exec = '';
 
       if (hopt.toUpperCase().indexOf(this.options.hopt) < 0)
          hopt += ' ' + this.options.hopt;
@@ -186,9 +187,9 @@ class THStackPainter extends ObjectPainter {
          let mp = this.getMainPainter();
          if (isFunc(mp?.createAutoColor)) {
             let icolor = mp.createAutoColor(nhists);
-            if (this.options._pfc) hist.fFillColor = icolor;
-            if (this.options._plc) hist.fLineColor = icolor;
-            if (this.options._pmc) hist.fMarkerColor = icolor;
+            if (this.options._pfc) { hist.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
+            if (this.options._plc) { hist.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
+            if (this.options._pmc) { hist.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
          }
       }
 
@@ -201,7 +202,10 @@ class THStackPainter extends ObjectPainter {
          let prev_name = subpad_painter.selectCurrentPad(subpad_painter.this_pad_name);
 
          return this.hdraw_func(subpad_painter.getDom(), hist, hopt).then(subp => {
-            this.painters.push(subp);
+            if (subp) {
+               subp._auto_exec = exec;
+               this.painters.push(subp);
+            }
             subpad_painter.selectCurrentPad(prev_name);
             return this.drawNextHisto(indx+1, pad_painter);
          });
@@ -279,13 +283,13 @@ class THStackPainter extends ObjectPainter {
           numhistos = histos ? histos.arr.length : 0;
 
       if (!numhistos) {
-         let histo = createHistogram('TH1I', 100);
-         histo.fTitle = stack.fTitle;
+         let histo = createHistogram(clTH1I, 100);
+         setHistogramTitle(histo, stack.fTitle);
          return histo;
       }
 
       let h0 = histos.arr[0],
-          histo = createHistogram((this.options.ndim == 1) ? 'TH1I' : 'TH2I', h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+          histo = createHistogram((this.options.ndim == 1) ? clTH1I : clTH2I, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
       histo.fName = 'axis_hist';
       Object.assign(histo.fXaxis, h0.fXaxis);
       if (this.options.ndim==2)
@@ -350,17 +354,18 @@ class THStackPainter extends ObjectPainter {
 
       // and now update histograms
       let hlst = this.options.nostack ? stack.fHists : stack.fStack,
-          nhists = (hlst && hlst.arr) ? hlst.arr.length : 0;
+          nhists = hlst?.arr?.length ?? 0;
 
       if (nhists !== this.painters.length) {
-         this.getPadPainter()?.cleanPrimitives(objp => { return this.painters.indexOf(objp) >= 0; });
+         this.getPadPainter()?.cleanPrimitives(objp => this.painters.indexOf(objp) >= 0);
          this.painters = [];
          this.did_update = true;
       } else {
          for (let indx = 0; indx < nhists; ++indx) {
-            let rindx = this.options.horder ? indx : nhists-indx-1;
-            let hist = hlst.arr[rindx];
-            this.painters[indx].updateObject(hist);
+            let rindx = this.options.horder ? indx : nhists - indx - 1,
+                hist = hlst.arr[rindx],
+                hopt = hlst.opt[rindx];
+            this.painters[indx].updateObject(hist, hopt);
          }
       }
 

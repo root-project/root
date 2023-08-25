@@ -102,7 +102,7 @@ public:
    TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy,
            Int_t ww, Int_t wh);
    TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid);
-   virtual ~TCanvas();
+   ~TCanvas() override;
 
    //-- used by friend TThread class
    void Constructor();
@@ -228,6 +228,8 @@ public:
 
    static TCanvas   *MakeDefCanvas();
    static Bool_t     SupportAlpha();
+
+   static Bool_t     SaveAll(const std::vector<TPad *>& = {}, const char *filename = "", Option_t *option = "");
 
    ClassDefOverride(TCanvas,8)  //Graphics canvas
 };

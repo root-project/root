@@ -73,7 +73,7 @@ public:
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame,
                  Pixel_t back = GetWhitePixel());
-   virtual ~TGTextLBEntry();
+   ~TGTextLBEntry() override;
 
    TGDimension GetDefaultSize() const override { return TGDimension(fTWidth, fTHeight+1); }
    const TGString *GetText() const { return fText; }
@@ -113,7 +113,7 @@ public:
                      UInt_t w = 0, Style_t s = 0,
                      UInt_t options = kHorizontalFrame,
                      Pixel_t back = GetWhitePixel());
-   virtual ~TGLineLBEntry();
+   ~TGLineLBEntry() override;
 
    TGDimension   GetDefaultSize() const override
                   { return TGDimension(fTWidth, fTHeight+1); }
@@ -146,7 +146,7 @@ public:
                  UInt_t w = 0, Style_t s = 0,
                  UInt_t options = kHorizontalFrame,
                  Pixel_t back = GetWhitePixel());
-   virtual ~TGIconLBEntry();
+   ~TGIconLBEntry() override;
 
    TGDimension   GetDefaultSize() const override
                   { return TGDimension(fTWidth, fTHeight+1); }
@@ -182,7 +182,7 @@ public:
    TGLBContainer(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                  UInt_t options = kSunkenFrame,
                  Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGLBContainer();
+   ~TGLBContainer() override;
 
    virtual void AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints);
    virtual void AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints);
@@ -239,7 +239,7 @@ public:
    TGListBox(const TGWindow *p = nullptr, Int_t id = -1,
              UInt_t options = kSunkenFrame | kDoubleBorder,
              Pixel_t back = GetWhitePixel());
-   virtual ~TGListBox();
+   ~TGListBox() override;
 
    virtual void AddEntry(TGString *s, Int_t id);
    virtual void AddEntry(const char *s, Int_t id);

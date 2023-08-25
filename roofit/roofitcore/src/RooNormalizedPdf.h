@@ -20,8 +20,11 @@ class RooNormalizedPdf : public RooAbsPdf {
 public:
    RooNormalizedPdf(RooAbsPdf &pdf, RooArgSet const &normSet)
       : _pdf("numerator", "numerator", this, pdf),
-        _normIntegral("denominator", "denominator", this,
-                      *pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange()), true, false, true),
+        _normIntegral(
+           "denominator", "denominator", this,
+           *std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())}
+               .release(),
+           true, false, true),
         _normSet{normSet}
    {
       auto name = std::string(pdf.GetName()) + "_over_" + _normIntegral->GetName();
@@ -49,21 +52,25 @@ public:
       return _pdf->getAnalyticalIntegralWN(allVars, analVars, &_normSet, rangeName);
    }
    /// Forward calculation of analytical integrals to input p.d.f
-   double analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = 0) const override
+   double analyticalIntegralWN(Int_t code, const RooArgSet * /*normSet*/, const char *rangeName = nullptr) const override
    {
       return _pdf->analyticalIntegralWN(code, &_normSet, rangeName);
    }
 
    ExtendMode extendMode() const override { return static_cast<RooAbsPdf &>(*_pdf).extendMode(); }
-   double expectedEvents(const RooArgSet * /*nset*/) const override
+   double expectedEvents(const RooArgSet * /*nset*/) const override { return _pdf->expectedEvents(&_normSet); }
+
+   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
    {
-      return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(&_normSet);
+      return _pdf->createExpectedEventsFunc(&_normSet);
    }
+
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
    bool canComputeBatchWithCuda() const override { return true; }
 
 protected:
-   void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const &) const override;
+   void computeBatch(double *output, size_t size, RooFit::Detail::DataMap const &) const override;
    double evaluate() const override
    {
       // Evaluate() should not be called in the BatchMode, but we still need it
@@ -76,9 +83,9 @@ protected:
    };
 
 private:
-   RooRealProxy _pdf;
+   RooTemplateProxy<RooAbsPdf> _pdf;
    RooRealProxy _normIntegral;
-   RooArgSet const &_normSet;
+   RooArgSet _normSet;
 };
 
 #endif

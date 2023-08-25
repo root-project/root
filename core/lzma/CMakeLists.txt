@@ -8,12 +8,14 @@
 # CMakeLists.txt file for building ROOT core/lzma package
 ############################################################################
 
-ROOT_OBJECT_LIBRARY(Lzma src/ZipLZMA.c BUILTINS LZMA)
+target_sources(Core PRIVATE src/ZipLZMA.c)
 
-target_include_directories(Lzma PRIVATE
-   ${LIBLZMA_INCLUDE_DIR}
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+target_link_libraries(Core PRIVATE ${LIBLZMA_LIBRARIES})
+
+target_include_directories(Core
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${LIBLZMA_INCLUDE_DIR}>
 )
 
 ROOT_INSTALL_HEADERS()

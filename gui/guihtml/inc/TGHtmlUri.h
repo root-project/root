@@ -60,7 +60,7 @@ private:
 public:
    TGHtmlUri(const char *zUri = nullptr);
    TGHtmlUri(const TGHtmlUri *uri);
-   virtual ~TGHtmlUri();
+   ~TGHtmlUri() override;
 
    char *BuildUri();
    int  EqualsUri(const TGHtmlUri *uri, int field_mask = URI_FULL_MASK);

@@ -37,9 +37,9 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   ~TTextEditor();
+   ~TTextEditor() override;
 
-   void SetModel(TObject *);
+   void SetModel(TObject *) override;
 
    void DoAngle();
    void DoSize();
@@ -47,7 +47,7 @@ public:
    void DoXpos();
    void DoYpos();
 
-   ClassDef(TTextEditor,0)        // text editor
+   ClassDefOverride(TTextEditor,0)        // text editor
 };
 
 #endif // ROOT_TTextEditor

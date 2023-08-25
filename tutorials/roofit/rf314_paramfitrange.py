@@ -8,7 +8,9 @@
 ##
 ## where `t` and `tmin` are both observables in the dataset
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -37,7 +39,7 @@ model = ROOT.RooExponential("model", "model", t, tau)
 dall = model.generate({t}, 10000)
 
 # Generate a (fake) prototype dataset for acceptance limit values
-tmp = ROOT.RooGaussian("gmin", "gmin", tmin, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.5)).generate({tmin}, 5000)
+tmp = ROOT.RooGaussian("gmin", "gmin", tmin, 0.0, 0.5).generate({tmin}, 5000)
 
 # Generate dataset with t values that observe (t>tmin)
 dacc = model.generate({t}, ProtoData=tmp)
@@ -45,7 +47,7 @@ dacc = model.generate({t}, ProtoData=tmp)
 # Fit pdf to data in acceptance region
 # -----------------------------------------------------------------------
 
-r = model.fitTo(dacc, Save=True)
+r = model.fitTo(dacc, Save=True, PrintLevel=-1)
 
 # Plot fitted pdf on full and accepted data
 # ---------------------------------------------------------------------------------

@@ -47,15 +47,12 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
    unsigned int iter = 0;
    // in case of analytical gradients we don't have step sizes
    bool hasGStep = !dgrad.IsAnalytical();
-   print.Debug("Gradient ", dgrad.Vec(), "G2",dgrad.G2());
-   MnAlgebraicSymMatrix mat(n);
+   //print.Trace("Gradient ", dgrad.Vec(), "G2",dgrad.G2());
    // gradient present in the state must have G2 otherwise something is wrong
-   //assert(dgrad.HasG2());
    if (!dgrad.HasG2()) {
       print.Error("Input gradient to NG2LS must have G2 already computed");
       return st;
    }
-   bool computeHessian = false;
 
    do {
       iterate = false;
@@ -72,6 +69,9 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
             MnAlgebraicVector step(n);
             MnLineSearch lsearch;
 
+            // when using analytical gradient use as step size a dummy value of 1
+            // maybe could do better using user given parameter step sizes
+            // tested using inverse of G2() gives worse behaviour
             if (dgrad.Vec()(i) < 0)
                step(i) = (hasGStep) ? dgrad.Gstep()(i) : 1;
             else
@@ -95,17 +95,16 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
             dgrad = gc(pa, dgrad);
             // re-compute also G2 if needed
             if (!dgrad.HasG2()) {
-               computeHessian = true;
-               print.Debug("Compute  Hessian at the new point", pa.Vec());
-               bool ret = gc.Hessian(pa,mat);
+               //no need to compute Hessian here but only G2
+               print.Debug("Compute  G2 at the new point", pa.Vec());
+               MnAlgebraicVector g2(n);
+               bool ret = gc.G2(pa,g2);
                if (!ret) {
-                  print.Error("Cannot compute Hessian");
+                  print.Error("Cannot compute G2");
                   assert(false);
                   return st;
                }
-               MnAlgebraicVector g2(n);
-               for (unsigned int j = 0; j < n; j++)
-                  g2(j) = mat(j,j);
+
                dgrad = FunctionGradient(dgrad.Grad(), g2);
             }
 
@@ -118,13 +117,12 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
       }
    } while (iter++ < 2 * n && iterate);
 
-   // for the case where we did not compute Hessian
-   if (!computeHessian) {
-      print.Info("Approximate covariance using only G2");
-      for (unsigned int i = 0; i < n; i++) {
-         mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) :
-           (dgrad.G2()(i) >= 0) ? 1./prec.Eps2() : -1./prec.Eps2());
-      }
+   // even if we computed the Hessian it is still better to use the diagonal part, the G2
+   print.Debug("Approximate new covariance after NegativeG2LS using only G2");
+   MnAlgebraicSymMatrix mat(n);
+   for (unsigned int i = 0; i < n; i++) {
+      mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) :
+                  (dgrad.G2()(i) >= 0) ? 1./prec.Eps2() : -1./prec.Eps2());
    }
 
    MinimumError err(mat, 1.);

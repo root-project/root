@@ -43,7 +43,7 @@ followed by the characters.
 Strings are ASCII encoded; every character is a signed 8bit integer.
 
 _Compression settings_: A 32bit integer containing both a compression algorithm and the compression level.
-The compression settings are encoded according to this formula: $$ settings = algorithm * 100 + level $$
+The compression settings are encoded according to this formula: $settings = algorithm * 100 + level$.
 See Compression.[h/cxx] for details and available algorithms.
 
 The meta-data envelope defines additional basic types (see below).
@@ -227,6 +227,7 @@ The header consists of the following elements:
  - List frame: list of alias column record frames
  - List frame: list of extra type information
 
+The last four list frames containing information about fields and columns are collectively referred to as _schema description_.
 The release candidate tag is used to mark unstable implementations of the file format.
 Production code sets the tag to zero.
 
@@ -250,8 +251,11 @@ Every field record frame of the list of fields has the following contents
 
 The field version and type version are used for schema evolution.
 
-If the flag 0x01 (_repetitive field_) is set, the field represents a fixed sized array.
-In this case, an additional 64bit integer specifies the size of the array.
+If `flags=0x0001` (_repetitive field_) is set, the field represents a fixed-size array.
+In this case, an additional 64bit integer follows immediately that specifies the size of the array.
+Typically, another (sub) field with `Parent Field ID` equal to the ID of this field
+is expected to be found, representing the array content
+(see Section "Mapping of C++ Types to Fields and Columns").
 
 The block of integers is followed by a list of strings:
 
@@ -270,7 +274,6 @@ The flags field can have one of the following bits set
 | Bit      | Meaning                                                                    |
 |----------|----------------------------------------------------------------------------|
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
-| 0x02     | Alias field, the columns referring to this field are alias columns         |
 
 The structural role of the field can have on of the following values
 
@@ -314,20 +317,41 @@ The column type and bits on storage integers can have one of the following value
 | 0x07 |   64 | Real64       | IEEE-754 double precision float                                               |
 | 0x08 |   32 | Real32       | IEEE-754 single precision float                                               |
 | 0x09 |   16 | Real16       | IEEE-754 half precision float                                                 |
-| 0x0A |   64 | Int64        | Two's complement, little-endian 8 byte integer                                |
-| 0x0B |   32 | Int32        | Two's complement, little-endian 4 byte integer                                |
-| 0x0C |   16 | Int16        | Two's complement, little-endian 2 byte integer                                |
-| 0x0D |    8 | Int8         | Two's complement, 1 byte integer                                              |
+| 0x16 |   64 | Int64        | Two's complement, little-endian 8 byte signed integer                         |
+| 0x0A |   64 | UInt64       | Little-endian 8 byte unsigned integer                                         |
+| 0x17 |   32 | Int32        | Two's complement, little-endian 4 byte signed integer                         |
+| 0x0B |   32 | UInt32       | Little-endian 4 byte unsigned integer                                         |
+| 0x18 |   16 | Int16        | Two's complement, little-endian 2 byte signed integer                         |
+| 0x0C |   16 | UInt16       | Little-endian 2 byte unsigned integer                                         |
+| 0x19 |    8 | Int8         | Two's complement, 1 byte signed integer                                       |
+| 0x0D |    8 | UInt8        | 1 byte unsigned integer                                                       |
 | 0x0E |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                   |
 | 0x0F |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                   |
 | 0x10 |   64 | SplitReal64  | Like Real64 but in split encoding                                             |
 | 0x11 |   32 | SplitReal32  | Like Real32 but in split encoding                                             |
 | 0x12 |   16 | SplitReal16  | Like Real16 but in split encoding                                             |
-| 0x13 |   64 | SplitInt64   | Like Int64 but in split encoding                                              |
-| 0x14 |   32 | SplitInt32   | Like Int32 but in split encoding                                              |
-| 0x15 |   16 | SplitInt16   | Like Int16 but in split encoding                                              |
+| 0x1A |   64 | SplitInt64   | Like Int64 but in split + zigzag encoding                                     |
+| 0x13 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                             |
+| 0x1B |   64 | SplitInt32   | Like Int32 but in split + zigzag encoding                                     |
+| 0x14 |   32 | SplitUInt32  | Like UInt32 but in split encoding                                             |
+| 0x1C |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                     |
+| 0x15 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                             |
 
-Future versions of the file format may introduce addtional column types
+The "split encoding" columns apply a byte transformation encoding to all pages of that column
+and in addition, depending on the column type, delta or zigzag encoding:
+
+Split (only)
+: Rearranges the bytes of elements: All the first bytes first, then all the second bytes, etc.
+
+Delta + split
+: The first element is stored unmodified, all other elements store the delta to the previous element.
+  Followed by split encoding.
+
+Zigzag + split
+: Used on signed integers only; it maps $x$ to $2x$ if $x$ is positive and to $-(2x+1)$ if $x$ is negative.
+  Followed by split encoding.
+
+Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
 Old readers need to ignore these columns and fields constructed from such columns.
 Old readers can, however, figure out the number of elements stored in such unknown columns.
@@ -339,7 +363,14 @@ The flags field can have one of the following bits set
 | 0x01     | Elements in the column are sorted (monotonically increasing) |
 | 0x02     | Elements in the column are sorted (monotonically decreasing) |
 | 0x04     | Elements have only non-negative values                       |
+| 0x08     | Index of first element in the column is not zero             |
 
+If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
+In this case, an additional 64bit integer containing the first element index follows the flags field.
+Compliant implementations should yield synthetic data pages made up of 0x00 bytes when trying to read back elements in the range $[0, firstElementIndex-1]$.
+This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
+The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
+In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
 #### Alias columns
 
@@ -354,9 +385,10 @@ An alias column has the following format
 |                           Field ID                            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-
+Alias columns do not have associated data pages.  Instead, their data comes from another column referred to below as "physical column".
 The first 32bit integer references the physical column ID.
-The second 32bit integer references a field that needs to have the "alias field" flag set.
+The second 32bit integer references the associated "projected" field.
+A projected field is a field using alias columns to present available data by an alternative C++ type.
 The ID of the alias column itself is given implicitly by the serialization order.
 In particular, alias columns have larger IDs than physical columns.
 In the footer and page list envelopes, only physical column IDs must be referenced.
@@ -397,7 +429,7 @@ The footer envelope has the following structure:
 
 - Feature flags
 - Header checksum (CRC32)
-- List frame of extension header envelope links
+- Schema extension record frame
 - List frame of column group record frames
 - List frame of cluster summary record frames
 - List frame of cluster group record frames
@@ -405,8 +437,21 @@ The footer envelope has the following structure:
 
 The header checksum can be used to cross-check that header and footer belong together.
 
-The extension headers are just additional headers with an empty name and description.
-They are necessary when fields have been backfilled during writing.
+#### Schema Extension Record Frame
+
+The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope). Specifically, it is a record frame with the following four fields (identical to the last four fields in Header Envelope):
+
+ - List frame: list of field record frames
+ - List frame: list of column record frames
+ - List frame: list of alias column record frames
+ - List frame: list of extra type information
+
+
+In general, a schema extension is optional and thus this record frame might be empty.
+The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
+This is necessary when fields have been added during writing.
+
+
 
 The ntuple meta-data can be split over multiple meta-data envelopes (see below).
 
@@ -453,7 +498,7 @@ The cluster summary record frame contains the entry range of a cluster:
 If flag 0x01 (sharded cluster) is set,
 an additional 32bit integer containing the column group ID follows the flags field.
 If flags is zero, the cluster stores the event range of _all_ the original columns
-_excluding_ the columns from extension headers.
+_including_ the columns from extension headers.
 
 The order of the cluster summaries defines the cluster IDs, starting from zero.
 
@@ -588,14 +633,24 @@ The following fundamental types are stored as `leaf` fields with a single column
 -----------------------------------|------------------------|-----------------------|
 | bool                             | Bit                    |                       |
 | char                             | Char                   |                       |
-| int8_t, uint_8_t, unsigned char  | Int8                   |                       |
-| int16_t, uint16_t                | SplitInt16             | Int16                 |
-| int32_t, uint32_t                | SplitInt32             | Int32                 |
-| int64_t, uint64_t                | SplitInt64             | Int64                 |
+| int8_t                           | Int8                   |                       |
+| uint_8_t, unsigned char          | UInt8                  |                       |
+| int16_t                          | SplitInt16             | Int16                 |
+| uint16_t                         | SplitUInt16            | UInt16                |
+| uint32_t                         | SplitUInt32            | UInt32                |
+| int32_t                          | SplitInt32             | Int32                 |
+| uint64_t                         | SplitUInt64            | UInt64                |
+| int64_t                          | SplitInt64             | Int64                 |
 | float                            | SplitReal32            | Real32                |
 | double                           | SplitReal64            | Real64                |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
+If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
+
+### Low-precision Floating Points
+
+The ROOT type `Double32_t` is stored on disk as a `double` field with a `SplitReal32` column representation.
+The field's type alias is set to `Double32_t`.
 
 ### STL Types and Collections
 
@@ -612,25 +667,30 @@ A string is stored as a single field with two columns.
 The first (principle) column is of type SplitIndex32.
 The second column is of type Char.
 
-#### std::vector<T> and ROOT::RVec<T>
+#### std::vector\<T\> and ROOT::RVec\<T\>
 
 STL vector and ROOT's RVec have identical on-disk representations.
 They are stored as two fields:
-  - Collection mother field of type SplitIndex32 or SplitIndex64
+  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
 #### std::array<T, N> and array type of the form T[N]
 
-Fixed-sized arrays are stored as single repetitive fields of type `T`.
-The array size `N` is stored in the field meta-data.
+Fixed-sized arrays are stored as two fields:
+  - A repetitive field of type `std::array<T, N>` with no attached columns. The array size `N` is stored in the field meta-data.
+  - Child field of type `T` named `_0`, which must be a type with RNTuple I/O support.
+
 Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 
 #### std::variant<T1, T2, ..., Tn>
 
 Variants are stored in $n+1$ fields:
-  - Variant mother field of type Switch; the dispatch tag points to the principle column of the active type
+  - Variant mother field with one column of type Switch; the dispatch tag points to the principal column of the active type
   - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
+
+The dispatch tag ranges from 1 to $n$.
+A value of 0 indicates that the variant is in the invalid state, i.e., it does not hold any of the valid alternatives.
 
 #### std::pair<T1, T2>
 
@@ -640,7 +700,40 @@ The child fileds are named `_0` and `_1`.
 #### std::tuple<T1, T2, ..., Tn>
 
 A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
-The child fileds are named `_0`, `_1`, ...
+The child fields are named `_0`, `_1`, ...
+
+#### std::bitset\<N\>
+
+A bitset is stored as a repetitive leaf field with an attached `Bit` column.
+The bitset size `N` is stored as repetition parameter in the field meta-data.
+Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
+
+#### std::unique_ptr\<T\>, std::optional\<T\>
+
+A unique pointer and an optional type have the same on disk representation.
+They are represented as a collection of `T`s of zero or one elements.
+A collection mother field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
+Note that RNTuple does not support polymorphism, so the type `T` is expected to be `T` and not a child class of `T`.
+
+By default, the mother field has a principal column of type `(Split)Index[64|32]`.
+This is called sparse representation.
+The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
+In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
+
+#### std::set\<T\>
+
+While STL sets by definition are associative containers (i.e., elements are referenced by their keys, which in the case for sets are equal to the values), on disk they are represented as indexed collections.
+This means that they have the same on-disk representation as `std::vector<T>`, using two fields:
+  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
+  - Child field of type `T`, which must by a type with RNTuple I/O support.
+    The name of the child field is `_0`.
+
+### User-defined enums
+
+User-defined enums are stored as a leaf field with a single subfield named `_0`.
+The mother field has no attached columns.
+The subfield corresponds to the integer type the underlies the enum.
+Unscoped and scoped enums are supported as long as the enum has a dictionary.
 
 ### User-defined classes
 
@@ -668,9 +761,20 @@ User classes that specify a collection proxy behave as collections of a given va
 Associative collections are not currently supported.
 
 The on-disk representation is similar to a `std::vector<T>` where `T` is the value type; specifically, it is stored as two fields:
-  - Collection mother field of type SplitIndex32 or SplitIndex64
+  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
+
+### ROOT::Experimental::RNTupleCardinality<SizeT>
+
+A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column of type (Split)Index32 or (Split)Index64.
+This field presents the offsets in the index column as lengths that correspond to the cardinality of the pointed-to collection.
+
+The value for the $i$-th element is computed by subtracting the $(i-1)$-th value from the $i$-th value in the index column.
+If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in the index column is assumed to be 0, e.g. given the index column values `[1, 1, 3]`, the values yielded by `RNTupleCardinality` shall be `[1, 0, 2]`.
+
+The `SizeT` template parameter defines the in-memory integer type of the collection size.
+The valid types are `std::uint32_t` and `std::uint64_t`.
 
 ## Limits
 

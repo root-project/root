@@ -98,7 +98,7 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 
    // --------------------
    // make a toy dataset
-   RooDataSet *data = mvg.generate(xVec, 100);
+   std::unique_ptr<RooDataSet> data{mvg.generate(xVec, 100)};
 
    // now create the model config for this problem
    RooWorkspace *w = new RooWorkspace("MVG");
@@ -112,7 +112,7 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    // MCMC
    // we want to setup an efficient proposal function
    // using the covariance matrix from a fit to the data
-   RooFitResult *fit = mvg.fitTo(*data, Save(true));
+   std::unique_ptr<RooFitResult> fit{mvg.fitTo(*data, Save(true))};
    ProposalHelper ph;
    ph.SetVariables((RooArgSet &)fit->floatParsFinal());
    ph.SetCovMatrix(fit->covarianceMatrix());

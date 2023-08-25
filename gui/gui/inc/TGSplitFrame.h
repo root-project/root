@@ -34,7 +34,7 @@ public:
    // constructors
    TGRectMap(Int_t rx, Int_t ry, UInt_t rw, UInt_t rh):
              fX(rx), fY(ry), fW(rw), fH(rh) {}
-   virtual ~TGRectMap() {}
+   ~TGRectMap() override {}
 
    // methods
    Bool_t Contains(Int_t px, Int_t py) const
@@ -59,7 +59,7 @@ private:
 
 public:
    TGSplitTool(const TGWindow *p = nullptr, const TGFrame *f = nullptr);
-   virtual ~TGSplitTool();
+   ~TGSplitTool() override;
 
    void   AddRectangle(TGFrame *frm, Int_t x, Int_t y, Int_t w, Int_t h);
    void   DoRedraw() override;
@@ -93,7 +93,7 @@ protected:
 public:
    TGSplitFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                 UInt_t options = 0);
-   virtual ~TGSplitFrame();
+   ~TGSplitFrame() override;
 
    void           AddFrame(TGFrame *f, TGLayoutHints *l = nullptr) override;
    void           Cleanup() override;

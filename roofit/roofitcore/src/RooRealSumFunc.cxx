@@ -114,6 +114,10 @@ double RooRealSumFunc::evaluate() const
   return RooRealSumPdf::evaluate(*this, _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
 }
 
+void RooRealSumFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   RooRealSumPdf::translateImpl(ctx, this, _funcList, _coefList);
+}
 
 //_____________________________________________________________________________
 bool RooRealSumFunc::checkObservables(const RooArgSet *nset) const
@@ -169,7 +173,7 @@ void RooRealSumFunc::printMetaArgs(std::ostream &os) const
 std::unique_ptr<RooAbsArg> RooRealSumFunc::compileForNormSet(RooArgSet const &/*normSet*/, RooFit::Detail::CompileContext & ctx) const
 {
    auto newArg = std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(Clone())};
-   newArg->setAttribute("_COMPILED");
+   ctx.markAsCompiled(*newArg);
    ctx.compileServers(*newArg, {});
    return newArg;
 }

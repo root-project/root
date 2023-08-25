@@ -11,9 +11,13 @@
 # These files depend on cling/clang/llvm; they need to be linked into libCling.
 # They are used by rootcling_stage1, rootcling and libCling.
 
-set(ClingUtils_dict_headers
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   root_std_complex.h
-  PARENT_SCOPE
+)
+
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>
 )
 
 ROOT_OBJECT_LIBRARY(ClingUtils
@@ -74,7 +78,7 @@ endforeach()
 
 set(CLANG_RESOURCE_DIR_STEM)
 if (builtin_clang)
-  set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm/src/${CMAKE_CFG_INTDIR}/lib/clang)
+  set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR}/lib/clang)
   set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION})
 else ()
   set(CLANG_RESOURCE_DIR_STEM ${LLVM_LIBRARY_DIR}/clang)
@@ -160,18 +164,6 @@ foreach(file  multimap  multiset)
   install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/cint)
 endforeach()
 
-# These headers do not have complete include guards on all platforms we
-# support. This means that the PCH cannot provide their representation at
-# runtime and clang will hit disk, triggering a possible incompatibility
-# of that file in build-time versus run-time (different length etc).
-# Capture their build-time version here, and inject it into runtime.
-foreach(file wchar.h bits/stat.h bits/time.h)
-  if(EXISTS ${DEFAULT_SYSROOT}/usr/include/${file})
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${DEFAULT_SYSROOT}/usr/include/${file}
-      ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${file})
-  endif()
-endforeach()
-
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
 if(MSVC)
   add_custom_command(OUTPUT ${stamp_file}
@@ -189,15 +181,6 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CLANG_RESOURCE_DIR}
         ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/assert.h
-        ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/assert.h
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/stdlib.h
-        ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/stdlib.h
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/unistd.h
-        ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/unistd.h
         ${copy_commands}
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}

@@ -69,7 +69,7 @@ public:
                FontStruct_t font = GetDefaultFontStruct(),
                UInt_t option = 0, Bool_t resize =  kTRUE);
 
-   virtual ~TGTableCell();
+   ~TGTableCell() override;
 
            void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
 

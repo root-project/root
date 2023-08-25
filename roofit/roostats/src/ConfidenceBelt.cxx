@@ -47,7 +47,7 @@ using namespace std;
 /// Default constructor
 
 ConfidenceBelt::ConfidenceBelt() :
-   TNamed(), fParameterPoints(0)
+   TNamed(), fParameterPoints(nullptr)
 {
 }
 
@@ -55,7 +55,7 @@ ConfidenceBelt::ConfidenceBelt() :
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name) :
-  TNamed(name,name), fParameterPoints(0)
+  TNamed(name,name), fParameterPoints(nullptr)
 {
 }
 
@@ -63,7 +63,7 @@ ConfidenceBelt::ConfidenceBelt(const char* name) :
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title) :
-   TNamed(name,title), fParameterPoints(0)
+   TNamed(name,title), fParameterPoints(nullptr)
 {
 }
 
@@ -221,7 +221,7 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
 
   if( !this->CheckParameters(parameterPoint) ){
     std::cout << "problem with parameters" << std::endl;
-    return 0;
+    return nullptr;
   }
 
   if( hist ) {
@@ -240,7 +240,7 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
     // need a way to get index for given point
     //    RooStats::SetParameters(&parameterPoint, tree->get()); // set tree's parameters to desired values
     Int_t index = 0; //need something like tree->calcTreeIndex();
-    const RooArgSet* thisPoint = 0;
+    const RooArgSet* thisPoint = nullptr;
     for(index=0; index<tree->numEntries(); ++index){
       thisPoint = tree->get(index);
       bool samePoint = true;
@@ -263,7 +263,7 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
       std::cout << "dataset is not initialized properly" << std::endl;
   }
 
-  return 0;
+  return nullptr;
 
 }
 

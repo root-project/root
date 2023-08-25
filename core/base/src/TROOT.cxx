@@ -521,6 +521,10 @@ namespace Internal {
    /// a hint for ROOT: it will try to satisfy the request if the execution
    /// scenario allows it. For example, if ROOT is configured to use an external
    /// scheduler, setting a value for 'numthreads' might not have any effect.
+   /// The maximum number of threads can be influenced by the environment
+   /// variable `ROOT_MAX_THREADS`: `export ROOT_MAX_THREADS=2` will try to set
+   /// the maximum number of active threads to 2, if the scheduling library
+   /// (such as tbb) "permits".
    ///
    /// \note Use `DisableImplicitMT()` to disable multi-threading (some locks will remain in place as
    /// described in EnableThreadSafety()). `EnableImplicitMT(1)` creates a thread-pool of size 1.
@@ -1129,11 +1133,13 @@ namespace {
 
 void TROOT::CloseFiles()
 {
+   // Close files without deleting the objects (`ResetGlobals` will be called
+   // next; see `EndOfProcessCleanups()` below.)
    if (fFiles && fFiles->First()) {
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
    // and Close TROOT itself.
-   Close("slow");
+   Close("nodelete");
    // Now sockets.
    if (fSockets && fSockets->First()) {
       if (nullptr==fCleanups->FindObject(fSockets) ) {
@@ -1212,14 +1218,17 @@ void TROOT::EndOfProcessCleanups()
    CloseFiles();
 
    if (gInterpreter) {
+      // This might delete some of the objects 'held' by the TFiles (hence
+      // `CloseFiles` must not delete them)
       gInterpreter->ResetGlobals();
    }
 
-   // Now delete the objects 'held' by the TFiles so that it
+   // Now delete the objects still 'held' by the TFiles so that it
    // is done before the tear down of the libraries.
    if (fClosedObjects && fClosedObjects->First()) {
       R__ListSlowDeleteContent(static_cast<TList*>(fClosedObjects));
    }
+   fList->Delete("slow");
 
    // Now a set of simpler things to delete.  See the same ordering in
    // TROOT::~TROOT
@@ -2766,6 +2775,7 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    const char *wd = webdisplay ? webdisplay : "";
 
    // store default values to set them back when needed
+   static TString canName = gEnv->GetValue("Canvas.Name", "");
    static TString brName = gEnv->GetValue("Browser.Name", "");
    static TString trName = gEnv->GetValue("TreeViewer.Name", "");
 
@@ -2797,9 +2807,13 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    }
 
    if (fIsWebDisplay) {
+      // restore canvas and browser classes configured at the moment when gROOT->SetWebDisplay() was called for the first time
+      // This is necessary when SetWebDisplay() called several times and therefore current settings may differ
+      gEnv->SetValue("Canvas.Name", canName);
       gEnv->SetValue("Browser.Name", brName);
       gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
    } else {
+      gEnv->SetValue("Canvas.Name", "TRootCanvas");
       gEnv->SetValue("Browser.Name", "TRootBrowser");
       gEnv->SetValue("TreeViewer.Name", trName);
    }
@@ -2950,6 +2964,17 @@ const TString& TROOT::GetLibDir() {
       const static TString rootlibdir = ROOTLIBDIR;
       return rootlibdir;
    }
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the shared libraries directory in the installation. Static utility function.
+
+const TString& TROOT::GetSharedLibDir() {
+#if defined(R__WIN32)
+   return TROOT::GetBinDir();
+#else
+   return TROOT::GetLibDir();
 #endif
 }
 

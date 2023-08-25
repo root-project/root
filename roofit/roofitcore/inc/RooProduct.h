@@ -63,6 +63,7 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
   void setCacheAndTrackHints(RooArgSet&) override ;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:
 
   void ioStreamerPass2() override ;
@@ -83,7 +84,7 @@ protected:
 
   double calculate(const RooArgList& partIntList) const;
   double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;

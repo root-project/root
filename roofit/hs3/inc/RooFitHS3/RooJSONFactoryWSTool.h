@@ -22,6 +22,7 @@
 
 #include <map>
 #include <stdexcept>
+#include <set>
 
 namespace RooFit {
 namespace JSONIO {
@@ -34,20 +35,25 @@ namespace RooStats {
 class ModelConfig;
 }
 
-class TClass;
-
 class RooJSONFactoryWSTool {
 public:
+   static constexpr bool useListsInsteadOfDicts = true;
+
+   struct CombinedData {
+      std::string name;
+      std::map<std::string, std::string> components;
+   };
+
    RooJSONFactoryWSTool(RooWorkspace &ws);
 
    ~RooJSONFactoryWSTool();
-
-   static std::ostream &log(int level);
 
    static std::string name(const RooFit::Detail::JSONNode &n);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
+
+   static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
@@ -113,12 +119,13 @@ public:
       return wsImport(Obj_t(name, name, std::forward<Args_t>(args)...));
    }
 
-   static void error(const char *s);
-   inline static void error(const std::string &s) { error(s.c_str()); }
+   [[noreturn]] static void error(const char *s);
+   [[noreturn]] inline static void error(const std::string &s) { error(s.c_str()); }
+   static std::ostream &warning(const std::string &s);
 
-   static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
+   static RooArgSet readAxes(const RooFit::Detail::JSONNode &node);
    static std::unique_ptr<RooDataHist>
-   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList const &varlist);
+   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgSet const &vars);
 
    bool importJSON(std::string const &filename);
    bool importYML(std::string const &filename);
@@ -133,9 +140,11 @@ public:
    std::string exportYMLtoString();
    bool importJSONfromString(const std::string &s);
    bool importYMLfromString(const std::string &s);
+   void importJSONElement(const std::string &name, const std::string &jsonString);
+   void importVariableElement(const RooFit::Detail::JSONNode &n);
 
-   void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
-   RooFit::Detail::JSONNode *exportObject(const RooAbsArg *func);
+   void importFunction(const RooFit::Detail::JSONNode &n, bool importAllDependants);
+   void importFunction(const std::string &jsonString, bool importAllDependants);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 
@@ -157,8 +166,11 @@ public:
       const char *what() const noexcept override { return _message.c_str(); }
    };
 
-   static void
-   writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
+   template <typename... Keys_t>
+   static RooFit::Detail::JSONNode &getRooFitInternal(RooFit::Detail::JSONNode &node, Keys_t const &...keys)
+   {
+      return node.get("misc", "ROOT_internal", keys...);
+   }
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
@@ -173,7 +185,10 @@ private:
    template <class T>
    T *requestImpl(const std::string &objname);
 
+   void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
+
    void exportData(RooAbsData const &data);
+   RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
@@ -184,7 +199,13 @@ private:
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
-   void exportDependants(const RooAbsArg *source);
+
+   void exportModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
+                          const std::vector<RooJSONFactoryWSTool::CombinedData> &d);
+
+   void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
+                                std::string const &analysisName,
+                                std::map<std::string, std::string> const *dataComponents);
 
    void exportModelConfig(RooFit::Detail::JSONNode &n, RooStats::ModelConfig const &mc);
 
@@ -192,6 +213,7 @@ private:
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
    const RooFit::Detail::JSONNode *_attributesNode = nullptr;
    RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
+   RooFit::Detail::JSONNode *_varsNode = nullptr;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information

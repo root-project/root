@@ -59,15 +59,14 @@ void ROOT::Experimental::Detail::RCluster::Adopt(RCluster &&other)
    fOnDiskPages.insert(std::make_move_iterator(pages.begin()), std::make_move_iterator(pages.end()));
    other.fOnDiskPages.clear();
 
-   auto &columns = other.fAvailColumns;
-   fAvailColumns.insert(std::make_move_iterator(columns.begin()), std::make_move_iterator(columns.end()));
-   other.fAvailColumns.clear();
+   auto &columns = other.fAvailPhysicalColumns;
+   fAvailPhysicalColumns.insert(std::make_move_iterator(columns.begin()), std::make_move_iterator(columns.end()));
+   other.fAvailPhysicalColumns.clear();
    std::move(other.fPageMaps.begin(), other.fPageMaps.end(), std::back_inserter(fPageMaps));
    other.fPageMaps.clear();
 }
 
-
-void ROOT::Experimental::Detail::RCluster::SetColumnAvailable(DescriptorId_t columnId)
+void ROOT::Experimental::Detail::RCluster::SetColumnAvailable(DescriptorId_t physicalColumnId)
 {
-   fAvailColumns.insert(columnId);
+   fAvailPhysicalColumns.insert(physicalColumnId);
 }

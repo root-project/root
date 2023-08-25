@@ -38,6 +38,9 @@ if(dataframe)
         TMVA/RInferenceUtils.hxx
         TMVA/RBDT.hxx
         TMVA/RSofieReader.hxx
+        TMVA/RBatchGenerator.hxx
+        TMVA/RBatchLoader.hxx
+        TMVA/RChunkLoader.hxx
     )
     set(TMVA_EXTRA_SOURCES
         RBDT.cxx
@@ -48,6 +51,11 @@ endif()
 if (imt)
   list(APPEND TMVA_EXTRA_DEPENDENCIES Imt)
 endif(imt)
+
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   HEADERS
@@ -429,6 +437,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     -writeEmptyRootPCM
   INSTALL_OPTIONS
     ${installoptions}
+  ${EXTRA_DICT_OPTS}
 )
 
 if(MSVC)

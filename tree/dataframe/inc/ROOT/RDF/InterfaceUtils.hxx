@@ -144,7 +144,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const uns
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
-   if (hasAxisLimits) {
+   if (hasAxisLimits || !IsImplicitMTEnabled()) {
       using Helper_t = FillHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
@@ -236,8 +236,7 @@ using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDispla
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<displayHelperArgs_t> &helperArgs, const unsigned int,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display,
-            const RDFInternal::RColumnRegister &colRegister)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display, const RColumnRegister &colRegister)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
@@ -270,7 +269,7 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       std::vector<bool> isDef;
       isDef.reserve(sizeof...(ColTypes));
       for (auto i = 0u; i < sizeof...(ColTypes); ++i)
-         isDef[i] = colRegister.IsDefineOrAlias(colNames[i]);
+         isDef.push_back(colRegister.IsDefineOrAlias(colNames[i]));
       return isDef;
    };
    std::vector<bool> isDefine = makeIsDefine();
@@ -762,8 +761,6 @@ struct IsDeque_t<std::deque<T>> : std::true_type {};
 // clang-format on
 
 void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols);
-
-void TriggerRun(ROOT::RDF::RNode &node);
 
 template <typename T>
 struct InnerValueType {

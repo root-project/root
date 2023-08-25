@@ -969,7 +969,7 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M, const std::vector<TString>
    for (UInt_t irow=0; irow<nvar; irow++) {
       logger << setw(maxL) << V[irow] << ":";
       for (UInt_t icol=0; icol<nvar; icol++) {
-         logger << setw(vLengths[icol]+1) << Form( "%+1.3f", M(irow,icol) );
+         logger << setw(vLengths[icol]+1) << TString::Format( "%+1.3f", M(irow,icol) );
       }
       logger << Endl;
    }
@@ -1024,7 +1024,7 @@ void TMVA::Tools::FormattedOutput( const TMatrixD& M,
    for (UInt_t irow=0; irow<nvvar; irow++) {
       logger << setw(maxL) << vert[irow] << ":";
       for (UInt_t icol=0; icol<nhvar; icol++) {
-         logger << setw(hLengths[icol]+1) << Form( "%+1.3f", M(irow,icol) );
+         logger << setw(hLengths[icol]+1) << TString::Format( "%+1.3f", M(irow,icol) );
       }
       logger << Endl;
    }
@@ -1048,7 +1048,7 @@ TString TMVA::Tools::GetXTitleWithUnit( const TString& title, const TString& uni
 TString TMVA::Tools::GetYTitleWithUnit( const TH1& h, const TString& unit, Bool_t normalised )
 {
    TString retval = ( normalised ? "(1/N) " : "" );
-   retval += Form( "dN_{ }/^{ }%.3g %s", h.GetXaxis()->GetBinWidth(1), unit.Data() );
+   retval += TString::Format( "dN_{ }/^{ }%.3g %s", h.GetXaxis()->GetBinWidth(1), unit.Data() );
    return retval;
 }
 
@@ -1233,7 +1233,7 @@ TString TMVA::Tools::StringFromInt( Long_t i )
 TString TMVA::Tools::StringFromDouble( Double_t d )
 {
    std::stringstream s;
-   s << Form( "%5.8e", d );
+   s << TString::Format( "%5.8e", d );
    return TString(s.str().c_str());
 }
 
@@ -1248,7 +1248,7 @@ void TMVA::Tools::WriteTMatrixDToXML( void* node, const char* name, TMatrixD* ma
    std::stringstream s;
    for (Int_t row = 0; row<mat->GetNrows(); row++) {
       for (Int_t col = 0; col<mat->GetNcols(); col++) {
-         s << Form( "%5.15e ", (*mat)[row][col] );
+         s << TString::Format( "%5.15e ", (*mat)[row][col] );
       }
    }
    xmlengine().AddRawLine( matnode, s.str().c_str() );
@@ -1331,7 +1331,7 @@ void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
    Int_t   iday   = idatqq%100;
    Int_t   imonth = (idatqq/100)%100;
    Int_t   iyear  = (idatqq/10000);
-   TString versionDate = Form("%s %d, %4d",months[imonth-1],iday,iyear);
+   TString versionDate = TString::Format("%s %d, %4d",months[imonth-1],iday,iyear);
 
    logger << kHEADER ;
    logger << "You are running ROOT Version: " << gROOT->GetVersion() << ", " << versionDate << Endl;
@@ -1756,7 +1756,7 @@ Double_t TMVA::Tools::RMS(Long64_t n, const T *a, const Double_t *w)
 
 TH1* TMVA::Tools::GetCumulativeDist( TH1* h)
 {
-   TH1* cumulativeDist= (TH1*) h->Clone(Form("%sCumul",h->GetTitle()));
+   TH1* cumulativeDist= (TH1*) h->Clone(TString::Format("%sCumul",h->GetTitle()));
    //cumulativeDist->Smooth(5); // with this, I get less beautiful ROC curves, hence out!
 
    Float_t partialSum = 0;

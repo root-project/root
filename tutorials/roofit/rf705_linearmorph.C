@@ -4,8 +4,8 @@
 /// Special pdf's: linear interpolation between pdf shapes using the 'Alex Read' algorithm
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -31,7 +31,7 @@ void rf705_linearmorph()
 
    // Lower end point shape: a Gaussian
    RooRealVar g1mean("g1mean", "g1mean", -10);
-   RooGaussian g1("g1", "g1", x, g1mean, RooConst(2));
+   RooGaussian g1("g1", "g1", x, g1mean, 2.0);
 
    // Upper end point shape: a Polynomial
    RooPolynomial g2("g2", "g2", x, RooArgSet(-0.03, -0.001));
@@ -88,11 +88,11 @@ void rf705_linearmorph()
 
    // Generate a toy dataset at alpha = 0.8
    alpha = 0.8;
-   RooDataSet *data = lmorph.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{lmorph.generate(x, 1000)};
 
    // Fit pdf to toy data
    lmorph.setCacheAlpha(true);
-   lmorph.fitTo(*data, Verbose(true));
+   lmorph.fitTo(*data, Verbose(true), PrintLevel(-1));
 
    // Plot fitted pdf and data overlaid
    RooPlot *frame2 = x.frame(Bins(100));

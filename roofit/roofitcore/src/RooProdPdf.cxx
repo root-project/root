@@ -354,12 +354,12 @@ RooProdPdf::~RooProdPdf()
 
 RooProdPdf::CacheElem* RooProdPdf::getCacheElem(RooArgSet const* nset) const {
   int code ;
-  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, 0, &code)) ;
+  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, nullptr, &code)) ;
 
   // If cache doesn't have our configuration, recalculate here
   if (!cache) {
     code = getPartIntList(nset, nullptr) ;
-    cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, 0, &code)) ;
+    cache = static_cast<CacheElem*>(_cacheMgr.getObj(nset, nullptr, &code)) ;
   }
   return cache;
 }
@@ -410,24 +410,24 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::calculateBatch(const RooProdPdf::CacheElem& cache, cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProdPdf::calculateBatch(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, double *output,
+                                size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-
-  if (cache._isRearranged) {
-    auto numerator = dataMap.at(cache._rearrangedNum.get());
-    auto denominator = dataMap.at(cache._rearrangedDen.get());
-    dispatch->compute(stream, RooBatchCompute::Ratio, output, nEvents, {numerator, denominator});
-  } else {
-    RooBatchCompute::VarVector factors;
-    factors.reserve(cache._partList.size());
-    for (const RooAbsArg *i : cache._partList) {
-       auto span = dataMap.at(i);
-       factors.push_back(span);
-    }
-    RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
-    dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, factors, special);
-  }
+   if (cache._isRearranged) {
+      auto numerator = dataMap.at(cache._rearrangedNum.get());
+      auto denominator = dataMap.at(cache._rearrangedDen.get());
+      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Ratio, output, nEvents,
+                               {numerator, denominator});
+   } else {
+      RooBatchCompute::VarVector factors;
+      factors.reserve(cache._partList.size());
+      for (const RooAbsArg *i : cache._partList) {
+         auto span = dataMap.at(i);
+         factors.push_back(span);
+      }
+      RooBatchCompute::ArgVector special{static_cast<double>(factors.size())};
+      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::ProdPdf, output, nEvents, factors, special);
+   }
 }
 
 namespace {
@@ -481,10 +481,10 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   std::vector<RooArgSet> depIntNoNormList;
 
   // Setup lists for factorization terms and their dependents
-  RooArgSet* term(0);
-  RooArgSet* termNormDeps(0);
-  RooArgSet* termIntDeps(0);
-  RooArgSet* termIntNoNormDeps(0);
+  RooArgSet* term(nullptr);
+  RooArgSet* termNormDeps(nullptr);
+  RooArgSet* termIntDeps(nullptr);
+  RooArgSet* termIntNoNormDeps(nullptr);
 
   std::vector<RooAbsArg*> pdfIntNoNormDeps;
   std::vector<RooAbsArg*> pdfIntSet;
@@ -506,7 +506,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // RooAbsArg::treeNodeServer list is relatively expensive, so we only do it
     // once and use it in a lambda function.
     RooArgSet pdfLeafList("leafNodeServerList") ;
-    pdf.treeNodeServerList(&pdfLeafList,0,false,true,true) ;
+    pdf.treeNodeServerList(&pdfLeafList,nullptr,false,true,true) ;
     auto getObservablesOfCurrentPdf = [&pdfLeafList](
             std::vector<RooAbsArg*> & out,
             const RooArgSet& dataList) {
@@ -630,13 +630,17 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // Make list of wholly imported dependents
     RooArgSet impDeps(depAllList[i]);
     impDeps.remove(*normDeps, true, true);
-    impDepList.Add(impDeps.snapshot());
+    auto snap = new RooArgSet;
+    impDeps.snapshot(*snap);
+    impDepList.Add(snap);
 //     cout << GetName() << ": list of imported dependents for term " << (*term) << " set to " << impDeps << endl ;
 
     // Make list of cross dependents (term is self contained for these dependents,
     // but components import dependents from other components)
     auto crossDeps = std::unique_ptr<RooAbsCollection>{depIntNoNormList[i].selectCommon(*normDeps)};
-    crossDepList.Add(crossDeps->snapshot());
+    snap = new RooArgSet;
+    crossDeps->snapshot(*snap);
+    crossDepList.Add(snap);
 //     cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << endl ;
   }
 
@@ -718,7 +722,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 //       cout<<"FK: termImpSet.getSize()  = "<<termImpSet.getSize()<< " " << termImpSet << endl;
 //       cout<<"FK: _refRangeName = "<<_refRangeName<<endl;
 
-      if (!termImpSet.empty() && 0 != _refRangeName) {
+      if (!termImpSet.empty() && nullptr != _refRangeName) {
 
 //    cout << "WVE now here" << endl;
 
@@ -758,7 +762,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
    imps=(RooArgSet*)imp.At(termIdx);
    RooArgSet termNSet(*norm), termImpSet(*imps);
 
-   if (!termImpSet.empty() && 0 != _refRangeName) {
+   if (!termImpSet.empty() && nullptr != _refRangeName) {
 
      // WVE we can skip this if the ref range is equal to the normalization range
      bool rangeIdentical(true);
@@ -835,15 +839,13 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned);
         if (func[0]) {
           cache->_partList.add(*func[0]);
-          if (isOwned) cache->_ownedList.addOwned(*func[0]);
+          if (isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func[0]});
 
-          cache->_normList.emplace_back(norm->snapshot(false));
+          cache->_normList.emplace_back(std::make_unique<RooArgSet>());
+          norm->snapshot(*cache->_normList.back(), false);
 
-          cache->_numList.addOwned(*func[1]);
-          cache->_denList.addOwned(*func[2]);
-//          cout << "func[0]=" << func[0]->ClassName() << "::" << func[0]->GetName() << endl;
-//          cout << "func[1]=" << func[1]->ClassName() << "::" << func[1]->GetName() << endl;
-//          cout << "func[2]=" << func[2]->ClassName() << "::" << func[2]->GetName() << endl;
+          cache->_numList.addOwned(std::unique_ptr<RooAbsArg>{func[1]});
+          cache->_denList.addOwned(std::unique_ptr<RooAbsArg>{func[2]});
         }
       } else {
 //        cout << "processing composite item" << endl;
@@ -870,7 +872,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 //       cout << GetName() << ": created composite term component " << func[0]->GetName() << endl;
    if (func[0]) {
      compTermSet.add(*func[0]);
-     if (isOwned) cache->_ownedList.addOwned(*func[0]);
+     if (isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func[0]});
      compTermNorm.add(*norm, false);
 
      compTermNum.add(*func[1]);
@@ -900,12 +902,12 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       cache->_partList.add(*inttmp);
 
       // Product of numerator terms
-      const string prodname_num = makeRGPPName("SPECPROD_NUM", compTermNum, RooArgSet(), RooArgSet(), 0);
+      const string prodname_num = makeRGPPName("SPECPROD_NUM", compTermNum, RooArgSet(), RooArgSet(), nullptr);
       auto prodtmp_num = std::make_unique<RooProduct>(prodname_num.c_str(), prodname_num.c_str(), compTermNum);
       prodtmp_num->addOwnedComponents(compTermNum);
 
       // Product of denominator terms
-      const string prodname_den = makeRGPPName("SPECPROD_DEN", compTermDen, RooArgSet(), RooArgSet(), 0);
+      const string prodname_den = makeRGPPName("SPECPROD_DEN", compTermDen, RooArgSet(), RooArgSet(), nullptr);
       auto prodtmp_den = std::make_unique<RooProduct>(prodname_den.c_str(), prodname_den.c_str(), compTermDen);
       prodtmp_den->addOwnedComponents(compTermDen);
 
@@ -922,8 +924,9 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       cache->_ownedList.addOwned(std::move(prodtmp_num));
       cache->_ownedList.addOwned(std::move(prodtmp_den));
       cache->_numList.addOwned(std::move(numtmp));
-      cache->_denList.addOwned(*(RooAbsArg*)RooFit::RooConst(1).clone("1"));
-      cache->_normList.emplace_back(compTermNorm.snapshot(false));
+      cache->_denList.addOwned(std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg*>(RooFit::RooConst(1).clone("1"))});
+      cache->_normList.emplace_back(std::make_unique<RooArgSet>());
+      compTermNorm.snapshot(*cache->_normList.back(), false);
     }
   }
 
@@ -949,12 +952,13 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 
 std::unique_ptr<RooAbsReal> RooProdPdf::makeCondPdfRatioCorr(RooAbsReal& pdf, const RooArgSet& termNset, const RooArgSet& /*termImpSet*/, const char* normRangeTmp, const char* refRange) const
 {
-  RooAbsReal* ratio_num = pdf.createIntegral(termNset,normRangeTmp) ;
-  RooAbsReal* ratio_den = pdf.createIntegral(termNset,refRange) ;
+  std::unique_ptr<RooAbsReal> ratio_num{pdf.createIntegral(termNset,normRangeTmp)};
+  std::unique_ptr<RooAbsReal> ratio_den{pdf.createIntegral(termNset,refRange)};
   auto ratio = std::make_unique<RooFormulaVar>(Form("ratio(%s,%s)",ratio_num->GetName(),ratio_den->GetName()),"@0/@1",
                   RooArgList(*ratio_num,*ratio_den)) ;
 
-  ratio->addOwnedComponents(RooArgSet(*ratio_num,*ratio_den)) ;
+  ratio->addOwnedComponents(std::move(ratio_num));
+  ratio->addOwnedComponents(std::move(ratio_den));
   ratio->setAttribute("RATIO_TERM") ;
   return ratio ;
 }
@@ -973,16 +977,16 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   {
     std::vector<char> buf(strlen(_normRange.Data()) + 1);
     strcpy(buf.data(),_normRange.Data()) ;
-    char* save(0) ;
+    char* save(nullptr) ;
     char* token = R__STRTOK_R(buf.data(),",",&save) ;
     while(token) {
       rangeComps.push_back(token) ;
-      token = R__STRTOK_R(0,",",&save) ;
+      token = R__STRTOK_R(nullptr,",",&save) ;
     }
   }
 
 
-  map<string,RooArgSet> denListList ;
+  std::map<std::string,RooArgSet> denListList ;
   RooArgSet specIntDeps ;
   string specIntRange ;
 
@@ -1000,7 +1004,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //     cout << "corresponding denominator = " << den->GetName() << endl ;
 
 
-    RooFormulaVar* ratio(0) ;
+    RooFormulaVar* ratio(nullptr) ;
     RooArgSet origNumTerm ;
 
     if (string("SPECINT")==part->getStringAttribute("PROD_TERM_TYPE")) {
@@ -1086,13 +1090,13 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //        cout << "depends in value of ratio" << endl ;
 
        // Make specialize ratio instance
-       RooAbsReal* specializedRatio = specializeRatio(*(RooFormulaVar*)ratio,iter->c_str()) ;
+       std::unique_ptr<RooAbsReal> specializedRatio{specializeRatio(*(RooFormulaVar*)ratio,iter->c_str())};
 
 //        cout << "specRatio = " << endl ;
 //        specializedRatio->printComponentTree() ;
 
        // Replace generic ratio with specialized ratio
-       RooAbsArg *partCust(0) ;
+       RooAbsArg *partCust(nullptr) ;
        if (parg->InheritsFrom(RooAddition::Class())) {
 
 
@@ -1113,19 +1117,21 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //        cout << "customized function = " << endl ;
 //        partCust->printComponentTree() ;
 
-       RooAbsReal* specializedPartCust = specializeIntegral(*(RooAbsReal*)partCust,iter->c_str()) ;
+       std::unique_ptr<RooAbsReal> specializedPartCust{specializeIntegral(*(RooAbsReal*)partCust,iter->c_str())};
 
        // Finally divide again by ratio
        string name = Form("%s_divided_by_ratio",specializedPartCust->GetName()) ;
-       RooFormulaVar* specIntFinal = new RooFormulaVar(name.c_str(),"@0/@1",RooArgList(*specializedPartCust,*specializedRatio)) ;
+       auto specIntFinal = std::make_unique<RooFormulaVar>(name.c_str(),"@0/@1",RooArgList(*specializedPartCust,*specializedRatio)) ;
+       specIntFinal->addOwnedComponents(std::move(specializedPartCust));
+       specIntFinal->addOwnedComponents(std::move(specializedRatio));
 
-       denListList[*iter].add(*specIntFinal) ;
+       denListList[*iter].addOwned(std::move(specIntFinal));
      } else {
 
 //        cout << "does NOT depend on value of ratio" << endl ;
 //        parg->Print("t") ;
 
-       denListList[*iter].add(*specializeIntegral(*parg,iter->c_str())) ;
+       denListList[*iter].addOwned(specializeIntegral(*parg,iter->c_str()));
 
      }
    }
@@ -1134,33 +1140,37 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
    if (ratio) {
 
-     RooAbsReal* specRatio = specializeRatio(*(RooFormulaVar*)ratio,iter->c_str()) ;
+     std::unique_ptr<RooAbsReal> specRatio{specializeRatio(*(RooFormulaVar*)ratio,iter->c_str())};
 
      // If integral is 'Int r(y)*g(y) dy ' then divide a posteriori by r(y)
 //      cout << "have ratio, orig den = " << den->GetName() << endl ;
 
      RooArgSet tmp(origNumTerm) ;
      tmp.add(*specRatio) ;
-     const string pname = makeRGPPName("PROD",tmp,RooArgSet(),RooArgSet(),0) ;
-     RooProduct* specDenProd = new RooProduct(pname.c_str(),pname.c_str(),tmp) ;
-     RooAbsReal* specInt(0) ;
+     const string pname = makeRGPPName("PROD",tmp,RooArgSet(),RooArgSet(),nullptr) ;
+     auto specDenProd = std::make_unique<RooProduct>(pname.c_str(),pname.c_str(),tmp) ;
+     std::unique_ptr<RooAbsReal> specInt;
 
      if (den->InheritsFrom(RooRealIntegral::Class())) {
-       specInt = specDenProd->createIntegral(((RooRealIntegral*)den)->intVars(),iter->c_str()) ;
+       specInt = std::unique_ptr<RooAbsReal>{specDenProd->createIntegral(((RooRealIntegral*)den)->intVars(),iter->c_str())};
+       specInt->addOwnedComponents(std::move(specDenProd));
      } else if (den->InheritsFrom(RooAddition::Class())) {
        RooAddition* orig = (RooAddition*)den ;
        RooRealIntegral* origInt = (RooRealIntegral*) orig->list1().first() ;
-       specInt = specDenProd->createIntegral(origInt->intVars(),iter->c_str()) ;
+       specInt = std::unique_ptr<RooAbsReal>{specDenProd->createIntegral(origInt->intVars(),iter->c_str())};
+       specInt->addOwnedComponents(std::move(specDenProd));
      } else {
        throw string("this should not happen") ;
      }
 
      //RooAbsReal* specInt = specializeIntegral(*den,iter->c_str()) ;
      string name = Form("%s_divided_by_ratio",specInt->GetName()) ;
-     RooFormulaVar* specIntFinal = new RooFormulaVar(name.c_str(),"@0/@1",RooArgList(*specInt,*specRatio)) ;
-     denListList[*iter].add(*specIntFinal) ;
+     auto specIntFinal = std::make_unique<RooFormulaVar>(name.c_str(),"@0/@1",RooArgList(*specInt,*specRatio)) ;
+     specIntFinal->addOwnedComponents(std::move(specInt));
+     specIntFinal->addOwnedComponents(std::move(specRatio));
+     denListList[*iter].addOwned(std::move(specIntFinal));
    } else {
-     denListList[*iter].add(*specializeIntegral(*den,iter->c_str())) ;
+     denListList[*iter].addOwned(specializeIntegral(*den,iter->c_str()));
    }
 
       }
@@ -1176,7 +1186,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   string name = Form("%s_numerator",GetName()) ;
   // WVE FIX THIS (2)
 
-  RooAbsReal* numerator = new RooProduct(name.c_str(),name.c_str(),nomList) ;
+  std::unique_ptr<RooAbsReal> numerator = std::make_unique<RooProduct>(name.c_str(),name.c_str(),nomList) ;
 
   RooArgSet products ;
 //   cout << "nomList = " << nomList << endl ;
@@ -1185,22 +1195,23 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
     name = Form("%s_denominator_comp_%s",GetName(),iter->first.c_str()) ;
     // WVE FIX THIS (2)
     RooProduct* prod_comp = new RooProduct(name.c_str(),name.c_str(),iter->second) ;
+    prod_comp->addOwnedComponents(std::move(iter->second));
     products.add(*prod_comp) ;
   }
   name = Form("%s_denominator_sum",GetName()) ;
   RooAbsReal* norm = new RooAddition(name.c_str(),name.c_str(),products) ;
   norm->addOwnedComponents(products) ;
 
-  if (specIntDeps.getSize()>0) {
+  if (!specIntDeps.empty()) {
     // Apply posterior integration required for SPECINT case
 
     string namesr = Form("SPEC_RATIO(%s,%s)",numerator->GetName(),norm->GetName()) ;
     RooFormulaVar* ndr = new RooFormulaVar(namesr.c_str(),"@0/@1",RooArgList(*numerator,*norm)) ;
+    ndr->addOwnedComponents(std::move(numerator));
 
     // Integral of ratio
-    RooAbsReal* numtmp = ndr->createIntegral(specIntDeps,specIntRange.c_str()) ;
+    numerator = std::unique_ptr<RooAbsReal>{ndr->createIntegral(specIntDeps,specIntRange.c_str())};
 
-    numerator = numtmp ;
     norm = (RooAbsReal*) RooFit::RooConst(1).Clone() ;
   }
 
@@ -1214,7 +1225,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   // WVE DEBUG
   //RooMsgService::instance().debugWorkspace()->import(RooArgSet(*numerator,*norm)) ;
 
-  cache._rearrangedNum.reset(numerator);
+  cache._rearrangedNum = std::move(numerator);
   cache._rearrangedDen.reset(norm);
   cache._isRearranged = true ;
 
@@ -1223,31 +1234,31 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsReal* RooProdPdf::specializeRatio(RooFormulaVar& input, const char* targetRangeName) const
+std::unique_ptr<RooAbsReal> RooProdPdf::specializeRatio(RooFormulaVar& input, const char* targetRangeName) const
 {
   RooRealIntegral* numint = (RooRealIntegral*) input.getParameter(0) ;
   RooRealIntegral* denint = (RooRealIntegral*) input.getParameter(1) ;
 
-  RooAbsReal* numint_spec = specializeIntegral(*numint,targetRangeName) ;
+  std::unique_ptr<RooAbsReal> numint_spec{specializeIntegral(*numint,targetRangeName)};
 
-  RooAbsReal* ret =  new RooFormulaVar(Form("ratio(%s,%s)",numint_spec->GetName(),denint->GetName()),"@0/@1",RooArgList(*numint_spec,*denint)) ;
-  ret->addOwnedComponents(*numint_spec) ;
+  std::unique_ptr<RooAbsReal> ret = std::make_unique<RooFormulaVar>(Form("ratio(%s,%s)",numint_spec->GetName(),denint->GetName()),"@0/@1",RooArgList(*numint_spec,*denint)) ;
+  ret->addOwnedComponents(std::move(numint_spec));
 
-  return ret ;
+  return ret;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsReal* RooProdPdf::specializeIntegral(RooAbsReal& input, const char* targetRangeName) const
+std::unique_ptr<RooAbsReal> RooProdPdf::specializeIntegral(RooAbsReal& input, const char* targetRangeName) const
 {
   if (input.InheritsFrom(RooRealIntegral::Class())) {
 
     // If input is integral, recreate integral but override integration range to be targetRangeName
     RooRealIntegral* orig = (RooRealIntegral*)&input ;
 //     cout << "creating integral: integrand =  " << orig->integrand().GetName() << " vars = " << orig->intVars() << " range = " << targetRangeName << endl ;
-    return orig->integrand().createIntegral(orig->intVars(),targetRangeName) ;
+    return std::unique_ptr<RooAbsReal>{orig->integrand().createIntegral(orig->intVars(),targetRangeName)};
 
   } else if (input.InheritsFrom(RooAddition::Class())) {
 
@@ -1255,14 +1266,12 @@ RooAbsReal* RooProdPdf::specializeIntegral(RooAbsReal& input, const char* target
     RooAddition* orig = (RooAddition*)&input ;
     RooRealIntegral* origInt = (RooRealIntegral*) orig->list1().first() ;
 //     cout << "creating integral from addition: integrand =  " << origInt->integrand().GetName() << " vars = " << origInt->intVars() << " range = " << targetRangeName << endl ;
-    return origInt->integrand().createIntegral(origInt->intVars(),targetRangeName) ;
-
-  } else {
-
-//     cout << "specializeIntegral: unknown input type " << input.ClassName() << "::" << input.GetName() << endl ;
+    return std::unique_ptr<RooAbsReal>{origInt->integrand().createIntegral(origInt->intVars(),targetRangeName)};
   }
 
-  return &input ;
+  std::stringstream errMsg;
+  errMsg << "specializeIntegral: unknown input type " << input.ClassName() << "::" << input.GetName();
+  throw std::runtime_error(errMsg.str());
 }
 
 
@@ -1354,12 +1363,12 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
                      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
                      bool& isOwned, bool forceWrap) const
 {
-  vector<RooAbsReal*> ret(3) ; ret[0] = 0 ; ret[1] = 0 ; ret[2] = 0 ;
+  vector<RooAbsReal*> ret(3) ; ret[0] = nullptr ; ret[1] = nullptr ; ret[2] = nullptr ;
 
   // CASE I: factorizing term: term is integrated over all normalizing observables
   // -----------------------------------------------------------------------------
   // Check if all observbales of this term are integrated. If so the term cancels
-  if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize() && isetRangeName==0) {
+  if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize() && isetRangeName==nullptr) {
 
 
     //cout << "processProductTerm(" << GetName() << ") case I " << endl ;
@@ -1386,7 +1395,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
       RooAbsPdf* pdf = (RooAbsPdf*) term->first() ;
 
-      RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet,isetRangeName) ;
+      RooAbsReal* partInt = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,termNSet,isetRangeName)}.release();
       partInt->setOperMode(operMode()) ;
       partInt->setStringAttribute("PROD_TERM_TYPE","IIIa") ;
 
@@ -1397,8 +1406,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       ret[0] = partInt ;
 
       // Split mode results
-      ret[1] = pdf->createIntegral(termISet,isetRangeName) ;
-      ret[2] = pdf->createIntegral(termNSet,normRange()) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,isetRangeName)}.release();
+      ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
 
       return ret ;
 
@@ -1419,13 +1428,13 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       isOwned=true ;
       ret[0] = partInt ;
 
-      const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
+      const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),nullptr) ;
 
       // WVE FIX THIS
       RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
-      ret[1] = tmp_prod->createIntegral(termISet,isetRangeName) ;
-      ret[2] = tmp_prod->createIntegral(termNSet,normRange()) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)}.release();
+      ret[2] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())}.release();
 
       return ret ;
     }
@@ -1448,13 +1457,13 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     isOwned=true ;
     ret[0] = partInt ;
 
-    const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),0) ;
+    const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),nullptr) ;
 
     // WVE FIX THIS
     RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
-    ret[1] = tmp_prod->createIntegral(termISet,isetRangeName) ;
-    ret[2] = tmp_prod->createIntegral(termNSet,normRange()) ;
+    ret[1] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)}.release();
+    ret[2] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())}.release();
 
     return ret ;
   }
@@ -1491,8 +1500,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
       ret[0] = partInt ;
 
-      ret[1] = pdf->createIntegral(RooArgSet()) ;
-      ret[2] = pdf->createIntegral(termNSet,normRange()) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
+      ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
 
       return ret ;
 
@@ -1506,8 +1515,9 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       pdf->setStringAttribute("PROD_TERM_TYPE","IVb") ;
       ret[0] = pdf ;
 
-      ret[1] = pdf->createIntegral(RooArgSet()) ;
-      ret[2] = termNSet.getSize()>0 ? pdf->createIntegral(termNSet,normRange()) : ((RooAbsReal*)RooFit::RooConst(1).clone("1")) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
+      ret[2] = !termNSet.empty() ? std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release()
+                                 : ((RooAbsReal*)RooFit::RooConst(1).clone("1"));
       return ret  ;
     }
   }
@@ -1603,7 +1613,7 @@ double RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, co
   CacheElem* cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
 
   // If cache has been sterilized, revive this slot
-  if (cache==0) {
+  if (cache==nullptr) {
     std::unique_ptr<RooArgSet> vars{getParameters(RooArgSet())} ;
     RooArgSet nset = _cacheMgr.selectFromSet1(*vars, code-1) ;
     RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1) ;
@@ -1645,9 +1655,18 @@ double RooProdPdf::expectedEvents(const RooArgSet* nset) const
     throw std::logic_error(std::string("RooProdPdf ") + GetName() + " could not be extended.");
   }
 
-  return ((RooAbsPdf*)_pdfList.at(_extendedIndex))->expectedEvents(nset) ;
+  return static_cast<RooAbsPdf*>(_pdfList.at(_extendedIndex))->expectedEvents(nset) ;
 }
 
+std::unique_ptr<RooAbsReal> RooProdPdf::createExpectedEventsFunc(const RooArgSet* nset) const
+{
+  if (_extendedIndex<0) {
+    coutF(Generation) << "Requesting expected number of events from a RooProdPdf that does not contain an extended p.d.f" << endl ;
+    throw std::logic_error(std::string("RooProdPdf ") + GetName() + " could not be extended.");
+  }
+
+  return static_cast<RooAbsPdf*>(_pdfList.at(_extendedIndex))->createExpectedEventsFunc(nset);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1789,7 +1808,7 @@ bool RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
   if (!_useDefaultGen) return RooAbsPdf::isDirectGenSafe(arg) ;
 
   // Argument may appear in only one PDF component
-  RooAbsPdf* thePdf(0) ;
+  RooAbsPdf* thePdf(nullptr) ;
   for (auto* pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
 
     if (pdf->dependsOn(arg)) {
@@ -1931,25 +1950,34 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
   auto constrainedParamsNamePtrs = sortedNamePtrs(constrainedParams);
 
   // Loop over PDF components
-  for(auto * pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
-    // A constraint term is a p.d.f that does not depend on any of the listed observables
-    // but does depends on any of the parameters that should be constrained
+  for (std::size_t iPdf = 0; iPdf < _pdfList.size(); ++iPdf) {
+    auto * pdf = static_cast<RooAbsPdf*>(&_pdfList[iPdf]);
+
     RooArgSet tmp;
     pdf->getParameters(nullptr, tmp);
-    auto tmpNamePtrs = sortedNamePtrs(tmp);
-    // Before, there were calls to `pdf->dependsOn()` here, but they were very
-    // expensive for large computation graphs! Given that we have to traverse
-    // the computation graph with a call to `pdf->getParameters()` anyway, we
-    // can just check if the set of all variables operlaps with the observables
-    // or constraind parameters.
-    //
-    // We are using an optimized implementation of overlap checking. Because
-    // the overlap is checked by name, we can check overlap of the
-    // corresponding name pointers. The optimization can't be in
-    // RooAbsCollection itself, because it is crucial that the memory for the
-    // non-tmp name pointers is not reallocated for each pdf.
-    if (!sortedNamePtrsOverlap(tmpNamePtrs, observablesNamePtrs) &&
-        sortedNamePtrsOverlap(tmpNamePtrs, constrainedParamsNamePtrs)) {
+
+    // A constraint term is a p.d.f that doesn't contribute to the
+    // expectedEvents() and does not depend on any of the listed observables
+    // but does depends on any of the parameters that should be constrained
+    bool isConstraint = false;
+
+    if(static_cast<int>(iPdf) != _extendedIndex) {
+      auto tmpNamePtrs = sortedNamePtrs(tmp);
+      // Before, there were calls to `pdf->dependsOn()` here, but they were very
+      // expensive for large computation graphs! Given that we have to traverse
+      // the computation graph with a call to `pdf->getParameters()` anyway, we
+      // can just check if the set of all variables operlaps with the observables
+      // or constraind parameters.
+      //
+      // We are using an optimized implementation of overlap checking. Because
+      // the overlap is checked by name, we can check overlap of the
+      // corresponding name pointers. The optimization can't be in
+      // RooAbsCollection itself, because it is crucial that the memory for the
+      // non-tmp name pointers is not reallocated for each pdf.
+      isConstraint = !sortedNamePtrsOverlap(tmpNamePtrs, observablesNamePtrs) &&
+                     sortedNamePtrsOverlap(tmpNamePtrs, constrainedParamsNamePtrs);
+    }
+    if (isConstraint) {
       constraints.add(*pdf) ;
       conParams.add(tmp,true) ;
     } else {
@@ -2002,11 +2030,14 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
 RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) const
 {
   RooArgSet* connectedPars  = new RooArgSet("connectedPars") ;
-  for (const auto arg : _pdfList) {
-    // Check if term is relevant
-    if (arg->dependsOn(observables)) {
+  for (std::size_t iPdf = 0; iPdf < _pdfList.size(); ++iPdf) {
+    auto * pdf = static_cast<RooAbsPdf*>(&_pdfList[iPdf]);
+    // Check if term is relevant, either because it provides a probablity
+    // density in the observables or because it is used for the expected
+    // events.
+    if (static_cast<int>(iPdf) == _extendedIndex || pdf->dependsOn(observables)) {
       RooArgSet tmp;
-      arg->getParameters(&observables, tmp);
+      pdf->getParameters(&observables, tmp);
       connectedPars->add(tmp) ;
     }
   }
@@ -2312,14 +2343,18 @@ public:
 
    inline bool canComputeBatchWithCuda() const override { return true; }
 
-   void computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+   void computeBatch(double *output, size_t nEvents,
                      RooFit::Detail::DataMap const &dataMap) const override
    {
-      _prodPdf->calculateBatch(*_cache, stream, output, nEvents, dataMap);
+      _prodPdf->calculateBatch(this, *_cache, output, nEvents, dataMap);
    }
 
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }
    double expectedEvents(const RooArgSet * /*nset*/) const override { return _prodPdf->expectedEvents(&_normSet); }
+   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
+   {
+      return _prodPdf->createExpectedEventsFunc(&_normSet);
+   }
 
    // Analytical Integration handling
    bool forceAnalyticalInt(const RooAbsArg &dep) const override { return _prodPdf->forceAnalyticalInt(dep); }
@@ -2371,25 +2406,28 @@ private:
 std::unique_ptr<RooAbsArg>
 RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
-   std::unique_ptr<RooProdPdf> prodPdfClone{static_cast<RooProdPdf *>(this->Clone())};
-   prodPdfClone->setAttribute("_COMPILED");
+   if (ctx.likelihoodMode()) {
+      auto binnedInfo = RooHelpers::getBinnedL(*this);
+      if (binnedInfo.binnedPdf && binnedInfo.binnedPdf != this) {
+         return binnedInfo.binnedPdf->compileForNormSet(normSet, ctx);
+      }
+   }
 
-   RooArgList serverClones;
+   std::unique_ptr<RooProdPdf> prodPdfClone{static_cast<RooProdPdf *>(this->Clone())};
+   ctx.markAsCompiled(*prodPdfClone);
+
    for (const auto server : prodPdfClone->servers()) {
       auto nsetForServer = fillNormSetForServer(normSet, *server);
       RooArgSet const &nset = nsetForServer ? *nsetForServer : normSet;
 
-      auto depList = new RooArgSet; // INTENTIONAL LEAK FOR NOW!
-      server->getObservables(&nset, *depList);
+      RooArgSet depList;
+      server->getObservables(&nset, depList);
 
-      if (auto serverClone = ctx.compile(*server, *prodPdfClone, *depList)) {
-         serverClones.add(*serverClone);
-      }
+      ctx.compileServer(*server, *prodPdfClone, depList);
    }
-   prodPdfClone->redirectServers(serverClones, false, true);
 
    auto fixedProdPdf = std::make_unique<RooFixedProdPdf>(std::move(prodPdfClone), normSet);
-   fixedProdPdf->setAttribute("_COMPILED");
+   ctx.markAsCompiled(*fixedProdPdf);
 
    return fixedProdPdf;
 }

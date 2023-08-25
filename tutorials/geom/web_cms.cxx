@@ -7,13 +7,12 @@
 /// \author Sergey Linev
 
 #include <ROOT/RGeomViewer.hxx>
-#include <ROOT/RDirectory.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TFile.h"
 
-void web_cms()
+void web_cms(bool split = false)
 {
    TFile::SetCacheFileDir(".");
 
@@ -36,9 +35,7 @@ void web_cms()
    gGeoManager->GetVolume("EAP4")->SetLineColor(7);
    gGeoManager->GetVolume("HTC1")->SetLineColor(2);
 
-   using namespace ROOT::Experimental;
-
-   auto viewer = std::make_shared<RGeomViewer>(gGeoManager);
+   auto viewer = std::make_shared<ROOT::RGeomViewer>(gGeoManager);
 
    // select volume to draw
    viewer->SelectVolume("CMSE");
@@ -50,9 +47,23 @@ void web_cms()
    // when viewer created, initial values exported from TGeoManager
    viewer->SetLimits();
 
-   // start browser
+   viewer->SetShowHierarchy(!split);
+
+   // start web browser
    viewer->Show();
 
-   // add to global heap to avoid immediate destroy of RGeomViewer
-   RDirectory::Heap().Add("geom_viewer", viewer);
+   // destroy viewer only when connection to client is closed
+   viewer->ClearOnClose(viewer);
+
+   if (split) {
+      // create separate widget with geometry hierarchy only
+      auto hier = std::make_shared<ROOT::RGeomHierarchy>(viewer->Description());
+
+      // start web browser with hierarchy
+      hier->Show();
+
+      // destroy widget only when connection to client is closed
+      hier->ClearOnClose(hier);
+   }
+
 }

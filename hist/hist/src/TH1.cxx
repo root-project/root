@@ -2477,6 +2477,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 /// By default the full range of the histogram is used.
 /// Use option "R" for restricting the chisquare calculation to the given range of the function
 /// Use option "L" for using the chisquare based on the poisson likelihood (Baker-Cousins Chisquare)
+/// Use option "P" for using the Pearson chisquare based on the expected bin errors
 
 Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 {
@@ -2487,9 +2488,11 @@ Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 
    TString opt(option); opt.ToUpper();
    bool useRange = opt.Contains("R");
-   bool usePL = opt.Contains("L");
+   ROOT::Fit::EChisquareType type = ROOT::Fit::EChisquareType::kNeyman;  // default chi2 with observed error
+   if (opt.Contains("L")) type = ROOT::Fit::EChisquareType::kPLikeRatio;
+   else if (opt.Contains("P")) type = ROOT::Fit::EChisquareType::kPearson;
 
-   return ROOT::Fit::Chisquare(*this, *func, useRange, usePL);
+   return ROOT::Fit::Chisquare(*this, *func, useRange, type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4261,7 +4264,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 {
    // implementation of Fit method is in file hist/src/HFitImpl.cxx
    Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kHistogram,option,fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kHistogram,option,fitOption);
 
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(xxmin,xxmax);
@@ -4617,7 +4620,7 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 
 Int_t TH1::FitOptionsMake(Option_t *choptin, Foption_t &fitOption)
 {
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kHistogram, choptin,fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kHistogram, choptin,fitOption);
    return 1;
 }
 
@@ -6654,7 +6657,7 @@ UInt_t TH1::SetCanExtend(UInt_t extendBitMask)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Internal function used in TH1::Fill to see which axis is full alphanumeric
+/// Internal function used in TH1::Fill to see which axis is full alphanumeric,
 /// i.e. can be extended and is alphanumeric
 UInt_t TH1::GetAxisLabelStatus() const
 {
@@ -6690,9 +6693,9 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change (i.e. set) the title
+/// Change/set the title.
 ///
-/// if title is in the form `stringt;stringx;stringy;stringz`
+/// If title is in the form `stringt;stringx;stringy;stringz`
 /// the histogram title is set to `stringt`, the x axis title to `stringx`,
 /// the y axis title to `stringy`, and the z axis title to `stringz`.
 ///
@@ -6744,8 +6747,8 @@ void TH1::SetTitle(const char *title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Smooth array xx, translation of Hbook routine hsmoof.F
-/// based on algorithm 353QH twice presented by J. Friedman
+/// Smooth array xx, translation of Hbook routine `hsmoof.F`.
+/// Based on algorithm 353QH twice presented by J. Friedman
 /// in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
 
 void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)

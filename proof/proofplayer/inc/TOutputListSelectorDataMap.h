@@ -31,11 +31,11 @@ class TOutputListSelectorDataMap: public TObject {
 public:
 
    TOutputListSelectorDataMap(TSelector* sel = 0);
-   virtual ~TOutputListSelectorDataMap() {}
+   ~TOutputListSelectorDataMap() override {}
 
    static TOutputListSelectorDataMap* FindInList(TCollection* coll);
 
-   const char* GetName() const;
+   const char* GetName() const override;
 
    Bool_t Init(TSelector* sel);
    Bool_t SetDataMembers(TSelector* sel) const;
@@ -45,7 +45,7 @@ public:
 
 private:
    TCollection* fMap;
-   ClassDef(TOutputListSelectorDataMap, 1)  // Converter from output list to TSelector data members
+   ClassDefOverride(TOutputListSelectorDataMap, 1)  // Converter from output list to TSelector data members
 };
 
 

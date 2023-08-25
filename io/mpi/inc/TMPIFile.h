@@ -71,10 +71,10 @@ private:
       
    public:
       ParallelFileMerger(const char *filename, Int_t compression_settings, Bool_t writeCache = kFALSE);
-      virtual ~ParallelFileMerger();
+      ~ParallelFileMerger() override;
 
-      ULong_t Hash() const { return fFilename.Hash(); };
-      const char *GetName() const { return fFilename; };
+      ULong_t Hash() const override { return fFilename.Hash(); };
+      const char *GetName() const override { return fFilename; };
 
       static Bool_t NeedInitialMerge(TDirectory *dir);
 
@@ -97,7 +97,7 @@ public:
             const char *ftitle = "", Int_t compress = 4);
    TMPIFile(const char *name, Option_t *option = "", Int_t split = 1, const char *ftitle = "",
             Int_t compress = 4); // no complete implementation
-   virtual ~TMPIFile();
+   ~TMPIFile() override;
 
    // some functions on MPI information
    Int_t GetMPIGlobalSize() const { return fMPIGlobalSize; };
@@ -122,6 +122,6 @@ public:
    // Finalize work and save output in disk.
    void Close(Option_t *option = "") final;
 
-   ClassDef(TMPIFile, 0)
+   ClassDefOverride(TMPIFile, 0)
 };
 #endif

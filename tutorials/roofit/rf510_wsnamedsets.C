@@ -5,8 +5,8 @@
 /// snapshots in workspaces
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date April 2009
 /// \author Wouter Verkerke
@@ -40,10 +40,10 @@ void rf510_wsnamedsets()
    RooAbsPdf *model = w->pdf("model");
 
    // Generate data from pdf in given observables
-   RooDataSet *data = model->generate(*w->set("observables"), 1000);
+   std::unique_ptr<RooDataSet> data{model->generate(*w->set("observables"), 1000)};
 
    // Fit model to data
-   model->fitTo(*data);
+   model->fitTo(*data, PrintLevel(-1));
 
    // Plot fitted model and data on frame of first (only) observable
    RooPlot *frame = ((RooRealVar *)w->set("observables")->first())->frame();
@@ -111,7 +111,7 @@ void fillWorkspace(RooWorkspace &w)
    // of defineSet must be set to import them on the fly. Named sets contain only references
    // to the original variables, therefore the value of observables in named sets already
    // reflect their 'current' value
-   RooArgSet *params = (RooArgSet *)model.getParameters(x);
+   std::unique_ptr<RooArgSet> params{model.getParameters(x)};
    w.defineSet("parameters", *params);
    w.defineSet("observables", x);
 
@@ -128,7 +128,7 @@ void fillWorkspace(RooWorkspace &w)
 
    // Do a dummy fit to a (supposedly) reference dataset here and store the results
    // of that fit into a snapshot
-   RooDataSet *refData = model.generate(x, 10000);
+   std::unique_ptr<RooDataSet> refData{model.generate(x, 10000)};
    model.fitTo(*refData, PrintLevel(-1));
 
    // The true flag imports the values of the objects in (*params) into the workspace

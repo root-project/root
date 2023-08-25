@@ -3,7 +3,9 @@
 ## \notebook
 ## Data and categories: demonstration of real-discrete mapping functions
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -16,7 +18,7 @@ import ROOT
 
 # Define a dummy PDF in x
 x = ROOT.RooRealVar("x", "x", 0, 10)
-a = ROOT.RooArgusBG("a", "argus(x)", x, ROOT.RooFit.RooConst(10), ROOT.RooFit.RooConst(-1))
+a = ROOT.RooArgusBG("a", "argus(x)", x, 10.0, -1.0)
 
 # Generate a dummy dataset
 data = a.generate({x}, 10000)

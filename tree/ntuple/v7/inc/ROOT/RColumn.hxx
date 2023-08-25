@@ -25,7 +25,9 @@
 
 #include <TError.h>
 
+#include <cstring> // for memcpy
 #include <memory>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
@@ -36,9 +38,6 @@ namespace Detail {
 \class ROOT::Experimental::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
-
-On the primitives data layer, the RColumn and RColumnElement are the equivalents to RField and RFieldValue on the
-logical data layer.
 */
 // clang-format on
 class RColumn {
@@ -71,6 +70,8 @@ private:
    RPage fReadPage;
    /// The column id is used to find matching pages with content when reading
    ColumnId_t fColumnIdSource = kInvalidColumnId;
+   /// Global index of the first element in this column; usually == 0, unless it is a deferred column
+   NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
 
@@ -99,11 +100,11 @@ private:
    }
 
 public:
-   template <typename CppT, EColumnType ColumnT>
-   static RColumn *Create(const RColumnModel &model, std::uint32_t index) {
-      R__ASSERT(model.GetType() == ColumnT);
-      auto column = new RColumn(model, index);
-      column->fElement = std::unique_ptr<RColumnElementBase>(new RColumnElement<CppT, ColumnT>(nullptr));
+   template <typename CppT>
+   static std::unique_ptr<RColumn> Create(const RColumnModel &model, std::uint32_t index)
+   {
+      auto column = std::unique_ptr<RColumn>(new RColumn(model, index));
+      column->fElement = RColumnElementBase::Generate<CppT>(model.GetType());
       return column;
    }
 
@@ -111,101 +112,114 @@ public:
    RColumn &operator =(const RColumn&) = delete;
    ~RColumn();
 
-   void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
+   /// Connect the column to a page storage.  If `pageStorage` is a page sink, `firstElementIndex` can be used to
+   /// specify the first column element index with backing storage for this column.  On read back, elements before
+   /// `firstElementIndex` will cause the zero page to be mapped.
+   /// TODO(jalopezg): at this point it would be nicer to distinguish between connecting a page sink and a page source
+   void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage, NTupleSize_t firstElementIndex = 0U);
 
-   void Append(const RColumnElementBase &element) {
+   void Append(const void *from)
+   {
       void *dst = fWritePage[fWritePageIdx].GrowUnchecked(1);
 
       if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
          FlushShadowWritePage();
       }
 
-      element.WriteTo(dst, 1);
+      std::memcpy(dst, from, fElement->GetSize());
       fNElements++;
 
       SwapWritePagesIfFull();
    }
 
-   void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
+   void AppendV(const void *from, std::size_t count)
+   {
       // We might not have enough space in the current page. In this case, fall back to one by one filling.
       if (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage) {
          // TODO(jblomer): use (fewer) calls to AppendV to write the data page-by-page
          for (unsigned i = 0; i < count; ++i) {
-            Append(RColumnElementBase(elemArray, i));
+            Append(static_cast<const unsigned char *>(from) + fElement->GetSize() * i);
          }
          return;
       }
 
-      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
-
       // The check for flushing the shadow page is more complicated than for the Append() case
       // because we don't necessarily fill up to exactly fApproxNElementsPerPage / 2 elements;
-      // we might instead jump over the 50% fill level
+      // we might instead jump over the 50% fill level.
+      // This check should be done before calling `RPage::GrowUnchecked()` as the latter affects the return value of
+      // `RPage::GetNElements()`.
       if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
           (fWritePage[fWritePageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2))
       {
          FlushShadowWritePage();
       }
 
-      elemArray.WriteTo(dst, count);
+      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
+
+      std::memcpy(dst, from, fElement->GetSize() * count);
       fNElements += count;
 
       // Note that by the very first check in AppendV, we cannot have filled more than fApproxNElementsPerPage elements
       SwapWritePagesIfFull();
    }
 
-   void Read(const NTupleSize_t globalIndex, RColumnElementBase *element) {
+   void Read(const NTupleSize_t globalIndex, void *to)
+   {
       if (!fReadPage.Contains(globalIndex)) {
          MapPage(globalIndex);
-         R__ASSERT(fReadPage.Contains(globalIndex));
       }
-      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-                  (globalIndex - fReadPage.GetGlobalRangeFirst()) * element->GetSize();
-      element->ReadFrom(src, 1);
+      const auto elemSize = fElement->GetSize();
+      void *from = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
+                   (globalIndex - fReadPage.GetGlobalRangeFirst()) * elemSize;
+      std::memcpy(to, from, elemSize);
    }
 
-   void Read(const RClusterIndex &clusterIndex, RColumnElementBase *element) {
+   void Read(const RClusterIndex &clusterIndex, void *to)
+   {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
-      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-                  (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * element->GetSize();
-      element->ReadFrom(src, 1);
+      const auto elemSize = fElement->GetSize();
+      void *from = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
+                   (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * elemSize;
+      std::memcpy(to, from, elemSize);
    }
 
-   void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, RColumnElementBase *elemArray) {
-      R__ASSERT(count > 0);
+   void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, void *to)
+   {
       if (!fReadPage.Contains(globalIndex)) {
          MapPage(globalIndex);
       }
       NTupleSize_t idxInPage = globalIndex - fReadPage.GetGlobalRangeFirst();
 
-      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemArray->GetSize();
+      const auto elemSize = fElement->GetSize();
+      const void *from = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemSize;
       if (globalIndex + count <= fReadPage.GetGlobalRangeLast() + 1) {
-         elemArray->ReadFrom(src, count);
+         std::memcpy(to, from, elemSize * count);
       } else {
          ClusterSize_t::ValueType nBatch = fReadPage.GetNElements() - idxInPage;
-         elemArray->ReadFrom(src, nBatch);
-         RColumnElementBase elemTail(*elemArray, nBatch);
-         ReadV(globalIndex + nBatch, count - nBatch, &elemTail);
+         std::memcpy(to, from, elemSize * nBatch);
+         auto tail = static_cast<unsigned char *>(to) + nBatch * elemSize;
+         ReadV(globalIndex + nBatch, count - nBatch, tail);
       }
    }
 
-   void ReadV(const RClusterIndex &clusterIndex, const ClusterSize_t::ValueType count, RColumnElementBase *elemArray)
+   void ReadV(const RClusterIndex &clusterIndex, const ClusterSize_t::ValueType count, void *to)
    {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
       NTupleSize_t idxInPage = clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst();
 
-      void* src = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemArray->GetSize();
+      const auto elemSize = fElement->GetSize();
+      const void *from = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemSize;
       if (clusterIndex.GetIndex() + count <= fReadPage.GetClusterRangeLast() + 1) {
-         elemArray->ReadFrom(src, count);
+         std::memcpy(to, from, elemSize * count);
       } else {
          ClusterSize_t::ValueType nBatch = fReadPage.GetNElements() - idxInPage;
-         elemArray->ReadFrom(src, nBatch);
-         RColumnElementBase elemTail(*elemArray, nBatch);
-         ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch), count - nBatch, &elemTail);
+         std::memcpy(to, from, elemSize * nBatch);
+         auto tail = static_cast<unsigned char *>(to) + nBatch * elemSize;
+         ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch), count - nBatch, tail);
       }
    }
 
@@ -309,7 +323,9 @@ public:
    const RColumnModel &GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
+   NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
    RPageSource *GetPageSource() const { return fPageSource; }
+   RPageSink *GetPageSink() const { return fPageSink; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
 };

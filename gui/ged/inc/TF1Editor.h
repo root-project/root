@@ -43,10 +43,10 @@ protected:
 public:
    TF1Editor(const TGWindow *p = nullptr,  Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TF1Editor();
+   ~TF1Editor() override;
 
-   virtual void   SetModel(TObject* obj);
-   virtual void   ActivateBaseClassEditors(TClass* cl);
+   void   SetModel(TObject* obj) override;
+   void   ActivateBaseClassEditors(TClass* cl) override;
 
    virtual void   DoParameterSettings();
    virtual void   DoXPoints();
@@ -55,7 +55,7 @@ public:
    virtual void   DoSliderXReleased();
    virtual void   DoXRange();
 
-   ClassDef(TF1Editor,0)  // user interface for TF1 objects
+   ClassDefOverride(TF1Editor,0)  // user interface for TF1 objects
 };
 
 #endif

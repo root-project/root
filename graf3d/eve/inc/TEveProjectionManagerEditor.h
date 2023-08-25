@@ -47,9 +47,9 @@ protected:
 
 public:
    TEveProjectionManagerEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveProjectionManagerEditor(){}
+   ~TEveProjectionManagerEditor() override{}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // Declare callback/slot methods
 
@@ -63,7 +63,7 @@ public:
    void DoMaxTrackStep();
    void DoCenter();
 
-   ClassDef(TEveProjectionManagerEditor, 0); // Editor for TEveProjectionManager class.
+   ClassDefOverride(TEveProjectionManagerEditor, 0); // Editor for TEveProjectionManager class.
 };
 
 #endif

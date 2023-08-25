@@ -6,6 +6,9 @@
 #include <thread> // std::thread::hardware_concurrency
 
 #include "SimpleFiller.h" // for VaryFill
+#include "TROOT.h"
+#include "ROOT/RDF/RActionImpl.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <gtest/gtest.h>
 
@@ -377,6 +380,78 @@ TEST(RDFVary, SaveGraph)
       "source\\nEntries: 1\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t2 -> 1;\n\t0 -> 2;\n}");
 }
 
+
+TEST(RDFVary, WithRange) // no Range in multithreaded runs
+{
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 5, x + 5};
+                  },
+                  {"x"}, 2)
+               .Range(7)
+               .Filter("x > 1")
+               .Range(3)
+               .Sum<int>("x");
+   auto hs = VariationsFor(h);
+
+   EXPECT_EQ(*h, 9);
+   EXPECT_EQ(hs["nominal"], 9);
+   EXPECT_EQ(hs["x:0"], 0);
+   EXPECT_EQ(hs["x:1"], 18);
+}
+
+
+// must update this test when https://github.com/root-project/root/issues/9894 is addressed
+TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-thread only
+{
+   auto d = ROOT::RDataFrame(1)
+               .Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{-1, 2};
+                  },
+                  {}, 2)
+               .Display<int>({"x"});
+   // Display ignores variations, only displays the nominal values
+   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
+   // cannot vary a Display
+   EXPECT_THROW(
+      try { VariationsFor(d); } catch (const std::logic_error &err) {
+         const auto msg = "The MakeNew method is not implemented for this action helper (Display). "
+                          "Cannot Vary its result.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
+}
+
+// Make sure we can pass RResultMaps to RunGraphs (after converting them to RResultHandle).
+TEST(RDFVary, ResultMapAndRunGraphs)
+{
+   auto m = ROOT::RDataFrame(1)
+               .Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{-1, 1};
+                  },
+                  {}, 2)
+               .Max<int>("x");
+   auto mv = ROOT::RDF::Experimental::VariationsFor(m);
+   auto rh = ROOT::RDF::RResultHandle(mv);
+   ROOT::RDF::RunGraphs({rh});
+   EXPECT_EQ(rh.GetValue<int>(), 0);
+   EXPECT_EQ(mv["nominal"], 0);
+   EXPECT_EQ(&mv["nominal"], &rh.GetValue<int>());
+   EXPECT_EQ(mv["x:0"], -1);
+   EXPECT_EQ(mv["x:1"], 1);
+}
+
+/************ These tests are run in single- and multi-thread mode (they use TEST_P instead of TEST) ************/
 TEST_P(RDFVary, SimpleSum)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
@@ -649,7 +724,7 @@ TEST_P(RDFVary, DefineDependingOnVariations)
    EXPECT_EQ(sums["yshift:low"], 410);
 }
 
-TEST(RDFVary, VaryAndAlias)
+TEST_P(RDFVary, VaryAndAlias)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; }).Alias("y", "x").Vary("x", SimpleVariation, {}, 2);
    auto s1 = df.Sum<int>("y");
@@ -913,28 +988,6 @@ TEST_P(RDFVary, FillHelperResets)
    EXPECT_EQ(ss2["x:1"].GetMean(), 2);
 }
 
-TEST(RDFVary, WithRange) // no Range in multithreaded runs
-{
-   auto h = ROOT::RDataFrame(10)
-               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-               .Vary(
-                  "x",
-                  [](int x) {
-                     return ROOT::RVecI{x - 5, x + 5};
-                  },
-                  {"x"}, 2)
-               .Range(7)
-               .Filter("x > 1")
-               .Range(3)
-               .Sum<int>("x");
-   auto hs = VariationsFor(h);
-
-   EXPECT_EQ(*h, 9);
-   EXPECT_EQ(hs["nominal"], 9);
-   EXPECT_EQ(hs["x:0"], 0);
-   EXPECT_EQ(hs["x:1"], 18);
-}
-
 TEST_P(RDFVary, VaryRedefine)
 {
    // first redefine and then vary
@@ -1131,31 +1184,6 @@ TEST_P(RDFVary, VaryCount)
    EXPECT_EQ(hs["nominal"], 1);
    EXPECT_EQ(hs["x:0"], 0);
    EXPECT_EQ(hs["x:1"], 2);
-}
-
-// must update this test when https://github.com/root-project/root/issues/9894 is addressed
-TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-thread only
-{
-   auto d = ROOT::RDataFrame(1)
-               .Define("x", [] { return 0; })
-               .Vary(
-                  "x",
-                  [] {
-                     return ROOT::RVecI{-1, 2};
-                  },
-                  {}, 2)
-               .Display<int>({"x"});
-   // Display ignores variations, only displays the nominal values
-   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
-   // cannot vary a Display
-   EXPECT_THROW(
-      try { VariationsFor(d); } catch (const std::logic_error &err) {
-         const auto msg = "The MakeNew method is not implemented for this action helper (Display). "
-                          "Cannot Vary its result.";
-         EXPECT_STREQ(err.what(), msg);
-         throw;
-      },
-      std::logic_error);
 }
 
 struct Jet {
@@ -1539,8 +1567,7 @@ TEST_P(RDFVary, VarySnapshot)
                .Snapshot<int>("t", fname, {"x"});
    EXPECT_THROW(
       try { VariationsFor(h); } catch (const std::logic_error &err) {
-         const auto msg = "The MakeNew method is not implemented for this action helper (Snapshot). "
-                          "Cannot Vary its result.";
+         const auto msg = "Varying a Snapshot result is not implemented yet.";
          EXPECT_STREQ(err.what(), msg);
          throw;
       },
@@ -1590,6 +1617,57 @@ TEST_P(RDFVary, ManyVariationsManyColumns)
       EXPECT_EQ(sxs["syst:" + std::to_string(i)], 420);
       EXPECT_EQ(sys["syst:" + std::to_string(i)], 80);
    }
+}
+
+struct HelperWithCallback : ROOT::Detail::RDF::RActionImpl<HelperWithCallback> {
+   using Result_t = int;
+   std::shared_ptr<Result_t> fResult = std::make_shared<Result_t>(0);
+   static std::atomic_uint fCallbackCallCount; // shared among all the helpers for all variations
+
+   void InitTask(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int, int) {} // no-op
+   void Initialize() {}
+   void Finalize() { *fResult = fCallbackCallCount; }
+   std::shared_ptr<Result_t> GetResultPtr() const { return fResult; }
+   ROOT::RDF::SampleCallback_t GetSampleCallback() // increments fCallbackCallCount
+   {
+      auto callback = [](unsigned int, const ROOT::RDF::RSampleInfo &) { ++fCallbackCallCount; };
+      return callback;
+   }
+
+   HelperWithCallback MakeNew(void *newResult)
+   {
+      auto newHelper = HelperWithCallback();
+      newHelper.fResult = *static_cast<std::shared_ptr<Result_t> *>(newResult);
+      return newHelper;
+   }
+
+   std::string GetActionName() const { return "HelperWithCallback"; }
+};
+
+std::atomic_uint HelperWithCallback::fCallbackCallCount{0u};
+
+TEST_P(RDFVary, SampleCallbacks)
+{
+   // needs resetting between sequential and MT tests
+   HelperWithCallback::fCallbackCallCount = 0u;
+
+   // we book 2 tasks per thread with IMT, or 1 task in total in sequential execution
+   const auto nTasks = std::max(ROOT::GetThreadPoolSize() * 2, 1u);
+
+   auto r = ROOT::RDataFrame(nTasks) // one entry per task
+               .Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{-1, 1};
+                  },
+                  {}, 2)
+               .Book<int>(HelperWithCallback{}, {"x"});
+   auto rv = VariationsFor(r);
+
+   // the callback should have been called once per task per variation
+   EXPECT_EQ(*r, nTasks * 3);
 }
 
 // instantiate single-thread tests

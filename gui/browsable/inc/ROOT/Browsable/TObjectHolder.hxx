@@ -12,7 +12,6 @@
 #include <ROOT/Browsable/RHolder.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class TObjectHolder
@@ -51,13 +50,18 @@ public:
       if (fOwner) delete fObj;
    }
 
+   void Forget() final
+   {
+      fAdjusted = fObj = nullptr;
+      fOwner = false;
+   }
+
    const TClass *GetClass() const final { return fObj ? fObj->IsA() : nullptr; }
    const void *GetObject() const final { return fAdjusted; }
 };
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

@@ -4,8 +4,8 @@
 /// Multidimensional models: conditional pdf with per-event errors
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -14,7 +14,6 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooGaussModel.h"
-#include "RooConstVar.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooPlot.h"
@@ -45,20 +44,20 @@ void rf306_condpereventerrors()
    // ------------------------------------------------------------------------------------------------------
 
    // Use landau pdf to get somewhat realistic distribution with long tail
-   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, RooConst(1), RooConst(0.25));
-   RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
+   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
+   std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr, 10000)};
 
    // S a m p l e   d a t a   f r o m   c o n d i t i o n a l   d e c a y _ g m ( d t | d t e r r )
    // ---------------------------------------------------------------------------------------------
 
    // Specify external dataset with dterr values to use decay_dm as conditional pdf
-   RooDataSet *data = decay_gm.generate(dt, ProtoData(*expDataDterr));
+   std::unique_ptr<RooDataSet> data{decay_gm.generate(dt, ProtoData(*expDataDterr))};
 
    // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------
 
    // Specify dterr as conditional observable
-   decay_gm.fitTo(*data, ConditionalObservables(dterr));
+   decay_gm.fitTo(*data, ConditionalObservables(dterr), PrintLevel(-1));
 
    // P l o t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------

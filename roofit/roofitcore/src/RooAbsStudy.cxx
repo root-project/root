@@ -39,7 +39,7 @@ ClassImp(RooAbsStudy);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(0), _summaryData(0), _detailData(0), _ownDetailData(true)
+RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(false), _summaryData(nullptr), _detailData(nullptr), _ownDetailData(true)
 {
 }
 
@@ -49,7 +49,7 @@ RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,titl
 /// Copy constructor
 
 RooAbsStudy::RooAbsStudy(const RooAbsStudy& other) : TNamed(other), _storeDetails(other._storeDetails), _summaryData(other._summaryData),
-                       _detailData(0), _ownDetailData(other._ownDetailData)
+                       _detailData(nullptr), _ownDetailData(other._ownDetailData)
 {
 }
 
@@ -79,8 +79,8 @@ void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSe
     return ;
   }
 
-  string name = Form("%s_summary_data",GetName()) ;
-  string title = Form("%s Summary Data",GetTitle()) ;
+  std::string name = std::string(GetName()) + "_summary_data";
+  std::string title = std::string(GetTitle()) + " Summary Data";
   _summaryData = new RooDataSet(name.c_str(),title.c_str(),allVars,RooFit::StoreError(varsWithError),RooFit::StoreAsymError(varsWithAsymError)) ;
 }
 

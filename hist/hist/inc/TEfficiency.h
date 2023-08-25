@@ -20,6 +20,7 @@
 class TCollection;
 class TF1;
 class TGraphAsymmErrors;
+class TGraph2DAsymmErrors;
 class TH1;
 class TH2;
 class TList;
@@ -51,8 +52,9 @@ protected:
       Double_t      fConfLevel;              ///<  Confidence level (default = 0.683, 1 sigma)
       TDirectory*   fDirectory;              ///<! Pointer to directory holding this TEfficiency object
       TList*        fFunctions;              ///<->Pointer to list of functions
-      TGraphAsymmErrors* fPaintGraph;        ///<! Temporary graph for painting
-      TH2*          fPaintHisto;             ///<! Temporary histogram for painting
+      TGraphAsymmErrors* fPaintGraph=nullptr;        ///<! Temporary graph for painting
+      TGraph2DAsymmErrors* fPaintGraph2D=nullptr;    ///<! Temporary graph for painting
+      TH2*          fPaintHisto=nullptr;             ///<! Temporary histogram for painting
       TH1*          fPassedHistogram;        ///<  Histogram for events which passed certain criteria
       EStatOption   fStatisticOption;        ///<  Defines how the confidence intervals are determined
       TH1*          fTotalHistogram;         ///<  Histogram for total number of events
@@ -68,6 +70,7 @@ protected:
 
       void          Build(const char* name,const char* title);
       void          FillGraph(TGraphAsymmErrors * graph, Option_t * opt) const;
+      void          FillGraph2D(TGraph2DAsymmErrors * graph, Option_t * opt) const;
       void          FillHistogram(TH2 * h2) const;
 
 public:
@@ -94,6 +97,7 @@ public:
       void          Add(const TEfficiency& rEff) {*this += rEff;}
       void          Browse(TBrowser*) override{Draw();}
       TGraphAsymmErrors*   CreateGraph(Option_t * opt = "") const;
+      TGraph2DAsymmErrors*   CreateGraph2D(Option_t * opt = "") const;
       TH2*          CreateHistogram(Option_t * opt = "") const;
       Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
       void          Draw(Option_t* opt = "") override;
@@ -115,6 +119,7 @@ public:
       Double_t      GetEfficiencyErrorUp(Int_t bin) const;
       Int_t         GetGlobalBin(Int_t binx,Int_t biny=0,Int_t binz=0) const;
       TGraphAsymmErrors*   GetPaintedGraph() const { return fPaintGraph; }
+      TGraph2DAsymmErrors*   GetPaintedGraph2D() const { return fPaintGraph2D; }
       TH2*          GetPaintedHistogram() const { return fPaintHisto; }
       TList*        GetListOfFunctions();
       const TH1*    GetPassedHistogram() const {return fPassedHistogram;}

@@ -79,6 +79,9 @@ public:
 
    NormalizeThenLock(const char *cname)
    {
+      if (!TClassTable::CheckClassTableInit())
+         return;
+
       // The recorded name is normalized, let's make sure we convert the
       // input accordingly.  This operation will take the ROOT global lock
       // and might call recursively `TClassTable`, so this must be done
@@ -501,7 +504,7 @@ void TClassTable::Add(TProtoClass *proto)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TClassTable::AddAlternate(const char *normName, const char *alternate)
+ROOT::TClassAlt* TClassTable::AddAlternate(const char *normName, const char *alternate)
 {
    // This will be set at the lastest during TROOT construction, so before
    // any threading could happen.
@@ -518,12 +521,41 @@ void TClassTable::AddAlternate(const char *normName, const char *alternate)
             fprintf(stderr,"Error in TClassTable::AddAlternate: "
                     "Second registration of %s with a different normalized name (old: '%s', new: '%s')\n",
                     alternate, a->fNormName, normName);
-            return;
          }
+         return nullptr;
       }
    }
 
    fgAlternate[slot] = new TClassAlt(alternate,normName,fgAlternate[slot]);
+   return fgAlternate[slot];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void TClassTable::RemoveAlternate(ROOT::TClassAlt *alt)
+{
+   if (!alt || !gClassTable)
+      return;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
+   UInt_t slot = ROOT::ClassTableHash(alt->fName, fgSize);
+
+   if (!fgAlternate[slot])
+      return;
+
+   if (fgAlternate[slot] == alt)
+      fgAlternate[slot] = alt->fNext.release();
+   else {
+      for (TClassAlt *a = fgAlternate[slot]; a; a = a->fNext.get()) {
+         if (a->fNext.get() == alt) {
+            a->fNext.swap( alt->fNext );
+	    assert( alt == alt->fNext.get());
+	    alt->fNext.release();
+	 }
+      }
+   }
+   delete alt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -614,9 +646,6 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 
 Version_t TClassTable::GetID(const char *cname)
 {
-   if (!TClassTable::CheckClassTableInit())
-      return -1;
-
    NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
@@ -630,9 +659,6 @@ Version_t TClassTable::GetID(const char *cname)
 
 Int_t TClassTable::GetPragmaBits(const char *cname)
 {
-   if (!TClassTable::CheckClassTableInit())
-      return 0;
-
    NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
@@ -651,10 +677,6 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
-
-   if (!TClassTable::CheckClassTableInit())
-      return nullptr;
-
    NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
@@ -893,13 +915,24 @@ void ROOT::AddClass(const char *cname, Version_t id,
 /// Global function called by GenerateInitInstance.
 /// (see the ClassImp macro).
 
-void ROOT::AddClassAlternate(const char *normName, const char *alternate)
+ROOT::TClassAlt* ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
    if (!TROOT::Initialized() && !gClassTable) {
       GetDelayedAddClassAlternate().emplace_back(normName, alternate);
+      // If a library is loaded before gROOT is initialized we can assume
+      // it is hard linked along side libCore (or is libCore) thus can't
+      // really be unloaded.
+      return nullptr;
    } else {
-      TClassTable::AddAlternate(normName, alternate);
+      return TClassTable::AddAlternate(normName, alternate);
    }
+}
+
+void ROOT::RemoveClassAlternate(TClassAlt *alt)
+{
+   // This routine is meant to be called (indirectly) by dlclose so we
+   // we are guaranteed that the library initialization has completed.
+   TClassTable::RemoveAlternate(alt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -949,7 +982,7 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 /// Global function called by the dtor of a class's init class
 /// (see the ClassImp macro).
 
-void ROOT::RemoveClass(const char *cname)
+void ROOT::RemoveClass(const char *cname, TClass *oldcl)
 {
    // don't delete class information since it is needed by the I/O system
    // to write the StreamerInfo to file
@@ -959,14 +992,8 @@ void ROOT::RemoveClass(const char *cname)
       // pointer is now invalid ....
       // We still keep the TClass object around because TFile needs to
       // get to the TStreamerInfo.
-      if (gROOT && gROOT->GetListOfClasses()) {
-         TObject *pcname;
-         if ((pcname = gROOT->GetListOfClasses()->FindObject(cname))) {
-            TClass *cl = dynamic_cast<TClass*>(pcname);
-            if (cl)
-               cl->SetUnloaded();
-         }
-      }
+      if (oldcl)
+         oldcl->SetUnloaded();
       TClassTable::Remove(cname);
    }
 }
@@ -988,13 +1015,17 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
 
    TString classname(name);
    Ssiz_t loc = classname.Index("<");
-   if (loc >= 1) classname.Remove(loc);
+   if (loc >= 1)
+      classname.Remove(loc);
+   TNamed *reg = (TNamed*)table.FindObject(classname);
    if (file) {
-      TNamed *obj = new TNamed((const char*)classname, file);
-      obj->SetUniqueID(line);
-      table.Add(obj);
-      return obj;
+      if (reg)
+         reg->SetTitle(file);
+      else {
+         reg = new TNamed((const char*)classname, file);
+         table.Add(reg);
+      }
+      reg->SetUniqueID(line);
    }
-
-   return (TNamed*)table.FindObject(classname);
+   return reg;
 }

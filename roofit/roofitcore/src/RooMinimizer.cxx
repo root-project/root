@@ -298,7 +298,7 @@ ROOT::Fit::Fitter const *RooMinimizer::fitter() const
 
 bool RooMinimizer::fitFcn() const
 {
-   return _fcn->fit(*_theFitter);
+   return _theFitter->FitFCN(*_fcn->getMultiGenFcn());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   if (_cfg.timingAnalysis) 
+   if (_cfg.timingAnalysis) {
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else
@@ -319,6 +319,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
                              "please recompile with -Droofit_multiprocess=ON for logging with the "
                              "ProcessTimer.");
 #endif
+   }
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    setMinimizerType(type);
@@ -583,7 +584,7 @@ void RooMinimizer::optimizeConst(int flag)
 /// EDM setting, number of calls with evaluation problems, the minimized
 /// function value and the full correlation matrix.
 
-RooFitResult *RooMinimizer::save(const char *userName, const char *userTitle)
+RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const char *userTitle)
 {
    if (_theFitter->GetMinimizer() == 0) {
       coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << endl;
@@ -593,7 +594,7 @@ RooFitResult *RooMinimizer::save(const char *userName, const char *userTitle)
    TString name, title;
    name = userName ? userName : Form("%s", _fcn->getFunctionName().c_str());
    title = userTitle ? userTitle : Form("%s", _fcn->getFunctionTitle().c_str());
-   RooFitResult *fitRes = new RooFitResult(name, title);
+   auto fitRes = std::make_unique<RooFitResult>(name, title);
 
    // Move eventual fixed parameters in floatList to constList
    RooArgList saveConstList(*(_fcn->GetConstParamList()));
@@ -612,13 +613,9 @@ RooFitResult *RooMinimizer::save(const char *userName, const char *userTitle)
    fitRes->setConstParList(saveConstList);
    fitRes->setInitParList(saveFloatInitList);
 
-   // The fitter often clones the function. We therefore have to ask it for its copy.
-   const auto fitFcn = dynamic_cast<const RooAbsMinimizerFcn *>(_theFitter->GetFCN());
    double removeOffset = 0.;
-   if (fitFcn) {
-      fitRes->setNumInvalidNLL(fitFcn->GetNumInvalidNLL());
-      removeOffset = -fitFcn->getOffset();
-   }
+   fitRes->setNumInvalidNLL(_fcn->GetNumInvalidNLL());
+   removeOffset = -_fcn->getOffset();
 
    fitRes->setStatus(_status);
    fitRes->setCovQual(_theFitter->GetMinimizer()->CovMatrixStatus());
@@ -643,7 +640,7 @@ RooFitResult *RooMinimizer::save(const char *userName, const char *userTitle)
 
    fitRes->setStatusHistory(_statusHistory);
 
-   return fitRes;
+   return RooFit::Detail::owningPtr(std::move(fitRes));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -666,7 +663,8 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
                                double n5, double n6, unsigned int npoints)
 {
    RooArgList *params = _fcn->GetFloatParamList();
-   std::unique_ptr<RooArgList> paramSave{static_cast<RooArgList *>(params->snapshot())};
+   RooArgList paramSave;
+   params->snapshot(paramSave);
 
    // Verify that both variables are floating parameters of PDF
    int index1 = _fcn->GetFloatParamList()->index(&var1);
@@ -740,7 +738,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    _theFitter->GetMinimizer()->SetErrorDef(errdef);
 
    // restore parameter values
-   params->assign(*paramSave);
+   params->assign(paramSave);
 
    return frame;
 }
@@ -810,12 +808,12 @@ void RooMinimizer::applyCovarianceMatrix(TMatrixDSym const &V)
    _fcn->ApplyCovarianceMatrix(*_extV);
 }
 
-RooFitResult *RooMinimizer::lastMinuitFit()
+RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit()
 {
    return RooMinimizer::lastMinuitFit({});
 }
 
-RooFitResult *RooMinimizer::lastMinuitFit(const RooArgList &varList)
+RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &varList)
 {
    // Import the results of the last fit performed, interpreting
    // the fit parameters as the given varList of parameters.
@@ -843,7 +841,7 @@ RooFitResult *RooMinimizer::lastMinuitFit(const RooArgList &varList)
       }
    }
 
-   RooFitResult *res = new RooFitResult("lastMinuitFit", "Last MINUIT fit");
+   auto res = std::make_unique<RooFitResult>("lastMinuitFit", "Last MINUIT fit");
 
    // Extract names of fit parameters
    // and construct corresponding RooRealVars
@@ -912,7 +910,7 @@ RooFitResult *RooMinimizer::lastMinuitFit(const RooArgList &varList)
    }
    res->fillCorrMatrix(globalCC, corrs, covs);
 
-   return res;
+   return RooFit::Detail::owningPtr(std::move(res));
 }
 
 /// Try to recover from invalid function values. When invalid function values

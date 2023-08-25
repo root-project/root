@@ -21,7 +21,7 @@ endif()
 # which will avoid initialization time (especially when using ROOT)
 set(CAPTURE_STR "EmitModel( \"@1\", \"@2\");")
 set(ALL_CAPTURES "")
-# Finding .onnx files to be parsed AND creating the appropriate commAND
+# Finding .onnx files to be parsed AND creating the appropriate command
 file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
 foreach(onnx_file ${ONNX_FILES})
 	get_filename_component(fname ${onnx_file} NAME_WE)
@@ -34,6 +34,24 @@ string(REPLACE ";" ";\n" EMIT_CAPTURES "${ALL_CAPTURES}")
 configure_file(EmitFromONNX.cxx.in EmitFromONNX_all.cxx @ONLY)
 configure_file(EmitFromRoot.cxx.in EmitFromRoot_all.cxx @ONLY)
 configure_file(EmitFromONNX_GPU.cxx.in EmitFromONNX_GPU_all.cxx @ONLY)
+
+#Finding .onnx files to be parsed and creating the appropriate code to
+# parse all file. It is much faster to combine all parsing in a single executable
+# which will avoid initialization time (especially when using ROOT)
+set(CAPTURE_STR "EmitModel( \"@1\", \"@2\");")
+set(ALL_CAPTURES "")
+# Finding .onnx files to be parsed and creating the appropriate command
+file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
+foreach(onnx_file ${ONNX_FILES})
+	get_filename_component(fname ${onnx_file} NAME_WE)
+	get_filename_component(fdir ${onnx_file} DIRECTORY)
+  string(REPLACE "@1" ${onnx_file} cap ${CAPTURE_STR})
+  string(REPLACE "@2" ${fname} cap ${cap})
+  list(APPEND ALL_CAPTURES ${cap})
+endforeach()
+string(REPLACE ";" ";\n" EMIT_CAPTURES "${ALL_CAPTURES}")
+configure_file(EmitFromONNX.cxx.in EmitFromONNX_all.cxx @ONLY)
+configure_file(EmitFromRoot.cxx.in EmitFromRoot_all.cxx @ONLY)
 
 add_executable(emitFromONNX
    EmitFromONNX_all.cxx
@@ -50,8 +68,6 @@ target_include_directories(emitFromONNX PRIVATE
    ${SOFIE_PARSERS_DIR}/inc
    ${CMAKE_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 
 if (tmva-sycl AND testing)
@@ -86,12 +102,12 @@ if (tmva-sycl AND testing)
   add_dependencies(SofieCompileGPUModels_ONNX emitFromONNX_GPU)
 endif()
 
-add_custom_commAND(TARGET SofieCompileModels_ONNX POST_BUILD
+add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
 		USES_TERMINAL )
 
 if (tmva-sycl AND testing)
-  add_custom_commAND(TARGET SofieCompileGPUModels_ONNX POST_BUILD
+  add_custom_command(TARGET SofieCompileGPUModels_ONNX POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX_GPU ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
   USES_TERMINAL )
 endif()
@@ -138,8 +154,6 @@ target_include_directories(emitFromROOT PRIVATE
    ${SOFIE_PARSERS_DIR}/inc
    ${CMAKE_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
 )
 target_link_libraries(emitFromROOT ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromROOT PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
@@ -155,7 +169,7 @@ else()
   add_dependencies(SofieCompileModels_ROOT emitFromROOT onepcm)
 endif()
 
-add_custom_commAND(TARGET SofieCompileModels_ROOT POST_BUILD
+add_custom_command(TARGET SofieCompileModels_ROOT POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT
 		USES_TERMINAL )
 

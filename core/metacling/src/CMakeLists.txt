@@ -48,18 +48,16 @@ target_include_directories(MetaCling SYSTEM PRIVATE
 
 target_include_directories(MetaCling PRIVATE
    ${CLING_INCLUDE_DIRS}
-   ${CMAKE_SOURCE_DIR}/core/metacling/res
-   ${CMAKE_SOURCE_DIR}/core/clingutils/res
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/zip/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/res
    ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
    ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/clingutils/res
    ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/metacling/res
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/zip/inc
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_BINARY_DIR}/ginclude
 )
@@ -73,6 +71,9 @@ if(MSVC)
    target_include_directories(MetaCling PRIVATE
       ${CMAKE_SOURCE_DIR}/core/winnt/inc
    )
+   if(winrtdebug AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+      set_source_files_properties(TCling.cxx COMPILE_FLAGS "/bigobj")
+   endif()
 endif()
 
 add_dependencies(MetaCling CLING)
@@ -128,12 +129,20 @@ if(MSVC)
       __std_terminate
       cling_runtime_internal_throwIfInvalidPointer
   )
-  if(CMAKE_CXX_STANDARD GREATER 14)
+  if(MSVC_VERSION GREATER_EQUAL 1936)
     set(cling_exports ${cling_exports}
-      _Smtx_lock_shared
-      _Smtx_unlock_shared
+        __std_find_trivial_1
+        __std_find_trivial_2
+        __std_find_trivial_4
+        __std_find_trivial_8
     )
   endif()
+
+  set(cling_exports ${cling_exports}
+    _Smtx_lock_shared
+    _Smtx_unlock_shared
+  )
+
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(cling_exports ${cling_exports}
       ??2@YAPEAX_K@Z
@@ -142,6 +151,8 @@ if(MSVC)
       ??_U@YAPEAX_K@Z
       ??_V@YAXPEAX@Z
       ??_V@YAXPEAX_K@Z
+      ??2@YAPEAX_KAEBUnothrow_t@std@@@Z
+      ??_U@YAPEAX_KAEBUnothrow_t@std@@@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@H@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@M@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@N@Z
@@ -165,6 +176,8 @@ if(MSVC)
       ??_U@YAPAXI@Z
       ??_V@YAXPAX@Z
       ??_V@YAXPAXI@Z
+      ??2@YAPAXIABUnothrow_t@std@@@Z
+      ??_U@YAPAXIABUnothrow_t@std@@@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@M@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@N@Z
@@ -194,3 +207,8 @@ if(APPLE)
 elseif(NOT MSVC)
   target_link_libraries(Cling PUBLIC -Wl,--unresolved-symbols=ignore-in-object-files)
 endif()
+
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  target_link_libraries(Cling PUBLIC util procstat)
+endif()
+

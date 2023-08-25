@@ -13,7 +13,7 @@ It is in a separate module so as to avoid a numpy dependency for ROOT.
 """
 try:
     import numpy
-except:
+except ImportError:
     raise ImportError("Failed to import numpy during call to determine function signature.")
 
 FUNDAMENTAL_PYTHON_TYPES = {

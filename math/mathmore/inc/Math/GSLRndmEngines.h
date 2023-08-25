@@ -40,7 +40,7 @@ namespace Math {
 
 
    class GSLRngWrapper;
-   class GSLMCIntegrator; 
+   class GSLMCIntegrator;
 
    //_________________________________________________________________
    /**
@@ -112,7 +112,7 @@ namespace Math {
          0 is excluded and 1 is included
       */
       double operator() () const;
-      
+
       /**
          Generate a  random number between ]0,1]
          0 is excluded and 1 is included
@@ -129,7 +129,7 @@ namespace Math {
           Generate an integer number between [0,max_generator-1] (including 0 and max-1)
           if max is larger than available range of algorithm
           an error message is printed and zero is returned
-      */ 
+      */
       unsigned long IntRndm() const {
          return RndmInt(MaxInt());   // max return the largest value the generator can give +1
       }
@@ -165,13 +165,13 @@ namespace Math {
          return the minimum integer a generator can handle
          typically this value is 0
        */
-      unsigned long MinInt() const; 
+      unsigned long MinInt() const;
 
       /**
          return the maximum integer +1 a generator can handle
 
        */
-      unsigned long MaxInt() const; 
+      unsigned long MaxInt() const;
 
       /**
           set the random generator seed
@@ -212,7 +212,8 @@ namespace Math {
       /**
          Multivariate Gaussian distribution
       */
-      void GaussianND(const int dim, double *pars, double *covmat, double *genpars) const;
+      void GaussianND(size_t dim, const double *pars, const double *covmat, double *genpars, double * lmat = nullptr) const;
+
 
       /**
          Exponential distribution
@@ -318,14 +319,13 @@ namespace Math {
       /// internal method to return the engine
       /// Used by class like GSLMCIntegrator to set the engine
       GSLRngWrapper * Engine() {
-         return fRng; 
+         return fRng;
       }
-      
+
    private:
 
       GSLRngWrapper * fRng;                // pointer to GSL generator wrapper (managed by the class)
       mutable unsigned int  fCurTime;      // current time used to seed the generator
-
 
    };
 
@@ -340,7 +340,7 @@ namespace Math {
    */
    class GSLRngMT : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngMT();
    };
 
@@ -354,7 +354,7 @@ namespace Math {
    */
    class GSLRngRanLux : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngRanLux();
    };
 
@@ -368,7 +368,7 @@ namespace Math {
    */
    class GSLRngRanLuxS1 : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngRanLuxS1();
    };
    typedef GSLRngRanLuxS1 GSLRngRanLux1; // for backward compatibility
@@ -383,7 +383,7 @@ namespace Math {
    */
    class GSLRngRanLuxS2 : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngRanLuxS2();
    };
    typedef GSLRngRanLuxS2 GSLRngRanLux2; // for backward compatibility
@@ -398,7 +398,7 @@ namespace Math {
    */
    class GSLRngRanLuxD1 : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngRanLuxD1();
    };
 
@@ -412,7 +412,7 @@ namespace Math {
    */
    class GSLRngRanLuxD2 : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngRanLuxD2();
    };
    typedef GSLRngRanLuxD2 GSLRngRanLux48; // for backward compatibility
@@ -427,7 +427,7 @@ namespace Math {
    */
    class GSLRngTaus : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngTaus();
    };
 
@@ -440,7 +440,7 @@ namespace Math {
    */
    class GSLRngGFSR4 : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngGFSR4();
    };
 
@@ -453,7 +453,7 @@ namespace Math {
    */
    class GSLRngCMRG : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngCMRG();
    };
 
@@ -466,7 +466,7 @@ namespace Math {
    */
    class GSLRngMRG : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngMRG();
    };
 
@@ -480,7 +480,7 @@ namespace Math {
    */
    class GSLRngRand : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngRand();
    };
 
@@ -493,7 +493,7 @@ namespace Math {
    */
    class GSLRngRanMar : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngRanMar();
    };
 
@@ -506,17 +506,17 @@ namespace Math {
    */
    class GSLRngMinStd : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngMinStd();
    };
 
    /** MixMax generator based on ROOT::Math::MixMaxEngine of N=240
 
-       @ingroup Random 
+       @ingroup Random
    */
    class GSLRngMixMax : public GSLRandomEngine {
    public:
-      typedef GSLRandomEngine BaseType; 
+      typedef GSLRandomEngine BaseType;
       GSLRngMixMax();
       ~GSLRngMixMax() override;  // we need a dtcor since is not a standard GSL engine
    };
@@ -525,7 +525,7 @@ namespace Math {
 } // namespace ROOT
 
 // random functions specialization for GSL
-// needs to be defined after defining GSLRandomEngine class 
+// needs to be defined after defining GSLRandomEngine class
 
 #include "Math/GSLRandomFunctions.h"
 

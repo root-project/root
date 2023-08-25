@@ -11,30 +11,44 @@ sap.ui.define([
       },
 
       onExit() {
-         if (this.object_painter) {
-            this.object_painter.cleanup();
-            delete this.object_painter;
+         this.cleanupPainter();
+      },
+
+      cleanupPainter() {
+         this.object_painter?.cleanup();
+         delete this.object_painter;
+      },
+
+      preservePainterContent() {
+         // workaround, openui5 does not preserve DOM elements when calling onBeforeRendering
+         let dom = this.getView().getDomRef();
+         if (this.object_painter && dom?.children.length && !this._mainChild) {
+            this._mainChild = dom.children[0];
+            dom.removeChild(this._mainChild);
+         }
+      },
+
+      restorePainterContent() {
+         // workaround, openui5 does not preserve DOM elements when do rendering
+         let dom = this.getView().getDomRef();
+         if (this.object_painter && dom && this._mainChild) {
+            dom.appendChild(this._mainChild)
+            delete this._mainChild;
          }
       },
 
       onBeforeRendering() {
-         if (this.object_painter) {
-            this.object_painter.cleanup();
-            delete this.object_painter;
-         }
+         this.preservePainterContent();
          this.rendering_perfromed = false;
       },
 
       onAfterRendering() {
-
+         this.restorePainterContent();
          ResizeHandler.register(this.getView(), () => this.onResize());
-
          this.rendering_perfromed = true;
-
          let arr = this.renderFuncs;
          delete this.renderFuncs;
-         if (arr)
-            arr.forEach(func => func(this.getView().getDomRef()));
+         arr?.forEach(func => func(this.getView().getDomRef()));
       },
 
       setObjectPainter(painter) {
@@ -59,8 +73,7 @@ sap.ui.define([
 
       onResizeTimeout() {
          delete this.resize_tmout;
-         if (this.object_painter)
-            this.object_painter.checkResize();
+         this.object_painter?.checkResize();
       }
 
    });

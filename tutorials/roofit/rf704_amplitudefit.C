@@ -4,8 +4,8 @@
 /// Special pdf's: using a pdf defined by a sum of real-valued amplitude components
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -56,10 +56,10 @@ void rf704_amplitudefit()
    RooRealSumPdf pdf("pdf", "pdf", RooArgList(ampl1, ampl2), RooArgList(f1, f2));
 
    // Generate some toy data from pdf
-   RooDataSet *data = pdf.generate(RooArgSet(t, cosa), 10000);
+   std::unique_ptr<RooDataSet> data{pdf.generate({t, cosa}, 10000)};
 
    // Fit pdf to toy data with only amplitude strength floating
-   pdf.fitTo(*data);
+   pdf.fitTo(*data, PrintLevel(-1));
 
    // P l o t   a m p l i t u d e   s u m   p d f
    // -------------------------------------------

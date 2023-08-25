@@ -20,7 +20,7 @@
 #include "TNamed.h"
 
 #include <memory>
-#include <float.h>
+#include <cfloat>
 
 class TH1 ;
 

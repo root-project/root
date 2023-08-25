@@ -3,7 +3,7 @@
 // Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -37,7 +37,6 @@ public:
    {
       // just let run loop
       CefDoMessageLoopWork();
-
    }
 };
 
@@ -50,7 +49,7 @@ public:
 
    FrameSourceVisitor(RCefWebDisplayHandle *handle) : CefStringVisitor(), fHandle(handle) {}
 
-   virtual ~FrameSourceVisitor() = default;
+   ~FrameSourceVisitor() override = default;
 
    void Visit(const CefString &str) override
    {
@@ -69,9 +68,9 @@ class HeadlessPrintCallback : public CefPdfPrintCallback {
    bool *fFlag{nullptr};
 public:
    HeadlessPrintCallback(bool *flag) : CefPdfPrintCallback(), fFlag(flag) {}
-   virtual ~HeadlessPrintCallback() = default;
+   ~HeadlessPrintCallback() override = default;
 
-   void OnPdfPrintFinished(const CefString&, bool ok ) override
+   void OnPdfPrintFinished(const CefString&, bool ok) override
    {
       if (fFlag) *fFlag = true;
    }
@@ -81,7 +80,7 @@ private:
    DISALLOW_COPY_AND_ASSIGN(HeadlessPrintCallback);
 };
 
-std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::Experimental::RWebDisplayArgs &args)
+std::unique_ptr<ROOT::RWebDisplayHandle> RCefWebDisplayHandle::CefCreator::Display(const ROOT::RWebDisplayArgs &args)
 {
 
    auto handle = std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
@@ -226,7 +225,6 @@ RCefWebDisplayHandle::~RCefWebDisplayHandle()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Closes associated browser window
 
-
 void RCefWebDisplayHandle::CloseBrowser()
 {
    if (fBrowser) {
@@ -235,8 +233,6 @@ void RCefWebDisplayHandle::CloseBrowser()
       fBrowser = nullptr;
    }
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Process system events until browser content is available
@@ -277,6 +273,18 @@ bool RCefWebDisplayHandle::WaitForContent(int tmout_sec, const std::string &extr
    return !GetContent().empty();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Resize browser window
+
+bool RCefWebDisplayHandle::Resize(int width, int height)
+{
+   if (!fBrowser)
+      return false;
+   return GuiHandler::PlatformResize(fBrowser, width, height);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add CEF creator
 
 void RCefWebDisplayHandle::AddCreator()
 {
@@ -285,6 +293,8 @@ void RCefWebDisplayHandle::AddCreator()
       GetMap().emplace("cef", std::make_unique<CefCreator>());
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Helper struct to add creator
 
 struct RCefCreatorReg {
    RCefCreatorReg() { RCefWebDisplayHandle::AddCreator(); }

@@ -30,10 +30,9 @@ range and values of the arguments.
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 
+#include <RooFit/Detail/AnalyticalIntegrals.h>
 
 #include <cmath>
-
-using namespace std;
 
 ClassImp(RooExponential);
 
@@ -57,15 +56,14 @@ RooExponential::RooExponential(const RooExponential& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 
 double RooExponential::evaluate() const{
-  return exp(c*x);
+  return std::exp(c*x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Exponential distribution.
-void RooExponential::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooExponential::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
-  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Exponential, output, nEvents, {dataMap.at(x),dataMap.at(c)});
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Exponential, output, nEvents, {dataMap.at(x),dataMap.at(c)});
 }
 
 
@@ -85,10 +83,25 @@ double RooExponential::analyticalIntegral(Int_t code, const char* rangeName) con
   auto& constant  = code == 1 ? c : x;
   auto& integrand = code == 1 ? x : c;
 
-  if (constant == 0.0) {
-    return integrand.max(rangeName) - integrand.min(rangeName);
-  }
+  return RooFit::Detail::AnalyticalIntegrals::exponentialIntegral(integrand.min(rangeName), integrand.max(rangeName), constant);
+}
 
-  return (exp(constant*integrand.max(rangeName)) - exp(constant*integrand.min(rangeName)))
-      / constant;
+////////////////////////////////////////////////////////////////////////////////
+
+void RooExponential::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Build a call to the stateless gaussian defined later.
+   ctx.addResult(this, "std::exp(" + ctx.getResult(c) + " * " + ctx.getResult(x) + ")");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string RooExponential::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
+                                                     RooFit::Detail::CodeSquashContext &ctx) const
+{
+   auto& constant  = code == 1 ? c : x;
+   auto& integrand = code == 1 ? x : c;
+
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::exponentialIntegral",
+                        integrand.min(rangeName), integrand.max(rangeName), constant);
 }

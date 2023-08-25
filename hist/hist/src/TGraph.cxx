@@ -1204,7 +1204,7 @@ TObject *TGraph::FindObject(const TObject *obj) const
 TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
 {
    Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph, option, fitOption);
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kGraph, option, fitOption);
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(rxmin, rxmax);
    ROOT::Math::MinimizerOptions minOption;
@@ -1482,29 +1482,18 @@ TH1F *TGraph::GetHistogram() const
       fHistogram->GetXaxis()->CenterTitle(historg->GetXaxis()->GetCenterTitle());
       fHistogram->GetXaxis()->RotateTitle(historg->GetXaxis()->GetRotateTitle());
       fHistogram->GetXaxis()->SetNoExponent(historg->GetXaxis()->GetNoExponent());
-      fHistogram->GetXaxis()->SetNdivisions(historg->GetXaxis()->GetNdivisions());
-      fHistogram->GetXaxis()->SetLabelFont(historg->GetXaxis()->GetLabelFont());
-      fHistogram->GetXaxis()->SetLabelOffset(historg->GetXaxis()->GetLabelOffset());
-      fHistogram->GetXaxis()->SetLabelSize(historg->GetXaxis()->GetLabelSize());
-      fHistogram->GetXaxis()->SetTitleSize(historg->GetXaxis()->GetTitleSize());
-      fHistogram->GetXaxis()->SetTitleOffset(historg->GetXaxis()->GetTitleOffset());
-      fHistogram->GetXaxis()->SetTitleFont(historg->GetXaxis()->GetTitleFont());
       fHistogram->GetXaxis()->SetTimeDisplay(historg->GetXaxis()->GetTimeDisplay());
       fHistogram->GetXaxis()->SetTimeFormat(historg->GetXaxis()->GetTimeFormat());
+      historg->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
 
       fHistogram->GetYaxis()->SetTitle(historg->GetYaxis()->GetTitle());
       fHistogram->GetYaxis()->CenterTitle(historg->GetYaxis()->GetCenterTitle());
       fHistogram->GetYaxis()->RotateTitle(historg->GetYaxis()->GetRotateTitle());
       fHistogram->GetYaxis()->SetNoExponent(historg->GetYaxis()->GetNoExponent());
-      fHistogram->GetYaxis()->SetNdivisions(historg->GetYaxis()->GetNdivisions());
-      fHistogram->GetYaxis()->SetLabelFont(historg->GetYaxis()->GetLabelFont());
-      fHistogram->GetYaxis()->SetLabelOffset(historg->GetYaxis()->GetLabelOffset());
-      fHistogram->GetYaxis()->SetLabelSize(historg->GetYaxis()->GetLabelSize());
-      fHistogram->GetYaxis()->SetTitleSize(historg->GetYaxis()->GetTitleSize());
-      fHistogram->GetYaxis()->SetTitleOffset(historg->GetYaxis()->GetTitleOffset());
-      fHistogram->GetYaxis()->SetTitleFont(historg->GetYaxis()->GetTitleFont());
       fHistogram->GetYaxis()->SetTimeDisplay(historg->GetYaxis()->GetTimeDisplay());
       fHistogram->GetYaxis()->SetTimeFormat(historg->GetYaxis()->GetTimeFormat());
+      historg->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
+
       delete historg;
    }
    return fHistogram;

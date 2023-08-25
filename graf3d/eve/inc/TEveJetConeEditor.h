@@ -36,14 +36,14 @@ protected:
 public:
    TEveJetConeEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveJetConeEditor() {}
+   ~TEveJetConeEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // Declare callback/slot methods
    // void DoXYZZ();
 
-   ClassDef(TEveJetConeEditor, 0); // GUI editor for TEveJetCone.
+   ClassDefOverride(TEveJetConeEditor, 0); // GUI editor for TEveJetCone.
 };
 
 #endif

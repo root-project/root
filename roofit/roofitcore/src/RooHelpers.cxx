@@ -30,6 +30,8 @@
 #include <ROOT/StringUtils.hxx>
 #include <TClass.h>
 
+#include <unordered_map>
+
 namespace RooHelpers {
 
 LocalChangeMsgLevel::LocalChangeMsgLevel(RooFit::MsgLevel lvl,
@@ -275,20 +277,21 @@ std::string getRangeNameForSimComponent(std::string const& rangeName, bool split
    return rangeName;
 }
 
-BinnedLOutput getBinnedL(RooAbsPdf &pdf)
+BinnedLOutput getBinnedL(RooAbsPdf const &pdf)
 {
    if (pdf.getAttribute("BinnedLikelihood") && pdf.IsA()->InheritsFrom(RooRealSumPdf::Class())) {
       // Simplest case: top-level of component is a RooRealSumPdf
-      return {&pdf, true};
+      return {const_cast<RooAbsPdf *>(&pdf), true};
    } else if (pdf.IsA()->InheritsFrom(RooProdPdf::Class())) {
       // Default case: top-level pdf is a product of RooRealSumPdf and other pdfs
-      for (RooAbsArg *component : static_cast<RooProdPdf &>(pdf).pdfList()) {
+      for (RooAbsArg *component : static_cast<RooProdPdf const &>(pdf).pdfList()) {
          if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
             return {static_cast<RooAbsPdf *>(component), true};
          }
          if (component->getAttribute("MAIN_MEASUREMENT")) {
-           // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be passed to the slave calculator
-           return {static_cast<RooAbsPdf *>(component), false};
+            // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be
+            // passed to the slave calculator
+            return {static_cast<RooAbsPdf *>(component), false};
          }
       }
    }
@@ -296,7 +299,7 @@ BinnedLOutput getBinnedL(RooAbsPdf &pdf)
 }
 
 /// Get the topologically-sorted list of all nodes in the computation graph.
-void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out)
+void getSortedComputationGraph(RooAbsArg const &func, RooArgSet &out)
 {
    // Get the set of nodes in the computation graph. Do the detour via
    // RooArgList to avoid deduplication done after adding each element.
@@ -309,5 +312,97 @@ void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out)
    // node in the collection.
    out.sortTopologically();
 }
+
+namespace Detail {
+
+namespace {
+
+using ToCloneList = std::vector<RooAbsArg const *>;
+using ToCloneMap = std::unordered_map<TNamed const *, RooAbsArg const *>;
+
+// Add clones of servers of given argument to end of list
+void addServerClonesToList(const RooAbsArg &var, ToCloneList &outlist, ToCloneMap &outmap, bool deepCopy,
+                           RooArgSet const *observables)
+{
+   if (outmap.find(var.namePtr()) != outmap.end()) {
+      return;
+   }
+
+   if (observables && var.isFundamental() && !observables->find(var)) {
+      return;
+   }
+
+   outmap[var.namePtr()] = &var;
+   outlist.push_back(&var);
+
+   if (deepCopy) {
+      for (const auto server : var.servers()) {
+         addServerClonesToList(*server, outlist, outmap, deepCopy, observables);
+      }
+   }
+}
+
+} // namespace
+
+/// Implementation of RooAbsCollection::snapshot() with some extra parameters.
+/// to be used in other RooHelpers functions.
+/// param[in] input The input collection.
+/// param[in] output The output collection.
+/// param[in] deepCopy If the whole computation graph should be cloned recursivly.
+/// param[in] observables If this is not a nullptr, only the fundamental
+///                       variables that are in observables are deep cloned.
+bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool deepCopy, RooArgSet const *observables)
+{
+   // Figure out what needs to be cloned
+   ToCloneList toCloneList;
+   ToCloneMap toCloneMap;
+   for (RooAbsArg *orig : input) {
+      addServerClonesToList(*orig, toCloneList, toCloneMap, deepCopy, observables);
+   }
+
+   // Actually do the cloning
+   output.reserve(toCloneList.size());
+   for (RooAbsArg const *arg : toCloneList) {
+      std::unique_ptr<RooAbsArg> serverClone{static_cast<RooAbsArg *>(arg->Clone())};
+      serverClone->setAttribute("SnapShot_ExtRefClone");
+      output.addOwned(std::move(serverClone));
+   }
+
+   // Redirect all server connections to internal list members
+   for (RooAbsArg *var : output) {
+      var->redirectServers(output, deepCopy && !observables);
+   }
+
+   return false;
+}
+
+RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const *observables)
+{
+   // Clone tree using snapshot
+   RooArgSet clonedNodes;
+   snapshotImpl(RooArgSet(arg), clonedNodes, true, observables);
+
+   // Find the head node in the cloneSet
+   RooAbsArg *head = clonedNodes.find(arg);
+   assert(head);
+
+   // We better to release the ownership before removing the "head". Otherwise,
+   // "head" might also be deleted as the clonedNodes collection owns it.
+   // (Actually this does not happen because even an owning collection doesn't
+   // delete the element when removed by pointer lookup, but it's better not to
+   // rely on this unexpected fact).
+   clonedNodes.releaseOwnership();
+
+   // Remove the head node from the cloneSet
+   // To release it from the set ownership
+   clonedNodes.remove(*head);
+
+   // Add the set as owned component of the head
+   head->addOwnedComponents(std::move(clonedNodes));
+
+   return head;
+}
+
+} // namespace Detail
 
 }

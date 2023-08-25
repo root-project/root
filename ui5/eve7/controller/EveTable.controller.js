@@ -309,10 +309,11 @@ sap.ui.define([
          this.checkScenes();
       },
 
+      /*
       // function called from GuiPanelController
       onExit: function () {
          if (this.mgr) this.mgr.Unregister(this);
-      },
+      },*/
 
       onSceneCreate: function (element, id) {
          this.locateEveTable();
@@ -425,6 +426,7 @@ sap.ui.define([
                let oModel = new JSONModel();
                let oSuggestionData = this.eveTable.fPublicFunctions;
                oModel.setData(oSuggestionData);
+               oModel.setSizeLimit(10000);// default limit is 100
                exprIn.setModel(oModel);
                exprIn.bindAggregation("suggestionRows", "/", oTableItemTemplate);
 
@@ -555,6 +557,26 @@ sap.ui.define([
                }
             }
          }
+      },
+
+
+      switchSingle: function()
+      {
+         let oRouter = UIComponent.getRouterFor(this);
+         EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: this.eveViewerId};
+
+         oRouter.navTo("Table", { viewName: this.mgr.GetElement(this.eveViewerId).fName });
+      },
+
+      swap: function ()
+      {
+         this.mgr.controllers[0].switchViewSides(this.mgr.GetElement(this.eveViewerId));
+      },
+
+      detachViewer: function()
+      {
+         this.mgr.controllers[0].removeView(this.mgr.GetElement(this.eveViewerId));
+         this.destroy();
       }
    });
 });

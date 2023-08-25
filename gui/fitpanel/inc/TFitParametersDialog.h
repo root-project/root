@@ -83,9 +83,9 @@ protected:
 public:
    TFitParametersDialog(const TGWindow *p, const TGWindow *main, TF1 *func,
                         TVirtualPad *pad, Int_t *ret_code = nullptr);
-   virtual ~TFitParametersDialog();
+   ~TFitParametersDialog() override;
 
-   virtual void  CloseWindow();
+   void  CloseWindow() override;
    virtual void  DoApply();
    virtual void  DoCancel();
    virtual void  DoOK();
@@ -106,7 +106,7 @@ public:
 protected:
    void SetParameters();
 
-   ClassDef(TFitParametersDialog, 0)  // Fit function parameters dialog
+   ClassDefOverride(TFitParametersDialog, 0)  // Fit function parameters dialog
 };
 
 #endif

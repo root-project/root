@@ -57,9 +57,9 @@ private:
 
 public:
    TStructNode(TString name, TString typeName, void* pointer, TStructNode* parent, ULong_t size, ENodeType type);
-   ~TStructNode();
+   ~TStructNode() override;
 
-   virtual Int_t  Compare(const TObject* obj) const;
+   Int_t  Compare(const TObject* obj) const override;
    ULong_t        GetAllMembersCount() const;
    Float_t        GetCenter() const;
    Float_t        GetHeight() const;
@@ -69,7 +69,7 @@ public:
    TList*         GetMembers() const;
    ULong_t        GetMembersCount() const;
    Float_t        GetMiddle() const;
-   const char*    GetName() const;
+   const char*    GetName() const override;
    ENodeType      GetNodeType() const;
    TStructNode   *GetParent() const;
    void*          GetPointer() const;
@@ -86,7 +86,7 @@ public:
    Float_t        GetX() const;
    Float_t        GetY() const;
    Bool_t         IsCollapsed() const;
-   virtual Bool_t IsSortable() const;
+   Bool_t IsSortable() const override;
    bool           IsVisible() const;
    void           SetAllMembersCount(ULong_t count);
    void           SetCollapsed(Bool_t collapsed);
@@ -105,7 +105,7 @@ public:
    void           SetX(Float_t x);
    void           SetY(Float_t y);
 
-   ClassDef(TStructNode,0); // Node with information about class
+   ClassDefOverride(TStructNode,0); // Node with information about class
 };
 
 #endif

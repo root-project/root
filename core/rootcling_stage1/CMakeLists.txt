@@ -10,6 +10,7 @@
 
 if(WIN32)
   set_source_files_properties(src/rootcling_stage1.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4217,4286")
 else()
   if(CXX_HAS_fno_rtti)
     set_source_files_properties(src/rootcling_stage1.cxx PROPERTIES COMPILE_FLAGS "-fno-rtti")
@@ -34,6 +35,9 @@ target_include_directories(rootcling_stage1 PRIVATE
    ${CMAKE_SOURCE_DIR}/core/dictgen/res # for rootcling_impl.h
    ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h
 )
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  target_link_libraries(rootcling_stage1 util procstat)
+endif()
 
 set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
 add_dependencies(rootcling_stage1 ClingUtils)

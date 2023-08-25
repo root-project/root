@@ -93,11 +93,6 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-R__DEPRECATED(6, 30, "Use ROOT::RDF::Experimental::FromRNTuple instead.")
-RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName);
-R__DEPRECATED(6, 30, "Use ROOT::RDF::Experimental::FromRNTuple instead.")
-RDataFrame MakeNTupleDataFrame(RNTuple *ntuple);
-
 } // ns Experimental
 
 namespace RDF {

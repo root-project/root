@@ -17,5 +17,6 @@ file(COPY 1cluster_20entries.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_common test_common.py)
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_dist test_dist.py)
+ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_graph_caching test_graph_caching.py)
 
 endif()

@@ -35,7 +35,7 @@ protected:
    TEveElement   *fElement;    // Cached eve-element pointer.
    TObject       *fObject;     // Cached tobj pointer.
 
-   virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name);
+   TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name) override;
 
    static Int_t   fgMaxExtraEditors;
    static TList  *fgExtraEditors;
@@ -44,17 +44,17 @@ protected:
 
 public:
    TEveGedEditor(TCanvas* canvas=nullptr, UInt_t width=250, UInt_t height=400);
-   virtual ~TEveGedEditor();
+   ~TEveGedEditor() override;
 
-   virtual void CloseWindow();
+   void CloseWindow() override;
 
    TEveElement* GetEveElement() const;
 
    void DisplayElement(TEveElement* re);
    void DisplayObject(TObject* obj);
 
-   virtual void SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE);
-   virtual void Update(TGedFrame* gframe=nullptr);
+   void SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE) override;
+   void Update(TGedFrame* gframe=nullptr) override;
 
    // --- Statics for extra editors. ---
 
@@ -66,7 +66,7 @@ public:
 
    static TContextMenu* GetContextMenu();
 
-   ClassDef(TEveGedEditor, 0); // Specialization of TGedEditor for proper update propagation to TEveManager.
+   ClassDefOverride(TEveGedEditor, 0); // Specialization of TGedEditor for proper update propagation to TEveManager.
 };
 
 
@@ -86,13 +86,13 @@ protected:
 public:
    TEveGedNameFrame(const TGWindow *p=nullptr, Int_t width=140, Int_t height=30,
                     UInt_t options=kChildFrame | kHorizontalFrame);
-   virtual ~TEveGedNameFrame();
+   ~TEveGedNameFrame() override;
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void SpawnEditorClone();
 
-   ClassDef(TEveGedNameFrame, 0); // Top name-frame used in EVE.
+   ClassDefOverride(TEveGedNameFrame, 0); // Top name-frame used in EVE.
 };
 
 
@@ -110,11 +110,11 @@ private:
 
 public:
    TEveGedNameTextButton(TEveGedNameFrame* p);
-   virtual ~TEveGedNameTextButton();
+   ~TEveGedNameTextButton() override;
 
-   virtual Bool_t HandleButton(Event_t* event);
+   Bool_t HandleButton(Event_t* event) override;
 
-   ClassDef(TEveGedNameTextButton, 0); // Button for GED name-frame.
+   ClassDefOverride(TEveGedNameTextButton, 0); // Button for GED name-frame.
 };
 
 #endif

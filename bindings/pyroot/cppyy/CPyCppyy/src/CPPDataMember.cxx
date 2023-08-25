@@ -1,5 +1,6 @@
 // Bindings
 #include "CPyCppyy.h"
+#include "CPyCppyy/Reflex.h"
 #include "PyStrings.h"
 #include "CPPDataMember.h"
 #include "CPPInstance.h"
@@ -145,6 +146,8 @@ static CPPDataMember* pp_new(PyTypeObject* pytype, PyObject*, PyObject*)
     pyprop->fEnclosingScope = 0;
     pyprop->fName           = nullptr;
 
+    new (&pyprop->fFullType) std::string{};
+
     return pyprop;
 }
 
@@ -156,9 +159,38 @@ static void pp_dealloc(CPPDataMember* pyprop)
     if (pyprop->fConverter && pyprop->fConverter->HasState()) delete pyprop->fConverter;
     Py_XDECREF(pyprop->fName);    // never exposed so no GC necessary
 
+    pyprop->fFullType.~string();
+
     Py_TYPE(pyprop)->tp_free((PyObject*)pyprop);
 }
 
+//= CPyCppyy datamember proxy access to internals ============================
+static PyObject* dm_reflex(CPPDataMember* dm, PyObject* args)
+{
+// Provide the requested reflection information.
+    Cppyy::Reflex::RequestId_t request = -1;
+    Cppyy::Reflex::FormatId_t  format  = Cppyy::Reflex::OPTIMAL;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("i|i:__cpp_reflex__"), &request, &format))
+        return nullptr;
+
+    if (request == Cppyy::Reflex::TYPE) {
+        if (format == Cppyy::Reflex::OPTIMAL || format == Cppyy::Reflex::AS_STRING)
+            return CPyCppyy_PyText_FromString(dm->fFullType.c_str());
+    } else if (request == Cppyy::Reflex::OFFSET) {
+        if (format == Cppyy::Reflex::OPTIMAL)
+            return PyLong_FromLong(dm->fOffset);
+    }
+
+    PyErr_Format(PyExc_ValueError, "unsupported reflex request %d or format %d", request, format);
+    return nullptr;
+}
+
+//----------------------------------------------------------------------------
+static PyMethodDef dm_methods[] = {
+    {(char*)"__cpp_reflex__", (PyCFunction)dm_reflex, METH_VARARGS,
+      (char*)"C++ datamember reflection information" },
+    {(char*)nullptr, nullptr, 0, nullptr }
+};
 
 //= CPyCppyy data member type ================================================
 PyTypeObject CPPDataMember_Type = {
@@ -189,7 +221,7 @@ PyTypeObject CPPDataMember_Type = {
     0,                             // tp_weaklistoffset
     0,                             // tp_iter
     0,                             // tp_iternext
-    0,                             // tp_methods
+    dm_methods,                    // tp_methods
     0,                             // tp_members
     0,                             // tp_getset
     0,                             // tp_base
@@ -243,15 +275,15 @@ void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t i
         fFlags |= kIsArrayType;
     }
 
-    std::string fullType = Cppyy::GetDatamemberType(scope, idata);
+    fFullType = Cppyy::GetDatamemberType(scope, idata);
     if (Cppyy::IsEnumData(scope, idata)) {
-        fullType = Cppyy::ResolveEnum(fullType);  // enum might be any type of int
+        fFullType = Cppyy::ResolveEnum(fFullType);  // enum might be any type of int
         fFlags |= kIsConstData;
     } else if (Cppyy::IsConstData(scope, idata)) {
         fFlags |= kIsConstData;
     }
 
-    fConverter = CreateConverter(fullType, dims.empty() ? nullptr : dims.data());
+    fConverter = CreateConverter(fFullType, dims.empty() ? nullptr : dims.data());
 }
 
 //-----------------------------------------------------------------------------
@@ -262,6 +294,7 @@ void CPyCppyy::CPPDataMember::Set(Cppyy::TCppScope_t scope, const std::string& n
     fOffset         = (intptr_t)address;
     fFlags          = kIsStaticData | kIsConstData;
     fConverter      = CreateConverter("internal_enum_type_t");
+    fFullType       = "unsigned int";
 }
 
 

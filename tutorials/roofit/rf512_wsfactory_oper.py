@@ -8,6 +8,7 @@
 ## basic p.d.f.s in the workspace factory syntax
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)

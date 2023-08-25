@@ -327,12 +327,6 @@ class ROOTFacade(types.ModuleType):
         try:
             # Inject FromNumpy function
             from libROOTPythonizations import MakeNumpyDataFrame
-            def DeprecatedMakeNumpy(*args, **kwargs):
-                import warnings
-                warnings.warn("MakeNumpyDataFrame is deprecated since v6.28 and will be removed in v6.30."\
-                              "Please use FromNumpy instead.", FutureWarning)
-                MakeNumpyDataFrame(*args, **kwargs)
-            ns.MakeNumpyDataFrame = DeprecatedMakeNumpy
             ns.FromNumpy = MakeNumpyDataFrame
 
             if sys.version_info >= (3, 8):
@@ -367,6 +361,12 @@ class ROOTFacade(types.ModuleType):
         hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
         if hasRDF:
             try:
+                if sys.version_info >= (3, 8):
+                    from ._pythonization._tmva import inject_rbatchgenerator
+
+                    inject_rbatchgenerator(ns)
+
+
                 from libROOTPythonizations import AsRTensor
                 ns.Experimental.AsRTensor = AsRTensor
             except:
@@ -384,6 +384,20 @@ class ROOTFacade(types.ModuleType):
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
         del type(self).Numba
         return ns
+
+    @property
+    def NumbaExt(self):
+        if sys.version_info < (3, 7):
+            raise Exception("NumbaExt requires Python 3.7 or higher")
+
+        import numba
+        if not hasattr(numba, 'version_info') or numba.version_info < (0, 54):
+            raise Exception("NumbaExt requires Numba version 0.54 or higher")
+
+        import cppyy.numba_ext
+
+        # Return something as it is a property function
+        return self
 
     # Get TPyDispatcher for programming GUI callbacks
     @property

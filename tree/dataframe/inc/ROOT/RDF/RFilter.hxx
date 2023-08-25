@@ -39,8 +39,7 @@ namespace GraphDrawing {
 std::shared_ptr<GraphNode>
 CreateFilterNode(const RFilterBase *filterPtr, std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RDFInternal::RColumnRegister &colRegister,
+std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines,
                                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // ns GraphDrawing
@@ -191,6 +190,8 @@ public:
    /// Return a clone of this Filter that works with values in the variationName "universe".
    std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final
    {
+      // Only the nominal filter should be asked to produce varied filters
+      assert(fVariation == "nominal");
       // nobody should ask for a varied filter for the nominal variation: they can just
       // use the nominal filter!
       assert(variationName != "nominal");

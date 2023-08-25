@@ -141,7 +141,20 @@ def generateActivationModel():
     model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
     model.fit(x_train, y_train, epochs=10, batch_size=1)
     model.save('KerasModelActivations.h5')
-    
+
+def generateSwishModel():
+# Create the Keras model
+    model = Sequential()
+    model.add(Dense(64, activation='swish', input_shape=(8,)))
+    model.add(Dense(32, activation='swish'))
+    model.add(Dense(1, activation='swish'))
+
+    model.compile(loss='categorical_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+    # Save the model as an h5 file
+    model.save('swish_model.h5')
+
 
 generateFunctionalModel()
 generateSequentialModel()
@@ -152,3 +165,4 @@ generateReshapeModel()
 generateConcatModel()
 generateBinaryOpModel()
 generateActivationModel()
+generateSwishModel()

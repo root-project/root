@@ -53,13 +53,19 @@
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
 #include "RooTrace.h"
+#include "RooFormula.h"
 
 
 using namespace std;
 
 ClassImp(RooFormulaVar);
 
+RooFormulaVar::RooFormulaVar() {}
 
+RooFormulaVar::~RooFormulaVar()
+{
+   if(_formula) delete _formula;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with formula expression and list of input variables.
@@ -74,13 +80,12 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(inFormula)
 {
-  _actualVars.add(dependents) ;
-
-  if (_actualVars.empty()) {
+  if (dependents.empty()) {
     _value = traceEval(nullptr);
   } else {
-    _formula = std::make_unique<RooFormula>(GetName(), _formExpr, _actualVars, checkVariables);
+    _formula = new RooFormula(GetName(), _formExpr, dependents, checkVariables);
     _formExpr = _formula->formulaString().c_str();
+    _actualVars.add(_formula->actualDependents());
   }
 }
 
@@ -98,13 +103,12 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(title)
 {
-  _actualVars.add(dependents) ;
-
-  if (_actualVars.empty()) {
-    _value = traceEval(0);
+  if (dependents.empty()) {
+    _value = traceEval(nullptr);
   } else {
-    _formula = std::make_unique<RooFormula>(GetName(), _formExpr, _actualVars, checkVariables);
+    _formula = new RooFormula(GetName(), _formExpr, dependents, checkVariables);
     _formExpr = _formula->formulaString().c_str();
+    _actualVars.add(_formula->actualDependents());
   }
 }
 
@@ -119,7 +123,7 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
   _formExpr(other._formExpr)
 {
   if (other._formula && other._formula->ok()) {
-    _formula = std::make_unique<RooFormula>(*other._formula);
+    _formula = new RooFormula(*other._formula);
     _formExpr = _formula->formulaString().c_str();
   }
 }
@@ -132,14 +136,18 @@ RooFormula& RooFormulaVar::getFormula() const
 {
   if (!_formula) {
     // After being read from file, the formula object might not exist, yet:
-    auto theFormula = new RooFormula(GetName(), _formExpr, _actualVars);
-    const_cast<std::unique_ptr<RooFormula>&>(_formula).reset(theFormula);
+    _formula = new RooFormula(GetName(), _formExpr, _actualVars);
     const_cast<TString&>(_formExpr) = _formula->formulaString().c_str();
   }
 
   return *_formula;
 }
 
+
+bool RooFormulaVar::ok() const { return getFormula().ok() ; }
+
+
+void RooFormulaVar::dumpFormula() { getFormula().dump() ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,21 +159,9 @@ double RooFormulaVar::evaluate() const
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate the formula for all entries of our servers found in `inputData`.
-RooSpan<double> RooFormulaVar::evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const {
-  if (normSet != _lastNSet) {
-    // TODO: Remove dependence on _lastNSet
-    // See also comment in RooAbsReal::getValBatch().
-    std::cerr << "Formula " << GetName() << " " << GetTitle() << "\n\tBeing evaluated with normSet " << normSet << "\n";
-    normSet->Print("V");
-    std::cerr << "\tHowever, _lastNSet = " << _lastNSet << "\n";
-    if (_lastNSet) _lastNSet->Print("V");
-
-    throw std::logic_error("Got conflicting norm sets. This shouldn't happen.");
-  }
-
-  return formula().evaluateSpan(this, inputData, normSet);
+void RooFormulaVar::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+{
+  getFormula().computeBatch(output, nEvents, dataMap);
 }
 
 
@@ -282,8 +278,8 @@ std::list<double>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, double
 
 double RooFormulaVar::defaultErrorLevel() const
 {
-  RooAbsReal* nllArg(0) ;
-  RooAbsReal* chi2Arg(0) ;
+  RooAbsReal* nllArg(nullptr) ;
+  RooAbsReal* chi2Arg(nullptr) ;
 
   for (const auto arg : _actualVars) {
     if (dynamic_cast<RooNLLVar*>(arg)) {

@@ -71,7 +71,7 @@ protected:
 
 public:
    TEveTrackPropagatorSubEditor(const TGWindow* p);
-   virtual ~TEveTrackPropagatorSubEditor() {}
+   ~TEveTrackPropagatorSubEditor() override {}
 
    void SetModel(TEveTrackPropagator* m);
 
@@ -93,7 +93,7 @@ public:
 
    void CreateRefsContainer(TGVerticalFrame* p);
 
-   ClassDef(TEveTrackPropagatorSubEditor, 0); // Sub-editor for TEveTrackPropagator class.
+   ClassDefOverride(TEveTrackPropagatorSubEditor, 0); // Sub-editor for TEveTrackPropagator class.
 };
 
 /******************************************************************************/
@@ -114,11 +114,11 @@ protected:
 public:
    TEveTrackPropagatorEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                              UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTrackPropagatorEditor() {}
+   ~TEveTrackPropagatorEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
-   ClassDef(TEveTrackPropagatorEditor, 0); // Editor for TEveTrackPropagator class.
+   ClassDefOverride(TEveTrackPropagatorEditor, 0); // Editor for TEveTrackPropagator class.
 };
 
 #endif

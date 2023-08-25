@@ -247,10 +247,10 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       for (Globals::iterator I = VisitedGlobals.begin(),
              E = VisitedGlobals.end(); I != E; ++I)
         if (GlobalVariable* GVar = dyn_cast<GlobalVariable>(*I)) {
-          GVar->setInitializer(0);
+          GVar->setInitializer(nullptr);
         }
         else if (GlobalAlias* GA = dyn_cast<GlobalAlias>(*I)) {
-          GA->setAliasee(0);
+          GA->setAliasee(nullptr);
         }
         else {
           Function* F = cast<Function>(*I);
@@ -454,7 +454,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
 
   bool DeclUnloader::VisitDeclaratorDecl(DeclaratorDecl* DD) {
     // VisitDeclaratorDecl: ValueDecl
-    auto found = std::find(m_Sema->UnusedFileScopedDecls.begin(/*ExtSource*/0,
+    auto found = std::find(m_Sema->UnusedFileScopedDecls.begin(/*ExtSource*/nullptr,
                                                                /*Local*/true),
                            m_Sema->UnusedFileScopedDecls.end(), DD);
     if (found != m_Sema->UnusedFileScopedDecls.end())
@@ -591,13 +591,13 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
         This->getCommonPtr()->Specializations.clear();
 
         //Readd the collected specializations.
-        void* InsertPos = 0;
-        FunctionTemplateSpecializationInfo* FTSI = 0;
+        void* InsertPos = nullptr;
+        FunctionTemplateSpecializationInfo* FTSI = nullptr;
         for (size_t i = 0, e = specializations.size(); i < e; ++i) {
           FTSI = specializations[i]->getTemplateSpecializationInfo();
           assert(FTSI && "Must not be null.");
           // Avoid assertion on add.
-          FTSI->SetNextInBucket(0);
+          FTSI->SetNextInBucket(nullptr);
           This->addSpecialization(FTSI, InsertPos);
         }
 #ifndef NDEBUG
@@ -682,16 +682,29 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
 
   bool DeclUnloader::VisitDeclContext(DeclContext* DC) {
     bool Successful = true;
-    typedef llvm::SmallVector<Decl*, 64> Decls;
-    Decls declsToErase;
-    // Removing from single-linked list invalidates the iterators.
+    llvm::SmallVector<Decl*, 64> tagDecls, otherDecls;
+
+    // The order in which declarations are removed makes a difference, e.g.
+    // `MaybeRemoveDeclFromModule()` may require access to type information to
+    // make up the mangled name.
+    // Thus, we segregate declarations to be removed in `TagDecl`s (i.e., struct
+    // / union / class / enum) and other declarations.  Removal of `TagDecl`s
+    // is deferred until all the other declarations have been processed.
+    // Declarations in each group are iterated in reverse order.
+    // Note that removing from single-linked list invalidates the iterators.
     for (DeclContext::decl_iterator I = DC->noload_decls_begin();
          I != DC->noload_decls_end(); ++I) {
-      declsToErase.push_back(*I);
+      if (isa<TagDecl>(*I))
+        tagDecls.push_back(*I);
+      else
+        otherDecls.push_back(*I);
     }
 
-    for(Decls::reverse_iterator I = declsToErase.rbegin(),
-          E = declsToErase.rend(); I != E; ++I) {
+    for (auto I = otherDecls.rbegin(), E = otherDecls.rend(); I != E; ++I) {
+      Successful = Visit(*I) && Successful;
+      assert(Successful);
+    }
+    for (auto I = tagDecls.rbegin(), E = tagDecls.rend(); I != E; ++I) {
       Successful = Visit(*I) && Successful;
       assert(Successful);
     }
@@ -735,7 +748,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       // Hopefully LSD->isExternCContext() means that it already does exist
       ExternCContextDecl* ECD = m_Sema->Context.getExternCContextDecl();
       StoredDeclsMap* Map = ECD ? ECD->getLookupPtr() : nullptr;
-      
+
       for (Decl* D : LSD->noload_decls()) {
         if (NamedDecl* ND = dyn_cast<NamedDecl>(D)) {
 
@@ -908,7 +921,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
     const MacroInfo* MI = MD->getMacroInfo();
 
     // If the macro is not defined, this is a noop undef, just return.
-    if (MI == 0)
+    if (!MI)
       return false;
 
     // Remove the pair from the macros
@@ -928,8 +941,8 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
     bool Successful = true;
 
     // Remove specializations:
-    for (FunctionTemplateDecl::spec_iterator I = FTD->spec_begin(),
-           E = FTD->spec_end(); I != E; ++I)
+    for (FunctionTemplateDecl::spec_iterator I = FTD->loaded_spec_begin(),
+           E = FTD->loaded_spec_end(); I != E; ++I)
       Successful &= Visit(*I);
 
     Successful &= VisitRedeclarableTemplateDecl(FTD);
@@ -941,8 +954,8 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
     // ClassTemplateDecl: TemplateDecl, Redeclarable
     bool Successful = true;
     // Remove specializations:
-    for (ClassTemplateDecl::spec_iterator I = CTD->spec_begin(),
-           E = CTD->spec_end(); I != E; ++I)
+    for (ClassTemplateDecl::spec_iterator I = CTD->loaded_spec_begin(),
+           E = CTD->loaded_spec_end(); I != E; ++I)
       Successful &= Visit(*I);
 
     Successful &= VisitRedeclarableTemplateDecl(CTD);
@@ -982,13 +995,13 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       This->getCommonPtr()->Specializations.clear();
 
       //Readd the collected specializations.
-      void* InsertPos = 0;
-      ClassTemplateSpecializationDecl* CTSD = 0;
+      void* InsertPos = nullptr;
+      ClassTemplateSpecializationDecl* CTSD = nullptr;
       for (size_t i = 0, e = specializations.size(); i < e; ++i) {
         CTSD = specializations[i];
         assert(CTSD && "Must not be null.");
         // Avoid assertion on add.
-        CTSD->SetNextInBucket(0);
+        CTSD->SetNextInBucket(nullptr);
         This->AddSpecialization(CTSD, InsertPos);
       }
     }
@@ -1018,13 +1031,13 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       This->getPartialSpecializations().clear();
 
       //Readd the collected specializations.
-      void* InsertPos = 0;
-      ClassTemplatePartialSpecializationDecl* CTPSD = 0;
+      void* InsertPos = nullptr;
+      ClassTemplatePartialSpecializationDecl* CTPSD = nullptr;
       for (size_t i = 0, e = specializations.size(); i < e; ++i) {
         CTPSD = specializations[i];
         assert(CTPSD && "Must not be null.");
         // Avoid assertion on add.
-        CTPSD->SetNextInBucket(0);
+        CTPSD->SetNextInBucket(nullptr);
         This->AddPartialSpecialization(CTPSD, InsertPos);
       }
     }

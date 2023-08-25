@@ -159,14 +159,14 @@ private:
    void           CheckTargetUnderGrab();
    void           HighlightCompositeFrame(Window_t);
    void           Compact(Bool_t global = kTRUE);
-   Bool_t         StartDrag(TGFrame *src, Int_t x, Int_t y);
-   Bool_t         EndDrag();
-   Bool_t         Drop();
-   Bool_t         Cancel(Bool_t delSrc);
+   Bool_t         StartDrag(TGFrame *src, Int_t x, Int_t y) override;
+   Bool_t         EndDrag() override;
+   Bool_t         Drop() override;
+   Bool_t         Cancel(Bool_t delSrc) override;
    void           Menu4Frame(TGFrame *, Int_t x, Int_t y);
    void           Menu4Lasso(Int_t x, Int_t y);
    void           CreatePropertyEditor();
-   void           DoRedraw();
+   void           DoRedraw() override;
    void           SwitchEditable(TGFrame *frame);
    void           UnmapAllPopups();
    void           BreakLayout();
@@ -175,33 +175,33 @@ private:
    Bool_t         RecognizeGesture(Event_t *, TGFrame *frame = nullptr);
    Bool_t         HandleButtonPress(Event_t *);
    Bool_t         HandleButtonRelease(Event_t *);
-   Bool_t         HandleButton(Event_t *);
-   Bool_t         HandleDoubleClick(Event_t*);
-   Bool_t         HandleMotion(Event_t *);
-   Bool_t         HandleClientMessage(Event_t *);
+   Bool_t         HandleButton(Event_t *) override;
+   Bool_t         HandleDoubleClick(Event_t*) override;
+   Bool_t         HandleMotion(Event_t *) override;
+   Bool_t         HandleClientMessage(Event_t *) override;
    Bool_t         HandleDestroyNotify(Event_t *);
-   Bool_t         HandleSelection(Event_t *);
-   Bool_t         HandleExpose(Event_t *);
-   Bool_t         HandleConfigureNotify(Event_t *);
-   Bool_t         HandleSelectionRequest(Event_t *);
+   Bool_t         HandleSelection(Event_t *) override;
+   Bool_t         HandleExpose(Event_t *) override;
+   Bool_t         HandleConfigureNotify(Event_t *) override;
+   Bool_t         HandleSelectionRequest(Event_t *) override;
    void           HandleButon3Pressed(Event_t *, TGFrame *frame = nullptr);
-   Bool_t         HandleEvent(Event_t *);
-   Bool_t         HandleTimer(TTimer *);
+   Bool_t         HandleEvent(Event_t *) override;
+   Bool_t         HandleTimer(TTimer *) override;
 
    Bool_t         IsMoveWaiting() const;
    Bool_t         IsLassoDrawn() const { return fLassoDrawn; }
    void           SetLassoDrawn(Bool_t on);
    void           HideGrabRectangles();
-   Bool_t         IgnoreEvent(Event_t *e);
+   Bool_t         IgnoreEvent(Event_t *e) override;
    Bool_t         CheckDragResize(Event_t *event);
    Bool_t         IsPasteFrameExist();
 
 public:
    TGuiBldDragManager();
-   virtual        ~TGuiBldDragManager();
+          ~TGuiBldDragManager() override;
 
    void           HandleAction(Int_t act);
-   Bool_t         HandleKey(Event_t *);
+   Bool_t         HandleKey(Event_t *) override;
 
    TGFrame       *GetTarget() const { return fTarget; }
    TGFrame       *GetSelected() const;
@@ -209,21 +209,21 @@ public:
    void           SetGridStep(UInt_t step);
    UInt_t         GetGridStep();
    void           HandleUpdateSelected(TGFrame *);
-   Int_t          GetStrartDragX() const;
-   Int_t          GetStrartDragY() const;
-   Int_t          GetEndDragX() const;
-   Int_t          GetEndDragY() const;
+   Int_t          GetStrartDragX() const override;
+   Int_t          GetStrartDragY() const override;
+   Int_t          GetEndDragX() const override;
+   Int_t          GetEndDragY() const override;
 
    Bool_t         GetDropStatus() const { return fDropStatus; }
    void           SetBuilder(TRootGuiBuilder *b) { fBuilder = b; }
 
    Bool_t         IsStopped() const { return fStop; }
-   void           SetEditable(Bool_t on = kTRUE);
+   void           SetEditable(Bool_t on = kTRUE) override;
    void           SelectFrame(TGFrame *frame, Bool_t add = kFALSE);
 
    static void    MapGlobalDialog(TGMainFrame *dialog, TGFrame *fr);
 
-   Bool_t         HandleTimerEvent(Event_t *ev, TTimer *t);
+   Bool_t         HandleTimerEvent(Event_t *ev, TTimer *t) override;
    void           TimerEvent(Event_t *ev)
                      { Emit("TimerEvent(Event_t*)", (Longptr_t)ev); } // *SIGNAL*
 
@@ -256,7 +256,7 @@ public:
    void ChangeBackgroundColor(TGFrame *);             //*MENU* *DIALOG*icon=bld_colorselect.png*
    void ChangeBackgroundColor(TGCompositeFrame *);    //*MENU* *DIALOG*icon=bld_colorselect.png*
 
-   ClassDef(TGuiBldDragManager,0)  // drag and drop manager
+   ClassDefOverride(TGuiBldDragManager,0)  // drag and drop manager
 };
 
 

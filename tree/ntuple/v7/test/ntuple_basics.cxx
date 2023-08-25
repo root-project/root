@@ -411,6 +411,10 @@ TEST(RNTupleModel, GetField)
    EXPECT_EQ(m->GetField("cs.v1")->GetType(), "std::vector<float>");
    EXPECT_EQ(m->GetField("nonexistent"), nullptr);
    EXPECT_EQ(m->GetField(""), nullptr);
+   EXPECT_EQ("", m->GetFieldZero()->GetQualifiedFieldName());
+   EXPECT_EQ("x", m->GetField("x")->GetQualifiedFieldName());
+   EXPECT_EQ("cs", m->GetField("cs")->GetQualifiedFieldName());
+   EXPECT_EQ("cs.v1", m->GetField("cs.v1")->GetQualifiedFieldName());
 }
 
 TEST(RNTuple, EmptyString)
@@ -674,14 +678,14 @@ TEST(RNTuple, ReadCallback)
    auto model = RNTupleModel::Create();
    auto fieldI32 = std::make_unique<RField<std::int32_t>>("i32");
    auto fieldKlass = std::make_unique<RField<CustomStruct>>("klass");
-   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &value) {
+   RFieldCallbackInjector::Inject(*fieldI32, [](void *target) {
       static std::int32_t expected = 0;
-      EXPECT_EQ(*value.Get<std::int32_t>(), expected++);
+      EXPECT_EQ(*static_cast<std::int32_t *>(target), expected++);
       gNCallReadCallback++;
    });
-   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &) { gNCallReadCallback++; });
-   RFieldCallbackInjector::Inject(*fieldKlass, [](RFieldValue &value) {
-      auto typedValue = value.Get<CustomStruct>();
+   RFieldCallbackInjector::Inject(*fieldI32, [](void *) { gNCallReadCallback++; });
+   RFieldCallbackInjector::Inject(*fieldKlass, [](void *target) {
+      auto typedValue = static_cast<CustomStruct *>(target);
       typedValue->a = 1337.0; // should change the value on the default entry
       gNCallReadCallback++;
    });
@@ -696,4 +700,35 @@ TEST(RNTuple, ReadCallback)
    ntuple->LoadEntry(1);
    EXPECT_EQ(1337.0, rdKlass->a);
    EXPECT_EQ(6U, gNCallReadCallback);
+}
+
+TEST(RNTuple, FillBytesWritten)
+{
+   FileRaii fileGuard("test_ntuple_fillbytes.ntuple");
+
+   auto checkFillReturnValue = [&](const RNTupleWriteOptions &options) {
+      const std::size_t indexColumnSz = options.GetHasSmallClusters() ? sizeof(std::uint32_t) : sizeof(std::uint64_t);
+
+      // TODO(jalopezg): improve test coverage by adding other field types
+      auto model = RNTupleModel::Create();
+      auto fieldI32 = model->MakeField<std::int32_t>("i32");
+      auto fieldStr = model->MakeField<std::string>("s");
+      auto fieldBoolVec = model->MakeField<std::vector<bool>>("bool_vec");
+      auto fieldFloatVec = model->MakeField<std::vector<float>>("float_vec");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+      *fieldI32 = 42;
+      *fieldStr = "abc";
+      // A 32bit integer + "abc" literal + one (32|64)bit integer for each index column
+      EXPECT_EQ(7U + (3 * indexColumnSz), ntuple->Fill());
+      *fieldBoolVec = {true, false, true};
+      *fieldFloatVec = {42.0f, 1.1f};
+      // A 32bit integer + "abc" literal + one (32|64)bit integer for each index column + 3 bools + 2 floats
+      EXPECT_EQ(18U + (3 * indexColumnSz), ntuple->Fill());
+   };
+
+   checkFillReturnValue({});
+
+   RNTupleWriteOptions optsSmall;
+   optsSmall.SetHasSmallClusters(true);
+   checkFillReturnValue(optsSmall);
 }

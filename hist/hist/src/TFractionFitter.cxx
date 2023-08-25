@@ -209,7 +209,7 @@ fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
    for (par = 0; par < fNpar; ++par) {
       fMCs.Add(MCs->At(par));
       // Histogram containing template prediction
-      TString s = Form("Prediction for MC sample %i",par);
+      TString s = TString::Format("Prediction for MC sample %i",par);
       TH1* pred = (TH1*) ((TH1*)MCs->At(par))->Clone(s);
       // TFractionFitter manages these histograms
       pred->SetDirectory(0);

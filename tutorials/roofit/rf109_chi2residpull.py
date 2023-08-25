@@ -5,7 +5,9 @@
 ## Calculating chi^2 from histograms and curves in ROOT.RooPlots,
 ## making histogram of residual and pull distributions
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)

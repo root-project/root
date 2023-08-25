@@ -70,7 +70,7 @@ ClassImp(RooNDKeysPdf);
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
                            TString options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(rho),
+     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
   // Constructor
@@ -85,7 +85,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
     _varName.push_back(var->GetName());
   }
 
-  createPdf();
+  createPdf(true, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
                            TString options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _ownedData(createDatasetFromHist(varList, hist)), _data(_ownedData.get()),
+     _rhoList("rhoList", "List of rho parameters", this),
      _options(options), _widthFactor(rho), _nSigma(nSigma), _rotate(rotate),
      _sortInput(sortInput), _nAdpt(1)
 {
@@ -108,7 +108,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
       _varName.push_back(var->GetName());
    }
 
-   createPdf();
+   createPdf(true, *std::unique_ptr<RooDataSet>{createDatasetFromHist(varList, hist)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
                            const TVectorD &rho, TString options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(-1.0),
+     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
   for (const auto var : varList) {
@@ -146,7 +146,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
      _rho[j] = rho[j]; /*cout<<"RooNDKeysPdf ctor, _rho["<<j<<"]="<<_rho[j]<<endl;*/
   }
 
-  createPdf(); // calls initialize ...
+  createPdf(true, data); // calls initialize ...
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
                            const RooArgList &rhoList, TString options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(-1.0),
+     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
    for (const auto var : varList) {
@@ -193,7 +193,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
    _tracker = new RooChangeTracker("tracker", "track rho parameters", _rhoList, true); // check for value updates
    (void)_tracker->hasChanged(true); // first evaluation always true for new parameters (?)
 
-   createPdf();
+   createPdf(true, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +202,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
                            const RooArgList &rhoList, TString options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _ownedData(createDatasetFromHist(varList, hist)), _data(_ownedData.get()),
+     _rhoList("rhoList", "List of rho parameters", this),
      _options(options), _widthFactor(-1), _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput),
      _nAdpt(1)
 {
@@ -240,7 +240,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
    _tracker = new RooChangeTracker("tracker", "track rho parameters", _rhoList, true); // check for value updates
    (void)_tracker->hasChanged(true); // first evaluation always true for new parameters (?)
 
-   createPdf();
+   createPdf(true, *std::unique_ptr<RooDataSet>{createDatasetFromHist(varList, hist)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +249,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooDataSet &data, Mirror mirror,
                            double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options("a"), _widthFactor(rho),
+     _rhoList("rhoList", "List of rho parameters", this), _options("a"), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
    _varList.add(x);
@@ -262,7 +262,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
       _options = "m";
    }
 
-   createPdf();
+   createPdf(true, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,14 +272,14 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooDataSet &data,
                            TString options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _data(&data), _options(options), _widthFactor(rho),
+     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
    _varList.add(RooArgSet(x, y));
    _varName.push_back(x.GetName());
    _varName.push_back(y.GetName());
 
-   createPdf();
+   createPdf(true, data);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,8 +287,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, R
 
 RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
    : RooAbsPdf(other, name), _varList("varList", this, other._varList), _rhoList("rhoList", this, other._rhoList),
-     _ownedData(other._ownedData ? new RooDataSet(*other._ownedData) : nullptr),
-     _data(_ownedData ? _ownedData.get() : other._data), _options(other._options), _widthFactor(other._widthFactor),
+     _options(other._options), _widthFactor(other._widthFactor),
      _nSigma(other._nSigma), _rotate(other._rotate), _sortInput(other._sortInput),
      _nAdpt(other._nAdpt)
 {
@@ -380,24 +379,24 @@ RooNDKeysPdf::~RooNDKeysPdf()
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluation order of constructor.
 
-void RooNDKeysPdf::createPdf(bool firstCall)
+void RooNDKeysPdf::createPdf(bool firstCall, RooDataSet const& data)
 {
   if (firstCall) {
     // set options
     setOptions();
     // initialization
-    initialize();
+    initialize(data);
   }
 
 
   // copy dataset, calculate sigma_i's, determine min and max event weight
-  loadDataSet(firstCall);
+  loadDataSet(firstCall, data);
 
   // mirror dataset around dataset boundaries -- does not depend on event weights
   if (_mirror) mirrorDataSet();
 
   // store indices and weights of events with high enough weights
-  loadWeightSet();
+  loadWeightSet(data);
 
   // store indices of events in variable boundaries and box shell.
 //calculateShell(&_fullBoxInfo);
@@ -451,10 +450,10 @@ void RooNDKeysPdf::setOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// initialization
 
-void RooNDKeysPdf::initialize()
+void RooNDKeysPdf::initialize(RooDataSet const& data)
 {
   _nDim      = _varList.getSize();
-  _nEvents   = (Int_t)_data->numEntries();
+  _nEvents   = (Int_t)data.numEntries();
   _nEventsM  = _nEvents;
   _fixedShape= false;
 
@@ -476,7 +475,7 @@ void RooNDKeysPdf::initialize()
 
   _d         = static_cast<double>(_nDim);
 
-  vector<double> dummy(_nDim,0.);
+  std::vector<double> dummy(_nDim,0.);
   _dataPts.resize(_nEvents,dummy);
   _weights0.resize(_nEvents,dummy);
 
@@ -498,16 +497,16 @@ void RooNDKeysPdf::initialize()
   _xDatLo3s.resize(_nDim,0.);
   _xDatHi3s.resize(_nDim,0.);
 
-  boxInfoInit(&_fullBoxInfo,0,0xFFFF);
+  boxInfoInit(&_fullBoxInfo,nullptr,0xFFFF);
 
   _minWeight=0;
   _maxWeight=0;
   _wMap.clear();
 
-  _covMat = 0;
-  _corrMat= 0;
-  _rotMat = 0;
-  _sigmaR = 0;
+  _covMat = nullptr;
+  _corrMat= nullptr;
+  _rotMat = nullptr;
+  _sigmaR = nullptr;
   _dx = new TVectorD(_nDim); _dx->Zero();
   _dataPtsR.resize(_nEvents,*_dx);
 
@@ -521,7 +520,7 @@ void RooNDKeysPdf::initialize()
 ////////////////////////////////////////////////////////////////////////////////
 /// copy the dataset and calculate some useful variables
 
-void RooNDKeysPdf::loadDataSet(bool firstCall)
+void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
 {
   // first some initialization
   _nEventsW=0.;
@@ -538,7 +537,7 @@ void RooNDKeysPdf::loadDataSet(bool firstCall)
   _rotMat->Zero();
   _sigmaR->Zero();
 
-  const RooArgSet* values= _data->get();
+  const RooArgSet* values= data.get();
   vector<RooRealVar*> dVars(_nDim);
   for  (Int_t j=0; j<_nDim; j++) {
     dVars[j] = (RooRealVar*)values->find(_varName[j].c_str());
@@ -548,12 +547,12 @@ void RooNDKeysPdf::loadDataSet(bool firstCall)
   _idx.clear();
   for (Int_t i=0; i<_nEvents; i++) {
 
-    _data->get(i); // fills dVars
+    data.get(i); // fills dVars
     _idx.push_back(i);
-    vector<double>& point  = _dataPts[i];
+    std::vector<double>& point  = _dataPts[i];
     TVectorD& pointV = _dataPtsR[i];
 
-    double myweight = _data->weight(); // default is one?
+    double myweight = data.weight(); // default is one?
     if ( TMath::Abs(myweight)>_maxWeight ) { _maxWeight = TMath::Abs(myweight); }
     _nEventsW += myweight;
 
@@ -741,13 +740,13 @@ void RooNDKeysPdf::mirrorDataSet()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooNDKeysPdf::loadWeightSet()
+void RooNDKeysPdf::loadWeightSet(RooDataSet const& data)
 {
   _wMap.clear();
 
   for (Int_t i=0; i<_nEventsM; i++) {
-    _data->get(_idx[i]);
-    double myweight = _data->weight();
+    data.get(_idx[i]);
+    double myweight = data.weight();
     //if ( TMath::Abs(myweight)>_minWeight ) {
       _wMap[i] = myweight;
     //}
@@ -924,8 +923,8 @@ void RooNDKeysPdf::calculateBandWidth()
      vector<double> dummy(_nDim, 0.);
      _weights1.resize(_nEvents, dummy);
 
-     std::vector<std::vector<double>> *weights_prev(0);
-     std::vector<std::vector<double>> *weights_new(0);
+     std::vector<std::vector<double>> *weights_prev(nullptr);
+     std::vector<std::vector<double>> *weights_new(nullptr);
 
      // cout << "Number of adaptive iterations: " << _nAdpt << endl;
 
@@ -1175,7 +1174,7 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   vector<bool> doInt(_nDim,true);
 
   // get BoxInfo
-  BoxInfo* bi(0);
+  BoxInfo* bi(nullptr);
 
   if (rangeName) {
     string rangeNameStr(rangeName) ;

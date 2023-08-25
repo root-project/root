@@ -16,7 +16,7 @@
 The RCsvDS class implements a CSV file reader for RDataFrame.
 
 A RDataFrame that reads from a CSV file can be constructed using the factory method
-ROOT::RDF::MakeCsvDataFrame, which accepts five parameters:
+ROOT::RDF::FromCSV, which accepts five parameters:
 1. Path to the CSV file.
 2. Boolean that specifies whether the first row of the CSV file contains headers or
 not (optional, default `true`). If `false`, header names will be automatically generated as Col0, Col1, ..., ColN.
@@ -561,12 +561,6 @@ RDataFrame FromCSV(std::string_view fileName, bool readHeaders, char delimiter, 
    ROOT::RDataFrame rdf(
       std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize, std::move(colTypes)));
    return rdf;
-}
-
-RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
-                            std::unordered_map<std::string, char> &&colTypes)
-{
-   return FromCSV(fileName, readHeaders, delimiter, linesChunkSize, std::move(colTypes));
 }
 
 } // ns RDF

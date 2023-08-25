@@ -39,31 +39,31 @@ protected:
    friend class TTreeCloner;
 
    void Init(TTree *tree, TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
-   virtual Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *);
+   Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
 public:
    TBranchClones();
    TBranchClones(TTree *tree, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    TBranchClones(TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
-   virtual ~TBranchClones();
+   ~TBranchClones() override;
 
-   virtual void    Browse(TBrowser *b);
-   virtual const char* GetClassName() const { return fClassName; }
-   virtual Int_t   GetEntry(Long64_t entry=0, Int_t getall = 0);
+   void    Browse(TBrowser *b) override;
+   const char* GetClassName() const override { return fClassName; }
+   Int_t   GetEntry(Long64_t entry=0, Int_t getall = 0) override;
    virtual Int_t   GetN() const {return fN;}
    TClonesArray    *GetList() const {return fList;}
-   Bool_t          IsFolder() const {return kTRUE;}
-   virtual void    Print(Option_t *option="") const;
-   virtual void    Reset(Option_t *option="");
-   virtual void    ResetAfterMerge(TFileMergeInfo *);
-   virtual void    SetAddress(void *add);
-   virtual void    SetBasketSize(Int_t buffsize);
-   virtual void    SetTree(TTree *tree) { fTree = tree; fBranchCount->SetTree(tree); }
-   virtual void    UpdateFile();
+   Bool_t          IsFolder() const override {return kTRUE;}
+   void    Print(Option_t *option="") const override;
+   void    Reset(Option_t *option="") override;
+   void    ResetAfterMerge(TFileMergeInfo *) override;
+   void    SetAddress(void *add) override;
+   void    SetBasketSize(Int_t buffsize) override;
+   void    SetTree(TTree *tree) override { fTree = tree; fBranchCount->SetTree(tree); }
+   void    UpdateFile() override;
 
 private:
 
-   ClassDef(TBranchClones,2);  //Branch in case of an array of clone objects
+   ClassDefOverride(TBranchClones,2);  //Branch in case of an array of clone objects
 };
 
 #endif

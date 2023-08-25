@@ -112,14 +112,15 @@ int RDaosFakeObject::Update(daos_key_t *dkey, unsigned int nr, daos_iod_t *iods,
    for (unsigned i = 0; i < nr; i++) {
       auto &data = fStorage[GetKey(dkey, /*akey=*/&iods[i].iod_name)];
       /* We assume each attribute key is associated to a single value whose corresponding data is
-       * updated from exactly one I/O vector. */
+       * sequentially updated from one or more I/O vectors. */
       if (iods[i].iod_nr != 1 || iods[i].iod_type != DAOS_IOD_SINGLE)
          return -DER_INVAL;
-      if (sgls[i].sg_nr != 1)
-         return -DER_INVAL;
 
-      d_iov_t &iov = sgls[i].sg_iovs[0];
-      data.assign(reinterpret_cast<char *>(iov.iov_buf), iov.iov_buf_len); // Write to buffer
+      data.clear();
+      for (unsigned j = 0; j < sgls[i].sg_nr; j++) {
+         const d_iov_t &iov = sgls[i].sg_iovs[j];
+         data.append(reinterpret_cast<const char *>(iov.iov_buf), iov.iov_buf_len);
+      }
    }
    return 0;
 }

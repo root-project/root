@@ -29,7 +29,7 @@ range cannot include zero.
 #include "RooInvTransform.h"
 
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

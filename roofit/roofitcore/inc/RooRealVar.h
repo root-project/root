@@ -33,9 +33,6 @@ class RooErrorVar ;
 class RooVectorDataStore ;
 class RooExpensiveObjectCache ;
 class RooRealVarSharedProperties;
-namespace RooBatchCompute{
-struct RunContext;
-}
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -53,7 +50,6 @@ public:
 
   // Parameter value and error accessors
   double getValV(const RooArgSet* nset=nullptr) const override ;
-  RooSpan<const double> getValues(RooBatchCompute::RunContext& inputData, const RooArgSet* = nullptr) const final;
 
   /// Returns how many times the value of this RooRealVar was reset.
   std::size_t valueResetCounter() const { return _valueResetCounter; }
@@ -136,6 +132,8 @@ public:
 
   static void cleanup() ;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
   protected:
 
   static bool _printScientific ;
@@ -172,7 +170,7 @@ public:
 
   std::size_t _valueResetCounter = 0; ///<! How many times the value of this variable was reset
 
-  ClassDefOverride(RooRealVar,9); // Real-valued variable
+  ClassDefOverride(RooRealVar,10); // Real-valued variable
 };
 
 #endif

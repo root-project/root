@@ -222,7 +222,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
          return nullptr;
       }
       if (isEmpty)
-         frame->SetTitle(Form("Posterior Keys PDF for %s", v->GetName()));
+         frame->SetTitle(("Posterior Keys PDF for " + std::string(v->GetName())).c_str());
       else
          frame->SetTitle(GetTitle());
       //fPosteriorKeysPdf->plotOn(frame);
@@ -305,8 +305,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
             frame->SetTitle(nullptr);
          else
             frame->SetTitle(GetTitle());
-         frame->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
-                  p->GetName()));
+         frame->GetYaxis()->SetTitle(("Posterior for parameter " + std::string(p->GetName())).c_str());
          fPosteriorKeysPdf->plotOn(frame,
                RooFit::Normalization(1, RooAbsReal::Raw),
                RooFit::Range(ll, ul, false),
@@ -397,10 +396,9 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
          hist->SetTitle(nullptr);
       else
          hist->SetTitle(GetTitle());
-      hist->GetYaxis()->SetTitle(Form("Posterior for parameter %s",
-               p->GetName()));
+      hist->GetYaxis()->SetTitle(("Posterior for parameter " + std::string(p->GetName())).c_str());
       hist->SetStats(false);
-      TH1F* copy = (TH1F*)hist->Clone(Form("%s_copy", hist->GetTitle()));
+      TH1F* copy = static_cast<TH1F*>(hist->Clone((std::string(hist->GetTitle()) + "_copy").c_str()));
       double histCutoff = fInterval->GetHistCutoff();
 
       Int_t i;

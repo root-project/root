@@ -23,10 +23,6 @@ class RooAbsIntegrator : public TObject {
 public:
   RooAbsIntegrator() ;
   RooAbsIntegrator(const RooAbsFunc& function, bool printEvalCounter=false);
-  /// Destructor
-  inline ~RooAbsIntegrator() override {
-  }
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const = 0 ;
 
   /// Is integrator in valid state
   inline bool isValid() const {
@@ -51,11 +47,6 @@ public:
   double calculate(const double *yvec=nullptr) ;
   virtual double integral(const double *yvec=nullptr)=0 ;
 
-  virtual bool canIntegrate1D() const = 0 ;
-  virtual bool canIntegrate2D() const = 0 ;
-  virtual bool canIntegrateND() const = 0 ;
-  virtual bool canIntegrateOpenEnded() const = 0 ;
-
   bool printEvalCounter() const { return _printEvalCounter ; }
   void setPrintEvalCounter(bool value) { _printEvalCounter = value ; }
 
@@ -65,9 +56,9 @@ public:
 
 protected:
 
-  const RooAbsFunc *_function; ///< Pointer to function binding of integrand
-  bool _valid;               ///< Is integrator in valid state?
-  bool _printEvalCounter ;   ///< If true print number of function evaluation required for integration
+  const RooAbsFunc *_function = nullptr; ///< Pointer to function binding of integrand
+  bool _valid = false;                   ///< Is integrator in valid state?
+  bool _printEvalCounter = false;        ///< If true print number of function evaluation required for integration
 
   ClassDefOverride(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };

@@ -27,9 +27,9 @@
 // The range casts are not used in this file, but if you want to work with
 // RooFit collections you also want to have static_range_cast and
 // dynamic_range_cast available without including RangeCast.h every time.
-#include "ROOT/RRangeCast.hxx"
+#include <ROOT/RRangeCast.hxx>
 
-#include "ROOT/RSpan.hxx"
+#include <ROOT/RSpan.hxx>
 
 #include <string>
 #include <unordered_map>
@@ -115,7 +115,16 @@ public:
 
   // List content management
   virtual bool add(const RooAbsArg& var, bool silent=false) ;
+// The following function is not memory safe, because it takes ownership of var
+// without moving it. It is not publically available in the memory safe
+// interfaces mode.
+#ifdef ROOFIT_MEMORY_SAFE_INTERFACES
+protected:
+#endif
   virtual bool addOwned(RooAbsArg& var, bool silent=false);
+#ifdef ROOFIT_MEMORY_SAFE_INTERFACES
+public:
+#endif
   bool addOwned(std::unique_ptr<RooAbsArg> var, bool silent=false);
   virtual RooAbsArg *addClone(const RooAbsArg& var, bool silent=false) ;
   virtual bool replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
@@ -313,10 +322,10 @@ public:
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
   // Latex printing methods
-  void printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
-        const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-        const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-        const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+  void printLatex(const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+        const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+        const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+        const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
   void printLatex(std::ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1,
                   const RooLinkedList& siblingLists=RooLinkedList(), const RooCmdArg* formatCmd=nullptr) const ;
 
@@ -367,9 +376,6 @@ protected:
   bool _allRRV = true;   ///< All contents are RRV
 
   void deleteList() ;
-
-  // Support for snapshot method
-  bool addServerClonesToList(const RooAbsArg& var) ;
 
   inline TNamed* structureTag() { if (_structureTag==nullptr) makeStructureTag() ; return _structureTag ; }
   inline TNamed* typedStructureTag() { if (_typedStructureTag==nullptr) makeTypedStructureTag() ; return _typedStructureTag ; }

@@ -178,7 +178,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    assert( ndim > 0 );
    //typedef  BinPoint::CoordData CoordData;
    //CoordData x = CoordData( hfit->GetDimension() );
-   dv.Initialize(n,ndim);
+   dv.Initialize(n,ndim, (fitOpt.fErrors1) ? ROOT::Fit::BinData::kNoError : ROOT::Fit::BinData::kValueError);
 
    double x[3];
    double s[3];
@@ -236,7 +236,10 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
                if (hdim == 2)  dv.Add(  x,  x[1],  yaxis->GetBinWidth(biny) / error  );
                if (hdim == 3)  dv.Add(  x,  x[2],  zaxis->GetBinWidth(binz) / error  );
             } else {
-               dv.Add(   x,  value, error  );
+               if (fitOpt.fErrors1)
+                  dv.Add(   x,  value );
+               else
+                  dv.Add(   x,  value, error  );
                if (useBinEdges) {
                   dv.AddBinUpEdge( s );
                }
@@ -726,7 +729,7 @@ void FillData(SparseData & dv, const THnBase * h1, TF1 * /*func*/)
 
 //       std::cout << "FILLDATA(SparseData): h1(" << i << ")";
 
-      // Exclude underflows and oveflows! (defect behaviour with the TH1*)
+      // Exclude underflows and overflows! (defect behaviour with the TH1*)
       bool insertBox = true;
       for ( int j = 0; j < dim && insertBox; ++j )
       {
@@ -769,7 +772,7 @@ void FillData(BinData & dv, const THnBase * s1, TF1 * func)
    // Put default options, needed for the likelihood fitting of sparse
    // data.
    ROOT::Fit::DataOptions& dopt = dv.Opt();
-   dopt.fUseEmpty = true;
+   //dopt.fUseEmpty = true;
    // when using sparse data need to set option to use normalized bin volume, because sparse bins are merged together
    //if (!dopt.fIntegral) dopt.fBinVolume = true;
    dopt.fBinVolume = true;

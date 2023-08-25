@@ -29,8 +29,6 @@ class THttpCallArg;
 class THttpServer;
 
 namespace ROOT {
-namespace Experimental {
-
 
 /// function signature for connect/disconnect call-backs
 /// argument is connection id
@@ -47,6 +45,7 @@ using WebWindowDataCallback_t = std::function<void(unsigned, const std::string &
 /// Waiting will be performed until function returns non-zero value
 using WebWindowWaitFunc_t = std::function<int(double)>;
 
+class RFileDialog;
 class RWebWindowsManager;
 class RWebWindowWSHandler;
 
@@ -55,6 +54,7 @@ class RWebWindow {
    friend class RWebWindowsManager;
    friend class RWebWindowWSHandler;
    friend class RWebDisplayHandle;
+   friend class RFileDialog;
 
 private:
    using timestamp_t = std::chrono::time_point<std::chrono::system_clock>;
@@ -110,6 +110,12 @@ private:
       }
    };
 
+   struct MasterConn {
+      unsigned connid{0};
+      int channel{-1};
+      MasterConn(unsigned _connid, int _channel) : connid(_connid), channel(_channel) {}
+   };
+
    enum EQueueEntryKind { kind_None, kind_Connect, kind_Data, kind_Disconnect };
 
    struct QueueEntry {
@@ -124,8 +130,7 @@ private:
 
    std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
    std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embedded
-   unsigned fMasterConnId{0};                       ///<! master connection id
-   int fMasterChannel{-1};                          ///<! channel id in the master window
+   std::vector<MasterConn> fMasterConns;            ///<! master connections
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
@@ -150,8 +155,8 @@ private:
    std::thread fWindowThrd;                         ///<! special thread for that window
    std::queue<QueueEntry> fInputQueue;              ///<! input queue for all callbacks
    std::mutex fInputQueueMutex;                     ///<! mutex to protect input queue
-   unsigned fWidth{0};                              ///<! initial window width when displayed
-   unsigned fHeight{0};                             ///<! initial window height when displayed
+   unsigned fWidth{0}, fHeight{0};                  ///<! initial window width and height when displayed, zeros are ignored
+   int fX{-1}, fY{-1};                              ///<! initial window position, -1 ignored
    float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
    std::string fClientVersion;                      ///<! configured client version, used as prefix in scripts URL
    std::string fProtocolFileName;                   ///<! local file where communication protocol will be written
@@ -160,6 +165,7 @@ private:
    std::string fProtocolPrefix;                     ///<! prefix for created files names
    std::string fProtocol;                           ///<! protocol
    std::string fUserArgs;                           ///<! arbitrary JSON code, which is accessible via conn.getUserArgs() method
+   std::shared_ptr<void> fClearOnClose;             ///<! entry which is cleared when last connection is closed
 
    std::shared_ptr<RWebWindowWSHandler> CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id, double tmout);
 
@@ -167,7 +173,7 @@ private:
 
    void CompleteWSSend(unsigned wsid);
 
-   ConnectionsList_t GetConnections(unsigned connid = 0, bool only_active = false) const;
+   ConnectionsList_t GetWindowConnections(unsigned connid = 0, bool only_active = false) const;
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
@@ -200,9 +206,15 @@ private:
 
    unsigned AddDisplayHandle(bool headless_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
 
-   unsigned AddEmbedWindow(std::shared_ptr<RWebWindow> window, int channel);
+   unsigned AddEmbedWindow(std::shared_ptr<RWebWindow> window, unsigned connid, int channel);
 
    void RemoveEmbedWindow(unsigned connid, int channel);
+
+   void AddMasterConnection(std::shared_ptr<RWebWindow> window, unsigned connid, int channel);
+
+   std::vector<MasterConn> GetMasterConnections(unsigned connid = 0) const;
+
+   void RemoveMasterConnection(unsigned connid = 0);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
@@ -213,6 +225,10 @@ private:
    unsigned FindHeadlessConnection();
 
    void CheckThreadAssign();
+
+   static std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> gStartDialogFunc;
+
+   static void SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)>);
 
 public:
 
@@ -241,6 +257,13 @@ public:
       fHeight = height;
    }
 
+   /// Set window position. Will be applied if supported by used web display (like CEF or Chromium)
+   void SetPosition(unsigned x, unsigned y)
+   {
+      fX = x;
+      fY = y;
+   }
+
    /////////////////////////////////////////////////////////////////////////
    /// returns configured window width (0 - default)
    /// actual window width can be different
@@ -249,6 +272,14 @@ public:
    /////////////////////////////////////////////////////////////////////////
    /// returns configured window height (0 - default)
    unsigned GetHeight() const { return fHeight; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns configured window X position (-1 - default)
+   int GetX() const { return fX; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns configured window Y position (-1 - default)
+   int GetY() const { return fY; }
 
    void SetConnLimit(unsigned lmt = 0);
 
@@ -283,6 +314,8 @@ public:
    int NumConnections(bool with_pending = false) const;
 
    unsigned GetConnectionId(int num = 0) const;
+
+   std::vector<unsigned> GetConnections(unsigned excludeid = 0) const;
 
    bool HasConnection(unsigned connid = 0, bool only_active = true) const;
 
@@ -337,6 +370,8 @@ public:
 
    void SetDisconnectCallBack(WebWindowConnectCallback_t func);
 
+   void SetClearOnClose(const std::shared_ptr<void> &handle = nullptr);
+
    void AssignThreadId();
 
    void UseServerThreads();
@@ -357,9 +392,11 @@ public:
 
    static unsigned ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDisplayArgs &args = "");
 
+   static bool IsFileDialogMessage(const std::string &msg);
+
+   static bool EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args);
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

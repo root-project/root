@@ -54,6 +54,14 @@
 #include <mach-o/dyld.h>
 #endif
 
+#ifdef R__FBSD
+#include <sys/param.h>
+#include <sys/user.h>
+#include <sys/types.h>
+#include <libutil.h>
+#include <libprocstat.h>
+#endif // R__FBSD
+
 #if !defined(R__WIN32)
 #include <limits.h>
 #include <unistd.h>
@@ -120,6 +128,8 @@ const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 bool gBuildingROOT = false;
 const ROOT::Internal::RootCling::DriverConfig* gDriverConfig = nullptr;
 
+#define rootclingStringify(s) rootclingStringifyx(s)
+#define rootclingStringifyx(s) #s
 
 // Maybe too ugly? let's see how it performs.
 using HeadersDeclsMap_t = std::map<std::string, std::list<std::string>>;
@@ -204,6 +214,19 @@ const char *GetExePath()
       buf[ret] = 0;
       exepath = buf;
     }
+#endif
+#if defined(R__FBSD)
+  procstat* ps = procstat_open_sysctl();  //
+  kinfo_proc* kp = kinfo_getproc(getpid());
+
+  if (kp!=NULL) {
+     char path_str[PATH_MAX] = "";
+     procstat_getpathname(ps, kp, path_str, sizeof(path_str));
+     exepath = path_str;
+  }
+
+  free(kp);
+  procstat_close(ps);
 #endif
 #ifdef _WIN32
     char *buf = new char[MAX_MODULE_NAME32 + 1];
@@ -3008,10 +3031,6 @@ static void CheckForMinusW(std::string arg,
 
    if (arg.find(pattern) != 0)
       return;
-   if (arg == "-Wno-noexcept-type") {
-      // GCC7 warning not supported by clang 3.9
-      return;
-   }
 
    ROOT::TMetaUtils::ReplaceAll(arg, pattern, "#pragma clang diagnostic ignored \"-W");
    arg += "\"";
@@ -4275,6 +4294,12 @@ int RootClingMain(int argc,
       // Try to get the module name in the modulemap based on the filepath.
       moduleName = GetModuleNameFromRdictName(outputFile);
 
+#ifdef _MSC_VER
+      clingArgsInterpreter.push_back("-Xclang");
+      clingArgsInterpreter.push_back("-fmodule-feature");
+      clingArgsInterpreter.push_back("-Xclang");
+      clingArgsInterpreter.push_back("msvc" + std::string(rootclingStringify(_MSC_VER)));
+#endif
       clingArgsInterpreter.push_back("-fmodule-name=" + moduleName.str());
 
       std::string moduleCachePath = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
@@ -4398,7 +4423,7 @@ int RootClingMain(int argc,
       const clang::LangOptions& LangOpts
          = interp.getCI()->getASTContext().getLangOpts();
 #define LANGOPT(Name, Bits, Default, Description) \
-      ROOT::TMetaUtils::Info(0, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
+      ROOT::TMetaUtils::Info(nullptr, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
 #define ENUM_LANGOPT(Name, Type, Bits, Default, Description)
 #include "clang/Basic/LangOptions.def"
       ROOT::TMetaUtils::Info(nullptr, "==== END interpreter configuration ====\n\n");
@@ -4700,9 +4725,20 @@ int RootClingMain(int argc,
 
    int rootclingRetCode(0);
 
-   if (linkdef.empty()) {
-      // There is no linkdef file, we added the 'default' #pragma to
-      // interpPragmaSource.
+   if (linkdef.empty() || ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
+      if (ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
+        std::ifstream file(linkdefFilename.c_str());
+        if (file.is_open()) {
+           ROOT::TMetaUtils::Info(nullptr, "Using linkdef file: %s\n", linkdefFilename.c_str());
+           file.close();
+        } else {
+           ROOT::TMetaUtils::Error(nullptr, "Linkdef file %s couldn't be opened!\n", linkdefFilename.c_str());
+        }
+
+        selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
+      }
+      // If there is no linkdef file, we added the 'default' #pragma to
+      // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
@@ -4738,34 +4774,6 @@ int RootClingMain(int argc,
          file.close();
       } else {
          ROOT::TMetaUtils::Error(nullptr, "XML file %s couldn't be opened!\n", linkdefFilename.c_str());
-      }
-
-   } else if (ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
-
-      std::ifstream file(linkdefFilename.c_str());
-      if (file.is_open()) {
-         ROOT::TMetaUtils::Info(nullptr, "Using linkdef file: %s\n", linkdefFilename.c_str());
-         file.close();
-      } else {
-         ROOT::TMetaUtils::Error(nullptr, "Linkdef file %s couldn't be opened!\n", linkdefFilename.c_str());
-      }
-
-      selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
-
-      LinkdefReader ldefr(interp, constructorTypes);
-      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
-
-      if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
-                       llvmResourceDir.c_str())) {
-         ROOT::TMetaUtils::Error(nullptr, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
-         rootclingRetCode += 1;
-      } else {
-         ROOT::TMetaUtils::Info(nullptr, "Linkdef file successfully parsed.\n");
-      }
-
-      if (! ldefr.LoadIncludes(extraIncludes)) {
-         ROOT::TMetaUtils::Error(nullptr, "Error loading the #pragma extra_include.\n");
-         return 1;
       }
 
    } else {
