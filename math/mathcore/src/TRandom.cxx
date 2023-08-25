@@ -541,7 +541,7 @@ void TRandom::ReadRandom(const char *filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Machine independent random number generator.
-///  Based on the BSD Unix (Rand) Linear congrential generator.
+///  Based on the BSD Unix (Rand) Linear congruential generator.
 ///  Produces uniformly-distributed floating points between 0 and 1.
 ///  Identical sequence on all machines of >= 32 bits.
 ///  Periodicity = 2**31, generates a number in (0,1).
