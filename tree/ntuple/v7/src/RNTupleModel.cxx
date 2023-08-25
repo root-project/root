@@ -213,13 +213,13 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
 {
    auto cloneModel = std::unique_ptr<RNTupleModel>(new RNTupleModel());
    auto cloneFieldZero = fFieldZero->Clone("");
-   cloneModel->fModelId = fModelId;
+   cloneModel->fModelId = (fModelId == 0) ? 0 : GetNewModelId();
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
    if (fDefaultEntry) {
-      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(fModelId));
+      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
          cloneModel->fDefaultEntry->AddValue(f->GenerateValue());
       }
@@ -347,13 +347,18 @@ void ROOT::Experimental::RNTupleModel::Unfreeze()
    fModelId = 0;
 }
 
+std::uint64_t ROOT::Experimental::RNTupleModel::GetNewModelId()
+{
+   static std::atomic<std::uint64_t> gLastModelId = 0;
+   return ++gLastModelId;
+}
+
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
    if (IsFrozen())
       return;
 
-   static std::atomic<std::uint64_t> gLastModelId = 0;
-   fModelId = ++gLastModelId;
+   fModelId = GetNewModelId();
    if (fDefaultEntry)
       fDefaultEntry->fModelId = fModelId;
 }

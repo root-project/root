@@ -179,9 +179,14 @@ private:
    std::string fDescription;
    /// The set of projected top-level fields
    std::unique_ptr<RProjectedFields> fProjectedFields;
-   /// Upon freezing, every model has a unique ID to distingusish it from other models.  Cloning preserves the ID.
-   /// Entries are linked to models via the ID.
+   /// Upon freezing, every model has a unique ID to distingusish it from other models.
+   /// Entries are linked to models via the ID.  Unfreezing and re-freezing will update the model id and
+   /// thus invalidate existing entries. Cloning will also update the model id because the cloned model
+   /// as new fields so that existing entries cannot be used with the clone.
    std::uint64_t fModelId = 0;
+
+   /// Returns a new, unique ID
+   static std::uint64_t GetNewModelId();
 
    /// Checks that user-provided field names are valid in the context
    /// of this NTuple model. Throws an RException for invalid names.

@@ -570,7 +570,7 @@ TEST(RNTuple, ModelId)
    EXPECT_NE(m1->GetModelId(), m2->GetModelId());
 
    auto m2c = m2->Clone();
-   EXPECT_EQ(m2->GetModelId(), m2c->GetModelId());
+   EXPECT_NE(m2->GetModelId(), m2c->GetModelId());
 }
 
 TEST(RNTuple, Entry)
