@@ -455,6 +455,29 @@ TEST(ONNX, Neg)
       }
    }
 
+TEST(ONNX, Elu)
+   {
+      constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+      // Preparing the standard input
+      std::vector<float> input({
+        1.0, -2.0, 3.0, 0.5, -1.0, 2.0
+      });
+
+      TMVA_SOFIE_Elu::Session s("Elu_FromONNX.dat");
+      std::vector<float> output = s.infer(input.data());
+
+      // Checking output size
+      EXPECT_EQ(output.size(), sizeof(Elu_ExpectedOutput::outputs) / sizeof(float));
+
+      float *correct = Elu_ExpectedOutput::outputs;
+
+      // Checking every output value, one by one
+      for (size_t i = 0; i < output.size(); ++i) {
+         EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+      }
+   }
+
 TEST(ONNX, Cast)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
