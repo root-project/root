@@ -11,7 +11,6 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/HistFactoryJSONTool.h>
 
-#include <RooFit/Common.h>
 #include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooDataHist.h>
 #include <RooWorkspace.h>
@@ -139,35 +138,25 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 
 /// What kind of model is set up. Use this to instantiate
 /// a test suite.
-/// \note Make sure that equidistant bins have even numbers,
-/// so those tests can be found using `% 2 == kEquidistantBins`.
-enum MakeModelMode {
-   kEquidistantBins = 0,
-   kCustomBins = 1,
-   kEquidistantBins_histoSyst = 2,
-   kCustomBins_histoSyst = 3,
-   kEquidistantBins_statSyst = 4,
-   kCustomBins_statSyst = 5
-};
+enum class MakeModelMode { Simple, HistoSyst, StatSyst };
 
-std::string getName(std::tuple<MakeModelMode, std::string> const &param)
+using HFTestParam = std::tuple<MakeModelMode, bool, std::string>;
+
+std::string getName(HFTestParam const &param)
 {
-   MakeModelMode p = std::get<0>(param);
-   std::stringstream ss;
-   if (p == kEquidistantBins)
-      ss << "EquidistantBins";
-   if (p == kCustomBins)
-      ss << "CustomBins";
-   if (p == kEquidistantBins_histoSyst)
-      ss << "EquidistantBins_HistoSyst";
-   if (p == kCustomBins_histoSyst)
-      ss << "CustomBins_HistoSyst";
-   if (p == kEquidistantBins_statSyst)
-      ss << "EquidistantBins_StatSyst";
-   if (p == kCustomBins_statSyst)
-      ss << "CustomBins_StatSyst";
+   const MakeModelMode mode = std::get<0>(param);
+   const bool customBins = std::get<1>(param);
+   const std::string batchMode = std::get<2>(param);
 
-   std::string batchMode = std::get<1>(param);
+   std::stringstream ss;
+
+   ss << (customBins ? "CustomBins" : "EquidistantBins");
+
+   if (mode == MakeModelMode::HistoSyst)
+      ss << "_HistoSyst";
+   if (mode == MakeModelMode::StatSyst)
+      ss << "_StatSyst";
+
    if (!batchMode.empty()) {
       ss << "_BatchMode_" << batchMode;
    }
@@ -182,7 +171,7 @@ std::string getName(std::tuple<MakeModelMode, std::string> const &param)
 /// equidistant or custom bins are used, and shape systematics are added.
 /// - A Measurement with the histograms in the file is created.
 /// - The corresponding workspace is created.
-class HFFixture : public testing::TestWithParam<std::tuple<MakeModelMode, std::string>> {
+class HFFixture : public testing::TestWithParam<HFTestParam> {
 public:
    std::string _inputFile{"TestMakeModel.root"};
    static constexpr bool _verbose = false;
@@ -196,35 +185,30 @@ public:
    std::unique_ptr<RooStats::HistFactory::Measurement> _measurement;
    std::string _name;
 
+   TH1D *createHisto(const char *name, const char *title, bool customBins)
+   {
+      if (customBins)
+         return new TH1D{name, title, 2, _customBins};
+      return new TH1D{name, title, 2, 1, 2};
+   }
+
    void SetUp()
    {
       _name = getName(GetParam());
 
       const MakeModelMode makeModelMode = std::get<0>(GetParam());
+      const bool customBins = std::get<1>(GetParam());
+
       {
          TFile example(_inputFile.c_str(), "RECREATE");
-         TH1D *data, *signal, *bkg1, *bkg2, *statUnc, *systUncUp, *systUncDo;
-         data = signal = bkg1 = bkg2 = statUnc = systUncUp = systUncDo = nullptr;
-         if (makeModelMode % 2 == kEquidistantBins) {
-            data = new TH1D("data", "data", 2, 1, 2);
-            signal = new TH1D("signal", "signal histogram (pb)", 2, 1, 2);
-            bkg1 = new TH1D("background1", "background 1 histogram (pb)", 2, 1, 2);
-            bkg2 = new TH1D("background2", "background 2 histogram (pb)", 2, 1, 2);
-            statUnc = new TH1D("background1_statUncert", "statUncert", 2, 1, 2);
-            systUncUp = new TH1D("shapeUnc_sigUp", "signal shape uncert.", 2, 1, 2);
-            systUncDo = new TH1D("shapeUnc_sigDo", "signal shape uncert.", 2, 1, 2);
-         } else if (makeModelMode % 2 == kCustomBins) {
-            data = new TH1D("data", "data", 2, _customBins);
-            signal = new TH1D("signal", "signal histogram (pb)", 2, _customBins);
-            bkg1 = new TH1D("background1", "background 1 histogram (pb)", 2, _customBins);
-            bkg2 = new TH1D("background2", "background 2 histogram (pb)", 2, _customBins);
-            statUnc = new TH1D("background1_statUncert", "statUncert", 2, _customBins);
-            systUncUp = new TH1D("shapeUnc_sigUp", "signal shape uncert.", 2, _customBins);
-            systUncDo = new TH1D("shapeUnc_sigDo", "signal shape uncert.", 2, _customBins);
-         } else {
-            // Harden the test and make clang-tidy happy:
-            FAIL() << "This should not be reachable.";
-         }
+
+         TH1D *data = createHisto("data", "data", customBins);
+         TH1D *signal = createHisto("signal", "signal histogram (pb)", customBins);
+         TH1D *bkg1 = createHisto("background1", "background 1 histogram (pb)", customBins);
+         TH1D *bkg2 = createHisto("background2", "background 2 histogram (pb)", customBins);
+         TH1D *statUnc = createHisto("background1_statUncert", "statUncert", customBins);
+         TH1D *systUncUp = createHisto("shapeUnc_sigUp", "signal shape uncert.", customBins);
+         TH1D *systUncDo = createHisto("shapeUnc_sigDo", "signal shape uncert.", customBins);
 
          bkg1->SetBinContent(1, 100);
          bkg2->SetBinContent(2, 100);
@@ -234,12 +218,12 @@ public:
             systUncUp->SetBinContent(bin + 1, _targetSysUp[bin] - 100.);
             systUncDo->SetBinContent(bin + 1, _targetSysDo[bin] - 100.);
 
-            if (makeModelMode <= kCustomBins) {
+            if (makeModelMode == MakeModelMode::Simple) {
                data->SetBinContent(bin + 1, _targetMu * signal->GetBinContent(bin + 1) + 100.);
-            } else if (makeModelMode <= kCustomBins_histoSyst) {
+            } else if (makeModelMode == MakeModelMode::HistoSyst) {
                // Set data such that alpha = -1., fit should pull parameter.
                data->SetBinContent(bin + 1, _targetMu * systUncDo->GetBinContent(bin + 1) + 100.);
-            } else if (makeModelMode <= kCustomBins_statSyst) {
+            } else if (makeModelMode == MakeModelMode::StatSyst) {
                // Tighten the stat. errors of the model, and kick bin 0, so the gammas have to adapt
                signal->SetBinError(bin + 1, 0.1 * std::sqrt(signal->GetBinContent(bin + 1)));
                bkg1->SetBinError(bin + 1, 0.1 * std::sqrt(bkg1->GetBinContent(bin + 1)));
@@ -265,14 +249,14 @@ public:
       meas.SetPOI("SigXsecOverSM");
       meas.AddConstantParam("alpha_syst1");
       meas.AddConstantParam("Lumi");
-      if (makeModelMode == kEquidistantBins_histoSyst || makeModelMode == kCustomBins_histoSyst) {
+      if (makeModelMode == MakeModelMode::HistoSyst) {
          // We are testing the shape systematics. Switch off the normalisation
          // systematics for the background here:
          meas.AddConstantParam("alpha_syst2");
          meas.AddConstantParam("alpha_syst4");
          meas.AddConstantParam("gamma_stat_channel1_bin_0");
          meas.AddConstantParam("gamma_stat_channel1_bin_1");
-      } else if (makeModelMode == kEquidistantBins_statSyst || makeModelMode == kCustomBins_statSyst) {
+      } else if (makeModelMode == MakeModelMode::StatSyst) {
          // Fix all systematics but the gamma parameters
          // Cannot set the POI constant here, happens in the fit test.
          meas.AddConstantParam("alpha_syst2");
@@ -301,7 +285,7 @@ public:
       _systNames.insert("alpha_syst1");
 
       signal.AddNormFactor("SigXsecOverSM", 1, 0, 3);
-      if (makeModelMode >= kEquidistantBins_histoSyst) {
+      if (makeModelMode != MakeModelMode::Simple) {
          signal.AddHistoSys("SignalShape", "shapeUnc_sigDo", _inputFile, "", "shapeUnc_sigUp", _inputFile, "");
          _systNames.insert("alpha_SignalShape");
       }
@@ -353,7 +337,7 @@ class HFFixtureFit : public HFFixture {};
 /// Test that the model consists of what is expected
 TEST_P(HFFixture, ModelProperties)
 {
-   const MakeModelMode makeModelMode = std::get<0>(GetParam());
+   const bool customBins = std::get<1>(GetParam());
 
    auto simPdf = dynamic_cast<RooSimultaneous *>(ws->pdf("simPdf"));
    ASSERT_NE(simPdf, nullptr);
@@ -364,22 +348,21 @@ TEST_P(HFFixture, ModelProperties)
    auto obs = dynamic_cast<RooRealVar *>(ws->var("obs_x_channel1"));
 
    // Nice to inspect the model if needed:
-   if (false)
-      channelPdf->graphVizTree((RooFit::tmpPath() + "graphVizTree.dot").c_str());
+   // channelPdf->graphVizTree("graphVizTree.dot");
 
    // Check bin widths
    ASSERT_NE(obs, nullptr);
-   if (makeModelMode % 2 == kEquidistantBins) {
+   if (!customBins) {
       EXPECT_DOUBLE_EQ(obs->getBinWidth(0), 0.5);
       EXPECT_DOUBLE_EQ(obs->getBinWidth(1), 0.5);
       EXPECT_EQ(obs->numBins(), 2);
-   } else if (makeModelMode % 2 == kCustomBins) {
+   } else {
       EXPECT_DOUBLE_EQ(obs->getBinWidth(0), _customBins[1] - _customBins[0]);
       EXPECT_DOUBLE_EQ(obs->getBinWidth(1), _customBins[2] - _customBins[1]);
       EXPECT_EQ(obs->numBins(), 2);
    }
 
-   RooStats::ModelConfig *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
    // Check that parameters are in the model
@@ -441,7 +424,7 @@ TEST_P(HFFixture, Evaluation)
 
    auto obs = dynamic_cast<RooRealVar *>(ws->var("obs_x_channel1"));
 
-   RooStats::ModelConfig *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
    // Test evaluating the model:
@@ -457,7 +440,7 @@ TEST_P(HFFixture, Evaluation)
       << "Integral over PDF range should be 1.";
 
    // Test that shape uncertainties have an effect:
-   if (makeModelMode >= kEquidistantBins_histoSyst) {
+   if (makeModelMode != MakeModelMode::Simple) {
       auto var = ws->var("alpha_SignalShape");
       ASSERT_NE(var, nullptr);
 
@@ -496,7 +479,7 @@ TEST_P(HFFixture, BatchEvaluation)
 
    auto obs = dynamic_cast<RooRealVar *>(ws->var("obs_x_channel1"));
 
-   RooStats::ModelConfig *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
    // Test evaluating the model:
@@ -513,7 +496,7 @@ TEST_P(HFFixture, BatchEvaluation)
       << "Integral over PDF range should be 1.";
 
    // Test that shape uncertainties have an effect:
-   if (makeModelMode >= kEquidistantBins_histoSyst) {
+   if (makeModelMode != MakeModelMode::Simple) {
       auto var = ws->var("alpha_SignalShape");
       ASSERT_NE(var, nullptr);
 
@@ -663,9 +646,8 @@ TEST_P(HFFixture, HS3ClosureLoop)
 TEST_P(HFFixtureFit, Fit)
 {
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
-   const std::string batchMode = std::get<1>(GetParam());
+   const std::string batchMode = std::get<2>(GetParam());
 
-   constexpr bool createPlot = false;
    constexpr bool verbose = false;
 
    auto simPdf = dynamic_cast<RooSimultaneous *>(ws->pdf("simPdf"));
@@ -678,7 +660,7 @@ TEST_P(HFFixtureFit, Fit)
    RooAbsData *data = dynamic_cast<RooAbsData *>(ws->data("obsData"));
    ASSERT_NE(data, nullptr);
 
-   RooStats::ModelConfig *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
    // This tests both correct pre-caching of constant terms and (if false) that all computeBatch() are correct.
@@ -701,7 +683,7 @@ TEST_P(HFFixtureFit, Fit)
          if (real && !real->isConstant())
             real->setVal(real->getVal() * 0.95);
       }
-      if (makeModelMode >= kEquidistantBins_statSyst) {
+      if (makeModelMode == MakeModelMode::StatSyst) {
          auto poi = dynamic_cast<RooRealVar *>(pars->find("SigXsecOverSM"));
          ASSERT_NE(poi, nullptr);
          poi->setVal(2.);
@@ -736,7 +718,7 @@ TEST_P(HFFixtureFit, Fit)
          }
       };
 
-      if (makeModelMode <= kCustomBins) {
+      if (makeModelMode == MakeModelMode::Simple) {
          // Model is set up such that background scale factors should be close to 1, and signal == 2
          checkParam("SigXsecOverSM", 2., 1.E-2);
          checkParam("alpha_syst2", 0., 1.E-2);
@@ -744,7 +726,7 @@ TEST_P(HFFixtureFit, Fit)
          checkParam("alpha_syst4", 0., 1.E-2);
          checkParam("gamma_stat_channel1_bin_0", 1., 1.E-2);
          checkParam("gamma_stat_channel1_bin_1", 1., 1.E-2);
-      } else if (makeModelMode <= kCustomBins_histoSyst) {
+      } else if (makeModelMode == MakeModelMode::HistoSyst) {
          // Model is set up with a -1 sigma pull on the signal shape parameter.
          checkParam("SigXsecOverSM", 2., 1.E-1); // Higher tolerance: Expect a pull due to shape syst.
          checkParam("alpha_syst2", 0., 1.E-2);
@@ -753,7 +735,7 @@ TEST_P(HFFixtureFit, Fit)
          checkParam("gamma_stat_channel1_bin_0", 1., 1.E-2);
          checkParam("gamma_stat_channel1_bin_1", 1., 1.E-2);
          checkParam("alpha_SignalShape", -0.9, 5.E-2); // Pull slightly lower than 1 because of constraint term
-      } else if (makeModelMode <= kCustomBins_statSyst) {
+      } else if (makeModelMode == MakeModelMode::StatSyst) {
          // Model is set up with a -1 sigma pull on the signal shape parameter.
          checkParam("SigXsecOverSM", 2., 1.E-1); // Higher tolerance: Expect a pull due to shape syst.
          checkParam("alpha_syst2", 0., 1.E-2);
@@ -765,7 +747,7 @@ TEST_P(HFFixtureFit, Fit)
       }
    }
 
-   if (createPlot) {
+   if (false) {
       auto obs = dynamic_cast<RooRealVar *>(ws->var("obs_x_channel1"));
       auto frame = obs->frame();
       data->plotOn(frame);
@@ -774,9 +756,9 @@ TEST_P(HFFixtureFit, Fit)
       TCanvas canv;
       frame->Draw();
       canv.Draw();
-      canv.SaveAs((RooFit::tmpPath() + "HFTest" + std::to_string(makeModelMode) + ".png").c_str());
+      canv.SaveAs(("HFTest" + _name + ".png").c_str());
 
-      channelPdf->graphVizTree((RooFit::tmpPath() + "HFTest" + std::to_string(makeModelMode) + ".dot").c_str());
+      channelPdf->graphVizTree(("HFTest" + _name + ".dot").c_str());
    }
 }
 
@@ -786,16 +768,16 @@ std::string getNameFromInfo(testing::TestParamInfo<HFFixture::ParamType> const &
 }
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixture,
-                         testing::Combine(testing::Values(kEquidistantBins, kCustomBins, kEquidistantBins_histoSyst,
-                                                          kCustomBins_histoSyst, kEquidistantBins_statSyst,
-                                                          kCustomBins_statSyst),
+                         testing::Combine(testing::Values(MakeModelMode::Simple, MakeModelMode::HistoSyst,
+                                                          MakeModelMode::StatSyst),
+                                          testing::Values(false, true), // non-uniform bins or not
                                           testing::Values("")),
                          getNameFromInfo);
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
-                         testing::Combine(testing::Values(kEquidistantBins, kCustomBins, kEquidistantBins_histoSyst,
-                                                          kCustomBins_histoSyst, kEquidistantBins_statSyst,
-                                                          kCustomBins_statSyst),
+                         testing::Combine(testing::Values(MakeModelMode::Simple, MakeModelMode::HistoSyst,
+                                                          MakeModelMode::StatSyst),
+                                          testing::Values(false, true), // non-uniform bins or not
                                           testing::Values("off", "cpu")),
                          getNameFromInfo);
 
@@ -803,8 +785,9 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
 // TODO: merge with the previous HFFixtureFix test suite once the codegen AD
 // supports all of HistFactory
 INSTANTIATE_TEST_SUITE_P(HistFactoryCodeGen, HFFixtureFit,
-                         testing::Combine(testing::Values(kEquidistantBins, kEquidistantBins_histoSyst,
-                                                          kEquidistantBins_statSyst),
+                         testing::Combine(testing::Values(MakeModelMode::Simple, MakeModelMode::HistoSyst,
+                                                          MakeModelMode::StatSyst),
+                                          testing::Values(false), // no non-uniform bins
                                           testing::Values("codegen")),
                          getNameFromInfo);
 #endif
