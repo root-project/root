@@ -113,6 +113,8 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    if (!serv)
       return;
 
+   engine->ChangeNumActiveThrerads(1);
+
    auto arg = std::make_shared<THttpCallArg>();
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
@@ -149,6 +151,8 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    arg->SetMethod("WS_CLOSE");
 
    serv->ExecuteWS(arg, kTRUE, kFALSE); // do not wait for result of execution
+
+   engine->ChangeNumActiveThrerads(-1);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -245,6 +249,19 @@ static int log_message_handler(const struct mg_connection *conn, const char *mes
    return 0;
 }
 
+struct TEngineHolder {
+   TCivetweb *fEngine;
+   TEngineHolder(TCivetweb *engine)
+   {
+      fEngine = engine;
+      fEngine->ChangeNumActiveThrerads(1);
+   }
+   ~TEngineHolder()
+   {
+      fEngine->ChangeNumActiveThrerads(-1);
+   }
+};
+
 //////////////////////////////////////////////////////////////////////////
 
 static int begin_request_handler(struct mg_connection *conn, void *)
@@ -257,6 +274,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    THttpServer *serv = engine->GetServer();
    if (!serv)
       return 0;
+
+   TEngineHolder thrd_cnt_holder(engine);
 
    auto arg = std::make_shared<THttpCallArg>();
 
@@ -476,6 +495,26 @@ Int_t TCivetweb::ProcessLog(const char *message)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns number of actively used threads
+
+Int_t TCivetweb::GetNumActiveThreads()
+{
+   std::lock_guard<std::mutex> guard(fMutex);
+   return fNumActiveThreads;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of actively used threads
+
+Int_t TCivetweb::ChangeNumActiveThrerads(int cnt)
+{
+   std::lock_guard<std::mutex> guard(fMutex);
+   fNumActiveThreads += cnt;
+   return fNumActiveThreads;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates embedded civetweb server
 ///
 /// @param args string with civetweb server configuration
@@ -513,7 +552,7 @@ Bool_t TCivetweb::Create(const char *args)
    // fCallbacks.begin_request = begin_request_handler;
    fCallbacks.log_message = log_message_handler;
    TString sport = IsSecured() ? "8480s" : "8080",
-           num_threads = "10",
+           num_threads,
            websocket_timeout = "300000",
            dir_listening = "no",
            auth_file,
@@ -557,7 +596,7 @@ Bool_t TCivetweb::Create(const char *args)
 
             Int_t thrds = url.GetIntValueFromOptions("thrds");
             if (thrds > 0)
-               num_threads.Form("%d", thrds);
+               fNumThreads = thrds;
 
             const char *afile = url.GetValueFromOptions("auth_file");
             if (afile)
@@ -624,6 +663,8 @@ Bool_t TCivetweb::Create(const char *args)
          }
       }
    }
+
+   num_threads.Form("%d", fNumThreads);
 
    const char *options[30];
    int op = 0;
