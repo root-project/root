@@ -316,26 +316,29 @@ ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() 
    return fDefaultEntry.get();
 }
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry() const
+std::unique_ptr<ROOT::Experimental::REntry>
+ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEntry) const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
    for (const auto &f : fFieldZero->GetSubFields()) {
-      entry->AddValue(f->GenerateValue());
-   }
-   return entry;
-}
+      if (linkedEntry) {
+         bool isLinked = false;
+         for (const auto &v : *linkedEntry) {
+            if (f->Compare(*v.GetField()) != 0)
+               continue;
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateBareEntry() const
-{
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+            entry->AddValue(f->BindValue(v.GetRawPtr()));
+            isLinked = true;
+            break;
+         }
+         if (isLinked)
+            continue;
+      }
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
-   for (const auto &f : fFieldZero->GetSubFields()) {
-      entry->AddValue(f->BindValue(nullptr));
+      entry->AddValue(isBare ? f->BindValue(nullptr) : f->GenerateValue());
    }
    return entry;
 }

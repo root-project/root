@@ -198,6 +198,11 @@ private:
    /// Throws an RException if fDefaultEntry is nullptr
    void EnsureNotBare() const;
 
+   /// For all the top-level fields of the model, creates RValue objects. If a linked entry
+   /// is given, the objects point to the ones from the linked entry where possible. Otherwise
+   /// the objects are generated if isBare is false, or nullptr otherwise.
+   std::unique_ptr<REntry> CreateEntryImpl(bool isBare, REntry *linkedEntry = nullptr) const;
+
    RNTupleModel();
 
 public:
@@ -317,10 +322,21 @@ public:
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 
-   std::unique_ptr<REntry> CreateEntry() const;
-   /// In a bare entry, all values point to nullptr. The resulting entry shall use CaptureValueUnsafe() in order
-   /// set memory addresses to be serialized / deserialized
-   std::unique_ptr<REntry> CreateBareEntry() const;
+   /// If a linked entry is given, create entry will use the memory location of the linked
+   /// entries for identical fields.  Fields that don't mach any of the linked entry ones
+   /// are handled as if no linked entry was given.  If the linked entry contains a field
+   /// with the same name than this entry but a different type, the linked entry's field
+   /// is ignored.
+   std::unique_ptr<REntry> CreateEntry(REntry *linkedEntry = nullptr) const
+   {
+      return CreateEntryImpl(false /* isBare */, linkedEntry);
+   }
+   /// In a bare entry, all values not covered by the linked entry point to nullptr.
+   /// The resulting entry shall use CaptureValueUnsafe() in order set memory addresses to be serialized / deserialized
+   std::unique_ptr<REntry> CreateBareEntry(REntry *linkedEntry = nullptr) const
+   {
+      return CreateEntryImpl(true /* isBare */, linkedEntry);
+   }
    REntry *GetDefaultEntry() const;
 
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
