@@ -633,6 +633,14 @@ public:
    /// Return the C++ type version stored in the field descriptor; only valid after a call to `ConnectPageSource()`
    std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
 
+   /// Returns zero for equivalent field (trees), -1 otherwise. Fields are equivalent if
+   ///   - they have the same name
+   ///   - they have the same type and type version
+   ///   - their subfields are equivalent and in the same order
+   /// We may use the return value in the future to give more fine-grained information
+   /// about the differences between the fields.
+   int Compare(const RFieldBase &other) const;
+
    RSchemaIterator begin()
    {
       return fSubFields.empty() ? RSchemaIterator(this, -1) : RSchemaIterator(fSubFields[0].get(), 0);

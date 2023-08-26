@@ -790,6 +790,26 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
    fState = EState::kConnectedToSource;
 }
 
+int ROOT::Experimental::Detail::RFieldBase::Compare(const RFieldBase &other) const
+{
+   if (GetName() != other.GetName())
+      return -1;
+   if (GetType() != other.GetType())
+      return -1;
+   if (GetFieldVersion() != other.GetFieldVersion() || GetTypeVersion() != other.GetTypeVersion())
+      return -1;
+   auto mySubFields = GetSubFields();
+   auto otherSubFields = other.GetSubFields();
+   if (mySubFields.size() != otherSubFields.size())
+      return -1;
+   for (std::size_t i = 0; i < mySubFields.size(); ++i) {
+      if (mySubFields[i]->Compare(*otherSubFields[i]) != 0) {
+         return -1;
+      }
+   }
+
+   return 0;
+}
 
 void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {

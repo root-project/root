@@ -29,6 +29,28 @@ TEST(RNTuple, TypeName) {
       (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
+TEST(RNTuple, FieldCompare)
+{
+   auto f1 = RFieldBase::Create("f", "int").Unwrap();
+   auto f2 = RFieldBase::Create("f", "int").Unwrap();
+   EXPECT_EQ(0, f1->Compare(*f2));
+
+   auto f3 = RFieldBase::Create("g", "int").Unwrap();
+   EXPECT_EQ(-1, f1->Compare(*f3));
+   auto f4 = RFieldBase::Create("f", "float").Unwrap();
+   EXPECT_EQ(-1, f1->Compare(*f4));
+
+   auto f5 = RFieldBase::Create("f", "CustomStruct").Unwrap();
+   auto f6 = RFieldBase::Create("f", "CustomStruct").Unwrap();
+   EXPECT_EQ(0, f5->Compare(*f6));
+
+   auto f7 = RFieldBase::Create("f", "std::vector<int>").Unwrap();
+   auto f8 = RFieldBase::Create("f", "std::vector<int>").Unwrap();
+   EXPECT_EQ(0, f7->Compare(*f8));
+   auto f9 = RFieldBase::Create("f", "std::vector<float>").Unwrap();
+   EXPECT_EQ(-1, f7->Compare(*f9));
+}
+
 TEST(RNTuple, EnumBasics)
 {
    // Needs fix of TEnum
