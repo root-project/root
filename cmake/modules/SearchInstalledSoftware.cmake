@@ -1697,6 +1697,26 @@ if(tmva-sofie)
   endif()
 endif()
 
+#---Check for SYCL
+if (tmva-sofie AND tmva-sycl AND testing)
+  set(KNOWN_SYCL_IMPLEMENTATIONS "IntelSYCL;IntelDPCPP;hipSYCL")
+
+  if (NOT ${SYCL_IMPLEMENTATION} IN_LIST KNOWN_SYCL_IMPLEMENTATIONS OR NOT SYCL_IMPLEMENTATION)
+    message(FATAL_ERROR "Building SOFIE-SYCL tests required specifying a SYCL implementatioon with "
+            "-DSYCL_IMPLEMENTATION=[IntelSYCL,hipSYCL]")
+  endif()
+
+  if (${SYCL_IMPLEMENTATION} STREQUAL "IntelSYCL")
+    if ( NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND 
+         NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+        message(FATAL_ERROR "Set -DCMAKE_CXX_COMPILER or environment variable to a SYCL compatible compiler: icx, clang++, icpx")
+        return()
+    else()
+      find_package(${SYCL_IMPLEMENTATION} REQUIRED)
+    endif()
+  endif()
+endif()
+
 ### Look for package CuDNN. If both cudnn and tmva-gpu are set and cudnn was
 ### found, it implies the tmva-cudnn flag.
 if (cudnn)
