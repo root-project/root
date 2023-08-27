@@ -1714,7 +1714,10 @@ if (tmva-sofie AND tmva-sycl AND testing)
     else()
       find_package(${SYCL_IMPLEMENTATION} REQUIRED)
     endif()
+  else()
+    find_package(${SYCL_IMPLEMENTATION} CONFIG REQUIRED)
   endif()
+
 endif()
 
 ### Look for package CuDNN. If both cudnn and tmva-gpu are set and cudnn was
