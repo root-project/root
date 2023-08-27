@@ -108,6 +108,7 @@ tmva-gpu=OFF
 tmva-pymva=ON
 tmva-rmva=OFF
 tmva-sofie=OFF
+tmva-sycl=OFF
 tmva=ON
 unuran=OFF
 uring=OFF
