@@ -479,10 +479,18 @@ namespace SOFIE{
    }
 
    void RModel::GenerateGPU(std::underlying_type_t<Options> options, int batchSize){
-      if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options)
+      if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
          fUseSession = false;
-      if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options)
+         fWeightFile = WeightFileType::None;
+      }
+      if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
          fUseWeightFile = false;
+         fWeightFile = WeightFileType::None;
+      }
+      if (static_cast<std::underlying_type_t<Options>>(Options::kRootBinaryWeightFile) & options) {
+         fUseWeightFile = true;
+         fWeightFile = WeightFileType::RootBinary;
+      }
       if (fUseWeightFile && !fUseSession) {
          throw std::runtime_error("TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
       }
@@ -518,6 +526,9 @@ namespace SOFIE{
       fGC += "#include \"TMVA/SOFIE_GPU_common.hxx\"\n";
       if (fUseWeightFile)
          fGC += "#include <fstream>\n";
+
+      if (fWeightFile == WeightFileType::RootBinary)
+         fGC += "#include \"TFile.h\"\n";
 
       fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
       if (fUseSession) {
@@ -581,7 +592,13 @@ namespace SOFIE{
          // here add initialization and reading of weight tensors
          if (fUseWeightFile) {
             fGC += "Session(std::string filename =\"\") {\n";
-            fGC += "   if (filename.empty()) filename = \"" + fName + ".dat\";\n";
+            fGC += "   if (filename.empty()) filename = \"" + fName;
+            if (fWeightFile == WeightFileType::Text) {
+               fGC += ".dat\";\n";
+            }
+            if (fWeightFile == WeightFileType::RootBinary) {
+               fGC += ".root\";\n";
+            }
             ReadInitializedTensorsFromFile();
             //fUseWeightFile = fUseWeightFile;
          } else {
@@ -765,10 +782,7 @@ namespace SOFIE{
       fGC += "\"with OpenCL error code: \" << e.code() << std::endl;\n";
       fGC += SP + "}\n"; //end of catch clause
 
-      if (outputSize == 1) {
-     
-      } else {
-
+      if (outputSize != 1) {
          fGC += "ret = {";
          for (size_t i = 0; i < outputSize; i++) {
             if (fOutputTensorNames[i].empty()) {
