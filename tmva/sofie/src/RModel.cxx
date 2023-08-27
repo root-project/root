@@ -275,8 +275,8 @@ void RModel::GenerateIntermediateTensorInfo() {
             fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
          }
          if (i.second.type == ETensorType::BOOL){
-            fGC += "std::vector<bool> fTensor_" + i.first  + " = std::vector<bool>(" + std::to_string(length) + ");\n";
-            fGC += "bool * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
+            fGC += "bool fTensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";
+            fGC += "bool * tensor_" + i.first + " = fTensor_"+ i.first + ";\n";
          }
       }
       if (fUseSession) {
@@ -605,10 +605,6 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
             fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(\"";
             fGC += dirName + "/" + tensor_name + "\"));\n";
          }
-         else if (i.second.fType == ETensorType::BOOL) {
-            fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<bool>*>(rootFile->Get(\"";
-            fGC += dirName + "/" + tensor_name + "\"));\n";
-         }
          fGC += "  }\n";
       }
       fGC += "  }\n";
@@ -667,12 +663,6 @@ void RModel::WriteInitializedTensorsToFile(std::string filename) {
             const int64_t* data = (std::static_pointer_cast<int64_t>(item.second.fData)).get();
             std::vector<int64_t> tensorDataVector(data , data + length);
             outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
-         }
-         else if(item.second.fType == ETensorType::BOOL) {
-            const std::shared_ptr<void> ptr = item.second.fData; // shared_ptr<void> instance
-            const bool* data = (std::static_pointer_cast<bool>(item.second.fData)).get();
-            std::vector<bool> tensorDataVector(data , data + length);
-            outputDir->WriteObjectAny(&tensorDataVector, "std::vector<bool>", tensorName.c_str());
          }
       }
       outputFile->Write(filename.c_str());
