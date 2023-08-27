@@ -700,8 +700,8 @@ namespace SOFIE{
       fGC += SP*3 + "return -1;\n" + SP*2 + "};\n\n";
 
       // Create queue
-      fGC += SP + "// Create In-order Queue\n";
-      fGC += SP*2 + "auto q = cl::sycl::queue{cl::sycl::gpu_selector_v, [=](cl::sycl::exception_list eL){\n";
+      fGC += SP + "// Create Queue\n";
+      fGC += SP*2 + "auto q = cl::sycl::queue{intel_gpu_selector, [=](cl::sycl::exception_list eL){\n";
       //fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}, cl::sycl::property::queue::in_order{}};\n";
       fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}};\n";
 
