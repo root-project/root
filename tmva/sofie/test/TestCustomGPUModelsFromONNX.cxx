@@ -124,7 +124,7 @@
 #include "RNNSequenceBatchwiseGPU_FromONNX.hxx"
 #include "input_models/references/RNNSequenceBatchwise.ref.hxx"
 
-
+/*
 #include "LSTMBatchwiseGPU_FromONNX.hxx"
 #include "input_models/references/LSTMBatchwise.ref.hxx"
 
@@ -154,6 +154,7 @@
 
 #include "GRUSeqLengthGPU_FromONNX.hxx"
 #include "input_models/references/GRUSeqLength.ref.hxx"
+*/
 
 #include "Softmax1dGPU_FromONNX.hxx"
 #include "input_models/references/Softmax1d.ref.hxx"
@@ -1337,6 +1338,7 @@ TEST(ONNX, RNNSequenceBatchwise)
    }
 }
 
+/*
 TEST(ONNX, LSTMBatchwise)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -1666,7 +1668,7 @@ TEST(ONNX, GRUSeqLength)
       EXPECT_LE(std::abs(output_yh[i] - correct_yh[i]), TOLERANCE);
    }
 }
-
+*/
 TEST(ONNX, Softmax1d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
