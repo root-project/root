@@ -1699,11 +1699,11 @@ endif()
 
 #---Check for SYCL
 if (tmva-sofie AND tmva-sycl AND testing)
-  set(KNOWN_SYCL_IMPLEMENTATIONS "IntelSYCL;OpenSYCL")
+  set(KNOWN_SYCL_IMPLEMENTATIONS "IntelSYCL")
 
   if (NOT ${SYCL_IMPLEMENTATION} IN_LIST KNOWN_SYCL_IMPLEMENTATIONS OR NOT SYCL_IMPLEMENTATION)
     message(FATAL_ERROR "Building SOFIE-SYCL tests required specifying a SYCL implementatioon with "
-            "-DSYCL_IMPLEMENTATION=[IntelSYCL,OpenSYCL]")
+            "-DSYCL_IMPLEMENTATION=[IntelSYCL]")
   endif()
 
   if (${SYCL_IMPLEMENTATION} STREQUAL "IntelSYCL")
@@ -1714,8 +1714,6 @@ if (tmva-sofie AND tmva-sycl AND testing)
     else()
       find_package(${SYCL_IMPLEMENTATION} REQUIRED)
     endif()
-  else()
-    find_package(${SYCL_IMPLEMENTATION} CONFIG REQUIRED)
   endif()
 
 endif()
