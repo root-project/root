@@ -38,6 +38,45 @@ namespace RF_ARCH {
 
 constexpr int blockSize = 512;
 
+namespace {
+
+/** Fills a Batches object
+\param output The array where the computation results are stored.
+\param nEvents The number of events to be processed.
+\param vars A std::vector containing pointers to the variables involved in the computation.
+\param extraArgs An optional std::vector containing extra double values that may participate in the computation.
+For every scalar parameter a `Batch` object inside the `Batches` object is set accordingly;
+a data member of type double gets assigned the scalar value. This way, when the cuda kernel
+is launched this scalar value gets copied automatically and thus no call to cudaMemcpy is needed **/
+void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, const VarVector &vars, ArgVector &extraArgs)
+{
+   batches._nEvents = nEvents;
+   batches._nBatches = vars.size();
+   batches._nExtraArgs = extraArgs.size();
+   batches._output = output;
+
+   if (vars.size() > maxParams) {
+      throw std::runtime_error(std::string("Size of vars is ") + std::to_string(vars.size()) +
+                               ", which is larger than maxParams = " + std::to_string(maxParams) + "!");
+   }
+   if (extraArgs.size() > maxExtraArgs) {
+      throw std::runtime_error(std::string("Size of extraArgs is ") + std::to_string(extraArgs.size()) +
+                               ", which is larger than maxExtraArgs = " + std::to_string(maxExtraArgs) + "!");
+   }
+
+   for (int i = 0; i < vars.size(); i++) {
+      const std::span<const double> &span = vars[i];
+      size_t size = span.size();
+      if (size == 1)
+         batches._arrays[i].set(span[0], nullptr, false);
+      else
+         batches._arrays[i].set(0.0, span.data(), true);
+   }
+   std::copy(extraArgs.cbegin(), extraArgs.cend(), batches._extraArgs);
+}
+
+} // namespace
+
 std::vector<void (*)(BatchesHandle)> getFunctions();
 
 /// This class overrides some RooBatchComputeInterface functions, for the
@@ -72,7 +111,8 @@ public:
    void compute(RooBatchCompute::Config const &cfg, Computer computer, RestrictArr output, size_t nEvents,
                 const VarVector &vars, ArgVector &extraArgs) override
    {
-      Batches batches(output, nEvents, vars, extraArgs);
+      Batches batches;
+      fillBatches(batches, output, nEvents, vars, extraArgs);
       RooFit::Detail::CudaInterface::DeviceArray<Batches> batchesDevice{1};
       RooFit::Detail::CudaInterface::copyHostToDevice(&batches, batchesDevice.data(), 1, cfg.cudaStream());
       const int gridSize = std::ceil(double(nEvents) / blockSize);
@@ -211,37 +251,6 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
-
-/** Construct a Batches object
-\param output The array where the computation results are stored.
-\param nEvents The number of events to be processed.
-\param vars A std::vector containing pointers to the variables involved in the computation.
-\param extraArgs An optional std::vector containing extra double values that may participate in the computation.
-For every scalar parameter a `Batch` object inside the `Batches` object is set accordingly;
-a data member of type double gets assigned the scalar value. This way, when the cuda kernel
-is launched this scalar value gets copied automatically and thus no call to cudaMemcpy is needed **/
-Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgVector &extraArgs, double *)
-   : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
-{
-   if (vars.size() > maxParams) {
-      throw std::runtime_error(std::string("Size of vars is ") + std::to_string(vars.size()) +
-                               ", which is larger than maxParams = " + std::to_string(maxParams) + "!");
-   }
-   if (extraArgs.size() > maxExtraArgs) {
-      throw std::runtime_error(std::string("Size of extraArgs is ") + std::to_string(extraArgs.size()) +
-                               ", which is larger than maxExtraArgs = " + std::to_string(maxExtraArgs) + "!");
-   }
-
-   for (int i = 0; i < vars.size(); i++) {
-      const std::span<const double> &span = vars[i];
-      size_t size = span.size();
-      if (size == 1)
-         _arrays[i].set(span[0], nullptr, false);
-      else
-         _arrays[i].set(0.0, span.data(), true);
-   }
-   std::copy(extraArgs.cbegin(), extraArgs.cend(), _extraArgs);
-}
 
 } // End namespace RF_ARCH
 } // End namespace RooBatchCompute
