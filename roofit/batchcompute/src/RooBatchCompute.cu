@@ -38,13 +38,13 @@ namespace RF_ARCH {
 
 constexpr int blockSize = 512;
 
-std::vector<void (*)(Batches)> getFunctions();
+std::vector<void (*)(BatchesHandle)> getFunctions();
 
 /// This class overrides some RooBatchComputeInterface functions, for the
 /// purpose of providing a cuda specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
 private:
-   const std::vector<void (*)(Batches)> _computeFunctions;
+   const std::vector<void (*)(BatchesHandle)> _computeFunctions;
 
 public:
    RooBatchComputeClass() : _computeFunctions(getFunctions())
@@ -73,8 +73,10 @@ public:
                 const VarVector &vars, ArgVector &extraArgs) override
    {
       Batches batches(output, nEvents, vars, extraArgs);
+      RooFit::Detail::CudaInterface::DeviceArray<Batches> batchesDevice{1};
+      RooFit::Detail::CudaInterface::copyHostToDevice(&batches, batchesDevice.data(), 1, cfg.cudaStream());
       const int gridSize = std::ceil(double(nEvents) / blockSize);
-      _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream()>>>(batches);
+      _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream()>>>(*batchesDevice.data());
    }
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
