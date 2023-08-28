@@ -274,6 +274,9 @@ void RModel::GenerateIntermediateTensorInfo() {
             fGC += "std::vector<int64_t> fTensor_" + i.first  + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
             fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
         }
+        if (i.second.type == ETensorType::BOOL){
+            fGC += "bool tensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";         
+        }
     }
 }
 
@@ -328,6 +331,10 @@ void RModel::GenerateOutput() {
         }
         case  ETensorType::DOUBLE : {
             fGC += "double* tensor_" + fInputTensorNames[i] + ",";
+            break;
+        }
+        case  ETensorType::BOOL :{
+            fGC += "bool* tensor_" + fInputTensorNames[i] + ",";
             break;
         }
         default: {
