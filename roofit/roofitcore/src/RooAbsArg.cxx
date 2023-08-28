@@ -66,37 +66,33 @@ for single nodes.
 
 */
 
-#include "TBuffer.h"
-#include "TClass.h"
-#include "TVirtualStreamerInfo.h"
-#include "strlcpy.h"
+#include <RooAbsArg.h>
 
-#include "RooSecondMoment.h"
-#include "RooWorkspace.h"
+#include <RooAbsCategoryLValue.h>
+#include <RooAbsData.h>
+#include <RooAbsDataStore.h>
+#include <RooArgProxy.h>
+#include <RooArgSet.h>
+#include <RooConstVar.h>
+#include <RooExpensiveObjectCache.h>
+#include <RooHelpers.h>
+#include <RooListProxy.h>
+#include <RooMsgService.h>
+#include <RooRealIntegral.h>
+#include <RooResolutionModel.h>
+#include <RooSetProxy.h>
+#include <RooTrace.h>
+#include <RooTreeDataStore.h>
+#include <RooVectorDataStore.h>
+#include <RooWorkspace.h>
 
-#include "RooMsgService.h"
-#include "RooAbsArg.h"
-#include "RooArgSet.h"
-#include "RooArgProxy.h"
-#include "RooSetProxy.h"
-#include "RooListProxy.h"
-#include "RooAbsData.h"
-#include "RooAbsCategoryLValue.h"
-#include "RooTrace.h"
-#include "RooRealIntegral.h"
-#include "RooConstVar.h"
-#include "RooExpensiveObjectCache.h"
-#include "RooAbsDataStore.h"
-#include "RooResolutionModel.h"
-#include "RooVectorDataStore.h"
-#include "RooTreeDataStore.h"
-#include "RooHelpers.h"
+#include <TBuffer.h>
+#include <TClass.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <algorithm>
 #include <cstring>
 #include <fstream>
-#include <iostream>
-#include <memory>
 #include <sstream>
 
 using namespace std;
@@ -218,15 +214,6 @@ void RooAbsArg::setDirtyInhibit(bool flag)
 void RooAbsArg::verboseDirty(bool flag)
 {
   _verboseDirty = flag ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if this object was created as a clone of 'other'
-
-bool RooAbsArg::isCloneOf(const RooAbsArg& other) const
-{
-  return (getAttribute(Form("CloneOf(%zx)",(size_t)&other)) ||
-     other.getAttribute(Form("CloneOf(%zx)",(size_t)this))) ;
 }
 
 
@@ -2167,30 +2154,6 @@ RooAbsCache* RooAbsArg::getCache(Int_t index) const
 RooFit::OwningPtr<RooArgSet> RooAbsArg::getVariables(bool stripDisconnected) const
 {
   return getParameters(RooArgSet(),stripDisconnected) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return ancestors in cloning chain of this RooAbsArg. NOTE: Returned pointers
-/// are not guaranteed to be 'live', so do not dereference without proper caution
-
-RooLinkedList RooAbsArg::getCloningAncestors() const
-{
-  RooLinkedList retVal ;
-
-  set<string>::const_iterator iter= _boolAttrib.begin() ;
-  while(iter != _boolAttrib.end()) {
-    if (TString(*iter).BeginsWith("CloneOf(")) {
-      char buf[128] ;
-      strlcpy(buf,iter->c_str(),128) ;
-      strtok(buf,"(") ;
-      char* ptrToken = strtok(nullptr,")") ;
-      RooAbsArg* ptr = (RooAbsArg*) strtoll(ptrToken,nullptr,16) ;
-      retVal.Add(ptr) ;
-    }
-  }
-
-  return retVal ;
 }
 
 

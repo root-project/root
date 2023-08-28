@@ -16,17 +16,18 @@
 #ifndef ROO_ABS_ARG
 #define ROO_ABS_ARG
 
-#include "TNamed.h"
-#include "TObjArray.h"
-#include "TRefArray.h"
-#include "RooPrintable.h"
-#include "RooSTLRefCountList.h"
-#include "RooAbsCache.h"
-#include "RooNameReg.h"
-#include "RooLinkedListIter.h"
+#include <RooAbsCache.h>
 #include <RooFit/Config.h>
 #include <RooFit/Detail/NormalizationHelpers.h>
+#include <RooLinkedListIter.h>
+#include <RooNameReg.h>
+#include <RooPrintable.h>
+#include <RooSTLRefCountList.h>
 #include <RooStringView.h>
+
+#include <TNamed.h>
+#include <TObjArray.h>
+#include <TRefArray.h>
 
 #include <deque>
 #include <iostream>
@@ -99,7 +100,6 @@ public:
   virtual bool isDerived() const {
     return true ;
   }
-  bool isCloneOf(const RooAbsArg& other) const ;
 
   /// Check whether this object depends on values from an element in the `serverList`.
   ///
@@ -364,7 +364,6 @@ public:
   inline bool isConstant() const {
     return _isConstant ; //getAttribute("Constant") ;
   }
-  RooLinkedList getCloningAncestors() const ;
 
   // Sorting
   Int_t Compare(const TObject* other) const override ;

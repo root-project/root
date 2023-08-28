@@ -43,6 +43,7 @@ The following people have contributed to this new version:
 - The `RooAbsString` that was only an alias for `RooStringVar` got removed.
 - The `RooDataWeightedAverage` is now deprecated and will be removed in 6.32. It was only supposed to be an implementation detail of RooFits plotting that is now not necessary anymore.
 - The `RooSpan` class was removed and its place in the implementation details of RooFit is now taken by `std::span`.
+- The `RooAbsArg::isCloneOf()` and `RooAbsArg::getCloningAncestors()` member functions were removed because they didn't work (always returned `false` and an empty list respectively)
 
 ## Core Libraries
 
