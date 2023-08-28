@@ -415,9 +415,12 @@ public:
       TString expression(pdf->expression());
       for (size_t i = 0; i < pdf->nParameters(); ++i) {
          RooAbsArg *par = pdf->getParameter(i);
-         std::stringstream ss;
-         ss << "x[" << i << "]";
-         expression.ReplaceAll(ss.str().c_str(), par->GetName());
+         std::stringstream ss_1;
+         ss_1 << "x[" << i << "]";
+         std::stringstream ss_2;
+         ss_2 << "@" << i << "";
+         expression.ReplaceAll(ss_1.str().c_str(), par->GetName());
+         expression.ReplaceAll(ss_2.str().c_str(), par->GetName());
       }
       elem["expression"] << expression.Data();
       return true;
