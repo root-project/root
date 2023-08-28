@@ -86,16 +86,6 @@ public:
    Batches(RestrictArr output, std::size_t nEvents, const VarVector &vars, ArgVector &extraArgs,
            double *buffer = nullptr);
 
-#ifdef __CUDACC__
-#else
-   // As we don't pass around Batches by value in the CPU case, delete copying
-   // and moving so it's not done accidentally.
-   Batches(const Batches &) = delete;
-   Batches &operator=(const Batches &) = delete;
-   Batches(Batches &&) = delete;
-   Batches &operator=(Batches &&) = delete;
-#endif // #ifdef __CUDACC__
-
    __roodevice__ std::size_t getNEvents() const { return _nEvents; }
    __roodevice__ std::size_t getNExtraArgs() const { return _nExtraArgs; }
    __roodevice__ double extraArg(std::size_t i) const { return _extraArgs[i]; }
@@ -110,13 +100,10 @@ public:
    }
 }; // end class Batches
 
-#ifdef __CUDACC__
-// In the GPU case, we have to pass the Batches object to the compute functions by value.
-using BatchesHandle = Batches;
-#else
+// Defines the actual argument type of the compute funciton.
 using BatchesHandle = Batches &;
-#endif // #ifdef __CUDACC__
 
 } // End namespace RF_ARCH
 } // end namespace RooBatchCompute
+
 #endif // #ifdef ROOFIT_BATCHCOMPUTE_BATCHES_H
