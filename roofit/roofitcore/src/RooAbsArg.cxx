@@ -102,7 +102,6 @@ for single nodes.
 using namespace std;
 
 ClassImp(RooAbsArg);
-;
 
 bool RooAbsArg::_verboseDirty(false) ;
 bool RooAbsArg::_inhibitDirty(false) ;
@@ -116,12 +115,8 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 /// Default constructor
 
 RooAbsArg::RooAbsArg()
-   : TNamed(), _deleteWatch(false), _valueDirty(true), _shapeDirty(true), _operMode(Auto), _fast(false), _ownedComponents(nullptr),
-     _prohibitServerRedirect(false), _namePtr(nullptr), _isConstant(false), _localNoInhibitDirty(false),
-     _myws(nullptr)
 {
   _namePtr = RooNameReg::instance().constPtr(GetName()) ;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,9 +125,7 @@ RooAbsArg::RooAbsArg()
 /// dirty flags set.
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
-   : TNamed(name, title), _deleteWatch(false), _valueDirty(true), _shapeDirty(true), _operMode(Auto), _fast(false),
-     _ownedComponents(nullptr), _prohibitServerRedirect(false), _namePtr(nullptr), _isConstant(false),
-     _localNoInhibitDirty(false), _myws(nullptr)
+   : TNamed(name, title)
 {
   if (name == nullptr || strlen(name) == 0) {
     throw std::logic_error("Each RooFit object needs a name. "
@@ -146,12 +139,14 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 /// object. Transient properties and client-server links are not copied
 
 RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
-   : TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other),
+   : TNamed(name ? name : other.GetName(), other.GetTitle()),
+     RooPrintable(other),
      _boolAttrib(other._boolAttrib),
-     _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(false),
-     _ownedComponents(nullptr), _prohibitServerRedirect(false),
+     _stringAttrib(other._stringAttrib),
+     _deleteWatch(other._deleteWatch),
      _namePtr(name ? RooNameReg::instance().constPtr(name) : other._namePtr),
-     _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(nullptr)
+     _isConstant(other._isConstant),
+     _localNoInhibitDirty(other._localNoInhibitDirty)
 {
 
   // Copy server list by hand
@@ -164,10 +159,6 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
 
   setValueDirty() ;
   setShapeDirty() ;
-
-  //setAttribute(Form("CloneOf(%08x)",&other)) ;
-  //cout << "RooAbsArg::cctor(" << this << ") #bools = " << _boolAttrib.size() << " #strings = " << _stringAttrib.size() << endl ;
-
 }
 
 
@@ -245,7 +236,7 @@ bool RooAbsArg::isCloneOf(const RooAbsArg& other) const
 void RooAbsArg::setAttribute(const Text_t* name, bool value)
 {
   // Preserve backward compatibility - any strong
-  if(string("Constant")==name) {
+  if(std::string{"Constant"} == name) {
     _isConstant = value ;
   }
 
@@ -401,9 +392,11 @@ void RooAbsArg::addServerList(RooAbsCollection& serverList, bool valueProp, bool
 void RooAbsArg::removeServer(RooAbsArg& server, bool force)
 {
   if (_prohibitServerRedirect) {
-    cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): PROHIBITED SERVER REMOVAL REQUESTED: removing server "
-            << server.GetName() << "(" << &server << ")" << endl ;
-    assert(0) ;
+    std::stringstream ss;
+    ss << "RooAbsArg::addServer(" << this << "," << GetName() << "): PROHIBITED SERVER REMOVAL REQUESTED: removing server "
+       << server.GetName() << "(" << &server << ")";
+    cxcoutF(LinkStateMgmt) << ss.str() << std::endl;
+    throw std::runtime_error(ss.str());
   }
 
   if (_verboseDirty) {
@@ -1240,10 +1233,12 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameCha
 
       // Check if match is unique
       if(tmp->size()>1) {
-        coutF(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->size() << " servers with "
-            << nameAttrib << " attribute" << endl ;
+        std::stringstream ss;
+        ss << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->size() << " servers with "
+            << nameAttrib << " attribute";
+        coutF(LinkStateMgmt) << ss.str() << std::endl;
         tmp->Print("v") ;
-        assert(0) ;
+        throw std::runtime_error(ss.str());
       }
 
       // use the unique element in the set
