@@ -256,6 +256,11 @@ Some of these classes are now removed from the public interface:
   File name can include printf qualifier to code pad number. Also allows to store all pads in single PDF
   or single ROOT file. Significantly improves performance when creating many image files using web graphics.
 
+- Introduce `TCanvas::UpdateAsync` method. In case of web-based canvas triggers update of the canvas on the client side,
+  but does not wait that real update is completed. Avoids blocking of caller thread.
+  Have to be used if called from other web-based widget to avoid logical dead-locks.
+  In case of normal canvas just canvas->Update() is performed.
+
 
 ## 3D Graphics Libraries
 
