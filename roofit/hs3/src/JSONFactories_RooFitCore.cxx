@@ -37,6 +37,9 @@
 
 #include "static_execute.h"
 
+#include <algorithm>
+#include <cctype>
+
 using RooFit::Detail::JSONNode;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,34 +58,36 @@ namespace {
  * opening parenthesis, are not treated as arguments. The extracted
  * arguments are returned as a vector of strings.
  *
- * @param expression A string representing a mathematical expression.
+ * @param expr A string representing a mathematical expression.
  * @return A vector of strings representing the extracted arguments.
  */
-std::vector<std::string> extract_arguments(const std::string &expression)
+std::vector<std::string> extractArguments(std::string expr)
 {
+   // Get rid of whitespaces
+   expr.erase(std::remove_if(expr.begin(), expr.end(), [](unsigned char c) { return std::isspace(c); }), expr.end());
+
    std::vector<std::string> arguments;
-   size_t startidx = expression.size();
-   for (size_t i = 0; i < expression.size(); ++i) {
-      if (startidx >= expression.size()) {
-         if (isalpha(expression[i])) {
+   size_t startidx = expr.size();
+   for (size_t i = 0; i < expr.size(); ++i) {
+      if (startidx >= expr.size()) {
+         if (isalpha(expr[i])) {
             startidx = i;
          }
       } else {
-         if (!isdigit(expression[i]) && !isalpha(expression[i]) && expression[i] != '_') {
-            if (expression[i] == ' ')
-               continue;
-            if (expression[i] == '(') {
-               startidx = expression.size();
+         if (!isdigit(expr[i]) && !isalpha(expr[i]) && expr[i] != '_') {
+            if (expr[i] == '(') {
+               startidx = expr.size();
                continue;
             }
-            std::string arg(expression.substr(startidx, i - startidx));
-            startidx = expression.size();
+            std::string arg(expr.substr(startidx, i - startidx));
+            startidx = expr.size();
             arguments.push_back(arg);
          }
       }
    }
-   if (startidx < expression.size())
-      arguments.push_back(expression.substr(startidx));
+   if (startidx < expr.size()) {
+      arguments.push_back(expr.substr(startidx));
+   }
    return arguments;
 }
 
@@ -97,7 +102,7 @@ public:
       }
       TString formula(p["expression"].val());
       RooArgList dependents;
-      for (const auto &d : extract_arguments(formula.Data())) {
+      for (const auto &d : extractArguments(formula.Data())) {
          dependents.add(*tool->request<RooAbsReal>(d, name));
       }
       tool->wsImport(RooArg_t{name.c_str(), formula, dependents});
