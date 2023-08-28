@@ -1698,7 +1698,7 @@ if(tmva-sofie)
 endif()
 
 #---Check for SYCL
-if (tmva-sofie AND tmva-sycl AND testing)
+if (tmva-sofie AND sofie-sycl AND testing)
   set(KNOWN_SYCL_IMPLEMENTATIONS "IntelSYCL")
 
   if (NOT ${SYCL_IMPLEMENTATION} IN_LIST KNOWN_SYCL_IMPLEMENTATIONS OR NOT SYCL_IMPLEMENTATION)

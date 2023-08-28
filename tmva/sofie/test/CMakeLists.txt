@@ -57,7 +57,7 @@ add_executable(emitFromONNX
    EmitFromONNX_all.cxx
 )
 
-if (tmva-sycl AND testing)
+if (sofie-sycl AND testing)
   add_executable(emitFromONNX_GPU
     EmitFromONNX_GPU_all.cxx  
   )
@@ -70,7 +70,7 @@ target_include_directories(emitFromONNX PRIVATE
    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
 )
 
-if (tmva-sycl AND testing)
+if (sofie-sycl AND testing)
   target_include_directories(emitFromONNX_GPU PRIVATE
     ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
     ${SOFIE_PARSERS_DIR}/inc
@@ -86,7 +86,7 @@ set_target_properties(emitFromONNX PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 AND 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
-if (tmva-sycl AND testing)
+if (sofie-sycl AND testing)
 target_link_libraries(emitFromONNX_GPU ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromONNX_GPU PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 AND 3.6. Not needed from protobuf version 3.17
@@ -97,7 +97,7 @@ endif()
 add_custom_target(SofieCompileModels_ONNX)
 add_dependencies(SofieCompileModels_ONNX emitFromONNX)
 
-if (tmva-sycl AND testing)
+if (sofie-sycl AND testing)
   add_custom_target(SofieCompileGPUModels_ONNX)
   add_dependencies(SofieCompileGPUModels_ONNX emitFromONNX_GPU)
 endif()
@@ -106,7 +106,7 @@ add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
 		USES_TERMINAL )
 
-if (tmva-sycl AND testing)
+if (sofie-sycl AND testing)
   add_custom_command(TARGET SofieCompileGPUModels_ONNX POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX_GPU ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
   USES_TERMINAL )
@@ -127,7 +127,7 @@ add_dependencies(TestCustomModelsFromONNX SofieCompileModels_ONNX)
 endif()
 
 # Creating a Google Test
-if (tmva-sycl AND testing)  # we need oneapi math kernel library to compile the models
+if (sofie-sycl AND testing)  # we need oneapi math kernel library to compile the models
 find_package(MKL REQUIRED)
 ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
   LIBRARIES
@@ -208,7 +208,7 @@ if (tmva-cpu)
   )
  endif()
 
- #if (tmva-sycl AND testing)
+ #if (sofie-sycl AND testing)
  #   ROOT_ADD_GTEST(TestSofieGPUModels TestSofieGPUModels.cxx
  #   LIBRARIES
  #     ROOTTMVASofie
