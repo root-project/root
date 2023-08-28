@@ -2508,7 +2508,7 @@ void TCanvas::Update()
 
    fUpdating = kTRUE;
 
-   if (!fCanvasImp->PerformUpdate()) {
+   if (!fCanvasImp->PerformUpdate(kFALSE)) {
 
       if (!IsBatch()) FeedbackMode(kFALSE); // Goto double buffer mode
 
@@ -2520,6 +2520,21 @@ void TCanvas::Update()
    }
 
    fUpdating = kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Asynchronous pad update.
+/// In case of web-based canvas triggers update of the canvas on the client side,
+/// but does not wait that real update is completed. Avoids blocking of caller thread.
+/// Have to be used if called from other web-based widget to avoid logical dead-locks.
+/// In case of normal canvas just canvas->Update() is performed.
+
+void TCanvas::UpdateAsync()
+{
+   if (IsWeb())
+      fCanvasImp->PerformUpdate(kTRUE);
+   else
+      Update();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

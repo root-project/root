@@ -2830,6 +2830,18 @@ void TPad::Update()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Asynchronous pad update.
+/// In case of web-based canvas triggers update of the canvas on the client side,
+/// but does not wait that real update is completed. Avoids blocking of caller thread.
+/// Have to be used if called from other web-based widget to avoid logical dead-locks.
+/// In case of normal canvas just canvas->Update() is performed.
+
+void TPad::UpdateAsync()
+{
+   if (fCanvas) fCanvas->UpdateAsync();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get frame.
 
 TFrame *TPad::GetFrame()

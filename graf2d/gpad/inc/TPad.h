@@ -363,6 +363,8 @@ public:
 
    void              ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true) override;
    void              Update() override;
+   void              UpdateAsync() override;
+
    Int_t             UtoAbsPixel(Double_t u) const override { return Int_t(fUtoAbsPixelk + u*fUtoPixel); }
    Int_t             VtoAbsPixel(Double_t v) const override { return Int_t(fVtoAbsPixelk + v*fVtoPixel); }
    Int_t             UtoPixel(Double_t u) const override;

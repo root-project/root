@@ -46,7 +46,7 @@ protected:
    virtual Bool_t IsLocked() { return kFALSE; }
 
    virtual Bool_t IsWeb() const { return kFALSE; }
-   virtual Bool_t PerformUpdate() { return kFALSE; }
+   virtual Bool_t PerformUpdate(Bool_t /* async */) { return kFALSE; }
    virtual TVirtualPadPainter *CreatePadPainter() { return nullptr; }
 
 public:
