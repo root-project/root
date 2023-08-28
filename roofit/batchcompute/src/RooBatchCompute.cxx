@@ -39,6 +39,38 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
+namespace {
+
+void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, ArgVector &extraArgs)
+{
+   batches._extraArgs = extraArgs.data();
+   batches._nEvents = nEvents;
+   batches._nBatches = nBatches;
+   batches._nExtraArgs = extraArgs.size();
+   batches._output = output;
+}
+
+void fillArrays(std::vector<Batch> &arrays, const VarVector &vars, double *buffer)
+{
+
+   arrays.resize(vars.size());
+   for (size_t i = 0; i < vars.size(); i++) {
+      const std::span<const double> &span = vars[i];
+      if (span.empty()) {
+         std::stringstream ss;
+         ss << "The span number " << i << " passed to Batches::Batches() is empty!";
+         throw std::runtime_error(ss.str());
+      } else if (span.size() > 1)
+         arrays[i].set(span.data()[0], span.data(), true);
+      else {
+         std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
+         arrays[i].set(span.data()[0], &buffer[i * bufferSize], false);
+      }
+   }
+}
+
+} // namespace
+
 std::vector<void (*)(BatchesHandle)> getFunctions();
 
 /// This class overrides some RooBatchComputeInterface functions, for the
@@ -78,7 +110,7 @@ public:
    \param nEvents The number of events to be processed.
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(Config const&, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
+   void compute(Config const &, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
                 ArgVector &extraArgs) override
    {
       static std::vector<double> buffer;
@@ -96,7 +128,11 @@ public:
          auto task = [&](std::size_t idx) -> int {
             // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
             // Then advance every object but the first to split the work between threads
-            Batches batches(output, nEventsPerThread, vars, extraArgs, buffer.data());
+            Batches batches;
+            std::vector<Batch> arrays;
+            fillBatches(batches, output, nEventsPerThread, vars.size(), extraArgs);
+            fillArrays(arrays, vars, buffer.data());
+            batches._arrays = arrays.data();
             batches.advance(batches.getNEvents() * idx);
 
             // Set the number of events of the last Batches object as the remaining events
@@ -124,7 +160,11 @@ public:
       } else {
          // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
          // Then advance every object but the first to split the work between threads
-         Batches batches(output, nEvents, vars, extraArgs, buffer.data());
+         Batches batches;
+         std::vector<Batch> arrays;
+         fillBatches(batches, output, nEvents, vars.size(), extraArgs);
+         fillArrays(arrays, vars, buffer.data());
+         batches._arrays = arrays.data();
 
          std::size_t events = batches.getNEvents();
          batches.setNEvents(bufferSize);
@@ -138,8 +178,8 @@ public:
       }
    }
    /// Return the sum of an input array
-   double reduceSum(Config const&, InputArr input, size_t n) override;
-   ReduceNLLOutput reduceNLL(Config const&, std::span<const double> probas, std::span<const double> weightSpan,
+   double reduceSum(Config const &, InputArr input, size_t n) override;
+   ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weightSpan,
                              std::span<const double> weights, double weightSum,
                              std::span<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
@@ -167,12 +207,12 @@ inline std::pair<double, double> getLog(double prob, ReduceNLLOutput &out)
 
 } // namespace
 
-double RooBatchComputeClass::reduceSum(Config const&, InputArr input, size_t n)
+double RooBatchComputeClass::reduceSum(Config const &, InputArr input, size_t n)
 {
    return ROOT::Math::KahanSum<double, 4u>::Accumulate(input, input + n).Sum();
 }
 
-ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const&, std::span<const double> probas,
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const double> probas,
                                                 std::span<const double> weightSpan, std::span<const double> weights,
                                                 double weightSum, std::span<const double> binVolumes)
 {
@@ -210,38 +250,6 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const&, std::span<const d
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
-
-/** Construct a Batches object
-\param output The array where the computation results are stored.
-\param nEvents The number of events to be processed.
-\param vars A std::vector containing pointers to the variables involved in the computation.
-\param extraArgs An optional std::vector containing extra double values that may participate in the computation.
-\param buffer A 2D array that is used as a buffer for scalar variables.
-For every scalar parameter a buffer (one row of the buffer) is filled with copies of the scalar
-value, so that it behaves as a batch and facilitates auto-vectorization. The Batches object can be
-passed by value to a compute function to perform efficient computations. **/
-Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgVector &extraArgs, double *buffer)
-   : _extraArgs{extraArgs.data()},
-     _nEvents(nEvents),
-     _nBatches(vars.size()),
-     _nExtraArgs(extraArgs.size()),
-     _output(output)
-{
-   _arrays.resize(vars.size());
-   for (size_t i = 0; i < vars.size(); i++) {
-      const std::span<const double> &span = vars[i];
-      if (span.empty()) {
-         std::stringstream ss;
-         ss << "The span number " << i << " passed to Batches::Batches() is empty!";
-         throw std::runtime_error(ss.str());
-      } else if (span.size() > 1)
-         _arrays[i].set(span.data()[0], span.data(), true);
-      else {
-         std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
-         _arrays[i].set(span.data()[0], &buffer[i * bufferSize], false);
-      }
-   }
-}
 
 } // End namespace RF_ARCH
 } // End namespace RooBatchCompute
