@@ -25,7 +25,6 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include <TError.h>
 
 #include <algorithm>
-#include <iostream>
 
 #ifndef RF_ARCH
 #error "RF_ARCH should always be defined"
@@ -48,15 +47,17 @@ void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size
    batches._output = output;
 }
 
-void fillArrays(Batch *arrays, const VarVector &vars)
+void fillArrays(Batch *arrays, const VarVector &vars, double *buffer, double *bufferDevice)
 {
    for (int i = 0; i < vars.size(); i++) {
       const std::span<const double> &span = vars[i];
-      size_t size = span.size();
-      if (size == 1)
-         arrays[i].set(span[0], nullptr, false);
-      else
-         arrays[i].set(0.0, span.data(), true);
+      if (span.size() == 1) {
+         buffer[i] = span[0];
+         arrays[i].set(bufferDevice + i, false);
+      } else {
+         buffer[i] = 0.0;
+         arrays[i].set(span.data(), true);
+      }
    }
 }
 
@@ -98,20 +99,23 @@ public:
    {
       using namespace RooFit::Detail::CudaInterface;
 
-      const std::size_t memSize = sizeof(Batches) + vars.size() * sizeof(Batch) + extraArgs.size() * sizeof(double);
+      const std::size_t memSize = sizeof(Batches) + vars.size() * sizeof(Batch) + vars.size() * sizeof(double) +
+                                  extraArgs.size() * sizeof(double);
 
       std::vector<char> hostMem(memSize);
       auto batches = reinterpret_cast<Batches *>(hostMem.data());
       auto arrays = reinterpret_cast<Batch *>(batches + 1);
-      auto extraArgsHost = reinterpret_cast<double *>(arrays + vars.size());
+      auto scalarBuffer = reinterpret_cast<double *>(arrays + vars.size());
+      auto extraArgsHost = reinterpret_cast<double *>(scalarBuffer + vars.size());
 
       DeviceArray<char> deviceMem(memSize);
       auto batchesDevice = reinterpret_cast<Batches *>(deviceMem.data());
       auto arraysDevice = reinterpret_cast<Batch *>(batchesDevice + 1);
-      auto extraArgsDevice = reinterpret_cast<double *>(arraysDevice + vars.size());
+      auto scalarBufferDevice = reinterpret_cast<double *>(arraysDevice + vars.size());
+      auto extraArgsDevice = reinterpret_cast<double *>(scalarBufferDevice + vars.size());
 
       fillBatches(*batches, output, nEvents, vars.size(), extraArgs.size());
-      fillArrays(arrays, vars);
+      fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice);
       batches->_arrays = arraysDevice;
 
       if (!extraArgs.empty()) {
