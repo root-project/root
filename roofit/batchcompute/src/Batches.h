@@ -29,23 +29,16 @@ so that they can contain data for every kind of compute function.
 
 namespace RooBatchCompute {
 
-#ifdef __CUDACC__
-// In the CPU case we use std::vector instead of fixed size arrays to pass
-// around data, so no maximum size variables are necessary.
-constexpr std::size_t maxParams = 8;
-constexpr std::size_t maxExtraArgs = 16;
-#endif // #ifdef __CUDACC__
 constexpr std::size_t bufferSize = 64;
 
 namespace RF_ARCH {
 
 class Batch {
-private:
+public:
    double _scalar = 0;
    const double *__restrict _array = nullptr;
    bool _isVector = false;
 
-public:
    Batch() = default;
    inline Batch(InputArr array, bool isVector) : _scalar{array[0]}, _array{array}, _isVector{isVector} {}
 
@@ -68,14 +61,8 @@ public:
 
 class Batches {
 public:
-#ifdef __CUDACC__
-   // In the GPU case, we used fixed-size buffers to pass around input arrays by value.
-   Batch _arrays[maxParams];
-   double _extraArgs[maxExtraArgs];
-#else
-   Batch *_arrays;
+   Batch *_arrays = nullptr;
    double *_extraArgs = nullptr;
-#endif // #ifdef __CUDACC__
    std::size_t _nEvents = 0;
    std::size_t _nBatches = 0;
    std::size_t _nExtraArgs = 0;
