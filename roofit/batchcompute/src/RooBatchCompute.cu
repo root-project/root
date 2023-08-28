@@ -48,9 +48,8 @@ void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size
    batches._output = output;
 }
 
-void fillArrays(std::vector<Batch> &arrays, const VarVector &vars)
+void fillArrays(Batch *arrays, const VarVector &vars)
 {
-   arrays.resize(vars.size());
    for (int i = 0; i < vars.size(); i++) {
       const std::span<const double> &span = vars[i];
       size_t size = span.size();
@@ -99,31 +98,37 @@ public:
    {
       using namespace RooFit::Detail::CudaInterface;
 
-      Batches batches;
-      std::vector<Batch> arrays;
-      fillBatches(batches, output, nEvents, vars.size(), extraArgs.size());
-      fillArrays(arrays, vars);
+      const std::size_t memSize = sizeof(Batches) + vars.size() * sizeof(Batch) + extraArgs.size() * sizeof(double);
 
-      std::unique_ptr<DeviceArray<double>> extraArgsDevice;
+      std::vector<char> hostMem(memSize);
+      auto batches = reinterpret_cast<Batches *>(hostMem.data());
+      auto arrays = reinterpret_cast<Batch *>(batches + 1);
+      auto extraArgsHost = reinterpret_cast<double *>(arrays + vars.size());
+
+      DeviceArray<char> deviceMem(memSize);
+      auto batchesDevice = reinterpret_cast<Batches *>(deviceMem.data());
+      auto arraysDevice = reinterpret_cast<Batch *>(batchesDevice + 1);
+      auto extraArgsDevice = reinterpret_cast<double *>(arraysDevice + vars.size());
+
+      fillBatches(*batches, output, nEvents, vars.size(), extraArgs.size());
+      fillArrays(arrays, vars);
+      batches->_arrays = arraysDevice;
+
       if (!extraArgs.empty()) {
-         extraArgsDevice = std::make_unique<DeviceArray<double>>(extraArgs.size());
-         copyHostToDevice(extraArgs.data(), extraArgsDevice->data(), extraArgs.size(), cfg.cudaStream());
+         std::copy(std::cbegin(extraArgs), std::cend(extraArgs), extraArgsHost);
+         batches->_extraArgs = extraArgsDevice;
       }
 
-      DeviceArray<Batch> arraysDevice{arrays.size()};
-      copyHostToDevice(arrays.data(), arraysDevice.data(), arrays.size(), cfg.cudaStream());
-      batches._arrays = arraysDevice.data();
-      batches._extraArgs = extraArgsDevice ? extraArgsDevice->data() : nullptr;
-      DeviceArray<Batches> batchesDevice{1};
-      copyHostToDevice(&batches, batchesDevice.data(), 1, cfg.cudaStream());
+      copyHostToDevice(hostMem.data(), deviceMem.data(), hostMem.size(), cfg.cudaStream());
 
       const int gridSize = std::ceil(double(nEvents) / blockSize);
-      _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream()>>>(*batchesDevice.data());
+      _computeFunctions[computer]<<<gridSize, blockSize, 0, *cfg.cudaStream()>>>(*batchesDevice);
 
       // The compute might have modified the mutable extra args, so we need to
-      // copy them back.
+      // copy them back. This can be optimized if necessary in the future by
+      // flagging if the extra args were actually changed.
       if (!extraArgs.empty()) {
-         copyDeviceToHost(extraArgsDevice->data(), extraArgs.data(), extraArgs.size(), cfg.cudaStream());
+         copyDeviceToHost(extraArgsDevice, extraArgs.data(), extraArgs.size(), cfg.cudaStream());
       }
    }
    /// Return the sum of an input array
