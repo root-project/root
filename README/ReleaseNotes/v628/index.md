@@ -899,24 +899,60 @@ Published on May 7, 2023
 
 ### Bugs and Issues fixed in this release
 
-* [[#12493](https://github.com/root-project/root/issues/12493)] - "TEXT90 COLZ" does not work
+* [[#12493](https://github.com/root-project/root/issues/12493)] - `"TEXT90 COLZ"` does not work
 * [[#12520](https://github.com/root-project/root/issues/12520)] - `RDF::FromCSV` gives wrong output with colTypes specified
 * [[#12597](https://github.com/root-project/root/issues/12597)] - [DF] Display of `RVec<bool>` shows wrong values
-* [[#12358](https://github.com/root-project/root/issues/12358)] - Self-reference through a map of tuples breaks the interpreter (2023.02.20.)
+* [[#12358](https://github.com/root-project/root/issues/12358)] - Self-reference through a map of tuples breaks the interprete
 * [[#12623](https://github.com/root-project/root/issues/12623)] - `gDirectory` macro should include global-namespace qualification
 * [[#12378](https://github.com/root-project/root/issues/12378)] - `GetClass(<typedef>)` works only at the second try
 * [[#12552](https://github.com/root-project/root/issues/12552)] - Race condition when loading dictionary shared libraries
 * [[#12704](https://github.com/root-project/root/issues/12704)] - [RF] Off-by-one error in Roofit/Histfactory/HistoToWorkspaceFactoryFast
-* [[#8984](https://github.com/root-project/root/issues/8984)] - [RF] Problem of memory leak (?) with RooDataSet
+* [[#8984](https://github.com/root-project/root/issues/8984)] - [RF] Problem of memory leak (?) with `RooDataSet`
 * [[#12659](https://github.com/root-project/root/issues/12659)] - compiling v6.28.02 fails under opensuse TW with gcc-13
 * [[#12646](https://github.com/root-project/root/issues/12646)] - [RF] `RooLinearVar` not used in plot projection integrals
 * [[#10895](https://github.com/root-project/root/issues/10895)] - [cling] void macro should not return value
 * [[#12750](https://github.com/root-project/root/issues/12750)] - cocoa GUI crashes on macOS
-* [[#12240](https://github.com/root-project/root/issues/12240)] - [ROOT 6.29] module 'std.bits/uses_allocator_args.h' requires feature 'cplusplus20'
+* [[#12240](https://github.com/root-project/root/issues/12240)] - module `std.bits/uses_allocator_args.h` requires feature `cplusplus20`
 * [[#12779](https://github.com/root-project/root/issues/12779)] - [cling][c++20] Interpreter crash on concept definition
+
+
+## Release 6.28/06
+
+Published on August 28, 2023
+
+### Bugs and Issues fixed in this release
+
+* [[#12771](https://github.com/root-project/root/issues/12771)] - CMS build errors for ROOT 6.28/master
+* [[#12037](https://github.com/root-project/root/issues/12037)] - Compilation failure with g++ 12.2 and C++20
+* [[#12766](https://github.com/root-project/root/issues/12766)] - OpenSSL 3.1 not supported in build of module net/http
+* [[#12457](https://github.com/root-project/root/issues/12457)] - Failing Cling test for unloading Lambda in template instantiation
+* [[#12783](https://github.com/root-project/root/issues/12783)] - [IO] Writing `HistFactory` model file twice gives strange results since ROOT 6.26.02
+* [[#12649](https://github.com/root-project/root/issues/12649)] - `TTreeCache` scales (very) poorly with number of baskets/clusters.
+* [[#12897](https://github.com/root-project/root/issues/12897)] - root-6.28.04 fails to compile with gcc-13 under linux TW
+* [[#12715](https://github.com/root-project/root/issues/12715)] - Issue with `TClass` object managed in case of multi-threaded 'rapid' set of dlopen/dlclose on same library.
+* [[#12455](https://github.com/root-project/root/issues/12455)] - Failing Cling tests with multiple interpreters
+* [[#9670](https://github.com/root-project/root/issues/9670)] - Cannot import `<filesystem>` with runtime modules
+* [[#7710](https://github.com/root-project/root/issues/7710)] - I/O should take less locks
+* [[#12967](https://github.com/root-project/root/issues/12967)] - [RF] `HistFactory` workspaces incompatible between versions 6.26 and 6.28
+* [[#12003](https://github.com/root-project/root/issues/12003)] - "different definitions in different modules" with C++17 build on macOS
+* [[#8795](https://github.com/root-project/root/issues/8795)] - [GH] Issue and Improvement templates
+* [[#10291](https://github.com/root-project/root/issues/10291)] - Problems with `std::map` in a Debug build using recent versions of GCC
+* [[#12868](https://github.com/root-project/root/issues/12868)] - When unloading a library the altername class name are not unloaded.
+* [[#13182](https://github.com/root-project/root/issues/13182)] - Infinite loop in `TDirectoryFile::ls`
+* [[#13233](https://github.com/root-project/root/issues/13233)] - Classic `TRootBrowser`: Histogramming leafs which are functions fails
+* [[#11920](https://github.com/root-project/root/issues/11920)] - [CMake] Attempt to write `ClingConfig.cmake.tmp` to the external LLVM library directory, causing configuration failure
+* [[#12152](https://github.com/root-project/root/issues/12152)] - Building fails with `builtin_llvm=OFF` due to unintend libbsd linking
+* [[#12156](https://github.com/root-project/root/issues/12156)] - Building fails with `builtin_llvm=OFF`:  CommandLine Error: Option 'W' registered more than once!
+* [[#13156](https://github.com/root-project/root/issues/13156)] - ROOT header `core/clib/inc/strlcpy.h` incompatible with latest glibc
+* [[#13462](https://github.com/root-project/root/issues/13462)] - Segmentation violation for a trivial `std::unique_ptr`
+* [[#13449](https://github.com/root-project/root/issues/13449)] - Slow closing of `TFile` with very large number of directories.
+* [[#13450](https://github.com/root-project/root/issues/13450)] - Error while building module 'std' imported from `input_line_1:1:`...
+* [[#13453](https://github.com/root-project/root/issues/13453)] - Unable to compile ROOT 6.28/04 with c++14
+* [[#13551](https://github.com/root-project/root/issues/13551)] - [df] Creation of `Snapshot` actions writes to uninitialized memory 
+
 
 ## HEAD of the v6-28-00-patches branch
 
-These changes will be part of a future 6.28/06.
+These changes will be part of a future 6.28/08.
 
 - None so far.
