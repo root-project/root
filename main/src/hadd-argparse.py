@@ -40,7 +40,9 @@ def get_argparse():
     parser.add_argument("-experimental-io-features", help=textwrap.fill(
         "Used with an argument provided, enables the corresponding experimental feature for output trees"))
     parser.add_argument("-f", help=textwrap.fill(
-        "Gives the ability to specify the compression level of the target file (by default 4) "))
+        "Force overwriting of output file."))
+    parser.add_argument("-f[0-9]", help=textwrap.fill(
+        "Gives the ability to specify the compression level of the target file (by default 4)"))
     parser.add_argument("-fk", help=textwrap.fill(
         "Sets the target file to contain the baskets with the same compression "
         "as the input files (unless -O is specified). Compresses the meta data "
