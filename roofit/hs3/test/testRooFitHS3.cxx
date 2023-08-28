@@ -27,7 +27,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = false;
+const bool writeJsonFiles = true;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -189,7 +189,20 @@ TEST(RooFitHS3, RooGenericPdf)
 
    // At this point, only basic arithmetic operations with +, -, * and / are
    // defined in the HS3 standard.
-   int status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf('a * x + c', {x, a, c})"});
+   int status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf1('a * x + c', {x, a, c})"});
+   EXPECT_EQ(status, 0);
+
+   // Test that it also works with index notation builtin to TFormula
+   status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf2('x[1] * x[0] + x[2]', {x, a, c})"});
+   EXPECT_EQ(status, 0);
+
+   // Test for ordinal notation
+   status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf3('@1 * @0 + @2', {x, a, c})"});
+   EXPECT_EQ(status, 0);
+
+   // Test for variable names with numbers and extra whitespaces in it
+   status = validate({"m_001_mu[1.0, 0.1, 10]", "x[0, 5]", "m_003_mu[5]",
+                      "EXPR::genericPdf4('@0   *  2  *      @1 +   @2', {m_001_mu, x, m_003_mu})"});
    EXPECT_EQ(status, 0);
 }
 
