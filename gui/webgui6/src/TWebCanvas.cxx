@@ -1884,7 +1884,7 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 /// scan all primitives in the TCanvas and subpads and convert them into
 /// the structure which will be delivered to JSROOT client
 
-Bool_t TWebCanvas::PerformUpdate()
+Bool_t TWebCanvas::PerformUpdate(Bool_t async)
 {
    Bool_t modified = CheckCanvasModified();
 
@@ -1896,7 +1896,7 @@ Bool_t TWebCanvas::PerformUpdate()
    } else {
       CheckDataToSend();
 
-      if (!fProcessingData && !IsAsyncMode())
+      if (!fProcessingData && !IsAsyncMode() && !async)
          WaitWhenCanvasPainted(fCanvVersion);
    }
 
