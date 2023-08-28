@@ -218,7 +218,7 @@ public:
       if (Browsable::RProvider::Draw6(pad, obj, drawopt)) {
          fObjects.emplace(pad, std::move(obj));
          pad->Modified();
-         fCanvas->Update();
+         fCanvas->UpdateAsync();
          return true;
       }
 
@@ -228,7 +228,7 @@ public:
    void CheckModified() override
    {
       if (fCanvas->IsModified())
-         fCanvas->Update();
+         fCanvas->UpdateAsync();
    }
 
 };
