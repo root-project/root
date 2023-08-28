@@ -102,7 +102,8 @@ void count_NLL_components(RooAbsReal *nll, bool verbose = false)
          std::cout << "the NLL object is a RooAddition*..." << std::endl;
       }
       std::size_t nll_component_count = 0;
-      for (const auto &component : *nll->getComponents()) {
+      std::unique_ptr<RooArgSet> components{nll->getComponents()};
+      for (const auto &component : *components) {
          if (component->IsA() == RooNLLVar::Class()) {
             ++nll_component_count;
          }

@@ -47,7 +47,7 @@ void Zbi_Zgamma()
    // numeric RooFit Z_Gamma
    w1->var("y")->setVal(100);
    w1->var("x")->setVal(150);
-   RooAbsReal *cdf = w1->pdf("averagedModel")->createCdf(*w1->var("x"));
+   std::unique_ptr<RooAbsReal> cdf{w1->pdf("averagedModel")->createCdf(*w1->var("x"))};
    cdf->getVal(); // get ugly print messages out of the way
 
    cout << "Hybrid p-value = " << cdf->getVal() << endl;

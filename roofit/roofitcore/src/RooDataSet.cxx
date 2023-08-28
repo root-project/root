@@ -937,7 +937,7 @@ RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t 
   RooSpan<const double> allWeights = _dstore->getWeightBatch(0, numEntries());
   if(allWeights.empty()) return {};
 
-  if(!sumW2) return {std::cbegin(allWeights) + first, std::cbegin(allWeights) + first + len};
+  if(!sumW2) return {&*(std::cbegin(allWeights) + first), len};
 
   // Treat the sumW2 case with a result buffer, first reset buffer if the
   // number of entries doesn't match with the dataset anymore
@@ -953,7 +953,7 @@ RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t 
     }
   }
 
-  return RooSpan<const double>(_sumW2Buffer->begin() + first, _sumW2Buffer->begin() + first + len);
+  return RooSpan<const double>(&*(_sumW2Buffer->begin() + first), len);
 }
 
 
@@ -1299,10 +1299,11 @@ void RooDataSet::append(RooDataSet& data)
 RooAbsArg* RooDataSet::addColumn(RooAbsArg& var, bool adjustRange)
 {
   checkInit() ;
-  RooAbsArg* ret = _dstore->addColumn(var,adjustRange) ;
-  _vars.addOwned(*ret) ;
+  std::unique_ptr<RooAbsArg> ret{_dstore->addColumn(var,adjustRange)};
+  RooAbsArg* retPtr = ret.get();
+  _vars.addOwned(std::move(ret));
   initialize(_wgtVar?_wgtVar->GetName():0) ;
-  return ret ;
+  return retPtr;
 }
 
 

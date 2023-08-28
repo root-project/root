@@ -1883,7 +1883,13 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
 
       cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
       LoadPCMImpl(pcmMemFile);
-      fPendingRdicts.erase(pendingRdict);
+      // Currently the module file are never unloaded (even if the library is
+      // unloaded) and, of course, never reloaded.
+      // Consequently, we must NOT remove the `pendingRdict` from the list
+      // of pending dictionary, otherwise if a library is unloaded and then
+      // reload we will be unable to update properly the TClass object
+      // (because we wont be able to load the rootpcm file by executing the
+      // above lines)
 
       return;
    }
@@ -2188,8 +2194,10 @@ void TCling::RegisterModule(const char* modulename,
                   }
                }
                if (scopes.empty() || DC) {
-                  // We know the scope; let's look for the enum.
-                  size_t posEnumName = fwdDeclsLine.find("\"))) ", 32);
+                  // We know the scope; let's look for the enum. For that, look
+                  // for the *last* closing parentheses of an attribute because
+                  // there can be multiple.
+                  size_t posEnumName = fwdDeclsLine.rfind("\"))) ");
                   R__ASSERT(posEnumName != std::string::npos && "Inconsistent enum fwd decl!");
                   posEnumName += 5; // skip "\"))) "
                   while (isspace(fwdDeclsLine[posEnumName]))

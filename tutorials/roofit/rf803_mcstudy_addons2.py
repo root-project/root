@@ -5,7 +5,9 @@
 ##
 ## RooMCStudy: Using the randomizer and profile likelihood add-on models
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \author Clemens Lange

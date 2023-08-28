@@ -56,7 +56,7 @@ protected:
   bool _useIntegrandLimits ;
 
   RooNumIntConfig _config ;
-  RooIntegrator1D** _array ; ///< Array of segment integrators
+  std::vector<std::unique_ptr<RooIntegrator1D>> _array ; ///< Array of segment integrators
 
   bool initialize();
 

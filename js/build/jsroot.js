@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.3.1
+// https://root.cern/js/ v7.3.3
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-let version_id = '7.3.1';
+let version_id = '7.3.3';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '28/03/2023';
+let version_date = '12/06/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -40362,7 +40362,7 @@ function createSVGRenderer(as_is, precision, doc) {
      svg_style: {},
      path_attr: {},
      accPath: '',
-     createElementNS(ns,kind) {
+     createElementNS(ns, kind) {
         if (kind == 'path')
            return {
               _wrapper: this,
@@ -40403,12 +40403,17 @@ function createSVGRenderer(as_is, precision, doc) {
      }
    };
 
-   let originalDocument = globalThis.document;
-   globalThis.document = doc_wrapper;
+   let originalDocument;
+
+   if (isNodeJs()) {
+      originalDocument = globalThis.document;
+      globalThis.document = doc_wrapper;
+   }
 
    let rndr = new SVGRenderer();
 
-   globalThis.document = originalDocument;
+   if (isNodeJs())
+      globalThis.document = originalDocument;
 
    rndr.doc_wrapper = doc_wrapper; // use it to get final SVG code
 
@@ -40416,11 +40421,13 @@ function createSVGRenderer(as_is, precision, doc) {
 
    rndr.render = function (scene, camera) {
       let originalDocument = globalThis.document;
-      globalThis.document = this.doc_wrapper;
+      if (isNodeJs())
+         globalThis.document = this.doc_wrapper;
 
       this.originalRender(scene, camera);
 
-      globalThis.document = originalDocument;
+      if (isNodeJs())
+         globalThis.document = originalDocument;
    };
 
    rndr.clearHTML = function() {
@@ -45365,7 +45372,7 @@ function normal_cdf_c(x, sigma, x0 = 0) {
   * @memberof Math */
 function normal_cdf(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
-   if (z < -1.) return erfc(-z);
+   if (z < -1.) return 0.5*erfc(-z);
    else         return 0.5*(1.0 + erf(z));
 }
 
@@ -50336,8 +50343,8 @@ const FrameInteractive = {
                               .on('touchend', null, true);
          } else if (settings.ContextMenu) {
             this.zoom_curr = arr[0];
-            this.getFrameSvg().on('touchcancel', this.endTouchSel.bind(this))
-                              .on('touchend', this.endTouchSel.bind(this));
+            this.getFrameSvg().on('touchcancel', evnt => this.endTouchMenu('', evnt))
+                              .on('touchend', evnt => this.endTouchMenu('', evnt));
             evnt.preventDefault();
             evnt.stopPropagation();
          }
@@ -53583,7 +53590,7 @@ class BrowserLayout {
 
    /** @summary Show status information inside special fields of browser layout */
    showStatus(...msgs) {
-      if (!this.status_layout) return;
+      if (!isObject(this.status_layout) || !isFunc(this.status_layout.getGridFrame)) return;
 
       let maxh = 0;
       for (let n = 0; n < 4; ++n) {
@@ -71565,7 +71572,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary add transformation control */
    addTransformControl() {
-      if (this._tcontrols) return;
+      if (this._tcontrols || !this._webgl || isBatchMode()) return;
 
       if (!this.ctrl._debug && !this.ctrl._grid) return;
 
@@ -73372,7 +73379,7 @@ class TGeoPainter extends ObjectPainter {
           info = main.querySelector('.geo_info');
 
       if (!msg) {
-         info.remove();
+         info?.remove();
       } else {
          let spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
@@ -74174,14 +74181,14 @@ class TGeoPainter extends ObjectPainter {
             if (obj.fVolume && obj.fVolume.$geo_painter===this) delete obj.fVolume.$geo_painter;
          }
 
-         if (this._main_painter) {
+         if (this._main_painter?._slave_painters) {
             let pos = this._main_painter._slave_painters.indexOf(this);
             if (pos >= 0) this._main_painter._slave_painters.splice(pos,1);
          }
 
-         for (let k = 0; k < this._slave_painters.length;++k) {
+         for (let k = 0; k < this._slave_painters?.length; ++k) {
             let slave = this._slave_painters[k];
-            if (slave && (slave._main_painter===this)) slave._main_painter = null;
+            if (slave && (slave._main_painter === this)) slave._main_painter = null;
          }
 
          delete this.geo_manager;
@@ -79832,8 +79839,11 @@ class TDrawSelector extends TSelector {
          res.max = this.hist_args[axisid * 3 + 2];
       } else {
 
-         res.min = Math.min.apply(null, arr);
-         res.max = Math.max.apply(null, arr);
+         res.min = res.max = arr[0];
+         for (let i = 1; i < arr.length; ++i) {
+            res.min = Math.min(res.min, arr[i]);
+            res.max = Math.max(res.max, arr[i]);
+         }
 
          if (this.hist_nbins)
             nbins = res.nbins = this.hist_nbins;
@@ -80184,7 +80194,7 @@ class TDrawSelector extends TSelector {
             case 1:
                for (let n0 = 0; n0 < var0.length; ++n0) {
                   var0.buf.push(var0.get(n0));
-                  cut.buf.push(cut.value);
+                  cut.buf?.push(cut.value);
                }
                break;
             case 2:
@@ -80192,7 +80202,7 @@ class TDrawSelector extends TSelector {
                   for (let n1 = 0; n1 < var1.length; ++n1) {
                      var0.buf.push(var0.get(n0));
                      var1.buf.push(var1.get(n1));
-                     cut.buf.push(cut.value);
+                     cut.buf?.push(cut.value);
                   }
                break;
             case 3:
@@ -80202,7 +80212,7 @@ class TDrawSelector extends TSelector {
                         var0.buf.push(var0.get(n0));
                         var1.buf.push(var1.get(n1));
                         var2.buf.push(var2.get(n2));
-                        cut.buf.push(cut.value);
+                        cut.buf?.push(cut.value);
                      }
                break;
          }
@@ -80367,7 +80377,8 @@ async function treeProcess(tree, selector, args) {
 
    if (!selector || !tree.$file || !selector.numBranches()) {
       if (selector) selector.Terminate(false);
-      return Promise.reject(Error('required parameter missing for TTree::Process'));
+      console.error('required parameter missing for TTree::Process');
+      return null;
    }
 
    // central handle with all information required for reading
@@ -80955,7 +80966,8 @@ async function treeProcess(tree, selector, args) {
 
       if (!item) {
          selector.Terminate(false);
-         return Promise.reject(Error(`Fail to add branch ${selector.nameOfBranch(nn)}`));
+         console.error(`Fail to add branch ${selector.nameOfBranch(nn)}`);
+         return null;
       }
    }
 
@@ -80982,7 +80994,8 @@ async function treeProcess(tree, selector, args) {
 
    if (handle.firstentry >= handle.lastentry) {
       selector.Terminate(false);
-      return Promise.reject(Error('No any common events for selected branches'));
+      console.error('No any common events for selected branches');
+      return null;
    }
 
    handle.process_min = handle.firstentry;
@@ -92189,6 +92202,8 @@ class TGraphPainter$1 extends ObjectPainter {
       painter.decodeOptions(opt, true);
       painter.createBins();
       painter.createStat();
+
+      let graph = painter.getObject();
       if (!settings.DragGraphs && !graph.TestBit(kNotEditable))
          graph.InvertBit(kNotEditable);
 
@@ -102922,20 +102937,16 @@ class RH1Painter$2 extends RHistPainter {
          }
       }
 
-      let close_path = '',
-          fill_for_interactive = !isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line;
-      if (!this.fillatt.empty() || fill_for_interactive) {
-         let h0 = height + 3;
-         if (fill_for_interactive) {
-            let gry0 = Math.round(funcs.gry(0));
-            if (gry0 <= 0)
-               h0 = -3;
-            else if (gry0 < height)
-               h0 = gry0;
-         }
-         close_path = `L${currx},${h0}H${startx}Z`;
-         if (res) res += close_path;
+      let fill_for_interactive = !isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line,
+          h0 = height + 3;
+      if (!fill_for_interactive) {
+         let gry0 = Math.round(funcs.gry(0));
+         if (gry0 <= 0)
+            h0 = -3;
+         else if (gry0 < height)
+            h0 = gry0;
       }
+      let close_path = `L${currx},${h0}H${startx}Z`;
 
       if (draw_markers || show_line) {
          if (path_fill)
@@ -102955,9 +102966,9 @@ class RH1Painter$2 extends RHistPainter {
                    .style('pointer-events', isBatchMode() ? null : 'visibleFill');
 
          if (path_line) {
-            if (!this.fillatt.empty())
+            if (!this.fillatt.empty() && !options.Hist)
                this.draw_g.append('svg:path')
-                     .attr('d', options.Fill ? (path_line + close_path) : res)
+                     .attr('d', path_line + close_path)
                      .call(this.fillatt.func);
 
             this.draw_g.append('svg:path')
@@ -102973,7 +102984,7 @@ class RH1Painter$2 extends RHistPainter {
 
       } else if (res && options.Hist) {
          this.draw_g.append('svg:path')
-                    .attr('d', res)
+                    .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
                     .style('stroke-linejoin','miter')
                     .call(this.lineatt.func)
                     .call(this.fillatt.func);

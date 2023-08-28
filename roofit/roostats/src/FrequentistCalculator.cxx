@@ -105,11 +105,9 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
 
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
-         RooFitResult *result = profile->minimizer()->save();
-         RooArgSet * detOutput = DetailedOutputAggregator::GetAsArgSet(result, "fitNull_");
+         std::unique_ptr<RooFitResult> result {profile->minimizer()->save()};
+         std::unique_ptr<RooArgSet> detOutput {DetailedOutputAggregator::GetAsArgSet(result.get(), "fitNull_")};
          fFitInfo->addOwned(*detOutput);
-         delete detOutput;
-         delete result;
       }
 
       RooMsgService::instance().setGlobalKillBelow(msglevel);
@@ -213,11 +211,9 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
 
       // Hack to extract a RooFitResult
       if (fStoreFitInfo) {
-         RooFitResult *result = profile->minimizer()->save();
-         RooArgSet * detOutput =  DetailedOutputAggregator::GetAsArgSet(result, "fitAlt_");
+         std::unique_ptr<RooFitResult> result {profile->minimizer()->save()};
+         std::unique_ptr<RooArgSet> detOutput {DetailedOutputAggregator::GetAsArgSet(result.get(), "fitAlt_")};
          fFitInfo->addOwned(*detOutput);
-         delete detOutput;
-         delete result;
       }
 
       RooMsgService::instance().setGlobalKillBelow(msglevel);

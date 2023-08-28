@@ -35,6 +35,19 @@ public:
   bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
   void writeToStream(std::ostream& os, bool compact) const override ;
 
+  /// Return pointer to parameter with given name.
+  inline RooAbsArg* getParameter(const char* name) const {
+    return _actualVars.find(name) ;
+  }
+  /// Return pointer to parameter at given index.
+  inline RooAbsArg* getParameter(Int_t index) const {
+    return _actualVars.at(index) ;
+  }
+  /// Return the number of parameters.
+  inline size_t nParameters() const {
+    return _actualVars.size();
+  }
+
   // Printing interface (human readable)
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
   void printMetaArgs(std::ostream& os) const override ;

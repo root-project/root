@@ -17,17 +17,17 @@
 #ifndef RooFit_ModelConfig_h
 #define RooFit_ModelConfig_h
 
-#include "RooAbsPdf.h"
+#include <RooAbsData.h>
+#include <RooAbsPdf.h>
+#include <RooArgSet.h>
+#include <RooGlobalFunc.h>
+#include <RooWorkspaceHandle.h>
 
-#include "RooAbsData.h"
-
-#include "RooArgSet.h"
-
-#include "RooWorkspaceHandle.h"
-
-#include "TRef.h"
+#include <TRef.h>
 
 #include <string>
+
+class RooFitResult;
 
 // ModelConfig kept in the RooStats namespace for backwards compatibility.
 namespace RooStats {
@@ -179,14 +179,7 @@ public:
       SetObservables(GetWS()->argSet(argList));
    }
 
-   /// Specify the conditional observables.
-   virtual void SetConditionalObservables(const RooArgSet &set)
-   {
-      if (!SetHasOnlyParameters(set, "ModelConfig::SetConditionalObservables"))
-         return;
-      fConditionalObsName = std::string(GetName()) + "_ConditionalObservables";
-      DefineSetInWS(fConditionalObsName.c_str(), set);
-   }
+   virtual void SetConditionalObservables(const RooArgSet &set);
    /// Specify the conditional observables
    /// through a comma-separated list of arguments already in the workspace.
    virtual void SetConditionalObservables(const char *argList)
@@ -196,21 +189,7 @@ public:
       SetConditionalObservables(GetWS()->argSet(argList));
    }
 
-   /// Specify the global observables.
-   virtual void SetGlobalObservables(const RooArgSet &set)
-   {
-
-      if (!SetHasOnlyParameters(set, "ModelConfig::SetGlobalObservables"))
-         return;
-
-      // make global observables constant
-      for (auto *arg : set) {
-         arg->setAttribute("Constant", true);
-      }
-
-      fGlobalObsName = std::string(GetName()) + "_GlobalObservables";
-      DefineSetInWS(fGlobalObsName.c_str(), set);
-   }
+   virtual void SetGlobalObservables(const RooArgSet &set);
    /// Specify the global observables
    /// through a comma-separated list of arguments already in the workspace.
    virtual void SetGlobalObservables(const char *argList)
@@ -218,6 +197,16 @@ public:
       if (!GetWS())
          return;
       SetGlobalObservables(GetWS()->argSet(argList));
+   }
+
+   void SetExternalConstraints(const RooArgSet &set);
+   /// Specify the external constraints
+   /// through a comma-separated list of arguments already in the workspace.
+   virtual void SetExternalConstraints(const char *argList)
+   {
+      if (!GetWS())
+         return;
+      SetExternalConstraints(GetWS()->argSet(argList));
    }
 
    /// Set parameter values for a particular hypothesis if using a common PDF
@@ -263,40 +252,37 @@ public:
    /* getter methods */
 
    /// get model PDF (return nullptr if pdf has not been specified or does not exist)
-   RooAbsPdf *GetPdf() const { return (GetWS()) ? GetWS()->pdf(fPdfName.c_str()) : nullptr; }
+   RooAbsPdf *GetPdf() const { return (GetWS()) ? GetWS()->pdf(fPdfName) : nullptr; }
 
    /// get RooArgSet containing the parameter of interest (return nullptr if not existing)
-   const RooArgSet *GetParametersOfInterest() const { return (GetWS()) ? GetWS()->set(fPOIName.c_str()) : nullptr; }
+   const RooArgSet *GetParametersOfInterest() const { return (GetWS()) ? GetWS()->set(fPOIName) : nullptr; }
 
    /// get RooArgSet containing the nuisance parameters (return nullptr if not existing)
-   const RooArgSet *GetNuisanceParameters() const
-   {
-      return (GetWS()) ? GetWS()->set(fNuisParamsName.c_str()) : nullptr;
-   }
+   const RooArgSet *GetNuisanceParameters() const { return (GetWS()) ? GetWS()->set(fNuisParamsName) : nullptr; }
 
    /// get RooArgSet containing the constraint parameters (return nullptr if not existing)
-   const RooArgSet *GetConstraintParameters() const
-   {
-      return (GetWS()) ? GetWS()->set(fConstrParamsName.c_str()) : nullptr;
-   }
+   const RooArgSet *GetConstraintParameters() const { return (GetWS()) ? GetWS()->set(fConstrParamsName) : nullptr; }
 
    /// get parameters prior pdf  (return nullptr if not existing)
-   RooAbsPdf *GetPriorPdf() const { return (GetWS()) ? GetWS()->pdf(fPriorPdfName.c_str()) : nullptr; }
+   RooAbsPdf *GetPriorPdf() const { return (GetWS()) ? GetWS()->pdf(fPriorPdfName) : nullptr; }
 
    /// get RooArgSet for observables  (return nullptr if not existing)
-   const RooArgSet *GetObservables() const { return (GetWS()) ? GetWS()->set(fObservablesName.c_str()) : nullptr; }
+   const RooArgSet *GetObservables() const { return (GetWS()) ? GetWS()->set(fObservablesName) : nullptr; }
 
    /// get RooArgSet for conditional observables  (return nullptr if not existing)
    const RooArgSet *GetConditionalObservables() const
    {
-      return (GetWS()) ? GetWS()->set(fConditionalObsName.c_str()) : nullptr;
+      return (GetWS()) ? GetWS()->set(fConditionalObsName) : nullptr;
    }
 
    /// get RooArgSet for global observables  (return nullptr if not existing)
-   const RooArgSet *GetGlobalObservables() const { return (GetWS()) ? GetWS()->set(fGlobalObsName.c_str()) : nullptr; }
+   const RooArgSet *GetGlobalObservables() const { return (GetWS()) ? GetWS()->set(fGlobalObsName) : nullptr; }
+
+   /// get RooArgSet for global observables  (return nullptr if not existing)
+   const RooArgSet *GetExternalConstraints() const { return (GetWS()) ? GetWS()->set(fExtConstraintsName) : nullptr; }
 
    /// get Proto data set (return nullptr if not existing)
-   RooAbsData *GetProtoData() const { return (GetWS()) ? GetWS()->data(fProtoDataName.c_str()) : nullptr; }
+   RooAbsData *GetProtoData() const { return (GetWS()) ? GetWS()->data(fProtoDataName) : nullptr; }
 
    /// get RooArgSet for parameters for a particular hypothesis  (return nullptr if not existing)
    const RooArgSet *GetSnapshot() const;
@@ -311,6 +297,26 @@ public:
 
    /// overload the print method
    void Print(Option_t *option = "") const override;
+
+   std::unique_ptr<RooAbsReal> createNLL(RooAbsData &data, const RooLinkedList &cmdList = {}) const;
+
+   /// Takes an arbitrary number of RooCmdArg command options and calls
+   /// createNLL(RooAbsData& data, const RooLinkedList& cmdList).
+   template <typename... Args>
+   std::unique_ptr<RooAbsReal> createNLL(RooAbsData &data, RooCmdArg const &arg1, Args const &...args) const
+   {
+      return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+   }
+
+   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, const RooLinkedList &cmdList = {});
+
+   /// Takes an arbitrary number of RooCmdArg command options and calls
+   /// ModelConfig::fitTo(RooAbsData& data, const RooLinkedList& cmdList).
+   template <typename... Args>
+   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, RooCmdArg const &arg1, Args const &...args)
+   {
+      return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+   }
 
 protected:
    /// helper function to check that content of a given set is exclusively parameters
@@ -339,6 +345,7 @@ protected:
 
    std::string fConditionalObsName; ///< name for RooArgSet specifying conditional observables
    std::string fGlobalObsName;      ///< name for RooArgSet specifying global observables
+   std::string fExtConstraintsName; ///< name for RooArgSet specifying external constraints
    std::string fProtoDataName;      ///< name for RooArgSet specifying dataset that should be used as proto-data
 
    std::string fSnapshotName; ///< name for RooArgSet that specifies a particular hypothesis
@@ -346,7 +353,7 @@ protected:
    std::string fObservablesName; ///< name for RooArgSet specifying observable parameters.
 
    ClassDefOverride(ModelConfig,
-                    5) ///< A class that holds configuration information for a model using a workspace as a store
+                    6); ///< A class that holds configuration information for a model using a workspace as a store
 };
 
 } // end namespace RooStats

@@ -122,9 +122,8 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   _doEvalErrorWall = true ;
 
   // Examine parameter list
-  RooArgSet* paramSet = function.getParameters(RooArgSet()) ;
+  std::unique_ptr<RooArgSet> paramSet{function.getParameters(RooArgSet())};
   RooArgList paramList(*paramSet) ;
-  delete paramSet ;
 
   _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant",false) ;
   if (_floatParamList->getSize()>1) {

@@ -80,13 +80,13 @@ TEST(RooArgSet, InsertAndDeduplicate) {
   RooArgList list2;
   for (unsigned int i = 0; i < 4; ++i) {
     char name[] = {char('a'+i), '\0'};
-    list.addOwned(*(new RooRealVar(name, name, 0.)));
+    list.addOwned(std::make_unique<RooRealVar>(name, name, 0.));
   }
   for (unsigned int i = 0; i < 5; ++i) {
     char name[] = {char('a'+i), '\0'};
-    list2.addOwned(*(new RooRealVar(name, name, 0.)));
+    list2.addOwned(std::make_unique<RooRealVar>(name, name, 0.));
     name[0] = char('a'+ 4 - i);
-    list2.addOwned(*(new RooRealVar(name, name, 0.)));
+    list2.addOwned(std::make_unique<RooRealVar>(name, name, 0.));
   }
 
   // Silence deduplication error messages
@@ -112,13 +112,13 @@ TEST(RooArgSet, HashAssistedFind) {
   RooArgList list2;
   for (unsigned int i = 0; i < 4; ++i) {
     char name[] = {char('a'+i), '\0'};
-    list.addOwned(*(new RooRealVar(name, name, 0.)));
+    list.addOwned(std::make_unique<RooRealVar>(name, name, 0.));
   }
   for (unsigned int i = 0; i < 5; ++i) {
     char name[] = {char('a'+i), '\0'};
-    list2.addOwned(*(new RooRealVar(name, name, 0.)));
+    list2.addOwned(std::make_unique<RooRealVar>(name, name, 0.));
     name[0] = char('a'+ 4 - i);
-    list2.addOwned(*(new RooRealVar(name, name, 0.)));
+    list2.addOwned(std::make_unique<RooRealVar>(name, name, 0.));
   }
 
   // Silence deduplication error messages

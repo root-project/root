@@ -1015,8 +1015,11 @@ class TDrawSelector extends TSelector {
          res.max = this.hist_args[axisid * 3 + 2];
       } else {
 
-         res.min = Math.min.apply(null, arr);
-         res.max = Math.max.apply(null, arr);
+         res.min = res.max = arr[0];
+         for (let i = 1; i < arr.length; ++i) {
+            res.min = Math.min(res.min, arr[i]);
+            res.max = Math.max(res.max, arr[i]);
+         }
 
          if (this.hist_nbins)
             nbins = res.nbins = this.hist_nbins;
@@ -1367,7 +1370,7 @@ class TDrawSelector extends TSelector {
             case 1:
                for (let n0 = 0; n0 < var0.length; ++n0) {
                   var0.buf.push(var0.get(n0));
-                  cut.buf.push(cut.value);
+                  cut.buf?.push(cut.value);
                }
                break;
             case 2:
@@ -1375,7 +1378,7 @@ class TDrawSelector extends TSelector {
                   for (let n1 = 0; n1 < var1.length; ++n1) {
                      var0.buf.push(var0.get(n0));
                      var1.buf.push(var1.get(n1));
-                     cut.buf.push(cut.value);
+                     cut.buf?.push(cut.value);
                   }
                break;
             case 3:
@@ -1385,7 +1388,7 @@ class TDrawSelector extends TSelector {
                         var0.buf.push(var0.get(n0));
                         var1.buf.push(var1.get(n1));
                         var2.buf.push(var2.get(n2));
-                        cut.buf.push(cut.value);
+                        cut.buf?.push(cut.value);
                      }
                break;
          }
@@ -1550,7 +1553,8 @@ async function treeProcess(tree, selector, args) {
 
    if (!selector || !tree.$file || !selector.numBranches()) {
       if (selector) selector.Terminate(false);
-      return Promise.reject(Error('required parameter missing for TTree::Process'));
+      console.error('required parameter missing for TTree::Process');
+      return null;
    }
 
    // central handle with all information required for reading
@@ -2138,7 +2142,8 @@ async function treeProcess(tree, selector, args) {
 
       if (!item) {
          selector.Terminate(false);
-         return Promise.reject(Error(`Fail to add branch ${selector.nameOfBranch(nn)}`));
+         console.error(`Fail to add branch ${selector.nameOfBranch(nn)}`);
+         return null;
       }
    }
 
@@ -2165,7 +2170,8 @@ async function treeProcess(tree, selector, args) {
 
    if (handle.firstentry >= handle.lastentry) {
       selector.Terminate(false);
-      return Promise.reject(Error('No any common events for selected branches'));
+      console.error('No any common events for selected branches');
+      return null;
    }
 
    handle.process_min = handle.firstentry;

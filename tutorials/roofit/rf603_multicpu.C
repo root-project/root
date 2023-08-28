@@ -4,8 +4,8 @@
 /// Likelihood and minimization: setting up a multi-core parallelized unbinned maximum likelihood fit
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -60,7 +60,7 @@ void rf603_multicpu()
    // it back to MINUIT.
 
    // Use four processes and time results both in wall time and CPU time
-   model.fitTo(*data, NumCPU(4), Timer(true));
+   model.fitTo(*data, NumCPU(4), Timer(true), PrintLevel(-1));
 
    // P a r a l l e l   M C   p r o j e c t i o n s
    // ----------------------------------------------

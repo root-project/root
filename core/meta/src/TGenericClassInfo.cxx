@@ -214,11 +214,16 @@ namespace Internal {
       delete fCollectionProxyInfo;
       delete fCollectionStreamerInfo;
       delete fStreamer;
-      if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
+      if (!fClass)
+         delete fIsA; // fIsA is adopted by the class if any.
       fIsA = nullptr;
       using ROOT::Internal::gROOTLocal;
-      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
-      if (fAction) GetAction().Unregister(GetClassName());
+      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses())
+         return;
+      for(auto alt : fAlternate)
+         ROOT::RemoveClassAlternate(alt);
+      if (fAction)
+         GetAction().Unregister(GetClassName(), fClass);
    }
 
    const Internal::TInitBehavior &TGenericClassInfo::GetAction() const
@@ -419,6 +424,11 @@ namespace Internal {
       ROOT::ResetClassVersion(fClass, GetClassName(),version);
       fVersion = version;
       return version;
+   }
+
+   void TGenericClassInfo::AdoptAlternate(ROOT::TClassAlt *alt)
+   {
+      fAlternate.push_back(alt);
    }
 
    void TGenericClassInfo::AdoptCollectionProxyInfo(TCollectionProxyInfo *info)

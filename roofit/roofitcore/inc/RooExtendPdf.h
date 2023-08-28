@@ -22,12 +22,11 @@
 class RooExtendPdf : public RooAbsPdf {
 public:
 
-  RooExtendPdf() ;
+  RooExtendPdf() = default;
   RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
           RooAbsReal& norm, const char* rangeName=nullptr) ;
   RooExtendPdf(const RooExtendPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
-  ~RooExtendPdf() override ;
 
   double evaluate() const override { return _pdf ; }
 
@@ -44,12 +43,13 @@ public:
   bool selfNormalized() const override { return true ; }
   ExtendMode extendMode() const override { return CanBeExtended ; }
   double expectedEvents(const RooArgSet* nset) const override ;
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
 protected:
 
-  RooTemplateProxy<RooAbsPdf>  _pdf; ///< Input p.d.f
-  RooTemplateProxy<RooAbsReal> _n;   ///< Number of expected events
-  const TNamed* _rangeName ;         ///< Name of subset range
+  RooTemplateProxy<RooAbsPdf>  _pdf;  ///< Input p.d.f
+  RooTemplateProxy<RooAbsReal> _n;    ///< Number of expected events
+  const TNamed* _rangeName = nullptr; ///< Name of subset range
 
 
   ClassDefOverride(RooExtendPdf,2) // Wrapper p.d.f adding an extended likelihood term to an existing p.d.f

@@ -1,5 +1,5 @@
 import { select as d3_select, drag as d3_drag } from '../d3.mjs';
-import { browser, internals, toJSON, settings, isFunc, isStr } from '../core.mjs';
+import { browser, internals, toJSON, settings, isObject, isFunc, isStr } from '../core.mjs';
 import { compressSVG, BasePainter } from '../base/BasePainter.mjs';
 import { getElementCanvPainter, selectActivePad, cleanup, resize, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
@@ -1492,7 +1492,7 @@ class BrowserLayout {
 
    /** @summary Show status information inside special fields of browser layout */
    showStatus(...msgs) {
-      if (!this.status_layout) return;
+      if (!isObject(this.status_layout) || !isFunc(this.status_layout.getGridFrame)) return;
 
       let maxh = 0;
       for (let n = 0; n < 4; ++n) {
@@ -1655,18 +1655,16 @@ class BrowserLayout {
            let sl = area.style('left'), st = area.style('top');
            this._float_left = parseInt(sl.slice(0,sl.length-2));
            this._float_top = parseInt(st.slice(0,st.length-2));
-           this._max_left = main.node().clientWidth - area.node().offsetWidth - 1;
-           this._max_top = main.node().clientHeight - area.node().offsetHeight - 1;
+           this._max_left = Math.max(0, main.node().clientWidth - area.node().offsetWidth - 1);
+           this._max_top = Math.max(0, main.node().clientHeight - area.node().offsetHeight - 1);
 
         }).filter(evnt => {
             return main.select('.jsroot_browser_title').node() === evnt.target;
         }).on('drag', evnt => {
            this._float_left += evnt.dx;
            this._float_top += evnt.dy;
-
            area.style('left', Math.min(Math.max(0, this._float_left), this._max_left) + 'px')
                .style('top', Math.min(Math.max(0, this._float_top), this._max_top) + 'px');
-
            this.setButtonsPosition();
         });
 

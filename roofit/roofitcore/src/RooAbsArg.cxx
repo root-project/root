@@ -716,6 +716,19 @@ bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet
 }
 
 
+/// Given a set of possible observables, return the observables that this PDF depends on.
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooArgSet &set, bool valueOnly) const
+{
+   return getObservables(&set, valueOnly);
+}
+
+/// Return the observables of this pdf given the observables defined by `data`.
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooAbsData &data) const
+{
+   return getObservables(&data);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a list of leaf nodes in the arg tree starting with
 /// ourself as top node that match any of the names of the variable list
@@ -723,9 +736,9 @@ bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getParameters().
 
-RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooAbsData* set) const
 {
-  if (!set) return new RooArgSet ;
+  if (!set) return RooFit::OwningPtr<RooArgSet>{new RooArgSet};
 
   return getObservables(set->get()) ;
 }
@@ -738,11 +751,11 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 /// for deleting the returned argset. The complement of this function
 /// is getParameters().
 
-RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) const
 {
   auto depList = new RooArgSet;
   getObservables(dataList, *depList, valueOnly);
-  return depList;
+  return RooFit::OwningPtr<RooArgSet>{depList};
 }
 
 
@@ -786,18 +799,34 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
 }
 
 
+/// \deprecated Use getObservables()
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet &set) const
+{
+   return getObservables(set);
+}
+
+/// \deprecated Use getObservables()
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooAbsData *set) const
+{
+   return getObservables(set);
+}
+
+/// \deprecated Use getObservables()
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet *depList) const
+{
+   return getObservables(depList);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooArgSet with all components (branch nodes) of the
 /// expression tree headed by this object.
-RooArgSet* RooAbsArg::getComponents() const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getComponents() const
 {
-  TString name(GetName()) ;
-  name.Append("_components") ;
-
-  RooArgSet* set = new RooArgSet(name) ;
+  RooArgSet* set = new RooArgSet((std::string(GetName()) + "_components").c_str()) ;
   branchNodeServerList(set) ;
 
-  return set ;
+  return RooFit::OwningPtr<RooArgSet>{set};
 }
 
 
@@ -916,10 +945,7 @@ bool RooAbsArg::observableOverlaps(const RooAbsData* dset, const RooAbsArg& test
 
 bool RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& testArg) const
 {
-  RooArgSet* depList = getObservables(nset) ;
-  bool ret = testArg.dependsOn(*depList) ;
-  delete depList ;
-  return ret ;
+   return testArg.dependsOn(*std::unique_ptr<RooArgSet>{getObservables(nset)});
 }
 
 
@@ -1068,11 +1094,6 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
 
     RooAbsArg * newServer= oldServer->findNewServer(*newSet, nameChange);
 
-    if (newServer && _verboseDirty) {
-      cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
-                  << " redirected from " << oldServer << " to " << newServer << endl ;
-    }
-
     if (!newServer) {
       if (mustReplaceAll) {
         std::stringstream ss;
@@ -1086,22 +1107,9 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
     }
 
     if (newServer != this) {
-      _serverList.Replace(oldServer, newServer);
-
-      const int clientListRefCount = oldServer->_clientList.Remove(this, true);
-      const int clientListValueRefCount = oldServer->_clientListValue.Remove(this, true);
-      const int clientListShapeRefCount = oldServer->_clientListShape.Remove(this, true);
-
-      newServer->_clientList.Add(this, clientListRefCount);
-      newServer->_clientListValue.Add(this, clientListValueRefCount);
-      newServer->_clientListShape.Add(this, clientListShapeRefCount);
-
-      if (clientListValueRefCount > 0 && newServer->operMode() == ADirty && operMode() != ADirty) {
-        setOperMode(ADirty);
-      }
+      substituteServer(oldServer, newServer);
     }
   }
-
 
   setValueDirty() ;
   setShapeDirty() ;
@@ -1121,14 +1129,88 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
     }
   }
 
-
   // Optional subclass post-processing
-  for (Int_t i=0 ;i<numCaches() ; i++) {
-    ret |= getCache(i)->redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
-  }
-  ret |= redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
+  ret |= callRedirectServersHook(*newSet, mustReplaceAll, nameChange, isRecursionStep);
+  return ret;
+}
 
-  return ret ;
+/// Private helper function for RooAbsArg::redirectServers().
+void RooAbsArg::substituteServer(RooAbsArg *oldServer, RooAbsArg *newServer)
+{
+   _serverList.Replace(oldServer, newServer);
+
+   const int clientListRefCount = oldServer->_clientList.Remove(this, true);
+   const int clientListValueRefCount = oldServer->_clientListValue.Remove(this, true);
+   const int clientListShapeRefCount = oldServer->_clientListShape.Remove(this, true);
+
+   newServer->_clientList.Add(this, clientListRefCount);
+   newServer->_clientListValue.Add(this, clientListValueRefCount);
+   newServer->_clientListShape.Add(this, clientListShapeRefCount);
+
+   if (clientListValueRefCount > 0 && newServer->operMode() == ADirty && operMode() != ADirty) {
+      setOperMode(ADirty);
+   }
+}
+
+/// Private helper function for RooAbsArg::redirectServers().
+bool RooAbsArg::callRedirectServersHook(RooAbsCollection const &newSet, bool mustReplaceAll, bool nameChange,
+                                        bool isRecursionStep)
+{
+   bool ret = false;
+   for (Int_t i = 0; i < numCaches(); i++) {
+      ret |= getCache(i)->redirectServersHook(newSet, mustReplaceAll, nameChange, isRecursionStep);
+   }
+   ret |= redirectServersHook(newSet, mustReplaceAll, nameChange, isRecursionStep);
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace some servers of this object. If there are proxies that correspond
+/// to the replaced servers, these proxies are adjusted as well.
+/// \param[in] replacements Map that specifiecs which args replace which servers.
+bool RooAbsArg::redirectServers(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements)
+{
+   bool ret(false);
+   bool nameChange = false;
+
+   RooArgList newList;
+
+   // Replace current servers with new servers with the same name from the given list
+   for (auto oldServer : _serverList) {
+
+      auto newServerFound = replacements.find(oldServer);
+      RooAbsArg *newServer = newServerFound != replacements.end() ? newServerFound->second : nullptr;
+
+      if (!newServer || newServer == this) {
+         continue;
+      }
+
+      if (nameChange == false)
+         nameChange = strcmp(newServerFound->first->GetName(), newServerFound->second->GetName()) != 0;
+
+      substituteServer(oldServer, newServer);
+      newList.add(*newServer);
+   }
+
+   // No servers were replaced, we don't need to process proxies and call the
+   // redirectServersHook.
+   if (newList.empty())
+      return ret;
+
+   setValueDirty();
+   setShapeDirty();
+
+   // Process the proxies
+   for (int i = 0; i < numProxies(); i++) {
+      if (RooAbsProxy *p = getProxy(i)) {
+         p->changePointer(replacements);
+      }
+   }
+
+   // Optional subclass post-processing
+   ret |= callRedirectServersHook(newList, false, nameChange, false);
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2510,7 +2592,24 @@ void RooAbsArg::applyWeightSquared(bool flag) {
 std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSet, RooFit::Detail::CompileContext & ctx) const
 {
    auto newArg = std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(Clone())};
-   newArg->setAttribute("_COMPILED");
+   ctx.markAsCompiled(*newArg);
    ctx.compileServers(*newArg, normSet);
    return newArg;
+}
+
+
+/// Sets the token for retrieving results in the BatchMode. For internal use only.
+void RooAbsArg::setDataToken(std::size_t index)
+{
+   if (_dataToken == index) {
+      return;
+   }
+   if (_dataToken != std::numeric_limits<std::size_t>::max()) {
+      std::stringstream errMsg;
+      errMsg << "The data token for \"" << GetName() << "\" is already set!"
+             << " Are you trying to evaluate the same object by multiple RooFitDriver instances?"
+             << " This is not allowed.";
+      throw std::runtime_error(errMsg.str());
+   }
+   _dataToken = index;
 }

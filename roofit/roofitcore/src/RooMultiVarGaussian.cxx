@@ -80,9 +80,9 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
   const RooArgList& fpf = fr.floatParsFinal() ;
   for (Int_t i=0 ; i<fpf.getSize() ; i++) {
     if (xvec.find(fpf.at(i)->GetName())) {
-      RooRealVar* parclone = (RooRealVar*) fpf.at(i)->Clone(Form("%s_centralvalue",fpf.at(i)->GetName())) ;
+      std::unique_ptr<RooRealVar> parclone{static_cast<RooRealVar*>(fpf.at(i)->Clone(Form("%s_centralvalue",fpf.at(i)->GetName())))};
       parclone->setConstant(true) ;
-      _mu.addOwned(*parclone) ;
+      _mu.addOwned(std::move(parclone));
       munames.push_back(fpf.at(i)->GetName()) ;
     }
   }
@@ -654,16 +654,15 @@ bool RooMultiVarGaussian::BitBlock::getBit(Int_t ibit)
   return false ;
 }
 
-bool RooMultiVarGaussian::BitBlock::operator==(const BitBlock& other)
+bool operator==(RooMultiVarGaussian::BitBlock const &lhs, RooMultiVarGaussian::BitBlock const &rhs)
 {
-  if (b0 != other.b0) return false ;
-  if (b1 != other.b1) return false ;
-  if (b2 != other.b2) return false ;
-  if (b3 != other.b3) return false ;
-  return true ;
+   if (lhs.b0 != rhs.b0)
+      return false;
+   if (lhs.b1 != rhs.b1)
+      return false;
+   if (lhs.b2 != rhs.b2)
+      return false;
+   if (lhs.b3 != rhs.b3)
+      return false;
+   return true;
 }
-
-
-
-
-

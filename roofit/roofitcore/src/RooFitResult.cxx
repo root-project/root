@@ -507,9 +507,13 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
     << indent << "  --------------------  ------------" << endl ;
 
       for (i=0 ; i<_constPars->getSize() ; i++) {
-   os << indent << "  " << setw(20) << ((RooAbsArg*)_constPars->at(i))->GetName()
-      << "  " << setw(12) << Form("%12.4e",((RooRealVar*)_constPars->at(i))->getVal())
-      << endl ;
+        os << indent << "  " << setw(20) << _constPars->at(i)->GetName() << "  " << setw(12);
+        if(RooRealVar* v = dynamic_cast<RooRealVar*>(_constPars->at(i))) {
+         os << TString::Format("%12.4e",v->getVal());
+        } else {
+          _constPars->at(i)->printValue(os); // for anything other than RooRealVar use printValue method to print
+        }  
+        os << endl ;
       }
 
       os << endl ;
@@ -628,7 +632,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
     gcName.Append("]") ;
     TString gcTitle(arg->GetTitle()) ;
     gcTitle.Append(" Global Correlation") ;
-    _globalCorr->addOwned(*(new RooRealVar(gcName.Data(),gcTitle.Data(),0.))) ;
+    _globalCorr->addOwned(std::make_unique<RooRealVar>(gcName.Data(),gcTitle.Data(),0.));
 
     // Create array with correlation holders for this parameter
     TString name("C[") ;
@@ -647,7 +651,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
       cTitle.Append(arg->GetName()) ;
       cTitle.Append(" and ") ;
       cTitle.Append(arg2->GetName()) ;
-      corrMatrixRow->addOwned(*(new RooRealVar(cName.Data(),cTitle.Data(),0.))) ;
+      corrMatrixRow->addOwned(std::make_unique<RooRealVar>(cName.Data(),cTitle.Data(),0.));
     }
   }
 
@@ -935,18 +939,18 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
     double xerr = gMinuit->fWerr[l-1];
     double xval = gMinuit->fU[i-1] ;
 
-    RooRealVar* var ;
+    std::unique_ptr<RooRealVar> var;
     if (varList.empty()) {
 
       if ((xlo<xhi) && !isConst) {
-   var = new RooRealVar(varName,varName,xval,xlo,xhi) ;
+        var = std::make_unique<RooRealVar>(varName,varName,xval,xlo,xhi) ;
       } else {
-   var = new RooRealVar(varName,varName,xval) ;
+        var = std::make_unique<RooRealVar>(varName,varName,xval) ;
       }
       var->setConstant(isConst) ;
     } else {
 
-      var = (RooRealVar*) varList.at(i-1)->Clone() ;
+      var = std::unique_ptr<RooRealVar>{static_cast<RooRealVar*>(varList.at(i-1)->Clone())};
       var->setConstant(isConst) ;
       var->setVal(xval) ;
       if (xlo<xhi) {
@@ -960,10 +964,10 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
     }
 
     if (isConst) {
-      constPars.addOwned(*var) ;
+      constPars.addOwned(std::move(var));
     } else {
       var->setError(xerr) ;
-      floatPars.addOwned(*var) ;
+      floatPars.addOwned(std::move(var));
     }
   }
 

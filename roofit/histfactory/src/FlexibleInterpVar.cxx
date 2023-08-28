@@ -357,35 +357,26 @@ double FlexibleInterpVar::nominal() const { return _nominal; }
 const std::vector<double>& FlexibleInterpVar::low() const { return _low; }
 const std::vector<double>& FlexibleInterpVar::high() const { return _high; }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Calculate and return value of polynomial
-
-double FlexibleInterpVar::evaluate() const
+void FlexibleInterpVar::processParam(std::size_t i, double paramVal, double & total) const
 {
-  double total(_nominal) ;
-  int i=0;
-
-  for (auto arg : _paramList) {
-    auto param = static_cast<const RooAbsReal*>(arg);
-
     Int_t icode = _interpCode[i] ;
 
     switch(icode) {
 
     case 0: {
       // piece-wise linear
-      if(param->getVal()>0)
-   total +=  param->getVal()*(_high[i] - _nominal );
+      if(paramVal>0)
+   total +=  paramVal*(_high[i] - _nominal );
       else
-   total += param->getVal()*(_nominal - _low[i]);
+   total += paramVal*(_nominal - _low[i]);
       break ;
     }
     case 1: {
       // pice-wise log
-      if(param->getVal()>=0)
-   total *= pow(_high[i]/_nominal, +param->getVal());
+      if(paramVal>=0)
+   total *= pow(_high[i]/_nominal, +paramVal);
       else
-   total *= pow(_low[i]/_nominal,  -param->getVal());
+   total *= pow(_low[i]/_nominal,  -paramVal);
       break ;
     }
     case 2: {
@@ -393,12 +384,12 @@ double FlexibleInterpVar::evaluate() const
       double a = 0.5*(_high[i]+_low[i])-_nominal;
       double b = 0.5*(_high[i]-_low[i]);
       double c = 0;
-      if(param->getVal()>1 ){
-   total += (2*a+b)*(param->getVal()-1)+_high[i]-_nominal;
-      } else if(param->getVal()<-1 ) {
-   total += -1*(2*a-b)*(param->getVal()+1)+_low[i]-_nominal;
+      if(paramVal>1 ){
+   total += (2*a+b)*(paramVal-1)+_high[i]-_nominal;
+      } else if(paramVal<-1 ) {
+   total += -1*(2*a-b)*(paramVal+1)+_low[i]-_nominal;
       } else {
-   total +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
+   total +=  a*pow(paramVal,2) + b*paramVal+c;
       }
       break ;
     }
@@ -407,28 +398,28 @@ double FlexibleInterpVar::evaluate() const
       double a = 0.5*(_high[i]+_low[i])-_nominal;
       double b = 0.5*(_high[i]-_low[i]);
       double c = 0;
-      if(param->getVal()>1 ){
-   total += (2*a+b)*(param->getVal()-1)+_high[i]-_nominal;
-      } else if(param->getVal()<-1 ) {
-   total += -1*(2*a-b)*(param->getVal()+1)+_low[i]-_nominal;
+      if(paramVal>1 ){
+   total += (2*a+b)*(paramVal-1)+_high[i]-_nominal;
+      } else if(paramVal<-1 ) {
+   total += -1*(2*a-b)*(paramVal+1)+_low[i]-_nominal;
       } else {
-   total +=  a*pow(param->getVal(),2) + b*param->getVal()+c;
+   total +=  a*pow(paramVal,2) + b*paramVal+c;
       }
       break ;
     }
 
     case 4: {
       double boundary = _interpBoundary;
-      double x = param->getVal();
-      //std::cout << icode << " param " << param->GetName() << "  " << param->getVal() << " boundary " << boundary << std::endl;
+      double x = paramVal;
+      //std::cout << icode << " param " << param->GetName() << "  " << paramVal << " boundary " << boundary << std::endl;
 
       if(x >= boundary)
       {
-         total *= std::pow(_high[i]/_nominal, +param->getVal());
+         total *= std::pow(_high[i]/_nominal, +paramVal);
       }
       else if (x <= -boundary)
       {
-         total *= std::pow(_low[i]/_nominal, -param->getVal());
+         total *= std::pow(_low[i]/_nominal, -paramVal);
       }
       else if (x != 0)
       {
@@ -437,11 +428,21 @@ double FlexibleInterpVar::evaluate() const
       break ;
     }
     default: {
-      coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  " << param->GetName()
+      coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
              << " with unknown interpolation code" << endl ;
     }
     }
-    ++i;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return value of polynomial
+
+double FlexibleInterpVar::evaluate() const
+{
+  double total(_nominal) ;
+
+  for (std::size_t i = 0; i < _paramList.size(); ++i) {
+    processParam(i, static_cast<const RooAbsReal*>(&_paramList[i])->getVal(), total);
   }
 
   if(total<=0) {
@@ -449,6 +450,21 @@ double FlexibleInterpVar::evaluate() const
   }
 
   return total;
+}
+
+void FlexibleInterpVar::computeBatch(cudaStream_t* /*stream*/, double* output, size_t /*nEvents*/, RooFit::Detail::DataMap const& dataMap) const
+{
+  double total(_nominal) ;
+
+  for (std::size_t i = 0; i < _paramList.size(); ++i) {
+    processParam(i, dataMap.at(&_paramList[i])[0], total);
+  }
+
+  if(total<=0) {
+     total= TMath::Limits<double>::Min();
+  }
+
+  output[0] = total;
 }
 
 void FlexibleInterpVar::printMultiline(ostream& os, Int_t contents,

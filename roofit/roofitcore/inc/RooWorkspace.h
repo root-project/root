@@ -87,7 +87,7 @@ public:
   bool extendSet(const char* name, const char* newContents) ;
   bool renameSet(const char* name, const char* newName) ;
   bool removeSet(const char* name) ;
-  const RooArgSet* set(const char* name) ;
+  const RooArgSet* set(RooStringView name) ;
   inline const std::map<std::string,RooArgSet>& sets() const { return _namedSets; }
 
   // Import, load and save parameter value snapshots

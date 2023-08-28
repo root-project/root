@@ -67,8 +67,11 @@ PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* title, const RooAbsReal& nominal,
                       const RooArgList& lowSet,
                       const RooArgList& highSet,
-                      const RooArgList& paramSet,
-                      bool takeOwnership) :
+                      const RooArgList& paramSet
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+                     , bool takeOwnership
+#endif
+  ) :
   RooAbsReal(name, title),
   _normIntMgr(this),
   _nominal("!nominal","nominal value", this, (RooAbsReal&)nominal),
@@ -91,9 +94,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _lowSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
-      _ownedList.addOwned(*comp) ;
+      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
   }
 
 
@@ -104,9 +109,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _highSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
-      _ownedList.addOwned(*comp) ;
+      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
   }
 
 
@@ -117,16 +124,18 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _paramSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
-      _ownedList.addOwned(*comp) ;
+      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
     _interpCode.push_back(0); // default code: linear interpolation
   }
 
 
   // Choose special integrator by default
   specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator") ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -145,7 +154,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
   _interpCode(other._interpCode)
 {
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -155,7 +164,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
 
 PiecewiseInterpolation::~PiecewiseInterpolation()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -506,19 +515,16 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
   // Make list of function projection and normalization integrals
   RooAbsReal *func ;
-  RooAbsReal *funcInt;
 
   // do variations 
   for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it)
   {
     auto i = it - _paramSet.begin();
     func = static_cast<RooAbsReal *>(_lowSet.at(i));
-    funcInt = func->createIntegral(analVars) ;
-    cache->_lowIntList.addOwned(*funcInt) ;
+    cache->_lowIntList.addOwned(std::unique_ptr<RooAbsReal>{func->createIntegral(analVars)});
 
     func = static_cast<RooAbsReal *>(_highSet.at(i));
-    funcInt = func->createIntegral(analVars) ;
-    cache->_highIntList.addOwned(*funcInt);
+    cache->_highIntList.addOwned(std::unique_ptr<RooAbsReal>{func->createIntegral(analVars)});
   }
 
   // Store cache element

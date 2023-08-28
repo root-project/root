@@ -7,7 +7,9 @@
 ##
 ## (require ROOT to be compiled with --enable-fftw3)
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -45,7 +47,7 @@ projModel = model.createProjection({mean})
 d = projModel.generateBinned({x}, 1000)
 
 # Fit p.d.f. to toy data
-projModel.fitTo(d, Verbose=True)
+projModel.fitTo(d, Verbose=True, PrintLevel=-1)
 
 # Plot data and fitted p.d.f.
 frame = x.frame(Bins=25)

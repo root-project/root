@@ -99,17 +99,17 @@ namespace RooStats {
          TString renamed(TString::Format("%s%s", prefix.Data(), v->GetName()));
          if (fResult == nullptr) {
             // we never committed, so by default all columns are expected to not exist
-            RooAbsArg* var = v->createFundamental();
+            std::unique_ptr<RooAbsArg> var{v->createFundamental()};
             assert(var != nullptr);
             RooArgSet(*var).assign(RooArgSet(*v));
             var->SetName(renamed);
-            if (RooRealVar* rvar= dynamic_cast<RooRealVar*>(var)) {
+            if (RooRealVar* rvar= dynamic_cast<RooRealVar*>(var.get())) {
                if (v->getAttribute("StoreError"))     var->setAttribute("StoreError");
                else rvar->removeError();
                if (v->getAttribute("StoreAsymError")) var->setAttribute("StoreAsymError");
                else rvar->removeAsymError();
             }
-            if (fBuiltSet->addOwned(*var)) continue;  // OK - can skip past setting value
+            if (fBuiltSet->addOwned(std::move(var))) continue;  // OK - can skip past setting value
          }
          if (RooAbsArg* var = fBuiltSet->find(renamed)) {
             // we already committed an argset once, so we expect all columns to already be in the set

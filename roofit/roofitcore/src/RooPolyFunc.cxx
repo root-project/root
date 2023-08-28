@@ -47,17 +47,17 @@ void RooPolyFunc::addTerm(double coefficient)
    std::string coeff_name = Form("%s_c%d", GetName(), n_terms);
    std::string term_name = Form("%s_t%d", GetName(), n_terms);
    auto termList = std::make_unique<RooListProxy>(term_name.c_str(), term_name.c_str(), this);
-   auto coeff = new RooRealVar(coeff_name.c_str(), coeff_name.c_str(), coefficient);
-   auto exponents = new RooArgList();
+   auto coeff = std::make_unique<RooRealVar>(coeff_name.c_str(), coeff_name.c_str(), coefficient);
+   RooArgList exponents{};
 
    for (const auto &var : _vars) {
       std::string exponent_name = Form("%s_%s^%d", GetName(), var->GetName(), 0);
-      auto exponent = new RooRealVar(exponent_name.c_str(), exponent_name.c_str(), 0);
-      exponents->add(*exponent);
+      auto exponent = std::make_unique<RooRealVar>(exponent_name.c_str(), exponent_name.c_str(), 0);
+      exponents.addOwned(std::move(exponent));
    }
 
-   termList->addOwned(*exponents);
-   termList->addOwned(*coeff);
+   termList->addOwned(std::move(exponents));
+   termList->addOwned(std::move(coeff));
    _terms.push_back(std::move(termList));
 }
 
@@ -67,8 +67,8 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1)
    std::string coeff_name = Form("%s_c%d", GetName(), n_terms);
    std::string term_name = Form("%s_t%d", GetName(), n_terms);
    auto termList = std::make_unique<RooListProxy>(term_name.c_str(), term_name.c_str(), this);
-   auto coeff = new RooRealVar(coeff_name.c_str(), coeff_name.c_str(), coefficient);
-   auto exponents = new RooArgList();
+   auto coeff = std::make_unique<RooRealVar>(coeff_name.c_str(), coeff_name.c_str(), coefficient);
+   RooArgList exponents{};
 
    // linear iterate over all the variables, create var1^exp1 ..vark^0
    for (const auto &var : _vars) {
@@ -76,12 +76,12 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1)
       if (strcmp(var1.GetName(), var->GetName()) == 0)
          exp += exp1;
       std::string exponent_name = Form("%s_%s^%d", GetName(), var->GetName(), exp);
-      auto exponent = new RooRealVar(exponent_name.c_str(), exponent_name.c_str(), exp);
-      exponents->add(*exponent);
+      auto exponent = std::make_unique<RooRealVar>(exponent_name.c_str(), exponent_name.c_str(), exp);
+      exponents.addOwned(std::move(exponent));
    }
 
-   termList->addOwned(*exponents);
-   termList->addOwned(*coeff);
+   termList->addOwned(std::move(exponents));
+   termList->addOwned(std::move(coeff));
    _terms.push_back(std::move(termList));
 }
 
@@ -92,8 +92,8 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1, 
    std::string coeff_name = Form("%s_c%d", GetName(), n_terms);
    std::string term_name = Form("%s_t%d", GetName(), n_terms);
    auto termList = std::make_unique<RooListProxy>(term_name.c_str(), term_name.c_str(), this);
-   auto coeff = new RooRealVar(coeff_name.c_str(), coeff_name.c_str(), coefficient);
-   auto exponents = new RooArgList();
+   auto coeff = std::make_unique<RooRealVar>(coeff_name.c_str(), coeff_name.c_str(), coefficient);
+   RooArgList exponents{};
 
    for (const auto &var : _vars) {
       int exp = 0;
@@ -102,11 +102,11 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1, 
       if (strcmp(var2.GetName(), var->GetName()) == 0)
          exp += exp2;
       std::string exponent_name = Form("%s_%s^%d", GetName(), var->GetName(), exp);
-      auto exponent = new RooRealVar(exponent_name.c_str(), exponent_name.c_str(), exp);
-      exponents->add(*exponent);
+      auto exponent = std::make_unique<RooRealVar>(exponent_name.c_str(), exponent_name.c_str(), exp);
+      exponents.addOwned(std::move(exponent));
    }
-   termList->addOwned(*exponents);
-   termList->addOwned(*coeff);
+   termList->addOwned(std::move(exponents));
+   termList->addOwned(std::move(coeff));
    _terms.push_back(std::move(termList));
 }
 
@@ -121,9 +121,9 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsCollection &exponents)
    std::string coeff_name = Form("%s_c%d", GetName(), n_terms);
    std::string term_name = Form("%s_t%d", GetName(), n_terms);
    auto termList = std::make_unique<RooListProxy>(term_name.c_str(), term_name.c_str(), this);
-   auto coeff = new RooRealVar(coeff_name.c_str(), coeff_name.c_str(), coefficient);
+   auto coeff = std::make_unique<RooRealVar>(coeff_name.c_str(), coeff_name.c_str(), coefficient);
    termList->addOwned(exponents);
-   termList->addOwned(*coeff);
+   termList->addOwned(std::move(coeff));
    _terms.push_back(std::move(termList));
 }
 

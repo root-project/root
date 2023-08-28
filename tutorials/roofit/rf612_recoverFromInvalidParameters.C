@@ -23,8 +23,8 @@
 /// before ROOT 6.24. Positive values activate the recovery. Values between 1. and 10. were found to be a
 /// good default. If no argument is passed, RooFit uses 10.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date 10/2020
 /// \author Stephan Hageboeck
@@ -77,10 +77,10 @@ void rf612_recoverFromInvalidParameters() {
   a2.setVal(-1.);
 
   // Perform a fit:
-  RooFitResult* fitWithoutRecovery = pdf.fitTo(*data, RooFit::Save(),
+  std::unique_ptr<RooFitResult> fitWithoutRecovery{pdf.fitTo(*data, RooFit::Save(),
       RooFit::RecoverFromUndefinedRegions(0.), // This is how RooFit behaved prior to ROOT 6.24
       RooFit::PrintEvalErrors(-1), // We are expecting a lot of evaluation errors. -1 switches off printing.
-      RooFit::PrintLevel(-1));
+      RooFit::PrintLevel(-1))};
 
   pdf.plotOn(frame, RooFit::LineColor(kRed), RooFit::Name("noRecovery"));
 
@@ -97,11 +97,11 @@ void rf612_recoverFromInvalidParameters() {
   a2.setVal(-1.);
 
   // Fit again, but pass recovery information to the minimiser:
-  RooFitResult* fitWithRecovery = pdf.fitTo(*data, RooFit::Save(),
+  std::unique_ptr<RooFitResult> fitWithRecovery{pdf.fitTo(*data, RooFit::Save(),
       RooFit::RecoverFromUndefinedRegions(1.), // The magnitude of the recovery information can be chosen here.
-                                                // Higher values mean more aggressive recovery.
+                                               // Higher values mean more aggressive recovery.
       RooFit::PrintEvalErrors(-1), // We are still expecting a few evaluation errors.
-      RooFit::PrintLevel(0));
+      RooFit::PrintLevel(0))};
 
   pdf.plotOn(frame, RooFit::LineColor(kBlue), RooFit::Name("recovery"));
 

@@ -3,7 +3,9 @@
 ## \notebook
 ## Addition and convolution: setting up an extended maximum likelihood fit
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -51,7 +53,7 @@ model = ROOT.RooAddPdf("model", "(g1+g2)+a", [bkg, sig], [nbkg, nsig])
 data = model.generate({x})
 
 # Fit model to data, ML term automatically included
-model.fitTo(data)
+model.fitTo(data, PrintLevel=-1)
 
 # Plot data and PDF overlaid, expected number of events for pdf projection normalization
 # rather than observed number of events (==data.numEntries())

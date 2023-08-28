@@ -372,7 +372,8 @@ namespace cling {
 
       // Give my IncrementalExecutor a pointer to the Incremental executor of the
       // parent Interpreter.
-      m_Executor->setExternalIncrementalExecutor(parentInterpreter.m_Executor.get());
+      m_Executor->registerExternalIncrementalExecutor(
+          *parentInterpreter.m_Executor);
 
       if (auto C = parentInterpreter.m_IncrParser->getDiagnosticConsumer())
         m_IncrParser->setDiagnosticConsumer(C, /*Own=*/false);
@@ -692,7 +693,7 @@ namespace cling {
     CodeGenerator* CG = m_IncrParser->getCodeGenerator();
     ClangInternalState* state = new ClangInternalState(
         getCI()->getASTContext(), getCI()->getPreprocessor(),
-        getLastTransaction()->getModule(), CG, name);
+        getLastTransaction()->getCompiledModule(), CG, name);
     m_StoredStates.push_back(state);
   }
 
@@ -1500,7 +1501,7 @@ namespace cling {
     T.setUnloading();
     // Clear any stored states that reference the llvm::Module.
     // Do it first in case
-    auto Module = T.getModule();
+    const auto *Module = T.getCompiledModule();
     if (Module && !m_StoredStates.empty()) {
       const auto Predicate = [&Module](const ClangInternalState* S) {
         return S->getModule() == Module;

@@ -158,8 +158,6 @@ Int_t     gPS1RefNb[60];
 Int_t     gPS1ErrNb[60];
 Int_t     gPDFRefNb[60];
 Int_t     gPDFErrNb[60];
-Int_t     gGIFRefNb[60];
-Int_t     gGIFErrNb[60];
 Int_t     gJPGRefNb[60];
 Int_t     gJPGErrNb[60];
 Int_t     gPNGRefNb[60];
@@ -303,14 +301,12 @@ void stressGraphics(Int_t verbose = 0)
          sscanf(&line[18] ,"%d",&gPS1ErrNb[i]);
          sscanf(&line[28] ,"%d",&gPDFRefNb[i]);
          sscanf(&line[38] ,"%d",&gPDFErrNb[i]);
-         sscanf(&line[48] ,"%d",&gGIFRefNb[i]);
-         sscanf(&line[58] ,"%d",&gGIFErrNb[i]);
-         sscanf(&line[68] ,"%d",&gJPGRefNb[i]);
-         sscanf(&line[78] ,"%d",&gJPGErrNb[i]);
-         sscanf(&line[88] ,"%d",&gPNGRefNb[i]);
-         sscanf(&line[98] ,"%d",&gPNGErrNb[i]);
-         sscanf(&line[107],"%d",&gPS2RefNb[i]);
-         sscanf(&line[118],"%d",&gPS2ErrNb[i]);
+         sscanf(&line[48] ,"%d",&gJPGRefNb[i]);
+         sscanf(&line[58] ,"%d",&gJPGErrNb[i]);
+         sscanf(&line[68] ,"%d",&gPNGRefNb[i]);
+         sscanf(&line[78] ,"%d",&gPNGErrNb[i]);
+         sscanf(&line[87] ,"%d",&gPS2RefNb[i]);
+         sscanf(&line[98] ,"%d",&gPS2ErrNb[i]);
       }
       i++;
    }
@@ -319,7 +315,7 @@ void stressGraphics(Int_t verbose = 0)
    gRandom->SetSeed(65539);
 
    if (gOptionR) {
-      std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<std::endl;
+      std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<std::endl;
    } else {
       std::cout << "**********************************************************************" <<std::endl;
       std::cout << "*  Starting  Graphics - S T R E S S suite                            *" <<std::endl;
@@ -580,14 +576,6 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
    StatusPrint(pdffile, 0, "  PDF output", FileSize(outfile),
                                            gPDFRefNb[gTestNum-1],
                                            gPDFErrNb[gTestNum-1]);
-
-   snprintf(outfile, outfileSize, "sg%2.2d.gif",gTestNum);
-   C->cd(0);
-   C->SaveAs(outfile);
-   TString giffile = outfile;
-   StatusPrint(giffile, 0, "  GIF output", FileSize(outfile),
-                                           gGIFRefNb[gTestNum-1],
-                                           gGIFErrNb[gTestNum-1]);
 
    snprintf(outfile, outfileSize, "sg%2.2d.jpg",gTestNum);
    C->cd(0);

@@ -4,8 +4,8 @@
 /// Likelihood and minimization: working with the profile likelihood estimator
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -46,7 +46,7 @@ void rf605_profilell()
    // ---------------------------------------------------
 
    // Construct unbinned likelihood
-   RooAbsReal *nll = model.createNLL(*data, NumCPU(2));
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, NumCPU(2))};
 
    // Minimize likelihood w.r.t all parameters before making plots
    RooMinimizer(*nll).migrad();
@@ -102,5 +102,4 @@ void rf605_profilell()
 
    delete pll_frac;
    delete pll_sigmag2;
-   delete nll;
 }

@@ -1999,15 +1999,15 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    /////////////////////////////////////////////////////////////////////////////
 
    if (cl.GetRequestedName()[0] && classname != cl.GetRequestedName()) {
-      finalString << "\n" << "      ::ROOT::AddClassAlternate(\""
-                  << classname << "\",\"" << cl.GetRequestedName() << "\");\n";
+      finalString << "\n" << "      instance.AdoptAlternate(::ROOT::AddClassAlternate(\""
+                  << classname << "\",\"" << cl.GetRequestedName() << "\"));\n";
    }
 
    if (!cl.GetDemangledTypeInfo().empty()
          && cl.GetDemangledTypeInfo() != classname
          && cl.GetDemangledTypeInfo() != cl.GetRequestedName()) {
-      finalString << "\n" << "      ::ROOT::AddClassAlternate(\""
-                  << classname << "\",\"" << cl.GetDemangledTypeInfo() << "\");\n";
+      finalString << "\n" << "      instance.AdoptAlternate(::ROOT::AddClassAlternate(\""
+                  << classname << "\",\"" << cl.GetDemangledTypeInfo() << "\"));\n";
 
    }
 

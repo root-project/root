@@ -6,8 +6,8 @@
 ///  pdf = gauss(x,m,s)
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -64,7 +64,7 @@ void rf101_basics()
    // -----------------------------
 
    // Fit pdf to data
-   gauss.fitTo(*data);
+   gauss.fitTo(*data, PrintLevel(-1));
 
    // Print values of mean and sigma (that now reflect fitted values and errors)
    mean.Print();

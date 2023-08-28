@@ -131,6 +131,31 @@ bool RooArgProxy::changePointer(const RooAbsCollection& newServerList, bool name
   return newArg != nullptr;
 }
 
+bool RooArgProxy::changePointer(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements)
+{
+   if (!_arg)
+      return true;
+
+   RooAbsArg *newArg = nullptr;
+
+   auto newArgFound = replacements.find(_arg);
+   if (newArgFound != replacements.end()) {
+      newArg = newArgFound->second;
+   }
+
+   if (newArg) {
+      if (_ownArg) {
+         // We refer to an object that somebody gave to us. Now, we are not owning it, any more.
+         delete _arg;
+         _ownArg = false;
+      }
+
+      _arg = newArg;
+      _isFund = _arg->isFundamental();
+   }
+
+   return newArg != nullptr;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

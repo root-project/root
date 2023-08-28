@@ -645,9 +645,8 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
 
    // save all initial parameters of the model including the global observables
    RooArgSet initialParameters;
-   RooArgSet *allParams = sbModel->GetPdf()->getParameters(*data);
+   std::unique_ptr<RooArgSet> allParams{sbModel->GetPdf()->getParameters(*data)};
    allParams->snapshot(initialParameters);
-   delete allParams;
 
    // run first a data fit
 
@@ -687,15 +686,15 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
          constrainParams.add(*sbModel->GetNuisanceParameters());
       RooStats::RemoveConstantParameters(&constrainParams);
       tw.Start();
-      RooFitResult *fitres = sbModel->GetPdf()->fitTo(
+      std::unique_ptr<RooFitResult> fitres{sbModel->GetPdf()->fitTo(
          *data, InitialHesse(false), Hesse(false), Minimizer(mMinimizerType.c_str(), "Migrad"), Strategy(0),
-         PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()));
+         PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()))};
       if (fitres->status() != 0) {
          Warning("StandardHypoTestInvDemo",
                  "Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
-         fitres = sbModel->GetPdf()->fitTo(
+         fitres = std::unique_ptr<RooFitResult>{sbModel->GetPdf()->fitTo(
             *data, InitialHesse(true), Hesse(false), Minimizer(mMinimizerType.c_str(), "Migrad"), Strategy(1),
-            PrintLevel(mPrintLevel + 1), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()));
+            PrintLevel(mPrintLevel + 1), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()))};
       }
       if (fitres->status() != 0)
          Warning("StandardHypoTestInvDemo", " Fit still failed - continue anyway.....");
@@ -912,12 +911,11 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
 
          const RooArgSet *nuisParams =
             (bModel->GetNuisanceParameters()) ? bModel->GetNuisanceParameters() : sbModel->GetNuisanceParameters();
-         RooArgSet *np = nuisPdf->getObservables(*nuisParams);
+         std::unique_ptr<RooArgSet> np{nuisPdf->getObservables(*nuisParams)};
          if (np->getSize() == 0) {
             Warning("StandardHypoTestInvDemo",
                     "Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range");
          }
-         delete np;
 
          hhc->ForcePriorNuisanceAlt(*nuisPdf);
          hhc->ForcePriorNuisanceNull(*nuisPdf);
@@ -978,14 +976,14 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       std::cout << "Rebuild the upper limit distribution by re-generating new set of pseudo-experiment and re-compute "
                    "for each of them a new upper limit\n\n";
 
-      allParams = sbModel->GetPdf()->getParameters(*data);
+      allParams = std::unique_ptr<RooArgSet>{sbModel->GetPdf()->getParameters(*data)};
 
       // define on which value of nuisance parameters to do the rebuild
       // default is best fit value for bmodel snapshot
 
       if (mRebuildParamValues != 0) {
          // set all parameters to their initial workspace values
-         *allParams = initialParameters;
+         allParams->assign(initialParameters);
       }
       if (mRebuildParamValues == 0 || mRebuildParamValues == 1) {
          RooArgSet constrainParams;
@@ -1013,7 +1011,6 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       }
       std::cout << "StandardHypoTestInvDemo: Initial parameters used for rebuilding: ";
       RooStats::PrintListContent(*allParams, std::cout);
-      delete allParams;
 
       calc.SetCloseProof(1);
       tw.Start();

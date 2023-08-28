@@ -10,6 +10,7 @@
 #include <RooCategory.h>
 #include <RooWorkspace.h>
 #include <RooVectorDataStore.h>
+#include <RooStringVar.h>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -463,4 +464,26 @@ TEST(RooDataSet, ReadDataSetWithErrors626)
    EXPECT_DOUBLE_EQ(y.getVal(), 4.0);
    EXPECT_DOUBLE_EQ(y.getAsymErrorLo(), -2.0);
    EXPECT_DOUBLE_EQ(y.getAsymErrorHi(), 1.0);
+}
+
+TEST(RooDataSet,RooStringVarStorage) {
+   /* RooDataSet should be able to store strings
+    * although this currently will only work for tree storage
+    * */
+
+   RooStringVar str("str","test string","");
+   RooDataSet data("data","data",str);
+   data.convertToTreeStore(); // necessary until VectorStore supports strings
+   data.add(str="str1");
+   data.add(str="str2");
+
+   ASSERT_STREQ(data.get(0)->getStringValue("str"),"str1");
+   ASSERT_STREQ(data.get(1)->getStringValue("str"),"str2");
+
+   // ensure dataset is cloneable
+   RooDataSet dataClone(data);
+
+   ASSERT_STREQ(dataClone.get(0)->getStringValue("str"),"str1");
+   ASSERT_STREQ(dataClone.get(1)->getStringValue("str"),"str2");
+
 }

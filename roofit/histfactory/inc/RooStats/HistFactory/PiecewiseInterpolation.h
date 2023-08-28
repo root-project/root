@@ -31,7 +31,11 @@ class PiecewiseInterpolation : public RooAbsReal {
 public:
 
   PiecewiseInterpolation() ;
-  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, bool takeOwnerShip=false) ;
+  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+              , bool takeOwnership=false
+#endif
+  );
   ~PiecewiseInterpolation() override ;
 
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char *name = nullptr);

@@ -32,7 +32,7 @@ protected:
     // Use own name as base name for caches
     return GetName() ;
   }
-  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooFit::OwningPtr<RooArgSet> actualObservables(const RooArgSet& nset) const override ;
   RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(PdfCacheElem& cache) const override ;
 

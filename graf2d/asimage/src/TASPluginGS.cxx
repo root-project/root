@@ -64,6 +64,8 @@ TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 
 TASPluginGS::~TASPluginGS()
 {
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+
    delete [] fInterpreter;
    fInterpreter = nullptr;
 }

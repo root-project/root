@@ -4,8 +4,8 @@
 /// Data and categories: using weights in unbinned datasets
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -73,7 +73,7 @@ void rf403_weightedevts()
    //       event weights represent Poisson statistics themselves.
    //
    // Fit with 'wrong' errors
-   RooFitResult *r_ml_wgt = p2.fitTo(wdata, Save());
+   std::unique_ptr<RooFitResult> r_ml_wgt{p2.fitTo(wdata, Save(), PrintLevel(-1))};
 
    // A first order correction to estimated parameter errors in an
    // (unbinned) ML fit can be obtained by calculating the
@@ -88,7 +88,7 @@ void rf403_weightedevts()
    //
    // A fit in this mode can be performed as follows:
 
-   RooFitResult *r_ml_wgt_corr = p2.fitTo(wdata, Save(), SumW2Error(true));
+   std::unique_ptr<RooFitResult> r_ml_wgt_corr{p2.fitTo(wdata, Save(), SumW2Error(true), PrintLevel(-1))};
 
    // P l o t   w e i g h e d   d a t a   a n d   f i t   r e s u l t
    // ---------------------------------------------------------------
@@ -115,8 +115,8 @@ void rf403_weightedevts()
    RooDataSet *data3 = genPdf.generate(x, 43000);
 
    // Fit the 2nd order polynomial to both unweighted datasets and save the results for comparison
-   RooFitResult *r_ml_unw10 = p2.fitTo(*data2, Save());
-   RooFitResult *r_ml_unw43 = p2.fitTo(*data3, Save());
+   std::unique_ptr<RooFitResult> r_ml_unw10{p2.fitTo(*data2, Save(), PrintLevel(-1))};
+   std::unique_ptr<RooFitResult> r_ml_unw43{p2.fitTo(*data3, Save(), PrintLevel(-1))};
 
    // C h i 2   f i t   o f   p d f   t o   b i n n e d   w e i g h t e d   d a t a s e t
    // ------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ void rf403_weightedevts()
    m.hesse();
 
    // Plot chi^2 fit result on frame as well
-   RooFitResult *r_chi2_wgt = m.save();
+   std::unique_ptr<RooFitResult> r_chi2_wgt{m.save()};
    p2.plotOn(frame, LineStyle(kDashed), LineColor(kRed));
 
    // C o m p a r e   f i t   r e s u l t s   o f   c h i 2 , M L   f i t s   t o   ( u n ) w e i g h t e d   d a t a

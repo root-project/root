@@ -155,7 +155,7 @@ struct BinnedLOutput {
     bool isBinnedL = false;
 };
 
-BinnedLOutput getBinnedL(RooAbsPdf &pdf);
+BinnedLOutput getBinnedL(RooAbsPdf const &pdf);
 
 void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out);
 

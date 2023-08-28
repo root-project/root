@@ -6,7 +6,9 @@
 
 TEST(RNTuple, RealWorld1)
 {
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    FileRaii fileGuard("test_ntuple_realworld1.root");
 
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
@@ -74,7 +76,9 @@ TEST(RNTuple, RealWorld1)
 // Stress test the asynchronous cluster pool by a deliberately unfavourable read pattern
 TEST(RNTuple, RandomAccess)
 {
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    FileRaii fileGuard("test_ntuple_random_access.root");
 
    auto modelWrite = RNTupleModel::Create();
@@ -111,7 +115,9 @@ TEST(RNTuple, RandomAccess)
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST(RNTuple, LargeFile1)
 {
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    FileRaii fileGuard("test_large_file1.root");
 
    auto modelWrite = RNTupleModel::Create();
@@ -171,7 +177,9 @@ TEST(RNTuple, LargeFile1)
 
 TEST(RNTuple, LargeFile2)
 {
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    FileRaii fileGuard("test_large_file2.root");
 
    // Start out with a mini-file created small file

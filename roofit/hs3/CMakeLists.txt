@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     src/HistFactoryJSONTool.cxx
     src/JSONFactories_RooFitCore.cxx
     src/JSONFactories_HistFactory.cxx
+    src/JSONIOUtils.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES

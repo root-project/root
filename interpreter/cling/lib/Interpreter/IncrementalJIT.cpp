@@ -29,6 +29,10 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Target/TargetMachine.h>
 
+#ifdef __linux__
+#include <sys/stat.h>
+#endif
+
 using namespace llvm;
 using namespace llvm::orc;
 
@@ -289,6 +293,33 @@ Error RTDynamicLibrarySearchGenerator::tryToGenerate(
   return JD.define(absoluteSymbols(std::move(NewSymbols)), CurrentRT());
 }
 
+/// A definition generator that calls a user-provided function that is
+/// responsible for providing symbol addresses.
+/// This is used by `IncrementalJIT::getGenerator()` to yield a generator that
+/// resolves symbols defined in the IncrementalJIT object on which the function
+/// is called, which in turn may be used to provide lookup across different
+/// IncrementalJIT instances.
+class DelegateGenerator : public DefinitionGenerator {
+  using LookupFunc = std::function<Expected<JITEvaluatedSymbol>(StringRef)>;
+  LookupFunc lookup;
+
+public:
+  DelegateGenerator(LookupFunc lookup) : lookup(lookup) {}
+
+  Error tryToGenerate(LookupState& LS, LookupKind K, JITDylib& JD,
+                      JITDylibLookupFlags JDLookupFlags,
+                      const SymbolLookupSet& LookupSet) override {
+    SymbolMap Symbols;
+    for (auto& KV : LookupSet) {
+      if (auto Addr = lookup(*KV.first))
+        Symbols[KV.first] = Addr.get();
+    }
+    if (Symbols.empty())
+      return Error::success();
+    return JD.define(absoluteSymbols(std::move(Symbols)));
+  }
+};
+
 static std::unique_ptr<TargetMachine>
 CreateTargetMachine(const clang::CompilerInstance& CI) {
   CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
@@ -317,6 +348,32 @@ CreateTargetMachine(const clang::CompilerInstance& CI) {
 
   return cantFail(JTMB.createTargetMachine());
 }
+
+#if defined(__linux__) && defined(__GLIBC__)
+static SymbolMap GetListOfLibcNonsharedSymbols(const LLJIT& Jit) {
+  // Inject a number of symbols that may be in libc_nonshared.a where they are
+  // not found automatically. Before DefinitionGenerators in ORCv2, this used
+  // to be done by RTDyldMemoryManager::getSymbolAddressInProcess See also the
+  // upstream issue https://github.com/llvm/llvm-project/issues/61289.
+
+  static const std::pair<const char*, const void*> NamePtrList[] = {
+      {"stat", (void*)&stat},       {"fstat", (void*)&fstat},
+      {"lstat", (void*)&lstat},     {"stat64", (void*)&stat64},
+      {"fstat64", (void*)&fstat64}, {"lstat64", (void*)&lstat64},
+      {"fstatat", (void*)&fstatat}, {"fstatat64", (void*)&fstatat64},
+      {"mknod", (void*)&mknod},     {"mknodat", (void*)&mknodat},
+  };
+
+  SymbolMap LibcNonsharedSymbols;
+  for (const auto& NamePtr : NamePtrList) {
+    auto Addr = static_cast<JITTargetAddress>(
+        reinterpret_cast<uintptr_t>(NamePtr.second));
+    LibcNonsharedSymbols[Jit.mangleAndIntern(NamePtr.first)] =
+        JITEvaluatedSymbol(Addr, JITSymbolFlags::Exported);
+  }
+  return LibcNonsharedSymbols;
+}
+#endif
 } // unnamed namespace
 
 namespace cling {
@@ -412,6 +469,12 @@ IncrementalJIT::IncrementalJIT(
                                   return !m_ForbidDlSymbols.contains(*Sym); });
   Jit->getMainJITDylib().addGenerator(std::move(LibLookup));
 
+#if defined(__linux__) && defined(__GLIBC__)
+  // See comment in ListOfLibcNonsharedSymbols.
+  cantFail(Jit->getMainJITDylib().define(
+      absoluteSymbols(GetListOfLibcNonsharedSymbols(*Jit))));
+#endif
+
   // This replaces llvm::orc::ExecutionSession::logErrorsToStdErr:
   auto&& ErrorReporter = [&Executor, LinkerPrefix, Verbose](Error Err) {
     Err = handleErrors(std::move(Err),
@@ -442,6 +505,11 @@ IncrementalJIT::IncrementalJIT(
     logAllUnhandledErrors(std::move(Err), errs(), "cling JIT session error: ");
   };
   Jit->getExecutionSession().setErrorReporter(ErrorReporter);
+}
+
+std::unique_ptr<llvm::orc::DefinitionGenerator> IncrementalJIT::getGenerator() {
+  return std::make_unique<DelegateGenerator>(
+      [&](StringRef UnmangledName) { return Jit->lookup(UnmangledName); });
 }
 
 void IncrementalJIT::addModule(Transaction& T) {

@@ -541,8 +541,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
   // Create the partial integral set for this request
   for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-    RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet,0,rangeName) ;
-    cache->_partIntList.addOwned(*pdfInt) ;
+    cache->_partIntList.addOwned(std::unique_ptr<RooAbsReal>{proxy->arg().createIntegral(analVars,normSet,0,rangeName)});
   }
 
   // Store the partial integral list and return the assigned code ;
@@ -1035,12 +1034,12 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
 ////////////////////////////////////////////////////////////////////////////////
 /// Special generator interface for generation of 'global observables' -- for RooStats tools
 
-RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
+RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
 {
   // Make set with clone of variables (placeholder for output)
   RooArgSet* globClone = (RooArgSet*) whatVars.snapshot() ;
 
-  RooDataSet* data = new RooDataSet("gensimglobal","gensimglobal",whatVars) ;
+  auto data = std::make_unique<RooDataSet>("gensimglobal","gensimglobal",whatVars);
 
   for (Int_t i=0 ; i<nEvents ; i++) {
     for (const auto& nameIdx : indexCat()) {
@@ -1049,21 +1048,17 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
       RooAbsPdf* pdftmp = getPdf(nameIdx.first);
 
       // Generate only global variables defined by the pdf associated with this state
-      RooArgSet* globtmp = pdftmp->getObservables(whatVars) ;
-      RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
+      std::unique_ptr<RooArgSet> globtmp{pdftmp->getObservables(whatVars)};
+      std::unique_ptr<RooDataSet> tmp{pdftmp->generate(*globtmp,1)};
 
       // Transfer values to output placeholder
       globClone->assign(*tmp->get(0)) ;
-
-      // Cleanup
-      delete globtmp ;
-      delete tmp ;
     }
     data->add(*globClone) ;
   }
 
   delete globClone ;
-  return data ;
+  return RooFit::Detail::owningPtr(std::move(data));
 }
 
 
@@ -1207,22 +1202,17 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       prefixArgs(pdfClone.get(), prefix, normSet);
 
-      auto binnedInfo = RooHelpers::getBinnedL(*pdfClone);
-
-      RooAbsPdf &pdf = binnedInfo.binnedPdf ? *binnedInfo.binnedPdf : *pdfClone;
-
-      if (binnedInfo.isBinnedL) {
-         pdf.setAttribute("BinnedLikelihoodActive");
-      }
-
       std::unique_ptr<RooArgSet> pdfNormSet(
-         static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdf.getVariables())->selectByAttrib("__obs__", true)));
+         static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)));
 
       if (rangeName) {
-         pdf.setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
+         pdfClone->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
       }
 
-      auto *pdfFinal = RooFit::Detail::CompileContext{*pdfNormSet}.compile(pdf, *newSimPdf, *pdfNormSet);
+      RooFit::Detail::CompileContext pdfContext{*pdfNormSet};
+      pdfContext.setLikelihoodMode(ctx.likelihoodMode());
+      auto *pdfFinal = pdfContext.compile(*pdfClone, *newSimPdf, *pdfNormSet);
+
       pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
 
       pdfClone->SetName((std::string("_") + pdfClone->GetName()).c_str());

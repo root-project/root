@@ -62,9 +62,13 @@ namespace HistFactory{
     const std::vector<double>& low() const;
     const std::vector<double>& high() const;
 
+    void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+
   private:
 
     double PolyInterpValue(int i, double x) const;
+
+    void processParam(std::size_t i, double paramVal, double &total) const;
 
   protected:
 

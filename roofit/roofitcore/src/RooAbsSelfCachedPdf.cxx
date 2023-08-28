@@ -101,7 +101,7 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
 /// Defines observables to be cached, given a set of user defined observables
 /// Returns the subset of nset that are observables this p.d.f
 
-RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) const
 {
   // Make list of servers
   RooArgSet *serverSet = new RooArgSet;
@@ -111,7 +111,7 @@ RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) con
   }
 
   // Return servers that are in common with given normalization set
-  return serverSet;
+  return RooFit::OwningPtr<RooArgSet>{serverSet};
 }
 
 

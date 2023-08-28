@@ -70,18 +70,18 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 
   string pname=Form("%s_product",name) ;
 
-  RooFormulaVar* XF ;
+  std::unique_ptr<RooFormulaVar> XF;
   if (centr) {
     string formula=Form("pow((@0-@1),%d)*@2",_order) ;
     string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
+    XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
     addOwnedComponents(*mom1) ;
     _mean.setArg(*mom1) ;
   } else {
     string formula=Form("pow(@0,%d)*@1",_order) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
+    XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
   }
 
@@ -89,15 +89,17 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
     XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
-  RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(x) ;
-  RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(x) ;
-  intXF->setCacheNumeric(true) ;
-  intF->setCacheNumeric(true) ;
+  std::unique_ptr<RooAbsReal> intXF{XF->createIntegral(x)};
+  std::unique_ptr<RooAbsReal> intF{func.createIntegral(x)};
+  static_cast<RooRealIntegral&>(*intXF).setCacheNumeric(true) ;
+  static_cast<RooRealIntegral&>(*intF).setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;
   _if.setArg(*intF) ;
-  addOwnedComponents(RooArgSet(*XF,*intXF,*intF)) ;
+  addOwnedComponents(std::move(XF)) ;
+  addOwnedComponents(std::move(intXF));
+  addOwnedComponents(std::move(intF));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,18 +116,18 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   _nset.add(nset) ;
 
   string pname=Form("%s_product",name) ;
-  RooFormulaVar* XF ;
+  std::unique_ptr<RooFormulaVar> XF;
   if (centr) {
     string formula=Form("pow((@0-@1),%d)*@2",_order) ;
     string m1name=Form("%s_moment1",GetName()) ;
     RooAbsReal* mom1 = func.mean(x,nset) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
+    XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
     addOwnedComponents(*mom1) ;
     _mean.setArg(*mom1) ;
   } else {
     string formula=Form("pow(@0,%d)*@1",_order) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
+    XF = std::make_unique<RooFormulaVar>(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
     XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
   }
 
@@ -136,15 +138,17 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   RooArgSet intSet(x) ;
   if (intNSet) intSet.add(_nset,true) ;
 
-  RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(intSet,&_nset) ;
-  RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(intSet,&_nset) ;
-  intXF->setCacheNumeric(true) ;
-  intF->setCacheNumeric(true) ;
+  std::unique_ptr<RooAbsReal> intXF{XF->createIntegral(intSet, &_nset)};
+  std::unique_ptr<RooAbsReal> intF{func.createIntegral(intSet, &_nset)};
+  static_cast<RooRealIntegral&>(*intXF).setCacheNumeric(true) ;
+  static_cast<RooRealIntegral&>(*intF).setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;
   _if.setArg(*intF) ;
-  addOwnedComponents(RooArgSet(*XF,*intXF,*intF)) ;
+  addOwnedComponents(std::move(XF)) ;
+  addOwnedComponents(std::move(intXF));
+  addOwnedComponents(std::move(intF));
 }
 
 

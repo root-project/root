@@ -178,10 +178,10 @@ public:
   bool getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
-  virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
                               const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
                               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
 
   virtual RooAbsReal* createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
   virtual RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
@@ -189,10 +189,10 @@ public:
              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
   // Chi^2 fits to X-Y datasets
-  virtual RooFitResult* chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
                               const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
                               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  virtual RooFitResult* chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
 
   virtual RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
   virtual RooAbsReal* createChi2(RooDataSet& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
@@ -203,40 +203,40 @@ public:
   virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
 
 
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
                              const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
               const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
               const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
 
   /// Create integral over observables in iset in range named rangeName.
-  RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const {
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const char* rangeName) const {
     return createIntegral(iset,nullptr,nullptr,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=nullptr) const {
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=nullptr) const {
     return createIntegral(iset,&nset,nullptr,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
   /// using specified configuration for any numeric integration.
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooArgSet& nset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
     return createIntegral(iset,&nset,&cfg,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration.
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
     return createIntegral(iset,nullptr,&cfg,rangeName) ;
   }
-  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const ;
+  virtual RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const ;
 
 
   void setParameterizeIntegral(const RooArgSet& paramVars) ;
 
   // Create running integrals
-  RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset={}) ;
   RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
          const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
          const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
          const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  RooFit::OwningPtr<RooAbsReal> createIntRI(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooFit::OwningPtr<RooAbsReal> createIntRI(const RooArgSet& iset, const RooArgSet& nset={}) ;
   RooFit::OwningPtr<RooAbsReal> createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
 
@@ -418,7 +418,7 @@ protected:
 
  protected:
 
-  RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
+  RooFit::OwningPtr<RooFitResult> chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList);
 
   void plotOnCompSelect(RooArgSet* selNodes) const ;
   RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, double Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
@@ -440,7 +440,7 @@ protected:
          const RooArgSet& set) const ;
 
 
-  RooAbsReal* createIntObj(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const ;
+  RooFit::OwningPtr<RooAbsReal> createIntObj(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const ;
   void findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& innerObs, const char* rangeName) const ;
 
 
@@ -475,7 +475,6 @@ protected:
 
   //---------- Interface to access batch data ---------------------------
   //
-  friend class BatchInterfaceAccessor;
 
  private:
   void checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
@@ -486,8 +485,17 @@ protected:
   //--------------------------------------------------------------------
 
  protected:
+  friend class BatchInterfaceAccessor;
+  friend class RooVectorDataStore;
+  friend class RooRealBinding;
+  friend class RooRealSumPdf;
+  friend class RooRealSumFunc;
+  friend class RooAddHelpers;
+  friend class RooAddPdf;
+  friend class RooAddModel;
+  friend class RooFit::Detail::DataMap;
+
   // Hooks for RooDataSet interface
-  friend class RooVectorDataStore ;
   void syncCache(const RooArgSet* set=nullptr) override { getVal(set) ; }
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
@@ -495,7 +503,6 @@ protected:
   void setTreeBranchStatus(TTree& t, bool active) override ;
   void fillTreeBranch(TTree& t) override ;
 
-  friend class RooRealBinding ;
   double _plotMin ;       ///< Minimum of plot range
   double _plotMax ;       ///< Maximum of plot range
   Int_t    _plotBins ;      ///< Number of plot bins
@@ -566,12 +573,6 @@ protected:
 
   bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
                                    bool nameChange, bool isRecursiveStep) override;
-
-  friend class RooRealSumPdf ;
-  friend class RooRealSumFunc;
-  friend class RooAddHelpers ;
-  friend class RooAddPdf ;
-  friend class RooAddModel ;
 
   static void globalSelectComp(bool flag) ;
   bool _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn

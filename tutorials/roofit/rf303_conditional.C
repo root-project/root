@@ -6,8 +6,8 @@
 /// `pdf = gauss(x,f(y),sx | y )` with `f(y) = a0 + a1*y`
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -62,7 +62,7 @@ void rf303_conditional()
    // F i t   c o n d i t i o n a l   p . d . f   m o d e l ( x | y )   t o   d a t a
    // ---------------------------------------------------------------------------------------------
 
-   model.fitTo(*expDataXY, ConditionalObservables(y));
+   model.fitTo(*expDataXY, ConditionalObservables(y), PrintLevel(-1));
 
    // P r o j e c t   c o n d i t i o n a l   p . d . f   o n   x   a n d   y   d i m e n s i o n s
    // ---------------------------------------------------------------------------------------------

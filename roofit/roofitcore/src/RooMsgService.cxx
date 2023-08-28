@@ -79,7 +79,7 @@ Int_t RooMsgService::_debugCount = 0;
 
 RooMsgService::RooMsgService()
 {
-  _devnull = new ofstream("/dev/null") ;
+  _devnull = std::make_unique<ofstream>("/dev/null") ;
 
   _levelNames[DEBUG]="DEBUG" ;
   _levelNames[INFO]="INFO" ;
@@ -116,13 +116,9 @@ void RooMsgService::reset() {
   _globMinLevel = DEBUG ;
   _lastMsgLevel = DEBUG ;
 
-  delete _debugWorkspace;
   _debugWorkspace = nullptr;
   _debugCode = 0 ;
 
-  for (auto &item : _files) {
-    delete item.second;
-  }
   _files.clear();
 
   // Old-style streams
@@ -133,24 +129,7 @@ void RooMsgService::reset() {
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMsgService::~RooMsgService()
-{
-  // Delete all ostreams we own ;
-  map<string,ostream*>::iterator iter = _files.begin() ;
-  for (; iter != _files.end() ; ++iter) {
-    delete iter->second ;
-  }
-
-  if (_debugWorkspace) {
-    delete _debugWorkspace ;
-  }
-
-  delete _devnull ;
-}
-
+RooMsgService::~RooMsgService() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,9 +147,9 @@ bool RooMsgService::anyDebug()
 RooWorkspace* RooMsgService::debugWorkspace()
 {
   if (!_debugWorkspace) {
-    _debugWorkspace = new RooWorkspace("wdebug") ;
+    _debugWorkspace = std::make_unique<RooWorkspace>("wdebug") ;
   }
-  return _debugWorkspace ;
+  return _debugWorkspace.get();
 }
 
 
@@ -270,7 +249,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   } else if (string(outFile).size()>0) {
 
     // See if we already opened the file
-    ostream* os2 = _files["outFile"] ;
+    ostream* os2 = _files["outFile"].get();
 
     if (!os2) {
 
@@ -286,8 +265,8 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
       }
 
     } else {
-      _files["outFile"] = os2 ;
       newStream.os = os2 ;
+      _files["outFile"] = std::unique_ptr<std::ostream>{os2};
     }
 
 

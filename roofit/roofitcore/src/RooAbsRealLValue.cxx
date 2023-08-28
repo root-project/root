@@ -1061,7 +1061,7 @@ bool RooAbsRealLValue::isJacobianOK(const RooArgSet&) const
 }
 
 
-RooAbsReal* RooAbsRealLValue::createIntegral(const RooArgSet&, const RooArgSet*, const RooNumIntConfig*, const char*) const
+RooFit::OwningPtr<RooAbsReal> RooAbsRealLValue::createIntegral(const RooArgSet&, const RooArgSet*, const RooNumIntConfig*, const char*) const
 {
   std::stringstream errStream;
   errStream << "Attempting to integrate the " << ClassName() << " \"" << GetName()

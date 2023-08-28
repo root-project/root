@@ -673,7 +673,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
 
       // Delete clone of incoming node
-      nodesToBeDeleted.addOwned(*node) ;
+      nodesToBeDeleted.addOwned(std::unique_ptr<RooAbsArg>{node});
 
       //cout << "WV: recycling existing node " << existingNode << " = " << existingNode->GetName() << " for imported node " << node << endl ;
 
@@ -683,7 +683,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
         coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing " << node->ClassName() << "::"
             << node->GetName() << endl ;
       }
-      _allOwnedNodes.addOwned(*node) ;
+      _allOwnedNodes.addOwned(std::unique_ptr<RooAbsArg>{node});
       if (_openTrans) {
         _sandboxNodes.add(*node) ;
       } else {
@@ -956,10 +956,10 @@ bool RooWorkspace::extendSet(const char* name, const char* newContents)
 /// Return pointer to previously defined named set with given nmame
 /// If no such set is found a null pointer is returned
 
-const RooArgSet* RooWorkspace::set(const char* name)
+const RooArgSet* RooWorkspace::set(RooStringView name)
 {
-  map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
-  return (i!=_namedSets.end()) ? &(i->second) : 0 ;
+  std::map<string,RooArgSet>::iterator i = _namedSets.find(static_cast<const char*>(name));
+  return (i!=_namedSets.end()) ? &(i->second) : nullptr;
 }
 
 

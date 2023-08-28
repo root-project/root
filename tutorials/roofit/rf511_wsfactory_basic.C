@@ -4,8 +4,8 @@
 /// Organization and simultaneous fits: basic use of the 'object factory' associated with
 /// a workspace to rapidly build pdfs functions and their parameter components
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2009
 /// \author Wouter Verkerke

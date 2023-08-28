@@ -1484,6 +1484,8 @@ class TGraphPainter extends ObjectPainter {
       painter.decodeOptions(opt, true);
       painter.createBins();
       painter.createStat();
+
+      let graph = painter.getObject();
       if (!settings.DragGraphs && !graph.TestBit(kNotEditable))
          graph.InvertBit(kNotEditable);
 

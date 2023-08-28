@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: tuning and customizing the RooFit message logging facility
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -60,7 +60,7 @@ void rf506_msgservice()
    RooMsgService::instance().getStream(1).addTopic(Integration);
 
    // Construct integral over gauss to demonstrate new message stream
-   RooAbsReal *igauss = gauss.createIntegral(x);
+   std::unique_ptr<RooAbsReal> igauss{gauss.createIntegral(x)};
    igauss->Print();
 
    // Print streams configuration in verbose, which also shows inactive streams

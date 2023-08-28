@@ -14,6 +14,8 @@
 #include <RooWorkspace.h>
 #include <RooHelpers.h>
 
+#include <Math/PdfFuncMathCore.h>
+
 #include <gtest/gtest.h>
 
 // Backward compatibility for gtest version < 1.10.0
@@ -31,7 +33,7 @@ private:
    {
       RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
 
-      datap.reset(prod.generate(x, 1000));
+      datap = std::unique_ptr<RooDataSet>{prod.generate(x, 1000)};
       a.setConstant(true);
 
       _optimize = std::get<0>(GetParam());
@@ -212,4 +214,26 @@ TEST(RooProdPdf, DISABLED_ChangeServerNormSetForProdPdfInAddPdf)
 
    EXPECT_FLOAT_EQ(val2, val1);
    EXPECT_FLOAT_EQ(val3, val1);
+}
+
+// Make sure that the pdf that provides the expected number of events in a
+// RooProdPdf is not considered as a constraint. Covers JIRA issue ROOT-7604.
+TEST(RooProdPdf, RooProdPdfWithExtendedTerm)
+{
+   RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::Minimization, false);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::L_constraint(L_nom[10],L[10,0,20],0.2)");
+   ws.factory("PROD::full_model( RooExtendedTerm::model( L ) , L_constraint )");
+
+   ws.factory("weightVar[10,0,100]");
+   ws.factory("dummy_obs[1,0,1]");
+   ws.defineSet("obs", "dummy_obs,weightVar");
+   RooDataSet data("data", "data", *ws.set("obs"), RooFit::WeightVar("weightVar"));
+   data.add(*ws.set("obs"), 5);
+
+   std::unique_ptr<RooAbsReal> nll1{ws.pdf("full_model")->createNLL(data)};
+   double refVal = -std::log(ROOT::Math::gaussian_pdf(10, 0.2, 10)) + (10. - 5 * std::log(10.));
+   double nll1Val = nll1->getVal();
+   EXPECT_FLOAT_EQ(nll1Val, refVal);
 }

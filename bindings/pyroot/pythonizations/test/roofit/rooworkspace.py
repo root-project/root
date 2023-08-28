@@ -40,5 +40,6 @@ class RooWorkspace_test(unittest.TestCase):
         self.assertEqual(x.getVal(), self.x.getVal())
 
 
+
 if __name__ == "__main__":
     unittest.main()

@@ -165,7 +165,6 @@ ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ with zmq_ppoll and cppzmq).")
-ROOT_BUILD_OPTION(roofit_hs3_ryml OFF "Try to find RapidYML on the system and use it for RooFit JSON/YAML convertes")
 ROOT_BUILD_OPTION(webgui ON "Build Web-based UI components of ROOT (requires C++17 standard or higher)")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT (requires C++17 standard or higher)")
 ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search path)")
@@ -223,7 +222,7 @@ else()
     "Known values are zlib, lzma, lz4, zstd (case-insensitive).")
 endif()
 
-#--- The 'all' option swithes ON major options---------------------------------------------------
+#--- The 'all' option switches ON major options---------------------------------------------------
 if(all)
  set(alien_defvalue ON)
  set(arrow_defvalue ON)
@@ -258,6 +257,7 @@ if(all)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
  set(qt5web_defvalue ON)
+ set(qt6web_defvalue ON)
  set(r_defvalue ON)
  set(roofit_defvalue ON)
  set(roofit_multiprocess_defvalue ON)
@@ -414,6 +414,12 @@ if(webgui)
   endif()
 endif()
 
+if(NOT webgui)
+   set(qt5web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(qt6web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(cefweb OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+endif()
+
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs alien bonjour castor chirp geocad glite globus hdfs ios
             krb5 ldap memstat qt qtgsi rfio ruby sapdb srp table python vmc)
@@ -426,6 +432,12 @@ endforeach()
 foreach(opt gfal gsl_shared jemalloc monalisa pyroot_legacy tcmalloc xproofd)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
+  endif()
+endforeach()
+
+foreach(opt minuit2_omp minuit2_mpi)
+  if(${opt})
+      message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with OpenMP or MPI support, it is better to build Minuit2 as a standalone library.")
   endif()
 endforeach()
 

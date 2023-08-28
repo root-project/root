@@ -724,10 +724,8 @@ void MCMCInterval::DetermineByKeys()
 
    double cutoff = 0.0;
    fCutoffVar->setVal(cutoff);
-   RooAbsReal* integral = fProduct->createIntegral(fParameters, NormSet(fParameters));
-   double full = integral->getVal(fParameters);
+   double full = std::unique_ptr<RooAbsReal>{fProduct->createIntegral(fParameters, NormSet(fParameters))}->getVal(fParameters);
    fFull = full;
-   delete integral;
    if (full < 0.98) {
       coutW(Eval) << "Warning: Integral of Keys PDF came out to " << full
          << " instead of expected value 1.  Will continue using this "
@@ -1379,14 +1377,10 @@ double MCMCInterval::GetKeysPdfCutoff()
 
 double MCMCInterval::CalcConfLevel(double cutoff, double full)
 {
-   RooAbsReal* integral;
-   double confLevel;
    fCutoffVar->setVal(cutoff);
-   integral = fProduct->createIntegral(fParameters, NormSet(fParameters));
-   confLevel = integral->getVal(fParameters) / full;
+   std::unique_ptr<RooAbsReal> integral{fProduct->createIntegral(fParameters, NormSet(fParameters))};
+   double confLevel = integral->getVal(fParameters) / full;
    coutI(Eval) << "cutoff = " << cutoff << ", conf = " << confLevel << endl;
-   //cout << "tmp: cutoff = " << cutoff << ", conf = " << confLevel << endl;
-   delete integral;
    return confLevel;
 }
 

@@ -44,8 +44,8 @@ protected:
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  RooSegmentedIntegrator1D* _xIntegrator ;
-  RooAbsFunc* _xint ;
+  std::unique_ptr<RooSegmentedIntegrator1D> _xIntegrator;
+  std::unique_ptr<RooAbsFunc> _xint;
 
   ClassDefOverride(RooSegmentedIntegrator2D,0) // 2-dimensional piece-wise numerical integration engine
 };

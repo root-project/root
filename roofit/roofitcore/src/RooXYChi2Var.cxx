@@ -245,7 +245,7 @@ void RooXYChi2Var::initialize()
 void RooXYChi2Var::initIntegrator()
 {
   if (!_funcInt) {
-    _funcInt = _funcClone->createIntegral(_rrvArgs,_rrvArgs,_intConfig,"bin") ;
+    _funcInt = std::unique_ptr<RooAbsReal>{_funcClone->createIntegral(_rrvArgs,_rrvArgs,_intConfig,"bin")};
     for(auto * x : static_range_cast<RooRealVar*>(_rrvArgs)) {
       _binList.push_back(&x->getBinning("bin",false,true)) ;
     }
@@ -254,16 +254,7 @@ void RooXYChi2Var::initIntegrator()
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooXYChi2Var::~RooXYChi2Var()
-{
-  if (_funcInt) delete _funcInt ;
-}
-
-
+RooXYChi2Var::~RooXYChi2Var() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////

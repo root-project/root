@@ -38,13 +38,16 @@ RooAbsArg *RooFit::Detail::CompileContext::find(RooAbsArg &arg) const
 
 void RooFit::Detail::CompileContext::compileServers(RooAbsArg &arg, RooArgSet const &normSet)
 {
-   RooArgList serverClones;
-   for (const auto server : arg.servers()) {
-      if (auto serverClone = this->compile(*server, arg, normSet)) {
-         serverClones.add(*serverClone);
-      }
+   for (RooAbsArg *server : arg.servers()) {
+      this->compile(*server, arg, normSet);
    }
-   arg.redirectServers(serverClones, false, true);
+   arg.redirectServers(_replacements);
+}
+
+void RooFit::Detail::CompileContext::compileServer(RooAbsArg &server, RooAbsArg &arg, RooArgSet const &normSet)
+{
+   this->compile(server, arg, normSet);
+   arg.redirectServers(_replacements);
 }
 
 RooAbsArg *RooFit::Detail::CompileContext::compileImpl(RooAbsArg &arg, RooAbsArg &owner, RooArgSet const &normSet)
@@ -55,16 +58,25 @@ RooAbsArg *RooFit::Detail::CompileContext::compileImpl(RooAbsArg &arg, RooAbsArg
    if (arg.isFundamental() && !_topLevelNormSet.find(arg)) {
       return nullptr;
    }
-   if (arg.getAttribute("_COMPILED")) {
+   if (isMarkedAsCompiled(arg)) {
       return nullptr;
    }
 
    std::unique_ptr<RooAbsArg> newArg = arg.compileForNormSet(normSet, *this);
-   newArg->setAttribute("_COMPILED");
-   const std::string attrib = std::string("ORIGNAME:") + arg.GetName();
-   newArg->setAttribute(attrib.c_str());
+   markAsCompiled(*newArg);
+   _replacements[&arg] = newArg.get();
    this->add(*newArg);
    RooAbsArg *out = newArg.get();
    owner.addOwnedComponents(std::move(newArg));
    return out;
+}
+
+void RooFit::Detail::CompileContext::markAsCompiled(RooAbsArg &arg) const
+{
+   arg.setAttribute("_COMPILED");
+}
+
+bool RooFit::Detail::CompileContext::isMarkedAsCompiled(RooAbsArg const &arg) const
+{
+   return arg.getAttribute("_COMPILED");
 }

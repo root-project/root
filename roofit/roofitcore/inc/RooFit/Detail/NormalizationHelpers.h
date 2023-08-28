@@ -14,6 +14,7 @@
 #define RooFit_Detail_NormalizationHelpers_h
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 class RooAbsArg;
@@ -38,14 +39,31 @@ public:
    }
 
    void compileServers(RooAbsArg &arg, RooArgSet const &normSet);
+   void compileServer(RooAbsArg &server, RooAbsArg &arg, RooArgSet const &normSet);
+
+   void markAsCompiled(RooAbsArg &arg) const;
+
+   // This information is used for the binned likelihood optimization.
+   void setLikelihoodMode(bool flag) { _likelihoodMode = flag; }
+   bool likelihoodMode() const { return _likelihoodMode; }
+   void setBinnedLikelihoodMode(bool flag) { _binnedLikelihoodMode = flag; }
+   bool binnedLikelihoodMode() const { return _binnedLikelihoodMode; }
+   void setBinWidthFuncFlag(bool flag) { _binWidthFuncFlag = flag; }
+   bool binWidthFuncFlag() const { return _binWidthFuncFlag; }
 
 private:
    RooAbsArg *compileImpl(RooAbsArg &arg, RooAbsArg &owner, RooArgSet const &normSet);
    void add(RooAbsArg &arg);
    RooAbsArg *find(RooAbsArg &arg) const;
+   bool isMarkedAsCompiled(RooAbsArg const &arg) const;
 
    RooArgSet const &_topLevelNormSet;
    std::unordered_map<TNamed const *, RooAbsArg *> _clonedArgsSet;
+   std::unordered_map<RooAbsArg *, RooAbsArg *> _replacements;
+
+   bool _likelihoodMode = false;
+   bool _binnedLikelihoodMode = false;
+   bool _binWidthFuncFlag = false;
 };
 
 template <class T>

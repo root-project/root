@@ -60,9 +60,9 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   // Make full list of dependents (generated & proto)
   RooArgSet deps(vars) ;
   if (prototype) {
-    RooArgSet* protoDeps = model.getObservables(*prototype->get()) ;
-    deps.remove(*protoDeps,true,true) ;
-    delete protoDeps ;
+    RooArgSet protoDeps;
+    model.getObservables(prototype->get(), protoDeps);
+    deps.remove(protoDeps,true,true) ;
   }
 
   // Factorize product in irreducible terms

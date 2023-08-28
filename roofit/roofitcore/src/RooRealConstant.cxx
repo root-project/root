@@ -59,11 +59,12 @@ RooConstVar& RooRealConstant::value(double value)
   std::ostringstream s ;
   s << value ;
 
-  auto var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
+  auto var = std::make_unique<RooConstVar>(s.str().c_str(),s.str().c_str(),value);
   var->setAttribute("RooRealConstant_Factory_Object",true) ;
-  constDB().addOwned(*var) ;
+  RooConstVar &varRef = *var;
+  constDB().addOwned(std::move(var));
 
-  return *var ;
+  return varRef;
 }
 
 
@@ -72,12 +73,13 @@ RooConstVar& RooRealConstant::value(double value)
 
 RooConstVar& RooRealConstant::removalDummy()
 {
-  RooConstVar* var = new RooConstVar("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
+  auto var = std::make_unique<RooConstVar>("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
   var->setAttribute("RooRealConstant_Factory_Object",true) ;
   var->setAttribute("REMOVAL_DUMMY") ;
-  constDB().addOwned(*var) ;
+  RooConstVar &varRef = *var;
+  constDB().addOwned(std::move(var));
 
-  return *var ;
+  return varRef;
 }
 
 

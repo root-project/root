@@ -340,7 +340,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
          _out.first->add(_tmp);
       } else {
          if (_pdf->canBeExtended()) {
-            _out.first.reset(_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected)));
+            _out.first = std::unique_ptr<RooDataSet>{_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected))};
          } else {
             if (expected) {
                // use AsymptoticCalculator because generate expected not working correctly on unextended pdf?
@@ -348,7 +348,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
                // ObsToExpected?
                _out.first.reset(RooStats::AsymptoticCalculator::GenerateAsimovData(*_pdf, *_obs));
             } else {
-               _out.first.reset(_pdf->generate(*_obs, RooFit::ExpectedData(expected)));
+               _out.first = std::unique_ptr<RooDataSet>{_pdf->generate(*_obs, RooFit::ExpectedData(expected))};
             }
          }
       }
@@ -639,7 +639,7 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
    }
 
    std::string logs;
-   RooFitResult *out = nullptr;
+   std::unique_ptr<RooFitResult> out;
    {
       auto logger = (logSize > 0) ? std::make_unique<cout_redirect>(logs, logSize) : nullptr;
       RooMinimizer _minimizer(*_nll);
@@ -814,7 +814,7 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
       // method
 
       // signal(SIGINT,gOldHandlerr);
-      out = _minimizer.save(fitName, resultTitle);
+      out = std::unique_ptr<RooFitResult>{_minimizer.save(fitName, resultTitle)};
 
       out->setStatusHistory(statusHistory);
 
@@ -935,7 +935,7 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
    }
    if (out && !logs.empty()) {
       // save logs to StringVar in constPars list
-      const_cast<RooArgList &>(out->constPars()).addOwned(*new RooStringVar(".log", "log", logs.c_str()));
+      const_cast<RooArgList &>(out->constPars()).addOwned(std::make_unique<RooStringVar>(".log", "log", logs.c_str()));
    }
 
    if (out && cacheDir && cacheDir->IsWritable()) {
@@ -956,13 +956,13 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
          }
          // add the fitConfig name into the fit result before writing, so can retrieve in future
          const_cast<RooArgList &>(out->constPars())
-            .addOwned(*new RooStringVar(".fitConfigName", "fitConfigName", configName.c_str()));
+            .addOwned(std::make_unique<RooStringVar>(".fitConfigName", "fitConfigName", configName.c_str()));
 
-         dir->WriteObject(out, out->GetName());
+         dir->WriteObject(out.get(), out->GetName());
       }
    }
 
-   return std::shared_ptr<const RooFitResult>(out);
+   return std::shared_ptr<const RooFitResult>(std::move(out));
 }
 
 // calculate asymmetric errors, if required, on the named parameter that was floating in the fit

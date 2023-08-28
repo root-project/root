@@ -383,7 +383,7 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
    }
 
    // Binned generation
-   _genSample = _genModel->generateBinned(_dependents,nEvt) ;
+   _genSample = std::unique_ptr<RooDataHist>{_genModel->generateBinned(_dependents,nEvt)}.release();
 
       } else {
 
@@ -640,7 +640,7 @@ RooFit::OwningPtr<RooFitResult> RooMCStudy::refit(RooAbsData* genSample)
     fr = std::unique_ptr<RooFitResult>{doFit(genSample)};
   }
 
-  return RooFit::OwningPtr<RooFitResult>(fr.release());
+  return RooFit::Detail::owningPtr(std::move(fr));
 }
 
 

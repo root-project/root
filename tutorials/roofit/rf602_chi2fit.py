@@ -7,6 +7,7 @@
 ## Setting up a chi^2 fit to a binned dataset
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)

@@ -4,8 +4,8 @@
 /// Likelihood and minimization: visualization of errors from a covariance matrix
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date April 2009
 /// \author Wouter Verkerke
@@ -44,7 +44,7 @@ void rf610_visualerror()
    RooAbsData *d = model.generateBinned(x, 1000);
 
    // Perform fit and save fit result
-   RooFitResult *r = model.fitTo(*d, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*d, Save(), PrintLevel(-1))};
 
    // V i s u a l i z e   f i t   e r r o r
    // -------------------------------------

@@ -1810,7 +1810,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary add transformation control */
    addTransformControl() {
-      if (this._tcontrols) return;
+      if (this._tcontrols || !this._webgl || isBatchMode()) return;
 
       if (!this.ctrl._debug && !this.ctrl._grid) return;
 
@@ -3617,7 +3617,7 @@ class TGeoPainter extends ObjectPainter {
           info = main.querySelector('.geo_info');
 
       if (!msg) {
-         info.remove();
+         info?.remove();
       } else {
          let spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
@@ -4419,14 +4419,14 @@ class TGeoPainter extends ObjectPainter {
             if (obj.fVolume && obj.fVolume.$geo_painter===this) delete obj.fVolume.$geo_painter;
          }
 
-         if (this._main_painter) {
+         if (this._main_painter?._slave_painters) {
             let pos = this._main_painter._slave_painters.indexOf(this);
             if (pos >= 0) this._main_painter._slave_painters.splice(pos,1);
          }
 
-         for (let k = 0; k < this._slave_painters.length;++k) {
+         for (let k = 0; k < this._slave_painters?.length; ++k) {
             let slave = this._slave_painters[k];
-            if (slave && (slave._main_painter===this)) slave._main_painter = null;
+            if (slave && (slave._main_painter === this)) slave._main_painter = null;
          }
 
          delete this.geo_manager;

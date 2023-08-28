@@ -31,7 +31,7 @@ generate_1D_gaussian_pdf_nll(RooWorkspace &w, unsigned long N_events)
    RooAbsPdf *pdf = w.pdf("g");
    RooRealVar *mu = w.var("mu");
 
-   RooDataSet *data = pdf->generate(RooArgSet(*w.var("x")), N_events);
+   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*w.var("x")), N_events)};
    mu->setVal(-2.9);
 
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
@@ -111,7 +111,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
    w.import(*sum); // keep sum around after returning
 
    // --- Generate a toyMC sample from composite PDF ---
-   RooDataSet *data = sum->generate(obs_set, N_events);
+   std::unique_ptr<RooDataSet> data{sum->generate(obs_set, N_events)};
 
    std::unique_ptr<RooAbsReal> nll{sum->createNLL(*data)};
 

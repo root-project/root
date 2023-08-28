@@ -94,7 +94,7 @@ protected:
   friend class MorphCacheElem ;
   PdfCacheElem* createCache(const RooArgSet* nset) const override ;
   const char* inputBaseName() const override ;
-  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooFit::OwningPtr<RooArgSet> actualObservables(const RooArgSet& nset) const override ;
   RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(PdfCacheElem& cache) const override ;
 

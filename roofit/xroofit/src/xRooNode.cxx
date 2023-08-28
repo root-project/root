@@ -5744,7 +5744,7 @@ public:
       // Clone self for internal use
       RooAbsReal *cloneFunc = (RooAbsReal *)fFunc.absArg()->cloneTree();
       RooAbsPdf *clonePdf = dynamic_cast<RooAbsPdf *>(cloneFunc);
-      RooArgSet *errorParams = cloneFunc->getObservables(fpf_stripped);
+      std::unique_ptr<RooArgSet> errorParams{cloneFunc->getObservables(fpf_stripped)};
 
       std::unique_ptr<RooArgSet> nset =
          nset_in.empty() ? std::unique_ptr<RooArgSet>{cloneFunc->getParameters(*errorParams)} : std::unique_ptr<RooArgSet>{cloneFunc->getObservables(nset_in)};
@@ -5807,7 +5807,6 @@ public:
       Double_t sum = F * (C * F);
 
       delete cloneFunc;
-      delete errorParams;
 
       return sqrt(sum);
    }

@@ -73,7 +73,7 @@ RooGamma::RooGamma(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooGamma::RooGamma(const RooGamma& other, const char* name) :
-  RooAbsPdf(other,name), x("x",this,other.x), gamma("mean",this,other.gamma),
+  RooAbsPdf(other,name), x("x",this,other.x), gamma("gamma",this,other.gamma),
   beta("beta",this,other.beta), mu("mu",this,other.mu)
 {
 }

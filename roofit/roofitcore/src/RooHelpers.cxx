@@ -275,20 +275,21 @@ std::string getRangeNameForSimComponent(std::string const& rangeName, bool split
    return rangeName;
 }
 
-BinnedLOutput getBinnedL(RooAbsPdf &pdf)
+BinnedLOutput getBinnedL(RooAbsPdf const &pdf)
 {
    if (pdf.getAttribute("BinnedLikelihood") && pdf.IsA()->InheritsFrom(RooRealSumPdf::Class())) {
       // Simplest case: top-level of component is a RooRealSumPdf
-      return {&pdf, true};
+      return {const_cast<RooAbsPdf *>(&pdf), true};
    } else if (pdf.IsA()->InheritsFrom(RooProdPdf::Class())) {
       // Default case: top-level pdf is a product of RooRealSumPdf and other pdfs
-      for (RooAbsArg *component : static_cast<RooProdPdf &>(pdf).pdfList()) {
+      for (RooAbsArg *component : static_cast<RooProdPdf const &>(pdf).pdfList()) {
          if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
             return {static_cast<RooAbsPdf *>(component), true};
          }
          if (component->getAttribute("MAIN_MEASUREMENT")) {
-           // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be passed to the slave calculator
-           return {static_cast<RooAbsPdf *>(component), false};
+            // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be
+            // passed to the slave calculator
+            return {static_cast<RooAbsPdf *>(component), false};
          }
       }
    }

@@ -4,6 +4,7 @@
 ## Organization and simultaneous fits: reading and writing ASCII configuration files
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -33,7 +34,7 @@ model = ROOT.RooAddPdf("model", "model", [gauss, poly], [f])
 # -----------------------------------------
 
 d = model.generate({x}, 1000)
-model.fitTo(d)
+model.fitTo(d, PrintLevel=-1)
 
 # Write parameters to ASCII file
 # -----------------------------------------------------------

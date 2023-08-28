@@ -1,5 +1,22 @@
 # JSROOT changelog
 
+## Changes in 7.3.x
+1. Fix - do not allow move float browser too far left/top
+
+
+## Changes in 7.3.3
+1. Fix - failure in normal_cdf calculation
+2. Fix - check in TTree::Draw for null buffer
+3. Fix - do not rise exception in treeProcess
+4. Fix - RH1 zero line drawing only when required
+
+
+## Changes in 7.3.2
+1. Fix - undefined graph in TGraphPainter
+2. Fix - error in showing info in the geo painter
+3. Fix - stack limitation with Math.min.apply in tree draw
+
+
 ## Changes in 7.3.1
 1. Fix - TGeo update in the TWebCanvas
 2. Fix - several tutorials with three.js modules loading

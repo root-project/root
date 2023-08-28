@@ -106,7 +106,7 @@ public:
 
    int minimize(const char *type, const char *alg = nullptr);
 
-   RooFitResult *save(const char *name = nullptr, const char *title = nullptr);
+   RooFit::OwningPtr<RooFitResult> save(const char *name = nullptr, const char *title = nullptr);
    RooPlot *contour(RooRealVar &var1, RooRealVar &var2, double n1 = 1.0, double n2 = 2.0, double n3 = 0.0,
                     double n4 = 0.0, double n5 = 0.0, double n6 = 0.0, unsigned int npoints = 50);
 
@@ -129,8 +129,8 @@ public:
    std::string const &minimizerType() const { return _cfg.minimizerType; }
 
    static void cleanup();
-   static RooFitResult *lastMinuitFit();
-   static RooFitResult *lastMinuitFit(const RooArgList &varList);
+   static RooFit::OwningPtr<RooFitResult> lastMinuitFit();
+   static RooFit::OwningPtr<RooFitResult> lastMinuitFit(const RooArgList &varList);
 
    void saveStatus(const char *label, int status)
    {

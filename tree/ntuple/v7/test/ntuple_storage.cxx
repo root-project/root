@@ -369,7 +369,9 @@ TEST(RPageSinkBuf, Basics)
 }
 
 TEST(RPageSinkBuf, ParallelZip) {
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
 
    FileRaii fileGuard("test_ntuple_sinkbuf_pzip.root");
    {
@@ -419,7 +421,9 @@ TEST(RPageSinkBuf, CommitSealedPageV)
    RNTupleWriteOptions options;
    options.SetApproxUnzippedPageSize(8);
 
+#ifdef R__USE_IMT
    ROOT::DisableImplicitMT();
+#endif
    {
       std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
@@ -437,7 +441,9 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       EXPECT_EQ(0, counters.fNCommitSealedPage);
       EXPECT_EQ(0, counters.fNCommitSealedPageV);
    }
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    {
       std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;

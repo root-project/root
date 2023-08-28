@@ -3,7 +3,9 @@
 ## \notebook
 ## Multidimensional models: complete example with use of conditional pdf with per-event errors
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -45,7 +47,7 @@ data = decay_gm.generate({dt}, ProtoData=expDataDterr)
 # ---------------------------------------------------------------------
 
 # Specify dterr as conditional observable
-decay_gm.fitTo(data, ConditionalObservables={dterr})
+decay_gm.fitTo(data, ConditionalObservables={dterr}, PrintLevel=-1)
 
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------

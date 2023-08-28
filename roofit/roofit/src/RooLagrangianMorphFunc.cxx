@@ -2155,7 +2155,7 @@ RooProduct *RooLagrangianMorphFunc::getSumElement(const char *name) const
       coutE(Eval) << "unable to retrieve morphing function" << std::endl;
       return nullptr;
    }
-   RooArgSet *args = mf->getComponents();
+   std::unique_ptr<RooArgSet> args{mf->getComponents()};
    TString prodname(name);
    prodname.Append("_");
    prodname.Append(this->GetName());
@@ -2554,7 +2554,7 @@ TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name, bool correlateEr
 
    auto hist = std::make_unique<TH1F>(name.c_str(), name.c_str(), nbins, observable->getBinning().array());
 
-   RooArgSet *args = mf->getComponents();
+   std::unique_ptr<RooArgSet> args{mf->getComponents()};
    for (int i = 0; i < nbins; ++i) {
       observable->setBin(i);
       double val = 0;
@@ -2592,7 +2592,7 @@ int RooLagrangianMorphFunc::countContributingFormulas() const
    auto mf = std::make_unique<RooRealSumFunc>(*(this->getFunc()));
    if (!mf)
       coutE(InputArguments) << "unable to retrieve morphing function" << std::endl;
-   RooArgSet *args = mf->getComponents();
+   std::unique_ptr<RooArgSet> args{mf->getComponents()};
    for (auto itr : *args) {
       RooProduct *prod = dynamic_cast<RooProduct *>(itr);
       if (prod->getVal() != 0) {
@@ -2679,9 +2679,8 @@ void RooLagrangianMorphFunc::printEvaluation() const
       std::cerr << "Error: unable to retrieve morphing function" << std::endl;
       return;
    }
-   RooArgSet *args = mf->getComponents();
-   for (auto itr : *args) {
-      RooAbsReal *formula = dynamic_cast<RooAbsReal *>(itr);
+   std::unique_ptr<RooArgSet> args{mf->getComponents()};
+   for (auto *formula : dynamic_range_cast<RooAbsReal*>(*args)) {
       if (formula) {
          TString name(formula->GetName());
          name.Remove(0, 2);

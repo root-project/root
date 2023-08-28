@@ -5,8 +5,8 @@
 ## uncertainty of a Monte-Carlo fit template.
 ##
 ## \macro_image
-## \macro_output
 ## \macro_code
+## \macro_output
 ##
 ## Based on a demo by Wouter Verkerke
 ## \date June 2021
