@@ -210,7 +210,7 @@ TEST(Packing, OnDiskEncoding)
       RNTupleWriteOptions options;
       options.SetCompression(0);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-      auto e = writer->CreateEntry();
+      auto e = writer->CreateEntry().lock();
 
       *e->Get<std::int16_t>("int16") = 1;
       *e->Get<std::int32_t>("int32") = 0x00010203;

@@ -419,7 +419,7 @@ TEST(RNTuple, Int64)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto e = writer->CreateEntry();
+      auto e = writer->CreateEntry().lock();
       *e->Get<std::int64_t>("i1") = std::numeric_limits<std::int64_t>::max() - 137;
       *e->Get<std::int64_t>("i2") = std::numeric_limits<std::int64_t>::max() - 138;
       *e->Get<std::uint64_t>("i3") = std::numeric_limits<std::uint64_t>::max() - 42;
@@ -475,7 +475,7 @@ TEST(RNTuple, Int32)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto e = writer->CreateEntry();
+      auto e = writer->CreateEntry().lock();
       *e->Get<std::int32_t>("i1") = std::numeric_limits<std::int32_t>::max() - 137;
       *e->Get<std::int32_t>("i2") = std::numeric_limits<std::int32_t>::max() - 138;
       *e->Get<std::uint32_t>("i3") = std::numeric_limits<std::uint32_t>::max() - 42;
@@ -533,7 +533,7 @@ TEST(RNTuple, Int16)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto e = writer->CreateEntry();
+      auto e = writer->CreateEntry().lock();
       *e->Get<std::int16_t>("i1") = std::numeric_limits<std::int16_t>::max() - 137;
       *e->Get<std::int16_t>("i2") = std::numeric_limits<std::int16_t>::max() - 138;
       *e->Get<std::uint16_t>("i3") = std::numeric_limits<std::uint16_t>::max() - 42;
@@ -615,7 +615,7 @@ TEST(RNTuple, Double)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto e = writer->CreateEntry();
+      auto e = writer->CreateEntry().lock();
       *e->Get<double>("d1") = 1.0;
       *e->Get<double>("d2") = 2.0;
       writer->Fill(*e);
@@ -648,7 +648,7 @@ TEST(RNTuple, Float)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-      auto e = writer->CreateEntry();
+      auto e = writer->CreateEntry().lock();
       *e->Get<float>("f1") = 1.0;
       *e->Get<float>("f2") = 2.0;
       writer->Fill(*e);

@@ -19,10 +19,23 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/StringUtils.hxx>
 
+#include <TError.h>
+
 #include <atomic>
 #include <cstdlib>
 #include <memory>
 #include <utility>
+
+ROOT::Experimental::RNTupleModel::~RNTupleModel()
+{
+   for (const auto &e : fCreatedEntries) {
+      if (e.use_count() <= 1)
+         continue;
+
+      R__LOG_ERROR(NTupleLog()) << "dangling entries of a destructed model detected";
+      break;
+   }
+}
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Detail::RFieldBase *target,
@@ -316,13 +329,13 @@ ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() 
    return fDefaultEntry.get();
 }
 
-std::unique_ptr<ROOT::Experimental::REntry>
-ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEntry) const
+std::weak_ptr<ROOT::Experimental::REntry>
+ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEntry)
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
-   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
+   auto entry = std::shared_ptr<REntry>(new REntry(fModelId));
    for (const auto &f : fFieldZero->GetSubFields()) {
       if (linkedEntry) {
          bool isLinked = false;
@@ -340,6 +353,7 @@ ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEnt
 
       entry->AddValue(isBare ? f->BindValue(nullptr) : f->GenerateValue());
    }
+   fCreatedEntries.emplace_back(entry);
    return entry;
 }
 

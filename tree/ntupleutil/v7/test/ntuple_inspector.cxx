@@ -246,9 +246,9 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
       auto writeOptions = RNTupleWriteOptions();
       writeOptions.SetCompression(0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+      auto e = ntuple->CreateEntry().lock();
 
       for (int i = 0; i < 5; ++i) {
-         auto e = ntuple->CreateEntry();
          *e->Get<std::int32_t>("int32") = i;
          *e->Get<double>("splitReal64") = i;
          ntuple->Fill(*e);

@@ -322,7 +322,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       auto &countLeafName = p.first;
       auto &c = p.second;
       c.fCollectionModel->Freeze();
-      c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
+      c.fCollectionEntry = c.fCollectionModel->CreateBareEntry().lock();
       for (auto idx : c.fImportFieldIndexes) {
          const auto name = fImportFields[idx].fField->GetName();
          const auto buffer = fImportFields[idx].fFieldBuffer;
@@ -350,7 +350,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    }
 
    fModel->Freeze();
-   fEntry = fModel->CreateBareEntry();
+   fEntry = fModel->CreateBareEntry().lock();
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)
          continue;

@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -173,6 +174,11 @@ private:
    std::unique_ptr<RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields
    std::unique_ptr<REntry> fDefaultEntry;
+   /// Entries handed out by CreateEntry or CreateBareEntry are owned and tracked by the model.
+   /// Callers retrieve a weak pointer to the corresponding entry.  This ensures that entries
+   /// get destructed while the model is still alive (the entry's values may use the model's fields to
+   /// for destruction).
+   std::vector<std::shared_ptr<REntry>> fCreatedEntries;
    /// Keeps track of which field names are taken, including projected field names.
    std::unordered_set<std::string> fFieldNames;
    /// Free text set by the user
@@ -201,14 +207,14 @@ private:
    /// For all the top-level fields of the model, creates RValue objects. If a linked entry
    /// is given, the objects point to the ones from the linked entry where possible. Otherwise
    /// the objects are generated if isBare is false, or nullptr otherwise.
-   std::unique_ptr<REntry> CreateEntryImpl(bool isBare, REntry *linkedEntry = nullptr) const;
+   std::weak_ptr<REntry> CreateEntryImpl(bool isBare, REntry *linkedEntry = nullptr);
 
    RNTupleModel();
 
 public:
    RNTupleModel(const RNTupleModel&) = delete;
    RNTupleModel& operator =(const RNTupleModel&) = delete;
-   ~RNTupleModel() = default;
+   ~RNTupleModel();
 
    std::unique_ptr<RNTupleModel> Clone() const;
    static std::unique_ptr<RNTupleModel> Create();
@@ -322,18 +328,22 @@ public:
       std::string_view fieldName,
       std::unique_ptr<RNTupleModel> collectionModel);
 
+   /// Let the model generate a corresponding entry. The model subsequently owns the entry. When the model
+   /// is destructed, there must be no remaining shared pointers to any of its entries.
+   /// An entry can only be returned from a frozen model. Unfreezing and refreezing invalidates existing entries.
+   ///
    /// If a linked entry is given, create entry will use the memory location of the linked
    /// entries for identical fields.  Fields that don't mach any of the linked entry ones
    /// are handled as if no linked entry was given.  If the linked entry contains a field
    /// with the same name than this entry but a different type, the linked entry's field
    /// is ignored.
-   std::unique_ptr<REntry> CreateEntry(REntry *linkedEntry = nullptr) const
+   std::weak_ptr<REntry> CreateEntry(REntry *linkedEntry = nullptr)
    {
       return CreateEntryImpl(false /* isBare */, linkedEntry);
    }
    /// In a bare entry, all values not covered by the linked entry point to nullptr.
    /// The resulting entry shall use CaptureValueUnsafe() in order set memory addresses to be serialized / deserialized
-   std::unique_ptr<REntry> CreateBareEntry(REntry *linkedEntry = nullptr) const
+   std::weak_ptr<REntry> CreateBareEntry(REntry *linkedEntry = nullptr)
    {
       return CreateEntryImpl(true /* isBare */, linkedEntry);
    }

@@ -86,27 +86,27 @@ TEST(RNTuple, ModelExtensionInvalidUse)
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
 
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
-      auto entry = ntuple->GetModel()->CreateEntry();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      auto entry = writer->CreateEntry();
 
-      auto modelUpdater = ntuple->CreateModelUpdater();
+      auto modelUpdater = writer->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       double d;
       modelUpdater->AddField<double>("d", &d);
       // Cannot fill if the model is not frozen
-      EXPECT_THROW(ntuple->Fill(), ROOT::Experimental::RException);
+      EXPECT_THROW(writer->Fill(), ROOT::Experimental::RException);
       // Trying to create an entry should throw if model is not frozen
-      EXPECT_THROW((void)ntuple->GetModel()->CreateEntry(), ROOT::Experimental::RException);
+      EXPECT_THROW((void)writer->CreateEntry(), ROOT::Experimental::RException);
       modelUpdater->CommitUpdate();
 
       // Using an entry that does not match the model should throw
-      EXPECT_THROW(ntuple->Fill(*entry), ROOT::Experimental::RException);
+      EXPECT_THROW(writer->Fill(*entry.lock()), ROOT::Experimental::RException);
 
-      ntuple->Fill();
-      auto entry2 = ntuple->GetModel()->CreateEntry();
-      ntuple->Fill(*entry2);
+      writer->Fill();
+      auto entry2 = writer->CreateEntry();
+      writer->Fill(*entry2.lock());
 
-      ntuple->Fill();
+      writer->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());

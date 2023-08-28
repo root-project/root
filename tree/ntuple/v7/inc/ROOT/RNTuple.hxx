@@ -426,6 +426,7 @@ public:
    void CommitCluster(bool commitClusterGroup = false);
 
    std::weak_ptr<REntry> CreateEntry(REntry *linkedEntry = nullptr) { return fModel->CreateEntry(linkedEntry); }
+   std::weak_ptr<REntry> CreateBareEntry(REntry *linkedEntry = nullptr) { return fModel->CreateBareEntry(linkedEntry); }
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }

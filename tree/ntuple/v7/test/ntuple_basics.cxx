@@ -592,13 +592,22 @@ TEST(RNTuple, Entry)
    FileRaii fileGuard("test_ntuple_entry.root");
    auto ntuple = RNTupleWriter::Recreate(std::move(m1), "ntpl", fileGuard.GetPath());
    ntuple->Fill();
-   ntuple->Fill(*e1);
+   ntuple->Fill(*e1.lock());
    try {
-      ntuple->Fill(*e2);
+      ntuple->Fill(*e2.lock());
       FAIL() << "filling with wrong entry should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
    }
+
+   auto m3 = RNTupleModel::Create();
+   m3->Freeze();
+   auto e3 = m3->CreateEntry().lock();
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "[ROOT.NTuple]", "dangling entries of a destructed model detected",
+                         true /* matchFullMessage */);
+   m3 = nullptr;
 }
 
 TEST(RNTuple, BareEntry)
@@ -609,8 +618,8 @@ TEST(RNTuple, BareEntry)
 
    FileRaii fileGuard("test_ntuple_bare_entry.root");
    {
-      auto ntuple = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
-      const auto model = ntuple->GetModel();
+      auto writer = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
+      const auto model = writer->GetModel();
       try {
          model->GetDefaultEntry();
          FAIL() << "accessing default entry of bare model should throw";
@@ -624,16 +633,16 @@ TEST(RNTuple, BareEntry)
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
 
-      auto e1 = model->CreateEntry();
+      auto e1 = writer->CreateEntry().lock();
       ASSERT_NE(nullptr, e1->Get<float>("pt"));
       *(e1->Get<float>("pt")) = 1.0;
-      auto e2 = model->CreateBareEntry();
+      auto e2 = writer->CreateBareEntry().lock();
       EXPECT_EQ(nullptr, e2->Get<float>("pt"));
       float pt = 2.0;
       e2->CaptureValueUnsafe("pt", &pt);
 
-      ntuple->Fill(*e1);
-      ntuple->Fill(*e2);
+      writer->Fill(*e1);
+      writer->Fill(*e2);
    }
 
    auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());

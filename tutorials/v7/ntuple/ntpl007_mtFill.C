@@ -52,7 +52,8 @@ constexpr int kNWriterThreads = 4;
 constexpr int kNEventsPerThread = 25000;
 
 // Thread function to generate and write events
-void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
+void FillData(std::shared_ptr<REntry> entry, RNTupleWriter *ntuple)
+{
    // Protect the ntuple->Fill() call
    static std::mutex gLock;
 
@@ -101,14 +102,14 @@ void Write()
    model->MakeField<std::vector<float>>("vpz");
 
    // We hand-over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "NTuple", kNTupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "NTuple", kNTupleFileName);
 
-   std::vector<std::unique_ptr<REntry>> entries;
+   std::vector<std::weak_ptr<REntry>> entries;
    std::vector<std::thread> threads;
    for (int i = 0; i < kNWriterThreads; ++i)
-      entries.emplace_back(ntuple->CreateEntry());
+      entries.emplace_back(writer->CreateEntry());
    for (int i = 0; i < kNWriterThreads; ++i)
-      threads.emplace_back(FillData, std::move(entries[i]), ntuple.get());
+      threads.emplace_back(FillData, entries[i].lock(), writer.get());
    for (int i = 0; i < kNWriterThreads; ++i)
       threads[i].join();
 
