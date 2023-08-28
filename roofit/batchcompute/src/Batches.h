@@ -67,24 +67,19 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class Batches {
-private:
+public:
 #ifdef __CUDACC__
    // In the GPU case, we used fixed-size buffers to pass around input arrays by value.
    Batch _arrays[maxParams];
    double _extraArgs[maxExtraArgs];
 #else
-   std::vector<Batch> _arrays;
-   double *const _extraArgs = nullptr;
+   Batch *_arrays;
+   double *_extraArgs = nullptr;
 #endif // #ifdef __CUDACC__
    std::size_t _nEvents = 0;
    std::size_t _nBatches = 0;
    std::size_t _nExtraArgs = 0;
-
-public:
    RestrictArr _output = nullptr;
-
-   Batches(RestrictArr output, std::size_t nEvents, const VarVector &vars, ArgVector &extraArgs,
-           double *buffer = nullptr);
 
    __roodevice__ std::size_t getNEvents() const { return _nEvents; }
    __roodevice__ std::size_t getNExtraArgs() const { return _nExtraArgs; }
