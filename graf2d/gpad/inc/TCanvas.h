@@ -220,6 +220,7 @@ public:
    virtual void      ToggleEditor();
    virtual void      ToggleToolTips();
    void              Update() override;
+   void              UpdateAsync() override;
 
    Bool_t              UseGL() const { return fUseGL; }
    void                SetSupportGL(Bool_t support) {fUseGL = support;}
