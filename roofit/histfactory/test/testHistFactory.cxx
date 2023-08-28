@@ -262,7 +262,6 @@ public:
          meas.AddConstantParam("alpha_syst2");
          meas.AddConstantParam("alpha_syst3");
          meas.AddConstantParam("alpha_syst4");
-         meas.AddConstantParam("alpha_SignalShape");
       }
 
       meas.SetExportOnly(true);
@@ -285,7 +284,7 @@ public:
       _systNames.insert("alpha_syst1");
 
       signal.AddNormFactor("SigXsecOverSM", 1, 0, 3);
-      if (makeModelMode != MakeModelMode::Simple) {
+      if (makeModelMode == MakeModelMode::HistoSyst) {
          signal.AddHistoSys("SignalShape", "shapeUnc_sigDo", _inputFile, "", "shapeUnc_sigUp", _inputFile, "");
          _systNames.insert("alpha_SignalShape");
       }
@@ -440,7 +439,7 @@ TEST_P(HFFixture, Evaluation)
       << "Integral over PDF range should be 1.";
 
    // Test that shape uncertainties have an effect:
-   if (makeModelMode != MakeModelMode::Simple) {
+   if (makeModelMode == MakeModelMode::HistoSyst) {
       auto var = ws->var("alpha_SignalShape");
       ASSERT_NE(var, nullptr);
 
@@ -496,7 +495,7 @@ TEST_P(HFFixture, BatchEvaluation)
       << "Integral over PDF range should be 1.";
 
    // Test that shape uncertainties have an effect:
-   if (makeModelMode != MakeModelMode::Simple) {
+   if (makeModelMode == MakeModelMode::HistoSyst) {
       auto var = ws->var("alpha_SignalShape");
       ASSERT_NE(var, nullptr);
 
@@ -743,7 +742,6 @@ TEST_P(HFFixtureFit, Fit)
          checkParam("alpha_syst4", 0., 1.E-2);
          checkParam("gamma_stat_channel1_bin_0", 1.09, 1.E-2); // This should be pulled
          checkParam("gamma_stat_channel1_bin_1", 1., 1.E-2);
-         checkParam("alpha_SignalShape", 0., 1.E-2);
       }
    }
 
