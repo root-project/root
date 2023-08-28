@@ -34,7 +34,6 @@
 #include "TList.h"
 #include "TVirtualPad.h"
 #include "TCanvas.h"
-#include "TWebCanvas.h"
 #include "TDirectory.h"
 #include "TBufferJSON.h"
 #include "Math/Minimizer.h"
@@ -981,15 +980,7 @@ void RFitPanel::DoPadUpdate(TPad *pad)
    if (!pad) return;
 
    pad->Modified();
-
-   auto web = dynamic_cast<TWebCanvas *> (pad->GetCanvas()->GetCanvasImp());
-
-   Bool_t iswebsync = web ? !web->IsAsyncMode() : kFALSE;
-   if (iswebsync) web->SetAsyncMode(kTRUE);
-
-   pad->Update();
-
-   if (iswebsync) web->SetAsyncMode(kFALSE);
+   pad->UpdateAsync();
 }
 
 
