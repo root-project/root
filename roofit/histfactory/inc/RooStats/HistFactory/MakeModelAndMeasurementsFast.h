@@ -17,7 +17,7 @@ class TFile;
 namespace RooStats{
   namespace HistFactory{
 
-    RooWorkspace* MakeModelAndMeasurementFast(
+      RooFit::OwningPtr<RooWorkspace> MakeModelAndMeasurementFast(
             RooStats::HistFactory::Measurement& measurement,
             HistoToWorkspaceFactoryFast::Configuration const& cfg={}
     );

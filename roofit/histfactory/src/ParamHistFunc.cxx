@@ -478,10 +478,10 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
     VarNameStream << Prefix << "_bin_" << i;
     std::string VarName = VarNameStream.str();
 
-    RooRealVar* gamma = new RooRealVar( VarName.c_str(), VarName.c_str(),
-               gamma_nominal, gamma_min, gamma_max );
+    auto gamma = std::make_unique<RooRealVar>(VarName.c_str(), VarName.c_str(),
+               gamma_nominal, gamma_min, gamma_max);
     gamma->setConstant( false );
-    paramSet.add( *gamma );
+    paramSet.addOwned(std::move(gamma));
 
   }
 
@@ -664,7 +664,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   cache = new CacheElem ;
 
   // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,nullptr) ;
+  Int_t code = _normIntMgr.setObj(normSet,&analVars,cache,nullptr) ;
 
   return code+1 ;
 

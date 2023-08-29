@@ -322,7 +322,7 @@ public:
       meas.CollectHistograms();
 
       // Now, create the measurement
-      ws.reset(MakeModelAndMeasurementFast(meas));
+      ws = std::unique_ptr<RooWorkspace>(MakeModelAndMeasurementFast(meas));
 
       EXPECT_TRUE(hijackW.str().empty()) << "Warnings logged for HistFactory:\n" << hijackW.str();
    }

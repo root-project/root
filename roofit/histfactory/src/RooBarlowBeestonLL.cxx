@@ -75,14 +75,11 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, 
 
   // Determine actual parameters and observables
   /*
-  RooArgSet* actualObs = nllIn.getObservables(observables) ;
-  RooArgSet* actualPars = nllIn.getParameters(observables) ;
+  std::unique_ptr<RooArgSet> actualObs{nllIn.getObservables(observables)};
+  std::unique_ptr<RooArgSet> actualPars{nllIn.getParameters(observables)};
 
   _obs.add(*actualObs) ;
   _par.add(*actualPars) ;
-
-  delete actualObs ;
-  delete actualPars ;
   */
 }
 
@@ -151,13 +148,6 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
     return;
   }
 
-  /*
-  // Get the channels for this pdf
-  RooArgSet* channels = new RooArgSet();
-  RooArgSet* channelsWithConstraints = new RooArgSet();
-  getChannelsFromModel( _pdf, channels, channelsWithConstraints );
-  */
-
   // Loop over the channels
   RooSimultaneous* simPdf = (RooSimultaneous*) _pdf;
   RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
@@ -169,7 +159,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
     std::string channel_name = channelPdf->GetName();
 
     // First, we check if this channel uses Stat Uncertainties:
-    RooArgList* gammas = new RooArgList();
+    RooArgList* gammas = nullptr;
     ParamHistFunc* param_func=nullptr;
     bool hasStatUncert = getStatUncertaintyFromChannel( channelPdf, param_func, gammas );
     if( ! hasStatUncert ) {
@@ -398,12 +388,11 @@ void RooStats::HistFactory::RooBarlowBeestonLL::FactorizePdf(const RooArgSet &ob
     }
   } else if (id == typeid(RooSimultaneous) ) {    //|| id == typeid(RooSimultaneousOpt)) {
     RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
-    RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
+    std::unique_ptr<RooAbsCategoryLValue> cat{(RooAbsCategoryLValue *) sim->indexCat().Clone()};
     for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
       cat->setBin(ic);
       FactorizePdf(observables, *sim->getPdf(cat->getLabel()), obsTerms, constraints);
     }
-    delete cat;
   } else if (pdf.dependsOn(observables)) {
     if (!obsTerms.contains(pdf)) obsTerms.add(pdf);
   } else {
@@ -632,7 +621,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
 
 
     // Save current values of non-marginalized parameters
-    RooArgSet* obsStart = (RooArgSet*) _obs.snapshot(false) ;
+    std::unique_ptr<RooArgSet> obsStart{(RooArgSet*) _obs.snapshot(false)};
 
     // Start from previous global minimum
     if (_paramAbsMin.getSize()>0) {
@@ -654,9 +643,8 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
     _paramAbsMin.removeAll() ;
 
     // Only store non-constant parameters here!
-    RooArgSet* tmp = (RooArgSet*) _par.selectByAttrib("Constant",false) ;
+    std::unique_ptr<RooArgSet> tmp{(RooArgSet*) _par.selectByAttrib("Constant",false)};
     _paramAbsMin.addClone(*tmp) ;
-    delete tmp ;
 
     _obsAbsMin.addClone(_obs) ;
 
@@ -682,7 +670,6 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
 
     // Restore original parameter values
     const_cast<RooSetProxy&>(_obs) = *obsStart ;
-    delete obsStart ;
 
   }
 }
