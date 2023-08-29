@@ -14,8 +14,7 @@ on:
       - 'documentation/**'
   push:
     branches:
-      - 'master'
-      - 'codecov'
+      - '*'
 
   workflow_call:
     inputs:
