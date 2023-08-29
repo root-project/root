@@ -890,7 +890,7 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
     ws().commitTransaction() ;
   }
 
-  return !out.empty() ? ws().arg(out.c_str()) : nullptr ;
+  return !out.empty() ? ws().arg(out) : nullptr ;
 }
 
 
@@ -1107,7 +1107,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
    while(true) {
      autoname = Form("gobj%d",globCounter) ;
      globCounter++ ;
-     if (!ws().arg(autoname.c_str())) {
+     if (!ws().arg(autoname)) {
        break ;
      }
    }

@@ -94,7 +94,7 @@ bool RooGenFitStudy::attach(RooWorkspace& w)
 {
   bool ret = false ;
 
-  RooAbsPdf* pdf = w.pdf(_genPdfName.c_str()) ;
+  RooAbsPdf* pdf = w.pdf(_genPdfName) ;
   if (pdf) {
     _genPdf = pdf ;
   } else {
@@ -108,7 +108,7 @@ bool RooGenFitStudy::attach(RooWorkspace& w)
     ret = true ;
   }
 
-  pdf = w.pdf(_fitPdfName.c_str()) ;
+  pdf = w.pdf(_fitPdfName) ;
   if (pdf) {
     _fitPdf = pdf ;
   } else {

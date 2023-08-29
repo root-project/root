@@ -263,7 +263,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
     fpdName= "fitParData_" + std::string(_fitModel->GetName()) + "_" + std::string(_genModel->GetName());
   }
 
-  _fitParData = std::make_unique<RooDataSet>(fpdName.c_str(),"Fit Parameters DataSet",tmp2);
+  _fitParData = std::make_unique<RooDataSet>(fpdName,"Fit Parameters DataSet",tmp2);
   tmp2.setAttribAll("StoreError",false) ;
   tmp2.setAttribAll("StoreAsymError",false) ;
 

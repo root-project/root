@@ -757,7 +757,7 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
          indexCat.defineType(labels[iChannel], indices[iChannel]);
       }
 
-      auto combined = std::make_unique<RooDataSet>(combinedName.c_str(), combinedName.c_str(), allVars,
+      auto combined = std::make_unique<RooDataSet>(combinedName, combinedName, allVars,
                                                    RooFit::Import(dsMap), RooFit::Index(indexCat));
       datas.emplace_back(std::move(combined));
    }
@@ -1510,7 +1510,7 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       errMsg << "inconsistent bin numbers: contents=" << contents.num_children() << ", bins=" << bins.size();
       RooJSONFactoryWSTool::error(errMsg.str());
    }
-   auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), vars);
+   auto dh = std::make_unique<RooDataHist>(name, name, vars);
    std::vector<double> contentVals;
    contentVals.reserve(contents.num_children());
    for (auto const &cont : contents.children()) {

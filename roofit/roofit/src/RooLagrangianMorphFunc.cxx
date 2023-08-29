@@ -805,9 +805,9 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          RooArgSet vars;
          vars.add(var);
 
-         auto dh = std::make_unique<RooDataHist>(histname, histname, vars, hist.get());
+         auto dh = std::make_unique<RooDataHist>(histname.Data(), histname.Data(), vars, hist.get());
          // add it to the list
-         auto hf = std::make_unique<RooHistFunc>(funcname, funcname, var, std::move(dh));
+         auto hf = std::make_unique<RooHistFunc>(funcname.Data(), funcname.Data(), var, std::move(dh));
          int idx = physics.getSize();
          list_hf[sample] = idx;
          physics.addOwned(std::move(hf));
@@ -3078,7 +3078,7 @@ std::string LMIFace::create(RooFactoryWSTool &ft, const char * /*typeName*/, con
          for (const auto &subarg : subargs) {
             std::vector<std::string> parts = ROOT::Split(subarg, "=");
             if (parts.size() == 2) {
-               ft.ws().arg(parts[0].c_str())->setAttribute("NewPhysics", atoi(parts[1].c_str()));
+               ft.ws().arg(parts[0])->setAttribute("NewPhysics", atoi(parts[1].c_str()));
             } else
                throw std::string(Form("%s::create() ERROR: unknown token %s encountered, check input provided for %s",
                                       instanceName, subarg.c_str(), args[i].c_str()));
