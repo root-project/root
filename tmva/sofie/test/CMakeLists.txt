@@ -152,7 +152,22 @@ else()
       COMPILE_OPTIONS
         -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR} -fsycl-targets=nvptx64-nvidia-cuda
       LINK_OPTIONS
-        -fsycl
+        # VERY IMPORTANT TO ADD THE TARGET AND IN THE LINKING STAGE
+        # SEE https://intel.github.io/llvm-docs/GetStartedGuide.html#build-dpc-application-with-cmake
+        -fsycl -fsycl-targets=nvptx64-nvidia-cuda 
+      )
+    elseif (TARGET_GPU STREQUAL "AMD")
+    ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
+      LIBRARIES
+        ROOTTMVASofie
+      INCLUDE_DIRS
+        ${CMAKE_CURRENT_BINARY_DIR}
+      COMPILE_OPTIONS
+        -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR} -fsycl-targets=amdgcn-amd-amdhsa
+      LINK_OPTIONS
+        # VERY IMPORTANT TO ADD THE TARGET AND IN THE LINKING STAGE
+        # SEE https://intel.github.io/llvm-docs/GetStartedGuide.html#build-dpc-application-with-cmake
+        -fsycl -fsycl-targets=amdgcn-amd-amdhsa
       )
     else()
       ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
