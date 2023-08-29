@@ -143,16 +143,29 @@ if (GPU_BLAS STREQUAL "MKLBLAS")
   )
 else()
   find_package(PORTBLAS REQUIRED)
-  ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
-    LIBRARIES
-      ROOTTMVASofie
-    INCLUDE_DIRS
-      ${CMAKE_CURRENT_BINARY_DIR}
-    COMPILE_OPTIONS
-      -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR}
-    LINK_OPTIONS
-      -fsycl
-  )
+  if (TARGET_GPU STREQUAL "NVIDIA")
+    ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
+      LIBRARIES
+        ROOTTMVASofie
+      INCLUDE_DIRS
+        ${CMAKE_CURRENT_BINARY_DIR}
+      COMPILE_OPTIONS
+        -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR} -fsycl-targets=nvptx64-nvidia-cuda
+      LINK_OPTIONS
+        -fsycl
+      )
+    else()
+      ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
+      LIBRARIES
+        ROOTTMVASofie
+      INCLUDE_DIRS
+        ${CMAKE_CURRENT_BINARY_DIR}
+      COMPILE_OPTIONS
+        -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR}
+      LINK_OPTIONS
+        -fsycl
+      ) 
+    endif()
 endif()
 add_sycl_to_target(TARGET TestCustomGPUModelsFromONNX SOURCES TestCustomGPUModelsFromONNX.cxx)
 add_dependencies(TestCustomGPUModelsFromONNX SofieCompileGPUModels_ONNX)
