@@ -57,7 +57,7 @@ public:
    /// In order to handle changes to the serialization routine in future ntuple versions
    static constexpr std::uint16_t kEnvelopeCurrentVersion = 1;
    static constexpr std::uint16_t kEnvelopeMinVersion     = 1;
-   static constexpr std::uint32_t kReleaseCandidateTag    = 1;
+   static constexpr std::uint32_t kReleaseCandidateTag    = 2;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
 
