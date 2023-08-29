@@ -246,9 +246,8 @@ Int_t RooParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
                   const RooArgSet* /*normSet*/, const char* /*rangeName*/) const
 {
   // Simplest scenario, integrate over all dependents
-  RooAbsCollection *allVarsCommon = allVars.selectCommon(_x) ;
-  bool intAllObs = (allVarsCommon->getSize()==_x.getSize()) ;
-  delete allVarsCommon ;
+  std::unique_ptr<RooAbsCollection> allVarsCommon{allVars.selectCommon(_x)};
+  bool intAllObs = (allVarsCommon->size()==_x.size()) ;
   if (intAllObs && matchArgs(allVars,analVars,_x)) {
     return 1 ;
   }

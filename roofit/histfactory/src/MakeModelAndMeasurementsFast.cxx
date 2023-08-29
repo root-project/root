@@ -84,10 +84,10 @@
   </ul>
   </ul>
 */
-RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement, HistoToWorkspaceFactoryFast::Configuration const& cfg)
+RooFit::OwningPtr<RooWorkspace>
+RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measurement &measurement,
+                                                   HistoToWorkspaceFactoryFast::Configuration const &cfg)
 {
-  // This will be returned
-  RooWorkspace* ws = nullptr;
   std::unique_ptr<TFile> outFile;
   std::ofstream tableFile;
 
@@ -169,8 +169,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       std::string ch_name = channel.GetName();
       cxcoutPHF << "Starting to process channel: " << ch_name << std::endl;
       channel_names.push_back(ch_name);
-      RooWorkspace* ws_single = factory.MakeSingleChannelModel( measurement, channel );
-      channel_workspaces.emplace_back(ws_single);
+      std::unique_ptr<RooWorkspace> ws_single{factory.MakeSingleChannelModel( measurement, channel )};
 
       {
         // Make the output
@@ -178,7 +177,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     + ch_name + "_" + rowTitle + "_model.root";
         cxcoutIHF << "Opening File to hold channel: " << ChannelFileName << std::endl;
         std::unique_ptr<TFile> chanFile{TFile::Open( ChannelFileName.c_str(), "RECREATE" )};
-        chanFile->WriteTObject(ws_single);
+        chanFile->WriteTObject(ws_single.get());
         // Now, write the measurement to the file
         // Make a new measurement for only this channel
         RooStats::HistFactory::Measurement meas_chan( measurement );
@@ -209,6 +208,8 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       }
 
       tableFile << " & ";
+
+      channel_workspaces.emplace_back(std::move(ws_single));
     } // End loop over channels
 
     /***
@@ -218,10 +219,10 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     ***/
 
     // Use HistFactory to combine the individual channel workspaces
-    ws = factory.MakeCombinedModel(channel_names, channel_workspaces);
+    std::unique_ptr<RooWorkspace> ws{factory.MakeCombinedModel(channel_names, channel_workspaces)};
 
     // Configure that workspace
-    HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement( "simPdf", ws, measurement );
+    HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
 
     // Get the Parameter of interest as a RooRealVar
     RooRealVar* poi = dynamic_cast<RooRealVar*>( ws->var(measurement.GetPOI()));
@@ -235,7 +236,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
         cxcoutEHF << "Error: Failed to open file " << CombinedFileName << std::endl;
         throw hf_exc();
       }
-      combFile->WriteTObject(ws);
+      combFile->WriteTObject(ws.get());
       cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
       measurement.writeToFile( combFile.get() );
     }
@@ -262,7 +263,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
 
   msgSvc.getStream(1).addTopic(RooFit::ObjectHandling);
 
-  return ws;
+  return RooFit::Detail::owningPtr(std::move(ws));
 }
 
 
