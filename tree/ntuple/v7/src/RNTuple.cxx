@@ -107,6 +107,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    fModel->Freeze();
    InitPageSource();
    ConnectModel(*fModel);
+   fDefaultEntry = fModel->GetDefaultEntry().lock();
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
@@ -155,6 +156,7 @@ ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
    if (!fModel) {
       fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
       ConnectModel(*fModel);
+      fDefaultEntry = fModel->GetDefaultEntry().lock();
    }
    return fModel.get();
 }
@@ -233,7 +235,7 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &output)
 {
    auto reader = GetDisplayReader();
-   auto entry = reader->GetModel()->GetDefaultEntry();
+   auto entry = reader->GetModel()->GetDefaultEntry().lock();
 
    reader->LoadEntry(index);
    output << "{";
@@ -273,6 +275,8 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
       throw RException(R__FAIL("null sink"));
    }
    fModel->Freeze();
+   if (!fModel->IsBare())
+      fDefaultEntry = fModel->GetDefaultEntry().lock();
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
       fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
@@ -355,13 +359,6 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 
    if (commitClusterGroup)
       CommitClusterGroup();
-}
-
-//------------------------------------------------------------------------------
-
-ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique_ptr<REntry> defaultEntry)
-   : fOffset(0), fDefaultEntry(std::move(defaultEntry))
-{
 }
 
 //------------------------------------------------------------------------------

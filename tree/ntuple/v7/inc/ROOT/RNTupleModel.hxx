@@ -170,15 +170,17 @@ public:
    };
 
 private:
+   static constexpr std::size_t kInvalidDefaultEntryIdx = std::size_t(-1);
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldZero> fFieldZero;
-   /// Contains field values corresponding to the created top-level fields
-   std::unique_ptr<REntry> fDefaultEntry;
    /// Entries handed out by CreateEntry or CreateBareEntry are owned and tracked by the model.
    /// Callers retrieve a weak pointer to the corresponding entry.  This ensures that entries
    /// get destructed while the model is still alive (the entry's values may use the model's fields to
    /// for destruction).
    std::vector<std::shared_ptr<REntry>> fCreatedEntries;
+   /// A model that is not bare contains a default entry, whose values can be used during the construction phase.
+   /// This index points into fCreatedEntries if the default entry exists. Otherwise it is kInvalidDefaultEntryIdx.
+   std::size_t fDefaultEntryIdx = kInvalidDefaultEntryIdx;
    /// Keeps track of which field names are taken, including projected field names.
    std::unordered_set<std::string> fFieldNames;
    /// Free text set by the user
@@ -201,8 +203,11 @@ private:
    /// Throws an RException if fFrozen is true
    void EnsureNotFrozen() const;
 
-   /// Throws an RException if fDefaultEntry is nullptr
+   /// Throws an RException if no default entry exists
    void EnsureNotBare() const;
+
+   /// Does not check if the model is bare
+   REntry *GetDefaultEntryPtr() const { return fCreatedEntries[fDefaultEntryIdx].get(); }
 
    /// For all the top-level fields of the model, creates RValue objects. If a linked entry
    /// is given, the objects point to the ones from the linked entry where possible. Otherwise
@@ -222,7 +227,7 @@ public:
    static std::unique_ptr<RNTupleModel> CreateBare();
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
-   /// corresponding tree value that is managed by a shared pointer.
+   /// corresponding value that is managed by a shared pointer.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
@@ -238,11 +243,11 @@ public:
    ///
    /// // The RNTuple is written to disk when the RNTupleWriter goes out of scope
    /// {
-   ///    auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "myFile.root");
+   ///    auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "myFile.root");
    ///    for (int i = 0; i < 100; i++) {
    ///       *pt = static_cast<float>(i);
    ///       *vec = {i, i+1, i+2};
-   ///       ntuple->Fill();
+   ///       writer->Fill();
    ///    }
    /// }
    /// ~~~
@@ -275,8 +280,8 @@ public:
       auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
       field->SetDescription(fieldNameDesc.fDescription);
       std::shared_ptr<T> ptr;
-      if (fDefaultEntry)
-         ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
+      if (!IsBare())
+         ptr = GetDefaultEntryPtr()->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
       fFieldZero->Attach(std::move(field));
       return ptr;
    }
@@ -297,7 +302,7 @@ public:
 
       auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
       field->SetDescription(fieldNameDesc.fDescription);
-      fDefaultEntry->AddValue(field->BindValue(fromWhere));
+      GetDefaultEntryPtr()->AddValue(field->BindValue(fromWhere));
       fFieldZero->Attach(std::move(field));
    }
 
@@ -311,7 +316,7 @@ public:
    T *Get(std::string_view fieldName) const
    {
       EnsureNotBare();
-      return fDefaultEntry->Get<T>(fieldName);
+      return GetDefaultEntryPtr()->Get<T>(fieldName);
    }
 
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
@@ -320,6 +325,7 @@ public:
    void Unfreeze();
    bool IsFrozen() const { return fModelId != 0; }
    std::uint64_t GetModelId() const { return fModelId; }
+   bool IsBare() const { return fDefaultEntryIdx == kInvalidDefaultEntryIdx; }
 
    /// Ingests a model for a sub collection and attaches it to the current model
    ///
@@ -347,7 +353,7 @@ public:
    {
       return CreateEntryImpl(true /* isBare */, linkedEntry);
    }
-   REntry *GetDefaultEntry() const;
+   std::weak_ptr<REntry> GetDefaultEntry() const;
 
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
    const Detail::RFieldBase *GetField(std::string_view fieldName) const;

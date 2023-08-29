@@ -348,9 +348,9 @@ TEST(RNTupleShow, Collections)
       ntuple->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+   auto reader = RNTupleReader::Open(ntupleName, rootFileName);
    std::ostringstream osData;
-   ntuple->Show(0, osData);
+   reader->Show(0, osData);
    // clang-format off
    std::string outputData{ std::string("")
       + "{\n"
@@ -360,7 +360,7 @@ TEST(RNTupleShow, Collections)
    EXPECT_EQ(outputData, osData.str());
 
    std::ostringstream osFields;
-   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
    // clang-format off
    std::string outputFields{ std::string("")
       + "************************************ NTUPLE ************************************\n"
@@ -438,7 +438,7 @@ TEST(RNTupleShow, RVecTypeErased)
    std::string ntupleName{"r"};
    FileRaii fileGuard(rootFileName);
    {
-      auto m = RNTupleModel::Create();
+      auto m = RNTupleModel::CreateBare();
 
       auto intVecField = RFieldBase::Create("intVec", "ROOT::VecOps::RVec<int>").Unwrap();
       m->AddField(std::move(intVecField));
@@ -454,19 +454,17 @@ TEST(RNTupleShow, RVecTypeErased)
       ROOT::RVec<ROOT::RVec<float>> floatVecVec{ROOT::RVec<float>{0.1, 0.2}, ROOT::RVec<float>{1.1, 1.2}};
       ROOT::RVec<CustomStruct> customStructVec{CustomStruct(), {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
 
-      m->Freeze();
-      m->GetDefaultEntry()->CaptureValueUnsafe("intVec", &intVec);
-      m->GetDefaultEntry()->CaptureValueUnsafe("floatVecVec", &floatVecVec);
-      m->GetDefaultEntry()->CaptureValueUnsafe("customStructVec", &customStructVec);
+      auto writer = RNTupleWriter::Recreate(std::move(m), ntupleName, rootFileName);
+      auto entry = writer->CreateBareEntry().lock();
+      entry->CaptureValueUnsafe("intVec", &intVec);
+      entry->CaptureValueUnsafe("floatVecVec", &floatVecVec);
+      entry->CaptureValueUnsafe("customStructVec", &customStructVec);
 
-      auto ntuple = RNTupleWriter::Recreate(std::move(m), ntupleName, rootFileName);
-
-      ntuple->Fill();
-
+      writer->Fill(*entry);
       intVec.emplace_back(4);
       floatVecVec.emplace_back(ROOT::RVec<float>{2.1, 2.2});
       customStructVec.emplace_back(CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "bar", std::byte{0}});
-      ntuple->Fill();
+      writer->Fill(*entry);
    }
 
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);

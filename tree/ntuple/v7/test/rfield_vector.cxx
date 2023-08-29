@@ -215,19 +215,20 @@ TEST(RNTuple, RVecTypeErased)
    {
       ROOT::RVecI rvec = {1, 2, 3};
 
-      auto m = RNTupleModel::Create();
+      auto m = RNTupleModel::CreateBare();
       auto field = RFieldBase::Create("v", "ROOT::VecOps::RVec<int>").Unwrap();
       m->AddField(std::move(field));
-      m->Freeze();
-      m->GetDefaultEntry()->CaptureValueUnsafe("v", (void *)&rvec);
 
       auto w = RNTupleWriter::Recreate(std::move(m), "r", fileGuard.GetPath());
-      w->Fill();
+      auto e = w->CreateBareEntry().lock();
+      e->CaptureValueUnsafe("v", (void *)&rvec);
+
+      w->Fill(*e);
       rvec.clear();
       rvec.push_back(42);
-      w->Fill();
+      w->Fill(*e);
       rvec.clear();
-      w->Fill();
+      w->Fill(*e);
    }
 
    // read back RVec with type-erased API
@@ -359,7 +360,7 @@ TEST(RNTuple, ComplexVector)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry().lock()->Get<std::vector<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -402,7 +403,7 @@ TEST(RNTuple, ComplexRVec)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<ROOT::RVec<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry().lock()->Get<ROOT::RVec<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());

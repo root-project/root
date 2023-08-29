@@ -108,6 +108,8 @@ private:
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<RNTupleModel> fModel;
+   /// Caches fModel's default entry if it is not bare
+   std::shared_ptr<REntry> fDefaultEntry;
    /// We use a dedicated on-demand reader for Show() and Scan(). Printing data uses all the fields
    /// from the full model even if the analysis code uses only a subset of fields. The display reader
    /// is a clone of the original reader.
@@ -249,8 +251,9 @@ public:
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
          ConnectModel(*fModel);
+         fDefaultEntry = fModel->GetDefaultEntry().lock();
       }
-      LoadEntry(index, *fModel->GetDefaultEntry());
+      LoadEntry(index, *fDefaultEntry);
    }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
    void LoadEntry(NTupleSize_t index, REntry &entry) {
@@ -366,6 +369,8 @@ private:
    std::unique_ptr<Detail::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<RNTupleModel> fModel;
+   /// Caches a shared pointer of fModel's default entry if it is not bare
+   std::shared_ptr<REntry> fDefaultEntry;
    Detail::RNTupleMetrics fMetrics;
    NTupleSize_t fLastCommitted = 0;
    NTupleSize_t fLastCommittedClusterGroup = 0;
@@ -404,7 +409,7 @@ public:
 
    /// The simplest user interface if the default entry that comes with the ntuple model is used.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill() { return Fill(*fModel->GetDefaultEntry()); }
+   std::size_t Fill() { return Fill(*fDefaultEntry); }
    /// Multiple entries can have been instantiated from the ntuple model.  This method will perform
    /// a light check whether the entry comes from the ntuple's own model.
    /// \return The number of uncompressed bytes written.
@@ -470,18 +475,25 @@ public:
 */
 // clang-format on
 class RCollectionNTupleWriter {
+   friend class RNTupleModel;
+
 private:
-   ClusterSize_t fOffset;
-   std::unique_ptr<REntry> fDefaultEntry;
+   ClusterSize_t fOffset{0};
+   /// The entries created by the provided model
+   std::vector<std::shared_ptr<REntry>> fCreatedEntries;
+   std::size_t fDefaultEntryIdx = std::size_t(-1);
+
+   RCollectionNTupleWriter() = default;
+
 public:
-   explicit RCollectionNTupleWriter(std::unique_ptr<REntry> defaultEntry);
    RCollectionNTupleWriter(const RCollectionNTupleWriter&) = delete;
    RCollectionNTupleWriter& operator=(const RCollectionNTupleWriter&) = delete;
    ~RCollectionNTupleWriter() = default;
 
-   void Fill() { Fill(fDefaultEntry.get()); }
-   void Fill(REntry *entry) {
-      for (auto &value : *entry) {
+   void Fill() { Fill(*fCreatedEntries[fDefaultEntryIdx]); }
+   void Fill(REntry &entry)
+   {
+      for (auto &value : entry) {
          value.Append();
       }
       fOffset++;

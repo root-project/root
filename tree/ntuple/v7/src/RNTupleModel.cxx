@@ -200,7 +200,7 @@ void ROOT::Experimental::RNTupleModel::EnsureNotFrozen() const
 
 void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
 {
-   if (!fDefaultEntry)
+   if (IsBare())
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
 }
 
@@ -218,7 +218,9 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
 {
    auto model = CreateBare();
-   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
+   model->fCreatedEntries.emplace_back(std::shared_ptr<REntry>(new REntry()));
+   model->fDefaultEntryIdx = 0;
+
    return model;
 }
 
@@ -231,10 +233,11 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
-   if (fDefaultEntry) {
-      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId));
+   if (fDefaultEntryIdx != kInvalidDefaultEntryIdx) {
+      cloneModel->fCreatedEntries.emplace_back(std::shared_ptr<REntry>(new REntry(cloneModel->fModelId)));
+      cloneModel->fDefaultEntryIdx = 0;
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
-         cloneModel->fDefaultEntry->AddValue(f->GenerateValue());
+         cloneModel->fCreatedEntries[0]->AddValue(f->GenerateValue());
       }
    }
    return cloneModel;
@@ -248,8 +251,8 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
       throw RException(R__FAIL("null field"));
    EnsureValidFieldName(field->GetName());
 
-   if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->GenerateValue());
+   if (!IsBare())
+      GetDefaultEntryPtr()->AddValue(field->GenerateValue());
    fFieldZero->Attach(std::move(field));
 }
 
@@ -291,12 +294,23 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    if (!collectionModel) {
       throw RException(R__FAIL("null collectionModel"));
    }
-   auto collectionNTuple = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
-   auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
-   if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->BindValue(collectionNTuple->GetOffsetPtr()));
+   collectionModel->Freeze();
+
+   auto collectionWriter = std::shared_ptr<RCollectionNTupleWriter>(new RCollectionNTupleWriter());
+
+   for (auto &e : collectionModel->fCreatedEntries) {
+      collectionWriter->fCreatedEntries.emplace_back(std::move(e));
+   }
+   collectionWriter->fDefaultEntryIdx = collectionModel->fDefaultEntryIdx;
+
+   auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel));
+
+   if (!IsBare()) {
+      GetDefaultEntryPtr()->AddValue(field->BindValue(collectionWriter->GetOffsetPtr()));
+   }
+
    fFieldZero->Attach(std::move(field));
-   return collectionNTuple;
+   return collectionWriter;
 }
 
 const ROOT::Experimental::Detail::RFieldBase *
@@ -321,12 +335,12 @@ ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
    return field;
 }
 
-ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
+std::weak_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
    EnsureNotBare();
-   return fDefaultEntry.get();
+   return fCreatedEntries[fDefaultEntryIdx];
 }
 
 std::weak_ptr<ROOT::Experimental::REntry>
@@ -376,8 +390,8 @@ void ROOT::Experimental::RNTupleModel::Freeze()
       return;
 
    fModelId = GetNewModelId();
-   if (fDefaultEntry)
-      fDefaultEntry->fModelId = fModelId;
+   if (!IsBare())
+      GetDefaultEntryPtr()->fModelId = fModelId;
 }
 
 void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
