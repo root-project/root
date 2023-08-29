@@ -957,7 +957,7 @@ bool RooWorkspace::extendSet(const char* name, const char* newContents)
 
 const RooArgSet* RooWorkspace::set(RooStringView name)
 {
-  std::map<string,RooArgSet>::iterator i = _namedSets.find(static_cast<const char*>(name));
+  std::map<string,RooArgSet>::iterator i = _namedSets.find(name.c_str());
   return (i!=_namedSets.end()) ? &(i->second) : nullptr;
 }
 
@@ -1150,13 +1150,13 @@ bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, boo
   auto snapshot = new RooArgSet;
   actualParams.snapshot(*snapshot);
 
-  snapshot->setName(name) ;
+  snapshot->setName(name.c_str()) ;
 
   if (importValues) {
     snapshot->assign(params) ;
   }
 
-  if (std::unique_ptr<RooArgSet> oldSnap{static_cast<RooArgSet*>(_snapshots.FindObject(name))}) {
+  if (std::unique_ptr<RooArgSet> oldSnap{static_cast<RooArgSet*>(_snapshots.FindObject(name.c_str()))}) {
     coutI(ObjectHandling) << "RooWorkspace::saveSnaphot(" << GetName() << ") replacing previous snapshot with name " << name << endl ;
     _snapshots.Remove(oldSnap.get()) ;
   }
@@ -1207,7 +1207,7 @@ const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 
 RooAbsPdf* RooWorkspace::pdf(RooStringView name) const
 {
-  return dynamic_cast<RooAbsPdf*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooAbsPdf*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
@@ -1216,7 +1216,7 @@ RooAbsPdf* RooWorkspace::pdf(RooStringView name) const
 
 RooAbsReal* RooWorkspace::function(RooStringView name) const
 {
-  return dynamic_cast<RooAbsReal*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooAbsReal*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
@@ -1225,7 +1225,7 @@ RooAbsReal* RooWorkspace::function(RooStringView name) const
 
 RooRealVar* RooWorkspace::var(RooStringView name) const
 {
-  return dynamic_cast<RooRealVar*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooRealVar*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
@@ -1234,7 +1234,7 @@ RooRealVar* RooWorkspace::var(RooStringView name) const
 
 RooCategory* RooWorkspace::cat(RooStringView name) const
 {
-  return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
@@ -1243,7 +1243,7 @@ RooCategory* RooWorkspace::cat(RooStringView name) const
 
 RooAbsCategory* RooWorkspace::catfunc(RooStringView name) const
 {
-  return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
@@ -1253,7 +1253,7 @@ RooAbsCategory* RooWorkspace::catfunc(RooStringView name) const
 
 RooAbsArg* RooWorkspace::arg(RooStringView name) const
 {
-  return _allOwnedNodes.find(name) ;
+  return _allOwnedNodes.find(name.c_str()) ;
 }
 
 
@@ -1302,7 +1302,7 @@ RooAbsArg* RooWorkspace::fundArg(RooStringView name) const
 
 RooAbsData* RooWorkspace::data(RooStringView name) const
 {
-  return (RooAbsData*)_dataList.FindObject(name) ;
+  return (RooAbsData*)_dataList.FindObject(name.c_str()) ;
 }
 
 
@@ -1311,7 +1311,7 @@ RooAbsData* RooWorkspace::data(RooStringView name) const
 
 RooAbsData* RooWorkspace::embeddedData(RooStringView name) const
 {
-  return (RooAbsData*)_embeddedDataList.FindObject(name) ;
+  return (RooAbsData*)_embeddedDataList.FindObject(name.c_str()) ;
 }
 
 
@@ -2020,7 +2020,7 @@ TObject* RooWorkspace::obj(RooStringView name) const
 TObject* RooWorkspace::genobj(RooStringView name)  const
 {
   // Find object by name
-  TObject* gobj = _genObjects.FindObject(name) ;
+  TObject* gobj = _genObjects.FindObject(name.c_str()) ;
 
   // Exit here if not found
   if (!gobj) return nullptr;
@@ -2077,7 +2077,7 @@ RooFactoryWSTool& RooWorkspace::factory()
 /// \copydoc RooFactoryWSTool::process(const char*)
 RooAbsArg* RooWorkspace::factory(RooStringView expr)
 {
-  return factory().process(expr) ;
+  return factory().process(expr.c_str()) ;
 }
 
 

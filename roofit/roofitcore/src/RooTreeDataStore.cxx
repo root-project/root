@@ -327,7 +327,7 @@ void RooTreeDataStore::initialize()
 void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
 {
   if (!_tree) {
-    _tree = new TTree(name,title);
+    _tree = new TTree(name.c_str(),title.c_str());
     _tree->ResetBit(kCanDelete);
     _tree->ResetBit(kMustCleanup);
     _tree->SetDirectory(nullptr);
@@ -345,7 +345,7 @@ void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
   }
 
   if (!_cacheTree) {
-    _cacheTree = new TTree(TString{static_cast<const char*>(name)} + "_cacheTree", TString{static_cast<const char*>(title)});
+    _cacheTree = new TTree(TString{name.c_str()} + "_cacheTree", TString{title.c_str()});
     _cacheTree->SetDirectory(nullptr) ;
     gDirectory->RecursiveRemove(_cacheTree) ;
   }

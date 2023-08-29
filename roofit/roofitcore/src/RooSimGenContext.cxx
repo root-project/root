@@ -208,7 +208,7 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
       std::unique_ptr<RooArgSet> sliceObs{slicePdf->getObservables(obs)};
       std::string sliceName = Form("%s_slice_%s", name, nameIdx.first.c_str());
       std::string sliceTitle = Form("%s (index slice %s)", title, nameIdx.first.c_str());
-      dmap[nameIdx.first] = new RooDataSet(sliceName.c_str(),sliceTitle.c_str(),*sliceObs);
+      dmap[nameIdx.first] = new RooDataSet(sliceName,sliceTitle,*sliceObs);
     }
     _protoData = new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;
   }

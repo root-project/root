@@ -116,7 +116,7 @@ public:
    template <class Obj_t, typename... Args_t>
    Obj_t &wsEmplace(RooStringView name, Args_t &&...args)
    {
-      return wsImport(Obj_t(name, name, std::forward<Args_t>(args)...));
+      return wsImport(Obj_t(name.c_str(), name.c_str(), std::forward<Args_t>(args)...));
    }
 
    [[noreturn]] static void error(const char *s);
