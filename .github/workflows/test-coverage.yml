@@ -12,6 +12,10 @@ on:
     paths-ignore:
       - 'doc/**'
       - 'documentation/**'
+  push:
+    branches:
+      - 'master'
+      - 'codecov'
 
   workflow_call:
     inputs:
