@@ -539,8 +539,15 @@ public:
          out << SP*3 << "int " << OpName << "_n = " << fLength << ";\n";
          out << SP*3 << "float " << OpName << "_alpha = 1.;\n";
          out << SP*3 << "int " << OpName << "_inc = 1;\n";
-         out << SP*3 << axpy << OpName << "_n, " << OpName << "_alpha, ";
-         out << Bias << ", " << OpName << "_inc, buf_tensor_" << fNY << ", " << OpName << "_inc);\n";
+
+         if (GPU_BLAS == MKLBLAS) {
+            out << SP*3 << axpy << OpName << "_n, " << OpName << "_alpha, ";
+            out << Bias << ", " << OpName << "_inc, buf_tensor_" << fNY << ", " << OpName << "_inc);\n";
+         }
+         else {
+            out << SP*3 << axpy << OpName << "_n, " << OpName << "_alpha, ";
+            out << "blas::BufferIterator(" << Bias << "), " << OpName << "_inc, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_inc);\n";
+         }
       }
 
       return out.str();

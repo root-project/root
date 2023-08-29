@@ -523,7 +523,7 @@ namespace SOFIE{
       std::string copy_batch;
       std::string scal;
       
-      if (GPU_BLAS == "MKLBLAS") {
+      if (GPU_BLAS == MKLBLAS) {
          gemm = "oneapi::mkl::blas::gemm(q, ";
          copy = "oneapi::mkl::blas::copy(q, ";
          axpy = "oneapi::mkl::blas::axpy(q, ";
@@ -546,7 +546,7 @@ namespace SOFIE{
 
       // include BLAS libraries, if needed
       if (!fNeededBlasRoutines.empty()) {
-         if (GPU_BLAS == "MKLBLAS") {
+         if (GPU_BLAS == MKLBLAS) {
             fGC += "#include \"oneapi/mkl/blas.hpp\"\n";
             fGC += "#include \"mkl.h\"\n";
          }
@@ -745,7 +745,11 @@ namespace SOFIE{
       fGC += SP*2 + "auto custom_gpu_selector = [](const cl::sycl::device& dev) {\n";
       fGC += SP*3 + "if (dev.has(cl::sycl::aspect::gpu)) {\n";
       fGC += SP*4 + "auto vendorName = dev.get_info<cl::sycl::info::device::vendor>();\n";
-      fGC += SP*4 + "if (vendorName.find(\"" + TARGET_GPU + "\") != std::string::npos) {\n";
+      switch(TARGET_GPU) {
+         case Intel: {fGC += SP*4 + "if (vendorName.find(\"Intel\") != std::string::npos) {\n"; break;}
+         case NVIDIA: {fGC += SP*4 + "if (vendorName.find(\"NVIDIA\") != std::string::npos) {\n"; break;}
+         case AMD: {fGC += SP*4 + "if (vendorName.find(\"AMD\") != std::string::npos) {\n"; break;}
+      }
       fGC += SP*5 + "return 1;\n";
       fGC += SP*4 + "}\n";
       fGC += SP*3 + "}\n";
@@ -759,7 +763,7 @@ namespace SOFIE{
 
       fGC += SP*3 + "const sycl::property_list props = {sycl::property::buffer::use_host_ptr()};\n";
 
-      if (GPU_BLAS == "portBLAS") {
+      if (GPU_BLAS == portBLAS) {
          fGC += SP*3 + "blas::SB_Handle sb_handle(q);\n";
       }
      

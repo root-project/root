@@ -55,11 +55,11 @@ target_include_directories(ROOTTMVASofie PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
 if (NOT TARGET_GPU)
-  set(TARGET_GPU "Intel")
+  set(TARGET_GPU Intel)
 endif()
 
 if (NOT GPU_BLAS)
-  set(GPU_BLAS "MKLBLAS")
+  set(GPU_BLAS MKLBLAS)
 endif()
 
 if (tmva-sofie AND sofie-sycl)
@@ -82,8 +82,9 @@ if (tmva-sofie AND sofie-sycl)
 endif()
 set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
-target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU="${TARGET_GPU}")
-target_compile_definitions(ROOTTMVASofie PUBLIC GPU_BLAS="${GPU_BLAS}")
+
+target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=${TARGET_GPU})
+target_compile_definitions(ROOTTMVASofie PUBLIC GPU_BLAS=${GPU_BLAS})
 
 # tests requires protobuf
 if (tmva-sofie)

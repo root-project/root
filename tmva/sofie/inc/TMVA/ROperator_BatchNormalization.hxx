@@ -237,13 +237,26 @@ public:
       out << SP*3 << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
       out << SP*3 << "constexpr int "<<OpName<< "_incx = 1;\n";
       out << SP*3 << "constexpr int "<<OpName<< "_incy = 1;\n";
-      out << SP*3 << copy << OpName << "_N, " << "buf_tensor_" << fNX;
-      out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
-      
+
+      if (GPU_BLAS == MKLBLAS) {
+         out << SP*3 << copy << OpName << "_N, " << "buf_tensor_" << fNX;
+         out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
+      }
+      else {
+         out << SP*3 << copy << OpName << "_N, " << "blas::BufferIterator(buf_tensor_" << fNX;
+         out << "), " << OpName << "_incx, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_incy);\n\n";
+      }
+
       // blas axpy (Y = -Bmean + Y = X - Bmean)
       out << SP*3 << "float "<<OpName<< "_alpha = -1;\n"; 
-      out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, buf_tensor_" << fNMean;
-      out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
+      if (GPU_BLAS == MKLBLAS) {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, buf_tensor_" << fNMean;
+         out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
+      }
+      else {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, blas::BufferIterator(buf_tensor_" << fNMean;
+         out << "), " << OpName << "_incx, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_incy);\n\n";
+      }
 
       out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
       out << SP*4 << "auto acc_tensor_" << fNVar << " = cl::sycl::accessor{buf_tensor_" << fNVar;
@@ -261,9 +274,16 @@ public:
 
       // blas axpy Y = Bbias + Y = (X - Bmean) * Scale * Var + Bbias
       out << SP*3 << OpName << "_alpha = 1;\n";
-      out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, ";
-      out << "buf_tensor_" << fNB << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
-   
+
+      if (GPU_BLAS == MKLBLAS) {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, ";
+         out << "buf_tensor_" << fNB << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
+      }
+      else {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, ";
+         out << "blas::BufferIterator(buf_tensor_" << fNB << "), " << OpName << "_incx, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_incy);\n\n";
+      }
+      
       return out.str();
    }
 

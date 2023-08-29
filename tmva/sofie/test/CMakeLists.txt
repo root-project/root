@@ -151,7 +151,7 @@ else()
     COMPILE_OPTIONS
       -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR}
     LINK_OPTIONS
-      -fsycl PORTBLAS::PORTBLAS
+      -fsycl
   )
 endif()
 add_sycl_to_target(TARGET TestCustomGPUModelsFromONNX SOURCES TestCustomGPUModelsFromONNX.cxx)
