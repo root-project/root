@@ -267,7 +267,7 @@ namespace SOFIE{
                }
             }
             if (fType == "float"){
-               out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, ";
+               out << SP*3 << gemm << OpName << "_transB, " << OpName << "_transA, ";
                out << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha, ";
                out << "buf_tensor_" << fNB << ", " << OpName << "_ldb, buf_tensor_" << fNA << ", " << OpName;
                out << "_lda, " << OpName << "_beta, buf_tensor_" << fNY << ", " << OpName << "_n);\n";

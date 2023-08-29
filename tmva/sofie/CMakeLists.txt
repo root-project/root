@@ -64,7 +64,7 @@ endif()
 
 if (tmva-sofie AND sofie-sycl)
   set(TARGET_GPUS "Intel;NVIDIA;AMD")
-  set(BLAS_GPU_IMPLEMENTATIONS "MKLBLAS; portBLAS")
+  set(BLAS_GPU_IMPLEMENTATIONS "MKLBLAS;portBLAS")
   set(MKL_TARGETS "Intel")
 
   if (NOT ${TARGET_GPU} IN_LIST TARGET_GPUS)

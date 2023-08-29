@@ -128,19 +128,35 @@ endif()
 
 # Creating a Google Test
 if (sofie-sycl AND testing)  # we need oneapi math kernel library to compile the models
-find_package(MKL REQUIRED)
-ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
-  LIBRARIES
-    ROOTTMVASofie
-  INCLUDE_DIRS
-    ${CMAKE_CURRENT_BINARY_DIR}
-  COMPILE_OPTIONS
-    -fsycl -DMKL_ILP64  -I"${MKLROOT}/include"
-  LINK_OPTIONS
-    -fsycl  -L${MKLROOT}/lib/intel64 -lmkl_sycl -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lsycl -lpthread -lm -ldl
-)
+
+if (GPU_BLAS STREQUAL "MKLBLAS")
+  find_package(MKL REQUIRED)
+  ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
+    LIBRARIES
+      ROOTTMVASofie
+    INCLUDE_DIRS
+      ${CMAKE_CURRENT_BINARY_DIR}
+    COMPILE_OPTIONS
+      -fsycl -DMKL_ILP64  -I${MKLROOT}/include
+    LINK_OPTIONS
+      -fsycl  -L${MKLROOT}/lib/intel64 -lmkl_sycl -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lsycl -lpthread -lm -ldl
+  )
+else()
+  find_package(PORTBLAS REQUIRED)
+  ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
+    LIBRARIES
+      ROOTTMVASofie
+    INCLUDE_DIRS
+      ${CMAKE_CURRENT_BINARY_DIR}
+    COMPILE_OPTIONS
+      -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR}
+    LINK_OPTIONS
+      -fsycl PORTBLAS::PORTBLAS
+  )
+endif()
 add_sycl_to_target(TARGET TestCustomGPUModelsFromONNX SOURCES TestCustomGPUModelsFromONNX.cxx)
 add_dependencies(TestCustomGPUModelsFromONNX SofieCompileGPUModels_ONNX)
+
 endif()
 
 #For testing serialisation of RModel object

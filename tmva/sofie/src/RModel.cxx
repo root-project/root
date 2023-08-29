@@ -534,7 +534,7 @@ namespace SOFIE{
          scal = "oneapi::mkl::blas::scal(q, ";
       }
       else {
-         gemm = "blas::_gemv(sb_handle, ";
+         gemm = "blas::_gemm(sb_handle, ";
          copy = "blas::_copy(sb_handle, ";
          axpy = "blas::_axpy(sb_handle, ";
          transpose = "char ";
@@ -551,7 +551,7 @@ namespace SOFIE{
             fGC += "#include \"mkl.h\"\n";
          }
          else {
-            fGC += "#include \"portblas.hpp\"";
+            fGC += "#include \"portblas.hpp\"\n";
          }
       }
 
@@ -742,10 +742,10 @@ namespace SOFIE{
       fGC += SP + "// Intel GPU Device Selector\n";
       
       // Lambda device selector
-      fGC += SP*2 + "auto intel_gpu_selector = [](const cl::sycl::device& dev) {\n";
+      fGC += SP*2 + "auto custom_gpu_selector = [](const cl::sycl::device& dev) {\n";
       fGC += SP*3 + "if (dev.has(cl::sycl::aspect::gpu)) {\n";
       fGC += SP*4 + "auto vendorName = dev.get_info<cl::sycl::info::device::vendor>();\n";
-      fGC += SP*4 + "if (vendorName.find(\"Intel\") != std::string::npos) {\n";
+      fGC += SP*4 + "if (vendorName.find(\"" + TARGET_GPU + "\") != std::string::npos) {\n";
       fGC += SP*5 + "return 1;\n";
       fGC += SP*4 + "}\n";
       fGC += SP*3 + "}\n";
@@ -753,11 +753,16 @@ namespace SOFIE{
 
       // Create queue
       fGC += SP + "// Create Queue\n";
-      fGC += SP*2 + "auto q = cl::sycl::queue{intel_gpu_selector, [=](cl::sycl::exception_list eL){\n";
+      fGC += SP*2 + "auto q = cl::sycl::queue{custom_gpu_selector, [=](cl::sycl::exception_list eL){\n";
       //fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}, cl::sycl::property::queue::in_order{}};\n";
       fGC += SP*2 + "for (auto e:eL) {std::rethrow_exception(e);}}};\n";
 
       fGC += SP*3 + "const sycl::property_list props = {sycl::property::buffer::use_host_ptr()};\n";
+
+      if (GPU_BLAS == "portBLAS") {
+         fGC += SP*3 + "blas::SB_Handle sb_handle(q);\n";
+      }
+     
       // Buffer Creation
       fGC += SP*2 + "{\n"; // start of buffer creation
 
