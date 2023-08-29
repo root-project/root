@@ -1516,6 +1516,7 @@ void TPDF::NewPage()
          PrintStr("@");
       }
       PrintStr(">>@");
+      EndObject();
    }
 
    // Start a new page
