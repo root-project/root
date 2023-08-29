@@ -138,14 +138,15 @@ protected:
    /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
-public:
+public:   
    enum EFailureType { kNone, kBitFlip, kShortRead };
    
    struct RFailureInjectionContext{
-      std::uint32_t fRangeBegin {0};
-      std::uint32_t fRangeEnd {0};
-      EFailureType fFailureType = kNone;
-      bool fTriggered = false;
+      EFailureType fFailureType {kNone};
+      double fOccurrenceProbability {0};
+      std::uint64_t fRangeBegin {0};
+      std::uint64_t fRangeEnd {0};
+      std::uint64_t fBitIndex {0};
       std::random_device fSeed;
       std::mt19937 fGenerator {fSeed()};
    };
@@ -177,7 +178,7 @@ public:
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
   
 #ifdef R__TESTING_MODE
-   void TriggerBitFlip(void* buffer, size_t total_bytes);
+   void TriggerBitFlip(void* buffer, size_t total_bytes,std::uint64_t offset);
    void TriggerShortRead(void* buffer, size_t total_bytes);
    void PossiblyInjectFailure(void* buffer, size_t total_bytes, std::uint64_t offset);
 #endif  
