@@ -322,6 +322,8 @@ void TNetXNGFile::Close(const Option_t */*option*/)
 {
    TFile::Close();
 
+   if (!fFile) return;
+
    XrdCl::XRootDStatus status = fFile->Close();
    if (!status.IsOK()) {
       Error("Close", "%s", status.ToStr().c_str());
