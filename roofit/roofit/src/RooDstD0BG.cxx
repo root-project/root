@@ -32,7 +32,7 @@ D*-D0 mass difference distributions. It computes
 
 #include "RooDstD0BG.h"
 #include "RooRealVar.h"
-#include "RooIntegrator1D.h"
+#include "RooRombergIntegrator.h"
 #include "RooAbsFunc.h"
 #include "RooBatchCompute.h"
 
@@ -126,7 +126,7 @@ double RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
    // Do numerical integral
    RooArgSet vset(dm.arg(),"vset");
    std::unique_ptr<RooAbsFunc> func{bindVars(vset)};
-   RooIntegrator1D integrator(*func,min,max);
+   RooRombergIntegrator integrator(*func,min,max);
    return integrator.integral();
       }
     }

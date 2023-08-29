@@ -136,7 +136,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooHist.h
     RooHistPdf.h
     RooImproperIntegrator1D.h
-    RooIntegrator1D.h
+    RooRombergIntegrator.h
     RooInvTransform.h
     RooLinearCombination.h
     RooLinearVar.h
@@ -351,7 +351,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooHistFunc.cxx
     src/RooHistPdf.cxx
     src/RooImproperIntegrator1D.cxx
-    src/RooIntegrator1D.cxx
+    src/RooRombergIntegrator.cxx
     src/RooInvTransform.cxx
     src/RooLinearCombination.cxx
     src/RooLinearVar.cxx

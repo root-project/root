@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.h,v 1.21 2007/05/11 09:11:30 verkerke Exp $
+ *    File: $Id: RooRombergIntegrator.h,v 1.21 2007/05/11 09:11:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,18 +33,19 @@ std::pair<double, int> integrate1d(std::function<double(double)> func, bool doTr
 } // namespace Detail
 } // namespace RooFit
 
-class RooIntegrator1D : public RooAbsIntegrator {
+class RooRombergIntegrator : public RooAbsIntegrator {
 public:
    // Constructors, assignment etc
    enum SummationRule { Trapezoid, Midpoint };
 
-   RooIntegrator1D(const RooAbsFunc &function, SummationRule rule = Trapezoid, int maxSteps = 0, double eps = 0);
-   RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, SummationRule rule = Trapezoid,
-                   int maxSteps = 0, double eps = 0);
+   RooRombergIntegrator(const RooAbsFunc &function, SummationRule rule = Trapezoid, int maxSteps = 0, double eps = 0);
+   RooRombergIntegrator(const RooAbsFunc &function, double xmin, double xmax, SummationRule rule = Trapezoid,
+                        int maxSteps = 0, double eps = 0);
 
-   RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim = 1,
-                   bool doSegmentation = false);
-   RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config, int nDim = 1);
+   RooRombergIntegrator(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim = 1,
+                        bool doSegmentation = false);
+   RooRombergIntegrator(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config,
+                        int nDim = 1);
 
    bool checkLimits() const override;
    double integral(const double *yvec = nullptr) override;
@@ -83,7 +84,7 @@ protected:
    std::vector<double> _wksp; ///<! Integrator workspace
    std::vector<double> _x;    //! do not persist
 
-   ClassDefOverride(RooIntegrator1D, 0) // 1-dimensional numerical integration engine
+   ClassDefOverride(RooRombergIntegrator, 0) // 1-dimensional numerical integration engine
 };
 
 #endif
