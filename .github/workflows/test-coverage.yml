@@ -99,10 +99,24 @@ jobs:
           echo $OVERRIDE >> "$FILE"
           cat "$FILE" || true
 
-      - name: Pull Request Build
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+      # - name: Pull Request Build
+      #   if: github.event_name == 'pull_request'
+      #   env:
+      #     GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+      #   run: ".github/workflows/root-ci-config/build_root.py
+      #               --buildtype      Debug
+      #               --platform       fedora38
+      #               --incremental    false
+      #               --coverage       true
+      #               --base_ref       ${{ github.base_ref }}
+      #               --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+      #               --repository     ${{ github.server_url }}/${{ github.repository }}
+      #         "
+
+      - name: Push Build
+        # if: github.event_name == 'pull_request'
+        # env:
+          # GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
                     --platform       fedora38
