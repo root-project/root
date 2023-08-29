@@ -15,12 +15,11 @@
  *****************************************************************************/
 
 /**
-\file RooIntegrator1D.cxx
-\class RooIntegrator1D
+\file RooRombergIntegrator.cxx
+\class RooRombergIntegrator
 \ingroup Roofitcore
 
-RooIntegrator1D implements an adaptive one-dimensional
-numerical integration algorithm.
+RooRombergIntegrator implements an adaptive numerical integration algorithm.
 
 It uses Romberg's method with trapezoids or midpoints.
 The integrand is approximated by \f$ 1, 2, 4, 8, \ldots, 2^n \f$ trapezoids, and
@@ -36,7 +35,7 @@ desired precision is reached.
 #include "Riostream.h"
 
 #include "TClass.h"
-#include "RooIntegrator1D.h"
+#include "RooRombergIntegrator.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
@@ -142,7 +141,7 @@ std::pair<double, double> extrapolate(int n, double const *h, double const *s, d
          double w = c[i + 1] - d[i];
          double den = ho - hp;
          if (den == 0.0) {
-            throw std::runtime_error("RooIntegrator1D::extrapolate: internal error");
+            throw std::runtime_error("RooRombergIntegrator::extrapolate: internal error");
          }
          den = w / den;
          d[i] = hp * den;
@@ -231,18 +230,18 @@ std::pair<double, int> integrate1d(std::function<double(double)> func, bool doTr
 } // namespace Detail
 } // namespace RooFit
 
-ClassImp(RooIntegrator1D);
+ClassImp(RooRombergIntegrator);
 
 // Register this class with RooNumIntConfig
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Register RooIntegrator1D, its parameters and capabilities with RooNumIntFactory.
+/// Register integrator plugins, their parameters and capabilities with RooNumIntFactory.
 
-void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
+void RooRombergIntegrator::registerIntegrator(RooNumIntFactory &fact)
 {
    RooCategory sumRule("sumRule", "Summation Rule");
-   sumRule.defineType("Trapezoid", RooIntegrator1D::Trapezoid);
-   sumRule.defineType("Midpoint", RooIntegrator1D::Midpoint);
+   sumRule.defineType("Trapezoid", RooRombergIntegrator::Trapezoid);
+   sumRule.defineType("Midpoint", RooRombergIntegrator::Midpoint);
    sumRule.setLabel("Trapezoid");
    RooCategory extrap("extrapolation", "Extrapolation procedure");
    extrap.defineType("None", 0);
@@ -256,7 +255,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
    std::string name = "RooIntegrator1D";
 
    auto creator = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
-      return std::make_unique<RooIntegrator1D>(function, config, 1, /*doSegmentation=*/false);
+      return std::make_unique<RooRombergIntegrator>(function, config, 1, /*doSegmentation=*/false);
    };
 
    fact.registerPlugin(name, creator, {sumRule, extrap, maxSteps, minSteps, fixSteps},
@@ -268,7 +267,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
    RooNumIntConfig::defaultConfig().method1D().setLabel(name);
 
    auto creator2d = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
-      return std::make_unique<RooIntegrator1D>(function, config, 2, /*doSegmentation=*/false);
+      return std::make_unique<RooRombergIntegrator>(function, config, 2, /*doSegmentation=*/false);
    };
    std::string name2d = "RooIntegrator2D";
    fact.registerPlugin(name2d, creator2d, {},
@@ -280,7 +279,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
    RooNumIntConfig::defaultConfig().method2D().setLabel(name2d);
 
    auto creatorSeg = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
-      return std::make_unique<RooIntegrator1D>(function, config, 1, /*doSegmentation=*/true);
+      return std::make_unique<RooRombergIntegrator>(function, config, 1, /*doSegmentation=*/true);
    };
 
    fact.registerPlugin("RooSegmentedIntegrator1D", creatorSeg, {numSeg},
@@ -291,7 +290,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
                        /*depName=*/"RooIntegrator1D");
 
    auto creatorSeg2d = [](const RooAbsFunc &function, const RooNumIntConfig &config) {
-      return std::make_unique<RooIntegrator1D>(function, config, 2, /*doSegmentation=*/true);
+      return std::make_unique<RooRombergIntegrator>(function, config, 2, /*doSegmentation=*/true);
    };
 
    fact.registerPlugin("RooSegmentedIntegrator2D", creatorSeg2d, {},
@@ -307,7 +306,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
 /// rule, maximum number of steps and conversion tolerance. The integration
 /// limits are taken from the function binding.
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, SummationRule rule, int maxSteps, double eps)
+RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, SummationRule rule, int maxSteps, double eps)
    : RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsAbs(eps), _epsRel(eps)
 {
    _useIntegrandLimits = true;
@@ -320,8 +319,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, SummationRule rule,
 /// conversion tolerance. The integration limits are taken from the
 /// function binding.
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, SummationRule rule, int maxSteps,
-                                 double eps)
+RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, double xmin, double xmax, SummationRule rule,
+                                           int maxSteps, double eps)
    : RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsAbs(eps), _epsRel(eps)
 {
    _useIntegrandLimits = false;
@@ -335,15 +334,15 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double
 /// configuration object. The integration limits are taken from the
 /// function binding
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim,
-                                 bool doSegmentation)
+RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, const RooNumIntConfig &config, int nDim,
+                                           bool doSegmentation)
    : RooAbsIntegrator(function, config.printEvalCounter()),
      _nDim{nDim},
      _epsAbs(config.epsAbs()),
      _epsRel(config.epsRel())
 {
    // Extract parameters from config object
-   const RooArgSet &configSet = config.getConfigSection(ClassName());
+   const RooArgSet &configSet = config.getConfigSection("RooIntegrator1D");
    _rule = (SummationRule)configSet.getCatIndex("sumRule", Trapezoid);
    _maxSteps = (int)configSet.getRealValue("maxSteps", 20);
    _minStepsZero = (int)configSet.getRealValue("minSteps", 999);
@@ -356,7 +355,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConf
    }
 
    if (_fixSteps > _maxSteps) {
-      oocoutE(nullptr, Integration) << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps"
+      oocoutE(nullptr, Integration) << "RooRombergIntegrator::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps"
                                     << std::endl;
       _fixSteps = _maxSteps;
    }
@@ -369,15 +368,15 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, const RooNumIntConf
 /// Construct integrator on given function binding, using specified
 /// configuration object and integration range
 
-RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double xmax, const RooNumIntConfig &config,
-                                 int nDim)
+RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, double xmin, double xmax,
+                                           const RooNumIntConfig &config, int nDim)
    : RooAbsIntegrator(function, config.printEvalCounter()),
      _nDim{nDim},
      _epsAbs(config.epsAbs()),
      _epsRel(config.epsRel())
 {
    // Extract parameters from config object
-   const RooArgSet &configSet = config.getConfigSection(ClassName());
+   const RooArgSet &configSet = config.getConfigSection("RooIntegrator1D");
    _rule = (SummationRule)configSet.getCatIndex("sumRule", Trapezoid);
    _maxSteps = (int)configSet.getRealValue("maxSteps", 20);
    _minStepsZero = (int)configSet.getRealValue("minSteps", 999);
@@ -393,7 +392,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc &function, double xmin, double
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the integrator
 
-bool RooIntegrator1D::initialize()
+bool RooRombergIntegrator::initialize()
 {
    // apply defaults if necessary
    if (_maxSteps <= 0) {
@@ -407,7 +406,8 @@ bool RooIntegrator1D::initialize()
 
    // check that the integrand is a valid function
    if (!isValid()) {
-      oocoutE(nullptr, Integration) << "RooIntegrator1D::initialize: cannot integrate invalid function" << std::endl;
+      oocoutE(nullptr, Integration) << "RooRombergIntegrator::initialize: cannot integrate invalid function"
+                                    << std::endl;
       return false;
    }
 
@@ -425,10 +425,11 @@ bool RooIntegrator1D::initialize()
 /// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-bool RooIntegrator1D::setLimits(double *xmin, double *xmax)
+bool RooRombergIntegrator::setLimits(double *xmin, double *xmax)
 {
    if (_useIntegrandLimits) {
-      oocoutE(nullptr, Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << std::endl;
+      oocoutE(nullptr, Integration) << "RooRombergIntegrator::setLimits: cannot override integrand's limits"
+                                    << std::endl;
       return false;
    }
    _xmin.resize(_nDim);
@@ -444,7 +445,7 @@ bool RooIntegrator1D::setLimits(double *xmin, double *xmax)
 /// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-bool RooIntegrator1D::checkLimits() const
+bool RooRombergIntegrator::checkLimits() const
 {
    if (_useIntegrandLimits) {
       assert(nullptr != integrand() && integrand()->isValid());
@@ -460,7 +461,7 @@ bool RooIntegrator1D::checkLimits() const
       const double xmax = _xmax[iDim];
       const double range = xmax - xmin;
       if (range < 0.) {
-         oocoutE(nullptr, Integration) << "RooIntegrator1D::checkLimits: bad range with min > max (_xmin[" << iDim
+         oocoutE(nullptr, Integration) << "RooRombergIntegrator::checkLimits: bad range with min > max (_xmin[" << iDim
                                        << "] = " << xmin << " _xmax[" << iDim << "] = " << xmax << ")" << std::endl;
          return false;
       }
@@ -471,7 +472,7 @@ bool RooIntegrator1D::checkLimits() const
    return true;
 }
 
-double RooIntegrator1D::integral(const double *yvec)
+double RooRombergIntegrator::integral(const double *yvec)
 {
    // Copy yvec to xvec if provided
    if (yvec) {
@@ -486,7 +487,7 @@ double RooIntegrator1D::integral(const double *yvec)
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate numeric integral at given set of function binding parameters.
 
-double RooIntegrator1D::integral(int iDim, int nSeg, std::span<double> wksp)
+double RooRombergIntegrator::integral(int iDim, int nSeg, std::span<double> wksp)
 {
    assert(isValid());
 
@@ -537,7 +538,7 @@ double RooIntegrator1D::integral(int iDim, int nSeg, std::span<double> wksp)
 
    if (steps == _maxSteps) {
 
-      oocoutW(nullptr, Integration) << "RooIntegrator1D::integral: integral of " << _function->getName()
+      oocoutW(nullptr, Integration) << "RooRombergIntegrator::integral: integral of " << _function->getName()
                                     << " over range (" << xmin << "," << xmax << ") did not converge after "
                                     << _maxSteps << " steps" << std::endl;
       for (int j = 1; j <= _maxSteps; ++j) {

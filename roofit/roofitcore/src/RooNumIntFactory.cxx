@@ -38,7 +38,7 @@ the preference of the caller as encoded in the configuration object.
 #include "RooNumIntConfig.h"
 #include "RooNumber.h"
 
-#include "RooIntegrator1D.h"
+#include "RooRombergIntegrator.h"
 #include "RooBinIntegrator.h"
 #include "RooImproperIntegrator1D.h"
 #include "RooMCIntegrator.h"
@@ -57,7 +57,7 @@ ClassImp(RooNumIntFactory)
 /// their static registration functions
 void RooNumIntFactory::init() {
   RooBinIntegrator::registerIntegrator(*this) ;
-  RooIntegrator1D::registerIntegrator(*this) ;
+  RooRombergIntegrator::registerIntegrator(*this) ;
   RooImproperIntegrator1D::registerIntegrator(*this) ;
   RooMCIntegrator::registerIntegrator(*this) ;
   // GSL integrator is now in RooFitMore and it register itself

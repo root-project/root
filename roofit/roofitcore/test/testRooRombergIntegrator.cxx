@@ -1,10 +1,11 @@
-// Tests for the RooIntegrator1D.
-// Author: Stephan Hageboeck, CERN  05/2020
+// Tests for the RooRombergIntegrator.
+// Authors: Stephan Hageboeck, CERN  05/2020
+//          Jonas Rembser, CERN  08/2023
 
 #include "RooRealBinding.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
-#include "RooIntegrator1D.h"
+#include "RooRombergIntegrator.h"
 #include "RooNumIntConfig.h"
 #include "RooHelpers.h"
 #include <Math/ProbFuncMathCore.h>
@@ -18,7 +19,7 @@
 #include <numeric>
 #include <algorithm>
 
-TEST(Roo1DIntegrator, RunFormulaVar_Trapezoid)
+TEST(RooIntegrator1D, RunFormulaVar_Trapezoid)
 {
 
    RooRealVar x("x", "x", -100, 100);
@@ -37,7 +38,7 @@ TEST(Roo1DIntegrator, RunFormulaVar_Trapezoid)
 
    // Test the recursion anchors of the Romberg integration
    {
-      RooIntegrator1D oneStep(binding, RooIntegrator1D::Trapezoid, 1, 1.E-15);
+      RooRombergIntegrator oneStep(binding, RooRombergIntegrator::Trapezoid, 1, 1.E-15);
       EXPECT_DOUBLE_EQ(oneStep.integral(yvals.data()), 0.5 * 200. * (2 * 0.1 + 2. * 0.3 * 10000.));
       x = -100.;
       const double left = formula.getVal();
@@ -46,7 +47,7 @@ TEST(Roo1DIntegrator, RunFormulaVar_Trapezoid)
       // Run integral again, also to make sure that setting x has no effect:
       EXPECT_DOUBLE_EQ(oneStep.integral(yvals.data()), 0.5 * 200. * (left + right));
 
-      RooIntegrator1D twoStep(binding, RooIntegrator1D::Trapezoid, 2, 1.E-15);
+      RooRombergIntegrator twoStep(binding, RooRombergIntegrator::Trapezoid, 2, 1.E-15);
       x = 0.;
       const double middle = formula.getVal();
       EXPECT_DOUBLE_EQ(twoStep.integral(yvals.data()), 0.25 * 200. * (left + right) + 0.5 * 200. * middle);
@@ -56,7 +57,7 @@ TEST(Roo1DIntegrator, RunFormulaVar_Trapezoid)
    {
       constexpr unsigned int nSteps = 25;
       constexpr double relEps = 1.E-50;
-      RooIntegrator1D integrator(binding, RooIntegrator1D::Trapezoid, nSteps, relEps);
+      RooRombergIntegrator integrator(binding, RooRombergIntegrator::Trapezoid, nSteps, relEps);
       double inputs[] = {1., 3.123};
       double target = solution(inputs[0], inputs[1]);
       EXPECT_LT(std::abs(integrator.integral(inputs) - target) / target, 1.E-14);
@@ -73,7 +74,7 @@ TEST(Roo1DIntegrator, RunFormulaVar_Trapezoid)
    }
 }
 
-TEST(Roo1DIntegrator, RunQuarticFormulaVar)
+TEST(RooIntegrator1D, RunQuarticFormulaVar)
 {
    constexpr unsigned int nSteps = 25;
    constexpr double relEps = 1.E-16;
@@ -91,13 +92,13 @@ TEST(Roo1DIntegrator, RunQuarticFormulaVar)
       return indefInt(x.getMax()) - indefInt(x.getMin());
    };
    RooRealBinding binding(formula, {x});
-   RooIntegrator1D integrator(binding, RooIntegrator1D::Trapezoid, nSteps, relEps);
+   RooRombergIntegrator integrator(binding, RooRombergIntegrator::Trapezoid, nSteps, relEps);
 
    double target = solution(0.2, 0.3, 0.4, 0.5);
    EXPECT_LT(std::abs(integrator.integral() - target) / target, 1.E-13);
 }
 
-/// Run numeric integrations using RooIntegrator1D and ROOT's adaptive integrator. Ensure that
+/// Run numeric integrations using RooRombergIntegrator and ROOT's adaptive integrator. Ensure that
 /// they reach the requested precision.
 void testConvergenceSettings(const RooFormulaVar &formula, const RooArgSet &observables,
                              const RooArgSet &funcParameters,
@@ -117,7 +118,7 @@ void testConvergenceSettings(const RooFormulaVar &formula, const RooArgSet &obse
       RooArgSet variables(observables);
       variables.add(funcParameters);
       RooRealBinding binding(formula, variables);
-      RooIntegrator1D integrator(binding, RooIntegrator1D::Trapezoid, nSteps, relEps);
+      RooRombergIntegrator integrator(binding, RooRombergIntegrator::Trapezoid, nSteps, relEps);
 
       std::vector<double> errors;
       std::vector<double> errorsRootInt;
@@ -189,7 +190,7 @@ void testConvergenceSettings(const RooFormulaVar &formula, const RooArgSet &obse
       // actual precisiosn parameter, so we give it some headroom.
       const double mult = 100.0;
 
-      EXPECT_LT(mean(errors), mult * relEps) << "RooIntegrator1D should reach target precision.";
+      EXPECT_LT(mean(errors), mult * relEps) << "RooRombergIntegrator should reach target precision.";
       EXPECT_LT(mean(errorsRootInt), mult * relEps) << "ROOT integrator should reach target precision.";
 
       EXPECT_LT(q95_99_int1D.first, mult * relEps) << "95% quantile of errors exceeds relEpsilon";
@@ -202,7 +203,7 @@ void testConvergenceSettings(const RooFormulaVar &formula, const RooArgSet &obse
 
 /// Disabled because the integrator doesn't reach the asked precision. If this
 /// behavior gets changed, this can be enabled.
-TEST(Roo1DIntegrator, ConvergenceSettings_log)
+TEST(RooIntegrator1D, ConvergenceSettings_log)
 {
    RooRealVar x("x", "x", 0.1, 50);
    RooRealVar a("a", "a", 0.2, -100, 1.E5);
@@ -220,7 +221,7 @@ TEST(Roo1DIntegrator, ConvergenceSettings_log)
       "log(a*x)");
 }
 
-TEST(Roo1DIntegrator, ConvergenceSettings_pol4)
+TEST(RooIntegrator1D, ConvergenceSettings_pol4)
 {
    RooRealVar x2("x", "x", -10, 10);
    RooRealVar a2("a", "a", 0.2, -1., 1);
@@ -248,7 +249,7 @@ TEST(Roo1DIntegrator, ConvergenceSettings_pol4)
 
 /// Disabled because the integrator doesn't reach the asked precision. If this
 /// behavior gets changed, this can be enabled.
-TEST(Roo1DIntegrator, ConvergenceSettings_breitWig)
+TEST(RooIntegrator1D, ConvergenceSettings_breitWig)
 {
    RooRealVar x3("x", "x", 0., 100.);
    RooRealVar a3("a", "a", 10., 100.);
@@ -267,7 +268,7 @@ TEST(Roo1DIntegrator, ConvergenceSettings_breitWig)
       "Breit-Wigner distribution");
 }
 
-TEST(Roo1DIntegrator, ConvergenceSettings_Erf)
+TEST(RooIntegrator1D, ConvergenceSettings_Erf)
 {
    RooRealVar x("x", "x", -10., 10.);
    RooRealVar m("m", "m", -5., 5.);
@@ -287,7 +288,7 @@ TEST(Roo1DIntegrator, ConvergenceSettings_Erf)
       "Gaussian distribution");
 }
 
-TEST(Roo1DIntegrator, RunErf_NStep)
+TEST(RooIntegrator1D, RunErf_NStep)
 {
    RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::Integration);
    constexpr double sigma = 1.3;
@@ -304,7 +305,7 @@ TEST(Roo1DIntegrator, RunErf_NStep)
 
       double targetError = 0.;
       for (unsigned int nSteps = 4; nSteps < 24; ++nSteps) {
-         RooIntegrator1D integrator(binding, RooIntegrator1D::Trapezoid, nSteps, 1.E-17);
+         RooRombergIntegrator integrator(binding, RooRombergIntegrator::Trapezoid, nSteps, 1.E-17);
          const double integral = integrator.integral();
 
          const double error = std::abs(
@@ -332,7 +333,7 @@ TEST(Roo1DIntegrator, RunErf_NStep)
    }
 }
 
-TEST(Roo1DIntegrator, RunErf_Midpoint)
+TEST(RooIntegrator1D, RunErf_Midpoint)
 {
    const double min = 0, max = 1;
    RooRealVar theX("theX", "x", min, max);
@@ -343,7 +344,7 @@ TEST(Roo1DIntegrator, RunErf_Midpoint)
    RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::Integration);
 
    for (unsigned int nSteps = 4; nSteps < 20; ++nSteps) {
-      RooIntegrator1D integrator(binding, RooIntegrator1D::Midpoint, nSteps, 1.E-16);
+      RooRombergIntegrator integrator(binding, RooRombergIntegrator::Midpoint, nSteps, 1.E-16);
       const double integral = integrator.integral();
       const double error =
          std::abs(integral - (ROOT::Math::gaussian_cdf(max, 1, 0) - ROOT::Math::gaussian_cdf(min, 1, 0)));
@@ -361,5 +362,69 @@ TEST(Roo1DIntegrator, RunErf_Midpoint)
       if (nSteps > 15) {
          EXPECT_LT(error / integral, 1.E-6) << "For step " << nSteps << " with integral=" << integral;
       }
+   }
+}
+
+double testIntegrationMethod(int ndim, std::string const &label)
+{
+   constexpr bool verbose = false;
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar y{"y", "y", 0, 10};
+
+   std::string funcName = std::string("func") + label;
+   RooFormulaVar func{funcName.c_str(), "x*std::sqrt(x) + y*std::sqrt(y) + x*y", {x, y}};
+
+   if (verbose) {
+      std::cout << label << ":" << std::endl;
+   }
+
+   RooNumIntConfig cfg(*func.getIntegratorConfig());
+
+   if (ndim == 2) {
+      cfg.method2D().setLabel(label.c_str());
+   }
+   if (ndim == 1) {
+      cfg.method1D().setLabel(label.c_str());
+   }
+
+   RooArgSet iset{x};
+   if (ndim > 1) {
+      iset.add(y);
+   }
+   std::unique_ptr<RooAbsReal> integ{func.createIntegral(iset, RooFit::NumIntConfig(cfg))};
+   double val = integ->getVal();
+   if (verbose) {
+      std::cout << std::setprecision(15) << val << std::endl;
+      std::cout << std::endl;
+   }
+
+   return val;
+}
+
+TEST(RooRombergIntegrator, CompareToReference)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   std::vector<std::string> methods1d{"RooIntegrator1D", "RooSegmentedIntegrator1D"};
+   std::vector<std::string> methods2d{"RooAdaptiveIntegratorND", "RooIntegrator2D", "RooSegmentedIntegrator2D"};
+
+   // These are reference values obtained with ROOT 6.28.04
+   // We compare the results exactly to these references to ensure that the
+   // implementation has not changed accidentally. These values were printed
+   // out with setprecision(15), but for the comparisons we only use
+   // EXPECT_FLOAT_EQ because we are not bothered by foating point precision
+   // problems here.
+   std::vector<double> references1d{488.294986988088, 488.294680086881};
+   std::vector<double> references2d{5029.82213550336, 5029.84276464679, 5029.82506801992};
+
+   for (std::size_t i = 0; i < methods1d.size(); ++i) {
+      double res = testIntegrationMethod(1, methods1d[i]);
+      EXPECT_FLOAT_EQ(res, references1d[i]) << methods1d[i];
+   }
+
+   for (std::size_t i = 0; i < methods2d.size(); ++i) {
+      double res = testIntegrationMethod(2, methods2d[i]);
+      EXPECT_FLOAT_EQ(res, references2d[i]) << methods2d[i];
    }
 }
