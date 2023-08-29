@@ -1340,12 +1340,11 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
    // are automatically split from the component datasets.
    std::unique_ptr<TList> dataList{simPdf ? data.split(*simPdf, true) : data.split(*cat, true)};
 
-   int i = 0;
    for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
-      absData->SetName((std::string(data.GetName()) + "_" + absData->GetName()).c_str());
-      datamap.components[cat->lookupName(i)] = absData->GetName();
+      std::string catName(absData->GetName());
+      absData->SetName((std::string(data.GetName()) + "_" + catName).c_str());
+      datamap.components[catName] = absData->GetName();
       this->exportData(*absData);
-      ++i;
    }
    return datamap;
 }
@@ -1638,13 +1637,14 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
    nllNode["distributions"].set_seq();
    nllNode["data"].set_seq();
 
-   for (auto const &item : pdf->indexCat()) {
-      nllNode["distributions"].append_child() << pdf->getPdf(item.first)->GetName();
-      if (dataComponents) {
-         const auto &d = dataComponents->find(item.first);
-         nllNode["data"].append_child() << d->second;
+   if (dataComponents) {
+      for (auto const &item : pdf->indexCat()) {
+         const auto &dataComp = dataComponents->find(item.first);
+         nllNode["distributions"].append_child() << pdf->getPdf(item.first)->GetName();
+         nllNode["data"].append_child() << dataComp->second;
       }
    }
+
    if (mc.GetExternalConstraints()) {
       auto &extConstrNode = nllNode["aux_distributions"];
       extConstrNode.set_seq();
