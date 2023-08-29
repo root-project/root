@@ -44,7 +44,7 @@ useFischer = True  # Fischer discriminant
 useMLP = False  # Multi Layer Perceptron (old TMVA NN implementation)
 useBDT = True  # Boosted Decision Tree
 useDL = True  # TMVA Deep learning ( CPU or GPU)
-useKeras = True # Use Keras Deep Learning via PyMVA
+useKeras = True  # Use Keras Deep Learning via PyMVA
 
 if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
     TMVA.PyMethodBase.PyInitialize()
@@ -73,13 +73,13 @@ inputFileLink = "http://root.cern.ch/files/" + inputFileName
 
 
 if ROOT.gSystem.AccessPathName(inputFileName):
-    # file exists
     ROOT.Info("TMVA_Higgs_Classification", "Download Higgs_data.root file")
     TFile.SetCacheFileDir(".")
     inputFile = TFile.Open(inputFileLink, "CACHEREAD")
     if inputFile is None:
         raise FileNotFoundError("Input file cannot be downloaded - exit")
 else:
+    # file exists
     inputFile = TFile.Open(inputFileName)
 
 
@@ -319,7 +319,7 @@ if useDL:
         Architecture=arch,
     )
 
-#Keras DL
+# Keras DL
 if useKeras:
     ROOT.Info("TMVA_Higgs_Classification", "Building Deep Learning keras model")
     # create Keras model with 4 layers of 64 units and relu activations
@@ -329,13 +329,13 @@ if useKeras:
     from tensorflow.keras.layers import Input, Dense
 
     model = Sequential()
-    model.add(Dense(64, activation='relu',input_dim=7))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(2, activation='sigmoid'))
-    model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])
-    model.save('model_higgs.h5')
+    model.add(Dense(64, activation="relu", input_dim=7))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(2, activation="sigmoid"))
+    model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
+    model.save("model_higgs.h5")
     model.summary()
 
     if not os.path.exists("model_higgs.h5"):
@@ -353,7 +353,8 @@ if useKeras:
             FilenameModel="model_higgs.h5",
             FilenameTrainedModel="trained_model_higgs.h5",
             NumEpochs=20,
-            BatchSize=100 )
+            BatchSize=100,
+        )
 #            GpuOptions="allow_growth=True",
 #        )  # needed for RTX NVidia card and to avoid TF allocates all GPU memory
 
