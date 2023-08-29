@@ -615,7 +615,8 @@ auto ROperator_RNN<T>::Generate(std::string OpName)
 
 
 template<typename T>
-auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
+auto ROperator_RNN<T>::GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)
 -> std::string {
    OpName = "op_" + OpName;
 	std::stringstream out;
@@ -725,8 +726,8 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
       buf_hidden_state = "buf_" + OpName + "_hidden_state";
    }
 
-   out << SP*3 << "oneapi::mkl::transpose " << OpName <<  "_transA = oneapi::mkl::transpose::nontrans;\n";
-   out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transB = oneapi::mkl::transpose::trans;\n";
+   out << SP*3 << transpose << OpName <<  "_transA = " << nontrans << ";\n";
+   out << SP*3 << transpose << OpName << "_transB = " << trans << ";\n";
    out << SP*3 << "int " << OpName << "_m = " << seq_length * batch_size << ";\n";
    out << SP*3 << "int " << OpName << "_n = " << fAttrHiddenSize << ";\n";
    out << SP*3 << "int " << OpName << "_k = " << input_size << ";\n";
@@ -743,7 +744,7 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
    for (size_t direction = 0; direction < num_directions; direction++) {
       if (fType == "float") { 
          if (direction == 0) {
-            out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA";
+            out << SP*3 << gemm << OpName << "_transB, " << OpName << "_transA";
             out << ", " << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha";
             out << ", buf_tensor_" << fNW << ", " << OpName << "_k, " << buf_input;
             out << ", " << OpName << "_k, " << OpName << "_beta, " << "buf_" << OpName << "_feedforward, ";
@@ -752,7 +753,7 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
          else {
             out << SP*3 << "size_t " << OpName << "_w_offset = " << fAttrHiddenSize * input_size << ";\n";
             out << "auto buf_tensor_" << fNW << "_w_offset = cl::sycl::buffer{buf_tensor_" << fNW << ", cl::sycl::id<1>(" << OpName << "_w_offset), cl::sycl::range<1>(" << fAttrHiddenSize * input_size << ")};\n";
-            out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA";
+            out << SP*3 << gemm << OpName << "_transB, " << OpName << "_transA";
             out << ", " << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha";
             out << ", buf_tensor_" << fNW << "_w_offset, " << OpName << "_k, " << buf_input;
             out << ", " << OpName << "_k, " << OpName << "_beta, " << "buf_" << OpName << "_feedforward, ";
@@ -764,25 +765,25 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
       if (!fNB.empty()) {
          if (fType == "float") {
             if (direction == 0) {
-               out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
+               out << SP*3 << axpy << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
                out << ", " << OpName << "_incx, buf_" << OpName << "_feedforward, " << OpName << "_incy);\n"; 
             }
             else {
                out << SP*3 << "size_t " << OpName << "_bias_offset = " << seq_length * batch_size * fAttrHiddenSize << ";\n";
                out << SP*3 << "auto buf_tensor_" << fNB << "_bias_offset = cl::sycl::buffer{buf_tensor_" << fNB << ", cl::sycl::id<1>(" << OpName << "_bias_offset), cl::sycl::range<1>(" << seq_length * batch_size * fAttrHiddenSize << ")};\n";
-               out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
+               out << SP*3 << axpy << OpName << "_bias_size, " << OpName << "_alpha, buf_tensor_" << fNB;
                out << "_bias_offset, " << OpName << "_incx, buf_" << OpName << "_feedforward, " << OpName << "_incy);\n";   
             }
          }
       }
       // Copy feedforward into hidden state
       if (direction == 0) {
-         out << SP*3 << "oneapi::mkl::blas::copy_batch(q, " << batch_size * fAttrHiddenSize << ", buf_" << OpName << "_feedforward, ";
+         out << SP*3 << copy_batch << batch_size * fAttrHiddenSize << ", buf_" << OpName << "_feedforward, ";
          out << "1, " << batch_size * fAttrHiddenSize << ", " << buf_hidden_state << ", 1, " << num_directions * batch_size * fAttrHiddenSize << ", " << seq_length << ");\n";
       }
       else {
          out << SP*3 << "auto tmp_buf_cpy = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(" << batch_size * fAttrHiddenSize << "), cl::sycl::range<1>(" << seq_length * batch_size * fAttrHiddenSize << ")};\n";
-         out << SP*3 << "oneapi::mkl::blas::copy_batch(q, " << batch_size * fAttrHiddenSize << ", buf_" << OpName << "_feedforward, ";
+         out << SP*3 << copy_batch << batch_size * fAttrHiddenSize << ", buf_" << OpName << "_feedforward, ";
          out << "1, " << batch_size * fAttrHiddenSize << ", tmp_buf_cpy, 1, " << num_directions * batch_size * fAttrHiddenSize << ", " << seq_length << ");\n";
       }
       out << SP*3 << "for (size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
@@ -804,7 +805,7 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
             out << SP*5 << "auto buf_tensor_" << fNR << "_r_offset = cl::sycl::buffer{buf_tensor_" << fNR << ", cl::sycl::id<1>(r_offset), cl::sycl::range<1>(" << fAttrHiddenSize * fAttrHiddenSize << ")};\n";
             out << SP*5 << "auto buf_" << OpName << "_hidden_state_previous_offset = cl::sycl::buffer{" << buf_initial_hidden_state << ", cl::sycl::id<1>(initial_hidden_state_offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
             out << SP*5 << "auto buf_" << OpName << "_hidden_state_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
-            out << SP*5 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, " << OpName << "_n, " << batch_size << ", " << OpName << "_n, " << OpName << "_alpha, ";
+            out << SP*5 << gemm << OpName << "_transB, " << OpName << "_transA, " << OpName << "_n, " << batch_size << ", " << OpName << "_n, " << OpName << "_alpha, ";
             out << "buf_tensor_" << fNR << "_r_offset, " << OpName << "_n, " << "buf_" << OpName << "_hidden_state_previous_offset, " << OpName << "_n, " << OpName << "_alpha, ";
             out << "buf_" << OpName << "_hidden_state_offset, " << OpName << "_n);\n";
          }
@@ -824,7 +825,7 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName)
          out << SP*5 << "auto buf_" << OpName << "_hidden_state_previous_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(previous_offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
          out << SP*5 << "auto buf_" << OpName << "_hidden_state_offset = cl::sycl::buffer{" << buf_hidden_state << ", cl::sycl::id<1>(offset), cl::sycl::range<1>(" << batch_size * fAttrHiddenSize << ")};\n";
       
-         out << SP*5 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, " << OpName << "_n, " << batch_size << ", " << OpName << "_n, " << OpName << "_alpha, ";
+         out << SP*5 << gemm << OpName << "_transB, " << OpName << "_transA, " << OpName << "_n, " << batch_size << ", " << OpName << "_n, " << OpName << "_alpha, ";
          out << "buf_tensor_" << fNR << "_r_offset, " << OpName << "_n, " << "buf_" << OpName << "_hidden_state_previous_offset, " << OpName << "_n, " << OpName << "_alpha, ";
          out << "buf_" << OpName << "_hidden_state_offset, " << OpName << "_n);\n";
       }

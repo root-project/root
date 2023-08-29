@@ -208,7 +208,8 @@ public:
       return out.str();
    }
 
-   std::string GenerateGPU(std::string OpName) {
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
       OpName = "op_" + OpName;
       OpName = "op_" + OpName;
       if (fShapeInput.empty() || fShapeOutput.empty()) {
@@ -236,7 +237,7 @@ public:
          opName = "Unsquueze";
 
       out << "\n" << SP*3 << "///--------" << opName << " operator\n" << std::endl;
-      out << SP*3 << "oneapi::mkl::blas::copy(q, buf_tensor_" << fNData << ".size(), buf_tensor_" << fNData << ", 1, buf_tensor_" << fNOutput << ", 1);\n";
+      out << SP*3 << "copy(q, buf_tensor_" << fNData << ".size(), buf_tensor_" << fNData << ", 1, buf_tensor_" << fNOutput << ", 1);\n";
 
       return out.str();
    }

@@ -218,7 +218,8 @@ public:
       return out.str();
    }
 
-   std::string GenerateGPU(std::string OpName) {
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
       OpName = "op_" + OpName;
       if (fShapeX.empty()){
          throw std::runtime_error("TMVA SOFIE Batch Normalization called to Generate without being initialized first");
@@ -236,12 +237,12 @@ public:
       out << SP*3 << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
       out << SP*3 << "constexpr int "<<OpName<< "_incx = 1;\n";
       out << SP*3 << "constexpr int "<<OpName<< "_incy = 1;\n";
-      out << SP*3 << "oneapi::mkl::blas::copy(q, " << OpName << "_N, " << "buf_tensor_" << fNX;
+      out << SP*3 << copy << OpName << "_N, " << "buf_tensor_" << fNX;
       out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
       
       // blas axpy (Y = -Bmean + Y = X - Bmean)
       out << SP*3 << "float "<<OpName<< "_alpha = -1;\n"; 
-      out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_N, " << OpName << "_alpha, buf_tensor_" << fNMean;
+      out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, buf_tensor_" << fNMean;
       out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
 
       out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
@@ -260,7 +261,7 @@ public:
 
       // blas axpy Y = Bbias + Y = (X - Bmean) * Scale * Var + Bbias
       out << SP*3 << OpName << "_alpha = 1;\n";
-      out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_N, " << OpName << "_alpha, ";
+      out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, ";
       out << "buf_tensor_" << fNB << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
    
       return out.str();

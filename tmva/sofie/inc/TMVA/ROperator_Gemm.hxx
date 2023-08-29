@@ -227,7 +227,8 @@ namespace SOFIE{
 
          }
 
-         std::string GenerateGPU(std::string OpName) {
+         std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
             OpName = "op_" + OpName;
             if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())) {
                throw std::runtime_error("TMVA SOFIE Gemm Op called to Generate without being initialized first");
@@ -235,8 +236,8 @@ namespace SOFIE{
             std::stringstream out;
 
             out << "\n" << SP*3 << "//--------- Gemm\n";
-            out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transA = oneapi::mkl::transpose::" << (fAttrTransA ? "trans" : "nontrans") << ";\n";
-            out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transB = oneapi::mkl::transpose::" << (fAttrTransB ? "trans" : "nontrans") << ";\n";
+            out << SP*3 << transpose << OpName << "_transA = " << (fAttrTransA ?  trans : nontrans) << ";\n";
+            out << SP*3 << transpose << OpName << "_transB = " << (fAttrTransB ? trans : nontrans) << ";\n";
             int m = (fAttrTransA ? fShapeA[1] : fShapeA[0]);
             int n = (fAttrTransB ? fShapeB[0] : fShapeB[1]);
             int k = (fAttrTransA ? fShapeA[0] : fShapeA[1]);

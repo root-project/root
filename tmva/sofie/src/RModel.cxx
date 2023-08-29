@@ -514,10 +514,45 @@ namespace SOFIE{
       // include SYCL libraries
       fGC += "#include \"CL/sycl.hpp\"\n";
 
+      std::string gemm;
+      std::string copy;
+      std::string axpy;
+      std::string transpose;
+      std::string nontrans;
+      std::string trans;
+      std::string copy_batch;
+      std::string scal;
+      
+      if (GPU_BLAS == "MKLBLAS") {
+         gemm = "oneapi::mkl::blas::gemm(q, ";
+         copy = "oneapi::mkl::blas::copy(q, ";
+         axpy = "oneapi::mkl::blas::axpy(q, ";
+         transpose = "oneapi::mkl::transpose ";
+         nontrans = "oneapi::mkl::transpose::nontrans";
+         trans = "oneapi::mkl::transpose::trans";
+         copy_batch = "oneapi::mkl::blas::copy_batch(q, ";
+         scal = "oneapi::mkl::blas::scal(q, ";
+      }
+      else {
+         gemm = "blas::_gemv(sb_handle, ";
+         copy = "blas::_copy(sb_handle, ";
+         axpy = "blas::_axpy(sb_handle, ";
+         transpose = "char ";
+         nontrans = "\'n\'";
+         trans = "\'t\'";
+         copy_batch = "";
+         scal = "blas::_scal(sb_handle, ";
+      }
+
       // include BLAS libraries, if needed
       if (!fNeededBlasRoutines.empty()) {
-         fGC += "#include \"oneapi/mkl/blas.hpp\"\n";
-         fGC += "#include \"mkl.h\"\n";
+         if (GPU_BLAS == "MKLBLAS") {
+            fGC += "#include \"oneapi/mkl/blas.hpp\"\n";
+            fGC += "#include \"mkl.h\"\n";
+         }
+         else {
+            fGC += "#include \"portblas.hpp\"";
+         }
       }
 
       // for the session we need to include SOFIE_Common functions
@@ -768,7 +803,7 @@ namespace SOFIE{
       }
 
       for (size_t id = 0; id < fOperators.size() ; id++){
-         fGC+= (fOperators[id]->GenerateGPU(std::to_string(id)));
+         fGC+= (fOperators[id]->GenerateGPU(std::to_string(id), gemm, copy, axpy, transpose, nontrans, trans, copy_batch, scal));
       }
 
       fGC += "\n";

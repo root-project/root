@@ -42,7 +42,8 @@ public:
    virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) = 0;
    virtual void Initialize(RModel&) = 0;
    virtual std::string Generate(std::string OpName) = 0;  //expect unique opname for each operator within the same RModel
-   virtual std::string GenerateGPU(std::string OpName) = 0;
+   virtual std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) = 0;
    // generate initialization code
    virtual std::string GenerateInitCode() { return "";}
    // generate session data members specific to operator

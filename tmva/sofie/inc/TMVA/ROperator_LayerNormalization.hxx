@@ -313,7 +313,8 @@ public:
       return out.str();
    }
 
-   std::string GenerateGPU(std::string OpName) override {
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) override {
       OpName = "op_" + OpName;
       if (fShapeX.empty()) {
          throw std::runtime_error("TMVA::SOFIE LayerNormalization operator " + OpName +
@@ -538,7 +539,7 @@ public:
          out << SP*3 << "int " << OpName << "_n = " << fLength << ";\n";
          out << SP*3 << "float " << OpName << "_alpha = 1.;\n";
          out << SP*3 << "int " << OpName << "_inc = 1;\n";
-         out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_n, " << OpName << "_alpha, ";
+         out << SP*3 << axpy << OpName << "_n, " << OpName << "_alpha, ";
          out << Bias << ", " << OpName << "_inc, buf_tensor_" << fNY << ", " << OpName << "_inc);\n";
       }
 

@@ -53,8 +53,37 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
 
 target_include_directories(ROOTTMVASofie PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+
+if (NOT TARGET_GPU)
+  set(TARGET_GPU "Intel")
+endif()
+
+if (NOT GPU_BLAS)
+  set(GPU_BLAS "MKLBLAS")
+endif()
+
+if (tmva-sofie AND sofie-sycl)
+  set(TARGET_GPUS "Intel;NVIDIA;AMD")
+  set(BLAS_GPU_IMPLEMENTATIONS "MKLBLAS; portBLAS")
+  set(MKL_TARGETS "Intel")
+
+  if (NOT ${TARGET_GPU} IN_LIST TARGET_GPUS)
+    message(FATAL_ERROR "Please select a GPU target with -DTARGET_GPU. Valid values are: [Intel, NVIDIA, AMD]")
+  endif()
+
+  if (NOT ${GPU_BLAS} IN_LIST BLAS_GPU_IMPLEMENTATIONS)
+    message(FATAL_ERROR "Please select a BLAS Implementation with -DGPU_BLAS. Valid values are: [MKLBLAS, portBLAS]")
+  endif()
+  
+  if (NOT ${TARGET_GPU} IN_LIST MKL_TARGETS AND ${GPU_BLAS} STREQUAL "MKLBLAS")
+    message(FATAL_ERROR "Target GPU is not compatible with MKLBLAS. Please select portBLAS instead")
+  endif()
+
+endif()
 set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
+target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU="${TARGET_GPU}")
+target_compile_definitions(ROOTTMVASofie PUBLIC GPU_BLAS="${GPU_BLAS}")
 
 # tests requires protobuf
 if (tmva-sofie)

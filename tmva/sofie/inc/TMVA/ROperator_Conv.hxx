@@ -536,7 +536,8 @@ public:
       return out.str();
       }
 
-      std::string GenerateGPU(std::string OpName) {
+      std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
          OpName = "op_" + OpName;
 
          if (fShapeX.empty() || fShapeW.empty() || (fNB != "" && fShapeB.empty()) || fShapeY.empty()) {
@@ -630,8 +631,8 @@ public:
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
 
-         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transA = oneapi::mkl::transpose::nontrans;\n";
-         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transB = oneapi::mkl::transpose::nontrans;\n";
+         out << SP*3 << transpose << OpName << "_transA = " << nontrans << ";\n";
+         out << SP*3 << transpose << OpName << "_transB = " << nontrans << ";\n";
          out << SP*3 << "int " << OpName << "_m = " << oHeight * oWidth * oDepth << ";\n"; // output h*w
          assert(fShapeY[1] == fShapeW[0]);
          assert(fShapeW[1] == fShapeX[1] / fAttrGroup);
@@ -710,7 +711,7 @@ public:
             }
             out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
             out << fShapeY[1] * oDepth * oHeight * oWidth << ")};\n";
-            out << SP*4 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transA, " << OpName << "_transB, " << OpName;
+            out << SP*4 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
             out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
             out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
             out << ", " << OpName << "_m);\n";
@@ -750,7 +751,7 @@ public:
             }
             out << SP*5 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
             out << fShapeW[0] * oDepth * oHeight * oWidth / fAttrGroup << ")};\n";
-            out << SP*5 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transA, " << OpName << "_transB, " << OpName;
+            out << SP*5 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
             out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
             out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
             out << ", " << OpName << "_m);\n";
@@ -762,7 +763,7 @@ public:
             out << SP*3 << "int " << OpName << "_incx = 1;\n";
             out << SP*3 << "int " << OpName << "_incy = 1;\n";
 
-            out << SP*3 << "oneapi::mkl::blas::axpy(q, " << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNB2;
+            out << SP*3 << axpy << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNB2;
             out << ", " << OpName << "_incx, tmp_buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
          }
 

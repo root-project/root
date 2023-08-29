@@ -130,7 +130,8 @@ public:
       return out.str();
    }
 
-   std::string GenerateGPU(std::string OpName)  {
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)  {
       OpName = "op_" + OpName;
       if (fShapeData.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Transpose Op called to Generate without being initialized first");
