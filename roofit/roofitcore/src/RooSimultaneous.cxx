@@ -357,7 +357,7 @@ RooSimultaneous::~RooSimultaneous()
 
 RooAbsPdf* RooSimultaneous::getPdf(RooStringView catName) const
 {
-  RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(catName));
+  RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(catName.c_str()));
   return proxy ? static_cast<RooAbsPdf*>(proxy->absArg()) : nullptr;
 }
 

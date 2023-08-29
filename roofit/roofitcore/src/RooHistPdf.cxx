@@ -638,7 +638,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
      coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
      return true ;
    }
-   _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.c_str()) ;
+   _dataHist = (RooDataHist*) ws.embeddedData(uniqueName) ;
       }
 
     } else {
@@ -650,7 +650,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
    coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
    return true ;
       }
-      _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName.c_str()));
+      _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName));
 
     }
     return false ;

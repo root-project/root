@@ -88,11 +88,12 @@ RooDataHist::RooDataHist()
 }
 
 
-std::unique_ptr<RooAbsDataStore> RooDataHist::makeDefaultDataStore(const char* name, const char* title, RooArgSet const& vars)
+std::unique_ptr<RooAbsDataStore>
+RooDataHist::makeDefaultDataStore(RooStringView name, RooStringView title, RooArgSet const &vars)
 {
-  return RooAbsData::defaultStorageType == RooAbsData::Tree
-      ? static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooTreeDataStore>(name, title, vars))
-      : static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooVectorDataStore>(name, title, vars));
+   return RooAbsData::defaultStorageType == RooAbsData::Tree
+             ? static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooTreeDataStore>(name, title, vars))
+             : static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooVectorDataStore>(name, title, vars));
 }
 
 

@@ -262,7 +262,7 @@ std::unique_ptr<RooSimWSTool::ObjBuildConfig> RooSimWSTool::validateConfig(Build
       RooArgSet splitCatSet ;
       list<string>::iterator catiter ;
       for (catiter = pariter->second.first.begin() ; catiter!=pariter->second.first.end() ; ++catiter) {
-   RooAbsCategory* cat = _ws->catfunc(catiter->c_str()) ;
+   RooAbsCategory* cat = _ws->catfunc(*catiter) ;
    if (!cat) {
      oocoutE(nullptr, ObjectHandling) << "RooSimWSTool::build() ERROR: associated workspace " << _ws->GetName()
             << " does not contain a category named " << catiter->c_str()
@@ -453,7 +453,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
       string splitName = makeSplitName(splitCatSetTmp) ;
 
       // If composite split object does not exist yet, create it now
-      RooAbsCategory* splitCat = _ws->catfunc(splitName.c_str()) ;
+      RooAbsCategory* splitCat = _ws->catfunc(splitName) ;
       if (!splitCat) {
    auto splitCatOwner = std::make_unique<RooMultiCategory>(splitName.c_str(),splitName.c_str(),splitCatSetTmp);
    splitCat = splitCatOwner.get();
@@ -481,15 +481,13 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
      if (splitIter->second.second == typeName) continue ;
 
      // Construct name of split leaf
-     TString splitLeafName(splitIter->first->GetName()) ;
-     splitLeafName.Append("_") ;
-     splitLeafName.Append(typeName) ;
+     std::string splitLeafName = std::string{splitIter->first->GetName()} + "_" + typeName;
 
      // Check if split leaf already exists
      RooAbsArg* splitLeaf = _ws->fundArg(splitLeafName) ;
      if (!splitLeaf) {
        // If not create it now
-       splitLeaf = (RooAbsArg*) splitIter->first->clone(splitLeafName) ;
+       splitLeaf = (RooAbsArg*) splitIter->first->clone(splitLeafName.c_str());
        _ws->import(*splitLeaf,RooFit::Silence(!verbose)) ;
      }
      fracLeafList.add(*splitLeaf) ;

@@ -237,7 +237,7 @@ void ModelConfig::SetSnapshot(const RooArgSet &set)
    if (!fSnapshotName.empty())
       fSnapshotName += "_";
    fSnapshotName += "snapshot";
-   GetWS()->saveSnapshot(fSnapshotName.c_str(), set, true); // import also the given parameter values
+   GetWS()->saveSnapshot(fSnapshotName, set, true); // import also the given parameter values
    DefineSetInWS(fSnapshotName.c_str(), set);
 }
 
@@ -253,9 +253,9 @@ const RooArgSet *ModelConfig::GetSnapshot() const
       return nullptr;
    // calling loadSnapshot will also copy the current parameter values in the workspaces
    // since we do not want to change the model parameters - we restore the previous ones
-   if (!GetWS()->set(fSnapshotName.c_str()))
+   if (!GetWS()->set(fSnapshotName))
       return nullptr;
-   RooArgSet snapshotVars(*GetWS()->set(fSnapshotName.c_str()));
+   RooArgSet snapshotVars(*GetWS()->set(fSnapshotName));
    if (snapshotVars.empty())
       return nullptr;
    // make my snapshot which will contain a copy of the snapshot variables

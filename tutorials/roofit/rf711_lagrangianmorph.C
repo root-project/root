@@ -74,9 +74,9 @@ void rf711_lagrangianmorph()
    auto morph_hist_0p25 = morphfunc.createTH1("morph_cHq3=0.25");
    morphfunc.setParameter("cHq3", 0.5);
    auto morph_hist_0p5 = morphfunc.createTH1("morph_cHq3=0.5");
-   RooDataHist morph_datahist_0p01("morph_dh_cHq3=0.01", "", RooArgList(obsvar), morph_hist_0p01);
-   RooDataHist morph_datahist_0p25("morph_dh_cHq3=0.25", "", RooArgList(obsvar), morph_hist_0p25);
-   RooDataHist morph_datahist_0p5("morph_dh_cHq3=0.5", "", RooArgList(obsvar), morph_hist_0p5);
+   RooDataHist morph_datahist_0p01("morph_dh_cHq3=0.01", "", {obsvar}, morph_hist_0p01);
+   RooDataHist morph_datahist_0p25("morph_dh_cHq3=0.25", "", {obsvar}, morph_hist_0p25);
+   RooDataHist morph_datahist_0p5("morph_dh_cHq3=0.5", "", {obsvar}, morph_hist_0p5);
 
    // E x t r a c t  i n p u t  t e m p l a t e s
    // f o r  p l o t t i n g
@@ -94,9 +94,9 @@ void rf711_lagrangianmorph()
    input_hist2->SetDirectory(NULL);
    file->Close();
 
-   RooDataHist input_dh0(samplelist[0].c_str(), "", RooArgList(obsvar), input_hist0);
-   RooDataHist input_dh1(samplelist[1].c_str(), "", RooArgList(obsvar), input_hist1);
-   RooDataHist input_dh2(samplelist[2].c_str(), "", RooArgList(obsvar), input_hist2);
+   RooDataHist input_dh0(samplelist[0], "", {obsvar}, input_hist0);
+   RooDataHist input_dh1(samplelist[1], "", {obsvar}, input_hist1);
+   RooDataHist input_dh2(samplelist[2], "", {obsvar}, input_hist2);
 
    auto frame0 = obsvar.frame(Title("Input templates for p_{T}^{V}"));
    input_dh0.plotOn(frame0, Name(samplelist[0].c_str()), LineColor(kBlack), MarkerColor(kBlack), MarkerSize(1));

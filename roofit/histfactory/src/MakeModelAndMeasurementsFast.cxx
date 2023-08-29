@@ -417,7 +417,7 @@ void RooStats::HistFactory::FitModel(RooWorkspace * combined, std::string data_n
       return;
     }
 
-    RooAbsData* simData = combined->data(data_name.c_str());
+    RooAbsData* simData = combined->data(data_name);
     if(!simData){
       cxcoutEHF << "no data " << data_name << " exiting" << std::endl;
       return;

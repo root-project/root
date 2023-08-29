@@ -252,7 +252,7 @@ public:
 
          // Create Poisson model and dataset
          RooWorkspace* w = new RooWorkspace("w");
-         w->factory(TString::Format("Poisson::poiss(x[%d,0,1000], mean[0,1000])", fObsValue));
+         w->factory(TString::Format("Poisson::poiss(x[%d,0,1000], mean[0,1000])", fObsValue).Data());
          RooDataSet *data = new RooDataSet("data", "data", *w->var("x"));
          data->add(*w->var("x"));
 
@@ -616,7 +616,7 @@ public:
          w->factory("Uniform::prior(mean)");
          w->import(*(new RooCFunction1PdfBinding<Double_t, Double_t>("priorInv", "priorInv", &priorInv, *w->var("mean"))));
          w->import(*(new RooCFunction1PdfBinding<Double_t, Double_t>("priorInvSqrt", "priorInvSqrt", priorInvSqrt, *w->var("mean"))));
-         w->factory(TString::Format("Gamma::priorGamma(mean, %lf, %lf, 0)", gammaShape, gammaRate));
+         w->factory(TString::Format("Gamma::priorGamma(mean, %lf, %lf, 0)", gammaShape, gammaRate).Data());
 
          // build argument sets and data set
          w->defineSet("obs", "x");
@@ -1792,8 +1792,8 @@ public:
          // Make model for prototype on/off problem
          // Pois(x | s+b) * Pois(y | tau b )
          RooWorkspace* w = new RooWorkspace("w");
-         w->factory(TString::Format("Poisson::on_pdf(x[%d,0,500],sum::splusb(sig[0,0,100],bkg[100,0,300]))", xValue));
-         w->factory(TString::Format("Poisson::off_pdf(y[%d,0,500],prod::taub(tau[%lf],bkg))", yValue, tauValue));
+         w->factory(TString::Format("Poisson::on_pdf(x[%d,0,500],sum::splusb(sig[0,0,100],bkg[100,0,300]))", xValue).Data());
+         w->factory(TString::Format("Poisson::off_pdf(y[%d,0,500],prod::taub(tau[%lf],bkg))", yValue, tauValue).Data());
          w->factory("PROD::prod_pdf(on_pdf, off_pdf)");
 
          w->var("x")->setVal(xValue);

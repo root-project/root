@@ -1235,7 +1235,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
       TString fac(child.GetName());
       if (!fac.Contains("["))
          fac += "[1]";
-      return xRooNode(*fParent->get<RooWorkspace>()->factory(fac), fParent);
+      return xRooNode(*fParent->get<RooWorkspace>()->factory(fac.Data()), fParent);
    } else if (strcmp(GetName(), ".datasets()") == 0) {
       // create a dataset - only allowed for pdfs or workspaces
       if (auto _ws = ws(); _ws && fParent) {
@@ -2175,7 +2175,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
          return out;
       } else if (sOpt == "func" && ws()) {
          // need to get way to get dependencies .. can't pass all as causes circular dependencies issues.
-         if (auto arg = ws()->factory(TString("expr::") + child.GetName())) {
+         if (auto arg = ws()->factory(std::string("expr::") + child.GetName())) {
             auto out = Multiply(*arg);
             if (get() /* can happen this is null if on a bin node with no shapeFactors*/)
                Info("Multiply", "Scaled %s by new func factor %s",
@@ -3638,7 +3638,7 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode &acquirer, con
    } else if (!get() && sName.BeginsWith("factory:") && acquirer.ws()) {
       TString s(sName);
       s = TString(s(8, s.Length()));
-      fComp.reset(acquirer.ws()->factory(s), [](TObject *) {});
+      fComp.reset(acquirer.ws()->factory(s.Data()), [](TObject *) {});
       return fComp;
    }
 

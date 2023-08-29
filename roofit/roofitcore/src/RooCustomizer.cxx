@@ -683,7 +683,7 @@ std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const 
   }
 
   // Check that first arg exists as RooAbsArg
-  RooAbsArg* arg = ft.ws().arg(args[0].c_str()) ;
+  RooAbsArg* arg = ft.ws().arg(args[0]) ;
   if (!arg) {
     throw string(Form("RooCustomizer::CustIFace::create() ERROR: input RooAbsArg %s does not exist",args[0].c_str())) ;
   }

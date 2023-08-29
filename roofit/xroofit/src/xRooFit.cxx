@@ -281,7 +281,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
          // do subpdf's individually
          _obs->add(w);
          _out.first.reset(new RooDataSet(
-            uuid, TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"), *_obs, "weightVar"));
+            uuid.Data(), TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy").Data(), *_obs, "weightVar"));
 
          for (auto &c : s->indexCat()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 00)
