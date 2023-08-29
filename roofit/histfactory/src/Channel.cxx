@@ -330,11 +330,9 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
   // Check that all internal histogram pointers
   // are properly configured (ie that they're not nullptr)
 
-  try {
-
     if( fData.GetHisto() == nullptr && !fData.GetInputFile().empty() ) {
       cxcoutEHF << "Error: Data Histogram for channel " << GetName() << " is nullptr." << std::endl;
-      throw hf_exc();
+      return false;
     }
 
     // Get the histograms for the samples:
@@ -345,7 +343,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
       // Get the nominal histogram:
       if( sample.GetHisto() == nullptr ) {
    cxcoutEHF << "Error: Nominal Histogram for sample " << sample.GetName() << " is nullptr." << std::endl;
-   throw hf_exc();
+   return false;
       }
       else {
 
@@ -376,7 +374,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
       if( sample.GetStatError().GetUseHisto() ) {
    if( sample.GetStatError().GetErrorHist() == nullptr ) {
      cxcoutEHF << "Error: Statistical Error Histogram for sample " << sample.GetName() << " is nullptr." << std::endl;
-     throw hf_exc();
+     return false;
    }
       }
 
@@ -389,12 +387,12 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
    if( histoSys.GetHistoLow() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoSys.GetName()
           << " in sample " << sample.GetName() << " is nullptr." << std::endl;
-     throw hf_exc();
+     return false;
    }
    if( histoSys.GetHistoHigh() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst High for Systematic " << histoSys.GetName()
           << " in sample " << sample.GetName() << " is nullptr." << std::endl;
-     throw hf_exc();
+     return false;
    }
 
       } // End Loop over HistoSys
@@ -408,12 +406,12 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
    if( histoFactor.GetHistoLow() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoFactor.GetName()
           << " in sample " << sample.GetName() << " is nullptr." << std::endl;
-     throw hf_exc();
+     return false;
    }
    if( histoFactor.GetHistoHigh() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst High for Systematic " << histoFactor.GetName()
           << " in sample " << sample.GetName() << " is nullptr." << std::endl;
-     throw hf_exc();
+     return false;
    }
 
       } // End Loop over HistoFactor
@@ -427,25 +425,14 @@ bool RooStats::HistFactory::Channel::CheckHistograms() const {
    if( shapeSys.GetErrorHist() == nullptr ) {
      cxcoutEHF << "Error: HistoSyst High for Systematic " << shapeSys.GetName()
           << " in sample " << sample.GetName() << " is nullptr." << std::endl;
-     throw hf_exc();
+     return false;
    }
 
       } // End Loop over ShapeSys
 
     } // End Loop over Samples
 
-  }
-  catch(std::exception& e)
-    {
-      std::cout << e.what() << std::endl;
-      return false;
-    }
-
   return true;
-
-
-
-
 }
 
 

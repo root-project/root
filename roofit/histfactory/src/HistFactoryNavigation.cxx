@@ -1109,12 +1109,7 @@ namespace RooStats {
         RooFit::MsgLevel levelBefore = RooMsgService::instance().globalKillBelow();
         RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
         std::unique_ptr<TH1> hist;
-        try {
-          hist.reset(MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp"));
-        } catch(...) {
-        RooMsgService::instance().setGlobalKillBelow(levelBefore);
-        throw;
-        }
+        hist.reset(MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp"));
         RooMsgService::instance().setGlobalKillBelow(levelBefore);
 
         // Print the hist

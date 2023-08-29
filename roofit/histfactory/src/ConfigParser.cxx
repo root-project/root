@@ -122,8 +122,6 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
   // (This is what will be returned)
   std::vector< HistFactory::Measurement > measurement_list;
 
-  try {
-
     // Open the Driver XML File
     TDOMParser xmlparser;
     Int_t parseError = xmlparser.ParseFile( input.c_str() );
@@ -332,15 +330,8 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
    measurement.GetChannels().push_back( channel_list.at(j) );
       }
     }
-  }
-  catch(std::exception& e)
-    {
-      std::cout << e.what() << std::endl;
-      throw hf_exc();
-    }
 
   return measurement_list;
-
 }
 
 

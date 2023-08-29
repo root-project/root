@@ -110,22 +110,7 @@ int main(int argc, char** argv) {
     driverArg = argv[i];
   }
 
-  try {
-    RooStats::HistFactory::fastDriver(driverArg, cfg);
-  }
-  catch(const std::string &str) {
-    std::cerr << "hist2workspace - Caught exception: " << str << std::endl ;
-    return 1;
-  }
-  catch( const std::exception& e ) {
-    std::cerr << "hist2workspace - Caught Exception: " << e.what() << std::endl;
-    return 1;
-  }
-  catch(...) {
-    std::cerr << "hist2workspace - Caught Exception" << std::endl;
-    return 1;
-  }
-
+  RooStats::HistFactory::fastDriver(driverArg, cfg);
 
   return 0;
 }
