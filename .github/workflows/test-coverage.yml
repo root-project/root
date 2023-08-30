@@ -48,7 +48,7 @@ jobs:
   
   build-linux:
     # if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
-
+    # For the commit
     permissions:
       contents: read
 
