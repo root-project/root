@@ -119,7 +119,7 @@ class SOFIE_GNN(unittest.TestCase):
     Tests for the pythonizations of ParseFromMemory method of SOFIE GNN.
     """
 
-    def test_parse_gnn(self):
+    def test_a_parse_gnn(self):
         '''
         Test that parsed GNN model from a graphnets model generates correct
         inference code
@@ -159,12 +159,8 @@ class SOFIE_GNN(unittest.TestCase):
         assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
         assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
 
-        fname = "gnn_network"
-        os.remove(fname + '.dat')
-        os.remove(fname + '.hxx')
 
-
-    def test_parse_graph_independent(self):
+    def test_b_parse_graph_independent(self):
         '''
         Test that parsed GraphIndependent model from a graphnets model generates correct
         inference code
@@ -186,8 +182,9 @@ class SOFIE_GNN(unittest.TestCase):
         model = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(GraphModule, GraphData)
         model.Generate()
         model.OutputGenerated()
+        
+        ret = ROOT.gInterpreter.Declare('#include "graph_independent_network.hxx"')
 
-        ROOT.gInterpreter.Declare('#include "graph_independent_network.hxx"')
         input_data = ROOT.TMVA.Experimental.SOFIE.GNN_Data()
 
         input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['nodes'])
@@ -205,17 +202,14 @@ class SOFIE_GNN(unittest.TestCase):
         assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
         assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
 
-        fname = "graph_independent_network"
-        os.remove(fname + '.dat')
-        os.remove(fname + '.hxx')
 
-    def test_lhcb_toy_inference(self):
+    def test_c_lhcb_toy_inference(self):
         '''
         Test that parsed stack of SOFIE GNN and GraphIndependent modules generate the correct
         inference code
         '''
 
-        print('Run LHCb test')
+        print('\nRun LHCb test')
 
         # Instantiating EncodeProcessDecode Model
 
@@ -233,7 +227,6 @@ class SOFIE_GNN(unittest.TestCase):
 
         # Make data for core networks (number of features for node/edge global is 2 * lsize)
         CoreGraphData = resize_graph_data(InputGraphData, 2 * lsize, 2 * lsize, 2 * lsize)
-
 
         OutputGraphData = resize_graph_data(InputGraphData, lsize, lsize, lsize)
 
@@ -306,12 +299,16 @@ class SOFIE_GNN(unittest.TestCase):
 
           assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data))
 
-        #remove header files after being used
-        filesToRemove = ['core','encoder','decoder','output_transform']
+    @classmethod
+    def tearDownClass(self) :
+        filesToRemove = ['core','encoder','decoder','output_transform','gnn_network','graph_independent_network']
         for fname in filesToRemove:
           os.remove(fname + '.hxx')
           os.remove(fname + '.dat')
 
+    
+
 
 if __name__ == '__main__':
     unittest.main()
+  
