@@ -370,10 +370,10 @@ def rebase(base_ref, head_ref) -> None:
 
 @github_log_group("Create Test Coverage in XML")
 def create_coverage_xml() -> None:
-    result, shell_log = subprocess_with_log(f"""
+    result = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
         gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="roottest|runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -r ../src ../build
-    """, shell_log)
+    """)
 
     if result != 0:
         die(result, "Failed to create test coverage")
