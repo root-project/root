@@ -119,6 +119,7 @@ jobs:
                     --buildtype      Debug
                     --platform       fedora38
                     --incremental    false
+                    --coverage       true
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
