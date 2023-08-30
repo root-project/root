@@ -145,7 +145,7 @@ public:
          fValue.Read(entry);
          fLastEntry = entry;
       }
-      return fValue.GetRawPtr();
+      return fValue.Get<void>();
    }
 };
 

@@ -93,7 +93,7 @@ public:
             continue;
 
          if constexpr (std::is_void_v<T>)
-            return v.GetRawPtr();
+            return v.Get<void>();
 
          if (v.GetField().GetType() != RField<T>::TypeName())
             throw RException(R__FAIL("type mismatch in REntry::GetRaw()"));
