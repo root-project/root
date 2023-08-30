@@ -21,6 +21,7 @@
 void ROOT::Experimental::REntry::AddValue(Detail::RFieldBase::RValue &&value)
 {
    fValues.emplace_back(std::move(value));
+   fValuePtrs.emplace_back(nullptr);
 }
 
 void ROOT::Experimental::REntry::BindRaw(std::string_view fieldName, void *where)
@@ -30,6 +31,16 @@ void ROOT::Experimental::REntry::BindRaw(std::string_view fieldName, void *where
          continue;
       fValues[i].BindRaw(where);
       return;
+   }
+   throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+}
+
+bool ROOT::Experimental::REntry::IsManaged(std::string_view fieldName) const
+{
+   for (std::size_t i = 0; i < fValues.size(); ++i) {
+      if (fValues[i].GetField().GetName() != fieldName)
+         continue;
+      return static_cast<bool>(fValuePtrs[i]);
    }
    throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
 }

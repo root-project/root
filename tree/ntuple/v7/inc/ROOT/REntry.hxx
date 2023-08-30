@@ -122,6 +122,7 @@ public:
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
+   bool IsManaged(std::string_view fieldName) const;
 
    ConstIterator_t begin() const { return fValues.cbegin(); }
    ConstIterator_t end() const { return fValues.cend(); }
