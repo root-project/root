@@ -75,6 +75,7 @@ using namespace RooStats ;
 using namespace std ;
 
 using namespace RooStats::HistFactory::Detail;
+using namespace RooStats::HistFactory::Detail::MagicConstants;
 
 ClassImp(RooStats::HistFactory::HistoToWorkspaceFactoryFast);
 
@@ -968,7 +969,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
             RooArgList statFactorParams = ParamHistFunc::createParamSet(proto,
                 ParamSetPrefix,
                 theObservables,
-                0.0, 10.0);
+                defaultGammaMin, defaultStatErrorGammaMax);
 
             ParamHistFunc statUncertFunc(statFuncName.c_str(), statFuncName.c_str(),
                 theObservables, statFactorParams );
@@ -1018,7 +1019,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               //      We should change this to range from 0 to /inf
               RooArgList shapeFactorParams = ParamHistFunc::createParamSet(proto,
                   funcParams,
-                  theObservables, 0, 1000);
+                  theObservables, defaultGammaMin, defaultShapeFactorGammaMax);
 
               // Create the Function
               ParamHistFunc shapeFactorFunc( funcName.c_str(), funcName.c_str(),
@@ -1062,7 +1063,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           cxcoutF(HistFactory) << "Cannot include Stat Error for histograms of more than 3 dimensions."
               << std::endl;
           throw hf_exc();
-        } else {
+        }
 
           // List of ShapeSys ParamHistFuncs
           std::vector<string> ShapeSysNames;
@@ -1098,7 +1099,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               std::string funcParams = "gamma_" + shapeSys.GetName();
               RooArgList shapeFactorParams = ParamHistFunc::createParamSet(proto,
                   funcParams,
-                  theObservables, 0, 10);
+                  theObservables, defaultGammaMin, defaultShapeSysGammaMax);
 
               // Create the Function
               ParamHistFunc shapeFactorFunc( funcName.c_str(), funcName.c_str(),
@@ -1125,8 +1126,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               systype = Constraint::Poisson;
             }
 
-            double minShapeUncertainty = 0.0;
-            RooArgList shapeConstraints = createStatConstraintTerms(proto, constraintTermNames,
+            RooArgList shapeConstraints = createGammaConstraintTerms(proto, constraintTermNames,
                 *paramHist, shapeErrorHist,
                 systype,
                 minShapeUncertainty);
@@ -1140,8 +1140,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           for(std::string const& name : ShapeSysNames) {
             sampleHistFuncs.push_back(proto.function(name));
           }
-
-        } // End: NumObsVar == 1
 
       } // End: !GetShapeSysList.empty()
 
@@ -1206,7 +1204,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       }
 
       double statRelErrorThreshold = channel.GetStatErrorConfig().GetRelErrorThreshold();
-      RooArgList statConstraints = createStatConstraintTerms(proto, constraintTermNames,
+      RooArgList statConstraints = createGammaConstraintTerms(proto, constraintTermNames,
           *chanStatUncertFunc, fracStatError.get(),
           statConstraintType,
           statRelErrorThreshold);
@@ -1754,9 +1752,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 }
 
 
-
   RooArgList HistoToWorkspaceFactoryFast::
-  createStatConstraintTerms( RooWorkspace& proto, vector<string>& constraintTermNames,
+  createGammaConstraintTerms( RooWorkspace& proto, std::vector<std::string>& constraintTermNames,
               ParamHistFunc& paramHist, const TH1* uncertHist,
               Constraint::Type type, double minSigma ) {
 
@@ -1787,29 +1784,27 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   // Check that there are N elements
   // in the RooArgList
   if( numBins != numParams ) {
-    std::cout << "Error: In createStatConstraintTerms, encountered bad number of bins" << std::endl;
+    std::cout << "Error: In createGammaConstraintTerms, encountered bad number of bins" << std::endl;
     std::cout << "Given histogram with " << numBins << " bins,"
          << " but require exactly " << numParams << std::endl;
     throw hf_exc();
   }
 
-  int TH1BinNumber = 0;
+  // Get the relative sigmas from the hist
+  std::vector<double> relSigmas(paramSet.size());
+  for(int i = 0; i < paramSet.getSize(); ++i) {
+     relSigmas[i] = uncertHist->GetBinContent(i + 1);
+  }
+  configureConstrainedGammas(paramSet, relSigmas, minSigma);
+
   for( int i = 0; i < paramSet.getSize(); ++i) {
-
-    TH1BinNumber++;
-
-    while( uncertHist->IsBinUnderflow(TH1BinNumber) || uncertHist->IsBinOverflow(TH1BinNumber) ){
-      TH1BinNumber++;
-    }
 
     RooRealVar& gamma = (RooRealVar&) (paramSet[i]);
 
     cxcoutI(HistFactory) << "Creating constraint for: " << gamma.GetName()
          << ". Type of constraint: " << type <<  std::endl;
 
-    // Get the sigma from the hist
-    // (the relative uncertainty)
-    const double sigmaRel = uncertHist->GetBinContent(TH1BinNumber);
+    const double sigmaRel = relSigmas[i];
 
     // If the sigma is <= 0,
     // do cont create the term
@@ -1818,15 +1813,10 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       << gamma.GetName()
       << " because sigma = " << sigmaRel
       << " (sigma<=0)"
-      << " (TH1 bin number = " << TH1BinNumber << ")"
+      << " (TH1 bin number = " << (i + 1) << ")"
       << std::endl;
-      gamma.setConstant(true);
       continue;
     }
-
-    // set reasonable ranges for gamma parameters
-    gamma.setMax( 1 + 5*sigmaRel );
-    gamma.setMin( 0. );
 
     // Make Constraint Term
     std::string constrName = std::string(gamma.GetName()) + "_constraint";
@@ -1846,10 +1836,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       // Make the constraint:
       getOrCreate<RooGaussian>(proto, constrName, constrNom, gamma, constrSigma);
-
-      // Give reasonable starting point for pre-fit errors by setting it to the absolute sigma
-      // Mostly useful for pre-fit plotting.
-      gamma.setError(sigmaRel);
     } else if( type == Constraint::Poisson ) {
 
       double tau = 1/sigmaRel/sigmaRel; // this is correct Poisson equivalent to a Gaussian with mean 1 and stdev sigma
@@ -1870,28 +1856,11 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       // Type 2 : RooPoisson
       getOrCreate<RooPoisson>(proto, constrName, constrNom, constrMean).setNoRounding(true);
 
-      if (std::string(gamma.GetName()).find("gamma_stat") != std::string::npos) {
-        // Give reasonable starting point for pre-fit errors.
-        // Mostly useful for pre-fit plotting.
-        gamma.setError(sigmaRel);
-      }
-
     } else {
 
       std::cout << "Error: Did not recognize Stat Error constraint term type: "
       << type << " for : " << paramHist.GetName() << std::endl;
       throw hf_exc();
-    }
-
-    // If the sigma value is less
-    // than a supplied threshold,
-    // set the variable to constant
-    if( sigmaRel < minSigma ) {
-      cxcoutW(HistFactory) << "Warning:  Bin " << i << " = " << sigmaRel
-      << " and is < " << minSigma
-      << ". Setting: " << gamma.GetName() << " to constant"
-      << std::endl;
-      gamma.setConstant(true);
     }
 
     constraintTermNames.push_back( constrName );
