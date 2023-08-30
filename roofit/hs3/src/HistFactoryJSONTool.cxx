@@ -81,6 +81,16 @@ void writeObservables(const TH1 &h, JSONNode &n, const std::vector<std::string> 
    }
 }
 
+void exportSimpleHistogram(const TH1 &histo, JSONNode &node)
+{
+   node.set_seq();
+   const int nBins = histo.GetNbinsX() * histo.GetNbinsY() * histo.GetNbinsZ();
+   for (int i = 1; i <= nBins; ++i) {
+      const double val = histo.GetBinContent(i);
+      node.append_child() << val;
+   }
+}
+
 void exportHistogram(const TH1 &histo, JSONNode &node, const std::vector<std::string> &varnames,
                      const TH1 *errH = nullptr, bool doWriteObservables = true, bool writeErrors = true)
 {
@@ -143,8 +153,24 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
          node["name"] << sys.GetName();
          node["type"] << "histosys";
          auto &data = node["data"].set_map();
-         exportHistogram(*sys.GetHistoLow(), data["lo"], obsnames, nullptr, false);
-         exportHistogram(*sys.GetHistoHigh(), data["hi"], obsnames, nullptr, false);
+         exportSimpleHistogram(*sys.GetHistoLow(), data["lo"].set_map()["contents"]);
+         exportSimpleHistogram(*sys.GetHistoHigh(), data["hi"].set_map()["contents"]);
+      }
+   }
+
+   if (!sample.GetShapeSysList().empty()) {
+      auto &modifiers = s["modifiers"].set_seq();
+      for (size_t i = 0; i < sample.GetShapeSysList().size(); ++i) {
+         auto &sys = sample.GetShapeSysList()[i];
+         auto &node = modifiers.append_child().set_map();
+         node["name"] << sys.GetName();
+         node["type"] << "shapesys";
+         if (sys.GetConstraintType() == RooStats::HistFactory::Constraint::Gaussian)
+            node["constraint"] << "Gauss";
+         if (sys.GetConstraintType() == RooStats::HistFactory::Constraint::Poisson)
+            node["constraint"] << "Poisson";
+         auto &data = node["data"].set_map();
+         exportSimpleHistogram(*sys.GetErrorHist(), data["vals"]);
       }
    }
 
@@ -188,26 +214,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    for (const auto &ch : measurement.GetChannels()) {
       if (!ch.CheckHistograms())
          throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
-   }
-
-   // collect information
-   std::map<std::string, RooStats::HistFactory::Constraint::Type> constraints;
-   std::map<std::string, NormFactor> normfactors;
-   for (const auto &ch : measurement.GetChannels()) {
-      for (const auto &s : ch.GetSamples()) {
-         for (const auto &sys : s.GetOverallSysList()) {
-            constraints[sys.GetName()] = RooStats::HistFactory::Constraint::Gaussian;
-         }
-         for (const auto &sys : s.GetHistoSysList()) {
-            constraints[sys.GetName()] = RooStats::HistFactory::Constraint::Gaussian;
-         }
-         for (const auto &sys : s.GetShapeSysList()) {
-            constraints[sys.GetName()] = sys.GetConstraintType();
-         }
-         for (const auto &norm : s.GetNormFactorList()) {
-            normfactors[norm.GetName()] = norm;
-         }
-      }
    }
 
    // preprocess functions
