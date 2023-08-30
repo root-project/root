@@ -98,10 +98,16 @@ public:
    void BindRaw(std::string_view fieldName, void *where);
 
    template <typename T>
-   std::shared_ptr<T> GetShared(std::string_view /* fieldName */) const
+   std::shared_ptr<T> GetShared(std::string_view fieldName) const
    {
-      // TODO
-      return std::shared_ptr<T>(new T());
+      for (std::size_t i = 0; i < fValues.size(); ++i) {
+         if (fValues[i].GetField().GetName() != fieldName)
+            continue;
+         if (!fValuePtrs[i])
+            throw RException(R__FAIL("invalid attempt to get shared pointer of raw value: " + std::string(fieldName)));
+         return static_cast<std::shared_ptr<T>>(fValuePtrs[i]);
+      }
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
 
    template <typename T>
