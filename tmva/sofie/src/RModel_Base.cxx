@@ -18,11 +18,11 @@ void RModel_Base::GenerateHeaderInfo(std::string& hgname) {
     std::transform(hgname.begin(), hgname.end(), hgname.begin(), [](unsigned char c) {
                        return std::toupper(c);
                    } );
-    hgname = "TMVA_SOFIE_" + hgname;
+    hgname = "ROOT_TMVA_SOFIE_" + hgname;
     fGC += "\n#ifndef " + hgname + "\n";
     fGC += "#define " + hgname + "\n\n";
     for (auto& i: fNeededStdLib) {
-        fGC += "#include<" + i + ">\n";
+        fGC += "#include <" + i + ">\n";
     }
     for (auto& i: fCustomOpHeaders) {
         fGC += "#include \"" + i + "\"\n";
