@@ -89,13 +89,13 @@ public:
    T *GetRaw(std::string_view fieldName) const
    {
       for (auto& v : fValues) {
-         if (v.GetField()->GetName() != fieldName)
+         if (v.GetField().GetName() != fieldName)
             continue;
 
          if constexpr (std::is_void_v<T>)
             return v.GetRawPtr();
 
-         if (v.GetField()->GetType() != RField<T>::TypeName())
+         if (v.GetField().GetType() != RField<T>::TypeName())
             throw RException(R__FAIL("type mismatch in REntry::GetRaw()"));
          return v.Get<T>();
       }

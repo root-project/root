@@ -143,7 +143,7 @@ public:
 
    private:
       RFieldBase *fField = nullptr; ///< The field that created the RValue
-      /// Created by RFieldBase::GenerateValue() or a non-owning pointer from SplitValue() or BindValue()
+      /// Created by RFieldBase::GenerateValue() or a non-owning pointer from SplitValue(), BindValue(), or BindRaw()
       void *fObjPtr = nullptr;
       bool fIsOwning = false; ///< If true, fObjPtr is destroyed in the destructor
 
@@ -184,6 +184,12 @@ public:
       std::size_t Append() { return fField->Append(fObjPtr); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
       void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
+      void BindRaw(void *objPtr)
+      {
+         DestroyIfOwning();
+         fObjPtr = objPtr;
+         fIsOwning = false;
+      }
 
       template <typename T>
       T *Get() const
@@ -191,7 +197,7 @@ public:
          return static_cast<T *>(fObjPtr);
       }
       void *GetRawPtr() const { return fObjPtr; }
-      RFieldBase *GetField() const { return fField; }
+      const RFieldBase &GetField() const { return *fField; }
    }; // class RValue
 
    /// Similar to RValue but manages an array of consecutive values. Bulks have to come from the same cluster.

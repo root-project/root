@@ -354,7 +354,7 @@ ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEnt
       if (linkedEntry) {
          bool isLinked = false;
          for (const auto &v : *linkedEntry) {
-            if (f->Compare(*v.GetField()) != 0)
+            if (f->Compare(v.GetField()) != 0)
                continue;
 
             entry->AddValue(f->BindValue(v.GetRawPtr()));

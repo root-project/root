@@ -26,9 +26,9 @@ void ROOT::Experimental::REntry::AddValue(Detail::RFieldBase::RValue &&value)
 void ROOT::Experimental::REntry::BindValue(std::string_view fieldName, void *where)
 {
    for (std::size_t i = 0; i < fValues.size(); ++i) {
-      if (fValues[i].GetField()->GetName() != fieldName)
+      if (fValues[i].GetField().GetName() != fieldName)
          continue;
-      fValues[i] = fValues[i].GetField()->BindValue(where);
+      fValues[i].BindRaw(where);
       return;
    }
    throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
