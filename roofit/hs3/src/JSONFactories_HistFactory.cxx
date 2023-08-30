@@ -37,6 +37,9 @@
 
 using RooFit::Detail::JSONNode;
 
+using namespace RooStats::HistFactory::Detail;
+using namespace RooStats::HistFactory::Detail::MagicConstants;
+
 namespace {
 
 inline void writeAxis(JSONNode &axis, RooRealVar const &obs)
@@ -141,8 +144,6 @@ std::string toString(TClass *c)
    return "unknown";
 }
 
-using namespace RooStats::HistFactory::Detail;
-
 RooRealVar &createNominal(RooWorkspace &ws, std::string const &parname, double val, double min, double max)
 {
    RooRealVar &nom = getOrCreate<RooRealVar>(ws, "nom_" + parname, val, min, max);
@@ -163,20 +164,6 @@ RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &sysname, const std
    RooRealVar *constrParam = ws.var(pname);
    constrParam->setError(1.0);
    return getOrCreate<RooGaussian>(ws, constraintName(sysname), *constrParam, *ws.var("nom_" + pname), 1.);
-}
-
-void setMCStatGammaRanges(RooArgList const &gammas, std::vector<double> const &errs, double statErrThresh)
-{
-   // Set a reasonable range for gamma and set constant NPs which are below the
-   // MC stat threshold, and remove them from the np list.
-   for (size_t i = 0; i < errs.size(); ++i) {
-      auto g = static_cast<RooRealVar *>(gammas.at(i));
-      g->setMax(1 + 5 * errs[i]);
-      g->setError(errs[i]);
-      if (errs[i] < statErrThresh) {
-         g->setConstant(true); // all negative errs are set constant
-      }
-   }
 }
 
 ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname, const std::vector<double> &vals,
@@ -319,7 +306,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             }
             RooArgList gammas;
             std::string constraint(mod["constraint"].val());
-            shapeElems.add(createPHF(sysname, funcName, vals, tool, constraints, varlist, constraint, gammas, 0, 1000));
+            shapeElems.add(createPHF(sysname, funcName, vals, tool, constraints, varlist, constraint, gammas,
+                                     defaultGammaMin, defaultShapeSysGammaMax));
+            configureConstrainedGammas(gammas, vals, minShapeUncertainty);
          } else if (modtype == "custom") {
             RooAbsReal *obj = ws.function(sysname);
             if (!obj) {
@@ -423,8 +412,8 @@ public:
 
          RooArgList gammas;
          mcStatObject = &createPHF("stat_" + phfName, "mc_stat_" + phfName, vals, *tool, constraints, observables,
-                                   statErrType, gammas, 0, 10);
-         setMCStatGammaRanges(gammas, errs, statErrThresh);
+                                   statErrType, gammas, defaultGammaMin, defaultStatErrorGammaMax);
+         configureConstrainedGammas(gammas, errs, statErrThresh);
       }
 
       int idx = 0;

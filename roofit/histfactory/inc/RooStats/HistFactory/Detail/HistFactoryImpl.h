@@ -16,9 +16,21 @@
 #include <RooGlobalFunc.h>
 #include <RooWorkspace.h>
 
+#include <ROOT/RSpan.hxx>
+
 namespace RooStats {
 namespace HistFactory {
 namespace Detail {
+
+namespace MagicConstants {
+
+constexpr double defaultGammaMin = 0;
+constexpr double defaultShapeFactorGammaMax = 1000;
+constexpr double defaultShapeSysGammaMax = 10;
+constexpr double defaultStatErrorGammaMax = 10;
+constexpr double minShapeUncertainty = 0.0;
+
+} // namespace MagicConstants
 
 template <class Arg_t, class... Params_t>
 Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, Params_t &&...params)
@@ -30,6 +42,8 @@ Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, Params_t &&...para
    ws.import(newArg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
    return *static_cast<Arg_t *>(ws.obj(name));
 }
+
+void configureConstrainedGammas(RooArgList const &gammas, std::span<double> relSigmas, double minSigma);
 
 } // namespace Detail
 } // namespace HistFactory
