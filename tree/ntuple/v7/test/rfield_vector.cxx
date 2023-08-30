@@ -221,7 +221,7 @@ TEST(RNTuple, RVecTypeErased)
 
       auto w = RNTupleWriter::Recreate(std::move(m), "r", fileGuard.GetPath());
       auto e = w->CreateBareEntry().lock();
-      e->BindValue("v", (void *)&rvec);
+      e->BindRaw("v", (void *)&rvec);
 
       w->Fill(*e);
       rvec.clear();

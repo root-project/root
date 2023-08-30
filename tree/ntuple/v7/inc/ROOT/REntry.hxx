@@ -76,7 +76,7 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
-   void BindValue(std::string_view fieldName, void *where);
+   void BindRaw(std::string_view fieldName, void *where);
 
    template <typename T>
    std::shared_ptr<T> GetShared(std::string_view /* fieldName */) const

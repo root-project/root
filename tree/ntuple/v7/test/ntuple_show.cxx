@@ -456,9 +456,9 @@ TEST(RNTupleShow, RVecTypeErased)
 
       auto writer = RNTupleWriter::Recreate(std::move(m), ntupleName, rootFileName);
       auto entry = writer->CreateBareEntry().lock();
-      entry->BindValue("intVec", &intVec);
-      entry->BindValue("floatVecVec", &floatVecVec);
-      entry->BindValue("customStructVec", &customStructVec);
+      entry->BindRaw("intVec", &intVec);
+      entry->BindRaw("floatVecVec", &floatVecVec);
+      entry->BindRaw("customStructVec", &customStructVec);
 
       writer->Fill(*entry);
       intVec.emplace_back(4);

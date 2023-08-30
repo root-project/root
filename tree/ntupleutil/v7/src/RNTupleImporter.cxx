@@ -326,7 +326,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       for (auto idx : c.fImportFieldIndexes) {
          const auto name = fImportFields[idx].fField->GetName();
          const auto buffer = fImportFields[idx].fFieldBuffer;
-         c.fCollectionEntry->BindValue(name, buffer);
+         c.fCollectionEntry->BindRaw(name, buffer);
       }
       c.fFieldName = "_collection" + std::to_string(iLeafCountCollection);
       c.fCollectionWriter = fModel->MakeCollection(c.fFieldName, std::move(c.fCollectionModel));
@@ -354,10 +354,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)
          continue;
-      fEntry->BindValue(f.fField->GetName(), f.fFieldBuffer);
+      fEntry->BindRaw(f.fField->GetName(), f.fFieldBuffer);
    }
    for (const auto &[_, c] : fLeafCountCollections) {
-      fEntry->BindValue(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
+      fEntry->BindRaw(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
    }
 
    if (!fIsQuiet)
