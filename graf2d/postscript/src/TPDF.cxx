@@ -1375,7 +1375,7 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 void TPDF::EndObject()
 {
    if (!fgObjectIsOpen)
-      Warning("TPDF::EndObject", "There no Object open, one must be created before ending one");
+      Warning("TPDF::EndObject", "No Object currently opened.");
    fgObjectIsOpen = kFALSE;
 
    PrintStr("endobj@");
@@ -1439,7 +1439,7 @@ void TPDF::MoveTo(Double_t x, Double_t y)
 void TPDF::NewObject(Int_t n)
 {
    if (fgObjectIsOpen)
-      Warning("TPDF::NewObject", "An Object is already open, it must be closed before creating a new one");
+      Warning("TPDF::NewObject", "An Object is already open.");
    fgObjectIsOpen = kTRUE;
    if (!fObjPos || n >= fObjPosSize) {
       Int_t newN = TMath::Max(2*fObjPosSize,n+1);
