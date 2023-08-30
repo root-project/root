@@ -248,7 +248,7 @@ TEST(MiniFile, FailOnForwardIncompatibility)
       auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
       ASSERT_EQ(1U, reader->GetNEntries());
       reader->LoadEntry(0);
-      EXPECT_EQ(42.0, *(reader->GetModel()->GetDefaultEntry().lock()->Get<float>("pt")));
+      EXPECT_EQ(42.0, *(reader->GetModel()->GetDefaultEntry().lock()->GetRaw<float>("pt")));
    }
 
    // Fix the version numbers in the header

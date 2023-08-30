@@ -316,7 +316,7 @@ public:
    T *Get(std::string_view fieldName) const
    {
       EnsureNotBare();
-      return GetDefaultEntryPtr()->Get<T>(fieldName);
+      return GetDefaultEntryPtr()->GetRaw<T>(fieldName);
    }
 
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }

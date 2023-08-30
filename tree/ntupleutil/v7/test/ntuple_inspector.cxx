@@ -249,8 +249,8 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
       auto e = ntuple->CreateEntry().lock();
 
       for (int i = 0; i < 5; ++i) {
-         *e->Get<std::int32_t>("int32") = i;
-         *e->Get<double>("splitReal64") = i;
+         *e->GetRaw<std::int32_t>("int32") = i;
+         *e->GetRaw<double>("splitReal64") = i;
          ntuple->Fill(*e);
       }
    }

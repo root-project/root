@@ -23,6 +23,7 @@
 #include <TError.h>
 
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -78,23 +79,25 @@ public:
    void BindValue(std::string_view fieldName, void *where);
 
    template <typename T>
-   T *Get(std::string_view fieldName) const
+   std::shared_ptr<T> GetShared(std::string_view /* fieldName */) const
    {
-      for (auto& v : fValues) {
-         if (v.GetField()->GetName() == fieldName) {
-            R__ASSERT(v.GetField()->GetType() == RField<T>::TypeName());
-            return v.Get<T>();
-         }
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      // TODO
+      return std::shared_ptr<T>(new T());
    }
 
-   void *GetRawPtr(std::string_view fieldName) const
+   template <typename T>
+   T *GetRaw(std::string_view fieldName) const
    {
       for (auto& v : fValues) {
-         if (v.GetField()->GetName() == fieldName) {
+         if (v.GetField()->GetName() != fieldName)
+            continue;
+
+         if constexpr (std::is_void_v<T>)
             return v.GetRawPtr();
-         }
+
+         if (v.GetField()->GetType() != RField<T>::TypeName())
+            throw RException(R__FAIL("type mismatch in REntry::GetRaw()"));
+         return v.Get<T>();
       }
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }

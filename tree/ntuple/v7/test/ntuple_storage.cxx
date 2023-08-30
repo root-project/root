@@ -71,7 +71,7 @@ TEST(RNTuple, Basics)
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
    EXPECT_EQ(3U, ntuple->GetNEntries());
-   auto rdPt = ntuple->GetModel()->GetDefaultEntry().lock()->Get<float>("pt");
+   auto rdPt = ntuple->GetModel()->GetDefaultEntry().lock()->GetRaw<float>("pt");
 
    ntuple->LoadEntry(0);
    EXPECT_EQ(42.0, *rdPt);
@@ -110,7 +110,7 @@ TEST(RNTuple, Extended)
    }
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
-   auto rdVector = ntuple->GetModel()->GetDefaultEntry().lock()->Get<std::vector<double>>("vector");
+   auto rdVector = ntuple->GetModel()->GetDefaultEntry().lock()->GetRaw<std::vector<double>>("vector");
 
    double chksumRead = 0.0;
    for (auto entryId : *ntuple) {
@@ -519,7 +519,7 @@ TEST(RPageSink, MultipleClusterGroups)
    EXPECT_EQ(2U, ntuple->GetDescriptor()->GetNClusterGroups());
    EXPECT_EQ(3U, ntuple->GetDescriptor()->GetNClusters());
    EXPECT_EQ(3U, ntuple->GetNEntries());
-   auto rdPt = ntuple->GetModel()->GetDefaultEntry().lock()->Get<float>("pt");
+   auto rdPt = ntuple->GetModel()->GetDefaultEntry().lock()->GetRaw<float>("pt");
 
    ntuple->LoadEntry(0);
    EXPECT_EQ(42.0, *rdPt);

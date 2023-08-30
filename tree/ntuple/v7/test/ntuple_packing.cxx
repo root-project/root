@@ -212,31 +212,31 @@ TEST(Packing, OnDiskEncoding)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
       auto e = writer->CreateEntry().lock();
 
-      *e->Get<std::int16_t>("int16") = 1;
-      *e->Get<std::int32_t>("int32") = 0x00010203;
-      *e->Get<std::int64_t>("int64") = 0x0001020304050607L;
-      *e->Get<std::uint16_t>("uint16") = 1;
-      *e->Get<std::uint32_t>("uint32") = 0x00010203;
-      *e->Get<std::uint64_t>("uint64") = 0x0001020304050607L;
-      *e->Get<float>("float") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
-      *e->Get<double>("double") = std::nextafter(1., 2.);  // 0x3ff0 0000 0000 0001
-      *e->Get<ClusterSize_t>("index32") = 39916801;        // 0x0261 1501
-      *e->Get<ClusterSize_t>("index64") = 0x0706050403020100L;
-      e->Get<std::string>("str")->assign("abc");
+      *e->GetRaw<std::int16_t>("int16") = 1;
+      *e->GetRaw<std::int32_t>("int32") = 0x00010203;
+      *e->GetRaw<std::int64_t>("int64") = 0x0001020304050607L;
+      *e->GetRaw<std::uint16_t>("uint16") = 1;
+      *e->GetRaw<std::uint32_t>("uint32") = 0x00010203;
+      *e->GetRaw<std::uint64_t>("uint64") = 0x0001020304050607L;
+      *e->GetRaw<float>("float") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
+      *e->GetRaw<double>("double") = std::nextafter(1., 2.);  // 0x3ff0 0000 0000 0001
+      *e->GetRaw<ClusterSize_t>("index32") = 39916801;        // 0x0261 1501
+      *e->GetRaw<ClusterSize_t>("index64") = 0x0706050403020100L;
+      e->GetRaw<std::string>("str")->assign("abc");
 
       writer->Fill(*e);
 
-      *e->Get<std::int16_t>("int16") = -3;
-      *e->Get<std::int32_t>("int32") = -0x04050607;
-      *e->Get<std::int64_t>("int64") = -0x08090a0b0c0d0e0fL;
-      *e->Get<std::uint16_t>("uint16") = 2;
-      *e->Get<std::uint32_t>("uint32") = 0x04050607;
-      *e->Get<std::uint64_t>("uint64") = 0x08090a0b0c0d0e0fL;
-      *e->Get<float>("float") = std::nextafterf(1.f, 0.f);            // 0 01111110 11111111111111111111111 = 0x3f7fffff
-      *e->Get<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
-      *e->Get<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
-      *e->Get<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
-      e->Get<std::string>("str")->assign("de");
+      *e->GetRaw<std::int16_t>("int16") = -3;
+      *e->GetRaw<std::int32_t>("int32") = -0x04050607;
+      *e->GetRaw<std::int64_t>("int64") = -0x08090a0b0c0d0e0fL;
+      *e->GetRaw<std::uint16_t>("uint16") = 2;
+      *e->GetRaw<std::uint32_t>("uint32") = 0x04050607;
+      *e->GetRaw<std::uint64_t>("uint64") = 0x08090a0b0c0d0e0fL;
+      *e->GetRaw<float>("float") = std::nextafterf(1.f, 0.f); // 0 01111110 11111111111111111111111 = 0x3f7fffff
+      *e->GetRaw<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
+      *e->GetRaw<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
+      *e->GetRaw<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
+      e->GetRaw<std::string>("str")->assign("de");
 
       writer->Fill(*e);
    }
