@@ -41,7 +41,10 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
+   friend class RCollectionNTupleWriter;
    friend class RNTupleModel;
+   friend class RNTupleReader;
+   friend class RNTupleWriter;
 
    /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
    std::uint64_t fModelId = 0;
@@ -65,6 +68,22 @@ class REntry {
       fValues.emplace_back(field->BindValue(ptr.get()));
       fValuePtrs.emplace_back(ptr);
       return ptr;
+   }
+
+   void Read(NTupleSize_t index)
+   {
+      for (auto &v : fValues) {
+         v.Read(index);
+      }
+   }
+
+   std::size_t Append()
+   {
+      std::size_t bytesWritten = 0;
+      for (auto &v : fValues) {
+         bytesWritten += v.Append();
+      }
+      return bytesWritten;
    }
 
 public:
@@ -103,22 +122,6 @@ public:
    }
 
    std::uint64_t GetModelId() const { return fModelId; }
-
-   void Read(NTupleSize_t index)
-   {
-      for (auto &v : fValues) {
-         v.Read(index);
-      }
-   }
-
-   std::size_t Append()
-   {
-      std::size_t bytesWritten = 0;
-      for (auto &v : fValues) {
-         bytesWritten += v.Append();
-      }
-      return bytesWritten;
-   }
 
    ConstIterator_t begin() const { return fValues.cbegin(); }
    ConstIterator_t end() const { return fValues.cend(); }
