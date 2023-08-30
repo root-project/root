@@ -5194,7 +5194,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (strstr(opt,"Preview"))
       gSystem->Exec(TString::Format("epstool --quiet -t6p %s %s", psname.Data(), psname.Data()).Data());
    if (strstr(opt,"EmbedFonts")) {
-      gSystem->Exec(TString::Format("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dUseCIEColor -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
+      gSystem->Exec(TString::Format("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
                           psname.Data()).Data());
       gSystem->Rename("pdf_temp.pdf", psname.Data());
    }

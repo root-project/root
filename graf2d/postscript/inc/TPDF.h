@@ -52,6 +52,7 @@ protected:
 
    static Int_t       fgLineJoin;       ///< Appearance of joining lines
    static Int_t       fgLineCap;        ///< Appearance of line caps
+   static Bool_t      fgObjectIsOpen;   ///< Indicates if an object is open
 
 public:
    TPDF();
@@ -76,6 +77,7 @@ public:
    void     DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
    void     LineTo(Double_t x, Double_t y);
    void     MoveTo(Double_t x, Double_t y);
+   void     EndObject();
    void     FontEncode();
    void     NewObject(Int_t n);
    void     NewPage() override;
