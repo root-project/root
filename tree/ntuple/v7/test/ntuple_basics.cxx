@@ -640,7 +640,7 @@ TEST(RNTuple, BareEntry)
       auto e2 = writer->CreateBareEntry().lock();
       EXPECT_EQ(nullptr, e2->Get<float>("pt"));
       float pt = 2.0;
-      e2->CaptureValueUnsafe("pt", &pt);
+      e2->BindValue("pt", &pt);
 
       writer->Fill(*e1);
       writer->Fill(*e2);

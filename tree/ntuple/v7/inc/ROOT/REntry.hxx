@@ -75,7 +75,7 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
-   void CaptureValueUnsafe(std::string_view fieldName, void *where);
+   void BindValue(std::string_view fieldName, void *where);
 
    template <typename T>
    T *Get(std::string_view fieldName) const

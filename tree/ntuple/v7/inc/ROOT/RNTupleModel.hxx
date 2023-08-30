@@ -348,7 +348,7 @@ public:
       return CreateEntryImpl(false /* isBare */, linkedEntry);
    }
    /// In a bare entry, all values not covered by the linked entry point to nullptr.
-   /// The resulting entry shall use CaptureValueUnsafe() in order set memory addresses to be serialized / deserialized
+   /// The resulting entry shall use BindValue() in order set memory addresses to be serialized / deserialized
    std::weak_ptr<REntry> CreateBareEntry(REntry *linkedEntry = nullptr)
    {
       return CreateEntryImpl(true /* isBare */, linkedEntry);
