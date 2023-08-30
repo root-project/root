@@ -5,6 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 set(root_build_options)
+set(root_gpu_options)
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_BUILD_OPTION( name defvalue [description] )
@@ -18,6 +19,18 @@ function(ROOT_BUILD_OPTION opt defvalue)
   set(${opt}_defvalue    ${defvalue} PARENT_SCOPE)
   set(${opt}_description ${description} PARENT_SCOPE)
   set(root_build_options  ${root_build_options} ${opt} PARENT_SCOPE )
+endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_GPU_OPTION( name defvalue [description] )
+#---------------------------------------------------------------------------------------------------
+function(ROOT_GPU_OPTION opt defvalue)
+  if(ARGN)
+    set(description ${ARGN})
+  else()
+    set(description " ")
+  endif()
+  set(root_gpu_options  ${root_gpu_options} ${opt}_${defvalue} PARENT_SCOPE )
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -36,6 +49,24 @@ function(ROOT_GET_OPTIONS result)
   CMAKE_PARSE_ARGUMENTS(ARG "ENABLED" "" "" ${ARGN})
   set(enabled)
   foreach(opt ${root_build_options})
+    if(ARG_ENABLED)
+      if(${opt})
+        set(enabled "${enabled} ${opt}")
+      endif()
+    else()
+      set(enabled "${enabled} ${opt}")
+    endif()
+  endforeach()
+  set(${result} "${enabled}" PARENT_SCOPE)
+endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#---ROOT_GET_GPU_OPTIONS(result ENABLED)
+#---------------------------------------------------------------------------------------------------
+function(ROOT_GET_GPU_OPTIONS result)
+  CMAKE_PARSE_ARGUMENTS(ARG "ENABLED" "" "" ${ARGN})
+  set(enabled)
+  foreach(opt ${root_gpu_options})
     if(ARG_ENABLED)
       if(${opt})
         set(enabled "${enabled} ${opt}")
@@ -179,9 +210,9 @@ ROOT_BUILD_OPTION(tmva ON "Build TMVA multi variate analysis library")
 ROOT_BUILD_OPTION(tmva-cpu ON "Build TMVA with CPU support for deep learning (requires BLAS)")
 ROOT_BUILD_OPTION(tmva-gpu OFF "Build TMVA with GPU support for deep learning (requries CUDA)")
 ROOT_BUILD_OPTION(tmva-sofie OFF "Build TMVA with support for sofie - fast inference code generation (requires protobuf 3)")
-ROOT_BUILD_OPTION(sofie-sycl OFF "Build TMVA with support for sofie sycl - fast inference code generation for Intel GPUs (requires IntelSYCL installation and OneAPI MKL libraries)")
 ROOT_BUILD_OPTION(tmva-pymva ON "Enable support for Python in TMVA (requires numpy)")
 ROOT_BUILD_OPTION(tmva-rmva OFF "Enable support for R in TMVA")
+ROOT_BUILD_OPTION(sofie-sycl OFF "Build TMVA with support for sofie sycl - fast inference code generation for Intel GPUs (requires IntelSYCL installation and OneAPI MKL libraries)")
 ROOT_BUILD_OPTION(spectrum ON "Enable support for TSpectrum")
 ROOT_BUILD_OPTION(unuran OFF "Enable support for UNURAN (package for generating non-uniform random numbers)")
 ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires liburing and Linux kernel >= 5.1)")
@@ -196,6 +227,10 @@ ROOT_BUILD_OPTION(x11 ON "Enable support for X11/Xft")
 ROOT_BUILD_OPTION(xml ON "Enable support for XML (requires libxml2)")
 ROOT_BUILD_OPTION(xrootd ON "Enable support for XRootD file server and client")
 ROOT_BUILD_OPTION(xproofd OFF "Enable LEGACY support for XProofD file server and client (requires XRootD v4 with private-devel), deprecated")
+
+#--- SOFIE-SYCL GPU Options-------------------------------------------------------------
+ROOT_GPU_OPTION(TARGET_GPU ${TARGET_GPU} "Choose device to generate SYCL code for. Valid options are: [Intel;NVIDIA;AMD]")
+ROOT_GPU_OPTION(GPU_BLAS ${GPU_BLAS} "Choose BLAS library for SYCL generated code. Valid options are: [MKLBLAS;portBLAS]")
 
 option(all "Enable all optional components by default" OFF)
 option(clingtest "Enable cling tests (Note: that this makes llvm/clang symbols visible in libCling)" OFF)

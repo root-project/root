@@ -84,7 +84,9 @@ set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
 
 target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=${TARGET_GPU})
+message("TARGET_GPU = ${TARGET_GPU}")
 target_compile_definitions(ROOTTMVASofie PUBLIC GPU_BLAS=${GPU_BLAS})
+message("GPU_BLAS = ${GPU_BLAS}")
 
 # tests requires protobuf
 if (tmva-sofie)

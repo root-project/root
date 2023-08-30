@@ -703,6 +703,7 @@ configure_file(${CMAKE_SOURCE_DIR}/etc/class.rules ${CMAKE_BINARY_DIR}/etc/class
 #---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
 ROOT_GET_OPTIONS(ROOT_ALL_OPTIONS)
 ROOT_GET_OPTIONS(ROOT_ENABLED_OPTIONS ENABLED)
+ROOT_GET_GPU_OPTIONS(ROOT_ENABLED_GPU_OPTIONS)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
                ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake @ONLY NEWLINE_STYLE UNIX)
 
