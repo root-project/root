@@ -202,7 +202,7 @@ public:
          out << SP*4 << "});\n";
          out << SP*3 << "});\n";
 
-         if (GPU_BLAS == MKLBLAS) {
+         if (gpu_blas == MKLBLAS) {
             out << SP*3 << scal << length << ", " << "1 / sum_buf.get_host_access()[0], buf_tensor_" << fNY << ", 1);\n";
          }
          else {

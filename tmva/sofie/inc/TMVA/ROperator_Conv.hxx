@@ -713,7 +713,7 @@ public:
             out << fShapeY[1] * oDepth * oHeight * oWidth << ")};\n";
             out << SP*4 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
 
-            if (GPU_BLAS == MKLBLAS) {
+            if (gpu_blas == MKLBLAS) {
                out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
                out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
                out << ", " << OpName << "_m);\n";
@@ -761,7 +761,7 @@ public:
             out << fShapeW[0] * oDepth * oHeight * oWidth / fAttrGroup << ")};\n";
             out << SP*5 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
 
-            if (GPU_BLAS == MKLBLAS) {
+            if (gpu_blas == MKLBLAS) {
                out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
                out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
                out << ", " << OpName << "_m);\n";
@@ -779,7 +779,7 @@ public:
             out << SP*3 << "int " << OpName << "_incx = 1;\n";
             out << SP*3 << "int " << OpName << "_incy = 1;\n";
 
-            if (GPU_BLAS == MKLBLAS) {
+            if (gpu_blas == MKLBLAS) {
                out << SP*3 << axpy << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNB2;
                out << ", " << OpName << "_incx, tmp_buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
             }

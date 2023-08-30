@@ -630,7 +630,7 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName, std::str
             out <<  fShapeX[1] * iHeight * iWidth << ")};\n";
             out << SP*4 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
 
-            if (GPU_BLAS == MKLBLAS) {
+            if (gpu_blas == MKLBLAS) {
                out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, tmp_buf_tensor_" << fNX << ", " << OpName;
                out << "_m, buf_" << OpName << "_f, " << OpName << "_n, " << OpName << "_beta, buf_" << OpName << "_xcol";
                out << ", " << OpName << "_m);\n";
@@ -681,7 +681,7 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName, std::str
             out <<  fShapeX[1] * iDepth * iHeight * iWidth<< ")};\n";
             out << SP*4 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
 
-            if (GPU_BLAS == MKLBLAS) {
+            if (gpu_blas == MKLBLAS) {
                out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, tmp_buf_tensor_" << fNX << ", " << OpName;
                out << "_m, buf_" << OpName << "_f, " << OpName << "_n, " << OpName << "_beta, buf_" << OpName << "_xcol";
                out << ", " << OpName << "_m);\n";
@@ -729,7 +729,7 @@ std::string ROperator_ConvTranspose<T>::GenerateGPU(std::string OpName, std::str
             out << SP*3 << "int " << OpName << "_incx = 1;\n";
             out << SP*3 << "int " << OpName << "_incy = 1;\n";
 
-            if (GPU_BLAS == MKLBLAS) {
+            if (gpu_blas == MKLBLAS) {
                out << SP*3 << axpy << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNBroadcastedB;
                out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
             }

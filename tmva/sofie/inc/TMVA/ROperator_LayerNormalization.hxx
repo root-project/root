@@ -540,7 +540,7 @@ public:
          out << SP*3 << "float " << OpName << "_alpha = 1.;\n";
          out << SP*3 << "int " << OpName << "_inc = 1;\n";
 
-         if (GPU_BLAS == MKLBLAS) {
+         if (gpu_blas == MKLBLAS) {
             out << SP*3 << axpy << OpName << "_n, " << OpName << "_alpha, ";
             out << Bias << ", " << OpName << "_inc, buf_tensor_" << fNY << ", " << OpName << "_inc);\n";
          }

@@ -1,0 +1,130 @@
+=========================================================================
+How to use the TGrid/TAlien/TAlienFile class V1.1 - Andreas.Peters@cern.ch
+=========================================================================
+
+
+TGrid-Plugin: TAlien
+====================
+
+To connect to Alien you have to connect to a running API service of your
+virtual organization.
+
+Creating <gGrid> instance:
+a) // connecting to an API service
+
+    TGrid::Connect("alien://pcapiserv01.cern.ch:9000","aliprod);
+
+    // connecting to an API service which is defined already by the
+    environment variables:
+       export alien_API_HOST=...
+       export alien_API_PORT=...
+       export alien_API_USER=...
+    TGrid::Connect("alien://");
+
+    // connect to an API service with an authentication token established
+    previously with gShellq.
+
+b)  TGrid::Connect("alien://",0,0,"t");
+
+    In case a) the authentication is private to the process, while case b)
+    shares the authentication(session) with the shell, which has established
+    the session previously. Notice that a) is not thread-safe, while b) is!
+
+If you have executed TGrid::Connect(), the gGrid global variable
+should be set != 0.
+
+Some examples:
+
+- change the working directory
+
+    gGrid->Cd("/alice/");  // => returns 1 for success, 0 for error
+
+- get the working directory
+
+    printf("GRID Working is %d",gGrid->Pwd());
+
+- list a directory
+
+    TGridResult* result = gGrid->Ls("/alice");
+    Int_t i=0;
+    while (result->GetFileName(i))
+      printf("File %s\n",result->GetFileName(i++));
+    TGridResult* result = gGrid->Ls("/alice");
+    Int_t i=0;
+    while (result->GetFileName(i))
+      printf("File %s\n",result->GetFileName(i++));
+
+- get all file permissions - using the GetKey function
+
+    TGridResult* result = gGrid->Ls("/alice","-la");
+    while (result->GetFileName(i))\
+    printf("The permissions are %s\n",result->GetKey(i++,"permissions")
+
+    // => the defined keys for GetKey can be seen using result->Print();
+
+
+- query files under a certain namespace tree
+
+    TGridResult* result = gGrid->Query("/alice/,"*.root");
+
+
+You can execute any existing command via the Command interface:
+
+    TGridResult* result = gGrid->Command("ls -la /",0,2);
+
+    // '0' switches of the output of stdout and stderr to the terminal
+    // '2' selects the result stream to be returned as TGridResult* :
+     '0' returns stdout,
+     '1' returns stderr,
+     '2' returns the result structure
+
+-> This command is equivalent to:
+
+    gGrid->Ls("/","-la");
+
+You can print the stdout of the last command via:
+    gGrid->Stdout();
+
+You can print the stderr of the last command via:
+    gGrid->Stderr();
+
+To see the result structure of a command, you can just use the 'Print' function for the
+TGridResult:
+
+   result->Print();
+
+
+
+TFile-Plugin: TAlienFile
+========================
+
+Files stored in Alien can be opened with the catalogue LFN or a GUID.
+To open a file by LFN use:
+
+   TFile* myfile = TFile::Open("alien:///alice/cern.ch/file.root");
+
+or
+
+   TFile* myfile = TFile::Open("/alien/alice/cern.ch/file.root");
+
+
+To open a file by GUID use:
+
+   TFile* myfile = TFile::Open("alien://<guid>");
+
+To address a certain storage element add to the URL
+      "?se=ALICE::CERN::Castor";
+
+f.e.    TFile::Open("/alien/alice/cern.ch/file.root?se=ALICE::CERN::Castor");
+
+
+To open a ZIP file in an archive, use:
+
+  TFile::Open("/alien7alice/cern.ch/archivefile.zip#file.root");
+
+- this assumes, that archivefile.zip is an UNCOMPRESSED zip archive containing
+  'file.root'.
+- remember, that archives need to have the suffix '.zip' to be understood as
+  such.
+
+

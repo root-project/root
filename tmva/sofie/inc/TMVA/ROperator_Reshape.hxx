@@ -238,7 +238,7 @@ public:
 
       out << "\n" << SP*3 << "///--------" << opName << " operator\n" << std::endl;
 
-      if (GPU_BLAS == MKLBLAS) {
+      if (gpu_blas == MKLBLAS) {
          out << SP*3 << copy << "buf_tensor_" << fNData << ".size(), buf_tensor_" << fNData << ", 1, buf_tensor_" << fNOutput << ", 1);\n";
       }
       else {

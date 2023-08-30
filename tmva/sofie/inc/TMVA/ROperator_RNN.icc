@@ -619,7 +619,7 @@ auto ROperator_RNN<T>::GenerateGPU(std::string OpName, std::string gemm, std::st
    std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)
 -> std::string {
 
-   if (GPU_BLAS == portBLAS) {
+   if (gpu_blas == portBLAS) {
       return std::string();
    }
    OpName = "op_" + OpName;

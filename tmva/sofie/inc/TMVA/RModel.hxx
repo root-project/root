@@ -28,6 +28,7 @@ enum class Options {
    kRootBinaryWeightFile = 0x4
 };
 
+
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
 std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
 
@@ -62,6 +63,8 @@ private:
    std::unordered_set<std::string> fCustomOpHeaders;
    bool fUseWeightFile = true;
    bool fUseSession = true;
+   int gpu_blas = GPU_BLAS;
+   int target_gpu = TARGET_GPU;
 
 public:
 

@@ -59,7 +59,8 @@ protected:
 
    const std::string SP = "    ";    ///< space used to correctly indent the generated C++ code
    bool fUseSession = false;        ///< flag to identify if using the session class
-
+   int gpu_blas = GPU_BLAS;
+   int target_gpu = TARGET_GPU;
 };
 
 

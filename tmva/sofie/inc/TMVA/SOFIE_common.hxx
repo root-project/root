@@ -28,11 +28,11 @@ enum class ETensorType{
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
 };
 
-enum gpu_blas {
+enum gpu_enum {
    MKLBLAS, portBLAS
 };
 
-enum target_gpu {
+enum target_enum {
    Intel, NVIDIA, AMD
 };
 

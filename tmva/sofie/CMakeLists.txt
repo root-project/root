@@ -83,10 +83,19 @@ endif()
 set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
 
-target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=${TARGET_GPU})
-message("TARGET_GPU = ${TARGET_GPU}")
-target_compile_definitions(ROOTTMVASofie PUBLIC GPU_BLAS=${GPU_BLAS})
-message("GPU_BLAS = ${GPU_BLAS}")
+if (${TARGET_GPU} STREQUAL "Intel")
+target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=0)
+elseif(${TARGET_GPU} STREQUAL "NVIDIA")
+target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=1)
+else()
+target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=2)
+endif()
+
+if (${GPU_BLAS} STREQUAL "MKLBLAS")
+target_compile_definitions(ROOTTMVASofie PUBLIC GPU_BLAS=0)
+else()
+target_compile_definitions(ROOTTMVASofie PUBLIC GPU_BLAS=1)
+endif()
 
 # tests requires protobuf
 if (tmva-sofie)

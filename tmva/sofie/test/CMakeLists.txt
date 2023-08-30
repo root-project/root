@@ -129,7 +129,7 @@ endif()
 # Creating a Google Test
 if (sofie-sycl AND testing)  # we need oneapi math kernel library to compile the models
 
-if (GPU_BLAS STREQUAL "MKLBLAS")
+if (${GPU_BLAS} STREQUAL "MKLBLAS")
   find_package(MKL REQUIRED)
   ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
     LIBRARIES
@@ -143,7 +143,7 @@ if (GPU_BLAS STREQUAL "MKLBLAS")
   )
 else()
   find_package(PORTBLAS REQUIRED)
-  if (TARGET_GPU STREQUAL "NVIDIA")
+  If (${TARGET_GPU} STREQUAL "NVIDIA")
     ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
       LIBRARIES
         ROOTTMVASofie
@@ -156,7 +156,7 @@ else()
         # SEE https://intel.github.io/llvm-docs/GetStartedGuide.html#build-dpc-application-with-cmake
         -fsycl -fsycl-targets=nvptx64-nvidia-cuda 
       )
-    elseif (TARGET_GPU STREQUAL "AMD")
+    elseif (${TARGET_GPU} STREQUAL "AMD")
     ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
       LIBRARIES
         ROOTTMVASofie
@@ -178,7 +178,7 @@ else()
       COMPILE_OPTIONS
         -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR}
       LINK_OPTIONS
-        -fsycl
+        -fsycl 
       ) 
     endif()
 endif()
