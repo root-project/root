@@ -565,12 +565,9 @@ TEST_P(HFFixture, HistFactoryJSONTool)
    Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
                                          GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
 
-   // TODO: Of course this should also work for the ShapeSyst case!
-   if(makeModelMode != MakeModelMode::ShapeSyst) {
-      // Do also the reverse comparison to check that the set of constant parameters matches
-      EXPECT_TRUE(result->isIdentical(*resultFromJson));
-      EXPECT_TRUE(resultFromJson->isIdentical(*result));
-   }
+   // Do also the reverse comparison to check that the set of constant parameters matches
+   EXPECT_TRUE(result->isIdentical(*resultFromJson));
+   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
 TEST_P(HFFixture, HS3ClosureLoop)
