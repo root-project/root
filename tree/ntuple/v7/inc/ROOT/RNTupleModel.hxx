@@ -214,6 +214,8 @@ private:
    /// the objects are generated if isBare is false, or nullptr otherwise.
    std::weak_ptr<REntry> CreateEntryImpl(bool isBare, REntry *linkedEntry = nullptr);
 
+   Detail::RFieldBase *FindField(std::string_view fieldName) const;
+
    RNTupleModel();
 
 public:
@@ -356,7 +358,8 @@ public:
    std::weak_ptr<REntry> GetDefaultEntry() const;
 
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
-   const Detail::RFieldBase *GetField(std::string_view fieldName) const;
+   const Detail::RFieldBase &GetField(std::string_view fieldName) const;
+   const Detail::RFieldBase &GetConstField(std::string_view fieldName) const { return GetField(fieldName); }
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
