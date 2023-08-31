@@ -97,6 +97,8 @@ tool.writedoc("hs3.tex")
 
 constexpr auto hs3VersionTag = "0.1.90";
 
+bool RooJSONFactoryWSTool::useListsInsteadOfDicts = true;
+
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
 
@@ -1215,11 +1217,10 @@ void RooJSONFactoryWSTool::importFunction(const std::string &jsonString, bool im
  */
 void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, JSONNode &output)
 {
-   auto &observablesNode = output["axes"].set_seq();
+   auto &observablesNode = output["axes"];
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(vars)) {
-      JSONNode &obsNode = observablesNode.append_child().set_map();
-      obsNode["name"] << var->GetName();
+      auto &obsNode = appendNamedChild(observablesNode, var->GetName());
       if (var->getBinning().isUniform()) {
          obsNode["min"] << var->getMin();
          obsNode["max"] << var->getMax();
@@ -1450,13 +1451,14 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
    RooArgSet vars;
 
    for (JSONNode const &nd : node["axes"].children()) {
+      std::string nameStr{RooJSONFactoryWSTool::name(nd)};
+      auto name = nameStr.c_str();
       if (nd.has_child("bounds")) {
          std::vector<double> bounds;
          for (auto const &bound : nd["bounds"].children()) {
             bounds.push_back(bound.val_double());
          }
-         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(), bounds[0],
-                                                 bounds[bounds.size() - 1]);
+         auto obs = std::make_unique<RooRealVar>(name, name, bounds[0], bounds[bounds.size() - 1]);
          RooBinning bins(obs->getMin(), obs->getMax());
          ;
          for (auto b : bounds) {
@@ -1465,8 +1467,7 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
          obs->setBinning(bins);
          vars.addOwned(std::move(obs));
       } else {
-         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(),
-                                                 nd["min"].val_double(), nd["max"].val_double());
+         auto obs = std::make_unique<RooRealVar>(name, name, nd["min"].val_double(), nd["max"].val_double());
          obs->setBins(nd["nbins"].val_int());
          vars.addOwned(std::move(obs));
       }
@@ -1600,7 +1601,8 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
 }
 
 void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                                             const std::vector<CombinedData> &combDataSets)
+                                             const std::vector<CombinedData> &combDataSets,
+                                             const std::set<std::string> &dependents)
 {
    auto pdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf());
    if (pdf == nullptr) {
@@ -1617,13 +1619,14 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
       if (hasdata)
          analysisName += "_" + combDataSets[i].name;
 
-      exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr);
+      exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr, dependents);
    }
 }
 
 void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
                                                    std::string const &analysisName,
-                                                   std::map<std::string, std::string> const *dataComponents)
+                                                   std::map<std::string, std::string> const *dataComponents,
+                                                   const std::set<std::string> &dependents)
 {
    auto pdf = static_cast<RooSimultaneous const *>(mc.GetPdf());
 
@@ -1650,6 +1653,30 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       extConstrNode.set_seq();
       for (const auto &constr : *mc.GetExternalConstraints()) {
          extConstrNode.append_child() << constr->GetName();
+      }
+   }
+   if (!useImplicitConstraints) {
+      auto &extConstrNode = nllNode["aux_distributions"];
+      extConstrNode.set_seq();
+      auto *ws = mc.GetWS();
+      auto *globs = mc.GetGlobalObservables();
+      auto *obs = mc.GetObservables();
+      for (const auto &constr : dependents) {
+         std::cout << constr << std::endl;
+         auto *constrpdf = ws->pdf(constr);
+         if (!constrpdf)
+            continue;
+         if (globs) {
+            // if we have globs, we can use them to say which pdfs are constraint terms
+            if (constrpdf->dependsOn(*globs) && !constrpdf->dependsOn(*obs)) {
+               extConstrNode.append_child() << constr;
+            }
+         } else {
+            // otherwise, we have to make do with what we know about observables
+            if (!constrpdf->dependsOn(*obs)) {
+               extConstrNode.append_child() << constr;
+            }
+         }
       }
    }
 
@@ -1699,8 +1726,12 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
    sortByName(allpdfs);
    std::set<std::string> exportedObjectNames;
+   std::map<RooAbsPdf *, std::set<std::string>> dependents;
    for (RooAbsPdf *p : allpdfs) {
-      this->exportObject(*p, exportedObjectNames);
+      std::set<std::string> deps;
+      this->exportObject(*p, deps);
+      exportedObjectNames.insert(deps.begin(), deps.end());
+      dependents[p] = deps;
    }
 
    // export attributes of exported objects
@@ -1729,7 +1760,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
-         exportModelConfig(n, *mc, combData);
+         exportModelConfig(n, *mc, combData, dependents[mc->GetPdf()]);
       }
    }
 
