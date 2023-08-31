@@ -7,13 +7,13 @@
 /// As input data is used a toy-MC sample consisting of two gaussian
 /// distributions.
 ///
-/// The output file "TMVA.root" can be analysed with the use of dedicated
+/// The output file "TMVACV.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
 /// Launch the GUI via the command:
 ///
 /// ```
-/// root -l -e 'TMVA::TMVAGui("TMVA.root")'
+/// root -l -e 'TMVA::TMVAGui("TMVACV.root")'
 /// ```
 ///
 /// ## Cross Evaluation
@@ -121,7 +121,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
    TTree *bkgTree = genTree(1000, -1.0, 1.0, 101);
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName("TMVA.root");
+   TString outfileName("TMVACV.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    // DataLoader definitions; We declare variables in the tree so that TMVA can
