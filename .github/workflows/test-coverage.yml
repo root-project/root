@@ -87,17 +87,41 @@ jobs:
               '
       
 
-      - name: Apply option override from matrix for this job
+      # - name: Apply option override from matrix for this job
+      #   env:
+      #     OVERRIDE: "coverage=On"
+      #     FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
+      #   shell: bash
+      #   run: |
+      #     set -x
+
+      #     echo '' >> "$FILE"
+      #     echo $OVERRIDE >> "$FILE"
+      #     cat "$FILE" || true
+
+      - name: Apply option overrides from matrix for this job
         env:
-          OVERRIDE: "coverage=On"
-          FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
+          OVERRIDES: "coverage=On testing=On roottest=On"
+          CONFIGFILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
         shell: bash
         run: |
           set -x
 
-          echo '' >> "$FILE"
-          echo $OVERRIDE >> "$FILE"
-          cat "$FILE" || true
+          echo '' >> "$CONFIGFILE"
+
+          for ENTRY in $OVERRIDES; do
+              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+
+              # Add entry to file if not exists, otherwise replace
+
+              if grep -q "$KEY=" "$CONFIGFILE"; then
+                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
+              else
+                  echo "$ENTRY" >> "$CONFIGFILE"
+              fi
+          done
+
+          cat "$CONFIGFILE" || true
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
