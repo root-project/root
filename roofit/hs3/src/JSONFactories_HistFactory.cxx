@@ -282,7 +282,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + prefixedName, varlist)));
             constraints.add(getConstraint(ws, sysname, parname));
          } else if (modtype == "shapesys") {
-            std::string funcName = prefixedName + "_" + sysname + "_" + prefixedName + "_ShapeSys";
+            std::string funcName = fprefix + "_" + sysname + "_ShapeSys";
+            erasePrefix(funcName, "model_");
+            // funName should be "<channel_name>_<sysname>_ShapeSys"
             std::vector<double> vals;
             for (const auto &v : mod["data"]["vals"].children()) {
                vals.push_back(v.val_double());
@@ -747,14 +749,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             sample.useBarlowBeestonLight = true;
          } else { // other ShapeSys
             ShapeSys sys(phf->GetName());
-            erasePrefix(sys.name, "model_" + chname + "_");
             erasePrefix(sys.name, chname + "_");
-            erasePrefix(sys.name, sample.name + "_");
             eraseSuffix(sys.name, "_ShapeSys");
-            eraseSuffix(sys.name, "_" + sample.name);
-            eraseSuffix(sys.name, "_model_" + chname);
-            eraseSuffix(sys.name, "_" + chname);
-            eraseSuffix(sys.name, "_" + sample.name);
 
             for (const auto &g : phf->paramList()) {
                RooAbsPdf *constraint = findConstraint(g);
