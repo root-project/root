@@ -12,7 +12,13 @@
 
 #include <RooStats/HistFactory/Detail/HistFactoryImpl.h>
 
+#include <RooStats/HistFactory/HistFactoryException.h>
+
+#include <RooConstVar.h>
+#include <RooGaussian.h>
 #include <RooMsgService.h>
+#include <RooPoisson.h>
+#include <RooProduct.h>
 #include <RooRealVar.h>
 
 namespace RooStats {
@@ -35,7 +41,7 @@ namespace Detail {
  *                 below this threshold, the gamma parameter is set to be
  *                 constant.
  */
-void configureConstrainedGammas(RooArgList const &gammas, std::span<double> relSigmas, double minSigma)
+void configureConstrainedGammas(RooArgList const &gammas, std::span<const double> relSigmas, double minSigma)
 {
    assert(gammas.size() == relSigmas.size());
 
@@ -72,6 +78,108 @@ void configureConstrainedGammas(RooArgList const &gammas, std::span<double> relS
          gamma.setConstant(true);
       }
    }
+}
+
+// Take a RooArgList of RooAbsReals and create N constraint terms (one for
+// each gamma) whose relative uncertainty is the value of the ith RooAbsReal
+CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramSet,
+                                                    std::span<const double> relSigmas, double minSigma,
+                                                    Constraint::Type type)
+{
+   CreateGammaConstraintsOutput out;
+
+   // Check that there are N elements in the RooArgList
+   if (relSigmas.size() != paramSet.size()) {
+      std::cout << "Error: In createGammaConstraints, encountered bad number of relative sigmas" << std::endl;
+      std::cout << "Given vector with " << relSigmas.size() << " bins,"
+                << " but require exactly " << paramSet.size() << std::endl;
+      throw hf_exc();
+   }
+
+   configureConstrainedGammas(paramSet, relSigmas, minSigma);
+
+   for (std::size_t i = 0; i < paramSet.size(); ++i) {
+
+      RooRealVar &gamma = static_cast<RooRealVar &>(paramSet[i]);
+
+      oocxcoutI(static_cast<TObject *>(nullptr), HistFactory)
+         << "Creating constraint for: " << gamma.GetName() << ". Type of constraint: " << type << std::endl;
+
+      const double sigmaRel = relSigmas[i];
+
+      // If the sigma is <= 0,
+      // do cont create the term
+      if (sigmaRel <= 0) {
+         oocxcoutI(static_cast<TObject *>(nullptr), HistFactory)
+            << "Not creating constraint term for " << gamma.GetName() << " because sigma = " << sigmaRel
+            << " (sigma<=0)"
+            << " (bin number = " << i << ")" << std::endl;
+         continue;
+      }
+
+      // Make Constraint Term
+      std::string constrName = std::string(gamma.GetName()) + "_constraint";
+      std::string nomName = std::string("nom_") + gamma.GetName();
+
+      if (type == Constraint::Gaussian) {
+
+         // Type 1 : RooGaussian
+
+         // Make sigma
+         std::string sigmaName = std::string(gamma.GetName()) + "_sigma";
+         auto constrSigma = std::make_unique<RooConstVar>(sigmaName.c_str(), sigmaName.c_str(), sigmaRel);
+
+         // Make "observed" value
+         auto constrNom = std::make_unique<RooRealVar>(nomName.c_str(), nomName.c_str(), 1.0, 0, 10);
+         constrNom->setConstant(true);
+
+         // Make the constraint:
+         auto term = std::make_unique<RooGaussian>(constrName.c_str(), constrName.c_str(), *constrNom, gamma, *constrSigma);
+
+         out.globalObservables.push_back(constrNom.get());
+
+         term->addOwnedComponents(std::move(constrSigma));
+         term->addOwnedComponents(std::move(constrNom));
+
+         out.constraints.emplace_back(std::move(term));
+      } else if (type == Constraint::Poisson) {
+
+         // this is correct Poisson equivalent to a Gaussian with mean 1 and stdev sigma
+         const double tau = 1. / (sigmaRel * sigmaRel);
+
+         // Make nominal "observed" value
+         auto constrNom = std::make_unique<RooRealVar>(nomName.c_str(), nomName.c_str(), tau);
+         constrNom->setMin(0);
+         constrNom->setConstant(true);
+
+         // Make the scaling term
+         std::string scalingName = std::string(gamma.GetName()) + "_tau";
+         auto poissonScaling = std::make_unique<RooConstVar>(scalingName.c_str(), scalingName.c_str(), tau);
+
+         // Make mean for scaled Poisson
+         std::string poisMeanName = std::string(gamma.GetName()) + "_poisMean";
+         auto constrMean = std::make_unique<RooProduct>(poisMeanName.c_str(), poisMeanName.c_str(), gamma, *poissonScaling);
+
+         // Type 2 : RooPoisson
+         auto term = std::make_unique<RooPoisson>(constrName.c_str(), constrName.c_str(), *constrNom, *constrMean);
+         term->setNoRounding(true);
+
+         out.globalObservables.push_back(constrNom.get());
+
+         term->addOwnedComponents(std::move(poissonScaling));
+         term->addOwnedComponents(std::move(constrMean));
+         term->addOwnedComponents(std::move(constrNom));
+
+         out.constraints.emplace_back(std::move(term));
+      } else {
+
+         std::cout << "Error: Did not recognize Stat Error constraint term type: " << type
+                   << " for : " << gamma.GetName() << std::endl;
+         throw hf_exc();
+      }
+   } // end loop over parameters
+
+   return out;
 }
 
 } // namespace Detail

@@ -70,6 +70,17 @@
 constexpr double alphaLow = -5.0;
 constexpr double alphaHigh = 5.0;
 
+std::vector<double> histToVector(TH1 const &hist)
+{
+   // Must get the full size of the TH1 (No direct method to do this...)
+   int numBins = hist.GetNbinsX() * hist.GetNbinsY() * hist.GetNbinsZ();
+   std::vector<double> out(numBins);
+   for (int i = 0; i < numBins; ++i) {
+      out[i] = hist.GetBinContent(i + 1);
+   }
+   return out;
+}
+
 // use this order for safety on library loading
 using namespace RooStats ;
 using namespace std ;
@@ -1126,10 +1137,20 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
               systype = Constraint::Poisson;
             }
 
-            RooArgList shapeConstraints = createGammaConstraintTerms(proto, constraintTermNames,
-                *paramHist, shapeErrorHist,
-                systype,
-                minShapeUncertainty);
+            auto shapeConstraintsInfo = createGammaConstraints(
+                paramHist->paramList(), histToVector(*shapeErrorHist),
+                minShapeUncertainty,
+                systype);
+            for (auto const& term : shapeConstraintsInfo.constraints) {
+               proto.import(*term, RooFit::RecycleConflictNodes());
+               constraintTermNames.emplace_back(term->GetName());
+            }
+            // Add the "observed" value to the list of global observables:
+            RooArgSet *globalSet = const_cast<RooArgSet *>(proto.set("globalObservables"));
+            for (RooAbsArg * glob : shapeConstraintsInfo.globalObservables) {
+               globalSet->add(*proto.var(glob->GetName()));
+            }
+
 
           } // End: Loop over ShapeSys vector in this EstimateSummary
 
@@ -1204,10 +1225,19 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       }
 
       double statRelErrorThreshold = channel.GetStatErrorConfig().GetRelErrorThreshold();
-      RooArgList statConstraints = createGammaConstraintTerms(proto, constraintTermNames,
-          *chanStatUncertFunc, fracStatError.get(),
-          statConstraintType,
-          statRelErrorThreshold);
+      auto statConstraintsInfo = createGammaConstraints(
+          chanStatUncertFunc->paramList(), histToVector(*fracStatError),
+          statRelErrorThreshold,
+          statConstraintType);
+      for (auto const& term : statConstraintsInfo.constraints) {
+         proto.import(*term, RooFit::RecycleConflictNodes());
+         constraintTermNames.emplace_back(term->GetName());
+      }
+      // Add the "observed" value to the list of global observables:
+      RooArgSet *globalSet = const_cast<RooArgSet *>(proto.set("globalObservables"));
+      for (RooAbsArg * glob : statConstraintsInfo.globalObservables) {
+         globalSet->add(*proto.var(glob->GetName()));
+      }
 
     } // END: Loop over stat Hist Pairs
 
@@ -1751,135 +1781,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   return std::unique_ptr<TH1>(ErrorHist);
 }
 
-
-  RooArgList HistoToWorkspaceFactoryFast::
-  createGammaConstraintTerms( RooWorkspace& proto, std::vector<std::string>& constraintTermNames,
-              ParamHistFunc& paramHist, const TH1* uncertHist,
-              Constraint::Type type, double minSigma ) {
-
-
-  // Take a RooArgList of RooAbsReal's and
-  // create N constraint terms (one for
-  // each gamma) whose relative uncertainty
-  // is the value of the ith RooAbsReal
-  //
-  // The integer "type" controls the type
-  // of constraint term:
-  //
-  // type == 0 : NONE
-  // type == 1 : Gaussian
-  // type == 2 : Poisson
-  // type == 3 : LogNormal
-
-  RooArgList ConstraintTerms;
-
-  RooArgList paramSet = paramHist.paramList();
-
-  // Must get the full size of the TH1
-  // (No direct method to do this...)
-  int numBins   = uncertHist->GetNbinsX()*uncertHist->GetNbinsY()*uncertHist->GetNbinsZ();
-  int numParams = paramSet.getSize();
-  //  int numBins   = uncertHist->GetNbinsX()*uncertHist->GetNbinsY()*uncertHist->GetNbinsZ();
-
-  // Check that there are N elements
-  // in the RooArgList
-  if( numBins != numParams ) {
-    std::cout << "Error: In createGammaConstraintTerms, encountered bad number of bins" << std::endl;
-    std::cout << "Given histogram with " << numBins << " bins,"
-         << " but require exactly " << numParams << std::endl;
-    throw hf_exc();
-  }
-
-  // Get the relative sigmas from the hist
-  std::vector<double> relSigmas(paramSet.size());
-  for(int i = 0; i < paramSet.getSize(); ++i) {
-     relSigmas[i] = uncertHist->GetBinContent(i + 1);
-  }
-  configureConstrainedGammas(paramSet, relSigmas, minSigma);
-
-  for( int i = 0; i < paramSet.getSize(); ++i) {
-
-    RooRealVar& gamma = (RooRealVar&) (paramSet[i]);
-
-    cxcoutI(HistFactory) << "Creating constraint for: " << gamma.GetName()
-         << ". Type of constraint: " << type <<  std::endl;
-
-    const double sigmaRel = relSigmas[i];
-
-    // If the sigma is <= 0,
-    // do cont create the term
-    if( sigmaRel <= 0 ){
-      cxcoutI(HistFactory) << "Not creating constraint term for "
-      << gamma.GetName()
-      << " because sigma = " << sigmaRel
-      << " (sigma<=0)"
-      << " (TH1 bin number = " << (i + 1) << ")"
-      << std::endl;
-      continue;
-    }
-
-    // Make Constraint Term
-    std::string constrName = std::string(gamma.GetName()) + "_constraint";
-    std::string nomName = std::string("nom_") + gamma.GetName();
-
-    if( type == Constraint::Gaussian ) {
-
-      // Type 1 : RooGaussian
-
-      // Make sigma
-      std::string sigmaName = std::string(gamma.GetName()) + "_sigma";
-      RooConstVar constrSigma( sigmaName.c_str(), sigmaName.c_str(), sigmaRel );
-
-      // Make "observed" value
-      RooRealVar constrNom(nomName.c_str(), nomName.c_str(), 1.0,0,10);
-      constrNom.setConstant( true );
-
-      // Make the constraint:
-      getOrCreate<RooGaussian>(proto, constrName, constrNom, gamma, constrSigma);
-    } else if( type == Constraint::Poisson ) {
-
-      double tau = 1/sigmaRel/sigmaRel; // this is correct Poisson equivalent to a Gaussian with mean 1 and stdev sigma
-
-      // Make nominal "observed" value
-      RooRealVar constrNom(nomName.c_str(), nomName.c_str(), tau);
-      constrNom.setMin(0);
-      constrNom.setConstant( true );
-
-      // Make the scaling term
-      std::string scalingName = string(gamma.GetName()) + "_tau";
-      RooConstVar poissonScaling( scalingName.c_str(), scalingName.c_str(), tau);
-
-      // Make mean for scaled Poisson
-      std::string poisMeanName = std::string(gamma.GetName()) + "_poisMean";
-      RooProduct constrMean( poisMeanName.c_str(), poisMeanName.c_str(), RooArgSet(gamma, poissonScaling) );
-
-      // Type 2 : RooPoisson
-      getOrCreate<RooPoisson>(proto, constrName, constrNom, constrMean).setNoRounding(true);
-
-    } else {
-
-      std::cout << "Error: Did not recognize Stat Error constraint term type: "
-      << type << " for : " << paramHist.GetName() << std::endl;
-      throw hf_exc();
-    }
-
-    constraintTermNames.push_back( constrName );
-    ConstraintTerms.add( *proto.pdf(constrName) );
-
-    // Add the "observed" value to the
-    // list of global observables:
-    RooArgSet* globalSet = const_cast<RooArgSet*>(proto.set("globalObservables"));
-
-    RooRealVar* nomVarInWorkspace = proto.var(nomName);
-    if( ! globalSet->contains(*nomVarInWorkspace) ) {
-      globalSet->add( *nomVarInWorkspace );
-    }
-
-  } // end loop over parameters
-
-  return ConstraintTerms;
-
-}
 
 } // namespace RooStats
 } // namespace HistFactory

@@ -37,6 +37,7 @@
 
 using RooFit::Detail::JSONNode;
 
+using namespace RooStats::HistFactory;
 using namespace RooStats::HistFactory::Detail;
 using namespace RooStats::HistFactory::Detail::MagicConstants;
 
@@ -168,42 +169,24 @@ RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &sysname, const std
 
 ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname, const std::vector<double> &vals,
                          RooJSONFactoryWSTool &tool, RooArgList &constraints, const RooArgSet &observables,
-                         const std::string &constraintType, RooArgList &gammas, double gamma_min, double gamma_max)
+                         const std::string &constraintType, double gammaMin, double gammaMax, double minSigma)
 {
    RooWorkspace &ws = *tool.workspace();
 
-   gammas.add(ParamHistFunc::createParamSet(ws, "gamma_" + sysname, observables, gamma_min, gamma_max));
+   RooArgList gammas = ParamHistFunc::createParamSet(ws, "gamma_" + sysname, observables, gammaMin, gammaMax);
+
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
-   for (size_t i = 0; i < gammas.size(); ++i) {
-      auto *constrParam = dynamic_cast<RooRealVar *>(&gammas[i]);
-      if (!constrParam)
-         continue;
-      std::string basename = constrParam->GetName();
-      constrParam->setConstant(false);
-      if (constraintType == "Const" || vals[i] == 0.) {
-         constrParam->setConstant(true);
-      } else if (constraintType == "Gauss") {
-         auto &nom = createNominal(ws, basename, 1.0, 0, std::max(10., gamma_max));
-         auto &sigma = tool.wsEmplace<RooConstVar>(basename + "_sigma", vals[i]);
-         constrParam->setError(sigma.getVal());
-         constraints.add(tool.wsEmplace<RooGaussian>(constraintName(basename), nom, *constrParam, sigma), true);
-      } else if (constraintType == "Poisson") {
-         double tau_float = vals[i];
-         auto &tau = tool.wsEmplace<RooConstVar>(basename + "_tau", tau_float);
-         auto &nom = createNominal(ws, basename, tau_float, 0, RooNumber::infinity());
-         auto &prod = tool.wsEmplace<RooProduct>(basename + "_poisMean", *constrParam, tau);
-         auto &pois = tool.wsEmplace<RooPoisson>(constraintName(basename), nom, prod);
-         pois.setNoRounding(true);
-         constraints.add(pois, true);
-      } else {
-         RooJSONFactoryWSTool::error("unknown constraint type " + constraintType);
+
+   if (constraintType != "Const") {
+      auto constraintsInfo = createGammaConstraints(
+         gammas, vals, minSigma, constraintType == "Poisson" ? Constraint::Poisson : Constraint::Gaussian);
+      for (auto const &term : constraintsInfo.constraints) {
+         ws.import(*term, RooFit::RecycleConflictNodes());
+         constraints.add(*ws.pdf(term->GetName()));
       }
-   }
-   for (auto &g : gammas) {
-      for (auto client : g->clients()) {
-         if (dynamic_cast<RooAbsPdf *>(client) && !constraints.find(*client)) {
-            constraints.add(*client);
-         }
+   } else {
+      for (auto *gamma : static_range_cast<RooRealVar *>(gammas)) {
+         gamma->setConstant(true);
       }
    }
 
@@ -304,11 +287,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             for (const auto &v : mod["data"]["vals"].children()) {
                vals.push_back(v.val_double());
             }
-            RooArgList gammas;
             std::string constraint(mod["constraint"].val());
-            shapeElems.add(createPHF(sysname, funcName, vals, tool, constraints, varlist, constraint, gammas,
-                                     defaultGammaMin, defaultShapeSysGammaMax));
-            configureConstrainedGammas(gammas, vals, minShapeUncertainty);
+            shapeElems.add(createPHF(sysname, funcName, vals, tool, constraints, varlist, constraint, defaultGammaMin,
+                                     defaultShapeSysGammaMax, minShapeUncertainty));
          } else if (modtype == "custom") {
             RooAbsReal *obj = ws.function(sysname);
             if (!obj) {
@@ -398,22 +379,15 @@ public:
          std::string phfName = name;
          erasePrefix(phfName, "model_");
 
-         std::vector<double> vals(sumW.size());
          std::vector<double> errs(sumW.size());
-
          for (size_t i = 0; i < sumW.size(); ++i) {
             errs[i] = std::sqrt(sumW2[i]) / sumW[i];
-            if (statErrType == "Gauss") {
-               vals[i] = std::max(errs[i], 0.); // avoid negative sigma. This NP will be set constant anyway later
-            } else if (statErrType == "Poisson") {
-               vals[i] = sumW[i] * sumW[i] / sumW2[i];
-            }
+            // avoid negative sigma. This NP will be set constant anyway later
+            errs[i] = std::max(errs[i], 0.);
          }
 
-         RooArgList gammas;
-         mcStatObject = &createPHF("stat_" + phfName, "mc_stat_" + phfName, vals, *tool, constraints, observables,
-                                   statErrType, gammas, defaultGammaMin, defaultStatErrorGammaMax);
-         configureConstrainedGammas(gammas, errs, statErrThresh);
+         mcStatObject = &createPHF("stat_" + phfName, "mc_stat_" + phfName, errs, *tool, constraints, observables,
+                                   statErrType, defaultGammaMin, defaultStatErrorGammaMax, statErrThresh);
       }
 
       int idx = 0;
@@ -791,7 +765,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                else if (!constraint) {
                   sys.constraints.push_back(0.0);
                } else if (auto constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
-                  sys.constraints.push_back(constraint_p->getX().getVal());
+                  sys.constraints.push_back(1. / std::sqrt(constraint_p->getX().getVal()));
                   if (!sys.constraint) {
                      sys.constraint = RooPoisson::Class();
                   }

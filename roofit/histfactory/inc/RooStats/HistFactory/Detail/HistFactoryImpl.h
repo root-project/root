@@ -13,6 +13,8 @@
 #ifndef HistFactoryImplHelpers_h
 #define HistFactoryImplHelpers_h
 
+#include <RooStats/HistFactory/Systematics.h>
+
 #include <RooGlobalFunc.h>
 #include <RooWorkspace.h>
 
@@ -43,7 +45,16 @@ Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, Params_t &&...para
    return *static_cast<Arg_t *>(ws.obj(name));
 }
 
-void configureConstrainedGammas(RooArgList const &gammas, std::span<double> relSigmas, double minSigma);
+void configureConstrainedGammas(RooArgList const &gammas, std::span<const double> relSigmas, double minSigma);
+
+struct CreateGammaConstraintsOutput {
+   std::vector<std::unique_ptr<RooAbsPdf>> constraints;
+   std::vector<RooRealVar*> globalObservables;
+};
+
+CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramList,
+                                                    std::span<const double> relSigmas, double minSigma,
+                                                    Constraint::Type type);
 
 } // namespace Detail
 } // namespace HistFactory
