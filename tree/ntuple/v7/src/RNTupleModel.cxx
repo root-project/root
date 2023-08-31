@@ -236,7 +236,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    if (fDefaultEntryIdx != kInvalidDefaultEntryIdx) {
       cloneModel->fCreatedEntries.emplace_back(std::shared_ptr<REntry>(new REntry(cloneModel->fModelId)));
       cloneModel->fDefaultEntryIdx = 0;
-      for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
+      for (auto &f : cloneModel->fFieldZero->GetSubFields()) {
          cloneModel->fCreatedEntries[0]->AddValue(f->GenerateValue());
       }
    }
@@ -350,7 +350,7 @@ ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEnt
       throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
 
    auto entry = std::shared_ptr<REntry>(new REntry(fModelId));
-   for (const auto &f : fFieldZero->GetSubFields()) {
+   for (auto &f : fFieldZero->GetSubFields()) {
       if (linkedEntry) {
          bool isLinked = false;
          for (const auto &v : *linkedEntry) {
