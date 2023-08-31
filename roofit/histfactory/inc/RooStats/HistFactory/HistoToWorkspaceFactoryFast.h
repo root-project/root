@@ -90,11 +90,6 @@ namespace RooStats{
 
       TH1* MakeAbsolUncertaintyHist( const std::string& Name, const TH1* Hist );
 
-      RooArgList createGammaConstraintTerms( RooWorkspace& proto,
-                   std::vector<std::string>& constraintTerms,
-                   ParamHistFunc& paramHist, const TH1* uncertHist,
-                   Constraint::Type type, double minSigma );
-
       void ConfigureHistFactoryDataset(RooDataSet& obsData, TH1 const& nominal, RooWorkspace& proto,
                    std::vector<std::string> const& obsNameVec);
 
