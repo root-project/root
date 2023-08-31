@@ -151,7 +151,7 @@ ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
    return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceFriends>("_friends", sources));
 }
 
-ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
+const ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
       fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();

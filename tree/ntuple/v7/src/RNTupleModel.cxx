@@ -333,6 +333,16 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    return collectionWriter;
 }
 
+ROOT::Experimental::Detail::RFieldBase &ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName)
+{
+   EnsureNotFrozen();
+   auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("invalid field: " + std::string(fieldName)));
+
+   return *f;
+}
+
 const ROOT::Experimental::Detail::RFieldBase &
 ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
