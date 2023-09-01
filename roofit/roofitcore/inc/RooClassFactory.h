@@ -17,24 +17,16 @@
 #ifndef ROO_CODE_FACTORY
 #define ROO_CODE_FACTORY
 
-#include "TNamed.h"
-#include "RooArgSet.h"
-#include "RooPrintable.h"
-
-#include <vector>
 #include <string>
 
 class RooAbsReal;
 class RooAbsPdf;
+class RooArgList;
 
 // RooFit class code and instance factory
 class RooClassFactory {
 
 public:
-
-  // Constructors, assignment etc
-  RooClassFactory() ;
-  ~RooClassFactory() ;
 
   static RooAbsReal* makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
   static RooAbsReal* makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
@@ -49,14 +41,9 @@ public:
          const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=nullptr) ;
   static bool makeFunction(const char* name, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
               const char* expression="1.0", bool hasAnaInt=false, const char* intExpression=nullptr) ;
-  static bool makeClass(const char* className, const char* name, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
+  static bool makeClass(std::string const& baseName, const std::string& className, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
            const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=nullptr) ;
 
-protected:
-
-
-
-  RooClassFactory(const RooClassFactory&) ;
 } ;
 
 #endif
