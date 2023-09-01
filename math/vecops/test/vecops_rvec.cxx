@@ -869,6 +869,21 @@ TEST(VecOps, RangeBeginEnd)
    CheckEqual(Range(4, 1), RVecI{});
 }
 
+TEST(VecOps, RangeBeginEndStride)
+{
+    const RVecI ref{1, 3};
+    CheckEqual(Range(1, 5, 2), ref);
+    
+    CheckEqual(Range(-1, 8, 3), RVecI{-1, 2, 5});
+    CheckEqual(Range(6, 1, -1), RVecI{6, 5, 4, 3, 2});
+    CheckEqual(Range(-3, -9, -2), RVecI{-3, -5, -7});
+    CheckEqual(Range(1, 8, 2), RVecI{1, 3, 5, 7});
+    CheckEqual(Range(-1, -8, -2), RVecI{-1, -3, -5, -7});
+    CheckEqual(Range(-4, -7, 1), RVecI{});
+    CheckEqual(Range(-4, -1, -1), RVecI{});
+    CheckEqual(Range(1, 3, 5), RVecI{1});
+}
+
 TEST(VecOps, Drop)
 {
    RVec<int> v1{2, 0, 1};
