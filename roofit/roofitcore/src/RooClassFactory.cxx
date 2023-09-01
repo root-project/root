@@ -39,7 +39,10 @@ instantiate objects.
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
 #include "RooAbsPdf.h"
-#include "strlcpy.h"
+
+#include <ROOT/StringUtils.hxx>
+
+#include <strlcpy.h>
 #include <fstream>
 
 using namespace std;
@@ -64,23 +67,6 @@ static Int_t init()
   return 0 ;
 }
 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooClassFactory::RooClassFactory()
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooClassFactory::~RooClassFactory()
-{
 }
 
 
@@ -383,6 +369,48 @@ bool RooClassFactory::makeFunction(const char* name, const char* argNames, const
 }
 
 
+namespace {
+
+std::string listVars(std::vector<std::string> const &alist, std::vector<bool> const &isCat = {})
+{
+   std::stringstream ss;
+   for (std::size_t i = 0; i < alist.size(); ++i) {
+      if (!isCat.empty()) {
+         ss << (isCat[i] ? "int" : "double") << " ";
+      }
+      ss << alist[i];
+      if (i < alist.size() - 1) {
+         ss << ", ";
+      }
+   }
+   return ss.str();
+}
+
+std::string declareVarSpans(std::vector<std::string> const &alist)
+{
+   std::stringstream ss;
+   for (std::size_t i = 0; i < alist.size(); ++i) {
+      ss << "   "
+         << "std::span<const double> " << alist[i] << "Span = dataMap.at(" << alist[i] << ");\n";
+   }
+   return ss.str();
+}
+
+std::string getFromVarSpans(std::vector<std::string> const &alist)
+{
+   std::stringstream ss;
+   for (std::size_t i = 0; i < alist.size(); ++i) {
+      std::string name = alist[i] + "Span";
+      ss << name << ".size() > 1 ? " << name << "[i] : " << name << "[0]";
+      if (i < alist.size() - 1) {
+         ss << ",\n                               ";
+      }
+   }
+   return ss.str();
+}
+
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Write code for a 'baseName' implementation with class name 'className',
 /// taking RooAbsReal arguments with names listed in argNames and
@@ -401,19 +429,10 @@ bool RooClassFactory::makeFunction(const char* name, const char* argNames, const
 /// if hasIntGen is true
 ///
 
-bool RooClassFactory::makeClass(const char* baseName, const char* className, const char* realArgNames, const char* catArgNames,
+bool RooClassFactory::makeClass(std::string const& baseName, std::string const& className, const char* realArgNames, const char* catArgNames,
               const char* expression,  bool hasAnaInt, bool hasIntGen, const char* intExpression)
 {
   // Check that arguments were given
-  if (!baseName) {
-    oocoutE(nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: a base class name must be given" << endl ;
-    return true ;
-  }
-
-  if (!className) {
-    oocoutE(nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: a class name must be given" << endl ;
-    return true ;
-  }
 
   if ((!realArgNames || !*realArgNames) && (!catArgNames || !*catArgNames)) {
     oocoutE(nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
@@ -430,36 +449,21 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
   vector<bool> isCat ;
 
   if (realArgNames && *realArgNames) {
-    const size_t bufSize = strlen(realArgNames)+1;
-    std::vector<char> buf(bufSize);
-    strlcpy(buf.data(),realArgNames,bufSize) ;
-    char* token = strtok(buf.data(),",") ;
-    while(token) {
+    for(auto const& token : ROOT::Split(realArgNames, ",")) {
       alist.push_back(token) ;
       isCat.push_back(false) ;
-      token = strtok(nullptr,",") ;
     }
   }
   if (catArgNames && *catArgNames) {
-    const size_t bufSize = strlen(catArgNames)+1;
-    std::vector<char> buf(bufSize);
-    strlcpy(buf.data(),catArgNames,bufSize) ;
-    char* token = strtok(buf.data(),",") ;
-    while(token) {
+    for(auto const& token : ROOT::Split(catArgNames, ",")) {
       alist.push_back(token) ;
       isCat.push_back(true) ;
-      token = strtok(nullptr,",") ;
     }
   }
 
-  TString impFileName(className), hdrFileName(className) ;
-  impFileName += ".cxx" ;
-  hdrFileName += ".h" ;
+  std::string ifdefName = className + "_h";
 
-  TString ifdefName(className) ;
-  ifdefName.ToUpper() ;
-
-  ofstream hf(hdrFileName) ;
+  ofstream hf(className + ".h") ;
   hf << "/*****************************************************************************" << endl
      << " * Project: RooFit                                                           *" << endl
      << " *                                                                           *" << endl
@@ -528,6 +532,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
 
   hf << "  " << endl
      << "  double evaluate() const override;" << endl
+     << "  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;" << endl
      << "" << endl
      << "private:" << endl
      << "" << endl
@@ -537,7 +542,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
      << "#endif" << endl ;
 
 
-  ofstream cf(impFileName) ;
+  ofstream cf(className + ".cxx") ;
 
   cf << "/***************************************************************************** " << endl
      << " * Project: RooFit                                                           * " << endl
@@ -547,21 +552,22 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
      << endl
      << "// Your description goes here... " << endl
      << endl
-
-     << "#include \"Riostream.h\" " << endl
+     << "#include \"" << className << ".h\"\n"
+     << endl
+     << "#include <RooAbsReal.h>\n"
+     << "#include <RooAbsCategory.h>\n"
+     << endl
+     << "#include <Riostream.h>\n"
+     << endl
+     << "#include <TMath.h>\n"
+     << endl
+     << "#include <cmath>\n"
      << endl
 
-     << "#include \"" << className << ".h\" " << endl
-     << "#include \"RooAbsReal.h\" " << endl
-     << "#include \"RooAbsCategory.h\" " << endl
-     << "#include <math.h> " << endl
-     << "#include \"TMath.h\" " << endl
+     << "ClassImp(" << className << ");\n"
      << endl
 
-     << "ClassImp(" << className << "); " << endl
-     << endl
-
-     << " " << className << "::" << className << "(const char *name, const char *title, " << endl ;
+     << className << "::" << className << "(const char *name, const char *title, " << endl ;
 
   // Insert list of proxy constructors
   for (i=0 ; i<alist.size() ; i++) {
@@ -590,12 +596,11 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
     cf << endl ;
   }
 
-  cf << " { " << endl
-     << " } " << endl
-     << endl
+  cf << "{ " << endl
+     << "} " << endl
      << endl
 
-     << " " << className << "::" << className << "(const " << className << "& other, const char* name) :  " << endl
+     << className << "::" << className << "(const " << className << "& other, const char* name) :  " << endl
      << "   " << baseName << "(other,name), " << endl ;
 
   for (i=0 ; i<alist.size() ; i++) {
@@ -606,20 +611,32 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
     cf << endl ;
   }
 
-  cf << " { " << endl
-     << " } " << endl
+  cf << "{\n"
+     << "}\n"
      << endl
+     << "namespace {\n"
      << endl
-     << endl
-
-     << " double " << className << "::evaluate() const " << endl
-     << " { " << endl
+     << "inline double evaluateImpl(" << listVars(alist, isCat) << ") " << endl
+     << "{\n"
      << "   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE " << endl
-     << "   return " << expression << " ; " << endl
-     << " } " << endl
+     << "   return " << expression << "; " << endl
+     << "}\n"
      << endl
-     << endl
-     << endl ;
+     << "} // namespace\n"
+     << "\n"
+     << "double " << className << "::evaluate() const " << endl
+     << "{\n"
+     << "   return evaluateImpl(" << listVars(alist) << "); " << endl
+     << "}\n"
+     << "\n"
+     << "void " << className << "::computeBatch(double *output, size_t size, RooFit::Detail::DataMap const &dataMap) const " << endl
+     << "{ \n"
+     << declareVarSpans(alist)
+     << "\n"
+     << "   for (std::size_t i = 0; i < size; ++i) {\n"
+     << "      output[i] = evaluateImpl(" << getFromVarSpans(alist) << ");\n"
+     << "   }\n"
+     << "} \n";
 
   if (hasAnaInt) {
 
@@ -639,8 +656,9 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
       }
     }
 
-    cf << " Int_t " << className << "::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const  " << endl
-       << " { " << endl
+    cf << "\n"
+       << "Int_t " << className << "::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const  " << endl
+       << "{ " << endl
        << "   // LIST HERE OVER WHICH VARIABLES ANALYTICAL INTEGRATION IS SUPPORTED, " << endl
        << "   // ASSIGN A NUMERIC CODE FOR EACH SUPPORTED (SET OF) PARAMETERS " << endl
        << "   // THE EXAMPLE BELOW ASSIGNS CODE 1 TO INTEGRATION OVER VARIABLE X" << endl
@@ -657,13 +675,12 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
     }
 
     cf << "   return 0 ; " << endl
-       << " } " << endl
-       << endl
+       << "} " << endl
        << endl
        << endl
 
-       << " double " << className << "::analyticalIntegral(Int_t code, const char* rangeName) const  " << endl
-       << " { " << endl
+       << "double " << className << "::analyticalIntegral(Int_t code, const char* rangeName) const  " << endl
+       << "{ " << endl
        << "   // RETURN ANALYTICAL INTEGRAL DEFINED BY RETURN CODE ASSIGNED BY getAnalyticalIntegral" << endl
        << "   // THE MEMBER FUNCTION x.min(rangeName) AND x.max(rangeName) WILL RETURN THE INTEGRATION" << endl
        << "   // BOUNDARIES FOR EACH OBSERVABLE x" << endl
@@ -679,15 +696,13 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
     }
 
     cf << "   return 0 ; " << endl
-       << " } " << endl
-       << endl
-       << endl
-       << endl ;
+       << "} " << endl;
   }
 
   if (hasIntGen) {
-    cf << " Int_t " << className << "::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const " << endl
-       << " { " << endl
+    cf << "\n"
+       << "Int_t " << className << "::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const " << endl
+       << "{ " << endl
        << "   // LIST HERE OVER WHICH VARIABLES INTERNAL GENERATION IS SUPPORTED, " << endl
        << "   // ASSIGN A NUMERIC CODE FOR EACH SUPPORTED (SET OF) PARAMETERS " << endl
        << "   // THE EXAMPLE BELOW ASSIGNS CODE 1 TO INTEGRATION OVER VARIABLE X" << endl
@@ -698,11 +713,8 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
        << endl
        << "   // if (matchArgs(directVars,generateVars,x)) return 1 ;   " << endl
        << "   return 0 ; " << endl
-       << " } " << endl
+       << "} " << endl
        << endl
-       << endl
-       << endl
-
        << " void " << className << "::generateEvent(Int_t code) " << endl
        << " { " << endl
        << "   // GENERATE SET OF OBSERVABLES DEFINED BY RETURN CODE ASSIGNED BY getGenerator()" << endl
@@ -712,12 +724,8 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
        << "   // assert(code==1) ; " << endl
        << "   // x = 0 ; " << endl
        << "   return; " << endl
-       << " } " << endl
-       << endl
-       << endl
-       << endl ;
+       << "} " << endl;
   }
-
 
   return false ;
 }
@@ -731,10 +739,9 @@ std::string ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, co
   static int classCounter = 0 ;
 
   string tn(typeName) ;
-  if (tn=="CEXPR" || tn=="cexpr") {
 
     if (args.size()<2) {
-      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: CEXPR requires at least 2 arguments (expr,var,...), but only %u args found",
+      throw std::runtime_error(Form("RooClassFactory::ClassFacIFace::create() ERROR: CEXPR requires at least 2 arguments (expr,var,...), but only %u args found",
          (UInt_t)args.size())) ;
     }
 
@@ -747,7 +754,6 @@ std::string ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, co
 
     RooArgList varList ;
 
-    try {
       if (args.size()==2) {
    // Interpret 2nd arg as list
    varList.add(ft.asLIST(args[1].c_str())) ;
@@ -756,9 +762,6 @@ std::string ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, co
      varList.add(ft.asARG(args[i].c_str())) ;
    }
       }
-    } catch (const string &err) {
-      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: %s",err.c_str())) ;
-    }
 
     string className ;
     while(true) {
@@ -776,7 +779,7 @@ std::string ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, co
       ret = RooClassFactory::makeFunctionInstance(className.c_str(),instanceName,expr,varList) ;
     }
     if (!ret) {
-      throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR creating %s %s with RooClassFactory",((tn=="CEXPR")?"pdf":"function"),instanceName)) ;
+      throw std::runtime_error(Form("RooClassFactory::ClassFacIFace::create() ERROR creating %s %s with RooClassFactory",((tn=="CEXPR")?"pdf":"function"),instanceName)) ;
     }
 
     // Import object
@@ -785,12 +788,6 @@ std::string ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, co
     // Import class code as well
     ft.ws().importClassCode(ret->IsA()) ;
 
-
-  } else {
-
-    throw string(Form("RooClassFactory::ClassFacIFace::create() ERROR: Unknown meta-type %s requested",typeName)) ;
-
-  }
   return string(instanceName) ;
 }
 
