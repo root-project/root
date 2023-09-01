@@ -10,12 +10,12 @@ class RH1Painter extends RH1Painter2D {
    draw3D(reason) {
       this.mode3d = true;
 
-      let main = this.getFramePainter(), // who makes axis drawing
-          is_main = this.isMainPainter(), // is main histogram
-          zmult = 1 + 2*gStyle.fHistTopMargin,
-          pr = Promise.resolve(this);
+      const main = this.getFramePainter(), // who makes axis drawing
+            is_main = this.isMainPainter(), // is main histogram
+            zmult = 1 + 2*gStyle.fHistTopMargin;
+      let pr = Promise.resolve(this);
 
-      if (reason == 'resize') {
+      if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
          return pr;
       }

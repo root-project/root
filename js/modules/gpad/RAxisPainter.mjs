@@ -20,7 +20,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary constructor */
    constructor(dom, arg1, axis, cssprefix) {
-      let drawable = cssprefix ? arg1.getObject() : arg1;
+      const drawable = cssprefix ? arg1.getObject() : arg1;
       super(dom, drawable, '', cssprefix ? arg1.csstype : 'axis');
       Object.assign(this, AxisPainterMethods);
       this.initAxisPainter();
@@ -28,7 +28,7 @@ class RAxisPainter extends RObjectPainter {
       this.axis = axis;
       if (cssprefix) { // drawing from the frame
          this.embedded = true; // indicate that painter embedded into the histo painter
-         //this.csstype = arg1.csstype; // for the moment only via frame one can set axis attributes
+         // this.csstype = arg1.csstype; // for the moment only via frame one can set axis attributes
          this.cssprefix = cssprefix;
          this.rstyle = arg1.rstyle;
       } else {
@@ -53,7 +53,7 @@ class RAxisPainter extends RObjectPainter {
       this.name = name;
       this.kind = 'normal';
       this.log = false;
-      let _log = this.v7EvalAttr('log', 0);
+      const _log = this.v7EvalAttr('log', 0);
       if (_log) {
          this.log = true;
          this.logbase = 10;
@@ -77,7 +77,7 @@ class RAxisPainter extends RObjectPainter {
       this.kind = 'normal';
       this.vertical = vertical;
       this.log = false;
-      let _log = this.v7EvalAttr('log', 0),
+      const _log = this.v7EvalAttr('log', 0),
           _symlog = this.v7EvalAttr('symlog', 0);
       this.reverse = opts.reverse || false;
 
@@ -92,17 +92,17 @@ class RAxisPainter extends RObjectPainter {
       } else if (this.axis?.fLabelsIndex) {
          this.kind = 'labels';
          delete this.own_labels;
-      } else if (opts.labels) {
+      } else if (opts.labels)
          this.kind = 'labels';
-      } else {
+       else
          this.kind = 'normal';
-      }
 
-      if (this.kind == 'time') {
+
+      if (this.kind === 'time')
          this.func = d3_scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
-      } else if (_symlog && (_symlog > 0)) {
+       else if (_symlog && (_symlog > 0)) {
          this.symlog = _symlog;
-         this.func = d3_scaleSymlog().constant(_symlog).domain([smin,smax]);
+         this.func = d3_scaleSymlog().constant(_symlog).domain([smin, smax]);
       } else if (_log) {
          if (smax <= 0) smax = 1;
          if ((smin <= 0) || (smin >= smax))
@@ -113,9 +113,9 @@ class RAxisPainter extends RObjectPainter {
             this.logbase = Math.exp(1);
          else if (_log > 1.9)
             this.logbase = Math.round(_log);
-         this.func = d3_scaleLog().base(this.logbase).domain([smin,smax]);
+         this.func = d3_scaleLog().base(this.logbase).domain([smin, smax]);
       } else
-         this.func = d3_scaleLinear().domain([smin,smax]);
+         this.func = d3_scaleLinear().domain([smin, smax]);
 
       this.scale_min = smin;
       this.scale_max = smax;
@@ -140,7 +140,7 @@ class RAxisPainter extends RObjectPainter {
 
       delete this.format;// remove formatting func
 
-      let ndiv = this.v7EvalAttr('ndiv', 508);
+      const ndiv = this.v7EvalAttr('ndiv', 508);
 
       this.nticks = ndiv % 100;
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
@@ -148,37 +148,36 @@ class RAxisPainter extends RObjectPainter {
 
       if (this.nticks > 20) this.nticks = 20;
 
-      let gr_range = Math.abs(this.gr_range) || 100;
+      const gr_range = Math.abs(this.gr_range) || 100;
 
-      if (this.kind == 'time') {
+      if (this.kind === 'time') {
          if (this.nticks > 8) this.nticks = 8;
 
-         let scale_range = this.scale_max - this.scale_min,
-             tf1 = this.v7EvalAttr('timeFormat', ''),
-             tf2 = chooseTimeFormat(scale_range / gr_range, false);
+         const scale_range = this.scale_max - this.scale_min,
+               tf2 = chooseTimeFormat(scale_range / gr_range, false);
+         let tf1 = this.v7EvalAttr('timeFormat', '');
 
          if (!tf1 || (scale_range < 0.1 * (this.full_max - this.full_min)))
             tf1 = chooseTimeFormat(scale_range / this.nticks, true);
 
          this.tfunc1 = this.tfunc2 = d3_timeFormat(tf1);
-         if (tf2!==tf1)
+         if (tf2 !== tf1)
             this.tfunc2 = d3_timeFormat(tf2);
 
          this.format = this.formatTime;
-
       } else if (this.log) {
          if (this.nticks2 > 1) {
             this.nticks *= this.nticks2; // all log ticks (major or minor) created centrally
             this.nticks2 = 1;
          }
          this.noexp = this.v7EvalAttr('noexp', false);
-         if ((this.scale_max < 300) && (this.scale_min > 0.3) && (this.logbase == 10)) this.noexp = true;
+         if ((this.scale_max < 300) && (this.scale_min > 0.3) && (this.logbase === 10)) this.noexp = true;
          this.moreloglabels = this.v7EvalAttr('moreloglbls', false);
 
          this.format = this.formatLog;
-      } else if (this.kind == 'labels') {
+      } else if (this.kind === 'labels') {
          this.nticks = 50; // for text output allow max 50 names
-         let scale_range = this.scale_max - this.scale_min;
+         const scale_range = this.scale_max - this.scale_min;
          if (this.nticks > scale_range)
             this.nticks = Math.round(scale_range);
          this.nticks2 = 1;
@@ -203,15 +202,15 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Provide label for axis value */
    formatLabels(d) {
-      let indx = Math.round(d);
+      const indx = Math.round(d);
       if (this.axis?.fLabelsIndex) {
          if ((indx < 0) || (indx >= this.axis.fNBinsNoOver)) return null;
          for (let i = 0; i < this.axis.fLabelsIndex.length; ++i) {
-            let pair = this.axis.fLabelsIndex[i];
+            const pair = this.axis.fLabelsIndex[i];
             if (pair.second === indx) return pair.first;
          }
       } else {
-         let labels = this.getObject().fLabels;
+         const labels = this.getObject().fLabels;
          if (labels && (indx >= 0) && (indx < labels.length))
             return labels[indx];
       }
@@ -220,15 +219,14 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Creates array with minor/middle/major ticks */
    createTicks(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
+      if (optionNoopt && this.nticks && (this.kind === 'normal')) this.noticksopt = true;
 
-      if (optionNoopt && this.nticks && (this.kind == 'normal')) this.noticksopt = true;
-
-      let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
+      const handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
 
       handle.minor = handle.middle = handle.major = this.produceTicks(this.nticks);
 
       if (only_major_as_array) {
-         let res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
+         const res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
          if (res[0] > this.scale_min + delta) res.unshift(this.scale_min);
          if (res[res.length-1] < this.scale_max - delta) res.push(this.scale_max);
          return res;
@@ -237,12 +235,12 @@ class RAxisPainter extends RObjectPainter {
       if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10))) {
          handle.minor = handle.middle = this.produceTicks(handle.major.length, this.nticks2);
 
-         let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
+         const gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
 
          // avoid black filling by middle-size
-         if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5)) {
+         if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5))
             handle.minor = handle.middle = handle.major;
-         } else if ((this.nticks3 > 1) && !this.log) {
+          else if ((this.nticks3 > 1) && !this.log) {
             handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
             if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
          }
@@ -273,7 +271,7 @@ class RAxisPainter extends RObjectPainter {
       };
 
       handle.last_major = function() {
-         return (this.kind !== 1) ? false : this.nmajor == this.major.length;
+         return (this.kind !== 1) ? false : this.nmajor === this.major.length;
       };
 
       handle.next_major_grpos = function() {
@@ -288,12 +286,11 @@ class RAxisPainter extends RObjectPainter {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind == 'normal') && !this.log && (handle.major.length > 0)) {
-
+      if ((this.kind === 'normal') && !this.log && (handle.major.length > 0)) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
-            let maxtick = Math.max(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
+            const maxtick = Math.max(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
                 mintick = Math.min(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
                 ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
                 ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
@@ -301,8 +298,8 @@ class RAxisPainter extends RObjectPainter {
              exclorder3 = (maxtick < 2e4); // do not show 10^3 for values below 20000
 
              if (maxtick || mintick) {
-                maxorder = Math.max(ord1,ord2) + 3;
-                minorder = Math.min(ord1,ord2) - 3;
+                maxorder = Math.max(ord1, ord2) + 3;
+                minorder = Math.min(ord1, ord2) - 3;
              }
          }
 
@@ -316,7 +313,7 @@ class RAxisPainter extends RObjectPainter {
             this.ndig = 0;
             let lbls = [], indx = 0, totallen = 0;
             while (indx<handle.major.length) {
-               let lbl = this.format(handle.major[indx], true);
+               const lbl = this.format(handle.major[indx], true);
                if (lbls.indexOf(lbl) < 0) {
                   lbls.push(lbl);
                   totallen += lbl.length;
@@ -327,7 +324,7 @@ class RAxisPainter extends RObjectPainter {
                lbls = []; indx = 0; totallen = 0;
             }
 
-            // for order == 0 we should virually remove '0.' and extra label on top
+            // for order === 0 we should virually remove '0.' and extra label on top
             if (!order && (this.ndig < 4))
                totallen -= (handle.major.length * 2 + 3);
 
@@ -364,26 +361,26 @@ class RAxisPainter extends RObjectPainter {
    processLabelsMove(arg, pos) {
       if (this.optionUnlab || !this.axis_g) return false;
 
-      let label_g = this.axis_g.select('.axis_labels');
-      if (!label_g || (label_g.size() != 1)) return false;
+      const label_g = this.axis_g.select('.axis_labels');
+      if (!label_g || (label_g.size() !== 1)) return false;
 
-      if (arg == 'start') {
+      if (arg === 'start') {
          // no moving without labels
-         let box = label_g.node().getBBox();
+         const box = label_g.node().getBBox();
 
          label_g.append('rect')
-                 .classed('drag',true)
+                 .classed('drag', true)
                  .attr('x', box.x)
                  .attr('y', box.y)
                  .attr('width', box.width)
                  .attr('height', box.height)
                  .style('cursor', 'move')
                  .call(addHighlightStyle, true);
-         if (this.vertical) {
+         if (this.vertical)
             this.drag_pos0 = pos[0];
-         } else {
+          else
             this.drag_pos0 = pos[1];
-         }
+
 
          return true;
       }
@@ -399,12 +396,12 @@ class RAxisPainter extends RObjectPainter {
       }
       if (!offset) label_g.attr('transform', null);
 
-      if (arg == 'stop') {
+      if (arg === 'stop') {
          label_g.select('rect.drag').remove();
          delete this.drag_pos0;
-         if (offset != label_g.property('fix_offset')) {
+         if (offset !== label_g.property('fix_offset')) {
             label_g.property('fix_offset', offset);
-            let side = label_g.property('side') || 1;
+            const side = label_g.property('side') || 1;
             this.labelsOffset = offset / (this.vertical ? -side : side);
             this.changeAxisAttr(1, 'labels_offset', this.labelsOffset / this.scalingSize);
          }
@@ -418,34 +415,34 @@ class RAxisPainter extends RObjectPainter {
       if (!settings.MoveResize || this.isBatchMode()) return;
 
       let drag_rect = null,
-          acc_x, acc_y, new_x, new_y, alt_pos, curr_indx,
-          drag_move = d3_drag().subject(Object);
+          acc_x, acc_y, new_x, new_y, alt_pos, curr_indx;
+
+      const drag_move = d3_drag().subject(Object);
 
       drag_move
          .on('start', evnt => {
-
             evnt.sourceEvent.preventDefault();
             evnt.sourceEvent.stopPropagation();
 
-            let box = title_g.node().getBBox(), // check that elements visible, request precise value
+            const box = title_g.node().getBBox(), // check that elements visible, request precise value
                 title_length = this.vertical ? box.height : box.width;
 
             new_x = acc_x = title_g.property('shift_x');
             new_y = acc_y = title_g.property('shift_y');
 
-            if (this.titlePos == 'center')
+            if (this.titlePos === 'center')
                curr_indx = 1;
             else
-               curr_indx = (this.titlePos == 'left') ? 0 : 2;
+               curr_indx = (this.titlePos === 'left') ? 0 : 2;
 
             // let d = ((this.gr_range > 0) && this.vertical) ? title_length : 0;
             alt_pos = [0, this.gr_range/2, this.gr_range]; // possible positions
-            let off = this.vertical ? -title_length : title_length,
+            const off = this.vertical ? -title_length : title_length,
                 swap = this.isReverseAxis() ? 2 : 0;
-            if (this.title_align == 'middle') {
+            if (this.title_align === 'middle') {
                alt_pos[swap] += off/2;
                alt_pos[2-swap] -= off/2;
-            } else if ((this.title_align == 'begin') ^ this.isTitleRotated()) {
+            } else if ((this.title_align === 'begin') ^ this.isTitleRotated()) {
                alt_pos[1] -= off/2;
                alt_pos[2-swap] -= off;
             } else { // end
@@ -472,10 +469,10 @@ class RAxisPainter extends RObjectPainter {
                acc_x += evnt.dx;
                acc_y += evnt.dy;
 
-               let set_x, set_y,
-                   p = this.vertical ? acc_y : acc_x, besti = 0;
+               const p = this.vertical ? acc_y : acc_x;
+               let set_x, set_y, besti = 0;
 
-               for (let i=1; i<3; ++i)
+               for (let i = 1; i < 3; ++i)
                   if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
 
                if (this.vertical) {
@@ -488,27 +485,26 @@ class RAxisPainter extends RObjectPainter {
 
                new_x = set_x; new_y = set_y; curr_indx = besti;
                makeTranslate(title_g, new_x, new_y);
-
           }).on('end', evnt => {
                if (!drag_rect) return;
 
                evnt.sourceEvent.preventDefault();
                evnt.sourceEvent.stopPropagation();
 
-               let basepos = title_g.property('basepos') || 0;
+               const basepos = title_g.property('basepos') || 0;
 
                title_g.property('shift_x', new_x)
                       .property('shift_y', new_y);
 
                this.titleOffset = (this.vertical ? basepos - new_x : new_y - basepos) * side;
 
-               if (curr_indx == 1) {
+               if (curr_indx === 1)
                   this.titlePos = 'center';
-               } else if (curr_indx == 0) {
+                else if (curr_indx === 0)
                   this.titlePos = 'left';
-               } else {
+                else
                   this.titlePos = 'right';
-               }
+
 
                this.changeAxisAttr(0, 'title_position', this.titlePos, 'title_offset', this.titleOffset / this.scalingSize);
 
@@ -547,8 +543,8 @@ class RAxisPainter extends RObjectPainter {
       let ending = '';
 
       if (this.endingSize && this.endingStyle) {
-         let sz = (this.gr_range > 0) ? -this.endingSize : this.endingSize,
-             sz7 = Math.round(sz*0.7);
+         let sz = (this.gr_range > 0) ? -this.endingSize : this.endingSize;
+         const sz7 = Math.round(sz*0.7);
          sz = Math.round(sz);
          if (this.vertical)
             ending = `l${sz7},${sz}M0,${this.gr_range}l${-sz7},${sz}`;
@@ -557,7 +553,7 @@ class RAxisPainter extends RObjectPainter {
       }
 
       axis_g.append('svg:path')
-            .attr('d','M0,0' + (this.vertical ? 'v' : 'h') + this.gr_range + ending)
+            .attr('d', 'M0,0' + (this.vertical ? 'v' : 'h') + this.gr_range + ending)
             .call(this.lineatt.func)
             .style('fill', ending ? 'none' : null);
    }
@@ -571,7 +567,7 @@ class RAxisPainter extends RObjectPainter {
       this.handle.reset();
 
       let res = '', ticks_plusminus = 0;
-      if (this.ticksSide == 'both') {
+      if (this.ticksSide === 'both') {
          side = 1;
          ticks_plusminus = 1;
       }
@@ -582,13 +578,13 @@ class RAxisPainter extends RObjectPainter {
          if (this.handle.kind < 3)
             h1 = Math.round(this.ticksSize/2);
 
-         let grpos = this.handle.grpos - this.axis_shift;
+         const grpos = this.handle.grpos - this.axis_shift;
 
          if ((this.startingSize || this.endingSize) && !this.isInsideGrRange(grpos, -Math.abs(this.startingSize), -Math.abs(this.endingSize))) continue;
 
-         if (this.handle.kind == 1) {
+         if (this.handle.kind === 1) {
             // if not showing labels, not show large tick
-            if ((this.kind == 'labels') || (this.format(this.handle.tick,true) !== null)) h1 = this.ticksSize;
+            if ((this.kind === 'labels') || (this.format(this.handle.tick, true) !== null)) h1 = this.ticksSize;
 
             if (main_draw) this.ticks.push(grpos); // keep graphical positions of major ticks
          }
@@ -607,10 +603,10 @@ class RAxisPainter extends RObjectPainter {
          axis_g.append('svg:path')
                .attr('d', res)
                .style('stroke', this.ticksColor || this.lineatt.color)
-               .style('stroke-width', !this.ticksWidth || (this.ticksWidth == 1) ? null : this.ticksWidth);
+               .style('stroke-width', !this.ticksWidth || (this.ticksWidth === 1) ? null : this.ticksWidth);
        }
 
-       let gap0 = Math.round(0.25*this.ticksSize), gap = Math.round(1.25*this.ticksSize);
+       const gap0 = Math.round(0.25*this.ticksSize), gap = Math.round(1.25*this.ticksSize);
        return { '-1': (side > 0) || ticks_plusminus ? gap : gap0,
                   1: (side < 0) || ticks_plusminus ? gap : gap0 };
    }
@@ -618,11 +614,11 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Performs labels drawing
      * @return {Promise} with gaps in both direction */
    async drawLabels(axis_g, side, gaps) {
-      let center_lbls = this.isCenteredLabels(),
-          rotate_lbls = this.labelsFont.angle != 0,
-          textscale = 1, maxtextlen = 0, lbls_tilt = false,
-          label_g = axis_g.append('svg:g').attr('class','axis_labels').property('side', side),
-          lbl_pos = this.handle.lbl_pos || this.handle.major,
+      const center_lbls = this.isCenteredLabels(),
+            rotate_lbls = this.labelsFont.angle !== 0,
+            label_g = axis_g.append('svg:g').attr('class', 'axis_labels').property('side', side),
+            lbl_pos = this.handle.lbl_pos || this.handle.major;
+      let textscale = 1, maxtextlen = 0, lbls_tilt = false,
           max_lbl_width = 0, max_lbl_height = 0;
 
       // function called when text is drawn to analyze width, required to correctly scale all labels
@@ -630,7 +626,7 @@ class RAxisPainter extends RObjectPainter {
          max_lbl_width = Math.max(max_lbl_width, this.result_width);
          max_lbl_height = Math.max(max_lbl_height, this.result_height);
 
-         let textwidth = this.result_width;
+         const textwidth = this.result_width;
 
          if (textwidth && ((!painter.vertical && !rotate_lbls) || (painter.vertical && rotate_lbls)) && !painter.log) {
             let maxwidth = this.gap_before*0.45 + this.gap_after*0.45;
@@ -642,14 +638,14 @@ class RAxisPainter extends RObjectPainter {
          if ((textscale > 0.0001) && (textscale < 0.8) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (side > 0))
             lbls_tilt = true;
 
-         let scale = textscale * (lbls_tilt ? 3 : 1);
+         const scale = textscale * (lbls_tilt ? 3 : 1);
          if ((scale > 0.0001) && (scale < 1))
             painter.scaleTextDrawing(1/scale, label_g);
       }
 
-      let lastpos = 0,
-          fix_offset = Math.round((this.vertical ? -side : side) * this.labelsOffset),
-          fix_coord = Math.round((this.vertical ? -side : side) * gaps[side]);
+      const fix_offset = Math.round((this.vertical ? -side : side) * this.labelsOffset),
+            fix_coord = Math.round((this.vertical ? -side : side) * gaps[side]);
+      let lastpos = 0;
 
       if (fix_offset)
          label_g.attr('transform', this.vertical ? `translate(${fix_offset})` : `translate(0,${fix_offset})`);
@@ -702,7 +698,7 @@ class RAxisPainter extends RObjectPainter {
          lastpos = pos;
       }
 
-      if (this.order)
+      if (this.order) {
          this.drawText({ x: this.vertical ? side*5 : this.getGrRange(5),
                          y: this.has_obstacle ? fix_coord : (this.vertical ? this.getGrRange(3) : -3*side),
                          align: this.vertical ? ((side < 0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
@@ -710,19 +706,20 @@ class RAxisPainter extends RObjectPainter {
                          text: '#times' + this.formatExp(10, this.order),
                          draw_g: label_g
          });
+      }
 
       return this.finishTextDrawing(label_g).then(() => {
-
-        if (lbls_tilt)
+        if (lbls_tilt) {
            label_g.selectAll('text').each(function() {
-               let txt = d3_select(this), tr = txt.attr('transform');
+               const txt = d3_select(this), tr = txt.attr('transform');
                txt.attr('transform', tr + ' rotate(25)').style('text-anchor', 'start');
            });
+         }
 
-         if (this.vertical) {
+         if (this.vertical)
             gaps[side] += Math.round(rotate_lbls ? 1.2*max_lbl_height : max_lbl_width + 0.4*this.labelsFont.size) - side*fix_offset;
-         } else {
-            let tilt_height = lbls_tilt ? max_lbl_width * Math.sin(25/180*Math.PI) + max_lbl_height * (Math.cos(25/180*Math.PI) + 0.2) : 0;
+         else {
+            const tilt_height = lbls_tilt ? max_lbl_width * Math.sin(25/180*Math.PI) + max_lbl_height * (Math.cos(25/180*Math.PI) + 0.2) : 0;
 
             gaps[side] += Math.round(Math.max(rotate_lbls ? max_lbl_width + 0.4*this.labelsFont.size : 1.2*max_lbl_height, 1.2*this.labelsFont.size, tilt_height)) + fix_offset;
          }
@@ -737,7 +734,7 @@ class RAxisPainter extends RObjectPainter {
          const sz = Math.max(lgaps[side], 10),
                d = this.vertical ? `v${this.gr_range}h${-side*sz}v${-this.gr_range}` : `h${this.gr_range}v${side*sz}h${-this.gr_range}`;
          axis_g.append('svg:path')
-               .attr('d',`M0,0${d}z`)
+               .attr('d', `M0,0${d}z`)
                .attr('class', 'axis_zoom')
                .style('opacity', '0')
                .style('cursor', 'crosshair');
@@ -746,7 +743,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Returns true if axis title is rotated */
    isTitleRotated() {
-      return this.titleFont && (this.titleFont.angle != (this.vertical ? 270 : 0));
+      return this.titleFont && (this.titleFont.angle !== (this.vertical ? 270 : 0));
    }
 
    /** @summary Draw axis title */
@@ -754,10 +751,9 @@ class RAxisPainter extends RObjectPainter {
       if (!this.fTitle)
          return this;
 
-      let title_g = axis_g.append('svg:g').attr('class', 'axis_title'),
-          title_shift_x = 0, title_shift_y = 0, title_basepos = 0;
-
-      let rotated = this.isTitleRotated();
+      const title_g = axis_g.append('svg:g').attr('class', 'axis_title'),
+            rotated = this.isTitleRotated();
+      let title_shift_x = 0, title_shift_y = 0, title_basepos = 0;
 
       this.startTextDrawing(this.titleFont, 'font', title_g);
 
@@ -790,7 +786,7 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Extract major draw attributes, which are also used in interactive operations
      * @private  */
    extractDrawAttributes(scalingSize) {
-      let pp = this.getPadPainter(),
+      const pp = this.getPadPainter(),
           rect = pp?.getPadRect() || { width: 10, height: 10 };
 
       this.scalingSize = scalingSize || (this.vertical ? rect.width : rect.height);
@@ -817,8 +813,8 @@ class RAxisPainter extends RObjectPainter {
 
          this.titleOffset = this.v7EvalLength('title_offset', this.scalingSize, 0);
          this.titlePos = this.v7EvalAttr('title_position', 'right');
-         this.titleCenter = (this.titlePos == 'center');
-         this.titleOpposite = (this.titlePos == 'left');
+         this.titleCenter = (this.titlePos === 'center');
+         this.titleOpposite = (this.titlePos === 'left');
       } else {
          delete this.titleFont;
          delete this.titleOffset;
@@ -858,14 +854,14 @@ class RAxisPainter extends RObjectPainter {
       this.axis_g = axis_g;
       this.side = side;
 
-      if (this.ticksSide == 'invert') side = -side;
+      if (this.ticksSide === 'invert') side = -side;
 
       if (this.standalone)
          this.drawMainLine(axis_g);
 
-      let optionNoopt = false,  // no ticks position optimization
-          optionInt = false,    // integer labels
-          optionNoexp = false;  // do not create exp
+      const optionNoopt = false,  // no ticks position optimization
+            optionInt = false,    // integer labels
+            optionNoexp = false;  // do not create exp
 
       this.handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
 
@@ -898,7 +894,7 @@ class RAxisPainter extends RObjectPainter {
       this.extractDrawAttributes();
 
       let side = this.side;
-      if (this.ticksSide == 'invert') side = -side;
+      if (this.ticksSide === 'invert') side = -side;
 
       if (this.standalone)
          this.drawMainLine(this.axis_g);
@@ -922,13 +918,13 @@ class RAxisPainter extends RObjectPainter {
    drawAxisOtherPlace(layer, transform, side, only_ticks) {
       let axis_g = layer.selectChild(`.${this.name}_container2`);
       if (axis_g.empty())
-         axis_g = layer.append('svg:g').attr('class',`${this.name}_container2`);
+         axis_g = layer.append('svg:g').attr('class', `${this.name}_container2`);
       else
          axis_g.selectAll('*').remove();
 
       axis_g.attr('transform', transform);
 
-      if (this.ticksSide == 'invert') side = -side;
+      if (this.ticksSide === 'invert') side = -side;
 
       // draw ticks again
       const tgaps = this.drawTicks(axis_g, side, false),
@@ -943,21 +939,20 @@ class RAxisPainter extends RObjectPainter {
    }
 
    /** @summary Change zooming in standalone mode */
-   zoomStandalone(min,max) {
+   zoomStandalone(min, max) {
       this.changeAxisAttr(1, 'zoomMin', min, 'zoomMax', max);
    }
 
    /** @summary Redraw axis, used in standalone mode for RAxisDrawable */
    redraw() {
-
-      let drawable = this.getObject(),
-          pp   = this.getPadPainter(),
-          pos  = pp.getCoordinate(drawable.fPos),
-          len  = pp.getPadLength(drawable.fVertical, drawable.fLength),
-          reverse = this.v7EvalAttr('reverse', false),
-          labels_len = drawable.fLabels.length,
-          min = (labels_len > 0) ? 0 : this.v7EvalAttr('min', 0),
-          max = (labels_len > 0) ? labels_len : this.v7EvalAttr('max', 100);
+      const drawable = this.getObject(),
+            pp   = this.getPadPainter(),
+            pos  = pp.getCoordinate(drawable.fPos),
+            reverse = this.v7EvalAttr('reverse', false),
+            labels_len = drawable.fLabels.length,
+            min = (labels_len > 0) ? 0 : this.v7EvalAttr('min', 0),
+            max = (labels_len > 0) ? labels_len : this.v7EvalAttr('max', 100);
+      let len  = pp.getPadLength(drawable.fVertical, drawable.fLength);
 
       // in vertical direction axis drawn in negative direction
       if (drawable.fVertical) len -= pp.getPadHeight();
@@ -974,12 +969,12 @@ class RAxisPainter extends RObjectPainter {
 
       this.standalone = true;  // no need to clean axis container
 
-      let promise = this.drawAxis(this.draw_g, makeTranslate(pos.x, pos.y));
+      const promise = this.drawAxis(this.draw_g, makeTranslate(pos.x, pos.y));
 
       if (this.isBatchMode()) return promise;
 
       return promise.then(() => {
-         if (settings.ContextMenu)
+         if (settings.ContextMenu) {
             this.draw_g.on('contextmenu', evnt => {
                evnt.stopPropagation(); // disable main context menu
                evnt.preventDefault();  // disable browser context menu
@@ -990,35 +985,37 @@ class RAxisPainter extends RObjectPainter {
                  menu.show();
                });
             });
+         }
 
          addDragHandler(this, { x: pos.x, y: pos.y, width: this.vertical ? 10 : len, height: this.vertical ? len : 10,
                                 only_move: true, redraw: d => this.positionChanged(d) });
 
          this.draw_g.on('dblclick', () => this.zoomStandalone());
 
-         if (settings.ZoomWheel)
+         if (settings.ZoomWheel) {
             this.draw_g.on('wheel', evnt => {
                evnt.stopPropagation();
                evnt.preventDefault();
 
-               let pos = d3_pointer(evnt, this.draw_g.node()),
+               const pos = d3_pointer(evnt, this.draw_g.node()),
                    coord = this.vertical ? (1 - pos[1] / len) : pos[0] / len,
                    item = this.analyzeWheelEvent(evnt, coord);
 
                if (item.changed) this.zoomStandalone(item.min, item.max);
             });
+         }
       });
    }
 
    /** @summary Process interactive moving of the axis drawing */
    positionChanged(drag) {
-      let drawable = this.getObject(),
+      const drawable = this.getObject(),
           rect = this.getPadPainter().getPadRect(),
           xn = drag.x / rect.width,
           yn = 1 - drag.y / rect.height;
 
-      drawable.fPos.fHoriz.fArr = [ xn ];
-      drawable.fPos.fVert.fArr = [ yn ];
+      drawable.fPos.fHoriz.fArr = [xn];
+      drawable.fPos.fVert.fArr = [yn];
 
       this.submitCanvExec(`SetPos({${xn.toFixed(4)},${yn.toFixed(4)}})`);
    }
@@ -1026,7 +1023,8 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Change axis attribute, submit changes to server and redraw axis when specified
      * @desc Arguments as redraw_mode, name1, value1, name2, value2, ... */
    changeAxisAttr(redraw_mode) {
-      let changes = {}, indx = 1;
+      const changes = {};
+      let indx = 1;
       while (indx < arguments.length - 1) {
          this.v7AttrChange(changes, arguments[indx], arguments[indx+1]);
          this.v7SetAttr(arguments[indx], arguments[indx+1]);
@@ -1044,7 +1042,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Change axis log scale kind */
    changeAxisLog(arg) {
-      if ((this.kind == 'labels') || (this.kind == 'time')) return;
+      if ((this.kind === 'labels') || (this.kind === 'time')) return;
       if (arg === 'toggle') arg = this.log ? 0 : 10;
 
       arg = parseFloat(arg);
@@ -1053,16 +1051,15 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Provide context menu for axis */
    fillAxisContextMenu(menu, kind) {
-
       if (kind) menu.add('Unzoom', () => this.getFramePainter().unzoom(kind));
 
       menu.add('sub:Log scale', () => this.changeAxisLog('toggle'));
       menu.addchk(!this.log && !this.symlog, 'linear', 0, arg => this.changeAxisLog(arg));
-      menu.addchk(this.log && !this.symlog && (this.logbase == 10), 'log10', () => this.changeAxisLog(10));
-      menu.addchk(this.log && !this.symlog && (this.logbase == 2), 'log2', () => this.changeAxisLog(2));
+      menu.addchk(this.log && !this.symlog && (this.logbase === 10), 'log10', () => this.changeAxisLog(10));
+      menu.addchk(this.log && !this.symlog && (this.logbase === 2), 'log2', () => this.changeAxisLog(2));
       menu.addchk(this.log && !this.symlog && Math.abs(this.logbase - Math.exp(1)) < 0.1, 'ln', () => this.changeAxisLog(Math.exp(1)));
       menu.addchk(!this.log && this.symlog, 'symlog', 0, () =>
-         menu.input('set symlog constant', this.symlog || 10, 'float').then(v => this.changeAxisAttr(2,'symlog', v)));
+         menu.input('set symlog constant', this.symlog || 10, 'float').then(v => this.changeAxisAttr(2, 'symlog', v)));
       menu.add('endsub:');
 
       menu.add('Divisions', () => menu.input('Set axis devisions', this.v7EvalAttr('ndiv', 508), 'int').then(val => this.changeAxisAttr(2, 'ndiv', val)));

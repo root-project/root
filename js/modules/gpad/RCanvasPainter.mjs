@@ -42,18 +42,18 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Returns layout kind */
    getLayoutKind() {
-      let origin = this.selectDom('origin'),
+      const origin = this.selectDom('origin'),
          layout = origin.empty() ? '' : origin.property('layout');
       return layout || 'simple';
    }
 
    /** @summary Set canvas layout kind */
    setLayoutKind(kind, main_selector) {
-      let origin = this.selectDom('origin');
+      const origin = this.selectDom('origin');
       if (!origin.empty()) {
          if (!kind) kind = 'simple';
          origin.property('layout', kind);
-         origin.property('layout_selector', (kind != 'simple') && main_selector ? main_selector : null);
+         origin.property('layout_selector', (kind !== 'simple') && main_selector ? main_selector : null);
          this._changed_layout = (kind !== 'simple'); // use in cleanup
       }
    }
@@ -61,14 +61,15 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Changes layout
      * @return {Promise} indicating when finished */
    async changeLayout(layout_kind, mainid) {
-      let current = this.getLayoutKind();
-      if (current == layout_kind)
+      const current = this.getLayoutKind();
+      if (current === layout_kind)
          return true;
 
-      let origin = this.selectDom('origin'),
-          sidebar = origin.select('.side_panel'),
-          sidebar2 = origin.select('.side_panel2'),
-          main = this.selectDom(), lst = [], force;
+      const origin = this.selectDom('origin'),
+            sidebar2 = origin.select('.side_panel2'),
+            lst = [];
+      let sidebar = origin.select('.side_panel'),
+          main = this.selectDom(), force;
 
       while (main.node().firstChild)
          lst.push(main.node().removeChild(main.node().firstChild));
@@ -81,22 +82,22 @@ class RCanvasPainter extends RPadPainter {
       this.setLayoutKind('simple'); // restore defaults
       origin.html(''); // cleanup origin
 
-      if (layout_kind == 'simple') {
+      if (layout_kind === 'simple') {
          main = origin;
          for (let k = 0; k < lst.length; ++k)
             main.node().appendChild(lst[k]);
          this.setLayoutKind(layout_kind);
          force = true;
       } else {
-         let grid = new GridDisplay(origin.node(), layout_kind);
+         const grid = new GridDisplay(origin.node(), layout_kind);
 
-         if (mainid == undefined)
-            mainid = (layout_kind.indexOf('vert') == 0) ? 0 : 1;
+         if (mainid === undefined)
+            mainid = (layout_kind.indexOf('vert') === 0) ? 0 : 1;
 
          main = d3_select(grid.getGridFrame(mainid));
          main.classed('central_panel', true).style('position', 'relative');
 
-         if (mainid == 2) {
+         if (mainid === 2) {
             // left panel for Y
             sidebar = d3_select(grid.getGridFrame(0));
             sidebar.classed('side_panel2', true).style('position', 'relative');
@@ -136,7 +137,7 @@ class RCanvasPainter extends RPadPainter {
 
       let layout = 'simple', mainid;
 
-      switch(kind) {
+      switch (kind) {
          case 'XY': layout = 'projxy'; mainid = 2; break;
          case 'X':
          case 'bottom': layout = 'vert2_31'; mainid = 0; break;
@@ -151,7 +152,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Draw projection for specified histogram
      * @private */
-   async drawProjection(/*kind,hist,hopt*/) {
+   async drawProjection(/* kind,hist,hopt */) {
       // dummy for the moment
       return false;
    }
@@ -159,8 +160,8 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Draw in side panel
      * @private */
    async drawInSidePanel(canv, opt, kind) {
-      let sel = ((this.getLayoutKind() == 'projxy') && (kind == 'Y')) ? '.side_panel2' : '.side_panel',
-          side = this.selectDom('origin').select(sel);
+      const sel = ((this.getLayoutKind() === 'projxy') && (kind === 'Y')) ? '.side_panel2' : '.side_panel',
+            side = this.selectDom('origin').select(sel);
       return side.empty() ? null : this.drawObject(side.node(), canv, opt);
    }
 
@@ -183,7 +184,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Function called when canvas menu item Save is called */
    saveCanvasAsFile(fname) {
-      let pnt = fname.indexOf('.');
+      const pnt = fname.indexOf('.');
       this.createImage(fname.slice(pnt+1))
           .then(res => this.sendWebsocket(`SAVE:${fname}:${res}`));
    }
@@ -234,25 +235,24 @@ class RCanvasPainter extends RPadPainter {
       if (!this._websocket._tmouts)
          this._websocket._tmouts = {};
 
-      let handle = this._websocket._tmouts[name];
+      const handle = this._websocket._tmouts[name];
       if (tm === undefined)
          return handle !== undefined;
 
-      if (tm == 'reset') {
+      if (tm === 'reset') {
          if (handle) { clearTimeout(handle); delete this._websocket._tmouts[name]; }
-      } else if (!handle && Number.isInteger(tm)) {
+      } else if (!handle && Number.isInteger(tm))
          this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
-      }
    }
 
    /** @summary Hanler for websocket open event
      * @private */
-   onWebsocketOpened(/*handle*/) {
+   onWebsocketOpened(/* handle */) {
    }
 
    /** @summary Hanler for websocket close event
      * @private */
-   onWebsocketClosed(/*handle*/) {
+   onWebsocketClosed(/* handle */) {
       if (!this.embed_canvas)
          closeCurrentWindow();
    }
@@ -262,13 +262,13 @@ class RCanvasPainter extends RPadPainter {
    onWebsocketMsg(handle, msg) {
       // console.log('GET_MSG ' + msg.slice(0,30));
 
-      if (msg == 'CLOSE') {
+      if (msg === 'CLOSE') {
          this.onWebsocketClosed();
          this.closeWebsocket(true);
-      } else if (msg.slice(0,5) == 'SNAP:') {
+      } else if (msg.slice(0, 5) === 'SNAP:') {
          msg = msg.slice(5);
-         let p1 = msg.indexOf(':'),
-             snapid = msg.slice(0,p1),
+         const p1 = msg.indexOf(':'),
+             snapid = msg.slice(0, p1),
              snap = parse(msg.slice(p1+1));
          this.syncDraw(true)
              .then(() => {
@@ -279,28 +279,27 @@ class RCanvasPainter extends RPadPainter {
                  handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
               });
-      } else if (msg.slice(0,4) == 'JSON') {
-         let obj = parse(msg.slice(4));
+      } else if (msg.slice(0, 4) === 'JSON') {
+         const obj = parse(msg.slice(4));
          // console.log('get JSON ', msg.length-4, obj._typename);
          this.redrawObject(obj);
-      } else if (msg.slice(0,9) == 'REPL_REQ:') {
+      } else if (msg.slice(0, 9) === 'REPL_REQ:')
          this.processDrawableReply(msg.slice(9));
-      } else if (msg.slice(0,4) == 'CMD:') {
+       else if (msg.slice(0, 4) === 'CMD:') {
          msg = msg.slice(4);
-         let p1 = msg.indexOf(':'),
-             cmdid = msg.slice(0,p1),
+         const p1 = msg.indexOf(':'),
+             cmdid = msg.slice(0, p1),
              cmd = msg.slice(p1+1),
              reply = `REPLY:${cmdid}:`;
-         if ((cmd == 'SVG') || (cmd == 'PNG') || (cmd == 'JPEG')) {
+         if ((cmd === 'SVG') || (cmd === 'PNG') || (cmd === 'JPEG')) {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
-         } else if (cmd.indexOf('ADDPANEL:') == 0) {
-            let relative_path = cmd.slice(9);
-            if (!isFunc(this.showUI5Panel)) {
+         } else if (cmd.indexOf('ADDPANEL:') === 0) {
+            const relative_path = cmd.slice(9);
+            if (!isFunc(this.showUI5Panel))
                handle.send(reply + 'false');
-            } else {
-
-               let conn = new WebWindowHandle(handle.kind);
+             else {
+               const conn = new WebWindowHandle(handle.kind);
 
                // set interim receiver until first message arrives
                conn.setReceiver({
@@ -310,7 +309,7 @@ class RCanvasPainter extends RPadPainter {
                   },
 
                   onWebsocketMsg(panel_handle, msg) {
-                     let panel_name = (msg.indexOf('SHOWPANEL:') == 0) ? msg.slice(10) : '';
+                     const panel_name = (msg.indexOf('SHOWPANEL:') === 0) ? msg.slice(10) : '';
                      this.cpainter.showUI5Panel(panel_name, panel_handle)
                                   .then(res => handle.send(reply + (res ? 'true' : 'false')));
                   },
@@ -328,12 +327,12 @@ class RCanvasPainter extends RPadPainter {
                });
 
                let addr = handle.href;
-               if (relative_path.indexOf('../') == 0) {
-                  let ddd = addr.lastIndexOf('/',addr.length-2);
-                  addr = addr.slice(0,ddd) + relative_path.slice(2);
-               } else {
+               if (relative_path.indexOf('../') === 0) {
+                  const ddd = addr.lastIndexOf('/', addr.length-2);
+                  addr = addr.slice(0, ddd) + relative_path.slice(2);
+               } else
                   addr += relative_path;
-               }
+
                // only when connection established, panel will be activated
                conn.connect(addr);
             }
@@ -341,22 +340,20 @@ class RCanvasPainter extends RPadPainter {
             console.log('Unrecognized command ' + cmd);
             handle.send(reply);
          }
-      } else if ((msg.slice(0,7) == 'DXPROJ:') || (msg.slice(0,7) == 'DYPROJ:')) {
-         let kind = msg[1],
+      } else if ((msg.slice(0, 7) === 'DXPROJ:') || (msg.slice(0, 7) === 'DYPROJ:')) {
+         const kind = msg[1],
              hist = parse(msg.slice(7));
          this.drawProjection(kind, hist);
-      } else if (msg.slice(0,5) == 'SHOW:') {
-         let that = msg.slice(5),
-             on = that[that.length-1] == '1';
-         this.showSection(that.slice(0,that.length-2), on);
-      } else {
-         console.log(`unrecognized msg len: ${msg.length} msg: ${msg.slice(0,30)}`);
-      }
+      } else if (msg.slice(0, 5) === 'SHOW:') {
+         const that = msg.slice(5),
+             on = that[that.length-1] === '1';
+         this.showSection(that.slice(0, that.length-2), on);
+      } else
+         console.log(`unrecognized msg len: ${msg.length} msg: ${msg.slice(0, 30)}`);
    }
 
    /** @summary Submit request to RDrawable object on server side */
    submitDrawableRequest(kind, req, painter, method) {
-
       if (!this._websocket || !req || !req._typename ||
           !painter.snapid || !isStr(painter.snapid)) return null;
 
@@ -364,10 +361,10 @@ class RCanvasPainter extends RPadPainter {
          // if kind specified - check if such request already was submitted
          if (!painter._requests) painter._requests = {};
 
-         let prevreq = painter._requests[kind];
+         const prevreq = painter._requests[kind];
 
          if (prevreq) {
-            let tm = new Date().getTime();
+            const tm = new Date().getTime();
             if (!prevreq._tm || (tm - prevreq._tm < 5000)) {
                prevreq._nextreq = req; // submit when got reply
                return false;
@@ -383,11 +380,11 @@ class RCanvasPainter extends RPadPainter {
       if (method) {
          if (!this._nextreqid) this._nextreqid = 1;
          req.reqid = this._nextreqid++;
-      } else {
+      } else
          req.reqid = 0; // request will not be replied
-      }
 
-      let msg = JSON.stringify(req);
+
+      const msg = JSON.stringify(req);
 
       if (req.reqid) {
          req._kind = kind;
@@ -423,12 +420,12 @@ class RCanvasPainter extends RPadPainter {
       if (!this._websocket) return;
 
       if (subelem && isStr(subelem)) {
-         let len = subelem.length;
-         if ((len > 2) && (subelem.indexOf('#x') == len - 2)) subelem = 'x'; else
-         if ((len > 2) && (subelem.indexOf('#y') == len - 2)) subelem = 'y'; else
-         if ((len > 2) && (subelem.indexOf('#z') == len - 2)) subelem = 'z';
+         const len = subelem.length;
+         if ((len > 2) && (subelem.indexOf('#x') === len - 2)) subelem = 'x'; else
+         if ((len > 2) && (subelem.indexOf('#y') === len - 2)) subelem = 'y'; else
+         if ((len > 2) && (subelem.indexOf('#z') === len - 2)) subelem = 'z';
 
-         if ((subelem == 'x') || (subelem == 'y') || (subelem == 'z'))
+         if ((subelem === 'x') || (subelem === 'y') || (subelem === 'z'))
             exec = subelem + 'axis#' + exec;
          else
             return console.log(`not recoginzed subelem ${subelem} in SubmitExec`);
@@ -439,19 +436,20 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Process reply from request to RDrawable */
    processDrawableReply(msg) {
-      let reply = parse(msg);
+      const reply = parse(msg);
       if (!reply || !reply.reqid || !this._submreq) return false;
 
-      let req = this._submreq[reply.reqid];
+      const req = this._submreq[reply.reqid];
       if (!req) return false;
 
       // remove reference first
       delete this._submreq[reply.reqid];
 
       // remove blocking reference for that kind
-      if (req._kind && req._painter?._requests)
+      if (req._kind && req._painter?._requests) {
          if (req._painter._requests[req._kind] === req)
             delete req._painter._requests[req._kind];
+      }
 
       if (req._method)
          req._method(reply, req);
@@ -463,7 +461,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Show specified section in canvas */
    async showSection(that, on) {
-      switch(that) {
+      switch (that) {
          case 'Menu': break;
          case 'StatusBar': break;
          case 'Editor': break;
@@ -480,7 +478,7 @@ class RCanvasPainter extends RPadPainter {
       // check if we could send at least one message more - for some meaningful actions
       if (!this._websocket || !this._websocket.canSend(2) || !isStr(kind)) return;
 
-      let msg = '';
+      const msg = '';
       if (!painter) painter = this;
       switch (kind) {
          case 'sbits':
@@ -494,24 +492,22 @@ class RCanvasPainter extends RPadPainter {
             console.log('TPave is moved inside RCanvas - that to do?');
             break;
          default:
-            if ((kind.slice(0,5) == 'exec:') && painter?.snapid) {
+            if ((kind.slice(0, 5) === 'exec:') && painter?.snapid)
                this.submitExec(painter, kind.slice(5), subelem);
-            } else {
+             else
                console.log('UNPROCESSED CHANGES', kind);
-            }
       }
 
-      if (msg) {
-         console.log('RCanvas::processChanges want to send  ' + msg.length + '  ' + msg.slice(0,40));
-      }
+      if (msg)
+         console.log('RCanvas::processChanges want to send  ' + msg.length + '  ' + msg.slice(0, 40));
    }
 
    /** @summary Handle pad button click event
      * @private */
    clickPadButton(funcname, evnt) {
-      if (funcname == 'ToggleGed')
+      if (funcname === 'ToggleGed')
          return this.activateGed(this, null, 'toggle');
-      if (funcname == 'ToggleStatus')
+      if (funcname === 'ToggleStatus')
          return this.activateStatusBar('toggle');
       super.clickPadButton(funcname, evnt);
    }
@@ -521,7 +517,7 @@ class RCanvasPainter extends RPadPainter {
       if (this.testUI5()) return false;
       if (this.brlayout)
          return this.brlayout.hasStatus();
-      let hp = getHPainter();
+      const hp = getHPainter();
       return hp ? hp.hasStatusLine() : false;
    }
 
@@ -542,7 +538,7 @@ class RCanvasPainter extends RPadPainter {
    showCanvasStatus(...msgs) {
       if (this.testUI5()) return;
 
-      let br = this.brlayout || getHPainter()?.brlayout;
+      const br = this.brlayout || getHPainter()?.brlayout;
 
       br?.showStatus(...msgs);
    }
@@ -594,37 +590,33 @@ class RCanvasPainter extends RPadPainter {
       if (mode === false)
          return false;
 
-      let btns = this.brlayout.createBrowserBtns();
+      const btns = this.brlayout.createBrowserBtns();
 
       ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode', 'browser')
-                  .style('margin','3px').on('click', () => this.brlayout.toggleKind('fix'));
+                  .style('margin', '3px').on('click', () => this.brlayout.toggleKind('fix'));
 
       ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode', 'browser')
-                  .style('margin','3px').on('click', () => this.brlayout.toggleKind('float'));
+                  .style('margin', '3px').on('click', () => this.brlayout.toggleKind('float'));
 
       ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED', 'browser')
-                  .style('margin','3px').on('click', () => this.removeGed());
+                  .style('margin', '3px').on('click', () => this.removeGed());
 
       // be aware, that jsroot_browser_hierarchy required for flexible layout that element use full browser area
-      this.brlayout.setBrowserContent("<div class='jsroot_browser_hierarchy' id='ged_placeholder'>Loading GED ...</div>");
+      this.brlayout.setBrowserContent('<div class=\'jsroot_browser_hierarchy\' id=\'ged_placeholder\'>Loading GED ...</div>');
       this.brlayout.setBrowserTitle('GED');
       this.brlayout.toggleBrowserKind(kind || 'float');
 
       return new Promise(resolveFunc => {
-
          loadOpenui5.then(sap => {
-
             d3_select('#ged_placeholder').text('');
 
-            sap.ui.require(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
-
-               let oModel = new JSONModel({ handle: null });
+            sap.ui.require(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel, XMLView) => {
+               const oModel = new JSONModel({ handle: null });
 
                XMLView.create({
                   viewName: 'rootui5.canv.view.Ged',
                   viewData: this.getUi5PanelData('Ged')
                }).then(oGed => {
-
                   oGed.setModel(oModel);
 
                   oGed.placeAt('ged_placeholder');
@@ -661,11 +653,11 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary draw RCanvas object */
    static async draw(dom, can /*, opt */) {
-      let nocanvas = !can;
+      const nocanvas = !can;
       if (nocanvas)
          can = create(`${nsREX}RCanvas`);
 
-      let painter = new RCanvasPainter(dom, can);
+      const painter = new RCanvasPainter(dom, can);
       painter.normal_canvas = !nocanvas;
       painter.createCanvasSvg(0);
 
@@ -683,8 +675,8 @@ class RCanvasPainter extends RPadPainter {
 
 /** @summary draw RPadSnapshot object
   * @private */
-function drawRPadSnapshot(dom, snap /*, opt*/) {
-   let painter = new RCanvasPainter(dom, null);
+function drawRPadSnapshot(dom, snap /*, opt */) {
+   const painter = new RCanvasPainter(dom, null);
    painter.normal_canvas = false;
    painter.batch_mode = isBatchMode();
    return painter.syncDraw(true).then(() => painter.redrawPadSnap(snap)).then(() => {
@@ -705,7 +697,7 @@ async function ensureRCanvas(painter, frame_kind) {
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
 
    // simple check - if canvas there, can use painter
-   let pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* noframe */) : Promise.resolve(true);
+   const pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* noframe */) : Promise.resolve(true);
 
    return pr.then(() => {
       if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty())
@@ -720,26 +712,26 @@ async function ensureRCanvas(painter, frame_kind) {
 /** @summary Function used for direct draw of RFrameTitle
   * @private */
 function drawRFrameTitle(reason, drag) {
-   let fp = this.getFramePainter();
+   const fp = this.getFramePainter();
    if (!fp)
       return console.log('no frame painter - no title');
 
-   let rect         = fp.getFrameRect(),
-       fx           = rect.x,
-       fy           = rect.y,
-       fw           = rect.width,
-       // fh           = rect.height,
-       ph           = this.getPadPainter().getPadHeight(),
-       title        = this.getObject(),
-       title_margin = this.v7EvalLength('margin', ph, 0.02),
-       title_width  = fw,
-       title_height = this.v7EvalLength('height', ph, 0.05),
-       textFont     = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
+   const rect         = fp.getFrameRect(),
+         fx           = rect.x,
+         fy           = rect.y,
+         fw           = rect.width,
+         // fh           = rect.height,
+         ph           = this.getPadPainter().getPadHeight(),
+         title        = this.getObject(),
+         title_width  = fw,
+         textFont     = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
+   let title_margin = this.v7EvalLength('margin', ph, 0.02),
+       title_height = this.v7EvalLength('height', ph, 0.05);
 
-   if (reason == 'drag') {
+   if (reason === 'drag') {
       title_height = drag.height;
       title_margin = fy - drag.y - drag.height;
-      let changes = {};
+      const changes = {};
       this.v7AttrChange(changes, 'margin', title_margin / ph);
       this.v7AttrChange(changes, 'height', title_height / ph);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
@@ -749,7 +741,7 @@ function drawRFrameTitle(reason, drag) {
 
    makeTranslate(this.draw_g, fx, Math.round(fy-title_margin-title_height));
 
-   let arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
+   const arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
 
    this.startTextDrawing(textFont, 'font');
 
@@ -761,7 +753,7 @@ function drawRFrameTitle(reason, drag) {
    );
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////
+/// /////////////////////////////////////////////////////////////////////////////////////////
 
 registerMethods(`${nsREX}RPalette`, {
 
@@ -774,7 +766,8 @@ registerMethods(`${nsREX}RPalette`, {
    },
 
    getContourIndex(zc) {
-      let cntr = this.fContour, l = 0, r = cntr.length-1, mid;
+      const cntr = this.fContour;
+      let l = 0, r = cntr.length-1, mid;
 
       if (zc < cntr[0]) return -1;
       if (zc >= cntr[r]) return r-1;
@@ -792,7 +785,7 @@ registerMethods(`${nsREX}RPalette`, {
    },
 
    getContourColor(zc) {
-      let zindx = this.getContourIndex(zc);
+      const zindx = this.getContourIndex(zc);
       return (zindx < 0) ? '' : this.getColor(zindx);
    },
 
@@ -805,7 +798,7 @@ registerMethods(`${nsREX}RPalette`, {
    },
 
    calcColor(value, entry1, entry2) {
-      let dist = entry2.fOrdinal - entry1.fOrdinal,
+      const dist = entry2.fOrdinal - entry1.fOrdinal,
           r1 = entry2.fOrdinal - value,
           r2 = value - entry1.fOrdinal;
 
@@ -813,7 +806,7 @@ registerMethods(`${nsREX}RPalette`, {
          return (r1 < r2) ? entry2.fColor : entry1.fColor;
 
       // interpolate
-      let col1 = d3_rgb(this.extractRColor(entry1.fColor)),
+      const col1 = d3_rgb(this.extractRColor(entry1.fColor)),
           col2 = d3_rgb(this.extractRColor(entry2.fColor)),
           color = d3_rgb(Math.round((col1.r*r1 + col2.r*r2)/dist),
                          Math.round((col1.g*r1 + col2.g*r2)/dist),
@@ -823,19 +816,20 @@ registerMethods(`${nsREX}RPalette`, {
    },
 
    createPaletteColors(len) {
-      let arr = [], indx = 0;
+      const arr = [];
+      let indx = 0;
 
       while (arr.length < len) {
-         let value = arr.length / (len-1);
+         const value = arr.length / (len-1),
 
-         let entry = this.fColors[indx];
+          entry = this.fColors[indx];
 
-         if ((Math.abs(entry.fOrdinal - value) < 0.0001) || (indx == this.fColors.length - 1)) {
+         if ((Math.abs(entry.fOrdinal - value) < 0.0001) || (indx === this.fColors.length - 1)) {
             arr.push(this.extractRColor(entry.fColor));
             continue;
          }
 
-         let next = this.fColors[indx+1];
+         const next = this.fColors[indx+1];
          if (next.fOrdinal <= value)
             indx++;
          else
@@ -849,7 +843,7 @@ registerMethods(`${nsREX}RPalette`, {
       // extract color with ordinal value between 0 and 1
       if (!this.fColors)
          return 'black';
-      if ((typeof value != 'number') || (value < 0))
+      if ((typeof value !== 'number') || (value < 0))
          value = 0;
       else if (value > 1)
          value = 1;
@@ -884,15 +878,17 @@ registerMethods(`${nsREX}RPalette`, {
       this.colzmax = zmax;
 
       if (logz) {
-         if (this.colzmax <= 0) this.colzmax = 1.;
-         if (this.colzmin <= 0)
+         if (this.colzmax <= 0) this.colzmax = 1.0;
+         if (this.colzmin <= 0) {
             if ((zminpositive === undefined) || (zminpositive <= 0))
                this.colzmin = 0.0001*this.colzmax;
             else
                this.colzmin = ((zminpositive < 3) || (zminpositive>100)) ? 0.3*zminpositive : 1;
-         if (this.colzmin >= this.colzmax) this.colzmin = 0.0001*this.colzmax;
+         }
+         if (this.colzmin >= this.colzmax)
+            this.colzmin = 0.0001*this.colzmax;
 
-         let logmin = Math.log(this.colzmin)/Math.log(10),
+         const logmin = Math.log(this.colzmin)/Math.log(10),
              logmax = Math.log(this.colzmax)/Math.log(10),
              dz = (logmax-logmin)/nlevels;
          this.fContour.push(this.colzmin);
@@ -905,12 +901,12 @@ registerMethods(`${nsREX}RPalette`, {
             this.colzmax += 0.01*Math.abs(this.colzmax);
             this.colzmin -= 0.01*Math.abs(this.colzmin);
          }
-         let dz = (this.colzmax-this.colzmin)/nlevels;
+         const dz = (this.colzmax-this.colzmin)/nlevels;
          for (let level=0; level<=nlevels; level++)
             this.fContour.push(this.colzmin + dz*level);
       }
 
-      if (!this.palette || (this.palette.length != nlevels))
+      if (!this.palette || (this.palette.length !== nlevels))
          this.palette = this.createPaletteColors(nlevels);
    }
 
@@ -919,10 +915,10 @@ registerMethods(`${nsREX}RPalette`, {
 /** @summary draw RFont object
   * @private */
 function drawRFont() {
-   let font   = this.getObject(),
-       svg    = this.getCanvSvg(),
-       defs   = svg.selectChild('.canvas_defs'),
-       clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
+   const font   = this.getObject(),
+         svg    = this.getCanvSvg(),
+         clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
+   let defs = svg.selectChild('.canvas_defs');
 
    if (defs.empty())
       defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
@@ -931,7 +927,7 @@ function drawRFont() {
    if (entry.empty())
       entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
 
-   entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : "normal"}; font-style: ${font.fStyle ? font.fStyle : "normal"}; src: ${font.fSrc}; }`);
+   entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : 'normal'}; font-style: ${font.fStyle ? font.fStyle : 'normal'}; src: ${font.fSrc}; }`);
 
    if (font.fDefault)
       this.getPadPainter()._dfltRFont = font;
@@ -942,7 +938,7 @@ function drawRFont() {
 /** @summary draw RAxis object
   * @private */
 function drawRAxis(dom, obj, opt) {
-   let painter = new RAxisPainter(dom, obj, opt);
+   const painter = new RAxisPainter(dom, obj, opt);
    painter.disable_zooming = true;
    return ensureRCanvas(painter, false)
            .then(() => painter.redraw())
@@ -952,8 +948,8 @@ function drawRAxis(dom, obj, opt) {
 /** @summary draw RFrame object
   * @private */
 function drawRFrame(dom, obj, opt) {
-   let p = new RFramePainter(dom, obj);
-   if (opt == '3d') p.mode3d = true;
+   const p = new RFramePainter(dom, obj);
+   if (opt === '3d') p.mode3d = true;
    return ensureRCanvas(p, false).then(() => p.redraw());
 }
 

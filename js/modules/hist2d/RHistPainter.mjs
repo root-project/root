@@ -17,20 +17,20 @@ function assignRAxisMethods(axis) {
       axis.max = axis.fLow + axis.fNBinsNoOver/axis.fInvBinWidth;
       axis.GetNumBins = function() { return this.fNBinsNoOver; }
       axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; }
-      axis.FindBin = function(x,add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); }
-   } else if (axis._typename == `${nsREX}RAxisIrregular`) {
+      axis.FindBin = function(x, add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); }
+   } else if (axis._typename === `${nsREX}RAxisIrregular`) {
       axis.min = axis.fBinBorders[0];
       axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
       axis.GetNumBins = function() { return this.fBinBorders.length; }
       axis.GetBinCoord = function(bin) {
-         let indx = Math.round(bin);
+         const indx = Math.round(bin);
          if (indx <= 0) return this.fBinBorders[0];
          if (indx >= this.fBinBorders.length) return this.fBinBorders[this.fBinBorders.length - 1];
-         if (indx==bin) return this.fBinBorders[indx];
-         let indx2 = (bin < indx) ? indx - 1 : indx + 1;
+         if (indx === bin) return this.fBinBorders[indx];
+         const indx2 = (bin < indx) ? indx - 1 : indx + 1;
          return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);
       }
-      axis.FindBin = function(x,add) {
+      axis.FindBin = function(x, add) {
          for (let k = 1; k < this.fBinBorders.length; ++k)
             if (x < this.fBinBorders[k]) return Math.floor(k-1+add);
          return this.fBinBorders.length - 1;
@@ -80,7 +80,8 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary get histogram */
    getHisto(force) {
-      let obj = this.getObject(), histo = getHImpl(obj);
+      const obj = this.getObject();
+      let histo = getHImpl(obj);
 
       if (histo && (!histo.getBinContent || force)) {
          if (histo.fAxes._2) {
@@ -91,7 +92,7 @@ class RHistPainter extends RObjectPainter {
             // all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y, z) { return this.fStatistics.fBinContent[this.getBin(x, y, z)]; }
             histo.getBinError = function(x, y, z) {
-               let bin = this.getBin(x, y, z);
+               const bin = this.getBin(x, y, z);
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
@@ -103,7 +104,7 @@ class RHistPainter extends RObjectPainter {
             // all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
             histo.getBinError = function(x, y) {
-               let bin = this.getBin(x, y);
+               const bin = this.getBin(x, y);
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
@@ -125,7 +126,7 @@ class RHistPainter extends RObjectPainter {
          histo = obj;
 
          if (!histo.getBinContent || force) {
-            if (histo.fAxes.length == 3) {
+            if (histo.fAxes.length === 3) {
                assignRAxisMethods(histo.fAxes[0]);
                assignRAxisMethods(histo.fAxes[1]);
                assignRAxisMethods(histo.fAxes[2]);
@@ -153,7 +154,7 @@ class RHistPainter extends RObjectPainter {
 
                histo.getBinContent = function(x, y, z) { return this.fBinContent[this.getBin0(x, y, z)]; }
                histo.getBinError = function(x, y, z) { return Math.sqrt(Math.abs(this.getBinContent(x, y, z))); }
-            } else if (histo.fAxes.length == 2) {
+            } else if (histo.fAxes.length === 2) {
                assignRAxisMethods(histo.fAxes[0]);
                assignRAxisMethods(histo.fAxes[1]);
 
@@ -217,7 +218,7 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Clear 3d drawings - if any */
    clear3DScene() {
-      let fp = this.getFramePainter();
+      const fp = this.getFramePainter();
       if (isFunc(fp?.create3DScene))
          fp.create3DScene(-1);
       this.mode3d = false;
@@ -247,7 +248,7 @@ class RHistPainter extends RObjectPainter {
    /** @summary Draw axes */
    async drawFrameAxes() {
       // return true when axes was drawn
-      let main = this.getFramePainter();
+      const main = this.getFramePainter();
       if (!main)
          return false;
 
@@ -295,20 +296,17 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary update histogram object */
    updateObject(obj /* , opt */) {
-
       const origin = this.getObject();
 
       if (obj !== origin) {
-
          if (!this.matchObjectType(obj)) return false;
 
-         if (this.isDisplayItem()) {
+         if (this.isDisplayItem())
 
             this.updateDisplayItem(origin, obj);
 
-         } else {
-
-            let horigin = getHImpl(origin),
+          else {
+            const horigin = getHImpl(origin),
                 hobj = getHImpl(obj);
 
             if (!horigin || !hobj) return false;
@@ -329,17 +327,18 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Get axis object */
    getAxis(name) {
-      let histo = this.getHisto(), obj = this.getObject(), axis = null;
+      const histo = this.getHisto(), obj = this.getObject();
+      let axis;
 
       if (obj?.fAxes) {
-         switch(name) {
+         switch (name) {
             case 'x': axis = obj.fAxes[0]; break;
             case 'y': axis = obj.fAxes[1]; break;
             case 'z': axis = obj.fAxes[2]; break;
             default: axis = obj.fAxes[0]; break;
          }
       } else if (histo?.fAxes) {
-         switch(name) {
+         switch (name) {
             case 'x': axis = histo.fAxes._0; break;
             case 'y': axis = histo.fAxes._1; break;
             case 'z': axis = histo.fAxes._2; break;
@@ -355,7 +354,7 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Get tip text for axis bin */
    getAxisBinTip(name, bin, step) {
-      let pmain = this.getFramePainter(),
+      const pmain = this.getFramePainter(),
           handle = pmain[`${name}_handle`],
           axis = this.getAxis(name),
           x1 = axis.GetBinCoord(bin);
@@ -363,7 +362,7 @@ class RHistPainter extends RObjectPainter {
       if (handle.kind === 'labels')
          return pmain.axisAsText(name, x1);
 
-      let x2 = axis.GetBinCoord(bin+(step || 1));
+      const x2 = axis.GetBinCoord(bin+(step || 1));
 
       if (handle.kind === 'time')
          return pmain.axisAsText(name, (x1+x2)/2);
@@ -437,7 +436,7 @@ class RHistPainter extends RObjectPainter {
          if (handle.incomplete) {
             return new Promise(resolveFunc => {
                // use empty kind to always submit request
-               let req = this.v7SubmitRequest('', { _typename: `${nsREX}RHistDrawableBase::RRequest` },
+               const req = this.v7SubmitRequest('', { _typename: `${nsREX}RHistDrawableBase::RRequest` },
                                                   this.processItemReply.bind(this));
                if (req) {
                   this.current_item_reqid = req.reqid; // ignore all previous requests, only this one will be processed
@@ -454,31 +453,31 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Toggle statbox drawing
      * @desc Not yet implemented */
-   toggleStat(/*arg*/) {}
+   toggleStat(/* arg */) {}
 
    /** @summary get selected index for axis */
    getSelectIndex(axis, size, add) {
       // be aware - here indexes starts from 0
-      let indx = 0,
-          taxis = this.getAxis(axis),
+      const taxis = this.getAxis(axis),
           nbins = this['nbins'+axis] || 0;
+      let indx = 0;
 
-      if (this.options.second_x && axis == 'x') axis = 'x2';
-      if (this.options.second_y && axis == 'y') axis = 'y2';
+      if (this.options.second_x && axis === 'x') axis = 'x2';
+      if (this.options.second_y && axis === 'y') axis = 'y2';
 
-      let main = this.getFramePainter(),
+      const main = this.getFramePainter(),
           min = main ? main[`zoom_${axis}min`] : 0,
           max = main ? main[`zoom_${axis}max`] : 0;
 
       if ((min !== max) && taxis) {
-         if (size == 'left')
+         if (size === 'left')
             indx = taxis.FindBin(min, add || 0);
          else
             indx = taxis.FindBin(max, (add || 0) + 0.5);
          if (indx < 0) indx = 0; else if (indx>nbins) indx = nbins;
-      } else {
-         indx = (size == 'left') ? 0 : nbins;
-      }
+      } else
+         indx = (size === 'left') ? 0 : nbins;
+
 
       return indx;
    }
@@ -490,7 +489,7 @@ class RHistPainter extends RObjectPainter {
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
       // TODO: move to frame painter
-      switch(funcname) {
+      switch (funcname) {
          case 'ToggleZoom':
             if ((this.zoom_xmin !== this.zoom_xmax) || (this.zoom_ymin !== this.zoom_ymax) || (this.zoom_zmin !== this.zoom_zmax)) {
                this.unzoom();
@@ -512,7 +511,7 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Fill pad toolbar with hist-related functions */
    fillToolbar(not_shown) {
-      let pp = this.getPadPainter();
+      const pp = this.getPadPainter();
       if (!pp) return;
 
       pp.addPadButton('auto_zoom', 'Toggle between unzoom and autozoom-in', 'ToggleZoom', 'Ctrl *');
@@ -527,7 +526,7 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary get tool tips used in 3d mode */
    get3DToolTip(indx) {
-      let histo = this.getHisto(),
+      const histo = this.getHisto(),
           tip = { bin: indx, name: histo.fName || 'histo', title: histo.fTitle };
       switch (this.getDimension()) {
          case 1:
@@ -593,13 +592,13 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Start dialog to modify range of axis where histogram values are displayed */
    changeValuesRange(menu, arg) {
-      let pmain = this.getFramePainter();
+      const pmain = this.getFramePainter();
       if (!pmain) return;
-      let prefix = pmain.isAxisZoomed(arg) ? 'zoom_' + arg : arg,
+      const prefix = pmain.isAxisZoomed(arg) ? 'zoom_' + arg : arg,
           curr = '[' + pmain[`${prefix}min`] + ',' + pmain[`${prefix}max`] + ']';
       menu.input('Enter values range for axis ' + arg + ' like [0,100] or empty string to unzoom', curr).then(res => {
          res = res ? JSON.parse(res) : [];
-         if (!isObject(res) || (res.length != 2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1]))
+         if (!isObject(res) || (res.length !== 2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1]))
             pmain.unzoom(arg);
          else
             pmain.zoom(arg, res[0], res[1]);
@@ -608,18 +607,17 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Fill histogram context menu */
    fillContextMenuItems(menu) {
-
       if (this.draw_content) {
          menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
 
-         if (this.getDimension() == 2)
+         if (this.getDimension() === 2)
              menu.add('Values range', () => this.changeValuesRange(menu, 'z'));
 
          if (isFunc(this.fillHistContextMenu))
             this.fillHistContextMenu(menu);
       }
 
-      let fp = this.getFramePainter();
+      const fp = this.getFramePainter();
 
       if (this.options.Mode3D) {
          // menu for 3D drawings
@@ -627,7 +625,7 @@ class RHistPainter extends RObjectPainter {
          if (menu.size() > 0)
             menu.add('separator');
 
-         let main = this.getMainPainter() || this;
+         const main = this.getMainPainter() || this;
 
          menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
@@ -708,20 +706,20 @@ class RHistPainter extends RObjectPainter {
       if (args.right_extra === undefined) args.right_extra = args.extra;
       if (args.middle === undefined) args.middle = 0;
 
-      let histo = this.getHisto(), xaxis = this.getAxis('x'), yaxis = this.getAxis('y'),
-          pmain = this.getFramePainter(),
-          hdim = this.getDimension(),
-          i, j, x, y, binz, binarea,
-          res = {
-             i1: this.getSelectIndex('x', 'left', 0 - args.extra),
-             i2: this.getSelectIndex('x', 'right', 1 + args.right_extra),
-             j1: (hdim < 2) ? 0 : this.getSelectIndex('y', 'left', 0 - args.extra),
-             j2: (hdim < 2) ? 1 : this.getSelectIndex('y', 'right', 1 + args.right_extra),
-             k1: (hdim < 3) ? 0 : this.getSelectIndex('z', 'left', 0 - args.extra),
-             k2: (hdim < 3) ? 1 : this.getSelectIndex('z', 'right', 1 + args.right_extra),
-             stepi: 1, stepj: 1, stepk: 1,
-             min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
-          };
+      const histo = this.getHisto(), xaxis = this.getAxis('x'), yaxis = this.getAxis('y'),
+            pmain = this.getFramePainter(),
+            hdim = this.getDimension(),
+            res = {
+               i1: this.getSelectIndex('x', 'left', 0 - args.extra),
+               i2: this.getSelectIndex('x', 'right', 1 + args.right_extra),
+               j1: (hdim < 2) ? 0 : this.getSelectIndex('y', 'left', 0 - args.extra),
+               j2: (hdim < 2) ? 1 : this.getSelectIndex('y', 'right', 1 + args.right_extra),
+               k1: (hdim < 3) ? 0 : this.getSelectIndex('z', 'left', 0 - args.extra),
+               k2: (hdim < 3) ? 1 : this.getSelectIndex('z', 'right', 1 + args.right_extra),
+               stepi: 1, stepj: 1, stepk: 1,
+               min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
+            };
+      let i, j, x, y, binz, binarea;
 
       if (this.isDisplayItem() && histo.fIndicies) {
          if (res.i1 < histo.fIndicies[0]) { res.i1 = histo.fIndicies[0]; res.incomplete = true; }
@@ -758,7 +756,7 @@ class RHistPainter extends RObjectPainter {
 
       if (args.pixel_density) args.rounding = true;
 
-      let funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
+      const funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
 
        // calculate graphical coordinates in advance
       for (i = res.i1; i <= res.i2; ++i) {
@@ -775,8 +773,8 @@ class RHistPainter extends RObjectPainter {
       }
 
       if (args.use3d) {
-         if ((res.i1 < res.i2-2) && (res.grx[res.i1] == res.grx[res.i1+1])) res.i1++;
-         if ((res.i1 < res.i2-2) && (res.grx[res.i2-1] == res.grx[res.i2])) res.i2--;
+         if ((res.i1 < res.i2-2) && (res.grx[res.i1] === res.grx[res.i1+1])) res.i1++;
+         if ((res.i1 < res.i2-2) && (res.grx[res.i2-1] === res.grx[res.i2])) res.i2--;
       }
 
       // copy last valid value to higher indicies
@@ -802,8 +800,8 @@ class RHistPainter extends RObjectPainter {
       }
 
       if (args.use3d && (hdim > 1)) {
-         if ((res.j1 < res.j2-2) && (res.gry[res.j1] == res.gry[res.j1+1])) res.j1++;
-         if ((res.j1 < res.j2-2) && (res.gry[res.j2-1] == res.gry[res.j2])) res.j2--;
+         if ((res.j1 < res.j2-2) && (res.gry[res.j1] === res.gry[res.j1+1])) res.j1++;
+         if ((res.j1 < res.j2-2) && (res.gry[res.j2-1] === res.gry[res.j2])) res.j2--;
       }
 
       // copy last valid value to higher indicies
