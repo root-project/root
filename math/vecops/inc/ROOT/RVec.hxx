@@ -3135,6 +3135,45 @@ inline RVec<std::size_t> Range(std::size_t begin, std::size_t end)
    return ret;
 }
 
+/// Allows for negative begin, end, and/or stride. Produce RVec<int> with entries equal to begin, begin+stride, ... , N,
+/// where N is the first integer such that N+stride exceeds or equals N in the positive or negative direction (same as in Python).
+/// An empty RVec is returned if begin >= end and stride > 0 or if
+/// begin < end and stride < 0. Throws a runtime_error if stride==0
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using namespace ROOT::VecOps;
+/// cout << Range(1, 5, 2) << "\n";
+/// // { 1, 3 }
+/// cout << Range(-1, -11, -4) << "\n";
+/// // { -1, -5, -9 }
+/// ~~~
+inline RVec<long long int> Range(long long int begin, long long int end, long long int stride)
+{
+   if (stride==0ll)
+   {
+      throw std::runtime_error("Range: the stride must not be zero");
+   }
+   RVec<long long int> ret;
+   float ret_cap = std::ceil(static_cast<float>(end-begin) / stride); //the capacity to reserve
+   //ret_cap < 0 if either begin > end & stride > 0, or begin < end & stride < 0. In both cases, an empty RVec should be returned
+   if (ret_cap < 0)
+   {
+      return ret;
+   }
+   ret.reserve(static_cast<size_t>(ret_cap));
+   if (stride > 0)
+   {
+      for (auto i = begin; i < end; i+=stride)
+         ret.push_back(i);
+   }
+   else
+   {
+      for (auto i = begin; i > end; i+=stride)
+         ret.push_back(i);
+   }
+   return ret;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:
 template <class T>
