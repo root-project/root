@@ -30,7 +30,8 @@ function treeShowProgress(handle, str) {
 
       if (++handle._break < 3) {
          main_box.title = 'Will break after next I/O operation';
-         return text_node.nodeValue = 'Breaking ... ';
+         text_node.nodeValue = 'Breaking ... ';
+         return;
       }
       if (isFunc(handle.Abort))
          handle.Abort();

@@ -513,27 +513,28 @@ class TPavePainter extends ObjectPainter {
                }
                break;
 
-            case clTLine:
-               let lx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
-                   lx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
-                   ly1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty + stepy*0.5),
-                   ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5),
-                   lineatt = new TAttLineHandler(entry);
+            case clTLine: {
+               const lx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
+                     lx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
+                     ly1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty + stepy*0.5),
+                     ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5),
+                     lineatt = new TAttLineHandler(entry);
                text_g.append('svg:path')
                      .attr('d', `M${lx1},${ly1}L${lx2},${ly2}`)
                      .call(lineatt.func);
                break;
-
-            case clTBox:
-               let bx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
-                   bx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
-                   by1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty),
-                   by2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy),
-                   fillatt = this.createAttFill(entry);
+            }
+            case clTBox: {
+               const bx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
+                     bx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
+                     by1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty),
+                     by2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy),
+                     fillatt = this.createAttFill(entry);
                text_g.append('svg:path')
                      .attr('d', `M${bx1},${by1}H${bx2}V${by2}H${bx1}Z`)
                      .call(fillatt.func);
                break;
+            }
          }
       }
 
@@ -1165,19 +1166,19 @@ class TPavePainter extends ObjectPainter {
    updateObject(obj, opt) {
       if (!this.matchObjectType(obj)) return false;
 
-      let pave = this.getObject();
+      const pave = this.getObject();
 
       if (!pave.modified_NDC && !this.isDummyPos(obj)) {
          // if position was not modified interactively, update from source object
 
-         if (this.stored && !obj.fInit && (this.stored.fX1 == obj.fX1)
-             && (this.stored.fX2 == obj.fX2) && (this.stored.fY1 == obj.fY1) && (this.stored.fY2 == obj.fY2)) {
+         if (this.stored && !obj.fInit && (this.stored.fX1 === obj.fX1) &&
+             (this.stored.fX2 === obj.fX2) && (this.stored.fY1 === obj.fY1) && (this.stored.fY2 === obj.fY2)) {
             // case when source object not initialized and original coordinates are not changed
             // take over only modified NDC coordinate, used in tutorials/graphics/canvas.C
-            if (this.stored.fX1NDC != obj.fX1NDC) pave.fX1NDC = obj.fX1NDC;
-            if (this.stored.fX2NDC != obj.fX2NDC) pave.fX2NDC = obj.fX2NDC;
-            if (this.stored.fY1NDC != obj.fY1NDC) pave.fY1NDC = obj.fY1NDC;
-            if (this.stored.fY2NDC != obj.fY2NDC) pave.fY2NDC = obj.fY2NDC;
+            if (this.stored.fX1NDC !== obj.fX1NDC) pave.fX1NDC = obj.fX1NDC;
+            if (this.stored.fX2NDC !== obj.fX2NDC) pave.fX2NDC = obj.fX2NDC;
+            if (this.stored.fY1NDC !== obj.fY1NDC) pave.fY1NDC = obj.fY1NDC;
+            if (this.stored.fY2NDC !== obj.fY2NDC) pave.fY2NDC = obj.fY2NDC;
          } else {
             pave.fInit = obj.fInit;
             pave.fX1 = obj.fX1; pave.fX2 = obj.fX2;
@@ -1209,22 +1210,22 @@ class TPavePainter extends ObjectPainter {
             pave.fOptStat = obj.fOptStat;
             pave.fOptFit = obj.fOptFit;
             return true;
-         case clTLegend:
-            let oldprim = pave.fPrimitives;
+         case clTLegend: {
+            const oldprim = pave.fPrimitives;
             pave.fPrimitives = obj.fPrimitives;
             pave.fNColumns = obj.fNColumns;
-            this.AutoPlace = opt == 'autoplace';
-            if (oldprim && oldprim.arr && pave.fPrimitives && pave.fPrimitives.arr && (oldprim.arr.length == pave.fPrimitives.arr.length)) {
+            this.AutoPlace = opt === 'autoplace';
+            if (oldprim?.arr?.length && (oldprim?.arr?.length === pave.fPrimitives?.arr?.length)) {
                // try to sync object reference, new object does not displayed automatically
                // in ideal case one should use snapids in the entries
                for (let k = 0; k < oldprim.arr.length; ++k) {
-                  let oldobj = oldprim.arr[k].fObject, newobj = pave.fPrimitives.arr[k].fObject;
-
-                  if (oldobj && newobj && oldobj._typename == newobj._typename && oldobj.fName == newobj.fName)
+                  const oldobj = oldprim.arr[k].fObject, newobj = pave.fPrimitives.arr[k].fObject;
+                  if (oldobj && newobj && oldobj._typename === newobj._typename && oldobj.fName === newobj.fName)
                      pave.fPrimitives.arr[k].fObject = oldobj;
                }
             }
             return true;
+         }
          case clTPaletteAxis:
             pave.fBorderSize = 1;
             pave.fShadowColor = 0;

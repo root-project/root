@@ -85,8 +85,7 @@ class RH2Painter extends RHistPainter {
    /** @summary Readraw projections */
    redrawProjection(/* ii1, ii2, jj1, jj2 */) {
       // do nothing for the moment
-
-      if (!this.is_projection) return;
+      // if (!this.is_projection) return;
    }
 
    /** @summary Execute menu command */
@@ -528,22 +527,19 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Draw RH2 bins as text */
    drawBinsText(handle) {
-      let histo = this.getHisto(),
-          i, j, binz, binw, binh, text, x, y, width, height;
-
       if (handle === null) handle = this.prepareDraw({ rounding: false });
 
-      let textFont  = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
-          text_offset = 0,
-          text_g = this.draw_g.append('svg:g').attr('class','th2_text'),
-          di = handle.stepi, dj = handle.stepj,
-          profile2d = false;
-
-      if (this.options.BarOffset) text_offset = this.options.BarOffset;
+      const histo = this.getHisto(),
+            textFont  = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
+            text_offset = this.options.BarOffset || 0,
+            text_g = this.draw_g.append('svg:g').attr('class','th2_text'),
+            di = handle.stepi, dj = handle.stepj,
+            profile2d = false;
+      let i, j, binz, binw, binh, text, x, y, width, height;
 
       this.startTextDrawing(textFont, 'font', text_g);
 
-      for (i = handle.i1; i < handle.i2; i += di)
+      for (i = handle.i1; i < handle.i2; i += di) {
          for (j = handle.j1; j < handle.j2; j += dj) {
             binz = histo.getBinContent(i+1, j+1);
             if ((binz === 0) && !this._show_empty_bins) continue;
@@ -554,8 +550,7 @@ class RH2Painter extends RHistPainter {
             if (profile2d)
                binz = histo.getBinEntries(i+1, j+1);
 
-            text = (binz === Math.round(binz)) ? binz.toString() :
-                      floatToString(binz, gStyle.fPaintTextFormat);
+            text = (binz === Math.round(binz)) ? binz.toString() : floatToString(binz, gStyle.fPaintTextFormat);
 
             if (textFont.angle) {
                x = Math.round(handle.grx[i] + binw*0.5);
@@ -570,11 +565,10 @@ class RH2Painter extends RHistPainter {
 
             this.drawText({ align: 22, x, y, width, height, text, latex: 0, draw_g: text_g });
          }
+      }
 
       return this.finishTextDrawing(text_g, true).then(() => {
-
          handle.hide_only_zeros = true; // text drawing suppress only zeros
-
          return handle;
       });
    }
@@ -595,8 +589,8 @@ class RH2Painter extends RHistPainter {
          return dy ? `v${dy}` : '';
       };
 
-      for (let loop = 0; loop < 2; ++loop)
-         for (i = handle.i1; i < handle.i2; i += di)
+      for (let loop = 0; loop < 2; ++loop) {
+         for (i = handle.i1; i < handle.i2; i += di) {
             for (j = handle.j1; j < handle.j2; j += dj) {
 
                if (i === handle.i1) {
@@ -629,18 +623,20 @@ class RH2Painter extends RHistPainter {
                   dy = Math.round(y2-y1);
 
                   if ((dx !== 0) || (dy !== 0)) {
-                     cmd += 'M'+Math.round(x1)+','+Math.round(y1) + makeLine(dx,dy);;
+                     cmd += 'M'+Math.round(x1)+','+Math.round(y1) + makeLine(dx, dy);
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(2/(dx**2 + dy**2));
                         si  = Math.round(anr*(dx + dy));
                         co  = Math.round(anr*(dx - dy));
                         if (si || co)
-                           cmd += `m${-si},${co}` + makeLine(si,-co) + makeLine(-co,-si);;
+                           cmd += `m${-si},${co}` + makeLine(si,-co) + makeLine(-co, -si);
                      }
                   }
                }
             }
+         }
+      }
 
       this.draw_g
          .append('svg:path')
@@ -653,10 +649,9 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Draw RH2 bins as boxes */
    drawBinsBox() {
-
-      let histo = this.getHisto(),
-          handle = this.prepareDraw({ rounding: false }),
-          main = this.getFramePainter();
+      const histo = this.getHisto(),
+            handle = this.prepareDraw({ rounding: false }),
+            main = this.getFramePainter();
 
       if (main.maxbin === main.minbin) {
          main.maxbin = this.gmaxbin;
@@ -719,12 +714,12 @@ class RH2Painter extends RHistPainter {
                cross += `M${xx},${yy}l${ww},${hh}M${xx+ww},${yy}l${-ww},${hh}`;
 
             if ((this.options.BoxStyle === 11) && (ww>5) && (hh>5)) {
-               let pww = Math.round(ww*0.1),
-                   phh = Math.round(hh*0.1),
-                   side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
-                   side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
-               if (binz < 0) { btn2 += side1; btn1 += side2; }
-                        else { btn1 += side1; btn2 += side2; }
+               const pww = Math.round(ww*0.1),
+                     phh = Math.round(hh*0.1),
+                     side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
+                     side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
+               btn2 += (binz < 0) ? side1 : side2;
+               btn1 += (binz < 0) ? side2 : side1;
             }
          }
       }
@@ -738,11 +733,12 @@ class RH2Painter extends RHistPainter {
             elem.call(this.lineatt.func);
       }
 
-      if (btn1 && this.fillatt.hasColor())
+      if (btn1 && this.fillatt.hasColor()) {
          this.draw_g.append('svg:path')
                     .attr('d', btn1)
                     .call(this.fillatt.func)
                     .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+      }
 
       if (btn2)
          this.draw_g.append('svg:path')
@@ -767,7 +763,7 @@ class RH2Painter extends RHistPainter {
           handle = this.prepareDraw({ rounding: true, pixel_density: true, scatter_plot: true }),
           colPaths = [], currx = [], curry = [], cell_w = [], cell_h = [],
           colindx, cmd1, cmd2, i, j, binz, cw, ch, factor = 1.,
-          scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000. / this.gmaxbin : 1.),
+          scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000 / this.gmaxbin : 1),
           di = handle.stepi, dj = handle.stepj;
 
       let rnd = new TRandom(handle.sumz);
@@ -1047,15 +1043,25 @@ class RH2Painter extends RHistPainter {
              path;
 
          if (this.is_projection) {
-            let pwx = this.projection_widthX || 1, ddx = (pwx - 1) / 2;
+            const pwx = this.projection_widthX || 1, ddx = (pwx - 1) / 2;
             if ((this.is_projection.indexOf('X')) >= 0 && (pwx > 1)) {
-               if (j2+ddx >= h.j2) { j2 = Math.min(Math.round(j2+ddx), h.j2); j1 = Math.max(j2-pwx, h.j1); }
-                              else { j1 = Math.max(Math.round(j1-ddx), h.j1); j2 = Math.min(j1+pwx, h.j2); }
+               if (j2+ddx >= h.j2) {
+                  j2 = Math.min(Math.round(j2+ddx), h.j2);
+                  j1 = Math.max(j2-pwx, h.j1);
+               } else {
+                  j1 = Math.max(Math.round(j1-ddx), h.j1);
+                  j2 = Math.min(j1+pwx, h.j2);
+               }
             }
-            let pwy = this.projection_widthY || 1, ddy = (pwy - 1) / 2;
+            const pwy = this.projection_widthY || 1, ddy = (pwy - 1) / 2;
             if ((this.is_projection.indexOf('Y')) >= 0 && (pwy > 1)) {
-               if (i2+ddy >= h.i2) { i2 = Math.min(Math.round(i2+ddy), h.i2); i1 = Math.max(i2-pwy, h.i1); }
-                              else { i1 = Math.max(Math.round(i1-ddy), h.i1); i2 = Math.min(i1+pwy, h.i2); }
+               if (i2+ddy >= h.i2) {
+                  i2 = Math.min(Math.round(i2+ddy), h.i2);
+                  i1 = Math.max(i2-pwy, h.i1);
+               } else {
+                  i1 = Math.max(Math.round(i1-ddy), h.i1);
+                  i2 = Math.min(i1+pwy, h.i2);
+               }
             }
          }
 
@@ -1136,9 +1142,8 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Draw histogram using painter instance
      * @private */
-   static async _draw(painter /*, opt*/) {
+   static async _draw(painter /* , opt */) {
       return ensureRCanvas(painter).then(() => {
-
          painter.setAsMainPainter();
 
          painter.options = { Hist: false, Error: false, Zero: false, Mark: false,
@@ -1146,7 +1151,8 @@ class RH2Painter extends RHistPainter {
                              Text: true, TextAngle: 0, TextKind: '',
                              BaseLine: false, Mode3D: false, AutoColor: 0,
                              Color: false, Scat: false, ScatCoef: 1, Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
-                             BarOffset: 0., BarWidth: 1., minimum: kNoZoom, maximum: kNoZoom };
+                             BarOffset: 0, BarWidth: 1, minimum: kNoZoom, maximum: kNoZoom,
+                             FrontBox: false, BackBox: false };
 
          let kind = painter.v7EvalAttr('kind', ''),
              sub = painter.v7EvalAttr('sub', 0),
@@ -1154,7 +1160,7 @@ class RH2Painter extends RHistPainter {
 
          o.Text = painter.v7EvalAttr('drawtext', false);
 
-         switch(kind) {
+         switch (kind) {
             case 'lego': o.Lego = sub > 0 ? 10+sub : 12; o.Mode3D = true; break;
             case 'surf': o.Surf = sub > 0 ? 10+sub : 1; o.Mode3D = true; break;
             case 'box': o.Box = true; o.BoxStyle = 10 + sub; break;

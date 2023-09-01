@@ -20,7 +20,7 @@ class TASImagePainter extends ObjectPainter {
 
       this.options = { Zscale: false };
 
-      let obj = this.getObject();
+      const obj = this.getObject();
 
       if (d.check('CONST')) {
          this.options.constRatio = true;
@@ -32,18 +32,18 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Create RGBA buffers */
    createRGBA(nlevels) {
-      let obj = this.getObject();
+      const obj = this.getObject(),
+            pal = obj?.fPalette;
+      if (!pal) return null;
 
-      if (!obj?.fPalette) return null;
+      const rgba = new Array((nlevels+1) * 4).fill(0); // precaclucated colors
 
-      let rgba = new Array((nlevels+1) * 4), indx = 1, pal = obj.fPalette; // precaclucated colors
-
-      for(let lvl = 0; lvl <= nlevels; ++lvl) {
-         let l = 1.*lvl/nlevels;
+      for (let lvl = 0, indx = 1; lvl <= nlevels; ++lvl) {
+         const l = lvl/nlevels;
          while ((pal.fPoints[indx] < l) && (indx < pal.fPoints.length-1)) indx++;
 
-         let r1 = (pal.fPoints[indx] - l) / (pal.fPoints[indx] - pal.fPoints[indx-1]),
-             r2 = (l - pal.fPoints[indx-1]) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
+         const r1 = (pal.fPoints[indx] - l) / (pal.fPoints[indx] - pal.fPoints[indx-1]),
+               r2 = (l - pal.fPoints[indx-1]) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
 
          rgba[lvl*4]   = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
          rgba[lvl*4+1] = Math.min(255, Math.round((pal.fColorGreen[indx-1] * r1 + pal.fColorGreen[indx] * r2) / 256));
@@ -57,13 +57,12 @@ class TASImagePainter extends ObjectPainter {
    /** @summary Create url using image buffer
      * @private */
    async makeUrlFromImageBuf(obj, fp) {
-
-      let nlevels = 1000;
+      const nlevels = 1000;
       this.rgba = this.createRGBA(nlevels); // precaclucated colors
 
       let min = obj.fImgBuf[0], max = obj.fImgBuf[0];
       for (let k = 1; k < obj.fImgBuf.length; ++k) {
-         let v = obj.fImgBuf[k];
+         const v = obj.fImgBuf[k];
          min = Math.min(v, min);
          max = Math.max(v, max);
       }
@@ -79,8 +78,8 @@ class TASImagePainter extends ObjectPainter {
          getLevels() { return this.arr; },
          getPaletteColor(pal, zval) {
             if (!this.arr || !this.rgba) return 'white';
-            let indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
-            return '#' + toHex(this.rgba[indx],1) + toHex(this.rgba[indx+1],1) + toHex(this.rgba[indx+2],1) + toHex(this.rgba[indx+3],1);
+            const indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
+            return '#' + toHex(this.rgba[indx], 1) + toHex(this.rgba[indx+1], 1) + toHex(this.rgba[indx+2], 1) + toHex(this.rgba[indx+3], 1);
          }
       };
       for (let k = 0; k < 200; k++)
@@ -88,27 +87,25 @@ class TASImagePainter extends ObjectPainter {
 
       if (min >= max) max = min + 1;
 
-      let z = this.getImageZoomRange(fp, obj.fConstRatio, obj.fWidth, obj.fHeight);
-
-      let pr = isNodeJs() ?
-                 import('canvas').then(h => h.default.createCanvas(z.xmax - z.xmin, z.ymax - z.ymin)) :
-                 new Promise(resolveFunc => {
-                    let c = document.createElement('canvas');
+      const z = this.getImageZoomRange(fp, obj.fConstRatio, obj.fWidth, obj.fHeight),
+            pr = isNodeJs()
+                 ? import('canvas').then(h => h.default.createCanvas(z.xmax - z.xmin, z.ymax - z.ymin))
+                 : new Promise(resolveFunc => {
+                    const c = document.createElement('canvas');
                     c.width = z.xmax - z.xmin;
                     c.height = z.ymax - z.ymin;
                     resolveFunc(c);
                  });
 
       return pr.then(canvas => {
+         const context = canvas.getContext('2d'),
+               imageData = context.getImageData(0, 0, canvas.width, canvas.height),
+               arr = imageData.data;
 
-         let context = canvas.getContext('2d'),
-             imageData = context.getImageData(0, 0, canvas.width, canvas.height),
-             arr = imageData.data;
-
-         for(let i = z.ymin; i < z.ymax; ++i) {
-            let dst = (z.ymax - i - 1) * (z.xmax - z.xmin) * 4,
-                row = i * obj.fWidth;
-            for(let j = z.xmin; j < z.xmax; ++j) {
+         for (let i = z.ymin; i < z.ymax; ++i) {
+            let dst = (z.ymax - i - 1) * (z.xmax - z.xmin) * 4;
+            const row = i * obj.fWidth;
+            for (let j = z.xmin; j < z.xmax; ++j) {
                let iii = Math.round((obj.fImgBuf[row + j] - min) / (max - min) * nlevels) * 4;
                // copy rgba value for specified point
                arr[dst++] = this.rgba[iii++];
@@ -125,31 +122,31 @@ class TASImagePainter extends ObjectPainter {
    }
 
    getImageZoomRange(fp, constRatio, width, height) {
-      let res = { xmin: 0, xmax: width, ymin: 0, ymax: height };
+      const res = { xmin: 0, xmax: width, ymin: 0, ymax: height };
       if (!fp) return res;
 
       let offx = 0, offy = 0, sizex = width, sizey = height;
 
       if (constRatio && fp) {
-         let image_ratio = height/width,
-             frame_ratio = fp.getFrameHeight() / fp.getFrameWidth();
+         const image_ratio = height/width,
+               frame_ratio = fp.getFrameHeight() / fp.getFrameWidth();
 
          if (image_ratio > frame_ratio) {
-            let w2 = height / frame_ratio;
+            const w2 = height / frame_ratio;
             offx = Math.round((w2 - width)/2);
             sizex = Math.round(w2);
          } else {
-            let h2 = frame_ratio * width;
+            const h2 = frame_ratio * width;
             offy = Math.round((h2 - height)/2);
             sizey = Math.round(h2);
          }
       }
 
-      if (fp.zoom_xmin != fp.zoom_xmax) {
+      if (fp.zoom_xmin !== fp.zoom_xmax) {
          res.xmin = Math.min(width, Math.max(0, Math.round(fp.zoom_xmin * sizex) - offx));
          res.xmax = Math.min(width, Math.max(0, Math.round(fp.zoom_xmax * sizex) - offx));
       }
-      if (fp.zoom_ymin != fp.zoom_ymax) {
+      if (fp.zoom_ymin !== fp.zoom_ymax) {
          res.ymin = Math.min(height, Math.max(0, Math.round(fp.zoom_ymin * sizey) - offy));
          res.ymax = Math.min(height, Math.max(0, Math.round(fp.zoom_ymax * sizey) - offy));
       }
@@ -158,48 +155,46 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Produce data url from png buffer */
    async makeUrlFromPngBuf(obj, fp) {
-      let buf = obj.fPngBuf, pngbuf = '';
+      const buf = obj.fPngBuf;
+      let pngbuf = '';
 
       if (isStr(buf))
          pngbuf = buf;
-      else
+      else {
          for (let k = 0; k < buf.length; ++k)
             pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
+      }
 
-
-      let res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() };
+      const res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() };
 
       if (!res.can_zoom || ((fp?.zoom_xmin === fp?.zoom_xmax) && (fp?.zoom_ymin === fp?.zoom_ymax)))
          return res;
 
       return new Promise(resolveFunc => {
-
-         let image = document.createElement('img');
+         const image = document.createElement('img');
 
          image.onload = () => {
-            let canvas = document.createElement('canvas');
+            const canvas = document.createElement('canvas');
             canvas.width = image.width;
             canvas.height = image.height;
 
-            let context = canvas.getContext('2d');
+            const context = canvas.getContext('2d');
             context.drawImage(image, 0, 0);
 
-            let arr = context.getImageData(0,0, image.width, image.height).data;
-
-            let z = this.getImageZoomRange(fp, res.constRatio, image.width, image.height);
-
-            let canvas2 = document.createElement('canvas');
+            const arr = context.getImageData(0, 0, image.width, image.height).data,
+                  z = this.getImageZoomRange(fp, res.constRatio, image.width, image.height),
+                  canvas2 = document.createElement('canvas');
             canvas2.width = z.xmax - z.xmin;
             canvas2.height = z.ymax - z.ymin;
 
-            let context2 = canvas2.getContext('2d'),
-                imageData2 = context2.getImageData(0, 0, canvas2.width, canvas2.height),
-                arr2 = imageData2.data;
+            const context2 = canvas2.getContext('2d'),
+                  imageData2 = context2.getImageData(0, 0, canvas2.width, canvas2.height),
+                  arr2 = imageData2.data;
 
-            for(let i = z.ymin; i < z.ymax; ++i) {
+            for (let i = z.ymin; i < z.ymax; ++i) {
                 let dst = (z.ymax - i - 1) * (z.xmax - z.xmin) * 4,
                     src = ((image.height - i - 1) * image.width + z.xmin) * 4;
-                for(let j = z.xmin; j < z.xmax; ++j) {
+                for (let j = z.xmin; j < z.xmax; ++j) {
                    // copy rgba value for specified point
                    arr2[dst++] = arr[src++];
                    arr2[dst++] = arr[src++];
@@ -218,21 +213,20 @@ class TASImagePainter extends ObjectPainter {
          image.onerror = () => resolveFunc(res);
 
          image.src = res.url;
-
       });
    }
 
    /** @summary Draw image */
    async drawImage() {
-      let obj = this.getObject(),
-          fp = this.getFramePainter(),
-          rect = fp?.getFrameRect() ?? this.getPadPainter().getPadRect();
+      const obj = this.getObject(),
+            fp = this.getFramePainter(),
+            rect = fp?.getFrameRect() ?? this.getPadPainter().getPadRect();
 
       this.wheel_zoomy = true;
 
       if (obj._blob) {
          // try to process blob data due to custom streamer
-         if ((obj._blob.length == 15) && !obj._blob[0]) {
+         if ((obj._blob.length === 15) && !obj._blob[0]) {
             obj.fImageQuality = obj._blob[1];
             obj.fImageCompression = obj._blob[2];
             obj.fConstRatio = obj._blob[3];
@@ -252,22 +246,20 @@ class TASImagePainter extends ObjectPainter {
             obj.fHeight = obj._blob[13];
             obj.fImgBuf = obj._blob[14];
 
-            if ((obj.fWidth * obj.fHeight != obj.fImgBuf.length) ||
-                  (obj.fPalette.fNumPoints != obj.fPalette.fPoints.length)) {
+            if ((obj.fWidth * obj.fHeight !== obj.fImgBuf.length) ||
+                  (obj.fPalette.fNumPoints !== obj.fPalette.fPoints.length)) {
                console.error(`TASImage _blob decoding error ${obj.fWidth * obj.fHeight} != ${obj.fImgBuf.length} ${obj.fPalette.fNumPoints} != ${obj.fPalette.fPoints.length}`);
                delete obj.fImgBuf;
                delete obj.fPalette;
             }
-
-         } else if ((obj._blob.length == 3) && obj._blob[0]) {
+         } else if ((obj._blob.length === 3) && obj._blob[0]) {
             obj.fPngBuf = obj._blob[2];
-            if (obj.fPngBuf?.length != obj._blob[1]) {
+            if (obj.fPngBuf?.length !== obj._blob[1]) {
                console.error(`TASImage with png buffer _blob error ${obj._blob[1]} != ${obj.fPngBuf?.length}`);
                delete obj.fPngBuf;
             }
-         } else {
+         } else
             console.error(`TASImage _blob len ${obj._blob.length} not recognized`);
-         }
 
          delete obj._blob;
       }
@@ -282,11 +274,10 @@ class TASImagePainter extends ObjectPainter {
          promise = Promise.resolve(null);
 
       return promise.then(res => {
-
          if (!res?.url)
             return this;
 
-         let img = this.createG(fp ? true : false)
+         const img = this.createG(fp)
              .append('image')
              .attr('href', res.url)
              .attr('width', rect.width)
@@ -316,27 +307,29 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Fill TASImage context */
    fillContextMenuItems(menu) {
-      let obj = this.getObject();
-      if (obj)
+      const obj = this.getObject();
+      if (obj) {
          menu.addchk(obj.fConstRatio, 'Const ratio', flag => {
             obj.fConstRatio = flag;
             this.interactiveRedraw('pad', `exec:SetConstRatio(${flag})`);
          }, 'Change const ratio flag of image');
-      if (obj?.fPalette)
+      }
+      if (obj?.fPalette) {
          menu.addchk(this.options.Zscale, 'Color palette', flag => {
             this.options.Zscale = flag;
             this.drawColorPalette(flag, true);
          }, 'Toggle color palette');
+      }
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
-   canZoomInside(axis,min,max) {
-      let obj = this.getObject();
+   canZoomInside(axis, min, max) {
+      const obj = this.getObject();
 
       if (!obj)
          return false;
 
-      if (((axis == 'x') || (axis == 'y')) && (max - min > 0.01)) return true;
+      if (((axis === 'x') || (axis === 'y')) && (max - min > 0.01)) return true;
 
       return false;
    }
@@ -344,12 +337,11 @@ class TASImagePainter extends ObjectPainter {
    /** @summary Draw color palette
      * @private */
    async drawColorPalette(enabled, can_move) {
-
       if (!this.isMainPainter())
          return null;
 
       if (!this.draw_palette) {
-         let pal = create(clTPaletteAxis);
+         const pal = create(clTPaletteAxis);
          Object.assign(pal, { fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
          pal.fAxis.fChopt = '+';
          this.draw_palette = pal;
@@ -366,11 +358,11 @@ class TASImagePainter extends ObjectPainter {
          return null;
       }
 
-      let fp = this.getFramePainter();
+      const fp = this.getFramePainter();
 
       // keep palette width
       if (can_move && fp) {
-         let pal = this.draw_palette;
+         const pal = this.draw_palette;
          pal.fX2NDC = fp.fX2NDC + 0.01 + (pal.fX2NDC - pal.fX1NDC);
          pal.fX1NDC = fp.fX2NDC + 0.01;
          pal.fY1NDC = fp.fY1NDC;
@@ -382,10 +374,9 @@ class TASImagePainter extends ObjectPainter {
          return pal_painter.drawPave('');
       }
 
-      let prev_name = this.selectCurrentPad(this.getPadName());
+      const prev_name = this.selectCurrentPad(this.getPadName());
 
       return TPavePainter.draw(this.getDom(), this.draw_palette).then(p => {
-
          pal_painter = p;
 
          this.selectCurrentPad(prev_name);
@@ -415,7 +406,7 @@ class TASImagePainter extends ObjectPainter {
    clickButton(funcname) {
       if (!this.isMainPainter()) return false;
 
-      switch(funcname) {
+      switch (funcname) {
          case 'ToggleColorZ': this.toggleColz(); break;
          default: return false;
       }
@@ -425,7 +416,7 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Fill pad toolbar for TASImage */
    fillToolbar() {
-      let pp = this.getPadPainter();
+      const pp = this.getPadPainter();
       if (pp && this.getObject()?.fPalette) {
          pp.addPadButton('th2colorz', 'Toggle color palette', 'ToggleColorZ');
          pp.showPadButtons();
@@ -434,7 +425,7 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Draw TASImage object */
    static async draw(dom, obj, opt) {
-      let painter = new TASImagePainter(dom, obj, opt);
+      const painter = new TASImagePainter(dom, obj, opt);
       painter.setAsMainPainter();
       painter.decodeOptions(opt);
       return ensureTCanvas(painter, false)

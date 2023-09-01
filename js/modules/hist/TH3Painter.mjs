@@ -521,13 +521,11 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      for(let ncol = 0; ncol < cols_size.length; ++ncol) {
+      for (let ncol = 0; ncol < cols_size.length; ++ncol) {
          if (!cols_size[ncol]) continue; // ignore dummy colors
 
-         let nseq = cols_sequence[ncol];
-
-         // BufferGeometries that store geometry of all bins
-         let all_bins_buffgeom = new BufferGeometry();
+         const nseq = cols_sequence[ncol],
+               all_bins_buffgeom = new BufferGeometry(); // BufferGeometries that store geometry of all bins
 
          // Create mesh from bin buffergeometry
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
@@ -535,8 +533,9 @@ class TH3Painter extends THistPainter {
 
          if (use_colors) fillcolor = this.fPalette.getColor(ncol);
 
-         const material = use_lambert ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
-                                      : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false }),
+         const material = use_lambert
+                            ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
+                            : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false }),
               combined_bins = new Mesh(all_bins_buffgeom, material);
 
          combined_bins.bins = bin_tooltips[nseq];

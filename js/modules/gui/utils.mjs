@@ -74,9 +74,9 @@ function tryOpenOpenUI(sources, args) {
    let src = sources.shift();
 
    if ((src.indexOf('roothandler') == 0) && (src.indexOf('://') < 0))
-      src = src.replace(/\:\//g, '://');
+      src = src.replace(/:\//g, '://');
 
-   let element = document.createElement('script');
+   const element = document.createElement('script');
    element.setAttribute('type', 'text/javascript');
    element.setAttribute('id', 'sap-ui-bootstrap');
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
@@ -115,8 +115,8 @@ function tryOpenOpenUI(sources, args) {
   * @private */
 async function loadOpenui5(args) {
    // very simple - openui5 was loaded before and will be used as is
-   if (typeof sap == 'object')
-      return sap;
+   if (typeof globalThis.sap === 'object')
+      return globalThis.sap;
 
    if (!args) args = {};
 
@@ -130,8 +130,8 @@ async function loadOpenui5(args) {
          rootui5sys = undefined;
    }
 
-   let openui5_sources = [],
-       openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
+   const openui5_sources = [];
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -142,9 +142,8 @@ async function loadOpenui5(args) {
          case 'jsroot': openui5_sources.push(openui5_root); openui5_root = ''; break;
          default: openui5_sources.push(args.openui5src); break;
       }
-   } else if (args.ui5dbg) {
+   } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
-   }
 
    if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
       openui5_sources.push(openui5_root);
@@ -152,12 +151,11 @@ async function loadOpenui5(args) {
       openui5_sources.push(openui5_dflt);
 
    return new Promise((resolve, reject) => {
-
       args.resolveFunc = resolve;
       args.rejectFunc = reject;
 
       globalThis.completeUI5Loading = function() {
-         sap.ui.loader.config({
+         globalThis.sap.ui.loader.config({
             paths: {
                jsroot: source_dir,
                rootui5: rootui5sys
@@ -165,7 +163,7 @@ async function loadOpenui5(args) {
          });
 
          if (args.resolveFunc) {
-            args.resolveFunc(sap);
+            args.resolveFunc(globalThis.sap);
             args.resolveFunc = null;
          }
       };
@@ -262,11 +260,9 @@ const ToolbarIcons = {
   * @param {number} [delay] - one could specify delay after which resize event will be handled
   * @protected */
 function registerForResize(handle, delay) {
+   if (!handle || isBatchMode() || (typeof window === 'undefined')) return;
 
-   if (!handle || isBatchMode() || (typeof window == 'undefined')) return;
-
-   let myInterval = null, myDelay = delay ? delay : 300;
-
+   let myInterval = null, myDelay = delay || 300;
    if (myDelay < 20) myDelay = 20;
 
    function ResizeTimer() {
@@ -275,9 +271,9 @@ function registerForResize(handle, delay) {
       document.body.style.cursor = 'wait';
       if (isFunc(handle))
          handle();
-      else if (isFunc(handle?.checkResize)) {
+      else if (isFunc(handle?.checkResize))
          handle.checkResize();
-      } else {
+      else {
          let node = new BasePainter(handle).selectDom();
          if (!node.empty()) {
             let mdi = node.property('mdi');

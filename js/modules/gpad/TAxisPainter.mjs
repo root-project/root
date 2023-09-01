@@ -176,10 +176,10 @@ const AxisPainterMethods = {
       if (settings.Latex > constants.Latex.Symbols)
          return res + `^{${order}}`;
       const superscript_symbols = {
-            '0': '\u2070', '1': '\xB9', '2': '\xB2', '3': '\xB3', '4': '\u2074', '5': '\u2075',
-            '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079', '-': '\u207B'
+            0: '\u2070', 1: '\xB9', 2: '\xB2', 3: '\xB3', 4: '\u2074', 5: '\u2075',
+            6: '\u2076', 7: '\u2077', 8: '\u2078', 9: '\u2079', '-': '\u207B'
          };
-      let str = order.toString();
+      const str = order.toString();
       for (let n = 0; n < str.length; ++n)
          res += superscript_symbols[str[n]];
       return res;
@@ -299,7 +299,7 @@ const AxisPainterMethods = {
       if ((dmin > 0) && (dmin < 1)) {
          if (this.log) {
             let factor = (item.min > 0) ? Math.log10(item.max/item.min) : 2;
-            if (factor>10) factor = 10; else if (factor < 0.01) factor = 0.01;
+            if (factor > 10) factor = 10; else if (factor < 0.01) factor = 0.01;
             item.min = item.min / Math.pow(10, factor*delta_left*dmin);
             item.max = item.max * Math.pow(10, factor*delta_right*(1-dmin));
          } else if ((delta_left === -delta_right) && !item.reverse) {
@@ -938,7 +938,7 @@ class TAxisPainter extends ObjectPainter {
       // function called when text is drawn to analyze width, required to correctly scale all labels
       // must be function to correctly handle 'this' argument
       function process_drawtext_ready(painter) {
-         let textwidth = this.result_width;
+         const textwidth = this.result_width;
          max_textwidth = Math.max(max_textwidth, textwidth);
 
          if (textwidth && ((!painter.vertical && !rotate_lbls) || (painter.vertical && rotate_lbls)) && !painter.log) {
@@ -946,15 +946,14 @@ class TAxisPainter extends ObjectPainter {
             if (!this.gap_before) maxwidth = 0.9*this.gap_after; else
             if (!this.gap_after) maxwidth = 0.9*this.gap_before;
             textscale = Math.min(textscale, maxwidth / textwidth);
-         } else if (painter.vertical && max_text_width && this.normal_side && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset)) {
+         } else if (painter.vertical && max_text_width && this.normal_side && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset))
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
-         }
 
          if ((textscale > 0.0001) && (textscale < 0.7) && !any_modified &&
               !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
             lbl_tilt = true;
 
-         let scale = textscale * (lbl_tilt ? 3 : 1);
+         const scale = textscale * (lbl_tilt ? 3 : 1);
 
          if ((scale > 0.0001) && (scale < 1)) {
             applied_scale = 1/scale;
@@ -963,7 +962,6 @@ class TAxisPainter extends ObjectPainter {
       }
 
       for (let lcnt = 0; lcnt < label_g.length; ++lcnt) {
-
          if (lcnt > 0) side = -side;
 
          let lastpos = 0, fix_coord = this.vertical ? -labeloffset*side : labeloffset*side + ticksPlusMinus*tickSize;
@@ -1189,11 +1187,10 @@ class TAxisPainter extends ObjectPainter {
 
       if (this.optionPlus && this.optionMinus) {
          side = 1; ticksPlusMinus = 1;
-      } else if (this.optionMinus) {
+      } else if (this.optionMinus)
          side = (swap_side ^ this.vertical) ? 1 : -1;
-      } else if (this.optionPlus) {
+      else if (this.optionPlus)
          side = (swap_side ^ this.vertical) ? -1 : 1;
-      }
 
       // first draw ticks
 
@@ -1201,29 +1198,30 @@ class TAxisPainter extends ObjectPainter {
 
       axis_lines += this.produceTicksPath(handle, side, this.ticksSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing && !this.disable_ticks);
 
-      if (!disable_axis_drawing && axis_lines && !this.lineatt.empty())
+      if (!disable_axis_drawing && axis_lines && !this.lineatt.empty()) {
          axis_g.append('svg:path')
                .attr('d', axis_lines)
                .call(this.lineatt.func);
+      }
 
-      let title_shift_x = 0, title_shift_y = 0, title_g = null, labelsMaxWidth = 0,
-          // draw labels (sometime on both sides)
-          pr = (disable_axis_drawing || this.optionUnlab) ? Promise.resolve(0) :
-                this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width);
+      let title_shift_x = 0, title_shift_y = 0, title_g = null, labelsMaxWidth = 0;
+      // draw labels (sometime on both sides)
+      const pr = (disable_axis_drawing || this.optionUnlab)
+                ? Promise.resolve(0)
+                : this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width);
 
       return pr.then(maxw => {
-
          labelsMaxWidth = maxw;
 
          if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
-            let labelSize = Math.max(this.labelsFont.size, 5),
-                r = axis_g.append('svg:rect')
-                          .attr('class', 'axis_zoom')
-                          .style('opacity', '0')
-                          .style('cursor', 'crosshair');
+            const labelSize = Math.max(this.labelsFont.size, 5),
+                  r = axis_g.append('svg:rect')
+                            .attr('class', 'axis_zoom')
+                            .style('opacity', '0')
+                            .style('cursor', 'crosshair');
 
             if (this.vertical) {
-               let rw = (labelsMaxWidth || 2*labelSize) + 3;
+               const rw = (labelsMaxWidth || 2*labelSize) + 3;
                r.attr('x', (side > 0) ? -rw : 0).attr('y', 0)
                 .attr('width', rw).attr('height', h);
             } else {

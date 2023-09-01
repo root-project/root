@@ -482,9 +482,9 @@ class GridDisplay extends MDIDisplay {
            .style(handle.vertical ? 'width' : 'height', (handle.size?.toFixed(2) || 100)+'%')
            .style(handle.vertical ? 'height' : 'width', '5px')
            .style('cursor', handle.vertical ? 'ns-resize' : 'ew-resize')
-           .append('div').attr('style', 'position: absolute;' + (handle.vertical ?
-                       'left: 0; right: 0; top: 50%; height: 3px; border-top: 1px dotted #ff0000' :
-                       'top: 0; bottom: 0; left: 50%; width: 3px; border-left: 1px dotted #ff0000'));
+           .append('div').attr('style', 'position: absolute;' + (handle.vertical
+                       ? 'left: 0; right: 0; top: 50%; height: 3px; border-top: 1px dotted #ff0000'
+                       : 'top: 0; bottom: 0; left: 50%; width: 3px; border-left: 1px dotted #ff0000'));
 
       let pthis = this, drag_move =
         d3_drag().on('start', function() { pthis.handleSeparator(this, 'start'); })
@@ -1209,13 +1209,12 @@ class BatchDisplay extends MDIDisplay {
       function clear_element() {
          const elem = d3_select(this);
          if (elem.style('display') == 'none') elem.remove();
-      };
+      }
 
       main.selectAll('g.root_frame').each(clear_element);
       main.selectAll('svg').each(clear_element);
 
-      let svg = compressSVG(main.html());
-
+      const svg = compressSVG(main.html());
       main.remove();
       return svg;
    }

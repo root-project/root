@@ -8,7 +8,6 @@ class RH1Painter extends RH1Painter2D {
 
    /** @summary Draw 1-D histogram in 3D mode */
    draw3D(reason) {
-
       this.mode3d = true;
 
       let main = this.getFramePainter(), // who makes axis drawing
@@ -38,9 +37,8 @@ class RH1Painter extends RH1Painter2D {
          return pr;
 
       return pr.then(() => this.drawingBins(reason)).then(() => {
-
          // called when bins received from server, must be reentrant
-         let main = this.getFramePainter();
+         const main = this.getFramePainter();
 
          drawBinsLego(this, true);
          this.updatePaletteDraw();
