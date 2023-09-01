@@ -600,6 +600,7 @@ public:
    std::string GetName() const { return fName; }
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
+   bool IsTopLevelField() const;
    std::string GetType() const { return fType; }
    std::string GetTypeAlias() const { return fTypeAlias; }
    ENTupleStructure GetStructure() const { return fStructure; }

@@ -344,6 +344,11 @@ std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() cons
    return result;
 }
 
+bool ROOT::Experimental::Detail::RFieldBase::IsTopLevelField() const
+{
+   return dynamic_cast<RFieldZero *>(fParent) != nullptr;
+}
+
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
