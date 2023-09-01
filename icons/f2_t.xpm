@@ -1,0 +1,25 @@
+/* XPM */
+const char *tf2_16[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 3 1",
+"  c #000080",
+". c Green",
+"X c Magenta",
+/* pixels */
+"     X       ..X",
+"     X       .X ",
+"     X  ..   .  ",
+"     X  . . .   ",
+"     X .  ..    ",
+"     X . XX     ",
+"     X .XX      ",
+"  .. X .X       ",
+" .  .X .        ",
+" .   ..         ",
+"X.XXXXXXXXXXXXXX",
+".  XX           ",
+". XX            ",
+".XX             ",
+".X              ",
+".               "
+};

@@ -1,0 +1,23 @@
+/* XPM */
+const char * slink_t_xpm[] = {
+"16 16 4 1",
+" 	s None	c None",
+".	c #808080",
+"X	c black",
+"o	c white",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"                ",
+"......X         ",
+".oooooX         ",
+".ooXXoX         ",
+".oX.XoX         ",
+".oXoooX         ",
+".oooooX         ",
+"XXXXXXX         "};

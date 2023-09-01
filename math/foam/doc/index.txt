@@ -1,0 +1,9 @@
+This directory contains the FOAM class.
+BEGIN_HTML
+ See class TFoam and:
+<ul>
+<li><a href="http://hpjmiady.ifj.edu.pl/~jadach/mFoam/mFoam.html">mFOAM-1.02: A Compact Version
+of the Cellular Event Generator FOAM
+    </a></li>
+</ul>
+END_HTML

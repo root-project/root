@@ -1,0 +1,32 @@
+/* XPM */
+static char *bld_grab_d[] = {
+/* width height num_colors chars_per_pixel */
+"    21    21        4            1",
+/* colors */
+". c #9b9b9b",
+"# c #cccccc",
+"a c #808080",
+"b c #ededed",
+/* pixels */
+"#####..a#..a..#######",
+"#####..a#..a..#######",
+"####.bb..b#.b#.######",
+"####.#b#.#b.#b.a.####",
+"#####.bb#ab#.b#.b.###",
+"#####.#b#.#b.bb.#b.##",
+"######.bb.#b.#b.#b#.#",
+"##.a##.#b#.b#.b#.bb.#",
+"..b.a#a.bb.bb.bb.bb.a",
+"..#b.a#.bb.bb.bb.bb.a",
+"##.bb.a.bbbbbbbbbbb.a",
+"##.bb.a.bbbbbbbbbbb.a",
+"##.#bb..bbbbbbbbbb#.a",
+"###.bbbbbbbbbbbbbb.a#",
+"###.#bbbbbbbbbbbb#.a#",
+"####.bbbbbbbbbbbb.a##",
+"#####.bbbbbbbbbb#.a##",
+"######.bbbbbbbbb.a###",
+"######...bbbb....a###",
+"######.bbbbbbbb.a####",
+"#######........a#####"
+};

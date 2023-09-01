@@ -1,0 +1,237 @@
+<br/>
+<hr/>
+<a name="io"></a>
+<h3>I/O Libraries</h3>
+
+<h4>LZMA Compression and compression Level setting</h4>
+
+ROOT I/O now support the LZMA compression algorithm to compress data in
+addition to the ZLIB compression algorithm.
+LZMA compression typically results in smaller files, but takes more
+CPU time to compress data. To use the new feature, the external XZ
+package must be installed when ROOT is configured and built:
+
+Download 5.0.3 from here <a href="http://tukaani.org/xz/">tukaani.org</a>
+and make sure to configure with fPIC:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">   ./configure CFLAGS='-fPIC'</pre>
+
+Then the client C++ code must call routines to explicitly request LZMA
+compression.<br/>
+<p/>
+ZLIB compression is still the default.
+
+<h5>Setting the Compression Level and Algorithm</h5>
+
+There are three equivalent ways to set the compression level and
+algorithm. For example, to set the compression to the LZMA algorithm
+and compression level 5.
+<ol><li><pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+TFile f(filename, option, title);
+f.SetCompressionSettings(ROOT::CompressionSettings(ROOT::kLZMA, 5));
+</pre></li>
+<li>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+TFile f(filename, option, title, ROOT::CompressionSettings(ROOT::kLZMA, 5));
+</pre></li>
+<li>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+TFile f(filename, option, title);
+f.SetCompressionAlgorithm(ROOT::kLZMA);
+f.SetCompressionLevel(5);
+</pre></li>
+</ol>
+These methods work for <tt>TFile</tt>, <tt>TBranch</tt>, <tt>TMessage</tt>, <tt>TSocket</tt>, and <tt>TBufferXML</tt>.
+The compression algorithm and level settings only affect compression of
+data after they have been set. <tt>TFile</tt> passes its settings to a TTree's branches
+only at the time the branches are created. This can be overidden by
+explicitly setting the level and algorithm for the branch. These classes
+also have the following methods to access the algorithm and level for
+compression.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+Int_t GetCompressionAlgorithm() const;
+Int_t GetCompressionLevel() const;
+Int_t GetCompressionSettings() const;
+</pre>
+If the compression level is set to 0, then no compression will be
+done. All of the currently supported algorithms allow the level to be
+set to any value from 1 to 9. The higher the level, the larger the
+compression factors will be (smaller compressed data size). The
+tradeoff is that for higher levels more CPU time is used for
+compression and possibly more memory. The ZLIB algorithm takes less
+CPU time during compression than the LZMA algorithm, but the LZMA
+algorithm usually delivers higher compression factors.
+<p/>
+The header file core/zip/inc/Compression.h declares the function
+"CompressionSettings" and the enumeration for the algorithms.
+Currently the following selections can be made for the algorithm:
+kZLIB (1), kLZMA (2), kOldCompressionAlgo (3), and kUseGlobalSetting
+(0). The last option refers to an older interface used to control the
+algorithm that is maintained for backward compatibility. The following
+function is defined in core/zip/inc/Bits.h and it set the global
+variable.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+R__SetZipMode(int algorithm);
+</pre>
+If the algorithm is set to kUseGlobalSetting (0), the global variable
+controls the algorithm for compression operations.  This is the
+default and the default value for the global variable is kZLIB.
+
+<h4>gDirectory</h4>
+gDirectory is now a thread local!
+
+The value of gDirectory and gFile are now all accessed via a static function of their respective class.  The access is made transparent via a CPP macro.
+
+<br/>Note: Whenever a thread has an associated TThread object, the value of gDirectory is now thread local, i.e. all modifications direct or indirect of gDirectory will not be seen by the other thread.   In particular this means that several I/O operations (including TDirectory::Write) are thread safe (<b>as long as all the required TClass and TStreamerInfo has been previously setup</b>).
+<br/>Note: This model does <b>not</b> support sharing TFile amongst threads (i.e. a TFile must be accessed from exactly <em>one</em> thread).   This means that whenever a TFile's control is <i>passed</i> from a thread to another, the code must explicitly reset gDirectory to another value or there is a risk for this gDirectory to point to a stale pointer if the other thread deletes the TFile object.  A TFile deletion will only affect the value of the local gDirectory and gFile.
+
+<h4>TMemFile</h4>
+Introduce <tt>TMemFile</tt> and update <tt>TFileMerger</tt> to support incremental merges.
+<p/>
+Add new tutorials (<tt>net/treeClient.C</tt> + <tt>net/fastMergeServer.C</tt>)
+demonstrating how a <tt>TMemFile</tt> can be used to do parallel merge
+from many clients. (<tt>TMemFile</tt> still needs to be better integrated
+with <tt>TMessage</tt> and <tt>TSocket</tt>).
+<p/>
+The new <tt>TMemFile</tt> class support the <tt>TFile</tt> interface but only store
+the information in memory.   This version is limited to <tt>32MB</tt>.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TMessage mess;
+   ...
+   mess->ReadFastArray(scratch,length);
+   transient = new TMemFile("hsimple.memroot",scratch,length);
+</pre>
+will copy the content of 'scratch' into the in-memory buffer
+created by/for the <tt>TMemFile</tt>.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   TMemFile *file = new TMemFile("hsimple.memroot","RECREATE");
+</pre>
+Will create an empty in-memory of (currently fixed) size <tt>32MB</tt>.
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   file->ResetAfterMerge(0);
+</pre>
+Will reset the objects in the <tt>TDirectory</tt> list of objects
+so that they are ready for more data accumulations (i.e.
+returns the data to 0 but keep the customizations).
+
+<h4>TFile::MakeProject</h4>
+<ul>
+<li>New option 'par' in to pack in a PAR file the generated
+code. The first argument defines the directory and the name of the package.
+For example, the following generates a PAR package equivalent to
+tutorials/proof/event.par:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+  root [] TFile *f = TFile::Open("http://root.cern.ch/files/data/event_1.root")
+  root [] f->MakeProject("packages/myevent.par", "*", "par");
+</pre>
+Note that, because a PAR file is a tarball, for the time being, on Windows
+only the package directory and the files are generated and a warning message
+is printed.
+</li>
+<li>Properly handle the case of class which version is zero and to properly initialization array of objects (streamerElement type kStreamLoop).
+</li>
+<li>Fix support for call to MakeProject like:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+    gFile->MakeProject("./classCode/","*","RECREATE++")
+</pre>
+</li>
+<li>Better error handling if the source file failed to be created
+or if the project directory can not be created.
+</li>
+
+</ul>
+
+<h4>TParallelMergingFile</h4>
+
+Introduce the class <tt>TParallelMergingFile</tt> part of the net package.  This class connect ot a parallel merge server
+and upload its content every time Write is called on the file object.   After the upload the object of classes
+with a <tt>ResetAfterMerge</tt> function are reset.
+<br/>
+A <tt>TParallelMergingFile</tt> is created whether a <tt>?pmerge</tt> option is passed to <tt>TFile::Open</tt> as part of the file name.
+For example:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+    TFile::Open("mergedClient.root?pmerge","RECREATE"); // For now contact localhost:1095
+    TFile::Open("mergedClient.root?pmerge=localhost:1095","RECREATE");
+    TFile::Open("rootd://root.cern.ch/files/output.root?pmerger=pcanal:password@locahost:1095","NEW")
+</pre>
+<tt>tutorials/net/treeClient.C</tt> and <tt>fastMergeServer.C</tt>: update to follow the change in interfaces
+Introduce the tutorials <tt>parallelMergerClient.C</tt> and the temporary tutorials <tt>parallelMergerServer.C</tt>
+to demonstrate the parallel merging (with <tt>parallelMergerServer.C</tt> being the prototype of the upcoming
+parallel merger server executable).
+
+<h4>Other</h4>
+<ul>
+<li>Introduce the new function <tt>TFileMerger::PartialMerge(Int_t)</tt> which
+will <tt>Merge</tt> the list of file _with_ the content of the output
+file (if any).   This allows make several successive <tt>Merge</tt>
+into the same <tt>TFile</tt> object.
+Yhe argument defines the type of merge as define by the bit values in <tt>EPartialMergeType</tt>:
+   <ul>
+   <li> kRegular      : normal merge, overwritting the output file.</li>
+   <li> kIncremental  : merge the input file with the content of the output file (if already exising) (default).</li>
+   <li> kAll          : merge all type of objects (default).</li>
+   <li> kResetable    : merge only the objects with a MergeAfterReset member function. </li>
+   <li> kNonResetable : merge only the objects without a MergeAfterReset member function. </li>
+   </ul>
+</li>
+<li>Removed <tt>TFileMerger::RecursiveMerge</tt> from the interface.
+</li>
+<li>Prevent <tt>TFileMerger</tt> (and <tt>hadd</tt>) from trying to open too many files.
+Add a new member function <tt>TFileMerger::SetMaxOpenedFiles</tt> and
+new command line option to <tt>hadd</tt> ( <tt>-n requested_max</tt> ) to allow
+the user to reduce the number of files opened even further.
+</li>
+<li>Update hadd and TFileMerger so that they prefix all their information message
+with their names (when running hadd, the TFileMerger message are prefixed by hadd):
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+$ hadd -v 0 -f output.root input1.root input2.root
+$ hadd -v 1 -f output.root input1.root input2.root
+hadd merged 2 input files in output.root.
+$ hadd -v 2 -f output.root input1.root input2.root
+hadd target file: output.root
+hadd Source file 1: input1.root
+hadd Source file 2: input2.root
+hadd Target path: output.root:/
+</pre>
+</li>
+<li>Introduce non-static version of <tt>TFile::Cp</tt> allows the copy of
+an existing <tt>TFile</tt> object.
+</li><li>
+Introduce new explicit interface for providing reseting
+capability after a merge.  If a class has a method with
+the name and signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   void ResetAfterMerge(TFileMergeInfo*);
+</pre>
+it will be used by a <tt>TMemFile</tt> to reset its objects after
+a merge operation has been done.
+<p/>
+If this method does not exist, the <tt>TClass</tt> will use
+a method with the name and signature:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   void Reset(Optiont_t *);
+</pre>
+</li><li>
+<tt>TClass</tt> now provides a quick access to these merging
+function via <tt>TClass::GetResetAfterMerge</tt>.   The wrapper function
+is automatically created by rootcint and can be installed
+via <tt>TClass::SetResetAfterMerge</tt>.   The wrapper function should have
+the signature/type <tt>ROOT::ResetAfterMergeFunc_t</tt>:
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+   void (*)(void *thisobj, TFileMergeInfo*);
+</pre>
+<tt>ResetAfterMerge</tt> functions were added to the following classes:
+<tt>TDirectoryFile</tt>, <tt>TMemFile</tt>, <tt>TTree</tt>, <tt>TChain</tt>, <tt>TBranch</tt>, <tt>TBranchElement</tt>,
+<tt>TBranchClones</tt>, <tt>TBranchObject</tt> and <tt>TBranchRef</tt>.
+</li>
+<li>Avoid leaking the inner object in a container like  <tt>vector&lt;vector&lt;MyClass*&gt; &gt; </tt>
+and  <tt>vector&lt;vector&lt;MyClass*&gt; *&gt; </tt>.
+</li>
+<li>Put in place the infrastructure to optimize the I/O writes in the same way we optimized the I/O reads.
+</li>
+<li>Add the function <tt>TBuffer::AutoExpand</tt> to centralize the automatic
+buffer extension policy.  This enable the ability to tweak it later
+(for example instead of always doubling the size, increasing by
+only at most 2Mb or take hints from the number of entries already
+in a <tt>TBasket</tt>).
+</li>
+</ul>

@@ -1,0 +1,112 @@
+    <br>
+    <hr>
+    <a name="tmva"></a>
+    <h3>TMVA</h3>
+
+    TMVA version 4.1.0 is included in this root release. The most
+    important new feature is the support for simulataneous classification 
+    of multiple output classes for several multi-variate methods. 
+    A lot of effort went into consolidation of the software,
+    i.e. method performance and robustness, and framework
+    stability. The changes with respect to ROOT 5.27 / TMVA 4.0.7 are
+    in detail:
+
+    <h4>Framework</h4>
+
+    <ul>
+      <li><b><em>Multi-class support.</em></b> The support of multiple
+      output classes (i.e., more than a single background and signal
+      class) has been enabled for these methods: MLP (NN), BDTG,
+      FDA.<br>
+
+        <div style="margin-left:20; font-size: small">The multiclass
+        functionality can be enabled with the Factory option
+        <code>"AnalysisType=multiclass"</code>. Training data is
+        specified with an additional classname, e.g. via
+        <code>factory->AddTree(tree,"classname");</code>. After the
+        training a genetic algorithm is invoked to determine the best
+        cuts for selecting a specific class, based on the figure of
+        merit: purity*efficiency. TMVA comes with two examples in
+        <code>$ROOTSYS/tmva/test</code>: <code>TMVAMulticlass.C</code>
+        and <code>TMVAMulticlassApplication.C</code></div>
+
+      </li>
+
+      <li> <b><em>New TMVA event vector building.</em></b> The code
+      for splitting the input data into training and test samples for
+      all classes and the mixing of those samples to one training and
+      one test sample has been rewritten completely. The new code is
+      more performant and has a clearer structure. This fixes several
+      bugs which have been reported by some users of TMVA.</li>
+
+      <li><b><em>Code and performance test framework</em></b>: A unit
+      test framework for daily software and method performance
+      validation has been implemented.
+      </li>
+
+    </ul>
+
+    <h4>Methods</h4>
+
+    <ul>
+
+      <li><b><em>BDT Automatic parameter optimisation for building the
+      tree architecture</em></b>: The optimisation procedure uses the
+      performance of the trained classifier on the "test sample" for
+      finding the set of optimal parameters. Two different methods to
+      traverse the parameter space are available (scanning, genetic
+      algorithm). Currently parameter optimization is implemented only
+      for these three parameters that influence the tree architectur:
+      the maximum depth of a tree, <code>MaxDepth</code>, the minimum
+      number of events in each node, <code>NodeMinEvents</code>, and
+      the number of tress, <code>NTrees</code>.
+
+        <div style="margin-left:20; font-size: small">Optimization can
+        is invoked by calling
+        <code>factory->OptimizeAllMethods();</code> prior to the call
+        <code>factory->TrainAllMethods();</code>.</div>
+
+        Automated and configurable parameter optimization is soon to
+        be enabled for all methods (for those parameters where
+        optimization is applicable).
+      </li>
+
+      <li>
+        <b><em>BDT node splitting</em></b>: While Decision Trees
+        typically have only univariate splits, in TMVA one can now
+        also opt for multivariate splits that use a "Fisher
+        Discriminant" (option: UseFisherCuts), built from all
+        observables that show correlations larger than some threshold
+        (MinLinCorrForFisher).  The training will then test at each
+        split a cut on this fisher discriminant in addition to all
+        univariate cuts on the variables (or only on those variables
+        that have not been used in the Fisher discriminant, option
+        UseExcusiveVars). No obvious improvement betwen very simple
+        decision trees after boosting has been observed so far, but
+        only a limited number of studies has been performed concerning
+        potiential benenfit of these simple multivariate splits.
+      </li>
+
+    </ul>
+
+
+    <h4>Bug fixes</h4>
+
+    <ul>
+      <li>A problem in the BDTG has been fixed, leading to a much
+      improved regression performance.</li>
+
+      <li>A problem in the TMVA::Reader has been fixed.</li>
+
+      <li>With the new test framework and the coverity checks of ROOT
+      a number of bugs were discovered and fixed. They mainly concerned
+      memory leaks, and did not affect the performance.</li>
+
+    </ul>
+
+
+
+
+
+
+

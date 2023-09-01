@@ -1,0 +1,470 @@
+<br/>
+<hr/>
+<a name="hist"></a>
+<h3>Histogram package</h3>
+
+<h4>TGraphDelaunay</h4>
+<ul>
+<li> New version of the method <tt>TGraphDelaunay::Enclose()</tt>. This method
+     decides if a point is inside a triangle or not. The way it was implemented
+     produced infinite numbers and generated wrong peaks. It was visible on some
+     machines only (for instance MacOsX). Now this method uses
+     <tt>TMath::IsInside()</tt>. It is much safer, it runs faster, and the
+     code is simpler. The problem could be seen with a simple macro like the
+     following one:
+     <pre>
+     {
+        TCanvas *c1 = new TCanvas("c1", "c1",0,0,600,600);
+        c1->SetTheta(90.);
+        c1->SetPhi(0.0001);
+        gStyle->SetPalette(1);
+        TGraph2D *graph2d = new TGraph2D();
+        graph2d->SetPoint(0, 110, 110, 0.0);
+        graph2d->SetPoint(1, -80,  50, 1.0);
+        graph2d->SetPoint(2, -70,  40, 2.0);
+        graph2d->SetPoint(3,-110, -50, 3.0);
+        graph2d->SetNpx(9);
+        graph2d->SetNpy(9);
+        graph2d->Draw("surf1");
+        graph2d->SetLineWidth(2);
+        graph2d->Draw(" triw p0 same");
+     }
+     </pre>
+</li>
+<li> The X and Y vectors are normalized in order to compute the triangles.
+     The scale factor used was the same for the X and Y axis.
+     This generated problems (very long triangles instead of the obvious ones)
+     in some cases when the X and Y axis had very different ranges. Having two
+     scale factors, one for the X axis and one for the Y axis, cures the problem.</li>
+</ul>
+
+<h4>TGraph2D</h4>
+<ul>
+<li> In case all the points are in the same Z-plane Z0 (zmin = zmax), the graph
+     minimum is set to Z0-0.01*Z0 and the maximum to Z0+0.01*Z0. This
+     allow to make <tt>TGraph2D</tt> like:
+     <pre>
+     {
+        double *x = new double[2];
+        double *y = new double[2];
+        double *z = new double[2];
+        x[0] = 6215.;
+        x[1] = 5542.;
+        y[0] = 3853.;
+        y[1] = 5270.;
+        z[0] = 2723.;
+        z[1] = 2723.;
+        TGraph2D * g = new TGraph2D(2, x, y, z);
+        g->Draw("LINE");
+     }
+     </pre>
+</li>
+</ul>
+
+<h4>TGraph2DPainter</h4>
+<ul>
+<li> When a <tt>TGraph2D</tt> was painted with the option <tt>TRI1</tt> the
+     color distribution in case of log scale along the Z axis was wrong.</li>
+</ul>
+
+<h4>THistPainter</h4>
+<ul>
+<li> After executing the following macro, zooming the X axis interactively
+     generated the error message:
+     <br/>
+     <tt>Error in &lt;TGraphPainter::PaintGraphHist&gt;: X must have N+1 values with option N </tt>
+     <pre>
+     {
+        int n = 70;
+        TH1F h("h","test",n,0.,30.);
+        TRandom3 rndm_engine;
+        for (int i=0; i&lt;10000; ++i) h->Fill(rndm_engine->Gaus(15.,4.));
+        TF1 f("f","gaus");
+        h->Fit("f");
+        gPad->SetLogx();
+     }
+     </pre>
+</li>
+<li> The following macro didn't draw any box. Because of a precision
+     problem the filled bin was not drawn.
+     <pre>
+     {
+        double yarr[] = { 1.0, 2.0, 3.0, 4.0 };
+        double xarr[] = { 0.01, 0.02, 0.03, 0.04 };
+        TH2D *h = new TH2D("h","h",3,xarr,3,yarr);
+        h->Fill(0.011,2.5);
+        h->Draw("box");
+     }
+     </pre>
+</li>
+<li> The following macro displayed the histogram out of the frame
+     (option "bar"):
+     <pre>
+     {
+        gStyle->SetHistMinimumZero();
+        TH1F* h = new TH1F("h","h", 44, -0.5, 43.5);
+        h->SetBarWidth(0.7);
+        h->SetBarOffset(0.2);
+        h->SetFillColor(kGreen);
+        for (int i=0;i&lt;44; i++ ) h->Fill(i, -i-60);
+        h->DrawCopy("bar1");
+     }
+     </pre>
+</li>
+<li> The setting <tt>gStyle->SetHistMinimumZero()</tt> now works for horizontal
+     plots produced with the option <tt>HBAR</tt>.
+     <center><img src="hbarmin0.gif" alt="HBAR option"/></center>
+</li>
+<li> In the case of profile histograms it is possible to print the number
+     of entries instead of the bin content. It is enough to combine the
+     option "E" (for entries) with the option "TEXT".
+     <pre>
+     {
+        TCanvas *c02 = new TCanvas("c02","c02",700,400);
+        c02->Divide(2,1);
+        TProfile *profile = new TProfile("profile","profile",10,0,10);
+        profile->SetMarkerSize(2.2);
+        profile->Fill(0.5,1);
+        profile->Fill(1.5,2);
+        profile->Fill(2.5,3);
+        profile->Fill(3.5,4);
+        profile->Fill(4.5,5);
+        profile->Fill(5.5,5);
+        profile->Fill(6.5,4);
+        profile->Fill(7.5,3);
+        profile->Fill(8.5,2);
+        profile->Fill(9.5,1);
+        c02->cd(1); profile->Draw("HIST TEXT0");
+        c02->cd(2); profile->Draw("HIST TEXT0E");
+     }
+     </pre>
+     <center><img src="textoption.gif" alt="TEXT option"/></center>
+</li>
+<li> The following lines generated an empty stats box:
+     <pre>
+     gStyle->SetStatFont(43);
+     gStyle->SetStatFontSize(12);
+     TH2D *h2 = new TH2D("h2","h2",10,0,1,10,0,1);
+     h2->Draw();
+     </pre>
+</li>
+<li> PaintAxis does not redraw the axis labels and the axis title in case
+     of axis redrawing. Only the tick marks are redrawn. Redrawing the
+     labels and title made them appear a bit thicker.
+</li>
+<li> Fix a precision issue in PaintInit. The problem showed up with
+     the following lines:
+     <pre>
+     TF1 *f = new TF1("f","exp(-x)*exp(x-2.)",0.,2.0);
+     f->Draw();
+     </pre>
+</li>
+<li> For 2D histograms plotted with option <tt>TEXT</tt>, it is possible to
+     plot empty cells by calling <tt>gStyle->SetHistMinimumZero()</tt>.
+</li>
+<li> An empty frame is drawn when an empty 1D histogram is painted with log
+     scale along the Y axis and when a 2D histogram is painted with log scale
+     along the Z axis.
+</li>
+<li> Log axis for TH3 histograms did not work.
+</li>
+<li> With option COL and SCAT, TH2 was drawn empty when all bins have the same content.
+</li>
+</ul>
+
+<h4>TGraphPainter</h4>
+<ul>
+<li> When painted with option "2" (errors represented with boxes) the graph
+     with error bars were not clipped if the boxes were outside the frame
+     limits. This problem was visible with TGraphErrors, TGraphAsymmErrors and
+     TGraphBentErrors. The following macro showed the problem:
+     <pre>
+     {
+        TCanvas *c1 = new TCanvas("c1","c1",200,10,700,500);
+
+        const Int_t n    = 10;
+        Double_t x[n]    = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
+        Double_t y[n]    = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+        Double_t ex[n]   = {.05,.1,.07,.07,10.04,.05,.06,.07,.08,.05};
+        Double_t ey[n]   = {3.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+        Double_t exd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+        Double_t eyd[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
+
+        TGraphErrors *gr1 = new TGraphErrors(n,x,y,ex,ey);
+        gr1->SetFillStyle(3004);
+
+        TGraphAsymmErrors *gr2 = new TGraphAsymmErrors(n, x, y, ex, ex, ey, ey);
+        gr2->SetFillStyle(3005);
+
+        TGraphBentErrors *gr3 = new TGraphBentErrors(n,x,y,ex,ex,ey,ey,exd,exd,eyd,eyd);
+        gr3->SetFillStyle(3006);
+
+        c1->DrawFrame(-1,0,1,10);
+
+        gr1->Draw("2");
+        gr2->Draw("2");
+        gr3->Draw("2");
+     }
+     </pre>
+</li>
+<li> In PaintGraphBentErrors the fill style was not set for the boxes.</li>
+<li> The following macro displayed the histogram out of the frame
+     (option "b"):
+     <pre>
+     {
+        gStyle->SetHistMinimumZero();
+        TH1F* h = new TH1F("h","h", 44, -0.5, 43.5);
+        h->SetBarWidth(0.7);
+        h->SetBarOffset(0.2);
+        h->SetFillColor(kGreen);
+        for (int i=0;i&lt;44; i++ ) h->Fill(i, -i-60);
+        h->DrawCopy("b");
+     }
+     </pre>
+</li>
+<li> It was not possible to interactively move a graph with many points
+     close to each other. It was only possible to move the points one by one.</li>
+<li> PaintGrapHist: improvements with the option "][".</li>
+<li> The new markers (style 32 to 34) were not taken into account in the
+     error bars drawing. Ie: the error bars were crossing the down triangle
+     (style 32)</li>
+</ul>
+
+<h4>TGraph</h4>
+<ul>
+<li>Fix a bug in <tt>TGraph::Eval</tt> when evaluating at the graph point
+    values. </li>
+<li> With the following macro the axis title was not displayed:
+    <pre>
+    {
+       TGraph *graph = new TGraph ();
+       graph->SetPoint(0, 0.00100, 30.00);
+       graph->SetPoint(1, 0.00150, 20.00);
+       graph->SetPoint(2, 0.01150, 30.00);
+       graph->Draw("AL*");
+       graph->GetXaxis()->SetTitle("foo") ;
+       gPad->SetLogx(1) ;
+    }
+    </pre>
+</li>
+<li>New method <tt>IsInside(x,y)</tt>.</li>
+</ul>
+
+<h4>TMultiGraph</h4>
+<ul>
+<li>New method <tt>IsInside(x,y)</tt>.</li>
+</ul>
+
+<h4>THStack</h4>
+<ul>
+<li>The color index used to erase the background while drawing a stack of 1D
+    histogram was wrong.</li>
+</ul>
+
+<h4>TF1</h4>
+<ul>
+  <li> Bug fixed in TF1 zooming on Y axis. To reproduce it do:
+     <pre>
+     root [0] TF1 f1( "f1", "-x", 1,3)
+     root [1] f1.Draw()
+     </pre>
+     now selecting some range on the y-axis with the mouse
+     jumped to the range (0, 1) instead of chosen range.
+  </li>
+  <li> Add in <tt>TF1::GetX</tt> and <tt>TF1::GetMaximum, TF1::GetMinimum</tt> and
+  <tt>TF1::GetMaximumX, TF1::GetMinimumX</tt> the tolerance and max number
+  of iterations as extra parameters with default values of
+  tolerance=10E-10 and max iterations=100
+  </li>
+</ul>
+
+<h4>TH1</h4>
+<ul>
+  <li>Implement a faster version of <tt>TH1::FillRandom(TH1*,int)</tt>
+  when the passed histogram has the same bins. In this case generate
+  the flactuations bin by bins using Multinomial statistics
+  </li>
+</ul>
+
+<h4>THnSparse</h4>
+<ul>
+  <li>Shrink THnSparse on disk by 70% in an arbitrary example case;
+  also reduce memory usage, especially when not filling.
+  <br/>
+  <b>IMPORTANT NOTE</b>: while new THnSparse objects can be read and e.g. projected from in old ROOT versions, filling a new THnSparse object in old ROOT versions does NOT WORK!</li>
+  <li>
+  Add SetBinContent(), AddBinContent(), SetBinError() taking the
+  linear bin index. Use it in Projection() for a considerable
+  speed-up.</li>
+</ul>
+
+<h4>TSpectrum2Painter</h4>
+<ul>
+<li> New parameter bf() in the SPEC option to define the buffer size
+  used by TSpectrum2Painter. It is needed in case of very
+  large canvases like 8000x5000.</li>
+</ul>
+
+
+<h4>New TEfficiency class</h4>
+<ul>
+  <li>
+This new class from Christian Gumpert (CERN summer student 2010) handles the calculation of efficiencies and their uncertainties. It
+provides several statistical methods for calculating frequentist and bayesian
+confidence intervals as well as a function for combining several efficiencies.</li>
+<li>Example of usage: Creating a <tt>TEfficiency</tt> object
+  <ul>
+    <li>If you start a new analysis, it is highly recommended to use the TEfficiency class
+from the beginning. You can then use one of the constructors for fixed or
+variable bin size and your desired dimension. These constructors append the
+created TEfficiency object to the current directory. So it will be written
+automatically to a file during the next <a
+    href="http://root.cern.ch/root/html/TFile.html#TFile:Write">TFile::Write</a>
+    command.</li>
+    <li>Example 1: create a twodimensional TEfficiency object with 10
+    bins along X and 20 bins along Y:
+    <pre>
+TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,20,-5,5);
+</pre>
+    </li>
+<li>  You can fill the TEfficiency object by calling the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fill">Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)</a> method.
+   The boolean flag "bPassed" indicates whether the current event is a good
+   (both histograms are filled) or not (only <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> is filled).
+   The variables x,y and z determine the bin which is filled. For lower
+   dimensions the z- or even the y-value may be omitted.
+    </li>
+
+    <li>You can also set the number of passed or total events for a bin directly by using the SetPassedEvents or SetTotalEvents method.</li>
+
+    <li>If you already have two histograms filled with the number of passed and total
+events, you will use the constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%1">TEfficiency(const TH1& passed,const TH1& total)</a>
+to construct the TEfficiency object. The histograms "passed" and "total" have
+to fullfill the conditions  mentioned in <a
+    href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:CheckConsistency">CheckConsistency</a>,
+    otherwise the construction will fail.
+    <li>Example 2: Create TEfficiency from 2 existing histograms:
+    <pre>
+TEfficiency * pEff = 0;
+if (TEfficiency::CheckConsistency(h_pass,h_total))
+   pEff = new TEfficiency(h_pass,h_total);
+   </pre>
+    </li>
+</ul>
+  </li>
+
+<li>
+   The TEfficiency class provides various statistics option based on
+  frequentist or Bayesian statistics  to compute
+  the confidence interval on the efficiencies. For each statistical
+  option a corresponding static function esists taking as parameters
+  <tt>n</tt>, the number of total events, <tt>k</tt>, the number of
+  passed events and <tt>cl</tt> the desired confidence level and a
+  boolean flag specyfing if the upper (or lower) interval boundary
+  must be computed. Each statistics option can be set using the method
+  <tt>TEfficiency::SetStatisticOption</tt></li>
+ <li>The major statistics options are (see <a
+  href="http://root.cern.ch/root/htmldoc/TEfficiency.html#stat">class
+  documentation</a> for a full description and examples):
+  <ul>
+    <li>Clopper_pearson (default) using the function
+    <tt>TEfficiency::ClopperPearson(n, k, cl)</tt>
+    </li>
+
+    <li>Bayesian methods using the function
+    <tt>TEfficiency::Bayesian(n, k, cl, alpha, beta)</tt>.
+    In this case the alpha and beta parameters of the
+  beta prior distribution for the efficiency can be specified.
+    </li>
+    </ul>
+  <br>
+   <li>Merging and combining different TEfficiency objects is
+   supported
+   (see the <a
+  href="http://root.cern.ch/root/htmldoc/TEfficiency.html#cm">class
+  documentation</a>):
+   </li>
+</ul>
+
+<h4>New TKDE class</h4>
+
+<ul>
+  <li>New class for Kernel density estimation from Bartolomeu
+  Rabacal. The algorithm used is described in "Cranmer KS, <i>Kernel Estimation in High-Energy
+   Physics</i>. Computer Physics Communications 136:198-207,2001" -
+  e-Print Archive: hep ex/0011057 and more information can be found
+  also in "Scott DW, <i>Multivariate Density Estimation. Theory, Practice and Visualization</i>. New York: Wiley",
+    and "Jann Ben -, <i>Univariate kernel
+  density estimation document for KDENS</i> ".
+  </li>
+
+  </ul>
+
+<h4>New TSVDUnfold class</h4>
+
+<tt>TSVDUnfold</tt> implements the singular value decomposition based
+unfolding method proposed in <a
+href="http://arXiv.org/abs/hep-ph/9509307">NIM A372, 469 (1996)
+[hep-ph/9509307]</a>. The regularisation is implemented as
+a discrete minimum curvature condition. This minimal implementation of
+<tt>TSVDUnfold</tt> provides unfolding of one-dimensional histograms with
+equal number of, not necessarily equidistant, bins in the measured and
+unfolded distributions. In addition to the unfolding itself,
+<tt>TSVDUnfold</tt> provides
+<ul>
+<li>Propagation of covariance matrices from the measured to the unfolded
+spectrum via <tt>GetUnfoldCovMatrix</tt></li>
+<li>Evaluation of covariance matrix due to finite statistics in detector
+response via <tt>GetAdetCovMatrix</tt></li>
+<li>Access to distribution of |d_i| useful for determining the proper
+regularisation via <tt>GetD</tt></li>
+<li>Access to singular values via <tt>GetSV</tt></li>
+</ul>
+A toy example for the use of <tt>TSVDUnfold</tt> is included in the math
+tutorials (<tt>TSVDUnfoldExample.C</tt>).
+
+
+<h4>New TH2Poly class</h4>
+<tt>TH2Poly</tt> is a 2D Histogram class, inheriting from <tt>TH2</tt>,
+allowing to define polygonal bins of arbitary shape.
+<p>
+Each bin, in a <tt>TH2Poly</tt> histogram, is a <tt>TH2PolyBin</tt> object.
+<tt>TH2PolyBin</tt> is a very simple class containing the vertices, stored
+as <tt>TGraph</tt>s and <tt>TMultiGraph</tt>s, and the content of the polygonal
+bin.
+<p>
+Bins are defined using one of the <tt>AddBin()</tt> methods. The bins definition
+should be done before filling.
+<p>
+<tt>TH2Poly</tt> implements a partitioning algorithm to speed up bins' filling.
+The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
+<pre>
+{
+   TH2Poly *h2p = new TH2Poly();
+
+   Double_t x1[] = {0, 5, 5};
+   Double_t y1[] = {0, 0, 5};
+   Double_t x2[] = {0, -1, -1, 0};
+   Double_t y2[] = {0, 0, -1, -1};
+   Double_t x3[] = {4, 3, 0, 1, 2.4};
+   Double_t y3[] = {4, 3.7, 1, 4.7, 3.5};
+
+   h2p->AddBin(3, x1, y1);
+   h2p->AddBin(3, x2, y2);
+   h2p->AddBin(3, x3, y3);
+
+   h2p->Fill(   3,    1, 3); // fill bin 1
+   h2p->Fill(-0.5, -0.5, 7); // fill bin 2
+   h2p->Fill(-0.7, -0.5, 1); // fill bin 2
+   h2p->Fill(   1,    3, 5); // fill bin 3
+}
+</pre>
+
+More examples can be found in <tt>$ROOTSYS/tutorials/hist/</tt>:
+<p>
+<center><img src="th2polyBoxes.gif"     alt="th2polyBoses.C"/></center>
+<center><img src="th2polyEurope.gif"    alt="th2polyEurope.C"/></center>
+<center><img src="th2polyHoneycomb.gif" alt="th2polyHonecomb.C"/></center>
+<center><img src="th2polyUSA.gif"       alt="th2polyUSA.C"/></center>
+
+
+

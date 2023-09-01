@@ -1,0 +1,56 @@
+The following is a description of the association between the 'core' libraries
+and executable(s) and the sub-directories of the directory named 'core'.  When
+using the verb 'contains' we mean "contains .o files generated from the source
+files in the following (sub)directories."
+
+rootcling_stage1 executable contains:
+  - clib
+  - foundation
+  - clingutils
+  - dictgen
+  - rootcling_stage1
+
+Note: The public version of rootcling is hosted (outside of core) in the
+directory/package named 'main' 'and depends on libCore, libCling, libRIO
+and io/rootpcm.
+
+libCore does a dlopen of libCling and contains:
+  - clib
+  - foundation
+  - base
+  - cont
+  - meta
+  - textinput
+and depending on the platform
+  - macosx
+  - unix
+  - winnt
+and optionaly
+  - lzma
+  - lz4
+  - zip
+
+libCling depends on libCore and libRIO and contains:
+  - clingutils
+  - dictgen
+  - metacling
+
+The code in metacling and dictgen that uses libRIO should be moved to
+io/rootpcm to remove the dependency on libRIO, see ROOT-8512.
+
+libThread depends on libCore and contains:
+  - thread
+
+libNew depends on libCore and contains:
+  - newdelete
+
+libRint depends on libCore and contains:
+  - rint
+
+libMultiProc depends on explicitly on libCore, libNet, libTreePlayer and
+implicit on libRIO, libTree, libGraf3d, libGraf, libHist, libGpad and
+libMathCore and contains:
+   - multiproc
+
+libMultiProc should be moved to a different package due to its depencies,
+see ROOT-8513.

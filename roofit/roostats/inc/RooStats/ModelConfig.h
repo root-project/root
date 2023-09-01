@@ -1,0 +1,1 @@
+#include <RooFit/ModelConfig.h>

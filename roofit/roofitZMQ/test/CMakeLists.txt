@@ -1,0 +1,5 @@
+ROOT_ADD_GTEST(test_RooFitZMQ test_ZMQ.cpp LIBRARIES RooFitZMQ RooFitCommon)
+ROOT_ADD_GTEST(test_RooFitZMQ_polling test_polling.cxx LIBRARIES RooFitZMQ RooFitCommon)
+ROOT_ADD_GTEST(test_RooFitZMQ_HWM test_HWM.cxx LIBRARIES RooFitZMQ RooFitCommon)
+ROOT_ADD_GTEST(test_RooFitZMQ_load_balancing test_ZMQ_load_balancing.cxx LIBRARIES RooFitZMQ RooFitCommon)
+ROOT_ADD_GTEST(test_RooFitZMQ_mkstemp test_mkstemp.cxx LIBRARIES RooFitZMQ RooFitCommon)

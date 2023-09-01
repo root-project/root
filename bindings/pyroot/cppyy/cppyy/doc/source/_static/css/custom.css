@@ -1,0 +1,7 @@
+.rst-content .toconly {
+    display: none;
+}
+
+nav .toconly {
+    display: unset;
+}

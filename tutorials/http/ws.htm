@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>Example of web socket usage with THttpServer</title>
+   </head>
+
+   <body>
+      <h3>Log protocol:</h3>
+      <div id="LogDiv"></div>
+   </body>
+
+   <script type='text/javascript'>
+
+      let path = window.location.href;
+      path = path.replace("http://", "ws://") + "root.websocket";
+      let cnt  = 0;
+
+      function show(str) {
+         document.getElementById('LogDiv').insertAdjacentHTML( 'beforeend', '<text>' + str + '</text><br/>');
+         console.log(str);
+      }
+
+      console.log('starting socket ' + path);
+      let socket = new WebSocket(path);
+
+      socket.onopen = function() {
+         show('websocket initialized');
+         this._ready = true;
+         this.send("First message");
+      }
+
+      socket.onmessage = function(e) {
+         let msg = e.data;
+         if (typeof msg != 'string') return console.log("unsupported message kind: " + (typeof msg));
+
+         show('get: ' + msg);
+      }
+
+      socket.onclose = function() {
+         show('websocket closed');
+         window.close();
+         this._ready = false;
+      }
+
+      socket.onerror = function (err) {
+         this._ready = false;
+         show('websocket error' + err);
+      }
+
+      // sends data every second
+      setInterval(() => {
+         if (socket._ready) socket.send("Client time " + new Date().toTimeString() + " client counter:" + (cnt++));
+      }, 1000);
+
+   </script>
+
+</html>

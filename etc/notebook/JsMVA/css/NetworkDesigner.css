@@ -1,0 +1,169 @@
+/**
+ * This file contain all CSS code for the Deep neural network designer.
+ * Author: Attila Bagoly <battila93@gmail.com>
+ * Created: 7/9/16
+ */
+
+
+#nd_menu_div {
+    position: relative;
+    margin: 0;
+}
+
+#nd_menu_div ul#nd_menu {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #e7e7e7;
+    position: clear;
+    cursor: pointer;
+}
+
+#nd_menu_div ul#nd_menu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nd_menu_element, .nd_menu_dropdown {
+    float: left;
+}
+
+.nd_menu_element div, .nd_menu_dropdown div {
+    display: inline-block;
+    color: #333333;//#777;
+    text-align: center;
+    padding: 6px 16px;
+    text-decoration: none;
+}
+
+.nd_menu_element:hover, .nd_menu_dropdown:hover {
+    background-color: #337ab7;
+}
+
+.nd_menu_dropdown {
+    display: inline-block;
+}
+.nd_menu_dropdown_content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    //min-width: 100px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 99;
+    overflow: hidden;
+}
+
+.nd_menu_dropdown_content li div {
+    text-align: left;
+    width: 100%;
+}
+
+.nd_menu_dropdown_content li div:hover {
+    background-color: #fafafa;
+}
+
+.nd_menu_dropdown:hover .nd_menu_dropdown_content {
+    display: block;
+}
+
+.connection {
+    border:3px solid #051;
+    opacity: 0.5;
+    z-index:1;
+    border-radius:100%;
+    pointer-events:none;
+}
+
+#drawConnectionHelper {
+    position: absolute;
+    text-indent: -9999px;
+    width: 0px;
+    height: 0px;
+    border-top: 16px solid transparent;
+    border-bottom: 16px solid transparent;
+    border-left: 16px solid #051;
+    z-index: 95;
+}
+
+.layer_box {
+    border: 4px solid #051;
+    -webkit-border-radius: 20%;
+    -moz-border-radius: 20%;
+    border-radius: 20%;
+    width: 140px;
+    height: 70px;
+    cursor: pointer;
+}
+
+.layer_box span {
+    position: absolute;
+    width:100%;
+    bottom: 0px;
+    text-align:center;
+    font-size: 22px;
+    font-weight: bold;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.layer_box input.button_layer{
+    position: absolute;
+    top: 5px;
+    left: 23%;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.layer_box input.button_layer_output {
+    position: absolute;
+    bottom: 3px;
+    left: 23%;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.layer_box center {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 5px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#ts_link {
+    margin-top: 10px;
+}
+
+#neuronnum_layer_dialog input:not(.ui-button) {
+    width: 100px;
+}
+
+#neuronnum_layer_dialog label {
+    padding-right: 5px;
+}
+
+#trainingstrategy_dialog tr td:first-child {
+    float: right;
+}
+
+#globopts_dialog tr td:first-child {
+    float: right;
+}
+
+#trainingstrategy_dialog input {
+    width: 150px;
+}
+
+#trainingstrategy_dialog label {
+    padding-right: 10px;
+}

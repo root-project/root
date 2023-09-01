@@ -1,0 +1,39 @@
+/* XPM */
+static char *hpp_src_s[] = {
+/* width height num_colors chars_per_pixel */
+"    16    16       16            1",
+/* colors */
+"` c None s None",
+". c #800000",
+"# c #008000",
+"a c #808000",
+"b c #000080",
+"c c #800080",
+"d c #008080",
+"e c #c0c0c0",
+"f c #808080",
+"g c #ff0000",
+"h c #00ff00",
+"i c #ffff00",
+"j c #0000ff",
+"k c #ff00ff",
+"l c #00ffff",
+"m c #ffffff",
+/* pixels */
+"`ffffffffff`````",
+"`fmmmmmmmmef````",
+"`fmmmmmmmme`f```",
+"`fmmmmmmmm``````",
+"`fmbbmmmmmmme```",
+"`fmbbmmmmmbme```",
+"`fmbbbbmmbbbe```",
+"`fmbbmbbmmbme```",
+"`fmbbmbbmmmme```",
+"`fmbbmbbmmbme```",
+"`fmbbmbbmbbbe```",
+"`fmbbmbbmmbme```",
+"`fmmmmmmmmmme```",
+"`fmmmmmmmmmme```",
+"`feeeeeeeeeee```",
+"````````````````"
+};

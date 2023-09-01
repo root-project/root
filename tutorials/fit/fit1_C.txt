@@ -1,0 +1,13 @@
+   TCanvas * c1 = new TCanvas("c1","Canvas");
+   c1->SetGridx();
+   c1->SetGridy();
+   TFile * file = new TFile("fillrandom.root");
+   file->ls();
+   TF1 * sqroot = 0;
+   file->GetObject("sqroot",sqroot);
+   sqroot->Print();
+
+   TH1 * h1f = 0;
+   file->GetObject("h1f",h1f);
+
+   h1f->Fit("sqroot");

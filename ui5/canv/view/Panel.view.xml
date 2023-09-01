@@ -1,0 +1,6 @@
+<mvc:View
+   xmlns="sap.m"
+   xmlns:mvc="sap.ui.core.mvc"
+   async="true"
+   controllerName="rootui5.canv.controller.Panel">
+</mvc:View>

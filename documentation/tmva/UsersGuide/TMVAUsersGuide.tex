@@ -1,0 +1,177 @@
+\documentclass[11pt,twoside]{myArticle}       % CUSTOMIZED (!) article
+
+%
+% use PDFLatex
+%
+\pdfoutput=1
+
+\usepackage{amsmath,amssymb,amsfonts} % Typical maths resource packages
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{color}                    % For creating coloured text and background
+\usepackage[bookmarksnumbered]{hyperref} % For creating hyperlinks in cross references
+\usepackage{myFancyhdr}               % CUSTOMIZED (!) fancy headers and footer
+\usepackage{makeidx}                  % Package for indexing
+\usepackage{helvet}                   % For sans-serif mode
+\usepackage{setspace}                 % Allows to customize line distances
+\usepackage{fancybox}                 % For code example and option boxes
+\usepackage{float}                    % Floating objects
+\usepackage{xspace}                   % ...
+\usepackage{wasysym}                  % permille sign
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{hypernat}
+\usepackage{subfigure}
+\usepackage{rotating}                 % for sideways tables/figures
+% \usepackage{times}
+%
+% define TMVA and document versions ==========================================
+% \newcommand\TMVAVersion{4.2.0\xspace}
+\newcommand\TMVAVersion{4.3.0 for ROOT \textgreater= 6.12/00\xspace}
+% ============================================================================
+%
+% setup colors (requires usepackage{color}
+%
+\definecolor{darkblue1}{rgb}{0,0,.7}
+\definecolor{darkblue}{rgb}{0,0,.3}
+\definecolor{darkred}{rgb}{0.5,0,0}
+\pagecolor{white} % Background color
+\color{black}     % Text color
+%
+% setup hyper links
+%
+\hypersetup{breaklinks=true, 
+            colorlinks=true, 
+            linkcolor=darkblue1, 
+            menucolor=darkblue1, 
+            urlcolor=darkblue1,
+            citecolor=darkblue1,
+            pdftitle={TMVA - Users Guide},
+            pdfauthor={TMVA},
+            pdfsubject={TMVA - Users Guide},
+            pdfkeywords={},
+            pdfproducer={TMVA}
+}
+%
+% setup page margins and style
+%
+\parsep 20ex
+\parskip 0.04cm
+
+\topmargin -0.5cm
+\oddsidemargin -0.1cm
+\evensidemargin -0.1cm
+\textwidth 16.6cm
+\textheight 21.5cm
+\parindent 0cm % no indentation throughout document
+%
+% setup natbib
+%
+\bibstyle{plain}
+%
+% ------------ include custom definitions
+%
+\input TMVAdef
+%
+% create index
+%
+\makeindex
+%
+% Forces the page to use the fancy template
+%
+\pagestyle{fancy}  
+%
+% line gap between paragraphs
+%
+\parindent 0cm % no indentation throughout document
+\parskip 1.6ex
+
+% ============================================================================
+\begin{document}
+% ============================================================================
+
+%
+% ------------ title
+%
+\input Title
+%
+% ------------ contents, figures, tables
+%
+\pagenumbering{roman}
+
+\setcounter{tocdepth}{3}
+\addtolength{\parskip}{-0.40\baselineskip}
+{\footnotesize\sl
+\twocolumn
+\tableofcontents
+\onecolumn
+}
+\addtolength{\parskip}{0.40\baselineskip} 
+% \listoffigures
+% \listoftables
+
+\newpage
+
+\pagenumbering{arabic}
+%
+% ------------ introduction
+%
+\input Introduction
+%
+% ------------ technicalities
+%
+\input UsingTMVAQuickStart
+\input UsingTMVA
+\clearpage
+%\vfill\pagebreak
+\input DataPreprocessing
+\input CommonTools
+%\vfill\pagebreak
+\clearpage
+%
+% ------------ MVA methods
+%
+\input MethodsIntro
+%
+\input Cuts
+\input Likelihood
+\input PDERS
+\input PDEFoam
+\input KNN
+\input HMatrix
+\input Fisher
+\input LD
+\input FDA
+\input MLPs
+\input DeepLearning
+\input SVM
+\input BDTs
+\input RuleFit
+% ------------ PyMVA
+\input PyMVAIntro
+\input Keras
+% ------------ combining
+\input Combining
+%
+% ------------ conclusions
+% 
+\input Conclusions
+%
+% ------------ references
+% 
+\newpage
+\input Appendix
+%
+% ------------ references
+% 
+\newpage
+\input Bibliography
+%
+% ------------ print and include index
+%
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+% ============================================================================
+\end{document}
+% ============================================================================
+

@@ -1,0 +1,211 @@
+<br>
+<hr>
+
+
+<a name="graf2d"></a>
+<h3>TASImage - libAfterImage library</h3>
+
+<h4>TASImage</h4>
+<ul>
+<li> Protection added in DrawCircle. Problem seen with gcc version 4.2.3.
+<li> Fixed byte swapping issues. With that fix the pictures generated in batch
+     mode on Solaris and Mac are now correct (cf stressGraphics -k).
+<li> The Alpha Blending code has been rewritten in a simpler way in order to
+     work on linux with gcc 4.2.3. Here also the pictures generated in batch
+     mode were wrong.
+<li> In FillRectangleInternal when the rectangle to be drawn had its width or
+     its height equal to 0, they were set to the current image width or height.
+     This was not a good solution because this obscured completely the picture.
+     In particular, some markers being drawn with a filled rectangle, they
+     obscured the picture when they were really small because in that case the
+     rectangle drawn had width=height=0. Now, when a rectangle has its width or
+     height equal to 0 it is set to 1 (pixel) with makes sense because
+     &quot;0&quot; means &quot;tiny&quot; not &quot;huge&quot; ...
+<li> New method to retrieve the last zoom position on an image:
+     <pre>
+     void TASImage::GetZoomPosition(UInt_t &amp;x, UInt_t &amp;y, UInt_t &amp;w, UInt_t &amp;h) const
+     </pre>
+     This is useful when the zoom has been done interactively using the mouse.
+<li> In batch, when a picture was saved in a binary file (gif for instance) from
+     an image containing more than one pad, only the first pad was saved. The
+     following macro demonstrates the problem: ccc2.gif was wrong compared to
+     ccc1.gif.
+<pre>
+       {
+          gROOT-&gt;SetBatch();
+          TCanvas *c = new TCanvas;
+          c-&gt;Divide(1,2);
+          TH1F *h = new TH1F(&quot;gaus&quot;, &quot;gaus&quot;, 100, -5, 5);
+          h-&gt;FillRandom(&quot;gaus&quot;, 10000);
+          c-&gt;cd(1); h-&gt;Draw();
+          c-&gt;cd(2); h-&gt;Draw(&quot;c*&quot;);
+          c-&gt;Print(&quot;ccc1.gif&quot;);
+          TImage *img = TImage::Create();
+          img-&gt;FromPad(c);
+          img-&gt;WriteImage(&quot;ccc2.gif&quot;);
+       }
+</pre>
+</ul>
+
+<h4>libAfterImage</h4>
+<ul>
+<li> There no need anymore for the special version we had up to now. The
+     modifications we needed have been introduced in the official version.
+<p>  This version also fixes the color problem on BigEndian machines.
+     On these machines (Mac and Solaris for instance) the color of the jpeg
+     and png images saved from the &quot;File&quot; menu in a TCanvas were
+     completely wrong.
+<li> Addition for image pixelization and color to alpha functionality.
+<li> Fixed bunch of compilation bugs showing up on old systems.
+</ul>
+
+
+<h3>Graphical Output</h3>
+
+<h4>PDF</h4>
+<ul>
+<li> Text rotated at 270 degrees was not correct. The PDF rotation matrix
+     contained very small values close to 0 instead of 0. Acrobat reader
+     produced a wrong output and also printed result was wrong.
+     &quot;gv&quot; worked.
+</ul>
+
+<h4>PostScript</h4>
+<ul>
+<li> The character &quot;@&quot; could not be printed in PostScript files.
+<li> Change the Page numbering to make it appear nicer in postcript viewers
+     like &quot;gv&quot;. It is compliant with the Adobe Postscript Document
+     Structuring Conventions (easily found on the web).
+<li> The fonts encoding has been simplified (use ISOLatin1Encoding). The new
+     way allows to print any character with accent etc.. like on the screen.
+     The new encoding was done by Pierre Juillot.
+</ul>
+
+
+<h3>TPad</h3>
+<ul>
+<li> In batch mode it was not possible to generate a bitmap file (gif,
+     jpeg etc..) with a filename containing &quot;)&quot;,
+     &quot;(&quot;, &quot;]&quot; or &quot;[&quot;.
+<li> The Tickx and Tixky attributes were not saved properly by SavePrimitive.
+<li> PaintPolyLineNDC was not working in case of PS output.
+<li> In ExecuteEvent. A problem was found Mathieu de Naurois
+     &lt;denauroi@in2p3.fr&gt;.
+     It can be reproduced by the following sequence:
+     <ol>
+     <li> do TCanvas c
+     <li> do c-&gt;Divide(2,2)
+     <li> show the toolbar
+     <li> click L to enter text
+     <li> click on a pad to enter text
+     <li> move the mouse without releasing the button.
+     <li> entex text
+     <li> hit Enter.
+     </ol>
+     Before this bug fix, the canvas position changed on &quot;hit Enter&quot;.
+<li> On a Windows dual core machine, the WaitPrimitive call returned
+     immediately.
+</ul>
+
+
+<h3>Miscellaneous</h3>
+
+<h4>TView3D</h4>
+<ul>
+<li>Protection was missing in ctors in case gPad does not exits.
+<li>Allow interactive zooming on histograms painted with option CONT4
+</ul>
+
+<h4>TMultiGraph</h4>
+<ul>
+<li> Joining two multigraphs using <tt>In
+     TMultiGraph::Add(TMultiGraph*,Option_t *)</tt> method issued the error:
+     <pre>
+     Error in &lt;TList::AddLast&gt;: argument is a null pointer
+     </pre>
+     Despite of the message the joined multigraph was correct.
+     Internally the loop on the input multigraph was one step too long.
+<li> Implement the fit parameters painting.
+</ul>
+
+<h4>Histograms painting</h4>
+<ul>
+<li> For 2D histograms, when all the bins' contents were negative, the boxes
+     were not painted correctly.
+<li> For 3D histograms painted using OpenGL (drawing options "glbox" and
+     "glbox1") a minus sign on negative bins is added in order to
+     distinguish them from positive bins.
+     <img alt="example of GLBOX" src="graf2d_01.gif">
+<li> In <tt>THistPainter::PaintH3</tt> the palette is drawn in case of option
+     COLZ. This is useful when a TTree 4D plot is painted with that option.
+     <img alt="example of COLZ palette" src="graf2d_02.gif"><br>
+     This image has been prodiced with the command:<pre>
+     ntuple-&gt;Draw("px:py:pz:px*px","","COLZ");</pre>
+</ul>
+
+<h4>TGraph2D</h4>
+<ul>
+<li>The operator "=" was not correct.
+</ul>
+
+<h4>TGraph</h4>
+<ul>
+<li>Protection added in <tt>PaintPolyLineHatches</tt> (division by zero in some
+    cases).
+<li>All the graphical code has been moved from the <tt>TGraph</tt> classes to
+    <tt>TGraphPainter</tt>.
+</ul>
+
+<h4>TGraphPolar</h4>
+<ul>
+<li>Protection added in case a <tt>GraphPolar</tt> is plotted with option
+    &quot;E&quot; but has no errors defined.
+<li>The markers clipping (in <tt>TGraphPainter</tt>) was wrong in case of TGraphPolar.
+<li>The constructor's parameters naming was wrong.
+<li>Documentation: better example (easier to understand).
+<li>In the constructors some data members were not initialized.
+</ul>
+
+<h4>TPie</h4>
+<ul>
+<li> Add the <tt>TPie::GetEntries()</tt> method that return the number slices.
+     (Guido Volpi).
+<li> Implement Editors for TPie and TPieSlice (Guido Volpi).
+</ul>
+
+<h4>TPaletteAxis</h4>
+<ul>
+<li> Attributes are now accessible in the context menu.
+     (requested by Mathieu de Naurois &lt;denauroi@in2p3.fr&gt;)
+</ul>
+
+<h4>TPolyLine</h4>
+<ul>
+<li> Implement the possibility to draw TPolyLine in NDC coordinates
+     (it was partially done but the code was not used).
+</ul>
+
+<h4>Documentation</h4>
+<ul>
+<li> Better comments in THelix.
+<li> Option &quot;FUNC&quot; was not documented in THistPainter..
+<li> Update the help for animated gif generation in TPad.
+<li> Update TAttMarker documentation about the non scalable markers.
+<li> Re-writting of the THistPainter documentation.
+</ul>
+
+<h4>TCutG</h4>
+<ul>
+<li> The graphical cuts applied on histograms did not work when the cut name
+     contained a mix of lower and upper case characters. This problem occured
+     because the option used to draw an histogram was always converted into
+     lower case before begin stored in a pad (in Draw and DrawCopy). Now in
+     Draw() and DrawCopy() the AppendPad() procedure is called with the option
+     string not converted in lower
+case.
+</ul>
+
+<h3>QT</h3>
+Version 3 of QT is not supported anymore. If you install ROOT with the QT option
+you must have QT version 4 already installed.
+

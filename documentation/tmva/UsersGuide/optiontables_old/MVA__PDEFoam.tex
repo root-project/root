@@ -1,0 +1,17 @@
+\begin{optiontableAuto}
+            SigBgSeparate  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Separate foams for signal and background \\
+                  TailCut  &  \mc{1}{c}{--}  &            0.001  &  \mc{1}{l}{--}  &  Fraction of outlier events that are excluded from the foam in each dimension \\
+                  VolFrac  &  \mc{1}{c}{--}  &        0.0666667  &  \mc{1}{l}{--}  &  Size of sampling box, used for density calculation during foam build-up (maximum value: 1.0 is equivalent to volume of entire foam) \\
+             nActiveCells  &  \mc{1}{c}{--}  &              500  &  \mc{1}{l}{--}  &  Maximum number of active cells to be created by the foam \\
+                   nSampl  &  \mc{1}{c}{--}  &             2000  &  \mc{1}{l}{--}  &  Number of generated MC events per cell \\
+                     nBin  &  \mc{1}{c}{--}  &                5  &  \mc{1}{l}{--}  &  Number of bins in edge histograms \\
+                 Compress  &  \mc{1}{c}{--}  &             True  &  \mc{1}{l}{--}  &  Compress foam output file \\
+    MultiTargetRegression  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Do regression with multiple targets \\
+                     Nmin  &  \mc{1}{c}{--}  &              100  &  \mc{1}{l}{--}  &  Number of events in cell required to split cell \\
+                 MaxDepth  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Maximum depth of cell tree (0=unlimited) \\
+  FillFoamWithOrigWeights  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Fill foam with original or boost weights \\
+             UseYesNoCell  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Return -1 or 1 for bkg or signal like events \\
+                  DTLogic  &  \mc{1}{c}{--}  &             None  &  None, GiniIndex, MisClassificationError, CrossEntropy, GiniIndexWithLaplace, SdivSqrtSplusB  &  Use decision tree algorithm to split cells \\
+                   Kernel  &  \mc{1}{c}{--}  &             None  &  None, Gauss, LinNeighbors  &  Kernel type used \\
+          TargetSelection  &  \mc{1}{c}{--}  &             Mean  &  Mean, Mpv  &  Target selection method 
+\end{optiontableAuto}

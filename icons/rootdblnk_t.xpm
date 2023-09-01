@@ -1,0 +1,32 @@
+/* XPM */
+const char *rootdblnk_t_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 10 1",
+"  c Gray0",
+". c #800000",
+"a c #808080",
+"B c black",
+"w c white",
+"X c #808000",
+"o c Yellow",
+"O c #c0c0c0",
+"+ c Gray100",
+"@ c None",
+/* pixels */
+"@@++++++++++@@@@",
+"@    OOOOOO+O@@@",
+" oOoO OOOOO+  @@",
+" OoOo OOOOOOO @@",
+" oOoO XXOOOOO @@",
+"@    OOXOO     @",
+"@@+OOOOXX OoOoO ",
+"@@+OOOOXO oOoOo ",
+"@@+OOOOXO OoOoO ",
+"aaaaaaBXOO     @",
+"awwwwwBXOOOOO @@",
+"awwBBwBXOO     @",
+"awBaBwBXX OoOoO ",
+"awBwwwBOO oOoOo ",
+"awwwwwB   OoOoO ",
+"BBBBBBB@@@     @"
+};

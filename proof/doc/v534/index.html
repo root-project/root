@@ -1,0 +1,106 @@
+
+<hr></hr>
+<a name="proof"></a>
+<h3>PROOF System</h3>
+<ul>
+  <li style="font-style: italic;">Added functionality
+  <ul>
+    <li>Added interface to simplify the creation of the performance
+tree: two new methods TProof::SetPerfTree("&lt;file&gt;") and
+TProof::SavePerfTree("&lt;file&gt;", "&lt;queryref&gt;") allow set
+and/or save the information to a given file path. The perfomance tree
+settim=ngs are diabled after each query, so they need to be enabled
+each time. See also <a href="http://root.cern.ch/drupal/content/creating-and-saving-performance-tree">Creating
+and saving the performance tree</a>.</li>
+    <li>Add support for a command line test run of 'proofserv'; this is
+useful to test that the environment is setup correctly.</li>
+    <li>In TProofBench::DrawCPU, add possibility to extract of a couple
+of numbers supposed to give an idea of the computing specs of the
+cluster being benchmarked. These are the maximum rate for the standard
+CPU intensive task and the normalized, per worker, rate. Both are
+expressed in RNGPS (RaNdom Generation Per Second). See also <a href="http://root.cern.ch/drupal/content/proof-benchmark-framework-tproofbench#perfspecs">Getting
+the performance specs</a> .</li>
+    <li>Add class TProofPerfAnalysis collecting a set of tools to
+analyse the performance tree. See&nbsp;<a href="http://root.cern.ch/drupal/content/analysing-performance-tree">Analysing
+the performance tree</a> .</li>
+    <li>Add support for selector-by-object processing in PROOF. The
+selector object, created and configured locally by the user, is added
+to the input list and recuperated from there on the worker machines for
+processing. Any input list setting in the selector itself is not
+streamed but temporarly moved to then standard input list, so that user
+can use the selector input list as container of processing information
+if they find convenient to do so. Process(...) methods with the file
+name argument replaced by 'TSelector *' have&nbsp; introduced where
+relevant (TProof, TProofPlayer and their derivatives, TDSet).&nbsp; </li>
+    <li>Add the possibility to force submerging at node level, i.e. one
+submerger per physical machine. In this way the network traffic can be
+minimized, for example when merging large output files. The new feature
+is enabled by setting the Int_t parameter 'PROOF_MergersByHost' (or the
+directive 'Proof.MergersByHost') to a non-null value.</li>
+    <li>Simplify enabling of basic feedback. In TProof::Process, add
+support for switches "fb=name1,name2,name3,... " or
+"feedback=name1,name2,name3,... " in the option field. This enables
+feedback for the specified objects, creating a TDrawFeedback object
+attached to the session. Feedback for the specified objects is disabled
+at the end of the query and the created TDrawFeedback is destroyed. The
+special name 'stats' enables the three feedback histograms required by
+a dedicated new class TStatsFeedback, and uses a TStatsFeedback instead
+of TDrawFeedback to display the feedback. </li>
+  </ul>
+  </li>
+  <li style="font-style: italic;">Improvements
+  <ul>
+    <li>Add to TProofMgr two static functions to upload files. These
+functions are both called UploadFiles and differ in the first argument,
+which is used to pass the files to be uploaded. These can be given as a
+list (of TFileInfo or TObjString), a directory or specified in a text
+file. See&nbsp;<a href="http://root.cern.ch/drupal/content/uploading-data-files-proof-cluster">Uploading
+data files to a PROOF cluster</a> .</li>
+    <li>Add support for paralell dataset verification. This is
+implemented via a dedicated TSelector (TSelVerifyDataSet) which is run
+over the list of files in the dataset via TPacketizerFile. The file
+order is preserved using the recently introduced index in TFileInfo.</li>
+    <li>In TProofOutputFile, add switch to control the way histograms
+are merged by TFileMerger, i.e. one-by-one or all-in-one-go. The
+default is one-by-one which requires much less memory. Merging in
+one-go (the previous default) can be activated by passing 'H' in the
+constructor options.</li>
+    <li>In ProofBench, add possibility to change the location of the
+generated files via the third argument of TProofBench::MakeDataSet.</li>
+    <li>Several optimizations in the low level PROOF event loop
+(TProofPlayer::Process),&nbsp; allowing to reduce dramatically the
+overhead introduced by the operations PROOF needs to perform during the
+event loop. A measurement of the overhead can be obtained from a very
+light computational task, for example, generating one random number and
+filling one histogram; executing this task within a PROOF-Lite session
+with 1 worker now takes only 1.8 times the time required by a straight
+loop in the parent ROOT session; the same number before was about 13. </li>
+    <li>In TDrawFeedback::Feedback, call method Draw() of objects not
+identified as TH1 derivation. This allows user-defined objects
+implementing Draw to be displayed via this utility class.</li>
+    <li>In TProof::LoadPackageOnClient, do not create a symlink
+'pack_name' to the package dir, but add directly the package dir to the
+include path. This solves the longstanding annoying problem of failure
+when a directory or file with the name of the package did already exist
+in the local working directory. </li>
+  </ul>
+  </li>
+  <li style="font-style: italic;">Fixes
+  <ul>
+    <li>Fix merging issue affecting automatic dataset creation when
+only one worker is active.</li>
+    <li>Fix the realtime reported by TProof::GetRealTime() for masters
+(it was overwritten with the ones coming from workers).</li>
+    <li>Fix serious problem with TProof::Load: additional files were
+not copied in the master sandbox but left in the cache. A workaround
+for backward compatibility has also been implemented.</li>
+    <li>Fix a problem preventing actions requiring access to worker
+nodes (log file retrieval, reset) to work on workers where the username
+is different from the one o the master, e.g. PoD on gLite.</li>
+    <li>Fix issue with the specification of the working directory
+template in 'xpd.multiuser'.
+    </li>
+  </ul>
+  </li>
+</ul>
+

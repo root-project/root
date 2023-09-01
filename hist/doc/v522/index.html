@@ -1,0 +1,269 @@
+<br>
+<hr>
+<a name="hist"></a>
+<h3>Histogram package</h3>
+<p>
+Modify implementation of the Fit function in the histograms and data classes to use a new common implementation, defined in the file <tt>HFitImpl.cxx</tt>. This file provides the implementation of the function used for bin fitting of the data objects of the histogram package, TH1's, TGraph, TMultiGraph, TGraph2D,  and un-binned maximum likelihood fit for TTree data (used by the <tt>TTree::UnbinnedFit</tt> method).
+
+<h4><tt>HFitInterface.h</tt></h4>
+  Header file defining functions in the namespace <tt>ROOT::Fit</tt> providing functions required for fitting the data objects of the histogram package. These functions are used for example from other libraries like the FitPanel or the TTreePlayer for performing the fits.
+  <ul>
+<li>
+    <tt>ROOT::Fit::FitObject</tt>: function for fitting the various data objects. The user must pass in addition to a pointer to the fit object, the fit options (via the <tt>FOption</tt> class and not a string), the minimizer options and the fit data range.
+    <li>
+  <tt>ROOT::Fit::FillData</tt>: function for filling the fit data from the histogram data objects. Used for fitting an histogram using the <tt>ROOT::Fit::Fitter</tt> class.
+    <li>
+    <tt>ROOT::Fit::UnBinFit</tt>:: function for fitting an unbinned data sets, for example obtained from TTree data.
+  </li>
+  </ul>
+
+
+  <h4>TBackCompFitter</h4>
+  New class providing a backward compatible implementation of the
+     <tt>TVirtualFitter</tt> using the new fitting class. It is wrapping the functionality of the <tt>ROOT::Math::Fitter</tt> and it
+     can be used to retrieve the fit information (result and
+     configuration) via the
+     TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class
+     is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This instace will be deleted only when the next fit is executed.
+  This gives full backward compatibility functionality in fitting.
+  This class in addition to the TVirtualFitter provides the following functionality:
+  <ul>
+    <li>access direct to references to <tt>ROOT::Fit::FitResult</tt>  and <tt>ROOT::FitConfig</tt> objects via the member functions <tt>TBackCompFitter::GetFitResult()</tt> and <tt>TBackCompFitter::GetFitConfig()</tt>
+    <li>Possibility to set the fit the fit function directly as a function pointer to a muldi-dimensional function interface instead of using the TMinuit FCN style API.
+    <li>New methods for making in a easy way contour , with <tt>TBackCompFitter::Contour</tt>, and scan plots of the objective function, with <tt>TBackCompFitter::Scan</tt>. Both Scan and Contour takes as input a TGraph which on exit will be filled with the scanned or contour points.
+
+  </ul>
+
+  <h4>TH1</h4>
+  <ul><li>
+  Re-implement <tt>TH1::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+    <li>Add new function <tt>TH1::Interpolate</tt> to approximate the value via linear interpolation. Implementation from Any Mastbaum. </li>
+    <li>Fixed a bug in rebinning in a new variable bin histogram.
+    <li>Fixed a bug in copy constructor of histograms
+    <li>define now <tt>kNstat</tt> as an enumeration in the TH1 class, to avoid using wrong values for this constant variable. This fixes a previous bug in TProfile3D
+    </ul>
+  <h4>TH2</h4>
+    <ul>
+<li>  Share a common implementation for (FitSlicesX,FitSclicesY) and (ProfileX, ProfileY) using a common protected method.
+      <li>Add possibility to be used in the FitPanel (add a <tt>TH2::FitPanel()</tt> method).
+    <li>Add also here the new function <tt>TH2::Interpolate</tt>. </li>
+    <li>fix a bug in the resulting statistics in TH2::ProjectionX(Y) when all range was used
+    <li>fix a bug in getting the right axis and limits in TH2::ProfileX(Y)
+      </ul>
+
+  <h4>TH3</h4>
+
+<ul>
+  <li>Add new option "NUF" and "NOF" in TH3::Project to have excluded the underflow/overflow  (they are included by default).
+  <li>Add option "UF" and "OF" in TH3::ProjectProfile to include the underflow/overflow. By default they are now excluded while in the previous version they were included. This is consistent with the projection from a TH2.
+  <li>
+    Fixed a bug in <tt>TH3::Project</tt> reported by Marco Van Leeuwen in setting the bin error in the projected histogram when a range was set in the projected axis.
+  </li>
+        <li>Add possibility to be used in the FitPanel (add a <tt>TH3::FitPanel()</tt> method).
+
+</ul>
+
+ <h4>TProfile</h4>
+<ul>
+  <li>Fix a bug in <tt>TProfile::Rebin</tt>. The underflow and overflow were not properly taken into account
+  </ul>
+
+ <h4>TProfile3D</h4>
+<ul>
+  <li>Fix a bug in the copy constructor and assignment operator
+  </ul>
+
+  <h4>THnSparse</h4>
+  <li>fix a bug in SetBinError
+  <li>fix in THnSParse::Rebin
+  <li>fix error calculation in Multiply
+
+<h4>TGraph</h4>
+
+<ul>
+  <li>
+    Change the API of <tt>TGraph::GetPoint</tt> from
+    <pre>
+    void TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
+    </pre>
+    to
+    <pre>
+    Int_t TGraph::GetPoint(Int_t i, Double_t &amp;x, Double_t &amp;y) const
+    </pre>
+    The function returns -1 in case of an invalid request or the
+    point number otherwise.
+  </li>
+<li>    Re-implement <tt>TGraph::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+
+</ul>
+
+<h4>TGraph2D</h4>
+<ul>
+  <li>    Re-implement <tt>TGraph2D::Fit</tt> using the functions defined in <tt>HFitImpl.cxx</tt>.
+        <li>Add possibility to be used in the FitPanel (add a <tt>TGraph2D::FitPanel()</tt> method).
+</ul>
+
+<h4>TMultiGraph</h4>
+<ul>
+  <li> Re-implement <tt>TMultiGraph::Fit</tt> using the functions defined in
+      <tt>HFitImpl.cxx</tt>.
+  <li> Add possibility to be used in the FitPanel (add a
+       <tt>TMultiGraph::FitPanel()</tt> method).
+  <li> Protection added in <tt>Draw()</tt>: "Cannot draw empty TMultiGraph".
+</ul>
+
+<h4>TGraphPainter</h4>
+<ul>
+<li> When a histogram was drawn in a larger frame than its limits (using the
+  option "SAME"), the `outside' vertical lines for the first and last bins
+  were not drawn. The macro below demonstrates the problem:
+<pre>
+  {
+     TH1D h("h", "h", 10., 0., 1.);
+     h.SetBinContent(1, 1.);
+     h.SetBinContent(3, 1.);
+     h.SetBinContent(10, 1.);
+     h.SetFillColor(1001);
+     h.SetFillColor(kOrange-2);
+     h.SetLineColor(kBlack);
+     TCanvas canvas("canvas");
+     frame = canvas.DrawFrame(-1., 0., 2., 2.);
+     h.Draw("SAME");
+  }
+</pre>
+</ul>
+
+<h4>TPaletteAxis</h4>
+<ul>
+<li> New method <tt>Int_t TPaletteAxis::GetBinColor(Int_t i, Int_t j)</tt> to
+     return the color index of the bin (i,j).
+     <br>
+     This function should be used after an histogram has been plotted with the
+     option COL or COLZ like in the following example:
+     <pre>
+       h2->Draw("COLZ");
+       gPad->Update();
+       TPaletteAxis *palette =
+          (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+       Int_t ci = palette->GetBinColor(20,15);
+     </pre>
+     Then it is possible to retrieve the RGB components in the following way:
+     <pre>
+       TColor *c = gROOT->GetColor(ci);
+       float x,y,z;
+       c->GetRGB(x,y,z);
+     </pre>
+</li>
+</ul>
+
+<h4>TFormula</h4>
+
+<ul>
+  <li>
+  Fixed a bug in <tt>TFormula::GetExprFormula</tt>. Now the correct formula is returned for expressions based on CINT type functions.
+</li>
+</ul>
+
+
+<h4>TF1</h4>
+
+<ul>
+  <li>
+    Fixed a bug in the calculation of the integral of multi-dimensional interpreted functions. The method <tt>TF1::operator() (const double *x, const double *p)</tt> calls now <tt>TF1::InitArgs</tt> in the case of CINT functions.
+  <li>Fixed a bug in using the <tt>TF1::GetMinimum(), TF1::GetMaximum(), TF1::GetMinimumX, TF1::GetMaximumX, TF1::GetX</tt> with default arguments. </li>
+  <li>Fixed a bug when copying functions obtained from member functions of interpreted classes
+  </li>
+  </li>
+
+</ul>
+
+
+<h4>THStack</h4>
+<ul>
+<li>
+In <tt>THStack::Paint()</tt> replace
+<tt>fHistogram-&gt;Paint(&quot;axissame&quot;);</tt> by
+<tt>gPad-&gt;RedrawAxis();</tt> in order to fix the bug described here:
+<tt>https://savannah.cern.ch/bugs/?41423</tt> .
+The simple following macro was enough to show the problem:
+<pre>
+   {
+      TH1D h(&quot;h&quot;, &quot;h&quot;, 10., 0., 1.); h.Fill(.5);
+      THStack s(&quot;s&quot;, &quot;s&quot;); s.Add(&amp;h);
+      TCanvas canvas(&quot;canvas&quot;);
+      frame = canvas.DrawFrame(-1., 0., 2., 2.);
+      frame.SetLabelSize(0.05, &quot;XY&quot;);
+      frame.Draw(); s.Draw(&quot;same&quot;);
+   }
+</pre>
+
+</li>
+<li> Make the data member <tt>fHistogram</tt> persistent in order to save the
+     axis attributes which may have been changed during a root session (like,
+     for instance, the axis titles).</li>
+<li> When a THStack is drawn with the option "pads", the number of lines is
+     now optimized to make sure there is no empty line.  </li>
+</ul>
+
+<h4>TUnfold</h4>
+<ul>
+  <li>
+Introduces this new class for solving inverse problems:
+<b>
+     data histograms with Gaussian errors are decomposed into
+     several template distributions ("generator level" bins).
+</b><br>
+The result are new normalisation constants for the template
+distributions (the unfolded "generator level" distribution).
+<br>
+The solution can be tuned by properly adjusting the
+regularisation parameter tau. A standard method, the L-curve scan is
+implemented to help finding a good choice of this parameter.
+</li>
+<li>Two example tutorials are included to show the usage of this class: <em>tutorials/math/testUnfiold1.C</em> and <em>tutorials/math/testUnfiold2.C</em>
+  </ul>
+
+
+<br>
+<hr>
+
+<h3>FitPanel</h3>
+Add a new revised version of the Fit Panel with the following functionality:
+<ul>
+
+ <li> Add support now for fitting, in addition to the TH1 and TGraph
+ also for TH2, TH3, TMultiGraph and TGraph2D and TTree (with un-binned
+ fits)</li>
+
+ <li>Add possibility to select the data object directly from the Fit
+ panel. The Fit Panel can also be open directly from the TCanvas menu
+ (under Tools)</li>
+
+ <li>Improve the function selection by having the possibility to
+ support user defined function, predefined functions and functions
+ used before for fitting. </li>
+
+ <li> Allow the opening of the parameter dialog in case of linear
+ fitter. This is needed for example for fixing some of the
+ parameters</li>
+
+ <li>Improve minimization panel by adding some extra methods, like
+ combined for a combined migrad-simplex minimization (option
+ "MINIMIZE" in Minuit).</li>
+
+ <li>Improve the slider by adding a numeric entry. </li>
+
+ <li>Add the Advanced Graphics dialog, that allows the user to perform
+ Contour and Scan operation on the last fit.</li>
+
+ <li> Fix various bugs in setting the fit model function and in
+  setting the parameters (values, limits, etc..)</li>
+
+ </ul>
+Here is how the fit panel is now:
+  <p><img alt="Fit Panel" src="FitPanel.gif"></img></p>
+These are the currently support methods for the new Advance Graphics dialog:
+  <p><img alt="Fit Panel" src="Contour.gif"></img>&nbsp;<img alt="Fit Panel" src="Scan.gif"></img></p>
+
+
+

@@ -1,0 +1,40 @@
+name: Improvement
+description: Suggest something that could be improved.
+labels: ["improvement"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for taking the time to fill out this improvement suggestion! Note that since v6.28/06 you can also prefill this template using `root -q -e '.gh improvement'`
+  - type: textarea
+    id: improvement-description
+    attributes:
+      label: Explain what you would like to see improved and how.
+    validations:
+      required: true
+  - type: textarea
+    id: root-version
+    attributes:
+      label: ROOT version
+      description: On Linux/MacOS, `root -b -q | xclip -sel clip`. On Windows, `root -b -q | clip.exe`
+    validations:
+      required: true
+  - type: input
+    id: root-install-how
+    attributes:
+      label: Installation method
+      placeholder: Package manager (which?), pre-built binary, build from source, ...
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      placeholder: Windows, MacOS, Linux (which distribution?)
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+    validations:
+      required: false

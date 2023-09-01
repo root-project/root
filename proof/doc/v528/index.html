@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head></head>
+<body>
+<br --></head><body><hr>
+<a name="proof"></a>
+<h3>Proof</h3>
+<ul>
+<li>New functionality
+<ul>
+<li>Add support for processing
+many datasets in one go in TProof::Process(const char
+*dataset, ...).<br>
+Two options are provided:<br>
+&nbsp;- <span style="font-style: italic;">'grand
+dataset'</span>:&nbsp; &nbsp;the datasets are added up
+and considered as a single dataset <span style="text-decoration: underline;">(</span><span style="font-style: italic; text-decoration: underline;">syntax</span><span style="text-decoration: underline;">:</span>
+"dataset1|dataset2|...")<br>
+&nbsp;- <span style="font-style: italic;">'keep
+separated'</span>:
+the datasets are processed one after the other; the user is notified in
+the selector of the change of dataset so they have the opportunity to
+separate the results. A new packetizer, TPacketizerMulti, has been
+developed for this case: it basically contains a list of standard
+packetizers (one for each dataset) and loops over them (<span style="font-style: italic; text-decoration: underline;">syntax</span>:
+"dataset1,dataset2,..." or dataset1 dataset2 ...").<br>
+In
+both cases, entry-list can be applied using the syntax
+"dataset&lt;&lt;entrylist", e.g.
+"dataset1&lt;&lt;el1|dataset2&lt;&lt;el2|".<br>
+The datasets to be processed can also be specified on one or multiple lines in a text file.<br> See <a href="http://root.cern.ch/drupal/content/working-data-sets">http://root.cern.ch/drupal/content/working-data-sets</a>
+for more details.</li>
+<li>Add
+support for automatic download of a package when available on the
+master but not locally. The downloaded packages are store under <span style="font-style: italic;">&lt;sandbox&gt;/packages/downloaded</span>
+and automatically checked for updates against the master repository. If
+a local version of the same package is created (using the
+UploadPackage) the entry in&nbsp;<span style="font-style: italic;">downloaded</span> is
+cleared, so that the behaviour is unchanged.<br>
+The new functionality is described in <a href="http://root.cern.ch/drupal/content/working-packages-par-files">http://root.cern.ch/drupal/content/working-packages-par-files</a>
+.</li>
+<li>Add
+the possibility to remap the server for the files in a dataset. This
+allows, for example, to reuse the dataset information for the same
+files stored in a different cluster.</li>
+<li>Add a local cache for
+TDataSetManagerFile. This is mainly used to improve the speed of
+TDataSetManager::ShowDataSets, which is run very often by users and may
+be very slow if the number of dataset is large. The cache is also used
+to cache frequently received dataset objects.</li><li>Add the possibility to audit the activity on the nodes via syslog. See <a href="http://root.cern.ch/drupal/content/enabling-query-monitoring">http://root.cern.ch/drupal/content/enabling-query-monitoring</a>
+.</li><li>New
+packetizer TPacketizerFile generating packets which contain a single
+file path to be used in processing single files. Used, for example, in
+tasks generating files. The files are specified into a TMap - named
+'PROOF_FilesToProcess' - containing the list of files to be generated
+per host (the key is the host name, the value the TList of TObjString
+(or TFileInfo) with the files names - or a TFileCollection: the output
+of TFileCollection::GetFilesPerServer() can be directly passed as files
+map). Workers are first assigned files belonging to
+the list with host name matching the worker name. The map is
+distributed to the master via the input list.</li><li>Add support for
+automatic setting of pointer data members to the relevant object in the
+output list. The use of fOutputList-&gt;FindObject("name") in
+TSelector::Terminate is not needed anymore for pointer data members,
+e.g. histograms.</li>
+      <li>Add the possibility to define an external list of environment
+variables to be transmitted to the master and workers. This is done via
+the environment variable PROOF_ENVVARS. This addition allows to change
+the variables wthout changing the macro or application running
+TProof::Open. See <a href="http://root.cern.ch/drupal/content/controlling-environment-proof-session">http://root.cern.ch/drupal/content/controlling-environment-proof-session</a>
+.</li>
+      <li>Add the possibility to save the perfomance information shown
+by the dialog into a small ntuple included in the output list. The
+ntuple contains 5 floats (processing time, number of active workers,
+event rate, MBytes read, number of effective sessions on the cluster)
+and it is filled each time the number of active workers changes or at
+max 100 regular intervals at least 5 secs apart; in this way the ntuple
+has at most O(100 entries + number of workers). To enable the saving of
+the ntuple execute the following:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; proof-&gt;SetParameter("PROOF_SaveProgressPerf", "yes");<br>
+before running the query. The ntuple is called 'PROOF_ProgressPerfNtuple'.</li>
+      <li>Add support for worker autodiscovery in PROOF using the
+Avahi/Bonjour technology. The new functionality is supported on Mac
+(MacOsX &gt;= 10.4; no need of additional installs) and linux (requires
+the Avahi framework, available by default on most of the
+distributions). To use this functionality (instead-of or in-addition-to
+the the static worker configuration via proof.conf or xpd.worker) the
+new directive 'xpd.bonjour' must be used (see description at <br>
+        <a href="http://root.cern.ch/drupal/content/configuration-reference-guide#bonjour">http://root.cern.ch/drupal/content/configuration-reference-guide#bonjour</a>).<br>
+        <br>
+      </li>
+
+</ul>
+</li>
+<li>Improvements
+<ul>
+<li>Improve support for valgrind runs in PROOF-Lite</li>
+<li>Add the possibility to add files to a dataset. This is
+achieved with a new option 'U' (for update) to RegisterDataSet.</li>
+<li>Add
+methof TProof::GetStatistics to allow the client to retrieve the
+correct values of fBytesRead, fRealTime and fCpuTime at any moment;
+this will be used to setup a sort of ROOTmarks in stressProof .</li>
+<li>Several improvements in the test program 'stressProof'
+and in the tutorials under 'tutorials/proof'</li>
+<li>Avoid
+contacting the DNS when initializing TProofMgr as base class of
+TProofMgrLite: it is not needed and it may introduce long startup
+delays.</li>
+<li>Make&nbsp;TProof::LogViewer("") start the viewer for
+a Lite session, in parallel to whats happen for TProof::Open("").</li>
+<li>Several
+improvements in the handling of wild cards in the dataset manager; for
+example, issuing a GetDataSet(...) on a dataset URI containign wild
+cards will return a grand dataset sum of all the datasets matching the
+URI.</li>
+<li>Add options to get a list of all dataset registered names
+from ScanDataSets (option kList; the result is a TMap of {TObjString,
+TObjString} with the second TObjString empty).</li><li>Improved version of the PQ2 scripts; the scripts now invoke a dedicated ROOT application (named <span style="font-style: italic;">pq2</span>) available under $ROOTSYS/bin .</li><li>Add
+support for recursive reading of group config files via the 'include
+sub-file' directive. This allows to have a common part and, for
+example, customize differently the quotas.</li><li>Fix an issue with TTreeFriends. New tutorial showing how to use&nbsp;friends in PROOF.</li><li>Package
+management: add support for arguments in the SETUP function: it is
+possible now to pass a string or a list of objects. The
+TProof::EnablePackage interface has been extended to support this.</li><li>Optimize
+the validation step in the case not all the entries are required. The
+validation step is stopped as soon as the requested number of events is
+reached. If the parameter "PROOF_ValidateByFile" is set to 1, the
+number of files is exactly what needed; otherwise the number of files
+may exceed the number of files needed by (Number_Of_Workers - 1) .</li><li>New directive '<a href="http://root.cern.ch/drupal/content/configuration-reference-guide#datadir">xpd.datadir</a>' to better control the user data directories and their permission settings.&nbsp;</li><li>In TPacketizerUnit, add the possibility to exactly share the number of cycles between the workers. See the parameter <a href="http://root.cern.ch/drupal/content/list-input-parameters-used-proof#FixedNum">PROOF_PacketizerFixedNum</a>.</li><li>Implement
+a timer to terminate idle sessions. The timeout value is controlled by
+the variable ProofServ.IdleTimeout (value in seconds). This variable
+can be set for all sessions in the xproofd config file via the&nbsp;'<a href="http://root.cern.ch/drupal/content/configuration-reference-guide#putrc">xpd.putrc</a>' directive.</li>
+      <li>Add the possibility to control the use of sub-mergers with
+the ROOTrc variable Proof.SubMergers. It has the same meaning of the
+parameter 'PROOF_UseMergers'. The capabilities of the latter have been
+extended: now -1 means <span style="font-style: italic;">disable the use of submergers</span> (before&nbsp; negative values were ignored and there was no way for the user to disable the use of submergers). <br>
+      </li>
+      <li>Packetizer optimizations: improved worked distribution when
+the number of files left to be processed is smaller than the number of
+workers and at least one file has a number of events significantly
+larger than the average; better apply the upper/lower limits on the
+expected packet processing time.</li>
+      <li>Add the possibility to single-out disk partitions in the
+packetizer; this works adding the beginning of a path in the name
+defining a new TFileNode (e.g. 'host://disk1' instead of 'host' only as
+it was so far). These feature can be enabled by defining the rootrc
+variable 'Packetizer.Partitions', e.g.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Packetizer.Partitions&nbsp; /disk1,/disk2,/disk3</li>
+      <li>Add to the output list the parameters used by the active packetizer. <br>
+      </li>
+      <li>In the PrintProgress function used to display a text progress
+bar, show also the average reading rate in [k,M,G}bytes/s in addition
+to the event processing rate. This is useful to have a feeling of the
+rate when running of a remote machine in batch mode.</li>
+      <li>Add the possibility to control the resident and virtual
+memory of a proofserv using 'ulimit', which has less limitations and
+more flexibility than setrlimit.</li>
+      <li>Deactivate workers when the requested packages could not be enabled properly.</li>
+      <li>Add support for reconfiguring the group manager and the
+{env,rootrc} settings. The related configuration files are checked for
+changes during the regular checks done by the XrdProofdManager.</li>
+      <li>Add support for selective definition of env and rootrc
+variables. Different values can be set for different users, groups, SVN
+versions or ROOT versions.</li>
+      <li>Improve the diagnostic in case of exceptions. Information
+about the event and file being processed at the moment the exception
+was raised is sent to the client, e.g.<br>
+&nbsp;&nbsp; 0.5: caught exception triggered by signal '1' while
+processing dset:'EventTree',
+file:'http://root.cern.ch/files/data/event_3.root', event:1 - check
+logs for possible stacktrace<br>
+The patch also fixes a problem with submergers observed when a worker
+was stopped because above the memory limits: this worker was
+established as merger but could not do the work, for obvious reasons,
+freezing the session.</li>
+      <li>Add two new methods to TProof: ShowMissingFiles() to facilitate
+the display of the list of missing files; and GetMissingFiles() to get
+a TFileCollection (dataset) with the missing files for further
+processing.<br>
+        <br>
+      </li>
+
+
+</ul></li>
+<li>Fixes
+<ul>
+<li>Fix a bug in error status transmission which avoid
+session freezing in some cases</li>
+<li>FIx
+a few issues in libXrdProofd.so with handling of connection used for
+admin operation: this should solve some cases where the daemon was not
+responding. </li>
+<li>Fix a few memory leaks showing up when
+running&nbsp;several&nbsp;queries in the same session</li>
+<li>Fix a few issues affecting the new sub-merging option</li>
+<li>Fix an issue preventing proper real-time notification
+during VerifyDataSet</li>
+<li>Fix an issue with TQueryResult ordering (was causing
+random 'stressProof' failures)</li>
+<li>Fix
+an issue with TProof::AskStatistics (fBytesRead, fRealTime and fCpuTime
+were not correctly filled on the client; the values on the master,
+displayed by TProof::Print were correct).</li>
+<li>Fix several small issues affecting the handling of global
+package directories</li>
+<li>Fix an issue with socket handling in the main event-loop
+while sendign or receiving files via TProofMgr.</li>
+<li>Fix
+a problem counting valid nodes in sequential or 'masteronly' mode,
+generating the fake error message "GoParallel: attaching to candidate!"</li>
+<li>Fix a few issues with the length of Unix socket paths
+affecting PROOF-Lite and xproofd on MacOsX </li>
+<li>Fix an issue with the release of file descriptors when
+recovering sessions .</li>
+<li>Fix an issue with a fake error message<span style="font-family: monospace;"> ("</span>Error in
+&lt;TROOT::cd&gt;: No such file root:/") in PROOF-Lite when
+issuing TProof::SetParallel().</li>
+<li>Fix a problem with negative values for 'workers still
+sending' in PROOF-Lite .</li>
+<li>Fix locking issue while building packages locally.</li>
+<li>Fix issue setting permission and ownership of the dataset
+user directories.</li><li>Fix
+a subtle bug affecting the (possibly rare) case when not all entries
+are required and # entries does not correspond to an complete subset of
+files (e.g. # entries = 1001000 with files of 100000 entries each). The
+effect was uncomplete processing (skipped events, magenta bar) or a
+session freeze.</li>
+<li>Fix problem with packet re-assignment in case of a worker death (some packets were processed twice or more times).</li>
+      <li>Fix problem with the transmission of non-default file
+attributes (e.g. the number of entries) from TChainElement to
+TDSetElement during TChain processing in PROOF</li>
+      <li>Fix problem in the default packetizer with validating the
+exact number of needed files when the information about the entries is
+already available.</li>
+      <li>Fix problem with 'xpd.putenv' and 'xpd.putrc' occuring when the variables themselves contain commas.</li>
+      <li>Avoid resolving the workers FQDN when running in PROOF-Lite,
+creating unnecessary delays when running PROOF-Lite within virtual
+machines.</li>
+      <li>Fix problem with the permissions of the user data directory.</li>
+      <li>Add files to the list of files to process only when finally validated.</li>
+      <li style="outline-color: navy ! important; outline-style: dashed ! important; outline-width: 2px ! important;">Fix
+problem with canvases when the feedback canvas and the final canvas are
+the same (do not delete the feedback canvas at the end of processing)</li>
+      <li>Make sure that TProof::Load, TProofPlayer::SendSelector and
+TSelector::GetSelector treat consistently the extensions of the
+implementation files.</li>
+      <li>Unlock the cache after failure to load a selector; prevents session freezing</li>
+      <li>Correctly update the number of submergers when workers die</li>
+      <li>Add missing protection causing a crash in submergers when the output list contained TProofOutputFile objects.</li>
+      <li>Move the creation and start of the idle timeout from the end
+of SetupCommon to the end of CreateServer, so that the timeout is not
+active during worker setup.</li>
+      <li>Make sure that the TProof instance on the client is invalidated after an idle timeout.</li>
+      <li>Fix an old issue with DeactivateWorker("*") (the session is
+was terminated because no worker was active; this call coudl not be
+used as intermediate step to select a small number of workers).</li>
+      <li>Consistently check both Proof.Sandbox and ProofLite.Sandbox for sandbox non-default location as done in TProofLite</li>
+      <li>Fix a problem with the registration of missing files in the
+'MissingFiles' list (files which could not be open on the workers were
+not always added to the list).<br>
+        <br>
+        <br>
+      </li>
+
+
+</ul></li>
+</ul>
+<!-- /body></html -->
+</body></html>

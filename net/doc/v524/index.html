@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head></head>
+<body><br>
+<hr>
+<a name="net"></a>
+<h3>Networking</h3>
+<ul>
+<li>
+Class TWebFile now supports proxies. Set the proxy URL either via
+static method:
+<pre>   TWebFile::SetProxy(const char *url);<br></pre>
+or via the shell variable http_proxy, like is used for e.g. wget.
+</li>
+<li>
+Class TWebFile now supports the basic authentication (AuthType Basic) scheme.
+The user name and password can be specified in the URL like this:
+<pre>   http://username:mypasswd@pcsalo.cern.ch/files/aap.root<br></pre>
+</li>
+</ul>
+
+</p><h3>XROOTD</h3><ul><li>New version 20090610-0430</li></ul><ul><ul><li>Improvements</li><ul><li>Add the possibility of using the xrd command line from
+batch scripts</li><li>Add support for&nbsp;Adler32 checksum calculation of
+a local unix file (including stdin) and file on a remote xrootd data
+server.</li><li>Add support for the so-called Xtreme copy, allowing xrdcp
+to read multiple chunks from several servers, in parallel.</li><li>Add possibility to use a different version of a given C++
+compiler or linker (--with-cxx=..., etc)</li><li>Increase flexibility in configuring openssl and openafs
+support</li><li>In GSI authentication, automatize the loading of CRL; the
+information
+about the URI is looked for either in the dedicated extension on the CA
+certificate or from the file "&lt;CA hash&gt;.crl_url" and the
+file
+automatically downloaded and transformed in PEM format</li></ul><li>Fixes</li><ul><li>Server side</li></ul><ul><ul><li>Fix wrong reporting of the refresh option for Locate</li></ul><ul><li>Fix incorrect propagation of selected nodes</li></ul><ul><li>Prevent potential long duration loop (15 mins) after client disconnections</li></ul><ul><li>Avoid potential deadlocks when trying to remove a node from a cluster</li></ul><ul><li>Correct matching of incoming connection with previously dropped connection</li></ul><ul><li>Correct export of cluster identification</li></ul><ul><li>Correctly propagate information about files that could not be staged</li></ul><ul><li>Prevent endsess deadlock when parallel streams stall due to large WAN RTT</li><li>Fix infinite wait for primary login that will never
+happen if you are a manager without a meta-manager</li><li>Prevent annoying (but not deadly) infinite loop should a
+server go offline that is subject to a locate request display.</li></ul></ul><ul><li>Client side</li></ul><ul><ul><li>Better handling of errno, especially for parallel streams</li></ul><ul><li>Allow the client to cycle through all the remaining valid security protocols in the list of protocols returned by the server</li></ul><ul><li>Make the readahead strategy more conservative</li></ul><ul><li>Fix a rare race condition happening when destroying instances with outstanding open requests</li></ul><ul><li>Enforce cache coherency in the case of reads+writes in the same file</li></ul><ul><li>Correctly guess the filesize of a file opened for writing in sync mode</li></ul><ul><li>Make server host name check more flexible for GSI authentication</li><li>Fix some relevant issues with cache handling on the client, including a&nbsp;rare but fatal bug in
+determining the cache holes list and the end of a cache lookup</li><li>More complete detection of async read errors</li></ul><li>General</li><ul><li>Fix problem in handling the return code
+of&nbsp;X509_REQ_verify
+in&nbsp;XrdCryptosslX509Req.cc</li><li>Avoid SEGV when doing an lsd admin command with
+authenticated xrootd clients</li><li>Close race conditions that allowed a supervisor/manager
+to subscribe without declaring a data port. Initialize nostage state in
+XrdCmsState to prevent erroneous state declaration during
+initialization.</li><li>Fix a problem with the subject name of proxies of level
+&gt; 1; this was creating a failure when a Globus application was
+trying to use the proxy certificate</li><li>Fix a problem with cache refreshing in XrdSutCache
+affecting automatic reloading of password files</li><li>For now, turn off IPV6 processing as it seems to create
+several problems.</li><li>Fix a few issues with the available releases of gcc 4.4</li><li>Fix a few issues with the 'icc' compiler</li><li>Fix several issues in GSI and PWD authentication modules</li></ul></ul><li>New features</li><ul><li>New File Residency Manager (frm), replacement for the MPS scripts</li><li>Scripts are now provided&nbsp;to</li><ul><li>automatically donwload a CRL certificate
+(utils/getCRLcert)</li></ul><ul><li>install the recommended verion of OpenSSL and build it
+with the options optimal for usage in XROOTD/SCALLA
+(utils/installOpenSSL.sh)</li></ul><ul><li>install the recommended verion of OpenAFS and build it
+with the options optimal for usage in
+XROOTD/SCALLA&nbsp;(utils/installOpenAFS.sh)</li></ul></ul><li>Miscellanea</li><ul><li>TokenAuthz and CS2 modules are no longer part of the main
+built; they have to be built externally</li></ul></ul></ul>
+
+</body></html>

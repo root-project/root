@@ -1,0 +1,989 @@
+%% BEGIN fancybox.sty
+%%
+%% With corrections and suggestions from:
+%%   - Marcin Wolinski <wolinski@melkor.mimuw.edu.pl>
+%%   - Heiko Oberdiek  <oberdiek@ruf.uni-freiburg.de>
+%%
+\def\fileversion{1.3}
+\def\filedate{2000/09/19}
+% DG/SR modification begin - September 19, 2000
+% (suggested by Heiko Oberdiek <oberdiek@ruf.uni-freiburg.de>)
+\@ifundefined{ProvidesPackage}{}{%
+  \ProvidesPackage{fancybox}[\filedate\space\fileversion]}
+% DG/SR modification end
+% DG/SR modification begin - May 16, 1997
+\providecommand\@begindvi{} % For rather old versions of LaTeX 2e
+% DG/SR modification end
+% DG/SR modification begin - Feb. 27, 1997
+% Now defined only in latex209.def
+\def\@lquote{\leavevmode{\kern\z@}`}
+% DG/SR modification end
+%%
+%% COPYRIGHT 1993, by Timothy Van Zandt, tvz@Princeton.EDU
+%%
+%% DESCRIPTION:
+%%   fancybox.sty is a LaTeX style option, consisting of:
+%%   * Variants of \fbox: \shadowbox, \doublebox, \ovalbox, \Ovalbox.
+%%   * Helpful tools for using box macros.
+%%   * Extensive documentation about how to use box macros.
+%%   * Flexible verbatim macros.
+%%
+%% INSTALLATION:
+%%   Put this file where your TeX looks for inputs.
+%%
+%% DOCUMENTATION:
+%%  See fancybox.doc, which might be appended to this file.
+%%
+%% COPYING:
+%%   Copying of part or all of this file is allowed under the following
+%%   conditions only:
+%%   (1) You may freely distribute unchanged copies of the file. Please
+%%       include the documentation when you do so.
+%%   (2) You may modify a renamed copy of the file, but only for personal
+%%       use or use within an organization.
+%%   (3) You may copy fragments from the file, for personal use or for
+%%       distribution, as long as credit is given where credit is due.
+%%
+%%   You are NOT ALLOWED to take money for the distribution or use of
+%%   this file or modified versions or fragments thereof, except for
+%%   a nominal charge for copying etc.
+%%
+%% CODE:
+\expandafter\ifx\csname fb@framepage\endcsname\relax\else
+  \expandafter\endinput
+\fi
+\typeout{Style option: `fancybox' v\fileversion \space  <\filedate> (tvz)}
+
+\newbox\@fancybox
+\@ifundefined{@tempdimc}{\newdimen\@tempdimc}{}
+
+%% \shadowbox
+
+\newdimen\shadowsize
+\shadowsize 4pt
+
+\def\shadowbox{\VerbBox\@shadowbox}
+\def\@shadowbox#1{%
+  \setbox\@fancybox\hbox{\fbox{#1}}%
+  \leavevmode\vbox{%
+    \offinterlineskip
+    \dimen@=\shadowsize
+    \advance\dimen@ .5\fboxrule
+    \hbox{\copy\@fancybox\kern-.5\fboxrule\lower\shadowsize\hbox{%
+      \vrule \@height\ht\@fancybox \@depth\dp\@fancybox \@width\dimen@}}%
+    \vskip-\dimen@
+    \moveright\shadowsize\vbox{%
+      \hrule \@width\wd\@fancybox \@height\dimen@}}}
+
+% \fancyoval
+
+\def\cornersize{\@ifstar{\@cornersize}{\@@cornersize}}
+\def\@cornersize#1{%
+  \@tempdima=#1\relax
+  \edef\the@cornersize{\number\@tempdima sp}}
+\def\@@cornersize#1{%
+  \edef\the@cornersize{#1\noexpand\@tempdimb}}
+\cornersize{.5}
+
+% This is just a simple change to \oval, making use of the \cornersize
+% parameter instead of making the corner arcs are large as possible.
+
+\def\fancyoval(#1,#2){\@ifnextchar[{\fancy@oval(#1,#2)}{\fancy@oval(#1,#2)[]}}
+
+\def\fancy@oval(#1,#2)[#3]{%
+  \begingroup
+    \fancy@@oval{#1\unitlength}{#2\unitlength}{#3}%
+    \@put{-.5\wd\@tempboxa}{-.5\ht\@tempboxa}{\ht\@tempboxa=\z@\box\@tempboxa}%
+  \endgroup}
+
+\def\fancy@@oval#1#2#3{%
+  \boxmaxdepth \maxdimen
+  \@ovttrue \@ovbtrue \@ovltrue \@ovrtrue
+  \@tfor\@tempa :=#3\do{\csname @ov\@tempa false\endcsname}%
+  \@ovxx#1\relax
+  \advance\@ovxx-\@wholewidth
+  \@ovyy#2\relax
+  \advance\@ovyy-\@wholewidth
+  \@tempdimb \ifdim \@ovyy >\@ovxx \@ovxx\else \@ovyy \fi
+  \advance\@tempdimb-2\p@
+  \ifdim\@tempdimb>\the@cornersize\relax
+    \@tempdimb=\the@cornersize
+  \fi
+  \@getcirc\@tempdimb
+  \@ovro\ht\@tempboxa \@ovri\dp\@tempboxa
+  \@ovdx\@ovxx \advance\@ovdx-\@tempdima \divide\@ovdx \tw@
+  \@ovdy\@ovyy \advance\@ovdy-\@tempdima \divide\@ovdy \tw@
+  \@circlefnt
+  \setbox\@tempboxa\hbox{%
+    \if@ovr \@ovvert32\kern -\@tempdima \fi
+    \if@ovl \kern \@ovxx \@ovvert01\kern -\@tempdima \kern -\@ovxx \fi
+    \if@ovt \@ovhorz \kern -\@ovxx \fi
+    \if@ovb \raise \@ovyy \@ovhorz \fi}%
+  \advance\@ovdx\@ovro
+  \advance\@ovdy\@ovro
+  \advance\@ovxx\@wholewidth
+  \wd\@tempboxa=\@ovxx
+  \dp\@tempboxa=\z@}
+
+% \ovalbox
+
+\def\ovalbox{\VerbBox{\@ovalbox\thinlines}}
+\def\Ovalbox{\VerbBox{\@ovalbox\thicklines}}
+\def\@ovalbox#1#2{%
+  \begingroup
+    #1\relax
+    \setbox\@fancybox\hbox{{#2}}%
+    \@tempdimc\fboxsep \advance\@tempdimc\@wholewidth
+    \@tempdima\ht\@fancybox \advance\@tempdima\dp\@fancybox
+    \advance\@tempdima2\@tempdimc
+    \@tempdimb\wd\@fancybox \advance\@tempdimb2\@tempdimc
+    \fancy@@oval\@tempdimb\@tempdima{}%
+    \@tempdima\dp\@fancybox \advance\@tempdima\@tempdimc
+    \wd\@tempboxa=\z@
+    \leavevmode\hbox{%
+      \lower\@tempdima\box\@tempboxa
+      \kern\@tempdimc\box\@fancybox\kern\@tempdimc}%
+  \endgroup}
+
+% \doublebox
+
+\def\doublebox{\VerbBox\@doublebox}
+\def\@doublebox#1{%
+  \begingroup
+    \setbox\@fancybox\hbox{{#1}}%
+    \fboxrule=.75\fboxrule
+    \setbox\@fancybox\hbox{\fbox{\box\@fancybox}}%
+    \fboxrule=2\fboxrule
+    \fboxsep=\fboxrule
+    \advance\fboxsep .5pt
+    \fbox{\box\@fancybox}%
+  \endgroup}
+
+% Frames for seminar.sty:
+
+\@ifundefined{newslideframe}{}{%
+  \newslideframe{shadow}{\shadowbox{#1}}
+  \newslideframe{double}{\doublebox{#1}}
+  \newslideframe{oval}{\ovalbox{#1}}
+  \newslideframe{Oval}{\Ovalbox{#1}}}
+
+% Sbox environment
+
+\newbox\@Sbox
+
+\def\Sbox{\global\setbox\@Sbox\hbox\bgroup\ignorespaces}
+
+\def\endSbox{%
+  \@testtrue\ifhmode\ifinner\@testfalse\fi\fi
+  \if@test\@latexerr{Misplaced \string\endSbox! Should be in LR mode}\@ehd\fi
+  \egroup}
+
+\def\TheSbox{%
+  \ifvoid\@Sbox
+    \@latexerr{\string\TheSbox\space is empty!}\@ehd
+  \else
+    \box\@Sbox
+  \fi}
+
+\def\beginsbox#1{\setbox#1\hbox\bgroup\ignorespaces}
+
+\def\endsbox{\endSbox}
+
+% \VerbBox
+
+\newtoks\do@VerbBox
+
+\def\VerbBox#1{%
+  \do@VerbBox{#1}%
+  \afterassignment\begin@VerbBox
+  \setbox\@fancybox=\hbox}
+\def\begin@VerbBox{\aftergroup\end@VerbBox}
+\def\end@VerbBox{\the\do@VerbBox{\box\@fancybox}}%
+
+% \Btrivlist
+
+\def\@Blistrestore{%
+  \let\par\relax
+  \let\-\@dischyph \let\'\@acci \let\`\@accii \let\=\@acciii
+  \lineskip\normallineskip \baselineskip\normalbaselineskip}
+
+\def\Btrivlist#1{\@ifnextchar[{\@Btrivlist{#1}}{\@Btrivlist{#1}[]}}
+\def\@Btrivlist#1[#2]{%
+  \@Blistrestore
+  \let\\=\@Btrivlistcr
+  \fb@beginvbox{#2}%
+  \halign\bgroup
+    \if#1l\else\@empty\hfil\fi
+    \ignorespaces##\unskip
+    \if#1r\@empty\else\hfil\fi\cr}
+\def\endBtrivlist{\crcr\egroup\egroup\if@pboxsw$\fi}
+
+\def\fb@beginvbox#1{%
+  \leavevmode
+  \@pboxswfalse
+  \if#1b\@empty\vbox\else\if#1t\@empty\vtop\else
+    \ifmmode\vcenter\else\@pboxswtrue$\vcenter\fi
+  \fi\fi\bgroup}
+
+\def\@Btrivlistcr{\@ifstar
+  {\@ifnextchar[{@@Btrivlistcr}{\cr}}{\@ifnextchar[{\@@Btrivlistcr}{\cr}}}
+\def\@@Btrivlistcr[#1]{\cr\noalign{\vskip #1}}
+
+\def\Bcenter{\Btrivlist{c}}
+\def\endBcenter{\endBtrivlist}
+
+\def\Bflushleft{\Btrivlist{l}}
+\def\endBflushleft{\endBtrivlist}
+
+\def\Bflushright{\Btrivlist{r}}
+\def\endBflushright{\endBtrivlist}
+
+% \Blist
+
+\def\Blist#1#2{\@ifnextchar[{\@Blist{#1}{#2}}{\@Blist{#1}{#2}[]}}
+
+\def\@Blist#1#2[#3]{%
+  \ifnum\@listdepth>5
+    \@toodeep
+  \else
+    \global\advance\@listdepth\@ne
+  \fi
+  \itemindent\z@
+  \csname @list\romannumeral\the\@listdepth\endcsname
+  \def\@itemlabel{#1}%
+  \let\makelabel\@mklab
+  \@nmbrlistfalse
+  \@Blistrestore
+  \let\\=\@Blistcr
+  \let\item\Bitem
+  \@Bitemswfalse
+  #2\relax
+  \fb@beginvbox{#3}%
+  \halign\bgroup
+    \ignorespaces##&\hskip\labelsep\ignorespaces##\unskip\hfil\cr}
+
+\def\endBlist{\endBtrivlist\global\advance\@listdepth\m@ne}
+
+\newif\if@Bitemsw
+
+\def\Bitem{\@ifnextchar({\@Bitemcr\Bitem@skip}{\@Bitemcr\@Bitem}}
+
+\def\@Bitemcr{%
+  \if@Bitemsw
+    \def\next{\cr\noalign{\vskip\itemsep}}%
+  \else
+    \def\next{\global\@Bitemswtrue}%
+  \fi
+  \next}
+
+\def\Bitem@skip(#1){\noalign{\vskip #1}\@Bitem}
+
+\def\@Bitem{\@ifnextchar[{\Bitem@label}{\Bitem@nolabel}}
+
+\def\Bitem@label[#1]{\makelabel{#1}&}
+
+\def\Bitem@nolabel{%
+  \if@nmbrlist
+    \expandafter\advance\csname c@\@listctr\endcsname1 \fi
+  \makelabel{\@itemlabel}%
+  &%
+  \if@nmbrlist\refstepcounter{\@listctr}\fi}
+
+\def\@Blistcr{\@ifstar
+  {\@ifnextchar[{@@Blistcr}{\cr&}}{\@ifnextchar[{\@@Blistcr}{\cr&}}}
+
+\def\@@Blistcr[#1]{\cr\noalign{\vskip #1}&}
+
+% \Bitemize
+
+\def\Bitemize{%
+  \ifnum\@itemdepth>3
+    \@toodeep
+  \else
+    \advance\@itemdepth\@ne
+  \fi
+  \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}%
+  \Blist{\csname\@itemitem\endcsname}{\def\makelabel####1{\hfil####1}}}
+\def\endBitemize{\endBlist}
+
+% \Bdescription
+
+\def\Bdescription{\Blist{}{\def\makelabel####1{\bf####1\hfil}}}
+\def\endBdescription{\endBlist}
+
+% \Benumerate
+
+\def\Benumerate{%
+  \ifnum\@enumdepth>3
+    \@toodeep
+  \else
+    \advance\@enumdepth\@ne
+  \fi
+  \edef\@enumctr{enum\romannumeral\the\@enumdepth}%
+  \Blist{\csname label\@enumctr\endcsname}%
+    {\usecounter{\@enumctr}\def\makelabel####1{\hfil####1}}}
+\def\endBenumerate{\endBlist}
+
+% Beqnarray
+
+\def\Beqnarray{%
+  \stepcounter{equation}%
+  \let\@currentlabel\theequation
+  \def\@eqnnum{{\csname reset@font\endcsname\rm (\theequation)}}%
+  \global\@eqnswtrue\m@th
+  \global\@eqcnt\z@
+  \tabskip\@centering
+  \let\\\@eqncr
+  \vbox\bgroup
+    \halign\bgroup
+      \@eqnsel
+        \hskip\@centering
+        $\displaystyle\tabskip\z@{##}$%
+      &\global\@eqcnt\@ne
+        \hskip 2\arraycolsep
+        \hfil${##}$\hfil
+      &\global\@eqcnt\tw@
+        \hskip 2\arraycolsep
+        $\displaystyle\tabskip\z@{##}$%
+        \hfil
+        \tabskip\@centering
+      &\if@eqnsw\hskip 1em\fi
+        \hfil{##}\tabskip\z@
+      \cr}
+
+\def\endBeqnarray{%
+  \@@eqncr
+  \egroup
+  \global\advance\c@equation\m@ne
+  \egroup
+  \global\@ignoretrue}
+
+\@namedef{Beqnarray*}{\def\@eqncr{\nonumber\@seqncr}\Beqnarray}
+\@namedef{endBeqnarray*}{\nonumber\endBeqnarray}
+
+% \fb@outputage
+
+% Here we insert various hooks for rotating or framing the page.
+% Otherwise, it is the usual \@outputpage
+
+\def\fb@outputpage{%
+  \begingroup
+    \catcode`\ =10
+    \let\-\@dischyph
+    \let\'\@acci
+    \let\`\@accii
+    \let\=\@acciii
+    \if@specialpage
+      \global\@specialpagefalse\@nameuse{ps@\@specialstyle}%
+    \fi
+    \if@twoside
+      \ifodd\count\z@
+        \let\@thehead\@oddhead
+        \let\@thefoot\@oddfoot
+        \let\@themargin\oddsidemargin
+      \else
+        \let\@thehead\@evenhead
+        \let\@thefoot\@evenfoot
+        \let\@themargin\evensidemargin
+      \fi
+    \fi
+    \csname reset@font\endcsname
+    \normalsize
+    \baselineskip\z@
+    \lineskip\z@
+    \let\par\@@par
+    \ifx\this@fancypage\@empty\else
+      \this@fancypage
+      \gdef\this@fancypage{}%
+    \fi
+    \ifx\the@fancypage\@empty\else
+      \setbox\@outputbox\hbox{\the@fancypage{\box\@outputbox}}%
+    \fi
+    \ifx\fb@@rotatepage\@empty\else
+      \setbox\@outputbox\hbox{\fb@@rotatepage{\box\@outputbox}}%
+    \fi
+    \setbox\@outputbox\vbox{%
+      \@tempdima=\wd\@outputbox
+      \setbox\@tempboxa=\hbox to\@tempdima{%
+        \let\label\@gobble
+        \let\index\@gobble
+        \let\glossary\@gobble
+        \@thehead}%
+      \ht\@tempboxa\headheight
+      \dp\@tempboxa\z@
+      \box\@tempboxa
+      \vskip\headsep
+      \box\@outputbox
+      \baselineskip\footskip
+      \hbox to\@tempdima{%
+        \let\label\@gobble
+        \let\index\@gobble
+        \let\glossary\@gobble
+        \@thefoot}}
+    \ifx\the@@fancypage\@empty\else
+      \setbox\@outputbox\hbox{\the@@fancypage{\box\@outputbox}}%
+    \fi
+    \setbox\@outputbox\vbox{%
+      \ifnum\fancyput@flag>-1 \do@fancyput\fi
+      \vskip\topmargin
+      \moveright\@themargin\box\@outputbox}%
+    \ifx\fb@rotatepage\@empty\else
+       \setbox\@outputbox\hbox{\lower\ht\@outputbox\box\@outputbox}%
+       \dp\@outputbox\z@
+       \wd\@outputbox\z@
+       \setbox\@outputbox\hbox{\fb@rotatepage{\box\@outputbox}}%
+       \expandafter\fb@setoffsets\fb@theoffsets
+    \fi
+% DG/SR modification begin - September 19, 2000
+% (suggested by Marcin Wolinski <wolinski@melkor.mimuw.edu.pl> and
+%  Heiko Oberdiek <oberdiek@ruf.uni-freiburg.de>)
+    \let\protect\noexpand
+% DG/SR modification end
+    \shipout\box\@outputbox
+    \global\@colht\textheight
+  \endgroup
+  \stepcounter{page}%
+  \let\firstmark\botmark}
+
+% \fancypage
+
+\def\the@fancypage{}
+\def\the@@fancypage{}
+\def\this@fancypage{}
+
+\def\fancypage#1#2{%
+% DG/SR modification begin - May 16, 1997
+  \@begindvi                    % Need today by LaTeX 2e
+% DG/SR modification end
+  \def\the@fancypage{#1}%
+  \def\the@@fancypage{#2}%
+  \def\@outputpage{\fb@outputpage}}
+
+\def\thisfancypage#1#2{%
+% DG/SR modification begin - May 16, 1997
+  \@begindvi                    % Need today by LaTeX 2e
+% DG/SR modification end
+  \gdef\@outputpage{\fb@outputpage}%
+  \gdef\this@fancypage{\def\the@fancypage{#1}\def\the@@fancypage{#2}}}
+
+% \fancyput
+
+% Token registers used to make it easier to put definitions in argument.
+% Boxes not processed until output so that contents can depend, e.g., on
+% current page or marks or whatever. This makes everything slightly more
+% complicated than one would expect.
+
+\newtoks\the@fancyput
+\newtoks\this@fancyput
+\def\fancyput@flag{-1}%
+
+% \fancyput@flag=-1 if no fancyput, 0 if regular fancyput, 1 if thisfancyput.
+
+\def\fancyput{%
+% DG/SR modification begin - May 16, 1997
+  \@begindvi                    % Need today by LaTeX 2e
+% DG/SR modification end
+  \def\@outputpage{\fb@outputpage}
+  \@ifstar{\@testtrue\@fancyput}{\@testfalse\@fancyput}}
+\def\@fancyput{\@ifnextchar({\@@fancyput}{\@@fancyput(\z@,\z@)}}
+\def\@@fancyput(#1,#2)#3{%
+  \if@test
+    \expandafter\the@fancyput\expandafter{\the\the@fancyput\do{#1}{#2}{#3}}%
+  \else
+    \the@fancyput{\do{#1}{#2}{#3}}%
+  \fi
+  \gdef\fancyput@flag{\z@}}
+
+\def\thisfancyput{%
+% DG/SR modification begin - May 16, 1997
+  \@begindvi                    % Need today by LaTeX 2e
+% DG/SR modification end
+  \gdef\@outputpage{\fb@outputpage}
+  \@ifstar{\@testtrue\@thisfancyput}{\@testfalse\@thisfancyput}}
+\def\@thisfancyput{\@ifnextchar({\@@thisfancyput}{\@@thisfancyput(\z@,\z@)}}
+\def\@@thisfancyput(#1,#2)#3{%
+  \if@test
+    \ifnum\fancyput@flag=\z@
+      \expandafter\global\expandafter\this@fancyput\expandafter{%
+        \the\this@fancyput\do{#1}{#2}{#3}}%
+    \else
+      \expandafter\global\expandafter\this@fancyput\expandafter{%
+        \the\the@fancyput\do{#1}{#2}{#3}}%
+    \fi
+  \else
+    \global\this@fancyput{\do{#1}{#2}{#3}}%
+  \fi
+  \gdef\fancyput@flag{1}}
+
+\def\do@fancyput{%
+  \def\do##1##2##3{\raise##2\hbox to\z@{\kern##1\relax##3\hss}}%
+  \setbox\@tempboxa=\hbox to\z@{%
+    \kern-\hoffset
+    \raise\voffset\hbox{%
+      \ifnum\fancyput@flag=\z@\the\the@fancyput\else\the\this@fancyput\fi}%
+    \hss}%
+  \ht\@tempboxa=\z@ \dp\@tempboxa=\z@
+  \box\@tempboxa
+  \gdef\fancyput@flag{\z@}%
+  \global\this@fancyput{}}
+
+% \Landscape
+
+\def\UsePageParameters{%
+  \clearpage
+  \global\@colht\textheight
+  \onecolumn}
+
+\def\fb@rotatepage{}
+
+
+\def\Landscape{\@ifstar{\@testtrue\@Landscape}{\@testfalse\@Landscape}}
+\def\@Landscape#1#2#3{%
+% DG/SR modification begin - May 16, 1997
+  \@begindvi                    % Need today by LaTeX 2e
+% DG/SR modification end
+  \clearpage
+  \def\fb@rotatepage{#3}%
+  \def\@outputpage{\fb@outputpage}%
+  \@tempdima#1\relax
+  \@tempdimb#2\relax
+  \if@test
+    \edef\fb@theoffsets{{\voffset}{\hoffset}{\number\@tempdima sp}}%
+  \else
+    \edef\fb@theoffsets{{\hoffset}{\voffset}{\number\@tempdimb sp}}%
+  \fi
+  \advance\@tempdimb-\@tempdima
+  \advance\textwidth\@tempdimb
+  \advance\textheight-\@tempdimb
+  \UsePageParameters}
+\def\endLandscape{\clearpage\aftergroup\UsePageParameters}
+
+\def\fb@setoffsets#1#2#3{%
+  \@tempdima#1%
+  \advance#1#2%
+  #2#3
+  \advance#2-2in
+  \advance#2-\@tempdima}
+
+\@namedef{Landscape*}{\@testtrue\@Landscape}
+\@namedef{endLandscape*}{\endLandscape}
+
+% \LandScape
+
+\def\fb@@rotatepage{}
+
+\def\LandScape#1{%
+% DG/SR modification begin - May 16, 1997
+  \@begindvi                    % Need today by LaTeX 2e
+% DG/SR modification end
+  \clearpage
+  \def\fb@@rotatepage{#1}%
+  \def\@outputpage{\fb@outputpage}%
+  \@tempdima\textheight
+  \textheight\textwidth
+  \textwidth\@tempdima
+  \UsePageParameters}
+\def\endLandScape{\clearpage\aftergroup\UsePageParameters}
+
+% \GenericCaption
+
+\def\GenericCaption#1{%
+  \par
+  \begingroup
+    \@parboxrestore
+    \normalsize
+    \vskip 10\p@
+    \setbox\@tempboxa\hbox{#1}%
+    \ifdim\wd\@tempboxa>\hsize
+      #1\par
+    \else
+      \hbox to\hsize{\hfil\box\@tempboxa\hfil}%
+    \fi
+  \endgroup
+  \par}
+
+% \landfloat
+
+\def\landfloat#1#2{%
+  \gdef\curr@landfloat{#1}%
+  \gdef\float@rotation{#2}%
+  \begin{#1}[p]%
+    \setbox\@tempboxa\vbox\bgroup
+      \hsize\@colht
+      \@parboxrestore}
+\def\endlandfloat{%
+      \par\vskip\z@
+    \egroup
+    \setbox\@tempboxa\hbox{\float@rotation{\box\@tempboxa}}%
+    \centerline{\box\@tempboxa}%
+  \expandafter\end\expandafter{\curr@landfloat}}
+
+% \boxput
+
+\def\boxput{\@ifstar{\@testtrue\@boxput}{\@testfalse\@boxput}}
+\def\@boxput{\@ifnextchar({\@@boxput}{\@@boxput(0,0)}}
+\long\def\@@boxput(#1,#2)#3#4{%
+  \setbox\@fancybox\hbox{{#4}}%
+  \setbox\@tempboxa\vbox to\z@{\vss\hbox to\z@{\hss{#3}\hss}\vss}%
+  \@tempdima=#1\wd\@fancybox
+  \advance\@tempdima\wd\@fancybox
+  \divide\@tempdima 2
+  \ifcat a#2\relax
+    \@tempdimb=\z@
+  \else
+    \@tempdimb=.5\ht\@fancybox
+    \advance\@tempdimb.5\dp\@fancybox
+    \@tempdimc=\@tempdimb
+    \advance\@tempdimc-\dp\@fancybox
+    \@tempdimb=#2\@tempdimb
+    \advance\@tempdimb\@tempdimc
+  \fi
+  \setbox\@tempboxa\hbox to \z@{%
+    \if@test\kern-\wd\@fancybox\fi
+    \kern\@tempdima\raise\@tempdimb\box\@tempboxa\hss}%
+  \ht\@tempboxa=\z@ \dp\@tempboxa=\z@
+  \leavevmode
+  \if@test
+    \hbox{\box\@fancybox\box\@tempboxa}%
+  \else
+    \hbox{\box\@tempboxa\box\@fancybox}%
+  \fi}
+
+% \Vfootnotes
+
+\def\VerbatimFootnotes{\let\@footnotetext\V@footnotetext}
+
+\long\def\V@footnotetext{%
+  \afterassignment\V@@footnotetext
+  \let\@tempa}
+\def\V@@footnotetext{%
+  \insert\footins\bgroup
+  \csname reset@font\endcsname
+  \footnotesize
+  \interlinepenalty\interfootnotelinepenalty
+  \splittopskip\footnotesep
+  \splitmaxdepth\dp\strutbox
+  \floatingpenalty \@MM
+  \hsize\columnwidth
+  \@parboxrestore
+  \edef\@currentlabel{\csname p@footnote\endcsname\@thefnmark}%
+  \@makefntext{}%
+  \rule{\z@}{\footnotesep}%
+  \bgroup
+  \aftergroup\V@@@footnotetext
+  \ignorespaces}
+\def\V@@@footnotetext{\strut\egroup}
+
+% Verbatim
+
+% The main idea is to separate the reading and formatting of the
+% verbatim listing. It's pretty simple.
+
+\def\Verbatim@Codes{%
+  \let\do\@makeother
+  \dospecials
+  \Verbatim@ObeyThings
+  \ThisVerbCodes\relax\gdef\ThisVerbCodes{}}
+
+\def\EveryVerbatimCodes{}
+
+% \Verbatim is redefined temporarilly in \Get@Verbatim to scan the
+% verbatim text. \Verbatim is used so that error messages are more
+% enlightening. \next checks whether \Verbatim found its argument,
+% and attempts to recover if not.
+%
+% Heuristically, if current environment is `foo' and argument of
+% \Get@Verbatim is \The@Verbatim, then definition of \Verbatim is
+%
+% \def\Verbatim#1^^M#2^^M\the\EndVerbatimTokens\end{foo}{%
+%  \xdef\The@Verbatim{\noexpand\Every@VerbatimLine#2}%
+%  \endgroup\end{foo}}
+%
+% \The@Verbatim is then equal to the verbatim text, with spaces
+% replaced by \Verbatim@Space, tabs replaced by \Verbatim@Tab,
+% and ` replaced by \@lquote. In addition, each line begins with
+% \Every@VerbatimLine, and each line but the last ends with
+% \Verbatim@Par. It is then possible to redefine these when formatting
+% the verbatim text. To insert each line as an argument to \foo, use
+%   \def\Every@VerbatimLine#1\Verbatim@Par{\foo{#1}}
+%   \The@Verbatim\Verbatim@Par
+%
+\newtoks\EndVerbatimTokens
+\begingroup
+  \catcode`\|=0
+  \catcode`\[=1
+  \catcode`\]=2
+  \catcode`\{=12
+  \catcode`\}=12
+  \catcode`\^^M=13%
+  \catcode`\\=12%
+  |gdef|Get@Verbatim#1[%
+    |begingroup%
+      |Verbatim@Codes|EveryVerbatimCodes%
+      |let|protect|noexpand%
+      |VerbatimEnvironment%
+      |edef|next[|noexpand|def|noexpand|Verbatim####1|noexpand^^M####2%
+        |noexpand^^M|the|EndVerbatimTokens\end{|@VerbEnvir}]%
+      |edef|endVerbatim[|noexpand|endgroup|noexpand|end[|@VerbEnvir]]%
+      |global|let|@VerbEnvir|relax%
+      |next[|@nil|xdef#1[|noexpand|Every@VerbatimLine##2]|endVerbatim]%
+      |def|next[|@ifnextchar|@nil[|@gobble]%     If \@nil is there, then
+        [|gdef#1[]|endVerbatim|end[document]]]%  \Verbatim found its argument.
+      |expandafter|next|Verbatim]%               Otherwise, try to recover.
+  |gdef|AltGet@Verbatim#1[%
+    |begingroup%
+      |Verbatim@Codes|EveryVerbatimCodes%
+      |def^^M##1^^M##2[%
+        |ifx|@nil##2|@empty|else%
+          |noexpand|Verbatim@Par|noexpand|Every@VerbatimLine##1%
+          |expandafter^^M|expandafter##2%
+        |fi]%
+      |let|protect|noexpand%
+      |VerbatimEnvironment%
+      |edef|next[|noexpand|def|noexpand|Verbatim####1|noexpand^^M####2%
+        \end{|@VerbEnvir}]%
+      |edef|endVerbatim[|noexpand|endgroup|noexpand|end[|@VerbEnvir]]%
+      |global|let|@VerbEnvir|relax%
+      |next[|@nil|xdef#1[|noexpand|Every@VerbatimLine##2^^M|@nil]|endVerbatim]%
+      |def|next[|@ifnextchar|@nil[|@gobble]%
+        [|gdef#1[]|endVerbatim|end[document]]]%
+      |expandafter|next|Verbatim]%
+|endgroup
+\def\AltGetVerbatim{\let\Get@Verbatim\AltGet@Verbatim}
+
+% It is enough to not use \begin or \end when defining new verbatim
+% environments, as the default is for \Get@Verbatim to look for the
+% end of the current environment, but using \VerbatimEnvironment
+% is easier to explain to users.
+
+\def\VerbatimEnvironment{%
+  \ifx\@VerbEnvir\relax\xdef\@VerbEnvir{\@currenvir}\fi}
+
+\let\@VerbEnvir\relax
+
+\def\The@VerbatimErr{%
+  \gdef\The@Verbatim{\@latexerr{Misplaced \string\end{Verbatim}}\@ehd}}
+\The@VerbatimErr
+
+\begingroup
+\catcode`\^^M=\active%
+\catcode`\ =\active%
+\catcode`\^^I=\active%
+\gdef\Verbatim@ObeyThings{%
+\catcode`\^^M=\active%
+\catcode`\ =\active%
+\catcode`\^^I=\active%
+\catcode``=\active%
+\def^^M{\noexpand\Verbatim@Par\noexpand\Every@VerbatimLine}%
+\def^^I{\noexpand\Verbatim@Tab}%
+\def {\noexpand\Verbatim@Space}%
+\Verbatim@NoLigs}%
+\gdef\Verbatim@DontObeyLines{\outer\def^^M{}}%
+\endgroup
+
+\def\SaveVerbatim{\@bsphack\Get@Verbatim}
+
+\def\endSaveVerbatim{\@esphack}
+
+{\catcode``13 \gdef\Verbatim@NoLigs{\def`{\noexpand\@lquote}}}
+
+\def\Verbatim@Prep{%
+  \frenchspacing
+  \ThisVerb\relax\gdef\ThisVerb{}%
+  \VerbatimFont
+  \EveryVerbatim
+  \let\Every@VerbatimLine\EveryVerbatimLine
+  \def\Verbatim@Space{\leavevmode\penalty\@M\VerbatimSpace}%
+  \def\Verbatim@Tab{\leavevmode\penalty\@M\VerbatimTab}}%
+
+\def\Verb@Prep{%
+  \frenchspacing
+  \ThisVerb\relax\gdef\ThisVerb{}%
+  \VerbFont
+  \EveryVerb
+  \let\Every@VerbatimLine\EveryVerbatimLine
+  \def\Verbatim@Space{\leavevmode\penalty\@M\VerbSpace}%
+  \def\Verbatim@Tab{\leavevmode\penalty\@M\VerbTab}}%
+
+\def\Verbatim@Par{\leavevmode\null\@@par\penalty\interlinepenalty}
+
+% Parameter initialization:
+
+\def\VerbatimSpace{\ }
+
+{\catcode`\ =12\gdef\ttspace{{\tt }}}
+
+\def\VerbSpace{\ }
+
+\def\VerbatimTab{\ \ \ \ \ \ \ \ }
+
+\def\VerbTab{\ }
+
+\def\EveryVerbatim{}
+
+\def\EveryVerb{}
+
+\def\ThisVerb{}
+
+\def\EveryVerbatimLine{}%
+
+\def\EveryVerbOutLine{}
+
+\def\VerbatimFont{\tt}
+
+\def\VerbFont{\tt}
+
+\def\VerbatimFuzz{2pt}%
+
+\def\EveryVerbatimCodes{}
+
+\def\EveryVerbCodes{}
+
+\def\EveryVerbOutCodes{}
+
+\def\ThisVerbCodes{}
+
+\def\Verbatim@List#1{%
+  \if@minipage\else\vskip\parskip\fi
+  \leftskip\@totalleftmargin
+  \@rightskip\@flushglue \rightskip\@rightskip
+  \parindent\z@
+  \parskip\z@
+  \parfillskip\@flushglue
+  \hfuzz\VerbatimFuzz\relax
+  \@@par
+  \global\@inlabelfalse  %Prevents vspace from being inserted when
+  \Verbatim@Prep         %first line exceeds \hsize.
+  #1%
+  \Verbatim@Par}%
+
+\def\UseVerbatim#1{%
+  \begingroup\trivlist\item[]\Verbatim@List{#1}\endtrivlist\endgroup}
+
+\def\Verbatim{\Get@Verbatim\The@Verbatim}
+\def\endVerbatim{\UseVerbatim\The@Verbatim\The@VerbatimErr}
+
+\def\LUseVerbatim#1{%
+  \begingroup\list{}{}\item[]\Verbatim@List{#1}\endlist\endgroup}
+
+\def\LVerbatim{\Get@Verbatim\The@Verbatim}
+\def\endLVerbatim{\LUseVerbatim\The@Verbatim\The@VerbatimErr}
+
+\def\BUseVerbatim{%
+  \@ifnextchar[{\@BUseVerbatim}{\@BUseVerbatim[]}}
+\def\@BUseVerbatim[#1]#2{%
+  \begingroup
+    \Verbatim@Prep
+    \let\Verbatim@Par\@Btrivlistcr
+    \@Btrivlist{l}[#1]%
+    #2%
+    \endBtrivlist
+  \endgroup}%
+
+\def\BVerbatim{%
+  \catcode`\^^M=13\relax
+  \@ifnextchar[{\@BVerbatim}{\@BVerbatim[]}}
+\def\@BVerbatim[#1]{\def\@tempa{[#1]}\Get@Verbatim\The@Verbatim}
+\def\endBVerbatim{
+  \expandafter\@BUseVerbatim\@tempa\The@Verbatim\The@VerbatimErr}
+
+\newwrite\Verbatim@Outfile
+\def\VerbatimOut#1{%
+  \@bsphack
+  \begingroup
+    \immediate\openout\Verbatim@Outfile #1\relax
+    \def\EveryVerbatimCodes{\EveryVerbOutCodes}%
+    \Get@Verbatim\The@Verbatim}
+\def\endVerbatimOut{%
+    \Verbatim@ObeyThings
+    \def\Verbatim@Par{^^J}%
+    \def\Verbatim@Space{\space}%
+    \def\Verbatim@Tab{\space}%
+    \def\@lquote{\string`}%
+    \ThisVerb\relax\gdef\ThisVerb{}%
+    \let\Every@VerbatimLine\EveryVerbOutLine
+    \immediate\write\Verbatim@Outfile{\The@Verbatim}%
+    \immediate\closeout\Verbatim@Outfile
+  \endgroup
+  \The@VerbatimErr
+  \@esphack}
+
+% This one is a little tricky because:
+% * we want to ignore the ^^M at the end of the last line,
+% * we want to handle files that end with newline and files that don't
+% * we want comment characters to work properly,
+% * we want to expand each line before inserting \Every@VerbatimLine and
+%     \Verbatim@Par,
+%
+% \The@GVerbatim is used as scratch with global redefinition.
+\newread\Verbatim@Infile
+\def\Verbatim@Input#1#2{%
+  \begingroup
+    \Verbatim@Codes\EveryVerbatimCodes
+    \immediate\openin\Verbatim@Infile #1\relax
+    \ifeof\Verbatim@Infile
+      \@latexerr{No verbatim file #1}\@ehd
+    \else
+      \def\The@GVerbatim{}\Verbatim@NextLine
+      \ifeof\Verbatim@Infile
+        \@latexerr{Verbatim file #1 is empty}\@ehd
+      \else
+        \let\The@Verbatim\The@GVerbatim
+        \def\The@GVerbatim{}\Verbatim@NextLine
+        #2{\Verbatim@@Input}%
+      \fi
+    \fi
+    \immediate\closein\Verbatim@Infile
+ \endgroup}
+\def\Verbatim@@Input{%
+  \let\protect\noexpand
+  \edef\The@Verbatim{%
+    \noexpand\Every@VerbatimLine
+    \The@Verbatim
+    \ifeof\Verbatim@Infile\else\noexpand\Verbatim@Par\fi}%
+  \let\protect\relax
+  \The@Verbatim
+  \ifeof\Verbatim@Infile\else
+    \let\The@Verbatim\The@GVerbatim
+    \def\The@GVerbatim{}\Verbatim@NextLine
+    \expandafter\Verbatim@@Input
+  \fi}%
+\begingroup\catcode`\^^M=\active%
+\gdef\Verbatim@NextLine{%
+  \ifeof\Verbatim@Infile\else%
+    \immediate\read\Verbatim@Infile to\@tempa%
+    \expandafter\Verbatim@@NextLine\@tempa^^M\relax^^M\@nil%
+  \fi}%
+% #2 is empty if line ends in ^^M, #2=\relax otherwise.
+\gdef\Verbatim@@NextLine#1^^M#2^^M#3\@nil{%
+  \expandafter\gdef\expandafter\The@GVerbatim\expandafter{\The@GVerbatim#1}%
+  \ifx#2\@empty\@empty\else\expandafter\Verbatim@NextLine\fi}%
+\endgroup%
+
+\def\UseVerb#1{\begingroup\Verb@Prep#1\endgroup}
+
+\def\SaveVerb{\@ifnextchar[{\Save@Verb}{\Save@Verb[]}}
+
+\long\def\Save@Verb[#1]#2{%
+  \begingroup
+    \Verbatim@Codes\Verbatim@DontObeyLines\EveryVerbCodes
+    \Save@@Verb{#1}{#2}}
+
+\long\def\Save@@Verb#1#2#3{%
+  \let\protect\noexpand
+  \def\next{\@ifnextchar\@nil{\@gobble}{\endgroup}}%
+  \long\def\Verb##1#3{\@nil\xdef#2{##1}\endgroup#1}%
+  \expandafter\next\Verb}
+
+\def\Verb{\Save@Verb[\UseVerb{\The@Verbatim}]{\The@Verbatim}}
+
+\def\VerbatimInput#1{\begingroup\Verbatim@Input{#1}\UseVerbatim\endgroup}
+
+\def\LVerbatimInput#1{\begingroup\Verbatim@Input{#1}\LUseVerbatim\endgroup}
+
+\def\BVerbatimInput{\@ifnextchar[{\@BVerbatimInput}{\@BVerbatimInput[]}}
+\def\@BVerbatimInput[#1]#2{%
+  \begingroup\Verbatim@Input{#2}{\@BUseVerbatim[#1]}\endgroup}
+
+\endinput
+%% END fancybox.sty

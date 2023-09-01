@@ -1,0 +1,13 @@
+\begin{optiontableAuto}
+                  NSmooth  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Number of smoothing iterations for the input histograms \\
+               MinNSmooth  &  \mc{1}{c}{--}  &               -1  &  \mc{1}{l}{--}  &  Min number of smoothing iterations, for bins with most data \\
+               MaxNSmooth  &  \mc{1}{c}{--}  &               -1  &  \mc{1}{l}{--}  &  Max number of smoothing iterations, for bins with least data \\
+             NAvEvtPerBin  &  \mc{1}{c}{--}  &               50  &  \mc{1}{l}{--}  &  Average number of events per PDF bin \\
+                    Nbins  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Defined number of bins for the histogram from which the PDF is created \\
+                CheckHist  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Whether or not to check the source histogram of the PDF \\
+              PDFInterpol  &  \mc{1}{c}{--}  &          Spline2  &  Spline0, Spline1, Spline2, Spline3, Spline5, KDE  &  Interpolation method for reference histograms (e.g. Spline2 or KDE) \\
+                  KDEtype  &  \mc{1}{c}{--}  &            Gauss  &  Gauss  &  KDE kernel type (1=Gauss) \\
+                  KDEiter  &  \mc{1}{c}{--}  &      Nonadaptive  &  Nonadaptive, Adaptive  &  Number of iterations (1=non-adaptive, 2=adaptive) \\
+            KDEFineFactor  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Fine tuning factor for Adaptive KDE: Factor to multyply the width of the kernel \\
+                KDEborder  &  \mc{1}{c}{--}  &             None  &  None, Renorm, Mirror  &  Border effects treatment (1=no treatment , 2=kernel renormalization, 3=sample mirroring) 
+\end{optiontableAuto}

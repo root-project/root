@@ -1,0 +1,1548 @@
+// @(#)root/mathcore:$Id: IFunction.h 24537 2008-06-25 11:01:23Z moneta $
+// Authors: C. Gumpert    09/2011
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2011 , LCG ROOT MathLib Team                         *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+//
+// Implementation file for KDTree class
+//
+
+
+#ifndef KD_TREE_ICC
+#define KD_TREE_ICC
+
+#ifndef ROOT_Math_KDTree
+#error "Do not use KDTree.icc directly. #include \"KDTree.h\" instead."
+#endif // ROOT_Math_KDTree
+
+// STL include(s)
+#include <iostream>
+#include <functional>
+#include <algorithm>
+#include <limits>
+
+namespace ROOT
+{
+   namespace Math
+   {
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::KDTree(UInt_t iBucketSize):
+         fBucketSize(iBucketSize),
+         fIsFrozen(false)
+      {
+         //standard constructor creates an empty k-d tree
+         //
+         //Input: iBucketSize - target population for each bin
+         //
+         //Note: - The actual interpretation of the bucket size as population depends on
+         //        the chosen splitting option:
+         //        kBinContent - iBucketSize applies to the sum of weights in each bucket
+         //        kEffective  - iBucketSize applies to the number of effective entries in each bucket
+         //      - As long as the tree has not been frozen, it is ensured that no bucket
+         //        contains more than 2 x target population but there is no statement about
+         //        the minimum bucket population.
+         //        However, given a reasonably large bucket size with respect to characteristic
+         //        event weights and sufficient statistics, most of the buckets will have
+         //        a population between [0.8 * iBucketSize .. 2 * iBucketSize]
+
+         // create dummy terminal node as head
+         TerminalNode* pTerminal = new TerminalNode(iBucketSize);
+         fHead = new HeadNode(*pTerminal);
+         pTerminal->Parent() = fHead;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::KDTree():
+         fHead(0),
+         fBucketSize(1),
+         fIsFrozen(false)
+      {
+         //private standard constructor creating a not functional tree
+         //
+         //only used by internal function for creating copies of the tree
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::~KDTree()
+      {
+         //standard destructor deleting all nodes
+         //
+         //Note: - In case the option SetOWner(true) has been called beforehand and
+         //        the tree is not yet frozen, all contained data point objects are
+         //        deleted as well.
+
+         delete fHead;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline void KDTree<_DataPoint>::EmptyBins()
+      {
+         //all buckets are reset
+         //
+         //This call results in empty buckets but the splitting structure is kept.
+         //You can now fill the formerly created binning with 'new' data points.
+         //In order to prevent further splitting, you might want to freeze the tree.
+         //
+         //Note: - In case the option SetOWner(true) has been called beforehand and
+         //        the tree is not yet frozen, all contained data point objects are
+         //        deleted as well.
+
+         for(iterator it = First(); it != End(); ++it)
+            it->EmptyBin();
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::End()
+      {
+         //return an iterator representing the end of all buckets
+         //
+         //This function can be used the retrieve a limiter for both sides. It
+         //represents the 'one step after the last bin' as well as 'one step before
+         //the first bin'. However, you should not try to increment/decrement this
+         //iterator.
+
+         return iterator(0);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline const typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::End() const
+      {
+         //return an iterator representing the end of all buckets
+         //
+         //This function can be used the retrieve a limiter for both sides. It
+         //represents the 'one step after the last bin' as well as 'one step before
+         //the first bin'. However, you should not try to increment/decrement this
+         //iterator.
+
+         return iterator(0);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::First()
+      {
+         //return an iterator to the first bucket
+         //
+         //Note: - Buckets are not ordered to any criteria.
+
+         BaseNode* pNode = fHead->Parent();
+         while(pNode->LeftChild())
+            pNode = pNode->LeftChild();
+
+         assert(dynamic_cast<BinNode*>(pNode));
+         return iterator((BinNode*)pNode);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline const typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::First() const
+      {
+         //return an iterator to the first bucket
+         //
+         //Note: - Buckets are not ordered to any criteria.
+
+         BaseNode* pNode = fHead->Parent();
+         while(pNode->LeftChild())
+            pNode = pNode->LeftChild();
+
+         assert(dynamic_cast<BinNode*>(pNode));
+         return iterator((BinNode*)pNode);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::Freeze()
+      {
+         //freeze the current tree
+         //
+         //By calling this function, the current splitting information in the tree is frozen.
+         //No further division of buckets into sub-buckets will occur.
+         //In addition all point related information are dropped. Therefore nearest neighbor
+         //searches or retrieving the data points from a bucket are not possible anymore.
+         //Furthermore, no restrictions on the population in each bucket exist if the tree
+         //is filled with further points.
+         //
+         //Note: - Technically it means that all TerminalNodes are converted to BinNodes
+         //        resulting in a loss of all information related to individual data points.
+
+         // do it only once
+         if(!fIsFrozen)
+         {
+            std::vector<TerminalNode*> vBins;
+            // replace all terminal nodes by bin nodes
+            for(iterator it = First(); it != End(); ++it)
+               vBins.push_back(it.TN());
+
+            BinNode* pBin = 0;
+            for(typename std::vector<TerminalNode*>::iterator bit = vBins.begin(); bit != vBins.end(); ++bit)
+            {
+               pBin = (*bit)->ConvertToBinNode();
+               (*bit)->GetParentPointer() = pBin;
+               pBin->Parent() = (*bit)->Parent();
+               delete *bit;
+            }
+
+            fIsFrozen = true;
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::GetClosestPoints(const _DataPoint& rRef,UInt_t nPoints,
+                                                std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const
+      {
+         //returns the nPoints data points closest to the given reference point
+         //
+         //Input: rRef         - reference point
+         //       nPoints      - desired number of closest points (0 < nPoints < total number of points in tree)
+         //       vFoundPoints - vector containing all found points
+         //
+         //vFoundPoints contains the nPoints pairs of:
+         // first  = pointer to found data point
+         // second = distance between found data point and reference point
+         //
+         //vFoundPoints is ordered in the sense that the point closest to the reference comes first.
+         //
+         //Note: - This method works only if the tree has not yet been frozen.
+
+         // check bad input and that tree is not frozen yet
+         if((nPoints > 0) && (!fIsFrozen))
+            fHead->GetClosestPoints(rRef,nPoints,vFoundPoints);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      Double_t KDTree<_DataPoint>::GetEffectiveEntries() const
+      {
+         //returns the total effective entries of the tree
+         //
+         //Note: - This is not the sum of effective entries of all buckets!
+
+         Double_t fSumw = 0;
+         Double_t fSumw2 = 0;
+         for(iterator it = First(); it != End(); ++it)
+         {
+            fSumw += it->GetBinContent();
+            fSumw2 += it->GetSumw2();
+         }
+
+         return ((fSumw2) ? fSumw * fSumw / fSumw2 : 0);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      UInt_t KDTree<_DataPoint>::GetEntries() const
+      {
+         //returns the number of filled data points
+
+         UInt_t iPoints = 0;
+         for(iterator it = First(); it != End(); ++it)
+            iPoints += it->GetEntries();
+
+         return iPoints;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>* KDTree<_DataPoint>::GetFrozenCopy()
+      {
+         //returns a frozen copy of this k-d tree
+         //
+         //Note: - The current tree remains unchanged.
+         //      - The new tree is owned by the user (-> you should invoke 'delete' if you do not need it anymore)!
+
+         KDTree<_DataPoint>* pTree = new KDTree<_DataPoint>();
+         pTree->fBucketSize = fBucketSize;
+         pTree->fHead = fHead->Clone();
+         pTree->fIsFrozen = true;
+
+         return pTree;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      UInt_t KDTree<_DataPoint>::GetNBins() const
+      {
+         //returns the number of buckets
+
+         UInt_t iBins = 0;
+         for(iterator it = First(); it != End(); ++it)
+            ++iBins;
+
+         return iBins;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::GetPointsWithinDist(const _DataPoint& rRef,value_type fDist,
+                                                   std::vector<const _DataPoint*>& vFoundPoints) const
+      {
+         //returns all data points within a given distance around the reference point
+         //
+         //Input: rRef         - reference point
+         //       fDist        - radius of sphere around reference point (0 < fDist)
+         //       vFoundPoints - vector to store the results
+         //
+         //vFoundPoints contains the pointers to all data points in the specified sphere.
+         //The points are NOT ordered according to their distance.
+         //
+         //Note - This method works only if the tree has not yet been frozen.
+         //     - Distance is defined as euclidian distance in a k-dimensional space.
+
+         // valid distance given and tree not frozen yet
+         if((fDist > 0) && (!fIsFrozen))
+            fHead->GetPointsWithinDist(rRef,fDist,vFoundPoints);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      Double_t KDTree<_DataPoint>::GetTotalSumw() const
+      {
+         //returns the total sum of weights
+
+         Double_t fSumw = 0;
+         for(iterator it = First(); it != End(); ++it)
+            fSumw += it->GetSumw();
+
+         return fSumw;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      Double_t KDTree<_DataPoint>::GetTotalSumw2() const
+      {
+         //returns the total sum of weights^2
+
+         Double_t fSumw2 = 0;
+         for(iterator it = First(); it != End(); ++it)
+            fSumw2 += it->GetSumw2();
+
+         return fSumw2;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::Last()
+      {
+         //returns an iterator to the last bucket
+         //
+         //Note: - Buckets are not ordered to any criteria.
+
+         BaseNode* pNode = fHead->Parent();
+         while(pNode->RightChild())
+            pNode = pNode->RightChild();
+
+         assert(dynamic_cast<TerminalNode*>(pNode));
+         return iterator((TerminalNode*)pNode);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline const typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::Last() const
+      {
+         //returns an iterator to the last bucket
+         //
+         //Note: - Buckets are not ordered to any criteria.
+
+         BaseNode* pNode = fHead->Parent();
+         while(pNode->RightChild())
+            pNode = pNode->RightChild();
+
+         assert(dynamic_cast<BinNode*>(pNode));
+         return iterator((BinNode*)pNode);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::Reset()
+      {
+         //resets the tree
+         //
+         //Afterwards the tree is completely empty and all splitting information is lost.
+         //
+         //Note: - In case the option SetOWner(true) has been called beforehand and
+         //        the tree is not yet frozen, all contained data point objects are
+         //        deleted as well.
+         //      - The 'frozen' status is reset to false. Otherwise you won't be able to
+         //        create splittings and the tree would consist of only one large bucket.
+
+         // delete current tree
+         delete fHead->Parent();
+         // create new (and empty) top bucket
+         TerminalNode* pTerminal = new TerminalNode(fBucketSize);
+         pTerminal->Parent() = fHead;
+         fHead->Parent() = pTerminal;
+
+         // reset 'freeze' status
+         fIsFrozen = false;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::SetOwner(Bool_t bIsOwner)
+      {
+         //specifies the ownership of data points
+         //
+         //Input: bIsOwner - true: data points are located on the heap and the ownership
+         //                        is transferred to the tree object
+         //                  false: the data points are not owned by the tree
+         //
+         //Note: - This function has no effect if the tree is already frozen.
+
+         if(!fIsFrozen)
+         {
+            for(iterator it = First(); it != End(); ++it)
+               it.TN()->SetOwner(bIsOwner);
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::SetSplitOption(eSplitOption opt)
+      {
+         //sets the splitting option for the buckets
+         //
+         //Buckets are split into two sub-buckets if their population reaches twice the
+         //given bucket size. The definition of population depends on the chosen splitting
+         //option:
+         //kBinContent = population is the sum of weights
+         //kEffective  = population is the number of effective entries
+         //
+         //Note: - In principle it possible to change the splitting mode while filling the tree.
+         //        However, this should be avoided to ensure an optimal splitting.
+         //      - This function has no effect if the tree is already frozen.
+
+         if(!fIsFrozen)
+         {
+            for(iterator it = First(); it != End(); ++it)
+               it.TN()->SetSplitOption(opt);
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      bool KDTree<_DataPoint>::ComparePoints::operator()(const _DataPoint* pFirst,const _DataPoint* pSecond) const
+      {
+         //compares two points along set axis
+         //
+         //Uses the internal comparison axis of the ComparePoints object to evaluate:
+         //
+         // pFirst[Axis] < pSecond[Axis]
+         //
+         //Note: - The template class _DataPoint has to provide a static function:
+         //
+         //        static UInt_t _DataPoint::Dimension()
+         //
+         //        returning the dimensionality of the data point.
+         //      - The dimensionality of the two data points is higher than the currently
+         //        set comparison axis.
+
+         assert(pFirst && pSecond && (fAxis < KDTree<_DataPoint>::Dimension()));
+
+         return (pFirst->GetCoordinate(fAxis) < pSecond->GetCoordinate(fAxis));
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      bool KDTree<_DataPoint>::Cut::operator<(const _DataPoint& rPoint) const
+      {
+         //comapres a point with the given cut
+         //
+         // this cut value < rPoint.GetCoordinate(this cut axis)
+         //
+         //Note: - The template class _DataPoint has to provide a static function:
+         //
+         //        static UInt_t _DataPoint::Dimension()
+         //
+         //        returning the dimensionality of the data point.
+         //      - The dimensionality of the given data point is higher than the cut
+         //        axis.
+
+         assert(Dimension() > fAxis);
+         return (fCutValue < rPoint.GetCoordinate(fAxis));
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      bool KDTree<_DataPoint>::Cut::operator>(const _DataPoint& rPoint) const
+      {
+         //comapres a point with the given cut
+         //
+         // this cut value > rPoint.GetCoordinate(this cut axis)
+         //
+         //Note: - The template class _DataPoint has to provide a static function:
+         //
+         //        static UInt_t _DataPoint::Dimension()
+         //
+         //        returning the dimensionality of the data point.
+         //      - The dimensionality of the given data point is higher than the cut
+         //        axis.
+
+         assert(Dimension() > fAxis);
+         return (fCutValue > rPoint.GetCoordinate(fAxis));
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::BaseNode::BaseNode(BaseNode* pParent):
+         fParent(pParent),
+         fLeftChild(0),
+         fRightChild(0)
+      {
+         //standard constructor
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::BaseNode::~BaseNode()
+      {
+         //standard destructor
+         //
+         //Note: - both children are deleted but no pointer rearrangement is done
+         //        -> should not be a problem as long as you do not try to rely on
+         //           tree internal information
+
+         delete LeftChild();
+         delete RightChild();
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::BaseNode*& KDTree<_DataPoint>::BaseNode::GetParentPointer()
+      {
+         //returns a reference to the pointer from the parent node to the current node
+         //
+         //Note: - This should never be called for the head node (as it is the head!)
+
+         assert(!IsHeadNode());
+
+         if(Parent()->Parent() == this)
+            return Parent()->Parent();
+         if(Parent()->LeftChild() == this)
+            return Parent()->LeftChild();
+         if(Parent()->RightChild() == this)
+            return Parent()->RightChild();
+
+         // should never reach this line
+         assert(false);
+         return Parent();  // to fix a warning statement
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      bool KDTree<_DataPoint>::BaseNode::IsLeftChild() const
+      {
+         //checks whether the current node is a left node
+         //
+         //Note: - returns false in the case of the head node (which is no child at all)
+
+         if(Parent()->IsHeadNode())
+            return false;
+         else
+            return (Parent()->LeftChild() == this);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::HeadNode* KDTree<_DataPoint>::HeadNode::Clone()
+      {
+         //creates an identical copy
+         //
+         //Note: - The Clone() function is propagated to the whole tree -> the returned
+         //        pointer is the head node of a complete new tree.
+
+         BaseNode* pParent = Parent()->Clone();
+         HeadNode* pHead = new HeadNode(*pParent);
+         pParent->Parent() = pHead;
+
+         return pHead;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline void KDTree<_DataPoint>::HeadNode::GetClosestPoints(const _DataPoint& rRef,UInt_t nPoints,
+                                                                 std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const
+      {
+         Parent()->GetClosestPoints(rRef,nPoints,vFoundPoints);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline void KDTree<_DataPoint>::HeadNode::GetPointsWithinDist(const _DataPoint& rRef,value_type fDist,
+                                                                    std::vector<const _DataPoint*>& vFoundPoints) const
+      {
+         Parent()->GetPointsWithinDist(rRef,fDist,vFoundPoints);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::SplitNode::SplitNode(UInt_t iAxis,Double_t fCutValue,BaseNode& rLeft,
+                                               BaseNode& rRight,BaseNode* pParent):
+         BaseNode(pParent),
+         fCut(new Cut(iAxis,fCutValue))
+      {
+         //standard constructor for spitting node which represents a splitting hyperplane
+         //
+         //Input: iAxis     - axis on which the split is performed
+         //       fCutValue - cut value
+         //       rLeft     - left sub-bucket
+         //       rRight    - right sub-bucket
+         //       pParent   - optional pointer to parent node
+         //
+         //Note: - As a split node can never be a leaf, always the two child nodes has to
+         //        be passed at construction time.
+
+         this->LeftChild() = &rLeft;
+         this->RightChild() = &rRight;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::SplitNode::~SplitNode()
+      {
+         // standard destructor
+
+         delete fCut;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::SplitNode* KDTree<_DataPoint>::SplitNode::Clone()
+      {
+         //creates a direct copy of this node
+         //
+         //This also involves the copying of the child nodes.
+
+         BaseNode* pLeft = this->LeftChild()->Clone();
+         BaseNode* pRight = this->RightChild()->Clone();
+
+         SplitNode* pSplit = new SplitNode(fCut->GetAxis(),fCut->GetCutValue(),*pLeft,*pRight);
+
+         pLeft->Parent() = pSplit;
+         pRight->Parent() = pSplit;
+
+         return pSplit;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      const typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::SplitNode::FindNode(const _DataPoint& rPoint) const
+      {
+         //finds bin node containing the given reference point
+
+         // pPoint < cut -> left sub tree
+         if(*fCut > rPoint)
+            return this->LeftChild()->FindNode(rPoint);
+         // pPoint >= cut -> right sub tree
+         else
+            return this->RightChild()->FindNode(rPoint);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::SplitNode::GetClosestPoints(const _DataPoint& rRef,UInt_t nPoints,
+                                                           std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const
+      {
+         //finds the closest points around the given reference point
+         //
+         //Input: rRef         - reference point
+         //       nPoints      - number of points to look for (should be less than the total number of points in the tree)
+         //       vFoundPoints - vector in which the result is stored as pair <pointer to found data point,distance to reference point>
+         //
+         //Note: vFoundPoints is ordered in the sense that the found point closest to the reference point comes first.
+
+         // rRef < cut -> left sub tree
+         if(*fCut > rRef)
+         {
+            this->LeftChild()->GetClosestPoints(rRef,nPoints,vFoundPoints);
+
+            // number of found points lower than wanted number of points
+            // or: sphere with (radius = largest distance between rRef and vFoundPoints) intersects the splitting plane
+            // --> look also in right sub bucket
+            if((vFoundPoints.size() < nPoints) || (vFoundPoints.back().second > fabs(rRef.GetCoordinate(fCut->GetAxis()) - fCut->GetCutValue())))
+               this->RightChild()->GetClosestPoints(rRef,nPoints,vFoundPoints);
+         }
+         // rRef >= cut -> right sub tree
+         else
+         {
+            this->RightChild()->GetClosestPoints(rRef,nPoints,vFoundPoints);
+
+            // number of found points lower than wanted number of points
+            // or: sphere with (radius = largest distance between rRef and vFoundPoints) intersects the splitting plane
+            // --> look also in left sub bucket
+            if((vFoundPoints.size() < nPoints) || (vFoundPoints.back().second > fabs(rRef.GetCoordinate(fCut->GetAxis()) - fCut->GetCutValue())))
+               this->LeftChild()->GetClosestPoints(rRef,nPoints,vFoundPoints);
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::SplitNode::GetPointsWithinDist(const _DataPoint& rRef,value_type fDist,
+                                                              std::vector<const _DataPoint*>& vFoundPoints) const
+      {
+         //returns the points within a certain distance around the reference point
+         //
+         //Input: rRef         - reference point
+         //       fDist        - radius of sphere to scan ( > 0)
+         //       vFoundPoints - vector in which all found points are stored
+         //
+         //Note: vFoundPoints ist NOT ordered.
+
+         // does the sphere around rRef intersect the splitting plane?
+         // no -> check only points in sub bucket which rRef belongs to
+         if(fabs(rRef.GetCoordinate(fCut->GetAxis()) - fCut->GetCutValue()) > fDist)
+         {
+            // rRef < cut -> left sub tree
+            if(*fCut > rRef)
+               this->LeftChild()->GetPointsWithinDist(rRef,fDist,vFoundPoints);
+            // rRef >= cut -> right sub tree
+            else
+               this->RightChild()->GetPointsWithinDist(rRef,fDist,vFoundPoints);
+         }
+         // yes -> check points in both sub buckets
+         else
+         {
+            this->RightChild()->GetPointsWithinDist(rRef,fDist,vFoundPoints);
+            this->LeftChild()->GetPointsWithinDist(rRef,fDist,vFoundPoints);
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline Bool_t KDTree<_DataPoint>::SplitNode::Insert(const _DataPoint& rPoint)
+      {
+         //inserts a new data point in the tree
+
+         // pPoint < cut -> left sub tree
+         if(*fCut > rPoint)
+            return this->LeftChild()->Insert(rPoint);
+         // pPoint >= cut -> right sub tree
+         else
+            return this->RightChild()->Insert(rPoint);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::SplitNode::Print(int iRow) const
+      {
+         //prints some information about the current node
+
+         std::cout << "SplitNode at " << this << " in row " << iRow << std::endl;
+         std::cout << "cut on " << fCut->GetCutValue() << " at axis " << fCut->GetAxis() << std::endl;
+
+         this->LeftChild()->Print(iRow+1);
+         this->RightChild()->Print(iRow+1);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::BinNode::BinNode(BaseNode* pParent):
+         BaseNode(pParent),
+         fBoundaries(std::vector<tBoundary>(Dimension(),std::make_pair(0,0))),
+         fSumw(0),
+         fSumw2(0),
+         fEntries(0)
+      {
+         //standard constructor
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::BinNode::BinNode(const BinNode& copy):
+         BaseNode(),
+         fBoundaries(copy.fBoundaries),
+         fSumw(copy.fSumw),
+         fSumw2(copy.fSumw2),
+         fEntries(copy.fEntries)
+      {
+         //copy constructor
+         //
+         //Note: - The resulting bin node is NOT connected to any other node
+         //        -> it is not part of any tree
+
+         this->Parent() = 0;
+         this->LeftChild() = 0;
+         this->RightChild() = 0;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::BinNode::Clone()
+      {
+         //creates identical copy which is not part of the tree anymore
+
+         return new BinNode(*this);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::BinNode::EmptyBin()
+      {
+         //resets bin content, sumw, asumw2 and entries
+
+         fSumw2 = fSumw = 0;
+         fEntries = 0;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::BinNode& KDTree<_DataPoint>::BinNode::operator=(const BinNode& rhs)
+      {
+         //assignment operator
+         //
+         //Note: - Should not be used because it can lead to inconsistencies with respect
+         //        bin boundaries.
+
+         fBoundaries = rhs.fBoundaries;
+         fSumw = rhs.fSumw;
+         fSumw2 = rhs.fSumw2;
+         fEntries = rhs.fEntries;
+         return *this;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      const typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::BinNode::FindNode(const _DataPoint& rPoint) const
+      {
+         //finds bin node containing the given reference point
+
+         if(IsInBin(rPoint))
+            return this;
+         else
+            return 0;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      _DataPoint KDTree<_DataPoint>::BinNode::GetBinCenter() const
+      {
+         //returns the bin center of the current node
+         //
+         //Note: - The bin center is defined as
+         //        coordinate i = 0.5 * (lower bound i + uper bound i)
+
+         _DataPoint rPoint;
+
+         for(UInt_t k = 0; k < Dimension(); ++k)
+            rPoint.SetCoordinate(k,0.5 * (fBoundaries.at(k).first + fBoundaries.at(k).second));
+
+         return rPoint;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      Double_t KDTree<_DataPoint>::BinNode::GetVolume() const
+      {
+         //returns the volume of the current bin
+         //
+         //Note: - The volume is defined as
+         //        vol = product over i (upper bound i - lower bound i)
+
+         Double_t dVol = 1;
+         for(typename std::vector<tBoundary>::const_iterator it = fBoundaries.begin(); it != fBoundaries.end(); ++it)
+            dVol *= (it->second - it->first);
+
+         return dVol;
+      }
+
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      Bool_t KDTree<_DataPoint>::BinNode::Insert(const _DataPoint& rPoint)
+      {
+         //inserts a new data point in this bin
+
+         if(IsInBin(rPoint))
+         {
+            ++fEntries;
+            fSumw += rPoint.GetWeight();
+            fSumw2 += pow(rPoint.GetWeight(),2);
+
+            return true;
+         }
+         else
+            return false;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      Bool_t KDTree<_DataPoint>::BinNode::IsInBin(const _DataPoint& rPoint) const
+      {
+         //checks whether the given point is inside the boundaries of this bin
+
+         for(UInt_t k = 0; k < Dimension(); ++k)
+            if((rPoint.GetCoordinate(k) < fBoundaries.at(k).first) || (fBoundaries.at(k).second < rPoint.GetCoordinate(k)))
+               return false;
+
+         return true;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::BinNode::Print(int) const
+      {
+         //prints some information about this bin node
+
+         std::cout << "BinNode at " << this << std::endl;
+         std::cout << "containing " << GetEntries() << " entries" << std::endl;
+         std::cout << "sumw = " << GetBinContent() << " sumw2 = " << GetSumw2() << " => effective entries = " << GetEffectiveEntries() << std::endl;
+         std::cout << "volume = " << GetVolume() << " and bin center at (";
+         _DataPoint rBinCenter = GetBinCenter();
+         for(UInt_t dim = 0; dim < Dimension(); ++dim)
+         {
+            std::cout << rBinCenter.GetCoordinate(dim);
+            if(dim < Dimension() -1)
+               std::cout << ",";
+         }
+         std::cout << ")" << std::endl;
+         std::cout << "boundaries are ";
+         for(typename std::vector<tBoundary>::const_iterator it = fBoundaries.begin(); it != fBoundaries.end(); ++it)
+            std::cout << "(" << it->first << " ... " << it->second << ") ";
+         std::cout << std::endl;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::TerminalNode::TerminalNode(Double_t iBucketSize,BaseNode* pParent):
+         BinNode(pParent),
+         fOwnData(false),
+         fSplitOption(kEffective),
+         fBucketSize(iBucketSize),
+         fSplitAxis(0)
+      {
+         //standard constructor
+         //
+         //Input: iBucketSize - desired bucket size
+         //       pParent     - pointer to parent node (optional)
+         //
+         //Note: - The bucket size has to be positive.
+         //      - The standard split option is kEffective.
+         //      - By default the data points are not owned by the tree.
+
+         assert(fBucketSize > 0);
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::TerminalNode::TerminalNode(Double_t iBucketSize,UInt_t iSplitAxis,data_it first,data_it end):
+         BinNode(),
+         fOwnData(false),
+         fSplitOption(kEffective),
+         fBucketSize(iBucketSize),
+         fSplitAxis(iSplitAxis % Dimension()),
+         fDataPoints(std::vector<const _DataPoint*>(first,end))
+      {
+         //internal constructor used for splitting
+         //
+         //Input: iBucketSize - desired bucket size
+         //       iSplitAxis  - axis for next splitting
+         //       first,end   - iterators pointing to the beginning and end of data points
+         //                     which are copied to this TerminalNode
+
+         // recalculate sumw and sumw2
+         for(data_it it = fDataPoints.begin(); it != fDataPoints.end(); ++it)
+         {
+            this->fSumw += (*it)->GetWeight();
+            this->fSumw2 += pow((*it)->GetWeight(),2);
+         }
+
+         this->fEntries = fDataPoints.size();
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      KDTree<_DataPoint>::TerminalNode::~TerminalNode()
+      {
+         //standard destructor
+         //
+         //Note: - If fOwnData is set, all associated data point objects are deleted
+
+         if(fOwnData)
+         {
+            for(typename std::vector<const _DataPoint*>::iterator it = fDataPoints.begin();
+                it != fDataPoints.end(); ++it)
+               delete *it;
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::TerminalNode::ConvertToBinNode()
+      {
+         //creates a new BinNode with information of the TerminalNode
+         //
+         //The returned BinNode contains all information of this TerminalNode except the
+         //point-related information.
+         //
+         //Note: - The returned node is not owned by the tree but the user as to take care of it.
+
+         UpdateBoundaries();
+         BinNode* pBin = new BinNode(*this);
+
+         return pBin;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::TerminalNode::EmptyBin()
+      {
+         //resets the bin content and removes all data points
+         //
+         //Note: - If fOwnData is set, all associated data points are deleted.
+
+         // delete data points
+         if(fOwnData)
+         {
+            for(typename std::vector<const _DataPoint*>::iterator it = fDataPoints.begin();
+                it != fDataPoints.end(); ++it)
+               delete *it;
+         }
+         fDataPoints.clear();
+         UpdateBoundaries();
+         BinNode::EmptyBin();
+      }
+//______________________________________________________________________________
+      template<class _DataPoint>
+#ifdef _AIX
+      void KDTree<_DataPoint>::TerminalNode::GetBoundaries() const { }
+#else
+      const std::vector<typename KDTree<_DataPoint>::TerminalNode::tBoundary>& KDTree<_DataPoint>::TerminalNode::GetBoundaries() const
+      {
+         //returns the boundaries of this TerminalNode
+         //
+         //Note: - In a high-dimensional space most of the nodes are bounded only on
+         //        one side due to a split. One-sided intervals would result in an
+         //        infinite volume of the bin which is not the desired behaviour.
+         //        Therefore the following convention is used for determining the
+         //        boundaries:
+         //        If a node is not restricted along one axis on one/both side(s) due
+         //        to a split, the corresponding upper/lower boundary is set to
+         //        the minimum/maximum coordinate along this axis of all contained
+         //        data points.
+         //        This procedure maximises the density in the bins.
+
+         const_cast<TerminalNode*>(this)->UpdateBoundaries();
+
+         return BinNode::GetBoundaries();
+      }
+#endif
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::TerminalNode::GetClosestPoints(const _DataPoint& rRef,UInt_t nPoints,
+                                                              std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const
+      {
+         //finds the closest points around the given reference point
+         //
+         //Input: rRef         - reference point
+         //       nPoints      - number of points to look for (should be less than the total number of points in the tree)
+         //       vFoundPoints - vector in which the result is stored as pair <pointer to found data point,distance to reference point>
+         //
+         //Note: vFoundPoints is ordered in the sense that the found point closest to the reference point comes first.
+
+         // store maximal distance so far if desired number of points already found
+         value_type fMaxDist = (vFoundPoints.size() < nPoints) ? std::numeric_limits<value_type>::max() : vFoundPoints.back().second;
+         value_type fDist;
+         typedef typename std::vector<std::pair<const _DataPoint*,Double_t> >::iterator t_pit;
+
+         // loop over all points and check distances
+         for(typename std::vector<const _DataPoint*>::const_iterator it = fDataPoints.begin(); it != fDataPoints.end(); ++it)
+         {
+            fDist = (*it)->Distance(rRef);
+            // fDist < fMaxDist -> insert
+            if(fDist < fMaxDist)
+            {
+               // find position at which the current point should be inserted
+               t_pit pit = vFoundPoints.begin();
+               while(pit != vFoundPoints.end())
+               {
+                  if(pit->second > fDist)
+                     break;
+                  else
+                     ++pit;
+               }
+
+               vFoundPoints.insert(pit,std::make_pair(*it,fDist));
+               // truncate vector of found points at nPoints
+               if(vFoundPoints.size() > nPoints)
+                  vFoundPoints.resize(nPoints);
+               // update maximal distance
+               fMaxDist = (vFoundPoints.size() < nPoints) ? vFoundPoints.back().second : std::numeric_limits<value_type>::max();
+            }
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::TerminalNode::GetPointsWithinDist(const _DataPoint& rRef,value_type fDist,
+                                                                 std::vector<const _DataPoint*>& vFoundPoints) const
+      {
+         //returns the points within a certain distance around the reference point
+         //
+         //Input: rRef         - reference point
+         //       fDist        - radius of sphere to scan ( > 0)
+         //       vFoundPoints - vector in which all found points are stored
+         //
+         //Note: vFoundPoints ist NOT ordered.
+
+         // loop over all points and check distances
+         for(typename std::vector<const _DataPoint*>::const_iterator it = fDataPoints.begin(); it != fDataPoints.end(); ++it)
+         {
+            if((*it)->Distance(rRef) <= fDist)
+               vFoundPoints.push_back(*it);
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      Bool_t KDTree<_DataPoint>::TerminalNode::Insert(const _DataPoint& rPoint)
+      {
+         //inserts a new data point in this bin
+         //
+         //Note: - If the population of this TerminalNode exceeds the limit of
+         //        2 x fBucketSize, the node is split using the Split() function.
+
+         // store pointer to data point
+         fDataPoints.push_back(&rPoint);
+
+         // update weights
+         this->fSumw += rPoint.GetWeight();
+         this->fSumw2 += pow(rPoint.GetWeight(),2);
+         ++this->fEntries;
+
+         // split terminal node if necessary
+         switch(fSplitOption)
+         {
+         case kEffective:
+            if(this->GetEffectiveEntries() > 2 * fBucketSize)
+               Split();
+            break;
+         case kBinContent:
+            if(this->GetSumw() > 2 * fBucketSize)
+               Split();
+            break;
+         default: assert(false);
+         }
+
+         return true;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::TerminalNode::Print(int iRow) const
+      {
+         //prints some information about this TerminalNode
+
+         std::cout << "TerminalNode at " << this << " in row " << iRow << std::endl;
+         const_cast<TerminalNode*>(this)->UpdateBoundaries();
+         BinNode::Print(iRow);
+         std::cout << "next split axis: " << fSplitAxis << std::endl << std::endl;
+         for(const_data_it it = fDataPoints.begin(); it != fDataPoints.end(); ++it)
+         {
+            std::cout << "(";
+            for(UInt_t i = 0; i < Dimension(); ++i)
+            {
+               std::cout << (*it)->GetCoordinate(i);
+               if(i != Dimension() - 1)
+                  std::cout << ",";
+            }
+            std::cout << "), w = " << (*it)->GetWeight() << std::endl;
+         }
+
+         std::cout << std::endl;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::TerminalNode::Split()
+      {
+         //splits this TerminalNode
+         //
+         //A new SplitNode containing the split axis and split value is created. It
+         //is placed at the current position of this TerminalNode in the tree.
+         //The data points in this node are divided into two groups according to
+         //the splitting axis and value. From the second half a new TerminalNode is created.
+         //
+         //Sketch:               SplitNode
+         //                     |         |
+         //                    ...   current TerminalNode (which is split)
+         //
+         //                         |
+         //                         V
+         //
+         //                      SplitNode
+         //                     |         |
+         //                    ...     new SplitNode
+         //                           |             |
+         //                current TerminalNode   new TerminalNode
+         //                (modified)
+
+         data_it cut;
+         switch(fSplitOption)
+         {
+         case kEffective: cut = SplitEffectiveEntries(); break;
+         case kBinContent: cut = SplitBinContent(); break;
+         default: assert(false);
+         }
+
+         // store split value
+         value_type fSplitValue = (*cut)->GetCoordinate(fSplitAxis);
+         //create second terminal node with second part of (unsorted vector)
+         TerminalNode* pNew = new TerminalNode(fBucketSize,fSplitAxis+1,cut,fDataPoints.end());
+         // copy options
+         pNew->SetOwner(fOwnData);
+         pNew->SetSplitOption(fSplitOption);
+
+         // remove the copied elements from this bucket
+         fDataPoints.erase(cut,fDataPoints.end());
+         // recalculate sumw and sumw2
+         this->fSumw = this->fSumw2 = 0;
+         for(data_it it = fDataPoints.begin(); it != fDataPoints.end(); ++it)
+         {
+            this->fSumw += (*it)->GetWeight();
+            this->fSumw2 += pow((*it)->GetWeight(),2);
+         }
+         this->fEntries = fDataPoints.size();
+
+         // create new splitting node
+         SplitNode* pSplit = new SplitNode(fSplitAxis,fSplitValue,*this,*pNew,this->Parent());
+
+         // link new splitting node
+         this->GetParentPointer() = pSplit;
+
+         // set splitting node as new parent of both terminal nodes
+         this->Parent() = pSplit;
+         pNew->Parent() = pSplit;
+
+         // update boundaries
+         this->UpdateBoundaries();
+         pNew->UpdateBoundaries();
+
+         // change splitting axis
+         ++fSplitAxis;
+         fSplitAxis = fSplitAxis % Dimension();
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::TerminalNode::data_it KDTree<_DataPoint>::TerminalNode::SplitEffectiveEntries()
+      {
+         //splits according to the number of effective entries
+         //
+         //returns an iterator pointing to the data point at which the vector should be split
+         //
+         //Note: - The vector containing the data points is partially ordered according to the
+         //        coordinates of the current split axis at least until the position of cut.
+
+         // function pointer for comparing data points
+         typename KDTree<_DataPoint>::ComparePoints cComp;
+         cComp.SetAxis(fSplitAxis);
+
+         data_it first = fDataPoints.begin();
+         data_it cut = first;
+         data_it middle;
+         UInt_t step = fDataPoints.size();
+         Double_t fSumwTemp = 0;
+         Double_t fSumw2Temp = 1e-7;
+         Double_t fEffective = this->GetEffectiveEntries();
+
+         // sort data points along split axis
+         // find data point at which the cumulative effective entries reach half of the total effective entries
+         while(((fSumwTemp * fSumwTemp)/fSumw2Temp < fEffective/2) && (step > 1))
+         {
+            middle = first + (++step /= 2);
+            std::partial_sort(first,middle,fDataPoints.end(),cComp);
+
+            while(((fSumwTemp * fSumwTemp)/fSumw2Temp < fEffective/2) && (cut != middle-1))
+            {
+               fSumwTemp += (*cut)->GetWeight();
+               fSumw2Temp += pow((*cut)->GetWeight(),2);
+               ++cut;
+            }
+            first = middle;
+         }
+
+         return cut;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::TerminalNode::data_it KDTree<_DataPoint>::TerminalNode::SplitBinContent()
+      {
+         //splits according to the bin content
+         //
+         //returns an iterator pointing to the data point at which the vector should be split
+         //
+         //Note: - The vector containing the data points is partially ordered according to the
+         //        coordinates of the current split axis at least until the position of cut.
+
+         // function pointer for comparing data points
+         typename KDTree<_DataPoint>::ComparePoints cComp;
+         cComp.SetAxis(fSplitAxis);
+
+         data_it first = fDataPoints.begin();
+         data_it cut = first;
+         data_it middle;
+         UInt_t step = fDataPoints.size();
+         Double_t fSumwTemp = 0;
+         Double_t fBinContent = this->GetSumw();
+
+         // sort data points along split axis
+         // find data point at which the cumulative effective entries reach half of the total effective entries
+         while((fSumwTemp < fBinContent/2) && (step > 1))
+         {
+            middle = first + (++step /= 2);
+            std::partial_sort(first,middle,fDataPoints.end(),cComp);
+
+            while((fSumwTemp < fBinContent/2) && (cut != middle-1))
+            {
+               fSumwTemp += (*cut)->GetWeight();
+               ++cut;
+            }
+            first = middle;
+         }
+
+         return cut;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      void KDTree<_DataPoint>::TerminalNode::UpdateBoundaries()
+      {
+         //updates the boundaries of this bin and caches them
+         //
+         //Note: - In a high-dimensional space most of the nodes are bounded only on
+         //        one side due to a split. One-sided intervals would result in an
+         //        infinite volume of the bin which is not the desired behaviour.
+         //        Therefore the following convention is used for determining the
+         //        boundaries:
+         //        If a node is not restricted along one axis on one/both side(s) due
+         //        to a split, the corresponding upper/lower boundary is set to
+         //        the minimum/maximum coordinate along this axis of all contained
+         //        data points.
+         //        This procedure maximises the density in the bins.
+
+         const value_type fMAX = 0.4 * std::numeric_limits<value_type>::max();
+         const value_type fMIN = -1.0 * fMAX;
+
+         this->fBoundaries = std::vector<tBoundary>(Dimension(),std::make_pair(fMIN,fMAX));
+
+         //walk back the tree and update bounds
+         const BaseNode* pNode = this->Parent();
+         const SplitNode* pSplit = 0;
+         const Cut* pCut = 0;
+         bool bLeft = this->IsLeftChild();
+         while(!pNode->IsHeadNode())
+         {
+            pSplit = dynamic_cast<const SplitNode*>(pNode);
+            assert(pSplit);
+            pCut = pSplit->GetCut();
+            // left subtree -> cut is upper bound
+            if(bLeft)
+               this->fBoundaries.at(pCut->GetAxis()).second = std::min(pCut->GetCutValue(),this->fBoundaries.at(pCut->GetAxis()).second);
+            // right subtree -> cut is lower bound
+            else
+               this->fBoundaries.at(pCut->GetAxis()).first = std::max(pCut->GetCutValue(),this->fBoundaries.at(pCut->GetAxis()).first);
+
+            bLeft = pNode->IsLeftChild();
+            pNode = pNode->Parent();
+         }
+
+         // if there are some data points in this bucket, use their minimum/maximum values to define the open boundaries
+         if(fDataPoints.size())
+         {
+            // loop over bounds and set unspecified values to minimum/maximum coordinate of all points in this bucket
+            for(UInt_t dim = 0; dim < this->fBoundaries.size(); ++dim)
+            {
+               // check lower bound
+               if(this->fBoundaries.at(dim).first < 0.8*fMIN)
+               {
+                  this->fBoundaries.at(dim).first = fMAX;
+                  // look for smalles coordinate along axis 'dim'
+                  for(typename std::vector<const _DataPoint*>::const_iterator it = fDataPoints.begin();
+                      it != fDataPoints.end(); ++it)
+                  {
+                     if((*it)->GetCoordinate(dim) < this->fBoundaries.at(dim).first)
+                        this->fBoundaries.at(dim).first = (*it)->GetCoordinate(dim);
+                  }
+               }
+               // check upper bound
+               if(this->fBoundaries.at(dim).second > 0.8*fMAX)
+               {
+                  this->fBoundaries.at(dim).second = fMIN;
+                  // look for biggest coordinate along axis 'dim'
+                  for(typename std::vector<const _DataPoint*>::const_iterator it = fDataPoints.begin();
+                      it != fDataPoints.end(); ++it)
+                  {
+                     if((*it)->GetCoordinate(dim) > this->fBoundaries.at(dim).second)
+                        this->fBoundaries.at(dim).second = (*it)->GetCoordinate(dim);
+                  }
+               }
+            }
+         }
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator++()
+      {
+         //pre-increment operator
+
+         fBin = Next();
+         return *this;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline const typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator++() const
+      {
+         //pre-increment operator
+
+         fBin = Next();
+         return *this;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator++(int)
+      {
+         //post-increment operator
+
+         iterator tmp(*this);
+         fBin = Next();
+         return tmp;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline const typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator++(int) const
+      {
+         //post-increment operator
+
+         iterator tmp(*this);
+         fBin = Next();
+         return tmp;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator--()
+      {
+         //pre-decrement operator
+
+         fBin = Previous();
+         return *this;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline const typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator--() const
+      {
+         //pre-decrement operator
+
+         fBin = Previous();
+         return *this;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator--(int)
+      {
+         //post-decrement operator
+
+         iterator tmp(*this);
+         fBin = Previous();
+         return tmp;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline const typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator--(int) const
+      {
+         //post-decrement operator
+
+         iterator tmp(*this);
+         fBin = Previous();
+         return tmp;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator=(const typename KDTree<_DataPoint>::iterator& rhs)
+      {
+         //assignment operator
+
+         fBin = rhs.fBin;
+         return *this;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::iterator::Next() const
+      {
+         //advance this iterator to the next bin
+         //
+         //Note: - Check for the end of all bins by comparing to End().
+
+         BaseNode* pNode = fBin;
+
+         while(!pNode->IsHeadNode())
+         {
+            if(pNode->IsLeftChild())
+            {
+               assert(pNode->Parent()->RightChild());
+               pNode = pNode->Parent()->RightChild();
+               while(pNode->LeftChild())
+                  pNode = pNode->LeftChild();
+
+               assert(dynamic_cast<BinNode*>(pNode));
+               return (BinNode*)pNode;
+            }
+            else
+               pNode = pNode->Parent();
+         }
+
+         return 0;
+      }
+
+//______________________________________________________________________________
+      template<class _DataPoint>
+      typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::iterator::Previous() const
+      {
+         //decline this iterator to the previous bin
+         //
+         //Note: - Check for the end of all bins by comparing to End().
+
+         BaseNode* pNode = fBin;
+
+         while(!pNode->IsHeadNode())
+         {
+            if(pNode->Parent()->RightChild() == pNode)
+            {
+               assert(pNode->Parent()->LeftChild());
+               pNode = pNode->Parent()->LeftChild();
+               while(pNode->RightChild())
+                  pNode = pNode->RightChild();
+
+               assert(dynamic_cast<BinNode*>(pNode));
+               return (BinNode*)pNode;
+            }
+            else
+               pNode = pNode->Parent();
+         }
+
+         return 0;
+      }
+
+   }//namespace Math
+}//namespace ROOT
+
+#endif //KD_TREE_ICC

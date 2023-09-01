@@ -1,0 +1,45 @@
+<core:FragmentDefinition
+       xmlns="sap.m"
+       xmlns:l="sap.ui.layout"
+       xmlns:jsroot="rootui5.canv.controller"
+       xmlns:core="sap.ui.core">
+       <FlexBox renderType="Bare" width="100%">
+          <items>
+             <jsroot:ColorButton text="fill" attrcolor="{/attfill/color}" tooltip="Fill color"/>
+             <Select selectedKey="{/attfill/pattern}" tooltip="Fill pattern">
+               <layoutData>
+                 <FlexItemData growFactor="2"/>
+               </layoutData>
+               <items>
+                 <core:Item text="none" key="0"/>
+                 <core:Item text="solid" key="1001"/>
+                 <core:Item text="3001" key="3001"/>
+                 <core:Item text="3002" key="3002"/>
+                 <core:Item text="3003" key="3003"/>
+                 <core:Item text="3004" key="3004"/>
+                 <core:Item text="3005" key="3005"/>
+                 <core:Item text="3006" key="3006"/>
+                 <core:Item text="3007" key="3007"/>
+                 <core:Item text="3008" key="3008"/>
+                 <core:Item text="3009" key="3009"/>
+                 <core:Item text="3010" key="3010"/>
+                 <core:Item text="3011" key="3011"/>
+                 <core:Item text="3012" key="3012"/>
+                 <core:Item text="3013" key="3013"/>
+                 <core:Item text="3014" key="3014"/>
+                 <core:Item text="3015" key="3015"/>
+                 <core:Item text="3016" key="3016"/>
+                 <core:Item text="3017" key="3017"/>
+                 <core:Item text="3018" key="3018"/>
+                 <core:Item text="3019" key="3019"/>
+                 <core:Item text="3020" key="3020"/>
+               </items>
+            </Select>
+            <jsroot:SVGSample svgsample="{/attfill}" tooltip="Fill pattern sample">
+               <jsroot:layoutData>
+                  <FlexItemData growFactor="2"/>
+                </jsroot:layoutData>
+            </jsroot:SVGSample>
+          </items>
+       </FlexBox>
+</core:FragmentDefinition>

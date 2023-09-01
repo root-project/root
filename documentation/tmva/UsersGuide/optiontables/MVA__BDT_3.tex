@@ -1,0 +1,9 @@
+\begin{optiontableAuto}
+              PruneMethod  &  \mc{1}{c}{--}  &        NoPruning  &  NoPruning, ExpectedError, CostComplexity  &  Note: for BDTs use small trees (e.g.MaxDepth=3) and NoPruning:  Pruning: Method used for pruning (removal) of statistically insignificant branches  \\
+            PruneStrength  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  Pruning strength \\
+       PruningValFraction  &  \mc{1}{c}{--}  &              0.5  &  \mc{1}{l}{--}  &  Fraction of events to use for optimizing automatic pruning. \\
+               nEventsMin  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  deprecated: Use MinNodeSize (in \% of training events) instead \\
+      GradBaggingFraction  &  \mc{1}{c}{--}  &              0.6  &  \mc{1}{l}{--}  &  deprecated: Use *BaggedSampleFraction* instead: Defines the fraction of events to be used in each iteration, e.g. when UseBaggedGrad=kTRUE.  \\
+          UseNTrainEvents  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  deprecated: Use *BaggedSampleFraction* instead: Number of randomly picked training events used in randomised (and bagged) trees \\
+                NNodesMax  &  \mc{1}{c}{--}  &                0  &  \mc{1}{l}{--}  &  deprecated: Use MaxDepth instead to limit the tree size 
+\end{optiontableAuto}

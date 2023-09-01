@@ -1,0 +1,396 @@
+# Microsoft Developer Studio Generated Dependency File, included by freetype.mak
+
+..\..\..\src\autofit\autofit.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\autofit\afangles.c"\
+	"..\..\..\src\autofit\afcjk.c"\
+	"..\..\..\src\autofit\afcjk.h"\
+	"..\..\..\src\autofit\afdummy.c"\
+	"..\..\..\src\autofit\afdummy.h"\
+	"..\..\..\src\autofit\aferrors.h"\
+	"..\..\..\src\autofit\afglobal.c"\
+	"..\..\..\src\autofit\afglobal.h"\
+	"..\..\..\src\autofit\afhints.c"\
+	"..\..\..\src\autofit\afhints.h"\
+	"..\..\..\src\autofit\afindic.c"\
+	"..\..\..\src\autofit\afindic.h"\
+	"..\..\..\src\autofit\aflatin.c"\
+	"..\..\..\src\autofit\aflatin.h"\
+	"..\..\..\src\autofit\aflatin2.c"\
+	"..\..\..\src\autofit\aflatin2.h"\
+	"..\..\..\src\autofit\afloader.c"\
+	"..\..\..\src\autofit\afloader.h"\
+	"..\..\..\src\autofit\afmodule.c"\
+	"..\..\..\src\autofit\afmodule.h"\
+	"..\..\..\src\autofit\aftypes.h"\
+	"..\..\..\src\autofit\afwarp.c"\
+	"..\..\..\src\autofit\afwarp.h"\
+	
+
+..\..\..\src\bdf\bdf.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\bdf\bdf.h"\
+	"..\..\..\src\bdf\bdfdrivr.c"\
+	"..\..\..\src\bdf\bdfdrivr.h"\
+	"..\..\..\src\bdf\bdferror.h"\
+	"..\..\..\src\bdf\bdflib.c"\
+	
+
+..\..\..\src\cff\cff.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\cff\cffcmap.c"\
+	"..\..\..\src\cff\cffcmap.h"\
+	"..\..\..\src\cff\cffdrivr.c"\
+	"..\..\..\src\cff\cffdrivr.h"\
+	"..\..\..\src\cff\cfferrs.h"\
+	"..\..\..\src\cff\cffgload.c"\
+	"..\..\..\src\cff\cffgload.h"\
+	"..\..\..\src\cff\cffload.c"\
+	"..\..\..\src\cff\cffload.h"\
+	"..\..\..\src\cff\cffobjs.c"\
+	"..\..\..\src\cff\cffobjs.h"\
+	"..\..\..\src\cff\cffparse.c"\
+	"..\..\..\src\cff\cffparse.h"\
+	"..\..\..\src\cff\cfftoken.h"\
+	"..\..\..\src\cff\cfftypes.h"\
+	
+
+..\..\..\src\base\ftbase.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\base\ftcalc.c"\
+	"..\..\..\src\base\ftdbgmem.c"\
+	"..\..\..\src\base\ftgloadr.c"\
+	"..\..\..\src\base\ftobjs.c"\
+	"..\..\..\src\base\ftoutln.c"\
+	"..\..\..\src\base\ftrfork.c"\
+	"..\..\..\src\base\ftstream.c"\
+	"..\..\..\src\base\fttrigon.c"\
+	"..\..\..\src\base\ftutil.c"\
+	
+
+..\..\..\src\base\ftbbox.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftbdf.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftbitmap.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\cache\ftcache.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\cache\ftcbasic.c"\
+	"..\..\..\src\cache\ftccache.c"\
+	"..\..\..\src\cache\ftccache.h"\
+	"..\..\..\src\cache\ftccback.h"\
+	"..\..\..\src\cache\ftccmap.c"\
+	"..\..\..\src\cache\ftcerror.h"\
+	"..\..\..\src\cache\ftcglyph.c"\
+	"..\..\..\src\cache\ftcglyph.h"\
+	"..\..\..\src\cache\ftcimage.c"\
+	"..\..\..\src\cache\ftcimage.h"\
+	"..\..\..\src\cache\ftcmanag.c"\
+	"..\..\..\src\cache\ftcmanag.h"\
+	"..\..\..\src\cache\ftcmru.c"\
+	"..\..\..\src\cache\ftcmru.h"\
+	"..\..\..\src\cache\ftcsbits.c"\
+	"..\..\..\src\cache\ftcsbits.h"\
+	
+
+..\ftdebug.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftgasp.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftglyph.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftgxval.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\gzip\ftgzip.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\gzip\adler32.c"\
+	"..\..\..\src\gzip\infblock.c"\
+	"..\..\..\src\gzip\infblock.h"\
+	"..\..\..\src\gzip\infcodes.c"\
+	"..\..\..\src\gzip\infcodes.h"\
+	"..\..\..\src\gzip\inffixed.h"\
+	"..\..\..\src\gzip\inflate.c"\
+	"..\..\..\src\gzip\inftrees.c"\
+	"..\..\..\src\gzip\inftrees.h"\
+	"..\..\..\src\gzip\infutil.c"\
+	"..\..\..\src\gzip\infutil.h"\
+	"..\..\..\src\gzip\zconf.h"\
+	"..\..\..\src\gzip\zlib.h"\
+	"..\..\..\src\gzip\zutil.c"\
+	"..\..\..\src\gzip\zutil.h"\
+	
+
+..\..\..\src\base\ftinit.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\lzw\ftlzw.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\lzw\ftzopen.c"\
+	"..\..\..\src\lzw\ftzopen.h"\
+	
+
+..\..\..\src\base\ftmm.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftotval.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftpfr.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftstroke.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftsynth.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftsystem.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\fttype1.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftwinfnt.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\base\ftxf86.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	
+
+..\..\..\src\pcf\pcf.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\pcf\pcf.h"\
+	"..\..\..\src\pcf\pcfdrivr.c"\
+	"..\..\..\src\pcf\pcfdrivr.h"\
+	"..\..\..\src\pcf\pcferror.h"\
+	"..\..\..\src\pcf\pcfread.c"\
+	"..\..\..\src\pcf\pcfread.h"\
+	"..\..\..\src\pcf\pcfutil.c"\
+	"..\..\..\src\pcf\pcfutil.h"\
+	
+
+..\..\..\src\pfr\pfr.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\pfr\pfrcmap.c"\
+	"..\..\..\src\pfr\pfrcmap.h"\
+	"..\..\..\src\pfr\pfrdrivr.c"\
+	"..\..\..\src\pfr\pfrdrivr.h"\
+	"..\..\..\src\pfr\pfrerror.h"\
+	"..\..\..\src\pfr\pfrgload.c"\
+	"..\..\..\src\pfr\pfrgload.h"\
+	"..\..\..\src\pfr\pfrload.c"\
+	"..\..\..\src\pfr\pfrload.h"\
+	"..\..\..\src\pfr\pfrobjs.c"\
+	"..\..\..\src\pfr\pfrobjs.h"\
+	"..\..\..\src\pfr\pfrsbit.c"\
+	"..\..\..\src\pfr\pfrsbit.h"\
+	"..\..\..\src\pfr\pfrtypes.h"\
+	
+
+..\..\..\src\psaux\psaux.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\psaux\afmparse.c"\
+	"..\..\..\src\psaux\afmparse.h"\
+	"..\..\..\src\psaux\psauxerr.h"\
+	"..\..\..\src\psaux\psauxmod.c"\
+	"..\..\..\src\psaux\psauxmod.h"\
+	"..\..\..\src\psaux\psconv.c"\
+	"..\..\..\src\psaux\psconv.h"\
+	"..\..\..\src\psaux\psobjs.c"\
+	"..\..\..\src\psaux\psobjs.h"\
+	"..\..\..\src\psaux\t1cmap.c"\
+	"..\..\..\src\psaux\t1cmap.h"\
+	"..\..\..\src\psaux\t1decode.c"\
+	"..\..\..\src\psaux\t1decode.h"\
+	
+
+..\..\..\src\pshinter\pshinter.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\pshinter\pshalgo.c"\
+	"..\..\..\src\pshinter\pshalgo.h"\
+	"..\..\..\src\pshinter\pshglob.c"\
+	"..\..\..\src\pshinter\pshglob.h"\
+	"..\..\..\src\pshinter\pshmod.c"\
+	"..\..\..\src\pshinter\pshnterr.h"\
+	"..\..\..\src\pshinter\pshrec.c"\
+	"..\..\..\src\pshinter\pshrec.h"\
+	
+
+..\..\..\src\psnames\psmodule.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\psnames\psmodule.h"\
+	"..\..\..\src\psnames\psnamerr.h"\
+	"..\..\..\src\psnames\pstables.h"\
+	
+
+..\..\..\src\raster\raster.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\raster\ftmisc.h"\
+	"..\..\..\src\raster\ftraster.c"\
+	"..\..\..\src\raster\ftraster.h"\
+	"..\..\..\src\raster\ftrend1.c"\
+	"..\..\..\src\raster\ftrend1.h"\
+	"..\..\..\src\raster\rasterrs.h"\
+	
+
+..\..\..\src\sfnt\sfnt.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\sfnt\sfdriver.c"\
+	"..\..\..\src\sfnt\sfdriver.h"\
+	"..\..\..\src\sfnt\sferrors.h"\
+	"..\..\..\src\sfnt\sfobjs.c"\
+	"..\..\..\src\sfnt\sfobjs.h"\
+	"..\..\..\src\sfnt\ttbdf.c"\
+	"..\..\..\src\sfnt\ttbdf.h"\
+	"..\..\..\src\sfnt\ttcmap.c"\
+	"..\..\..\src\sfnt\ttcmap.h"\
+	"..\..\..\src\sfnt\ttkern.c"\
+	"..\..\..\src\sfnt\ttkern.h"\
+	"..\..\..\src\sfnt\ttload.c"\
+	"..\..\..\src\sfnt\ttload.h"\
+	"..\..\..\src\sfnt\ttmtx.c"\
+	"..\..\..\src\sfnt\ttmtx.h"\
+	"..\..\..\src\sfnt\ttpost.c"\
+	"..\..\..\src\sfnt\ttpost.h"\
+	"..\..\..\src\sfnt\ttsbit.c"\
+	"..\..\..\src\sfnt\ttsbit.h"\
+	
+
+..\..\..\src\smooth\smooth.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\smooth\ftgrays.c"\
+	"..\..\..\src\smooth\ftgrays.h"\
+	"..\..\..\src\smooth\ftsmerrs.h"\
+	"..\..\..\src\smooth\ftsmooth.c"\
+	"..\..\..\src\smooth\ftsmooth.h"\
+	
+
+..\..\..\src\truetype\truetype.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\truetype\ttdriver.c"\
+	"..\..\..\src\truetype\ttdriver.h"\
+	"..\..\..\src\truetype\tterrors.h"\
+	"..\..\..\src\truetype\ttgload.c"\
+	"..\..\..\src\truetype\ttgload.h"\
+	"..\..\..\src\truetype\ttgxvar.c"\
+	"..\..\..\src\truetype\ttgxvar.h"\
+	"..\..\..\src\truetype\ttinterp.c"\
+	"..\..\..\src\truetype\ttinterp.h"\
+	"..\..\..\src\truetype\ttobjs.c"\
+	"..\..\..\src\truetype\ttobjs.h"\
+	"..\..\..\src\truetype\ttpload.c"\
+	"..\..\..\src\truetype\ttpload.h"\
+	
+
+..\..\..\src\type1\type1.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\type1\t1afm.c"\
+	"..\..\..\src\type1\t1afm.h"\
+	"..\..\..\src\type1\t1driver.c"\
+	"..\..\..\src\type1\t1driver.h"\
+	"..\..\..\src\type1\t1errors.h"\
+	"..\..\..\src\type1\t1gload.c"\
+	"..\..\..\src\type1\t1gload.h"\
+	"..\..\..\src\type1\t1load.c"\
+	"..\..\..\src\type1\t1load.h"\
+	"..\..\..\src\type1\t1objs.c"\
+	"..\..\..\src\type1\t1objs.h"\
+	"..\..\..\src\type1\t1parse.c"\
+	"..\..\..\src\type1\t1parse.h"\
+	"..\..\..\src\type1\t1tokens.h"\
+	
+
+..\..\..\src\cid\type1cid.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\cid\ciderrs.h"\
+	"..\..\..\src\cid\cidgload.c"\
+	"..\..\..\src\cid\cidgload.h"\
+	"..\..\..\src\cid\cidload.c"\
+	"..\..\..\src\cid\cidload.h"\
+	"..\..\..\src\cid\cidobjs.c"\
+	"..\..\..\src\cid\cidobjs.h"\
+	"..\..\..\src\cid\cidparse.c"\
+	"..\..\..\src\cid\cidparse.h"\
+	"..\..\..\src\cid\cidriver.c"\
+	"..\..\..\src\cid\cidriver.h"\
+	"..\..\..\src\cid\cidtoken.h"\
+	
+
+..\..\..\src\type42\type42.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\type42\t42drivr.c"\
+	"..\..\..\src\type42\t42drivr.h"\
+	"..\..\..\src\type42\t42error.h"\
+	"..\..\..\src\type42\t42objs.c"\
+	"..\..\..\src\type42\t42objs.h"\
+	"..\..\..\src\type42\t42parse.c"\
+	"..\..\..\src\type42\t42parse.h"\
+	"..\..\..\src\type42\t42types.h"\
+	
+
+..\..\..\src\winfonts\winfnt.c : \
+	"..\..\..\include\freetype\config\ftheader.h"\
+	"..\..\..\include\ft2build.h"\
+	"..\..\..\src\winfonts\fnterrs.h"\
+	"..\..\..\src\winfonts\winfnt.h"\
+	

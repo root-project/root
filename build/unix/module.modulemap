@@ -1,0 +1,78 @@
+// This module contains header files from module Core which can be used in both
+// C and C++ context.
+module ROOT_Foundation_C  {
+  module "ThreadLocalStorage.h" { header "ThreadLocalStorage.h" export * }
+  module "strlcpy.h" { header "strlcpy.h" export * }
+  module "snprintf.h" { header "snprintf.h" export * }
+
+  export *
+}
+
+// This module contains header files from module Core which are used as
+// configuration for ROOT. They contain a lot of macro definitions which are
+// supposed to be textually expanded in each TU.
+module ROOT_Config  {
+  // These headers are supposed to be only textually expanded for each TU.
+  module "RVersion.h" { textual header "RVersion.h" export * }
+  module "RConfig.h" { header "RConfig.h" export * }
+  module "ROOT/RConfig.h" { header "ROOT/RConfig.h" export * }
+  module "ROOT/RConfig.hxx" { textual header "ROOT/RConfig.hxx" export * }
+  module "RConfigure.h" { textual header "RConfigure.h" export * }
+  // FIXME: There is little benefit in keeping DllImport as a separate header.
+  // The majority of its uses already include Rtypes.h which includes DllImport.
+  module "DllImport.h" { header "DllImport.h" export * }
+
+  export *
+}
+
+module ROOT_Rtypes {
+  module "RtypesCore.h" { header "RtypesCore.h" export * }
+}
+
+// This module contains header files from module Core which do not need -frtti.
+// They are mainly needed for ROOT stage1 build.
+module ROOT_Foundation_Stage1_NoRTTI  {
+  module "ESTLType.h" { header "ESTLType.h" export * }
+  module "ROOT/RStringView.hxx" {
+    // RWrap_libcpp_string_view.h is meant to be included only by ROOT/RStringView.hxx
+    textual header "ROOT/RWrap_libcpp_string_view.h"
+    header "ROOT/RStringView.hxx"
+    export *
+  }
+  // Varargs contains a lot of macros for supporting the obsolete va_args.
+  // FIXME: We may want to drop this when we reimplement all uses to use variadic
+  // templates.
+  module "Varargs.h" { header "Varargs.h" export * }
+  module "TClassEdit.h" { header "TClassEdit.h" export * }
+  module "TIsAProxy.h" { header "TIsAProxy.h" export * }
+  module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
+  module "TException.h" { header "TException.h" export * }
+
+  export *
+}
+
+// Some frameworks include gl.h or gltypes.h (eg. Cocoa) and thus we cannot build
+// this module as part of the ROOT. The only way is either by outlining it here
+// or relying on fragile module ordering (eg. order before things such as Cocoa.h
+// including gltypes.h.
+// FIXME: The resolution of https://llvm.org/bugs/show_bug.cgi?id=30508 is not
+// enough, we need to downgrade the errors to warnings coming from 'module * { export * }'
+// when there is no folder GL or contents in it.
+// module ROOT_Glew {
+  // Depending on the platform we get some of these three installed.
+  module "glew.h" { header "GL/glew.h" export * }
+  module "wglew.h" { header "GL/wglew.h" export * }
+  module "glxew.h" { header "GL/glxew.h" export * }
+//  link "lib/libGLEW.so"
+//}
+
+// We have a few c files scattered all over graf3d. We need to have a module
+// which is built in C mode, to prevent trying to build the entire Graf3d module
+// within a C context.
+module "Graf3D.X3DBuffer.h_C" {
+  requires !cplusplus
+  header "X3DBuffer.h"
+  export *
+}
+
+// From this point on the contents of this file are automatically generated.

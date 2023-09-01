@@ -1,0 +1,13 @@
+<mvc:View
+    controllerName="rootui5.eve7.controller.Summary"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:l="sap.ui.layout"
+    xmlns="sap.m"
+    class="sapUiSizeCompact">
+		<FlexBox height="100%" id="sumSplitter" direction="Column" fitContainer="true" alignItems="Inherit" justifyContent="SpaceBetween">
+    <Tree id="tree" width="95%"
+          toggleOpenState="onToggleOpenState"
+          class="sapUiSizeCompact sapUiTinyMargin">
+    </Tree>
+    </FlexBox>
+</mvc:View>

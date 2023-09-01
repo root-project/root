@@ -1,0 +1,62 @@
+\section{The TMVA Methods}
+\label{sec:tmvaClassifiers}
+
+All TMVA classification and regression methods (in most cases, a method serves both 
+analysis goals) inherit from \code{MethodBase}, which implements basic 
+functionality like the interpretation of common configuration options, the 
+interaction with the training and test data sets, I/O operations and common 
+performance evaluation calculus. The functionality each MVA method is required 
+to implement is defined in the abstract interface \code{IMethod}.\footnote 
+{ 
+  Two constructors are
+  implemented for each method: one that creates the method for
+  a first time for training with a configuration (``option'') string
+  among the arguments, and another that recreates a method from an
+  existing weight file. The use of the first constructor is
+  demonstrated in the example macros \code{TMVAClassification.C} and
+  \code{TMVARegression.C}, while the second one is employed by the Reader in 
+  \code{TMVAClassificationApplication.C} and \code{TMVARegressionApplication.C}.
+  Other functions implemented by each methods are: \code{Train}
+  (called for training), \code{Write/ReadWeightsToStream} (I/O of
+  specific training results), \code{WriteMonitoringHistosToFile}
+  (additional specific information for monitoring purposes) and 
+  \code{CreateRanking} (variable ranking).  
+} 
+Each MVA method provides a function that creates a rank object (of 
+type \code{Ranking}), which is an ordered list of the input variables 
+prioritised according to criteria specific to that method. Also 
+provided are brief method-specific help notes (option \code{Help}, 
+switched off by default) with information on the adequate usage of 
+the method and performance optimisation in case of unsatisfying 
+results.
+
+If the option \code{CreateMVAPdfs} is set TMVA creates signal and
+background PDFs from the corresponding MVA response
+distributions using the training sample (\cf\
+Sec.~\ref{sec:usingtmva:training}). The binning and smoothing
+properties of the underlying histograms can be customised via controls
+implemented in the \code{PDF} class (\cf\ Sec.~\ref{sec:PDF} and Option 
+Table~\ref{opt:pdf} on page~\pageref{opt:pdf}). The options specific to
+\code{MethodBase} are listed in Option Table~\ref{opt:mva::methodbase}. 
+They can be accessed by all MVA methods. 
+
+The following sections describe the methods implemented in TMVA. For each method we 
+proceed according to the following scheme: ($i$) a brief introduction, ($ii$) the description 
+of the booking options required to configure the method, ($iii$) a description of the 
+the method and TMVA implementation specifications for classification and -- where
+available -- for regression, ($iv$) the properties of the 
+variable ranking, and ($v$) a few comments on performance, favourable (and 
+disfavoured) use cases, and comparisons with other methods.
+% ======= input option table ==========================================
+\begin{option}[!t]
+\input optiontables/MVA__MethodBase.tex
+\caption[.]{\optionCaptionSize 
+   Configuration options that are common for all classifiers (but which can be controlled individually
+   for each classifier). Values given are defaults. If predefined categories exist, the default category 
+   is marked by a ’*’. The lower options in the table control the PDF fitting of the classifiers (required,
+   \eg, for the Rarity calculation).
+}
+\label{opt:mva::methodbase}
+\end{option}
+% =====================================================================
+

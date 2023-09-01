@@ -1,0 +1,249 @@
+%
+% fancy look (headers and footers)
+%
+\renewcommand{\sectionmark}[1]   {\markright{\sf\bfseries\thesection\ \ \ \boldmath\textbf{#1}\unboldmath}}
+\renewcommand{\subsectionmark}[1]{\markright{\sf\bfseries\thesubsection\ \ \ \boldmath\textbf{#1}\unboldmath}}
+                                        %The text used in the header is determined by the arguments to the \markboth
+                                        %  and \markright commands used here. The section information will appear as the
+                                        %  section number in bold, followed by a dot and a space, followed by the section
+                                        %  title (dealt with by LaTeX---no user intervention needed here) in italics. The
+                                        %  section information will appear as the section number, followed by a space, and
+                                        %  then the section title (again generated automatically) in bold. Any maths in
+                                        %  the section title will also appear in bold (provided the bold font exists).
+\fancyhf{}                              %  Clears all header and footer fields, in preparation.
+\fancyhead[LE,RO]{\sf\thepage}          %Displays the page number in bold in the header,
+                                        %  to the left on even pages and to the right on odd pages.
+\fancyhead[RE]{\nouppercase{\leftmark}} %Displays the upper-level (section) information---
+                                        %  as determined above---in non-upper case in the header, to the right on even pages.
+\fancyhead[LO]{\rightmark}              %Displays the lower-level (section) information---as
+                                        %  determined above---in the header, to the left on odd pages.
+\renewcommand{\headrulewidth}{0.5pt}    %Underlines the header. (Set to 0pt if not required).
+\renewcommand{\footrulewidth}{0.5pt}    %Underlines the footer. (Set to 0pt if not required).
+\newcommand{\HRule}{\rule{\linewidth}{1mm}}
+
+%
+% font definition
+%
+\newcommand\allFontSize{\small}
+
+%
+% redefine caption style
+%
+\usepackage[bf]{caption}
+\renewcommand{\captionfont}{\allFontSize}
+
+%
+% environment for detailed information
+%
+\newcommand\detailsSize{\allFontSize}
+\newenvironment{details}%
+{\begin{myquote}\detailsSize}{\end{myquote}}
+
+%
+% environment for code examples
+%
+\newcommand\codeexampleCaptionSize{\allFontSize}
+\newfloat{codeexample}{H}{loc}
+\floatname{codeexample}{\sf\allFontSize Code Example}
+
+\newlength{\tmvaboxwidth}
+\setlength{\fboxsep}{3mm}
+
+\definecolor{DarkGray}{rgb}{0.4,0.42,0.45}
+\definecolor{LightGray}{rgb}{0.97,0.98,0.98}
+
+\fboxrule0.2mm
+\newenvironment{tmvacode}%
+{\VerbatimEnvironment\normalsize
+\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{minipage}[t]{\tmvaboxwidth}\begin{Verbatim}}%
+{\end{Verbatim}\end{minipage}\end{Sbox}\vspace{1ex} \fcolorbox{DarkGray}{LightGray}{\TheSbox}}
+
+%
+% environment for option table 
+%
+\newcommand\optionCaptionSize{\allFontSize}
+\newfloat{option}{H}{loc}
+\floatname{option}{\sf\allFontSize Option Table}
+
+\def\sze{\footnotesize}
+\usepackage{tabularx}
+% NEW TABLES (more entries)
+\newenvironment{optiontableAuto}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{3cm}>{\sze}p{0.7cm}>{\tt\sze}p{2.0cm}>{\tt\sze}p{2.7cm}>{\sze}p{5.4cm}}
+&&\\[-0.8cm]
+\rm\sze Option  & \rm\sze Array    & \rm\sze Default    & \rm\sze Predefined Values    & \rm\sze Description\\[0.1cm]\hline
+&&\\[-0.50cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+
+% usual tables
+\newenvironment{optiontable}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{3cm}>{\tt\sze}p{4.5cm}>{\sze}p{5.7cm}}
+&&\\[-0.7cm]
+\rm\sze Option  & \rm\sze  Values   & \rm\smszeall Description\\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+% table to display activation functions
+\newenvironment{activationtable}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{7.5cm}>{\sze}p{5.7cm}>{\sze}p{0.cm}}
+&&\\[-0.7cm]
+\rm\sze Name & \rm\sze Activation Function \\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+% special tables for long descriptions
+\newenvironment{optiontableDescr}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{3cm}>{\tt\sze}p{3.5cm}>{\sze}p{6.7cm}}
+&&\\[-0.7cm]
+\rm\sze Option  & \rm\sze Values    & \rm\sze Description\\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+% special tables for long descriptions
+\newenvironment{optiontableDescr2}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.5ex}\tt\sze}p{3.0cm}>{\tt\sze}p{3.0cm}>{\sze}p{7.2cm}}
+&&\\[-0.7cm]
+\rm\sze Option  & \rm\sze Values    & \rm\sze Description\\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+% special tables for long descriptions and short option words
+\newenvironment{optiontableDescrShort}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{2.5cm}>{\tt\sze}p{3.5cm}>{\sze}p{7.2cm}}
+&&\\[-0.7cm]
+\rm\sze Option  & \rm\sze Values    & \rm\sze Description\\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+% special table for long option words
+\newenvironment{optiontableLong}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{4.5cm}>{\tt\sze}p{3.2cm}>{\sze}p{5.5cm}}
+&&\\[-0.7cm]
+\rm\sze Option  & \rm\sze Values    & \rm\sze Description\\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+% special table for long option words
+\newenvironment{optiontableLong2}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{4.0cm}>{\tt\sze}p{3.0cm}>{\sze}p{7.6cm}}
+&&\\[-0.7cm]
+\rm\sze Option  & \rm\sze Values    & \rm\sze Description\\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+\newcommand\optionSeparator{\\[0.15cm]\hline&&\\[-0.45cm]}
+%
+% environment for program table 
+%
+\newcommand\programCaptionSize{\allFontSize}
+\newfloat{programs}{H}{loc}
+\floatname{programs}{\sf Table}
+
+\usepackage{tabularx}
+% usual table
+\newenvironment{programtable}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\small}p{4.3cm}>{\small}p{10.6cm}}
+&\\[-0.7cm]
+\rm\small Macro & \rm\small Description\\[0.1cm]\hline
+&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
+\newcommand\programSeparator{\\[0.15cm]\hline&\\[-0.45cm]}
+%
+% url, email and command styles
+%
+\urlstyle{rm}
+\newcommand\email{\begingroup \urlstyle{rm}\Url}
+\newcommand\emailsf{\begingroup \urlstyle{sf}\Url}
+\newcommand\code{\begingroup \urlstyle{tt}\Url}
+\newcommand\spacecode[1]{{\tt #1}} % use if space must be obeyed
+\newcommand\T{\UrlTildeSpecial}
+\renewcommand \verbatim{\tt}
+\newcommand\urlsm[1]{{\small\url{#1}}}
+%
+% other definitions -------------------
+%
+\newcommand\un{\underline}
+\newcommand\ie{i.e.\xspace}
+\newcommand\eg{e.g.\xspace}
+\newcommand\ea{{\em et al.}\xspace}
+\newcommand\cf{cf.\xspace}
+\newcommand\Lik{{\cal L}}
+\newcommand\RLik{\ensuremath{ y_\Lik}\xspace}
+\newcommand\RPDERS{\ensuremath{ y_\text{\mbox{PDE-RS}}}\xspace}
+\newcommand\RPDEFoam{\ensuremath{ y_\text{\mbox{PDE-Foam}}}\xspace}
+\newcommand\HMATRIX{\ensuremath{ y_H}\xspace}
+\newcommand\xPDFSB{\ensuremath{{\hat x}_{S(B)}}\xspace}
+\newcommand\xPDFS{\ensuremath{{\hat x}_{S}}\xspace}
+\newcommand\xPDFB{\ensuremath{{\hat x}_{B}}\xspace}
+\newcommand\xPDF{\ensuremath{\hat x}\xspace}
+\newcommand\yPDFSB{\ensuremath{{\hat y}_{S(B)}}\xspace}
+\newcommand\yPDFS{\ensuremath{{\hat y}_{S}}\xspace}
+\newcommand\yPDFB{\ensuremath{{\hat y}_{B}}\xspace}
+\newcommand\Rarity{{\cal R}}
+\newcommand{\yMLP}{\ensuremath{y_\text{MLP}}\xspace}
+\newcommand{\Signif}{\ensuremath{\cal S}\xspace}
+\newcommand{\Fisher}{\ensuremath {y_\text{Fi}}\xspace}
+\newcommand{\yMVA}{\ensuremath{y}\xspace}
+\newcommand{\yBoost}{\ensuremath{ y_\text{Boost}\xspace}}
+\newcommand{\yRF}{\ensuremath{ y_{\rm RF}}\xspace}
+\newcommand{\yANN}{\ensuremath{ y_{\rm ANN}}\xspace}
+\newcommand{\yANNa}{\ensuremath{ y_{{\rm ANN},a}}\xspace}
+\newcommand\proba{\ensuremath{ P_{\!S}}\xspace}
+\newcommand\FisherMean{\ensuremath{ \overline y_\text{Fi}\xspace}}
+\newcommand\beq{\begin{equation}}
+\newcommand\eeq{\end{equation}}
+\newcommand\beqn{\begin{eqnarray}}
+\newcommand\eeqn{\end{eqnarray}}
+\newcommand\beqns{\begin{eqnarray*}}
+\newcommand\eeqns{\end{eqnarray*}}
+\newcommand{\intl}{\int\limits}
+\newcommand{\ointl}{\oint\limits}
+\newcommand{\mc}{\multicolumn}
+\newcommand\rs{\raisebox{1.3ex}[-1.5ex]}
+\newcommand{\e}{\varepsilon}
+\newcommand{\eS}{\ensuremath{ \e_{\!S}}\xspace}
+\newcommand{\eB}{\ensuremath{ \e_{\!B}}\xspace}
+\newcommand{\rB}{\ensuremath{ r_{\!B}}\xspace}
+\newcommand{\NS}{\ensuremath{ N_{\!S}}\xspace}
+\newcommand{\NB}{\ensuremath{ N_{\!B}}\xspace}
+\newcommand{\NSB}{\ensuremath{ N_{\!S(B)}}\xspace}
+\newcommand{\WS}{\ensuremath{ W_{\!S}}\xspace}
+\newcommand{\WB}{\ensuremath{ W_{\!B}}\xspace}
+\newcommand{\WSB}{\ensuremath{ W_{\!S(B)}}\xspace}
+\newcommand{\fS}{\ensuremath{ f_{\!S}}\xspace}
+\newcommand{\Separation}{{\ensuremath{\langle S^2\rangle}}\xspace}
+\newcommand{\Nvar}{{\ensuremath{n_\text{var}}}\xspace}
+\newcommand{\Ntar}{{\ensuremath{n_\text{tar}}}\xspace}
+\newcommand{\Ntrain}{{\ensuremath{N}}\xspace}
+\newcommand{\Dfrac}[2]{\frac{\displaystyle#1}{\displaystyle#2}}
+\newcommand\lsim{\mathrel{\!\mathpalette\vereq<}\!}
+\newcommand\gsim{\mathrel{\!\mathpalette\vereq>}\!}
+%  used in tables
+\newcommand\AD{0.15cm}
+\newcommand\BD{-0.3cm}
+\newcommand\Good{$\star\star$}
+\newcommand\OK{$\star$}
+\newcommand\Bad{$\circ$}
+\newcommand{\YES}{$\bullet$}
+\newcommand{\NO}{$\circ$}
+% --------------------------------
+\newcommand{\Hessian}{\ensuremath{H}\xspace}
+\newcommand{\IHessian}{\ensuremath{\Hessian^{-1}}\xspace}
+\newcommand{\IHessiank}{\ensuremath{\Hessian^{-1(k)}}\xspace}
+\newcommand{\IHessiankmone}{\ensuremath{\Hessian^{-1(k-1)}}\xspace}
+
+% TMVA constants
+\newcommand\TmvaTutorialDir{\code{$ROOTSYS/tutorials/tmva/test}~}
+\newcommand\TmvaKerasTutorialDir{\code{$ROOTSYS/tutorials/tmva/test/keras}~}

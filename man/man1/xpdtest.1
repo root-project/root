@@ -1,0 +1,136 @@
+.\"
+.\" $Id: root-config.1,v 1.4 2005/03/21 21:42:21 rdm Exp $
+.\"
+.TH XPDTEST 1 "Version 5" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+xpdtest \- xproofd test utility
+.SH SYNOPSIS
+.B xpdtest
+.I "[options]"
+.SH "DESCRIPTION"
+This manual page documents the
+.BR xpdtest
+program, an utility whose purpose is to test the status of an xproofd daemon running on the local machine.
+The target is to run
+.B xpdtest
+inside a monitor infrastructure, for example
+.B monit
+(see
+.UR http://mmonit.com/monit/
+\fIhttp://mmonit.com/monit/\fP
+), capable to take some decisions and to do some actions following the result of
+.B xpdtest.
+
+
+.SH OPTIONS
+.TP
+.B \-\-help, \-h
+Gives a short list of options available, and exit
+.TP
+.B \-t\fP \fR<test>\fP
+type of test to be run:
+    0       ping the daemon (includes process existence check if pid specified; see below)
+    1       ping the daemon and check connection for default user
+    2       ping the daemon and check connection for the default user and all recent users
+
+The default user is the one specified in the URL (e.g. 'user' for user@localhost); if no explicit specification is found in the URL, the user under which
+.B xpdtest
+is run is used; it can be also passed via the environment variable
+.B XPDTEST_TEST.
+.TP
+.B \-u\fP \fR<url>\fP
+URL where the xproofd under test responds; it can be also passed via the environment variable
+.B XPDTEST_URL
+(default is 'localhost:1093').
+.TP
+.B \-d\fP \fR<sbdir>\fP
+sandbox directory used to find out the users of the facility when test is 2; it can be also passed via the environment variable
+.B XPDTEST_SBOXDIR
+(default is '/tmp/proofbox').
+.TP
+.B \-s\fP \fR<span>\fP
+define the time interval, in minutes, to define 'recent' users when test is 2: only users who connected within this interval are checked; use -1 for infinite;
+it can be also passed via the environment variable
+.B XPDTEST_TIMESPAN
+(default is -1).
+.TP
+.B \-T\fP \fR<timeout>\fP
+define the time, in seconds, waited for the session to start successfully;
+it can be also passed via the environment variable
+.B XPDTEST_TIMESOUT
+(default is 10 seconds).
+.TP
+.B \-l\fP \fR<logfile>\fP
+log file if not screen; deleted if the required test fails unless '-k' is specified (see below);it can be also passed via the environment variable
+.B XPDTEST_LOGFILE.
+.TP
+.B \-p\fP \fR<pidfile>\fP
+file with the process ID as a integer number in the first line; if this file is given a quick test on the process existence is done using kill(\fRpid\fP,0);
+it can be also passed via the environment variable
+.B XPDTEST_PIDFILE.
+.TP
+.B \-k
+keep log file at path given via '-l' in all cases; it can be also passed via the environment variable
+.B XPDTEST_KEEP
+(default is 'no keep').
+.TP
+.B \-v
+set
+.B
+gDebug=1
+for the underline ROOT calls; it can be also passed via the environment variable
+.B XPDTEST_VERBOSE
+(default is 'no verbose').
+.SH RETURN
+.B xpdtest
+returns 0 on success and 1 in case of test failure. Errors are printed on the screen or saved into the specified log file.
+
+.SH FILES
+The file
+.B xpdtest_popen_file
+in the temporary directory (typically /tmp) is used to parse the output of
+.B TProof::Open().
+The file is overwritten by each new attempt; after a run of
+.B xpdtest
+it contains the result of the last session open attempt.
+
+.SH NOTES
+The connection attempt is done in
+.B 'masteronly'
+mode. For daemons running in
+.B 'worker'
+mode the attempt will fail with a well defined error message ('Server not allowed to be top master');
+since this indicates that the daemon is anyhow responsive, a positive detection of such a pattern in the error message
+is interpreted as the attempt having being successful.
+
+.SH "ORIGINAL AUTHORS"
+The ROOT team:
+.RS
+\fBRene Brun\fR and \fBFons Rademakers\fR
+.RE
+More information can be found at the \fBROOT\fR website:
+.UR http://root.cern.ch
+\fIhttp://root.cern.ch\fB
+.SH "COPYRIGHT"
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+.P
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+.P
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+.SH AUTHOR
+This manual page was written by Gerardo Ganis
+<gerardo.ganis@cern.ch>, for the GNU/Linux system (but may be used by
+others).
+.\"
+.\" EOF
+.\"

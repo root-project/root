@@ -1,0 +1,25 @@
+# Example analysis illustrating the use of rootdrawtree / TSimpleAnalysis.
+# Run as:
+#  $ rootdrawtree tutorials/tree/simpleAnalysis.txt
+
+file_output.root   #the output file in which histograms are stored
+
+# The next line has the name of the tree of the input data. It is
+# optional if there is exactly one tree in the first input file.
+ntuple   #name of the input tree
+
+# The lines of the next block correspond to .root input files that
+# contain the tree. In this case we use only one input file.
+tutorials/hsimple.root  # this is the input file
+
+# The next block is composed by lines that allow to configure the
+# histograms. They have the following syntax:
+# NAME = EXPRESSION if CUT
+# which corresponds to chain->Draw("EXPRESSION >> NAME", "CUT")
+# i.e. it will create a histogram called NAME and store it in
+# file_output.root.
+# "if CUT" is optional
+hpx=px if px<-3   #first histogram
+hpxpy=px:py    #second histogram
+
+# End of the configuration file

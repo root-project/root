@@ -1,0 +1,138 @@
+<br/>
+<hr/>
+<a name="gui"></a>
+<h3>GUI</h3>
+
+<h4>TRootBrowser</h4>
+<ul>
+<li> Change the default canvas name from "Canvas 1" to "Canvas_1", solving the following issue: When saving the canvas as C++ script, it uses the canvas name as object name, creating a non-working C++ script.</li>
+<li> Close the browser before terminating the application</li>
+</ul>
+
+<h4>TGListBox</h4>
+<ul>
+<li> Fix a rounding problem in TGListBox when the entries have different height. This solves a problem with TGFontTypeComboBox, the last item (the one that reads "13. times") was barely visible. Only the top 2 or 3 pixels could be seen when the vertical scrollbar is at its lowest possible position.
+</li>
+</ul>
+
+<h4>TGClient</h4>
+<ul>
+<li> Added a new fStyle data member and the getter/setter methods (GetStyle()/SetStyle()), allowing to select between classic (win95) and modern (e.g. flat popup menu and toolbar buttons) look. This can be enabled/disabled via the new option <tt>GUI.Style</tt> in <tt>$ROOTSYS/etc/system.rootrc</tt>, the default being set as <tt>modern</tt>
+</li>
+</ul>
+
+<h4>TGButton</h4>
+<ul>
+<li> Properly position (center) the pictures when using different font size (part of the <a href="http://savannah.cern.ch/task/?18792">task #18792</a>)</li>
+<li> Create a new (flat) style for some buttons (e.g. the toolbar buttons) and added the SetStyle() method</li>
+</ul>
+
+<h4>TGComboBox</h4>
+<ul>
+<li> Keyboard navigation has been implemented
+</li>
+</ul>
+
+<h4>TGToolBar, TRootGuiBuilder, TStyleManager, TRecorder</h4>
+<ul>
+<li> Enable the new (flat) button style. This can be enabled/disabled via the <tt>GUI.Style</tt> entry in <tt>$ROOTSYS/etc/system.rootrc</tt> (or in a user defined <tt>$HOME/.rootrc</tt>)
+</li>
+</ul>
+
+<h4>TGMenu</h4>
+<ul>
+<li> Add a new (modern) way of displaying the popup menus (flat frame with gray border). This can be selected/changed via the "Gui.Style" entry in the system.rootrc file (modern being the default)
+</li>
+</ul>
+
+<h4>TGScrollBar</h4>
+<ul>
+<li> Create a new (flat) style for scrollbars. This is enabled/disabled via the <tt>GUI.Style</tt> entry in <tt>$ROOTSYS/etc/system.rootrc</tt> (or in a user defined <tt>$HOME/.rootrc</tt>)
+</li>
+</ul>
+
+<h4>TGCommandPlugin</h4>
+<ul>
+<li> Change the text highlighing color
+</li>
+</ul>
+
+<h4>TGListView</h4>
+<ul>
+<li> Change the way the current (selected) item is highlighted (full width instead of text only)
+</li>
+</ul>
+
+<h4>TGListTree</h4>
+<ul>
+<li> Change the way the current (selected) item and the item below the mouse are highlighted (full width instead of text only)</li>
+<li> Slightly improve search on Linux (implemented F3, Ctrl+F and Ctrl+G) and make it working on Windows</li>
+</ul>
+
+<h4>TGFileBrowser</h4>
+<ul>
+<li> Fix a problem when browsing geometries (TGeoManager must not be treated as a regular TDirectory)</li>
+<li> Allow user to specify any custom filter (e.g. *.png) in the filter combo box</li>
+<li> Enable the new (flat) button style. This can be enabled/disabled via the <tt>GUI.Style</tt> entry in <tt>$ROOTSYS/etc/system.rootrc</tt> (or in a user defined <tt>$HOME/.rootrc</tt>)</li>
+<li> Create special icons for symlinks (shortcuts) in the browser (add a small arrow on bottom left corner of the original icon)</li>
+</ul>
+
+<h4>TGFileDialog</h4>
+<ul>
+<li> Implemented the <a href="http://savannah.cern.ch/bugs/?78935">wish #78935</a>: Longer "File of type:" selector is wanted (make more combo box entries visible)</li>
+<li> Enable the new (flat) button style. This can be enabled/disabled via the <tt>GUI.Style</tt> entry in <tt>$ROOTSYS/etc/system.rootrc</tt> (or in a user defined <tt>$HOME/.rootrc</tt>)</li>
+</ul>
+
+<h4>TGFSContainer</h4>
+<ul>
+<li> The shortcuts are now working on Windows</li>
+</ul>
+
+<h4>TGColorDialog, TGFontDialog, TGTextEditDialogs</h4>
+<ul>
+<li> Several improvements in the layout when increasing the font size
+</li>
+</ul>
+
+<h4>TGTextEditor</h4>
+<ul>
+<li> Added a "Close" menu entry</li>
+<li> Properly ask the user to save the currently opened file (if modified) when trying to open a new file</li>
+<li> Moved the IsSaved() part of the code in the LoadFile() method, to make sure it works also when the text editor is used as a plugin in the browser</li>
+<li> Change the text highlighing color</li>
+<li> Cleanup the text when quitting root (avoid potential crash on Linux)</li>
+</ul>
+
+<h4>TGFrame</h4>
+<ul>
+<li> Allow to override CTRL+S behavior by using the <tt>TGMainFrame::BindKey()</tt> function
+</li>
+</ul>
+
+<h4>TVirtualDragManager</h4>
+<ul>
+<li> Renamed <tt>TVirtualDragManager::GetDragType()</tt> to <tt>TVirtualDragManager::GetEDragType()</tt>, to avoid potential clash between two classes (TGFrame and TVirtualDragManager) having both GetDragType method with different return types. And they are both inherited by one class (TGuiBldDragManager) which doesn't define GetDragType.
+</li>
+</ul>
+
+<h4>TGSlider</h4>
+<ul>
+<li> Added mouse wheel handling
+</li>
+</ul>
+
+<h4>TGToolTip</h4>
+<ul>
+<li> Properly set the text color of the tooltip label, using the value of <tt>Gui.TooltipForegroundColor</tt> in <tt>$ROOTSYS/etc/system.rootrc</tt> (or in a user defined <tt>$HOME/.rootrc</tt>)
+</li>
+</ul>
+
+<br/>
+<hr/>
+<h3>GUIHtml</h3>
+
+<h4>TGHtmlBrowser</h4>
+<ul>
+<li> Only add non-empty strings (urls) in the combo box, to avoid empty entries</li>
+<li> Enable the new (flat) button style. This can be enabled/disabled via the <tt>GUI.Style</tt> entry in <tt>$ROOTSYS/etc/system.rootrc</tt> (or in a user defined <tt>$HOME/.rootrc</tt>)</li>
+</ul>

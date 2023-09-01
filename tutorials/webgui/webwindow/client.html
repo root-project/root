@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>RWebWindow test</title>
+  </head>
+
+  <body>
+     <button onclick="sendMsg('get_text')">Text</button>
+     <button onclick="sendMsg('get_binary')">Binary</button>
+     <button onclick="sendMsg('halt')">Halt</button>
+     <div id="main"></div>
+  </body>
+
+  <script type="module">
+
+    import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+
+    let conn_handle = null;
+
+    globalThis.sendMsg = txt => {
+       if (conn_handle)
+          conn_handle.send(txt);
+    }
+
+    function addOutput(msg) {
+       document.getElementById("main").innerHTML += msg + "<br>";
+    }
+
+    connectWebWindow({
+       receiver: {
+          // method called when connection to server is established
+          onWebsocketOpened(handle) {
+             handle.send("Init msg from client");
+             conn_handle = handle;
+             addOutput("Connected");
+          },
+
+          // method with new message from server
+          onWebsocketMsg(handle, msg, offset) {
+             if (typeof msg != "string") {
+                let arr = new Float32Array(msg, offset);
+                addOutput("bin: " + arr.toString());
+             } else {
+                addOutput("txt: " + msg);
+             }
+          },
+
+          // method called when connection is gone
+          onWebsocketClosed(handle) {
+             conn_handle = null;
+             // when connection closed, close panel as well
+             if (window) window.close();
+          }
+       }
+    });
+
+  </script>
+
+</html>

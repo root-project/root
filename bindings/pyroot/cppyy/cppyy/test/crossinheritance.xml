@@ -1,0 +1,6 @@
+<lcgdict>
+
+   <namespace name="CrossInheritance" />
+   <class pattern="CrossInheritance::*" />
+
+</lcgdict>

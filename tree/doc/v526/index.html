@@ -1,0 +1,212 @@
+<br/>
+<hr/>
+<a name="tree"></a>
+<h3>Tree</h3>
+<ul>
+<li>Changed the MaxTreeSize default from 1.9 GBytes to 100 GBytes.</li>
+
+<li>Add new special functions in TTreeFormula (and hence TTree::Draw and TTree::Scan) to calculate the minimun and maximum with an entry:
+    <ul>
+    <li><pre lang="cxx">Min$(formula),Max$(formula):</pre>return the minimun/maximum (within one TTree entry) of the value of the
+                       elements of the formula given as a parameter.</li>
+    <li><pre lang="cxx">MinIf$(formula,condition),MaxIf$(formula,condition):</pre>return the minimum (maximum) (within one TTree entry)
+                       of the value of the elements of the formula given as a parameter
+                      if they match the condition. If not element match the condition, the result is zero.  To avoid the
+                       the result is zero.  To avoid the consequent peak a zero, use the
+                       pattern:
+       <pre lang="cxx">tree->Draw("MinIf$(formula,condition)","condition");</pre>
+                       which will avoid calculation MinIf$ for the entries that have no match
+                       for the condition.</li>
+    </ul>
+</li>
+<li>Add support in TTreeFormula (and hence TTree::Draw and TTree::Scan) for the ternary condition operator ( cond ? if_expr : else_expr ).</li>
+<li>Significantly (by 2 order of magnitude) improved the performance of TTree::Draw calling C++ functions.</li>
+<li>Replace the function <tt>TSelectorDraw::MakeIndex</tt> and <tt>TSelectorDraw::GetNameByIndex</tt>
+     with the function <tt>TSelectorDraw::SplitNames.</tt>  </li>
+<li>Add a return value to SetBranchAddress, a return value greater or equal to zero indicate success, a negative
+value indicates failure (in both case, the address is still updated).  Example:
+<pre lang="cxx">if (tree->SetBranchAddress(mybranch,&amp;myvar) &lt; 0) {
+   cerr &lt;&lt; "Something went wrong\n";
+   return;
+}</pre>
+The possible return values are:<ul>
+<li>kMissingBranch (-5) : Missing branch</li>
+<li>kInternalError (-4) : Internal error (could not find the type corresponding to a data type number.</li>
+<li>kMissingCompiledCollectionProxy (-3) : Missing compiled collection proxy for a compiled collection.</li>
+<li>kMismatch (-2) : Non-Class Pointer type given does not match the type expected by the branch.</li>
+<li>kClassMismatch (-1) : Class Pointer type given does not match the type expected by the branch.</li>
+<li>kMatch (0) : perfect match.</li>
+<li>kMatchConversion (1) : match with (I/O) conversion.</li>
+<li>kMatchConversionCollection (2) : match with (I/O) conversion of the content of a collection.</li>
+<li>kMakeClass (3) : MakeClass mode so we can not check.</li>
+<li>kVoidPtr (4) : void* passed so no check was made.</li>
+<li>kNoCheck (5) : Underlying TBranch not yet available so no check was made.</li>
+</ul></li>
+<li>Insure that the TTreeCloner (fast merging) is able to also copy 'uninitialized' TStreamerInfo describing abstract classes.</li>
+<li>Repair several use case of splitting collection of pointers (especially when their split level is 1).</li>
+<li>Several run-time performance improvements.</li>
+<li>In TTree::Fill use fZipBytes instead of fTotBytes for deciding when to flush or autosave.</li>
+<li>Properly handle TTree aliases containing array indices.</li>
+<li>Fix the default sorting order of baskets when the TTree is an older in-memory TTree.
+Enhance the sort order to use the 'entry number' when the seek position are equal.
+Consequently the default sort order for an older in-memory TTree is now
+essentially kSortBasketsByEntry rather than kSortBasketsByBranch (old 'correct' sort
+order) or 'random' (the 'broken' sort order prior to this release).</li>
+</ul>
+<h4>IMPORTANT enhancement in TTree::Fill:</h4>
+<p><b>Slides from a recent seminar describing the main features of ROOT IO and Trees  and the recent
+improvements described below</b> are available at
+ <a href="http://root.cern.ch/files/brun_lcgapp09.pptx ">http://root.cern.ch/files/brun_lcgapp09.pptx </a>
+or
+ <a href="http://root.cern.ch/files/brun_lcgapp09.pdf ">http://root.cern.ch/files/brun_lcgapp09.pdf </a>.</p>
+<p>The baskets are flushed and the Tree header saved at regular intervals (See AutoFlush and OptimizeBaskets)</p>
+
+<p>When the amount of data written so far (fTotBytes) is greater than fAutoFlush (see SetAutoFlush) all the baskets are flushed to disk.
+This makes future reading faster as it guarantees that baskets belonging to nearby entries will be on the same disk region.</p>
+<p>When the first call to flush the baskets happens, we also take this opportunity to optimize the baskets buffers.
+We also check if the number of bytes written is greater than fAutoSave (see SetAutoSave).
+In this case we also write the Tree header. This makes the Tree recoverable up to this point in case the program writing the Tree crashes.</p>
+<p>Note that the user can also decide to call FlushBaskets and AutoSave in her event loop on the base of the number of events written instead of the number of bytes written.</p>
+
+<h4>New function TTree::OptimizeBaskets</h4>
+<pre>
+void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
+</pre>
+<p>This function may be called after having filled some entries in a Tree
+using the information in the existing branch buffers, it will reassign
+new branch buffer sizes to optimize time and memory.</p>
+
+<p>The function computes the best values for branch buffer sizes such that
+the total buffer sizes is less than maxMemory and nearby entries written
+at the same time.
+In case the branch compression factor for the data written so far is less
+than compMin, the compression is disabled.
+
+if option ="d" an analysis report is printed.</p>
+
+<p>This function may also be called on an existing Tree to figure out the best values
+given the information in the Tree header</p>
+<pre>
+   TFile f("myfile.root");
+   TTree *T = (TTree*)f.Get("mytreename");
+   T->Print();  //show the branch buffer sizes before optimization
+   T->OptimizeBaskets(10000000,1,"d");
+   T->Print();  //show the branch buffer sizes after optimization
+</pre>
+
+<h4>New interface functions to customize the TreeCache</h4>
+<pre>   virtual void  AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
+   virtual void  AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   virtual void  PrintCacheStats(Option_t* option = "") const;
+   virtual void  SetParallelUnzip(Bool_t opt=kTRUE);
+   virtual void  SetCacheEntryRange(Long64_t first, Long64_t last);
+   virtual void  SetCacheLearnEntries(Int_t n=10);
+   virtual void  StopCacheLearningPhase();</pre>
+
+<h4>New functionality AutoFlush (and changes to AutoSave)</h4>
+
+Implement a new member fAutoFlush in TTree with its getter and setter:
+
+<pre lang="cxx">void TTree::SetAutoFlush(Long64_t autof)</pre>
+
+The logic of the AutoFlush mechanism is optimized such that the TreeCache
+will read always up to the point where FlushBaskets has been called.
+This minimizes the number of cases where one has to seek backward when reading.
+<br/>
+This function may be called at the start of a program to change
+the default value for fAutoFlush.
+
+<ul><li>CASE 1 : autof &gt; 0<br/>
+
+ autof is the number of consecutive entries after which TTree::Fill will
+ flush all branch buffers to disk.
+
+</li><li>     CASE 2 : autof &lt; 0<br/>
+
+ When filling the Tree the branch buffers will be flushed to disk when
+ more than autof bytes have been written to the file. At the first FlushBaskets
+ TTree::Fill will replace fAutoFlush by the current value of fEntries.
+
+ Calling this function with autof &lt; 0 is interesting when it is hard to estimate
+ the size of one entry. This value is also independent of the Tree.
+
+ When calling SetAutoFlush with no arguments, the
+ default value is -30000000, ie that the first AutoFlush will be done when
+ 30 MBytes of data are written to the file.
+
+</li><li>      CASE 3 : autof = 0<br/>
+ The AutoFlush mechanism is disabled.
+
+</li></ul>
+ Flushing the buffers at regular intervals optimize the location of
+ consecutive entries on the disk.
+
+<br/>
+Changed the default value of AutoSave from 10 to 30 MBytes.
+<br/>
+
+
+
+<h4>New class TTreePerfStats</h4>
+This new class is an important tool to measure the I/O performance of a Tree.
+It shows the locations in the file when reading a Tree. In particular it is easy
+to see the performance of the Tree Cache. The results can be:
+<ul>
+<li>drawn in a canvas.</li>
+<li>printed on standard output.</li>
+<li>saved to a file for processing later.</li>
+</ul>
+<pre>
+       Example of use
+ {
+   TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
+   T = (TTree*)f-&gt;Get("Events");
+   Long64_t nentries = T-&gt;GetEntries();
+   T-&gt;SetCacheSize(10000000);
+   T-&gt;AddBranchToCache("*");
+
+   TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
+
+   for (Int_t i=0;i&lt;nentries;i++) {
+      T-&gt;GetEntry(i);
+   }
+   ps->SaveAs("atlas_perf.root");
+ }
+</pre>
+<p>then, in a root interactive session, one can do:</p>
+<pre>
+    root &gt; TFile f("atlas_perf.root");
+    root &gt; ioperf-&gt;Draw();
+    root &gt; ioperf-&gt;Print();
+</pre>
+
+<p> The Draw or Print functions print the following information:</p>
+<pre>
+   TreeCache = TTree cache size in MBytes
+   N leaves  = Number of leaves in the TTree
+   ReadTotal = Total number of zipped bytes read
+   ReadUnZip = Total number of unzipped bytes read
+   ReadCalls = Total number of disk reads
+   ReadSize  = Average read size in KBytes
+   Readahead = Readahead size in KBytes
+   Readextra = Readahead overhead in percent
+   Real Time = Real Time in seconds
+   CPU  Time = CPU Time in seconds
+   Disk Time = Real Time spent in pure raw disk IO
+   Disk IO   = Raw disk IO speed in MBytes/second
+   ReadUZRT  = Unzipped MBytes per RT second
+   ReadUZCP  = Unipped MBytes per CP second
+   ReadRT    = Zipped MBytes per RT second
+   ReadCP    = Zipped MBytes per CP second
+</pre>
+<p>
+The Figure below shows the result for an original non optimized file when
+the Tree Cache is not used.</p>
+<p><img src="perfstats_atlas_original.gif" alt="no optimization, no tree cache"></img></p>
+<p>The Figure below shows the result for the above data file written with the
+new version of ROOT and when the Tree cache is activated.</p>
+<p><img src="perfstats_atlas_flushed.gif" alt="optimization, tree cache"></img></p>
+
+
+
+

@@ -1,0 +1,74 @@
+<br/>
+<hr/>
+<a name="gui"></a>
+<h3>GUI Libraries</h3>
+
+<h4>TGTextButton</h4>
+<ul>
+<li>Fix a problem with new style when using <tt>SetBackgroundPixmap()</tt> with flat buttons. To be able to set (and keep) a pixmap as background, one should set the <tt>kOwnBackground</tt> flag. E.g.:
+<pre>
+   fButton->SetBackgroundPixmap(img->GetPixmap());
+   fButton->ChangeOptions(fButton->GetOptions() | kOwnBackground);
+   fButton->SetStyle("modern");
+</pre></li>
+</ul>
+
+<h4>TRootBrowser</h4>
+<ul>
+<li>Use the <tt>ProcessedConfigure</tt> signal to be notified when an embedded frame change its layout, to properly call <tt>Layout()</tt> on its parent frame, to automatically display the change (for example, showing the EventStatusBar of a TCanvas embedded in a TBrowser was only appearing after manually resizing the window)</li>
+</ul>
+
+<h4>TGFileBrowser</h4>
+<ul>
+<li>Fixed memory leak when browsing TList inside a file: don't read the list content each time one click on the list</li>
+<li>A protection for empty directories (e.g. not containing any key) as been added. Solves the <a href="http://savannah.cern.ch/bugs/?94028">bug #94028, TBrowser crash trying to browse sub-root-directories in memory</a></li>
+</ul>
+
+<h4>TGFSComboBox</h4>
+<ul>
+<li>Fix a problem when the current directory is similar to $ROOTSYS, for example with $ROOTSYS being /home/user/root and $PWD being /home/user/rootdev, only "dev" was displayed, stripping off $ROOTSYS</li>
+<li>Properly handle backslashes as directory separators on Windows</li>
+</ul>
+
+<h4>TGFileDialog</h4>
+<ul>
+<li>Change the file name only if the selected entry is not a directory (as reported <a href="http://root.cern.ch/phpBB3//viewtopic.php?f=3&amp;t=14370">on the forum</a>)</li>
+</ul>
+
+<h4>TGMsgBox</h4>
+<ul>
+<li>Implemented "Enter" and "Escape" key handling in TGMsgBox (used as Ok and Cancel buttons, if they are there)</li>
+</ul>
+
+<h4>TGTextEntry</h4>
+<ul>
+<li>Several issues with text selection and combination of cursor position and text alignment in text entries have been solved</li>
+</ul>
+
+<h4>TRootCanvas</h4>
+<ul>
+<li>A check has been added for the case where the canvas is embedded (e.g. in the browser), then the layout of the main frame has to be re-applied when showing/hiding the editor</li>
+<li>Stay in the current (working) directory when using "File -> Save as..." from a canvas or from a text editor (as the file dialog changes the current directory)</li>
+</ul>
+
+<h4>TFitParametersDialog</h4>
+<ul>
+<li>Implemented keyboard navigation (tab and shift+tab) between the different number entry fields of the dialog</li>
+</ul>
+
+<h4>TFitEditor</h4>
+<ul>
+<li>Layout improvements and removed useless text in message box</li>
+</ul>
+
+<h4>TTreeViewer</h4>
+<ul>
+<li>Fixed a problem with array names (e.g. <tt>fVertex[]</tt>) as reported <a href="http://root.cern.ch/phpBB3//viewtopic.php?f=3&amp;t=14507">on the forum</a>)</li>
+</ul>
+
+<h4>TGWin32</h4>
+<ul>
+<li>Fixed several resource leaks (including GDI &amp; USER objects)</li>
+</ul>
+
+

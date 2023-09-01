@@ -1,0 +1,159 @@
+<mvc:View height="100%" width="100%"
+   class="sapUiSizeCompact sapUiResponsivePadding--header sapUiResponsivePadding--content sapUiResponsivePadding--footer sapUiResponsivePadding--floatingFooter"
+   controllerName="rootui5.tree.controller.TreeViewer"
+   xmlns="sap.m"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:core="sap.ui.core"
+   xmlns:l="sap.ui.layout"
+   xmlns:t="sap.ui.table">
+   <Page id="treeViewerPage" title="Tree viewer: {/fTreeName}" showNavButton="false" floatingFooter="true"
+       showFooter="true" showSubHeader="false" showHeader="false" class="sapUiStdPage sapUiContentPadding">
+       <content>
+          <VBox width="100%">
+            <FlexBox renderType="Bare" width="100%" alignItems="Center" >
+              <Label text="X" showColon="true" wrapping="false" labelFor="input_x" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="25px"/>
+                 </layoutData>
+               </Label>
+              <Input
+                 id="input_x"
+                 value="{/fExprX}"
+                 valueLiveUpdate="true"
+                 placeholder="Input x expression"
+                 showSuggestion="true"
+                 showValueHelp="true"
+                 valueHelpRequest=".onBranchHelpRequest"
+                 suggestionItems="{/fBranches}">
+                 <suggestionItems>
+                    <core:Item text="{fName}"/>
+                 </suggestionItems>
+              </Input>
+              <Button id="clear_x" icon="sap-icon://sys-cancel" tooltip="Clear X expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
+            </FlexBox>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center">
+               <Label text="Y" showColon="true" wrapping="false" labelFor="input_y" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="25px"/>
+                 </layoutData>
+               </Label>
+               <Input
+                 id="input_y"
+                 value="{/fExprY}"
+                 valueLiveUpdate="true"
+                 placeholder="Input y expression"
+                 showSuggestion="true"
+                 showValueHelp="true"
+                 valueHelpRequest=".onBranchHelpRequest"
+                 suggestionItems="{/fBranches}">
+                 <suggestionItems>
+                    <core:Item text="{fName}"/>
+                 </suggestionItems>
+               </Input>
+               <Button id="clear_y" icon="sap-icon://sys-cancel" tooltip="Clear Y expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
+            </FlexBox>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center" >
+               <Label text="Z" showColon="true" wrapping="false" labelFor="input_z" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="25px"/>
+                 </layoutData>
+               </Label>
+               <Input
+                 id="input_z"
+                 value="{/fExprZ}"
+                 valueLiveUpdate="true"
+                 placeholder="Input z expression"
+                 showSuggestion="true"
+                 showValueHelp="true"
+                 valueHelpRequest=".onBranchHelpRequest"
+                 suggestionItems="{/fBranches}">
+                 <suggestionItems>
+                    <core:Item text="{fName}"/>
+                 </suggestionItems>
+               </Input>
+               <Button id="clear_z" icon="sap-icon://sys-cancel" tooltip="Clear Z expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
+            </FlexBox>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center" >
+               <Label text="Cut" showColon="true" wrapping="false" labelFor="input_cut" class="sapUiTinyMarginEnd">
+                 <layoutData>
+                    <FlexItemData minWidth="55px" />
+                 </layoutData>
+               </Label>
+               <Input
+                 id="input_cut"
+                 value="{/fExprCut}"
+                 valueLiveUpdate="true"
+                 placeholder="Input cut expression"
+                 showSuggestion="true"
+                 showValueHelp="true"
+                 valueHelpRequest=".onBranchHelpRequest"
+                 suggestionItems="{/fBranches}">
+                 <suggestionItems>
+                    <core:Item text="{fName}"/>
+                 </suggestionItems>
+               </Input>
+               <Button id="clear_cut" icon="sap-icon://sys-cancel" tooltip="Clear cut expression" type="Transparent" press="onPressClearBtn" class="sapUiSizeCompact"/>
+            </FlexBox>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center">
+               <Label text="Options" showColon="true" wrapping="false" labelFor="input_option" class="sapUiTinyMarginEnd">
+                  <layoutData>
+                     <FlexItemData minWidth="55px" />
+                  </layoutData>
+               </Label>
+               <Input
+                  id="input_option"
+                  class="sapUiTinyMarginEnd"
+                  value="{/fOption}"
+                  valueLiveUpdate="true"
+                  placeholder="Input options"/>
+            </FlexBox>
+            <FlexBox renderType="Bare" width="100%" justifyContent="SpaceBetween" alignItems="Center">
+               <Label text="Entries" showColon="true" wrapping="false" labelFor="input_number" class="sapUiTinyMarginEnd">
+                  <layoutData>
+                     <FlexItemData minWidth="55px" />
+                  </layoutData>
+               </Label>
+               <StepInput
+                  id="input_number"
+                  class="sapUiSizeCompact sapUiTinyMarginEnd"
+                  min="0"
+                  max="{/fTreeEntries}"
+                  step="{/fStep}"
+                  largerStep="{/fLargerStep}"
+                  value="{/fNumber}"
+                  placeholder="Number of entries"
+                  validationMode="LiveChange"
+                  tooltip="Number of entries, 0 - all entries, maximum is {/fTreeEntries}"/>
+               <StepInput
+                  id="input_first"
+                  class="sapUiSizeCompact sapUiTinyMarginEnd"
+                  min="0"
+                  max="{/fTreeEntries}"
+                  step="{/fStep}"
+                  largerStep="{/fLargerStep}"
+                  value="{/fFirst}"
+                  placeholder="First entry"
+                  validationMode="LiveChange"
+                  tooltip="First entry, default - 0, maximum is {= ${/fTreeEntries} - 1}"/>
+            </FlexBox>
+            <ProgressIndicator
+                id="draw_progress"
+                class="sapUiSmallMarginBottom"
+                percentValue="0"
+                displayValue="0%"
+                showValue="false"
+                state="None"
+                visible="false"/>
+          </VBox>
+       </content>
+
+       <footer>
+         <OverflowToolbar>
+            <ToolbarSpacer/>
+            <Button type="Reject" text="Clear" press="onPressClearWidget"/>
+            <Button type="Accept" text="Draw" press="onPressPerformDraw" enabled="{= ${/fExprX} !== &apos;&apos; }"/>
+            <Button id="quitButton" type="Reject" text="Quit" press="onQuitRootPress"/>
+         </OverflowToolbar>
+      </footer>
+   </Page>
+</mvc:View>

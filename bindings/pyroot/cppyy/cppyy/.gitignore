@@ -1,0 +1,41 @@
+# python compiled files
+*.pyc
+*.pyo
+
+# dictionary products
+*.so
+*.pcm
+*.rootmap
+*_rflx.cpp
+
+.cache
+.pytest_cache
+
+# distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# notebook products
+.ipynb_checkpoints
+doc/tutorial/gsl_selection.xml
+
+# saved log files of benches
+bench/logs
+bench/swig_*.py
+bench/*_wrap.cxx
+bench/*_main

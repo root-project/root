@@ -1,0 +1,14 @@
+<mvc:View
+   controllerName="rootui5.eve7.controller.GL"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:core="sap.ui.core"
+   xmlns="sap.m">
+   <Toolbar id="tbar">
+      <content>
+         <Label text="view name label" id="titleLabel" width="100%" textAlign="Center"/>
+         <Button icon="sap-icon://move" press="switchSingle" tooltip="single view"/>
+         <Button icon="sap-icon://arrow-right" press="swap" tooltip="swap"/>
+         <Button icon="sap-icon://decline" press="detachViewer" tooltip="destroy"/>
+      </content>
+   </Toolbar>
+</mvc:View>

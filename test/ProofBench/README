@@ -1,0 +1,149 @@
+Setup for a benchmark
+=====================
+
+See $ROOTSYS/README/README.PROOF for instructions to install
+and configure PROOF
+
+Create the PAR file
+
+% ./make_event_par.sh
+
+Start root
+
+% root
+
+Start PROOF
+
+root[] TProof::Open("")
+
+Create the files on the nodes in the cluster, the first
+argument is the directory the files will reside in. The
+second argument is the number of events in each file.
+The last argument is the number of files on each node.
+(not the number of files per slave!)
+
+root[] .x make_event_trees.C("/data1/tmp", 100000, 4)
+
+Create the TDSet for these files:
+
+root[] .L make_tdset.C
+root[] TDSet *d = make_tdset("/data1/tmp",4)
+root[] d->Print("a")
+OBJ: TDSet      type TTree      EventTree       in /    elements 2
+TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_1.root' dir='' obj='' first=0 num=-1
+TDSetElement file='root://gluon.local//data1/tmp/event_tree_gluon.local_3.root' dir='' obj='' first=0 num=-1
+
+Test the system with a simple command
+
+root[] d->Draw("fTemperature","1")
+
+You are now ready to run the benchmark!
+
+
+Performance Monitoring
+======================
+
+Select which performance information should be gathered.
+To enable the filling of performance histograms in the master do:
+
+root[] gEnv->SetValue("Proof.StatsHist",1);
+
+or add a line to your ".rootrc" or "system.rootrc" file.
+The histograms will be returned to the client in the
+output list. The histograms are:
+
+Name                 Type     Description
+----                 ----     -----------
+
+PROOF_PacketsHist    TH1D     "Packets processed per Slave"
+
+PROOF_EventsHist     TH1D     "Events processed per Slave"
+
+PROOF_NodeHist       TH1D     "Slaves per Fileserving Node"
+                              dynamically updated, use in Feedback.
+
+PROOF_LatencyHist    TH2D     "GetPacket Latency per Slave"
+
+PROOF_ProcTimeHist   TH2D     "Packet Processing Time per Slave"
+
+PROOF_CpuTimeHist    TH2D     "Packet CPU Time per Slave"
+
+
+To enable the creation of the trace tree and store
+performance events in the master server do:
+
+root[] gEnv->SetValue("Proof.StatsTrace",1);
+
+to also record the detailed performance events in the slaves
+call in addition:
+
+root[] gEnv->SetValue("Proof.SlaveStatsTrace",1);
+
+or add them to either your ".rootrc" or "system.rootrc"
+A single Tree named "PROOF_PerfStats" will be returned to the client
+in the output list.
+
+The script SavePerfInfo.C can be used to save the
+current results in a .root file, e.g.
+
+root[] .X SavePerfInfo.C("perf_data.root")
+
+Run the Benchmark
+=================
+
+The benchmark provides 3 selectors, each reading a different amount
+of data:
+
+EventTree_NoProc.C   - Reads no data
+EventTree_ProcOpt.C  - Reads 25% of the data
+EventTree_Proc.C     - Reads all the data
+
+First make sure the PAR file is up to date and enabled
+
+root[] gProof->UploadPackage("event.par")
+root[] gProof->EnablePackage("event")
+
+Request dynamic feedback of some of the monitoring histograms
+
+root[] gProof->AddFeedback("PROOF_ProcTimeHist")
+root[] gProof->AddFeedback("PROOF_LatencyHist")
+root[] gProof->AddFeedback("PROOF_EventsHist")
+
+Create a TDrawFeedback object to automatically draw these histograms
+
+root[] TDrawFeedback fb(gProof)
+
+And request the timing of each command
+
+root[] gROOT->Time()
+
+Running one of the provided selectors is straight forward,
+using the TDSet that was created earlier:
+
+root[] .L make_tdset.C
+root[] TDSet *d = make_tdset("/data1/tmp",4)
+root[] gProof->Load("EventTree_Proc.C+")
+root[] d->Process("EventTree_Proc","")
+
+The monitoring histograms should appear shortly after the
+processing starts. The resulting histogram from the selector
+will also be drawn at the end.
+
+Loading the selector before processing is not strictly needed but it allows to
+circumvent a problem with file distribution that was present in some versions,
+including 5.22/00 and 5.22/00a.
+
+The above set of commands are included in the script Run_Simple_Test.C .
+
+
+Extra Scripts Included
+======================
+
+The script Draw_Time_Hists.C can be used to create the timing histograms
+from the trace tree and draw them on screen.
+
+The script Run_Node_Tests.C can be used to run a full sequence of
+tests. The results can be presented graphically using Draw_PerfProfiles.C.
+
+The script Draw_Slave_Access.C will draw a graph depicting the number
+of slaves accessing a file serving node as a function of time.

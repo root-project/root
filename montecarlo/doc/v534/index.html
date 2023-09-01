@@ -1,0 +1,57 @@
+<br/>
+<hr/>
+<a name="montecarlo"></a>
+<h3>MonteCarlo Libraries</h3>
+
+<h4>VMC</h4>
+<ul>
+<li>
+Update of the VMC interfaces for multi-threading:
+TVirtualMC and TVirtualMCApplication instances are now declared thread local.
+Added new functions in TVirtualMC and TVirtualMCApplication for multi-threading
+applications with default implementation. <br>
+In TVirtualMC:
+<pre>
+ virtual Bool_t IsMT() const { return kFALSE; }
+</pre>
+In TVirtualMCApplication:
+<pre>
+  virtual TVirtualMCApplication* CloneForWorker() const { return 0;}
+  virtual void InitForWorker() const {}
+  virtual void BeginWorkerRun() const {}
+  virtual void FinishWorkerRun() const {}
+  virtual void Merge(TVirtualMCApplication* /*localMCApplication*/) {}
+</pre>
+</li>
+
+<li>
+Removed default implementation of newly added functions in TVirtualMC:
+<pre>
+  virtual Bool_t IsRootGeometrySupported() const = 0;
+  virtual Bool_t GetMaterial(Int_t imat, TString& name,...) = 0;
+  virtual Bool_t CurrentBoundaryNormal(..) = 0;
+</pre>
+</li>
+
+<li>
+Removed deprecated functions from TVirtualMC:
+<pre>
+  // Return parameters for material specified by material number imat
+  // Deprecated - replaced with GetMaterial()
+  virtual void  Gfmate(Int_t imat, char *name, Float_t &amp;a, Float_t &amp;z,
+                       Float_t &amp;dens, Float_t &amp;radl, Float_t &amp;absl,
+                       Float_t *ubuf, Int_t &amp;nbuf) = 0;
+
+  //  Return parameters for material specified by material number imat
+  // (in double precision)
+  // Deprecated - replaced with GetMaterial()
+  virtual void  Gfmate(Int_t imat, char *name, Double_t &amp;a, Double_t &amp;z,
+                       Double_t &amp;dens, Double_t &amp;radl, Double_t &amp;absl,
+                       Double_t *ubuf, Int_t &amp;nbuf) = 0;
+
+  // Check the parameters of a tracking medium
+  // Deprecated
+  virtual void  Gckmat(Int_t imed, char *name) = 0;
+</pre>
+</li>
+</ul>

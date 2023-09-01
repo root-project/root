@@ -1,0 +1,100 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+include(ExternalProject)
+
+find_package(libuuid REQUIRED)
+find_package(LibXml2 REQUIRED)
+find_package(OpenSSL REQUIRED)
+
+set(DAVIX_VERSION "0.8.1")
+set(DAVIX_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources")
+set(DAVIX_URLHASH "SHA256=3f42f4eadaf560ab80984535ffa096d3e88287d631960b2193e84cf29a5fe3a6")
+set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
+set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/src/DAVIX-build/deps/curl-install/usr/lib/${CMAKE_STATIC_LIBRARY_PREFIX}curl${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+string(REPLACE "-Werror " "" DAVIX_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+
+ExternalProject_Add(DAVIX
+  URL ${DAVIX_URL}/davix-${DAVIX_VERSION}.tar.gz
+  URL_HASH ${DAVIX_URLHASH}
+  CMAKE_CACHE_ARGS
+    -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
+    -DUUID_INCLUDE_DIR:STRING=${UUID_INCLUDE_DIR}
+    -DUUID_LIBRARY:STRING=${UUID_LIBRARY}
+    -DLIBXML2_INCLUDE_DIR:PATH=${LIBXML2_INCLUDE_DIR}
+    -DLIBXML2_INCLUDE_DIRS:STRING=${LIBXML2_INCLUDE_DIRS}
+    -DLIBXML2_LIBRARY:PATH=${LIBXML2_LIBRARY}
+    -DLIBXML2_LIBRARIES:STRING=${LIBXML2_LIBRARIES}
+  CMAKE_ARGS
+    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DENABLE_HTML_DOCS=OFF
+    -DENABLE_IPV6=OFF
+    -DSTATIC_LIBRARY=ON
+    -DSHARED_LIBRARY=OFF
+    -DENABLE_TOOLS=OFF
+    -DDAVIX_TESTS=OFF
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+    -DCMAKE_CXX_FLAGS=${DAVIX_CXX_FLAGS}\ -fPIC
+    -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+    -DLIB_SUFFIX=
+  LOG_BUILD 1 LOG_CONFIGURE 1 LOG_DOWNLOAD 1 LOG_INSTALL 1
+  BUILD_BYPRODUCTS ${DAVIX_LIBRARIES}
+  TIMEOUT 600)
+
+if(builtin_openssl)
+  add_dependencies(DAVIX OPENSSL)
+endif()
+
+if(APPLE)
+   find_library(FOUND_CoreFoundation CoreFoundation)
+   if(NOT FOUND_CoreFoundation)
+      message(FATAL_ERROR "Missing macOS CoreFoundation framework!")
+   endif()
+   list(APPEND DAVIX_LIBRARIES ${FOUND_CoreFoundation})
+
+   find_library(FOUND_Security Security)
+   if(NOT FOUND_Security)
+      message(FATAL_ERROR "Missing macOS Security framework!")
+   endif()
+   list(APPEND DAVIX_LIBRARIES ${FOUND_Security})
+endif()
+
+list(APPEND DAVIX_LIBRARIES uuid::uuid OpenSSL::SSL ZLIB::ZLIB ${LIBXML2_LIBRARIES} ${CMAKE_DL_LIBS})
+
+check_cxx_symbol_exists("clock_gettime" "time.h" _have_clock_gettime)
+
+if(NOT _have_clock_gettime)
+  check_library_exists(rt clock_gettime "" _have_rt_library)
+  if(_have_rt_library)
+    list(APPEND DAVIX_LIBRARIES rt)
+  endif()
+endif()
+
+unset(DAVIX_FOUND CACHE)
+unset(DAVIX_FOUND PARENT_SCOPE)
+set(DAVIX_FOUND TRUE CACHE BOOL "" FORCE)
+
+set(DAVIX_INCLUDE_DIR  ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
+set(DAVIX_INCLUDE_DIRS ${DAVIX_PREFIX}/include/davix CACHE INTERNAL "" FORCE)
+set(DAVIX_LIBRARY ${DAVIX_PREFIX}/lib/${DAVIX_LIBNAME} CACHE INTERNAL "" FORCE)
+set(DAVIX_LIBRARIES ${DAVIX_LIBRARIES} CACHE INTERNAL "" FORCE)
+
+add_library(davix INTERFACE)
+target_include_directories(davix SYSTEM INTERFACE $<BUILD_INTERFACE:${DAVIX_INCLUDE_DIR}>)
+target_link_libraries(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_LIBRARIES}>)
+add_dependencies(davix DAVIX)
+
+add_library(Davix::Davix ALIAS davix)
+
+set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS DAVIX)

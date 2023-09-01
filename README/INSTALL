@@ -1,0 +1,135 @@
+Installation of ROOT from source
+================================
+
+Contents:
+=========
+
+   1.    Getting the source
+   2.    Getting ready to build
+   3.    Choosing the installation method
+   3.1.  Location independent build
+   3.2.  Fixed location build
+   4.    Installation Location
+   5.    Where to get more information
+   6.    Where to get help
+
+1. Getting the source:
+======================
+
+To install ROOT from source you first have to get the source code.
+
+You can clone the source code from our GitHub repository:
+
+     git clone https://github.com/root-project/root.git
+
+The release specific tag can be obtained using for example:
+
+     cd root
+     git checkout v6-22-00
+
+
+2. Getting ready to build:
+==========================
+
+ROOT requires CMake to be built.
+You may want to build ROOT with features (such as HistFactory) that depend on third-party libraries (such as libxml2).
+Make sure you meet all demands for additional
+features before trying to enable them (see below).
+
+The prerequisites needed for the different platforms are documented at
+
+  https://root.cern/install/dependencies
+
+
+3. Choosing the installation method:
+====================================
+
+There are two main methods of installing ROOT from source.
+  - 'location independent' is advised for a personal installation of ROOT
+  - 'fixed location' for a system wide installation.
+
+Both methods will install ROOT in the location specified as the `CMAKE_INSTALL_PREFIX` cmake variable at configuration time (`/usr/local` by default).
+The 'fixed location' requires in addition to set the 'gnuinstall' cmake option at configuration time, with `-Dgnuinstall=ON`.
+
+
+3.1. Location independent build:
+------------------------------
+
+You want to install in a generic directory, depending on environment
+variables ROOTSYS, LD_LIBRARY_PATH, and PATH.
+
+   1) Get the sources of the latest ROOT (see above)
+
+   2) Type the build commands:
+        mkdir <builddir>
+        cd <builddir>
+        cmake ../root
+        cmake --build . [ -- -j<N> ] [ or simply "make -j<N>" on Unix systems ] 
+
+   3) Add bin/ to PATH and lib/ to LD_LIBRARY_PATH. For the sh shell family do:
+        . bin/thisroot.sh
+
+      and for the csh shell family do:
+        source bin/thisroot.csh
+
+   4) try running root:
+        root
+
+3.2. Fixed location build:
+---------------------------
+
+You want to install ROOT in a fixed location, not depending on
+ROOTSYS. Typically you want to do this when installing in a location
+like `/usr/local/bin' or even `/usr/bin'. This allows you, and all
+others on your system, to run ROOT without having to setup ROOTSYS and
+special PATH and LD_LIBRARY_PATH variables.
+
+It's _strongly_ recommended to enable version numbers in sonames (if
+possible) using this method (see 'soversion' option below). Also,
+using the 'rpath' option to "cmake" you can set the load
+path to the ROOT libraries on the applications. However, this is not
+recommended if you have some other way (like /etc/ld.so.conf) of
+making the dynamic loader aware of where you installed the ROOT
+libraries.
+
+   1) Get the sources of latest ROOT (see above)
+
+   2) Now type the build commands:
+        mkdir <builddir>
+        cd <builddir>
+        cmake ../root -DCMAKE_INSTALL_PREFIX=<prefix> -Dgnuinstall=ON 
+        cmake --build .                  [ or simply "make -j<N>" on Unix systems ]
+        cmake --build . --target install [ or simply "make install" on Unix systems ]
+
+   3) Update the ldconfig cache by doing:
+        ldconfig
+
+   4) try running root:
+        root
+
+4. Installation Location:
+=========================
+
+By default, the system will be installed depending on the ROOTSYS
+environment variable. In that case the whole package will live under
+the directory ROOTSYS points to.
+
+Using the fixed location mode (section 3.2), the default 'CMAKE_INSTALL_PREFIX'
+path is '/usr/local', which will result in the ROOT files to be
+installed in '/usr/local/bin', `/usr/local/lib', etc. You can specify
+an installation prefix other than `/usr/local' by giving `cmake'
+the option `-DCMAKE_INSTALL_PREFIX=/opt/root-6.22'. Using a version-specific install prefix is recommended in case mulitple versions of ROOT will be installed in the system at the same time.
+
+
+5. Where to get more information:
+=================================
+
+For more detailed information about building ROOT from source, please check https://root.cern/install/build_from_source.
+
+A list of build options is available at https://root.cern/install/build_from_source/#all-build-options.
+
+
+6. Where to get help:
+=====================
+
+To get help provide feedback, please contact us by opening a new topic at https://root-forum.cern.ch.

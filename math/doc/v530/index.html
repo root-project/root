@@ -1,0 +1,158 @@
+<br/>
+<hr/>
+<a name="math"></a>
+<h3>Math Libraries</h3>
+
+<h3>MathCore</h4>
+
+<h4><tt>TMath</tt></h4>
+<ul>
+<li>Add some new functions based on std::numeric_limits:
+  <ul>
+    <li><tt>double TMath::QuietNaN()</tt> returning a quite NaN </li>
+    <li><tt>double TMath::SignalingNaN()</tt> returning a signaling NaN </li>
+    <li><tt>double TMath::Infinity()</tt> returning an infinity double value </li>
+  </ul></li>
+  <li>Added also (based on numeric_limits) templated functions on T (where T can be double, float or int) for computing
+  the limits for a given type:
+  <ul>
+    <li><tt>T TMath::Limits&lt T &gt::Max()</tt> returning the maximum number which can be represented for the type T ( <tt>T TMath::Limits&lt double &gt::Max()=1.79769e+308</tt>)</li>
+    <li><tt>T TMath::Limits&lt T &gt::Min()</tt> returning the minimum number which can be represented for the type T ( <tt>T TMath::Limits&lt double &gt::Max()=2.22507e-308</tt>)</li>
+    <li><tt>T TMath::Limits&lt T &gt::Epsilon()</tt> returning the epsilon (see <a
+    href="http://en.wikipedia.org/wiki/Machine_epsilon">Wikipedia</a> for its definition) for the type T  ( <tt>T
+    TMath::Limits&lt double &gt::Epsilon()=2.22045e-16</tt>)</li>
+  </ul>
+</li>
+</ul>
+
+<h4><tt>TRandom1 and TRandom3</tt></h4>
+<ul>
+  <li>Add an implementation of <tt>UInt_t GetSeed()</tt> to return the first element of the seed table. Before always a fixed
+  value was returned, independently of the random generator state
+  </li>
+</ul>
+
+
+<h4><tt>ROOT::Fit::Fitter</tt> and related classes</h4>
+
+<ul>
+  <li>
+  Add new version of the Fitter class with various improvements:
+  <ul>
+    <li>add the possibility to just evaluate the objective function (FCN) one time (<tt>Fitter::EvalFCN</tt>) and fill the
+    result (class <tt>ROOT::Fit::FitResult</tt> using the obtained value of FCN plus the parameter values and errors from
+    the Fit configuration class (<tt>ROOT::Fit::FitConfig</tt>).
+    This required adding a nw constructor of <tt>FitResult</tt> from <tt>FitConfig</tt>.
+    This originated from the <a href="https://savannah.cern.ch/bugs/?75896">Savannah request</a>.   </li>
+    <li>Add also new methods <tt>Fitter::SetFCN</tt>.</li>
+    <li> Update the configuration (parameter values and errors) after a fit with the FitResult values
+    So next fit will use improved parameter values and errors. This update can be switched on/off
+    by using <tt>FitConfig::SetUpdateAfterFit(on/off)</tt>. By default is on.</li>
+    <li>Add new method <tt>FitConfig::SetFromFitResult</tt>.</li>
+
+    <li> Add possibility to run Hesse (<tt>Fitter:::CalculateHessErrors</tt>) without having done the minimization.</li>
+
+
+  </ul>
+</li>
+<li> Add support  for weighted  likelihood fits.
+<ul>
+  <li>Add a new method <tt>Fitter::ApplyWeightCorrection(fcn2)</tt>
+  which corrects covariance matrix for the weights using the likelihood function built using the weight square</li>
+  <li>Add the support for weights for  the binned Poisson likelihood fits (in the
+  <tt>ROOT::Fit::PoissonLikelihoodFCN</tt> class). A new option (<it>WL</it>) has been added also in <tt>TH1::Fit</tt>
+  for performing weighted fits of histograms (see <a  href="#hist"></a>).
+  </li>
+  </ul>
+ </li>
+</ul>
+<h4><tt>ROOT::Math::Minimizer</tt></h4>
+ <li>Add new methods <tt>Minimizer::GetHessianMatrix(double * mat)</tt> and <tt>Minimizer::GetCovMatrix(double * mat)</tt> to return the full
+matrices by filling the passed C arrays, which must have a dimension of at least <i>n</i> x <i>n</i>, where <i>n</i> is the
+total number of parameters. The elements for the fixed parameters will be filled with zeros.
+These methods are currently implemented by only Minuit and Minuit2.
+</li>
+ <li>Change default tolerance in <tt>ROOT::Math::MinimizerOptions</tt> to be 0.01 from 0.0001.</li>
+</ul>
+<p>
+
+<h4>MathMore</h4>
+
+<ul>
+  <li><b>New class <tt>ROOT::Math::GSLMultiRootFinder</tt></b> for finding the root of system of functions.
+  The class is based on the GSL multi-root algorithm
+  (see the GSL <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Multidimensional-Root_002dFinding.html"> online
+  manual</A>) and it is used to solve a non-linear system of equations:
+  <pre>
+     f1(x1,....xn) = 0
+     f2(x1,....xn) = 0
+     ..................
+     fn(x1,....xn) = 0
+</pre>
+     The available GSL algorithms require the derivatives of the supplied functions or not (they are
+     computed internally by GSL). In the first case the user needs to provide a list of multidimensional functions implementing the
+     gradient interface (ROOT::Math::IMultiGradFunction) while in the second case it is enough to supply a list of
+     functions implementing the ROOT::Math::IMultiGenFunction interface.
+     The available algorithms requiring derivatives (see also the GSL
+     <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-using-Derivatives.html">documentation</A> )
+     are the followings:
+     <ul>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridSJ</tt>  with name <it>"HybridSJ"</it>: modified Powell's hybrid
+     method as implemented in HYBRJ in MINPACK
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridJ</tt>  with name <it>"HybridJ"</it>: unscaled version of the
+     previous algorithm</li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kNewton</tt>  with name <it>"Newton"</it>: Newton method </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kGNewton</tt>  with name <it>"GNewton"</it>: modified Newton method </li>
+     </ul>
+     The algorithms without derivatives (see also the GSL
+     <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-without-Derivatives.html">documentation</A> )
+     are the followings:
+     <ul>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridS</tt>  with name <it>"HybridS"</it>: same as HybridSJ but using
+     finate difference approximation for the derivatives</li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybrid</tt>  with name <it>"Hybrid"</it>: unscaled version of the
+     previous algorithm</li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kDNewton</tt>  with name <it>"DNewton"</it>: discrete Newton algorithm </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kBroyden</tt>  with name <it>"Broyden"</it>: Broyden algorithm </li>
+     </ul>
+
+   </li>
+
+ </ul>
+
+<h4>Minuit2</h4>
+
+ <ul>
+   <li>Improve Printing of information and Error messages. Use the class <tt>ROOT::Minuit2::MnPrint</tt> to store a
+   static print level, which can be set by using the static function <tt>MnPrint::SetLevel(int )</tt>.</li>
+   <li>
+   Add new information messages in the <tt>VariableMetricBuilder</tt> (i.e. <i>Migrad</i>), to print some messages
+   during the minimization.The new printing level is now also controlled by the <tt>Minuit2Minimizer</tt> class. </li>
+   <li>Print now in the messages the parameter names instead of the parameter indices.</li>
+   <li>fix the update of the number of function calls in Minuit2 after calling Hess after Migrad. The number is now not
+   reset in <tt>MnHesse</tt></li>
+   <li>Fix a problem, when, after calling Hesse ,the edm was correct to values below the required tolerance.
+   Now do not flag these cases as failed minimizations but as good ones.</li>
+   <li>Correct tolerance by 2E-3 instead 2E-4 to ve conistent with what is done in F77 Minuit or TMinuit</li>
+   <li>Avoid when using  the <tt>CombinedMinimumBuilder</tt> (i.e. the <i>Minimize</i> algorithm)  to call two times
+   <tt>ModularFunctionMinimize::Minimum</tt>. Since this last function correct the tolerance by the <i>Up</i> value, a
+   double correction was applied in this case. </li>
+
+   <li>Implement the methods <tt>Minuit2Minimizer::GetHessianMatrix(double * mat)</tt> and
+   <tt>Minuit2Minimizer::GetCovMatrix(double * mat)</tt>.</li>
+   <li>For retrieving  the Hessian, a new method has been added, <tt>MnUserParameterState::Hessian</tt>, which returns
+   the Hessian by inverting the covariance matrix, since the Hessian is not stored inside the Minuit2 classes.</li>
+   <li>Fix a bug in <tt>MnUserTransformation</tt> when using unnamed parameters (bug <a href="https://savannah.cern.ch/bugs/index.php?82552">82552</a>).
+   </li>
+   <li>Add the possibility when using Minos to pass the tolerance for the Migrad calls. (use a default of 0.1 * Up, which is
+   the same value used in F77). </li>
+</ul>
+
+<h4>Minuit</h4>
+
+<ul>
+  <li>Implement the methods <tt>TMinuitMinimizer::GetHessianMatrix(double * mat)</tt> and
+   <tt>TMinuitMinimizer::GetCovMatrix(double * mat)</tt>.</li>
+</ul>
+
+

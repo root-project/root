@@ -1,0 +1,3 @@
+CMAKE_CXX_STANDARD=17
+win_broken_tests=OFF
+winrtdebug=OFF

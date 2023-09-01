@@ -1,0 +1,73 @@
+<br/>
+<hr/>
+<a name="core"></a>
+<h3>Core</h3>
+<ul>
+<li>The following architectures have been obsoleted: linuxkcc, alphakcc,
+linuxia64sgi, linuxdeb2ppc, solariskcc, sgikcc and linuxpgcc.</li>
+<li>All of ROOT (not just Core) has been checked by a very nice static code analyzer <b>coverity</b>, see: <a href="http://www.coverity.com/">http://www.coverity.com/</a>.
+Many of the reports have been fixed. We expect that this further increases the stability of ROOT.</li>
+<li>Add support for 'Dump' and 'Browse' of 'emulated' object.</li>
+<li>TBits equality operator nows return true if the 2 operands have different
+length and all the bits in the longer TBits that are passed the length
+of the shorter TBits are zero (i.e. the default value of each
+bits is zero).</li>
+<li>Properly handle scripts with line longer than 1024 characters.</li>
+<li>Repair the handling of ACLiC options on the command line (for example a.C+g).</li>
+<li>In TClass::BuildEmulatedRealData properly handle the case of TNamed member that are not base class.</li>
+<li>On the command line:
+    <ul>
+    <li>Fix the tab-completion of filenames in the sub-directories.</li>
+    <li>Prevent the unadvertent replacement of an arrow with a dot when the left side is actually a pointer</li>
+    </ul>
+</li>
+<li>More user friendly stacktrace in case of a crash, with hints where
+the problem might be. On Linux and MacOS X these stacktraces are generated
+by the script $ROOTSYS/etc/gdb-backtrace.sh. Using the Root.StackTraceMessage
+resource one can customize the message printed by the script. The entire
+script can be replaced using the Root.StacktraceScript resource.</li>
+<li>Numerous minor bug fixes...</li>
+</ul>
+<h4>New module  <tt>editline</tt> </h4>
+<p>The new module <tt>editline</tt> enhances the prompt, giving type and syntax feedback using e.g. colors.
+Class names are highlighted blue when typed, indicating that it is known to ROOT.
+Matching parenthesis pairs are highlighted green when typed, or when the cursor is moved to a bracket. This works for () {} and [] brackets.
+Any mismatched brackets (those without a matching partner) will be highlighted red when typed or when the cursor is moved to the bracket.
+Tab completion output is colored magenta to differentiate between tab completion output and user input.</p>
+<p>All of the colors are configurable in the <tt>.rootrc</tt> file.
+They can be specified as #rgb or #rrggbb or color names:
+black, red, green, yellow, blue, magenta, cyan or white.
+They can be followed by an optional <tt>bold</tt> (alias <tt>light</tt>) or <tt>underlined</tt>.
+<tt>Rint.ReverseColor</tt> allows to quickly toggle between the default "light on dark" (<tt>yes</tt>) instead of "dark on light" (<tt>no</tt>), depending on the terminal background.</p>
+<p>An example configuration would be:</p>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+Rint.TypeColor:           blue
+Rint.BracketColor:        bold green
+Rint.BadBracketColor:     underlined red
+Rint.TabColor:            magenta
+Rint.PromptColor:         black
+Rint.ReverseColor:        no
+</pre>
+<p>The enhanced prompt is available on all platforms with [n]curses, including Linux, Solaris and MacOS; the bold and underline options are available also for black and white terminals. You can <tt>export</tt> (or <tt>setenv</tt>) <tt>TERM=xterm-256color</tt> for nicer colors.</p>
+<p>With editline comes also an improved terminal input handler.
+It supports e.g. ^O (Ctrl-o) to replay the history: suppose you have entered</p>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+...
+<span style="color:gray">root [3] </span>i = func()
+<span style="color:gray">root [4] </span>i += 12
+<span style="color:gray">root [5] </span>printf("i is %d\n", i)
+</pre>
+<p>You now want to re-run these three lines.
+As always, you press the up cursor three times to see</p>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+<span style="color:gray">root [6] </span>i = func()
+</pre>
+<p>and now press ^O (Ctrl-o) to run the line, and prepare the next line:</p>
+<pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
+<span style="color:gray">root [6] </span>i = func()^O
+<span style="color:gray">root [7] </span>i += 12^O
+<span style="color:gray">root [8] </span>printf("i is %d\n", i)^O
+<span style="color:gray">root [9] </span>
+</pre>
+<p>allowing you to re-run that part of the history without having to press the up-arrow again and again.</p>
+<p>Currently, <tt>editline</tt> is disabled on Windows.</p>

@@ -1,0 +1,32 @@
+<!--
+//============================================================================
+// Name        : example.xml
+//============================================================================
+-->
+
+<!--
+    Top-level configuration,  details for the example channel are in example_channel.xml.
+    This is the input file to the executable.
+
+    Note: Config.dtd needs to be accessible.  It can be found in ROOT release area.
+    The file system path is relative to location of this XML file, not the executable.
+-->
+
+<!DOCTYPE Combination  SYSTEM 'HistFactorySchema.dtd'>
+
+<Combination OutputFilePrefix="./results/example_Expression" >
+
+  <Function Name="rootPOI" Expression="sqrt(SigXsecOverSM)" Dependents="SigXsecOverSM[0,3]" />
+  <Function Name="rootPOI2" Expression="sqrt(SigXsecOverSM)" Dependents="SigXsecOverSM[0,3]" />
+
+  <Input>./config/examples/example_Expression_channel.xml</Input>
+
+  <Measurement Name="GaussExample" Lumi="1." LumiRelErr="0.1" >
+    <POI>SigXsecOverSM</POI>
+    <ParamSetting Const="True">Lumi alpha_syst1</ParamSetting>
+    <!-- don't need <ConstraintTerm> default is Gaussian with an exponential interpolation for normalization factors (LHC HCG default)-->
+  </Measurement>
+
+
+
+</Combination>

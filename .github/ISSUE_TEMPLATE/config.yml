@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ROOT forum
+    url: https://root-forum.cern.ch/
+    about: Please ask and answer generic questions here.
+  - name: ROOT website
+    url: https://root.cern
+    about: Find installation instructions, documentation, tutorials here.

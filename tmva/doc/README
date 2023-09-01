@@ -1,0 +1,165 @@
+========================================================================================
+         T M V A   ---   Toolkit for Multivariate Data Analysis with ROOT
+========================================================================================
+
+
+TMVA Users Guide    : http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf
+TMVA home page      : http://tmva.sourceforge.net/
+TMVA download page  : http://sourceforge.net/projects/tmva
+TMVA mailing list   : http://sourceforge.net/mailarchive/forum.php?forum_name=tmva-users
+TMVA license (BSD)  : http://tmva.sourceforge.net/LICENSE
+
+========================================================================================
+
+!!!!!
+From release 4.2.1 the integration of TMVA into root has been improved, such that
+there is no need for a particular "setup.sh" script, setting of 'macropath' or
+copying of 'evaluation macros' necessary anymore !
+
+All the evaluation macros are now part of the TMVA library libTMVA.so
+
+Example scripts of how to run TMVA are availabe in $ROOTSYS/tutorials/tmva/
+!!!!!
+ 
+
+System requirements:
+--------------------
+
+  TMVA has been tested to run on Linux, MAC/OSX and Windows platforms.
+
+  Running TMVA requires the availability of ROOT shared libraries with ROOT_VERSION >= 5.14
+  (type "root-config --version" to see the version installed)
+
+========================================================================================
+Getting Started: 
+----------------
+  Example scripts of how to run TMVA are availabe in $ROOTSYS/tutorials/tmva/
+  
+  please simply copy one of those scripts to you 'work' directory  
+  
+  --- For classification:
+  ~/myTMVAwork> root -l TMVAClassification.C                       # run all standard classifiers (takes a while)
+  ~/myTMVAWork> root -l TMVAClassification.C\(\"LD,Likelihood\"\)  # run LD and Likelihood classifiers
+
+  --- For regression:
+  ~/myTMVAwork> root -l TMVARegression.C                           # run all regression algorithms n(takes a while)
+  ~/myTMVAwork> root -l TMVARegression.C\(\"LD,KNN\"\)             # run LD and k-NN regression algorithms
+
+  --> at the end of the jobs, a GUI will pop up: try to click through all the buttons;
+      some of the lower buttons are method-specific, and will only work when the
+      corresponding classifiers/regression algorithms have been trained/tested before
+      (unless they are greyed out)
+
+  How to run the code as an executable: 
+  -------------------------------------
+  Get an example code/makefile from $ROOTSYS/tuturial/tmva
+  ~/myTMVAwork> make TMVAClassification
+  ~/myTMVAwork> ./TMVAClassification                              # run all standard classifiers 
+  ~/myTMVAwork> ./TMVAClassification LD Likelihood                # run LD and Likelihood classifiers 
+
+  ... and similarly for regression
+
+  ~/myTMVAwork> root -l 
+  ~/myTMVAwork> TMVA::Tools::Instance()  #setup TMVA (loads the library)           
+  ~/myTMVAwork> TMVA::TMVAGui()   #starts the Gui on the 'default tmva ouput file' TMVA.root   
+  ~/myTMVAwork> TMVA::TMVAGui("TheFileCreatedByYourTraining.root"   # start the GUI
+
+  How to apply the TMVA methods:
+  -------------------------------------
+
+  --- For classification:
+  ~/myTMVAwork> root -l TMVAClassificationApplication.C                
+  ~/myTMVAwork> root -l TMVAClassificationApplication.C\(\"LD,Likelihood\"\) 
+
+  ... and similar for regression.
+  ... and similar for executables.
+
+========================================================================================
+
+Executive summary:
+------------------
+
+The Toolkit for Multivariate Analysis (TMVA) provides a machine learning environment 
+for the processing and parallel evaluation of multivariate classification and regression
+algorithms. TMVA is integrated into the data analysis framework ROOT. It is specifically 
+designed to the needs of high-energy physics (HEP) applications, but should not be 
+restricted to these. The package includes:
+
+    * Rectangular cut optimisation
+    * Projective likelihood estimation (PDE approach)
+    * Multi-dimensional likelihood estimation (PDE - range-search, PDE-foam, and k-NN)
+    * Linear discriminant analysers (H-Matrix, Fisher Discriminant, and Linear Discr. (same as Fisher))
+    * Function discriminant analysis (FDA)
+    * Artificial neural networks (three different Multilayer Perceptron implementations)
+    * Support Vector Machine (SVM)
+    * Boosted/Bagged decision trees
+    * Predictive learning via rule ensembles (RuleFit) 
+
+TMVA consists of object-oriented implementations in C++ for each of these discrimination 
+techniques and provides training, testing and performance evaluation algorithms and 
+visualization scripts. The classifier/regression training and testing is performed with 
+the use of user-supplied data sets in form of ROOT trees or text files, where each event 
+can have an individual weight. The true event classification/target value in these data 
+sets must be known. Preselection requirements and transformations can be applied on this 
+data. TMVA supports the use of variable combinations and formulas.
+
+TMVA works in transparent factory mode to guarantee an unbiased performance comparison 
+between the algorithms: all algorithms see the same training and test data, and are 
+evaluated following the same prescriptions within the same execution job. A Factory 
+class organises the interaction between the user and the TMVA analysis steps. It performs 
+preanalysis and preprocessing of the training data to assess basic properties of the 
+discriminating variables used as input to the algorithms. The linear correlation 
+coefficients of the input variables are calculated and displayed, and a preliminary 
+ranking is derived (which is later superseded by method-specific variable rankings). 
+The variables can be linearly transformed (individually for each algorithm) into a 
+non-correlated variable space or projected upon their principle components. To compare 
+the signal-efficiency and background-rejection performance of the algorithms, the 
+analysis job prints tabulated results for some benchmark values, besides other criteria 
+such as a measure of the separation and the maximum signal significance. Smooth 
+efficiency versus background rejection curves are stored in a ROOT output file, 
+together with other graphical evaluation information. These results can be displayed 
+using ROOT macros, which are conveniently executed via a graphical user interface that 
+comes with the TMVA distribution.
+
+The TMVA training job runs alternatively as a ROOT script, as a standalone executable, 
+where libTMVA.so is linked as a shared library, or as a python script via the PyROOT 
+interface. Each MVA method trained in one of these applications writes its configuration 
+and training results in result (``weight'') files, which consists of one text and one 
+ROOT file.
+
+A light-weight Reader class is provided, which reads and interprets the weight files 
+(interfaced by the corresponding MVA method), and which can be included in any C++ 
+executable, ROOT macro or python analysis job.
+
+For standalone use of the trained MVA methods, TMVA also generates lightweight C++ 
+response classes (not available for all MVA methods), which contain the encoded 
+information from the weight files so that these are not required anymore. These classes 
+do not depend on TMVA or ROOT, neither on any other external library.
+
+We have put emphasis on the clarity and functionality of the Factory and Reader 
+interfaces to the user applications. All MVA methods run with reasonable default 
+configurations, so that for standard applications that do not require particular 
+tuning, the user script for a full TMVA analysis will hardly exceed a few lines 
+of code. For individual optimisation the user can (and should) customize the 
+classifiers via configuration strings.
+
+Please report any problems and/or suggestions for improvements to the authors.
+
+========================================================================================
+
+Copyright © (2005-2010):  
+------------------------
+
+   Andreas Hoecker, Peter Speckmayer, Jörg Stelzer (CERN, Switzerland),
+   Jan Therhaag, Eckhard von Toerne (U. Bonn, Germany), 
+   Helge Voss (MPI-KP Heidelberg, Germany), 
+
+Contributed to TMVA have, please see: http://tmva.sourceforge.net/#authors
+
+Redistribution and use of TMVA in source and binary forms, with or without 
+modification, are permitted according to the terms listed in the BSD license:
+http://tmva.sourceforge.net/LICENSE
+
+-----------------------------------------------------------------------------
+@(#)root/tmva $Id: README,v 1.14 2008-03-12 18:10:35 andreas.hoecker Exp $   
+

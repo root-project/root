@@ -1,0 +1,1238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html xmlns:my>
+<head>
+<title>TMVA Options Reference</title>
+<meta http-equiv="content-type"
+  content="text/html; charset=ISO-8859-1">
+<meta name="TMVA" content="TMVA">
+ 
+<LINK href="CreateOptionRef.css" rel="stylesheet" type="text/css">
+ 
+<!-- include js functions -->
+<script src="ow.js"></script>
+ 
+<!-- javascript to open pop-up window -->
+<script language="JavaScript">
+function openWindow(name,text) { 
+win = window.open("", name, "width=620,height=510,scrollbars=yes");
+win.document.writeln( text ); }
+function openPageWindow(link,name) { 
+win = window.open(link, name, "width=620,height=510,scrollbars=yes"); }
+</script>
+ 
+<!-- favicon -->
+<link rel="shortcut icon" href="http://hoecker.web.cern.ch/hoecker/htdocs/favicon.ico" />
+<link rel="icon" href="http://hoecker.web.cern.ch/hoecker/htdocs/favicon.ico" />
+</head>
+<!-- FFA521 -->
+ 
+<body style="background-color: #ffffff;">
+<center>
+<table border="0"  cellpadding="2" cellspacing="0" width="800"  bgcolor="#ffffff">
+<tr><td bgcolor=gainsboro> <table width=100%><tr><td><font size=+1><b>TMVA Configuration Options Reference</b>
+</font></td><td align="right"><a style="text-decoration:none" href="http://sourceforge.net/project/showfiles.php?group_id=152074" title="Download this version of TMVA"><font color="red">Reference version: TMVA-v-<i><font color="red">unknown</font></i></font></a>
+</td>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openPageWindow('versionRef.html','ROOT vs TMVA Version Reference')" title="Reference for TMVA versions in ROOT releases">TMVA-version @ ROOT</a></td>
+</tr></table></td></tr>
+<tr><td><br>
+Reference for configuration options defined in the option string of each MVA method booking, and for the definition of data sets used for training and testing (Factory).<br>
+<p></p>
+Table fields:
+<p></p>
+<table><tr>
+<td width=10></td><td width=130><b>Option:</b></td>
+<td>The option identifier in the option string (given, e.g., in "factory->BookMethod(...)" call).</td>
+</tr><tr>
+<td width=10></td><td><b>Array:</b></td>
+<td>Can the option be set individually for each input variable via the "[i]" tag, where "i" is the ith variable?</td>
+</tr><tr>
+<td width=10></td><td><b>Default value:</b></td>
+<td>Value used if option is not explicitly set in the configuration option string.</td>
+</tr><tr>
+<td width=10></td><td><b>Predefined values:</b></td>
+<td>Options can be categories of predefined values among which the user must choose.</td>
+</tr><tr>
+<td width=10></td><td><b>Description:</b></td>
+<td>Info about the option.</td>
+</tr></table>
+<br>Colour codes:<br>
+<p></p>
+<table class="mytable"><tr>
+<td width=10></td><td bgcolor=#D9FAC9><b>Greenish rows:</b></td>
+<td bgcolor=#D9FAC9>Options shared by all MVA methods (through common base class).</td>
+</tr><tr>
+<td width=10></td><td width=130 bgcolor=lavender><b>Bluish rows:</b></td>
+<td bgcolor=lavender>Specific MVA options.</td>
+</tr><tr>
+<td width=10></td><td bgcolor=#FFF8C6><b>Yellowish rows:</b></td>
+<td bgcolor=#FFF8C6>Configuration options for minimiser (fitter) classes.</td>
+</tr><tr>
+<td width=10></td><td bgcolor=#FFDFDA><b>Redish rows:</b></td>
+<td bgcolor=#FFDFDA>Options for other configurable classes.</td>
+</tr></table>
+<tr><td>
+<br>Available MVA methods (1st row), minimisation tools (2nd row), and other configurables (3rd row):<br>
+<p></p>
+<table class="mytable">
+<tr><td width=10 ></td>
+<td bgcolor=gainsboro>
+<a href="#MVA::HMatrix">[MVA::HMatrix]</a> <a href="#MVA::Fisher">[MVA::Fisher]</a> <a href="#MVA::PDERS">[MVA::PDERS]</a> <a href="#MVA::FDA">[MVA::FDA]</a> <a href="#MVA::LD">[MVA::LD]</a> <a href="#MVA::SVM">[MVA::SVM]</a> <a href="#MVA::CFMlpANN">[MVA::CFMlpANN]</a> <a href="#MVA::KNN">[MVA::KNN]</a> <a href="#MVA::BDT">[MVA::BDT]</a> <a href="#MVA::Boost">[MVA::Boost]</a> <a href="#MVA::RuleFit">[MVA::RuleFit]</a> <a href="#MVA::Likelihood">[MVA::Likelihood]</a> <a href="#MVA::MLP">[MVA::MLP]</a> <a href="#MVA::Cuts">[MVA::Cuts]</a> <a href="#MVA::PDEFoam">[MVA::PDEFoam]</a> <a href="#MVA::TMlpANN">[MVA::TMlpANN]</a> 
+</td></tr>
+<tr><td width=10 ></td>
+<td bgcolor=gainsboro>
+<a href="#Fitter_SA">[Fitter_SA]</a> <a href="#Fitter_MC">[Fitter_MC]</a> <a href="#Fitter_Minuit">[Fitter_Minuit]</a> <a href="#Fitter_GA">[Fitter_GA]</a> 
+</td></tr>
+<tr><td width=10 ></td>
+<td bgcolor=gainsboro>
+<a href="#DataSetFactory">[DataSetFactory]</a> <a href="#PDF">[PDF]</a> <a href="#Factory">[Factory]</a> 
+</td></tr>
+</table>
+<br>
+<tr><td> 
+<a name="MVA::HMatrix"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::HMatrix','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: HMatrix</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> The H-Matrix classifier discriminates one class (signal) of a feature vector from another (background). The correlated elements of the vector are assumed to be Gaussian distributed, and the inverse of the covariance matrix is the H-Matrix. A multivariate chi-squared estimator is built that exploits differences in the mean values of the vector elements between the two classes for the purpose of discrimination. <br><p></p> </ul><b>Performance optimisation:</b> <ul> The TMVA implementation of the H-Matrix classifier has been shown to underperform in comparison with the corresponding Fisher discriminant, when using similar assumptions and complexity. Its use is therefore depreciated. Only in cases where the background model is strongly non-Gaussian, H-Matrix may perform better than Fisher. In such occurrences the user is advised to employ non-linear classifiers. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> None </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the HMatrix method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>HMatrix</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::Fisher"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::Fisher','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: Fisher</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> Fisher discriminants select events by distinguishing the mean values of the signal and background distributions in a trans- formed variable space where linear correlations are removed. <br><p></p> (More precisely: the &quot;linear discriminator&quot; determines an axis in the (correlated) hyperspace of the input variables such that, when projecting the output classes (signal and background) upon this axis, they are pushed as far as possible away from each other, while events of a same class are confined in a close vicinity. The linearity property of this classifier is reflected in the metric with which &quot;far apart&quot; and &quot;close vicinity&quot; are determined: the covariance matrix of the discriminating variable space.) <br><p></p> </ul><b>Performance optimisation:</b> <ul> Optimal performance for Fisher discriminants is obtained for linearly correlated Gaussian-distributed variables. Any deviation from this ideal reduces the achievable separation power. In particular, no discrimination at all is achieved for a variable that has the same sample mean for signal and background, even if the shapes of the distributions are very different. Thus, Fisher discriminants often benefit from suitable transformations of the input variables. For example, if a variable x in [-1,1] has a a parabolic signal distributions, and a uniform background distributions, their mean value is zero in both cases, leading to no separation. The simple transformation x -> |x| renders this variable powerful for the use in a Fisher discriminant. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> <None> </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the Fisher method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>Fisher</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   Method</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>              Fisher</td> <td bgcolor=lightsteelblue class=predef>Fisher, Mahalanobis</td> <td bgcolor=lightsteelblue class=info>Discrimination method</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::PDERS"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::PDERS','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: PDERS</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> PDERS is a generalization of the projective likelihood classifier to N dimensions, where N is the number of input variables used. In its adaptive form it is mostly equivalent to k-Nearest-Neighbor (k-NN) methods. If the multidimensional PDF for signal and background were known, this classifier would exploit the full information contained in the input variables, and would hence be optimal. In practice however, huge training samples are necessary to sufficiently populate the multidimensional phase space. <br><p></p> The simplest implementation of PDERS counts the number of signal and background events in the vicinity of a test event, and returns a weight according to the majority species of the neighboring events. A more involved version of PDERS (selected by the option &quot;KernelEstimator&quot;) uses Kernel estimation methods to approximate the shape of the PDF. <br><p></p> </ul><b>Performance optimisation:</b> <ul> PDERS can be very powerful in case of strongly non-linear problems, e.g., distinct islands of signal and background regions. Because of the exponential growth of the phase space, it is important to restrict the number of input variables (dimension) to the strictly necessary. <br><p></p> Note that PDERS is a slowly responding classifier. Moreover, the necessity to store the entire binary tree in memory, to avoid accessing virtual memory, limits the number of training events that can effectively be used to model the multidimensional PDF. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> If the PDERS response is found too slow when using the adaptive volume size (option &quot;VolumeRangeMode=Adaptive&quot;), it might be found beneficial to reduce the number of events required in the volume, and/or to enlarge the allowed range (&quot;NeventsMin/Max&quot;). PDERS is relatively insensitive to the width (&quot;GaussSigma&quot;) of the Gaussian kernel (if used). </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the PDERS method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>PDERS</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>          VolumeRangeMode</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>            Adaptive</td> <td bgcolor=lightsteelblue class=predef>Unscaled, MinMax, RMS, Adaptive, kNN</td> <td bgcolor=lightsteelblue class=info>Method to determine volume size</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>          KernelEstimator</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 Box</td> <td bgcolor=lavender class=predef>Box, Sphere, Teepee, Gauss, Sinc3, Sinc5, Sinc7, Sinc9, Sinc11, Lanczos2, Lanczos3, Lanczos5, Lanczos8, Trim</td> <td bgcolor=lavender class=info>Kernel estimation function</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                DeltaFrac</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                   3</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>nEventsMin/Max for minmax and rms volume range</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>               NEventsMin</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 100</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>nEventsMin for adaptive volume range</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>               NEventsMax</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 200</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>nEventsMax for adaptive volume range</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>           MaxVIterations</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 150</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>MaxVIterations for adaptive volume range</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>             InitialScale</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                0.99</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>InitialScale for adaptive volume range</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>               GaussSigma</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 0.1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Width (wrt volume size) of Gaussian kernel estimator</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                 NormTree</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Normalize binary search tree</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::FDA"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::FDA','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: FDA</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> The function discriminant analysis (FDA) is a classifier suitable to solve linear or simple nonlinear discrimination problems. <br><p></p> The user provides the desired function with adjustable parameters via the configuration option string, and FDA fits the parameters to it, requiring the signal (background) function value to be as close as possible to 1 (0). Its advantage over the more involved and automatic nonlinear discriminators is the simplicity and transparency of the discrimination expression. A shortcoming is that FDA will underperform for involved problems with complicated, phase space dependent nonlinear correlations. <br><p></p> Please consult the Users Guide for the format of the formula string and the allowed parameter ranges: <a href=&quot;http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf&quot;>http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf</a> <br><p></p> </ul><b>Performance optimisation:</b> <ul> The FDA performance depends on the complexity and fidelity of the user-defined discriminator function. As a general rule, it should be able to reproduce the discrimination power of any linear discriminant analysis. To reach into the nonlinear domain, it is useful to inspect the correlation profiles of the input variables, and add quadratic and higher polynomial terms between variables as necessary. Comparison with more involved nonlinear classifiers can be used as a guide. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> Depending on the function used, the choice of &quot;FitMethod&quot; is crucial for getting valuable solutions with FDA. As a guideline it is recommended to start with &quot;FitMethod=MINUIT&quot;. When more complex functions are used where MINUIT does not converge to reasonable results, the user should switch to non-gradient FitMethods such as GeneticAlgorithm (GA) or Monte Carlo (MC). It might prove to be useful to combine GA (or MC) with MINUIT by setting the option &quot;Converger=MINUIT&quot;. GA (MC) will then set the starting parameters for MINUIT such that the basic quality of GA (MC) of finding global minima is combined with the efficacy of MINUIT of finding local minima. </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the FDA method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>FDA</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                  Formula</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 (0)</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>The discrimination formula</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                ParRanges</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                  ()</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Parameter ranges</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                FitMethod</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>              MINUIT</td> <td bgcolor=lightsteelblue class=predef>MC, GA, SA, MINUIT</td> <td bgcolor=lightsteelblue class=info>Optimisation Method</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                Converger</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                None</td> <td bgcolor=lavender class=predef>None, MINUIT</td> <td bgcolor=lavender class=info>FitMethod uses Converger to improve result</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::LD"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::LD','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: LD</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> Linear discriminants select events by distinguishing the mean values of the signal and background distributions in a trans- formed variable space where linear correlations are removed. The LD implementation here is equivalent to the &quot;Fisher&quot; discriminant for classification, but also provides linear regression. <br><p></p> (More precisely: the &quot;linear discriminator&quot; determines an axis in the (correlated) hyperspace of the input variables such that, when projecting the output classes (signal and background) upon this axis, they are pushed as far as possible away from each other, while events of a same class are confined in a close vicinity. The linearity property of this classifier is reflected in the metric with which &quot;far apart&quot; and &quot;close vicinity&quot; are determined: the covariance matrix of the discriminating variable space.) <br><p></p> </ul><b>Performance optimisation:</b> <ul> Optimal performance for the linear discriminant is obtained for linearly correlated Gaussian-distributed variables. Any deviation from this ideal reduces the achievable separation power. In particular, no discrimination at all is achieved for a variable that has the same sample mean for signal and background, even if the shapes of the distributions are very different. Thus, the linear discriminant often benefits from a suitable transformation of the input variables. For example, if a variable x in [-1,1] has a a parabolic signal distributions, and a uniform background distributions, their mean value is zero in both cases, leading to no separation. The simple transformation x -> |x| renders this variable powerful for the use in a linear discriminant. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> <None> </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the LD method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>LD</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::SVM"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::SVM','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: SVM</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> The Support Vector Machine (SVM) builds a hyperplance separating signal and background events (vectors) using the minimal subset of all vectors used for training (support vectors). The extension to the non-linear case is performed by mapping input vectors into a higher-dimensional feature space in which linear separation is possible. The use of the kernel functions thereby eliminates the explicit transformation to the feature space. The implemented SVM algorithm performs the classification tasks using linear, polynomial, Gaussian and sigmoidal kernel functions. The Gaussian kernel allows to apply any discriminant shape in the input space. <br><p></p> </ul><b>Performance optimisation:</b> <ul> SVM is a general purpose non-linear classification method, which does not require data preprocessing like decorrelation or Principal Component Analysis. It generalises quite well and can handle analyses with large numbers of input variables. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> Optimal performance requires primarily a proper choice of the kernel parameters (the width &quot;Sigma&quot; in case of Gaussian kernel) and the cost parameter &quot;C&quot;. The user must optimise them empirically by running SVM several times with different parameter sets. The time needed for each evaluation scales like the square of the number of training events so that a coarse preliminary tuning should be performed on reduced data sets. </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the SVM method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>SVM</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                    Gamma</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                   1</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>RBF kernel parameter: Gamma (size of the Kernel)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                        C</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Cost parameter</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                      Tol</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                0.01</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Tolerance parameter</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                  MaxIter</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                1000</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Maximum number of training loops</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::CFMlpANN"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::CFMlpANN','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: CFMlpANN</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> <None> <br><p></p> </ul><b>Performance optimisation:</b> <ul> <None> <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> <None> </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the CFMlpANN method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>CFMlpANN</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                  NCycles</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                3000</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of training cycles</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             HiddenLayers</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               N,N-1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Specification of hidden layer architecture</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::KNN"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::KNN','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: KNN</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> The k-nearest neighbor (k-NN) algorithm is a multi-dimensional classification and regression algorithm. Similarly to other TMVA algorithms, k-NN uses a set of training events for which a classification category/regression target is known. The k-NN method compares a test event to all training events using a distance function, which is an Euclidean distance in a space defined by the input variables. The k-NN method, as implemented in TMVA, uses a kd-tree algorithm to perform a quick search for the k events with shortest distance to the test event. The method returns a fraction of signal events among the k neighbors. It is recommended that a histogram which stores the k-NN decision variable is binned with k+1 bins between 0 and 1. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> The k-NN method estimates a density of signal and background events in a neighborhood around the test event. The method assumes that the density of the signal and background events is uniform and constant within the neighborhood. k is an adjustable parameter and it determines an average size of the neighborhood. Small k values (less than 10) are sensitive to statistical fluctuations and large (greater than 100) values might not sufficiently capture local differences between events in the training set. The speed of the k-NN method also increases with larger values of k. <br><p></p> The k-NN method assigns equal weight to all input variables. Different scales among the input variables is compensated using ScaleFrac parameter: the input variables are scaled so that the widths for central ScaleFrac*100% events are equal among all the input variables. <br><p></p> [1m--- Additional configuration options: [0m <br><p></p> The method inclues an option to use a Gaussian kernel to smooth out the k-NN response. The kernel re-weights events using a distance to the test event. </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the KNN method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>KNN</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                     nkNN</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                  20</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of k-nearest neighbors</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             BalanceDepth</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   6</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Binary tree balance depth</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                ScaleFrac</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.8</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Fraction of events used to compute variable width</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                SigmaFact</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Scale factor for sigma in Gaussian kernel</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   Kernel</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                Gaus</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Use polynomial (=Poln) or Gaussian (=Gaus) kernel</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                     Trim</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               False</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Use equal number of signal and background events</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                UseKernel</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Use polynomial kernel weight</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                UseWeight</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                True</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Use weight to count kNN events</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   UseLDA</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Use local linear discriminant - experimental feature</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::BDT"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::BDT','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: BDT</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> Boosted Decision Trees are a collection of individual decision trees which form a multivariate classifier by (weighted) majority vote of the individual trees. Consecutive decision trees are trained using the original training data set with re-weighted events. By default, the AdaBoost method is employed, which gives events that were misclassified in the previous tree a larger weight in the training of the following tree. <br><p></p> Decision trees are a sequence of binary splits of the data sample using a single descriminant variable at a time. A test event ending up after the sequence of left-right splits in a final (&quot;leaf&quot;) node is classified as either signal or background depending on the majority type of training events in that node. <br><p></p> </ul><b>Performance optimisation:</b> <ul> By the nature of the binary splits performed on the individual variables, decision trees do not deal well with linear correlations between variables (they need to approximate the linear split in the two dimensional space by a sequence of splits on the two variables individually). Hence decorrelation could be useful to optimise the BDT performance. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> The two most important parameters in the configuration are the minimal number of events requested by a leaf node (option &quot;nEventsMin&quot;). If this number is too large, detailed features in the parameter space cannot be modelled. If it is too small, the risk to overtrain rises. (Imagine the decision tree is split until the leaf node contains only a single event. In such a case, no training event is misclassified, while the situation will look very different for the test sample.) <br><p></p> The default minimal number is currently set to max(20, (N_training_events / N_variables^2 / 10)) and can be changed by the user. <br><p></p> The other crucial parameter, the pruning strength (&quot;PruneStrength&quot;), is also related to overtraining. It is a regularisation parameter that is used when determining after the training which splits are considered statistically insignificant and are removed. The user is advised to carefully watch the BDT screen output for the comparison between efficiencies obtained on the training and the independent test sample. They should be equal within statistical errors, in order to minimize statistical fluctuations in different samples. </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the BDT method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>BDT</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   NTrees</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 800</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of trees in the forest</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                 MaxDepth</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   3</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Max depth of the decision tree allowed</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>              MinNodeSize</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                  5%</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Minimum percentage of training events required in a leaf node (default: Classification: 5%, Regression: 0.2%)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                    nCuts</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                  20</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Number of grid points in variable range used in finding optimal cut in node splitting</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                BoostType</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>            AdaBoost</td> <td bgcolor=lightsteelblue class=predef>AdaBoost, RealAdaBoost, Bagging, AdaBoostR2, Grad</td> <td bgcolor=lightsteelblue class=info>Boosting type for the trees in the forest </td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>           AdaBoostR2Loss</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>           Quadratic</td> <td bgcolor=lavender class=predef>Linear, Quadratic, Exponential</td> <td bgcolor=lavender class=info>Type of Loss function in AdaBoostR2</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>            UseBaggedGrad</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Use only a random subsample of all events for growing the trees in each iteration. (Only valid for GradBoost)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                Shrinkage</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Learning rate for GradBoost algorithm</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>             AdaBoostBeta</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.5</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Learning rate  for AdaBoost algorithm</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>       UseRandomisedTrees</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               False</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Determine at each node splitting the cut variable only as the best out of a random subset of variables (like in RandomForests)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                 UseNvars</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                   2</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Size of the subset of variables used with RandomisedTree option</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>          UsePoissonNvars</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                True</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Interpret UseNvars not as fixed number but as mean of a Possion distribution in each split with RandomisedTree option</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>     BaggedSampleFraction</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.6</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Relative size of bagged event sample to original size of the data sample (used whenever bagging is used (i.e. UseBaggedGrad, Bagging,)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             UseYesNoLeaf</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                True</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Use Sig or Bkg categories, or the purity=S/(S+B) as classification of the leaf node -> Real-AdaBoost</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>       NegWeightTreatment</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>InverseBoostNegWeights</td> <td bgcolor=lightsteelblue class=predef>InverseBoostNegWeights, IgnoreNegWeightsInTraining, PairNegWeightsGlobal, Pray</td> <td bgcolor=lightsteelblue class=info>How to treat events with negative weights in the BDT training (particular the boosting) : IgnoreInTraining;  Boost With inverse boostweight; Pair events with negative and positive weights in traning sample and *annihilate* them (experimental!)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>          NodePurityLimit</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 0.5</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>In boosting/pruning, nodes with purity > NodePurityLimit are signal; background otherwise.</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>           SeparationType</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>           GiniIndex</td> <td bgcolor=lightsteelblue class=predef>CrossEntropy, GiniIndex, GiniIndexWithLaplace, MisClassificationError, SDivSqrtSPlusB, RegressionVariance</td> <td bgcolor=lightsteelblue class=info>Separation criterion for node splitting</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>           DoBoostMonitor</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               False</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Create control plot with ROC integral vs tree number</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>            UseFisherCuts</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Use multivariate splits using the Fisher criterion</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>      MinLinCorrForFisher</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 0.8</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>The minimum linear correlation between two variables demanded for use in Fisher criterion in node splitting</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>         UseExclusiveVars</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Variables already used in fisher criterion are not anymore analysed individually for node splitting</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>           DoPreselection</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               False</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>and and apply automatic pre-selection for 100% efficient signal (bkg) cuts prior to training</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>            RenormByClass</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Individually re-normalize each event class to the original size after boosting</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>         SigToBkgFraction</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Sig to Bkg ratio used in Training (similar to NodePurityLimit, which cannot be used in real adaboost</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>              PruneMethod</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>           NoPruning</td> <td bgcolor=lightsteelblue class=predef>NoPruning, ExpectedError, CostComplexity</td> <td bgcolor=lightsteelblue class=info>Note: for BDTs use small trees (e.g.MaxDepth=3) and NoPruning:  Pruning: Method used for pruning (removal) of statistically insignificant branches </td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>            PruneStrength</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   0</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Pruning strength</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>       PruningValFraction</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.5</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Fraction of events to use for optimizing automatic pruning.</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>               nEventsMin</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   0</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>deprecated: Use MinNodeSize (in % of training events) instead</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>      GradBaggingFraction</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.6</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>deprecated: Use *BaggedSampleFraction* instead: Defines the fraction of events to be used in each iteration, e.g. when UseBaggedGrad=kTRUE. </td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>          UseNTrainEvents</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   0</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>deprecated: Use *BaggedSampleFraction* instead: Number of randomly picked training events used in randomised (and bagged) trees</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                NNodesMax</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                   0</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>deprecated: Use MaxDepth instead to limit the tree size</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::Boost"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::Boost','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: Boost</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> This method combines several classifier of one species in a single multivariate quantity via the boost algorithm. the output is a weighted sum over all individual classifiers By default, the AdaBoost method is employed, which gives events that were misclassified in the previous tree a larger weight in the training of the following classifier. Optionally, Bagged boosting can also be applied. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> The most important parameter in the configuration is the number of boosts applied (Boost_Num) and the choice of boosting (Boost_Type), which can be set to either AdaBoost or Bagging. AdaBoosting: The most important parameters in this configuration is the beta parameter (Boost_AdaBoostBeta) When boosting a linear classifier, it is sometimes advantageous to transform the MVA output non-linearly. The following options are available: step, log, and minmax, the default is no transform. <br><p></p> Some classifiers are hard to boost and do not improve much in their performance by boosting them, some even slightly deteriorate due to the boosting. The booking of the boost method is special since it requires the booing of the method to be boosted and the boost itself. This is solved by booking the method to be boosted and to add all Boost parameters, which all begin with &quot;Boost_&quot; to the options string. The factory separates the options and initiates the boost process. The TMVA macro directory contains the example macro &quot;Boost.C&quot; </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the Boost method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>Boost</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                Boost_Num</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 100</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of times the classifier is boosted</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>      Boost_MonitorMethod</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                True</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Write monitoring histograms for each boosted classifier</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option> Boost_DetailedMonitoring</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Produce histograms for detailed boost-wise monitoring</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>               Boost_Type</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>            AdaBoost</td> <td bgcolor=lavender class=predef>AdaBoost, Bagging, HighEdgeGauss, HighEdgeCoPara</td> <td bgcolor=lavender class=info>Boosting type for the classifiers</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>Boost_BaggedSampleFraction</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.6</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Relative size of bagged event sample to original size of the data sample (used whenever bagging is used)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>   Boost_MethodWeightType</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>             ByError</td> <td bgcolor=lavender class=predef>ByError, Average, ByROC, ByOverlap, LastMethod</td> <td bgcolor=lavender class=info>How to set the final weight of the boosted classifiers</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>  Boost_RecalculateMVACut</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                True</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Recalculate the classifier MVA Signallike cut at every boost iteration</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>       Boost_AdaBoostBeta</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>The ADA boost parameter that sets the effect of every boost step on the events' weights</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>          Boost_Transform</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                step</td> <td bgcolor=lightsteelblue class=predef>step, linear, log, gauss</td> <td bgcolor=lightsteelblue class=info>Type of transform applied to every boosted method linear, log, step</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>         Boost_RandomSeed</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   0</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Seed for random number generator used for bagging</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::RuleFit"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::RuleFit','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: RuleFit</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> This method uses a collection of so called rules to create a discriminating scoring function. Each rule consists of a series of cuts in parameter space. The ensemble of rules are created from a forest of decision trees, trained using the training data. Each node (apart from the root) corresponds to one rule. The scoring function is then obtained by linearly combining the rules. A fitting procedure is applied to find the optimum set of coefficients. The goal is to find a model with few rules but with a strong discriminating power. <br><p></p> </ul><b>Performance optimisation:</b> <ul> There are two important considerations to make when optimising: <br><p></p> 1. Topology of the decision tree forest<br> 2. Fitting of the coefficients <br><p></p> The maximum complexity of the rules is defined by the size of the trees. Large trees will yield many complex rules and capture higher order correlations. On the other hand, small trees will lead to a smaller ensemble with simple rules, only capable of modeling simple structures. Several parameters exists for controlling the complexity of the rule ensemble. <br><p></p> The fitting procedure searches for a minimum using a gradient directed path. Apart from step size and number of steps, the evolution of the path is defined by a cut-off parameter, tau. This parameter is unknown and depends on the training data. A large value will tend to give large weights to a few rules. Similarily, a small value will lead to a large set of rules with similar weights. <br><p></p> A final point is the model used; rules and/or linear terms. For a given training sample, the result may improve by adding linear terms. If best performance is optained using only linear terms, it is very likely that the Fisher discriminant would be a better choice. Ideally the fitting procedure should be able to make this choice by giving appropriate weights for either terms. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> I.  TUNING OF RULE ENSEMBLE: <br><p></p> ForestType  : Recomended is to use the default &quot;AdaBoost&quot;.<br> nTrees      : More trees leads to more rules but also slow performance. With too few trees the risk is that the rule ensemble becomes too simple.<br> fEventsMin  <br> fEventsMax  : With a lower min, more large trees will be generated leading to more complex rules. With a higher max, more small trees will be generated leading to more simple rules. By changing this range, the average complexity of the rule ensemble can be controlled.<br> RuleMinDist : By increasing the minimum distance between rules, fewer and more diverse rules will remain. Initially it is a good idea to keep this small or zero and let the fitting do the selection of rules. In order to reduce the ensemble size, the value can then be increased. <br><p></p> II. TUNING OF THE FITTING: <br><p></p> GDPathEveFrac : fraction of events in path evaluation Increasing this fraction will improve the path finding. However, a too high value will give few unique events available for error estimation. It is recomended to usethe default = 0.5.<br> GDTau         : cutoff parameter tau By default this value is set to -1.0. This means that the cut off parameter is automatically estimated. In most cases this should be fine. However, you may want to fix this value if you already know it and want to reduce on training time.<br> GDTauPrec     : precision of estimated tau Increase this precision to find a more optimum cut-off parameter.<br> GDNStep       : number of steps in path search If the number of steps is too small, then the program will give a warning message. <br><p></p> III. WARNING MESSAGES <br><p></p> Risk(i+1)>=Risk(i) in path<br> Chaotic behaviour of risk evolution. The error rate was still decreasing at the end By construction the Risk should always decrease. However, if the training sample is too small or the model is overtrained, such warnings can occur. The warnings can safely be ignored if only a few (<3) occur. If more warnings are generated, the fitting fails. A remedy may be to increase the value<br> GDValidEveFrac to 1.0 (or a larger value).<br> In addition, if GDPathEveFrac is too high the same warnings may occur since the events used for error estimation are also used for path estimation. Another possibility is to modify the model - See above on tuning the rule ensemble. <br><p></p> The error rate was still decreasing at the end of the path Too few steps in path! Increase GDNSteps. <br><p></p> Reached minimum early in the search Minimum was found early in the fitting. This may indicate that the used step size GDStep. was too large. Reduce it and rerun. If the results still are not OK, modify the model either by modifying the rule ensemble or add/remove linear terms </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the RuleFit method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>RuleFit</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                    GDTau</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                  -1</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Gradient-directed (GD) path: default fit cut-off</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                GDTauPrec</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                0.01</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>GD path: precision of tau</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   GDStep</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                0.01</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>GD path: step size</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                 GDNSteps</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               10000</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>GD path: number of steps</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>               GDErrScale</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 1.1</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Stop scan when error > scale*errmin</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>              LinQuantile</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               0.025</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Quantile of linear terms (removes outliers)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>            GDPathEveFrac</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.5</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Fraction of events used for the path search</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>           GDValidEveFrac</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 0.5</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Fraction of events used for the validation</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>               fEventsMin</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.1</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Minimum fraction of events in a splittable node</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>               fEventsMax</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 0.9</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Maximum fraction of events in a splittable node</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   nTrees</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                  20</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of trees in forest.</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>               ForestType</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>            AdaBoost</td> <td bgcolor=lavender class=predef>AdaBoost, Random</td> <td bgcolor=lavender class=info>Method to use for forest generation (AdaBoost or RandomForest)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>              RuleMinDist</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               0.001</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Minimum distance between rules</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                   MinImp</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                0.01</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Minimum rule importance accepted</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                    Model</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>       ModRuleLinear</td> <td bgcolor=lightsteelblue class=predef>ModRule, ModRuleLinear, ModLinear</td> <td bgcolor=lightsteelblue class=info>Model to be used</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>            RuleFitModule</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>              RFTMVA</td> <td bgcolor=lavender class=predef>RFTMVA, RFFriedman</td> <td bgcolor=lavender class=info>Which RuleFit module to use</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                RFWorkDir</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>           ./rulefit</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Friedman's RuleFit module (RFF): working dir</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                 RFNrules</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                2000</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>RFF: Mximum number of rules</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>              RFNendnodes</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                   4</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>RFF: Average number of end nodes</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::Likelihood"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::Likelihood','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: Likelihood</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> The maximum-likelihood classifier models the data with probability density functions (PDF) reproducing the signal and background distributions of the input variables. Correlations among the variables are ignored. <br><p></p> </ul><b>Performance optimisation:</b> <ul> Required for good performance are decorrelated input variables (PCA transformation via the option &quot;VarTransform=Decorrelate&quot; may be tried). Irreducible non-linear correlations may be reduced by precombining strongly correlated input variables, or by simply removing one of the variables. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> High fidelity PDF estimates are mandatory, i.e., sufficient training statistics is required to populate the tails of the distributions It would be a surprise if the default Spline or KDE kernel parameters provide a satisfying fit to the data. The user is advised to properly tune the events per bin and smooth options in the spline cases individually per variable. If the KDE kernel is used, the adaptive Gaussian kernel may lead to artefacts, so please always also try the non-adaptive one. <br><p></p> All tuning parameters must be adjusted individually for each input variable! </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the Likelihood method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>Likelihood</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>          TransformOutput</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Transform likelihood output by inverse sigmoid function</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::MLP"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::MLP','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: MLP</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> The MLP artificial neural network (ANN) is a traditional feed- forward multilayer perceptron impementation. The MLP has a user- defined hidden layer architecture, while the number of input (output) nodes is determined by the input variables (output classes, i.e., signal and one background). <br><p></p> </ul><b>Performance optimisation:</b> <ul> Neural networks are stable and performing for a large variety of linear and non-linear classification problems. However, in contrast to (e.g.) boosted decision trees, the user is advised to reduce the number of input variables that have only little discrimination power. <br><p></p> In the tests we have carried out so far, the MLP and ROOT networks (TMlpANN, interfaced via TMVA) performed equally well, with however a clear speed advantage for the MLP. The Clermont-Ferrand neural net (CFMlpANN) exhibited worse classification performance in these tests, which is partly due to the slow convergence of its training (at least 10k training cycles are required to achieve approximately competitive results). <br><p></p> Overtraining: only the TMlpANN performs an explicit separation of the full training sample into independent training and validation samples. We have found that in most high-energy physics applications the avaliable degrees of freedom (training events) are sufficient to constrain the weights of the relatively simple architectures required to achieve good performance. Hence no overtraining should occur, and the use of validation samples would only reduce the available training information. However, if the perrormance on the training sample is found to be significantly better than the one found with the inde- pendent test sample, caution is needed. The results for these samples are printed to standard output at the end of each training job. <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> The hidden layer architecture for all ANNs is defined by the option &quot;HiddenLayers=N+1,N,...&quot;, where here the first hidden layer has N+1 neurons and the second N neurons (and so on), and where N is the number of input variables. Excessive numbers of hidden layers should be avoided, in favour of more neurons in the first hidden layer. <br><p></p> The number of cycles should be above 500. As said, if the number of adjustable weights is small compared to the training sample size, using a large number of training samples should not lead to overtraining. </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the MLP method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>MLP</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                  NCycles</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 500</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of training cycles</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             HiddenLayers</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               N,N-1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Specification of hidden layer architecture</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>               NeuronType</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>             sigmoid</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Neuron activation function type</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>               RandomSeed</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Random seed for initial synapse weights (0 means unique seed for each run; default value '1')</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>            EstimatorType</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 MSE</td> <td bgcolor=lightsteelblue class=predef>MSE, CE, linear, sigmoid, tanh, radial</td> <td bgcolor=lightsteelblue class=info>MSE (Mean Square Estimator) for Gaussian Likelihood or CE(Cross-Entropy) for Bernoulli Likelihood</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>          NeuronInputType</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 sum</td> <td bgcolor=lavender class=predef>sum, sqsum, abssum</td> <td bgcolor=lavender class=info>Neuron input function type</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>           TrainingMethod</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                  BP</td> <td bgcolor=lightsteelblue class=predef>BP, GA, BFGS</td> <td bgcolor=lightsteelblue class=info>Train with Back-Propagation (BP), BFGS Algorithm (BFGS), or Genetic Algorithm (GA - slower and worse)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             LearningRate</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                0.02</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>ANN learning rate parameter</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                DecayRate</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                0.01</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Decay rate for learning parameter</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                 TestRate</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                  10</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Test for overtraining performed at each #th epochs</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>          EpochMonitoring</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Provide epoch-wise monitoring plots according to TestRate (caution: causes big ROOT output file!)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                 Sampling</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Only 'Sampling' (randomly selected) events are trained each epoch</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>            SamplingEpoch</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                   1</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Sampling is used for the first 'SamplingEpoch' epochs, afterwards, all events are taken for training</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>       SamplingImportance</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info> The sampling weights of events in epochs which successful (worse estimator than before) are multiplied with SamplingImportance, else they are divided.</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>         SamplingTraining</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                True</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>The training sample is sampled</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>          SamplingTesting</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               False</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>The testing sample is sampled</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                ResetStep</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                  50</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>How often BFGS should reset history</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                      Tau</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   3</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>LineSearch size step</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   BPMode</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>          sequential</td> <td bgcolor=lightsteelblue class=predef>sequential, batch</td> <td bgcolor=lightsteelblue class=info>Back-propagation learning mode: sequential or batch</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                BatchSize</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                  -1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Batch size: number of events/batch, only set if in Batch Mode, -1 for BatchSize=number_of_events</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>       ConvergenceImprove</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               1e-30</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Minimum improvement which counts as improvement (<0 means automatic convergence check is turned off)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>         ConvergenceTests</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                  -1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Number of steps (without improvement) required for convergence (<0 means automatic convergence check is turned off)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>             UseRegulator</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Use regulator to avoid over-training</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>              UpdateLimit</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               10000</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Maximum times of regulator update</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>          CalculateErrors</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Calculates inverse Hessian matrix at the end of the training to be able to calculate the uncertainties of an MVA value</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>              WeightRange</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Take the events for the estimator calculations from small deviations from the desired value to large deviations only over the weight range</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::Cuts"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::Cuts','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: Cuts</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> The optimisation of rectangular cuts performed by TMVA maximises the background rejection at given signal efficiency, and scans over the full range of the latter quantity. Three optimisation methods are optional: Monte Carlo sampling (MC), a Genetics Algorithm (GA), and Simulated Annealing (SA). GA and SA are expected to perform best. <br><p></p> The difficulty to find the optimal cuts strongly increases with the dimensionality (number of input variables) of the problem. This behavior is due to the non-uniqueness of the solution space. <br><p></p> </ul><b>Performance optimisation:</b> <ul> If the dimensionality exceeds, say, 4 input variables, it is advisable to scrutinize the separation power of the variables, and to remove the weakest ones. If some among the input variables can be described by a single cut (e.g., because signal tends to be larger than background), this can be indicated to MethodCuts via the &quot;Fsmart&quot; options (see option string). Choosing this option reduces the number of requirements for the variable from 2 (min/max) to a single one (TMVA finds out whether it is to be interpreted as min or max). <br><p></p> </ul><b>Performance tuning via configuration options:</b> <ul> <b>Monte Carlo sampling:</b> <br><p></p> Apart form the &quot;Fsmart&quot; option for the variables, the only way to improve the MC sampling is to increase the sampling rate. This is done via the configuration option &quot;MC_NRandCuts&quot;. The execution time scales linearly with the sampling rate. <br><p></p> <b>Genetic Algorithm:</b> <br><p></p> The algorithm terminates if no significant fitness increase has been achieved within the last &quot;nsteps&quot; steps of the calculation. Wiggles in the ROC curve or constant background rejection of 1 indicate that the GA failed to always converge at the true maximum fitness. In such a case, it is recommended to broaden the search by increasing the population size (&quot;popSize&quot;) and to give the GA more time to find improvements by increasing the number of steps (&quot;nsteps&quot;) -> increase &quot;popSize&quot; (at least >10 * number of variables) -> increase &quot;nsteps&quot; <br><p></p> <b>Simulated Annealing (SA) algorithm:</b> <br><p></p> &quot;Increasing Adaptive&quot; approach: <br><p></p> The algorithm seeks local minima and explores their neighborhood, while changing the ambient temperature depending on the number of failures in the previous steps. The performance can be improved by increasing the number of iteration steps (&quot;MaxCalls&quot;), or by adjusting the minimal temperature (&quot;MinTemperature&quot;). Manual adjustments of the speed of the temperature increase (&quot;TemperatureScale&quot; and &quot;AdaptiveSpeed&quot;) to individual data sets should also help. Summary:<br> -> increase &quot;MaxCalls&quot;<br> -> adjust   &quot;MinTemperature&quot;<br> -> adjust   &quot;TemperatureScale&quot;<br> -> adjust   &quot;AdaptiveSpeed&quot; <br><p></p> &quot;Decreasing Adaptive&quot; approach: <br><p></p> The algorithm calculates the initial temperature (based on the effect- iveness of large steps) and the multiplier that ensures to reach the minimal temperature with the requested number of iteration steps. The performance can be improved by adjusting the minimal temperature (&quot;MinTemperature&quot;) and by increasing number of steps (&quot;MaxCalls&quot;):<br> -> increase &quot;MaxCalls&quot;<br> -> adjust   &quot;MinTemperature&quot; <br><p></p> Other kernels: <br><p></p> Alternative ways of counting the temperature change are implemented. Each of them starts with the maximum temperature (&quot;MaxTemperature&quot;) and descreases while changing the temperature according to a given prescription:<br> CurrentTemperature =<br> - Sqrt: InitialTemperature / Sqrt(StepNumber+2) * TemperatureScale<br> - Log:  InitialTemperature / Log(StepNumber+2) * TemperatureScale<br> - Homo: InitialTemperature / (StepNumber+2) * TemperatureScale<br> - Sin:  (Sin(StepNumber / TemperatureScale) + 1) / (StepNumber + 1)*InitialTemperature + Eps<br> - Geo:  CurrentTemperature * TemperatureScale <br><p></p> Their performance can be improved by adjusting initial temperature (&quot;InitialTemperature&quot;), the number of iteration steps (&quot;MaxCalls&quot;), and the multiplier that scales the termperature descrease (&quot;TemperatureScale&quot;)<br> -> increase &quot;MaxCalls&quot;<br> -> adjust   &quot;InitialTemperature&quot;<br> -> adjust   &quot;TemperatureScale&quot;<br> -> adjust   &quot;KernelTemperature&quot; </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the Cuts method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>Cuts</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                FitMethod</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                  GA</td> <td bgcolor=lightsteelblue class=predef>GA, SA, MC, MCEvents, MINUIT, EventScan</td> <td bgcolor=lightsteelblue class=info>Minimisation Method (GA, SA, and MC are the primary methods to be used; the others have been introduced for testing purposes and are depreciated)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                EffMethod</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>              EffSel</td> <td bgcolor=lavender class=predef>EffSel, EffPDF</td> <td bgcolor=lavender class=info>Selection Method</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>              CutRangeMin</td> <td bgcolor=lightsteelblue class=array>Yes</td> <td bgcolor=lightsteelblue class=val>                  -1</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Minimum of allowed cut range (set per variable)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>              CutRangeMax</td> <td bgcolor=lavender class=array>Yes</td> <td bgcolor=lavender class=val>                  -1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Maximum of allowed cut range (set per variable)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                  VarProp</td> <td bgcolor=lightsteelblue class=array>Yes</td> <td bgcolor=lightsteelblue class=val>         NotEnforced</td> <td bgcolor=lightsteelblue class=predef>NotEnforced, FMax, FMin, FSmart</td> <td bgcolor=lightsteelblue class=info>Categorisation of cuts</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::PDEFoam"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::PDEFoam','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: PDEFoam</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> PDE-Foam is a variation of the PDE-RS method using a self-adapting binning method to divide the multi-dimensional variable space into a finite number of hyper-rectangles (cells). The binning algorithm adjusts the size and position of a predefined number of cells such that the variance of the signal and background densities inside the cells reaches a minimum <br><p></p> </ul><b>Use of booking options:</b> <ul> The PDEFoam classifier supports two different algorithms: <br><p></p> (1) Create one foam, which stores the signal over background probability density.  During foam buildup the variance of the discriminant inside the cells is minimised. <br><p></p> Booking option:   SigBgSeparated=F <br><p></p> (2) Create two separate foams, one for the signal events and one for background events.  During foam buildup the variance of the event density inside the cells is minimised separately for signal and background. <br><p></p> Booking option:   SigBgSeparated=T <br><p></p> The following options can be set (the listed values are found to be a good starting point for most applications): <br><p></p> SigBgSeparate   False   Separate Signal and Background TailCut   0.001   Fraction of outlier events that excluded from the foam in each dimension VolFrac  0.0666   Volume fraction (used for density calculation during foam build-up) nActiveCells     500   Maximal number of active cells in final foam nSampl    2000   Number of MC events per cell in foam build-up nBin       5   Number of bins used in foam build-up Nmin     100   Number of events in cell required to split cell Kernel    None   Kernel type used (possible valuses are: None, Gauss) Compress    True   Compress foam output file <br><p></p> Additional regression options: <br><p></p> MultiTargetRegression   False   Do regression with multiple targets TargetSelection    Mean   Target selection method (possible valuses are: Mean, Mpv) <br><p></p> </ul><b>Performance optimisation:</b> <ul> The performance of the two implementations was found to be similar for most examples studied. For the same number of cells per foam, the two- foam option approximately doubles the amount of computer memory needed during classification. For special cases where the event-density distribution of signal and background events is very different, the two-foam option was found to perform significantly better than the option with only one foam. <br><p></p> In order to gain better classification performance we recommend to set the parameter &quot;nActiveCells&quot; to a high value. <br><p></p> The parameter &quot;VolFrac&quot; specifies the size of the sampling volume during foam buildup and should be tuned in order to achieve optimal performance.  A larger box leads to a reduced statistical uncertainty for small training samples and to smoother sampling. A smaller box on the other hand increases the sensitivity to statistical fluctuations in the training samples, but for sufficiently large training samples it will result in a more precise local estimate of the sampled density. In general, higher dimensional problems require larger box sizes, due to the reduced average number of events per box volume. The default value of 0.0666 was optimised for an example with 5 observables and training samples of the order of 50000 signal and background events each. <br><p></p> Furthermore kernel weighting can be activated, which will lead to an additional performance improvement. Note that Gauss weighting will significantly increase the response time of the method. LinNeighbors weighting performs a linear interpolation with direct neighbor cells for each dimension and is much faster than Gauss weighting. <br><p></p> The classification results were found to be rather insensitive to the values of the parameters &quot;nSamples&quot; and &quot;nBin&quot;. </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the PDEFoam method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>PDEFoam</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>            SigBgSeparate</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Separate foams for signal and background</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                  TailCut</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               0.001</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Fraction of outlier events that are excluded from the foam in each dimension</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                  VolFrac</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>           0.0666667</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Size of sampling box, used for density calculation during foam build-up (maximum value: 1.0 is equivalent to volume of entire foam)</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             nActiveCells</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                 500</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Maximum number of active cells to be created by the foam</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                   nSampl</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                2000</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of generated MC events per cell</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                     nBin</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   5</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Number of bins in edge histograms</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                 Compress</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                True</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Compress foam output file</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>    MultiTargetRegression</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               False</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Do regression with multiple targets</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                     Nmin</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 100</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of events in cell required to split cell</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                 MaxDepth</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                   0</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Maximum depth of cell tree (0=unlimited)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>  FillFoamWithOrigWeights</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>               False</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Fill foam with original or boost weights</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             UseYesNoCell</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               False</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Return -1 or 1 for bkg or signal like events</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                  DTLogic</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                None</td> <td bgcolor=lightsteelblue class=predef>None, GiniIndex, MisClassificationError, CrossEntropy, GiniIndexWithLaplace, SdivSqrtSplusB</td> <td bgcolor=lightsteelblue class=info>Use decision tree algorithm to split cells</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>                   Kernel</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>                None</td> <td bgcolor=lavender class=predef>None, Gauss, LinNeighbors</td> <td bgcolor=lavender class=info>Kernel type used</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>          TargetSelection</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                Mean</td> <td bgcolor=lightsteelblue class=predef>Mean, Mpv</td> <td bgcolor=lightsteelblue class=info>Target selection method</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="MVA::TMlpANN"></a><table class="mytable">
+<tr>
+<th colspan=4 class=alldescr>Configuration options for MVA method :</th>
+<td align="right"><a STYLE="text-decoration: none" href="javascript:openWindow('MVA::TMlpANN','<!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;><html xmlns:my><head><title>MVA method Info</title><LINK href=&quot;CreateOptionRef.css&quot; rel=&quot;stylesheet&quot; type=&quot;text/css&quot;><body style=&quot;background-color: #ffffff;&quot;><table class=&quot;mytable&quot;><tr><th class=&quot;coltitle&quot; style=&quot;font-family: sans-serif; font-size: 90%;&quot;>Tuning information for MVA method: TMlpANN</th></tr><tr><td></td></tr><tr><td></ul><b>Short description:</b> <ul> This feed-forward multilayer perceptron neural network is the standard implementation distributed with ROOT (class TMultiLayerPerceptron). <br><p></p> Detailed information is available here: <a href=&quot;http://root.cern.ch/root/html/TMultiLayerPerceptron.html&quot;>http://root.cern.ch/root/html/TMultiLayerPerceptron.html</a> <br><p></p> </ul><hr><font color=&quot;#555555&quot;>Created on Mon Jul 29 00:06:19 2013 (TMVA, 2006 - 2009)</font></td></tr></table></body></html>')" title="Tips how to tune the TMlpANN method"><img border=0 src="./images/i_icon.png" height="18px" width="18px" alt="Information on method tuning"/></a></td>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for MVA method: <i>TMlpANN</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>                        V</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Verbose output (short form of VerbosityLevel below - overrides the latter one)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>           VerbosityLevel</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>             Default</td> <td bgcolor=#D9FAC9 class=predef>Default, Debug, Verbose, Info, Warning, Error, Fatal</td> <td bgcolor=#D9FAC9 class=info>Verbosity level</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>             VarTransform</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>                None</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>List of variable transformations performed before training, e.g., D_Background,P_Signal,G,N_AllClasses for: Decorrelation, PCA-transformation, Gaussianisation, Normalisation, each for the given class of events ('AllClasses' denotes all events of all classes, if no class indication is given, 'All' is assumed)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>                        H</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Print method-specific help message</td>
+</tr>
+<tr>
+         <td bgcolor=#B0FA91 class=option>            CreateMVAPdfs</td> <td bgcolor=#B0FA91 class=array>No </td> <td bgcolor=#B0FA91 class=val>               False</td> <td bgcolor=#B0FA91 class=predef>&minus;</td> <td bgcolor=#B0FA91 class=info>Create PDFs for classifier outputs (signal and background)</td>
+</tr>
+<tr>
+         <td bgcolor=#D9FAC9 class=option>IgnoreNegWeightsInTraining</td> <td bgcolor=#D9FAC9 class=array>No </td> <td bgcolor=#D9FAC9 class=val>               False</td> <td bgcolor=#D9FAC9 class=predef>&minus;</td> <td bgcolor=#D9FAC9 class=info>Events with negative weights are ignored in the training (but are included for testing and performance evaluation)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>                  NCycles</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 200</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Number of training cycles</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>             HiddenLayers</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>               N,N-1</td> <td bgcolor=lavender class=predef>&minus;</td> <td bgcolor=lavender class=info>Specification of hidden layer architecture (N stands for number of variables; any integers may also be used)</td>
+</tr>
+<tr>
+         <td bgcolor=lightsteelblue class=option>       ValidationFraction</td> <td bgcolor=lightsteelblue class=array>No </td> <td bgcolor=lightsteelblue class=val>                 0.5</td> <td bgcolor=lightsteelblue class=predef>&minus;</td> <td bgcolor=lightsteelblue class=info>Fraction of events in training tree used for cross validation</td>
+</tr>
+<tr>
+         <td bgcolor=lavender class=option>           LearningMethod</td> <td bgcolor=lavender class=array>No </td> <td bgcolor=lavender class=val>          Stochastic</td> <td bgcolor=lavender class=predef>Stochastic, Batch, SteepestDescent, RibierePolak, FletcherReeves, BFGS</td> <td bgcolor=lavender class=info>Learning method</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="Fitter_SA"></a><table class="mytable">
+<tr>
+<th colspan=5 class=alldescr>Configuration options for setup and tuning of specific fitter :</th>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for fitting method: <i>Simulated Annealing (SA)</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                 MaxCalls</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>              100000</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Maximum number of minimisation calls</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>              InitialTemp</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>               1e+06</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Initial temperature</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                  MinTemp</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>               1e-06</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Mimimum temperature</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                      Eps</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>               1e-10</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Epsilon</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                TempScale</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                   1</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Temperature scale</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>            AdaptiveSpeed</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                   1</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Adaptive speed</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>         TempAdaptiveStep</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>            0.009875</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Step made in each generation temperature adaptive</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>          UseDefaultScale</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>               False</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Use default temperature scale for temperature minimisation algorithm</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>           UseDefaultTemp</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>               False</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Use default initial temperature</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>               KernelTemp</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>         IncAdaptive</td> <td bgcolor=#FFF8C6 class=predef>IncAdaptive, DecAdaptive, Sqrt, Log, Sin, Homo, Geo</td> <td bgcolor=#FFF8C6 class=info>Temperature minimisation algorithm</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="Fitter_MC"></a><table class="mytable">
+<tr>
+<th colspan=5 class=alldescr>Configuration options for setup and tuning of specific fitter :</th>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for fitting method: <i>Monte Carlo sampling (MC)</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>               SampleSize</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>              100000</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Number of Monte Carlo events in toy sample</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                    Sigma</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                  -1</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>If > 0: new points are generated according to Gauss around best value and with Sigma in units of interval length</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                     Seed</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                 100</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Seed for the random generator (0 takes random seeds)</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="Fitter_Minuit"></a><table class="mytable">
+<tr>
+<th colspan=5 class=alldescr>Configuration options for setup and tuning of specific fitter :</th>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for fitting method: <i>TMinuit (MT)</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>               ErrorLevel</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                   1</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>TMinuit: error level: 0.5=logL fit, 1=chi-squared fit</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>               PrintLevel</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                  -1</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>TMinuit: output level: -1=least, 0, +1=all garbage</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>              FitStrategy</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                   2</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>TMinuit: fit strategy: 2=best</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>            PrintWarnings</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>               False</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>TMinuit: suppress warnings</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>               UseImprove</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                True</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>TMinuit: use IMPROVE</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                 UseMinos</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                True</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>TMinuit: use MINOS</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                 SetBatch</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>               False</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>TMinuit: use batch mode</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                 MaxCalls</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                1000</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>TMinuit: approximate maximum number of function calls</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                Tolerance</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                 0.1</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>TMinuit: tolerance to the function value at the minimum</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="Fitter_GA"></a><table class="mytable">
+<tr>
+<th colspan=5 class=alldescr>Configuration options for setup and tuning of specific fitter :</th>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for fitting method: <i>Genetic Algorithm (GA)</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                  PopSize</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                 300</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Population size for GA</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                    Steps</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                  40</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Number of steps for convergence</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                   Cycles</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                   3</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Independent cycles of GA fitting</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                 SC_steps</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                  10</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Spread control, steps</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                  SC_rate</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                   5</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Spread control, rate: factor is changed depending on the rate</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                SC_factor</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                0.95</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Spread control, factor</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                 ConvCrit</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>               0.001</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Convergence criteria</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>              SaveBestGen</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>                   1</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Saves the best n results from each generation. They are included in the last cycle</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>            SaveBestCycle</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                  10</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Saves the best n results from each cycle. They are included in the last cycle. The value should be set to at least 1.0</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF8C6 class=option>                     Trim</td> <td bgcolor=#FFF8C6 class=array>No </td> <td bgcolor=#FFF8C6 class=val>               False</td> <td bgcolor=#FFF8C6 class=predef>&minus;</td> <td bgcolor=#FFF8C6 class=info>Trim the population to PopSize after assessing the fitness of each individual</td>
+</tr>
+<tr>
+         <td bgcolor=#FFF39D class=option>                     Seed</td> <td bgcolor=#FFF39D class=array>No </td> <td bgcolor=#FFF39D class=val>                 100</td> <td bgcolor=#FFF39D class=predef>&minus;</td> <td bgcolor=#FFF39D class=info>Set seed of random generator (0 gives random seeds)</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="DataSetFactory"></a><table class="mytable">
+<tr>
+<th colspan=5 class=alldescr>Configuration options given in the "PrepareForTrainingAndTesting" call; these options define the creation of the data sets used for training and expert validation by TMVA :</th>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for class: <i>DataSetFactory</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                SplitMode</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>              Random</td> <td bgcolor=#EEC1C0 class=predef>Random, Alternate, Block</td> <td bgcolor=#EEC1C0 class=info>Method of picking training and testing events (default: random)</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>                  MixMode</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>     SameAsSplitMode</td> <td bgcolor=#FFDFDA class=predef>SameAsSplitMode, Random, Alternate, Block</td> <td bgcolor=#FFDFDA class=info>Method of mixing events of differnt classes into one dataset (default: SameAsSplitMode)</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                SplitSeed</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                 100</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Seed for random event shuffling</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>                 NormMode</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>      EqualNumEvents</td> <td bgcolor=#FFDFDA class=predef>None, NumEvents, EqualNumEvents</td> <td bgcolor=#FFDFDA class=info>Overall renormalisation of  event-by-event weights used in the training (NumEvents: average weight of 1 per event, independently for signal and background; EqualNumEvents: average weight of 1 per event for signal, and sum of weights for background equal to sum of weights for signal)</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>            nTrain_Signal</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                   0</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Number of training events of class Signal (default: 0 = all)</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>             nTest_Signal</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                   0</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Number of test events of class Signal (default: 0 = all)</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>        nTrain_Background</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                   0</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Number of training events of class Background (default: 0 = all)</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>         nTest_Background</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                   0</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Number of test events of class Background (default: 0 = all)</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                        V</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>               False</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Verbosity (default: true)</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>             VerboseLevel</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                Info</td> <td bgcolor=#FFDFDA class=predef>Debug, Verbose, Info</td> <td bgcolor=#FFDFDA class=info>VerboseLevel (Debug/Verbose/Info)</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="PDF"></a><table class="mytable">
+<tr>
+<th colspan=5 class=alldescr>Configuration options for the PDF class :</th>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for class: <i>PDF</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                  NSmooth</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                   0</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Number of smoothing iterations for the input histograms</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>               MinNSmooth</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                  -1</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Min number of smoothing iterations, for bins with most data</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>               MaxNSmooth</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                  -1</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Max number of smoothing iterations, for bins with least data</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>             NAvEvtPerBin</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                  50</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Average number of events per PDF bin</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                    Nbins</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                   0</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Defined number of bins for the histogram from which the PDF is created</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>                CheckHist</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>               False</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Whether or not to check the source histogram of the PDF</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>              PDFInterpol</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>             Spline2</td> <td bgcolor=#EEC1C0 class=predef>Spline0, Spline1, Spline2, Spline3, Spline5, KDE</td> <td bgcolor=#EEC1C0 class=info>Interpolation method for reference histograms (e.g. Spline2 or KDE)</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>                  KDEtype</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>               Gauss</td> <td bgcolor=#FFDFDA class=predef>Gauss</td> <td bgcolor=#FFDFDA class=info>KDE kernel type (1=Gauss)</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                  KDEiter</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>         Nonadaptive</td> <td bgcolor=#EEC1C0 class=predef>Nonadaptive, Adaptive</td> <td bgcolor=#EEC1C0 class=info>Number of iterations (1=non-adaptive, 2=adaptive)</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>            KDEFineFactor</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                   1</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Fine tuning factor for Adaptive KDE: Factor to multyply the width of the kernel</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                KDEborder</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                None</td> <td bgcolor=#EEC1C0 class=predef>None, Renorm, Mirror</td> <td bgcolor=#EEC1C0 class=info>Border effects treatment (1=no treatment , 2=kernel renormalization, 3=sample mirroring)</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+<a name="Factory"></a><table class="mytable">
+<tr>
+<th colspan=5 class=alldescr>Configuration options for Factory running :</th>
+</tr><tr>
+<th colspan=5 class=alltitle>Configuration options reference for class: <i>Factory</i></th>
+</tr><tr>
+<th class=coltitle>Option</th> <th class=coltitle>Array</th> <th class=coltitle>Default value</th> <th class=coltitle>Predefined values</th> <th class=coltitle>Description</th> 
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>                        V</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>               False</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Verbose flag</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>                    Color</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                True</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Flag for coloured screen output (default: True, if in batch mode: False)</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>          Transformations</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                    </td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>List of transformations to test; formatting example: Transformations=I;D;P;U;G,D, for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>                   Silent</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>               False</td> <td bgcolor=#FFDFDA class=predef>&minus;</td> <td bgcolor=#FFDFDA class=info>Batch mode: boolean silent flag inhibiting any output from TMVA after the creation of the factory class object (default: False)</td>
+</tr>
+<tr>
+         <td bgcolor=#EEC1C0 class=option>          DrawProgressBar</td> <td bgcolor=#EEC1C0 class=array>No </td> <td bgcolor=#EEC1C0 class=val>                True</td> <td bgcolor=#EEC1C0 class=predef>&minus;</td> <td bgcolor=#EEC1C0 class=info>Draw progress bar to display training, testing and evaluation schedule (default: True)</td>
+</tr>
+<tr>
+         <td bgcolor=#FFDFDA class=option>             AnalysisType</td> <td bgcolor=#FFDFDA class=array>No </td> <td bgcolor=#FFDFDA class=val>                Auto</td> <td bgcolor=#FFDFDA class=predef>Classification, Regression, Multiclass, Auto</td> <td bgcolor=#FFDFDA class=info>Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)</td>
+</tr>
+<tr><td colspan=5><p></p></td></tr>
+</table>
+</td></tr>
+<tr><td>
+<hr>
+</td></tr>
+<tr><td><table border=0 cellpadding=0 cellspacing=0 width=100%><tr><td>
+<font color="#555555">Page created on Mon Jul 29 00:06:19 2013 (&copy; TMVA, 2006&minus;2009)</font></td>
+<td align="right"><a href="http://tmva.sf.net"><img border=0 vspace=0  width="80" src="images/tmva_logo.gif"></a>
+</td></tr></table>
+</td></tr>
+</table>
+</center>
+</body>
+</html>

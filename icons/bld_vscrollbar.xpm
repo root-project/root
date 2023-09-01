@@ -1,0 +1,33 @@
+/* XPM */
+static char *vscrollbar_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"20 21 6 1",
+"  c Gray0",
+". c Gray61",
+"X c #d6d6d6",
+"o c #b3cece",
+"O c Gray100",
+"+ c None",
+/* pixels */
+"++++++         +++++",
+"++++++ ...O...O+++++",
+"++++++ ..OX ..O+++++",
+"++++++ .OXXX .O+++++",
+"++++++ OXXXXX O+++++",
+"++++++        O+++++",
+"++++++ .......O+++++",
+"++++++ OOOOOO O+++++",
+"++++++ OXXXXX O+++++",
+"++++++ OXXXXX O+++++",
+"++++++ OXXXXX O+++++",
+"++++++ OXXXXX O+++++",
+"++++++ OXXXXX O+++++",
+"++++++ O      O+++++",
+"++++++ .......O+++++",
+"++++++ OOOOOOOO+++++",
+"++++++ OXXXXX O+++++",
+"++++++ .OXXX .O+++++",
+"++++++ ..OX ..O+++++",
+"++++++ ... ...O+++++",
+"++++++OOOOOOOOO+++++"
+};

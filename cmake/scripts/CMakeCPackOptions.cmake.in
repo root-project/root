@@ -1,0 +1,65 @@
+# This file is configured at cmake time, and loaded at cpack time.
+# To pass variables to cpack from cmake, they must be configured
+# in this file.
+
+set(CPACK_PACKAGE_NAME "ROOT")
+set(CPACK_PACKAGE_VENDOR "CERN")
+set(CPACK_PACKAGE_DESCRIPTION "A modular scientific software toolkit")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://root.cern")
+set(CPACK_PACKAGE_CONTACT "ROOT Developers <root-dev@cern.ch>")
+
+if(CPACK_GENERATOR STREQUAL "DEB")
+  set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+  set(CPACK_DEBIAN_PACKAGE_SECTION "science")
+  set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS TRUE)
+  set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS TRUE)
+  set(CPACK_DEBIAN_PACKAGE_GENERATE_SHLIBS_POLICY "=")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "g++")
+  set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "python3, python3-numpy")
+  set(CPACK_DEBIAN_PACKAGE_SUGGESTS "cmake, make, jupyter, python3-numba")
+endif()
+
+if(CPACK_GENERATOR STREQUAL "RPM")
+  set(CPACK_RPM_PACKAGE_AUTOREQ TRUE)
+  set(CPACK_RPM_PACKAGE_AUTOPROV TRUE)
+  set(CPACK_RPM_PACKAGE_REQUIRES "gcc-c++, python3")
+  set(CPACK_RPM_PACKAGE_REQUIRES_PRE "epel-release")
+  if (NOT gnuinstall)
+    set(CPACK_RPM_PACKAGE_RELOCATABLE TRUE)
+  else()
+    set(CPACK_RPM_PACKAGE_RELOCATABLE FALSE)
+  endif()
+endif()
+
+if(CPACK_GENERATOR MATCHES "NSIS")
+  # There is a bug in NSI that does not handle full unix paths properly. Make
+  # sure there is at least one set of four (4) backlasshes.
+  set(CPACK_NSIS_MUI_ICON "@CMAKE_SOURCE_DIR@\\icons\\RootIcon.ico")
+  set(CPACK_NSIS_MUI_UNIICON "@CMAKE_SOURCE_DIR@\\icons\\RootIcon.ico")
+  set(CPACK_NSIS_DISPLAY_NAME "ROOT @ROOT_VERSION@")
+  set(CPACK_NSIS_PACKAGE_NAME "ROOT @ROOT_VERSION@")
+  set(CPACK_NSIS_HELP_LINK "https:\\\\root.cern")
+  set(CPACK_NSIS_URL_INFO_ABOUT "https:\\\\root.cern\\about")
+  set(CPACK_NSIS_CONTACT "root-dev@cern.ch")
+  set(CPACK_NSIS_MODIFY_PATH ON)
+  set(CPACK_NSIS_INSTALL_ROOT "C:")
+  # Register .root file type
+  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+      WriteRegStr HKCR '.root' '' 'RootFile'
+      WriteRegStr HKCR 'RootFile' '' 'ROOT Data File'
+      WriteRegStr HKCR 'RootFile\\shell' '' 'open'
+      WriteRegStr HKCR 'RootFile\\shell\\DefaultIcon' '' '$INSTDIR\\icons\\RootIcon.ico'
+      WriteRegStr HKCR 'RootFile\\shell\\open\\command' '' \\
+                       '$INSTDIR\\bin\\root.exe -l \"%1\"  \"$INSTDIR\\macros\\fileopen.C\"'
+     ")
+  set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+      DeleteRegKey HKCR '.root'
+      DeleteRegKey HKCR 'RootFile'
+     ")
+elseif(CPACK_GENERATOR MATCHES "productbuild")
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/Applications/${CPACK_PACKAGE_INSTALL_DIRECTORY}")
+  set(CPACK_PACKAGE_DEFAULT_LOCATION "/")
+elseif(NOT CPACK_GENERATOR MATCHES "^(RPM|DEB)$")
+  set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0)
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/root/")
+endif()

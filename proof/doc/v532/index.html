@@ -1,0 +1,91 @@
+<br/>
+<hr/>
+<a name="proof"></a>
+<h3>PROOF System</h3>
+<span style="font-style: italic;">NB: Starting with version 5.32/00, Xrootd
+is not distributed any longer with ROOT but has become an external package.
+If not avaibable the PROOF modules 'proofx' and 'proofd' will not be built.
+The PROOF core modules, however, are built. Namely, PROOF-Lite will be
+available even when Xrootd is not.</span>
+<h4>New functionality</h4>
+<ul>
+<li>Creating PAR packages from ROOT data files: it is now possible to
+use TFile::MakeProject to create a PAR file to read the file. Details in
+<a href="http://root.cern.ch/drupal/content/creating-par-package-read-given-root-file">here</a>.</li>
+<li>Add support for backend-dependent record formatting of PROOF monitoring.
+This is achieved by introducing a new layer, described by the abstract
+interface TProofMonSender, with the record format defined in the backend
+implemenation (currently TProofMonSenderML, for MonaLisa, and
+TProofMonSenderSQL, for SQL backends). Currently three types of records
+are sent: 'summary' (derived from what was currently posted), 'dataset',
+with entries per dataset processed in the query, and 'files', with
+entries per file processed in the query. In SQL terms, each of this
+records corresponds to a different table. Sending of any of the three
+records can be toggled independently. See also the
+<a href="http://root.cern.ch/drupal/content/enabling-query-monitoring">web
+pages dedicated to monitoring</a>.</li>
+<li>In TProofMgr, add 'ping' functionality to test in non-blocking way if
+a PROOF service is listening at a given port of a given host.</li></ul>
+<h4>Improvements</h4>
+<ul>
+<li>In PROOF-Bench, file generation, add the possibility to change
+only the generating function, passed as TMacro. Add also check on the
+free space on the device and skip file generation if less than 10% or
+less than 1 GB.</li>
+<li>Record in TStatus also the max memory usage on the master and printed
+via TStatus::Print; this allow a quick visualisation of the overall
+memory usage at the end of the query.</li>
+<li>Import version 0.9.6 of afdsmgrd</li>
+<li>Make sure that the name(s) of the processed dataset(s) are registered
+in the TFileInfo objects being processed, so that it can be used for
+monitoring.</li>
+<li>In XrdProofd, add possibility to skip the checks for the data
+directories during session startup, as they may significantly slowdown
+the startup process is the medium is busy. In such a case, admins
+are responsible to create the directories in advance; the session
+releated part fo the path is created by the session once up.</li>
+<li>In XrdProofd, move the check for the username after authentication.
+This is because authentication may run some credentials-to-user mapping
+which can modify the requested username. This way we really check the
+final username and not the one requested by the client, which may even
+not exist on the machines. Side modification: when the mapping function
+returns more usernames, the username specified by the client is used to
+help choosing the effective username among the available choices; if not
+match is found the handshake does any longer fail, the first mapped
+username is chosen instead.</li>
+<li>In XrdProofd, allow 'xpd.allowedgroups' to control also PROOF
+groups, not only UNIX ones.</li><li>In XrdProofd, simplify error
+messages in case of login failure because of non-authorization.</li>
+<li>Remove hardcoded additions of dirname(COMPILER) and of
+'/bin:/usr/bin:/usr/local/bin' in front of PATH. These uncontrolled
+additions could hide specific settings in PATH and be the source of
+weird problems appearing in PROOF only.</li>
+<li>Add more flexibility to the definition of the library path seen by
+proofserv. So far to avoid ambiguites in some cases, $ROOTSYS/lib was
+removed and the one of the ROOT version chosen was added later on in
+front, which proved to be to aggressive in some cases.</li>
+<li>All changes (and fixes) needed to build against the version of Xrootd,
+now always installed as external.</li></ul>
+<h4>Fixes</h4>
+<ul>
+<li>Fix GetSessionLogs in PROOF-Lite</li>
+<li>Restore correct parsing of "workers=N" in PROOF-Lite</li>
+<li>In Proof-Bench, make sure that it can be run from any directory
+and no matter how ROOT was installed</li>
+<li>Fix issue in TProofPlayer::HandleHistogram preventing proper
+histogram cleaning right after merging when using TH1::Add; histogram
+were still destroyed at the end of the query, but there was no
+memory advantage in TH1::Add wrt TH1::Merge.</li>
+<li>Make sure that the performance tree is removed from the output
+list when saved to the output file. Solves a segv at quit.</li>
+<li>Decouple from registered TChains in already TProof::Close(); allows
+to avoid possible crash at exit ('.q') occuring after the recent
+revision of the socket cleanup policy.</li>
+<li>In XrdProofd, fix a few issues with option 'xpd.multiuser'.</li>
+<li>In TXSocket::ProcessUnsolicitedMsg, fix an issue preventig server
+messages to be displayed during setup, i.e. when the XrdClientConn
+instance is not yet defined.</li>
+<li>In XrdProofd, fix the behavior of the 'xpd.allowedusers' and
+'xpd.allowedgroups' directives
+(see the <a href="http://root.cern.ch/drupal/content/controlling-access">dedicated web entry</a>).</li>
+</ul>

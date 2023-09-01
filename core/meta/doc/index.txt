@@ -1,0 +1,8 @@
+This directory contains the Dictionary classes (interface to CINT)
+BEGIN_HTML
+ See:
+<ul>
+<li><a href="http://root.cern.ch/root/Dictionary.html">The ROOT Dictionary
+    </a></li>
+</ul>
+END_HTML

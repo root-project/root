@@ -1,0 +1,41 @@
+<!--
+    Single channel configuration exampple.
+    The top level configuration XML is example.xml
+
+    NormalizedByTheory should be "True" (not "TRUE" or "true") for all non-data-driven backgrounds.
+
+    If you comment or remove the <Data> tag then it will use the expected data.
+
+    Histogram inputs should be in pb and in top-level xml the lumi should be in 1/pb
+    (The important thing is that they match... fb and 1/fb is also ok)
+
+    Note: Config.dtd needs to be accessible.  It can be found in ROOT release area.
+    The file system path is relative to location of this XML file, not the executable.
+-->
+
+<!DOCTYPE Channel  SYSTEM 'HistFactorySchema.dtd'>
+
+  <Channel Name="signalRegion" InputFile="./data/dataDriven.root"  >
+    <Data HistoName="data" HistoPath="" />
+
+    <!-- Configure Stat Errors -->
+    <StatErrorConfig RelErrorThreshold="0.05" ConstraintType="Gaussian" />
+
+    <Sample Name="signal" HistoPath="" HistoName="Signal">
+      <OverallSys Name="syst_signal" High="1.05" Low="0.95"/>
+      <NormFactor Name="SigXsecOverSM" Val="1" Low=".2" High="1.5" />
+    </Sample>
+
+    <!-- This is MC Driven -->
+    <Sample Name="background1" HistoPath="" NormalizeByTheory="True" HistoName="Background1"  >
+      <StatError Activate="True" />
+      <OverallSys Name="bkg1CrossSection" Low="0.95" High="1.05"/>
+    </Sample>
+
+    <!-- Background 2 is completely DataDriven -->
+    <Sample Name="background2" HistoPath="" NormalizeByTheory="False" HistoName="FlatHist" >
+      <OverallSys Name="syst_bkg2Extrapolation" Low="0.95" High="1.05"/>
+      <ShapeFactor Name="Bkg2Shape" />
+    </Sample>
+
+  </Channel>

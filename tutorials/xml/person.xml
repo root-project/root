@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE PersonList PUBLIC "" "person.dtd" [
+]>
+<PersonList>
+<!--
+  This is an example...
+-->
+<Person ID="1">
+    <FirstName>Alicia</FirstName>
+    <LastName>Smith</LastName>
+    <Gender>F</Gender>
+    <DateOfBirth>
+        <Day>13</Day>
+        <Month>10</Month>
+        <Year>1978</Year>
+    </DateOfBirth>
+    <Address>
+        <Street>Grand Avenue, 143</Street>
+        <PostalCode>Toronto 2283</PostalCode>
+        <Country>Canada</Country>
+    </Address>
+  </Person>
+  <Person ID="2">
+    <FirstName>Maria</FirstName>
+    <LastName>White</LastName>
+    <Gender>F</Gender>
+    <DateOfBirth>
+        <Day>29</Day>
+        <Month>5</Month>
+        <Year>1980</Year>
+    </DateOfBirth>
+    <Address>
+        <Street>Green Land Park, 143</Street>
+        <PostalCode>Vancouver BC V6C 2C2</PostalCode>
+        <Country>Canada</Country>
+    </Address>
+  </Person>
+</PersonList>
