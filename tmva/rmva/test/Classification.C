@@ -23,7 +23,7 @@ void Classification()
    TMVA::Tools::Instance();
    ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
 
-   TString outfileName("TMVA.root");
+   TString outfileName("RMVA.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    TMVA::Factory *factory = new TMVA::Factory("RMVAClassification", outputFile,
