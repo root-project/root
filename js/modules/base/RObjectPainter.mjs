@@ -8,44 +8,44 @@ const kNormal = 1, /* kLessTraffic = 2, */ kOffline = 3;
 class RObjectPainter extends ObjectPainter {
 
    constructor(dom, obj, opt, csstype) {
-      super(dom,obj,opt);
+      super(dom, obj, opt);
       this.csstype = csstype;
    }
 
    /** @summary Evaluate v7 attributes using fAttr storage and configured RStyle */
    v7EvalAttr(name, dflt) {
-      let obj = this.getObject();
+      const obj = this.getObject();
       if (!obj) return dflt;
       if (this.cssprefix) name = this.cssprefix + name;
 
       const type_check = res => {
          if (dflt === undefined) return res;
-         let typ1 = typeof dflt, typ2 = typeof res;
-         if (typ1 == typ2) return res;
-         if (typ1 == 'boolean') {
-            if (typ2 == 'string') return (res != '') && (res != '0') && (res != 'no') && (res != 'off');
+         const typ1 = typeof dflt, typ2 = typeof res;
+         if (typ1 === typ2) return res;
+         if (typ1 === 'boolean') {
+            if (typ2 === 'string') return (res !== '') && (res !== '0') && (res !== 'no') && (res !== 'off');
             return !!res;
          }
-         if ((typ1 == 'number') && (typ2 == 'string'))
+         if ((typ1 === 'number') && (typ2 === 'string'))
             return parseFloat(res);
          return res;
       };
 
       if (obj.fAttr?.m) {
-         let value = obj.fAttr.m[name];
+         const value = obj.fAttr.m[name];
          if (value) return type_check(value.v); // found value direct in attributes
       }
 
       if (this.rstyle?.fBlocks) {
-         let blks = this.rstyle.fBlocks;
+         const blks = this.rstyle.fBlocks;
          for (let k = 0; k < blks.length; ++k) {
-            let block = blks[k],
-                match = (this.csstype && (block.selector == this.csstype)) ||
-                        (obj.fId && (block.selector == ('#' + obj.fId))) ||
-                        (obj.fCssClass && (block.selector == ('.' + obj.fCssClass)));
+            const block = blks[k],
+                  match = (this.csstype && (block.selector === this.csstype)) ||
+                          (obj.fId && (block.selector === ('#' + obj.fId))) ||
+                          (obj.fCssClass && (block.selector === ('.' + obj.fCssClass)));
 
             if (match && block.map?.m) {
-               let value = block.map.m[name.toLowerCase()];
+               const value = block.map.m[name.toLowerCase()];
                if (value) return type_check(value.v);
             }
          }
@@ -56,7 +56,7 @@ class RObjectPainter extends ObjectPainter {
 
    /** @summary Set v7 attributes value */
    v7SetAttr(name, value) {
-      let obj = this.getObject();
+      const obj = this.getObject();
       if (this.cssprefix) name = this.cssprefix + name;
 
       if (obj?.fAttr?.m)
@@ -67,12 +67,12 @@ class RObjectPainter extends ObjectPainter {
    v7EvalLength(name, sizepx, dflt) {
       if (sizepx <= 0) sizepx = 1;
 
-      let value = this.v7EvalAttr(name);
+      const value = this.v7EvalAttr(name);
 
       if (value === undefined)
          return Math.round(dflt*sizepx);
 
-      if (typeof value == 'number')
+      if (typeof value === 'number')
          return Math.round(value*sizepx);
 
       if (value === null)
@@ -82,44 +82,43 @@ class RObjectPainter extends ObjectPainter {
 
       while (val) {
          // skip empty spaces
-         while ((pos < val.length) && ((val[pos] == ' ') || (val[pos] == '\t')))
+         while ((pos < val.length) && ((val[pos] === ' ') || (val[pos] === '\t')))
             ++pos;
 
          if (pos >= val.length)
             break;
 
-         if ((val[pos] == '-') || (val[pos] == '+')) {
+         if ((val[pos] === '-') || (val[pos] === '+')) {
             if (operand) {
                console.log('Fail to parse RPadLength ' + value);
                return dflt;
             }
-            operand = (val[pos] == '-') ? -1 : 1;
+            operand = (val[pos] === '-') ? -1 : 1;
             pos++;
             continue;
          }
 
          if (pos > 0) { val = val.slice(pos); pos = 0; }
 
-         while ((pos < val.length) && (((val[pos] >= '0') && (val[pos] <= '9')) || (val[pos] == '.'))) pos++;
+         while ((pos < val.length) && (((val[pos] >= '0') && (val[pos] <= '9')) || (val[pos] === '.'))) pos++;
 
-         let v = parseFloat(val.slice(0, pos));
+         const v = parseFloat(val.slice(0, pos));
          if (!Number.isFinite(v)) {
-            console.log('Fail to parse RPadLength ' + value);
+            console.log(`Fail to parse RPadLength ${value}`);
             return Math.round(dflt*sizepx);
          }
 
          val = val.slice(pos);
          pos = 0;
          if (!operand) operand = 1;
-         if (val && (val[0] == '%')) {
+         if (val && (val[0] === '%')) {
             val = val.slice(1);
             norm += operand*v*0.01;
-         } else if ((val.length > 1) && (val[0] == 'p') && (val[1] == 'x')) {
+         } else if ((val.length > 1) && (val[0] === 'p') && (val[1] === 'x')) {
             val = val.slice(2);
             px += operand*v;
-         } else {
+         } else
             norm += operand*v;
-         }
 
          operand = 0;
       }
@@ -132,27 +131,27 @@ class RObjectPainter extends ObjectPainter {
       let val = this.v7EvalAttr(name, '');
       if (!val || !isStr(val)) return dflt;
 
-      if (val == 'auto') {
-         let pp = this.getPadPainter();
+      if (val === 'auto') {
+         const pp = this.getPadPainter();
          if (pp?._auto_color_cnt !== undefined) {
-            let pal = pp.getHistPalette(),
-                cnt = pp._auto_color_cnt++,
-                num = pp._num_primitives - 1;
+            const pal = pp.getHistPalette(),
+                  cnt = pp._auto_color_cnt++;
+            let num = pp._num_primitives - 1;
             if (num < 2) num = 2;
             val = pal ? pal.getColorOrdinal((cnt % num) / num) : 'blue';
             if (!this._auto_colors) this._auto_colors = {};
             this._auto_colors[name] = val;
-         } else if (this._auto_colors && this._auto_colors[name]) {
+         } else if (this._auto_colors && this._auto_colors[name])
             val = this._auto_colors[name];
-         } else {
+         else {
             console.error(`Autocolor ${name} not defined yet - please check code`);
             val = '';
          }
-      } else if (val[0] == '[') {
-         let ordinal = parseFloat(val.slice(1, val.length-1));
+      } else if (val[0] === '[') {
+         const ordinal = parseFloat(val.slice(1, val.length-1));
          val = 'black';
          if (Number.isFinite(ordinal)) {
-             let pal = this.getPadPainter()?.getHistPalette();
+             const pal = this.getPadPainter()?.getHistPalette();
              if (pal) val = pal.getColorOrdinal(ordinal);
          }
       }
@@ -162,25 +161,26 @@ class RObjectPainter extends ObjectPainter {
    /** @summary Evaluate RAttrText properties
      * @return {Object} FontHandler, can be used directly for the text drawing */
    v7EvalFont(name, dflts, fontScale) {
+      if (!dflts)
+         dflts = {};
+      else if (typeof dflts === 'number')
+         dflts = { size: dflts };
 
-      if (!dflts) dflts = {}; else
-      if (typeof dflts == 'number') dflts = { size: dflts };
-
-      let pp = this.getPadPainter(),
-          rfont = pp?._dfltRFont || { fFamily: 'Arial', fStyle: '', fWeight: '' },
-          text_size   = this.v7EvalAttr(name + '_size', dflts.size || 12),
-          text_angle  = this.v7EvalAttr(name + '_angle', 0),
-          text_align  = this.v7EvalAttr(name + '_align', dflts.align || 'none'),
-          text_color  = this.v7EvalColor(name + '_color', dflts.color || 'none'),
-          font_family = this.v7EvalAttr(name + '_font_family', rfont.fFamily || 'Arial'),
-          font_style  = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
-          font_weight = this.v7EvalAttr(name + '_font_weight', rfont.fWeight || '');
+      const pp = this.getPadPainter(),
+            rfont = pp?._dfltRFont || { fFamily: 'Arial', fStyle: '', fWeight: '' },
+            text_angle  = this.v7EvalAttr(name + '_angle', 0),
+            text_align  = this.v7EvalAttr(name + '_align', dflts.align || 'none'),
+            text_color  = this.v7EvalColor(name + '_color', dflts.color || 'none'),
+            font_family = this.v7EvalAttr(name + '_font_family', rfont.fFamily || 'Arial'),
+            font_style  = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
+            font_weight = this.v7EvalAttr(name + '_font_weight', rfont.fWeight || '');
+       let text_size   = this.v7EvalAttr(name + '_size', dflts.size || 12);
 
        if (isStr(text_size)) text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
        if (!fontScale) fontScale = pp?.getPadHeight() || 100;
 
-       let handler = new FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
+       const handler = new FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
 
        if (text_angle) handler.setAngle(360 - text_angle);
        if (text_align !== 'none') handler.setAlign(text_align);
@@ -193,8 +193,8 @@ class RObjectPainter extends ObjectPainter {
    createv7AttFill(prefix) {
       if (!prefix || !isStr(prefix)) prefix = 'fill_';
 
-      let color = this.v7EvalColor(prefix + 'color', ''),
-          pattern = this.v7EvalAttr(prefix + 'style', 0);
+      const color = this.v7EvalColor(prefix + 'color', ''),
+            pattern = this.v7EvalAttr(prefix + 'style', 0);
 
       this.createAttFill({ pattern, color,  color_as_svg: true });
    }
@@ -203,14 +203,14 @@ class RObjectPainter extends ObjectPainter {
    createv7AttLine(prefix) {
       if (!prefix || !isStr(prefix)) prefix = 'line_';
 
-      let color = this.v7EvalColor(prefix + 'color', 'black'),
-          width = this.v7EvalAttr(prefix + 'width', 1),
-          style = this.v7EvalAttr(prefix + 'style', 1),
-          pattern = this.v7EvalAttr(prefix + 'pattern');
+      const color = this.v7EvalColor(prefix + 'color', 'black'),
+            width = this.v7EvalAttr(prefix + 'width', 1),
+            style = this.v7EvalAttr(prefix + 'style', 1),
+            pattern = this.v7EvalAttr(prefix + 'pattern');
 
       this.createAttLine({ color, width, style, pattern });
 
-      if (prefix == 'border_')
+      if (prefix === 'border_')
          this.lineatt.setBorder(this.v7EvalAttr(prefix + 'rx', 0), this.v7EvalAttr(prefix + 'ry', 0));
    }
 
@@ -218,12 +218,10 @@ class RObjectPainter extends ObjectPainter {
    createv7AttMarker(prefix) {
       if (!prefix || !isStr(prefix)) prefix = 'marker_';
 
-      let color = this.v7EvalColor(prefix + 'color', 'black'),
-          size = this.v7EvalAttr(prefix + 'size', 0.01),
-          style = this.v7EvalAttr(prefix + 'style', 1),
-          refsize = 1;
-      if (size < 1)
-         refsize = this.getPadPainter()?.getPadHeight() || 100;
+      const color = this.v7EvalColor(prefix + 'color', 'black'),
+            size = this.v7EvalAttr(prefix + 'size', 0.01),
+            style = this.v7EvalAttr(prefix + 'style', 1),
+            refsize = (size >= 1) ? 1 : (this.getPadPainter()?.getPadHeight() || 100);
 
       this.createAttMarker({ color, size, style, refsize });
    }
@@ -252,16 +250,17 @@ class RObjectPainter extends ObjectPainter {
         if (kind !== 'none') console.error(`Trying to set ${kind} for none value`);
       }
 
-      if (!kind)
-         switch(typeof value) {
+      if (!kind) {
+         switch (typeof value) {
             case 'number': kind = 'double'; break;
             case 'boolean': kind = 'boolean'; break;
          }
+      }
 
       obj = { _typename: `${nsREX}RAttrMap::` };
-      switch(kind) {
+      switch (kind) {
          case 'none': obj._typename += 'NoValue_t'; break;
-         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = value ? true : false; break;
+         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = !!value; break;
          case 'int': obj._typename += 'IntValue_t'; obj.v = parseInt(value); break;
          case 'double': obj._typename += 'DoubleValue_t'; obj.v = parseFloat(value); break;
          default: obj._typename += 'StringValue_t'; obj.v = isStr(value) ? value : JSON.stringify(value); break;
@@ -273,10 +272,10 @@ class RObjectPainter extends ObjectPainter {
 
    /** @summary Sends accumulated attribute changes to server */
    v7SendAttrChanges(req, do_update) {
-      let canp = this.getCanvPainter();
+      const canp = this.getCanvPainter();
       if (canp && req?._typename) {
          if (do_update !== undefined)
-            req.update = do_update ? true : false;
+            req.update = !!do_update;
          canp.v7SubmitRequest('', req);
       }
    }
@@ -286,7 +285,7 @@ class RObjectPainter extends ObjectPainter {
     * @param req is object derived from DrawableRequest, including correct _typename
     * @param method is method of painter object which will be called when getting reply */
    v7SubmitRequest(kind, req, method) {
-      let canp = this.getCanvPainter();
+      const canp = this.getCanvPainter();
       if (!isFunc(canp?.submitDrawableRequest)) return null;
 
       // special situation when snapid not yet assigned - just keep ref until snapid is there
@@ -304,7 +303,7 @@ class RObjectPainter extends ObjectPainter {
    assignSnapId(id) {
       this.snapid = id;
       if (this.snapid && this._pending_request) {
-         let p = this._pending_request;
+         const p = this._pending_request;
          this.v7SubmitRequest(p.kind, p.req, p.method);
          delete this._pending_request;
       }
@@ -316,16 +315,16 @@ class RObjectPainter extends ObjectPainter {
      * kLessTraffic advise not to send commands if offline functionality available
      * kNormal is standard functionality with RCanvas on server side */
    v7CommMode() {
-      let canp = this.getCanvPainter();
+      const canp = this.getCanvPainter();
       if (!canp || !canp.submitDrawableRequest || !canp._websocket)
          return kOffline;
 
       return kNormal;
    }
 
-   v7NormalMode() { return this.v7CommMode() == kNormal; }
+   v7NormalMode() { return this.v7CommMode() === kNormal; }
 
-   v7OfflineMode() { return this.v7CommMode() == kOffline; }
+   v7OfflineMode() { return this.v7CommMode() === kOffline; }
 
 } // class RObjectPainter
 

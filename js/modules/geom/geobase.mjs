@@ -399,7 +399,7 @@ class GeometryCreator {
   * @private
   */
 
-class PolygonsCreator{
+class PolygonsCreator {
 
    /** @summary constructor */
    constructor() {
@@ -439,13 +439,12 @@ class PolygonsCreator{
       this.reduce = reduce;
 
       if (this.multi) {
-
-         if (reduce!==2) console.error('polygon not supported for not-reduced faces');
+         if (reduce !== 2) console.error('polygon not supported for not-reduced faces');
 
          let polygon;
 
          if (this.multi++ === 1) {
-            polygon = new CsgPolygon;
+            polygon = new CsgPolygon();
 
             polygon.vertices.push(this.mnormal ? this.v2 : this.v3);
             this.polygons.push(polygon);
@@ -459,11 +458,11 @@ class PolygonsCreator{
                console.error('vertex missmatch when building polygon');
          }
 
-         let first = this.mnormal ? polygon.vertices[0] : polygon.vertices[polygon.vertices.length-1],
-             next = this.mnormal ? this.v3 : this.v2;
+         const first = this.mnormal ? polygon.vertices[0] : polygon.vertices[polygon.vertices.length-1],
+               next = this.mnormal ? this.v3 : this.v2;
 
          if (next.diff(first) < 1e-12) {
-            //console.log(`polygon closed!!! nvertices = ${polygon.vertices.length}`);
+            // console.log(`polygon closed!!! nvertices = ${polygon.vertices.length}`);
             this.multi = 0;
          } else
          if (this.mnormal) {
@@ -473,10 +472,9 @@ class PolygonsCreator{
          }
 
          return;
-
       }
 
-      let polygon = new CsgPolygon;
+      let polygon = new CsgPolygon();
 
       switch (reduce) {
          case 0: polygon.vertices.push(this.v1, this.v2, this.v3, this.v4); break;
@@ -562,11 +560,10 @@ class PolygonsCreator{
 /** @summary Creates cube geometrey
   * @private */
 function createCubeBuffer(shape, faces_limit) {
-
    if (faces_limit < 0) return 12;
 
-   let dx = shape.fDX, dy = shape.fDY, dz = shape.fDZ,
-       creator = faces_limit ? new PolygonsCreator : new GeometryCreator(12);
+   const dx = shape.fDX, dy = shape.fDY, dz = shape.fDZ,
+         creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(12);
 
    creator.addFace4(dx,dy,dz, dx,-dy,dz, dx,-dy,-dz, dx,dy,-dz); creator.setNormal(1,0,0);
 
@@ -586,15 +583,14 @@ function createCubeBuffer(shape, faces_limit) {
 /** @summary Creates 8 edges geometry
   * @private */
 function create8edgesBuffer( v, faces_limit ) {
-
-   let indicies = [4,7,6,5, 0,3,7,4, 4,5,1,0, 6,2,1,5, 7,3,2,6, 1,2,3,0],
-        creator = (faces_limit > 0) ? new PolygonsCreator : new GeometryCreator(12);
+   const indicies = [4,7,6,5, 0,3,7,4, 4,5,1,0, 6,2,1,5, 7,3,2,6, 1,2,3,0],
+         creator = (faces_limit > 0) ? new PolygonsCreator() : new GeometryCreator(12);
 
    for (let n = 0; n < indicies.length; n += 4) {
-      let i1 = indicies[n]*3,
-          i2 = indicies[n+1]*3,
-          i3 = indicies[n+2]*3,
-          i4 = indicies[n+3]*3;
+      const i1 = indicies[n]*3,
+            i2 = indicies[n+1]*3,
+            i3 = indicies[n+2]*3,
+            i4 = indicies[n+3]*3;
       creator.addFace4(v[i1], v[i1+1], v[i1+2], v[i2], v[i2+1], v[i2+2],
                        v[i3], v[i3+1], v[i3+2], v[i4], v[i4+1], v[i4+2]);
       if (n === 0)
@@ -611,7 +607,6 @@ function create8edgesBuffer( v, faces_limit ) {
 /** @summary Creates PARA geometrey
   * @private */
 function createParaBuffer(shape, faces_limit) {
-
    if (faces_limit < 0) return 12;
 
    let txy = shape.fTxy, txz = shape.fTxz, tyz = shape.fTyz, v = [
@@ -692,20 +687,20 @@ function createArb8Buffer(shape, faces_limit) {
        numfaces = 0;
 
    for (let k = 0; k < indicies.length; k += 3) {
-      let id1 = indicies[k]*100   + indicies[k+1]*10 + indicies[k+2],
-          id2 = indicies[k+1]*100 + indicies[k+2]*10 + indicies[k],
-          id3 = indicies[k+2]*100 + indicies[k]*10   + indicies[k+1];
+      const id1 = indicies[k]*100   + indicies[k+1]*10 + indicies[k+2],
+            id2 = indicies[k+1]*100 + indicies[k+2]*10 + indicies[k],
+            id3 = indicies[k+2]*100 + indicies[k]*10   + indicies[k+1];
 
-      if ((indicies[k] == indicies[k+1]) || (indicies[k] == indicies[k+2]) || (indicies[k+1] == indicies[k+2]) ||
-          (map.indexOf(id1) >= 0) || (map.indexOf(id2) >= 0) || (map.indexOf(id3) >= 0)) {
+      if ((indicies[k] === indicies[k+1]) || (indicies[k] === indicies[k+2]) || (indicies[k+1] === indicies[k+2]) ||
+          (map.indexOf(id1) >= 0) || (map.indexOf(id2) >= 0) || (map.indexOf(id3) >= 0))
          indicies[k] = indicies[k+1] = indicies[k+2] = -1;
-      } else {
+      else {
          map.push(id1,id2,id3);
          numfaces++;
       }
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
 
    for (let n = 0; n < indicies.length; n += 6) {
       let i1 = indicies[n]   * 3,
@@ -813,8 +808,8 @@ function createSphereBuffer(shape, faces_limit) {
    if (Math.abs(_sint[0]) <= epsilon) { numoutside -= widthSegments; numtop = 0; }
    if (Math.abs(_sint[heightSegments]) <= epsilon) { numoutside -= widthSegments; numbottom = 0; }
 
-   let numfaces = numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut,
-       creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+   const numfaces = numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut,
+         creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
 
    for (let side = 0; side < 2; ++side) {
       if ((side === 1) && noInside) break;
@@ -830,7 +825,7 @@ function createSphereBuffer(shape, faces_limit) {
          if (Math.abs(_sint[k1]) <= epsilon) skip = 1; else
          if (Math.abs(_sint[k2]) <= epsilon) skip = 2;
 
-         for (let n=0;n<widthSegments;++n) {
+         for (let n = 0; n < widthSegments; ++n) {
             creator.addFace4(
                   r*_sint[k1]*_cosp[n],   r*_sint[k1] *_sinp[n],   r*_cost[k1],
                   r*_sint[k1]*_cosp[n+1], r*_sint[k1] *_sinp[n+1], r*_cost[k1],
@@ -848,10 +843,10 @@ function createSphereBuffer(shape, faces_limit) {
    }
 
    // top/bottom
-   for (let side = 0; side <= heightSegments; side += heightSegments)
+   for (let side = 0; side <= heightSegments; side += heightSegments) {
       if (Math.abs(_sint[side]) >= epsilon) {
-         let ss = _sint[side], cc = _cost[side],
-             d1 = (side === 0) ? 0 : 1, d2 = 1 - d1;
+         const ss = _sint[side], cc = _cost[side],
+               d1 = (side === 0) ? 0 : 1, d2 = 1 - d1;
          for (let n = 0; n < widthSegments; ++n) {
             creator.addFace4(
                   radius[1] * ss * _cosp[n+d1], radius[1] * ss * _sinp[n+d1], radius[1] * cc,
@@ -862,6 +857,7 @@ function createSphereBuffer(shape, faces_limit) {
             creator.calcNormal();
          }
       }
+   }
 
    // cut left/right sides
    if (phiLength < 360) {
@@ -933,10 +929,11 @@ function createTubeBuffer(shape, faces_limit) {
       _sin[seg] = Math.sin(phi0+seg*dphi);
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   const calcZ = (shape._typename !== clTGeoCtub) ? null : (x,y,z) => {
-      let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces),
+   calcZ = (shape._typename !== clTGeoCtub)
+      ? null
+      : (x, y, z) => {
+      const arr = (z < 0) ? shape.fNlow : shape.fNhigh;
       return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
    };
 
@@ -944,18 +941,18 @@ function createTubeBuffer(shape, faces_limit) {
    for (let side = 0; side < 2; ++side) {
       if ((side === 1) && !hasrmin) break;
 
-      let R = (side === 0) ? outerR : innerR,
-          d1 = side, d2 = 1 - side, nxy = 1., nz = 0;
+      const R = (side === 0) ? outerR : innerR, d1 = side, d2 = 1 - side;
+      let nxy = 1, nz = 0;
 
       if (R[0] !== R[1]) {
-         let angle = Math.atan2((R[1]-R[0]), 2*shape.fDZ);
+         const angle = Math.atan2((R[1]-R[0]), 2*shape.fDZ);
          nxy = Math.cos(angle);
          nz = Math.sin(angle);
       }
 
-      if (side === 1) { nxy *= -1; nz *= -1; };
+      if (side === 1) { nxy *= -1; nz *= -1; }
 
-      let reduce = (R[0] <= 0) ? 2 : ((R[1] <= 0) ? 1 : 0);
+      const reduce = (R[0] <= 0) ? 2 : ((R[1] <= 0) ? 1 : 0);
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(
@@ -1031,16 +1028,16 @@ function createEltuBuffer(shape, faces_limit) {
    if (faces_limit < 0) return radiusSegments*4;
 
    // calculate all sin/cos tables in advance
-   let x = new Float32Array(radiusSegments+1),
-       y = new Float32Array(radiusSegments+1);
+   const x = new Float32Array(radiusSegments+1),
+         y = new Float32Array(radiusSegments+1);
    for (let seg=0; seg<=radiusSegments; ++seg) {
-       let phi = seg/radiusSegments*2*Math.PI;
+       const phi = seg/radiusSegments*2*Math.PI;
        x[seg] = shape.fRmin*Math.cos(phi);
        y[seg] = shape.fRmax*Math.sin(phi);
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(radiusSegments*4),
-       nx1, ny1, nx2 = 1, ny2 = 0;
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(radiusSegments*4);
+   let nx1, ny1, nx2 = 1, ny2 = 0;
 
    // create tube faces
    for (let seg = 0; seg < radiusSegments; ++seg) {
@@ -1053,7 +1050,7 @@ function createEltuBuffer(shape, faces_limit) {
       nx1 = nx2; ny1 = ny2;
       nx2 = x[seg+1] * shape.fRmax / shape.fRmin;
       ny2 = y[seg+1] * shape.fRmin / shape.fRmax;
-      let dist = Math.sqrt(nx2**2 + ny2**2);
+      const dist = Math.sqrt(nx2**2 + ny2**2);
       nx2 = nx2 / dist; ny2 = ny2/dist;
 
       creator.setNormal_12_34(nx1,ny1,0,nx2,ny2,0);
@@ -1061,7 +1058,7 @@ function createEltuBuffer(shape, faces_limit) {
 
    // create top/bottom sides
    for (let side = 0; side < 2; ++side) {
-      let sign = (side === 0) ? 1 : -1, d1 = side, d2 = 1 - side;
+      const sign = (side === 0) ? 1 : -1, d1 = side, d2 = 1 - side;
       for (let seg=0; seg<radiusSegments; ++seg) {
          creator.addFace3(0,          0,          sign*shape.fDZ,
                           x[seg+d1],  y[seg+d1],  sign*shape.fDZ,
@@ -1089,10 +1086,10 @@ function createTorusBuffer(shape, faces_limit) {
       numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
    }
 
-   let _sinr = new Float32Array(radialSegments+1),
-       _cosr = new Float32Array(radialSegments+1),
-       _sint = new Float32Array(tubularSegments+1),
-       _cost = new Float32Array(tubularSegments+1);
+   const _sinr = new Float32Array(radialSegments+1),
+         _cosr = new Float32Array(radialSegments+1),
+         _sint = new Float32Array(tubularSegments+1),
+         _cost = new Float32Array(tubularSegments+1);
 
    for (let n = 0; n <= radialSegments; ++n) {
       _sinr[n] = Math.sin(n/radialSegments*2*Math.PI);
@@ -1100,24 +1097,24 @@ function createTorusBuffer(shape, faces_limit) {
    }
 
    for (let t = 0; t <= tubularSegments; ++t) {
-      let angle = (shape.fPhi1 + shape.fDphi*t/tubularSegments)/180*Math.PI;
+      const angle = (shape.fPhi1 + shape.fDphi*t/tubularSegments)/180*Math.PI;
       _sint[t] = Math.sin(angle);
       _cost[t] = Math.cos(angle);
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces),
-       // use vectors for normals calculation
-       p1 = new Vector3(), p2 = new Vector3(), p3 = new Vector3(), p4 = new Vector3(),
-       n1 = new Vector3(), n2 = new Vector3(), n3 = new Vector3(), n4 = new Vector3(),
-       center1 = new Vector3(), center2 = new Vector3();
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces),
+         // use vectors for normals calculation
+         p1 = new Vector3(), p2 = new Vector3(), p3 = new Vector3(), p4 = new Vector3(),
+         n1 = new Vector3(), n2 = new Vector3(), n3 = new Vector3(), n4 = new Vector3(),
+         center1 = new Vector3(), center2 = new Vector3();
 
    for (let side = 0; side < 2; ++side) {
       if ((side > 0) && (shape.fRmin <= 0)) break;
-      let tube = (side > 0) ? shape.fRmin : shape.fRmax,
-          d1 = 1 - side, d2 = 1 - d1, ns = side > 0 ? -1 : 1;
+      const tube = (side > 0) ? shape.fRmin : shape.fRmax,
+            d1 = 1 - side, d2 = 1 - d1, ns = side > 0 ? -1 : 1;
 
       for (let t = 0; t < tubularSegments; ++t) {
-         let t1 = t + d1, t2 = t + d2;
+         const t1 = t + d1, t2 = t + d2;
          center1.x = radius * _cost[t1]; center1.y = radius * _sint[t1];
          center2.x = radius * _cost[t2]; center2.y = radius * _sint[t2];
 
@@ -1254,14 +1251,14 @@ function createPolygonBuffer(shape, faces_limit) {
    let phi0 = thetaStart*Math.PI/180, dphi = thetaLength/radiusSegments*Math.PI/180;
 
    // calculate all sin/cos tables in advance
-   let _sin = new Float32Array(radiusSegments+1),
-       _cos = new Float32Array(radiusSegments+1);
-   for (let seg=0;seg<=radiusSegments;++seg) {
+   const _sin = new Float32Array(radiusSegments+1),
+         _cos = new Float32Array(radiusSegments+1);
+   for (let seg = 0; seg <= radiusSegments; ++seg) {
       _cos[seg] = Math.cos(phi0+seg*dphi);
       _sin[seg] = Math.sin(phi0+seg*dphi);
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
 
    // add sides
    for (let side = 0; side < 2; ++side) {
@@ -1270,14 +1267,13 @@ function createPolygonBuffer(shape, faces_limit) {
           d1 = 1 - side, d2 = side;
 
       for (let layer = 0; layer < shape.fNz; ++layer) {
-
          if (usage[layer*2+side] === 0) continue;
 
          let z2 = shape.fZ[layer], r2 = factor*shape[rside][layer],
              nxy = 1, nz = 0;
 
          if ((r2 !== r1)) {
-            let angle = Math.atan2((r2-r1), (z2-z1));
+            const angle = Math.atan2((r2-r1), (z2-z1));
             nxy = Math.cos(angle);
             nz = Math.sin(angle);
          }
@@ -1357,20 +1353,19 @@ function createXtruBuffer(shape, faces_limit) {
    if (faces.length < pnts.length-2) {
       geoWarn(`Problem with XTRU shape ${shape.fName} with ${pnts.length} vertices`);
       faces = [];
-   } else {
+   } else
       nfaces += faces.length * 2;
-   }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(nfaces);
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(nfaces);
 
    for (let layer = 0; layer < shape.fNz-1; ++layer) {
-      let z1 = shape.fZ[layer], scale1 = shape.fScale[layer],
-          z2 = shape.fZ[layer+1], scale2 = shape.fScale[layer+1],
-          x01 = shape.fX0[layer], x02 = shape.fX0[layer+1],
-          y01 = shape.fY0[layer], y02 = shape.fY0[layer+1];
+      const z1 = shape.fZ[layer], scale1 = shape.fScale[layer],
+            z2 = shape.fZ[layer+1], scale2 = shape.fScale[layer+1],
+            x01 = shape.fX0[layer], x02 = shape.fX0[layer+1],
+            y01 = shape.fY0[layer], y02 = shape.fY0[layer+1];
 
       for (let vert1 = 0; vert1 < shape.fNvert; ++vert1) {
-         let vert2 = (vert1+1) % shape.fNvert;
+         const vert2 = (vert1+1) % shape.fNvert;
          creator.addFace4(scale1 * shape.fX[vert1] + x01, scale1 * shape.fY[vert1] + y01, z1,
                           scale2 * shape.fX[vert1] + x02, scale2 * shape.fY[vert1] + y02, z2,
                           scale2 * shape.fX[vert2] + x02, scale2 * shape.fY[vert2] + y02, z2,
@@ -1380,19 +1375,19 @@ function createXtruBuffer(shape, faces_limit) {
    }
 
    for (let layer = 0; layer <= shape.fNz-1; layer += (shape.fNz-1)) {
-      let z = shape.fZ[layer], scale = shape.fScale[layer],
-          x0 = shape.fX0[layer], y0 = shape.fY0[layer];
+      const z = shape.fZ[layer], scale = shape.fScale[layer],
+            x0 = shape.fX0[layer], y0 = shape.fY0[layer];
 
       for (let n = 0; n < faces.length; ++n) {
-         let face = faces[n],
-             pnt1 = pnts[face[0]],
-             pnt2 = pnts[face[layer === 0 ? 2 : 1]],
-             pnt3 = pnts[face[layer === 0 ? 1 : 2]];
+         const face = faces[n],
+               pnt1 = pnts[face[0]],
+               pnt2 = pnts[face[layer === 0 ? 2 : 1]],
+               pnt3 = pnts[face[layer === 0 ? 1 : 2]];
 
          creator.addFace3(scale * pnt1.x + x0, scale * pnt1.y + y0, z,
                           scale * pnt2.x + x0, scale * pnt2.y + y0, z,
                           scale * pnt3.x + x0, scale * pnt3.y + y0, z);
-         creator.setNormal(0,0,layer === 0 ? -1 : 1);
+         creator.setNormal(0, 0, layer === 0 ? -1 : 1);
       }
    }
 
@@ -1434,18 +1429,17 @@ function createParaboloidBuffer(shape, faces_limit) {
    let ttmin = Math.atan2(zmin, rmin), ttmax = Math.atan2(zmax, rmax);
 
    // calculate all sin/cos tables in advance
-   let _sin = new Float32Array(radiusSegments+1),
-       _cos = new Float32Array(radiusSegments+1);
+   const _sin = new Float32Array(radiusSegments+1),
+         _cos = new Float32Array(radiusSegments+1);
    for (let seg=0;seg<=radiusSegments;++seg) {
       _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
       _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces),
-       lastz = zmin, lastr = 0, lastnxy = 0, lastnz = -1;
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
+   let lastz = zmin, lastr = 0, lastnxy = 0, lastnz = -1;
 
    for (let layer = 0; layer <= heightSegments + 1; ++layer) {
-
       let layerz = 0, radius = 0, nxy = 0, nz = -1;
 
       if ((layer === 0) && (rmin === 0)) continue;
@@ -1457,8 +1451,8 @@ function createParaboloidBuffer(shape, faces_limit) {
          case heightSegments: layerz = zmax; radius = rmax; break;
          case heightSegments + 1: layerz = zmax; radius = 0; break;
          default: {
-            let tt = Math.tan(ttmin + (ttmax-ttmin) * layer / heightSegments),
-                delta = tt**2 - 4*shape.fA*shape.fB; // should be always positive (a*b < 0)
+            const tt = Math.tan(ttmin + (ttmax-ttmin) * layer / heightSegments),
+                  delta = tt**2 - 4*shape.fA*shape.fB; // should be always positive (a*b < 0)
             radius = 0.5*(tt+Math.sqrt(delta))/shape.fA;
             if (radius < 1e-6) radius = 0;
             layerz = radius*tt;
@@ -1468,7 +1462,7 @@ function createParaboloidBuffer(shape, faces_limit) {
       nxy = shape.fA * radius;
       nz = (shape.fA > 0) ? -1 : 1;
 
-      let skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
+      const skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(radius*_cos[seg],   radius*_sin[seg], layerz,
@@ -1478,12 +1472,12 @@ function createParaboloidBuffer(shape, faces_limit) {
 
          // use analytic normal values when open/closing paraboloid around 0
          // cut faces (top or bottom) set with simple normal
-         if ((skip === 0) || ((layer === 1) && (rmin === 0)) || ((layer === heightSegments+1) && (rmax === 0)))
+         if ((skip === 0) || ((layer === 1) && (rmin === 0)) || ((layer === heightSegments+1) && (rmax === 0))) {
             creator.setNormal4(nxy*_cos[seg],       nxy*_sin[seg],       nz,
                                lastnxy*_cos[seg],   lastnxy*_sin[seg],   lastnz,
                                lastnxy*_cos[seg+1], lastnxy*_sin[seg+1], lastnz,
                                nxy*_cos[seg+1],     nxy*_sin[seg+1],     nz, skip);
-         else
+         } else
             creator.setNormal(0, 0, (layer < heightSegments) ? -1 : 1);
       }
 
@@ -1514,21 +1508,22 @@ function createHypeBuffer(shape, faces_limit) {
    }
 
    // calculate all sin/cos tables in advance
-   let _sin = new Float32Array(radiusSegments+1), _cos = new Float32Array(radiusSegments+1);
+   const _sin = new Float32Array(radiusSegments+1),
+         _cos = new Float32Array(radiusSegments+1);
    for (let seg=0;seg<=radiusSegments;++seg) {
       _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
       _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
    }
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
 
    // in-out side
    for (let side = 0; side < 2; ++side) {
       if ((side > 0) && (shape.fRmin <= 0)) break;
 
-      let r0 = (side > 0) ? shape.fRmin : shape.fRmax,
-          tsq = (side > 0) ? shape.fTinsq : shape.fToutsq,
-          d1 = 1- side, d2 = 1 - d1;
+      const r0 = (side > 0) ? shape.fRmin : shape.fRmax,
+            tsq = (side > 0) ? shape.fTinsq : shape.fToutsq,
+            d1 = 1- side, d2 = 1 - d1;
 
       // vertical layers
       for (let layer = 0; layer < heightSegments; ++layer) {
@@ -1549,11 +1544,11 @@ function createHypeBuffer(shape, faces_limit) {
 
    // add caps
    for (let layer = 0; layer < 2; ++layer) {
-      let z = (layer === 0) ? shape.fDz : -shape.fDz,
-          r1 = Math.sqrt(shape.fRmax**2 + shape.fToutsq*z**2),
-          r2 = (shape.fRmin > 0) ? Math.sqrt(shape.fRmin**2 + shape.fTinsq*z**2) : 0,
-          skip = (shape.fRmin > 0) ? 0 : 1,
-          d1 = 1 - layer, d2 = 1 - d1;
+      const z = (layer === 0) ? shape.fDz : -shape.fDz,
+            r1 = Math.sqrt(shape.fRmax**2 + shape.fToutsq*z**2),
+            r2 = (shape.fRmin > 0) ? Math.sqrt(shape.fRmin**2 + shape.fTinsq*z**2) : 0,
+            skip = (shape.fRmin > 0) ? 0 : 1,
+            d1 = 1 - layer, d2 = 1 - d1;
       for (let seg = 0; seg < radiusSegments; ++seg) {
           creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z,
                            r2 * _cos[seg+d1], r2 * _sin[seg+d1], z,
@@ -1574,16 +1569,16 @@ function createTessellatedBuffer(shape, faces_limit) {
       numfaces += (shape.fFacets[i].fNvert == 4) ? 2 : 1;
    if (faces_limit < 0) return numfaces;
 
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+   const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
 
    for (let i = 0; i < shape.fFacets.length; ++i) {
-      let f = shape.fFacets[i],
-          v0 = shape.fVertices[f.fIvert[0]].fVec,
-          v1 = shape.fVertices[f.fIvert[1]].fVec,
-          v2 = shape.fVertices[f.fIvert[2]].fVec;
+      const f = shape.fFacets[i],
+            v0 = shape.fVertices[f.fIvert[0]].fVec,
+            v1 = shape.fVertices[f.fIvert[1]].fVec,
+            v2 = shape.fVertices[f.fIvert[2]].fVec;
 
-      if (f.fNvert == 4) {
-         let v3 = shape.fVertices[f.fIvert[3]].fVec;
+      if (f.fNvert === 4) {
+         const v3 = shape.fVertices[f.fIvert[3]].fVec;
          creator.addFace4(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
          creator.calcNormal();
       } else {
@@ -1598,7 +1593,6 @@ function createTessellatedBuffer(shape, faces_limit) {
 /** @summary Creates Matrix4 from TGeoMatrix
   * @private */
 function createMatrix(matrix) {
-
    if (!matrix) return null;
 
    let translation, rotation, scale;
@@ -1609,6 +1603,7 @@ function createMatrix(matrix) {
       case 'TGeoScale': scale = matrix.fScale; break;
       case 'TGeoGenTrans':
          scale = matrix.fScale; // no break, translation and rotation follows
+      // eslint-disable-next-line no-fallthrough
       case 'TGeoCombiTrans':
          translation = matrix.fTranslation;
          if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
@@ -1626,13 +1621,14 @@ function createMatrix(matrix) {
 
    if (!translation && !rotation && !scale) return null;
 
-   let res = new Matrix4();
+   const res = new Matrix4();
 
-   if (rotation)
+   if (rotation) {
       res.set(rotation[0], rotation[1], rotation[2],  0,
               rotation[3], rotation[4], rotation[5],  0,
               rotation[6], rotation[7], rotation[8],  0,
                         0,           0,           0,  1);
+   }
 
    if (translation)
       res.setPosition(translation[0], translation[1], translation[2]);
@@ -1681,8 +1677,8 @@ function getNodeMatrix(kind, node) {
         case 'TGeoPatternZ':
         case 'TGeoPatternParaX':
         case 'TGeoPatternParaY':
-        case 'TGeoPatternParaZ':
-           let _shift = node.fFinder.fStart + (node.fIndex + 0.5) * node.fFinder.fStep;
+        case 'TGeoPatternParaZ': {
+           const _shift = node.fFinder.fStart + (node.fIndex + 0.5) * node.fFinder.fStep;
 
            matrix = new Matrix4();
 
@@ -1692,9 +1688,10 @@ function getNodeMatrix(kind, node) {
               case 'Z': matrix.setPosition(0, 0, _shift); break;
            }
            break;
+        }
 
-        case 'TGeoPatternCylPhi':
-           let phi = (Math.PI/180)*(node.fFinder.fStart+(node.fIndex+0.5)*node.fFinder.fStep),
+        case 'TGeoPatternCylPhi': {
+           const phi = (Math.PI/180)*(node.fFinder.fStart+(node.fIndex+0.5)*node.fFinder.fStep),
                _cos = Math.cos(phi), _sin = Math.sin(phi);
 
            matrix = new Matrix4();
@@ -1704,17 +1701,19 @@ function getNodeMatrix(kind, node) {
                          0,     0,  1,  0,
                          0,     0,  0,  1);
            break;
+        }
 
         case 'TGeoPatternCylR':
             // seems to be, require no transformation
             matrix = new Matrix4();
             break;
 
-        case 'TGeoPatternTrapZ':
-           let dz = node.fFinder.fStart + (node.fIndex+0.5)*node.fFinder.fStep;
+        case 'TGeoPatternTrapZ': {
+           const dz = node.fFinder.fStart + (node.fIndex+0.5)*node.fFinder.fStep;
            matrix = new Matrix4();
            matrix.setPosition(node.fFinder.fTxz*dz, node.fFinder.fTyz*dz, dz);
            break;
+        }
 
         default:
            geoWarn(`Unsupported pattern type ${node.fFinder._typename}`);
@@ -1912,10 +1911,10 @@ function createComposite(shape, faces_limit) {
    }
 
    if (countGeometryFaces(bsp1) === 0) {
-      geoWarn('Zero faces in comp shape'
-            + ` left: ${shape.fNode.fLeft._typename} ${countGeometryFaces(geom1)} faces`
-            + ` right: ${shape.fNode.fRight._typename} ${countGeometryFaces(geom2)} faces`
-            + '  use first');
+      geoWarn('Zero faces in comp shape' +
+             ` left: ${shape.fNode.fLeft._typename} ${countGeometryFaces(geom1)} faces` +
+             ` right: ${shape.fNode.fRight._typename} ${countGeometryFaces(geom2)} faces` +
+             '  use first');
       bsp1 = new CsgGeometry(geom1, matrix1);
    }
 
@@ -1925,10 +1924,9 @@ function createComposite(shape, faces_limit) {
 /** @summary Try to create projected geometry
   * @private */
 function projectGeometry(geom, matrix, projection, position, flippedMesh) {
-
    if (!geom.boundingBox) geom.computeBoundingBox();
 
-   let box = geom.boundingBox.clone();
+   const box = geom.boundingBox.clone();
 
    box.applyMatrix4(matrix);
 
@@ -2003,9 +2001,11 @@ function createGeometry(shape, limit) {
          case clTGeoHalfSpace:
             if (limit < 0) return 1; // half space if just plane used in composite
             // no break here - warning should appear
-         default: geoWarn(`unsupported shape type ${shape._typename}`);
+         // eslint-disable-next-line no-fallthrough
+         default:
+            geoWarn(`unsupported shape type ${shape._typename}`);
       }
-   } catch(e) {
+   } catch (e) {
       let place = '';
       if (e.stack !== undefined) {
          place = e.stack.split('\n')[0];
@@ -2046,15 +2046,15 @@ function makeEveGeometry(rd) {
 
    const GL_TRIANGLES = 4; // same as in EVE7
 
-   if (rd.prefixBuf[0] != GL_TRIANGLES)
-      throw 'Expect triangles first.';
+   if (rd.prefixBuf[0] !== GL_TRIANGLES)
+      throw Error('Expect triangles first.');
 
-   let nVert = 3 * rd.prefixBuf[1]; // number of vertices to draw
+   const nVert = 3 * rd.prefixBuf[1]; // number of vertices to draw
 
-   if (rd.idxBuff.length != nVert)
-      throw 'Expect single list of triangles in index buffer.';
+   if (rd.idxBuff.length !== nVert)
+      throw Error('Expect single list of triangles in index buffer.');
 
-   let body = new BufferGeometry();
+   const body = new BufferGeometry();
    body.setAttribute('position', new BufferAttribute(rd.vtxBuff, 3));
    body.setIndex(new BufferAttribute(rd.idxBuff, 1));
    body.computeVertexNormals();
@@ -2147,6 +2147,7 @@ function provideObjectInfo(obj) {
       case clTGeoBBox: break;
       case clTGeoPara: info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
       case clTGeoTrd2: info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+      // eslint-disable-next-line no-fallthrough
       case clTGeoTrd1: info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
       case clTGeoArb8: break;
       case clTGeoTrap: break;
@@ -2159,6 +2160,7 @@ function provideObjectInfo(obj) {
       case clTGeoConeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
          // no break;
+      // eslint-disable-next-line no-fallthrough
       case clTGeoCone:
          info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
                    `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
@@ -2167,6 +2169,7 @@ function provideObjectInfo(obj) {
       case clTGeoTubeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
          // no break
+      // eslint-disable-next-line no-fallthrough
       case clTGeoEltu:
       case clTGeoTube:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
@@ -2201,7 +2204,7 @@ function provideObjectInfo(obj) {
 /** @summary Creates projection matrix for the camera
   * @private */
 function createProjectionMatrix(camera) {
-   let cameraProjectionMatrix = new Matrix4();
+   const cameraProjectionMatrix = new Matrix4();
 
    camera.updateMatrixWorld();
 
@@ -2627,8 +2630,7 @@ class ClonedNodes {
                   }
 
                } else {
-                  clone.vis = !testGeoBit(obj.fVolume, geoBITS.kVisNone) &&
-                               testGeoBit(obj.fVolume, geoBITS.kVisThis) ? 99 : 0;
+                  clone.vis = !testGeoBit(obj.fVolume, geoBITS.kVisNone) && testGeoBit(obj.fVolume, geoBITS.kVisThis) ? 99 : 0;
 
                   if (!testGeoBit(obj, geoBITS.kVisDaughters) ||
                       !testGeoBit(obj.fVolume, geoBITS.kVisDaughters)) clone.nochlds = true;
@@ -2709,15 +2711,14 @@ class ClonedNodes {
      * @desc Trying to reimplement functionality in the RGeomViewer */
    setPhysNodeVisibility(stack, on) {
       let do_clear = false;
-      if (on == 'clearall') {
+      if (on === 'clearall') {
          delete this.fVisibility;
          return;
-      } else if (on == 'clear') {
+      } else if (on === 'clear') {
          do_clear = true;
          if (!this.fVisibility) return;
-      } else {
-         on = on ? true : false;
-      }
+      } else
+         on = !!on;
       if (!stack) return;
 
       if (!this.fVisibility)
@@ -2727,10 +2728,10 @@ class ClonedNodes {
          let item = this.fVisibility[indx],
              res = compare_stacks(item.stack, stack);
 
-         if (res == 0) {
+         if (res === 0) {
             if (do_clear) {
                this.fVisibility.splice(indx, 1);
-               if (this.fVisibility.length == 0)
+               if (this.fVisibility.length === 0)
                   delete this.fVisibility;
             } else
                item.visible = on;
@@ -2747,7 +2748,6 @@ class ClonedNodes {
 
       if (!do_clear)
          this.fVisibility.push({ visible: on, stack });
-      return;
    }
 
    /** @summary Get visibility item for physical node */
@@ -3150,11 +3150,11 @@ class ClonedNodes {
       let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
           force = isObject(options) || (options === 'force');
 
-      for(let lvl = 0; lvl <= stack.length; ++lvl) {
+      for (let lvl = 0; lvl <= stack.length; ++lvl) {
          let nchld = (lvl > 0) ? stack[lvl-1] : 0,
              // extract current node
              child = (lvl > 0) ? this.nodes[node.chlds[nchld]] : node,
-             obj3d = undefined;
+             obj3d;
          if (!child) {
             console.error(`Wrong stack ${JSON.stringify(stack)} for nodes at level ${lvl}, node.id ${node.id}, numnodes ${this.nodes.length}, nchld ${nchld}, numchilds ${node.chlds.length}, chldid ${node.chlds[nchld]}`);
             return null;
@@ -3324,13 +3324,11 @@ class ClonedNodes {
          if (instance) {
             instance.entries.push(entry);
             max_entries = Math.max(max_entries, instance.entries.length);
-         } else {
-            shape.instances.push({ nodeid: entry.nodeid, entries: [ entry ]});
-         }
+         } else
+            shape.instances.push({ nodeid: entry.nodeid, entries: [ entry ] });
       }
 
-      let make_sense = ctrl.instancing > 0 ? (max_entries > 2) :
-                        (draw_nodes.length > 10000) && (max_entries > 10);
+      const make_sense = ctrl.instancing > 0 ? (max_entries > 2) : (draw_nodes.length > 10000) && (max_entries > 10);
 
       if (!make_sense) {
          used_shapes.forEach(shape => { delete shape.instances; });
@@ -3347,9 +3345,9 @@ class ClonedNodes {
 
             prop.material.side = ctrl.doubleside ? DoubleSide : FrontSide;
 
-            if (instance.entries.length == 1) {
+            if (instance.entries.length == 1)
                this.createEntryMesh(ctrl, toplevel, entry0, shape, colors);
-            } else {
+            else {
                let arr1 = [], arr2 = [], stacks1 = [], stacks2 = [];
 
                instance.entries.forEach(entry => {
@@ -3831,8 +3829,8 @@ function getBoundingBox(node, box3, local_coordinates) {
 
       node.geometry.computeBoundingBox();
 
-      for ( let i = 0; i < node.count; i ++ ) {
-         node.getMatrixAt( i, m );
+      for (let i = 0; i < node.count; i++) {
+         node.getMatrixAt(i, m);
          b.copy( node.geometry.boundingBox ).applyMatrix4( m );
          box3.union( b );
       }

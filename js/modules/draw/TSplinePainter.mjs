@@ -259,11 +259,11 @@ class TSplinePainter extends ObjectPainter {
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
-   canZoomInside(axis/*,min,max*/) {
+   canZoomInside(axis /* , min, max */) {
       if (axis !== 'x') return false;
 
       // spline can always be calculated and therefore one can zoom inside
-      return this.getObject() ? true : false;
+      return !!this.getObject();
    }
 
    /** @summary Decode options for TSpline drawing */

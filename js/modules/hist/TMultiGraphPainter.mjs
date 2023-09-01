@@ -9,8 +9,9 @@ class TMultiGraphPainter extends TMultiGraphPainter2D {
    /** @summary draw speical histogram for axis
      * @return {Promise} when ready */
    async drawAxisHist(histo, hopt) {
-      return this._3d ? TH2Painter.draw(this.getDom(), histo, 'AXIS3D' + hopt)
-                      : TH1Painter.draw(this.getDom(), histo, 'AXIS' + hopt);
+      return this._3d
+              ? TH2Painter.draw(this.getDom(), histo, 'AXIS3D' + hopt)
+              : TH1Painter.draw(this.getDom(), histo, 'AXIS' + hopt);
    }
 
    /** @summary draw multigraph in 3D */

@@ -530,12 +530,12 @@ class JSRootMenu {
       if (painter.markeratt?.used) {
          this.add(`sub:${preffix}Marker att`);
          this.addColorMenu('color', painter.markeratt.color,
-            arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetMarkerColor'));});
+            arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetMarkerColor')); });
          this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size,
             arg => { painter.markeratt.change(undefined, undefined, arg); painter.interactiveRedraw(true, `exec:SetMarkerSize(${arg})`); });
 
          this.add('sub:style');
-         let supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
+         const supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
 
          for (let n = 0; n < supported.length; ++n) {
             let clone = new TAttMarkerHandler({ style: supported[n], color: painter.markeratt.color, size: 1.7 }),
@@ -608,7 +608,7 @@ class JSRootMenu {
       this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
              () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
       this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
-            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg ? true : false})` : `exec:RotateTitle(${arg})`, kind); });
+            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg})` : `exec:RotateTitle(${arg})`, kind); });
       if (is_gaxis) {
          this.addColorMenu('Color', faxis.fTextColor,
                arg => { faxis.fTextColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
@@ -910,13 +910,13 @@ class JSRootMenu {
    /** @summary Let input arguments from the method
      * @return {Promise} with method argument */
    async showMethodArgsDialog(method) {
-      let dlg_id = this.menuname + '_dialog',
-          main_content = '<form> <fieldset style="padding:0; border:0">';
+      const dlg_id = this.menuname + '_dialog';
+      let main_content = '<form> <fieldset style="padding:0; border:0">';
 
       for (let n = 0; n < method.fArgs.length; ++n) {
          let arg = method.fArgs[n];
          arg.fValue = arg.fDefault;
-         if (arg.fValue == '\"\"') arg.fValue = '';
+         if (arg.fValue === '""') arg.fValue = '';
          main_content += `<label for="${dlg_id}_inp${n}">${arg.fName}</label>
                           <input type='text' tabindex="${n+1}" id="${dlg_id}_inp${n}" value="${arg.fValue}" style="width:100%;display:block"/>`;
       }
@@ -924,21 +924,20 @@ class JSRootMenu {
       main_content += '</fieldset></form>';
 
       return new Promise(resolveFunc => {
-
          this.runModal(method.fClassName + '::' + method.fName, main_content, { btns: true, height: 100 + method.fArgs.length*60, width: 400, resizable: true }).then(element => {
             if (!element) return;
             let args = '';
 
             for (let k = 0; k < method.fArgs.length; ++k) {
-               let arg = method.fArgs[k];
+               const arg = method.fArgs[k];
                let value = element.querySelector(`#${dlg_id}_inp${k}`).value;
                if (value === '') value = arg.fDefault;
                if ((arg.fTitle == 'Option_t*') || (arg.fTitle == 'const char*')) {
                   // check quotes,
                   // TODO: need to make more precise checking of escape characters
                   if (!value) value = '""';
-                  if (value[0] != '"') value = '"' + value;
-                  if (value[value.length-1] != '"') value += '"';
+                  if (value[0] !== '"') value = '"' + value;
+                  if (value[value.length-1] !== '"') value += '"';
                }
 
                args += (k > 0 ? ',' : '') + value;
@@ -1170,7 +1169,6 @@ class StandaloneMenu extends JSRootMenu {
             else
                sub.textContent = d.text;
             text.appendChild(sub);
-
          }
 
          hovArea.appendChild(text);
@@ -1186,7 +1184,7 @@ class StandaloneMenu extends JSRootMenu {
             }
          }
 
-         if (d.hasOwnProperty('extraText') || d.sub) {
+         if (d.extraText || d.sub) {
             let extraText = document.createElement('span');
             extraText.className = 'jsroot_ctxt_extraText';
             extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';

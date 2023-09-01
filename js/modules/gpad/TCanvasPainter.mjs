@@ -101,11 +101,10 @@ class TCanvasPainter extends TPadPainter {
          this.setLayoutKind(layout_kind);
          force = true;
       } else {
+         const grid = new GridDisplay(origin.node(), layout_kind);
 
-         let grid = new GridDisplay(origin.node(), layout_kind);
-
-         if (mainid == undefined)
-            mainid = (layout_kind.indexOf('vert') == 0) ? 0 : 1;
+         if (mainid === undefined)
+            mainid = (layout_kind.indexOf('vert') === 0) ? 0 : 1;
 
          main = d3_select(grid.getGridFrame(mainid));
          main.classed('central_panel', true).style('position', 'relative');
@@ -143,14 +142,14 @@ class TCanvasPainter extends TPadPainter {
    async toggleProjection(kind) {
       delete this.proj_painter;
 
-      if (kind) this.proj_painter = { 'X': false, 'Y': false }; // just indicator that drawing can be preformed
+      if (kind) this.proj_painter = { X: false, Y: false }; // just indicator that drawing can be preformed
 
       if (isFunc(this.showUI5ProjectionArea))
          return this.showUI5ProjectionArea(kind);
 
       let layout = 'simple', mainid;
 
-      switch(kind) {
+      switch (kind) {
          case 'XY': layout = 'projxy'; mainid = 2; break;
          case 'X':
          case 'bottom': layout = 'vert2_31'; mainid = 0; break;
@@ -166,7 +165,6 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Draw projection for specified histogram
      * @private */
    async drawProjection(kind, hist, hopt) {
-
       if (!this.proj_painter)
          return false; // ignore drawing if projection not configured
 
@@ -175,21 +173,21 @@ class TCanvasPainter extends TPadPainter {
       if (!kind) kind = 'X';
 
       if (!this.proj_painter[kind]) {
-
          this.proj_painter[kind] = 'init';
 
-         let canv = create(clTCanvas),
-             pad = this.pad,
-             main = this.getFramePainter(), drawopt;
+         const canv = create(clTCanvas),
+               pad = this.pad,
+               main = this.getFramePainter();
+         let drawopt;
 
-         if (kind == 'X') {
+         if (kind === 'X') {
             canv.fLeftMargin = pad.fLeftMargin;
             canv.fRightMargin = pad.fRightMargin;
             canv.fLogx = main.logx;
             canv.fUxmin = main.logx ? Math.log10(main.scale_xmin) : main.scale_xmin;
             canv.fUxmax = main.logx ? Math.log10(main.scale_xmax) : main.scale_xmax;
             drawopt = 'fixframe';
-         } else if (kind == 'Y') {
+         } else if (kind === 'Y') {
             canv.fBottomMargin = pad.fBottomMargin;
             canv.fTopMargin = pad.fTopMargin;
             canv.fLogx = main.logy;
@@ -200,9 +198,9 @@ class TCanvasPainter extends TPadPainter {
 
          canv.fPrimitives.Add(hist, hopt);
 
-         let promise = isFunc(this.drawInUI5ProjectionArea)
-                       ? this.drawInUI5ProjectionArea(canv, drawopt, kind)
-                       : this.drawInSidePanel(canv, drawopt, kind);
+         const promise = isFunc(this.drawInUI5ProjectionArea)
+                          ? this.drawInUI5ProjectionArea(canv, drawopt, kind)
+                          : this.drawInSidePanel(canv, drawopt, kind);
 
          return promise.then(painter => { this.proj_painter[kind] = painter; return painter; });
       } else if (isStr(this.proj_painter[kind])) {
@@ -226,9 +224,8 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Draw in side panel
      * @private */
    async drawInSidePanel(canv, opt, kind) {
-      let sel = ((this.getLayoutKind() == 'projxy') && (kind == 'Y')) ? '.side_panel2' : '.side_panel',
-          side = this.selectDom('origin').select(sel);
-
+      const sel = ((this.getLayoutKind() === 'projxy') && (kind === 'Y')) ? '.side_panel2' : '.side_panel',
+            side = this.selectDom('origin').select(sel);
       return side.empty() ? null : this.drawObject(side.node(), canv, opt);
    }
 
@@ -314,26 +311,25 @@ class TCanvasPainter extends TPadPainter {
       if (!this._websocket._tmouts)
          this._websocket._tmouts = {};
 
-      let handle = this._websocket._tmouts[name];
+      const handle = this._websocket._tmouts[name];
       if (tm === undefined)
          return handle !== undefined;
 
-      if (tm == 'reset') {
+      if (tm === 'reset') {
          if (handle) { clearTimeout(handle); delete this._websocket._tmouts[name]; }
-      } else if (!handle && Number.isInteger(tm)) {
+      } else if (!handle && Number.isInteger(tm))
          this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
-      }
    }
 
    /** @summary Hanler for websocket open event
      * @private */
-   onWebsocketOpened(/*handle*/) {
+   onWebsocketOpened(/* handle */) {
       // indicate that we are ready to recieve any following commands
    }
 
    /** @summary Hanler for websocket close event
      * @private */
-   onWebsocketClosed(/*handle*/) {
+   onWebsocketClosed(/* handle */) {
       if (!this.embed_canvas)
          closeCurrentWindow();
    }

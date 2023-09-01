@@ -38,13 +38,13 @@ class TAttLineHandler {
          if (args.style === undefined) args.style = args.attr.fLineStyle;
       } else if (isStr(args.color)) {
          if ((args.color !== 'none') && !args.width) args.width = 1;
-      } else if (typeof args.color == 'number') {
+      } else if (typeof args.color === 'number') {
          this.color_index = args.color;
          args.color = args.painter?.getColor(args.color) ?? getColor(args.color);
       }
 
       if (args.width === undefined)
-         args.width = (args.color && args.color != 'none') ? 1 : 0;
+         args.width = (args.color && args.color !== 'none') ? 1 : 0;
 
       this.color = (args.width === 0) ? 'none' : args.color;
       this.width = args.width;
@@ -78,7 +78,7 @@ class TAttLineHandler {
    }
 
    /** @summary returns true if line attribute is empty and will not be applied. */
-   empty() { return this.color == 'none'; }
+   empty() { return this.color === 'none'; }
 
    /** @summary set border parameters, used for rect drawing */
    setBorder(rx, ry) {
@@ -91,30 +91,32 @@ class TAttLineHandler {
      * @param {object} selection - d3.js selection */
    apply(selection) {
       this.used = true;
-      if (this.empty())
+      if (this.empty()) {
          selection.style('stroke', null)
                   .style('stroke-width', null)
                   .style('stroke-dasharray', null);
-      else
+      } else {
          selection.style('stroke', this.color)
                   .style('stroke-width', this.width)
                   .style('stroke-dasharray', this.pattern);
+      }
    }
 
    /** @summary Applies line and border attribute to selection.
      * @param {object} selection - d3.js selection */
    applyBorder(selection) {
       this.used = true;
-      if (this.empty())
+      if (this.empty()) {
          selection.style('stroke', null)
                   .style('stroke-width', null)
                   .style('stroke-dasharray', null)
                   .attr('rx', null).attr('ry', null);
-      else
+      } else {
          selection.style('stroke', this.color)
                   .style('stroke-width', this.width)
                   .style('stroke-dasharray', this.pattern)
                   .attr('rx', this.rx || null).attr('ry', this.ry || null);
+      }
    }
 
    /** @summary Change line attributes */
@@ -150,7 +152,7 @@ class TAttLineHandler {
    /** @summary Save attributes values to gStyle */
    saveToStyle(name_color, name_width, name_style) {
       if (name_color) {
-         let indx = (this.color_index !== undefined) ? this.color_index : findColor(this.color);
+         const indx = (this.color_index !== undefined) ? this.color_index : findColor(this.color);
          if (indx >= 0)
             gStyle[name_color] = indx;
       }

@@ -33,7 +33,7 @@ class TAttTextHandler {
          args.color = args.painter?.getColor(this.color_index) ?? getColor(this.color_index);
          args.align = args.attr.fTextAlign || args.attr_alt?.fTextAlign || 0;
          args.angle = args.attr.fTextAngle || args.attr_alt?.fTextAngle || 0;
-      } else if (typeof args.color == 'number') {
+      } else if (typeof args.color === 'number') {
          this.color_index = args.color;
          args.color = args.painter?.getColor(args.color) ?? getColor(args.color);
       }
@@ -49,7 +49,7 @@ class TAttTextHandler {
    }
 
    /** @summary returns true if line attribute is empty and will not be applied. */
-   empty() { return this.color == 'none'; }
+   empty() { return this.color === 'none'; }
 
    /** @summary Change text attributes */
    change(font, size, color, align, angle) {
@@ -94,9 +94,9 @@ class TAttTextHandler {
          return Math.round(this.size);
       if (!w) w = 1000;
       if (!h) h = w;
-      if (!fact) fact = 1.;
+      if (!fact) fact = 1;
 
-      return Math.round((this.size || zero_size || 0.) * Math.min(w,h) * fact);
+      return Math.round((this.size || zero_size || 0) * Math.min(w, h) * fact);
    }
 
    /** @summary Returns alternating size - which defined by sz1 variable */
@@ -110,7 +110,7 @@ class TAttTextHandler {
 
    /** @summary Change text font from GED */
    setGedFont(value) {
-      let v = parseInt(value);
+      const v = parseInt(value);
       if ((v > 0) && (v < 17))
          this.change(v*10 + (this.font % 10));
       return this.font;

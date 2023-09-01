@@ -82,19 +82,25 @@ class RH1Painter extends RHistPainter {
 
       this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
 
-      if ((this.nbinsx == 0) || ((Math.abs(hmin) < 1e-300 && Math.abs(hmax) < 1e-300))) {
+      if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300 && Math.abs(hmax) < 1e-300)))
          this.draw_content = false;
-      } else {
+      else
          this.draw_content = true;
-      }
 
       if (this.draw_content) {
          if (hmin >= hmax) {
-            if (hmin == 0) { this.ymin = 0; this.ymax = 1; }
-            else if (hmin < 0) { this.ymin = 2 * hmin; this.ymax = 0; }
-            else { this.ymin = 0; this.ymax = hmin * 2; }
+            if (hmin === 0) {
+               this.ymin = 0;
+               this.ymax = 1;
+            } else if (hmin < 0) {
+               this.ymin = 2 * hmin;
+               this.ymax = 0;
+            } else {
+               this.ymin = 0;
+               this.ymax = hmin * 2;
+            }
          } else {
-            let dy = (hmax - hmin) * 0.05;
+            const dy = (hmax - hmin) * 0.05;
             this.ymin = hmin - dy;
             if ((this.ymin < 0) && (hmin >= 0)) this.ymin = 0;
             this.ymax = hmax + dy;
@@ -145,7 +151,8 @@ class RH1Painter extends RHistPainter {
    /** @summary Fill statistic */
    fillStatistic(stat, dostat/*, dofit*/) {
 
-      let data = this.countStat(),
+      let histo = this.getHisto(),
+          data = this.countStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
@@ -946,7 +953,6 @@ class RH1Painter extends RHistPainter {
 
    static async _draw(painter, opt) {
       return ensureRCanvas(painter).then(() => {
-
          painter.setAsMainPainter();
 
          painter.options = { Hist: false, Bar: false, BarStyle: 0,
@@ -954,7 +960,8 @@ class RH1Painter extends RHistPainter {
                              Zero: false, Mark: false,
                              Line: false, Fill: false, Lego: 0, Surf: 0,
                              Text: false, TextAngle: 0, TextKind: '', AutoColor: 0,
-                             BarOffset: 0., BarWidth: 1., BaseLine: false, Mode3D: false };
+                             BarOffset: 0, BarWidth: 1, BaseLine: false,
+                             Mode3D: false, FrontBox: false, BackBox: false };
 
          let d = new DrawOptions(opt);
          if (d.check('R3D_', true))
