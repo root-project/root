@@ -114,16 +114,15 @@ class RAxisPainter extends RObjectPainter {
          else if (_log > 1.9)
             this.logbase = Math.round(_log);
          this.func = d3_scaleLog().base(this.logbase).domain([smin,smax]);
-      } else {
+      } else
          this.func = d3_scaleLinear().domain([smin,smax]);
-      }
 
       this.scale_min = smin;
       this.scale_max = smax;
 
       this.gr_range = axis_range || 1000; // when not specified, one can ignore it
 
-      let range = frame_range ? frame_range : [0, this.gr_range];
+      const range = frame_range ?? [0, this.gr_range];
 
       this.axis_shift = range[1] - this.gr_range;
 
@@ -132,7 +131,7 @@ class RAxisPainter extends RObjectPainter {
       else
          this.func.range(range);
 
-      if (this.kind == 'time')
+      if (this.kind === 'time')
          this.gr = val => this.func(this.convertDate(val));
       else if (this.log)
          this.gr = val => (val < this.scale_min) ? (this.vertical ? this.func.range()[0]+5 : -5) : this.func(val);
@@ -578,7 +577,6 @@ class RAxisPainter extends RObjectPainter {
       }
 
       while (this.handle.next(true)) {
-
          let h1 = Math.round(this.ticksSize/4), h2 = 0;
 
          if (this.handle.kind < 3)
@@ -595,26 +593,26 @@ class RAxisPainter extends RObjectPainter {
             if (main_draw) this.ticks.push(grpos); // keep graphical positions of major ticks
          }
 
-         if (ticks_plusminus > 0) {
+         if (ticks_plusminus > 0)
             h2 = -h1;
-         } else if (side < 0) {
+         else if (side < 0) {
             h2 = -h1; h1 = 0;
-         } else {
+         } else
             h2 = 0;
-         }
 
          res += this.vertical ? `M${h1},${grpos}H${h2}` : `M${grpos},${-h1}V${-h2}`;
       }
 
-      if (res)
+      if (res) {
          axis_g.append('svg:path')
                .attr('d', res)
                .style('stroke', this.ticksColor || this.lineatt.color)
                .style('stroke-width', !this.ticksWidth || (this.ticksWidth == 1) ? null : this.ticksWidth);
+       }
 
        let gap0 = Math.round(0.25*this.ticksSize), gap = Math.round(1.25*this.ticksSize);
        return { '-1': (side > 0) || ticks_plusminus ? gap : gap0,
-                 '1': (side < 0) || ticks_plusminus ? gap : gap0 };
+                  1: (side < 0) || ticks_plusminus ? gap : gap0 };
    }
 
    /** @summary Performs labels drawing
@@ -629,7 +627,6 @@ class RAxisPainter extends RObjectPainter {
 
       // function called when text is drawn to analyze width, required to correctly scale all labels
       function process_drawtext_ready(painter) {
-
          max_lbl_width = Math.max(max_lbl_width, this.result_width);
          max_lbl_height = Math.max(max_lbl_height, this.result_height);
 
@@ -662,18 +659,17 @@ class RAxisPainter extends RObjectPainter {
       this.startTextDrawing(this.labelsFont, 'font', label_g);
 
       for (let nmajor = 0; nmajor < lbl_pos.length; ++nmajor) {
-
-         let lbl = this.format(lbl_pos[nmajor], true);
+         const lbl = this.format(lbl_pos[nmajor], true);
          if (lbl === null) continue;
 
-         let pos = Math.round(this.func(lbl_pos[nmajor])),
-             arg = { text: lbl, latex: 1, draw_g: label_g };
+         const arg = { text: lbl, latex: 1, draw_g: label_g };
+         let pos = Math.round(this.func(lbl_pos[nmajor]));
 
-         arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0,
+         arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
          arg.gap_after = (nmajor < lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
 
          if (center_lbls) {
-            let gap = arg.gap_after || arg.gap_before;
+            const gap = arg.gap_after || arg.gap_before;
             pos = Math.round(pos - (this.vertical ? 0.5*gap : -0.5*gap));
             if (!this.isInsideGrRange(pos, 5)) continue;
          }
@@ -698,8 +694,8 @@ class RAxisPainter extends RObjectPainter {
 
          this.drawText(arg);
 
-         if (lastpos && (pos!=lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
-            let axis_step = Math.abs(pos-lastpos);
+         if (lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
+            const axis_step = Math.abs(pos-lastpos);
             textscale = Math.min(textscale, 0.9*axis_step/this.labelsFont.size);
          }
 
@@ -738,9 +734,8 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Add zomming rect to axis drawing */
    addZoomingRect(axis_g, side, lgaps) {
       if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
-         let sz = Math.max(lgaps[side], 10),
-             d = this.vertical ? `v${this.gr_range}h${-side*sz}v${-this.gr_range}`
-                               : `h${this.gr_range}v${side*sz}h${-this.gr_range}`;
+         const sz = Math.max(lgaps[side], 10),
+               d = this.vertical ? `v${this.gr_range}h${-side*sz}v${-this.gr_range}` : `h${this.gr_range}v${side*sz}h${-this.gr_range}`;
          axis_g.append('svg:path')
                .attr('d',`M0,0${d}z`)
                .attr('class', 'axis_zoom')
@@ -875,10 +870,9 @@ class RAxisPainter extends RObjectPainter {
       this.handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
 
       // first draw ticks
-      let tgaps = this.drawTicks(axis_g, side, true);
-
-      // draw labels
-      let labelsPromise = this.optionUnlab ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
+      const tgaps = this.drawTicks(axis_g, side, true),
+             // draw labels
+            labelsPromise = this.optionUnlab ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
 
       return labelsPromise.then(lgaps => {
          // when drawing axis on frame, zoom rect should be always outside
@@ -910,9 +904,8 @@ class RAxisPainter extends RObjectPainter {
          this.drawMainLine(this.axis_g);
 
       // first draw ticks
-      let tgaps = this.drawTicks(this.axis_g, side, false);
-
-      let labelsPromise = this.optionUnlab ? Promise.resolve(tgaps) : this.drawLabels(this.axis_g, side, tgaps);
+      const tgaps = this.drawTicks(this.axis_g, side, false),
+            labelsPromise = this.optionUnlab ? Promise.resolve(tgaps) : this.drawLabels(this.axis_g, side, tgaps);
 
       return labelsPromise.then(lgaps => {
          // when drawing axis on frame, zoom rect should be always outside
@@ -938,10 +931,10 @@ class RAxisPainter extends RObjectPainter {
       if (this.ticksSide == 'invert') side = -side;
 
       // draw ticks again
-      let tgaps = this.drawTicks(axis_g, side, false);
+      const tgaps = this.drawTicks(axis_g, side, false),
 
-      // draw labels again
-      let promise = this.optionUnlab || only_ticks ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
+           // draw labels again
+           promise = this.optionUnlab || only_ticks ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
 
       return promise.then(lgaps => {
          this.addZoomingRect(axis_g, side, lgaps);

@@ -480,12 +480,13 @@ class Geometry {
          this.matrix = null; // new Matrix4;
          return this;
       } else if ( geometry instanceof BufferGeometry ) {
-         let pos_buf = geometry.getAttribute('position').array,
-             norm_buf = geometry.getAttribute('normal').array,
-             polygons = [], polygon, vert1, vert2, vert3;
+         const pos_buf = geometry.getAttribute('position').array,
+               norm_buf = geometry.getAttribute('normal').array,
+               polygons = [];
+         let polygon, vert1, vert2, vert3;
 
          for (let i=0; i < pos_buf.length; i+=9) {
-            polygon = new Polygon;
+            polygon = new Polygon();
 
             vert1 = new Vertex( pos_buf[i], pos_buf[i+1], pos_buf[i+2], norm_buf[i], norm_buf[i+1], norm_buf[i+2]);
             if (transfer_matrix) vert1.applyMatrix4(transfer_matrix);
@@ -506,14 +507,13 @@ class Geometry {
          this.tree = new Node( polygons, nodeid );
          if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
          return this;
-
       } else if (geometry.polygons && (geometry.polygons[0] instanceof Polygon)) {
-         let polygons = geometry.polygons;
+         const polygons = geometry.polygons;
 
          for (let i = 0; i < polygons.length; ++i) {
-            let polygon = polygons[i];
+            const polygon = polygons[i];
             if (transfer_matrix) {
-               let new_vertices = [];
+               const new_vertices = [];
 
                for (let n = 0; n < polygon.vertices.length; ++n)
                   new_vertices.push(polygon.vertices[n].clone().applyMatrix4(transfer_matrix));
@@ -532,15 +532,14 @@ class Geometry {
          throw Error('ThreeBSP: Given geometry is unsupported');
       }
 
-      let polygons = [],
-          nfaces = geometry.faces.length,
-          face, polygon, vertex, normal, useVertexNormals;
+      const polygons = [], nfaces = geometry.faces.length;
+      let face, polygon, vertex, normal, useVertexNormals;
 
       for (let i = 0; i < nfaces; ++i ) {
          face = geometry.faces[i];
          normal = face.normal;
          // faceVertexUvs = geometry.faceVertexUvs[0][i];
-         polygon = new Polygon;
+         polygon = new Polygon();
 
          useVertexNormals = face.vertexNormals && (face.vertexNormals.length==3);
 
@@ -553,7 +552,7 @@ class Geometry {
 
          vertex = geometry.vertices[ face.b ];
          if (useVertexNormals) normal = face.vertexNormals[1];
-         //uvs = faceVertexUvs ? new Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
+         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
          vertex = new Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /* face.normal, uvs */);
          if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push( vertex );
@@ -622,7 +621,6 @@ class Geometry {
    }
 
    tryToCompress(polygons) {
-
       if (this.maxid === undefined) return;
 
       let arr = [], parts, foundpair,
@@ -638,7 +636,7 @@ class Geometry {
          arr[p.id].push(p);
       }
 
-      for(n = 0; n < arr.length; ++n) {
+      for (n = 0; n < arr.length; ++n) {
          parts = arr[n];
          if (parts === undefined) continue;
 
@@ -655,9 +653,8 @@ class Geometry {
                for (i2 = i1+1; i2 < len; ++i2) {
                   p2 = parts[i2];
                   if (p2 && (p1.parent === p2.parent) && (p1.nsign === p2.nsign)) {
-
-                     if (p1.nsign !== p1.parent.nsign) p1.parent.flip();
-
+                     if (p1.nsign !== p1.parent.nsign)
+                        p1.parent.flip();
                      nreduce++;
                      parts[i1] = p1.parent;
                      parts[i2] = null;
@@ -673,52 +670,52 @@ class Geometry {
       if (nreduce > 0) {
          polygons.splice(0, polygons.length);
 
-         for(n = 0; n < arr.length; ++n) {
+         for (n = 0; n < arr.length; ++n) {
             parts = arr[n];
-            if (parts !== undefined)
+            if (parts !== undefined) {
                for (i1 = 0, len = parts.length; i1 < len; ++i1)
                   if (parts[i1]) polygons.push(parts[i1]);
+            }
          }
-
       }
    }
 
-   direct_subtract( other_tree ) {
-      let a = this.tree,
-          b = other_tree.tree;
+   direct_subtract(other_tree) {
+      const a = this.tree,
+            b = other_tree.tree;
       a.invert();
-      a.clipTo( b );
-      b.clipTo( a );
+      a.clipTo(b);
+      b.clipTo(a);
       b.invert();
-      b.clipTo( a );
+      b.clipTo(a);
       b.invert();
       a.build(b.collectPolygons());
       a.invert();
       return this;
    }
 
-   direct_union( other_tree ) {
-      let a = this.tree,
-          b = other_tree.tree;
+   direct_union(other_tree) {
+      const a = this.tree,
+            b = other_tree.tree;
 
-      a.clipTo( b );
-      b.clipTo( a );
+      a.clipTo(b);
+      b.clipTo(a);
       b.invert();
-      b.clipTo( a );
+      b.clipTo(a);
       b.invert();
       a.build(b.collectPolygons());
       return this;
    }
 
-   direct_intersect( other_tree ) {
-      let a = this.tree,
-          b = other_tree.tree;
+   direct_intersect(other_tree) {
+      const a = this.tree,
+            b = other_tree.tree;
 
       a.invert();
-      b.clipTo( a );
+      b.clipTo(a);
       b.invert();
-      a.clipTo( b );
-      b.clipTo( a );
+      a.clipTo(b);
+      b.clipTo(a);
       a.build(b.collectPolygons());
       a.invert();
       return this;
@@ -727,8 +724,8 @@ class Geometry {
    cut_from_plane( other_tree) {
       // just cut peaces from second geometry, which just simple plane
 
-      let a = this.tree,
-          b = other_tree.tree;
+      const a = this.tree,
+            b = other_tree.tree;
 
       a.invert();
       b.clipTo(a);
@@ -736,14 +733,14 @@ class Geometry {
       return this;
    }
 
-   scale(x,y,z) {
+   scale(x, y, z) {
       // try to scale as BufferGeometry
-      let polygons = this.tree.collectPolygons();
+      const polygons = this.tree.collectPolygons();
 
       for (let i = 0; i < polygons.length; ++i) {
-         let polygon = polygons[i];
-         for (let k=0; k < polygon.vertices.length; ++k) {
-            let v = polygon.vertices[k];
+         const polygon = polygons[i];
+         for (let k = 0; k < polygon.vertices.length; ++k) {
+            const v = polygon.vertices[k];
             v.x *= x;
             v.y *= y;
             v.z *= z;
@@ -753,7 +750,7 @@ class Geometry {
    }
 
    toPolygons() {
-      let polygons = this.tree.collectPolygons();
+      const polygons = this.tree.collectPolygons();
 
       this.tryToCompress(polygons);
 
@@ -769,9 +766,9 @@ class Geometry {
       return createBufferGeometry(this.toPolygons());
    }
 
-   toMesh( material ) {
-      let geometry = this.toBufferGeometry(),
-         mesh = new Mesh( geometry, material );
+   toMesh(material) {
+      const geometry = this.toBufferGeometry(),
+            mesh = new Mesh( geometry, material );
 
       if (this.matrix) {
          mesh.position.setFromMatrixPosition(this.matrix);

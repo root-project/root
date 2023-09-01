@@ -186,13 +186,13 @@ class RPadPainter extends RObjectPainter {
      * @private */
    findPainterFor(selobj, selname, seltype) {
       return this.painters.find(p => {
-         let pobj = p.getObject();
-         if (!pobj) return;
+         const pobj = p.getObject();
+         if (!pobj) return false;
 
          if (selobj && (pobj === selobj)) return true;
-         if (!selname && !seltype) return;
-         if (selname && (pobj.fName !== selname)) return;
-         if (seltype && (pobj._typename !== seltype)) return;
+         if (!selname && !seltype) return false;
+         if (selname && (pobj.fName !== selname)) return false;
+         if (seltype && (pobj._typename !== seltype)) return false;
          return true;
       });
    }
@@ -562,7 +562,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary returns true if any objects beside sub-pads exists in the pad */
    hasObjectsToDraw() {
-      return this.pad?.fPrimitives?.find(obj => obj._typename != `${nsREX}RPadDisplayItem`) ? true : false;
+      return this.pad?.fPrimitives?.find(obj => obj._typename != `${nsREX}RPadDisplayItem`);
    }
 
    /** @summary sync drawing/redrawing/resize of the pad
@@ -570,13 +570,13 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} when pad is ready for draw operation or false if operation already queued
      * @private */
    syncDraw(kind) {
-      let entry = { kind : kind || 'redraw' };
+      const entry = { kind : kind || 'redraw' };
       if (this._doing_draw === undefined) {
-         this._doing_draw = [ entry ];
+         this._doing_draw = [entry];
          return Promise.resolve(true);
       }
       // if queued operation registered, ignore next calls, indx == 0 is running operation
-      if ((entry.kind !== true) && (this._doing_draw.findIndex((e,i) => (i > 0) && (e.kind == entry.kind)) > 0))
+      if ((entry.kind !== true) && (this._doing_draw.findIndex((e,i) => (i > 0) && (e.kind === entry.kind)) > 0))
          return false;
       this._doing_draw.push(entry);
       return new Promise(resolveFunc => {
@@ -590,16 +590,16 @@ class RPadPainter extends RObjectPainter {
       if (this._doing_draw === undefined)
          return console.warn('failure, should not happen');
       this._doing_draw.shift();
-      if (this._doing_draw.length == 0) {
+      if (this._doing_draw.length === 0)
          delete this._doing_draw;
-      } else {
-         let entry = this._doing_draw[0];
-         if(entry.func) { entry.func(); delete entry.func; }
+      else {
+         const entry = this._doing_draw[0];
+         if (entry.func) { entry.func(); delete entry.func; }
       }
    }
 
    /** @summary Draw single primitive */
-   async drawObject(/*dom, obj, opt*/) {
+   async drawObject(/* dom, obj, opt */) {
       console.log('Not possible to draw object without loading of draw.mjs');
       return null;
    }
@@ -607,7 +607,6 @@ class RPadPainter extends RObjectPainter {
    /** @summary Draw pad primitives
      * @private */
    async drawPrimitives(indx) {
-
       if (indx === undefined) {
          if (this.iscan)
             this._start_tm = new Date().getTime();
@@ -619,11 +618,10 @@ class RPadPainter extends RObjectPainter {
       }
 
       if (!this.pad || (indx >= this._num_primitives)) {
-
          this.confirmDraw();
 
          if (this._start_tm) {
-            let spenttm = new Date().getTime() - this._start_tm;
+            const spenttm = new Date().getTime() - this._start_tm;
             if (spenttm > 3000) console.log(`Canvas drawing took ${(spenttm*1e-3).toFixed(2)}s`);
             delete this._start_tm;
          }
@@ -822,7 +820,7 @@ class RPadPainter extends RObjectPainter {
                delete this._resize_tmout;
                if (!this.pad?.fWinSize) return;
                let cw = this.getPadWidth(), ch = this.getPadHeight();
-               if ((cw > 0) && (ch > 0) && (this.pad.fWinSize[0] != cw) || (this.pad.fWinSize[1] != ch)) {
+               if ((cw > 0) && (ch > 0) && ((this.pad.fWinSize[0] != cw) || (this.pad.fWinSize[1] != ch))) {
                   this.pad.fWinSize[0] = cw;
                   this.pad.fWinSize[1] = ch;
                   this.sendWebsocket(`RESIZED:[${cw},${ch}]`);
@@ -871,7 +869,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Extract properties from TObjectDisplayItem */
    extractTObjectProp(snap) {
       if (snap.fColIndex && snap.fColValue) {
-         let colors = this.root_colors || getRootColors();
+         const colors = this.root_colors || getRootColors();
          for (let k = 0; k < snap.fColIndex.length; ++k)
             colors[snap.fColIndex[k]] = snap.fColValue[k];
        }

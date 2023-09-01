@@ -50,7 +50,7 @@ class TAttMarkerHandler {
      * @param {number} args.size - marker size
      * @param {number} [args.refsize] - when specified and marker size < 1, marker size will be calculated relative to that size */
    setArgs(args) {
-      if (isObject(args) && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
+      if (isObject(args) && (typeof args.fMarkerStyle === 'number')) args = { attr: args };
 
       if (args.attr) {
          if (args.color === undefined)
@@ -81,12 +81,13 @@ class TAttMarkerHandler {
          return `M${(x + this.x0).toFixed(this.ndig)},${(y + this.y0).toFixed(this.ndig)}${this.marker}`;
 
       // use optimized handling with relative position
-      let xx = Math.round(x), yy = Math.round(y), mv = `M${xx},${yy}`;
+      const xx = Math.round(x), yy = Math.round(y);
+      let mv = `M${xx},${yy}`;
       if (this.lastx !== null) {
-         if ((xx == this.lastx) && (yy == this.lasty)) {
+         if ((xx === this.lastx) && (yy === this.lasty))
             mv = ''; // pathological case, but let exclude it
-         } else {
-            let m2 = `m${xx-this.lastx},${yy - this.lasty}`;
+         else {
+            const m2 = `m${xx-this.lastx},${yy - this.lasty}`;
             if (m2.length < mv.length) mv = m2;
          }
       }
@@ -117,7 +118,6 @@ class TAttMarkerHandler {
    /** @summary Prepare object to create marker
      * @private */
    _configure() {
-
       this.x0 = this.y0 = 0;
 
       if ((this.style === 1) || (this.style === 777)) {
@@ -131,23 +131,23 @@ class TAttMarkerHandler {
 
       this.optimized = false;
 
-      let marker_kind = root_markers[this.style] ?? 104,
-          shape = marker_kind % 100;
+      const marker_kind = root_markers[this.style] ?? 104,
+            shape = marker_kind % 100;
 
       this.fill = (marker_kind >= 100);
 
       this.scale = this.refsize || 8; // v7 defines refsize as 1 or pad height
 
-      let size = this.getFullSize();
+      const size = this.getFullSize();
 
       this.ndig = (size > 7) ? 0 : ((size > 2) ? 1 : 2);
-      if (shape == 30) this.ndig++; // increase precision for star
-      let s1 = size.toFixed(this.ndig),
-          s2 = (size/2).toFixed(this.ndig),
-          s3 = (size/3).toFixed(this.ndig),
-          s4 = (size/4).toFixed(this.ndig),
-          s8 = (size/8).toFixed(this.ndig),
-          s38 = (size*3/8).toFixed(this.ndig);
+      if (shape === 30) this.ndig++; // increase precision for star
+      let s1 = size.toFixed(this.ndig);
+      const s2 = (size/2).toFixed(this.ndig),
+            s3 = (size/3).toFixed(this.ndig),
+            s4 = (size/4).toFixed(this.ndig),
+            s8 = (size/8).toFixed(this.ndig),
+            s38 = (size*3/8).toFixed(this.ndig);
 
       switch (shape) {
          case 1: // dot
@@ -194,11 +194,12 @@ class TAttMarkerHandler {
             this.x0 = this.y0 = size / 6;
             this.marker = `h${s3}v-${s3}h-${s3}v-${s3}h-${s3}v${s3}h-${s3}v${s3}h${s3}v${s3}h${s3}z`;
             break;
-         case 30: // star
+         case 30: { // star
             this.y0 = -size / 2;
-            let s56 = (size*5/6).toFixed(this.ndig), s58 = (size*5/8).toFixed(this.ndig);
+            const s56 = (size*5/6).toFixed(this.ndig), s58 = (size*5/8).toFixed(this.ndig);
             this.marker = `l${s3},${s1}l-${s56},-${s58}h${s1}l-${s56},${s58}z`;
             break;
+         }
          case 32: // triangle-down
             this.y0 = size / 2;
             this.marker = `l-${s2},-${s1}h${s1}z`;

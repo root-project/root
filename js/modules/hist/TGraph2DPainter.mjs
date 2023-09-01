@@ -66,8 +66,7 @@ class TGraphDelaunay {
    }
 
 
-   Initialize()
-   {
+   Initialize() {
       if (!this.fInit) {
          this.CreateTrianglesDataStructure();
          this.FindHull();
@@ -75,8 +74,7 @@ class TGraphDelaunay {
       }
    }
 
-   ComputeZ(x, y)
-   {
+   ComputeZ(x, y) {
       // Initialise the Delaunay algorithm if needed.
       // CreateTrianglesDataStructure computes fXoffset, fYoffset,
       // fXScaleFactor and fYScaleFactor;
@@ -96,19 +94,18 @@ class TGraphDelaunay {
    }
 
 
-   CreateTrianglesDataStructure()
-   {
+   CreateTrianglesDataStructure() {
       // Offset fX and fY so they average zero, and scale so the average
       // of the X and Y ranges is one. The normalized version of fX and fY used
       // in Interpolate.
-      let xmax = getMax(this.fGraph2D.fX),
-          ymax = getMax(this.fGraph2D.fY),
-          xmin = getMin(this.fGraph2D.fX),
-          ymin = getMin(this.fGraph2D.fY);
-      this.fXoffset      = -(xmax+xmin)/2.;
-      this.fYoffset      = -(ymax+ymin)/2.;
-      this.fXScaleFactor  = 1./(xmax-xmin);
-      this.fYScaleFactor  = 1./(ymax-ymin);
+      const xmax = getMax(this.fGraph2D.fX),
+            ymax = getMax(this.fGraph2D.fY),
+            xmin = getMin(this.fGraph2D.fX),
+            ymin = getMin(this.fGraph2D.fY);
+      this.fXoffset      = -(xmax+xmin)/2;
+      this.fYoffset      = -(ymax+ymin)/2;
+      this.fXScaleFactor  = 1/(xmax-xmin);
+      this.fYScaleFactor  = 1/(ymax-ymin);
       this.fXNmax        = (xmax+this.fXoffset)*this.fXScaleFactor;
       this.fXNmin        = (xmin+this.fXoffset)*this.fXScaleFactor;
       this.fYNmax        = (ymax+this.fYoffset)*this.fYScaleFactor;
@@ -129,37 +126,32 @@ class TGraphDelaunay {
    }
 
 
-   ////////////////////////////////////////////////////////////////////////////////
    /// Is point e inside the triangle t1-t2-t3 ?
 
-   Enclose(t1, t2, t3, e)
-   {
-      let x = [ this.fXN[t1], this.fXN[t2], this.fXN[t3], this.fXN[t1] ],
-          y = [ this.fYN[t1], this.fYN[t2], this.fYN[t3], this.fYN[t1] ],
-          xp = this.fXN[e],
-          yp = this.fYN[e],
-          i = 0, j = x.length - 1, oddNodes = false;
+   Enclose(t1, t2, t3, e) {
+      const x = [this.fXN[t1], this.fXN[t2], this.fXN[t3], this.fXN[t1]],
+            y = [this.fYN[t1], this.fYN[t2], this.fYN[t3], this.fYN[t1]],
+            xp = this.fXN[e],
+            yp = this.fYN[e];
+      let i = 0, j = x.length - 1, oddNodes = false;
 
       for (; i < x.length; ++i) {
          if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
-            if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
+            if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp)
                oddNodes = !oddNodes;
-            }
          }
-         j=i;
+         j = i;
       }
 
       return oddNodes;
    }
 
 
-   ////////////////////////////////////////////////////////////////////////////////
    /// Files the triangle defined by the 3 vertices p, n and m into the
    /// fxTried arrays. If these arrays are to small they are automatically
    /// expanded.
 
-   FileIt(p, n, m)
-   {
+   FileIt(p, n, m) {
       let swap, tmp, ps = p, ns = n, ms = m;
 
       // order the vertices before storing them
@@ -177,7 +169,6 @@ class TGraphDelaunay {
    }
 
 
-   ////////////////////////////////////////////////////////////////////////////////
    /// Attempt to find all the Delaunay triangles of the point set. It is not
    /// guaranteed that it will fully succeed, and no check is made that it has
    /// fully succeeded (such a check would be possible by referencing the points
@@ -189,8 +180,7 @@ class TGraphDelaunay {
    /// are too far beyond or too close to the non-shared sides. Fiddling with
    /// the size of the `alittlebit' parameter may help.
 
-   FindAllTriangles()
-   {
+   FindAllTriangles() {
       if (this.fAllTri) return;
 
       this.fAllTri = true;
@@ -316,25 +306,22 @@ class TGraphDelaunay {
       }
    }
 
-
-   ////////////////////////////////////////////////////////////////////////////////
    /// Finds those points which make up the convex hull of the set. If the xy
    /// plane were a sheet of wood, and the points were nails hammered into it
    /// at the respective coordinates, then if an elastic band were stretched
    /// over all the nails it would form the shape of the convex hull. Those
    /// nails in contact with it are the points that make up the hull.
 
-   FindHull()
-   {
+   FindHull() {
       if (!this.fHullPoints)
          this.fHullPoints = new Array(this.fNpoints);
 
       let nhull_tmp = 0;
-      for(let n=1; n<=this.fNpoints; n++) {
+      for (let n=1; n<=this.fNpoints; n++) {
          // if the point is not inside the hull of the set of all points
          // bar it, then it is part of the hull of the set of all points
          // including it
-         let is_in = this.InHull(n,n);
+         const is_in = this.InHull(n,n);
          if (!is_in) {
             // cannot increment fNhull directly - InHull needs to know that
             // the hull has not yet been completely found
@@ -346,11 +333,9 @@ class TGraphDelaunay {
    }
 
 
-   ////////////////////////////////////////////////////////////////////////////////
    /// Is point e inside the hull defined by all points apart from x ?
 
-   InHull(e, x)
-   {
+   InHull(e, x) {
       let n1,n2,n,m,ntry,
           lastdphi,dd1,dd2,dx1,dx2,dx3,dy1,dy2,dy3,
           u,v,vNv1,vNv2,phi1,phi2,dphi,xx,yy,
@@ -449,20 +434,18 @@ class TGraphDelaunay {
    }
 
 
-   ////////////////////////////////////////////////////////////////////////////////
    /// Finds the z-value at point e given that it lies
    /// on the plane defined by t1,t2,t3
 
-   InterpolateOnPlane(TI1, TI2, TI3, e)
-   {
+   InterpolateOnPlane(TI1, TI2, TI3, e) {
       let tmp, swap, x1,x2,x3,y1,y2,y3,f1,f2,f3,u,v,w,
           t1 = TI1, t2 = TI2, t3 = TI3;
 
       // order the vertices
       do {
          swap = false;
-         if (t2 > t1) { tmp = t1; t1 = t2; t2 = tmp; swap = true;}
-         if (t3 > t2) { tmp = t2; t2 = t3; t3 = tmp; swap = true;}
+         if (t2 > t1) { tmp = t1; t1 = t2; t2 = tmp; swap = true; }
+         if (t3 > t2) { tmp = t2; t2 = t3; t3 = tmp; swap = true; }
       } while (swap);
 
       x1 = this.fXN[t1];
@@ -481,14 +464,11 @@ class TGraphDelaunay {
       return u*this.fXN[e] + v*this.fYN[e] + w;
    }
 
-
-   ////////////////////////////////////////////////////////////////////////////////
    /// Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
    /// calculate a z-value for it by linearly interpolating the z-values that
    /// make up that triangle.
 
-   Interpolate(xx, yy)
-   {
+   Interpolate(xx, yy) {
       let thevalue,
           it, ntris_tried, p, n, m,
           i,j,k,l,z,f,d,o1,o2,a,b,t1,t2,t3,
@@ -497,7 +477,7 @@ class TGraphDelaunay {
           d1,d2,d3,c1,c2,dko1,dko2,dfo1,
           dfo2,sin_sum,cfo1k,co2o1k,co2o1f,
           shouldbein,
-          dx1,dx2,dx3,dy1,dy2,dy3,u,v,dxz = [0,0,0], dyz = [0,0,0];
+          dx1,dx2,dx3,dy1,dy2,dy3,u,v,dxz = [0, 0, 0], dyz = [0, 0, 0];
 
       // initialise the Delaunay algorithm if needed
       this.Initialize();
@@ -648,7 +628,7 @@ class TGraphDelaunay {
                            // on a common circle' situation. It is a sign something could be
                            // wrong though, especially if the two coincident points have
                            // different fZ's. If they don't then this is harmless.
-                           Warning("Interpolate", "Two of these three points are coincident %d %d %d",a,b,z);
+                           console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                         }
                      } else {
                         if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
@@ -824,34 +804,27 @@ class TGraphDelaunay {
                thevalue = this.InterpolateOnPlane(t1,t2,t3,0);
                return thevalue;
 
-   //L90:      continue;
+   // L90:      continue;
             }
          }
       }
-      if (shouldbein) {
+      if (shouldbein)
          console.error(`Interpolate Point outside hull when expected inside: this point could be dodgy ${xx}  ${yy} ${ntris_tried}`);
-      }
       return thevalue;
    }
 
-
-   ////////////////////////////////////////////////////////////////////////////////
    /// Defines the number of triangles tested for a Delaunay triangle
    /// (number of iterations) before abandoning the search
 
-   SetMaxIter(n = 100000)
-   {
+   SetMaxIter(n = 100000) {
       this.fAllTri  = false;
       this.fMaxIter = n;
    }
 
-
-   ////////////////////////////////////////////////////////////////////////////////
    /// Sets the histogram bin height for points lying outside the convex hull ie:
    /// the bins in the margin.
 
-   SetMarginBinsContent(z)
-   {
+   SetMarginBinsContent(z) {
       this.fZout = z;
    }
 
@@ -1018,7 +991,7 @@ class TGraph2DPainter extends ObjectPainter {
       dulaunay.FindAllTriangles();
       if (!dulaunay.fNdt) return;
 
-      let main_grz = !fp.logz ? fp.grz : value => (value < axis_zmin) ? -0.1 : fp.grz(value),
+      let main_grz = !fp.logz ? fp.grz : value => (value < fp.scale_zmin) ? -0.1 : fp.grz(value),
           do_faces = this.options.Triangles >= 10,
           do_lines = this.options.Triangles % 10 === 1,
           triangles = new Triangles3DHandler(levels, main_grz, 0, 2*fp.size_z3d, do_lines);

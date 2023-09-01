@@ -38,7 +38,7 @@ class TAttFillHandler {
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }
 
-      let was_changed = this.changed; // preserve changed state
+      const was_changed = this.changed; // preserve changed state
       this.change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
       this.changed = was_changed;
    }
@@ -63,17 +63,17 @@ class TAttFillHandler {
      * @desc If empty, alternative color will be provided
      * @param {string} [altern] - alternative color which returned when fill color not exists
      * @private */
-   getFillColorAlt(altern) { return this.color && (this.color != 'none') ? this.color : altern; }
+   getFillColorAlt(altern) { return this.color && (this.color !== 'none') ? this.color : altern; }
 
    /** @summary Returns true if color not specified or fill style not specified */
    empty() {
-      let fill = this.getFillColor();
-      return !fill || (fill == 'none');
+      const fill = this.getFillColor();
+      return !fill || (fill === 'none');
    }
 
    /** @summary Returns true if fill attributes has real color */
    hasColor() {
-      return this.color && (this.color != 'none');
+      return this.color && (this.color !== 'none');
    }
 
    /** @summary Set solid fill color as fill pattern
@@ -93,7 +93,7 @@ class TAttFillHandler {
      * @param {string} [solid_color] - when specified, checks if fill color matches */
    isSolid(solid_color) {
       if (this.pattern !== 1001) return false;
-      return !solid_color || (solid_color == this.color);
+      return !solid_color || (solid_color === this.color);
    }
 
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets
@@ -126,12 +126,12 @@ class TAttFillHandler {
          delete this.antialias;
       }
 
-      if ((this.pattern == 1000) && (this.colorindx === 0)) {
+      if ((this.pattern === 1000) && (this.colorindx === 0)) {
          this.pattern_url = 'white';
          return true;
       }
 
-      if (this.pattern == 1000)
+      if (this.pattern === 1000)
          this.pattern = 1001;
 
       if (this.pattern < 1001) {
@@ -148,10 +148,9 @@ class TAttFillHandler {
 
       if (color_as_svg) {
          this.color = color;
-         if (color != 'none') indx = d3_color(color).hex().slice(1); // fictional index produced from color code
-      } else {
+         if (color !== 'none') indx = d3_color(color).hex().slice(1); // fictional index produced from color code
+      } else
          this.color = painter ? painter.getColor(indx) : getColor(indx);
-      }
 
       if (!isStr(this.color)) this.color = 'none';
 
@@ -163,10 +162,10 @@ class TAttFillHandler {
          return true;
       }
 
-      if (!svg || svg.empty() || (this.pattern < 3000) || (this.color == 'none')) return false;
+      if (!svg || svg.empty() || (this.pattern < 3000) || (this.color === 'none')) return false;
 
-      let id = `pat_${this.pattern}_${indx}`,
-         defs = svg.selectChild('.canvas_defs');
+      const id = `pat_${this.pattern}_${indx}`;
+      let defs = svg.selectChild('.canvas_defs');
 
       if (defs.empty())
          defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
@@ -213,20 +212,22 @@ class TAttFillHandler {
          case 3023: w = h = 8; fills = 'M4,0h4v4zM8,4v4h-4z'; fills2 = 'M4,0L0,4L4,8L8,4Z'; break;
          case 3024: w = h = 16; fills = 'M0,8v8h2v-8zM8,0v8h2v-8M4,14v2h12v-2z'; fills2 = 'M0,2h8v6h4v-6h4v12h-12v-6h-4z'; break;
          case 3025: w = h = 18; fills = 'M5,13v-8h8ZM18,0v18h-18l5,-5h8v-8Z'; break;
-         default:
+         default: {
             if ((this.pattern > 3025) && (this.pattern < 3100)) {
                // same as 3002, see TGX11.cxx, line 2234
                w = 4; h = 2; fills = 'M1,0h1v1h-1zM3,1h1v1h-1z'; break;
             }
 
-            let code = this.pattern % 1000,
-                k = code % 10,
-                j = ((code - k) % 100) / 10,
-                i = (code - j * 10 - k) / 100;
+            const code = this.pattern % 1000,
+                  k = code % 10,
+                  j = ((code - k) % 100) / 10,
+                  i = (code - j * 10 - k) / 100;
             if (!i) break;
 
-            let hatches_spacing = Math.round(Math.max(0.5, gStyle.fHatchesSpacing)*2) * 6,
-                sz = i * hatches_spacing, pos, step, x1, x2, y1, y2, max;  // axis distance between lines
+            const hatches_spacing = Math.round(Math.max(0.5, gStyle.fHatchesSpacing)*2) * 6,
+                  sz = i * hatches_spacing; // axis distance between lines
+
+            let pos, step, x1, x2, y1, y2, max;
 
             w = h = 6 * sz; // we use at least 6 steps
 
@@ -236,14 +237,13 @@ class TAttFillHandler {
                // reduce step for smaller angles to keep normal distance approx same
                if (Math.abs(dy) < 3)
                   step = Math.round(sz / 12 * 9);
-               if (dy == 0) {
+               if (dy === 0) {
                   step = Math.round(sz / 12 * 8);
                   y1 = step / 2;
-               } else if (dy > 0) {
+               } else if (dy > 0)
                   max -= step;
-               } else {
+               else
                   y1 = step;
-               }
 
                while (y1 <= max) {
                   y2 = y1 + dy * step;
@@ -255,21 +255,29 @@ class TAttFillHandler {
                      x2 = Math.round((h - y1) / (y2 - y1) * w);
                      pos.push(0, y1, x2, h);
                      pos.push(w, h - y1, w - x2, 0);
-                  } else {
+                  } else
                      pos.push(0, y1, w, y2);
-                  }
                   y1 += step;
                }
                for (let k = 0; k < pos.length; k += 4) {
-                  if (swap) { x1 = pos[k+1]; y1 = pos[k]; x2 = pos[k+3]; y2 = pos[k+2]; }
-                       else { x1 = pos[k]; y1 = pos[k+1]; x2 = pos[k+2]; y2 = pos[k+3]; }
-                   lines += `M${x1},${y1}`;
-                   if (y2 == y1)
-                      lines += `h${x2-x1}`;
-                   else if (x2 == x1)
-                      lines += `v${y2-y1}`;
-                   else
-                      lines += `L${x2},${y2}`;
+                  if (swap) {
+                     x1 = pos[k+1];
+                     y1 = pos[k];
+                     x2 = pos[k+3];
+                     y2 = pos[k+2];
+                  } else {
+                     x1 = pos[k];
+                     y1 = pos[k+1];
+                     x2 = pos[k+2];
+                     y2 = pos[k+3];
+                  }
+                  lines += `M${x1},${y1}`;
+                  if (y2 === y1)
+                     lines += `h${x2-x1}`;
+                  else if (x2 === x1)
+                     lines += `v${y2-y1}`;
+                  else
+                     lines += `L${x2},${y2}`;
                }
             };
 
@@ -294,20 +302,21 @@ class TAttFillHandler {
                case 6: produce(-3, true); break;
                case 7: produce(-2, true); break;
                case 8: produce(-1, true); break;
-               case 9: if (j != 9) produce(0, true); break;
+               case 9: if (j !== 9) produce(0, true); break;
             }
 
             break;
+         }
       }
 
       if (!fills && !lines) return false;
 
-      let patt = defs.append('svg:pattern')
-                     .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
-                     .attr('width', w).attr('height', h);
+      const patt = defs.append('svg:pattern')
+                       .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
+                       .attr('width', w).attr('height', h);
 
       if (fills2) {
-         let col = d3_rgb(this.color);
+         const col = d3_rgb(this.color);
          col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
          patt.append('svg:path').attr('d', fills2).style('fill', col);
       }
@@ -334,7 +343,7 @@ class TAttFillHandler {
      * @private */
    saveToStyle(name_color, name_pattern) {
       if (name_color) {
-         let indx = this.colorindx ?? findColor(this.color);
+         const indx = this.colorindx ?? findColor(this.color);
          if (indx >= 0) gStyle[name_color] = indx;
       }
       if (name_pattern)

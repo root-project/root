@@ -40,7 +40,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Set active flag for frame - can block some events
     * @private */
    setFrameActive(on) {
-      this.enabledKeys = on && settings.HandleKeys ? true : false;
+      this.enabledKeys = on && settings.HandleKeys;
       // used only in 3D mode
       if (this.control)
          this.control.enableKeys = this.enabledKeys;
@@ -1046,19 +1046,19 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Fill context menu */
-   fillContextMenu(menu, kind, /* obj */) {
+   fillContextMenu(menu, kind /* , obj */) {
       // when fill and show context menu, remove all zooming
 
-      if (kind == 'pal') kind = 'z';
+      if (kind === 'pal') kind = 'z';
 
-      if ((kind == 'x') || (kind == 'y') || (kind == 'x2') || (kind == 'y2')) {
-         let handle = this[kind+'_handle'];
+      if ((kind === 'x') || (kind === 'y') || (kind === 'x2') || (kind === 'y2')) {
+         const handle = this[kind+'_handle'];
          if (!handle) return false;
          menu.add('header: ' + kind.toUpperCase() + ' axis');
          return handle.fillAxisContextMenu(menu, kind);
       }
 
-      let alone = menu.size() == 0;
+      const alone = menu.size() === 0;
 
       if (alone)
          menu.add('header:Frame');
@@ -1091,18 +1091,18 @@ class RFramePainter extends RObjectPainter {
          menu.addchk(this.y_handle.draw_swapside, 'Swap y', flag => this.changeFrameAttr('swapY', flag));
       if (this.x_handle && !this.x2_handle) {
          menu.add('sub:Ticks x');
-         menu.addchk(this.x_handle.draw_ticks == 0, 'off', () => this.changeFrameAttr('ticksX', 0));
-         menu.addchk(this.x_handle.draw_ticks == 1, 'normal', () => this.changeFrameAttr('ticksX', 1));
-         menu.addchk(this.x_handle.draw_ticks == 2, 'ticks on both sides', () => this.changeFrameAttr('ticksX', 2));
-         menu.addchk(this.x_handle.draw_ticks == 3, 'labels on both sides', () => this.changeFrameAttr('ticksX', 3));
+         menu.addchk(this.x_handle.draw_ticks === 0, 'off', () => this.changeFrameAttr('ticksX', 0));
+         menu.addchk(this.x_handle.draw_ticks === 1, 'normal', () => this.changeFrameAttr('ticksX', 1));
+         menu.addchk(this.x_handle.draw_ticks === 2, 'ticks on both sides', () => this.changeFrameAttr('ticksX', 2));
+         menu.addchk(this.x_handle.draw_ticks === 3, 'labels on both sides', () => this.changeFrameAttr('ticksX', 3));
          menu.add('endsub:');
        }
       if (this.y_handle && !this.y2_handle) {
          menu.add('sub:Ticks y');
-         menu.addchk(this.y_handle.draw_ticks == 0, 'off', () => this.changeFrameAttr('ticksY', 0));
-         menu.addchk(this.y_handle.draw_ticks == 1, 'normal', () => this.changeFrameAttr('ticksY', 1));
-         menu.addchk(this.y_handle.draw_ticks == 2, 'ticks on both sides', () => this.changeFrameAttr('ticksY', 2));
-         menu.addchk(this.y_handle.draw_ticks == 3, 'labels on both sides', () => this.changeFrameAttr('ticksY', 3));
+         menu.addchk(this.y_handle.draw_ticks === 0, 'off', () => this.changeFrameAttr('ticksY', 0));
+         menu.addchk(this.y_handle.draw_ticks === 1, 'normal', () => this.changeFrameAttr('ticksY', 1));
+         menu.addchk(this.y_handle.draw_ticks === 2, 'ticks on both sides', () => this.changeFrameAttr('ticksY', 2));
+         menu.addchk(this.y_handle.draw_ticks === 3, 'labels on both sides', () => this.changeFrameAttr('ticksY', 3));
          menu.add('endsub:');
        }
 
@@ -1121,15 +1121,14 @@ class RFramePainter extends RObjectPainter {
      * @desc method called normally when mouse enter main object element
      * @private */
    showAxisStatus(axis_name, evnt) {
-
       let taxis = null, hint_name = axis_name, hint_title = 'axis',
-          m = d3_pointer(evnt, this.getFrameSvg().node()), id = (axis_name == 'x') ? 0 : 1;
+          m = d3_pointer(evnt, this.getFrameSvg().node()), id = (axis_name === 'x') ? 0 : 1;
 
       if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || 'axis object'; }
 
       if (this.swap_xy) id = 1-id;
 
-      let axis_value = this.revertAxis(axis_name, m[id]);
+      const axis_value = this.revertAxis(axis_name, m[id]);
 
       this.showObjectStatus(hint_name, hint_title, `${axis_name} : ${this.axisAsText(axis_name, axis_value)}`, `${Math.round(m[0])},${Math.round(m[1])}`);
    }

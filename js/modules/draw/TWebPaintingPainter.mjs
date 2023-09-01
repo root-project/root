@@ -151,7 +151,7 @@ class TWebPaintingPainter extends ObjectPainter {
                default:
                   console.log(`unsupported operation ${oper}`);
             }
-         };
+         }
 
          return Promise.resolve(true);
       }

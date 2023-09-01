@@ -433,8 +433,8 @@ class RH3Painter extends RHistPainter {
       }
 
       let binx, grx, biny, gry, binz, grz;
-      xaxis = this.getAxis('x'),
-      yaxis = this.getAxis('y'),
+      xaxis = this.getAxis('x');
+      yaxis = this.getAxis('y');
       zaxis = this.getAxis('z');
 
       for (i = i1; i < i2; i += di) {
@@ -516,10 +516,10 @@ class RH3Painter extends RHistPainter {
 
          if (use_colors) fillcolor = palette.getColor(ncol);
 
-         let material = use_lambert ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
-                                    : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false });
-
-         let combined_bins = new Mesh(all_bins_buffgeom, material);
+         const material = use_lambert
+                           ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
+                           : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false }),
+               combined_bins = new Mesh(all_bins_buffgeom, material);
 
          combined_bins.bins = bin_tooltips[nseq];
          combined_bins.bins_faces = buffer_size/9;
@@ -575,19 +575,17 @@ class RH3Painter extends RHistPainter {
    }
 
    draw3D() {
-
       if (!this.draw_content)
          return false;
 
-      //this.options.Scatter = false;
-      //this.options.Box = true;
+      // this.options.Scatter = false;
+      // this.options.Box = true;
 
-      let handle = this.prepareDraw({ only_indexes: true, extra: -0.5, right_extra: -1 });
-
-      let pr = this.options.Scatter ? this.draw3DScatter(handle) : Promise.resolve(false);
+      const handle = this.prepareDraw({ only_indexes: true, extra: -0.5, right_extra: -1 }),
+            pr = this.options.Scatter ? this.draw3DScatter(handle) : Promise.resolve(false);
 
       return pr.then(res => {
-         return res ? res : this.draw3DBins(handle);
+         return res || this.draw3DBins(handle);
       });
    }
 
@@ -698,7 +696,6 @@ class RH3Painter extends RHistPainter {
 
    /** @summary Fill histogram context menu */
    fillHistContextMenu(menu) {
-
       let opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
@@ -713,14 +710,13 @@ class RH3Painter extends RHistPainter {
 
    /** @summary draw RH3 object */
   static async draw(dom, histo /*, opt*/) {
-      let painter = new RH3Painter(dom, histo);
+      const painter = new RH3Painter(dom, histo);
       painter.mode3d = true;
 
       return ensureRCanvas(painter, '3d').then(() => {
-
          painter.setAsMainPainter();
 
-         painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: kNoZoom, maximum: kNoZoom };
+         painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: kNoZoom, maximum: kNoZoom, FrontBox: false, BackBox: false };
 
          let kind = painter.v7EvalAttr('kind', ''),
              sub = painter.v7EvalAttr('sub', 0),

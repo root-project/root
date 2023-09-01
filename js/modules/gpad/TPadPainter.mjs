@@ -21,8 +21,8 @@ function toggleButtonsVisibility(handler, action, evnt) {
    evnt?.preventDefault();
    evnt?.stopPropagation();
 
-   let group = handler.getLayerSvg('btns_layer', handler.this_pad_name),
-       btn = group.select("[name='Toggle']");
+   const group = handler.getLayerSvg('btns_layer', handler.this_pad_name),
+         btn = group.select('[name=\'Toggle\']');
 
    if (btn.empty()) return;
 
@@ -34,7 +34,7 @@ function toggleButtonsVisibility(handler, action, evnt) {
    }
 
    let is_visible = false;
-   switch(action) {
+   switch (action) {
       case 'enable':
          is_visible = true;
          handler.btns_active_flag = true;
@@ -186,8 +186,8 @@ class TPadPainter extends ObjectPainter {
       this.this_pad_name = '';
       if (!this.iscan && pad?.fName) {
          this.this_pad_name = pad.fName.replace(' ', '_'); // avoid empty symbol in pad name
-         let regexp = new RegExp('^[A-Za-z][A-Za-z0-9_]*$');
-         if (!regexp.test(this.this_pad_name) || ((this.this_pad_name == 'button') && (pad._typename == clTButton)))
+         const regexp = /^[A-Za-z][A-Za-z0-9_]*$/;
+         if (!regexp.test(this.this_pad_name) || ((this.this_pad_name === 'button') && (pad._typename === clTButton)))
             this.this_pad_name = 'jsroot_pad_' + internals.id_counter++;
       }
       this.painters = []; // complete list of all painters in the pad
@@ -408,8 +408,7 @@ class TPadPainter extends ObjectPainter {
       if (this.is_active_pad === undefined) return;
 
       if (!svg_rect)
-         svg_rect = this.iscan ? this.getCanvSvg().selectChild('.canvas_fillrect') :
-                                 this.svg_this_pad().selectChild('.root_pad_border');
+         svg_rect = this.iscan ? this.getCanvSvg().selectChild('.canvas_fillrect') : this.svg_this_pad().selectChild('.root_pad_border');
 
       let lineatt = this.is_active_pad ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
 
@@ -421,7 +420,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Set fast drawing property depending on the size
      * @private */
    setFastDrawing(w, h) {
-      let was_fast = this._fast_drawing;
+      const was_fast = this._fast_drawing;
       this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h  < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
@@ -779,8 +778,8 @@ class TPadPainter extends ObjectPainter {
          cleanup, // do cleanup to let assign new handlers later on
          x: this._pad_x, y: this._pad_y, width: this._pad_width, height: this._pad_height, no_transform: true,
          only_resize: true, // !cleanup && (this._disable_dragging || this.getFramePainter()?.mode3d),
-         is_disabled: kind => svg_can.property('pad_enlarged') || this.btns_active_flag
-                         || (kind == 'move' && (this._disable_dragging || this.getFramePainter()?.mode3d)),
+         is_disabled: kind => svg_can.property('pad_enlarged') || this.btns_active_flag ||
+                             (kind == 'move' && (this._disable_dragging || this.getFramePainter()?.mode3d)),
          getDrawG: () => this.svg_this_pad(),
          pad_rect: { width, height },
          minwidth: 20, minheight: 20,
@@ -899,20 +898,19 @@ class TPadPainter extends ObjectPainter {
    findPainterFor(selobj, selname, seltype) {
       return this.painters.find(p => {
          let pobj = p.getObject();
-         if (!pobj) return;
+         if (!pobj) return false;
 
          if (selobj && (pobj === selobj)) return true;
-         if (!selname && !seltype) return;
-         if (selname && (pobj.fName !== selname)) return;
-         if (seltype && (pobj._typename !== seltype)) return;
+         if (!selname && !seltype) return false;
+         if (selname && (pobj.fName !== selname)) return false;
+         if (seltype && (pobj._typename !== seltype)) return false;
          return true;
       });
    }
 
    /** @summary Return true if any objects beside sub-pads exists in the pad */
    hasObjectsToDraw() {
-      let arr = this.pad?.fPrimitives?.arr;
-      return arr && arr.find(obj => obj._typename != clTPad) ? true : false;
+      return this.pad?.fPrimitives?.arr?.find(obj => obj._typename !== clTPad);
    }
 
    /** @summary sync drawing/redrawing/resize of the pad
@@ -920,13 +918,13 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} when pad is ready for draw operation or false if operation already queued
      * @private */
    syncDraw(kind) {
-      let entry = { kind : kind || 'redraw' };
+      const entry = { kind: kind || 'redraw' };
       if (this._doing_draw === undefined) {
-         this._doing_draw = [ entry ];
+         this._doing_draw = [entry];
          return Promise.resolve(true);
       }
       // if queued operation registered, ignore next calls, indx == 0 is running operation
-      if ((entry.kind !== true) && (this._doing_draw.findIndex((e,i) => (i > 0) && (e.kind == entry.kind)) > 0))
+      if ((entry.kind !== true) && (this._doing_draw.findIndex((e,i) => (i > 0) && (e.kind === entry.kind)) > 0))
          return false;
       this._doing_draw.push(entry);
       return new Promise(resolveFunc => {
@@ -1232,21 +1230,19 @@ class TPadPainter extends ObjectPainter {
       if (!elem.empty() && elem.property('can3d') === constants.Embed3D.Overlay) return true;
 
       return this.painters.findIndex(objp => {
-         if (isFunc(objp.needRedrawByResize))
-            return objp.needRedrawByResize();
+         return isFunc(objp.needRedrawByResize) ? objp.needRedrawByResize() : false;
       }) >= 0;
    }
 
    /** @summary Check resize of canvas
      * @return {Promise} with result */
    checkCanvasResize(size, force) {
-
       if (this._ignore_resize)
          return false;
 
       if (!this.iscan && this.has_canvas) return false;
 
-      let sync_promise = this.syncDraw('canvas_resize');
+      const sync_promise = this.syncDraw('canvas_resize');
       if (sync_promise === false) return false;
 
       if ((size === true) || (size === false)) { force = size; size = null; }
@@ -1255,19 +1251,19 @@ class TPadPainter extends ObjectPainter {
 
       if (!force) force = this.needRedrawByResize();
 
-      let changed = false, redrawNext = indx => {
-             if (!changed || (indx >= this.painters.length)) {
-                this.confirmDraw();
-                return changed;
-             }
+      let changed = false;
+      const redrawNext = indx => {
+         if (!changed || (indx >= this.painters.length)) {
+            this.confirmDraw();
+            return changed;
+         }
 
-             return getPromise(this.painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
-          };
+         return getPromise(this.painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
+      };
 
       // return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fCw, this.pad?.fCh)).then(() => {
 
       return sync_promise.then(() => {
-
          changed = this.createCanvasSvg(force ? 2 : 1, size);
 
          if (changed && this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.isBatchMode()) {
@@ -1541,11 +1537,11 @@ class TPadPainter extends ObjectPainter {
       this._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
       this._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
 
-      let first = snap.fSnapshot;
+      const first = snap.fSnapshot;
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
       // if there are execs in the pad, deliver events to the server
-      this._deliver_webcanvas_events = first.fExecs?.arr?.length ? true : false;
+      this._deliver_webcanvas_events = first.fExecs?.arr?.length > 0;
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
@@ -1606,16 +1602,16 @@ class TPadPainter extends ObjectPainter {
       }
 
       const MatchPrimitive = (painters, primitives, class_name, obj_name) => {
-         let painter = painters.find(p => {
-            if (p.snapid === undefined) return;
-            if (!p.matchObjectType(class_name)) return;
-            if (obj_name && (!p.getObject() || (p.getObject().fName !== obj_name))) return;
+         const painter = painters.find(p => {
+            if (p.snapid === undefined) return false;
+            if (!p.matchObjectType(class_name)) return false;
+            if (obj_name && (!p.getObject() || (p.getObject().fName !== obj_name))) return false;
             return true;
          });
          if (!painter) return;
-         let primitive = primitives.find(pr => {
-            if ((pr.fKind !== 1) || !pr.fSnapshot || (pr.fSnapshot._typename !== class_name)) return;
-            if (obj_name && (pr.fSnapshot.fName !== obj_name)) return;
+         const primitive = primitives.find(pr => {
+            if ((pr.fKind !== 1) || !pr.fSnapshot || (pr.fSnapshot._typename !== class_name)) return false;
+            if (obj_name && (pr.fSnapshot.fName !== obj_name)) return false;
             return true;
          });
          if (!primitive) return;
@@ -1635,25 +1631,26 @@ class TPadPainter extends ObjectPainter {
       let isanyfound = false, isanyremove = false;
 
       // find and remove painters which no longer exists in the list
-      if (!snap.fWithoutPrimitives)
-      for (let k = 0; k < this.painters.length; ++k) {
-         let sub = this.painters[k];
+      if (!snap.fWithoutPrimitives) {
+         for (let k = 0; k < this.painters.length; ++k) {
+            let sub = this.painters[k];
 
-         if (!isStr(sub.snapid)) continue; // look only for painters with snapid
+            if (!isStr(sub.snapid)) continue; // look only for painters with snapid
 
-         let snapid = sub.snapid, p = snapid.indexOf('#');
-         if (p > 0) snapid = snapid.slice(0, p);
+            let snapid = sub.snapid, p = snapid.indexOf('#');
+            if (p > 0) snapid = snapid.slice(0, p);
 
-         for (let i = 0; i < snap.fPrimitives.length; ++i)
-            if (snap.fPrimitives[i].fObjectID === snapid) { sub = null; isanyfound = true; break; }
+            for (let i = 0; i < snap.fPrimitives.length; ++i)
+               if (snap.fPrimitives[i].fObjectID === snapid) { sub = null; isanyfound = true; break; }
 
-         if (sub) {
-            // remove painter which does not found in the list of snaps
-            this.painters.splice(k--, 1);
-            sub.cleanup(); // cleanup such painter
-            isanyremove = true;
-            if (this.main_painter_ref === sub)
-               delete this.main_painter_ref;
+            if (sub) {
+               // remove painter which does not found in the list of snaps
+               this.painters.splice(k--, 1);
+               sub.cleanup(); // cleanup such painter
+               isanyremove = true;
+               if (this.main_painter_ref === sub)
+                  delete this.main_painter_ref;
+            }
          }
       }
 
@@ -1801,13 +1798,12 @@ class TPadPainter extends ObjectPainter {
    /** @summary returns actual ranges in the pad, which can be applied to the server
      * @private */
    getPadRanges(r) {
-
       if (!r) return false;
 
-      let main = this.getFramePainter(),
-          p = this.svg_this_pad();
+      const main = this.getFramePainter(),
+            p = this.svg_this_pad();
 
-      r.ranges = main?.ranges_set ? true : false; // indicate that ranges are assigned
+      r.ranges = main?.ranges_set ?? false; // indicate that ranges are assigned
 
       r.ux1 = r.px1 = r.ranges ? main.scale_xmin : 0; // need to initialize for JSON reader
       r.uy1 = r.py1 = r.ranges ? main.scale_ymin : 0;
@@ -2246,7 +2242,7 @@ class TPadPainter extends ObjectPainter {
          painter.selectCurrentPad(prev_name);
          return painter;
       });
-   };
+   }
 
 } // class TPadPainter
 

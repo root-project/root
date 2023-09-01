@@ -1,37 +1,38 @@
-
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-let version_id = 'dev';
+const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '24/08/2023';
+version_date = '1/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
   * Like '7.0.0 14/04/2022' */
-let version = version_id + ' ' + version_date;
+version = version_id + ' ' + version_date,
+
+/** @summary Is node.js flag
+  * @private */
+nodejs = !!((typeof process === 'object') && isObject(process.versions) && process.versions.node && process.versions.v8),
+
+/** @summary internal data
+  * @private */
+internals = {
+   /** @summary unique id counter, starts from 1 */
+   id_counter: 1
+};
 
 /** @summary Location of JSROOT modules
   * @desc Automatically detected and used to dynamically load other modules
   * @private */
 let source_dir = '';
 
-/** @summary Is node.js flag
-  * @private */
-let nodejs = !!((typeof process == 'object') && isObject(process.versions) && process.versions.node && process.versions.v8);
+const _src = import.meta?.url;
 
-/** @summary internal data
-  * @private */
-let internals = {
-   id_counter: 1          ///< unique id contner, starts from 1
-};
-
-const src = import.meta?.url;
-if (src && isStr(src)) {
-   const pos = src.indexOf('modules/core.mjs');
+if (_src && isStr(_src)) {
+   const pos = _src.indexOf('modules/core.mjs');
    if (pos >= 0) {
-      source_dir = src.slice(0, pos);
+      source_dir = _src.slice(0, pos);
       console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
    } else {
       console.log(`jsroot bundle, ${version}`);
@@ -55,15 +56,15 @@ function isNodeJs() { return nodejs; }
 
 /** @summary atob function in all environments
   * @private */
-const atob_func = isNodeJs() ? str => Buffer.from(str,'base64').toString('latin1') : globalThis?.atob;
+const atob_func = isNodeJs() ? str => Buffer.from(str, 'base64').toString('latin1') : globalThis?.atob,
 
 /** @summary btoa function in all environments
   * @private */
-const btoa_func = isNodeJs() ? str => Buffer.from(str,'latin1').toString('base64') : globalThis?.btoa;
+btoa_func = isNodeJs() ? str => Buffer.from(str, 'latin1').toString('base64') : globalThis?.btoa,
 
 /** @summary browser detection flags
   * @private */
-let browser = { isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false, screenWidth: 1200 };
+browser = { isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false, screenWidth: 1200 };
 
 if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typeof navigator !== 'undefined')) {
    browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
@@ -80,16 +81,16 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
   * @return {Number} 0 - not array, 1 - regular array, 2 - typed array
   * @private */
 function isArrayProto(proto) {
-    if ((proto.length < 14) || (proto.indexOf('[object ') != 0)) return 0;
-    let p = proto.indexOf('Array]');
-    if ((p < 0) || (p != proto.length - 6)) return 0;
+    if ((proto.length < 14) || (proto.indexOf('[object ') !== 0)) return 0;
+    const p = proto.indexOf('Array]');
+    if ((p < 0) || (p !== proto.length - 6)) return 0;
     // plain array has only '[object Array]', typed array type name inside
-    return proto.length == 14 ? 1 : 2;
+    return proto.length === 14 ? 1 : 2;
 }
 
 /** @desc Specialized JSROOT constants, used in {@link settings}
   * @namespace */
-let constants = {
+const constants = {
    /** @summary Kind of 3D rendering, used for {@link settings.Render3D}
      * @namespace */
    Render3D: {
@@ -102,7 +103,7 @@ let constants = {
       /** @summary Use SVG rendering, slow, inprecise and not interactive, nor recommendet */
       SVG: 3,
       fromString(s) {
-         if ((s === 'webgl') || (s == 'gl')) return this.WebGL;
+         if ((s === 'webgl') || (s === 'gl')) return this.WebGL;
          if (s === 'img') return this.WebGLImage;
          if (s === 'svg') return this.SVG;
          return this.Default;
@@ -145,7 +146,7 @@ let constants = {
       fromString(s) {
          if (!s || !isStr(s))
             return this.Normal;
-         switch(s){
+         switch (s) {
             case 'off': return this.Off;
             case 'symbols': return this.Symbols;
             case 'normal':
@@ -159,15 +160,15 @@ let constants = {
             case 'alwaysmath':
             case 'alwaysmathjax': return this.AlwaysMathJax;
          }
-         let code = parseInt(s);
+         const code = parseInt(s);
          return (Number.isInteger(code) && (code >= this.Off) && (code <= this.AlwaysMathJax)) ? code : this.Normal;
       }
    }
-};
+},
 
 /** @desc Global JSROOT settings
   * @namespace */
-let settings = {
+settings = {
    /** @summary Render of 3D drawing methods, see {@link constants.Render3D} for possible values */
    Render3D: constants.Render3D.Default,
    /** @summary 3D drawing methods in batch mode, see {@link constants.Render3D} for possible values */
@@ -264,15 +265,14 @@ let settings = {
    DarkMode: false,
    /** @summary Prefer to use saved points in TF1/TF2, avoids eval() and Function() when possible */
    PreferSavedPoints: false
-};
-
+},
 
 /** @namespace
   * @summary Insiance of TStyle object like in ROOT
   * @desc Includes default draw styles, can be changed after loading of JSRoot.core.js
   * or can be load from the file providing style=itemname in the URL
   * See [TStyle docu]{@link https://root.cern/doc/master/classTStyle.html} 'Private attributes' section for more detailed info about each value */
-let gStyle = {
+gStyle = {
    fName: 'Modern',
    /** @summary Default log x scale */
    fOptLogx: 0,
@@ -395,7 +395,7 @@ function getDocument() {
       return internals.nodejs_document;
    if (typeof document !== 'undefined')
       return document;
-   if (typeof window == 'object')
+   if (typeof window === 'object')
       return window.document;
    return undefined;
 }
@@ -419,16 +419,17 @@ async function injectCode(code) {
 
    if (typeof document !== 'undefined') {
       // check if code already loaded - to avoid duplication
-      let scripts = document.getElementsByTagName('script');
-      for (let n = 0; n < scripts.length; ++n)
-         if (scripts[n].innerHTML == code)
+      const scripts = document.getElementsByTagName('script');
+      for (let n = 0; n < scripts.length; ++n) {
+         if (scripts[n].innerHTML === code)
             return true;
+      }
 
-      let promise = code.indexOf('JSROOT.require') >= 0 ? _ensureJSROOT() : Promise.resolve(true);
+      const promise = code.indexOf('JSROOT.require') >= 0 ? _ensureJSROOT() : Promise.resolve(true);
 
       return promise.then(() => {
          return new Promise(resolve => {
-            let element = document.createElement('script');
+            const element = document.createElement('script');
             element.setAttribute('type', 'text/javascript');
             element.innerHTML = code;
             document.head.appendChild(element);
@@ -451,56 +452,57 @@ async function loadScript(url) {
       url = url.split(';');
 
    if (!isStr(url)) {
-      let scripts = url, loadNext = () => {
+      const scripts = url, loadNext = () => {
          if (!scripts.length) return true;
          return loadScript(scripts.shift()).then(loadNext, loadNext);
-      };
+      }
       return loadNext();
    }
 
    if (url.indexOf('$$$') === 0) {
       url = url.slice(3);
-      if ((url.indexOf('style/') == 0) && (url.indexOf('.css') < 0))
+      if ((url.indexOf('style/') === 0) && (url.indexOf('.css') < 0))
          url += '.css';
       url = source_dir + url;
    }
 
-   let element, isstyle = url.indexOf('.css') > 0;
+   const isstyle = url.indexOf('.css') > 0;
 
    if (nodejs) {
       if (isstyle)
          return null;
-      if ((url.indexOf('http:') == 0) || (url.indexOf('https:') == 0))
+      if ((url.indexOf('http:') === 0) || (url.indexOf('https:') === 0))
          return httpRequest(url, 'text').then(code => injectCode(code));
 
       // local files, read and use it
-      if (url.indexOf('./') == 0)
+      if (url.indexOf('./') === 0)
          return import('fs').then(fs => injectCode(fs.readFileSync(url)));
 
       return import(/* webpackIgnore: true */ url);
    }
 
    const match_url = src => {
-      if (src == url) return true;
-      let indx = src.indexOf(url);
-      return (indx > 0) && (indx + url.length == src.length) && (src[indx-1] == '/');
+      if (src === url) return true;
+      const indx = src.indexOf(url);
+      return (indx > 0) && (indx + url.length === src.length) && (src[indx-1] === '/');
    };
 
    if (isstyle) {
-      let styles = document.getElementsByTagName('link');
+      const styles = document.getElementsByTagName('link');
       for (let n = 0; n < styles.length; ++n) {
          if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
          if (match_url(styles[n].href))
             return true;
       }
-
    } else {
-      let scripts = document.getElementsByTagName('script');
-      for (let n = 0; n < scripts.length; ++n)
+      const scripts = document.getElementsByTagName('script');
+      for (let n = 0; n < scripts.length; ++n) {
          if (match_url(scripts[n].src))
             return true;
+      }
    }
 
+   let element;
    if (isstyle) {
       element = document.createElement('link');
       element.setAttribute('rel', 'stylesheet');
@@ -531,32 +533,28 @@ function BIT(n) { return 1 << n; }
 function clone(src, map, nofunc) {
    if (!src) return null;
 
-   if (!map) {
-      map = { obj: [], clones: [], nofunc: nofunc };
-   } else {
+   if (!map)
+      map = { obj: [], clones: [], nofunc };
+   else {
       const i = map.obj.indexOf(src);
       if (i >= 0) return map.clones[i];
    }
 
-   let arr_kind = isArrayProto(Object.prototype.toString.apply(src));
+   const arr_kind = isArrayProto(Object.prototype.toString.apply(src));
 
    // process normal array
-   if (arr_kind == 1) {
-      let tgt = [];
+   if (arr_kind === 1) {
+      const tgt = [];
       map.obj.push(src);
       map.clones.push(tgt);
       for (let i = 0; i < src.length; ++i)
-         if (isObject(src[i]))
-            tgt.push(clone(src[i], map));
-         else
-            tgt.push(src[i]);
-
+         tgt.push(isObject(src[i]) ? clone(src[i], map) : src[i]);
       return tgt;
    }
 
    // process typed array
-   if (arr_kind == 2) {
-      let tgt = [];
+   if (arr_kind === 2) {
+      const tgt = [];
       map.obj.push(src);
       map.clones.push(tgt);
       for (let i = 0; i < src.length; ++i)
@@ -565,11 +563,11 @@ function clone(src, map, nofunc) {
       return tgt;
    }
 
-   let tgt = {};
+   const tgt = {};
    map.obj.push(src);
    map.clones.push(tgt);
 
-   for (let k in src) {
+   for (const k in src) {
       if (isObject(src[k]))
          tgt[k] = clone(src[k], map);
       else if (!map.nofunc || !isFunc(src[k]))
@@ -596,18 +594,17 @@ function addMethods(obj, typename) {
   * @param {object|string} json  object where references will be replaced
   * @return {object} parsed object */
 function parse(json) {
-
    if (!json) return null;
 
-   let obj = isStr(json) ? JSON.parse(json) : json,
-       map = [], newfmt = undefined;
+   const obj = isStr(json) ? JSON.parse(json) : json, map = [];
+   let newfmt;
 
    const unref_value = value => {
       if ((value === null) || (value === undefined)) return;
 
       if (isStr(value)) {
          if (newfmt || (value.length < 6) || (value.indexOf('$ref:') !== 0)) return;
-         let ref = parseInt(value.slice(5));
+         const ref = parseInt(value.slice(5));
          if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
          newfmt = false;
          return map[ref];
@@ -615,21 +612,21 @@ function parse(json) {
 
       if (typeof value !== 'object') return;
 
-      let proto = Object.prototype.toString.apply(value);
+      const proto = Object.prototype.toString.apply(value);
 
       // scan array - it can contain other objects
       if (isArrayProto(proto) > 0) {
           for (let i = 0; i < value.length; ++i) {
-             let res = unref_value(value[i]);
+             const res = unref_value(value[i]);
              if (res !== undefined) value[i] = res;
           }
           return;
       }
 
-      let ks = Object.keys(value), len = ks.length;
+      const ks = Object.keys(value), len = ks.length;
 
       if ((newfmt !== false) && (len === 1) && (ks[0] === '$ref')) {
-         const ref = parseInt(value['$ref']);
+         const ref = parseInt(value.$ref);
          if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
          newfmt = true;
          return map[ref];
@@ -656,29 +653,27 @@ function parse(json) {
 
          if (value.b !== undefined) {
             // base64 coding
-
-            let buf = atob_func(value.b);
-
+            const buf = atob_func(value.b);
             if (arr.buffer) {
-               let dv = new DataView(arr.buffer, value.o || 0),
-                   len = Math.min(buf.length, dv.byteLength);
+               const dv = new DataView(arr.buffer, value.o || 0),
+                     len = Math.min(buf.length, dv.byteLength);
                for (let k = 0; k < len; ++k)
                   dv.setUint8(k, buf.charCodeAt(k));
-            } else {
+            } else
                throw new Error('base64 coding supported only for native arrays with binary data');
-            }
          } else {
             // compressed coding
             let nkey = 2, p = 0;
             while (nkey < len) {
-               if (ks[nkey][0] == 'p') p = value[ks[nkey++]]; // position
+               if (ks[nkey][0] === 'p') p = value[ks[nkey++]]; // position
                if (ks[nkey][0] !== 'v') throw new Error(`Unexpected member ${ks[nkey]} in array decoding`);
-               let v = value[ks[nkey++]]; // value
+               const v = value[ks[nkey++]]; // value
                if (typeof v === 'object') {
-                  for (let k = 0; k < v.length; ++k) arr[p++] = v[k];
+                  for (let k = 0; k < v.length; ++k)
+                     arr[p++] = v[k];
                } else {
                   arr[p++] = v;
-                  if ((nkey < len) && (ks[nkey][0] == 'n')) {
+                  if ((nkey < len) && (ks[nkey][0] === 'n')) {
                      let cnt = value[ks[nkey++]]; // counter
                      while (--cnt) arr[p++] = v;
                   }
@@ -691,12 +686,12 @@ function parse(json) {
 
       if ((newfmt !== false) && (len === 3) && (ks[0] === '$pair') && (ks[1] === 'first') && (ks[2] === 'second')) {
          newfmt = true;
-         let f1 = unref_value(value.first),
-             s1 = unref_value(value.second);
+         const f1 = unref_value(value.first),
+               s1 = unref_value(value.second);
          if (f1 !== undefined) value.first = f1;
          if (s1 !== undefined) value.second = s1;
-         value._typename = value['$pair'];
-         delete value['$pair'];
+         value._typename = value.$pair;
+         delete value.$pair;
          return; // pair object is not counted in the objects map
       }
 
@@ -710,8 +705,7 @@ function parse(json) {
       if (value._typename) addMethods(value);
 
       for (let k = 0; k < len; ++k) {
-         const i = ks[k],
-              res = unref_value(value[i]);
+         const i = ks[k], res = unref_value(value[i]);
          if (res !== undefined) value[i] = res;
       }
    };
@@ -727,10 +721,11 @@ function parse(json) {
   * @return {Array} array of parsed elements */
 function parseMulti(json) {
    if (!json) return null;
-   let arr = JSON.parse(json);
-   if (arr && arr.length)
+   const arr = JSON.parse(json);
+   if (arr?.length) {
       for (let i = 0; i < arr.length; ++i)
          arr[i] = parse(arr[i]);
+   }
    return arr;
 }
 
@@ -749,28 +744,27 @@ function parseMulti(json) {
 function toJSON(obj, spacing) {
    if (!isObject(obj)) return '';
 
-   let map = []; // map of stored objects
-
-   const copy_value = value => {
+   const map = [], // map of stored objects
+   copy_value = value => {
       if (isFunc(value)) return undefined;
 
       if ((value === undefined) || (value === null) || !isObject(value)) return value;
 
       // typed array need to be converted into normal array, otherwise looks strange
       if (isArrayProto(Object.prototype.toString.apply(value)) > 0) {
-         let arr = new Array(value.length);
+         const arr = new Array(value.length);
          for (let i = 0; i < value.length; ++i)
             arr[i] = copy_value(value[i]);
          return arr;
       }
 
       // this is how reference is code
-      let refid = map.indexOf(value);
+      const refid = map.indexOf(value);
       if (refid >= 0) return { $ref: refid };
 
-      let ks = Object.keys(value), len = ks.length, tgt = {};
+      const ks = Object.keys(value), len = ks.length, tgt = {};
 
-      if ((len == 3) && (ks[0] === '$pair') && (ks[1] === 'first') && (ks[2] === 'second')) {
+      if ((len === 3) && (ks[0] === '$pair') && (ks[1] === 'first') && (ks[2] === 'second')) {
          // special handling of pair objects which does not included into objects map
          tgt.$pair = value.$pair;
          tgt.first = copy_value(value.first);
@@ -781,15 +775,14 @@ function toJSON(obj, spacing) {
       map.push(value);
 
       for (let k = 0; k < len; ++k) {
-         let name = ks[k];
-         if (name && (name[0] != '$'))
+         const name = ks[k];
+         if (name && (name[0] !== '$'))
             tgt[name] = copy_value(value[name]);
       }
 
       return tgt;
-   };
-
-   let tgt = copy_value(obj);
+   },
+   tgt = copy_value(obj);
 
    return JSON.stringify(tgt, null, spacing);
 }
@@ -806,10 +799,10 @@ function toJSON(obj, spacing) {
   * console.log(`Get opt2 ${d.get('opt2')}`);     // '3'
   * console.log(`Get opt3 ${d.get('opt3','-')}`); // '-' */
 function decodeUrl(url) {
-   let res = {
+   const res = {
       opts: {},
       has(opt) { return this.opts[opt] !== undefined; },
-      get(opt,dflt) { let v = this.opts[opt]; return v !== undefined ? v : dflt; }
+      get(opt, dflt) { const v = this.opts[opt]; return v !== undefined ? v : dflt; }
    };
 
    if (!url || !isStr(url)) {
@@ -818,32 +811,31 @@ function decodeUrl(url) {
    }
    res.url = url;
 
-   let p1 = url.indexOf('?');
+   const p1 = url.indexOf('?');
    if (p1 < 0) return res;
    url = decodeURI(url.slice(p1+1));
 
    while (url) {
-
       // try to correctly handle quotes in the URL
       let pos = 0, nq = 0, eq = -1, firstq = -1;
       while ((pos < url.length) && ((nq !== 0) || ((url[pos] !== '&') && (url[pos] !== '#')))) {
          switch (url[pos]) {
-            case "'": if (nq >= 0) nq = (nq+1)%2; if (firstq < 0) firstq = pos; break;
-            case '"': if (nq <= 0) nq = (nq-1)%2; if (firstq < 0) firstq = pos; break;
+            case '\'': if (nq >= 0) nq = (nq+1) % 2; if (firstq < 0) firstq = pos; break;
+            case '"': if (nq <= 0) nq = (nq-1) % 2; if (firstq < 0) firstq = pos; break;
             case '=': if ((firstq < 0) && (eq < 0)) eq = pos; break;
          }
          pos++;
       }
 
-      if ((eq < 0) && (firstq < 0)) {
-         res.opts[url.slice(0,pos)] = '';
-      } if (eq > 0) {
-         let val = url.slice(eq+1, pos);
-         if (((val[0] === "'") || (val[0] === '"')) && (val[0] === val[val.length-1])) val = val.slice(1, val.length-1);
-         res.opts[url.slice(0,eq)] = val;
+      if ((eq < 0) && (firstq < 0))
+         res.opts[url.slice(0, pos)] = '';
+      else if (eq > 0) {
+         let val = url.slice(eq + 1, pos);
+         if (((val[0] === '\'') || (val[0] === '"')) && (val[0] === val[val.length-1])) val = val.slice(1, val.length-1);
+         res.opts[url.slice(0, eq)] = val;
       }
 
-      if ((pos >= url.length) || (url[pos] == '#')) break;
+      if ((pos >= url.length) || (url[pos] === '#')) break;
 
       url = url.slice(pos+1);
    }
@@ -856,7 +848,8 @@ function decodeUrl(url) {
 function findFunction(name) {
    if (isFunc(name)) return name;
    if (!isStr(name)) return null;
-   let names = name.split('.'), elem = globalThis;
+   const names = name.split('.');
+   let elem = globalThis;
 
    for (let n = 0; elem && (n < names.length); ++n)
       elem = elem[names[n]];
@@ -864,19 +857,18 @@ function findFunction(name) {
    return isFunc(elem) ? elem : null;
 }
 
-
 /** @summary Method to create http request, without promise can be used only in browser environment
   * @private */
 function createHttpRequest(url, kind, user_accept_callback, user_reject_callback, use_promise) {
-
    function configureXhr(xhr) {
       xhr.http_callback = isFunc(user_accept_callback) ? user_accept_callback.bind(xhr) : () => {};
       xhr.error_callback = isFunc(user_reject_callback) ? user_reject_callback.bind(xhr) : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
 
       if (!kind) kind = 'buf';
 
-      let method = 'GET', is_async = true, p = kind.indexOf(';sync');
-      if (p > 0) { kind = kind.slice(0,p); is_async = false; }
+      let method = 'GET', is_async = true;
+      const p = kind.indexOf(';sync');
+      if (p > 0) { kind = kind.slice(0, p); is_async = false; }
       switch (kind) {
          case 'head': method = 'HEAD'; break;
          case 'posttext': method = 'POST'; kind = 'text'; break;
@@ -890,7 +882,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
       if (settings.WithCredentials)
          xhr.withCredentials = true;
 
-      if (settings.HandleWrongHttpResponse && (method == 'GET') && isFunc(xhr.addEventListener))
+      if (settings.HandleWrongHttpResponse && (method === 'GET') && isFunc(xhr.addEventListener)) {
          xhr.addEventListener('progress', function(oEvent) {
             if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
                this.did_abort = true;
@@ -898,13 +890,13 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
                this.error_callback(Error(`Server sends more bytes ${oEvent.loaded} than expected ${this.expected_size}. Abort I/O operation`), 598);
             }
          }.bind(xhr));
+      }
 
       xhr.onreadystatechange = function() {
-
          if (this.did_abort) return;
 
          if ((this.readyState === 2) && this.expected_size) {
-            let len = parseInt(this.getResponseHeader('Content-Length'));
+            const len = parseInt(this.getResponseHeader('Content-Length'));
             if (Number.isInteger(len) && (len > this.expected_size) && !settings.HandleWrongHttpResponse) {
                this.did_abort = true;
                this.abort();
@@ -912,23 +904,23 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
             }
          }
 
-         if (this.readyState != 4) return;
+         if (this.readyState !== 4) return;
 
-         if ((this.status != 200) && (this.status != 206) && !browser.qt5 &&
+         if ((this.status !== 200) && (this.status !== 206) && !browser.qt5 &&
              // in these special cases browsers not always set status
-             !((this.status == 0) && ((url.indexOf('file://') == 0) || (url.indexOf('blob:') == 0)))) {
+             !((this.status === 0) && ((url.indexOf('file://') === 0) || (url.indexOf('blob:') === 0))))
                return this.error_callback(Error(`Fail to load url ${url}`), this.status);
-         }
 
-         if (this.nodejs_checkzip && (this.getResponseHeader('content-encoding') == 'gzip'))
+         if (this.nodejs_checkzip && (this.getResponseHeader('content-encoding') === 'gzip')) {
             // special handling of gzipped JSON objects in Node.js
             return import('zlib').then(handle => {
-                let res = handle.unzipSync(Buffer.from(this.response)),
-                    obj = JSON.parse(res); // zlib returns Buffer, use JSON to parse it
+                const res = handle.unzipSync(Buffer.from(this.response)),
+                      obj = JSON.parse(res); // zlib returns Buffer, use JSON to parse it
                return this.http_callback(parse(obj));
             });
+         }
 
-         switch(this.kind) {
+         switch (this.kind) {
             case 'xml': return this.http_callback(this.responseXML);
             case 'text': return this.http_callback(this.responseText);
             case 'object': return this.http_callback(parse(this.responseText));
@@ -940,13 +932,12 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
          if (this.responseType === undefined)
             return this.http_callback(this.responseText);
 
-         if ((this.kind == 'bin') && ('byteLength' in this.response)) {
+         if ((this.kind === 'bin') && ('byteLength' in this.response)) {
             // if string representation in requested - provide it
-
-            let filecontent = '', u8Arr = new Uint8Array(this.response);
+            const u8Arr = new Uint8Array(this.response);
+            let filecontent = '';
             for (let i = 0; i < u8Arr.length; ++i)
                filecontent += String.fromCharCode(u8Arr[i]);
-
             return this.http_callback(filecontent);
          }
 
@@ -955,10 +946,10 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
 
       xhr.open(method, url, is_async);
 
-      if ((kind == 'bin') || (kind == 'buf'))
+      if ((kind === 'bin') || (kind === 'buf'))
          xhr.responseType = 'arraybuffer';
 
-      if (nodejs && (method == 'GET') && (kind === 'object') && (url.indexOf('.json.gz') > 0)) {
+      if (nodejs && (method === 'GET') && (kind === 'object') && (url.indexOf('.json.gz') > 0)) {
          xhr.nodejs_checkzip = true;
          xhr.responseType = 'arraybuffer';
       }
@@ -969,10 +960,11 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
    if (isNodeJs()) {
       if (!use_promise)
          throw Error('Not allowed to create http requests in node.js without promise');
+      // eslint-disable-next-line new-cap
       return import('xhr2').then(h => configureXhr(new h.default()));
    }
 
-   let xhr = configureXhr(new XMLHttpRequest());
+   const xhr = configureXhr(new XMLHttpRequest());
    return use_promise ? Promise.resolve(xhr) : xhr;
 }
 
@@ -997,12 +989,13 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
   *       .then(obj => console.log(`Get object of type ${obj._typename}`))
   *       .catch(err => console.error(err.message)); */
 async function httpRequest(url, kind, post_data) {
-   return new Promise((accept, reject) => {
-      createHttpRequest(url, kind, accept, reject, true).then(xhr => xhr.send(post_data || null));
+   return new Promise((resolve, reject) => {
+      createHttpRequest(url, kind, resolve, reject, true).then(xhr => xhr.send(post_data || null));
    });
 }
 
 const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 'TString', clTObjString = 'TObjString',
+      clTKey = 'TKey', clTFile = 'TFile',
       clTList = 'TList', clTHashList = 'THashList', clTMap = 'TMap', clTObjArray = 'TObjArray', clTClonesArray = 'TClonesArray',
       clTAttLine = 'TAttLine', clTAttFill = 'TAttFill', clTAttMarker = 'TAttMarker', clTAttText = 'TAttText',
       clTHStack = 'THStack', clTGraph = 'TGraph', clTMultiGraph = 'TMultiGraph', clTCutG = 'TCutG',
@@ -1033,7 +1026,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
   * obj.fName = 'name';
   * obj.fTitle = 'title'; */
 function create(typename, target) {
-   let obj = target || {};
+   const obj = target || {};
 
    switch (typename) {
       case clTObject:
@@ -1054,7 +1047,7 @@ function create(typename, target) {
       case clTAxis:
          create(clTNamed, obj);
          create(clTAttAxis, obj);
-         extend(obj, { fNbins: 1, fXmin: 0, fXmax: 1, fXbins : [], fFirst: 0, fLast: 0,
+         extend(obj, { fNbins: 1, fXmin: 0, fXmax: 1, fXbins: [], fFirst: 0, fLast: 0,
                        fBits2: 0, fTimeDisplay: false, fTimeFormat: '', fLabels: null, fModLabs: null });
          break;
       case clTAttLine:
@@ -1064,7 +1057,7 @@ function create(typename, target) {
          extend(obj, { fFillColor: 0, fFillStyle: 0 });
          break;
       case clTAttMarker:
-         extend(obj, { fMarkerColor: 1, fMarkerStyle: 1, fMarkerSize: 1. });
+         extend(obj, { fMarkerColor: 1, fMarkerStyle: 1, fMarkerSize: 1 });
          break;
       case clTLine:
          create(clTObject, obj);
@@ -1079,7 +1072,7 @@ function create(typename, target) {
          break;
       case clTPave:
          create(clTBox, obj);
-         extend(obj, { fX1NDC : 0., fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
+         extend(obj, { fX1NDC: 0, fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
                        fBorderSize: 0, fInit: 1, fShadowColor: 1,
                        fCornerRadius: 0, fOption: 'brNDC', fName: 'title' });
          break;
@@ -1139,9 +1132,9 @@ function create(typename, target) {
                        fXaxis: create(clTAxis), fYaxis: create(clTAxis), fZaxis: create(clTAxis),
                        fFillColor: gStyle.fHistFillColor, fFillStyle: gStyle.fHistFillStyle,
                        fLineColor: gStyle.fHistLineColor, fLineStyle: gStyle.fHistLineStyle, fLineWidth: gStyle.fHistLineWidth,
-                       fBarOffset: 0, fBarWidth: 1000, fEntries: 0.,
-                       fTsumw: 0., fTsumw2: 0., fTsumwx: 0., fTsumwx2: 0.,
-                       fMaximum: kNoZoom, fMinimum: kNoZoom, fNormFactor: 0., fContour: [],
+                       fBarOffset: 0, fBarWidth: 1000, fEntries: 0,
+                       fTsumw: 0, fTsumw2: 0, fTsumwx: 0, fTsumwx2: 0,
+                       fMaximum: kNoZoom, fMinimum: kNoZoom, fNormFactor: 0, fContour: [],
                        fSumw2: [], fOption: '', fFunctions: create(clTList),
                        fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
          break;
@@ -1156,7 +1149,7 @@ function create(typename, target) {
          break;
       case clTH2:
          create(clTH1, obj);
-         extend(obj, { fScalefactor: 1., fTsumwy: 0.,  fTsumwy2: 0, fTsumwxy: 0 });
+         extend(obj, { fScalefactor: 1, fTsumwy: 0,  fTsumwy2: 0, fTsumwxy: 0 });
          break;
       case clTH2I:
       case 'TH2L64':
@@ -1169,7 +1162,7 @@ function create(typename, target) {
          break;
       case clTH3:
          create(clTH1, obj);
-         extend(obj, { fTsumwy: 0.,  fTsumwy2: 0, fTsumwz: 0.,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
+         extend(obj, { fTsumwy: 0,  fTsumwy2: 0, fTsumwz: 0,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
          break;
       case 'TH3I':
       case 'TH3L64':
@@ -1194,7 +1187,7 @@ function create(typename, target) {
          break;
       case 'TGraphAsymmErrors':
          create(clTGraph, obj);
-         extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: []});
+         extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: [] });
          break;
       case clTMultiGraph:
          create(clTNamed, obj);
@@ -1330,7 +1323,7 @@ function create(typename, target) {
   * h1.fYaxis.fTitle = 'yaxis';
   * h1.fXaxis.fLabelSize = 0.02; */
 function createHistogram(typename, nbinsx, nbinsy, nbinsz) {
-   let histo = create(typename);
+   const histo = create(typename);
    if (!histo.fXaxis || !histo.fYaxis || !histo.fZaxis) return null;
    histo.fName = 'hist'; histo.fTitle = 'title';
    if (nbinsx) extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
@@ -1361,10 +1354,10 @@ function createHistogram(typename, nbinsx, nbinsy, nbinsz) {
 
 function setHistogramTitle(histo, title) {
    if (!histo) return;
-   if (title.indexOf(';') < 0) {
+   if (title.indexOf(';') < 0)
       histo.fTitle = title;
-   } else {
-      let arr = title.split(';');
+   else {
+      const arr = title.split(';');
       histo.fTitle = arr[0];
       if (arr.length > 1) histo.fXaxis.fTitle = arr[1];
       if (arr.length > 2) histo.fYaxis.fTitle = arr[2];
@@ -1377,7 +1370,7 @@ function setHistogramTitle(histo, title) {
   * @param {number} npoints - number of points
   * @param {boolean} [use_int32] - use Int32Array type for points, default is Float32Array */
 function createTPolyLine(npoints, use_int32) {
-   let poly = create(clTPolyLine);
+   const poly = create(clTPolyLine);
    if (npoints) {
       poly.fN = npoints;
       if (use_int32) {
@@ -1396,13 +1389,13 @@ function createTPolyLine(npoints, use_int32) {
   * @param {array} [xpts] - array with X coordinates
   * @param {array} [ypts] - array with Y coordinates */
 function createTGraph(npoints, xpts, ypts) {
-   let graph = extend(create(clTGraph), { fBits: 0x408, fName: 'graph', fTitle: 'title' });
+   const graph = extend(create(clTGraph), { fBits: 0x408, fName: 'graph', fTitle: 'title' });
 
    if (npoints > 0) {
       graph.fMaxSize = graph.fNpoints = npoints;
 
-      const usex = isObject(xpts) && (xpts.length === npoints);
-      const usey = isObject(ypts) && (ypts.length === npoints);
+      const usex = isObject(xpts) && (xpts.length === npoints),
+            usey = isObject(ypts) && (ypts.length === npoints);
 
       for (let i = 0; i < npoints; ++i) {
          graph.fX.push(usex ? xpts[i] : i/npoints);
@@ -1423,7 +1416,7 @@ function createTGraph(npoints, xpts, ypts) {
   * let h3 = createHistogram('TH1F', nbinsx);
   * let stack = createTHStack(h1, h2, h3); */
 function createTHStack() {
-   let stack = create(clTHStack);
+   const stack = create(clTHStack);
    for (let i = 0; i < arguments.length; ++i)
       stack.fHists.Add(arguments[i], '');
    return stack;
@@ -1438,7 +1431,7 @@ function createTHStack() {
   * let gr3 = createTGraph(100);
   * let mgr = createTMultiGraph(gr1, gr2, gr3); */
 function createTMultiGraph() {
-   let mgraph = create(clTMultiGraph);
+   const mgraph = create(clTMultiGraph);
    for (let i = 0; i < arguments.length; ++i)
        mgraph.fGraphs.Add(arguments[i], '');
    return mgraph;
@@ -1451,19 +1444,18 @@ const methodsCache = {};
 /** @summary Returns methods for given typename
   * @private */
 function getMethods(typename, obj) {
-
-   let m = methodsCache[typename],
-       has_methods = (m !== undefined);
-
+   let m = methodsCache[typename];
+   const has_methods = (m !== undefined);
    if (!has_methods) m = {};
 
    // Due to binary I/O such TObject methods may not be set for derived classes
    // Therefore when methods requested for given object, check also that basic methods are there
-   if ((typename == clTObject) || (typename == clTNamed) || (obj?.fBits !== undefined))
+   if ((typename === clTObject) || (typename === clTNamed) || (obj?.fBits !== undefined)) {
       if (typeof m.TestBit === 'undefined') {
-         m.TestBit = function(f) { return (this.fBits & f) != 0; };
+         m.TestBit = function(f) { return (this.fBits & f) !== 0; };
          m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
       }
+   }
 
    if (has_methods) return m;
 
@@ -1472,11 +1464,11 @@ function getMethods(typename, obj) {
          this.arr = [];
          this.opt = [];
       }
-      m.Add = function(obj,opt) {
+      m.Add = function(obj, opt) {
          this.arr.push(obj);
          this.opt.push(isStr(opt) ? opt : '');
       }
-      m.AddFirst = function(obj,opt) {
+      m.AddFirst = function(obj, opt) {
          this.arr.unshift(obj);
          this.opt.unshift(isStr(opt) ? opt : '');
       }
@@ -1488,7 +1480,7 @@ function getMethods(typename, obj) {
 
    if ((typename === clTPaveText) || (typename === clTPaveStats)) {
       m.AddText = function(txt) {
-         let line = create(clTLatex);
+         const line = create(clTLatex);
          line.fTitle = txt;
          line.fTextAlign = this.fTextAlign;
          this.fLines.Add(line);
@@ -1498,7 +1490,7 @@ function getMethods(typename, obj) {
       }
    }
 
-   if ((typename.indexOf(clTF1) == 0) || (typename === clTF2)) {
+   if ((typename.indexOf(clTF1) === 0) || (typename === clTF2)) {
       m.addFormula = function(obj) {
          if (!obj) return;
          if (this.formulas === undefined) this.formulas = [];
@@ -1509,11 +1501,12 @@ function getMethods(typename, obj) {
          if (this.fParams?.fParNames)
             return this.fParams.fParNames[n];
          if (this.fFormula?.fParams) {
-            for (let k = 0, arr = this.fFormula.fParams; k < arr.length; ++k)
-               if(arr[k].second == n)
+            for (let k = 0, arr = this.fFormula.fParams; k < arr.length; ++k) {
+               if (arr[k].second === n)
                   return arr[k].first;
+            }
          }
-         return (this.fNames && this.fNames[n]) ? this.fNames[n] : 'p'+n;
+         return (this.fNames && this.fNames[n]) ? this.fNames[n] : `p${n}`;
       }
       m.GetParValue = function(n) {
          if (this.fParams?.fParameters) return this.fParams.fParameters[n];
@@ -1529,25 +1522,25 @@ function getMethods(typename, obj) {
       }
    }
 
-   if (((typename.indexOf(clTGraph) == 0) || (typename == clTCutG)) && (typename != clTGraphPolargram) && (typename != clTGraphTime)) {
+   if (((typename.indexOf(clTGraph) === 0) || (typename === clTCutG)) && (typename !== clTGraphPolargram) && (typename !== clTGraphTime)) {
       // check if point inside figure specified by the TGraph
-      m.IsInside = function(xp,yp) {
-         let i = 0, j = this.fNpoints - 1, x = this.fX, y = this.fY, oddNodes = false;
+      m.IsInside = function(xp, yp) {
+         const x = this.fX, y = this.fY;
+         let i = 0, j = this.fNpoints - 1, oddNodes = false;
 
          for (; i < this.fNpoints; ++i) {
-            if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
-               if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
+            if ((y[i] < yp && y[j] >= yp) || (y[j] < yp && y[i] >= yp)) {
+               if (x[i] + (yp - y[i])/(y[j] - y[i])*(x[j] - x[i]) < xp)
                   oddNodes = !oddNodes;
-               }
             }
-            j=i;
+            j = i;
          }
 
          return oddNodes;
       }
    }
 
-   if (typename.indexOf(clTH1) == 0 || typename.indexOf(clTH2) == 0 || typename.indexOf(clTH3) == 0) {
+   if (typename.indexOf(clTH1) === 0 || typename.indexOf(clTH2) === 0 || typename.indexOf(clTH3) === 0) {
       m.getBinError = function(bin) {
          //   -*-*-*-*-*Return value of error associated to bin number bin*-*-*-*-*
          //    if the sum of squares of weights has been defined (via Sumw2),
@@ -1568,66 +1561,54 @@ function getMethods(typename, obj) {
       }
    }
 
-   if (typename.indexOf(clTH1) == 0) {
+   if (typename.indexOf(clTH1) === 0) {
       m.getBin = function(x) { return x; }
       m.getBinContent = function(bin) { return this.fArray[bin]; }
       m.Fill = function(x, weight) {
-         let axis = this.fXaxis,
-             bin = 1 + Math.floor((x - axis.fXmin) / (axis.fXmax - axis.fXmin) * axis.fNbins);
-         if (bin < 0) bin = 0; else
-         if (bin > axis.fNbins + 1) bin = axis.fNbins + 1;
-         this.fArray[bin] += (weight === undefined) ? 1 : weight;
+         const a = this.fXaxis,
+               bin = Math.max(0, 1 + Math.min(a.fNbins, Math.floor((x - a.fXmin) / (a.fXmax - a.fXmin) * a.fNbins)));
+         this.fArray[bin] += weight ?? 1;
          this.fEntries++;
       }
    }
 
-   if (typename.indexOf(clTH2) == 0) {
+   if (typename.indexOf(clTH2) === 0) {
       m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
       m.getBinContent = function(x, y) { return this.fArray[this.getBin(x, y)]; }
       m.Fill = function(x, y, weight) {
-         let axis1 = this.fXaxis, axis2 = this.fYaxis,
-             bin1 = 1 + Math.floor((x - axis1.fXmin) / (axis1.fXmax - axis1.fXmin) * axis1.fNbins),
-             bin2 = 1 + Math.floor((y - axis2.fXmin) / (axis2.fXmax - axis2.fXmin) * axis2.fNbins);
-         if (bin1 < 0) bin1 = 0; else
-         if (bin1 > axis1.fNbins + 1) bin1 = axis1.fNbins + 1;
-         if (bin2 < 0) bin2 = 0; else
-         if (bin2 > axis2.fNbins + 1) bin2 = axis2.fNbins + 1;
-         this.fArray[bin1 + (axis1.fNbins+2)*bin2] += (weight === undefined) ? 1 : weight;
+         const a1 = this.fXaxis, a2 = this.fYaxis,
+               bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
+               bin2 = Math.max(0, 1 + Math.min(a2.fNbins, Math.floor((y - a2.fXmin) / (a2.fXmax - a2.fXmin) * a2.fNbins)));
+         this.fArray[bin1 + (a1.fNbins + 2)*bin2] += weight ?? 1;
          this.fEntries++;
       }
    }
 
-   if (typename.indexOf(clTH3) == 0) {
+   if (typename.indexOf(clTH3) === 0) {
       m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); }
       m.getBinContent = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; }
       m.Fill = function(x, y, z, weight) {
-         let axis1 = this.fXaxis, axis2 = this.fYaxis, axis3 = this.fZaxis,
-             bin1 = 1 + Math.floor((x - axis1.fXmin) / (axis1.fXmax - axis1.fXmin) * axis1.fNbins),
-             bin2 = 1 + Math.floor((y - axis2.fXmin) / (axis2.fXmax - axis2.fXmin) * axis2.fNbins),
-             bin3 = 1 + Math.floor((z - axis3.fXmin) / (axis3.fXmax - axis3.fXmin) * axis3.fNbins);
-         if (bin1 < 0) bin1 = 0; else
-         if (bin1 > axis1.fNbins + 1) bin1 = axis1.fNbins + 1;
-         if (bin2 < 0) bin2 = 0; else
-         if (bin2 > axis2.fNbins + 1) bin2 = axis2.fNbins + 1;
-         if (bin3 < 0) bin3 = 0; else
-         if (bin3 > axis3.fNbins + 1) bin3 = axis3.fNbins + 1;
-         this.fArray[bin1 + (axis1.fNbins+2)* (bin2+(axis2.fNbins+2)*bin3)] += (weight === undefined) ? 1 : weight;
+         const a1 = this.fXaxis, a2 = this.fYaxis, a3 = this.fZaxis,
+               bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
+               bin2 = Math.max(0, 1 + Math.min(a2.fNbins, Math.floor((y - a2.fXmin) / (a2.fXmax - a2.fXmin) * a2.fNbins))),
+               bin3 = Math.max(0, 1 + Math.min(a3.fNbins, Math.floor((z - a3.fXmin) / (a3.fXmax - a3.fXmin) * a3.fNbins)));
+         this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2)*bin3)] += weight ?? 1;
          this.fEntries++;
       }
    }
 
-   if (typename.indexOf(clTProfile) == 0) {
-      if (typename.indexOf(clTProfile2D) == 0) {
+   if (typename.indexOf(clTProfile) === 0) {
+      if (typename.indexOf(clTProfile2D) === 0) {
          m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
          m.getBinContent = function(x, y) {
-            let bin = this.getBin(x, y);
+            const bin = this.getBin(x, y);
             if (bin < 0 || bin >= this.fNcells) return 0;
             if (this.fBinEntries[bin] < 1e-300) return 0;
             if (!this.fArray) return 0;
             return this.fArray[bin]/this.fBinEntries[bin];
          }
          m.getBinEntries = function(x, y) {
-            let bin = this.getBin(x, y);
+            const bin = this.getBin(x, y);
             if (bin < 0 || bin >= this.fNcells) return 0;
             return this.fBinEntries[bin];
          }
@@ -1642,29 +1623,28 @@ function getMethods(typename, obj) {
       }
       m.getBinEffectiveEntries = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
-         let sumOfWeights = this.fBinEntries[bin];
-         if ( !this.fBinSumw2 || this.fBinSumw2.length != this.fNcells) {
+         const sumOfWeights = this.fBinEntries[bin];
+         if (!this.fBinSumw2 || this.fBinSumw2.length !== this.fNcells)
             // this can happen  when reading an old file
             return sumOfWeights;
-         }
-         let sumOfWeightsSquare = this.fBinSumw2[bin];
+         const sumOfWeightsSquare = this.fBinSumw2[bin];
          return (sumOfWeightsSquare > 0) ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0;
       }
       m.getBinError = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
-         let cont = this.fArray[bin],               // sum of bin w *y
-             sum  = this.fBinEntries[bin],          // sum of bin weights
-             err2 = this.fSumw2[bin],               // sum of bin w * y^2
-             neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
+         const cont = this.fArray[bin],               // sum of bin w *y
+               sum  = this.fBinEntries[bin],          // sum of bin weights
+               err2 = this.fSumw2[bin],               // sum of bin w * y^2
+               neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
          if (sum < 1e-300) return 0;                  // for empty bins
          const EErrorType = { kERRORMEAN: 0, kERRORSPREAD: 1, kERRORSPREADI: 2, kERRORSPREADG: 3 };
          // case the values y are gaussian distributed y +/- sigma and w = 1/sigma^2
          if (this.fErrorMode === EErrorType.kERRORSPREADG)
             return 1.0/Math.sqrt(sum);
          // compute variance in y (eprim2) and standard deviation in y (eprim)
-         let contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum**2));
+         const contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum**2));
          if (this.fErrorMode === EErrorType.kERRORSPREADI) {
-            if (eprim != 0) return eprim/Math.sqrt(neff);
+            if (eprim !== 0) return eprim/Math.sqrt(neff);
             // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
             // when the std(y) is zero
             return 1.0/Math.sqrt(12*neff);
@@ -1679,7 +1659,7 @@ function getMethods(typename, obj) {
       }
    }
 
-   if (typename == clTAxis) {
+   if (typename === clTAxis) {
       m.GetBinLowEdge = function(bin) {
          if (this.fNbins <= 0) return 0;
          if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
@@ -1773,7 +1753,7 @@ function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
 /** @summary Ensure global JSROOT and v6 support methods
   * @private */
 async function _ensureJSROOT() {
-   let pr = globalThis.JSROOT ? Promise.resolve(true) : loadScript(source_dir + 'scripts/JSRoot.core.js');
+   const pr = globalThis.JSROOT ? Promise.resolve(true) : loadScript(source_dir + 'scripts/JSRoot.core.js');
 
    return pr.then(() => {
       if (globalThis.JSROOT?._complete_loading)
@@ -1783,7 +1763,9 @@ async function _ensureJSROOT() {
 
 export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, setBatchMode,
          browser, internals, constants, settings, gStyle, atob_func, btoa_func, prROOT,
-         clTObject, clTNamed, clTString, clTObjString, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
+         clTObject, clTNamed, clTString, clTObjString,
+         clTKey, clTFile,
+         clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,

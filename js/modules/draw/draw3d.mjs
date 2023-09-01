@@ -7,7 +7,7 @@ import { drawPolyMarker3D as drawPolyMarker3Dplain } from './TPolyMarker3D.mjs';
 /** @summary Prepare frame painter for 3D drawing
   * @private */
 function before3DDraw(painter) {
-   let fp = painter.getFramePainter();
+   const fp = painter.getFramePainter();
 
    if (!fp?.mode3d || !painter.getObject())
       return null;
@@ -15,15 +15,15 @@ function before3DDraw(painter) {
    if (fp?.toplevel)
       return fp;
 
-   let main = painter.getMainPainter();
+   const main = painter.getMainPainter();
 
    if (main && !isFunc(main.drawExtras))
       return null;
 
-   let pr = main ? Promise.resolve(main) : drawDummy3DGeom(painter);
+   const pr = main ? Promise.resolve(main) : drawDummy3DGeom(painter);
 
    return pr.then(geop => {
-      let pp = painter.getPadPainter();
+      const pp = painter.getPadPainter();
       if (pp) pp._disable_dragging = true;
 
       if (geop._dummy && isFunc(painter.get3DBox))
@@ -35,16 +35,16 @@ function before3DDraw(painter) {
 /** @summary Function to extract 3DBox for poly marker and line
   * @private */
 function get3DBox() {
-   let obj = this.getObject();
+   const obj = this.getObject();
    if (!obj?.fP.length)
       return null;
-   let box = { min: { x: 0, y: 0, z: 0 }, max: { x: 0, y: 0, z: 0 } };
+   const box = { min: { x: 0, y: 0, z: 0 }, max: { x: 0, y: 0, z: 0 } };
 
-   for(let k = 0; k < obj.fP.length; k += 3) {
-      let x = obj.fP[k],
-          y = obj.fP[k + 1],
-          z = obj.fP[k + 2];
-      if (k == 0) {
+   for (let k = 0; k < obj.fP.length; k += 3) {
+      const x = obj.fP[k],
+            y = obj.fP[k + 1],
+            z = obj.fP[k + 2];
+      if (k === 0) {
          box.min.x = box.max.x = x;
          box.min.y = box.max.y = y;
          box.min.z = box.max.z = z;
@@ -65,10 +65,9 @@ function get3DBox() {
 /** @summary direct draw function for TPolyMarker3D object (optionally with geo painter)
   * @private */
 async function drawPolyMarker3D() {
-
    this.get3DBox = get3DBox;
 
-   let fp = before3DDraw(this);
+   const fp = before3DDraw(this);
 
    if (!isObject(fp) || !fp.grx || !fp.gry || !fp.grz)
       return fp;
@@ -82,22 +81,22 @@ async function drawPolyMarker3D() {
   * @desc Takes into account dashed properties
   * @private */
 async function drawPolyLine3D() {
-
    this.get3DBox = get3DBox;
 
-   let line = this.getObject(),
-       fp = before3DDraw(this);
+   const line = this.getObject(),
+         fp = before3DDraw(this);
 
    if (!isObject(fp) || !fp.grx || !fp.gry || !fp.grz)
       return fp;
 
-   let limit = 3*line.fN, p = line.fP, pnts = [];
+   const limit = 3*line.fN, p = line.fP, pnts = [];
 
-   for (let n = 3; n < limit; n += 3)
+   for (let n = 3; n < limit; n += 3) {
       pnts.push(fp.grx(p[n-3]), fp.gry(p[n-2]), fp.grz(p[n-1]),
                 fp.grx(p[n]), fp.gry(p[n+1]), fp.grz(p[n+2]));
+   }
 
-   let lines = createLineSegments(pnts, create3DLineMaterial(this, line));
+   const lines = createLineSegments(pnts, create3DLineMaterial(this, line));
 
    fp.toplevel.add(lines);
 

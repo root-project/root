@@ -2,9 +2,9 @@ import { clTColor, settings } from '../core.mjs';
 
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
-function toHex(num,scale) {
-   let s = Math.round(num*(scale || 255)).toString(16);
-   return s.length == 1 ? '0'+s : s;
+function toHex(num, scale) {
+   const s = Math.round(num*(scale || 255)).toString(16);
+   return s.length === 1 ? '0'+s : s;
 }
 
 /** @summary list of global root colors
@@ -14,7 +14,7 @@ let gbl_colors_list = [];
 /** @summary Generates all root colors, used also in jstests to reset colors
   * @private */
 function createRootColors() {
-   let colorMap = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan', '#59d454', '#5954d9', 'white'];
+   const colorMap = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan', '#59d454', '#5954d9', 'white'];
    colorMap[110] = 'white';
 
    const moreCol = [
@@ -30,10 +30,10 @@ function createRootColors() {
       { n: 920, s: 'cdcdcd9a9a9a666666333333' }];
 
    moreCol.forEach(entry => {
-      let s = entry.s;
+      const s = entry.s;
       for (let n = 0; n < s.length; n += 6) {
-         let num = entry.n + n / 6;
-         colorMap[num] = '#' + s.slice(n,n+6);
+         const num = entry.n + n / 6;
+         colorMap[num] = '#' + s.slice(n, n+6);
       }
    });
 
@@ -49,10 +49,10 @@ function getRootColors() {
 /** @summary Produces rgb code for TColor object
   * @private */
 function getRGBfromTColor(col) {
-   if (col?._typename != clTColor) return null;
+   if (col?._typename !== clTColor) return null;
 
    let rgb = '#' + toHex(col.fRed) + toHex(col.fGreen) + toHex(col.fBlue);
-   if ((col.fAlpha !== undefined) && (col.fAlpha !== 1.))
+   if ((col.fAlpha !== undefined) && (col.fAlpha !== 1))
       rgb += toHex(col.fAlpha);
 
    switch (rgb) {
@@ -84,17 +84,18 @@ function extendRootColors(jsarr, objarr) {
    if (objarr._typename && objarr.arr) {
       rgb_array = [];
       for (let n = 0; n < objarr.arr.length; ++n) {
-         let col = objarr.arr[n];
-         if (col?._typename != clTColor) continue;
+         const col = objarr.arr[n];
+         if (col?._typename !== clTColor) continue;
 
          if ((col.fNumber >= 0) && (col.fNumber <= 10000))
             rgb_array[col.fNumber] = getRGBfromTColor(col);
       }
    }
 
-   for (let n = 0; n < rgb_array.length; ++n)
-      if (rgb_array[n] && (jsarr[n] != rgb_array[n]))
+   for (let n = 0; n < rgb_array.length; ++n) {
+      if (rgb_array[n] && (jsarr[n] !== rgb_array[n]))
          jsarr[n] = rgb_array[n];
+   }
 
    return jsarr;
 }
@@ -120,9 +121,10 @@ function getColor(indx) {
   * @private */
 function findColor(name) {
    if (!name) return -1;
-   for (let indx = 0; indx < gbl_colors_list.length; ++indx)
-      if (gbl_colors_list[indx] == name)
+   for (let indx = 0; indx < gbl_colors_list.length; ++indx) {
+      if (gbl_colors_list[indx] === name)
          return indx;
+   }
    return -1;
 }
 
@@ -133,7 +135,7 @@ function findColor(name) {
   * @private */
 function addColor(rgb, lst) {
    if (!lst) lst = gbl_colors_list;
-   let indx = lst.indexOf(rgb);
+   const indx = lst.indexOf(rgb);
    if (indx >= 0) return indx;
    lst.push(rgb);
    return lst.length-1;
@@ -154,7 +156,7 @@ class ColorPalette {
 
    /** @summary Returns color index which correspond to contour index of provided length */
    calcColorIndex(i, len) {
-      let plen = this.palette.length, theColor = Math.floor((i + 0.99) * plen / (len - 1));
+      const plen = this.palette.length, theColor = Math.floor((i + 0.99) * plen / (len - 1));
       return (theColor > plen - 1) ? plen - 1 : theColor;
     }
 
@@ -193,13 +195,16 @@ function createDefaultPalette() {
 }
 
 function createGrayPalette() {
-   let palette = [];
+   const palette = [];
    for (let i = 0; i < 50; ++i) {
       const code = toHex((i+2)/60);
       palette.push('#'+code+code+code);
    }
    return new ColorPalette(palette);
 }
+
+/* eslint-disable comma-spacing */
+
 
 /** @summary Create color palette
   * @private */
@@ -208,8 +213,9 @@ function getColorPalette(id) {
    if ((id > 0) && (id < 10)) return createGrayPalette();
    if (id < 51) return createDefaultPalette();
    if (id > 113) id = 57;
-   let rgb, stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
-   switch(id) {
+   const stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
+   let rgb;
+   switch (id) {
       // Deep Sea
       case 51: rgb = [[0,9,13,17,24,32,27,25,29],[0,0,0,2,37,74,113,160,221],[28,42,59,78,98,129,154,184,221]]; break;
       // Grey Scale
@@ -223,7 +229,7 @@ function getColorPalette(id) {
       // Inverted Dark Body Radiator
       case 56: rgb = [[242,234,237,230,212,156,99,45,0],[243,238,238,168,101,45,0,0,0],[230,95,11,8,9,3,1,1,0]]; break;
       // Bird (default, keep float for backward compatibility)
-      case 57: rgb = [[ 53.091,15.096,19.89,5.916,45.951,135.1755,208.743,253.878,248.982],[42.432,91.7745,128.5455,163.6845,183.039,191.046,186.864,200.481,250.716],[134.9715,221.442,213.8175,201.807,163.8375,118.881,89.2245,50.184,13.7445]]; break;
+      case 57: rgb = [[53.091,15.096,19.89,5.916,45.951,135.1755,208.743,253.878,248.982],[42.432,91.7745,128.5455,163.6845,183.039,191.046,186.864,200.481,250.716],[134.9715,221.442,213.8175,201.807,163.8375,118.881,89.2245,50.184,13.7445]]; break;
       // Cubehelix
       case 58: rgb = [[0,24,2,54,176,236,202,194,255],[0,29,92,129,117,120,176,236,255],[0,68,80,34,57,172,252,245,255]]; break;
       // Green Red Violet
@@ -257,7 +263,7 @@ function getColorPalette(id) {
       // CMYK
       case 73: rgb = [[61,99,136,181,213,225,198,136,24],[149,140,96,83,132,178,190,135,22],[214,203,168,135,110,100,111,113,22]]; break;
       // Candy
-      case 74: rgb = [[76,120,156,183,197,180,162,154,140],[34,35,42,69,102,137,164,188,197],[ 64,69,78,105,142,177,205,217,198]]; break;
+      case 74: rgb = [[76,120,156,183,197,180,162,154,140],[34,35,42,69,102,137,164,188,197],[64,69,78,105,142,177,205,217,198]]; break;
       // Cherry
       case 75: rgb = [[37,102,157,188,196,214,223,235,251],[37,29,25,37,67,91,132,185,251],[37,32,33,45,66,98,137,187,251]]; break;
       // Coffee
@@ -267,13 +273,13 @@ function getColorPalette(id) {
       // Dark Terrain
       case 78: rgb = [[0,41,62,79,90,87,99,140,228],[0,57,81,93,85,70,71,125,228],[95,91,91,82,60,43,44,112,228]]; break;
       // Fall
-      case 79: rgb = [[49,59,72,88,114,141,176,205,222],[78,72,66,57,59,75,106,142,173],[ 78,55,46,40,39,39,40,41,47]]; break;
+      case 79: rgb = [[49,59,72,88,114,141,176,205,222],[78,72,66,57,59,75,106,142,173],[78,55,46,40,39,39,40,41,47]]; break;
       // Fruit Punch
       case 80: rgb = [[243,222,201,185,165,158,166,187,219],[94,108,132,135,125,96,68,51,61],[7,9,12,19,45,89,118,146,118]]; break;
       // Fuchsia
       case 81: rgb = [[19,44,74,105,137,166,194,206,220],[19,28,40,55,82,110,159,181,220],[19,42,68,96,129,157,188,203,220]]; break;
       // Grey Yellow
-      case 82: rgb = [[33,44,70,99,140,165,199,211,216],[ 38,50,76,105,140,165,191,189,167],[ 55,67,97,124,140,166,163,129,52]]; break;
+      case 82: rgb = [[33,44,70,99,140,165,199,211,216],[38,50,76,105,140,165,191,189,167],[55,67,97,124,140,166,163,129,52]]; break;
       // Green Brown Terrain
       case 83: rgb = [[0,33,73,124,136,152,159,171,223],[0,43,92,124,134,126,121,144,223],[0,43,68,76,73,64,72,114,223]]; break;
       // Green Pink
@@ -295,7 +301,7 @@ function getColorPalette(id) {
       // Pearl
       case 92: rgb = [[225,183,162,135,115,111,119,145,211],[205,177,166,135,124,117,117,132,172],[186,165,155,135,126,130,150,178,226]]; break;
       // Pigeon
-      case 93: rgb = [[39,43,59,63,80,116,153,177,223],[39,43,59,74,91,114,139,165,223],[ 39,50,59,70,85,115,151,176,223]]; break;
+      case 93: rgb = [[39,43,59,63,80,116,153,177,223],[39,43,59,74,91,114,139,165,223],[39,50,59,70,85,115,151,176,223]]; break;
       // Plum
       case 94: rgb = [[0,38,60,76,84,89,101,128,204],[0,10,15,23,35,57,83,123,199],[0,11,22,40,63,86,97,94,85]]; break;
       // Red Blue
@@ -311,7 +317,7 @@ function getColorPalette(id) {
       // Solar
       case 100: rgb = [[99,116,154,174,200,196,201,201,230],[0,0,8,32,58,83,119,136,173],[5,6,7,9,9,14,17,19,24]]; break;
       // South West
-      case 101: rgb = [[82,106,126,141,155,163,142,107,66],[ 62,44,69,107,135,152,149,132,119],[39,25,31,60,73,68,49,72,188]]; break;
+      case 101: rgb = [[82,106,126,141,155,163,142,107,66],[62,44,69,107,135,152,149,132,119],[39,25,31,60,73,68,49,72,188]]; break;
       // Starry Night
       case 102: rgb = [[18,29,44,72,116,158,184,208,221],[27,46,71,105,146,177,189,190,183],[39,55,80,108,130,133,124,100,76]]; break;
       // Sunset
@@ -345,9 +351,9 @@ function getColorPalette(id) {
        // create the colors...
        const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
        for (let c = 0; c < nColorsGradient; c++) {
-          const col = '#' + toHex(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1)
-                          + toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1)
-                          + toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
+          const col = '#' + toHex(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) +
+                          toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
+                          toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
           palette.push(col);
        }
     }

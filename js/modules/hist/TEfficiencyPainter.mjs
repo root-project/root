@@ -24,28 +24,26 @@ class TEfficiencyPainter extends ObjectPainter {
 
    /** @summary Caluclate efficiency */
    getEfficiency(obj, bin) {
-
       const BetaMean = (a,b) => (a <= 0 || b <= 0 ) ? 0 : a / (a + b),
             BetaMode = (a,b) => {
          if (a <= 0 || b <= 0 ) return 0;
-         if ( a <= 1 || b <= 1) {
+         if (a <= 1 || b <= 1) {
             if (a < b) return 0;
             if (a > b) return 1;
-            if (a == b) return 0.5; // cannot do otherwise
+            if (a === b) return 0.5; // cannot do otherwise
          }
          return (a - 1.0) / (a + b -2.0);
-      };
+      },
+      total = obj.fTotalHistogram.fArray[bin], // should work for both 1-d and 2-d
+      passed = obj.fPassedHistogram.fArray[bin]; // should work for both 1-d and 2-d
 
-      let total = obj.fTotalHistogram.fArray[bin], // should work for both 1-d and 2-d
-          passed = obj.fPassedHistogram.fArray[bin]; // should work for both 1-d and 2-d
-
-      if(obj.TestBit(kIsBayesian)) {
+      if (obj.TestBit(kIsBayesian)) {
          // parameters for the beta prior distribution
-         let alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha,
-             beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
+         const alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha,
+               beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
 
-         let aa,bb;
-         if(obj.TestBit(kUseWeights)) {
+         let aa, bb;
+         if (obj.TestBit(kUseWeights)) {
             let tw = total, // fTotalHistogram->GetBinContent(bin);
                 tw2 = obj.fTotalHistogram.fSumw2 ? obj.fTotalHistogram.fSumw2[bin] : Math.abs(total),
                 pw = passed; // fPassedHistogram->GetBinContent(bin);
@@ -53,7 +51,7 @@ class TEfficiencyPainter extends ObjectPainter {
             if (tw2 <= 0 ) return pw/tw;
 
             // tw/tw2 renormalize the weights
-            let norm = tw/tw2;
+            const norm = tw/tw2;
             aa = pw * norm + alpha;
             bb = (tw - pw) * norm + beta;
          } else {
@@ -72,9 +70,9 @@ class TEfficiencyPainter extends ObjectPainter {
 
    /** @summary Caluclate efficiency error low */
    getEfficiencyErrorLow(obj, bin, value) {
-      let total = obj.fTotalHistogram.fArray[bin],
-          passed = obj.fPassedHistogram.fArray[bin],
-          alpha = 0, beta = 0;
+      const total = obj.fTotalHistogram.fArray[bin],
+            passed = obj.fPassedHistogram.fArray[bin];
+      let alpha = 0, beta = 0;
       if (obj.TestBit(kIsBayesian)) {
          alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha;
          beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
@@ -85,9 +83,9 @@ class TEfficiencyPainter extends ObjectPainter {
 
    /** @summary Caluclate efficiency error low up */
    getEfficiencyErrorUp(obj, bin, value) {
-      let total = obj.fTotalHistogram.fArray[bin],
-          passed = obj.fPassedHistogram.fArray[bin],
-          alpha = 0, beta = 0;
+      const total = obj.fTotalHistogram.fArray[bin],
+            passed = obj.fPassedHistogram.fArray[bin];
+      let alpha = 0, beta = 0;
       if (obj.TestBit(kIsBayesian)) {
          alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha;
          beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
@@ -98,11 +96,11 @@ class TEfficiencyPainter extends ObjectPainter {
 
    /** @summary Copy drawning attributes */
    copyAttributes(obj, eff) {
-      ['fLineColor', 'fLineStyle', 'fLineWidth', 'fFillColor', 'fFillStyle', 'fMarkerColor', 'fMarkerStyle', 'fMarkerSize'].forEach(name => obj[name] = eff[name]);
+      ['fLineColor', 'fLineStyle', 'fLineWidth', 'fFillColor', 'fFillStyle', 'fMarkerColor', 'fMarkerStyle', 'fMarkerSize'].forEach(name => { obj[name] = eff[name]; });
    }
 
    /** @summary Create graph for the drawing of 1-dim TEfficiency */
-   createGraph(/*eff*/) {
+   createGraph(/* eff */) {
       let gr = create(clTGraphAsymmErrors);
       gr.fName = 'eff_graph';
       return gr;

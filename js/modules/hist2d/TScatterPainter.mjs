@@ -5,6 +5,7 @@ import { TGraphPainter } from './TGraphPainter.mjs';
 import { HistContour } from './THistPainter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 
+
 class TScatterPainter extends TGraphPainter {
 
    constructor(dom, obj) {
@@ -22,24 +23,24 @@ class TScatterPainter extends TGraphPainter {
   /** @summary Draw axis histogram
     * @private */
    async drawAxisHisto() {
-      let histo = this.createHistogram();
+      const histo = this.createHistogram();
       return TH2Painter.draw(this.getDom(), histo, this.options.Axis);
    }
 
   /** @summary Provide palette, create if necessary
     * @private */
    getPalette() {
-      let gr = this.getGraph(),
-          pal = gr?.fFunctions?.arr?.find(func => (func._typename == clTPaletteAxis));
+      const gr = this.getGraph();
+      let pal = gr?.fFunctions?.arr?.find(func => (func._typename === clTPaletteAxis));
 
       if (pal) return pal;
 
-      if (this.options.PadPalette) {
+      if (this.options.PadPalette)
          pal = this.getPadPainter()?.findInPrimitives('palette', clTPaletteAxis);
-      } else if (gr) {
+      else if (gr) {
          pal = create(clTPaletteAxis);
 
-         let fp = this.get_main();
+         const fp = this.get_main();
 
          Object.assign(pal, { fX1NDC: fp.fX2NDC + 0.005, fX2NDC: fp.fX2NDC + 0.05, fY1NDC: fp.fY1NDC, fY2NDC: fp.fY2NDC, fInit: 1, $can_move: true });
          Object.assign(pal.fAxis, { fChopt: '+', fLineColor: 1, fLineSyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11, fNdiv: 510 });
@@ -64,20 +65,20 @@ class TScatterPainter extends TGraphPainter {
 
    /** @summary Actual drawing of TScatter */
    async drawGraph() {
-      let fpainter = this.get_main(),
+      const fpainter = this.get_main(),
           hpainter = this.getMainPainter(),
-          scatter = this.getObject(),
-          scale = 1, offset = 0;
+          scatter = this.getObject();
+      let scale = 1, offset = 0;
       if (!fpainter || !hpainter || !scatter) return;
 
 
       if (scatter.fColor) {
-         let pal = this.getPalette();
+         const pal = this.getPalette();
          if (pal)
             pal.$main_painter = this;
 
          if (!this.fPalette) {
-            let pp = this.getPadPainter();
+            const pp = this.getPadPainter();
             if (isFunc(pp?.getCustomPalette))
                this.fPalette = pp.getCustomPalette();
          }
@@ -116,15 +117,15 @@ class TScatterPainter extends TGraphPainter {
 
       this.createG(!fpainter.pad_layer);
 
-      let funcs = fpainter.getGrFuncs();
+      const funcs = fpainter.getGrFuncs();
 
       for (let i = 0; i < this.bins.length; ++i) {
-         let pnt = this.bins[i],
-             grx = funcs.grx(pnt.x),
-             gry = funcs.gry(pnt.y),
-             size = scatter.fSize ? scatter.fMinMarkerSize + scale * (scatter.fSize[i] - offset) : scatter.fMarkerSize,
-             color = scatter.fColor ? this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
-             handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
+         const pnt = this.bins[i],
+               grx = funcs.grx(pnt.x),
+               gry = funcs.gry(pnt.y),
+               size = scatter.fSize ? scatter.fMinMarkerSize + scale * (scatter.fSize[i] - offset) : scatter.fMarkerSize,
+               color = scatter.fColor ? this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
+               handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
 
           this.draw_g.append('svg:path')
                      .attr('d', handle.create(grx, gry))
