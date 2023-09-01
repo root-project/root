@@ -18,7 +18,10 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+
+#ifdef R__TESTING_MODE
 #include <random>
+#endif
 
 namespace ROOT {
 namespace Internal {
@@ -139,6 +142,7 @@ protected:
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
 public:   
+#ifdef R__TESTING_MODE
    enum EFailureType { kNone, kBitFlip, kShortRead };
    
    struct RFailureInjectionContext{
@@ -155,6 +159,7 @@ public:
       static RFailureInjectionContext context {};
       return context;
    }
+#endif
 
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
