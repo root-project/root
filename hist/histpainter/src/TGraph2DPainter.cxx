@@ -1176,13 +1176,16 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
    fGraph2D->SetLineColor(fGraph2D->GetLineColor());
    fGraph2D->TAttLine::Modify();
    int lst = fGraph2D->GetLineStyle();
-   for (it=0; it<fNdt; it++) {
+   Double_t zmin = gCurrentHist->GetMinimum();
+   Double_t zmax = gCurrentHist->GetMaximum();
+    for (it=0; it<fNdt; it++) {
       t[0] = fPTried[order[it]];
       t[1] = fNTried[order[it]];
       t[2] = fMTried[order[it]];
       for (Int_t k=0; k<3; k++) {
          if(fX[t[k]-1] < fXmin || fX[t[k]-1] > fXmax) goto endloop;
          if(fY[t[k]-1] < fYmin || fY[t[k]-1] > fYmax) goto endloop;
+         if(fZ[t[k]-1] < zmin  || fZ[t[k]-1] > zmax)  goto endloop;
          temp1[0] = fX[t[k]-1];
          temp1[1] = fY[t[k]-1];
          temp1[2] = fZ[t[k]-1];
@@ -1331,6 +1334,8 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    fGraph2D->SetLineColor(fGraph2D->GetLineColor());
    fGraph2D->TAttLine::Modify();
    int lst = fGraph2D->GetLineStyle();
+   Double_t zmin = gCurrentHist->GetMinimum();
+   Double_t zmax = gCurrentHist->GetMaximum();
    for (const auto & it : dist) {
       p[0] = it.second->idx[0];
       p[1] = it.second->idx[1];
@@ -1338,6 +1343,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
       for (Int_t k=0; k<3; k++) {
          if(fX[p[k]] < fXmin || fX[p[k]] > fXmax) goto endloop;
          if(fY[p[k]] < fYmin || fY[p[k]] > fYmax) goto endloop;
+         if(fZ[p[k]] < zmin  || fZ[p[k]] > zmax)  goto endloop;
          temp1[0] = fX[p[k]];
          temp1[1] = fY[p[k]];
          temp1[2] = fZ[p[k]];
