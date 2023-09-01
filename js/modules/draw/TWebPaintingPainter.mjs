@@ -16,16 +16,16 @@ class TWebPaintingPainter extends ObjectPainter {
 
    /** @summary draw TWebPainting object */
    async redraw() {
-
       const obj = this.getObject(), func = this.getAxisToSvgFunc();
 
       if (!obj?.fOper || !func) return;
 
       let indx = 0, attr = {}, lastpath = null, lastkind = 'none', d = '',
-          oper, npoints, n, arr = obj.fOper.split(';');
+          oper, npoints, n;
 
-      const check_attributes = kind => {
-         if (kind == lastkind) return;
+      const arr = obj.fOper.split(';'),
+      check_attributes = kind => {
+         if (kind === lastkind) return;
 
          if (lastpath) {
             lastpath.attr('d', d); // flush previous
@@ -42,9 +42,10 @@ class TWebPaintingPainter extends ObjectPainter {
             case 'm': lastpath.call(this.markeratt.func); break;
          }
       }, read_attr = (str, names) => {
-         let lastp = 0, obj = { _typename: 'any' };
+         let lastp = 0;
+         const obj = { _typename: 'any' };
          for (let k = 0; k < names.length; ++k) {
-            let p = str.indexOf(':', lastp+1);
+            const p = str.indexOf(':', lastp+1);
             obj[names[k]] = parseInt(str.slice(lastp+1, (p > lastp) ? p : undefined));
             lastp = p;
          }
@@ -72,10 +73,9 @@ class TWebPaintingPainter extends ObjectPainter {
                   continue;
                case 'r':
                case 'b': {
+                  check_attributes((oper === 'b') ? 'f' : 'l');
 
-                  check_attributes((oper == 'b') ? 'f' : 'l');
-
-                  let x1 = func.x(obj.fBuf[indx++]),
+                  const x1 = func.x(obj.fBuf[indx++]),
                       y1 = func.y(obj.fBuf[indx++]),
                       x2 = func.x(obj.fBuf[indx++]),
                       y2 = func.y(obj.fBuf[indx++]);
@@ -86,7 +86,6 @@ class TWebPaintingPainter extends ObjectPainter {
                }
                case 'l':
                case 'f': {
-
                   check_attributes(oper);
 
                   npoints = parseInt(arr[k].slice(1));
@@ -94,13 +93,12 @@ class TWebPaintingPainter extends ObjectPainter {
                   for (n = 0; n < npoints; ++n)
                      d += `${(n>0)?'L':'M'}${func.x(obj.fBuf[indx++])},${func.y(obj.fBuf[indx++])}`;
 
-                  if (oper == 'f') d += 'Z';
+                  if (oper === 'f') d += 'Z';
 
                   continue;
                }
 
                case 'm': {
-
                   check_attributes(oper);
 
                   npoints = parseInt(arr[k].slice(1));
@@ -115,22 +113,21 @@ class TWebPaintingPainter extends ObjectPainter {
                case 'h':
                case 't': {
                   if (attr.fTextSize) {
-
                      check_attributes();
 
-                     let height = (attr.fTextSize > 1) ? attr.fTextSize : this.getPadPainter().getPadHeight() * attr.fTextSize,
-                         angle = attr.fTextAngle,
-                         txt = arr[k].slice(1),
-                         group = this.draw_g.append('svg:g');
+                     const height = (attr.fTextSize > 1) ? attr.fTextSize : this.getPadPainter().getPadHeight() * attr.fTextSize,
+                           group = this.draw_g.append('svg:g');
+                     let angle = attr.fTextAngle,
+                         txt = arr[k].slice(1);
 
                      if (angle >= 360) angle -= Math.floor(angle/360) * 360;
 
                      this.startTextDrawing(attr.fTextFont, height, group);
 
-                     if (oper == 'h') {
+                     if (oper === 'h') {
                         let res = '';
                         for (n = 0; n < txt.length; n += 2)
-                           res += String.fromCharCode(parseInt(txt.slice(n,n+2), 16));
+                           res += String.fromCharCode(parseInt(txt.slice(n, n+2), 16));
                         txt = res;
                      }
 
@@ -162,7 +159,7 @@ class TWebPaintingPainter extends ObjectPainter {
    }
 
    static async draw(dom, obj) {
-      let painter = new TWebPaintingPainter(dom, obj);
+      const painter = new TWebPaintingPainter(dom, obj);
       painter.addToPadPrimitives();
       return painter.redraw();
    }

@@ -22,18 +22,17 @@ class RPavePainter extends RObjectPainter {
 
    /** @summary Draw pave */
    async drawPave() {
-
-      let rect = this.getPadPainter().getPadRect(),
-          fp = this.getFramePainter();
+      const rect = this.getPadPainter().getPadRect(),
+            fp = this.getFramePainter();
 
       this.onFrame = fp && this.v7EvalAttr('onFrame', true);
       this.corner = this.v7EvalAttr('corner', ECorner.kTopRight);
 
-      let visible      = this.v7EvalAttr('visible', true),
-          offsetx      = this.v7EvalLength('offsetX', rect.width, 0.02),
-          offsety      = this.v7EvalLength('offsetY', rect.height, 0.02),
-          pave_width   = this.v7EvalLength('width', rect.width, 0.3),
-          pave_height  = this.v7EvalLength('height', rect.height, 0.3);
+      const visible      = this.v7EvalAttr('visible', true),
+            offsetx      = this.v7EvalLength('offsetX', rect.width, 0.02),
+            offsety      = this.v7EvalLength('offsetY', rect.height, 0.02),
+            pave_width   = this.v7EvalLength('width', rect.width, 0.3),
+            pave_height  = this.v7EvalLength('height', rect.height, 0.3);
 
       this.createG();
 
@@ -46,8 +45,8 @@ class RPavePainter extends RObjectPainter {
 
       this.createv7AttFill();
 
-      let pave_x = 0, pave_y = 0,
-          fr = this.onFrame ? fp.getFrameRect() : rect;
+      const fr = this.onFrame ? fp.getFrameRect() : rect;
+      let pave_x = 0, pave_y = 0;
       switch (this.corner) {
          case ECorner.kTopLeft:
             pave_x = fr.x + offsetx;
@@ -83,9 +82,7 @@ class RPavePainter extends RObjectPainter {
       // here should be fill and draw of text
 
       return this.drawContent().then(() => {
-
          if (!this.isBatchMode()) {
-
             // TODO: provide pave context menu as in v6
             if (settings.ContextMenu && this.paveContextMenu)
                this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
@@ -103,11 +100,12 @@ class RPavePainter extends RObjectPainter {
       this.pave_width = drag.width;
       this.pave_height = drag.height;
 
-      let pave_x = drag.x,
-          pave_y = drag.y,
-          rect = this.getPadPainter().getPadRect(),
-          fr = this.onFrame ? this.getFramePainter().getFrameRect() : rect,
-          offsetx = 0, offsety = 0, changes = {};
+      const pave_x = drag.x,
+            pave_y = drag.y,
+            rect = this.getPadPainter().getPadRect(),
+            fr = this.onFrame ? this.getFramePainter().getFrameRect() : rect,
+            changes = {};
+      let offsetx = 0, offsety = 0;
 
       switch (this.corner) {
          case ECorner.kTopLeft:
@@ -142,15 +140,16 @@ class RPavePainter extends RObjectPainter {
    }
 
    /** @summary Redraw RPave object */
-   async redraw(/*reason*/) {
+   async redraw(/* reason */) {
       return this.drawPave();
    }
 
    /** @summary draw RPave object */
    static async draw(dom, pave, opt) {
-      let painter = new RPavePainter(dom, pave, opt, 'pave');
+      const painter = new RPavePainter(dom, pave, opt, 'pave');
       return ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
+
 }
 
 
@@ -164,18 +163,19 @@ class RLegendPainter extends RPavePainter {
 
    /** @summary draw RLegend content */
    async drawContent() {
-      let legend     = this.getObject(),
-          textFont   = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
-          width      = this.pave_width,
-          height     = this.pave_height,
-          nlines     = legend.fEntries.length,
-          pp         = this.getPadPainter();
+      const legend     = this.getObject(),
+            textFont   = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
+            width      = this.pave_width,
+            height     = this.pave_height,
+            pp         = this.getPadPainter();
 
+      let nlines     = legend.fEntries.length;
       if (legend.fTitle) nlines++;
 
       if (!nlines || !pp) return this;
 
-      let stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
+      const stepy = height / nlines, margin_x = 0.02 * width;
+      let posy = 0;
 
       textFont.setSize(height/(nlines * 1.2));
       this.startTextDrawing(textFont, 'font');
@@ -186,41 +186,46 @@ class RLegendPainter extends RPavePainter {
       }
 
       for (let i = 0; i < legend.fEntries.length; ++i) {
-         let objp = null, entry = legend.fEntries[i], w4 = Math.round(width/4);
+         const entry = legend.fEntries[i], w4 = Math.round(width/4);
+         let objp = null;
 
          this.drawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + w4, y: posy, text: entry.fLabel });
 
-         if (entry.fDrawableId != 'custom') {
+         if (entry.fDrawableId !== 'custom')
             objp = pp.findSnap(entry.fDrawableId, true);
-         } else if (entry.fDrawable.fIO) {
+          else if (entry.fDrawable.fIO) {
             objp = new RObjectPainter(this.getDom(), entry.fDrawable.fIO);
             if (entry.fLine) objp.createv7AttLine();
             if (entry.fFill) objp.createv7AttFill();
             if (entry.fMarker) objp.createv7AttMarker();
          }
 
-         if (entry.fFill && objp?.fillatt)
+         if (entry.fFill && objp?.fillatt) {
             this.draw_g
-              .append('svg:path')
-              .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
-              .call(objp.fillatt.func);
+                .append('svg:path')
+                .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
+                .call(objp.fillatt.func);
+         }
 
-         if (entry.fLine && objp?.lineatt)
+         if (entry.fLine && objp?.lineatt) {
             this.draw_g
-              .append('svg:path')
-              .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
-              .call(objp.lineatt.func);
+                .append('svg:path')
+                .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
+                .call(objp.lineatt.func);
+         }
 
-         if (entry.fError && objp?.lineatt)
+         if (entry.fError && objp?.lineatt) {
             this.draw_g
-              .append('svg:path')
-              .attr('d', `M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
-              .call(objp.lineatt.func);
+                .append('svg:path')
+                .attr('d', `M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
+                .call(objp.lineatt.func);
+         }
 
-         if (entry.fMarker && objp?.markeratt)
+         if (entry.fMarker && objp?.markeratt) {
             this.draw_g.append('svg:path')
                 .attr('d', objp.markeratt.create(margin_x + width/8, posy + stepy/2))
                 .call(objp.markeratt.func);
+         }
 
          posy += stepy;
       }
@@ -230,7 +235,7 @@ class RLegendPainter extends RPavePainter {
 
    /** @summary draw RLegend object */
    static async draw(dom, legend, opt) {
-      let painter = new RLegendPainter(dom, legend, opt, 'legend');
+      const painter = new RLegendPainter(dom, legend, opt, 'legend');
       return ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
 
@@ -247,22 +252,23 @@ class RPaveTextPainter extends RPavePainter {
 
    /** @summary draw RPaveText content */
    drawContent() {
-      let pavetext  = this.getObject(),
-          textFont  = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
-          width     = this.pave_width,
-          height    = this.pave_height,
-          nlines    = pavetext.fText.length;
+      const pavetext  = this.getObject(),
+            textFont  = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
+            width     = this.pave_width,
+            height    = this.pave_height,
+            nlines    = pavetext.fText.length;
 
       if (!nlines) return;
 
-      let stepy = height / nlines, posy = 0, margin_x = 0.02 * width;
+      const stepy = height / nlines, margin_x = 0.02 * width;
+      let posy = 0;
 
       textFont.setSize(height/(nlines * 1.2))
 
       this.startTextDrawing(textFont, 'font');
 
       for (let i = 0; i < pavetext.fText.length; ++i) {
-         let line = pavetext.fText[i];
+         const line = pavetext.fText[i];
 
          this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });
          posy += stepy;
@@ -273,7 +279,7 @@ class RPaveTextPainter extends RPavePainter {
 
    /** @summary draw RPaveText object */
    static async draw(dom, pave, opt) {
-      let painter = new RPaveTextPainter(dom, pave, opt, 'pavetext');
+      const painter = new RPaveTextPainter(dom, pave, opt, 'pavetext');
       return ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
 
@@ -305,10 +311,10 @@ class RHistStatsPainter extends RPavePainter {
 
    /** @summary fill statistic */
    fillStatistic() {
-      let pp = this.getPadPainter();
+      const pp = this.getPadPainter();
       if (pp?._fast_drawing) return false;
 
-      let obj = this.getObject();
+      const obj = this.getObject();
       if (obj.fLines !== undefined) {
          this.stats_lines = obj.fLines;
          delete obj.fLines;
@@ -316,7 +322,7 @@ class RHistStatsPainter extends RPavePainter {
       }
 
       if (this.v7OfflineMode()) {
-         let main = this.getMainPainter();
+         const main = this.getMainPainter();
          if (!isFunc(main?.fillStatistic)) return false;
          // we take statistic from main painter
          return main.fillStatistic(this, gStyle.fOptStat, gStyle.fOptFit);
@@ -331,14 +337,14 @@ class RHistStatsPainter extends RPavePainter {
    format(value, fmt) {
       if (!fmt) fmt = 'stat';
 
-      switch(fmt) {
+      switch (fmt) {
          case 'stat' : fmt = gStyle.fStatFormat; break;
          case 'fit': fmt = gStyle.fFitFormat; break;
-         case 'entries': if ((Math.abs(value) < 1e9) && (Math.round(value) == value)) return value.toFixed(0); fmt = '14.7g'; break;
+         case 'entries': if ((Math.abs(value) < 1e9) && (Math.round(value) === value)) return value.toFixed(0); fmt = '14.7g'; break;
          case 'last': fmt = this.lastformat; break;
       }
 
-      let res = floatToString(value, fmt || '6.4g', true);
+      const res = floatToString(value, fmt || '6.4g', true);
 
       this.lastformat = res[1];
 
@@ -355,7 +361,7 @@ class RHistStatsPainter extends RPavePainter {
 
    /** @summary Change mask */
    changeMask(nbit) {
-      let obj = this.getObject(), mask = (1<<nbit);
+      const obj = this.getObject(), mask = (1<<nbit);
       if (obj.fShowMask & mask)
          obj.fShowMask = obj.fShowMask & ~mask;
       else
@@ -371,12 +377,12 @@ class RHistStatsPainter extends RPavePainter {
       evnt.stopPropagation(); // disable main context menu
 
       createMenu(evnt, this).then(menu => {
-         let obj = this.getObject(),
+         const obj = this.getObject(),
              action = this.changeMask.bind(this);
 
          menu.add('header: StatBox');
 
-         for (let n=0;n<obj.fEntries.length; ++n)
+         for (let n=0; n<obj.fEntries.length; ++n)
             menu.addchk((obj.fShowMask & (1<<n)), obj.fEntries[n], n, action);
 
          return this.fillObjectExecMenu(menu);
@@ -385,30 +391,28 @@ class RHistStatsPainter extends RPavePainter {
 
    /** @summary Draw statistic */
    async drawStatistic(lines) {
-
-      let textFont = this.v7EvalFont('stats_text', { size: 12, color: 'black', align: 22 }),
-          first_stat = 0, num_cols = 0, maxlen = 0,
-          width = this.pave_width,
-          height = this.pave_height;
-
       if (!lines) return this;
+      const textFont = this.v7EvalFont('stats_text', { size: 12, color: 'black', align: 22 }),
+            width = this.pave_width,
+            height = this.pave_height,
+            nlines = lines.length;
+      let first_stat = 0, num_cols = 0, maxlen = 0;
 
-      let nlines = lines.length;
       // adjust font size
       for (let j = 0; j < nlines; ++j) {
-         let line = lines[j];
+         const line = lines[j];
          if (j > 0) maxlen = Math.max(maxlen, line.length);
-         if ((j == 0) || (line.indexOf('|') < 0)) continue;
+         if ((j === 0) || (line.indexOf('|') < 0)) continue;
          if (first_stat === 0) first_stat = j;
-         let parts = line.split('|');
+         const parts = line.split('|');
          if (parts.length > num_cols)
             num_cols = parts.length;
       }
 
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
-      let stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
-
-      let text_g = this.draw_g.selectChild('.statlines');
+      const stepy = height / nlines, margin_x = 0.02 * width;
+      let has_head = false,
+          text_g = this.draw_g.selectChild('.statlines');
       if (text_g.empty())
          text_g = this.draw_g.append('svg:g').attr('class', 'statlines');
       else
@@ -417,44 +421,46 @@ class RHistStatsPainter extends RPavePainter {
       textFont.setSize(height/(nlines * 1.2));
       this.startTextDrawing(textFont, 'font', text_g);
 
-      if (nlines == 1) {
-         this.drawText({ width: width, height: height, text: lines[0], latex: 1, draw_g: text_g });
-      } else
-      for (let j = 0; j < nlines; ++j) {
-         let posy = j*stepy;
+      if (nlines === 1)
+         this.drawText({ width, height, text: lines[0], latex: 1, draw_g: text_g });
+       else {
+         for (let j = 0; j < nlines; ++j) {
+            const posy = j*stepy;
 
-         if (first_stat && (j >= first_stat)) {
-            let parts = lines[j].split('|');
-            for (let n = 0; n < parts.length; ++n)
-               this.drawText({ align: 'middle', x: width * n / num_cols, y: posy, latex: 0,
-                               width: width/num_cols, height: stepy, text: parts[n], draw_g: text_g });
-         } else if (lines[j].indexOf('=') < 0) {
-            if (j == 0) {
-               has_head = true;
-               let max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
-               if (lines[j].length > max_hlen + 5)
-                  lines[j] = lines[j].slice(0,max_hlen+2) + '...';
+            if (first_stat && (j >= first_stat)) {
+               const parts = lines[j].split('|');
+               for (let n = 0; n < parts.length; ++n) {
+                  this.drawText({ align: 'middle', x: width * n / num_cols, y: posy, latex: 0,
+                                  width: width/num_cols, height: stepy, text: parts[n], draw_g: text_g });
+               }
+            } else if (lines[j].indexOf('=') < 0) {
+               if (j === 0) {
+                  has_head = true;
+                  const max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
+                  if (lines[j].length > max_hlen + 5)
+                     lines[j] = lines[j].slice(0, max_hlen+2) + '...';
+               }
+               this.drawText({ align: (j === 0) ? 'middle' : 'start', x: margin_x, y: posy,
+                               width: width - 2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
+            } else {
+               const parts = lines[j].split('='), args = [];
+
+               for (let n = 0; n < 2; ++n) {
+                  const arg = {
+                     align: (n === 0) ? 'start' : 'end', x: margin_x, y: posy,
+                     width: width-2*margin_x, height: stepy, text: parts[n], draw_g: text_g,
+                     _expected_width: width-2*margin_x, _args: args,
+                     post_process(painter) {
+                       if (this._args[0].ready && this._args[1].ready)
+                          painter.scaleTextDrawing(1.05*(this._args[0].result_width && this._args[1].result_width)/this.__expected_width, this.draw_g);
+                     }
+                  };
+                  args.push(arg);
+               }
+
+               for (let n = 0; n < 2; ++n)
+                  this.drawText(args[n]);
             }
-            this.drawText({ align: (j == 0) ? 'middle' : 'start', x: margin_x, y: posy,
-                            width: width - 2*margin_x, height: stepy, text: lines[j], draw_g: text_g });
-         } else {
-            let parts = lines[j].split('='), args = [];
-
-            for (let n = 0; n < 2; ++n) {
-               let arg = {
-                  align: (n == 0) ? 'start' : 'end', x: margin_x, y: posy,
-                  width: width-2*margin_x, height: stepy, text: parts[n], draw_g: text_g,
-                  _expected_width: width-2*margin_x, _args: args,
-                  post_process(painter) {
-                    if (this._args[0].ready && this._args[1].ready)
-                       painter.scaleTextDrawing(1.05*(this._args[0].result_width && this._args[1].result_width)/this.__expected_width, this.draw_g);
-                  }
-               };
-               args.push(arg);
-            }
-
-            for (let n = 0; n < 2; ++n)
-               this.drawText(args[n]);
          }
       }
 
@@ -470,15 +476,15 @@ class RHistStatsPainter extends RPavePainter {
             lpath += 'M' + Math.round(width / num_cols * (ncol + 1)) + ',' + Math.round(first_stat * stepy) + 'V' + height;
       }
 
-      if (lpath) this.draw_g.append('svg:path').attr('d',lpath) /*.call(this.lineatt.func)*/;
+      if (lpath) this.draw_g.append('svg:path').attr('d', lpath);
 
       return this.finishTextDrawing(text_g);
    }
 
    /** @summary Redraw stats box */
    async redraw(reason) {
-      if (reason && isStr(reason) && (reason.indexOf('zoom') == 0) && this.v7NormalMode()) {
-         let req = {
+      if (reason && isStr(reason) && (reason.indexOf('zoom') === 0) && this.v7NormalMode()) {
+         const req = {
             _typename: `${nsREX}RHistStatBoxBase::RRequest`,
             mask: this.getObject().fShowMask // lines to show in stat box
          };
@@ -491,7 +497,7 @@ class RHistStatsPainter extends RPavePainter {
 
    /** @summary draw RHistStats object */
    static async draw(dom, stats, opt) {
-      let painter = new RHistStatsPainter(dom, stats, opt, stats);
+      const painter = new RHistStatsPainter(dom, stats, opt, stats);
       return ensureRCanvas(painter, false).then(() => painter.drawPave());
    }
 

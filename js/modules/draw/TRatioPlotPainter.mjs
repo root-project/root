@@ -14,9 +14,9 @@ class TRatioPlotPainter extends ObjectPainter {
 
    /** @summary Set grids range */
    setGridsRange(xmin, xmax) {
-      let ratio = this.getObject();
+      const ratio = this.getObject();
       if (xmin === xmax) {
-         let x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad)?.getFramePainter()?.x_handle;
+         const x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad)?.getFramePainter()?.x_handle;
          if (!x_handle) return;
          xmin = x_handle.full_min;
          xmax = x_handle.full_max;
@@ -30,19 +30,18 @@ class TRatioPlotPainter extends ObjectPainter {
 
    /** @summary Redraw TRatioPlot */
    async redraw() {
-      let ratio = this.getObject(),
-          pp = this.getPadPainter();
-
-      let top_p = pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad);
+      const ratio = this.getObject(),
+            pp = this.getPadPainter(),
+            top_p = pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad);
       if (top_p) top_p.disablePadDrawing();
 
-      let up_p = pp.findPainterFor(ratio.fUpperPad, 'upper_pad', clTPad),
-          up_main = up_p?.getMainPainter(),
-          up_fp = up_p?.getFramePainter(),
-          low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
-          low_main = low_p?.getMainPainter(),
-          low_fp = low_p?.getFramePainter(),
-          lbl_size = 20, promise_up = Promise.resolve(true);
+      const up_p = pp.findPainterFor(ratio.fUpperPad, 'upper_pad', clTPad),
+            up_main = up_p?.getMainPainter(),
+            up_fp = up_p?.getFramePainter(),
+            low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
+            low_main = low_p?.getMainPainter(),
+            low_fp = low_p?.getFramePainter();
+      let lbl_size = 20, promise_up = Promise.resolve(true);
 
       if (up_p && up_main && up_fp && low_fp && !up_p._ratio_configured) {
          up_p._ratio_configured = true;
@@ -51,7 +50,7 @@ class TRatioPlotPainter extends ObjectPainter {
          lbl_size = up_main.getHisto().fYaxis.fLabelSize;
          if (lbl_size < 1) lbl_size = Math.round(lbl_size*Math.min(up_p.getPadWidth(), up_p.getPadHeight()));
 
-         let h = up_main.getHisto();
+         const h = up_main.getHisto();
          h.fXaxis.fLabelSize = 0; // do not draw X axis labels
          h.fXaxis.fTitle = ''; // do not draw X axis title
          h.fYaxis.fLabelSize = lbl_size;
@@ -64,8 +63,8 @@ class TRatioPlotPainter extends ObjectPainter {
             up_fp._ratio_low_fp = low_fp;
             up_fp._ratio_painter = this;
 
-            up_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
-               return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax).then(res => {
+            up_fp.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
+               return this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax).then(res => {
                   this._ratio_painter.setGridsRange(up_fp.scale_xmin, up_fp.scale_xmax);
                   this._ratio_low_fp.o_zoom(up_fp.scale_xmin, up_fp.scale_xmax);
                   return res;
@@ -84,13 +83,12 @@ class TRatioPlotPainter extends ObjectPainter {
       }
 
       return promise_up.then(() => {
-
          if (!low_p || !low_main || !low_fp || !up_fp || low_p._ratio_configured)
             return this;
 
          low_p._ratio_configured = true;
          low_main.options.Axis = 0; // draw both axes
-         let h = low_main.getHisto();
+         const h = low_main.getHisto();
          h.fXaxis.fTitle = 'x';
          h.fXaxis.fLabelSize = lbl_size;
          h.fXaxis.fTitleSize = lbl_size;
@@ -103,16 +101,17 @@ class TRatioPlotPainter extends ObjectPainter {
                objp.testEditable(false);
          });
 
-         let arr = [], currpad;
+         const arr = [];
+         let currpad;
 
          if ((ratio.fGridlinePositions.length > 0) && (ratio.fGridlines.length < ratio.fGridlinePositions.length)) {
             ratio.fGridlinePositions.forEach(gridy => {
                let found = false;
                ratio.fGridlines.forEach(line => {
-                  if ((line.fY1 == line.fY2) && (Math.abs(line.fY1 - gridy) < 1e-6)) found = true;
+                  if ((line.fY1 === line.fY2) && (Math.abs(line.fY1 - gridy) < 1e-6)) found = true;
                });
                if (!found) {
-                  let line = create(clTLine);
+                  const line = create(clTLine);
                   line.fX1 = up_fp.scale_xmin;
                   line.fX2 = up_fp.scale_xmax;
                   line.fY1 = line.fY2 = gridy;
@@ -126,15 +125,14 @@ class TRatioPlotPainter extends ObjectPainter {
          }
 
          return Promise.all(arr).then(() => low_fp.zoom(up_fp.scale_xmin,  up_fp.scale_xmax)).then(() => {
-
             low_fp.o_zoom = low_fp.zoom;
             low_fp._ratio_up_fp = up_fp;
             low_fp._ratio_painter = this;
 
-            low_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
+            low_fp.zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
                this._ratio_painter.setGridsRange(xmin, xmax);
-               this._ratio_up_fp.o_zoom(xmin,xmax);
-               return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+               this._ratio_up_fp.o_zoom(xmin, xmax);
+               return this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax);
             }
 
             low_fp.o_sizeChanged = low_fp.sizeChanged;
@@ -151,7 +149,7 @@ class TRatioPlotPainter extends ObjectPainter {
 
    /** @summary Draw TRatioPlot */
    static async draw(dom, ratio, opt) {
-      let painter = new TRatioPlotPainter(dom, ratio, opt);
+      const painter = new TRatioPlotPainter(dom, ratio, opt);
 
       return ensureTCanvas(painter, false).then(() => painter.redraw());
    }

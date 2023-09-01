@@ -25,7 +25,7 @@ class RH1Painter extends RHistPainter {
    scanContent(when_axis_changed) {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
-      let histo = this.getHisto();
+      const histo = this.getHisto();
       if (!histo) return;
 
       if (!this.nbinsx && when_axis_changed) when_axis_changed = false;
@@ -42,13 +42,12 @@ class RH1Painter extends RHistPainter {
          hmax = histo.fContMax;
          hsum = hmax;
       } else {
-
-         let left = this.getSelectIndex('x', 'left'),
+         const left = this.getSelectIndex('x', 'left'),
              right = this.getSelectIndex('x', 'right');
 
-         if (when_axis_changed) {
+         if (when_axis_changed)
             if ((left === this.scan_xleft) && (right === this.scan_xright)) return;
-         }
+
 
          this.scan_xleft = left;
          this.scan_xright = right;
@@ -62,7 +61,7 @@ class RH1Painter extends RHistPainter {
             if ((i<left) || (i>=right)) continue;
 
             if (value > 0)
-               if ((hmin_nz == 0) || (value<hmin_nz)) hmin_nz = value;
+               if ((hmin_nz === 0) || (value<hmin_nz)) hmin_nz = value;
             if (first) {
                hmin = hmax = value;
                first = false;
@@ -110,12 +109,13 @@ class RH1Painter extends RHistPainter {
 
    /** @summary Count statistic */
    countStat(cond) {
-      let histo = this.getHisto(), xaxis = this.getAxis('x'),
-          left = this.getSelectIndex('x', 'left'),
-          right = this.getSelectIndex('x', 'right'),
-          stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
-          i, xx = 0, w = 0, xmax = null, wmax = null,
-          res = { name: 'histo', meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
+      const histo = this.getHisto(), xaxis = this.getAxis('x'),
+            left = this.getSelectIndex('x', 'left'),
+            right = this.getSelectIndex('x', 'right'),
+            stat_sumwy = 0, stat_sumwy2 = 0,
+            res = { name: 'histo', meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
+      let stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0,
+          i, xx = 0, w = 0, xmax = null, wmax = null;
 
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i+0.5);
@@ -149,9 +149,8 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Fill statistic */
-   fillStatistic(stat, dostat/*, dofit*/) {
-
-      let histo = this.getHisto(),
+   fillStatistic(stat, dostat/*, dofit */) {
+      const histo = this.getHisto(),
           data = this.countStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
@@ -170,7 +169,7 @@ class RH1Painter extends RHistPainter {
          stat.addText(data.name);
 
       if (print_entries > 0)
-         stat.addText('Entries = ' + stat.format(data.entries,'entries'));
+         stat.addText('Entries = ' + stat.format(data.entries, 'entries'));
 
       if (print_mean > 0)
          stat.addText('Mean = ' + stat.format(data.meanx));
@@ -185,7 +184,7 @@ class RH1Painter extends RHistPainter {
          stat.addText('Overflow = ' + stat.format(histo.getBinContent(this.nbinsx+1), 'entries'));
 
       if (print_integral > 0)
-         stat.addText('Integral = ' + stat.format(data.integral,'entries'));
+         stat.addText('Integral = ' + stat.format(data.integral, 'entries'));
 
       if (print_skew > 0)
          stat.addText('Skew = <not avail>');
@@ -198,19 +197,19 @@ class RH1Painter extends RHistPainter {
 
    /** @summary Draw histogram as bars */
    async drawBars(handle, funcs, width, height) {
-
       this.createG(true);
 
-      let left = handle.i1, right = handle.i2, di = handle.stepi,
-          pmain = this.getFramePainter(),
-          histo = this.getHisto(), xaxis = this.getAxis('x'),
-          i, x1, x2, grx1, grx2, y, gry1, gry2, w,
+      const left = handle.i1, right = handle.i2, di = handle.stepi,
+            pmain = this.getFramePainter(),
+            histo = this.getHisto(), xaxis = this.getAxis('x');
+      let i, x1, x2, grx1, grx2, y, gry1, gry2, w,
           bars = '', barsl = '', barsr = '';
 
       gry2 = pmain.swap_xy ? 0 : height;
-      if (Number.isFinite(this.options.BaseLine))
+      if (Number.isFinite(this.options.BaseLine)) {
          if (this.options.BaseLine >= funcs.scale_ymin)
             gry2 = Math.round(funcs.gry(this.options.BaseLine));
+      }
 
       for (i = left; i < right; i += di) {
          x1 = xaxis.GetBinCoord(i);
@@ -249,34 +248,37 @@ class RH1Painter extends RHistPainter {
 
       if (this.fillatt.empty()) this.fillatt.setSolidColor('blue');
 
-      if (bars)
+      if (bars) {
          this.draw_g.append('svg:path')
                     .attr('d', bars)
                     .call(this.fillatt.func);
+      }
 
-      if (barsl)
+      if (barsl) {
          this.draw_g.append('svg:path')
                .attr('d', barsl)
                .call(this.fillatt.func)
                .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+      }
 
-      if (barsr)
+      if (barsr) {
          this.draw_g.append('svg:path')
                .attr('d', barsr)
                .call(this.fillatt.func)
                .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+       }
 
        return true;
    }
 
    /** @summary Draw histogram as filled errors */
-   async drawFilledErrors(handle, funcs /*, width, height*/) {
+   async drawFilledErrors(handle, funcs /*, width, height */) {
       this.createG(true);
 
-      let left = handle.i1, right = handle.i2, di = handle.stepi,
-          histo = this.getHisto(), xaxis = this.getAxis('x'),
-          i, x, grx, y, yerr, gry,
-          bins1 = [], bins2 = [];
+      const left = handle.i1, right = handle.i2, di = handle.stepi,
+            histo = this.getHisto(), xaxis = this.getAxis('x'),
+            bins1 = [], bins2 = [];
+      let i, x, grx, y, yerr, gry;
 
       for (i = left; i < right; i += di) {
          x = xaxis.GetBinCoord(i+0.5);
@@ -288,14 +290,14 @@ class RH1Painter extends RHistPainter {
          if (funcs.logy && (y-yerr < funcs.scale_ymin)) continue;
 
          gry = Math.round(funcs.gry(y + yerr));
-         bins1.push({grx, gry});
+         bins1.push({ grx, gry });
 
          gry = Math.round(funcs.gry(y - yerr));
-         bins2.unshift({grx, gry});
+         bins2.unshift({ grx, gry });
       }
 
-      let path1 = buildSvgCurve(bins1, { line: this.options.ErrorKind !== 4 }),
-          path2 = buildSvgCurve(bins2, { line: this.options.ErrorKind !== 4, cmd: 'L' });
+      const path1 = buildSvgCurve(bins1, { line: this.options.ErrorKind !== 4 }),
+            path2 = buildSvgCurve(bins2, { line: this.options.ErrorKind !== 4, cmd: 'L' });
 
       if (this.fillatt.empty()) this.fillatt.setSolidColor('blue');
 
@@ -308,8 +310,7 @@ class RH1Painter extends RHistPainter {
 
    /** @summary Draw 1D histogram as SVG */
    async draw1DBins() {
-
-      let pmain = this.getFramePainter(),
+      const pmain = this.getFramePainter(),
           rect = pmain.getFrameRect();
 
       if (!this.draw_content || (rect.width <= 0) || (rect.height <= 0)) {
@@ -319,7 +320,7 @@ class RH1Painter extends RHistPainter {
 
       this.createHistDrawAttributes();
 
-      let handle = this.prepareDraw({ extra: 1, only_indexes: true }),
+      const handle = this.prepareDraw({ extra: 1, only_indexes: true }),
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
 
       if (this.options.Bar)
@@ -335,26 +336,26 @@ class RH1Painter extends RHistPainter {
    async drawHistBins(handle, funcs, width, height) {
       this.createG(true);
 
-      let options = this.options,
-          left = handle.i1,
-          right = handle.i2,
-          di = handle.stepi,
-          histo = this.getHisto(),
-          want_tooltip = !this.isBatchMode() && settings.Tooltip,
-          xaxis = this.getAxis('x'),
+      const options = this.options,
+            left = handle.i1,
+            right = handle.i2,
+            di = handle.stepi,
+            histo = this.getHisto(),
+            want_tooltip = !this.isBatchMode() && settings.Tooltip,
+            xaxis = this.getAxis('x'),
+            exclude_zero = !options.Zero,
+            show_errors = options.Error,
+            show_line = options.Line,
+            show_text = options.Text;
+      let show_markers = options.Mark,
           res = '', lastbin = false,
           startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
-          exclude_zero = !options.Zero,
-          show_errors = options.Error,
-          show_markers = options.Mark,
-          show_line = options.Line,
-          show_text = options.Text,
           path_fill = null, path_err = null, path_marker = null, path_line = null,
           hints_err = null,
           endx = '', endy = '', dend = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx,
           text_font;
 
-      if (show_errors && !show_markers && (this.v7EvalAttr('marker_style',1) > 1))
+      if (show_errors && !show_markers && (this.v7EvalAttr('marker_style', 1) > 1))
          show_markers = true;
 
       if (options.ErrorKind === 2) {
@@ -374,16 +375,15 @@ class RH1Painter extends RHistPainter {
             // simply use relative move from point, can optimize in the future
             path_marker = '';
             this.markeratt.resetPos();
-         } else {
+         } else
             show_markers = false;
-         }
       }
 
       if (show_text) {
          text_font = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 });
 
          if (!text_font.angle && !options.TextKind) {
-             let space = width / (right - left + 1);
+             const space = width / (right - left + 1);
              if (space < 3 * text_font.size) {
                 text_font.setAngle(270);
                 text_font.setSize(Math.round(space*0.7));
@@ -398,17 +398,17 @@ class RH1Painter extends RHistPainter {
       let use_minmax = ((right-left) > 3*width);
 
       if (options.ErrorKind === 1) {
-         let lw = this.lineatt.width + gStyle.fEndErrorSize;
+         const lw = this.lineatt.width + gStyle.fEndErrorSize;
          endx = `m0,${lw}v${-2*lw}m0,${lw}`;
          endy = `m${lw},0h${-2*lw}m${lw},0`;
          dend = Math.floor((this.lineatt.width-1)/2);
       }
 
-      let draw_markers = show_errors || show_markers;
+      const draw_markers = show_errors || show_markers;
 
       if (draw_markers || show_text || show_line) use_minmax = true;
 
-      let draw_bin = besti => {
+      const draw_bin = besti => {
          bincont = histo.getBinContent(besti+1);
          if (!exclude_zero || (bincont !== 0)) {
             mx1 = Math.round(funcs.grx(xaxis.GetBinCoord(besti)));
@@ -423,7 +423,7 @@ class RH1Painter extends RHistPainter {
             }
 
             if (show_text && (bincont !== 0)) {
-               let lbl = (bincont === Math.round(bincont)) ? bincont.toString() : floatToString(bincont, gStyle.fPaintTextFormat);
+               const lbl = (bincont === Math.round(bincont)) ? bincont.toString() : floatToString(bincont, gStyle.fPaintTextFormat);
 
                if (text_font.angle)
                   this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_font.size / 5), text: lbl, latex: 0 });
@@ -444,7 +444,7 @@ class RH1Painter extends RHistPainter {
                      let edx = 5;
                      if (this.options.errorX > 0) {
                         edx = Math.round((mx2-mx1)*this.options.errorX);
-                        let mmx1 = midx - edx, mmx2 = midx + edx;
+                        const mmx1 = midx - edx, mmx2 = midx + edx;
                         path_err += `M${mmx1+dend},${my}${endx}h${mmx2-mmx1-2*dend}${endx}`;
                      }
                      path_err += `M${midx},${my-yerr1+dend}${endy}v${yerr1+yerr2-2*dend}${endy}`;
@@ -457,7 +457,6 @@ class RH1Painter extends RHistPainter {
       };
 
       for (i = left; i <= right; i += di) {
-
          x = xaxis.GetBinCoord(i);
 
          if (funcs.logx && (x <= 0)) continue;
@@ -466,9 +465,9 @@ class RH1Painter extends RHistPainter {
 
          lastbin = (i > right - di);
 
-         if (lastbin && (left < right)) {
+         if (lastbin && (left < right))
             gry = curry;
-         } else {
+          else {
             y = histo.getBinContent(i+1);
             gry = Math.round(funcs.gry(y));
          }
@@ -487,9 +486,8 @@ class RH1Painter extends RHistPainter {
                curry_max = Math.max(curry_max, gry);
                curry = gry;
             } else {
-
                if (draw_markers || show_text || show_line) {
-                  if (bestimin === bestimax) { draw_bin(bestimin); } else
+                  if (bestimin === bestimax)  draw_bin(bestimin);  else
                      if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
                         draw_bin(bestimax); draw_bin(bestimin);
                      }
@@ -497,7 +495,6 @@ class RH1Painter extends RHistPainter {
 
                // when several points as same X differs, need complete logic
                if (!draw_markers && ((curry_min !== curry_max) || (prevy !== curry_min))) {
-
                   if (prevx !== currx)
                      res += 'h'+(currx-prevx);
 
@@ -535,39 +532,43 @@ class RH1Painter extends RHistPainter {
          }
       }
 
-      let fill_for_interactive = !this.isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line,
-          h0 = height + 3;
+      const fill_for_interactive = !this.isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line;
+      let h0 = height + 3;
       if (!fill_for_interactive) {
-         let gry0 = Math.round(funcs.gry(0));
+         const gry0 = Math.round(funcs.gry(0));
          if (gry0 <= 0)
             h0 = -3;
          else if (gry0 < height)
             h0 = gry0;
       }
-      let close_path = `L${currx},${h0}H${startx}Z`;
+      const close_path = `L${currx},${h0}H${startx}Z`;
 
       if (draw_markers || show_line) {
-         if (path_fill)
+         if (path_fill) {
             this.draw_g.append('svg:path')
                        .attr('d', path_fill)
                        .call(this.fillatt.func);
+         }
 
-         if (path_err)
-               this.draw_g.append('svg:path')
+         if (path_err) {
+            this.draw_g.append('svg:path')
                    .attr('d', path_err)
                    .call(this.lineatt.func);
+         }
 
-         if (hints_err)
-               this.draw_g.append('svg:path')
+         if (hints_err) {
+            this.draw_g.append('svg:path')
                    .attr('d', hints_err)
                    .style('fill', 'none')
                    .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
+         }
 
          if (path_line) {
-            if (!this.fillatt.empty() && !options.Hist)
+            if (!this.fillatt.empty() && !options.Hist) {
                this.draw_g.append('svg:path')
                      .attr('d', path_line + close_path)
                      .call(this.fillatt.func);
+            }
 
             this.draw_g.append('svg:path')
                    .attr('d', path_line)
@@ -575,15 +576,15 @@ class RH1Painter extends RHistPainter {
                    .call(this.lineatt.func);
          }
 
-         if (path_marker)
+         if (path_marker) {
             this.draw_g.append('svg:path')
                 .attr('d', path_marker)
                 .call(this.markeratt.func);
-
+         }
       } else if (res && options.Hist) {
          this.draw_g.append('svg:path')
                     .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
-                    .style('stroke-linejoin','miter')
+                    .style('stroke-linejoin', 'miter')
                     .call(this.lineatt.func)
                     .call(this.fillatt.func);
       }
@@ -593,29 +594,29 @@ class RH1Painter extends RHistPainter {
 
    /** @summary Provide text information (tooltips) for histogram bin */
    getBinTooltips(bin) {
-      let tips = [],
-          name = this.getObjectHint(),
-          pmain = this.getFramePainter(),
-          histo = this.getHisto(),
-          xaxis = this.getAxis('x'),
-          di = this.isDisplayItem() ? histo.stepx : 1,
-          x1 = xaxis.GetBinCoord(bin),
-          x2 = xaxis.GetBinCoord(bin+di),
-          cont = histo.getBinContent(bin+1),
-          xlbl = this.getAxisBinTip('x', bin, di);
+      const tips = [],
+            name = this.getObjectHint(),
+            pmain = this.getFramePainter(),
+            histo = this.getHisto(),
+            xaxis = this.getAxis('x'),
+            di = this.isDisplayItem() ? histo.stepx : 1,
+            x1 = xaxis.GetBinCoord(bin),
+            x2 = xaxis.GetBinCoord(bin+di),
+            xlbl = this.getAxisBinTip('x', bin, di);
+      let cont = histo.getBinContent(bin+1);
 
       if (name) tips.push(name);
 
       if (this.options.Error || this.options.Mark) {
          tips.push(`x = ${xlbl}`, `y = ${pmain.axisAsText('y', cont)}`);
          if (this.options.Error) {
-            if (xlbl[0] == '[') tips.push('error x = ' + ((x2 - x1) / 2).toPrecision(4));
+            if (xlbl[0] === '[') tips.push('error x = ' + ((x2 - x1) / 2).toPrecision(4));
             tips.push('error y = ' + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
          tips.push(`bin = ${bin+1}`, `x = ${xlbl}`);
          if (histo.$baseh) cont -= histo.$baseh.getBinContent(bin+1);
-         let lbl = 'entries = ' + (di > 1 ? '~' : '');
+         const lbl = 'entries = ' + (di > 1 ? '~' : '');
          if (cont === Math.round(cont))
             tips.push(lbl + cont);
          else
@@ -634,40 +635,40 @@ class RH1Painter extends RHistPainter {
          return null;
       }
 
-      let pmain = this.getFramePainter(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          width = pmain.getFrameWidth(),
-          height = pmain.getFrameHeight(),
-          histo = this.getHisto(), xaxis = this.getAxis('x'),
-          findbin = null, show_rect,
-          grx1, midx, grx2, gry1, midy, gry2, gapx = 2,
-          left = this.getSelectIndex('x', 'left', -1),
-          right = this.getSelectIndex('x', 'right', 2),
+      const pmain = this.getFramePainter(),
+            funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            width = pmain.getFrameWidth(),
+            height = pmain.getFrameHeight(),
+            histo = this.getHisto(), xaxis = this.getAxis('x'),
+            left = this.getSelectIndex('x', 'left', -1),
+            right = this.getSelectIndex('x', 'right', 2);
+      let findbin = null, show_rect,
+          grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right;
 
       function GetBinGrX(i) {
-         let xx = xaxis.GetBinCoord(i);
+         const xx = xaxis.GetBinCoord(i);
          return (funcs.logx && (xx <= 0)) ? null : funcs.grx(xx);
       }
 
       function GetBinGrY(i) {
-         let yy = histo.getBinContent(i + 1);
+         const yy = histo.getBinContent(i + 1);
          if (funcs.logy && (yy < funcs.scale_ymin))
             return funcs.swap_xy ? -1000 : 10*height;
          return Math.round(funcs.gry(yy));
       }
 
-      let pnt_x = funcs.swap_xy ? pnt.y : pnt.x,
+      const pnt_x = funcs.swap_xy ? pnt.y : pnt.x,
           pnt_y = funcs.swap_xy ? pnt.x : pnt.y;
 
       while (l < r-1) {
-         let m = Math.round((l+r)*0.5),
+         const m = Math.round((l+r)*0.5),
              xx = GetBinGrX(m);
-         if ((xx === null) || (xx < pnt_x - 0.5)) {
+         if ((xx === null) || (xx < pnt_x - 0.5))
             if (funcs.swap_xy) r = m; else l = m;
-         } else if (xx > pnt_x + 0.5) {
+          else if (xx > pnt_x + 0.5)
             if (funcs.swap_xy) l = m; else r = m;
-         } else { l++; r--; }
+          else { l++; r--; }
       }
 
       findbin = r = l;
@@ -685,8 +686,8 @@ class RH1Painter extends RHistPainter {
          // many points can be assigned with the same cursor position
          // first try point around mouse y
          let best = height;
-         for (let m=l;m<=r;m++) {
-            let dist = Math.abs(GetBinGrY(m) - pnt_y);
+         for (let m=l; m<=r; m++) {
+            const dist = Math.abs(GetBinGrY(m) - pnt_y);
             if (dist < best) { best = dist; findbin = m; }
          }
 
@@ -701,7 +702,7 @@ class RH1Painter extends RHistPainter {
       grx2 = Math.round(GetBinGrX(findbin+1));
 
       if (this.options.Bar) {
-         let w = grx2 - grx1;
+         const w = grx2 - grx1;
          grx1 += Math.round(this.options.BarOffset*w);
          grx2 = grx1 + Math.round(this.options.BarWidth*w);
       }
@@ -709,9 +710,8 @@ class RH1Painter extends RHistPainter {
       if (grx1 > grx2)
          [grx1, grx2] = [grx2, grx1];
 
-      midx = Math.round((grx1 + grx2)/2);
-
-      midy = gry1 = gry2 = GetBinGrY(findbin);
+      const midx = Math.round((grx1 + grx2)/2),
+            midy = gry1 = gry2 = GetBinGrY(findbin);
 
       if (this.options.Bar) {
          show_rect = true;
@@ -725,22 +725,20 @@ class RH1Painter extends RHistPainter {
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
-
       } else if (this.options.Error || this.options.Mark) {
-
          show_rect = true;
 
          let msize = 3;
          if (this.markeratt) msize = Math.max(msize, this.markeratt.getFullSize());
 
          if (this.options.Error) {
-            let cont = histo.getBinContent(findbin+1),
+            const cont = histo.getBinContent(findbin+1),
                 binerr = histo.getBinError(findbin+1);
 
             gry1 = Math.round(funcs.gry(cont + binerr)); // up
             gry2 = Math.round(funcs.gry(cont - binerr)); // down
 
-            let dx = (grx2-grx1)*this.options.errorX;
+            const dx = (grx2-grx1)*this.options.errorX;
             grx1 = Math.round(midx - dx);
             grx2 = Math.round(midx + dx);
          }
@@ -753,13 +751,11 @@ class RH1Painter extends RHistPainter {
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y<gry1) || (pnt_y>gry2)) findbin = null;
-
-      } else if (this.options.Line) {
+      } else if (this.options.Line)
 
          show_rect = false;
 
-      } else {
-
+       else {
          // if histogram alone, use old-style with rects
          // if there are too many points at pixel, use circle
          show_rect = (pnt.nproc === 1) && (right-left < width);
@@ -793,7 +789,7 @@ class RH1Painter extends RHistPainter {
          return null;
       }
 
-      let res = { name: 'histo', title: histo.fTitle,
+      const res = { name: 'histo', title: histo.fTitle,
                   x: midx, y: midy, exact: true,
                   color1: this.lineatt?.color ?? 'green',
                   color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
@@ -805,39 +801,40 @@ class RH1Painter extends RHistPainter {
          ttrect.remove();
          res.changed = true;
       } else if (show_rect) {
-
-         if (ttrect.empty())
+         if (ttrect.empty()) {
             ttrect = this.draw_g.append('svg:rect')
-                                .attr('class','tooltip_bin')
+                                .attr('class', 'tooltip_bin')
                                 .style('pointer-events', 'none')
                                 .call(addHighlightStyle);
+         }
 
          res.changed = ttrect.property('current_bin') !== findbin;
 
-         if (res.changed)
+         if (res.changed) {
             ttrect.attr('x', pmain.swap_xy ? gry1 : grx1)
                   .attr('width', pmain.swap_xy ? gry2-gry1 : grx2-grx1)
                   .attr('y', pmain.swap_xy ? grx1 : gry1)
                   .attr('height', pmain.swap_xy ? grx2-grx1 : gry2-gry1)
                   .style('opacity', '0.3')
                   .property('current_bin', findbin);
+         }
 
          res.exact = (Math.abs(midy - pnt_y) <= 5) || ((pnt_y>=gry1) && (pnt_y<=gry2));
 
          res.menu = res.exact; // one could show context menu
          // distance to middle point, use to decide which menu to activate
          res.menu_dist = Math.sqrt((midx-pnt_x)**2 + (midy-pnt_y)**2);
-
       } else {
-         let radius = this.lineatt.width + 3;
+         const radius = this.lineatt.width + 3;
 
-         if (ttrect.empty())
+         if (ttrect.empty()) {
             ttrect = this.draw_g.append('svg:circle')
-                                .attr('class','tooltip_bin')
-                                .style('pointer-events','none')
+                                .attr('class', 'tooltip_bin')
+                                .style('pointer-events', 'none')
                                 .attr('r', radius)
                                 .call(this.lineatt.func)
                                 .call(this.fillatt.func);
+         }
 
          res.exact = (Math.abs(midx - pnt.x) <= radius) && (Math.abs(midy - pnt.y) <= radius);
 
@@ -846,26 +843,27 @@ class RH1Painter extends RHistPainter {
 
          res.changed = ttrect.property('current_bin') !== findbin;
 
-         if (res.changed)
+         if (res.changed) {
             ttrect.attr('cx', midx)
                   .attr('cy', midy)
                   .property('current_bin', findbin);
+         }
       }
 
-      if (res.changed)
+      if (res.changed) {
          res.user_info = { obj: histo,  name: 'histo',
                            bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
+      }
 
       return res;
    }
 
    /** @summary Fill histogram context menu */
    fillHistContextMenu(menu) {
-
       menu.add('Auto zoom-in', () => this.autoZoom());
 
-      let opts = this.getSupportedDrawOptions();
+      const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
          if (arg === 'inspect')
@@ -874,7 +872,7 @@ class RH1Painter extends RHistPainter {
          this.decodeOptions(arg); // obsolete, should be implemented differently
 
          if (this.options.need_fillcol && this.fillatt?.empty())
-            this.fillatt.change(5,1001);
+            this.fillatt.change(5, 1001);
 
          // redraw all objects
          this.interactiveRedraw('pad', 'drawopt');
@@ -884,10 +882,10 @@ class RH1Painter extends RHistPainter {
    /** @summary Perform automatic zoom inside non-zero region of histogram */
    autoZoom() {
       let left = this.getSelectIndex('x', 'left', -1),
-          right = this.getSelectIndex('x', 'right', 1),
-          dist = right - left, histo = this.getHisto(), xaxis = this.getAxis('x');
+          right = this.getSelectIndex('x', 'right', 1);
+      const dist = right - left, histo = this.getHisto(), xaxis = this.getAxis('x');
 
-      if (dist == 0) return;
+      if (dist === 0) return;
 
       // first find minimum
       let min = histo.getBinContent(left + 1);
@@ -908,19 +906,19 @@ class RH1Painter extends RHistPainter {
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
-   canZoomInside(axis,min,max) {
-      let xaxis = this.getAxis('x');
+   canZoomInside(axis, min, max) {
+      const xaxis = this.getAxis('x');
 
-      if ((axis == 'x') && (xaxis.FindBin(max,0.5) - xaxis.FindBin(min,0) > 1)) return true;
+      if ((axis === 'x') && (xaxis.FindBin(max, 0.5) - xaxis.FindBin(min, 0) > 1)) return true;
 
-      if ((axis == 'y') && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
+      if ((axis === 'y') && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
 
       return false;
    }
 
    /** @summary Call appropriate draw function */
    async callDrawFunc(reason) {
-      let main = this.getFramePainter();
+      const main = this.getFramePainter();
 
       if (main && (main.mode3d !== this.options.Mode3D) && !this.isMainPainter())
          this.options.Mode3D = main.mode3d;
@@ -963,22 +961,22 @@ class RH1Painter extends RHistPainter {
                              BarOffset: 0, BarWidth: 1, BaseLine: false,
                              Mode3D: false, FrontBox: false, BackBox: false };
 
-         let d = new DrawOptions(opt);
+         const d = new DrawOptions(opt);
          if (d.check('R3D_', true))
             painter.options.Render3D = constants.Render3D.fromString(d.part.toLowerCase());
 
-         let kind = painter.v7EvalAttr('kind', 'hist'),
+         const kind = painter.v7EvalAttr('kind', 'hist'),
              sub = painter.v7EvalAttr('sub', 0),
              has_main = !!painter.getMainPainter(),
              o = painter.options;
 
          o.Text = painter.v7EvalAttr('drawtext', false);
-         o.BarOffset = painter.v7EvalAttr('baroffset', 0.);
-         o.BarWidth = painter.v7EvalAttr('barwidth', 1.);
+         o.BarOffset = painter.v7EvalAttr('baroffset', 0.0);
+         o.BarWidth = painter.v7EvalAttr('barwidth', 1.0);
          o.second_x = has_main && painter.v7EvalAttr('secondx', false);
          o.second_y = has_main && painter.v7EvalAttr('secondy', false);
 
-         switch(kind) {
+         switch (kind) {
             case 'bar': o.Bar = true; o.BarStyle = sub; break;
             case 'err': o.Error = true; o.ErrorKind = sub; break;
             case 'p': o.Mark = true; break;
