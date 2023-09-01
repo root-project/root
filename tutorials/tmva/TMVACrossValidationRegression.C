@@ -7,13 +7,13 @@
 /// As input data is used a toy-MC sample consisting of two gaussian
 /// distributions.
 ///
-/// The output file "TMVA.root" can be analysed with the use of dedicated
+/// The output file "TMVARegCv.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
 /// Launch the GUI via the command:
 ///
 /// ```
-/// root -l -e 'TMVA::TMVAGui("TMVA.root")'
+/// root -l -e 'TMVA::TMVAGui("TMVARegCv.root")'
 /// ```
 ///
 /// ## Cross Evaluation

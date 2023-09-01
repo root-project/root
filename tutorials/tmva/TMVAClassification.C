@@ -13,7 +13,7 @@
 ///
 /// (note that the backslashes are mandatory)
 /// If no method given, a default set of classifiers is used.
-/// The output file "TMVA.root" can be analysed with the use of dedicated
+/// The output file "TMVAC.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
 /// Launch the GUI via the command:
@@ -193,7 +193,7 @@ int TMVAClassification( TString myMethodList = "" )
    TTree *background     = (TTree*)input->Get("TreeB");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "TMVA.root" );
+   TString outfileName( "TMVAC.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
    // Create the factory object. Later you can choose the methods
