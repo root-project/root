@@ -153,11 +153,7 @@ ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
 
 const ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
 {
-   if (!fModel) {
-      fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
-      ConnectModel(*fModel);
-      fDefaultEntry = fModel->GetDefaultEntry().lock();
-   }
+   EnsureModel();
    return fModel.get();
 }
 

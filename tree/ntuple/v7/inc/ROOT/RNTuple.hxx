@@ -126,6 +126,16 @@ private:
    RNTupleReader *GetDisplayReader();
    void InitPageSource();
 
+   void inline EnsureModel()
+   {
+      if (R__likely(fModel))
+         return;
+
+      fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
+      ConnectModel(*fModel);
+      fDefaultEntry = fModel->GetDefaultEntry().lock();
+   }
+
 public:
    // Browse through the entries
    class RIterator {
@@ -248,11 +258,7 @@ public:
    /// On I/O errors, raises an exception.
    void LoadEntry(NTupleSize_t index) {
       // TODO(jblomer): can be templated depending on the factory method / constructor
-      if (R__unlikely(!fModel)) {
-         fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
-         ConnectModel(*fModel);
-         fDefaultEntry = fModel->GetDefaultEntry().lock();
-      }
+      EnsureModel();
       LoadEntry(index, *fDefaultEntry);
    }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
