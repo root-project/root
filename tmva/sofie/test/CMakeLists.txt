@@ -143,7 +143,7 @@ if (${GPU_BLAS} STREQUAL "MKLBLAS")
   )
 else()
   find_package(PORTBLAS REQUIRED)
-  If (${TARGET_GPU} STREQUAL "NVIDIA")
+  if (${TARGET_GPU} STREQUAL "NVIDIA")
     ROOT_ADD_GTEST(TestCustomGPUModelsFromONNX TestCustomGPUModelsFromONNX.cxx
       LIBRARIES
         ROOTTMVASofie
@@ -176,6 +176,7 @@ else()
       INCLUDE_DIRS
         ${CMAKE_CURRENT_BINARY_DIR}
       COMPILE_OPTIONS
+        # default sycl-target is spirv
         -fsycl -I${PORTBLAS_INCLUDE_DIR} -I${PORTBLAS_SRC_DIR}
       LINK_OPTIONS
         -fsycl 
@@ -251,20 +252,4 @@ if (tmva-cpu)
       ${CMAKE_CURRENT_BINARY_DIR}
   )
  endif()
-
- #if (sofie-sycl AND testing)
- #   ROOT_ADD_GTEST(TestSofieGPUModels TestSofieGPUModels.cxx
- #   LIBRARIES
- #     ROOTTMVASofie
- #     ROOTTMVASofieParser
- #   INCLUDE_DIRS
- #     ${CMAKE_CURRENT_BINARY_DIR}
- #   COMPILE_OPTIONS
- #     -fsycl -DMKL_ILP64  -I"${MKLROOT}/include"
- #   LINK_OPTIONS
- #     -fsycl  -L${MKLROOT}/lib/intel64 -lmkl_sycl -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lsycl -lpthread -lm -ldl
- # )
- # add_sycl_to_target(TARGET TestSofieGPUModels SOURCES TestSofieGPUModels.cxx)
- #endif()
-
 endif()

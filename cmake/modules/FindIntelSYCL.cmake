@@ -277,7 +277,7 @@ if(nosycllang)
   set(IntelSYCL_NOT_FOUND_MESSAGE "${SYCL_REASON_FAILURE}")
 endif()
 
-# Placeholder for identifying various implemenations of SYCL compilers.
+# Placeholder for identifying various implementations of SYCL compilers.
 # for now, set to the CMAKE_CXX_COMPILER_ID
 set(SYCL_IMPLEMENTATION_ID "${CMAKE_CXX_COMPILER_ID}")
 

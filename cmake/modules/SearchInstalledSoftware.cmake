@@ -1698,10 +1698,14 @@ if(tmva-sofie)
 endif()
 
 #---Check for SYCL
+if (NOT ${SYCL_IMPLEMENTATION})
+  set(${SYCL_IMPLEMENTATION} "IntelSYCL")
+endif()
+
 if (tmva-sofie AND sofie-sycl AND testing)
   set(KNOWN_SYCL_IMPLEMENTATIONS "IntelSYCL")
 
-  if (NOT ${SYCL_IMPLEMENTATION} IN_LIST KNOWN_SYCL_IMPLEMENTATIONS OR NOT SYCL_IMPLEMENTATION)
+  if (NOT ${SYCL_IMPLEMENTATION} IN_LIST KNOWN_SYCL_IMPLEMENTATIONS)
     message(FATAL_ERROR "Building SOFIE-SYCL tests required specifying a SYCL implementatioon with "
             "-DSYCL_IMPLEMENTATION=[IntelSYCL]")
   endif()

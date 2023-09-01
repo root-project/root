@@ -553,8 +553,6 @@ namespace SOFIE{
       else {
          fGC += "#include \"portblas.hpp\"\n";
       }
-      std::cout << gpu_blas << std::endl;
-      std::cout << target_gpu << std::endl;
 
       // for the session we need to include SOFIE_Common functions
       //needed for convolution operator (need to add a flag)
@@ -739,8 +737,6 @@ namespace SOFIE{
       }
 
       fGC += SP + "try {\n"; //beginning of try-catch block
-
-      fGC += SP + "// Intel GPU Device Selector\n";
       
       // Lambda device selector
       fGC += SP*2 + "auto custom_gpu_selector = [](const cl::sycl::device& dev) {\n";
