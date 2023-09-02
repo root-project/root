@@ -275,9 +275,7 @@ void RModel::GenerateIntermediateTensorInfo() {
             fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first  + ".data();\n";
          }
          if (i.second.type == ETensorType::BOOL){
-            fGC += "bool fTensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";
-            fGC += "bool * tensor_" + i.first + " = fTensor_"+ i.first + ";\n";
-         }
+            fGC += "bool tensor_" + i.first  + " [" + std::to_string(length) + "] = {false};\n";         }
       }
       if (fUseSession) {
          // add here specific operator code that needs to define session data members
