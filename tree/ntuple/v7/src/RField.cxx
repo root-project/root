@@ -2006,6 +2006,11 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
          CallGenerateValueOn(*fSubFields[0], begin + (i * fItemSize));
    }
 
+   if (fSubFields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubFields[0])->ReadV(collectionStart, nItems, begin);
+      return;
+   }
+
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < nItems; ++i) {
       CallReadOn(*fSubFields[0], collectionStart + i, begin + (i * fItemSize));
