@@ -33,8 +33,7 @@ public:
          fType = "float";
       }
 		else{
-			throw
-				std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Elu operator");
+			throw std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Elu operator");
 		}
    }
 
