@@ -110,6 +110,9 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       info.fElementSize = elementSize;
       info.fType = column.second.GetModel().GetType();
 
+      if (column.second.IsAliasColumn())
+         continue;
+
       for (const auto &cluster : fClusterDescriptors) {
          auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
          info.fNElements += columnRange.fNElements;
