@@ -173,11 +173,6 @@ class ROOTFacade(types.ModuleType):
         if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
             self.app.init_graphics()
 
-        # Set memory policy to kUseHeuristics.
-        # This restores the default in PyROOT which was changed
-        # by new Cppyy
-        self.SetMemoryPolicy(self.kMemoryHeuristics)
-
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
         self.__class__.__setattr__ = lambda self, name, val: setattr(gbl_namespace, name, val)

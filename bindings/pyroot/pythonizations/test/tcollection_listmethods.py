@@ -1,7 +1,6 @@
 import unittest
 
 import ROOT
-from libcppyy import SetOwnership
 
 
 class TCollectionListMethods(unittest.TestCase):
@@ -15,12 +14,16 @@ class TCollectionListMethods(unittest.TestCase):
     # Helpers
     def create_tcollection(self):
         c = ROOT.TList()
+        pylist = []
         for _ in range(self.num_elems):
             o = ROOT.TObject()
             # Prevent immediate deletion of C++ TObjects
-            SetOwnership(o, False)
+            ROOT.SetOwnership(o, False)
             c.Add(o)
+            pylist.append(o)
 
+        # To prevent memory leaks
+        c._owned_objects = pylist
         return c
 
     # Tests
@@ -70,6 +73,14 @@ class TCollectionListMethods(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.remove(o1)
 
+        # The TList destructor will call TList::Clear(), which triggers a
+        # ROOT-internal garbage collection routine implemented in
+        # TCollection::GarbageCollect(). This can segfault if Python already
+        # garbage collected the objects in the TList itself, because then the
+        # TList has dangling pointers. To avoid this, we call Clear() now,
+        # before the reference count of the objects in the list goes to zero.
+        c.Clear()
+
     def test_extend(self):
         c1 = self.create_tcollection()
         c2 = self.create_tcollection()
@@ -105,6 +116,14 @@ class TCollectionListMethods(unittest.TestCase):
 
         self.assertEqual(c.count(o1), 2)
         self.assertEqual(c.count(o2), 1)
+
+        # The TList destructor will call TList::Clear(), which triggers a
+        # ROOT-internal garbage collection routine implemented in
+        # TCollection::GarbageCollect(). This can segfault if Python already
+        # garbage collected the objects in the TList itself, because then the
+        # TList has dangling pointers. To avoid this, we call Clear() now,
+        # before the reference count of the objects in the list goes to zero.
+        c.Clear()
 
 
 if __name__ == '__main__':
