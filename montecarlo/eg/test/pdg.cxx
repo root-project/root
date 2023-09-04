@@ -38,15 +38,36 @@ TEST(TDatabasePDGMT, Initialization)
    delete TDatabasePDG::Instance();
 }
 
+void CheckPi0(TParticlePDG &pi0)
+{
+   EXPECT_TRUE(0 == pi0.Stable());
+   EXPECT_EQ(0, pi0.Beauty());
+   EXPECT_EQ(0, pi0.Charge());
+   EXPECT_EQ(0, pi0.Charm());
+   EXPECT_EQ(0, pi0.Isospin());
+   EXPECT_EQ(0, pi0.Strangeness());
+   EXPECT_EQ(0, pi0.Top());
+   EXPECT_DOUBLE_EQ(1.349768e-01, pi0.Mass());
+   EXPECT_DOUBLE_EQ(7.810000e-09, pi0.Width());
+   EXPECT_NEAR(8.4278090781e-17, pi0.Lifetime(),0.0000000001e-17);
+
+}
+
 TEST(TDatabasePDGMT, GetParticleByName)
 {
-   RunOnThreads([]() { TDatabasePDG::Instance()->GetParticle("pi0"); });
+   auto f = []() { 
+      auto pi0 = TDatabasePDG::Instance()->GetParticle("pi0"); 
+      CheckPi0(*pi0);};
+   RunOnThreads(f);
    delete TDatabasePDG::Instance();
 }
 
 TEST(TDatabasePDGMT, GetParticleByCode)
 {
-   RunOnThreads([]() { TDatabasePDG::Instance()->GetParticle(111); });
+   auto f = []() { 
+      auto pi0 = TDatabasePDG::Instance()->GetParticle(111); 
+      CheckPi0(*pi0);};
+   RunOnThreads(f);
    delete TDatabasePDG::Instance();
 }
 
@@ -54,7 +75,8 @@ TEST(TDatabasePDGMT, GetParticleByCodeAndName)
 {
    auto f = []() {
       const auto code = TDatabasePDG::Instance()->GetParticle("pi0")->PdgCode();
-      TDatabasePDG::Instance()->GetParticle(code);
+      auto pi0 = TDatabasePDG::Instance()->GetParticle(code);
+      CheckPi0(*pi0);
    };
    RunOnThreads(f);
    delete TDatabasePDG::Instance();
