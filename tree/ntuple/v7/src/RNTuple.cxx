@@ -338,9 +338,7 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
    {
       throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
-   for (auto &field : *fModel->GetFieldZero()) {
-      field.CommitCluster();
-   }
+   fModel->CommitCluster();
    fNBytesCommitted += fSink->CommitCluster(fNEntries);
    fNBytesFilled += fUnzippedClusterSize;
 
