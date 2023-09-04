@@ -110,6 +110,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       info.fElementSize = elementSize;
       info.fType = column.second.GetModel().GetType();
 
+      // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
+      // but don't add the the page sizes to the overall volume.
       if (column.second.IsAliasColumn())
          continue;
 
