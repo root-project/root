@@ -368,8 +368,10 @@ public:
    const Detail::RFieldBase &GetField(std::string_view fieldName) const;
    const Detail::RFieldBase &GetConstField(std::string_view fieldName) const { return GetField(fieldName); }
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
-   // TODO(jblomer): remove me
-   RFieldZero *GetFieldZeroPtr() { return fFieldZero.get(); }
+
+   // Only used by the RNTuple reader and writer and by RNTupleDescriptor::GenerateModel in order to
+   // set the on-disk field IDs and to connect the sub fields.
+   RFieldZero &GetMutableFieldZero() { return *fFieldZero; }
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);

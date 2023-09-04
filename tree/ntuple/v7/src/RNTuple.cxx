@@ -67,8 +67,8 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
-   model.GetFieldZeroPtr()->SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
-   for (auto &field : *model.GetFieldZeroPtr()) {
+   model.GetMutableFieldZero().SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
+   for (auto &field : model.GetMutableFieldZero()) {
       // If the model has been created from the descritor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
