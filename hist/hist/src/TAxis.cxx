@@ -609,6 +609,26 @@ const char *TAxis::GetTimeFormatOnly() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the time offset in GMT.
+
+UInt_t TAxis::GetTimeOffset() {
+
+  Int_t idF = fTimeFormat.Index("%F")+2;
+  if (idF<2) {
+    Warning("GetGMTimeOffset","Time format is not set!");
+    return 0;
+  }
+  TString stime=fTimeFormat(idF,19);
+  if (stime.Length() != 19) {
+    Warning("GetGMTimeOffset","Bad time format!");
+    return 0;
+  }
+
+  TDatime datime(stime.Data());
+  return datime.Convert(kTRUE);  // Convert to unix gmt time
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the ticks option (see SetTicks)
 
 const char *TAxis::GetTicks() const
