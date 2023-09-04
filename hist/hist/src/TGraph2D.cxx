@@ -1065,8 +1065,8 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
    }
 
    // Option "empty" is selected. An empty histogram is returned.
+   Double_t hzmax, hzmin;
    if (empty) {
-      Double_t hzmax, hzmin;
       if (fMinimum != -1111) {
          hzmin = fMinimum;
       } else {
@@ -1111,6 +1111,10 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       }
    }
 
+   hzmin = GetZminE();
+   hzmax = GetZmaxE();
+   if (hzmin < fHistogram->GetMinimum()) fHistogram->SetMinimum(hzmin);
+   if (hzmax > fHistogram->GetMaximum()) fHistogram->SetMaximum(hzmax);
 
    if (fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
    if (fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
