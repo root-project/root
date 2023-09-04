@@ -29,6 +29,7 @@ endif()
 if(DEFINED ROOT_SOURCE_DIR)
   # Testing using the binary tree
   set(ROOT_root_CMD ${ROOT_BINDIR}/root.exe)
+  include_directories(${ROOT_SOURCE_DIR}/tutorials)
 else()
   # Testing using an installation (assuming access to ROOT CMake modules)
   include_directories(${ROOT_INCLUDE_DIRS})
