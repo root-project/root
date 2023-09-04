@@ -2980,8 +2980,8 @@ ROOT::Experimental::RCollectionField::RCollectionField(
    : RFieldBase(name, "", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionNTuple(collectionNTuple)
 {
-   for (unsigned i = 0; i < collectionModel->GetFieldZero()->fSubFields.size(); ++i) {
-      auto& subField = collectionModel->GetFieldZero()->fSubFields[i];
+   for (unsigned i = 0; i < collectionModel->GetFieldZeroPtr()->fSubFields.size(); ++i) {
+      auto &subField = collectionModel->GetFieldZeroPtr()->fSubFields[i];
       Attach(std::move(subField));
    }
    SetDescription(collectionModel->GetDescription());

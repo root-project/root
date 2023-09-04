@@ -158,7 +158,7 @@ public:
       void AddField(const NameWithDescription_t &fieldNameDesc, T *fromWhere)
       {
          fOpenChangeset.fModel.AddField<T>(fieldNameDesc, fromWhere);
-         auto fieldZero = fOpenChangeset.fModel.GetFieldZero();
+         auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
          auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
                                 [&](const auto &f) { return f.GetName() == fieldNameDesc.fName; });
          R__ASSERT(it != fieldZero->end());
@@ -360,7 +360,6 @@ public:
    }
    std::weak_ptr<REntry> GetDefaultEntry() const;
 
-   RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
    Detail::RFieldBase::RBulk GenerateBulk(std::string_view fieldName);
    void CommitCluster();
 
@@ -368,6 +367,9 @@ public:
    Detail::RFieldBase &GetField(std::string_view fieldName);
    const Detail::RFieldBase &GetField(std::string_view fieldName) const;
    const Detail::RFieldBase &GetConstField(std::string_view fieldName) const { return GetField(fieldName); }
+   const RFieldZero &GetFieldZero() const { return *fFieldZero; }
+   // TODO(jblomer): remove me
+   RFieldZero *GetFieldZeroPtr() { return fFieldZero.get(); }
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);

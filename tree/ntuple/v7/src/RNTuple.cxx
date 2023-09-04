@@ -64,11 +64,11 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 
 //------------------------------------------------------------------------------
 
-void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model)
+void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
-   model.GetFieldZero()->SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
-   for (auto &field : *model.GetFieldZero()) {
+   model.GetFieldZeroPtr()->SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
+   for (auto &field : *model.GetFieldZeroPtr()) {
       // If the model has been created from the descritor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
@@ -197,7 +197,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       RPrintSchemaVisitor printVisitor(output);
 
       // Note that we do not need to connect the model, we are only looking at its tree of fields
-      fullModel->GetFieldZero()->AcceptVisitor(prepVisitor);
+      fullModel->GetFieldZero().AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
@@ -207,7 +207,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
-      fullModel->GetFieldZero()->AcceptVisitor(printVisitor);
+      fullModel->GetFieldZero().AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;

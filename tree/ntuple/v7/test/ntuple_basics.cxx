@@ -422,7 +422,7 @@ TEST(RNTupleModel, GetField)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
-   EXPECT_EQ("", m->GetFieldZero()->GetQualifiedFieldName());
+   EXPECT_EQ("", m->GetFieldZero().GetQualifiedFieldName());
    EXPECT_EQ("x", m->GetField("x").GetQualifiedFieldName());
    EXPECT_EQ("cs", m->GetField("cs").GetQualifiedFieldName());
    EXPECT_EQ("cs.v1", m->GetField("cs.v1").GetQualifiedFieldName());

@@ -401,7 +401,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   auto &fieldZero = *model.GetFieldZero();
+   auto &fieldZero = *model.GetFieldZeroPtr();
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
    model.GetProjectedFields().GetFieldZero()->SetOnDiskId(0);
