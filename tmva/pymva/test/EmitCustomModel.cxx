@@ -34,7 +34,7 @@ y_train=randomGenerator.rand(1,4)\n\
 \n\
 model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))\n\
 model.fit(x_train, y_train, epochs=10, batch_size=1)\n\
-model.save('KerasModelForCustomOp.keras')\n";
+model.save('KerasModelForCustomOp.h5')\n";
 
 int main(){
    Py_Initialize();
@@ -43,7 +43,7 @@ int main(){
    PyRun_SimpleString(pythonSrc);
 
     //Parsing the saved Keras .keras file into RModel object
-    RModel model = PyKeras::Parse("KerasModelForCustomOp.keras");
+    RModel model = PyKeras::Parse("KerasModelForCustomOp.h5");
     model.Generate();
 
     std::unique_ptr<ROperator> op;
