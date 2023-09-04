@@ -314,7 +314,6 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    if (!collectionModel) {
       throw RException(R__FAIL("null collectionModel"));
    }
-   collectionModel->Freeze();
 
    auto collectionWriter = std::shared_ptr<RCollectionNTupleWriter>(new RCollectionNTupleWriter());
 
@@ -323,7 +322,8 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    }
    collectionWriter->fDefaultEntryIdx = collectionModel->fDefaultEntryIdx;
 
-   auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel));
+   auto field = std::make_unique<RCollectionField>(fieldName, collectionWriter, std::move(collectionModel->fFieldZero));
+   field->SetDescription(collectionModel->GetDescription());
 
    if (!IsBare()) {
       GetDefaultEntryPtr()->AddValue(field->BindValue(collectionWriter->GetOffsetPtr()));

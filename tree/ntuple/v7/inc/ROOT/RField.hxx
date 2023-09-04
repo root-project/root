@@ -1391,7 +1391,7 @@ public:
 class RCollectionField : public ROOT::Experimental::Detail::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
-   std::shared_ptr<RCollectionNTupleWriter> fCollectionNTuple;
+   std::shared_ptr<RCollectionNTupleWriter> fCollectionWriter;
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -1404,9 +1404,8 @@ protected:
 
 public:
    static std::string TypeName() { return ""; }
-   RCollectionField(std::string_view name,
-                    std::shared_ptr<RCollectionNTupleWriter> collectionNTuple,
-                    std::unique_ptr<RNTupleModel> collectionModel);
+   RCollectionField(std::string_view name, std::shared_ptr<RCollectionNTupleWriter> collectionWriter,
+                    std::unique_ptr<RFieldBase> collectionMotherField);
    RCollectionField(RCollectionField&& other) = default;
    RCollectionField& operator =(RCollectionField&& other) = default;
    ~RCollectionField() override = default;
