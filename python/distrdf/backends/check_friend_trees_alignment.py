@@ -20,6 +20,9 @@ def create_chain():
     for i in range(3, 6):
         friend.Add(f"{FILENAMES[i]}?#{TREENAMES[i]}")
 
+    # The friend will be owned by the main TChain
+    ROOT.SetOwnership(friend, False)
+
     main.AddFriend(friend, "friend")
 
     return main

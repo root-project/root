@@ -22,9 +22,9 @@ public:
 
 int MyShareable::sInstances = 0;
 
-shared_ptr<MyShareable> mine = shared_ptr<MyShareable>(new MyShareable);
+shared_ptr<MyShareable> mine = std::make_shared<MyShareable>();
 
-void renew_mine() { mine = shared_ptr<MyShareable>(new MyShareable); }
+void renew_mine() { mine = std::make_shared<MyShareable>(); }
 
 shared_ptr<MyShareable> gime_mine();
 shared_ptr<MyShareable>* gime_mine_ptr();
