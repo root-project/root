@@ -198,6 +198,7 @@ extern "C" {
 #else
 #include "Windows4Root.h"
 #include <Psapi.h>
+#include <direct.h>
 #undef GetModuleFileName
 #define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
@@ -2647,6 +2648,13 @@ void TCling::AddIncludePath(const char *path)
       path += 2;
    TString sPath(path);
    gSystem->ExpandPathName(sPath);
+#ifdef _MSC_VER
+   if (sPath.BeginsWith("/")) {
+      char drive[3];
+      snprintf(drive, 3, "%c:", _getdrive() + 'A' - 1);
+      sPath.Prepend(drive);
+   }
+#endif
    fInterpreter->AddIncludePath(sPath.Data());
 }
 
