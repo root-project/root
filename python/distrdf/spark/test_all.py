@@ -12,6 +12,7 @@ from check_inv_mass import *
 from check_reducer_merge import *
 from check_rungraphs import *
 from check_variations import *
+from check_live_visualize import *
 
 if __name__ == "__main__":
     # The call to sys.exit is needed otherwise CTest would just ignore the
