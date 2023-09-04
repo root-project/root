@@ -545,7 +545,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
               palette = fobj;
          }
 
-         if (!stats && first_obj && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
+         TString hopt = iter.GetOption();
+         TString o = hopt;
+         o.ToUpper();
+
+         if (!stats && (first_obj || o.Contains("SAMES")) && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
             stats = new TPaveStats(
                            gStyle->GetStatX() - gStyle->GetStatW(),
                            gStyle->GetStatY() - gStyle->GetStatH(),
@@ -574,10 +578,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
              hist->GetListOfFunctions()->Add(stats);
          }
-
-         TString hopt = iter.GetOption();
-         TString o = hopt;
-         o.ToUpper();
 
          if (!palette && CanCreateObject("TPaletteAxis") && (hist->GetDimension() > 1) &&
               (o.Contains("COLZ") || o.Contains("LEGO2Z") || o.Contains("LEGO4Z") || o.Contains("SURF2Z"))) {
