@@ -46,6 +46,7 @@ from ._roojsonfactorywstool import RooJSONFactoryWSTool
 from ._roomcstudy import RooMCStudy
 from ._roomsgservice import RooMsgService
 from ._roonllvar import RooNLLVar
+from ._rooplot import RooPlot
 from ._rooprodpdf import RooProdPdf
 from ._roorealvar import RooRealVar
 from ._roosimultaneous import RooSimultaneous
@@ -78,6 +79,7 @@ python_classes = [
     RooMCStudy,
     RooMsgService,
     RooNLLVar,
+    RooPlot,
     RooProdPdf,
     RooRealVar,
     RooSimultaneous,
