@@ -45,7 +45,7 @@ The following people have contributed to this new version:
 ## Removals
 
 * The `TH1K` class was removed. `TMath::KNNDensity` can be used in its stead.
-* The `TObject` equality operator pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed.
+* The `TObject` equality operator Pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed.
 * Comparing C++ `nullptr` objects with `None` in Python now raises a `TypeError`, as announced in the ROOT 6.38 release notes. Use truth-value checks like `if not x` or `x is None` instead.
 * The `TGLIncludes.h` and `TGLWSIncludes.h` that were deprecated in ROOT 6.38 and scheduled for removal are gone now. Please include your required headers like `<GL/gl.h>` or `<GL/glu.h>` directly.
 * The GLEW headers (`GL/eglew.h`, `GL/glew.h`, `GL/glxew.h`, and `GL/wglew.h`) that were installed when building ROOT with `builtin_glew=ON` are no longer installed. This is done because ROOT is moving away from GLEW for loading OpenGL extensions.
@@ -235,6 +235,113 @@ The new implementation is statistically consistent and recommended.
 ## Python Interface
 
 - ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
+
+
+### Change in memory ownership heuristics
+
+In previous ROOT versions, if a C++ member function took a non-`const` raw pointer, e.g.
+```C++
+MyClass::add(T* obj)
+```
+then calling this method from Python on an instance
+```Python
+my_instance.add(obj)
+```
+would assume that ownership of `obj` is transferred to `my_instance`.
+
+In practice, many such functions do not actually take ownership.
+As a result, this heuristic caused several memory leaks.
+
+Starting with ROOT 6.40, the ROOT Python interfaces no longer assumes ownership transfer for non-`const` raw pointer arguments.
+
+#### What does this mean for you?
+
+Because Python no longer automatically relinquishes ownership, some code that previously relied on the old heuristic may now expose:
+
+  * **Dangling references** on the C++ side
+  * **Double deletes**
+
+These issues must now be fixed by managing object lifetimes explicitly.
+
+#### Dangling references
+
+A dangling reference occurs when C++ holds a pointer or reference to an object that has already been deleted on the Python side.
+
+*Example*
+```Python
+obj = ROOT.MyClass()
+my_instance.foo(obj)
+del obj  # C++ may still hold a pointer: dangling reference
+```
+
+When the Python object is deleted, the memory associated with the C++ object
+ is also freed. But the C++ side may want to delete the object as well, for
+instance if the destructor of the class of `my_instance` also calls `delete obj`.
+
+*Possible remedies*
+
+ 1. **Keep the Python object alive**
+
+    Assign the object to a Python variable that lives at least as long as the C++ reference.
+
+    *Example:* Python lifeline
+    ```Python
+    obj = ROOT.MyClass()
+    my_instance.foo(obj)
+    # Setting `obj` as an attribute of `my_instance` makes sure that it's not
+    # garbage collected before `my_instance` is deleted:
+    my_instance._owned_obj = obj
+    del obj  # Reference counter for `obj` doesn't hit zero here
+    ```
+    Setting the lifeline reference could also be done in a user-side Pythonization of `MyClass::foo`.
+
+ 3. **Transfer ownership explicitly to C++**
+      * Drop the ownership on the Python side:
+        ```Python
+        ROOT.SetOwnership(obj, False)
+        ```
+      * Ensure that the C++ side will take ownership instead, e.g. by explicitly calling `delete` in the class destructor or using smart pointers like `std::unique_ptr`.
+
+ 3. **Rely on Pythonizations that imply ownership transfer**
+
+    If the object is stored in a non-owning collection such as a default-constructed `TCollection` (e.g. `TList`), you can make the collection owning before adding any elements:
+    ```Python
+    coll.SetOwner(True)
+    ```
+    This will imply ownership transfer to the C++ side when adding elements with `TCollection::Add()`.
+
+#### Note on **TCollection** Pythonization
+
+`TCollection`-derived classes are Pythonized such that when an object is added to an owning collection via `TCollection::Add()`, Python ownership is automatically dropped.
+
+If you identify other cases where such a Pythonization would be beneficial, please report them via a GitHub issue. Users can also implement custom Pythonizations outside ROOT if needed.
+
+#### Double deletes
+
+A double delete indicates that C++ already owns the object, but Python still attempts to delete it.
+
+In this case, you do not need to ensure C++ ownership, as it already exists.
+Instead, ensure that Python does not delete the object.
+
+*Possible remedies*
+
+ 1. Drop Python ownership explicitly:
+    ```Python
+    ROOT.SetOwnership(obj, False)
+    ```
+
+ 2. Pythonize the relevant member function to automatically drop ownership on the Python side (similar to the `TCollection` Pythonization described above).
+
+#### Temporary compatibility option
+
+You can temporarily restore the old heuristic by calling:
+```Python
+ROOT.SetHeuristicMemoryPolicy(True)
+```
+
+after importing ROOT.
+
+This option is intended **for debugging only and will be removed in ROOT 6.44**.
 
 ### UHI
 #### Backwards incompatible changes
