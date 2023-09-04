@@ -30,19 +30,20 @@ int testPyKerasClassification(){
    TFile *input = TFile::Open(fname);
 
    // Build model from python file
-   std::cout << "Generate keras model..." << std::endl;
-   UInt_t ret;
-   ret = gSystem->Exec("echo '"+pythonSrc+"' > generateKerasModelClassification.py");
-   if(ret!=0){
-       std::cout << "[ERROR] Failed to write python code to file" << std::endl;
-       return 1;
+   if (gSystem->AccessPathName("kerasModelClassification.h5")) {
+      std::cout << "Generate keras model..." << std::endl;
+      UInt_t ret;
+      ret = gSystem->Exec("echo '"+pythonSrc+"' > generateKerasModelClassification.py");
+      if(ret!=0){
+         std::cout << "[ERROR] Failed to write python code to file" << std::endl;
+         return 1;
+      }
+      ret = gSystem->Exec(TMVA::Python_Executable() + " generateKerasModelClassification.py");
+      if(ret!=0){
+         std::cout << "[ERROR] Failed to generate model using python" << std::endl;
+         return 1;
+      }
    }
-   ret = gSystem->Exec(TMVA::Python_Executable() + " generateKerasModelClassification.py");
-   if(ret!=0){
-       std::cout << "[ERROR] Failed to generate model using python" << std::endl;
-       return 1;
-   }
-
    // Setup PyMVA and factory
    std::cout << "Setup TMVA..." << std::endl;
    TMVA::PyMethodBase::PyInitialize();
