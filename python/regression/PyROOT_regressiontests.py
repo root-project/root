@@ -589,7 +589,10 @@ class Regression22ObjectCleanup(MyTestCase):
       # ROOT-9040
       if not legacy_pyroot:
          mg = ROOT.TMultiGraph()
-         mg.Add(ROOT.TGraph())
+         tg = ROOT.TGraph()
+         # The TMultiGraph will take the ownership of the added TGraphs
+         ROOT.SetOwnership(tg, False)
+         mg.Add(tg)
 
          l = mg.GetListOfGraphs()
          self.assertEqual(l.TestBit(ROOT.kMustCleanup), False)

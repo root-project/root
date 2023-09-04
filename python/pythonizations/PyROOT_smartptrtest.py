@@ -110,8 +110,9 @@ class TestClassSMARTPTRS:
         # ROOT-10245
         import ROOT
 
-        ROOT.gROOT.ProcessLine('std::shared_ptr<TObject> optr(new TObject());')
+        ROOT.gROOT.ProcessLine('auto optr = std::make_shared<TObject>();')
         o2 = ROOT.TObject()
+        ROOT.SetOwnership(o2, False) # This object will be owned by the smart pointer
         ROOT.optr.__smartptr__().reset(o2)
         assert ROOT.optr == o2
 

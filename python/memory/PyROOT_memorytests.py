@@ -97,6 +97,10 @@ class Memory1TestCase( MyTestCase ):
       kMemoryStrict = ROOT.kMemoryStrict
       kMemoryHeuristics = ROOT.kMemoryHeuristics
 
+    # This unit test assumes that the global memory policy is set to
+    # "heuristics" at the beginning, so let's make sure of that.
+      old_memory_policy = SetMemoryPolicy( kMemoryHeuristics )
+
     # reference calls should not give up ownership
       a = MemTester()
       self.assertEqual( MemTester.counter, 1 )
@@ -190,6 +194,8 @@ class Memory1TestCase( MyTestCase ):
       self.assertEqual( MemTester.counter, 0 )
       del c             # c not derived from TObject, no notification
       self.assertEqual( MemTester.counter, 0 )
+
+      SetMemoryPolicy( old_memory_policy )
 
    def test4DestructionOfDerivedClass( self ):
       """Derived classes should call base dtor automatically"""

@@ -279,17 +279,25 @@ class Basic5PythonizationTestCase( MyTestCase ):
    def test2Lists( self ):
       """Test list/TList behavior and compatibility"""
 
+      # A TList is non-owning. In order to fill the TList with in-place created
+      # objects, we write this little helper to create a new TObjectString
+      # whose lifetime is managed by a separate owning Python list.
+      objects = []
+      def make_obj_str(s):
+          objects.append(TObjString(s))
+          return objects[-1]
+
       l = TList()
-      l.Add( TObjString('a') )
-      l.Add( TObjString('b') )
-      l.Add( TObjString('c') )
-      l.Add( TObjString('d') )
-      l.Add( TObjString('e') )
-      l.Add( TObjString('f') )
-      l.Add( TObjString('g') )
-      l.Add( TObjString('h') )
-      l.Add( TObjString('i') )
-      l.Add( TObjString('j') )
+      l.Add( make_obj_str('a') )
+      l.Add( make_obj_str('b') )
+      l.Add( make_obj_str('c') )
+      l.Add( make_obj_str('d') )
+      l.Add( make_obj_str('e') )
+      l.Add( make_obj_str('f') )
+      l.Add( make_obj_str('g') )
+      l.Add( make_obj_str('h') )
+      l.Add( make_obj_str('i') )
+      l.Add( make_obj_str('j') )
 
       self.assertEqual( len(l), 10 )
       self.assertEqual( l[3], 'd' )
@@ -299,14 +307,14 @@ class Basic5PythonizationTestCase( MyTestCase ):
 
       self.assertEqual( list(l), ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'] )
 
-      l[3] = TObjString('z')
+      l[3] = make_obj_str('z')
       self.assertEqual( list(l), ['a', 'b', 'c', 'z', 'e', 'f', 'g', 'h', 'i', 'j'] )
 
       del l[2]
       self.assertEqual( list(l), ['a', 'b', 'z', 'e', 'f', 'g', 'h', 'i', 'j'] )
 
-      self.assertTrue( TObjString('b') in l )
-      self.assertTrue( not TObjString('x') in l )
+      self.assertTrue( make_obj_str('b') in l )
+      self.assertTrue( not make_obj_str('x') in l )
 
       self.assertEqual( list(l[2:6]),   ['z', 'e', 'f', 'g'] )
       self.assertEqual( list(l[2:6:2]), ['z', 'f'] )
@@ -317,27 +325,27 @@ class Basic5PythonizationTestCase( MyTestCase ):
       del l[2:4]
       self.assertEqual( list(l), ['a', 'b', 'f', 'g', 'h', 'i', 'j'] )
 
-      l[2:5] = [ TObjString('1'), TObjString('2') ]
+      l[2:5] = [ make_obj_str('1'), make_obj_str('2') ]
       self.assertEqual( list(l), ['a', 'b', '1', '2', 'i', 'j'] )
 
-      l[6:6] = [ TObjString('3') ]
+      l[6:6] = [ make_obj_str('3') ]
       self.assertEqual( list(l), ['a', 'b', '1', '2', 'i', 'j', '3'] )
 
-      l.append( TObjString('4') )
+      l.append( make_obj_str('4') )
       self.assertEqual( list(l), ['a', 'b', '1', '2', 'i', 'j', '3', '4'] )
 
-      l.extend( [ TObjString('5'), TObjString('j') ] )
+      l.extend( [ make_obj_str('5'), make_obj_str('j') ] )
       self.assertEqual( list(l), ['a', 'b', '1', '2', 'i', 'j', '3', '4', '5', 'j'] )
       self.assertEqual( l.count( 'b' ), 1 )
       self.assertEqual( l.count( 'j' ), 2 )
       self.assertEqual( l.count( 'x' ), 0 )
 
-      self.assertEqual( l.index( TObjString( 'i' ) ), 4 )
-      self.assertRaises( ValueError, l.index, TObjString( 'x' ) )
+      self.assertEqual( l.index( make_obj_str( 'i' ) ), 4 )
+      self.assertRaises( ValueError, l.index, make_obj_str( 'x' ) )
 
-      l.insert(  3, TObjString('6') )
-      l.insert( 20, TObjString('7') )
-      l.insert( -1, TObjString('8') )
+      l.insert(  3, make_obj_str('6') )
+      l.insert( 20, make_obj_str('7') )
+      l.insert( -1, make_obj_str('8') )
       if not self.legacy_pyroot:
          # The pythonisation of TSeqCollection in experimental PyROOT mimics the
          # behaviour of the Python list, in this case for insert.
@@ -346,7 +354,7 @@ class Basic5PythonizationTestCase( MyTestCase ):
          # element of the list.
          self.assertEqual(list(l), ['a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '8', '7'])
          # Re-synchronize with current PyROOT's list
-         l.insert(0, TObjString('8'))
+         l.insert(0, make_obj_str('8'))
          self.assertEqual(list(l), ['8', 'a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '8', '7'])
          l.pop(-2)
          self.assertEqual(list(l), ['8', 'a', 'b', '1', '6', '2', 'i', 'j', '3', '4', '5', 'j', '7'])
@@ -356,10 +364,10 @@ class Basic5PythonizationTestCase( MyTestCase ):
       self.assertEqual( l.pop(3), '1' )
       self.assertEqual( list(l), ['8', 'a', 'b', '6', '2', 'i', 'j', '3', '4', '5', 'j'] )
 
-      l.remove( TObjString( 'j' ) )
-      l.remove( TObjString( '3' ) )
+      l.remove( make_obj_str( 'j' ) )
+      l.remove( make_obj_str( '3' ) )
 
-      self.assertRaises( ValueError, l.remove, TObjString( 'x' ) )
+      self.assertRaises( ValueError, l.remove, make_obj_str( 'x' ) )
       self.assertEqual( list(l), ['8', 'a', 'b', '6', '2', 'i', '4', '5', 'j'] )
 
       l.reverse()
