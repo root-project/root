@@ -14,6 +14,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
     # Helpers
     def create_tseqcollection(self):
         sc = ROOT.TList()
+        sc.SetOwner(True)
         for i in reversed(range(self.num_elems)):
             sc.Add(ROOT.TObjString(str(i)))
 

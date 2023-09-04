@@ -39,7 +39,7 @@ The following people have contributed to this new version:
 ## Removals
 
 * The `TH1K` class was removed. `TMath::KNNDensity` can be used in its stead.
-* The `TObject` equality operator pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed.
+* The `TObject` equality operator Pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed.
 * Comparing C++ `nullptr` objects with `None` in Python now raises a `TypeError`, as announced in the ROOT 6.38 release notes. Use truth-value checks like `if not x` or `x is None` instead.
 * The `TGLIncludes.h` and `TGLWSIncludes.h` that were deprecated in ROOT 6.38 and scheduled for removal are gone now. Please include your required headers like `<GL/gl.h>` or `<GL/glu.h>` directly.
 * The GLEW headers (`GL/eglew.h`, `GL/glew.h`, `GL/glxew.h`, and `GL/wglew.h`) that were installed when building ROOT with `builtin_glew=ON` are no longer installed. This is done because ROOT is moving away from GLEW for loading OpenGL extensions.
@@ -121,6 +121,55 @@ As part of this migration, the following build options are deprecated. From ROOT
 ## Python Interface
 
 ROOT dropped support for Python 3.9, meaning ROOT now requires at least Python 3.10.
+
+### Changed ownership policy for non-`const` pointer member function parameters
+
+If you have a member function taking a raw pointer, like `MyClass::foo(T *obj)`,
+calling such method on a Python object `my_instance` of type `MyClass`
+would assume that the memory ownership of `obj` transfers to `my_instance`.
+
+However, this resulted in many memory leaks, since many functions with such a
+signature actually don't take ownership of the object.
+
+Now, the Python interface of ROOT will not make this assumption anymore.
+Because of this change, some double-deletes or dangling references on the C++
+side might creep up in your scripts. These need to be fixed by properly
+managing object lifetime.
+
+A dangling references on the C++ side is a reference or pointer that refers to
+an object that the Python side has already deleted.
+Possible remedies:
+
+  1. Assigning the object to a Python variable that lives at least as long as
+     the C++ reference to keep the pointed-to object alive
+  2. If the C++ reference comes from a non-owning collection, like a
+     default-constructed **TCollection** (e.g. a **TList**), you can also transfer
+     the ownership to the C++ side explicitly by calling `coll.SetOwner(True)`
+     or migrate to another owning collection type like
+     `std::vector<unique_ptr<T>>`. In the general case of owning collections,
+     you will have to relinquish ownership on the Python side with
+     `ROOT.SetOwnership(obj, False)`.
+
+**Note:** **TCollection**-derived classes are Pythonized such that when an
+object is added to an owning collection with `TCollection::Add()`, the Python
+ownership is still dropped automatically. If you see other places where ROOT
+can benefit from this Pythonization, please report them in a GitHub issue. You
+can also [Pythonize classes](https://root.cern/doc/master/group__Pythonizations.html) from outside ROOT if needed.
+
+The double-delete problems can be fixed in a similar ways, but this time it's
+not necessary to make sure that the object is owned by C++. It there was a
+double-delete, that means the object was owned by C++ already. So the possible
+solutions are:
+
+  1. Dropping the ownership on the Python side with `ROOT.SetOwnership(obj, False)`
+  3. Pythonizing the member function that drops the ownership on the Python
+     side, like the **TCollection** Pythonization explained above
+
+**Important:** You can change back to the old policy by calling
+`ROOT.SetHeuristicMemoryPolicy(True)` after importing ROOT, but this should be
+only used for debugging purposes and this function might be **removed in ROOT
+6.42**!
+
 
 ## Command-line utilities
 

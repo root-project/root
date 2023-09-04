@@ -31,13 +31,19 @@ def _pack_cmd_args(*args, **kwargs):
     assert len(kwargs) == 0
 
     # Put RooCmdArgs in a RooLinkedList
-    cmdList = ROOT.RooLinkedList()
+    cmd_list = ROOT.RooLinkedList()
     for cmd in args:
         if not isinstance(cmd, ROOT.RooCmdArg):
             raise TypeError("This function only takes RooFit command arguments.")
-        cmdList.Add(cmd)
+        cmd_list.Add(cmd)
 
-    return cmdList
+    # The RooLinkedList passed to functions like fitTo() is expected to be
+    # non-owning. To make sure that the RooCmdArgs live long enough, we attach
+    # then as an attribute of the output list, such that the Python reference
+    # counter doesn't hit zero.
+    cmd_list._owning_pylist = args
+
+    return cmd_list
 
 
 class RooAbsPdf(RooAbsReal):

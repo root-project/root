@@ -38,6 +38,7 @@ if(roofit)
         ROOT/_pythonization/_roofit/_roojsonfactorywstool.py
         ROOT/_pythonization/_roofit/_roomcstudy.py
         ROOT/_pythonization/_roofit/_roomsgservice.py
+        ROOT/_pythonization/_roofit/_rooplot.py
         ROOT/_pythonization/_roofit/_rooprodpdf.py
         ROOT/_pythonization/_roofit/_roorealvar.py
         ROOT/_pythonization/_roofit/_roosimultaneous.py

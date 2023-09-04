@@ -14,10 +14,9 @@ class TCollectionListMethods(unittest.TestCase):
     # Helpers
     def create_tcollection(self):
         c = ROOT.TList()
+        c.SetOwner(True)
         for _ in range(self.num_elems):
             o = ROOT.TObject()
-            # Prevent immediate deletion of C++ TObjects
-            ROOT.SetOwnership(o, False)
             c.Add(o)
 
         return c
@@ -76,6 +75,7 @@ class TCollectionListMethods(unittest.TestCase):
         len1 = c1.GetEntries()
         len2 = c2.GetEntries()
 
+        c2.SetOwner(False)
         c1.extend(c2)
 
         len1_final = c1.GetEntries()
@@ -104,6 +104,8 @@ class TCollectionListMethods(unittest.TestCase):
 
         self.assertEqual(c.count(o1), 2)
         self.assertEqual(c.count(o2), 1)
+
+        c.Clear()
 
 
 if __name__ == '__main__':

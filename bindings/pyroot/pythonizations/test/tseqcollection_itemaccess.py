@@ -15,10 +15,9 @@ class TSeqCollectionItemAccess(unittest.TestCase):
     # Helpers
     def create_tseqcollection(self):
         sc = ROOT.TList()
+        sc.SetOwner(True)
         for _ in range(self.num_elems):
             o = ROOT.TObject()
-            # Prevent immediate deletion of C++ TObjects
-            ROOT.SetOwnership(o, False)
             sc.Add(o)
 
         return sc
@@ -50,6 +49,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
     def test_getitem_slice(self):
         sc = self.create_tseqcollection()
+        sc.SetOwner(False)
 
         # All items
         slice1 = sc[:]
@@ -125,7 +125,9 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
     def test_setitem_slice(self):
         sc1 = self.create_tseqcollection()
+        sc1.SetOwner(False)
         sc2 = self.create_tseqcollection()
+        sc2.SetOwner(False)
 
         # Replace all items
         sc1[:] = sc2
@@ -135,6 +137,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         # Append items
         sc1 = self.create_tseqcollection()
+        sc1.SetOwner(False)
         l1 = [elem for elem in sc1]
 
         sc1[self.num_elems:] = sc2
@@ -151,6 +154,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Assign second item.
         # This time use a Python list as assigned value
         sc3 = self.create_tseqcollection()
+        sc3.SetOwner(False)
         l2 = [ ROOT.TObject() ]
         l3 = [ elem for elem in sc3 ]
 
@@ -164,6 +168,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         # Assign second and third items to just one item.
         # This tests that the third item is removed
         sc4 = self.create_tseqcollection()
+        sc4.SetOwner(False)
         l4 = [ ROOT.TObject() ]
         l5 = [ elem for elem in sc4 ]
 
@@ -175,6 +180,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         # Assign with step
         sc5 = self.create_tseqcollection()
+        sc5.SetOwner(False)
         o = sc5[1]
         len6 = 2
         l6 = [ ROOT.TObject() for _ in range(len6) ]
@@ -196,6 +202,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         # Step cannot be zero
         sc6 = self.create_tseqcollection()
+        sc6.SetOwner(False)
         with self.assertRaises(ValueError):
             sc6[::0] = [ ROOT.TObject() ]
 
@@ -236,6 +243,8 @@ class TSeqCollectionItemAccess(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             del sc[1.0]
+
+        sc.Clear()
 
     def test_delitem_slice(self):
         # Delete all items
