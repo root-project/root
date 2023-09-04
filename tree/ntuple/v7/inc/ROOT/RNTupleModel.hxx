@@ -219,6 +219,9 @@ private:
    RNTupleModel();
 
 public:
+   using Iterator_t = Detail::RFieldBase::RSchemaIterator;
+   using ConstIterator_t = Detail::RFieldBase::RConstSchemaIterator;
+
    RNTupleModel(const RNTupleModel&) = delete;
    RNTupleModel& operator =(const RNTupleModel&) = delete;
    ~RNTupleModel();
@@ -368,6 +371,21 @@ public:
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
+
+   ConstIterator_t cbegin() const { return fFieldZero->cbegin(); }
+   ConstIterator_t cend() const { return fFieldZero->cend(); }
+   ConstIterator_t begin() const { return cbegin(); }
+   ConstIterator_t end() const { return cend(); }
+   Iterator_t begin()
+   {
+      EnsureNotFrozen();
+      return fFieldZero->begin();
+   }
+   Iterator_t end()
+   {
+      EnsureNotFrozen();
+      return fFieldZero->end();
+   }
 };
 
 } // namespace Experimental
