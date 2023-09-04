@@ -136,8 +136,8 @@ std::istream& TString::ReadToken(std::istream& strm)
    UInt_t wid = strm.width(0);
    char c='\0';
    Int_t hitSpace = 0;
-   while ((wid == 0 || Length() < (Int_t)wid) &&
-          strm.get(c).good() && (hitSpace = isspace((Int_t)c)) == 0) {
+   while ((wid == 0 || Length() < (Int_t)wid) && strm.get(c).good() &&
+          (hitSpace = isspace(static_cast<unsigned char>(c))) == 0) {
       // Check for overflow:
       Ssiz_t len = Length();
       Ssiz_t cap = Capacity();
