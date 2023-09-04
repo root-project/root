@@ -389,6 +389,18 @@ ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEnt
    return entry;
 }
 
+ROOT::Experimental::Detail::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::GenerateBulk(std::string_view fieldName)
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to create bulk of unfrozen model"));
+
+   auto f = FindField(fieldName);
+   if (!f)
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+
+   return f->GenerateBulk();
+}
+
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
    if (!IsFrozen())

@@ -358,6 +358,8 @@ public:
    std::weak_ptr<REntry> GetDefaultEntry() const;
 
    RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
+   Detail::RFieldBase::RBulk GenerateBulk(std::string_view fieldName);
+
    bool HasField(std::string_view fieldName) const { return FindField(fieldName) != nullptr; }
    Detail::RFieldBase &GetField(std::string_view fieldName);
    const Detail::RFieldBase &GetField(std::string_view fieldName) const;

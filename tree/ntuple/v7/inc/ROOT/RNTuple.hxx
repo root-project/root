@@ -264,6 +264,12 @@ public:
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
    void LoadEntry(NTupleSize_t index, REntry &entry) { entry.Read(index); }
 
+   Detail::RFieldBase::RBulk GenerateBulk(std::string_view fieldName)
+   {
+      EnsureModel();
+      return fModel->GenerateBulk(fieldName);
+   }
+
    /// Returns an iterator over the entry indices of the RNTuple.
    ///
    /// **Example: iterate over all entries and print each entry in JSON format**
