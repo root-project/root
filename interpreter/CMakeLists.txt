@@ -245,6 +245,7 @@ if(builtin_llvm)
     ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
     CACHE STRING "LLVM include directories."
     )
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/cmake/modules")
   #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
   set(llvmconfigfile "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/CMakeLists.txt")
   file(READ ${llvmconfigfile} _filestr)
