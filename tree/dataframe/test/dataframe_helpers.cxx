@@ -710,22 +710,24 @@ TEST(RDFHelpers, ProgressHelper_Existence_ST)
 class SimpleActionHelper : public ROOT::Detail::RDF::RActionImpl<SimpleActionHelper> {
 public:
    using Result_t = int;
+
 private:
    std::shared_ptr<Result_t> fValue;
    int &fTestVal;
+
 public:
    static constexpr int fgRefVal = 42;
-   SimpleActionHelper(int &testVal):fValue(new int), fTestVal(testVal) {}
+   SimpleActionHelper(int &testVal) : fValue(new int), fTestVal(testVal) {}
    SimpleActionHelper(SimpleActionHelper &&) = default;
    SimpleActionHelper(const SimpleActionHelper &) = delete;
    std::shared_ptr<int> GetResultPtr() const { return fValue; }
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
    template <typename... ColumnTypes>
-   void Exec(unsigned int, ColumnTypes...){}
-   void Finalize() { 
-      fTestVal = SimpleActionHelper::fgRefVal;
-      }
+   void Exec(unsigned int, ColumnTypes...)
+   {
+   }
+   void Finalize() { fTestVal = SimpleActionHelper::fgRefVal; }
    std::string GetActionName() { return "SimpleAction"; }
 };
 
