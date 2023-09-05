@@ -21,8 +21,9 @@ ParserFuncSignature ParseWhere = [](RModelParser_ONNX &parser, const onnx::NodeP
                   std::runtime_error("TMVA::SOFIE ONNX parser Where op condition is not of Boolean datatype");
             }
          }
-         if (i == 1)
-            input_type = parser.GetTensorType(input_name);
+         else if (i == 1){
+             input_type = parser.GetTensorType(input_name);
+         }
          else if(i == 2){
             if (input_type != parser.GetTensorType(input_name)) {
                throw

@@ -257,7 +257,7 @@
 #include "Log_FromONNX.hxx"
 #include "input_models/references/Log.ref.hxx"
 
-#include "Where_FromONNX.hxx"
+#include "where_FromONNX.hxx"
 #include "input_models/references/Where.ref.hxx"
 
 #include "gtest/gtest.h"
@@ -604,18 +604,16 @@ TEST(ONNX, Where)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the random input
-   std::vector<bool> condition({
-     true, false, false, true
-   });
+   bool condition[] = {true, false, false, true};
    std::vector<float> X({
      1.0, 2.0, 3.0, 4.0
    });
    std::vector<float> Y({
      5.0, 6.0, 7.0, 8.0
    });
-   TMVA_SOFIE_Where::Session s("Where_FromONNX.dat");
+   TMVA_SOFIE_where::Session s("where_FromONNX.dat");
 
-   std::vector<float> output = s.infer(condition.data(), X.data(), Y.data());
+   std::vector<float> output = s.infer(condition, X.data(), Y.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Where_ExpectedOutput::outputs) / sizeof(float));
