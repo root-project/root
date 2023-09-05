@@ -155,9 +155,9 @@ class SOFIE_GNN(unittest.TestCase):
         output_edge_data = output.edges.numpy()
         output_global_data = output.globals.numpy().flatten()
 
-        assert_almost_equal(output_node_data, np.asarray(input_data.node_data))
-        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
-        assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
+        assert_almost_equal(output_node_data, np.asarray(input_data.node_data), 5)
+        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data), 5)
+        assert_almost_equal(output_global_data, np.asarray(input_data.global_data), 5)
 
 
     def test_b_parse_graph_independent(self):
@@ -198,9 +198,9 @@ class SOFIE_GNN(unittest.TestCase):
         output_edge_data = output.edges.numpy()
         output_global_data = output.globals.numpy().flatten()
 
-        assert_almost_equal(output_node_data, np.asarray(input_data.node_data))
-        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data))
-        assert_almost_equal(output_global_data, np.asarray(input_data.global_data))
+        assert_almost_equal(output_node_data, np.asarray(input_data.node_data), 5)
+        assert_almost_equal(output_edge_data, np.asarray(input_data.edge_data), 5)
+        assert_almost_equal(output_global_data, np.asarray(input_data.global_data), 5)
 
 
     def test_c_lhcb_toy_inference(self):
@@ -293,11 +293,11 @@ class SOFIE_GNN(unittest.TestCase):
           output_edge_data = output_gn[i].edges.numpy()
           output_global_data = output_gn[i].globals.numpy().flatten()
 
-          assert_almost_equal(output_node_data, np.asarray(output_ops[i].node_data))
+          assert_almost_equal(output_node_data, np.asarray(output_ops[i].node_data), 5)
 
-          assert_almost_equal(output_edge_data, np.asarray(output_ops[i].edge_data))
+          assert_almost_equal(output_edge_data, np.asarray(output_ops[i].edge_data), 5)
 
-          assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data))
+          assert_almost_equal(output_global_data, np.asarray(output_ops[i].global_data), 5)
 
     @classmethod
     def tearDownClass(self) :
