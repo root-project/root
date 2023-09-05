@@ -814,6 +814,66 @@ Without this, two partial histograms resulting from two distributed tasks would 
 to errors when merging them. Failing to pass a histogram model will raise an error on the client side, before starting
 the distributed execution.
 
+### Live visualization in distributed mode with dask
+
+The live visualization feature allows real-time data representation of plots generated during the execution 
+of a distributed RDataFrame application. 
+It enables visualizing intermediate results as they are computed across multiple nodes of a Dask cluster
+by creating a canvas and continuously updating it as partial results become available. 
+
+The LiveVisualize() function can be imported from the Python package **ROOT.RDF.Experimental.Distributed**:
+
+~~~{.py}
+import ROOT
+
+LiveVisualize = ROOT.RDF.Experimental.Distributed.LiveVisualize
+~~~
+
+The function takes drawable objects (e.g. histograms) and optional callback functions as argument, it accepts 4 different input formats:
+
+- Passing a list or tuple of drawables: 
+You can pass a list or tuple containing the plots you want to visualize. For example:
+
+~~~{.py}
+LiveVisualize([h_gaus, h_exp, h_random])
+~~~
+
+- Passing a list or tuple of drawables with a global callback function: 
+You can also include a global callback function that will be applied to all plots. For example:
+
+~~~{.py}
+def set_fill_color(hist):
+    hist.SetFillColor(ROOT.kBlue)
+
+LiveVisualize([h_gaus, h_exp, h_random], set_fill_color)
+~~~
+
+- Passing a Dictionary of drawables and callback functions: 
+For more control, you can create a dictionary where keys are plots and values are corresponding (optional) callback functions. For example:
+
+~~~{.py}
+plot_callback_dict = {
+    graph: set_marker,
+    h_exp: fit_exp,
+    tprofile_2d: None
+}
+
+LiveVisualize(plot_callback_dict)
+~~~
+
+- Passing a Dictionary of drawables and callback functions with a global callback function: 
+You can also combine a dictionary of plots and callbacks with a global callback function:
+
+~~~{.py}
+LiveVisualize(plot_callback_dict, write_to_tfile)
+~~~
+
+\note The allowed operations to pass to LiveVisualize are:
+      - Histo1D(), Histo2D(), Histo3D()
+      - Graph()
+      - Profile1D(), Profile2D()
+
+\warning The Live Visualization feature is only supported for the Dask backend.
 
 \anchor parallel-execution
 ## Performance tips and parallel execution
