@@ -138,7 +138,13 @@ public:
 
    void saveStatus(const char *label, int status)
    {
-      _statusHistory.push_back(std::pair<std::string, int>(label, status));
+      _statusHistory.emplace_back(label, status);
+   }
+
+   /// Clears the Minuit status history.
+   void clearStatusHistory()
+   {
+      _statusHistory.clear();
    }
 
    int evalCounter() const;
