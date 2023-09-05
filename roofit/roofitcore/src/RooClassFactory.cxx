@@ -67,36 +67,84 @@ static int init()
   return 0 ;
 }
 
+
+bool makeAndCompileClass(const char *baseClassName, const char *name, const char *expression, const RooArgList &vars,
+                         const char *intExpression)
+{
+   std::string realArgNames, catArgNames;
+   for (RooAbsArg *arg : vars) {
+      if (dynamic_cast<RooAbsReal *>(arg)) {
+         if (!realArgNames.empty())
+            realArgNames += ",";
+         realArgNames += arg->GetName();
+      } else if (dynamic_cast<RooAbsCategory *>(arg)) {
+         if (!catArgNames.empty())
+            catArgNames += ",";
+         catArgNames += arg->GetName();
+      } else {
+         oocoutE(nullptr, InputArguments) << "RooClassFactory ERROR input argument " << arg->GetName()
+                                          << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl;
+      }
+   }
+
+   bool ret = RooClassFactory::makeClass(baseClassName, name, realArgNames.c_str(), catArgNames.c_str(), expression,
+                                         intExpression ? true : false, false, intExpression);
+   if (ret) {
+      return ret;
+   }
+
+   TInterpreter::EErrorCode ecode;
+   gInterpreter->ProcessLineSynch(Form(".L %s.cxx+", name), &ecode);
+   return (ecode != TInterpreter::kNoError);
 }
 
+RooAbsReal *makeClassInstance(const char *baseClassName, const char *className, const char *name,
+                              const char *expression, const RooArgList &vars, const char *intExpression)
+{
+   // Use class factory to compile and link specialized function
+   bool error = makeAndCompileClass(baseClassName, className, expression, vars, intExpression);
+
+   // Check that class was created OK
+   if (error) {
+      RooErrorHandler::softAbort();
+   }
+
+   // Create interpreter line that instantiates specialized object
+   std::string line = std::string("new ") + className + "(\"" + name + "\",\"" + name + "\"";
+
+   // Make list of pointer values (represented in hex ascii) to be passed to cint
+   // Note that the order of passing arguments must match the convention in which
+   // the class code is generated: first all reals, then all categories
+
+   std::string argList;
+   // First pass the RooAbsReal arguments in the list order
+   for (RooAbsArg *var : vars) {
+      if (dynamic_cast<RooAbsReal *>(var)) {
+         argList += Form(",*reinterpret_cast<RooAbsReal*>(0x%zx)", (std::size_t)var);
+      }
+   }
+   // Next pass the RooAbsCategory arguments in the list order
+   for (RooAbsArg *var : vars) {
+      if (dynamic_cast<RooAbsCategory *>(var)) {
+         argList += Form(",*reinterpret_cast<RooAbsCategory*>(0x%zx)", (std::size_t)var);
+      }
+   }
+
+   line += argList + ") ;";
+
+   // Let interpreter instantiate specialized formula
+   return reinterpret_cast<RooAbsReal *>(gInterpreter->ProcessLineSynch(line.c_str()));
+}
+
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool RooClassFactory::makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
+bool RooClassFactory::makeAndCompilePdf(const char *name, const char *expression, const RooArgList &vars,
+                                        const char *intExpression)
 {
-  string realArgNames,catArgNames ;
-  for (RooAbsArg * arg : vars) {
-    if (dynamic_cast<RooAbsReal*>(arg)) {
-      if (!realArgNames.empty()) realArgNames += "," ;
-      realArgNames += arg->GetName() ;
-    } else if (dynamic_cast<RooAbsCategory*>(arg)) {
-      if (!catArgNames.empty()) catArgNames += "," ;
-      catArgNames += arg->GetName() ;
-    } else {
-      oocoutE(nullptr,InputArguments) << "RooClassFactory::makeAndCompilePdf ERROR input argument " << arg->GetName()
-                     << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
-    }
-  }
-
-  bool ret = makePdf(name,realArgNames.c_str(),catArgNames.c_str(),expression,intExpression?true:false,false,intExpression) ;
-  if (ret) {
-    return ret ;
-  }
-
-  TInterpreter::EErrorCode ecode;
-  gInterpreter->ProcessLineSynch(Form(".L %s.cxx+",name),&ecode) ;
-  return (ecode!=TInterpreter::kNoError) ;
+   return makeAndCompileClass("RooAbsPdf", name, expression, vars, intExpression);
 }
 
 
@@ -114,30 +162,10 @@ bool RooClassFactory::makeAndCompilePdf(const char* name, const char* expression
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-bool RooClassFactory::makeAndCompileFunction(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
+bool RooClassFactory::makeAndCompileFunction(const char *name, const char *expression, const RooArgList &vars,
+                                             const char *intExpression)
 {
-  string realArgNames,catArgNames ;
-  for (RooAbsArg * arg : vars) {
-    if (dynamic_cast<RooAbsReal*>(arg)) {
-      if (!realArgNames.empty()) realArgNames += "," ;
-      realArgNames += arg->GetName() ;
-    } else if (dynamic_cast<RooAbsCategory*>(arg)) {
-      if (!catArgNames.empty()) catArgNames += "," ;
-      catArgNames += arg->GetName() ;
-    } else {
-      oocoutE(nullptr,InputArguments) << "RooClassFactory::makeAndCompileFunction ERROR input argument " << arg->GetName()
-                   << " is neither RooAbsReal nor RooAbsCategory and is ignored" << endl ;
-    }
-  }
-
-  bool ret = makeFunction(name,realArgNames.c_str(),catArgNames.c_str(),expression,intExpression?true:false,intExpression) ;
-  if (ret) {
-    return ret ;
-  }
-
-  TInterpreter::EErrorCode ecode;
-  gInterpreter->ProcessLineSynch(Form(".L %s.cxx+",name),&ecode) ;
-  return (ecode!=TInterpreter::kNoError) ;
+   return makeAndCompileClass("RooAbsReal", name, expression, vars, intExpression);
 }
 
 
@@ -164,12 +192,13 @@ bool RooClassFactory::makeAndCompileFunction(const char* name, const char* expre
 RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
 {
   // Construct unique class name for this function expression
-  string tmpName(name) ;
+  std::string tmpName(name) ;
   tmpName[0] = toupper(tmpName[0]) ;
-  string className = Form("Roo%sFunc",tmpName.c_str()) ;
+  string className = "Roo" + tmpName + "Func";
 
   return makeFunctionInstance(className.c_str(),name,expression,vars,intExpression) ;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write, compile and load code and instantiate object for a
@@ -191,73 +220,27 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
+RooAbsReal *RooClassFactory::makeFunctionInstance(const char *className, const char *name, const char *expression,
+                                                  const RooArgList &vars, const char *intExpression)
 {
-  // Use class factory to compile and link specialized function
-  bool error = makeAndCompileFunction(className,expression,vars,intExpression) ;
-
-  // Check that class was created OK
-  if (error) {
-    RooErrorHandler::softAbort() ;
-  }
-
-  // Create interpreter line that instantiates specialized object
-  std::string line = std::string("new ") + className + "(\"" + name + "\",\"" + name + "\"";
-
-  // Make list of pointer values (represented in hex ascii) to be passed to cint
-  // Note that the order of passing arguments must match the convention in which
-  // the class code is generated: first all reals, then all categories
-
-  std::string argList ;
-  // First pass the RooAbsReal arguments in the list order
-  for(RooAbsArg * var : vars) {
-    if (dynamic_cast<RooAbsReal*>(var)) {
-      argList += Form(",*((RooAbsReal*)0x%zx)",(std::size_t)var) ;
-    }
-  }
-  // Next pass the RooAbsCategory arguments in the list order
-  for(RooAbsArg * var : vars) {
-    if (dynamic_cast<RooAbsCategory*>(var)) {
-      argList += Form(",*((RooAbsCategory*)0x%zx)",(std::size_t)var) ;
-    }
-  }
-
-  line += argList + ") ;" ;
-
-  // Let interpreter instantiate specialized formula
-  return (RooAbsReal*) gInterpreter->ProcessLineSynch(line.c_str()) ;
+   return static_cast<RooAbsReal *>(makeClassInstance("RooAbsRal", className, name, expression, vars, intExpression));
 }
 
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Write, compile and load code and instantiate object for a
-/// RooAbsPdf implementation with class name 'name', taking all
-/// elements of 'vars' as constructor arguments. The initial value
-/// expression is taken to be 'expression' which can be any one-line
-/// C++ expression in terms of variables that occur in 'vars'.
+/// Write, compile and load code and instantiate object for a RooAbsPdf
+/// implementation. The difference to makeFunctionInstance() is the base
+/// class of the written class (RooAbsPdf instead of RooAbsReal).
 ///
-/// The returned object is an instance of the object you just defined
-/// connected to the variables listed in 'vars'. The name of the
-/// object is 'name', its class name Roo<name>Class.
-///
-/// This function is an effective compiled replacement of RooGenericPdf
-///
-/// You can add optional expressions for analytical integrals to be
-/// advertised by your class in the syntax
-/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where "<intObsName>" a name of the observable integrated over and
-/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
-/// integral.
+/// \see RooClassFactory::makeFunctionInstance(const char*, const char*, RooArgList const&, const char*)
 
 RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expression,
                    const RooArgList& vars, const char* intExpression)
 {
   // Construct unique class name for this function expression
-  string tmpName(name) ;
+  std::string tmpName(name) ;
   tmpName[0] = toupper(tmpName[0]) ;
-  string className = Form("Roo%sPdf",tmpName.c_str()) ;
+  string className = "Roo" + tmpName + "Pdf";
 
   return makePdfInstance(className.c_str(),name,expression,vars,intExpression) ;
 }
@@ -282,63 +265,20 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* name, const char* expression,
-                   const RooArgList& vars, const char* intExpression)
+RooAbsPdf *RooClassFactory::makePdfInstance(const char *className, const char *name, const char *expression,
+                                            const RooArgList &vars, const char *intExpression)
 {
-  // Use class factory to compile and link specialized function
-  bool error = makeAndCompilePdf(className,expression,vars,intExpression) ;
-
-  // Check that class was created OK
-  if (error) {
-    RooErrorHandler::softAbort() ;
-  }
-
-  // Create interpreter line that instantiates specialized object
-  std::string line = std::string("new ") + className + "(\"" + name + "\",\"" + name + "\"";
-
-  // Make list of pointer values (represented in hex ascii) to be passed to cint
-  // Note that the order of passing arguments must match the convention in which
-  // the class code is generated: first all reals, then all categories
-
-  std::string argList ;
-  // First pass the RooAbsReal arguments in the list order
-  for (RooAbsArg * var : vars) {
-    if (dynamic_cast<RooAbsReal*>(var)) {
-      argList += Form(",*((RooAbsReal*)0x%zx)",(std::size_t)var) ;
-    }
-  }
-  // Next pass the RooAbsCategory arguments in the list order
-  for (RooAbsArg * var : vars) {
-    if (dynamic_cast<RooAbsCategory*>(var)) {
-      argList += Form(",*((RooAbsCategory*)0x%zx)",(std::size_t)var) ;
-    }
-  }
-
-  line += argList + ") ;" ;
-
-  // Let interpreter instantiate specialized formula
-  return (RooAbsPdf*) gInterpreter->ProcessLineSynch(line.c_str()) ;
+   return static_cast<RooAbsPdf *>(makeClassInstance("RooAbsPdf", className, name, expression, vars, intExpression));
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write code for a RooAbsPdf implementation with class name 'name',
-/// taking RooAbsReal arguments with names listed in argNames and
-/// RooAbsCategory arguments with names listed in catArgNames as
-/// constructor arguments (use a comma separated list for multiple
-/// arguments). The initial value expression is taken to be
-/// 'expression' which can be any one-line C++ expression in terms of
-/// variables that occur in 'vars'. Skeleton code for handling of
-/// analytical integrals is added if hasAnaInt is true. You can add
-/// optional expressions for analytical integrals to be advertised by
-/// your class in the syntax
-/// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where "<intObsName>" a name of the observable integrated over and
-/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
-/// integral. Skeleton code for internal event generation is added
-/// if hasIntGen is true
+/// Write code for a RooAbsPdf implementation with class name 'name'.
+/// The difference to makePdf() is the base
+/// class of the written class (RooAbsPdf instead of RooAbsReal).
 ///
+/// \see RooClassFactory::makePdf(const char*, const char*, const char *, const char*, RooArgList const&, bool, bool, const char*)
 
 bool RooClassFactory::makePdf(const char* name, const char* argNames, const char* catArgNames, const char* expression,
             bool hasAnaInt, bool hasIntGen, const char* intExpression)
