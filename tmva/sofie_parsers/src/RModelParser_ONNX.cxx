@@ -33,7 +33,6 @@ extern ParserFuncSignature ParseMin;
 extern ParserFuncSignature ParseMean;
 extern ParserFuncSignature ParseSum;
 //Arithmetic Operators
-// Binary operators
 extern ParserFuncSignature ParseEq;
 extern ParserFuncSignature ParseLess;
 extern ParserFuncSignature ParseLessEq;
