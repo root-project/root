@@ -1,6 +1,6 @@
 
-#ifndef TMVA_SOFIE_ROperator_Arithmetic
-#define TMVA_SOFIE_ROperator_Arithmetic
+#ifndef TMVA_SOFIE_ROperator_Comparision
+#define TMVA_SOFIE_ROperator_Comparision
 
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
@@ -12,43 +12,43 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum EArithmeticOperator { Eq, Less, LessEq, Greater, GreaterEq };
+enum EComparisionOperator { Eq, Less, LessEq, Greater, GreaterEq };
 
-template <typename T, EArithmeticOperator Op1>
-struct ArithmeticTrait{};
+template <typename T, EComparisionOperator Op1>
+struct ComparisionTrait{};
 
 template <typename T>
-struct ArithmeticTrait<T, Eq> {
+struct ComparisionTrait<T, Eq> {
    static const std::string Name() { return "Equal"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + "==" +  t2 + "? true : false "; }
 };
 
 template <typename T>
-struct ArithmeticTrait<T, Less> {
+struct ComparisionTrait<T, Less> {
    static const std::string Name() { return "Less"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + "<" + t2 + "? true : false "; }
 };
 
 template <typename T>
-struct ArithmeticTrait<T, LessEq> {
+struct ComparisionTrait<T, LessEq> {
    static const std::string Name() { return "LessOrEqual"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + "<=" +  t2 + "? true : false ";  }
 };
 
 template <typename T>
-struct ArithmeticTrait<T, Greater> {
+struct ComparisionTrait<T, Greater> {
    static const std::string Name() { return "Greater"; }
    static std::string Op(const std::string & t1, const std::string t2) { return  t1 + ">" +  t2 + "? true : false "; }
 };
 
 template <typename T>
-struct ArithmeticTrait<T, GreaterEq> {
+struct ComparisionTrait<T, GreaterEq> {
    static const std::string Name() { return "GreaterOrEqual"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + ">=" +  t2 + "? true : false " ; }
 };
 
-template<typename T, EArithmeticOperator Op>
-class ROperator_Arithmetic final : public ROperator{
+template<typename T, EComparisionOperator Op>
+class ROperator_Comparision final : public ROperator{
 private:
 
    std::string fNX1;
@@ -63,8 +63,8 @@ private:
 
 
 public:
-   ROperator_Arithmetic(){}
-   ROperator_Arithmetic(std::string nameX1, std::string nameX2, std::string nameY):
+   ROperator_Comparision(){}
+   ROperator_Comparision(std::string nameX1, std::string nameX2, std::string nameY):
       fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){}
 
    // type of output given input
@@ -81,10 +81,10 @@ public:
    void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX1)){
-         throw std::runtime_error(std::string("TMVA SOFIE Arithmetic Op Input Tensor ") + fNX1 + "is not found in model");
+         throw std::runtime_error(std::string("TMVA SOFIE Comparision Op Input Tensor ") + fNX1 + "is not found in model");
       }
       if (!model.CheckIfTensorAlreadyExist(fNX2)) {
-         throw std::runtime_error(std::string("TMVA SOFIE Arithmetic Op Input Tensor ") + fNX2 + "is not found in model");
+         throw std::runtime_error(std::string("TMVA SOFIE Comparision Op Input Tensor ") + fNX2 + "is not found in model");
       }
       fShapeX1 = model.GetTensorShape(fNX1);
       fShapeX2 = model.GetTensorShape(fNX2);
@@ -136,10 +136,10 @@ public:
       OpName = "op_" + OpName;
 
      if (fShapeY.empty()) {
-         throw std::runtime_error("TMVA SOFIE Arithmetic Op called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Comparision Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ " << ArithmeticTrait<T,Op>::Name() << "\n";
+      out << SP << "\n//------ " << ComparisionTrait<T,Op>::Name() << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
       // Broadcast A if it's uninitialized
       if (!fNBroadcastedX1.empty()) {
@@ -163,7 +163,7 @@ public:
       const std::string& nameX2 = fNBroadcastedX2.empty()? fNX2 : fNBroadcastedX2;
      
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = " << ArithmeticTrait<T,Op>::Op( "tensor_" + nameX1 + "[id]" , "tensor_" + nameX2 + "[id]") <<  " ;\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = " << ComparisionTrait<T,Op>::Op( "tensor_" + nameX1 + "[id]" , "tensor_" + nameX2 + "[id]") <<  " ;\n";
       out << SP << "}\n";
    
       return out.str();
@@ -176,4 +176,4 @@ public:
 }//TMVA
 
 
-#endif //TMVA_SOFIE_ROperator_Arithmetic
+#endif //TMVA_SOFIE_ROperator_Comparision

@@ -260,6 +260,18 @@
 #include "Equal_FromONNX.hxx"
 #include "input_models/references/Equal.ref.hxx"
 
+#include "LessOrEqual_FromONNX.hxx"
+#include "input_models/references/LessOrEqual.ref.hxx"
+
+#include "GreaterOrEqual_FromONNX.hxx"
+#include "input_models/references/GreaterOrEqual.ref.hxx"
+
+#include "Less_FromONNX.hxx"
+#include "input_models/references/Less.ref.hxx"
+
+#include "Greater_FromONNX.hxx"
+#include "input_models/references/Greater.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2255,6 +2267,106 @@ TEST(ONNX, Equal){
    EXPECT_EQ(output.size(), sizeof(Equal_ExpectedOutput::outputs) / sizeof(bool));
 
    bool *correct = Equal_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, LessOrEqual){
+   constexpr float TOLERANCE = 0;
+
+   // Preparing the standard  input
+   std::vector<float> input1({
+      1.0, 2.0, 3.0
+   });
+   std::vector<float> input2({
+      4.0, 2.0, 6.0
+   });
+
+   TMVA_SOFIE_LessOrEqual::Session s("LessOrEqual_FromONNX.dat");
+   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(LessOrEqual_ExpectedOutput::outputs) / sizeof(bool));
+
+   bool *correct = LessOrEqual_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, GreaterOrEqual){
+   constexpr float TOLERANCE = 0;
+
+   // Preparing the standard  input
+   std::vector<float> input1({
+      1.0, 2.0, 3.0
+   });
+   std::vector<float> input2({
+      4.0, 2.0, 6.0
+   });
+
+   TMVA_SOFIE_GreaterOrEqual::Session s("GreaterOrEqual_FromONNX.dat");
+   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(GreaterOrEqual_ExpectedOutput::outputs) / sizeof(bool));
+
+   bool *correct = GreaterOrEqual_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, Greater){
+   constexpr float TOLERANCE = 0;
+
+   // Preparing the standard  input
+   std::vector<float> input1({
+      1.0, 2.0, 3.0
+   });
+   std::vector<float> input2({
+      4.0, 2.0, 6.0
+   });
+
+   TMVA_SOFIE_Greater::Session s("Greater_FromONNX.dat");
+   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Greater_ExpectedOutput::outputs) / sizeof(bool));
+
+   bool *correct = Greater_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(((correct[i]==output[i])?0:1), TOLERANCE);
+   }
+
+}
+
+TEST(ONNX, Less){
+   constexpr float TOLERANCE = 0;
+
+   // Preparing the standard  input
+   std::vector<float> input1({
+      1.0, 2.0, 3.0
+   });
+   std::vector<float> input2({
+      4.0, 2.0, 6.0
+   });
+
+   TMVA_SOFIE_Less::Session s("Less_FromONNX.dat");
+   std::vector<bool> output = s.infer(input1.data(),input2.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Less_ExpectedOutput::outputs) / sizeof(bool));
+
+   bool *correct = Less_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
