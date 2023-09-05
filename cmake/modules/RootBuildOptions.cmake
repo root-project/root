@@ -157,6 +157,7 @@ ROOT_BUILD_OPTION(oracle ON "Enable support for Oracle databases (requires Oracl
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
 ROOT_BUILD_OPTION(proof ON "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
+ROOT_BUILD_OPTION(pyroot-python2 OFF "Enable Python 2 support in PyROOT")
 ROOT_BUILD_OPTION(pyroot_legacy OFF "Use legacy Python bindings for ROOT, deprecated")
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library")
 ROOT_BUILD_OPTION(pythia6 ON "Enable support for Pythia 6.x")
