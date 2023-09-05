@@ -32,6 +32,13 @@ extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseMin;
 extern ParserFuncSignature ParseMean;
 extern ParserFuncSignature ParseSum;
+//Arithmetic Operators
+// Binary operators
+extern ParserFuncSignature ParseEq;
+extern ParserFuncSignature ParseLess;
+extern ParserFuncSignature ParseLessEq;
+extern ParserFuncSignature ParseGreater;
+extern ParserFuncSignature ParseGreaterEq;
 // Reduce operators
 extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSumsquare;
@@ -63,7 +70,6 @@ extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseErf;
-extern ParserFuncSignature ParseEqual;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -95,6 +101,12 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Min", ParseMin);
    RegisterOperator("Mean", ParseMean);
    RegisterOperator("Sum", ParseSum);
+   //Arithmetic Operators
+   RegisterOperator("Equal", ParseEq);
+   RegisterOperator("Less", ParseLess);
+   RegisterOperator("LessOrEqual", ParseLessEq);
+   RegisterOperator("Greater", ParseGreater);
+   RegisterOperator("GreaterOrEqual", ParseGreaterEq);
    // Reduce operators
    RegisterOperator("ReduceMean", ParseReduceMean);
    RegisterOperator("ReduceSumsquare", ParseReduceSumsquare);
@@ -133,7 +145,6 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Expand", ParseExpand);
    RegisterOperator("Gather", ParseGather);
    RegisterOperator("Erf", ParseErf);
-   RegisterOperator("Equal", ParseEqual);
 }
 
 // Destructor of the parser
