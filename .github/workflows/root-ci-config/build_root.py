@@ -378,5 +378,6 @@ def create_coverage_xml() -> None:
     if result != 0:
         die(result, "Failed to create test coverage")
 
+
 if __name__ == "__main__":
     main()
