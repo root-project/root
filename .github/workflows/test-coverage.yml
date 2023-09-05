@@ -6,13 +6,6 @@ on:
     - cron: '0 1 * * *'
 
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
-  # DISABLED: takes 4 hours! Might clang-coverage be a solution?
-  #pull_request:
-  #  branches:
-  #    - 'master'
-  #  paths-ignore:
-  #    - 'doc/**'
-  #    - 'documentation/**'
 
   workflow_call:
     inputs:
@@ -43,7 +36,7 @@ env:
   PYTHONUNBUFFERED: true
 
 jobs:
-  
+
   build-linux:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
 
@@ -84,7 +77,6 @@ jobs:
                ls -la
               '
       
-
       - name: Apply option override from matrix for this job
         env:
           OVERRIDE: "coverage=On"
@@ -123,6 +115,8 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
+     
+
       - name: Nightly build
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
@@ -144,3 +138,4 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           verbose: true
+          
