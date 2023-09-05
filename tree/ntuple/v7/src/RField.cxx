@@ -1814,9 +1814,16 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
    R__ASSERT((typedValue->size() % fItemSize) == 0);
    std::size_t nbytes = 0;
    auto count = typedValue->size() / fItemSize;
-   for (unsigned i = 0; i < count; ++i) {
-      nbytes += CallAppendOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
+
+   if (fSubFields[0]->IsSimple() && count) {
+      GetPrincipalColumnOf(*fSubFields[0])->AppendV(typedValue->data(), count);
+      nbytes += count * GetPrincipalColumnOf(*fSubFields[0])->GetElement()->GetPackedSize();
+   } else {
+      for (unsigned i = 0; i < count; ++i) {
+         nbytes += CallAppendOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
+      }
    }
+
    fNWritten += count;
    fColumns[0]->Append(&fNWritten);
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
@@ -1830,24 +1837,27 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
-   if (fSubFields[0]->GetTraits() & kTraitTrivialType) {
+   if (fSubFields[0]->IsSimple()) {
       typedValue->resize(nItems * fItemSize);
-   } else {
-      // See "semantics of reading non-trivial objects" in RNTuple's architecture.md
-      const auto oldNItems = typedValue->size() / fItemSize;
-      const bool canRealloc = oldNItems < nItems;
-      bool allDeallocated = false;
-      if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
-         allDeallocated = canRealloc;
-         for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
-            CallDestroyValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize), true /* dtorOnly */);
-         }
+      if (nItems)
+         GetPrincipalColumnOf(*fSubFields[0])->ReadV(collectionStart, nItems, typedValue->data());
+      return;
+   }
+
+   // See "semantics of reading non-trivial objects" in RNTuple's architecture.md
+   const auto oldNItems = typedValue->size() / fItemSize;
+   const bool canRealloc = oldNItems < nItems;
+   bool allDeallocated = false;
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+      allDeallocated = canRealloc;
+      for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
+         CallDestroyValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize), true /* dtorOnly */);
       }
-      typedValue->resize(nItems * fItemSize);
-      if (!(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)) {
-         for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
-            CallGenerateValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
-         }
+   }
+   typedValue->resize(nItems * fItemSize);
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)) {
+      for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
+         CallGenerateValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
       }
    }
 
@@ -1933,9 +1943,14 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const void *from)
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(from);
 
    std::size_t nbytes = 0;
-   auto begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
-   for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      nbytes += CallAppendOn(*fSubFields[0], begin + i * fItemSize);
+   if (fSubFields[0]->IsSimple() && *sizePtr) {
+      GetPrincipalColumnOf(*fSubFields[0])->AppendV(*beginPtr, *sizePtr);
+      nbytes += *sizePtr * GetPrincipalColumnOf(*fSubFields[0])->GetElement()->GetPackedSize();
+   } else {
+      auto begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
+      for (std::int32_t i = 0; i < *sizePtr; ++i) {
+         nbytes += CallAppendOn(*fSubFields[0], begin + i * fItemSize);
+      }
    }
 
    fNWritten += *sizePtr;
