@@ -26,6 +26,16 @@ import cppyy
 
 # import libROOTPythonizations with Python version number
 import sys, importlib
+import warnings
+
+if sys.version_info.major < 3:
+    # DeprecationWarning is ignored by default in Python, the next line enables it
+    warnings.filterwarnings("default", category=DeprecationWarning,
+                            module=__name__)
+    warnings.warn(
+        "The support for Python 2 in ROOT is deprecated. It will be removed in "
+        "ROOT version 6.32.", category=DeprecationWarning)
+
 major, minor = sys.version_info[0:2]
 librootpyz_mod_name = 'libROOTPythonizations{}_{}'.format(major, minor)
 importlib.import_module(librootpyz_mod_name)
