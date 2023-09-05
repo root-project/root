@@ -1,4 +1,4 @@
-import { gStyle, isStr, kNoZoom } from '../core.mjs';
+import { gStyle, isStr, kNoZoom, kInspect } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { floatToString, TRandom, addHighlightStyle } from '../base/BasePainter.mjs';
@@ -120,8 +120,8 @@ class RH2Painter extends RHistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
          this.decodeOptions(arg);
          this.interactiveRedraw('pad', 'drawopt');
       });

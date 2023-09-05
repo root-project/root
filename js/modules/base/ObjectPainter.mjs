@@ -791,7 +791,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Show object in inspector for provided object
      * @protected */
-   showInspector() {
+   showInspector(/* opt */) {
       return false;
    }
 

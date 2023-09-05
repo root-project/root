@@ -1,4 +1,4 @@
-import { gStyle, settings, constants } from '../core.mjs';
+import { gStyle, settings, constants, kInspect } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, DrawOptions, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { RHistPainter } from './RHistPainter.mjs';
@@ -866,8 +866,8 @@ class RH1Painter extends RHistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg); // obsolete, should be implemented differently
 

@@ -376,7 +376,10 @@ class TF1Painter extends TH1Painter {
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
       }
 
-      if (!hist) hist = createHistogram(clTH1D, 100);
+      if (!hist) {
+         hist = createHistogram(clTH1D, 100);
+         hist.fBits |= kNoStats;
+      }
 
       if (!opt && getElementMainPainter(dom))
          opt = 'same';

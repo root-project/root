@@ -325,7 +325,7 @@ class TGraphPainter extends ObjectPainter {
       if (!histo) {
          histo = this._need_2dhist ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
          histo.fName = graph.fName + '_h';
-         histo.fBits = histo.fBits | kNoStats;
+         histo.fBits |= kNoStats;
          this._own_histogram = true;
          this.setHistogram(histo);
       } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom)) {

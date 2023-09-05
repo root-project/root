@@ -939,7 +939,7 @@ class TGraph2DPainter extends ObjectPainter {
       histo.fZaxis.fXmax = uzmax;
       histo.fMinimum = uzmin;
       histo.fMaximum = uzmax;
-      histo.fBits = histo.fBits | kNoStats;
+      histo.fBits |= kNoStats;
       return histo;
    }
 

@@ -1,4 +1,4 @@
-import { gStyle, create, clTH1I } from '../core.mjs';
+import { gStyle, create, clTH1I, kNoStats } from '../core.mjs';
 import { DrawOptions, floatToString, buildSvgCurve } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist/TH1Painter.mjs';
@@ -93,6 +93,7 @@ class TSplinePainter extends ObjectPainter {
 
       histo.fName = spline.fName + '_hist';
       histo.fTitle = spline.fTitle;
+      histo.fBits |= kNoStats;
 
       histo.fXaxis.fXmin = xmin;
       histo.fXaxis.fXmax = xmax;

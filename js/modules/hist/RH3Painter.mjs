@@ -1,4 +1,4 @@
-import { gStyle, settings, kNoZoom } from '../core.mjs';
+import { gStyle, settings, kNoZoom, kInspect } from '../core.mjs';
 import { Matrix4, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry,
          LineBasicMaterial, BufferAttribute, BufferGeometry } from '../three.mjs';
 import { floatToString, TRandom } from '../base/BasePainter.mjs';
@@ -691,8 +691,8 @@ class RH3Painter extends RHistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg);
 

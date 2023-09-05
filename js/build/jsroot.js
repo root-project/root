@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '1/09/2023',
+version_date = '5/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -27,14 +27,15 @@ nodejs = !!((typeof process === 'object') && isObject(process.versions) && proce
 internals = {
    /** @summary unique id counter, starts from 1 */
    id_counter: 1
-};
+},
+
+_src = (typeof document === 'undefined' && typeof location === 'undefined' ? undefined : typeof document === 'undefined' ? location.href : (document.currentScript && document.currentScript.src || new URL('jsroot.js', document.baseURI).href));
 
 /** @summary Location of JSROOT modules
   * @desc Automatically detected and used to dynamically load other modules
   * @private */
 exports.source_dir = '';
 
-const _src = (typeof document === 'undefined' && typeof location === 'undefined' ? undefined : typeof document === 'undefined' ? location.href : (document.currentScript && document.currentScript.src || new URL('jsroot.js', document.baseURI).href));
 if (_src && isStr(_src)) {
    const pos = _src.indexOf('modules/core.mjs');
    if (pos >= 0) {
@@ -1020,7 +1021,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111, kNoStats = BIT(9);
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
 
 
 /** @summary Create some ROOT classes
@@ -1866,6 +1867,7 @@ isObject: isObject,
 isPromise: isPromise,
 isRootCollection: isRootCollection,
 isStr: isStr,
+kInspect: kInspect,
 kNoStats: kNoStats,
 kNoZoom: kNoZoom,
 loadScript: loadScript,
@@ -12160,7 +12162,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Show object in inspector for provided object
      * @protected */
-   showInspector() {
+   showInspector(/* opt */) {
       return false;
    }
 
@@ -58213,7 +58215,7 @@ class JSRootMenu {
       }
 
       if (opts.length === 1) {
-         if (opts[0] === 'inspect')
+         if (opts[0] === kInspect)
             top_name = top_name.replace('Draw', 'Inspect');
          this.add(top_name, opts[0], call_back);
          return;
@@ -58237,15 +58239,19 @@ class JSRootMenu {
          if (without_sub)
             name = top_name + ' ' + name;
 
-         if (group < i+2)
-            this.add(name, opts[i], call_back);
-          else {
+         if (group >= i+2) {
             this.add('sub:' + name, opts[i], call_back);
             for (let k = i+1; k < group; ++k)
                this.add(opts[k], opts[k], call_back);
             this.add('endsub:');
-            i = group-1;
-         }
+            i = group - 1;
+         } else if (name === kInspect) {
+            this.add('sub:' + name, opts[i], call_back, 'Inspect object content');
+            for (let k = 0; k < 10; ++k)
+               this.add(k.toString(), kInspect + k, call_back, `Inspect object and expand to level ${k}`);
+            this.add('endsub:');
+         } else
+            this.add(name, opts[i], call_back);
       }
       if (!without_sub)
          this.add('endsub:');
@@ -69612,8 +69618,8 @@ class TPavePainter extends ObjectPainter {
                this.interactiveRedraw(true, `exec:SetOptStat(${fmt})`);
             });
          });
-         function AddStatOpt(pos, name) {
-            let opt = (pos<10) ? pave.fOptStat : pave.fOptFit;
+         const addStatOpt = (pos, name) => {
+            let opt = (pos < 10) ? pave.fOptStat : pave.fOptFit;
             opt = parseInt(parseInt(opt) / parseInt(Math.pow(10, pos % 10))) % 10;
             menu.addchk(opt, name, opt * 100 + pos, arg => {
                const oldopt = parseInt(arg / 100);
@@ -69627,17 +69633,17 @@ class TPavePainter extends ObjectPainter {
                   this.interactiveRedraw(true, `exec:SetOptFit(${newopt})`);
                }
             });
-         }
+         };
 
-         AddStatOpt(0, 'Histogram name');
-         AddStatOpt(1, 'Entries');
-         AddStatOpt(2, 'Mean');
-         AddStatOpt(3, 'Std Dev');
-         AddStatOpt(4, 'Underflow');
-         AddStatOpt(5, 'Overflow');
-         AddStatOpt(6, 'Integral');
-         AddStatOpt(7, 'Skewness');
-         AddStatOpt(8, 'Kurtosis');
+         addStatOpt(0, 'Histogram name');
+         addStatOpt(1, 'Entries');
+         addStatOpt(2, 'Mean');
+         addStatOpt(3, 'Std Dev');
+         addStatOpt(4, 'Underflow');
+         addStatOpt(5, 'Overflow');
+         addStatOpt(6, 'Integral');
+         addStatOpt(7, 'Skewness');
+         addStatOpt(8, 'Kurtosis');
          menu.add('endsub:');
 
          menu.add('sub:SetOptFit', () => {
@@ -69646,10 +69652,10 @@ class TPavePainter extends ObjectPainter {
                this.interactiveRedraw(true, `exec:SetOptFit(${fmt})`);
             });
          });
-         AddStatOpt(10, 'Fit parameters');
-         AddStatOpt(11, 'Par errors');
-         AddStatOpt(12, 'Chi square / NDF');
-         AddStatOpt(13, 'Probability');
+         addStatOpt(10, 'Fit parameters');
+         addStatOpt(11, 'Par errors');
+         addStatOpt(12, 'Chi square / NDF');
+         addStatOpt(13, 'Probability');
          menu.add('endsub:');
 
          menu.add('separator');
@@ -70004,7 +70010,7 @@ class THistDrawOptions {
               Bar: false, BarStyle: 0, Curve: false,
               Hist: 1, Line: false, Fill: false,
               Error: 0, ErrorKind: -1, errorX: gStyle.fErrorX,
-              Mark: false, Same: false, Scat: false, ScatCoef: 1.0, Func: true,
+              Mark: false, Same: false, Scat: false, ScatCoef: 1.0, Func: true, AllFunc: false,
               Arrow: false, Box: false, BoxStyle: 0,
               Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
               Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: gStyle.fOrthoCamera,
@@ -70281,6 +70287,7 @@ class THistDrawOptions {
       if (d.check('CJUST')) this.Cjust = true;
       if (d.check('COL')) this.Color = true;
       if (d.check('CHAR')) this.Char = 1;
+      if (d.check('ALLFUNC')) this.AllFunc = true;
       if (d.check('FUNC')) { this.Func = true; this.Hist = false; }
       if (d.check('AXIS3D')) { this.Axis = 1; this.Lego = 1; check3d = true; }
       if (d.check('AXIS')) this.Axis = 1;
@@ -71244,8 +71251,8 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Find stats box
      * @desc either in list of functions or as object of correspondent painter */
-   findStat() {
-      if (this.options.PadStats)
+   findStat(check_in_pad) {
+      if (this.options.PadStats || check_in_pad)
          return this.getPadPainter()?.findPainterFor(null, 'stats', clTPaveStats)?.getObject();
 
       return this.findFunction(clTPaveStats, 'stats');
@@ -71301,7 +71308,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Returns true if stats box fill can be ingored */
    isIgnoreStatsFill() {
-      return !this.getObject() || (!this.draw_content && !this.create_stats && !this.snapid) || (this.options.Axis > 0);
+      return !this.getObject() || (!this.draw_content && !this.create_stats && !this.snapid); // || (this.options.Axis > 0);
    }
 
    /** @summary Create stat box for histogram if required */
@@ -71312,8 +71319,7 @@ class THistPainter extends ObjectPainter {
 
       if (!force && !this.options.ForceStat) {
          if (this.options.NoStat || histo.TestBit(kNoStats) || !settings.AutoStat) return null;
-
-         if ((this.options.Axis > 0) || !this.isMainPainter()) return null;
+         if (!this.isMainPainter()) return null;
       }
 
       const st = gStyle;
@@ -71327,19 +71333,18 @@ class THistPainter extends ObjectPainter {
       } else
          optstat = histo.$custom_stat || st.fOptStat;
 
-
       if (optfit !== undefined) {
          if (stats) stats.fOptFit = optfit;
          delete this.options.optfit;
       } else
          optfit = st.fOptFit;
 
-
       if (!stats && !optstat && !optfit) return null;
 
       this.create_stats = true;
 
-      if (stats) return stats;
+      if (stats)
+         return stats;
 
       stats = create$1(clTPaveStats);
       Object.assign(stats, {
@@ -71392,7 +71397,7 @@ class THistPainter extends ObjectPainter {
           return (func.fName !== 'stats') || (!histo.TestBit(kNoStats) && !this.options.NoStat);
 
        if ((func._typename === clTF1) || (func._typename === clTF2))
-          return !func.TestBit(BIT(9)); // TF1::kNotDraw
+          return this.options.AllFunc || !func.TestBit(BIT(9)); // TF1::kNotDraw
 
        if ((func._typename === 'TGraphDelaunay') || (func._typename === 'TGraphDelaunay2D'))
           return false; // do not try to draw delaunay classes
@@ -73058,8 +73063,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
          this.decodeOptions(arg);
          this.interactiveRedraw('pad', 'drawopt');
       });
@@ -78621,8 +78626,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg);
 
@@ -79800,8 +79805,8 @@ class TH3Painter extends THistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg);
 
@@ -88848,7 +88853,7 @@ class TGeoPainter extends ObjectPainter {
                menu.add('Browse', itemname, arg => this.activateInBrowser([arg], true));
 
                if (this._hpainter)
-                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, 'inspect'));
+                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, kInspect));
 
                if (isFunc(this.hidePhysicalNode)) {
                   menu.add('Hide', itemname, arg => this.hidePhysicalNode([arg]));
@@ -99683,11 +99688,11 @@ drawFuncs = { lst: [
    { name: 'kind:Command', icon: 'img_execute', execute: true },
    { name: 'TFolder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true, get_expand: () => import_h().then(h => h.folderHierarchy) },
    { name: 'TTask', icon: 'img_task', get_expand: () => import_h().then(h => h.taskHierarchy), for_derived: true },
-   { name: clTTree, icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return tree; }).then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: 'inspect' },
+   { name: clTTree, icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return tree; }).then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect },
    { name: 'TNtuple', sameas: clTTree },
    { name: 'TNtupleD', sameas: clTTree },
    { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump', noinspect: true },
-   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: 'inspect', ignore_online: true, always_draw: true },
+   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
    { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump', ctrl: 'dump', ignore_online: true, always_draw: true },
    { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
    { name: clTHashList, sameas: clTList },
@@ -99849,7 +99854,7 @@ function getDrawSettings(kind, selector) {
    if (!isany && (kind.indexOf(prROOT) === 0) && !noinspect) res.opts = [];
 
    if (!noinspect && res.opts)
-      res.opts.push('inspect');
+      res.opts.push(kInspect);
 
    res.inspect = !noinspect;
    res.expand = canexpand;
@@ -99886,8 +99891,8 @@ async function draw(dom, obj, opt) {
    if (!isObject(obj))
       return Promise.reject(Error('not an object in draw call'));
 
-   if (opt === 'inspect')
-      return import_h().then(h => h.drawInspector(dom, obj));
+   if (isStr(opt) && (opt.indexOf(kInspect) === 0))
+      return import_h().then(h => h.drawInspector(dom, obj, opt));
 
    let handle, type_info;
    if ('_typename' in obj) {
@@ -99897,7 +99902,7 @@ async function draw(dom, obj, opt) {
       type_info = 'kind ' + obj._kind;
       handle = getDrawHandle(obj._kind, opt);
    } else
-      return import_h().then(h => h.drawInspector(dom, obj));
+      return import_h().then(h => h.drawInspector(dom, obj, opt));
 
    // this is case of unsupported class, close it normally
    if (!handle)
@@ -101539,7 +101544,7 @@ class HierarchyPainter extends BasePainter {
      * @desc Used with 'expand all' / 'collapse all' buttons in normal GUI
      * @param {boolean} isopen - if items should be expand or closed
      * @return {boolean} true when any item was changed */
-   toggleOpenState(isopen, h) {
+   toggleOpenState(isopen, h, promises) {
       const hitem = h || this.h;
 
       if (hitem._childs === undefined) {
@@ -101550,7 +101555,9 @@ class HierarchyPainter extends BasePainter {
             if (!hitem._more && !hitem._expand && !this.canExpandItem(hitem)) return false;
          }
 
-         this.expandItem(this.itemFullName(hitem));
+         const pr = this.expandItem(this.itemFullName(hitem));
+         if (isPromise(pr))
+            promises.push(pr);
          if (hitem._childs !== undefined) hitem._isopen = true;
          return hitem._isopen;
       }
@@ -101563,7 +101570,7 @@ class HierarchyPainter extends BasePainter {
 
       let change_child = false;
       for (let i = 0; i < hitem._childs.length; ++i) {
-         if (this.toggleOpenState(isopen, hitem._childs[i]))
+         if (this.toggleOpenState(isopen, hitem._childs[i], promises))
             change_child = true;
       }
 
@@ -101571,10 +101578,20 @@ class HierarchyPainter extends BasePainter {
          // if none of the childs can be closed, than just close that item
          delete hitem._isopen;
          return true;
-       }
+      }
 
       if (!h) this.refreshHtml();
       return false;
+   }
+
+   /** @summary Exapnd to specified level
+     * @protected */
+   async exapndToLevel(level) {
+      if (!level || !Number.isFinite(level) || (level < 0)) return this;
+
+      const promises = [];
+      this.toggleOpenState(true, this.h, promises);
+      return Promise.all(promises).then(() => this.exapndToLevel(level - 1));
    }
 
    /** @summary Refresh HTML code of hierarchy painter
@@ -101825,8 +101842,8 @@ class HierarchyPainter extends BasePainter {
              drawopt = '';
 
          if (evnt.shiftKey) {
-            drawopt = handle?.shift || 'inspect';
-            if ((drawopt === 'inspect') && handle?.noinspect) drawopt = '';
+            drawopt = handle?.shift || kInspect;
+            if (isStr(drawopt) && (drawopt.indexOf(kInspect) === 0) && handle?.noinspect) drawopt = '';
          }
          if (evnt.ctrlKey && handle?.ctrl)
             drawopt = handle.ctrl;
@@ -101864,7 +101881,7 @@ class HierarchyPainter extends BasePainter {
 
          // cannot draw, but can inspect ROOT objects
          if (isStr(hitem._kind) && (hitem._kind.indexOf(prROOT) === 0) && sett.inspect && (can_draw !== false))
-            return this.display(itemname, 'inspect', true);
+            return this.display(itemname, kInspect, true);
 
          if (!hitem._childs || (hitem === this.h)) return;
       }
@@ -102135,7 +102152,7 @@ class HierarchyPainter extends BasePainter {
       if (!item) return false;
       if (item._player) return true;
       if (item._can_draw !== undefined) return item._can_draw;
-      if (drawopt === 'inspect') return true;
+      if (isStr(drawopt) && (drawopt.indexOf(kInspect) === 0)) return true;
       const handle = getDrawHandle(item._kind, drawopt);
       return canDrawHandle(handle);
    }
@@ -103131,7 +103148,7 @@ class HierarchyPainter extends BasePainter {
           root_type = isStr(node._kind) ? node._kind.indexOf(prROOT) === 0 : false;
 
       if (sett.opts && (node._can_draw !== false)) {
-         sett.opts.push('inspect');
+         sett.opts.push(kInspect);
          menu.addDrawMenu('Draw', sett.opts, arg => this.display(itemname, arg));
       }
 
@@ -103921,29 +103938,29 @@ class HierarchyPainter extends BasePainter {
 
 /** @summary Show object in inspector for provided object
   * @protected */
-ObjectPainter.prototype.showInspector = function(obj) {
-   if (obj === 'check')
+ObjectPainter.prototype.showInspector = function(opt, obj) {
+   if (opt === 'check')
       return true;
 
    const main = this.selectDom(),
-      rect = getElementRect(main),
-      w = Math.round(rect.width * 0.05) + 'px',
-      h = Math.round(rect.height * 0.05) + 'px',
-      id = 'root_inspector_' + internals.id_counter++;
+        rect = getElementRect(main),
+        w = Math.round(rect.width * 0.05) + 'px',
+        h = Math.round(rect.height * 0.05) + 'px',
+        id = 'root_inspector_' + internals.id_counter++;
 
    main.append('div')
-      .attr('id', id)
-      .attr('class', 'jsroot_inspector')
-      .style('position', 'absolute')
-      .style('top', h)
-      .style('bottom', h)
-      .style('left', w)
-      .style('right', w);
+       .attr('id', id)
+       .attr('class', 'jsroot_inspector')
+       .style('position', 'absolute')
+       .style('top', h)
+       .style('bottom', h)
+       .style('left', w)
+       .style('right', w);
 
    if (!obj?._typename)
       obj = this.getObject();
 
-   return drawInspector(id, obj);
+   return drawInspector(id, obj, opt);
 };
 
 
@@ -103973,7 +103990,7 @@ async function drawStreamerInfo(dom, lst) {
 
 /** @summary Display inspector
   * @private */
-async function drawInspector(dom, obj) {
+async function drawInspector(dom, obj, opt) {
    cleanup(dom);
    const painter = new HierarchyPainter('inspector', dom, '__as_dark_mode__');
 
@@ -103986,6 +104003,13 @@ async function drawInspector(dom, obj) {
    painter.default_by_click = 'expand'; // default action
    painter.with_icons = false;
    painter._inspector = true; // keep
+   let expand_level = 0;
+
+   if (isStr(opt) && opt.indexOf(kInspect) === 0) {
+      opt = opt.slice(kInspect.length);
+      if (opt.length > 0)
+         expand_level = Number.parseInt(opt);
+   }
 
    if (painter.selectDom().classed('jsroot_inspector')) {
       painter.removeInspector = function() {
@@ -104003,8 +104027,8 @@ async function drawInspector(dom, obj) {
             if (isFunc(this.removeInspector)) {
                ddom = ddom.parentNode;
                this.removeInspector();
-               if (arg === 'inspect')
-                  return this.showInspector(obj);
+               if (arg.indexOf(kInspect) === 0)
+                  return this.showInspector(arg, obj);
             }
             cleanup(ddom);
             draw(ddom, obj, arg);
@@ -104016,7 +104040,7 @@ async function drawInspector(dom, obj) {
 
    return painter.refreshHtml().then(() => {
       painter.setTopPainter();
-      return painter;
+      return painter.exapndToLevel(expand_level);
    });
 }
 
@@ -105088,7 +105112,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (!histo) {
          histo = this._need_2dhist ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
          histo.fName = graph.fName + '_h';
-         histo.fBits = histo.fBits | kNoStats;
+         histo.fBits |= kNoStats;
          this._own_histogram = true;
          this.setHistogram(histo);
       } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom)) {
@@ -107198,17 +107222,19 @@ class THStackPainter extends ObjectPainter {
    /** @summary Create main histogram for THStack axis drawing */
    createHistogram(stack) {
       const histos = stack.fHists,
-          numhistos = histos ? histos.arr.length : 0;
+            numhistos = histos ? histos.arr.length : 0;
 
       if (!numhistos) {
          const histo = createHistogram(clTH1I, 100);
          setHistogramTitle(histo, stack.fTitle);
+         histo.fBits |= kNoStats;
          return histo;
       }
 
       const h0 = histos.arr[0],
-          histo = createHistogram((this.options.ndim === 1) ? clTH1I : clTH2I, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+            histo = createHistogram((this.options.ndim === 1) ? clTH1I : clTH2I, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
       histo.fName = 'axis_hist';
+      histo.fBits |= kNoStats;
       Object.assign(histo.fXaxis, h0.fXaxis);
       if (this.options.ndim === 2)
          Object.assign(histo.fYaxis, h0.fYaxis);
@@ -107336,7 +107362,7 @@ class THStackPainter extends ObjectPainter {
              stack.fHistogram = painter.createHistogram(stack);
 
          const mm = painter.getMinMax(painter.options.errors || painter.options.draw_errors),
-             hopt = painter.options.hopt + ';axis;' + mm.hopt;
+               hopt = painter.options.hopt + ';axis;' + mm.hopt;
 
          return painter.hdraw_func(dom, stack.fHistogram, hopt).then(subp => {
             painter.addToPadPrimitives();
@@ -108545,7 +108571,7 @@ class TGraph2DPainter extends ObjectPainter {
       histo.fZaxis.fXmax = uzmax;
       histo.fMinimum = uzmin;
       histo.fMaximum = uzmax;
-      histo.fBits = histo.fBits | kNoStats;
+      histo.fBits |= kNoStats;
       return histo;
    }
 
@@ -109773,7 +109799,10 @@ class TF1Painter extends TH1Painter$2 {
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
       }
 
-      if (!hist) hist = createHistogram(clTH1D, 100);
+      if (!hist) {
+         hist = createHistogram(clTH1D, 100);
+         hist.fBits |= kNoStats;
+      }
 
       if (!opt && getElementMainPainter(dom))
          opt = 'same';
@@ -110597,6 +110626,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       axis.fXmax = Math.max(maximum, glob_maximum);
       histo.fMinimum = minimum;
       histo.fMaximum = maximum;
+      histo.fBits |= kNoStats;
 
       return histo;
    }
@@ -111187,7 +111217,10 @@ class TF2Painter extends TH2Painter {
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH2F);
       }
 
-      if (!hist) hist = createHistogram(clTH2F, 20, 20);
+      if (!hist) {
+         hist = createHistogram(clTH2F, 20, 20);
+         hist.fBits |= kNoStats;
+      }
 
       const painter = new TF2Painter(dom, hist);
 
@@ -111295,6 +111328,7 @@ class TSplinePainter extends ObjectPainter {
 
       histo.fName = spline.fName + '_hist';
       histo.fTitle = spline.fTitle;
+      histo.fBits |= kNoStats;
 
       histo.fXaxis.fXmin = xmin;
       histo.fXaxis.fXmax = xmax;
@@ -120577,8 +120611,8 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg); // obsolete, should be implemented differently
 
@@ -120879,8 +120913,8 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
          this.decodeOptions(arg);
          this.interactiveRedraw('pad', 'drawopt');
       });
@@ -122698,8 +122732,8 @@ class RH3Painter extends RHistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg);
 
@@ -122896,6 +122930,7 @@ exports.isObject = isObject;
 exports.isPromise = isPromise;
 exports.isRootCollection = isRootCollection;
 exports.isStr = isStr;
+exports.kInspect = kInspect;
 exports.kNoStats = kNoStats;
 exports.kNoZoom = kNoZoom;
 exports.loadOpenui5 = loadOpenui5;

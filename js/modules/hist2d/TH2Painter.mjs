@@ -1,5 +1,5 @@
 import { gStyle, createHistogram, createTPolyLine, isFunc, isStr,
-         clTMultiGraph, clTH1D, clTF2, clTProfile2D } from '../core.mjs';
+         clTMultiGraph, clTH1D, clTF2, clTProfile2D, kInspect } from '../core.mjs';
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
@@ -747,8 +747,8 @@ class TH2Painter extends THistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
          this.decodeOptions(arg);
          this.interactiveRedraw('pad', 'drawopt');
       });

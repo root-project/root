@@ -1030,8 +1030,8 @@ class TPavePainter extends ObjectPainter {
                this.interactiveRedraw(true, `exec:SetOptStat(${fmt})`);
             });
          });
-         function AddStatOpt(pos, name) {
-            let opt = (pos<10) ? pave.fOptStat : pave.fOptFit;
+         const addStatOpt = (pos, name) => {
+            let opt = (pos < 10) ? pave.fOptStat : pave.fOptFit;
             opt = parseInt(parseInt(opt) / parseInt(Math.pow(10, pos % 10))) % 10;
             menu.addchk(opt, name, opt * 100 + pos, arg => {
                const oldopt = parseInt(arg / 100);
@@ -1045,17 +1045,17 @@ class TPavePainter extends ObjectPainter {
                   this.interactiveRedraw(true, `exec:SetOptFit(${newopt})`);
                }
             });
-         }
+         };
 
-         AddStatOpt(0, 'Histogram name');
-         AddStatOpt(1, 'Entries');
-         AddStatOpt(2, 'Mean');
-         AddStatOpt(3, 'Std Dev');
-         AddStatOpt(4, 'Underflow');
-         AddStatOpt(5, 'Overflow');
-         AddStatOpt(6, 'Integral');
-         AddStatOpt(7, 'Skewness');
-         AddStatOpt(8, 'Kurtosis');
+         addStatOpt(0, 'Histogram name');
+         addStatOpt(1, 'Entries');
+         addStatOpt(2, 'Mean');
+         addStatOpt(3, 'Std Dev');
+         addStatOpt(4, 'Underflow');
+         addStatOpt(5, 'Overflow');
+         addStatOpt(6, 'Integral');
+         addStatOpt(7, 'Skewness');
+         addStatOpt(8, 'Kurtosis');
          menu.add('endsub:');
 
          menu.add('sub:SetOptFit', () => {
@@ -1064,10 +1064,10 @@ class TPavePainter extends ObjectPainter {
                this.interactiveRedraw(true, `exec:SetOptFit(${fmt})`);
             });
          });
-         AddStatOpt(10, 'Fit parameters');
-         AddStatOpt(11, 'Par errors');
-         AddStatOpt(12, 'Chi square / NDF');
-         AddStatOpt(13, 'Probability');
+         addStatOpt(10, 'Fit parameters');
+         addStatOpt(11, 'Par errors');
+         addStatOpt(12, 'Chi square / NDF');
+         addStatOpt(13, 'Probability');
          menu.add('endsub:');
 
          menu.add('separator');
