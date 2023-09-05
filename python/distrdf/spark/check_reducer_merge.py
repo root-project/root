@@ -30,6 +30,13 @@ class TestReducerMerge:
 
         """
         return rdf.Define("x", "rdfentry_").Define("y", "rdfentry_*rdfentry_")
+    
+    def define_two_err_columns(self, rdf):
+        """
+        Helper method that defines and returns 4 error columns:
+        X low, X high, Y low and Y high errors
+        """
+        return rdf.Define("exl", ".5").Define("exh", ".5").Define("eyl", "5").Define("eyh", "5")
 
     def define_three_columns(self, rdf):
         """
@@ -168,6 +175,33 @@ class TestReducerMerge:
 
         # Compare the Y co-ordinates of the graphs
         assert list(graph_py.GetY()) == list(graph_cpp.GetY())
+
+    def test_tgraphasymmerrors_merge(self, connection):
+        """Check the working of TGraphAsymmErrors merge operation in the reducer."""
+        # Operations with DistRDF
+        rdf_py = Spark.RDataFrame(10, sparkcontext=connection)
+        columns_py = self.define_two_columns(rdf_py)
+        err_columns_py = self.define_two_err_columns(columns_py)
+        graph_py = err_columns_py.GraphAsymmErrors("x", "y", "exl", "exh", "eyl", "eyh")
+
+        # Operations with PyROOT
+        rdf_cpp = ROOT.ROOT.RDataFrame(10)
+        columns_cpp = self.define_two_columns(rdf_cpp)
+        err_columns_cpp = self.define_two_err_columns(columns_cpp)
+        graph_cpp = err_columns_cpp.GraphAsymmErrors("x", "y", "exl", "exh", "eyl", "eyh")
+
+        # Sort the graphs to make sure corresponding points are the same
+        graph_py.Sort()
+        graph_cpp.Sort()
+
+        # Compare the X co-ordinates of the graphs
+        assert list(graph_py.GetX()) == list(graph_cpp.GetX())
+
+        # Compare the Y co-ordinates of the graphss
+        assert list(graph_py.GetY()) == list(graph_cpp.GetY())
+
+        # TODO Compare the X low, X high, Y low and Y high errors
+        # `list(graph_py.GetEXlow())` does not work for now, to be investigated.
 
     def test_distributed_count(self, connection):
         """Test support for `Count` operation in distributed backend"""
