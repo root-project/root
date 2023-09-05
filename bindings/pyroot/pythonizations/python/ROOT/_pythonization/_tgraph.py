@@ -34,9 +34,10 @@ def set_size(self, buf):
 # The pythonization consists in setting the size of the array that the getter
 # method returns, so that it is known in Python and the array is fully usable
 # (its length can be obtained, it is iterable).
-comp = cppyy.py.compose_method('^TGraph(2D)?$|^TGraph.*Errors$', # class to match
-                               'GetE?[XYZ]$',                    # method to match
-                               set_size)                         # post-process function
+comp = cppyy.py.compose_method(
+    '^TGraph(2D)?$|^TGraph.*Errors$',    # class to match
+    'GetE?[XYZ](low|high|lowd|highd)?$', # method to match
+    set_size)                            # post-process function
 
 # Add the composite to the list of pythonizors
 cppyy.py.add_pythonization(comp)
