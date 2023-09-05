@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '1/09/2023',
+version_date = '5/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -20,14 +20,15 @@ nodejs = !!((typeof process === 'object') && isObject(process.versions) && proce
 internals = {
    /** @summary unique id counter, starts from 1 */
    id_counter: 1
-};
+},
+
+_src = import.meta?.url;
+
 
 /** @summary Location of JSROOT modules
   * @desc Automatically detected and used to dynamically load other modules
   * @private */
 let source_dir = '';
-
-const _src = import.meta?.url;
 
 if (_src && isStr(_src)) {
    const pos = _src.indexOf('modules/core.mjs');
@@ -1014,7 +1015,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111, kNoStats = BIT(9);
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
 
 
 /** @summary Create some ROOT classes
@@ -1773,7 +1774,7 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTProfile, clTProfile2D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
-         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats,
+         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats, kInspect,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,

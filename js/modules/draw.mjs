@@ -5,7 +5,7 @@ import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, is
          clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTProfile, clTProfile2D,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
-         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, nsREX, atob_func } from './core.mjs';
+         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, kInspect, nsREX, atob_func } from './core.mjs';
 import { clTStreamerInfoList } from './io.mjs';
 import { clTBranchFunc } from './tree.mjs';
 import { BasePainter, compressSVG, svgToImage, _loadJSDOM } from './base/BasePainter.mjs';
@@ -124,11 +124,11 @@ drawFuncs = { lst: [
    { name: 'kind:Command', icon: 'img_execute', execute: true },
    { name: 'TFolder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true, get_expand: () => import_h().then(h => h.folderHierarchy) },
    { name: 'TTask', icon: 'img_task', get_expand: () => import_h().then(h => h.taskHierarchy), for_derived: true },
-   { name: clTTree, icon: 'img_tree', get_expand: () => import('./tree.mjs').then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: 'inspect' },
+   { name: clTTree, icon: 'img_tree', get_expand: () => import('./tree.mjs').then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect },
    { name: 'TNtuple', sameas: clTTree },
    { name: 'TNtupleD', sameas: clTTree },
    { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump', noinspect: true },
-   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: 'inspect', ignore_online: true, always_draw: true },
+   { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
    { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump', ctrl: 'dump', ignore_online: true, always_draw: true },
    { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
    { name: clTHashList, sameas: clTList },
@@ -290,7 +290,7 @@ function getDrawSettings(kind, selector) {
    if (!isany && (kind.indexOf(prROOT) === 0) && !noinspect) res.opts = [];
 
    if (!noinspect && res.opts)
-      res.opts.push('inspect');
+      res.opts.push(kInspect);
 
    res.inspect = !noinspect;
    res.expand = canexpand;
@@ -327,8 +327,8 @@ async function draw(dom, obj, opt) {
    if (!isObject(obj))
       return Promise.reject(Error('not an object in draw call'));
 
-   if (opt === 'inspect')
-      return import_h().then(h => h.drawInspector(dom, obj));
+   if (isStr(opt) && (opt.indexOf(kInspect) === 0))
+      return import_h().then(h => h.drawInspector(dom, obj, opt));
 
    let handle, type_info;
    if ('_typename' in obj) {
@@ -338,7 +338,7 @@ async function draw(dom, obj, opt) {
       type_info = 'kind ' + obj._kind;
       handle = getDrawHandle(obj._kind, opt);
    } else
-      return import_h().then(h => h.drawInspector(dom, obj));
+      return import_h().then(h => h.drawInspector(dom, obj, opt));
 
    // this is case of unsupported class, close it normally
    if (!handle)
@@ -633,6 +633,48 @@ async function makeImage(args) {
 }
 
 
+/** @summary test zooming features
+  * @private */
+async function $testZooming(node) {
+   const cp = getElementCanvPainter(node);
+   if (!cp) return;
+
+   const fp = cp.getFramePainter();
+   if (typeof fp?.zomm !== 'function') return;
+   if (typeof fp.scale_xmin === 'undefined' || typeof fp.scale_ymax === 'undefined') return;
+
+   const xmin = fp.scale_xmin, xmax = fp.scale_xmax, ymin = fp.scale_yxmin, ymax = fp.scale_ymax;
+
+   return fp.zoom(xmin + 0.2*(xmax - xmin), xmin + 0.8*(xmax - xmin), ymin + 0.2*(ymax - ymin), ymin + 0.8*(ymax - ymin))
+            .then(() => fp.unzoom())
+            .then(() => fp.zoom('x', xmin + 0.22*(xmax - xmin), xmin + 0.25*(xmax - xmin)))
+            .then(() => fp.zoom('y', ymin + 0.12*(ymax - ymin), ymin + 0.13*(ymax - ymin)))
+            .then(() => fp.unzoom())
+}
+
+/** @summary test interactive features of JSROOT drawings
+  * @desc used in https://github.com/linev/jsroot-test
+  * @private */
+function testInteractivity(args) {
+   async function build(main) {
+      main.attr('width', args.width).attr('height', args.height)
+          .style('width', args.width + 'px').style('height', args.height + 'px');
+
+      return draw(main.node(), args.object, args.option || '').then(() => {
+         return $testZooming(main.node());
+      }).then(() => {
+         cleanup(main.node());
+         main.remove();
+         return true;
+      });
+   }
+
+   return isNodeJs()
+          ? _loadJSDOM().then(handle => build(handle.body.append('div')))
+          : build(d3_select('body').append('div').style('display', 'none'));
+}
+
+
 /** @summary Create SVG image for provided object.
   * @desc Function especially useful in Node.js environment to generate images for
   * supported ROOT classes
@@ -698,4 +740,4 @@ async function drawRooPlot(dom, plot) {
 }
 
 export { addDrawFunc, getDrawHandle, canDrawHandle, getDrawSettings, setDefaultDrawOpt,
-         draw, redraw, cleanup, makeSVG, makeImage, drawRooPlot, assignPadPainterDraw };
+         draw, redraw, cleanup, makeSVG, makeImage, drawRooPlot, assignPadPainterDraw, testInteractivity };

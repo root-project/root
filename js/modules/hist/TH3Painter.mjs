@@ -1,4 +1,4 @@
-import { gStyle, settings } from '../core.mjs';
+import { gStyle, settings, kInspect } from '../core.mjs';
 import { Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
@@ -696,8 +696,8 @@ class TH3Painter extends THistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg);
 

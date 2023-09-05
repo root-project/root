@@ -27,7 +27,7 @@ class THistDrawOptions {
               Bar: false, BarStyle: 0, Curve: false,
               Hist: 1, Line: false, Fill: false,
               Error: 0, ErrorKind: -1, errorX: gStyle.fErrorX,
-              Mark: false, Same: false, Scat: false, ScatCoef: 1.0, Func: true,
+              Mark: false, Same: false, Scat: false, ScatCoef: 1.0, Func: true, AllFunc: false,
               Arrow: false, Box: false, BoxStyle: 0,
               Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
               Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: gStyle.fOrthoCamera,
@@ -304,6 +304,7 @@ class THistDrawOptions {
       if (d.check('CJUST')) this.Cjust = true;
       if (d.check('COL')) this.Color = true;
       if (d.check('CHAR')) this.Char = 1;
+      if (d.check('ALLFUNC')) this.AllFunc = true;
       if (d.check('FUNC')) { this.Func = true; this.Hist = false; }
       if (d.check('AXIS3D')) { this.Axis = 1; this.Lego = 1; check3d = true; }
       if (d.check('AXIS')) this.Axis = 1;
@@ -1267,8 +1268,8 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Find stats box
      * @desc either in list of functions or as object of correspondent painter */
-   findStat() {
-      if (this.options.PadStats)
+   findStat(check_in_pad) {
+      if (this.options.PadStats || check_in_pad)
          return this.getPadPainter()?.findPainterFor(null, 'stats', clTPaveStats)?.getObject();
 
       return this.findFunction(clTPaveStats, 'stats');
@@ -1324,7 +1325,7 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Returns true if stats box fill can be ingored */
    isIgnoreStatsFill() {
-      return !this.getObject() || (!this.draw_content && !this.create_stats && !this.snapid) || (this.options.Axis > 0);
+      return !this.getObject() || (!this.draw_content && !this.create_stats && !this.snapid); // || (this.options.Axis > 0);
    }
 
    /** @summary Create stat box for histogram if required */
@@ -1335,8 +1336,7 @@ class THistPainter extends ObjectPainter {
 
       if (!force && !this.options.ForceStat) {
          if (this.options.NoStat || histo.TestBit(kNoStats) || !settings.AutoStat) return null;
-
-         if ((this.options.Axis > 0) || !this.isMainPainter()) return null;
+         if (!this.isMainPainter()) return null;
       }
 
       const st = gStyle;
@@ -1350,19 +1350,18 @@ class THistPainter extends ObjectPainter {
       } else
          optstat = histo.$custom_stat || st.fOptStat;
 
-
       if (optfit !== undefined) {
          if (stats) stats.fOptFit = optfit;
          delete this.options.optfit;
       } else
          optfit = st.fOptFit;
 
-
       if (!stats && !optstat && !optfit) return null;
 
       this.create_stats = true;
 
-      if (stats) return stats;
+      if (stats)
+         return stats;
 
       stats = create(clTPaveStats);
       Object.assign(stats, {
@@ -1415,7 +1414,7 @@ class THistPainter extends ObjectPainter {
           return (func.fName !== 'stats') || (!histo.TestBit(kNoStats) && !this.options.NoStat);
 
        if ((func._typename === clTF1) || (func._typename === clTF2))
-          return !func.TestBit(BIT(9)); // TF1::kNotDraw
+          return this.options.AllFunc || !func.TestBit(BIT(9)); // TF1::kNotDraw
 
        if ((func._typename === 'TGraphDelaunay') || (func._typename === 'TGraphDelaunay2D'))
           return false; // do not try to draw delaunay classes
