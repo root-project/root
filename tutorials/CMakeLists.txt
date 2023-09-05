@@ -753,6 +753,7 @@ if(ROOT_pyroot_FOUND)
   endif()
   if(NOT test_distrdf_dask)
     list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
+    list(APPEND pyveto dataframe/distrdf003_live_visualization.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
