@@ -301,7 +301,10 @@ class TF2Painter extends TH2Painter {
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH2F);
       }
 
-      if (!hist) hist = createHistogram(clTH2F, 20, 20);
+      if (!hist) {
+         hist = createHistogram(clTH2F, 20, 20);
+         hist.fBits |= kNoStats;
+      }
 
       const painter = new TF2Painter(dom, hist);
 

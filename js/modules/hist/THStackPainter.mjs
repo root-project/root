@@ -1,4 +1,4 @@
-import { clone, create, createHistogram, setHistogramTitle, isFunc, gStyle, clTList, clTH1I, clTH2, clTH2I, kNoZoom } from '../core.mjs';
+import { clone, create, createHistogram, setHistogramTitle, isFunc, gStyle, clTList, clTH1I, clTH2, clTH2I, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
@@ -281,17 +281,19 @@ class THStackPainter extends ObjectPainter {
    /** @summary Create main histogram for THStack axis drawing */
    createHistogram(stack) {
       const histos = stack.fHists,
-          numhistos = histos ? histos.arr.length : 0;
+            numhistos = histos ? histos.arr.length : 0;
 
       if (!numhistos) {
          const histo = createHistogram(clTH1I, 100);
          setHistogramTitle(histo, stack.fTitle);
+         histo.fBits |= kNoStats;
          return histo;
       }
 
       const h0 = histos.arr[0],
-          histo = createHistogram((this.options.ndim === 1) ? clTH1I : clTH2I, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+            histo = createHistogram((this.options.ndim === 1) ? clTH1I : clTH2I, h0.fXaxis.fNbins, h0.fYaxis.fNbins);
       histo.fName = 'axis_hist';
+      histo.fBits |= kNoStats;
       Object.assign(histo.fXaxis, h0.fXaxis);
       if (this.options.ndim === 2)
          Object.assign(histo.fYaxis, h0.fYaxis);
@@ -419,7 +421,7 @@ class THStackPainter extends ObjectPainter {
              stack.fHistogram = painter.createHistogram(stack);
 
          const mm = painter.getMinMax(painter.options.errors || painter.options.draw_errors),
-             hopt = painter.options.hopt + ';axis;' + mm.hopt;
+               hopt = painter.options.hopt + ';axis;' + mm.hopt;
 
          return painter.hdraw_func(dom, stack.fHistogram, hopt).then(subp => {
             painter.addToPadPrimitives();

@@ -1,7 +1,7 @@
 import { httpRequest, browser, source_dir, settings, internals, constants, create, clone,
          findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, getPromise,
          prROOT, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
-         clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX } from '../core.mjs';
+         clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kInspect } from '../core.mjs';
 import { REVISION, DoubleSide, FrontSide,
          Color, Vector2, Vector3, Matrix4, Object3D, Box3, Group, Plane, PlaneHelper,
          Euler, Quaternion, Mesh, InstancedMesh, MeshLambertMaterial, MeshBasicMaterial,
@@ -1803,7 +1803,7 @@ class TGeoPainter extends ObjectPainter {
                menu.add('Browse', itemname, arg => this.activateInBrowser([arg], true));
 
                if (this._hpainter)
-                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, 'inspect'));
+                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, kInspect));
 
                if (isFunc(this.hidePhysicalNode)) {
                   menu.add('Hide', itemname, arg => this.hidePhysicalNode([arg]));

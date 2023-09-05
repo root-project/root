@@ -1,4 +1,4 @@
-import { create, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom } from '../core.mjs';
+import { create, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
@@ -200,6 +200,7 @@ class TMultiGraphPainter extends ObjectPainter {
       axis.fXmax = Math.max(maximum, glob_maximum);
       histo.fMinimum = minimum;
       histo.fMaximum = maximum;
+      histo.fBits |= kNoStats;
 
       return histo;
    }

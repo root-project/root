@@ -1,4 +1,4 @@
-import { gStyle, settings, clTF1, kNoZoom } from '../core.mjs';
+import { gStyle, settings, clTF1, kNoZoom, kInspect } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -1063,8 +1063,8 @@ class TH1Painter extends THistPainter {
       const opts = this.getSupportedDrawOptions();
 
       menu.addDrawMenu('Draw with', opts, arg => {
-         if (arg === 'inspect')
-            return this.showInspector();
+         if (arg.indexOf(kInspect) === 0)
+            return this.showInspector(arg);
 
          this.decodeOptions(arg);
 
