@@ -39,6 +39,7 @@ ClassImp(MethodPyKeras);
 MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle, DataSetInfo &dsi, const TString &theOption)
    : PyMethodBase(jobName, Types::kPyKeras, methodTitle, dsi, theOption) {
    fNumEpochs = 10;
+   fNumThreads = 0;
    fBatchSize = 100;
    fVerbose = 1;
    fContinueTraining = false;
@@ -380,23 +381,29 @@ void MethodPyKeras::SetupKerasModelForEval() {
 
    // disable eager execution (model will evaluate > 100 faster)
    // need to be done before loading the model
+#ifndef R__MACOSX  // problem siabling eager execution on Macos (conflict with multiprocessing)
    if (fUseTFKeras){
       PyRunString("tf.compat.v1.disable_eager_execution()","Failed to disable eager execution");
       Log() << kINFO << "Disabled TF eager execution when evaluating model " << Endl;
    }
+#endif
 
    SetupKerasModel(true);
 
    // Init evaluation (needed for getMvaValue)
-   fVals.resize(fNVars); // holds values used for classification and regression
-   npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
-   PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals.data());
-   PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
+   if (fNVars > 0) {
+      fVals.resize(fNVars); // holds values used for classification and regression
+      npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
+      PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals.data());
+      PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
+   }
    // setup output variables
-   fOutput.resize(fNOutputs); // holds classification probabilities or regression output
-   npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
-   PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)fOutput.data());
-   PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
+   if (fNOutputs > 0) {
+      fOutput.resize(fNOutputs); // holds classification probabilities or regression output
+      npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
+      PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)fOutput.data());
+      PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
+   }
 
    fModelIsSetupForEval = true;
 }
@@ -707,6 +714,7 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
       }
    }
 
+   std::vector<double> mvaValues(nEvents);
    npy_intp dimsData[2] = {(npy_intp)nEvents, (npy_intp)fNVars};
    PyArrayObject* pDataMvaValues = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsData, NPY_FLOAT, (void*)data);
    if (pDataMvaValues==0) Log() << "Failed to load data to Python array" << Endl;
@@ -717,11 +725,10 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
    PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", pDataMvaValues);
    if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
    delete[] data;
-
    // Load predictions to double vector
    // NOTE: The signal probability is given at the output
-   std::vector<double> mvaValues(nEvents);
    float* predictionsData = (float*) PyArray_DATA(pPredictions);
+
    for (UInt_t i=0; i<nEvents; i++) {
       mvaValues[i] = (double) predictionsData[i*fNOutputs + TMVA::Types::kSignal];
    }
