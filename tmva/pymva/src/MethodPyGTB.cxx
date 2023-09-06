@@ -65,7 +65,7 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
                          DataSetInfo &dsi,
                          const TString &theOption) :
    PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption),
-   fLoss("deviance"),
+   fLoss("log_loss"),
    fLearningRate(0.1),
    fNestimators(100),
    fSubsample(1.0),
@@ -85,7 +85,7 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
 //_______________________________________________________________________
 MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile)
    : PyMethodBase(Types::kPyGTB, theData, theWeightFile),
-   fLoss("deviance"),
+   fLoss("log_loss"),
    fLearningRate(0.1),
    fNestimators(100),
    fSubsample(1.0),
@@ -122,9 +122,9 @@ void MethodPyGTB::DeclareOptions()
 {
    MethodBase::DeclareCompatibilityOptions();
 
-   DeclareOptionRef(fLoss, "Loss", "{'deviance', 'exponential'}, optional (default='deviance')\
-      loss function to be optimized. 'deviance' refers to\
-      deviance (= logistic regression) for classification\
+   DeclareOptionRef(fLoss, "Loss", "{'log_loss', 'exponential'}, optional (default='log_loss')\
+      loss function to be optimized. 'log_loss' refers to\
+      logistic loss for classification\
       with probabilistic outputs. For loss 'exponential' gradient\
       boosting recovers the AdaBoost algorithm.");
 
@@ -197,9 +197,9 @@ void MethodPyGTB::DeclareOptions()
 // Check options and load them to local python namespace
 void MethodPyGTB::ProcessOptions()
 {
-   if (fLoss != "deviance" && fLoss != "exponential") {
+   if (fLoss != "log_loss" && fLoss != "exponential") {
       Log() << kFATAL << Form("Loss = %s ... that does not work!", fLoss.Data())
-            << " The options are 'deviance' or 'exponential'." << Endl;
+            << " The options are 'log_loss' or 'exponential'." << Endl;
    }
    pLoss = Eval(Form("'%s'", fLoss.Data()));
    PyDict_SetItemString(fLocalNS, "loss", pLoss);
