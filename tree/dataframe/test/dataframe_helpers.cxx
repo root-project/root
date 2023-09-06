@@ -683,14 +683,17 @@ TEST(RunGraphs, AlreadyRun)
                        "Got 4 handles from which 2 link to results which are already ready.");
 }
 
+int ret42 () {return 42;}
+int ret1 () {return 1;}
+
 TEST(RDFHelpers, ProgressHelper_Existence_ST)
 {
    // Redirect cout.
    std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
-   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "fh1.root");
-   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "fh2.root");
+   auto d_write_1 = ROOT::RDataFrame(10000).Define("x", ret42).Snapshot<int>("tree", "fh1.root", {"x"});
+   auto d_write_2 = ROOT::RDataFrame(10000).Define("y", ret1).Snapshot<int>("tree", "fh2.root", {"y"});
    ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root", "fh2.root"});
    ROOT::RDF::Experimental::AddProgressbar(d);
    d.Count().GetValue();
@@ -711,8 +714,8 @@ TEST(RDFHelpers, ProgressHelper_Existence_MT)
    std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
-   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "fh1.root");
-   auto d_write_2 = ROOT::RDataFrame(10000000).Define("y", "1").Snapshot("tree", "fh2.root");
+   auto d_write_1 = ROOT::RDataFrame(10000).Define("x", ret42).Snapshot<int>("tree", "fh1.root", {"x"});
+   auto d_write_2 = ROOT::RDataFrame(10000).Define("y", ret1).Snapshot<int>("tree", "fh2.root", {"y"});
    ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root", "fh2.root"});
    ROOT::RDF::Experimental::AddProgressbar(d);
    d.Count().GetValue();
@@ -729,7 +732,7 @@ TEST(RDFHelpers, ProgressHelper_existence_singleTTreeInput)
    std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
-   auto d_write_1 = ROOT::RDataFrame(10000000).Define("x", "42").Snapshot("tree", "fh1.root");
+   auto d_write_1 = ROOT::RDataFrame(10000).Define("x", ret42).Snapshot<int>("tree", "fh1.root", {"x"});
    ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh1.root"});
    ROOT::RDF::Experimental::AddProgressbar(d);
    d.Count().GetValue();
