@@ -12,7 +12,7 @@ include(FeatureSummary)
 include(CMakeDependentOption)
 
 # Check to see if we are inside ROOT and set a smart default
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../build/version_number")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../rootx/src/rootx.cxx")
     set(INROOT ON)
 else()
     set(INROOT OFF)
@@ -30,8 +30,8 @@ endif()
 include(copy_standalone.cmake)
 
 # Copy these files in if needed
-copy_standalone(SOURCE ../../build DESTINATION . OUTPUT VERSION_FILE
-                FILES version_number)
+copy_standalone(SOURCE ../.. DESTINATION . OUTPUT VERSION_FILE
+                FILES ROOTConfig-version.cmake)
 
 copy_standalone(SOURCE ../.. DESTINATION .
                 FILES LGPL2_1.txt)
@@ -39,9 +39,8 @@ copy_standalone(SOURCE ../.. DESTINATION .
 copy_standalone(SOURCE ../.. DESTINATION . OUTPUT LICENSE_FILE
                 FILES LICENSE)
 
-file(READ ${VERSION_FILE} versionstr)
-string(STRIP ${versionstr} versionstr)
-string(REGEX REPLACE "([0-9]+[.][0-9]+)[/]([0-9]+)" "\\1.\\2" versionstr ${versionstr})
+include(${VERSION_FILE})
+string(REGEX REPLACE "([0-9]+[.][0-9]+)[/]([0-9]+)" "\\1.\\2" versionstr ${PACKAGE_VERSION})
 
 project(Minuit2
     VERSION ${versionstr}
