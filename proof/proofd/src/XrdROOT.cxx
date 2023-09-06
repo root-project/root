@@ -19,6 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 #include "RConfigure.h"
+#include "ROOT/RVersion.hxx"
+#include "RGitCommit.h"
 
 #include "XrdProofdPlatform.h"
 
@@ -44,12 +46,12 @@ XrdROOT::XrdROOT(const char *dir, const char *tag, const char *bindir,
 
    fStatus = -1;
    fSrvProtVers = -1;
-   fRelease = "";
-   fGitCommit = "";
-   fVersionCode = -1;
-   fVrsMajor = -1;
-   fVrsMinor = -1;
-   fVrsPatch = -1;
+   fRelease = ROOT_RELEASE;
+   fGitCommit = ROOT_GIT_COMMIT;
+   fVersionCode = ROOT_VERSION_CODE;
+   fVrsMajor = ROOT_VERSION_MAJOR;
+   fVrsMinor = ROOT_VERSION_MINOR;
+   fVrsPatch = ROOT_VERSION_PATCH;
 
    // 'dir' must make sense
    if (!dir || strlen(dir) <= 0)
@@ -172,54 +174,6 @@ int XrdROOT::ParseROOTVersionInfo()
 {
    XPDLOC(SMGR, "ParseROOTVersionInfo")
 
-   int rc = -1;
-
-   XrdOucString versfile = fIncDir;
-   versfile += "/RVersion.h";
-
-   // Open file
-   FILE *fv = fopen(versfile.c_str(), "r");
-   if (!fv) {
-      TRACE(XERR, "unable to open "<<versfile);
-      return rc;
-   }
-
-   // Reset the related variables
-   fRelease = "";
-   fGitCommit = "";
-   fVersionCode = -1;
-   fVrsMajor = -1;
-   fVrsMinor = -1;
-   fVrsPatch = -1;
-
-   // Read the file
-   char *pv = 0;
-   XrdOucString tkn, sline;
-   char line[1024];
-   while (fgets(line, sizeof(line), fv)) {
-      if (fRelease.length() <= 0 && (pv = (char *) strstr(line, "ROOT_RELEASE"))) {
-         if (line[strlen(line)-1] == '\n')
-            line[strlen(line)-1] = 0;
-         pv += strlen("ROOT_RELEASE") + 1;
-         fRelease = pv;
-         fRelease.replace("\"","");
-      } else if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
-         if (line[strlen(line)-1] == '\n')
-            line[strlen(line)-1] = 0;
-         pv += strlen("ROOT_GIT_COMMIT") + 1;
-         fGitCommit = pv;
-         fGitCommit.replace("\"","");
-      } else if ((pv = (char *) strstr(line, "ROOT_VERSION_CODE"))) {
-         if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = 0;
-         pv += strlen("ROOT_VERSION_CODE");
-         while (pv[0] == ' ') pv++;
-         fVersionCode = atoi(pv);
-      }
-   }
-
-   // Close the file
-   fclose(fv);
-
    // Version code must be there
    if (fVersionCode < 0) {
       TRACE(XERR, "incomplete info found in "<<versfile<<": version code missing or bad: "<<fVersionCode);
@@ -231,36 +185,6 @@ int XrdROOT::ParseROOTVersionInfo()
        XrdROOT::ParseReleaseString(fRelease.c_str(), fVrsMajor, fVrsMinor, fVrsPatch) < 0) {
       TRACE(XERR, "incomplete info found in "<<versfile<<": release tag missing or bad: "<<fRelease);
       return rc;
-   }
-
-   // Retrieve GIT commit string from dedicated file if the case
-   if (fGitCommit.length() <= 0) {
-
-      XrdOucString gitcommit = fIncDir;
-      gitcommit += "/RGitCommit.h";
-
-      // Open file
-      if ((fv = fopen(gitcommit.c_str(), "r"))) {
-
-         // Read the file
-         pv = 0;
-         while (fgets(line, sizeof(line), fv)) {
-            if (fGitCommit.length() <= 0 && (pv = (char *) strstr(line, "ROOT_GIT_COMMIT"))) {
-               if (line[strlen(line)-1] == '\n')
-                  line[strlen(line)-1] = 0;
-               pv += strlen("ROOT_GIT_COMMIT") + 1;
-               fGitCommit = pv;
-               fGitCommit.replace("\"","");
-               if (fGitCommit.length() > 0) break;
-            }
-         }
-
-         // Close the file
-         fclose(fv);
-
-      } else {
-         TRACE(REQ, "file "<<gitcommit<<" not found");
-      }
    }
 
    // Done
