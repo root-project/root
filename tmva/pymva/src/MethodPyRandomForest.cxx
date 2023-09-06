@@ -69,7 +69,7 @@ MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,
    fMinSamplesSplit(2),
    fMinSamplesLeaf(1),
    fMinWeightFractionLeaf(0),
-   fMaxFeatures("'auto'"),
+   fMaxFeatures("'sqrt'"),
    fMaxLeafNodes("None"),
    fBootstrap(kTRUE),
    fOobScore(kFALSE),
@@ -90,7 +90,7 @@ MethodPyRandomForest::MethodPyRandomForest(DataSetInfo &theData, const TString &
    fMinSamplesSplit(2),
    fMinSamplesLeaf(1),
    fMinWeightFractionLeaf(0),
-   fMaxFeatures("'auto'"),
+   fMaxFeatures("'sqrt'"),
    fMaxLeafNodes("None"),
    fBootstrap(kTRUE),
    fOobScore(kFALSE),
@@ -234,7 +234,8 @@ void MethodPyRandomForest::ProcessOptions()
    pMinWeightFractionLeaf = Eval(Form("%f", fMinWeightFractionLeaf));
    PyDict_SetItemString(fLocalNS, "minWeightFractionLeaf", pMinWeightFractionLeaf);
 
-   if (fMaxFeatures == "auto" || fMaxFeatures == "sqrt" || fMaxFeatures == "log2"){
+   if (fMaxFeatures == "auto") fMaxFeatures = "sqrt"; // change in API from v 1.11
+   if (fMaxFeatures == "sqrt" || fMaxFeatures == "log2"){
       fMaxFeatures = Form("'%s'", fMaxFeatures.Data());
    }
    pMaxFeatures = Eval(fMaxFeatures);
@@ -428,9 +429,9 @@ std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long
 
    Py_DECREF(pEvent);
    Py_DECREF(result);
-   
+
    if (logProgress) {
-      Log() << kINFO 
+      Log() << kINFO
             << "Elapsed time for evaluation of " << nEvents <<  " events: "
             << timer.GetElapsedTime() << "       " << Endl;
    }
