@@ -135,9 +135,15 @@ class TestRooDataSetNumpy(unittest.TestCase):
         cat.defineType("minus", -1)
         cat.defineType("plus", +1)
 
-        in_x_range = (data["x"] <= x.getMax()) & (data["x"] >= x.getMin())
-        in_cat_range = (data["cat"] == -1) | (data["cat"] == +1)
-        n_in_range = np.sum(in_x_range & in_cat_range)
+        # Use manual loop because we had some problems with numpys boolean
+        # comparisions in the past (see GitHub issue #12162).
+        n_in_range = 0
+        for i in range(n_events):
+            in_x_range = data["x"][i] <= x.getMax() and data["x"][i] >= x.getMin()
+            in_cat_range = (data["cat"][i] == -1) or (data["cat"][i] == +1)
+            is_in_range = in_x_range and in_cat_range
+            if is_in_range:
+                n_in_range = n_in_range + 1
 
         dataset_numpy = ROOT.RooDataSet.from_numpy(data, {x, cat}, name="dataSetNumpy")
 
