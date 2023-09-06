@@ -52,15 +52,16 @@ class DependencyVersions(unittest.TestCase):
                 print('Ignore dependency {}'.format(requirement_str))
                 continue
             try:
+                print('Attempting requirement \'{}\''.format(requirement_str))
                 pkg_resources.require(requirement_str)
             except Exception as e:
-                errors.append(e)
+                errors.append(str(e))
         f.close()
         if errors:
             print()
             print('Full path to requirements.txt: {}'.format(path))
             print('Details about not matched dependencies:')
-            print('\n'.join([' - ' + e.report() for e in errors]))
+            print('\n'.join([' - ' + e for e in errors]))
             raise Exception('Found not matched dependencies declared in the requirements.txt, see test output for details')
 
 
