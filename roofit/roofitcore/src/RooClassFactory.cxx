@@ -44,6 +44,7 @@ instantiate objects.
 
 #include <strlcpy.h>
 #include <fstream>
+#include <mutex>
 
 using namespace std;
 
@@ -68,16 +69,69 @@ static int init()
 }
 
 
-bool makeAndCompileClass(std::string const &baseClassName, std::string const &name, std::string const &expression, const RooArgList &vars,
-                         std::string const &intExpression)
+bool makeAndCompileClass(std::string const &baseClassName, std::string const &name, std::string const &expression,
+                         const RooArgList &vars, std::string const &intExpression)
 {
+   // A structure to store the inputs to this function, to check if has been
+   // called already with the same arguments.
+   class ClassInfo {
+   public:
+      ClassInfo(std::string const &baseClassName, std::string const &name, std::string const &expression,
+                const RooArgList &vars, std::string const &intExpression)
+         : _baseClassName{baseClassName}, _name{name}, _expression{expression}, _intExpression{intExpression}
+      {
+         _argNames.reserve(vars.size());
+         _argsAreCategories.reserve(vars.size());
+         for (RooAbsArg *arg : vars) {
+            _argNames.emplace_back(arg->GetName());
+            _argsAreCategories.emplace_back(arg->isCategory());
+         }
+      }
+      bool operator==(const ClassInfo &other) const
+      {
+         return other._baseClassName == _baseClassName && other._name == _name && other._expression == _expression &&
+                other._argNames == _argNames && other._argsAreCategories == _argsAreCategories &&
+                other._intExpression == _intExpression;
+      }
+
+      std::string _baseClassName;
+      std::string _name;
+      std::string _expression;
+      std::vector<std::string> _argNames;
+      std::vector<bool> _argsAreCategories;
+      std::string _intExpression;
+   };
+
+   static std::vector<ClassInfo> infosVec;
+   static std::mutex infosVecMutex; // protects infosVec
+
+   ClassInfo info{baseClassName, name, expression, vars, intExpression};
+
+   // Check if this class was already compiled
+   auto found = std::find_if(infosVec.begin(), infosVec.end(), [&](auto const &elem) { return elem._name == name; });
+   if (found != infosVec.end()) {
+      if (*found == info) {
+         return false;
+      }
+      std::stringstream ss;
+      ss << "RooClassFactory ERROR The type, expressions, or variables for the class \"" << name
+         << "\" are not identical to what you passed last time this class was compiled! This is not allowed.";
+      oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
+      throw std::runtime_error(ss.str());
+   }
+
+   // Making a new compiled class is not thread safe
+   const std::lock_guard<std::mutex> lock(infosVecMutex);
+
+   infosVec.emplace_back(info);
+
    std::string realArgNames, catArgNames;
    for (RooAbsArg *arg : vars) {
       if (dynamic_cast<RooAbsReal *>(arg)) {
          if (!realArgNames.empty())
             realArgNames += ",";
          realArgNames += arg->GetName();
-      } else if (dynamic_cast<RooAbsCategory *>(arg)) {
+      } else if (arg->isCategory()) {
          if (!catArgNames.empty())
             catArgNames += ",";
          catArgNames += arg->GetName();
@@ -125,7 +179,7 @@ RooAbsReal *makeClassInstance(std::string const &baseClassName, std::string cons
    }
    // Next pass the RooAbsCategory arguments in the list order
    for (RooAbsArg *var : vars) {
-      if (dynamic_cast<RooAbsCategory *>(var)) {
+      if (var->isCategory()) {
          argList += Form(",*reinterpret_cast<RooAbsCategory*>(0x%zx)", (std::size_t)var);
       }
    }
