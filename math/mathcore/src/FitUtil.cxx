@@ -1118,7 +1118,7 @@ double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, 
          } else {
             // use (-inf +inf)
             data.Range().GetRange(&xmin[0],&xmax[0]);
-            // check if function is zero at +- inf
+            // check if funcition is zero at +- inf
             if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
                MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
                return 0;
