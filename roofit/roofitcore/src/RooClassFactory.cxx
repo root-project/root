@@ -68,8 +68,8 @@ static int init()
 }
 
 
-bool makeAndCompileClass(const char *baseClassName, const char *name, const char *expression, const RooArgList &vars,
-                         const char *intExpression)
+bool makeAndCompileClass(std::string const &baseClassName, std::string const &name, std::string const &expression, const RooArgList &vars,
+                         std::string const &intExpression)
 {
    std::string realArgNames, catArgNames;
    for (RooAbsArg *arg : vars) {
@@ -88,18 +88,18 @@ bool makeAndCompileClass(const char *baseClassName, const char *name, const char
    }
 
    bool ret = RooClassFactory::makeClass(baseClassName, name, realArgNames.c_str(), catArgNames.c_str(), expression,
-                                         intExpression ? true : false, false, intExpression);
+                                         !intExpression.empty(), false, intExpression);
    if (ret) {
       return ret;
    }
 
    TInterpreter::EErrorCode ecode;
-   gInterpreter->ProcessLineSynch(Form(".L %s.cxx+", name), &ecode);
+   gInterpreter->ProcessLineSynch((".L " + name + ".cxx+").c_str(), &ecode);
    return (ecode != TInterpreter::kNoError);
 }
 
-RooAbsReal *makeClassInstance(const char *baseClassName, const char *className, const char *name,
-                              const char *expression, const RooArgList &vars, const char *intExpression)
+RooAbsReal *makeClassInstance(std::string const &baseClassName, std::string const &className, std::string const &name,
+                              std::string const &expression, const RooArgList &vars, std::string const &intExpression)
 {
    // Use class factory to compile and link specialized function
    bool error = makeAndCompileClass(baseClassName, className, expression, vars, intExpression);
@@ -141,8 +141,8 @@ RooAbsReal *makeClassInstance(const char *baseClassName, const char *className, 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool RooClassFactory::makeAndCompilePdf(const char *name, const char *expression, const RooArgList &vars,
-                                        const char *intExpression)
+bool RooClassFactory::makeAndCompilePdf(std::string const &name, std::string const &expression, const RooArgList &vars,
+                                        std::string const &intExpression)
 {
    return makeAndCompileClass("RooAbsPdf", name, expression, vars, intExpression);
 }
@@ -162,8 +162,8 @@ bool RooClassFactory::makeAndCompilePdf(const char *name, const char *expression
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-bool RooClassFactory::makeAndCompileFunction(const char *name, const char *expression, const RooArgList &vars,
-                                             const char *intExpression)
+bool RooClassFactory::makeAndCompileFunction(std::string const &name, std::string const &expression, const RooArgList &vars,
+                                             std::string const &intExpression)
 {
    return makeAndCompileClass("RooAbsReal", name, expression, vars, intExpression);
 }
@@ -189,7 +189,7 @@ bool RooClassFactory::makeAndCompileFunction(const char *name, const char *expre
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
+RooAbsReal* RooClassFactory::makeFunctionInstance(std::string const &name, std::string const &expression, const RooArgList& vars, std::string const &intExpression)
 {
   // Construct unique class name for this function expression
   std::string tmpName(name) ;
@@ -220,8 +220,8 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsReal *RooClassFactory::makeFunctionInstance(const char *className, const char *name, const char *expression,
-                                                  const RooArgList &vars, const char *intExpression)
+RooAbsReal *RooClassFactory::makeFunctionInstance(std::string const &className, std::string const &name, std::string const &expression,
+                                                  const RooArgList &vars, std::string const &intExpression)
 {
    return static_cast<RooAbsReal *>(makeClassInstance("RooAbsRal", className, name, expression, vars, intExpression));
 }
@@ -234,8 +234,8 @@ RooAbsReal *RooClassFactory::makeFunctionInstance(const char *className, const c
 ///
 /// \see RooClassFactory::makeFunctionInstance(const char*, const char*, RooArgList const&, const char*)
 
-RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expression,
-                   const RooArgList& vars, const char* intExpression)
+RooAbsPdf* RooClassFactory::makePdfInstance(std::string const &name, std::string const &expression,
+                   const RooArgList& vars, std::string const &intExpression)
 {
   // Construct unique class name for this function expression
   std::string tmpName(name) ;
@@ -265,8 +265,8 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsPdf *RooClassFactory::makePdfInstance(const char *className, const char *name, const char *expression,
-                                            const RooArgList &vars, const char *intExpression)
+RooAbsPdf *RooClassFactory::makePdfInstance(std::string const &className, std::string const &name, std::string const &expression,
+                                            const RooArgList &vars, std::string const &intExpression)
 {
    return static_cast<RooAbsPdf *>(makeClassInstance("RooAbsPdf", className, name, expression, vars, intExpression));
 }
@@ -278,10 +278,10 @@ RooAbsPdf *RooClassFactory::makePdfInstance(const char *className, const char *n
 /// The difference to makePdf() is the base
 /// class of the written class (RooAbsPdf instead of RooAbsReal).
 ///
-/// \see RooClassFactory::makePdf(const char*, const char*, const char *, const char*, RooArgList const&, bool, bool, const char*)
+/// \see RooClassFactory::makePdf(const char*, const char*, std::string const &, const char*, RooArgList const&, bool, bool, const char*)
 
-bool RooClassFactory::makePdf(const char* name, const char* argNames, const char* catArgNames, const char* expression,
-            bool hasAnaInt, bool hasIntGen, const char* intExpression)
+bool RooClassFactory::makePdf(std::string const &name, std::string const &argNames, std::string const &catArgNames, std::string const &expression,
+            bool hasAnaInt, bool hasIntGen, std::string const &intExpression)
 {
   return makeClass("RooAbsPdf",name,argNames,catArgNames,expression,hasAnaInt,hasIntGen,intExpression) ;
 }
@@ -303,7 +303,7 @@ bool RooClassFactory::makePdf(const char* name, const char* argNames, const char
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-bool RooClassFactory::makeFunction(const char* name, const char* argNames, const char* catArgNames, const char* expression, bool hasAnaInt, const char* intExpression)
+bool RooClassFactory::makeFunction(std::string const &name, std::string const &argNames, std::string const &catArgNames, std::string const &expression, bool hasAnaInt, std::string const &intExpression)
 {
   return makeClass("RooAbsReal",name,argNames,catArgNames,expression,hasAnaInt,false,intExpression) ;
 }
@@ -378,17 +378,17 @@ void replaceAll(std::string &inout, std::string_view what, std::string_view with
 /// if hasIntGen is true
 ///
 
-bool RooClassFactory::makeClass(std::string const& baseName, std::string const& className, const char* realArgNames, const char* catArgNames,
-              const char* expression,  bool hasAnaInt, bool hasIntGen, const char* intExpression)
+bool RooClassFactory::makeClass(std::string const& baseName, std::string const& className, std::string const &realArgNames, std::string const &catArgNames,
+              std::string const &expression,  bool hasAnaInt, bool hasIntGen, std::string const &intExpression)
 {
   // Check that arguments were given
 
-  if ((!realArgNames || !*realArgNames) && (!catArgNames || !*catArgNames)) {
+  if (realArgNames.empty() && catArgNames.empty()) {
     oocoutE(nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
     return true ;
   }
 
-  if (intExpression && !hasAnaInt) {
+  if (!intExpression.empty() && !hasAnaInt) {
     oocoutE(nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR no analytical integration code requestion, but expression for analytical integral provided" << endl ;
     return true ;
   }
@@ -397,17 +397,13 @@ bool RooClassFactory::makeClass(std::string const& baseName, std::string const& 
   vector<string> alist ;
   vector<bool> isCat ;
 
-  if (realArgNames && *realArgNames) {
-    for(auto const& token : ROOT::Split(realArgNames, ",")) {
-      alist.push_back(token) ;
-      isCat.push_back(false) ;
-    }
+  for(auto const& token : ROOT::Split(realArgNames, ",", /*skipEmpyt=*/true)) {
+    alist.push_back(token) ;
+    isCat.push_back(false) ;
   }
-  if (catArgNames && *catArgNames) {
-    for(auto const& token : ROOT::Split(catArgNames, ",")) {
-      alist.push_back(token) ;
-      isCat.push_back(true) ;
-    }
+  for(auto const& token : ROOT::Split(catArgNames, ",", /*skipEmpyt=*/true)) {
+    alist.push_back(token) ;
+    isCat.push_back(true) ;
   }
 
   std::stringstream hf;
@@ -447,14 +443,14 @@ public:
     }
   }
 
-  hf << R"(  CLASS_NAME(CLASS_NAME const &other, const char* name=nullptr);
+  hf << R"(  CLASS_NAME(CLASS_NAME const &other, const char *name=nullptr);
   TObject* clone(const char *newname) const override { return new CLASS_NAME(*this, newname); }
 )";
 
   if (hasAnaInt) {
     hf << R"(
-   int getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
-   double analyticalIntegral(int code, const char* rangeName=0) const override;
+   int getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char *rangeName=nullptr) const override;
+   double analyticalIntegral(int code, const char *rangeName=nullptr) const override;
 )";
   }
 
@@ -598,10 +594,10 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
     vector<string> intExpr ;
     // Parse analytical integration expression if provided
     // Expected form is observable:expression,observable,observable:expression;[...]
-    if (intExpression && *intExpression) {
-      const std::size_t bufSize = strlen(intExpression)+1;
+    if (!intExpression.empty()) {
+      const std::size_t bufSize = intExpression.size()+1;
       std::vector<char> buf(bufSize);
-      strlcpy(buf.data(),intExpression,bufSize) ;
+      strlcpy(buf.data(),intExpression.c_str(),bufSize) ;
       char* ptr = strtok(buf.data(),":") ;
       while(ptr) {
    intObs.push_back(ptr) ;
@@ -611,7 +607,7 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
     }
 
     cf << R"(
-int CLASS_NAME::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+int CLASS_NAME::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char */*rangeName*/) const
 {
    // Support also using the imaginary unit
    using namespace std::complex_literals;
@@ -638,7 +634,7 @@ int CLASS_NAME::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, c
        << endl
        << endl
 
-       << R"(double CLASS_NAME::analyticalIntegral(int code, const char* rangeName) const
+       << R"(double CLASS_NAME::analyticalIntegral(int code, const char *rangeName) const
 {
   // RETURN ANALYTICAL INTEGRAL DEFINED BY RETURN CODE ASSIGNED BY
   // getAnalyticalIntegral(). THE MEMBER FUNCTION x.min(rangeName) AND
