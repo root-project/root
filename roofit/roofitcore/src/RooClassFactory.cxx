@@ -508,6 +508,7 @@ private:
 #include <TMath.h>
 
 #include <cmath>
+#include <complex>
 
 ClassImp(CLASS_NAME);
 
@@ -561,9 +562,17 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
      << endl
      << "namespace {\n"
      << endl
-     << "inline double evaluateImpl(" << listVars(alist, isCat) << ") " << endl
-     << "{\n"
-     << "   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE " << endl
+     << "inline double evaluateImpl(" << listVars(alist, isCat) << ") ";
+  cf << R"(
+{
+   // Support also using the imaginary unit
+   using namespace std::complex_literals;
+   // To be able to also comile C code, we define a variable that behaves like the "I" macro from C.
+   constexpr auto I = 1i;
+
+   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE"
+
+)"
      << "   return " << expression << "; " << endl
      << "}\n"
      << endl
@@ -604,6 +613,11 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
     cf << R"(
 int CLASS_NAME::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
+   // Support also using the imaginary unit
+   using namespace std::complex_literals;
+   // To be able to also comile C code, we define a variable that behaves like the "I" macro from C.
+   constexpr auto I = 1i;
+
    // LIST HERE OVER WHICH VARIABLES ANALYTICAL INTEGRATION IS SUPPORTED,
    // ASSIGN A NUMERIC CODE FOR EACH SUPPORTED (SET OF) PARAMETERS. THE EXAMPLE
    // BELOW ASSIGNS CODE 1 TO INTEGRATION OVER VARIABLE X YOU CAN ALSO
