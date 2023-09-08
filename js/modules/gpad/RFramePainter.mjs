@@ -1148,7 +1148,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Toggle log scale on the specified axes */
    toggleAxisLog(axis) {
       const handle = this[axis+'_handle'];
-      if (handle) handle.changeAxisLog('toggle');
+      return handle?.changeAxisLog('toggle');
    }
 
 } // class RFramePainter

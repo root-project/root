@@ -1,5 +1,5 @@
 import { httpRequest, browser, source_dir, settings, internals, constants, create, clone,
-         findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, getPromise,
+         findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, postponePromise, getPromise,
          prROOT, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
          clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kInspect } from '../core.mjs';
 import { REVISION, DoubleSide, FrontSide,
@@ -2785,7 +2785,7 @@ class TGeoPainter extends ObjectPainter {
          if (this._fit_main_area && !this._webgl) {
             // create top-most SVG for geomtery drawings
             const doc = getDocument(),
-                svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', w);
             svg.setAttribute('height', h);
             svg.appendChild(this._renderer.jsroot_dom);
@@ -2866,7 +2866,7 @@ class TGeoPainter extends ObjectPainter {
       if (filename === 'asis') return dataUrl;
       dataUrl.replace('image/png', 'image/octet-stream');
       const doc = getDocument(),
-          link = doc.createElement('a');
+            link = doc.createElement('a');
       if (isStr(link.download)) {
          doc.body.appendChild(link); // Firefox requires the link to be in the body
          link.download = filename || 'geometry.png';
@@ -3359,21 +3359,19 @@ class TGeoPainter extends ObjectPainter {
       else
          res.forEach(str => elem.append('p').text(str));
 
-      return new Promise(resolveFunc => {
-         setTimeout(() => {
-            arg.domatrix = true;
-            tm1 = new Date().getTime();
-            numvis = this._clones.scanVisible(arg);
-            tm2 = new Date().getTime();
+      return postponePromise(() => {
+         arg.domatrix = true;
+         tm1 = new Date().getTime();
+         numvis = this._clones.scanVisible(arg);
+         tm2 = new Date().getTime();
 
-            const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
-            if (this.isBatchMode())
-               res.push(last_str);
-            else
-               elem.append('p').text(last_str);
-            resolveFunc(this);
-         }, 100);
-      });
+         const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
+         if (this.isBatchMode())
+            res.push(last_str);
+         else
+            elem.append('p').text(last_str);
+         return this;
+      }, 100);
    }
 
    /** @summary Handle drop operation
@@ -4103,7 +4101,7 @@ class TGeoPainter extends ObjectPainter {
        else {
          const spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
-            info = document.createElement('p');
+            info = getDocument().createElement('p');
             info.setAttribute('class', 'geo_info');
             info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);

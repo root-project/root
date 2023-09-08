@@ -1,4 +1,4 @@
-import { gStyle, settings, isFunc, isStr, browser, clTAxis, kNoZoom } from '../core.mjs';
+import { gStyle, settings, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
@@ -24,6 +24,12 @@ function setPainterTooltipEnabled(painter, on) {
    // this is 3D control object
    if (isFunc(painter.control?.setTooltipEnabled))
       painter.control.setTooltipEnabled(on);
+}
+
+/** @summary Return pointers on touch event
+  * @private */
+function get_touch_pointers(event, node) {
+   return event.$touch_arr ?? d3_pointers(event, node);
 }
 
 /** @summary Returns coordinates transformation func
@@ -359,7 +365,7 @@ const TooltipHandler = {
          if (!rect || rect.empty())
             pnt = null; // disable
          else if (pnt.touch && evnt) {
-            const pos = d3_pointers(evnt, rect.node());
+            const pos = get_touch_pointers(evnt, rect.node());
             pnt = (pos && pos.length === 1) ? { touch: true, x: pos[0][0], y: pos[0][1] } : null;
          } else if (evnt) {
             const pos = d3_pointer(evnt, rect.node());
@@ -367,7 +373,7 @@ const TooltipHandler = {
          }
       }
 
-      let hints = [], nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false, textheight = 11;
+      let nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false, textheight = 11;
       const hmargin = 3, wmargin = 3, hstep = 1.2,
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
@@ -375,11 +381,13 @@ const TooltipHandler = {
             font = new FontHandler(160, textheight),
             disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
-      if (pnt && disable_tootlips) pnt.disabled = true; // indicate that highlighting is not required
-      if (pnt) pnt.painters = true; // get also painter
+      if (pnt) {
+         pnt.disabled = disable_tootlips; // indicate that highlighting is not required
+         pnt.painters = true; // get also painter
+      }
 
       // collect tooltips from pad painter - it has list of all drawn objects
-      if (pp) hints = pp.processPadTooltipEvent(pnt);
+      const hints = pp?.processPadTooltipEvent(pnt) ?? [];
 
       if (pp?._deliver_webcanvas_events && pp?.is_active_pad && pnt && isFunc(pp?.deliverWebCanvasEvent))
          pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints);
@@ -870,9 +878,9 @@ const TooltipHandler = {
       }
 
       if (!dblckick) {
- pp.selectObjectPainter(exact ? exact.painter : this,
+         pp.selectObjectPainter(exact ? exact.painter : this,
                { x: pnt.x + (this._frame_x || 0),  y: pnt.y + (this._frame_y || 0) });
-}
+      }
 
       return res;
    },
@@ -937,14 +945,16 @@ const TooltipHandler = {
       if (this.zoom_kind > 100) return;
 
       const frame = this.getFrameSvg(),
-          pos = d3_pointer(evnt, frame.node());
+            pos = d3_pointer(evnt, frame.node());
 
       if ((evnt.buttons === 3) || (evnt.button === 1)) {
          this.clearInteractiveElements();
          this._shifting_buttons = evnt.buttons;
 
-         d3_select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
-                          .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+         if (!evnt.$emul) {
+            d3_select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
+                             .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+         }
 
          setPainterTooltipEnabled(this, false);
          evnt.preventDefault();
@@ -962,8 +972,7 @@ const TooltipHandler = {
       const w = this.getFrameWidth(), h = this.getFrameHeight();
 
       this.zoom_lastpos = pos;
-      this.zoom_curr = [Math.max(0, Math.min(w, pos[0])),
-                         Math.max(0, Math.min(h, pos[1]))];
+      this.zoom_curr = [Math.max(0, Math.min(w, pos[0])), Math.max(0, Math.min(h, pos[1]))];
 
       this.zoom_origin = [0, 0];
       this.zoom_second = false;
@@ -986,8 +995,10 @@ const TooltipHandler = {
          this.zoom_origin[1] = this.zoom_curr[1];
       }
 
-      d3_select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
-                       .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+      if (!evnt.$emul) {
+         d3_select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
+                          .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+      }
 
       this.zoom_rect = null;
 
@@ -997,7 +1008,7 @@ const TooltipHandler = {
       evnt.stopPropagation();
 
       if (this.zoom_kind !== 1)
-         setTimeout(() => this.startLabelsMove(), 500);
+         return postponePromise(() => this.startLabelsMove(), 500);
    },
 
    /** @summary Starts labels move */
@@ -1035,9 +1046,9 @@ const TooltipHandler = {
       }
 
       const x = Math.min(this.zoom_origin[0], this.zoom_curr[0]),
-          y = Math.min(this.zoom_origin[1], this.zoom_curr[1]),
-          w = Math.abs(this.zoom_curr[0] - this.zoom_origin[0]),
-          h = Math.abs(this.zoom_curr[1] - this.zoom_origin[1]);
+            y = Math.min(this.zoom_origin[1], this.zoom_curr[1]),
+            w = Math.abs(this.zoom_curr[0] - this.zoom_origin[0]),
+            h = Math.abs(this.zoom_curr[1] - this.zoom_origin[1]);
 
       if (!this.zoom_rect) {
          // ignore small changes, can be switching to labels move
@@ -1058,11 +1069,13 @@ const TooltipHandler = {
 
       evnt.preventDefault();
 
-      d3_select(window).on('mousemove.zoomRect', null)
-                       .on('mouseup.zoomRect', null);
+      if (!evnt.$emul) {
+         d3_select(window).on('mousemove.zoomRect', null)
+                          .on('mouseup.zoomRect', null);
+      }
 
       const m = d3_pointer(evnt, this.getFrameSvg().node());
-      let kind = this.zoom_kind;
+      let kind = this.zoom_kind, pr;
 
       if (this.zoom_labels)
          this.zoom_labels.processLabelsMove('stop', m);
@@ -1097,16 +1110,16 @@ const TooltipHandler = {
 
          if (namex === 'x2') {
             this.zoomChangedInteractive(namex, true);
-            this.zoomSingle(namex, xmin, xmax);
+            pr = this.zoomSingle(namex, xmin, xmax);
             kind = 0;
          } else if (namey === 'y2') {
             this.zoomChangedInteractive(namey, true);
-            this.zoomSingle(namey, ymin, ymax);
+            pr = this.zoomSingle(namey, ymin, ymax);
             kind = 0;
          } else if (isany) {
             this.zoomChangedInteractive('x', true);
             this.zoomChangedInteractive('y', true);
-            this.zoom(xmin, xmax, ymin, ymax);
+            pr = this.zoom(xmin, xmax, ymin, ymax);
             kind = 0;
          }
       }
@@ -1127,17 +1140,20 @@ const TooltipHandler = {
             this.getPadPainter()?.selectObjectPainter(this, null, 'yaxis');
             break;
       }
+
+      // return promise - if any
+      return pr;
    },
 
    /** @summary Handle mouse double click on frame */
    mouseDoubleClick(evnt) {
       evnt.preventDefault();
       const m = d3_pointer(evnt, this.getFrameSvg().node()),
-          fw = this.getFrameWidth(), fh = this.getFrameHeight();
+            fw = this.getFrameWidth(), fh = this.getFrameHeight();
       this.clearInteractiveElements();
 
       const valid_x = (m[0] >= 0) && (m[0] <= fw),
-          valid_y = (m[1] >= 0) && (m[1] <= fh);
+            valid_y = (m[1] >= 0) && (m[1] <= fh);
 
       if (valid_x && valid_y && this._dblclick_handler)
          if (this.processFrameClick({ x: m[0], y: m[1] }, true)) return;
@@ -1152,10 +1168,10 @@ const TooltipHandler = {
          kind = this.swap_xy ? 'y' : 'x';
          if ((m[1] < 0) && this[kind+'2_handle']) kind += '2'; // let unzoom second axis
       }
-      this.unzoom(kind).then(changed => {
+      return this.unzoom(kind).then(changed => {
          if (changed) return;
          const pp = this.getPadPainter(), rect = this.getFrameRect();
-         if (pp) pp.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
+         return pp?.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
       });
    },
 
@@ -1169,7 +1185,7 @@ const TooltipHandler = {
       if ((this.zoom_kind !== 0) || drag_kind)
          return;
 
-      const arr = d3_pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
 
       // normally double-touch will be handled
       // touch with single click used for context menu
@@ -1224,7 +1240,6 @@ const TooltipHandler = {
       } else
          this.zoom_kind = 101; // x and y
 
-
       drag_kind = 'zoom'; // block other possible dragging
 
       setPainterTooltipEnabled(this, false);
@@ -1237,9 +1252,11 @@ const TooltipHandler = {
             .attr('height', this.zoom_origin[1] - this.zoom_curr[1])
             .call(addHighlightStyle, true);
 
-      d3_select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
-                       .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
-                       .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+      if (!evnt.$emul) {
+         d3_select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
+                          .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
+                          .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+      }
    },
 
    /** @summary Move touch zooming */
@@ -1248,7 +1265,7 @@ const TooltipHandler = {
 
       evnt.preventDefault();
 
-      const arr = d3_pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
 
       if (arr.length !== 2)
          return this.clearInteractiveElements();
@@ -1282,9 +1299,11 @@ const TooltipHandler = {
       drag_kind = ''; // reset global flag
 
       evnt.preventDefault();
-      d3_select(window).on('touchmove.zoomRect', null)
-                       .on('touchend.zoomRect', null)
-                       .on('touchcancel.zoomRect', null);
+      if (!evnt.$emul) {
+         d3_select(window).on('touchmove.zoomRect', null)
+                          .on('touchend.zoomRect', null)
+                          .on('touchcancel.zoomRect', null);
+      }
 
       let xmin, xmax, ymin, ymax, isany = false, namex = 'x', namey = 'y';
       const xid = this.swap_xy ? 1 : 0, yid = 1 - xid, changed = [true, true];
@@ -1333,8 +1352,7 @@ const TooltipHandler = {
          return handle2.analyzeWheelEvent(event, dmin, item.second, test_ignore);
       }
       const handle = this[item.name + '_handle'];
-      if (handle) return handle.analyzeWheelEvent(event, dmin, item, test_ignore);
-      console.error(`Fail to analyze zooming event for ${item.name}`);
+      return handle?.analyzeWheelEvent(event, dmin, item, test_ignore);
    },
 
     /** @summary return true if default Y zooming should be enabled
@@ -1372,19 +1390,21 @@ const TooltipHandler = {
       if (this.can_zoom_y)
          this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
 
-      this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
+      let pr = this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
 
       if (itemx.changed) this.zoomChangedInteractive('x', true);
       if (itemy.changed) this.zoomChangedInteractive('y', true);
 
       if (itemx.second) {
-         this.zoomSingle('x2', itemx.second.min, itemx.second.max);
+         pr = pr.then(() => this.zoomSingle('x2', itemx.second.min, itemx.second.max));
          if (itemx.second.changed) this.zoomChangedInteractive('x2', true);
       }
       if (itemy.second) {
-         this.zoomSingle('y2', itemy.second.min, itemy.second.max);
+         pr = pr.then(() => this.zoomSingle('y2', itemy.second.min, itemy.second.max));
          if (itemy.second.changed) this.zoomChangedInteractive('y2', true);
       }
+
+      return pr;
    },
 
    /** @summary Show frame context menu */
@@ -1404,7 +1424,7 @@ const TooltipHandler = {
          evnt.preventDefault();
          evnt.stopPropagation(); // disable main context menu
          const ms = d3_pointer(evnt, svg_node),
-               tch = d3_pointers(evnt, svg_node);
+               tch = get_touch_pointers(evnt, svg_node);
          if (tch.length === 1)
              pnt = { x: tch[0][0], y: tch[0][1], touch: true };
          else if (ms.length === 2)
@@ -1457,7 +1477,7 @@ const TooltipHandler = {
 
       this.clearInteractiveElements();
 
-      createMenu(evnt, menu_painter).then(menu => {
+      return createMenu(evnt, menu_painter).then(menu => {
          let domenu = menu.painter.fillContextMenu(menu, kind, obj);
 
          // fill frame menu by default - or append frame elements when activated in the frame corner
@@ -1465,10 +1485,10 @@ const TooltipHandler = {
             domenu = fp.fillContextMenu(menu);
 
          if (domenu) {
-            exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
+            return exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
                 // suppress any running zooming
                 setPainterTooltipEnabled(menu.painter, false);
-                menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
+                return menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
             });
          }
       });
@@ -1477,7 +1497,7 @@ const TooltipHandler = {
   /** @summary Activate touch handling on frame
     * @private */
    startSingleTouchHandling(kind, evnt) {
-      const arr = d3_pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
       if (arr.length !== 1) return;
 
       evnt.preventDefault();
@@ -1504,7 +1524,7 @@ const TooltipHandler = {
       let pos;
 
       try {
-        pos = d3_pointers(evnt, frame.node())[0];
+        pos = get_touch_pointers(evnt, frame.node())[0];
       } catch (err) {
         pos = [0, 0];
         if (evnt?.changedTouches)
@@ -1823,8 +1843,8 @@ class TFramePainter extends ObjectPainter {
       this.logx = this.logy = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad();
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad();
 
       this.scales_ndim = opts.ndim;
 
@@ -1923,8 +1943,8 @@ class TFramePainter extends ObjectPainter {
       this.logx2 = this.logy2 = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad();
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad();
 
       if (opts.second_x) {
          this.scale_x2min = this.x2min;
@@ -1965,6 +1985,7 @@ class TFramePainter extends ObjectPainter {
                                            noexp_changed: this.x2_noexp_changed,
                                            logcheckmin: this.swap_xy,
                                            logminfactor: logminfactorX });
+
          this.x2_handle.assignFrameMembers(this, 'x2');
       }
 
@@ -1990,7 +2011,7 @@ class TFramePainter extends ObjectPainter {
      * @private */
    getGrFuncs(second_x, second_y) {
       const use_x2 = second_x && this.grx2,
-          use_y2 = second_y && this.gry2;
+            use_y2 = second_y && this.gry2;
       if (!use_x2 && !use_y2) return this;
 
       return {
@@ -2486,7 +2507,7 @@ class TFramePainter extends ObjectPainter {
      * @param {number} value - 0 (linear), 1 (log) or 2 (log2) */
    changeAxisLog(axis, value) {
       const pp = this.getPadPainter(),
-          pad = pp?.getRootPad(true);
+            pad = pp?.getRootPad(true);
       if (!pad) return;
 
       pp._interactively_changed = true;
@@ -2509,12 +2530,12 @@ class TFramePainter extends ObjectPainter {
       // directly change attribute in the pad
       pad[name] = value;
 
-      this.interactiveRedraw('pad', `log${axis}`);
+      return this.interactiveRedraw('pad', `log${axis}`);
    }
 
    /** @summary Toggle log state on the specified axis */
    toggleAxisLog(axis) {
-      this.changeAxisLog(axis, 'toggle');
+      return this.changeAxisLog(axis, 'toggle');
    }
 
    /** @summary Fill context menu for the frame
@@ -2524,11 +2545,15 @@ class TFramePainter extends ObjectPainter {
           pp = this.getPadPainter(),
           pad = pp?.getRootPad(true),
           is_pal = kind === 'pal';
+
       if (is_pal) kind = 'z';
 
       if ((kind === 'x') || (kind === 'y') || (kind === 'z') || (kind === 'x2') || (kind === 'y2')) {
          const faxis = obj || this[kind+'axis'],
-             handle = this[`${kind}_handle`];
+               handle = this[`${kind}_handle`];
+        if (typeof faxis?.TestBit !== 'function')
+           return false;
+
          menu.add(`header: ${kind.toUpperCase()} axis`);
          menu.add('Unzoom', () => this.unzoom(kind));
          if (pad) {
@@ -2803,7 +2828,7 @@ class TFramePainter extends ObjectPainter {
 
       // first process zooming
       if (zoom_v) {
- this.forEachPainter(obj => {
+         this.forEachPainter(obj => {
             if (!isFunc(obj.canZoomInside)) return;
             if (zoom_v && obj.canZoomInside(name[0], vmin, vmax)) {
                this[`zoom_${name}min`] = vmin;
@@ -2812,7 +2837,7 @@ class TFramePainter extends ObjectPainter {
                zoom_v = false;
             }
          });
-}
+      }
 
       // and process unzoom, if any
       if (unzoom_v) {

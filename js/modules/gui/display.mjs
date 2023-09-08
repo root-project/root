@@ -1190,6 +1190,8 @@ class BatchDisplay extends MDIDisplay {
       const obj = d3_select(frame).property('_json_object_');
       if (obj) {
          d3_select(frame).property('_json_object_', null);
+         cleanup(frame);
+         d3_select(frame).remove();
          return toJSON(obj, spacing);
       }
    }
@@ -1214,6 +1216,8 @@ class BatchDisplay extends MDIDisplay {
       main.selectAll('svg').each(clear_element);
 
       const svg = compressSVG(main.html());
+
+      cleanup(frame);
       main.remove();
       return svg;
    }
