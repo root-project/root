@@ -29,6 +29,7 @@
 #include "TEnv.h"
 #include "TExec.h"
 #include "TSocket.h"
+#include "TThread.h"
 
 #include <thread>
 #include <chrono>
@@ -122,11 +123,6 @@ void RWebWindowsManager::AssignMainThrd()
 RWebWindowsManager::RWebWindowsManager()
 {
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
-   if (fExternalProcessEvents) {
-      gWebWinMainThrdSet = false;
-      fAssgnExec = std::make_unique<TExec>("init_threadid", "ROOT::RWebWindowsManager::AssignMainThrd();");
-      TTimer::SingleShot(0, "TExec",  fAssgnExec.get(), "Exec()");
-   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -138,20 +134,6 @@ RWebWindowsManager::~RWebWindowsManager()
    if (gApplication && fServer && !fServer->IsTerminated()) {
       gApplication->Disconnect("Terminate(Int_t)", fServer.get(), "SetTerminate()");
       fServer->SetTerminate();
-   }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Assign thread id for window
-/// Required in case of external process events
-
-void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
-{
-   if (fExternalProcessEvents && gWebWinMainThrdSet) {
-      win.fUseServerThreads = false;
-      win.fProcessMT = false;
-      win.fCallbacksThrdIdSet = true;
-      win.fCallbacksThrdId = gWebWinMainThrd;
    }
 }
 
@@ -498,10 +480,9 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
    }
 
    if (fExternalProcessEvents) {
-      if (gWebWinMainThrdSet)
-         AssignWindowThreadId(*win.get());
-      else
-         win->UseServerThreads(); // let run window until thread is obtained
+      // special mode when window communication done in THttpServer::ProcessRequests
+      // used only with python which has to provide such special thread
+      win->fUseProcessEvents = true;
    } else if (IsUseHttpThread())
       win->UseServerThreads();
 

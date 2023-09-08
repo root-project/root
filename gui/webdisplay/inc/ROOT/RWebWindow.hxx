@@ -135,6 +135,7 @@ private:
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
    bool fUseServerThreads{false};                   ///<! indicates that server thread is using, no special window thread
+   bool fUseProcessEvents{false};                   ///<! all window functionality will run through process events
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
@@ -223,8 +224,6 @@ private:
    unsigned MakeHeadless(bool create_new = false);
 
    unsigned FindHeadlessConnection();
-
-   void CheckThreadAssign();
 
    static std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> gStartDialogFunc;
 
