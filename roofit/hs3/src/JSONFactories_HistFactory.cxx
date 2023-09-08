@@ -51,13 +51,13 @@ inline void writeAxis(JSONNode &axis, RooRealVar const &obs)
       axis["min"] << obs.getMin();
       axis["max"] << obs.getMax();
    } else {
-      auto &bounds = axis["bounds"];
-      bounds.set_seq();
+      auto &edges = axis["edges"];
+      edges.set_seq();
       double val = binning.binLow(0);
-      bounds.append_child() << val;
+      edges.append_child() << val;
       for (int i = 0; i < binning.numBins(); ++i) {
          val = binning.binHigh(i);
-         bounds.append_child() << val;
+         edges.append_child() << val;
       }
    }
 }
