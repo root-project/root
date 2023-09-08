@@ -127,9 +127,7 @@ public:
    Bool_t ProcessWS(THttpCallArg *arg) override
    {
       if (!arg || IsDisabled()) return kFALSE;
-      auto res = fWindow.ProcessWS(*arg);
-      fWindow.CheckThreadAssign();
-      return res;
+      return fWindow.ProcessWS(*arg);
    }
 
    /// Allow processing of WS actions in arbitrary thread

@@ -69,8 +69,6 @@ private:
 
    bool CreateServer(bool with_http = false);
 
-   void AssignWindowThreadId(RWebWindow &win);
-
    bool InformListener(const std::string &msg);
 
 public:
