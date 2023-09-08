@@ -294,11 +294,11 @@ RooCmdArg Index(RooCategory &icat)
 }
 RooCmdArg Import(const char *state, TH1 &histo)
 {
-   return RooCmdArg("ImportHistoSlice", 0, 0, 0, 0, state, nullptr, &histo, nullptr);
+   return RooCmdArg("ImportDataSlice", 0, 0, 0, 0, state, nullptr, &histo, nullptr);
 }
 RooCmdArg Import(const char *state, RooDataHist &dhist)
 {
-   return RooCmdArg("ImportDataHistSlice", 0, 0, 0, 0, state, nullptr, &dhist, nullptr);
+   return RooCmdArg("ImportDataSlice", 0, 0, 0, 0, state, nullptr, &dhist, nullptr);
 }
 RooCmdArg Import(TH1 &histo, bool importDensity)
 {
@@ -307,11 +307,11 @@ RooCmdArg Import(TH1 &histo, bool importDensity)
 
 RooCmdArg Import(const std::map<std::string, RooDataHist *> &arg)
 {
-   return processMap("ImportDataHistSliceMany", processImportItem<RooDataHist>, arg);
+   return processMap("ImportDataSliceMany", processImportItem<RooDataHist>, arg);
 }
 RooCmdArg Import(const std::map<std::string, TH1 *> &arg)
 {
-   return processMap("ImportHistoSliceMany", processImportItem<TH1>, arg);
+   return processMap("ImportDataSliceMany", processImportItem<TH1>, arg);
 }
 
 // RooDataSet::ctor arguments
