@@ -459,7 +459,7 @@ class TCanvasPainter extends TPadPainter {
          return this.activateGed(this, null, 'toggle');
       if (funcname === 'ToggleStatus')
          return this.activateStatusBar('toggle');
-      super.clickPadButton(funcname, evnt);
+      return super.clickPadButton(funcname, evnt);
    }
 
    /** @summary Returns true if event status shown in the canvas */
@@ -469,6 +469,12 @@ class TCanvasPainter extends TPadPainter {
       if (this.brlayout)
          return this.brlayout.hasStatus();
       return getHPainter()?.hasStatusLine() ?? false;
+   }
+
+   /** @summary Check if status bar can be toggled
+     * @private */
+   canStatusBar() {
+      return this.testUI5() || this.brlayout || getHPainter();
    }
 
    /** @summary Show/toggle event status bar
@@ -608,7 +614,7 @@ class TCanvasPainter extends TPadPainter {
    completeCanvasSnapDrawing() {
       if (!this.pad) return;
 
-      if (document && !this.embed_canvas && this._websocket)
+      if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
          document.title = this.pad.fTitle;
 
       if (this._all_sections_showed) return;

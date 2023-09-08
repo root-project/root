@@ -62,7 +62,7 @@ function closeCurrentWindow() {
   * @private */
 function tryOpenOpenUI(sources, args) {
    if (!sources || (sources.length === 0)) {
-      if (args.rejectFunc) {
+      if (isFunc(args.rejectFunc)) {
          args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
       }
@@ -263,7 +263,7 @@ const ToolbarIcons = {
   * @param {number} [delay] - one could specify delay after which resize event will be handled
   * @protected */
 function registerForResize(handle, delay) {
-   if (!handle || isBatchMode() || (typeof window === 'undefined')) return;
+   if (!handle || isBatchMode() || (typeof window === 'undefined') || (typeof document === 'undefined')) return;
 
    let myInterval = null, myDelay = delay || 300;
    if (myDelay < 20) myDelay = 20;
@@ -418,17 +418,19 @@ function selectgStyle(name) {
   * @private */
 function saveCookie(obj, expires, name) {
    const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-       d = new Date();
+         d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+   if (typeof document !== 'undefined')
+      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
 /** @summary Read cookie with specified name
   * @private */
 function readCookie(name) {
-   if (typeof document === 'undefined') return null;
+   if (typeof document === 'undefined')
+      return null;
    const decodedCookie = decodeURIComponent(document.cookie),
-       ca = decodedCookie.split(';');
+         ca = decodedCookie.split(';');
    name += '=';
    for (let i = 0; i < ca.length; i++) {
       let c = ca[i];
@@ -516,7 +518,7 @@ async function saveFile(filename, content) {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
       });
-   } else if (typeof document === 'object') {
+   } else if (typeof document !== 'undefined') {
       const a = document.createElement('a');
       a.download = filename;
       a.href = content;

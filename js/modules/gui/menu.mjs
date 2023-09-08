@@ -1,4 +1,4 @@
-import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect } from '../core.mjs';
+import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect, getDocument } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
@@ -441,10 +441,12 @@ class JSRootMenu {
 
       this.add('column:');
 
+      const doc = getDocument();
+
       for (let n = 1; n < 20; ++n) {
          const id = n*10 + prec,
                handler = new FontHandler(id, 14),
-               txt = d3_select(document.createElementNS('http://www.w3.org/2000/svg', 'text'));
+               txt = d3_select(doc.createElementNS('http://www.w3.org/2000/svg', 'text'));
          let fullname = handler.getFontName(), qual = '';
          if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
          if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
@@ -1069,17 +1071,17 @@ class StandaloneMenu extends JSRootMenu {
    /** @summary Build HTML elements of the menu
      * @private */
    _buildContextmenu(menu, left, top, loc) {
-      const outer = document.createElement('div'),
-
-       container_style =
+      const doc = getDocument(),
+            outer = doc.createElement('div'),
+            container_style =
          'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
          'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
          'font-size: 13px; color: rgb(0, 0, 0, 0.8); line-height: 15px;';
 
-      // if loc !== document.body then its a submenu, so it needs to have position: relative;
-      if (loc === document.body) {
+      // if loc !== doc.body then its a submenu, so it needs to have position: relative;
+      if (loc === doc.body) {
          // delete all elements with className jsroot_ctxt_container
-         const deleteElems = document.getElementsByClassName('jsroot_ctxt_container');
+         const deleteElems = doc.getElementsByClassName('jsroot_ctxt_container');
          while (deleteElems.length > 0)
             deleteElems[0].parentNode.removeChild(deleteElems[0]);
 
@@ -1113,13 +1115,13 @@ class StandaloneMenu extends JSRootMenu {
          }
 
          if (d.divider) {
-            const hr = document.createElement('hr');
+            const hr = doc.createElement('hr');
             hr.style = 'width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15)';
             outer.appendChild(hr);
             return;
          }
 
-         const item = document.createElement('div');
+         const item = doc.createElement('div');
          item.style.position = 'relative';
          outer.appendChild(item);
 
@@ -1129,7 +1131,7 @@ class StandaloneMenu extends JSRootMenu {
             return;
          }
 
-         const hovArea = document.createElement('div');
+         const hovArea = doc.createElement('div');
          hovArea.style.width = '100%';
          hovArea.style.height = '100%';
          hovArea.style.display = 'flex';
@@ -1140,34 +1142,34 @@ class StandaloneMenu extends JSRootMenu {
          item.appendChild(hovArea);
          if (!d.text) d.text = 'item';
 
-         const text = document.createElement('div');
+         const text = doc.createElement('div');
          text.style = 'margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap';
 
          if (d.text.indexOf('<svg') >= 0) {
             if (need_check_area) {
                text.style.display = 'flex';
 
-               const chk = document.createElement('span');
+               const chk = doc.createElement('span');
                chk.innerHTML = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
 
-               const sub = document.createElement('div');
+               const sub = doc.createElement('div');
                sub.innerHTML = d.text;
                text.appendChild(sub);
             } else
                text.innerHTML = d.text;
          } else {
             if (need_check_area) {
-               const chk = document.createElement('span');
+               const chk = doc.createElement('span');
                chk.innerHTML = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
             }
 
-            const sub = document.createElement('span');
+            const sub = doc.createElement('span');
             if (d.text.indexOf('<nobr>') === 0)
                sub.textContent = d.text.slice(6, d.text.length-7);
             else
@@ -1189,7 +1191,7 @@ class StandaloneMenu extends JSRootMenu {
          }
 
          if (d.extraText || d.sub) {
-            const extraText = document.createElement('span');
+            const extraText = doc.createElement('span');
             extraText.className = 'jsroot_ctxt_extraText';
             extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
             extraText.textContent = d.sub ? '\u25B6' : d.extraText;
@@ -1240,10 +1242,10 @@ class StandaloneMenu extends JSRootMenu {
 
       loc.appendChild(outer);
 
-      const docWidth = document.documentElement.clientWidth, docHeight = document.documentElement.clientHeight;
+      const docWidth = doc.documentElement.clientWidth, docHeight = doc.documentElement.clientHeight;
 
       // Now determine where the contextmenu will be
-      if (loc === document.body) {
+      if (loc === doc.body) {
          if (left + outer.offsetWidth > docWidth) {
             // Does sub-contextmenu overflow window width?
             outer.style.left = (docWidth - outer.offsetWidth) + 'px';
@@ -1294,12 +1296,15 @@ class StandaloneMenu extends JSRootMenu {
 
       if (!event && this.show_evnt) event = this.show_evnt;
 
-      document.body.addEventListener('click', this.remove_handler);
+      const doc = getDocument(),
+            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.pageXOffset, y: window.pageYOffset };
 
-      const oldmenu = document.getElementById(this.menuname);
+      doc.body.addEventListener('click', this.remove_handler);
+
+      const oldmenu = doc.getElementById(this.menuname);
       if (oldmenu) oldmenu.remove();
 
-      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + window.pageXOffset, (event?.clientY || 0) + window.pageYOffset, document.body);
+      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + woffset.x, (event?.clientY || 0) + woffset.y, doc.body);
 
       this.element.setAttribute('id', this.menuname);
 
@@ -1387,7 +1392,7 @@ function createMenu(evnt, handler, menuname) {
 /** @summary Close previousely created and shown JSROOT menu
   * @param {string} [menuname] - optional menu name */
 function closeMenu(menuname) {
-   const element = document.getElementById(menuname || 'root_ctx_menu');
+   const element = getDocument().getElementById(menuname || 'root_ctx_menu');
    element?.remove();
    return !!element;
 }

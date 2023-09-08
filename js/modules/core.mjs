@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/09/2023',
+version_date = '8/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -429,13 +429,11 @@ async function injectCode(code) {
       const promise = code.indexOf('JSROOT.require') >= 0 ? _ensureJSROOT() : Promise.resolve(true);
 
       return promise.then(() => {
-         return new Promise(resolve => {
-            const element = document.createElement('script');
-            element.setAttribute('type', 'text/javascript');
-            element.innerHTML = code;
-            document.head.appendChild(element);
-            setTimeout(() => resolve(true), 10); // while onload event not fired, just postpone resolve
-         });
+         const element = document.createElement('script');
+         element.setAttribute('type', 'text/javascript');
+         element.innerHTML = code;
+         document.head.appendChild(element);
+         return postponePromise(true, 10); // while onload event not fired, just postpone resolve
       });
    }
 
@@ -1747,6 +1745,17 @@ function isStr(arg) { return typeof arg === 'string'; }
   * @private */
 function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
 
+/** @summary Postpone func execution and return result in promise
+  * @private */
+function postponePromise(func, timeout) {
+   return new Promise(resolveFunc => {
+      setTimeout(() => {
+         const res = isFunc(func) ? func() : func;
+         resolveFunc(res);
+      }, timeout);
+   });
+}
+
 /** @summary Provide promise in any case
   * @private */
 function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
@@ -1778,4 +1787,4 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,
-         getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, _ensureJSROOT };
+         getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, postponePromise, _ensureJSROOT };

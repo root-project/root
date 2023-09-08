@@ -20,7 +20,7 @@ function treeShowProgress(handle, str) {
       return showProgress();
 
    const main_box = document.createElement('p'),
-       text_node = document.createTextNode(str);
+         text_node = document.createTextNode(str);
 
    main_box.appendChild(text_node);
    main_box.title = 'Click on element to break';
