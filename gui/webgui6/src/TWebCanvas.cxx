@@ -61,16 +61,31 @@
 class TWebCanvasTimer : public TTimer {
    TWebCanvas &fCanv;
    Bool_t fProcessing{kFALSE};
+   Bool_t fSlow{kFALSE};
+   Int_t fSlowCnt{0};
 public:
    TWebCanvasTimer(TWebCanvas &canv) : TTimer(10, kTRUE), fCanv(canv) {}
+
+   Bool_t IsSlow() const { return fSlow; }
+   void SetSlow(Bool_t slow = kTRUE)
+   {
+      fSlow = slow;
+      fSlowCnt = 0;
+      SetTime(slow ? 1000 : 10);
+   }
 
    /// used to send control messages to clients
    void Timeout() override
    {
       if (fProcessing || fCanv.fProcessingData) return;
       fProcessing = kTRUE;
-      fCanv.CheckDataToSend();
+      Bool_t res = fCanv.CheckDataToSend();
       fProcessing = kFALSE;
+      if (res) {
+         fSlowCnt = 0;
+      } else if (++fSlowCnt > 10 && !IsSlow()) {
+         SetSlow(kTRUE);
+      }
    }
 };
 
@@ -114,6 +129,12 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
    fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 0) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
+
+   fWebConn.emplace_back(0); // add special connection which only used to perform updates
+
+   fTimer->TurnOn();
+
+   // fAsyncMode = kTRUE;
 }
 
 
@@ -798,29 +819,32 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 /// Add control message for specified connection
 /// Same control message can be overwritten many time before it really sends to the client
 /// If connid == 0, message will be add to all connections
-/// If parameter send_immediately specified, tries to submit message immediately
-/// Otherwise short timer is activated and message send afterwards
+/// After ctrl message is add to the output, short timer is activated and message send afterwards
 
 void TWebCanvas::AddCtrlMsg(unsigned connid, const std::string &key, const std::string &value)
 {
-   for (auto &conn : fWebConn)
-      if ((conn.fConnId == connid) || (connid == 0))
-         conn.fCtrl[key] = value;
+   Bool_t new_ctrl = kFALSE;
 
-   if (!fTimer->IsRunning())
-      fTimer->TurnOn();
+   for (auto &conn : fWebConn) {
+      if (conn.match(connid)) {
+         conn.fCtrl[key] = value;
+         new_ctrl = kTRUE;
+      }
+   }
+
+   if (new_ctrl && fTimer->IsSlow())
+      fTimer->SetSlow(kFALSE);
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add message to send queue for specified connection
 /// If connid == 0, message will be add to all connections
-/// Return kFALSE if queue is full or connection is not exists
 
 void TWebCanvas::AddSendQueue(unsigned connid, const std::string &msg)
 {
    for (auto &conn : fWebConn) {
-      if ((conn.fConnId == connid) || (connid == 0))
+      if (conn.match(connid))
          conn.fSend.emplace(msg);
    }
 }
@@ -830,26 +854,26 @@ void TWebCanvas::AddSendQueue(unsigned connid, const std::string &msg)
 /// Check if any data should be send to client
 /// If connid != 0, only selected connection will be checked
 
-void TWebCanvas::CheckDataToSend(unsigned connid)
+Bool_t TWebCanvas::CheckDataToSend(unsigned connid)
 {
-   if (!Canvas() || !fWindow)
-      return;
+   if (!Canvas())
+      return kFALSE;
 
-   bool isMoreData = false;
+   bool isMoreData = false, isAnySend = false;
 
    for (auto &conn : fWebConn) {
 
       bool isConnData = !conn.fCtrl.empty() || !conn.fSend.empty() ||
                         ((conn.fCheckedVersion < fCanvVersion) && (conn.fSendVersion == conn.fDrawVersion));
 
-      while ((!connid || (conn.fConnId == connid)) && fWindow->CanSend(conn.fConnId, true)) {
+      while ((conn.is_batch() && !connid) || (conn.match(connid) && fWindow && fWindow->CanSend(conn.fConnId, true))) {
          // check if any control messages still there to keep timer running
 
          std::string buf;
 
          if (!conn.fCtrl.empty()) {
-              buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
-              conn.fCtrl.clear();
+            buf = "CTRL:"s + TBufferJSON::ToJSON(&conn.fCtrl, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+            conn.fCtrl.clear();
          } else if (!conn.fSend.empty()) {
             std::swap(buf, conn.fSend.front());
             conn.fSend.pop();
@@ -868,6 +892,12 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
             holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
 
             CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf, &conn, this](TPadWebSnapshot *snap) {
+               if (conn.is_batch()) {
+                  // for batch connection only calling of CreatePadSnapshot is important
+                  buf.clear();
+                  return;
+               }
+
                auto json = TBufferJSON::ToJSON(snap, fJsonComp);
                auto hash = json.Hash();
                if (conn.fLastSendHash && (conn.fLastSendHash == hash) && conn.fSendVersion) {
@@ -890,20 +920,20 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
             break;
          }
 
-         if (!buf.empty())
+         if (!buf.empty() && !conn.is_batch()) {
             fWindow->Send(conn.fConnId, buf);
+            isAnySend = true;
+         }
       }
 
       if (isConnData)
          isMoreData = true;
    }
 
-   bool is_running = fTimer->IsRunning();
-   if (is_running && !isMoreData)
-      fTimer->TurnOff();
-   else if (!is_running && isMoreData)
-      fTimer->TurnOn();
+   if (fTimer->IsSlow() && isMoreData)
+      fTimer->SetSlow(kFALSE);
 
+   return isAnySend;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1405,10 +1435,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       return kTRUE;
 
    // try to identify connection for given WS request
-   unsigned indx = 0;
-   for (auto &c : fWebConn) {
-      if (c.fConnId == connid) break;
-      indx++;
+   unsigned indx = 0; // first connection is batch and excluded
+   while(++indx < fWebConn.size()) {
+      if (fWebConn[indx].fConnId == connid)
+         break;
    }
    if (indx >= fWebConn.size())
       return kTRUE;
@@ -1886,19 +1916,12 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate(Bool_t async)
 {
-   Bool_t modified = CheckCanvasModified();
+   CheckCanvasModified();
 
-   if (!fWindow) {
-      if (modified) {
-         TCanvasWebSnapshot holder(IsReadOnly(), false, true); // readonly, set ids, batchmode
-         CreatePadSnapshot(holder, Canvas(), 0, nullptr);
-      }
-   } else {
-      CheckDataToSend();
+   CheckDataToSend();
 
-      if (!fProcessingData && !IsAsyncMode() && !async)
-         WaitWhenCanvasPainted(fCanvVersion);
-   }
+   if (!fProcessingData && !IsAsyncMode() && !async)
+      WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
 }
@@ -1942,7 +1965,7 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
          return kFALSE; // wait ~1 min if no new connection established
       }
 
-      if ((fWebConn.size() > 0) && (fWebConn.front().fDrawVersion >= ver)) {
+      if ((fWebConn.size() > 1) && (fWebConn[1].fDrawVersion >= ver)) {
          if (gDebug > 2)
             Info("WaitWhenCanvasPainted", "ver %ld got painted", (long)ver);
          return kTRUE;
