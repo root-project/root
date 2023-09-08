@@ -36,6 +36,7 @@ protected:
    std::unique_ptr<TRootSniffer> fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
    Bool_t fTerminated{kFALSE};          ///<! termination flag, disables all requests processing
    Long_t fMainThrdId{0};               ///<! id of the thread for processing requests
+   Long_t fProcessingThrdId{0};         ///<! id of the thread where events are recently processing
    Bool_t fOwnThread{kFALSE};           ///<! true when specialized thread allocated for processing requests
    std::thread fThrd;                   ///<! own thread
    Bool_t fWSOnly{kFALSE};              ///<! when true, handle only websockets / longpoll engine
