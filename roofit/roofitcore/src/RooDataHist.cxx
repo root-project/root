@@ -284,17 +284,13 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   pc.defineObject("impHist","ImportHisto",0) ;
   pc.defineInt("impDens","ImportHisto",0) ;
   pc.defineObject("indexCat","IndexCat",0) ;
-  pc.defineObject("impSliceHist","ImportHistoSlice",0,nullptr,true) ; // array
-  pc.defineString("impSliceState","ImportHistoSlice",0,"",true) ; // array
-  pc.defineObject("impSliceDHist","ImportDataHistSlice",0,nullptr,true) ; // array
-  pc.defineString("impSliceDState","ImportDataHistSlice",0,"",true) ; // array
+  pc.defineObject("impSliceData","ImportDataSlice",0,nullptr,true) ; // array
+  pc.defineString("impSliceState","ImportDataSlice",0,"",true) ; // array
   pc.defineDouble("weight","Weight",0,1) ;
-  pc.defineObject("dummy1","ImportDataHistSliceMany",0) ;
-  pc.defineObject("dummy2","ImportHistoSliceMany",0) ;
+  pc.defineObject("dummy1","ImportDataSliceMany",0) ;
   pc.defineSet("glObs","GlobalObservables",0,nullptr) ;
-  pc.defineMutex("ImportHisto","ImportHistoSlice","ImportDataHistSlice") ;
-  pc.defineDependency("ImportHistoSlice","IndexCat") ;
-  pc.defineDependency("ImportDataHistSlice","IndexCat") ;
+  pc.defineMutex("ImportHisto","ImportDataSlice");
+  pc.defineDependency("ImportDataSlice","IndexCat") ;
 
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
@@ -313,11 +309,9 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   TH1* impHist = static_cast<TH1*>(pc.getObject("impHist")) ;
   bool impDens = pc.getInt("impDens") ;
   double initWgt = pc.getDouble("weight") ;
-  const char* impSliceNames = pc.getString("impSliceState","",true) ;
-  const RooLinkedList& impSliceHistos = pc.getObjectList("impSliceHist") ;
   RooCategory* indexCat = static_cast<RooCategory*>(pc.getObject("indexCat")) ;
-  const char* impSliceDNames = pc.getString("impSliceDState","",true) ;
-  const RooLinkedList& impSliceDHistos = pc.getObjectList("impSliceDHist") ;
+  const char* impSliceNames = pc.getString("impSliceState","",true) ;
+  const RooLinkedList& impSliceHistos = pc.getObjectList("impSliceData") ;
 
 
   if (impHist) {
@@ -328,29 +322,32 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   } else if (indexCat) {
 
 
-    if (!impSliceHistos.empty()) {
-
-      // Initialize importing mapped set of TH1s
+      // Initialize importing mapped set of RooDataHists and TH1s
+      std::map<std::string,RooDataHist*> dmap ;
       std::map<std::string,TH1*> hmap ;
       auto hiter = impSliceHistos.begin() ;
-      for (const auto& token : ROOT::Split(impSliceNames, ",")) {
-        auto histo = static_cast<TH1*>(*hiter);
-        assert(histo);
-        hmap[token] = histo;
+      for (const auto& token : ROOT::Split(impSliceNames, ",", /*skipEmpty=*/true)) {
+        if(auto dHist = dynamic_cast<RooDataHist*>(*hiter)) {
+           dmap[token] = dHist;
+        }
+        if(auto hHist = dynamic_cast<TH1*>(*hiter)) {
+           hmap[token] = hHist;
+        }
         ++hiter;
       }
-      importTH1Set(vars,*indexCat,hmap,initWgt,false) ;
-    } else {
-
-      // Initialize importing mapped set of RooDataHists
-      std::map<std::string,RooDataHist*> dmap ;
-      auto hiter = impSliceDHistos.begin() ;
-      for (const auto& token : ROOT::Split(impSliceDNames, ",")) {
-        dmap[token] = static_cast<RooDataHist*>(*hiter);
-        ++hiter;
+      if(!dmap.empty() && !hmap.empty()) {
+         std::stringstream errorMsgStream;
+         errorMsgStream << "RooDataHist::ctor(" << GetName() << ") ERROR: you can't import mix of TH1 and RooDataHist";
+         const std::string errorMsg = errorMsgStream.str();
+         coutE(InputArguments) << errorMsg << std::endl;
+         throw std::invalid_argument(errorMsg);
       }
-      importDHistSet(vars,*indexCat,dmap,initWgt) ;
-    }
+      if (!dmap.empty()) {
+         importDHistSet(vars,*indexCat,dmap,initWgt);
+      }
+      if (!hmap.empty()) {
+         importTH1Set(vars,*indexCat,hmap,initWgt,false);
+      }
 
 
   } else {
