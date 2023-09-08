@@ -34,7 +34,7 @@ const bool writeJsonFiles = false;
 // will be written out and read back, and then the values of the old and new
 // RooAbsReal will be compared for equality in each bin of the observable that
 // is called "x" by convention.
-int validate(RooWorkspace &ws1, std::string const &argName)
+int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
 {
    RooWorkspace ws2;
 
@@ -58,27 +58,27 @@ int validate(RooWorkspace &ws1, std::string const &argName)
       x2.setBin(i);
       const double val1 = arg1.getVal(nset1);
       const double val2 = arg2.getVal(nset2);
-      allGood &= val1 == val2;
+      allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
    }
 
    return allGood ? 0 : 1;
 }
 
-int validate(std::vector<std::string> const &expressions)
+int validate(std::vector<std::string> const &expressions, bool exact = true)
 {
    RooWorkspace ws;
    for (std::size_t iExpr = 0; iExpr < expressions.size() - 1; ++iExpr) {
       ws.factory(expressions[iExpr]);
    }
    const std::string argName = ws.factory(expressions.back())->GetName();
-   return validate(ws, argName);
+   return validate(ws, argName, exact);
 }
 
-int validate(RooAbsArg const &arg)
+int validate(RooAbsArg const &arg, bool exact = true)
 {
    RooWorkspace ws;
    ws.import(arg, RooFit::Silence());
-   return validate(ws, arg.GetName());
+   return validate(ws, arg.GetName(), exact);
 }
 
 } // namespace
@@ -250,7 +250,7 @@ TEST(RooFitHS3, RooLandau)
 
 TEST(RooFitHS3, RooLognormal)
 {
-   int status = validate({"Lognormal::lognormal(x[0.1, 2.0], m0[0.0, 0.1, 10], k[3.0, 1.1, 10])"});
+   int status = validate({"Lognormal::lognormal(x[0.1, 2.0], m0[0.0, 0.1, 10], k[3.0, 1.1, 10])"}, true);
    EXPECT_EQ(status, 0);
 }
 
