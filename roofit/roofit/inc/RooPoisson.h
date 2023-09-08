@@ -35,6 +35,8 @@ public:
 
   /// Switch off/on rounding of `x` to the nearest integer.
   void setNoRounding(bool flag = true) {_noRounding = flag;}
+  bool getNoRounding() const { return _noRounding; }
+  
   /// Switch on or off protection against negative means.
   void protectNegativeMean(bool flag = true) {_protectNegative = flag;}
 

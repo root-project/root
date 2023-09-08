@@ -16,23 +16,25 @@
 #ifndef ROO_EXPONENTIAL
 #define ROO_EXPONENTIAL
 
-#include "RooAbsPdf.h"
-#include "RooRealProxy.h"
-
-class RooRealVar;
-class RooAbsReal;
+#include <RooAbsPdf.h>
+#include <RooRealProxy.h>
 
 class RooExponential : public RooAbsPdf {
 public:
-  RooExponential() {} ;
+  RooExponential() {}
   RooExponential(const char *name, const char *title,
        RooAbsReal& _x, RooAbsReal& _c);
   RooExponential(const RooExponential& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooExponential(*this,newname); }
-  inline ~RooExponential() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
+
+  /// Get the x variable.
+  RooAbsReal const &variable() const { return x.arg(); }
+
+  /// Get the coefficient "c".
+  RooAbsReal const &coefficient() const { return c.arg(); }
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
   std::string
