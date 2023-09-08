@@ -5,20 +5,21 @@
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
+#include <RooAddPdf.h>
+#include <RooCategory.h>
+#include <RooConstVar.h>
+#include <RooGaussian.h>
+#include <RooGlobalFunc.h>
+#include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
-#include <RooRealVar.h>
-#include <RooConstVar.h>
-#include <RooWorkspace.h>
-#include <RooGlobalFunc.h>
-#include <RooGaussian.h>
-#include <RooHelpers.h>
 #include <RooMultiVarGaussian.h>
+#include <RooPoisson.h>
+#include <RooProdPdf.h>
+#include <RooRealVar.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
-#include <RooProdPdf.h>
-#include <RooPoisson.h>
-#include <RooCategory.h>
+#include <RooWorkspace.h>
 
 #include <TROOT.h>
 
@@ -27,7 +28,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = true;
+const bool writeJsonFiles = false;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -115,10 +116,30 @@ TEST(RooFitHS3, AttributesIO)
 
 TEST(RooFitHS3, RooAddPdf)
 {
-   int status =
-      validate({"Gaussian::signalModel(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
-                "ArgusBG::background(x, 5.291, argpar[-20.0, -100., -1.])",
-                "SUM::model(nsig[200, 0., 10000] * signalModel, nbkg[800, 0., 10000] * background)"});
+   int status = validate({"Gaussian::sig(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
+                          "ArgusBG::bkg(x, 5.291, argpar[-20.0, -100., -1.])",
+                          "SUM::model(nsig[200, 0., 10000] * sig, nbkg[800, 0., 10000] * bkg)"});
+   EXPECT_EQ(status, 0);
+
+   // With the next part of the test, we want to cover the closure of
+   // coefficient normalization reference observables.
+   RooWorkspace ws;
+   ws.factory("Gaussian::sig_1(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])");
+   ws.factory("Uniform::sig_2(x_2[0, 10])");
+
+   ws.factory("ArgusBG::bkg_1(x, 5.291, argpar[-20.0, -100., -1.])");
+   // Some pdf in x_2 needs to be non linear, otherwise the reference
+   // normalization set makes no difference.
+   ws.factory("Polynomial::bkg_2(x_2, {a2[1.0, 0.0, 2.0]}, 2)");
+
+   ws.factory("PROD::sig(sig_1, sig_2)");
+   ws.factory("PROD::bkg(bkg_1, bkg_2)");
+
+   ws.factory("nsig[200, 0., 10000]");
+   ws.factory("nbkg[800, 0., 10000]");
+   RooAddPdf addPdf{"model_cond", "model_cond", {*ws.pdf("sig"), *ws.pdf("bkg")}, {*ws.var("nsig"), *ws.var("nbkg")}};
+   addPdf.fixCoefNormalization({*ws.var("x"), *ws.var("x_2")});
+   status = validate(addPdf);
    EXPECT_EQ(status, 0);
 }
 
@@ -255,8 +276,19 @@ TEST(RooFitHS3, RooMultiVarGaussian)
 
 TEST(RooFitHS3, RooPoisson)
 {
-   int status = validate({"Poisson::poisson(x[0, 10], mean[5])"});
-   EXPECT_EQ(status, 0);
+   int status = 0;
+
+   for (auto noRounding : {false, true}) {
+
+      std::string name = "poisson";
+      name += noRounding ? "_true" : "_false";
+
+      RooRealVar x{"x", "x", 0, 10};
+      RooRealVar mean{"mean", "mean", 5};
+      RooPoisson poisson{name.c_str(), name.c_str(), x, mean, noRounding};
+      status = validate(poisson);
+      EXPECT_EQ(status, 0);
+   }
 }
 
 TEST(RooFitHS3, RooPolynomial)

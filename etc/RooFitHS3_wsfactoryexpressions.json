@@ -34,13 +34,6 @@
             "n"
         ]
     },
-    "exponential_dist": {
-        "class": "RooExponential",
-        "arguments": [
-            "x",
-            "c"
-        ]
-    },
     "gamma_dist": {
         "class": "RooGamma",
         "arguments": [
@@ -73,21 +66,6 @@
             "x",
             "mean",
             "sigma"
-        ]
-    },
-    "lognormal_dist": {
-        "class": "RooLognormal",
-        "arguments": [
-            "x",
-            "m0",
-            "k"
-        ]
-    },
-    "poisson_dist": {
-        "class": "RooPoisson",
-        "arguments": [
-            "x",
-            "mean"
         ]
     },
     "power_dist": {

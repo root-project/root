@@ -1,12 +1,4 @@
 {
-    "RooAddPdf": {
-        "type": "mixture_dist",
-        "proxies": {
-            "refCoefNorm": "coefnormset",
-            "pdfs": "summands",
-            "coefficients": "coefficients"
-        }
-    },
     "RooAddition": {
         "type": "sum",
         "proxies": {
@@ -48,13 +40,6 @@
             "sigma": "sigma"
         }
     },
-    "RooExponential": {
-        "type": "exponential_dist",
-        "proxies": {
-            "x": "x",
-            "c": "c"
-        }
-    },
     "RooGamma": {
         "type": "gamma_dist",
         "proxies": {
@@ -85,21 +70,6 @@
             "x": "x",
             "mean": "mean",
             "sigma": "sigma"
-        }
-    },
-    "RooLognormal": {
-        "type": "lognormal_dist",
-        "proxies": {
-            "x": "x",
-            "m0": "m0",
-            "k": "k"
-        }
-    },
-    "RooPoisson": {
-        "type": "poisson_dist",
-        "proxies": {
-            "x": "x",
-            "mean": "mean"
         }
     },
     "RooPower": {
