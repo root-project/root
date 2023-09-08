@@ -275,7 +275,6 @@ const AxisPainterMethods = {
        else if (evnt)
          delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail);
 
-
       if (!delta || (test_ignore && item.ignore)) return;
 
       delta = (delta < 0) ? -0.2 : 0.2;

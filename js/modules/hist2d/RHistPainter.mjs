@@ -1,4 +1,4 @@
-import { gStyle, settings, isObject, isFunc, isStr, nsREX } from '../core.mjs';
+import { gStyle, settings, isObject, isFunc, isStr, nsREX, getPromise } from '../core.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
@@ -459,22 +459,25 @@ class RHistPainter extends RObjectPainter {
    getSelectIndex(axis, size, add) {
       // be aware - here indexes starts from 0
       const taxis = this.getAxis(axis),
-          nbins = this['nbins'+axis] || 0;
+            nbins = this['nbins'+axis] || 0;
       let indx = 0;
 
       if (this.options.second_x && axis === 'x') axis = 'x2';
       if (this.options.second_y && axis === 'y') axis = 'y2';
 
       const main = this.getFramePainter(),
-          min = main ? main[`zoom_${axis}min`] : 0,
-          max = main ? main[`zoom_${axis}max`] : 0;
+            min = main ? main[`zoom_${axis}min`] : 0,
+            max = main ? main[`zoom_${axis}max`] : 0;
 
       if ((min !== max) && taxis) {
          if (size === 'left')
             indx = taxis.FindBin(min, add || 0);
          else
             indx = taxis.FindBin(max, (add || 0) + 0.5);
-         if (indx < 0) indx = 0; else if (indx>nbins) indx = nbins;
+         if (indx < 0)
+            indx = 0;
+         else if (indx > nbins)
+            indx = nbins;
       } else
          indx = (size === 'left') ? 0 : nbins;
 
@@ -488,23 +491,23 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
-      // TODO: move to frame painter
+      const fp = this.getFramePainter();
+      if (!fp) return false;
+
       switch (funcname) {
          case 'ToggleZoom':
             if ((this.zoom_xmin !== this.zoom_xmax) || (this.zoom_ymin !== this.zoom_ymax) || (this.zoom_zmin !== this.zoom_zmax)) {
-               this.unzoom();
-               this.getFramePainter().zoomChangedInteractive('reset');
-               return true;
+               const res = this.unzoom();
+               fp.zoomChangedInteractive('reset');
+               return res;
             }
-            if (this.draw_content) {
-               this.autoZoom();
-               return true;
-            }
+            if (this.draw_content)
+               return this.autoZoom();
             break;
-         case 'ToggleLogX': this.getFramePainter().toggleAxisLog('x'); break;
-         case 'ToggleLogY': this.getFramePainter().toggleAxisLog('y'); break;
-         case 'ToggleLogZ': this.getFramePainter().toggleAxisLog('z'); break;
-         case 'ToggleStatBox': this.toggleStat(); return true;
+         case 'ToggleLogX': return fp.toggleAxisLog('x');
+         case 'ToggleLogY': return fp.toggleAxisLog('y');
+         case 'ToggleLogZ': return fp.toggleAxisLog('z');
+         case 'ToggleStatBox': return getPromise(this.toggleStat());
       }
       return false;
    }
@@ -685,7 +688,7 @@ class RHistPainter extends RObjectPainter {
 
       if (this.options.Mode3D) {
          if (!this.options.Surf && !this.options.Lego && !this.options.Error) {
-            if ((this.nbinsx>=50) || (this.nbinsy>=50))
+            if ((this.nbinsx >= 50) || (this.nbinsy >= 50))
                this.options.Lego = this.options.Color ? 14 : 13;
             else
                this.options.Lego = this.options.Color ? 12 : 1;
@@ -695,7 +698,7 @@ class RHistPainter extends RObjectPainter {
       }
 
       this.copyOptionsToOthers();
-      this.interactiveRedraw('pad', 'drawopt');
+      return this.interactiveRedraw('pad', 'drawopt');
    }
 
    /** @summary Calculate histogram inidicies and axes values for each visible bin */

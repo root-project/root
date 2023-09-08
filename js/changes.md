@@ -19,9 +19,9 @@
 16. Draw axes grids in front of objects - making it equivalent to original ROOT
 17. Put `gl` in "devDependencies" of package.json. One can skip it installation with `npm i --production`.
 18. Add support of `TPaveClass`
-19. Use `eslint` for static code checking
-20. Support `inspectN` draw option, allows automatically expand object content to specified level
-21. Implement `allfunc` draw option for histograms, force drawing disregard of TF1::kNotDraw bit
+19. Support `inspectN` draw option, allows automatically expand object content to specified level
+20. Implement `allfunc` draw option for histograms, force drawing disregard of TF1::kNotDraw bit
+21. Use `eslint` for static code checking, add testing of interactive features
 
 
 ## Changes in 7.4.3

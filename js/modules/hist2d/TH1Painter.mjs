@@ -1164,7 +1164,7 @@ class TH1Painter extends THistPainter {
    /** @summary Call drawing function depending from 3D mode */
    async callDrawFunc(reason) {
       const main = this.getMainPainter(),
-          fp = this.getFramePainter();
+            fp = this.getFramePainter();
 
      if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
         this.copyOptionsFrom(main);

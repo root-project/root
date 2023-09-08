@@ -483,9 +483,11 @@ class TGraphPainter extends ObjectPainter {
       for (let n = drawbins.length-1; n >= 0; --n) {
          const bin = drawbins[n],
              dlen = Math.sqrt(bin.dgrx**2 + bin.dgry**2);
-         // shift point
-         bin.grx += excl_width*bin.dgry/dlen;
-         bin.gry -= excl_width*bin.dgrx/dlen;
+         if (dlen > 1e-10) {
+            // shift point
+            bin.grx += excl_width*bin.dgry/dlen;
+            bin.gry -= excl_width*bin.dgrx/dlen;
+         }
          extrabins.push(bin);
       }
 
@@ -1406,14 +1408,9 @@ class TGraphPainter extends ObjectPainter {
    clickButton(funcname) {
       if (funcname !== 'ToggleZoom') return false;
 
-      const main = this.getFramePainter();
-      if (!main) return false;
-
       if ((this.xmin === this.xmax) && (this.ymin === this.ymax)) return false;
 
-      main.zoom(this.xmin, this.xmax, this.ymin, this.ymax);
-
-      return true;
+      return this.getFramePainter()?.zoom(this.xmin, this.xmax, this.ymin, this.ymax);
    }
 
    /** @summary Find TF1/TF2 in TGraph list of functions */

@@ -132,16 +132,16 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
-      if (super.clickButton(funcname)) return true;
+      const res = super.clickButton(funcname);
+      if (res) return res;
 
       switch (funcname) {
-         case 'ToggleColor': this.toggleColor(); break;
-         case 'Toggle3D': this.toggleMode3D(); break;
-         default: return false;
+         case 'ToggleColor': return this.toggleColor();
+         case 'Toggle3D': return this.toggleMode3D();
       }
 
       // all methods here should not be processed further
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar with RH2-related functions */
@@ -165,8 +165,7 @@ class RH2Painter extends RHistPainter {
       } else
          this.options.Color = !this.options.Color;
 
-
-      this.redraw();
+      return this.redraw();
    }
 
    /** @summary Perform automatic zoom inside non-zero region of histogram */

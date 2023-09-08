@@ -1,4 +1,4 @@
-import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette } from '../core.mjs';
+import { create, settings, isNodeJs, isStr, btoa_func, clTAxis, clTPaletteAxis, clTImagePalette, getDocument } from '../core.mjs';
 import { toHex } from '../base/colors.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
@@ -165,16 +165,17 @@ class TASImagePainter extends ObjectPainter {
             pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
       }
 
-      const res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() };
+      const res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() },
+            doc = getDocument();
 
       if (!res.can_zoom || ((fp?.zoom_xmin === fp?.zoom_xmax) && (fp?.zoom_ymin === fp?.zoom_ymax)))
          return res;
 
       return new Promise(resolveFunc => {
-         const image = document.createElement('img');
+         const image = doc.createElement('img');
 
          image.onload = () => {
-            const canvas = document.createElement('canvas');
+            const canvas = doc.createElement('canvas');
             canvas.width = image.width;
             canvas.height = image.height;
 
@@ -183,7 +184,7 @@ class TASImagePainter extends ObjectPainter {
 
             const arr = context.getImageData(0, 0, image.width, image.height).data,
                   z = this.getImageZoomRange(fp, res.constRatio, image.width, image.height),
-                  canvas2 = document.createElement('canvas');
+                  canvas2 = doc.createElement('canvas');
             canvas2.width = z.xmax - z.xmin;
             canvas2.height = z.ymax - z.ymin;
 
@@ -393,7 +394,7 @@ class TASImagePainter extends ObjectPainter {
    toggleColz() {
       if (this.getObject()?.fPalette) {
          this.options.Zscale = !this.options.Zscale;
-         this.drawColorPalette(this.options.Zscale, true);
+         return this.drawColorPalette(this.options.Zscale, true);
       }
    }
 
@@ -402,16 +403,13 @@ class TASImagePainter extends ObjectPainter {
       return this.drawImage();
    }
 
-   /** @summary Process click on TASImage-defined buttons */
+   /** @summary Process click on TASImage-defined buttons
+     * @desc may return promise or simply false */
    clickButton(funcname) {
-      if (!this.isMainPainter()) return false;
+      if (this.isMainPainter() && funcname === 'ToggleColorZ')
+         return this.toggleColz();
 
-      switch (funcname) {
-         case 'ToggleColorZ': this.toggleColz(); break;
-         default: return false;
-      }
-
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar for TASImage */

@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, internals, addMethods,
-         isPromise, getPromise, isBatchMode, isObject, isFunc, isStr, btoa_func, clTPad, nsREX } from '../core.mjs';
+         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, btoa_func, clTPad, nsREX } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -422,10 +422,8 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Enlarge pad draw element when possible */
    enlargePad(evnt, is_dblclick) {
-      if (evnt) {
-         evnt.preventDefault();
-         evnt.stopPropagation();
-      }
+      evnt?.preventDefault();
+      evnt?.stopPropagation();
 
       // ignore double click on canvas itself for enlarge
       if (is_dblclick && this._websocket && (this.enlargeMain('state') === 'off'))
@@ -447,8 +445,7 @@ class RPadPainter extends RObjectPainter {
       } else
          console.error('missmatch with pad double click events');
 
-
-      this.checkResize(true);
+      return this.checkResize(true);
    }
 
    /** @summary Create SVG element for the pad
@@ -651,10 +648,9 @@ class RPadPainter extends RObjectPainter {
       if (pnt) pnt.nproc = painters.length;
 
       painters.forEach(obj => {
-         let hint = obj.processTooltipEvent(pnt);
-         if (!hint) hint = { user_info: null };
+         const hint = obj.processTooltipEvent(pnt) || { user_info: null };
          hints.push(hint);
-         if (pnt && pnt.painters) hint.painter = obj;
+         if (pnt?.painters) hint.painter = obj;
       });
 
       return hints;
@@ -690,8 +686,10 @@ class RPadPainter extends RObjectPainter {
       if (isFunc(this.hasMenuBar) && isFunc(this.actiavteMenuBar))
          menu.addchk(this.hasMenuBar(), 'Menu bar', flag => this.actiavteMenuBar(flag));
 
-      if (isFunc(this.hasEventStatus) && isFunc(this.activateStatusBar))
-         menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
+      if (isFunc(this.hasEventStatus) && isFunc(this.activateStatusBar) && isFunc(this.canStatusBar)) {
+         if (this.canStatusBar())
+            menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
+      }
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
          menu.addchk((this.enlargeMain('state') === 'on'), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
@@ -1214,7 +1212,7 @@ class RPadPainter extends RObjectPainter {
 
        // use timeout to avoid conflict with mouse click and automatic menu close
        if (name === 'pad')
-          return setTimeout(() => this.padContextMenu(evnt), 50);
+          return postponePromise(() => this.padContextMenu(evnt), 50);
 
        let selp = null, selkind;
 
@@ -1236,9 +1234,9 @@ class RPadPainter extends RObjectPainter {
 
        if (!isFunc(selp?.fillContextMenu)) return;
 
-       createMenu(evnt, selp).then(menu => {
+       return createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
-             selp.fillObjectExecMenu(menu, selkind).then(() => setTimeout(() => menu.show(), 50));
+             selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
        });
    }
 
@@ -1372,7 +1370,7 @@ class RPadPainter extends RObjectPainter {
          evnt?.stopPropagation();
          if (closeMenu()) return;
 
-         createMenu(evnt, this).then(menu => {
+         return createMenu(evnt, this).then(menu => {
             menu.add('header:Menus');
 
             if (this.iscan)
@@ -1408,23 +1406,26 @@ class RPadPainter extends RObjectPainter {
 
             menu.show();
          });
-
-         return;
       }
 
       // click automatically goes to all sub-pads
       // if any painter indicates that processing completed, it returns true
       let done = false;
+      const prs = [];
 
       for (let i = 0; i < this.painters.length; ++i) {
          const pp = this.painters[i];
 
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname, evnt);
+            prs.push(pp.clickPadButton(funcname, evnt));
 
-         if (!done && isFunc(pp.clickButton))
+         if (!done && isFunc(pp.clickButton)) {
             done = pp.clickButton(funcname);
+            if (isPromise(done)) prs.push(done);
+         }
       }
+
+      return Promise.all(prs);
    }
 
    /** @summary Add button to the pad

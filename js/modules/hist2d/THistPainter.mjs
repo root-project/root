@@ -1314,11 +1314,11 @@ class THistPainter extends ObjectPainter {
          has_stats = statpainter.Enabled;
       } else {
          const prev_name = this.selectCurrentPad(this.getPadName());
-         TPavePainter.draw(this.getDom(), stat).then(() => this.selectCurrentPad(prev_name));
-         has_stats = true;
+         // return promise which will be used to process
+         has_stats = TPavePainter.draw(this.getDom(), stat).then(() => this.selectCurrentPad(prev_name));
       }
 
-      this.processOnlineChange(`exec:SetBit(TH1::kNoStats,${has_stats?0:1})`, this);
+      this.processOnlineChange(`exec:SetBit(TH1::kNoStats,${has_stats ? 0 : 1})`, this);
 
       return has_stats;
    }
@@ -1736,25 +1736,22 @@ class THistPainter extends ObjectPainter {
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
       const fp = this.getFramePainter();
-
       if (!this.isMainPainter() || !fp) return false;
 
       switch (funcname) {
          case 'ToggleZoom':
             if ((fp.zoom_xmin !== fp.zoom_xmax) || (fp.zoom_ymin !== fp.zoom_ymax) || (fp.zoom_zmin !== fp.zoom_zmax)) {
-               fp.unzoom();
+               const pr = fp.unzoom();
                fp.zoomChangedInteractive('reset');
-               return true;
+               return pr;
             }
-            if (this.draw_content) {
-               this.autoZoom();
-               return true;
-            }
+            if (this.draw_content)
+               return this.autoZoom();
             break;
-         case 'ToggleLogX': fp.toggleAxisLog('x'); break;
-         case 'ToggleLogY': fp.toggleAxisLog('y'); break;
-         case 'ToggleLogZ': fp.toggleAxisLog('z'); break;
-         case 'ToggleStatBox': this.toggleStat(); return true;
+         case 'ToggleLogX': return fp.toggleAxisLog('x');
+         case 'ToggleLogY': return fp.toggleAxisLog('y');
+         case 'ToggleLogZ': return fp.toggleAxisLog('z');
+         case 'ToggleStatBox': return getPromise(this.toggleStat());
       }
       return false;
    }
@@ -1769,9 +1766,9 @@ class THistPainter extends ObjectPainter {
       pp.addPadButton('arrow_up', 'Toggle log y', 'ToggleLogY', 'PageUp');
       if (this.getDimension() > 1)
          pp.addPadButton('arrow_diag', 'Toggle log z', 'ToggleLogZ');
-      if (this.options.Axis <= 0)
-         pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
-      if (!not_shown) pp.showPadButtons();
+      pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
+      if (!not_shown)
+         pp.showPadButtons();
    }
 
    /** @summary Returns tooltip information for 3D drawings */
@@ -2151,7 +2148,7 @@ class THistPainter extends ObjectPainter {
       }
 
       this.copyOptionsToOthers();
-      this.interactiveRedraw('pad', 'drawopt');
+      return this.interactiveRedraw('pad', 'drawopt');
    }
 
    /** @summary Prepare handle for color draw */

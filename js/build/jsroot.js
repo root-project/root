@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/09/2023',
+version_date = '8/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -435,13 +435,11 @@ async function injectCode(code) {
       const promise = code.indexOf('JSROOT.require') >= 0 ? _ensureJSROOT() : Promise.resolve(true);
 
       return promise.then(() => {
-         return new Promise(resolve => {
-            const element = document.createElement('script');
-            element.setAttribute('type', 'text/javascript');
-            element.innerHTML = code;
-            document.head.appendChild(element);
-            setTimeout(() => resolve(true), 10); // while onload event not fired, just postpone resolve
-         });
+         const element = document.createElement('script');
+         element.setAttribute('type', 'text/javascript');
+         element.innerHTML = code;
+         document.head.appendChild(element);
+         return postponePromise(true, 10); // while onload event not fired, just postpone resolve
       });
    }
 
@@ -1753,6 +1751,17 @@ function isStr(arg) { return typeof arg === 'string'; }
   * @private */
 function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
 
+/** @summary Postpone func execution and return result in promise
+  * @private */
+function postponePromise(func, timeout) {
+   return new Promise(resolveFunc => {
+      setTimeout(() => {
+         const res = isFunc(func) ? func() : func;
+         resolveFunc(res);
+      }, timeout);
+   });
+}
+
 /** @summary Provide promise in any case
   * @private */
 function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
@@ -1874,6 +1883,7 @@ loadScript: loadScript,
 nsREX: nsREX,
 parse: parse,
 parseMulti: parseMulti,
+postponePromise: postponePromise,
 prROOT: prROOT,
 registerMethods: registerMethods,
 setBatchMode: setBatchMode,
@@ -8292,7 +8302,7 @@ class BasePainter {
 
       // one could redirect here
       if (!is_direct && !res.empty() && use_enlarge)
-         res = select('#jsroot_enlarge_div');
+         res = select(getDocument().getElementById('jsroot_enlarge_div'));
 
       return res;
    }
@@ -8422,7 +8432,8 @@ class BasePainter {
      * @protected */
    enlargeMain(action, skip_warning) {
       const main = this.selectDom(true),
-            origin = this.selectDom('origin');
+            origin = this.selectDom('origin'),
+            doc = getDocument();
 
       if (main.empty() || !settings.CanEnlarge || (origin.property('can_enlarge') === false)) return false;
 
@@ -8434,12 +8445,12 @@ class BasePainter {
 
       if (action === 'toggle') action = (state === 'off');
 
-      let enlarge = select('#jsroot_enlarge_div');
+      let enlarge = select(doc.getElementById('jsroot_enlarge_div'));
 
       if ((action === true) && (state !== 'on')) {
          if (!enlarge.empty()) return false;
 
-         enlarge = select(document.body)
+         enlarge = select(doc.body)
             .append('div')
             .attr('id', 'jsroot_enlarge_div')
             .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; inset: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
@@ -11559,10 +11570,11 @@ class ObjectPainter extends BasePainter {
       * @protected */
    redrawObject(obj, opt) {
       if (!this.updateObject(obj, opt)) return false;
-      const current = document.body.style.cursor;
+      const doc = getDocument(),
+            current = doc.body.style.cursor;
       document.body.style.cursor = 'wait';
       const res = this.redrawPad();
-      document.body.style.cursor = current;
+      doc.body.style.cursor = current;
       return res || true;
    }
 
@@ -11632,11 +11644,7 @@ class ObjectPainter extends BasePainter {
      * @desc Redirects to {@link TPadPainter#checkCanvasResize}
      * @private */
    checkResize(arg) {
-      const p = this.getCanvPainter();
-      if (!p) return false;
-      // only canvas should be checked
-      p.checkCanvasResize(arg);
-      return true;
+      return this.getCanvPainter()?.checkCanvasResize(arg);
    }
 
    /** @summary removes <g> element with object drawing
@@ -12731,10 +12739,18 @@ class ObjectPainter extends BasePainter {
          menu.exec_painter = (menu.painter !== this) ? this : undefined;
 
       return new Promise(resolveFunc => {
-         // set timeout to avoid menu hanging
-         setTimeout(() => DoFillMenu(menu, reqid, resolveFunc), 2000);
+         let did_resolve = false;
 
-         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, resolveFunc, lst));
+         function handleResolve(res) {
+            if (did_resolve) return;
+            did_resolve = true;
+            resolveFunc(res);
+         }
+
+         // set timeout to avoid menu hanging
+         setTimeout(() => DoFillMenu(menu, reqid, handleResolve), 2000);
+
+         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, handleResolve, lst));
       });
    }
 
@@ -54349,10 +54365,10 @@ const Handling3DDrawings = {
          // canvas element offset relative to first parent with non-static position
          // now try to use getBoundingClientRect - it should be more precise
 
-         const pos0 = prnt.getBoundingClientRect();
+         const pos0 = prnt.getBoundingClientRect(), doc = getDocument();
 
          while (prnt) {
-            if (prnt === document) { prnt = null; break; }
+            if (prnt === doc) { prnt = null; break; }
             try {
                if (getComputedStyle(prnt).position !== 'static') break;
             } catch (err) {
@@ -54397,10 +54413,7 @@ async function createRender3D(width, height, render3d, args) {
 
    let promise;
 
-   if (render3d === rc.WebGL) {
-      // interactive WebGL Rendering
-      promise = Promise.resolve(new WebGLRenderer(args));
-   } else if (render3d === rc.SVG) {
+   if (render3d === rc.SVG) {
       // SVG rendering
       const r = createSVGRenderer(false, 0, doc);
       r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -54419,14 +54432,15 @@ async function createRender3D(width, height, render3d, args) {
          args.context = gl;
          gl.canvas = args.canvas;
 
-         globalThis.WebGLRenderingContext = function() {}; // workaround to prevent crash in three.js constructor
-
          const r = new WebGLRenderer(args);
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
          r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
          return r;
       });
+   } else if (render3d === rc.WebGL) {
+      // interactive WebGL Rendering
+      promise = Promise.resolve(new WebGLRenderer(args));
    } else {
       // rendering with WebGL directly into svg image
       const r = new WebGLRenderer(args);
@@ -54555,7 +54569,7 @@ class TooltipFor3D {
       this.tt = null;
       this.cont = null;
       this.lastlbl = '';
-      this.parent = prnt || document.body;
+      this.parent = prnt || getDocument().body;
       this.canvas = canvas; // we need canvas to recalculate mouse events
       this.abspos = !prnt;
    }
@@ -54645,9 +54659,10 @@ class TooltipFor3D {
       }
 
       if (this.tt === null) {
-         this.tt = document.createElement('div');
+         const doc = getDocument();
+         this.tt = doc.createElement('div');
          this.tt.setAttribute('style', 'opacity: 1; filter: alpha(opacity=1); position: absolute; display: block; overflow: hidden; z-index: 101;');
-         this.cont = document.createElement('div');
+         this.cont = doc.createElement('div');
          this.cont.setAttribute('style', 'display: block; padding: 2px 12px 3px 7px; margin-left: 5px; font-size: 11px; background: #777; color: #fff;');
          this.tt.appendChild(this.cont);
          this.parent.appendChild(this.tt);
@@ -55088,7 +55103,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          }
       }
 
-      document.body.style.cursor = this.cursor_changed ? 'pointer' : 'auto';
+      getDocument().body.style.cursor = this.cursor_changed ? 'pointer' : 'auto';
    };
 
    control.mainProcessMouseLeave = function() {
@@ -55103,7 +55118,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       if (isFunc(this.processMouseLeave))
          this.processMouseLeave();
       if (this.cursor_changed) {
-         document.body.style.cursor = 'auto';
+         getDocument().body.style.cursor = 'auto';
          this.cursor_changed = false;
       }
    };
@@ -57620,7 +57635,7 @@ function closeCurrentWindow() {
   * @private */
 function tryOpenOpenUI(sources, args) {
    if (!sources || (sources.length === 0)) {
-      if (args.rejectFunc) {
+      if (isFunc(args.rejectFunc)) {
          args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
       }
@@ -57821,7 +57836,7 @@ const ToolbarIcons = {
   * @param {number} [delay] - one could specify delay after which resize event will be handled
   * @protected */
 function registerForResize(handle, delay) {
-   if (!handle || isBatchMode() || (typeof window === 'undefined')) return;
+   if (!handle || isBatchMode() || (typeof window === 'undefined') || (typeof document === 'undefined')) return;
 
    let myInterval = null, myDelay = delay || 300;
    if (myDelay < 20) myDelay = 20;
@@ -57976,17 +57991,19 @@ function selectgStyle(name) {
   * @private */
 function saveCookie(obj, expires, name) {
    const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-       d = new Date();
+         d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+   if (typeof document !== 'undefined')
+      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
 /** @summary Read cookie with specified name
   * @private */
 function readCookie(name) {
-   if (typeof document === 'undefined') return null;
+   if (typeof document === 'undefined')
+      return null;
    const decodedCookie = decodeURIComponent(document.cookie),
-       ca = decodedCookie.split(';');
+         ca = decodedCookie.split(';');
    name += '=';
    for (let i = 0; i < ca.length; i++) {
       let c = ca[i];
@@ -58074,7 +58091,7 @@ async function saveFile(filename, content) {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
       });
-   } else if (typeof document === 'object') {
+   } else if (typeof document !== 'undefined') {
       const a = document.createElement('a');
       a.download = filename;
       a.href = content;
@@ -58561,10 +58578,12 @@ class JSRootMenu {
 
       this.add('column:');
 
+      const doc = getDocument();
+
       for (let n = 1; n < 20; ++n) {
          const id = n*10 + prec,
                handler = new FontHandler(id, 14),
-               txt = select(document.createElementNS('http://www.w3.org/2000/svg', 'text'));
+               txt = select(doc.createElementNS('http://www.w3.org/2000/svg', 'text'));
          let fullname = handler.getFontName(), qual = '';
          if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
          if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
@@ -59189,17 +59208,17 @@ class StandaloneMenu extends JSRootMenu {
    /** @summary Build HTML elements of the menu
      * @private */
    _buildContextmenu(menu, left, top, loc) {
-      const outer = document.createElement('div'),
-
-       container_style =
+      const doc = getDocument(),
+            outer = doc.createElement('div'),
+            container_style =
          'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
          'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
          'font-size: 13px; color: rgb(0, 0, 0, 0.8); line-height: 15px;';
 
-      // if loc !== document.body then its a submenu, so it needs to have position: relative;
-      if (loc === document.body) {
+      // if loc !== doc.body then its a submenu, so it needs to have position: relative;
+      if (loc === doc.body) {
          // delete all elements with className jsroot_ctxt_container
-         const deleteElems = document.getElementsByClassName('jsroot_ctxt_container');
+         const deleteElems = doc.getElementsByClassName('jsroot_ctxt_container');
          while (deleteElems.length > 0)
             deleteElems[0].parentNode.removeChild(deleteElems[0]);
 
@@ -59233,13 +59252,13 @@ class StandaloneMenu extends JSRootMenu {
          }
 
          if (d.divider) {
-            const hr = document.createElement('hr');
+            const hr = doc.createElement('hr');
             hr.style = 'width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15)';
             outer.appendChild(hr);
             return;
          }
 
-         const item = document.createElement('div');
+         const item = doc.createElement('div');
          item.style.position = 'relative';
          outer.appendChild(item);
 
@@ -59249,7 +59268,7 @@ class StandaloneMenu extends JSRootMenu {
             return;
          }
 
-         const hovArea = document.createElement('div');
+         const hovArea = doc.createElement('div');
          hovArea.style.width = '100%';
          hovArea.style.height = '100%';
          hovArea.style.display = 'flex';
@@ -59260,34 +59279,34 @@ class StandaloneMenu extends JSRootMenu {
          item.appendChild(hovArea);
          if (!d.text) d.text = 'item';
 
-         const text = document.createElement('div');
+         const text = doc.createElement('div');
          text.style = 'margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap';
 
          if (d.text.indexOf('<svg') >= 0) {
             if (need_check_area) {
                text.style.display = 'flex';
 
-               const chk = document.createElement('span');
+               const chk = doc.createElement('span');
                chk.innerHTML = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
 
-               const sub = document.createElement('div');
+               const sub = doc.createElement('div');
                sub.innerHTML = d.text;
                text.appendChild(sub);
             } else
                text.innerHTML = d.text;
          } else {
             if (need_check_area) {
-               const chk = document.createElement('span');
+               const chk = doc.createElement('span');
                chk.innerHTML = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
             }
 
-            const sub = document.createElement('span');
+            const sub = doc.createElement('span');
             if (d.text.indexOf('<nobr>') === 0)
                sub.textContent = d.text.slice(6, d.text.length-7);
             else
@@ -59309,7 +59328,7 @@ class StandaloneMenu extends JSRootMenu {
          }
 
          if (d.extraText || d.sub) {
-            const extraText = document.createElement('span');
+            const extraText = doc.createElement('span');
             extraText.className = 'jsroot_ctxt_extraText';
             extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
             extraText.textContent = d.sub ? '\u25B6' : d.extraText;
@@ -59360,10 +59379,10 @@ class StandaloneMenu extends JSRootMenu {
 
       loc.appendChild(outer);
 
-      const docWidth = document.documentElement.clientWidth, docHeight = document.documentElement.clientHeight;
+      const docWidth = doc.documentElement.clientWidth, docHeight = doc.documentElement.clientHeight;
 
       // Now determine where the contextmenu will be
-      if (loc === document.body) {
+      if (loc === doc.body) {
          if (left + outer.offsetWidth > docWidth) {
             // Does sub-contextmenu overflow window width?
             outer.style.left = (docWidth - outer.offsetWidth) + 'px';
@@ -59414,12 +59433,15 @@ class StandaloneMenu extends JSRootMenu {
 
       if (!event && this.show_evnt) event = this.show_evnt;
 
-      document.body.addEventListener('click', this.remove_handler);
+      const doc = getDocument(),
+            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.pageXOffset, y: window.pageYOffset };
 
-      const oldmenu = document.getElementById(this.menuname);
+      doc.body.addEventListener('click', this.remove_handler);
+
+      const oldmenu = doc.getElementById(this.menuname);
       if (oldmenu) oldmenu.remove();
 
-      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + window.pageXOffset, (event?.clientY || 0) + window.pageYOffset, document.body);
+      this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + woffset.x, (event?.clientY || 0) + woffset.y, doc.body);
 
       this.element.setAttribute('id', this.menuname);
 
@@ -59507,7 +59529,7 @@ function createMenu(evnt, handler, menuname) {
 /** @summary Close previousely created and shown JSROOT menu
   * @param {string} [menuname] - optional menu name */
 function closeMenu(menuname) {
-   const element = document.getElementById(menuname || 'root_ctx_menu');
+   const element = getDocument().getElementById(menuname || 'root_ctx_menu');
    element?.remove();
    return !!element;
 }
@@ -59804,7 +59826,6 @@ const AxisPainterMethods = {
          delta = item.delta;
        else if (evnt)
          delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail);
-
 
       if (!delta || (test_ignore && item.ignore)) return;
 
@@ -60841,6 +60862,12 @@ function setPainterTooltipEnabled(painter, on) {
       painter.control.setTooltipEnabled(on);
 }
 
+/** @summary Return pointers on touch event
+  * @private */
+function get_touch_pointers(event, node) {
+   return event.$touch_arr ?? pointers(event, node);
+}
+
 /** @summary Returns coordinates transformation func
   * @private */
 function getEarthProjectionFunc(id) {
@@ -61174,7 +61201,7 @@ const TooltipHandler = {
          if (!rect || rect.empty())
             pnt = null; // disable
          else if (pnt.touch && evnt) {
-            const pos = pointers(evnt, rect.node());
+            const pos = get_touch_pointers(evnt, rect.node());
             pnt = (pos && pos.length === 1) ? { touch: true, x: pos[0][0], y: pos[0][1] } : null;
          } else if (evnt) {
             const pos = pointer(evnt, rect.node());
@@ -61182,7 +61209,7 @@ const TooltipHandler = {
          }
       }
 
-      let hints = [], nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false, textheight = 11;
+      let nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false, textheight = 11;
       const hmargin = 3, wmargin = 3, hstep = 1.2,
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
@@ -61190,11 +61217,13 @@ const TooltipHandler = {
             font = new FontHandler(160, textheight),
             disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
-      if (pnt && disable_tootlips) pnt.disabled = true; // indicate that highlighting is not required
-      if (pnt) pnt.painters = true; // get also painter
+      if (pnt) {
+         pnt.disabled = disable_tootlips; // indicate that highlighting is not required
+         pnt.painters = true; // get also painter
+      }
 
       // collect tooltips from pad painter - it has list of all drawn objects
-      if (pp) hints = pp.processPadTooltipEvent(pnt);
+      const hints = pp?.processPadTooltipEvent(pnt) ?? [];
 
       if (pp?._deliver_webcanvas_events && pp?.is_active_pad && pnt && isFunc(pp?.deliverWebCanvasEvent))
          pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints);
@@ -61685,9 +61714,9 @@ const TooltipHandler = {
       }
 
       if (!dblckick) {
- pp.selectObjectPainter(exact ? exact.painter : this,
+         pp.selectObjectPainter(exact ? exact.painter : this,
                { x: pnt.x + (this._frame_x || 0),  y: pnt.y + (this._frame_y || 0) });
-}
+      }
 
       return res;
    },
@@ -61752,14 +61781,16 @@ const TooltipHandler = {
       if (this.zoom_kind > 100) return;
 
       const frame = this.getFrameSvg(),
-          pos = pointer(evnt, frame.node());
+            pos = pointer(evnt, frame.node());
 
       if ((evnt.buttons === 3) || (evnt.button === 1)) {
          this.clearInteractiveElements();
          this._shifting_buttons = evnt.buttons;
 
-         select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
-                          .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+         if (!evnt.$emul) {
+            select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
+                             .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+         }
 
          setPainterTooltipEnabled(this, false);
          evnt.preventDefault();
@@ -61777,8 +61808,7 @@ const TooltipHandler = {
       const w = this.getFrameWidth(), h = this.getFrameHeight();
 
       this.zoom_lastpos = pos;
-      this.zoom_curr = [Math.max(0, Math.min(w, pos[0])),
-                         Math.max(0, Math.min(h, pos[1]))];
+      this.zoom_curr = [Math.max(0, Math.min(w, pos[0])), Math.max(0, Math.min(h, pos[1]))];
 
       this.zoom_origin = [0, 0];
       this.zoom_second = false;
@@ -61801,8 +61831,10 @@ const TooltipHandler = {
          this.zoom_origin[1] = this.zoom_curr[1];
       }
 
-      select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
-                       .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+      if (!evnt.$emul) {
+         select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
+                          .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+      }
 
       this.zoom_rect = null;
 
@@ -61812,7 +61844,7 @@ const TooltipHandler = {
       evnt.stopPropagation();
 
       if (this.zoom_kind !== 1)
-         setTimeout(() => this.startLabelsMove(), 500);
+         return postponePromise(() => this.startLabelsMove(), 500);
    },
 
    /** @summary Starts labels move */
@@ -61850,9 +61882,9 @@ const TooltipHandler = {
       }
 
       const x = Math.min(this.zoom_origin[0], this.zoom_curr[0]),
-          y = Math.min(this.zoom_origin[1], this.zoom_curr[1]),
-          w = Math.abs(this.zoom_curr[0] - this.zoom_origin[0]),
-          h = Math.abs(this.zoom_curr[1] - this.zoom_origin[1]);
+            y = Math.min(this.zoom_origin[1], this.zoom_curr[1]),
+            w = Math.abs(this.zoom_curr[0] - this.zoom_origin[0]),
+            h = Math.abs(this.zoom_curr[1] - this.zoom_origin[1]);
 
       if (!this.zoom_rect) {
          // ignore small changes, can be switching to labels move
@@ -61873,11 +61905,13 @@ const TooltipHandler = {
 
       evnt.preventDefault();
 
-      select(window).on('mousemove.zoomRect', null)
-                       .on('mouseup.zoomRect', null);
+      if (!evnt.$emul) {
+         select(window).on('mousemove.zoomRect', null)
+                          .on('mouseup.zoomRect', null);
+      }
 
       const m = pointer(evnt, this.getFrameSvg().node());
-      let kind = this.zoom_kind;
+      let kind = this.zoom_kind, pr;
 
       if (this.zoom_labels)
          this.zoom_labels.processLabelsMove('stop', m);
@@ -61912,16 +61946,16 @@ const TooltipHandler = {
 
          if (namex === 'x2') {
             this.zoomChangedInteractive(namex, true);
-            this.zoomSingle(namex, xmin, xmax);
+            pr = this.zoomSingle(namex, xmin, xmax);
             kind = 0;
          } else if (namey === 'y2') {
             this.zoomChangedInteractive(namey, true);
-            this.zoomSingle(namey, ymin, ymax);
+            pr = this.zoomSingle(namey, ymin, ymax);
             kind = 0;
          } else if (isany) {
             this.zoomChangedInteractive('x', true);
             this.zoomChangedInteractive('y', true);
-            this.zoom(xmin, xmax, ymin, ymax);
+            pr = this.zoom(xmin, xmax, ymin, ymax);
             kind = 0;
          }
       }
@@ -61942,17 +61976,20 @@ const TooltipHandler = {
             this.getPadPainter()?.selectObjectPainter(this, null, 'yaxis');
             break;
       }
+
+      // return promise - if any
+      return pr;
    },
 
    /** @summary Handle mouse double click on frame */
    mouseDoubleClick(evnt) {
       evnt.preventDefault();
       const m = pointer(evnt, this.getFrameSvg().node()),
-          fw = this.getFrameWidth(), fh = this.getFrameHeight();
+            fw = this.getFrameWidth(), fh = this.getFrameHeight();
       this.clearInteractiveElements();
 
       const valid_x = (m[0] >= 0) && (m[0] <= fw),
-          valid_y = (m[1] >= 0) && (m[1] <= fh);
+            valid_y = (m[1] >= 0) && (m[1] <= fh);
 
       if (valid_x && valid_y && this._dblclick_handler)
          if (this.processFrameClick({ x: m[0], y: m[1] }, true)) return;
@@ -61967,10 +62004,10 @@ const TooltipHandler = {
          kind = this.swap_xy ? 'y' : 'x';
          if ((m[1] < 0) && this[kind+'2_handle']) kind += '2'; // let unzoom second axis
       }
-      this.unzoom(kind).then(changed => {
+      return this.unzoom(kind).then(changed => {
          if (changed) return;
          const pp = this.getPadPainter(), rect = this.getFrameRect();
-         if (pp) pp.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
+         return pp?.selectObjectPainter(pp, { x: m[0] + rect.x, y: m[1] + rect.y, dbl: true });
       });
    },
 
@@ -61984,7 +62021,7 @@ const TooltipHandler = {
       if ((this.zoom_kind !== 0) || drag_kind)
          return;
 
-      const arr = pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
 
       // normally double-touch will be handled
       // touch with single click used for context menu
@@ -62039,7 +62076,6 @@ const TooltipHandler = {
       } else
          this.zoom_kind = 101; // x and y
 
-
       drag_kind = 'zoom'; // block other possible dragging
 
       setPainterTooltipEnabled(this, false);
@@ -62052,9 +62088,11 @@ const TooltipHandler = {
             .attr('height', this.zoom_origin[1] - this.zoom_curr[1])
             .call(addHighlightStyle, true);
 
-      select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
-                       .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
-                       .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+      if (!evnt.$emul) {
+         select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
+                          .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
+                          .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+      }
    },
 
    /** @summary Move touch zooming */
@@ -62063,7 +62101,7 @@ const TooltipHandler = {
 
       evnt.preventDefault();
 
-      const arr = pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
 
       if (arr.length !== 2)
          return this.clearInteractiveElements();
@@ -62097,9 +62135,11 @@ const TooltipHandler = {
       drag_kind = ''; // reset global flag
 
       evnt.preventDefault();
-      select(window).on('touchmove.zoomRect', null)
-                       .on('touchend.zoomRect', null)
-                       .on('touchcancel.zoomRect', null);
+      if (!evnt.$emul) {
+         select(window).on('touchmove.zoomRect', null)
+                          .on('touchend.zoomRect', null)
+                          .on('touchcancel.zoomRect', null);
+      }
 
       let xmin, xmax, ymin, ymax, isany = false, namex = 'x', namey = 'y';
       const xid = this.swap_xy ? 1 : 0, yid = 1 - xid, changed = [true, true];
@@ -62148,8 +62188,7 @@ const TooltipHandler = {
          return handle2.analyzeWheelEvent(event, dmin, item.second, test_ignore);
       }
       const handle = this[item.name + '_handle'];
-      if (handle) return handle.analyzeWheelEvent(event, dmin, item, test_ignore);
-      console.error(`Fail to analyze zooming event for ${item.name}`);
+      return handle?.analyzeWheelEvent(event, dmin, item, test_ignore);
    },
 
     /** @summary return true if default Y zooming should be enabled
@@ -62187,19 +62226,21 @@ const TooltipHandler = {
       if (this.can_zoom_y)
          this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
 
-      this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
+      let pr = this.zoom(itemx.min, itemx.max, itemy.min, itemy.max);
 
       if (itemx.changed) this.zoomChangedInteractive('x', true);
       if (itemy.changed) this.zoomChangedInteractive('y', true);
 
       if (itemx.second) {
-         this.zoomSingle('x2', itemx.second.min, itemx.second.max);
+         pr = pr.then(() => this.zoomSingle('x2', itemx.second.min, itemx.second.max));
          if (itemx.second.changed) this.zoomChangedInteractive('x2', true);
       }
       if (itemy.second) {
-         this.zoomSingle('y2', itemy.second.min, itemy.second.max);
+         pr = pr.then(() => this.zoomSingle('y2', itemy.second.min, itemy.second.max));
          if (itemy.second.changed) this.zoomChangedInteractive('y2', true);
       }
+
+      return pr;
    },
 
    /** @summary Show frame context menu */
@@ -62219,7 +62260,7 @@ const TooltipHandler = {
          evnt.preventDefault();
          evnt.stopPropagation(); // disable main context menu
          const ms = pointer(evnt, svg_node),
-               tch = pointers(evnt, svg_node);
+               tch = get_touch_pointers(evnt, svg_node);
          if (tch.length === 1)
              pnt = { x: tch[0][0], y: tch[0][1], touch: true };
          else if (ms.length === 2)
@@ -62272,7 +62313,7 @@ const TooltipHandler = {
 
       this.clearInteractiveElements();
 
-      createMenu(evnt, menu_painter).then(menu => {
+      return createMenu(evnt, menu_painter).then(menu => {
          let domenu = menu.painter.fillContextMenu(menu, kind, obj);
 
          // fill frame menu by default - or append frame elements when activated in the frame corner
@@ -62280,10 +62321,10 @@ const TooltipHandler = {
             domenu = fp.fillContextMenu(menu);
 
          if (domenu) {
-            exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
+            return exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
                 // suppress any running zooming
                 setPainterTooltipEnabled(menu.painter, false);
-                menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
+                return menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
             });
          }
       });
@@ -62292,7 +62333,7 @@ const TooltipHandler = {
   /** @summary Activate touch handling on frame
     * @private */
    startSingleTouchHandling(kind, evnt) {
-      const arr = pointers(evnt, this.getFrameSvg().node());
+      const arr = get_touch_pointers(evnt, this.getFrameSvg().node());
       if (arr.length !== 1) return;
 
       evnt.preventDefault();
@@ -62319,7 +62360,7 @@ const TooltipHandler = {
       let pos;
 
       try {
-        pos = pointers(evnt, frame.node())[0];
+        pos = get_touch_pointers(evnt, frame.node())[0];
       } catch (err) {
         pos = [0, 0];
         if (evnt?.changedTouches)
@@ -62638,8 +62679,8 @@ class TFramePainter extends ObjectPainter {
       this.logx = this.logy = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad();
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad();
 
       this.scales_ndim = opts.ndim;
 
@@ -62738,8 +62779,8 @@ class TFramePainter extends ObjectPainter {
       this.logx2 = this.logy2 = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad();
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad();
 
       if (opts.second_x) {
          this.scale_x2min = this.x2min;
@@ -62780,6 +62821,7 @@ class TFramePainter extends ObjectPainter {
                                            noexp_changed: this.x2_noexp_changed,
                                            logcheckmin: this.swap_xy,
                                            logminfactor: logminfactorX });
+
          this.x2_handle.assignFrameMembers(this, 'x2');
       }
 
@@ -62805,7 +62847,7 @@ class TFramePainter extends ObjectPainter {
      * @private */
    getGrFuncs(second_x, second_y) {
       const use_x2 = second_x && this.grx2,
-          use_y2 = second_y && this.gry2;
+            use_y2 = second_y && this.gry2;
       if (!use_x2 && !use_y2) return this;
 
       return {
@@ -63301,7 +63343,7 @@ class TFramePainter extends ObjectPainter {
      * @param {number} value - 0 (linear), 1 (log) or 2 (log2) */
    changeAxisLog(axis, value) {
       const pp = this.getPadPainter(),
-          pad = pp?.getRootPad(true);
+            pad = pp?.getRootPad(true);
       if (!pad) return;
 
       pp._interactively_changed = true;
@@ -63324,12 +63366,12 @@ class TFramePainter extends ObjectPainter {
       // directly change attribute in the pad
       pad[name] = value;
 
-      this.interactiveRedraw('pad', `log${axis}`);
+      return this.interactiveRedraw('pad', `log${axis}`);
    }
 
    /** @summary Toggle log state on the specified axis */
    toggleAxisLog(axis) {
-      this.changeAxisLog(axis, 'toggle');
+      return this.changeAxisLog(axis, 'toggle');
    }
 
    /** @summary Fill context menu for the frame
@@ -63339,11 +63381,15 @@ class TFramePainter extends ObjectPainter {
           pp = this.getPadPainter(),
           pad = pp?.getRootPad(true),
           is_pal = kind === 'pal';
+
       if (is_pal) kind = 'z';
 
       if ((kind === 'x') || (kind === 'y') || (kind === 'z') || (kind === 'x2') || (kind === 'y2')) {
          const faxis = obj || this[kind+'axis'],
-             handle = this[`${kind}_handle`];
+               handle = this[`${kind}_handle`];
+        if (typeof faxis?.TestBit !== 'function')
+           return false;
+
          menu.add(`header: ${kind.toUpperCase()} axis`);
          menu.add('Unzoom', () => this.unzoom(kind));
          if (pad) {
@@ -63618,7 +63664,7 @@ class TFramePainter extends ObjectPainter {
 
       // first process zooming
       if (zoom_v) {
- this.forEachPainter(obj => {
+         this.forEachPainter(obj => {
             if (!isFunc(obj.canZoomInside)) return;
             if (zoom_v && obj.canZoomInside(name[0], vmin, vmax)) {
                this[`zoom_${name}min`] = vmin;
@@ -63627,7 +63673,7 @@ class TFramePainter extends ObjectPainter {
                zoom_v = false;
             }
          });
-}
+      }
 
       // and process unzoom, if any
       if (unzoom_v) {
@@ -64926,6 +64972,8 @@ class BatchDisplay extends MDIDisplay {
       const obj = select(frame).property('_json_object_');
       if (obj) {
          select(frame).property('_json_object_', null);
+         cleanup(frame);
+         select(frame).remove();
          return toJSON(obj, spacing);
       }
    }
@@ -64950,6 +64998,8 @@ class BatchDisplay extends MDIDisplay {
       main.selectAll('svg').each(clear_element);
 
       const svg = compressSVG(main.html());
+
+      cleanup(frame);
       main.remove();
       return svg;
    }
@@ -65543,7 +65593,8 @@ function toggleButtonsVisibility(handler, action, evnt) {
       case 'disable':
       case 'leavebtn':
          handler.btns_active_flag = false;
-         if (!state) btn.property('timout_handler', setTimeout(() => toggleButtonsVisibility(handler, 'timeout'), 1200));
+         if (!state)
+            btn.property('timout_handler', setTimeout(() => toggleButtonsVisibility(handler, 'timeout'), 1200));
          return;
    }
 
@@ -65866,7 +65917,7 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Generate pad events, normally handled by GED
-    * @desc in pad painter, while pad may be drawn without canvas
+     * @desc in pad painter, while pad may be drawn without canvas
      * @private */
    producePadEvent(what, padpainter, painter, position, place) {
       if ((what === 'select') && isFunc(this.selectActivePad))
@@ -66100,17 +66151,15 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Enlarge pad draw element when possible */
    enlargePad(evnt, is_dblclick) {
-      if (evnt) {
-         evnt.preventDefault();
-         evnt.stopPropagation();
-      }
+      evnt?.preventDefault();
+      evnt?.stopPropagation();
 
       // ignore double click on canvas itself for enlarge
       if (is_dblclick && this._websocket && (this.enlargeMain('state') === 'off'))
          return;
 
       const svg_can = this.getCanvSvg(),
-          pad_enlarged = svg_can.property('pad_enlarged');
+            pad_enlarged = svg_can.property('pad_enlarged');
 
       if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.hasObjectsToDraw() && !this.painters)) {
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
@@ -66126,8 +66175,7 @@ class TPadPainter extends ObjectPainter {
       } else
          console.error('missmatch with pad double click events');
 
-
-      this.checkResize(true);
+      return this.checkResize(true);
    }
 
    /** @summary Create main SVG element for pad
@@ -66494,8 +66542,7 @@ class TPadPainter extends ObjectPainter {
 
       if (nx*ny < 2) return this;
 
-      const xmargin = 0.01, ymargin = 0.01,
-          dy = 1/ny, dx = 1/nx, subpads = [];
+      const xmargin = 0.01, ymargin = 0.01, dy = 1/ny, dx = 1/nx, subpads = [];
       let n = 0;
       for (let iy = 0; iy < ny; iy++) {
          const y2 = 1 - iy*dy - ymargin;
@@ -66552,20 +66599,17 @@ class TPadPainter extends ObjectPainter {
       const painters = [], hints = [];
 
       // first count - how many processors are there
-      if (this.painters !== null) {
-         this.painters.forEach(obj => {
-            if (isFunc(obj.processTooltipEvent))
-               painters.push(obj);
-         });
-      }
+      this.painters?.forEach(obj => {
+         if (isFunc(obj.processTooltipEvent))
+            painters.push(obj);
+      });
 
       if (pnt) pnt.nproc = painters.length;
 
       painters.forEach(obj => {
-         let hint = obj.processTooltipEvent(pnt);
-         if (!hint) hint = { user_info: null };
+         const hint = obj.processTooltipEvent(pnt) || { user_info: null };
          hints.push(hint);
-         if (pnt && pnt.painters) hint.painter = obj;
+         if (pnt?.painters) hint.painter = obj;
       });
 
       return hints;
@@ -66631,8 +66675,10 @@ class TPadPainter extends ObjectPainter {
       if (isFunc(this.hasMenuBar) && isFunc(this.actiavteMenuBar))
          menu.addchk(this.hasMenuBar(), 'Menu bar', flag => this.actiavteMenuBar(flag));
 
-      if (isFunc(this.hasEventStatus) && isFunc(this.activateStatusBar))
-         menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
+      if (isFunc(this.hasEventStatus) && isFunc(this.activateStatusBar) && isFunc(this.canStatusBar)) {
+         if (this.canStatusBar())
+            menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
+      }
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
          menu.addchk(this.isPadEnlarged(), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
@@ -66659,7 +66705,7 @@ class TPadPainter extends ObjectPainter {
          this.getFramePainter()?.setLastEventPos();
       }
 
-      createMenu(evnt, this).then(menu => {
+      return createMenu(evnt, this).then(menu => {
          this.fillContextMenu(menu);
          return this.fillObjectExecMenu(menu, '');
       }).then(menu => menu.show());
@@ -66721,7 +66767,7 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Check resize of canvas
-     * @return {Promise} with result */
+     * @return {Promise} with result or false */
    checkCanvasResize(size, force) {
       if (this._ignore_resize)
          return false;
@@ -67343,11 +67389,11 @@ class TPadPainter extends ObjectPainter {
      * @private */
    itemContextMenu(name) {
        const rrr = this.svg_this_pad().node().getBoundingClientRect(),
-           evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
+             evnt = { clientX: rrr.left + 10, clientY: rrr.top + 10 };
 
        // use timeout to avoid conflict with mouse click and automatic menu close
        if (name === 'pad')
-          return setTimeout(() => this.padContextMenu(evnt), 50);
+          return postponePromise(() => this.padContextMenu(evnt), 50);
 
        let selp = null, selkind;
 
@@ -67369,9 +67415,9 @@ class TPadPainter extends ObjectPainter {
 
        if (!isFunc(selp?.fillContextMenu)) return;
 
-       createMenu(evnt, selp).then(menu => {
+       return createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
-             selp.fillObjectExecMenu(menu, selkind).then(() => setTimeout(() => menu.show(), 50));
+             return selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
        });
    }
 
@@ -67525,7 +67571,7 @@ class TPadPainter extends ObjectPainter {
          evnt?.stopPropagation();
          if (closeMenu()) return;
 
-         createMenu(evnt, this).then(menu => {
+         return createMenu(evnt, this).then(menu => {
             menu.add('header:Menus');
 
             if (this.iscan)
@@ -67561,21 +67607,26 @@ class TPadPainter extends ObjectPainter {
 
             menu.show();
          });
-
-         return;
       }
 
       // click automatically goes to all sub-pads
       // if any painter indicates that processing completed, it returns true
       let done = false;
+      const prs = [];
 
-      this.painters.forEach(pp => {
+      for (let i = 0; i < this.painters.length; ++i) {
+         const pp = this.painters[i];
+
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname, evnt);
+            prs.push(pp.clickPadButton(funcname, evnt));
 
-         if (!done && isFunc(pp.clickButton))
+         if (!done && isFunc(pp.clickButton)) {
             done = pp.clickButton(funcname);
-      });
+            if (isPromise(done)) prs.push(done);
+         }
+      }
+
+      return Promise.all(prs);
    }
 
    /** @summary Add button to the pad
@@ -68178,7 +68229,7 @@ class TCanvasPainter extends TPadPainter {
          return this.activateGed(this, null, 'toggle');
       if (funcname === 'ToggleStatus')
          return this.activateStatusBar('toggle');
-      super.clickPadButton(funcname, evnt);
+      return super.clickPadButton(funcname, evnt);
    }
 
    /** @summary Returns true if event status shown in the canvas */
@@ -68188,6 +68239,12 @@ class TCanvasPainter extends TPadPainter {
       if (this.brlayout)
          return this.brlayout.hasStatus();
       return getHPainter()?.hasStatusLine() ?? false;
+   }
+
+   /** @summary Check if status bar can be toggled
+     * @private */
+   canStatusBar() {
+      return this.testUI5() || this.brlayout || getHPainter();
    }
 
    /** @summary Show/toggle event status bar
@@ -68327,7 +68384,7 @@ class TCanvasPainter extends TPadPainter {
    completeCanvasSnapDrawing() {
       if (!this.pad) return;
 
-      if (document && !this.embed_canvas && this._websocket)
+      if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
          document.title = this.pad.fTitle;
 
       if (this._all_sections_showed) return;
@@ -71297,11 +71354,11 @@ class THistPainter extends ObjectPainter {
          has_stats = statpainter.Enabled;
       } else {
          const prev_name = this.selectCurrentPad(this.getPadName());
-         TPavePainter.draw(this.getDom(), stat).then(() => this.selectCurrentPad(prev_name));
-         has_stats = true;
+         // return promise which will be used to process
+         has_stats = TPavePainter.draw(this.getDom(), stat).then(() => this.selectCurrentPad(prev_name));
       }
 
-      this.processOnlineChange(`exec:SetBit(TH1::kNoStats,${has_stats?0:1})`, this);
+      this.processOnlineChange(`exec:SetBit(TH1::kNoStats,${has_stats ? 0 : 1})`, this);
 
       return has_stats;
    }
@@ -71719,25 +71776,22 @@ class THistPainter extends ObjectPainter {
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
       const fp = this.getFramePainter();
-
       if (!this.isMainPainter() || !fp) return false;
 
       switch (funcname) {
          case 'ToggleZoom':
             if ((fp.zoom_xmin !== fp.zoom_xmax) || (fp.zoom_ymin !== fp.zoom_ymax) || (fp.zoom_zmin !== fp.zoom_zmax)) {
-               fp.unzoom();
+               const pr = fp.unzoom();
                fp.zoomChangedInteractive('reset');
-               return true;
+               return pr;
             }
-            if (this.draw_content) {
-               this.autoZoom();
-               return true;
-            }
+            if (this.draw_content)
+               return this.autoZoom();
             break;
-         case 'ToggleLogX': fp.toggleAxisLog('x'); break;
-         case 'ToggleLogY': fp.toggleAxisLog('y'); break;
-         case 'ToggleLogZ': fp.toggleAxisLog('z'); break;
-         case 'ToggleStatBox': this.toggleStat(); return true;
+         case 'ToggleLogX': return fp.toggleAxisLog('x');
+         case 'ToggleLogY': return fp.toggleAxisLog('y');
+         case 'ToggleLogZ': return fp.toggleAxisLog('z');
+         case 'ToggleStatBox': return getPromise(this.toggleStat());
       }
       return false;
    }
@@ -71752,9 +71806,9 @@ class THistPainter extends ObjectPainter {
       pp.addPadButton('arrow_up', 'Toggle log y', 'ToggleLogY', 'PageUp');
       if (this.getDimension() > 1)
          pp.addPadButton('arrow_diag', 'Toggle log z', 'ToggleLogZ');
-      if (this.options.Axis <= 0)
-         pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
-      if (!not_shown) pp.showPadButtons();
+      pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
+      if (!not_shown)
+         pp.showPadButtons();
    }
 
    /** @summary Returns tooltip information for 3D drawings */
@@ -72134,7 +72188,7 @@ class THistPainter extends ObjectPainter {
       }
 
       this.copyOptionsToOthers();
-      this.interactiveRedraw('pad', 'drawopt');
+      return this.interactiveRedraw('pad', 'drawopt');
    }
 
    /** @summary Prepare handle for color draw */
@@ -73075,19 +73129,19 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
-      if (super.clickButton(funcname)) return true;
+      const res = super.clickButton(funcname);
+      if (res) return res;
 
-      if (this !== this.getMainPainter()) return false;
-
-      switch (funcname) {
-         case 'ToggleColor': this.toggleColor(); break;
-         case 'ToggleColorZ': this.toggleColz(); break;
-         case 'Toggle3D': this.toggleMode3D(); break;
-         default: return false;
+      if (this.isMainPainter()) {
+         switch (funcname) {
+            case 'ToggleColor': return this.toggleColor();
+            case 'ToggleColorZ': return this.toggleColz();
+            case 'Toggle3D': return this.toggleMode3D();
+         }
       }
 
       // all methods here should not be processed further
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar with histogram-related functions */
@@ -73119,7 +73173,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       this.copyOptionsToOthers();
 
-      this.interactiveRedraw('pad', 'drawopt');
+      return this.interactiveRedraw('pad', 'drawopt');
    }
 
    /** @summary Perform automatic zoom inside non-zero region of histogram */
@@ -74903,8 +74957,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       let ndig = 0, tickStep = 1;
       const rect = this.getPadPainter().getFrameRect(),
             palette = this.getHistPalette(),
-            outerRadius = Math.min(rect.width, rect.height) * 0.5 - 60,
-            innerRadius = outerRadius - 10,
+            outerRadius = Math.max(10, Math.min(rect.width, rect.height) * 0.5 - 60),
+            innerRadius = Math.max(2, outerRadius - 10),
             data = [], labels = [],
             getColor = indx => palette.calcColor(indx, used.length),
             formatValue = v => v.toString(),
@@ -74949,18 +75003,18 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          .sortSubgroups(d3_descending)
          .sortChords(d3_descending),
 
-       chords = chord$1(data),
+      chords = chord$1(data),
 
-       group = this.draw_g.append('g')
+      group = this.draw_g.append('g')
          .attr('font-size', 10)
          .attr('font-family', 'sans-serif')
          .selectAll('g')
          .data(chords.groups)
          .join('g'),
 
-       arc$1 = arc().innerRadius(innerRadius).outerRadius(outerRadius),
+      arc$1 = arc().innerRadius(innerRadius).outerRadius(outerRadius),
 
-       ribbon = ribbon$1().radius(innerRadius - 1).padAngle(1 / innerRadius);
+      ribbon = ribbon$1().radius(innerRadius - 1).padAngle(1 / innerRadius);
 
       function ticks({ startAngle, endAngle, value }) {
          const k = (endAngle - startAngle) / value,
@@ -78727,7 +78781,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    /** @summary Call drawing function depending from 3D mode */
    async callDrawFunc(reason) {
       const main = this.getMainPainter(),
-          fp = this.getFramePainter();
+            fp = this.getFramePainter();
 
      if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
         this.copyOptionsFrom(main);
@@ -89835,7 +89889,7 @@ class TGeoPainter extends ObjectPainter {
          if (this._fit_main_area && !this._webgl) {
             // create top-most SVG for geomtery drawings
             const doc = getDocument(),
-                svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', w);
             svg.setAttribute('height', h);
             svg.appendChild(this._renderer.jsroot_dom);
@@ -89916,7 +89970,7 @@ class TGeoPainter extends ObjectPainter {
       if (filename === 'asis') return dataUrl;
       dataUrl.replace('image/png', 'image/octet-stream');
       const doc = getDocument(),
-          link = doc.createElement('a');
+            link = doc.createElement('a');
       if (isStr(link.download)) {
          doc.body.appendChild(link); // Firefox requires the link to be in the body
          link.download = filename || 'geometry.png';
@@ -90409,21 +90463,19 @@ class TGeoPainter extends ObjectPainter {
       else
          res.forEach(str => elem.append('p').text(str));
 
-      return new Promise(resolveFunc => {
-         setTimeout(() => {
-            arg.domatrix = true;
-            tm1 = new Date().getTime();
-            numvis = this._clones.scanVisible(arg);
-            tm2 = new Date().getTime();
+      return postponePromise(() => {
+         arg.domatrix = true;
+         tm1 = new Date().getTime();
+         numvis = this._clones.scanVisible(arg);
+         tm2 = new Date().getTime();
 
-            const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
-            if (this.isBatchMode())
-               res.push(last_str);
-            else
-               elem.append('p').text(last_str);
-            resolveFunc(this);
-         }, 100);
-      });
+         const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
+         if (this.isBatchMode())
+            res.push(last_str);
+         else
+            elem.append('p').text(last_str);
+         return this;
+      }, 100);
    }
 
    /** @summary Handle drop operation
@@ -91153,7 +91205,7 @@ class TGeoPainter extends ObjectPainter {
        else {
          const spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
-            info = document.createElement('p');
+            info = getDocument().createElement('p');
             info.setAttribute('class', 'geo_info');
             info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);
@@ -100223,7 +100275,7 @@ internals.addDrawFunc = addDrawFunc;
 
 function assignPadPainterDraw(PadPainterClass) {
    PadPainterClass.prototype.drawObject = async (...args) =>
-      draw(...args).catch(err => { console.log(err?.message ?? err); return null; });
+      draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err.stack ?? 'uncknown place'}`); return null; });
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }
 
@@ -103055,7 +103107,8 @@ class HierarchyPainter extends BasePainter {
          this.h = result;
          if (!result) return Promise.resolve(null);
 
-         if (this.h?._title) document.title = this.h._title;
+         if (this.h?._title && (typeof document !== 'undefined'))
+            document.title = this.h._title;
 
          result._isopen = true;
 
@@ -103545,7 +103598,8 @@ class HierarchyPainter extends BasePainter {
       if (GetOption('files_monitoring') !== null)
          this.files_monitoring = true;
 
-      if (title) document.title = title;
+      if (title && (typeof document !== 'undefined'))
+         document.title = title;
 
       if (expanditems.length === 0 && (GetOption('expand') === '')) expanditems.push('');
 
@@ -103675,7 +103729,7 @@ class HierarchyPainter extends BasePainter {
             if (('_layout' in this.h) && !layout && ((this.is_online !== 'draw') || (itemsarr.length > 1)))
                this.disp_kind = this.h._layout;
 
-            if (('_toptitle' in this.h) && this.exclude_browser && document)
+            if (('_toptitle' in this.h) && this.exclude_browser && (typeof document !== 'undefined'))
                document.title = this.h._toptitle;
 
             if (gui_div)
@@ -103903,7 +103957,7 @@ class HierarchyPainter extends BasePainter {
             const opt = document.createElement('option');
             opt.innerHTML = opt.value = this.getLayout();
             selects.appendChild(opt);
-            selects.selectedIndex = selects.options.length-1;
+            selects.selectedIndex = selects.options.length - 1;
          }
       }
 
@@ -105270,9 +105324,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       for (let n = drawbins.length-1; n >= 0; --n) {
          const bin = drawbins[n],
              dlen = Math.sqrt(bin.dgrx**2 + bin.dgry**2);
-         // shift point
-         bin.grx += excl_width*bin.dgry/dlen;
-         bin.gry -= excl_width*bin.dgrx/dlen;
+         if (dlen > 1e-10) {
+            // shift point
+            bin.grx += excl_width*bin.dgry/dlen;
+            bin.gry -= excl_width*bin.dgrx/dlen;
+         }
          extrabins.push(bin);
       }
 
@@ -106193,14 +106249,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    clickButton(funcname) {
       if (funcname !== 'ToggleZoom') return false;
 
-      const main = this.getFramePainter();
-      if (!main) return false;
-
       if ((this.xmin === this.xmax) && (this.ymin === this.ymax)) return false;
 
-      main.zoom(this.xmin, this.xmax, this.ymin, this.ymax);
-
-      return true;
+      return this.getFramePainter()?.zoom(this.xmin, this.xmax, this.ymin, this.ymax);
    }
 
    /** @summary Find TF1/TF2 in TGraph list of functions */
@@ -106478,7 +106529,7 @@ function treeShowProgress(handle, str) {
       return showProgress();
 
    const main_box = document.createElement('p'),
-       text_node = document.createTextNode(str);
+         text_node = document.createTextNode(str);
 
    main_box.appendChild(text_node);
    main_box.title = 'Click on element to break';
@@ -112025,16 +112076,17 @@ class TASImagePainter extends ObjectPainter {
             pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
       }
 
-      const res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() };
+      const res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() },
+            doc = getDocument();
 
       if (!res.can_zoom || ((fp?.zoom_xmin === fp?.zoom_xmax) && (fp?.zoom_ymin === fp?.zoom_ymax)))
          return res;
 
       return new Promise(resolveFunc => {
-         const image = document.createElement('img');
+         const image = doc.createElement('img');
 
          image.onload = () => {
-            const canvas = document.createElement('canvas');
+            const canvas = doc.createElement('canvas');
             canvas.width = image.width;
             canvas.height = image.height;
 
@@ -112043,7 +112095,7 @@ class TASImagePainter extends ObjectPainter {
 
             const arr = context.getImageData(0, 0, image.width, image.height).data,
                   z = this.getImageZoomRange(fp, res.constRatio, image.width, image.height),
-                  canvas2 = document.createElement('canvas');
+                  canvas2 = doc.createElement('canvas');
             canvas2.width = z.xmax - z.xmin;
             canvas2.height = z.ymax - z.ymin;
 
@@ -112253,7 +112305,7 @@ class TASImagePainter extends ObjectPainter {
    toggleColz() {
       if (this.getObject()?.fPalette) {
          this.options.Zscale = !this.options.Zscale;
-         this.drawColorPalette(this.options.Zscale, true);
+         return this.drawColorPalette(this.options.Zscale, true);
       }
    }
 
@@ -112262,16 +112314,13 @@ class TASImagePainter extends ObjectPainter {
       return this.drawImage();
    }
 
-   /** @summary Process click on TASImage-defined buttons */
+   /** @summary Process click on TASImage-defined buttons
+     * @desc may return promise or simply false */
    clickButton(funcname) {
-      if (!this.isMainPainter()) return false;
+      if (this.isMainPainter() && funcname === 'ToggleColorZ')
+         return this.toggleColz();
 
-      switch (funcname) {
-         case 'ToggleColorZ': this.toggleColz(); break;
-         default: return false;
-      }
-
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar for TASImage */
@@ -114858,7 +114907,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Toggle log scale on the specified axes */
    toggleAxisLog(axis) {
       const handle = this[axis+'_handle'];
-      if (handle) handle.changeAxisLog('toggle');
+      return handle?.changeAxisLog('toggle');
    }
 
 } // class RFramePainter
@@ -115274,10 +115323,8 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Enlarge pad draw element when possible */
    enlargePad(evnt, is_dblclick) {
-      if (evnt) {
-         evnt.preventDefault();
-         evnt.stopPropagation();
-      }
+      evnt?.preventDefault();
+      evnt?.stopPropagation();
 
       // ignore double click on canvas itself for enlarge
       if (is_dblclick && this._websocket && (this.enlargeMain('state') === 'off'))
@@ -115299,8 +115346,7 @@ class RPadPainter extends RObjectPainter {
       } else
          console.error('missmatch with pad double click events');
 
-
-      this.checkResize(true);
+      return this.checkResize(true);
    }
 
    /** @summary Create SVG element for the pad
@@ -115503,10 +115549,9 @@ class RPadPainter extends RObjectPainter {
       if (pnt) pnt.nproc = painters.length;
 
       painters.forEach(obj => {
-         let hint = obj.processTooltipEvent(pnt);
-         if (!hint) hint = { user_info: null };
+         const hint = obj.processTooltipEvent(pnt) || { user_info: null };
          hints.push(hint);
-         if (pnt && pnt.painters) hint.painter = obj;
+         if (pnt?.painters) hint.painter = obj;
       });
 
       return hints;
@@ -115542,8 +115587,10 @@ class RPadPainter extends RObjectPainter {
       if (isFunc(this.hasMenuBar) && isFunc(this.actiavteMenuBar))
          menu.addchk(this.hasMenuBar(), 'Menu bar', flag => this.actiavteMenuBar(flag));
 
-      if (isFunc(this.hasEventStatus) && isFunc(this.activateStatusBar))
-         menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
+      if (isFunc(this.hasEventStatus) && isFunc(this.activateStatusBar) && isFunc(this.canStatusBar)) {
+         if (this.canStatusBar())
+            menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
+      }
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
          menu.addchk((this.enlargeMain('state') === 'on'), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
@@ -116066,7 +116113,7 @@ class RPadPainter extends RObjectPainter {
 
        // use timeout to avoid conflict with mouse click and automatic menu close
        if (name === 'pad')
-          return setTimeout(() => this.padContextMenu(evnt), 50);
+          return postponePromise(() => this.padContextMenu(evnt), 50);
 
        let selp = null, selkind;
 
@@ -116088,9 +116135,9 @@ class RPadPainter extends RObjectPainter {
 
        if (!isFunc(selp?.fillContextMenu)) return;
 
-       createMenu(evnt, selp).then(menu => {
+       return createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
-             selp.fillObjectExecMenu(menu, selkind).then(() => setTimeout(() => menu.show(), 50));
+             selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
        });
    }
 
@@ -116224,7 +116271,7 @@ class RPadPainter extends RObjectPainter {
          evnt?.stopPropagation();
          if (closeMenu()) return;
 
-         createMenu(evnt, this).then(menu => {
+         return createMenu(evnt, this).then(menu => {
             menu.add('header:Menus');
 
             if (this.iscan)
@@ -116260,23 +116307,26 @@ class RPadPainter extends RObjectPainter {
 
             menu.show();
          });
-
-         return;
       }
 
       // click automatically goes to all sub-pads
       // if any painter indicates that processing completed, it returns true
       let done = false;
+      const prs = [];
 
       for (let i = 0; i < this.painters.length; ++i) {
          const pp = this.painters[i];
 
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname, evnt);
+            prs.push(pp.clickPadButton(funcname, evnt));
 
-         if (!done && isFunc(pp.clickButton))
+         if (!done && isFunc(pp.clickButton)) {
             done = pp.clickButton(funcname);
+            if (isPromise(done)) prs.push(done);
+         }
       }
+
+      return Promise.all(prs);
    }
 
    /** @summary Add button to the pad
@@ -117598,7 +117648,7 @@ class RCanvasPainter extends RPadPainter {
          return this.activateGed(this, null, 'toggle');
       if (funcname === 'ToggleStatus')
          return this.activateStatusBar('toggle');
-      super.clickPadButton(funcname, evnt);
+      return super.clickPadButton(funcname, evnt);
    }
 
    /** @summary returns true when event status area exist for the canvas */
@@ -117610,10 +117660,17 @@ class RCanvasPainter extends RPadPainter {
       return hp ? hp.hasStatusLine() : false;
    }
 
+   /** @summary Check if status bar can be toggled
+     * @private */
+   canStatusBar() {
+      return this.testUI5() || this.brlayout || getHPainter();
+   }
+
    /** @summary Show/toggle event status bar
      * @private */
    activateStatusBar(state) {
-      if (this.testUI5()) return;
+      if (this.testUI5())
+         return;
       if (this.brlayout)
          this.brlayout.createStatusLine(23, state);
       else
@@ -119363,22 +119420,25 @@ class RHistPainter extends RObjectPainter {
    getSelectIndex(axis, size, add) {
       // be aware - here indexes starts from 0
       const taxis = this.getAxis(axis),
-          nbins = this['nbins'+axis] || 0;
+            nbins = this['nbins'+axis] || 0;
       let indx = 0;
 
       if (this.options.second_x && axis === 'x') axis = 'x2';
       if (this.options.second_y && axis === 'y') axis = 'y2';
 
       const main = this.getFramePainter(),
-          min = main ? main[`zoom_${axis}min`] : 0,
-          max = main ? main[`zoom_${axis}max`] : 0;
+            min = main ? main[`zoom_${axis}min`] : 0,
+            max = main ? main[`zoom_${axis}max`] : 0;
 
       if ((min !== max) && taxis) {
          if (size === 'left')
             indx = taxis.FindBin(min, add || 0);
          else
             indx = taxis.FindBin(max, (add || 0) + 0.5);
-         if (indx < 0) indx = 0; else if (indx>nbins) indx = nbins;
+         if (indx < 0)
+            indx = 0;
+         else if (indx > nbins)
+            indx = nbins;
       } else
          indx = (size === 'left') ? 0 : nbins;
 
@@ -119392,23 +119452,23 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
-      // TODO: move to frame painter
+      const fp = this.getFramePainter();
+      if (!fp) return false;
+
       switch (funcname) {
          case 'ToggleZoom':
             if ((this.zoom_xmin !== this.zoom_xmax) || (this.zoom_ymin !== this.zoom_ymax) || (this.zoom_zmin !== this.zoom_zmax)) {
-               this.unzoom();
-               this.getFramePainter().zoomChangedInteractive('reset');
-               return true;
+               const res = this.unzoom();
+               fp.zoomChangedInteractive('reset');
+               return res;
             }
-            if (this.draw_content) {
-               this.autoZoom();
-               return true;
-            }
+            if (this.draw_content)
+               return this.autoZoom();
             break;
-         case 'ToggleLogX': this.getFramePainter().toggleAxisLog('x'); break;
-         case 'ToggleLogY': this.getFramePainter().toggleAxisLog('y'); break;
-         case 'ToggleLogZ': this.getFramePainter().toggleAxisLog('z'); break;
-         case 'ToggleStatBox': this.toggleStat(); return true;
+         case 'ToggleLogX': return fp.toggleAxisLog('x');
+         case 'ToggleLogY': return fp.toggleAxisLog('y');
+         case 'ToggleLogZ': return fp.toggleAxisLog('z');
+         case 'ToggleStatBox': return getPromise(this.toggleStat());
       }
       return false;
    }
@@ -119589,7 +119649,7 @@ class RHistPainter extends RObjectPainter {
 
       if (this.options.Mode3D) {
          if (!this.options.Surf && !this.options.Lego && !this.options.Error) {
-            if ((this.nbinsx>=50) || (this.nbinsy>=50))
+            if ((this.nbinsx >= 50) || (this.nbinsy >= 50))
                this.options.Lego = this.options.Color ? 14 : 13;
             else
                this.options.Lego = this.options.Color ? 12 : 1;
@@ -119599,7 +119659,7 @@ class RHistPainter extends RObjectPainter {
       }
 
       this.copyOptionsToOthers();
-      this.interactiveRedraw('pad', 'drawopt');
+      return this.interactiveRedraw('pad', 'drawopt');
    }
 
    /** @summary Calculate histogram inidicies and axes values for each visible bin */
@@ -119788,7 +119848,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
          hsum = hmax;
       } else {
          const left = this.getSelectIndex('x', 'left'),
-             right = this.getSelectIndex('x', 'right');
+               right = this.getSelectIndex('x', 'right');
 
          if (when_axis_changed)
             if ((left === this.scan_xleft) && (right === this.scan_xright)) return;
@@ -120348,6 +120408,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
             x1 = xaxis.GetBinCoord(bin),
             x2 = xaxis.GetBinCoord(bin+di),
             xlbl = this.getAxisBinTip('x', bin, di);
+
       let cont = histo.getBinContent(bin+1);
 
       if (name) tips.push(name);
@@ -120387,6 +120448,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
             histo = this.getHisto(), xaxis = this.getAxis('x'),
             left = this.getSelectIndex('x', 'left', -1),
             right = this.getSelectIndex('x', 'right', 2);
+
       let findbin = null, show_rect,
           grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right;
@@ -120404,11 +120466,11 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
       }
 
       const pnt_x = funcs.swap_xy ? pnt.y : pnt.x,
-          pnt_y = funcs.swap_xy ? pnt.x : pnt.y;
+            pnt_y = funcs.swap_xy ? pnt.x : pnt.y;
 
       while (l < r-1) {
          const m = Math.round((l+r)*0.5),
-             xx = GetBinGrX(m);
+               xx = GetBinGrX(m);
          if ((xx === null) || (xx < pnt_x - 0.5))
             if (funcs.swap_xy) r = m; else l = m;
           else if (xx > pnt_x + 0.5)
@@ -120420,18 +120482,18 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
       grx1 = GetBinGrX(findbin);
 
       if (funcs.swap_xy) {
-         while ((l>left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
-         while ((r<right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
+         while ((l > left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
+         while ((r < right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
       } else {
-         while ((l>left) && (GetBinGrX(l-1) > grx1 - 2)) --l;
-         while ((r<right) && (GetBinGrX(r+1) < grx1 + 2)) ++r;
+         while ((l > left) && (GetBinGrX(l-1) > grx1 - 2)) --l;
+         while ((r < right) && (GetBinGrX(r+1) < grx1 + 2)) ++r;
       }
 
       if (l < r) {
          // many points can be assigned with the same cursor position
          // first try point around mouse y
          let best = height;
-         for (let m=l; m<=r; m++) {
+         for (let m = l; m <= r; m++) {
             const dist = Math.abs(GetBinGrY(m) - pnt_y);
             if (dist < best) { best = dist; findbin = m; }
          }
@@ -120454,6 +120516,12 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
 
       if (grx1 > grx2)
          [grx1, grx2] = [grx2, grx1];
+
+      if (this.isDisplayItem() && ((findbin <= histo.dx) || (findbin >= histo.dx + histo.nx))) {
+         // special case when zoomed out of scale and bin is not available
+         ttrect.remove();
+         return null;
+      }
 
       const midx = Math.round((grx1 + grx2)/2),
             midy = gry1 = gry2 = GetBinGrY(findbin);
@@ -120478,7 +120546,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
 
          if (this.options.Error) {
             const cont = histo.getBinContent(findbin+1),
-                binerr = histo.getBinError(findbin+1);
+                  binerr = histo.getBinError(findbin+1);
 
             gry1 = Math.round(funcs.gry(cont + binerr)); // up
             gry2 = Math.round(funcs.gry(cont - binerr)); // down
@@ -120495,7 +120563,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
          gry2 = Math.max(gry2, midy + msize);
 
          if (!pnt.touch && (pnt.nproc === 1))
-            if ((pnt_y<gry1) || (pnt_y>gry2)) findbin = null;
+            if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
       } else if (this.options.Line)
 
          show_rect = false;
@@ -120925,16 +120993,16 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
 
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
-      if (super.clickButton(funcname)) return true;
+      const res = super.clickButton(funcname);
+      if (res) return res;
 
       switch (funcname) {
-         case 'ToggleColor': this.toggleColor(); break;
-         case 'Toggle3D': this.toggleMode3D(); break;
-         default: return false;
+         case 'ToggleColor': return this.toggleColor();
+         case 'Toggle3D': return this.toggleMode3D();
       }
 
       // all methods here should not be processed further
-      return true;
+      return false;
    }
 
    /** @summary Fill pad toolbar with RH2-related functions */
@@ -120958,8 +121026,7 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
       } else
          this.options.Color = !this.options.Color;
 
-
-      this.redraw();
+      return this.redraw();
    }
 
    /** @summary Perform automatic zoom inside non-zero region of histogram */
@@ -122942,6 +123009,7 @@ exports.nsREX = nsREX;
 exports.openFile = openFile;
 exports.parse = parse;
 exports.parseMulti = parseMulti;
+exports.postponePromise = postponePromise;
 exports.prROOT = prROOT;
 exports.readStyleFromURL = readStyleFromURL;
 exports.redraw = redraw;

@@ -1,6 +1,6 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
-         prROOT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
+         prROOT, clTObjString, clTAxis, isObject, isFunc, isStr, getDocument } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
 import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
@@ -188,10 +188,11 @@ class ObjectPainter extends BasePainter {
       * @protected */
    redrawObject(obj, opt) {
       if (!this.updateObject(obj, opt)) return false;
-      const current = document.body.style.cursor;
+      const doc = getDocument(),
+            current = doc.body.style.cursor;
       document.body.style.cursor = 'wait';
       const res = this.redrawPad();
-      document.body.style.cursor = current;
+      doc.body.style.cursor = current;
       return res || true;
    }
 
@@ -261,11 +262,7 @@ class ObjectPainter extends BasePainter {
      * @desc Redirects to {@link TPadPainter#checkCanvasResize}
      * @private */
    checkResize(arg) {
-      const p = this.getCanvPainter();
-      if (!p) return false;
-      // only canvas should be checked
-      p.checkCanvasResize(arg);
-      return true;
+      return this.getCanvPainter()?.checkCanvasResize(arg);
    }
 
    /** @summary removes <g> element with object drawing
@@ -1360,10 +1357,18 @@ class ObjectPainter extends BasePainter {
          menu.exec_painter = (menu.painter !== this) ? this : undefined;
 
       return new Promise(resolveFunc => {
-         // set timeout to avoid menu hanging
-         setTimeout(() => DoFillMenu(menu, reqid, resolveFunc), 2000);
+         let did_resolve = false;
 
-         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, resolveFunc, lst));
+         function handleResolve(res) {
+            if (did_resolve) return;
+            did_resolve = true;
+            resolveFunc(res);
+         }
+
+         // set timeout to avoid menu hanging
+         setTimeout(() => DoFillMenu(menu, reqid, handleResolve), 2000);
+
+         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, handleResolve, lst));
       });
    }
 
