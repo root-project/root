@@ -24,6 +24,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooSimultaneous.h>
+#include <RooFormulaVar.h>
 #include <RooFit/ModelConfig.h>
 
 #include "JSONIOUtils.h"
@@ -123,13 +124,13 @@ bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneo
  * @brief Structure to store variable information.
  *
  * This structure represents variable information such as the number of bins, minimum and maximum values,
- * and a vector of bounds for a variable.
+ * and a vector of binning edges for a variable.
  */
 struct Var {
    int nbins;                  // Number of bins
    double min;                 // Minimum value
    double max;                 // Maximum value
-   std::vector<double> bounds; // Vector of bounds
+   std::vector<double> edges; // Vector of edges
 
    /**
     * @brief Constructor for Var.
@@ -237,13 +238,13 @@ JSONNode const *getVariablesNode(JSONNode const &rootNode)
 
 Var::Var(const JSONNode &val)
 {
-   if (val.find("bounds")) {
+   if (val.find("edges")) {
       for (auto const &child : val.children()) {
-         this->bounds.push_back(child.val_double());
+         this->edges.push_back(child.val_double());
       }
-      this->nbins = this->bounds.size();
-      this->min = this->bounds[0];
-      this->max = this->bounds[this->nbins - 1];
+      this->nbins = this->edges.size();
+      this->min = this->edges[0];
+      this->max = this->edges[this->nbins - 1];
    } else {
       if (!val.find("nbins"))
          this->nbins = 1;
@@ -757,8 +758,8 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
          indexCat.defineType(labels[iChannel], indices[iChannel]);
       }
 
-      auto combined = std::make_unique<RooDataSet>(combinedName, combinedName, allVars,
-                                                   RooFit::Import(dsMap), RooFit::Index(indexCat));
+      auto combined = std::make_unique<RooDataSet>(combinedName, combinedName, allVars, RooFit::Import(dsMap),
+                                                   RooFit::Index(indexCat));
       datas.emplace_back(std::move(combined));
    }
 }
@@ -934,6 +935,57 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
    for (RooAbsArg *arg : allElems) {
       exportVariable(arg, n);
    }
+}
+
+RooAbsReal *RooJSONFactoryWSTool::importTransformed(const std::string &name, const std::string &tag,
+                                                    const std::string &operation_name, const std::string &formula)
+{
+   RooAbsReal *transformed = nullptr;
+   const std::string tagname = "autogen_transform_" + tag;
+   if (this->hasAttribute(name, tagname)) {
+      const std::string &original = this->getStringAttribute(name, tagname + "_original");
+      transformed = this->workspace()->function(original);
+      if (transformed)
+         return transformed;
+   }
+   const std::string newname = name + "_" + tag + "_" + operation_name;
+   transformed = this->workspace()->function(newname);
+   if (!transformed) {
+      auto *original = this->workspace()->arg(name);
+      if (!original) {
+         error("unable to import transformed of '" + name + "', original not present.");
+      }
+      RooArgSet components{*original};
+      const std::string &expression = TString::Format(formula.c_str(), name.c_str()).Data();
+      transformed = &wsEmplace<RooFormulaVar>(newname, expression.c_str(), components);
+      transformed->setAttribute(tagname.c_str());
+   }
+   return transformed;
+}
+
+std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &tag,
+                                                    const std::string &operation_name, const std::string &formula)
+{
+   const std::string tagname = "autogen_transform_" + tag;
+   if (original->getAttribute(tagname.c_str())) {
+      if (const RooFormulaVar *trafo = dynamic_cast<const RooFormulaVar *>(original)) {
+         return trafo->dependents().first()->GetName();
+      }
+   }
+
+   std::string newname = std::string(original->GetName()) + "_" + tag + "_" + operation_name;
+   auto &trafo_node = this->createAdHoc("functions", newname);
+   trafo_node["type"] << "generic_function";
+   trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
+   this->setAttribute(newname, tagname);
+   this->setStringAttribute(newname, tagname + "_original", original->GetName());
+   return newname;
+}
+
+RooFit::Detail::JSONNode &RooJSONFactoryWSTool::createAdHoc(const std::string &toplevel, const std::string &name)
+{
+   auto &collectionNode = (*_rootnodeOutput)[toplevel];
+   return appendNamedChild(collectionNode, name);
 }
 
 /**
@@ -1225,13 +1277,13 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
          obsNode["max"] << var->getMax();
          obsNode["nbins"] << var->getBins();
       } else {
-         auto &bounds = obsNode["bounds"];
-         bounds.set_seq();
+         auto &edges = obsNode["edges"];
+         edges.set_seq();
          double val = var->getBinning().binLow(0);
-         bounds.append_child() << val;
+         edges.append_child() << val;
          for (int i = 0; i < var->getBinning().numBins(); ++i) {
             val = var->getBinning().binHigh(i);
-            bounds.append_child() << val;
+            edges.append_child() << val;
          }
       }
    }
@@ -1450,16 +1502,15 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
    RooArgSet vars;
 
    for (JSONNode const &nd : node["axes"].children()) {
-      if (nd.has_child("bounds")) {
-         std::vector<double> bounds;
-         for (auto const &bound : nd["bounds"].children()) {
-            bounds.push_back(bound.val_double());
+      if (nd.has_child("edges")) {
+         std::vector<double> edges;
+         for (auto const &bound : nd["edges"].children()) {
+            edges.push_back(bound.val_double());
          }
-         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(), bounds[0],
-                                                 bounds[bounds.size() - 1]);
+         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(), edges[0],
+                                                 edges[edges.size() - 1]);
          RooBinning bins(obs->getMin(), obs->getMax());
-         ;
-         for (auto b : bounds) {
+         for (auto b : edges) {
             bins.addBoundary(b);
          }
          obs->setBinning(bins);
@@ -1892,6 +1943,50 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
       return false;
    }
    return this->exportYML(out);
+}
+
+bool RooJSONFactoryWSTool::hasAttribute(const std::string &obj, const std::string &attrib)
+{
+   if (!_attributesNode)
+      return false;
+   if (auto attrNode = _attributesNode->find(obj)) {
+      if (auto seq = attrNode->find("tags")) {
+         for (auto &a : seq->children()) {
+            if (a.val() == attrib)
+               return true;
+         }
+      }
+   }
+   return false;
+}
+void RooJSONFactoryWSTool::setAttribute(const std::string &obj, const std::string &attrib)
+{
+   auto node = &RooJSONFactoryWSTool::getRooFitInternal(*_rootnodeOutput, "attributes").set_map()[obj].set_map();
+   auto &tags = (*node)["tags"];
+   tags.set_seq();
+   tags.append_child() << attrib;
+}
+
+std::string RooJSONFactoryWSTool::getStringAttribute(const std::string &obj, const std::string &attrib)
+{
+   if (!_attributesNode)
+      return "";
+   if (auto attrNode = _attributesNode->find(obj)) {
+      if (auto dict = attrNode->find("dict")) {
+         if (auto *a = dict->find(attrib)) {
+            return a->val();
+         }
+      }
+   }
+   return "";
+}
+void RooJSONFactoryWSTool::setStringAttribute(const std::string &obj, const std::string &attrib,
+                                              const std::string &value)
+{
+   auto node = &RooJSONFactoryWSTool::getRooFitInternal(*_rootnodeOutput, "attributes").set_map()[obj].set_map();
+   auto &dict = (*node)["dict"];
+   dict.set_map();
+   dict[attrib] << value;
 }
 
 /**
