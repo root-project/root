@@ -74,8 +74,7 @@ double RooLognormal::evaluate() const
   double ln_k = TMath::Abs(TMath::Log(k));
   double ln_m0 = TMath::Log(m0);
 
-  double ret = ROOT::Math::lognormal_pdf(x,ln_m0,ln_k);
-  return ret ;
+  return ROOT::Math::lognormal_pdf(x,ln_m0,ln_k);
 }
 
 void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
