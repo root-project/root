@@ -72,7 +72,8 @@ jobs:
       - name: Install cov packages
         run: |
           sudo dnf -y update
-          sudo dnf -y install lcov
+          # sudo dnf -y install lcov
+          sudo dnf -y install clang llvm
           pip3 install gcovr
 
       - name: Checkout
@@ -90,7 +91,11 @@ jobs:
 
       - name: Apply option override from matrix for this job
         env:
-          OVERRIDE: "coverage=On"
+          OVERRIDE: |
+            coverage=On
+            CMAKE_CXX_COMPILER=clang++
+            CMAKE_C_COMPILER=clang
+            CMAKE_BUILD_TYPE=Release
           FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
         shell: bash
         run: |
@@ -123,7 +128,7 @@ jobs:
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
-              
+
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
