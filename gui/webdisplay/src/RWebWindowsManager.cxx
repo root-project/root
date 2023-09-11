@@ -123,6 +123,8 @@ void RWebWindowsManager::AssignMainThrd()
 RWebWindowsManager::RWebWindowsManager()
 {
    fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
+   if (fExternalProcessEvents)
+      RWebWindowsManager::AssignMainThrd();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -480,9 +482,12 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
    }
 
    if (fExternalProcessEvents) {
-      // special mode when window communication done in THttpServer::ProcessRequests
-      // used only with python which has to provide such special thread
+      // special mode when window communication performed in THttpServer::ProcessRequests
+      // used only with python which create special thread - but is has to be ignored!!!
+      // therefore use main thread id to detect callbacks which are invoked only from that main thread
       win->fUseProcessEvents = true;
+      win->fCallbacksThrdIdSet = gWebWinMainThrdSet;
+      win->fCallbacksThrdId = gWebWinMainThrd;
    } else if (IsUseHttpThread())
       win->UseServerThreads();
 
