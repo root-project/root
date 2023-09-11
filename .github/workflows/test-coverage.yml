@@ -2,8 +2,8 @@
 name: 'Test Coverage'
 
 on:
-  schedule:
-    - cron: '0 1 * * *'
+  # schedule:
+  #   - cron: '0 1 * * *'
 
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
   # DISABLED: takes 4 hours! Might clang-coverage be a solution?
@@ -13,6 +13,10 @@ on:
   #  paths-ignore:
   #    - 'doc/**'
   #    - 'documentation/**'
+
+  push:
+    branches:
+      - '*'
 
   workflow_call:
     inputs:
@@ -45,7 +49,7 @@ env:
 jobs:
 
   build-linux:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    # if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
 
     permissions:
       contents: read
@@ -109,7 +113,17 @@ jobs:
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
-
+      - name: Push Build
+        if:   github.event_name == 'push'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      Debug
+                    --platform       fedora38
+                    --incremental    false
+                    --coverage       true
+                    --base_ref       ${{ github.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+              
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
