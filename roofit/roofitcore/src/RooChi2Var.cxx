@@ -144,15 +144,15 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
-  pc.defineInt("extended","Extended",0,false) ;
+  pc.defineInt("extended","Extended",0,RooAbsPdf::extendedFitDefault);
   pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
-  if (func.IsA()->InheritsFrom(RooAbsPdf::Class())) {
-    _funcMode = pc.getInt("extended") ? ExtendedPdf : Pdf ;
+  if (auto pdf = dynamic_cast<RooAbsPdf*>(&func)) {
+    _funcMode = pdf->interpretExtendedCmdArg(pc.getInt("extended")) ? ExtendedPdf : Pdf ;
   } else {
     _funcMode = Function ;
   }
@@ -204,7 +204,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
                          makeRooAbsTestStatisticCfgForPdf(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
-  pc.defineInt("extended","Extended",0,false) ;
+  pc.defineInt("extended","Extended",0,RooAbsPdf::extendedFitDefault) ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
   pc.allowUndefined() ;
 
@@ -212,7 +212,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
   pc.process(arg4) ;  pc.process(arg5) ;  pc.process(arg6) ;
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
-  _funcMode = pc.getInt("extended") ? ExtendedPdf : Pdf ;
+  _funcMode = pdf.interpretExtendedCmdArg(pc.getInt("extended")) ? ExtendedPdf : Pdf ;
   _etype = (RooDataHist::ErrorType) pc.getInt("etype") ;
   if (_etype==RooAbsData::Auto) {
     _etype = hdata.isNonPoissonWeighted()? RooAbsData::SumW2 : RooAbsData::Expected ;
