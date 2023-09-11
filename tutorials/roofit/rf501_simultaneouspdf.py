@@ -55,7 +55,7 @@ model_ctl = ROOT.RooAddPdf("model_ctl", "model_ctl", [gx_ctl, px_ctl], [f_ctl])
 # ---------------------------------------------------------------
 
 # Generate 1000 events in x and y from model
-data = model.generate({x}, 100)
+data = model.generate({x}, 1000)
 data_ctl = model_ctl.generate({x}, 2000)
 
 # Create index category and join samples
@@ -93,7 +93,7 @@ fitResult.Print()
 # ----------------------------------------------------------------
 
 # Make a frame for the physics sample
-frame1 = x.frame(Bins=30, Title="Physics sample")
+frame1 = x.frame(Title="Physics sample")
 
 # Plot all data tagged as physics sample
 combData.plotOn(frame1, Cut="sample==sample::physics")
@@ -107,21 +107,38 @@ combData.plotOn(frame1, Cut="sample==sample::physics")
 simPdf.plotOn(frame1, Slice=(sample, "physics"), ProjWData=(sample, combData))
 simPdf.plotOn(frame1, Slice=(sample, "physics"), Components="px", ProjWData=(sample, combData), LineStyle="--")
 
-# The same plot for the control sample slice
-frame2 = x.frame(Bins=30, Title="Control sample")
-combData.plotOn(frame2, Cut="sample==sample::control")
-simPdf.plotOn(frame2, Slice=(sample, "control"), ProjWData=(sample, combData))
-simPdf.plotOn(frame2, Slice=(sample, "control"), Components="px_ctl", ProjWData=(sample, combData), LineStyle="--")
+# The same plot for the control sample slice. We do this with a different
+# approach this time, for illustration purposes. Here, we are slicing the
+# dataset and then use the data slice for the projection, because then the
+# RooFit::Slice() becomes unnecessary. This approach is more general,
+# because you can plot sums of slices by using logical or in the Cut()
+# command.
+frame2 = x.frame(Title="Control sample")
+slicedData = combData.reduce(Cut="sample==sample::control")
+slicedData.plotOn(frame2)
+simPdf.plotOn(frame2, ProjWData=(sample, slicedData))
+simPdf.plotOn(frame2, Components="px_ctl", ProjWData=(sample, slicedData), LineStyle="--")
 
-c = ROOT.TCanvas("rf501_simultaneouspdf", "rf501_simultaneouspdf", 800, 400)
-c.Divide(2)
-c.cd(1)
-ROOT.gPad.SetLeftMargin(0.15)
-frame1.GetYaxis().SetTitleOffset(1.4)
-frame1.Draw()
-c.cd(2)
-ROOT.gPad.SetLeftMargin(0.15)
-frame2.GetYaxis().SetTitleOffset(1.4)
-frame2.Draw()
+# The same plot for all the phase space. Here, we can just use the original
+# combined dataset.
+frame3 = x.frame(Title="Both samples")
+combData.plotOn(frame3)
+simPdf.plotOn(frame3, ProjWData=(sample, combData))
+simPdf.plotOn(frame3, Components="px,px_ctl", ProjWData=(sample, combData), LineStyle="--")
+
+c = ROOT.TCanvas("rf501_simultaneouspdf", "rf501_simultaneouspdf", 1200, 400)
+c.Divide(3)
+
+
+def draw(i, frame):
+    c.cd(i)
+    ROOT.gPad.SetLeftMargin(0.15)
+    frame.GetYaxis().SetTitleOffset(1.4)
+    frame.Draw()
+
+
+draw(1, frame1)
+draw(2, frame2)
+draw(3, frame3)
 
 c.SaveAs("rf501_simultaneouspdf.png")
