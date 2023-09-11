@@ -131,6 +131,7 @@ public:
    virtual Bool_t     GetTimeDisplay() const {return fTimeDisplay;}
    virtual const char *GetTimeFormat() const {return fTimeFormat.Data();}
    virtual const char *GetTimeFormatOnly() const;
+           UInt_t      GetTimeOffset();
    const char        *GetTitle() const override {return fTitle.Data();}
    const TArrayD     *GetXbins() const {return &fXbins;}
            Int_t      GetFirst() const;
