@@ -143,9 +143,9 @@ protected:
 
    virtual Bool_t IsJSSupportedClass(TObject *obj, Bool_t many_primitives = kFALSE);
 
-   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 0) && (fWebConn[0].fConnId == connid); }
+   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 1) && (fWebConn[1].fConnId == connid); }
 
-   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 0) && (fWebConn[0].fDrawVersion > 0); }
+   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 1) && (fWebConn[1].fDrawVersion > 0); }
 
    void ShowCmd(const std::string &arg, Bool_t show);
 
