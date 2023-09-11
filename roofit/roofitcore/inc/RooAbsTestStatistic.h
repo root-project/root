@@ -92,6 +92,9 @@ protected:
   virtual double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const = 0 ;
   virtual double getCarry() const;
 
+  // Overridden in cache-optimized test statistic
+  virtual void runRecalculateCache(std::size_t /*firstEvent*/, std::size_t /*lastEvent*/, std::size_t /*stepSize*/) const {}
+
   void setMPSet(Int_t setNum, Int_t numSets) ;
   void setSimCount(Int_t simCount) {
     // Store total number of components p.d.f. of a RooSimultaneous in this component test statistic
