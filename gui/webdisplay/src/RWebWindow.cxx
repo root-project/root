@@ -1060,9 +1060,7 @@ void RWebWindow::CheckDataToSend(bool only_once)
 
 void RWebWindow::Sync()
 {
-   // do not invoke callbacks from sync method, only server process events is relevant
-   if (!fUseProcessEvents)
-      InvokeCallbacks();
+   InvokeCallbacks();
 
    CheckDataToSend();
 
