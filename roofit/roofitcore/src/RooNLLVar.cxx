@@ -108,6 +108,7 @@ RooNLLVar::RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbs
   pc.process(arg7) ;  pc.process(arg8) ;  pc.process(arg9) ;
 
   _extended = pc.getInt("extended") ;
+  _skipZeroWeights = true;
 }
 
 
@@ -157,6 +158,10 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
         ++biter ;
       }
     }
+
+    _skipZeroWeights = false;
+  } else {
+    _skipZeroWeights = true;
   }
 }
 
@@ -230,11 +235,6 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
   double sumWeight{0.0};
 
   auto * pdfClone = static_cast<RooAbsPdf*>(_funcClone);
-
-  // cout << "RooNLLVar::evaluatePartition(" << GetName() << ") projDeps = " << (_projDeps?*_projDeps:RooArgSet()) << endl ;
-
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true) ) ;
-
 
 
   // If pdf is marked as binned - do a binned likelihood calculation here (sum of log-Poisson for each bin)

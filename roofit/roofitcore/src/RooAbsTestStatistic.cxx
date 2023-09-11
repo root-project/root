@@ -256,6 +256,7 @@ double RooAbsTestStatistic::evaluate() const
       break ;
     }
 
+    runRecalculateCache(nFirst, nLast, nStep);
     double ret = evaluatePartition(nFirst,nLast,nStep);
 
     if (numSets()==1) {
