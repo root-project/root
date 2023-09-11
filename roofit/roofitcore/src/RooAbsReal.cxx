@@ -4399,7 +4399,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLi
   pc.defineInt("initHesse","InitialHesse",0,0) ;
   pc.defineInt("hesse","Hesse",0,1) ;
   pc.defineInt("minos","Minos",0,0) ;
-  pc.defineInt("ext","Extended",0,2) ;
+  pc.defineInt("ext","Extended",0,RooAbsPdf::extendedFitDefault) ;
   pc.defineInt("numee","PrintEvalErrors",0,10) ;
   pc.defineInt("doWarn","Warnings",0,1) ;
   pc.defineString("mintype","Minimizer",0,"") ;
