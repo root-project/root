@@ -192,20 +192,33 @@ called for each data event.
 #include <cmath>
 #include <stdexcept>
 
-namespace {
-
-bool interpretExtendedCmdArg(RooAbsPdf const& pdf, int extendedCmdArg) {
-  // Process automatic extended option
-  if (extendedCmdArg == 2) {
-    bool ext = pdf.extendMode() == RooAbsPdf::CanBeExtended || pdf.extendMode() == RooAbsPdf::MustBeExtended;
-    if (ext) {
-      oocoutI(&pdf, Minimization)
-          << "p.d.f. provides expected number of events, including extended term in likelihood." << std::endl;
-    }
-    return ext;
-  }
-  return extendedCmdArg;
+bool RooAbsPdf::interpretExtendedCmdArg(int extendedCmdArg) const
+{
+   // Process automatic extended option
+   if (extendedCmdArg == RooAbsPdf::extendedFitDefault) {
+      bool ext = this->extendMode() == RooAbsPdf::CanBeExtended || this->extendMode() == RooAbsPdf::MustBeExtended;
+      if (ext) {
+         coutI(Minimization) << "p.d.f. provides expected number of events, including extended term in likelihood."
+                             << std::endl;
+      }
+      return ext;
+   }
+   // If Extended(false) was explicitly set, but the pdf MUST be extended, then
+   // it's time to print an error. This happens when you're fitting a RooAddPdf
+   // with coefficient that represent yields, and without the additional
+   // constraint these coefficients are degenerate because the RooAddPdf
+   // normalizes itself. Nothing correct can come out of this.
+   if (extendedCmdArg == 0) {
+      if (this->extendMode() == RooAbsPdf::MustBeExtended) {
+         std::string errMsg = "You used the Extended(false) option on a pdf where the fit MUST be extended! "
+                              "The parameters are not well defined and you're getting nonsensical results.";
+         coutE(InputArguments) << errMsg << std::endl;
+      }
+   }
+   return extendedCmdArg;
 }
+
+namespace {
 
 inline double getLog(double prob, RooAbsReal const *caller)
 {
@@ -977,7 +990,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   pc.defineDouble("rangeLo","Range",0,-999.) ;
   pc.defineDouble("rangeHi","Range",1,-999.) ;
   pc.defineInt("splitRange","SplitRange",0,0) ;
-  pc.defineInt("ext","Extended",0,2) ;
+  pc.defineInt("ext","Extended",0,extendedFitDefault) ;
   pc.defineInt("numcpu","NumCPU",0,1) ;
   pc.defineInt("interleave","NumCPU",1,0) ;
   pc.defineInt("verbose","Verbose",0,0) ;
@@ -1039,7 +1052,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   // Decode command line arguments
   const char* rangeName = pc.getString("rangeName",0,true) ;
   const char* addCoefRangeName = pc.getString("addCoefRange",0,true) ;
-  const bool ext = interpretExtendedCmdArg(*this, pc.getInt("ext")) ;
+  const bool ext = this->interpretExtendedCmdArg(pc.getInt("ext")) ;
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t numcpu_strategy = pc.getInt("interleave");
   // strategy 3 works only for RooSimultaneous.

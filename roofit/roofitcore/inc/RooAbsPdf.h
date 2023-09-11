@@ -396,6 +396,11 @@ private:
   int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
   int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal & nll) const;
 
+  friend class RooAbsReal;
+  friend class RooChi2Var;
+  static constexpr int extendedFitDefault = 2; // implementation detail to avoid magic numbers
+  bool interpretExtendedCmdArg(int extendedCmdArg) const;
+
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };
 
