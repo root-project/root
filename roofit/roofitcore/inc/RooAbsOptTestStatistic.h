@@ -73,6 +73,7 @@ protected:
   virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
   void optimizeConstantTerms(bool,bool=true) ;
+  void runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
   RooArgSet*  _normSet = nullptr;           ///< Pointer to set with observables used for normalization
   RooArgSet*  _funcCloneSet = nullptr;      ///< Set owning all components of internal clone of input function
@@ -84,6 +85,7 @@ protected:
   TString     _sealNotice ;  ///< User-defined notice shown when reading a sealed likelihood
   RooArgSet*  _funcObsSet = nullptr;  ///< List of observables in the pdf expression
   RooArgSet   _cachedNodes ; ///<! List of nodes that are cached as constant expressions
+  bool _skipZeroWeights = false; ///<! Whether to skip entries with weight zero in the evaluation
 
   RooAbsReal* _origFunc = nullptr;  ///< Original function
   RooAbsData* _origData = nullptr;  ///< Original data
