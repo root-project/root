@@ -699,7 +699,8 @@ void RBrowser::SendInitMsg(unsigned connid)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Return the current directory of ROOT
+/// Send generic progress message to the web window
+/// Should show progress bar on client side
 
 void RBrowser::SendProgress(unsigned connid, float progr)
 {
