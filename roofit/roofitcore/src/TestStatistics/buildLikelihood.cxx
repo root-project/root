@@ -152,7 +152,7 @@ std::unique_ptr<RooSubsidiaryL> buildSubsidiaryL(RooAbsPdf *pdf, RooAbsData *dat
    // Include constraints, if any, in likelihood
    if (!allConstraints.empty()) {
 
-      oocoutI(nullptr, Minimization) << " Including the following contraint terms in minimization: " << allConstraints
+      oocoutI(nullptr, Minimization) << " Including the following constraint terms in minimization: " << allConstraints
                                      << std::endl;
       if (!global_observables.empty()) {
          oocoutI(nullptr, Minimization) << "The following global observables have been defined: " << global_observables

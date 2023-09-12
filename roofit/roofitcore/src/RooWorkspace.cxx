@@ -578,7 +578,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
                 << origName << " to " << wsnode->GetName() << endl ;
         }
       } else {
-        coutW(ObjectHandling) << "RooWorkspce::import(" << GetName() << ") Internal error: expected to find existing node "
+        coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") Internal error: expected to find existing node "
             << origName << " to be renamed, but didn't find it..." << endl ;
       }
 
@@ -760,7 +760,7 @@ bool RooWorkspace::import(RooAbsData const& inData,
   if (!silence)
     coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing dataset " << inData.GetName() << endl ;
 
-  // Transform emtpy string into null pointer
+  // Transform empty string into null pointer
   if (dsetName && strlen(dsetName)==0) {
     dsetName=nullptr ;
   }
@@ -1098,7 +1098,7 @@ bool RooWorkspace::importClassCode(TClass* theClass, bool doReplace)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Inport code of all classes in the workspace that have a class name
+/// Import code of all classes in the workspace that have a class name
 /// that matches pattern 'pat' and which are not found to be part of
 /// the standard ROOT distribution. If doReplace is true any existing
 /// class code saved in the workspace is replaced
@@ -1157,7 +1157,7 @@ bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, boo
   }
 
   if (std::unique_ptr<RooArgSet> oldSnap{static_cast<RooArgSet*>(_snapshots.FindObject(name.c_str()))}) {
-    coutI(ObjectHandling) << "RooWorkspace::saveSnaphot(" << GetName() << ") replacing previous snapshot with name " << name << endl ;
+    coutI(ObjectHandling) << "RooWorkspace::saveSnapshot(" << GetName() << ") replacing previous snapshot with name " << name << endl ;
     _snapshots.Remove(oldSnap.get()) ;
   }
 
@@ -1501,7 +1501,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     return true ;
   }
 
-  // Check if class is listed in a ROOTMAP file - if so we can skip it because it is in the root distribtion
+  // Check if class is listed in a ROOTMAP file - if so we can skip it because it is in the root distribution
   const char* mapEntry = gInterpreter->GetClassSharedLibs(tc->GetName()) ;
   if (mapEntry && strlen(mapEntry)>0) {
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
@@ -1652,7 +1652,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
 
   list<string> extraHeaders ;
 
-  // If file has not beed stored yet, enter stl strings with implementation and declaration in file map
+  // If file has not been stored yet, enter stl strings with implementation and declaration in file map
   if (_fmap.find(declfilebase) == _fmap.end()) {
 
     // Open declaration file
@@ -1723,7 +1723,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     }
 
 
-    // Import entire implentation file into stl string
+    // Import entire implementation file into stl string
     string impl ;
     while(fimpl.getline(buf,1023)) {
       // Process #include statements here
@@ -2720,12 +2720,12 @@ bool RooWorkspace::CodeRepo::compileClasses()
     if (!writeExtraHeaders) {
       writeExtraHeaders = true ;
 
-      map<TString,ExtraHeader>::iterator eiter = _ehmap.begin() ;
-      while(eiter!=_ehmap.end()) {
+      map<TString,ExtraHeader>::iterator extraIter = _ehmap.begin() ;
+      while(extraIter!=_ehmap.end()) {
 
    // Check if identical declaration file (header) is already written
    bool needEHWrite=true ;
-   string fdname = Form("%s/%s",dirName.c_str(),eiter->second._hname.Data()) ;
+   string fdname = Form("%s/%s",dirName.c_str(),extraIter->second._hname.Data()) ;
    ifstream ifdecl(fdname.c_str()) ;
    if (ifdecl) {
      TString contents ;
@@ -2735,7 +2735,7 @@ bool RooWorkspace::CodeRepo::compileClasses()
         contents += "\n";
      }
      UInt_t crcFile = crc32(contents.Data());
-     UInt_t crcWS = crc32(eiter->second._hfile.Data());
+     UInt_t crcWS = crc32(extraIter->second._hfile.Data());
      needEHWrite = (crcFile != crcWS);
    }
 
@@ -2753,10 +2753,10 @@ bool RooWorkspace::CodeRepo::compileClasses()
                                           << " for writing" << endl;
          return false;
       }
-      fdecl << eiter->second._hfile.Data();
+      fdecl << extraIter->second._hfile.Data();
       fdecl.close();
    }
-   ++eiter;
+   ++extraIter;
       }
     }
 

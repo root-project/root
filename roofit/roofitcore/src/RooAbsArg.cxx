@@ -27,7 +27,7 @@ a computation graph models an expression tree that can be evaluated.
 Therefore, RooAbsArg provides functionality to connect objects of type RooAbsArg into
 a computation graph to pass values between those objects.
 A value can e.g. be a real-valued number, (instances of RooAbsReal), or an integer, that is,
-catgory index (instances of RooAbsCategory). The third subclass of RooAbsArg is RooStringVar,
+category index (instances of RooAbsCategory). The third subclass of RooAbsArg is RooStringVar,
 but it is rarely used.
 
 The "shapes" that a RooAbsArg can possess can e.g. be the definition
@@ -545,7 +545,7 @@ RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData* set, boo
 }
 
 
-/// Return the parameters of this p.d.f when used in conjuction with dataset 'data'.
+/// Return the parameters of this p.d.f when used in conjunction with dataset 'data'.
 RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData& data, bool stripDisconnected) const
 {
   return getParameters(&data,stripDisconnected) ;
@@ -613,7 +613,7 @@ void RooAbsArg::addParameters(RooAbsCollection& params, const RooArgSet* nset, b
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Obtain an estimate of the number of parameters of the function and its daughters.
-/// Calling `addParamters` for large functions (NLL) can cause many reallocations of
+/// Calling `addParameters` for large functions (NLL) can cause many reallocations of
 /// `params` due to the recursive behaviour. This utility function aims to pre-compute
 /// the total number of parameters, so that enough memory is reserved.
 /// The estimate is not fully accurate (overestimate) as there is no equivalent to `getParametersHook`.
@@ -1147,7 +1147,7 @@ bool RooAbsArg::callRedirectServersHook(RooAbsCollection const &newSet, bool mus
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace some servers of this object. If there are proxies that correspond
 /// to the replaced servers, these proxies are adjusted as well.
-/// \param[in] replacements Map that specifiecs which args replace which servers.
+/// \param[in] replacements Map that specifies which args replace which servers.
 bool RooAbsArg::redirectServers(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements)
 {
    bool ret(false);
@@ -1322,7 +1322,7 @@ bool RooAbsArg::redirectServersHook(const RooAbsCollection & /*newServerList*/, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register an RooArgProxy in the proxy list. This function is called by owned
-/// proxies upon creation. After registration, this arg wil forward pointer
+/// proxies upon creation. After registration, this arg will forward pointer
 /// changes from serverRedirects and updates in cached normalization sets
 /// to the proxies immediately after they occur. The proxied argument is
 /// also added as value and/or shape server
@@ -1367,7 +1367,7 @@ void RooAbsArg::unRegisterProxy(RooArgProxy& proxy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register an RooSetProxy in the proxy list. This function is called by owned
-/// proxies upon creation. After registration, this arg wil forward pointer
+/// proxies upon creation. After registration, this arg will forward pointer
 /// changes from serverRedirects and updates in cached normalization sets
 /// to the proxies immediately after they occur.
 
@@ -1402,7 +1402,7 @@ void RooAbsArg::unRegisterProxy(RooSetProxy& proxy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register an RooListProxy in the proxy list. This function is called by owned
-/// proxies upon creation. After registration, this arg wil forward pointer
+/// proxies upon creation. After registration, this arg will forward pointer
 /// changes from serverRedirects and updates in cached normalization sets
 /// to the proxies immediately after they occur.
 
@@ -1543,9 +1543,9 @@ void RooAbsArg::printClassName(ostream& os) const
 }
 
 
+/// Print address of this RooAbsArg.
 void RooAbsArg::printAddress(ostream& os) const
 {
-  // Print addrss of this RooAbsArg
   os << this ;
 }
 
@@ -2149,7 +2149,7 @@ RooAbsCache* RooAbsArg::getCache(Int_t index) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return RooArgSet with all variables (tree leaf nodes of expresssion tree)
+/// Return RooArgSet with all variables (tree leaf nodes of expression tree)
 
 RooFit::OwningPtr<RooArgSet> RooAbsArg::getVariables(bool stripDisconnected) const
 {
@@ -2539,7 +2539,7 @@ std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSe
 /// to form the C++ code that AD tools can understand. Any class that wants to support AD, has to
 /// implement this function.
 ///
-/// \param[in] ctx An object to manage auxilary information for code-squashing. Also takes the
+/// \param[in] ctx An object to manage auxiliary information for code-squashing. Also takes the
 /// code string that this class outputs into the squashed code through the 'addToCodeBody' function.
 void RooAbsArg::translate(RooFit::Detail::CodeSquashContext & /*ctx*/) const
 {

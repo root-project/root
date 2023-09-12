@@ -42,7 +42,7 @@ __roodevice__ __roohost__ static inline void cexp(double &re, double &im)
    // exp(z) for the x87 coprocessor; other platforms have the default
    // routines as fallback implementation, and compilers other than gcc on
    // x86_64 generate better code with the default routines; also avoid
-   // the inline assembly code when the copiler is not optimising code, or
+   // the inline assembly code when the compiler is not optimising code, or
    // is optimising for code size
    // (we insist on __unix__ here, since the assemblers on other OSs
    // typically do not speak AT&T syntax as gas does...)
@@ -234,7 +234,7 @@ faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N
       // norm of denominator
       const T norm = wk * wk + reimtmzm22;
       const T f = T(2) * tm * a[i] / norm;
-      // sum += a[i] * numer / wk
+      // sum += a[i] * numerator / wk
       sumre -= f * (numertmz[j] * wk + numertmz[j + 1] * reimtmzm2);
       sumim -= f * (numertmz[j + 1] * wk - numertmz[j] * reimtmzm2);
    }

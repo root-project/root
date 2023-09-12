@@ -11,7 +11,7 @@
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
- * std::listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
@@ -107,7 +107,7 @@
 
 namespace {
 
-// Internal helper RooAbsFunc that evalutes the scaled data-weighted average of
+// Internal helper RooAbsFunc that evaluates the scaled data-weighted average of
 // given RooAbsReal as a function of a single variable using the RooFit::Evaluator.
 class ScaledDataWeightedAverage : public RooAbsFunc {
 public:
@@ -496,7 +496,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createProfile(const RooArgSet& paramsO
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an object that represents the integral of the function over one or more observables std::listed in `iset`.
+/// Create an object that represents the integral of the function over one or more observables listed in `iset`.
 /// The actual integration calculation is only performed when the returned object is evaluated. The name
 /// of the integral object is automatically constructed from the name of the input function, the variables
 /// it integrates and the range integrates over.
@@ -544,7 +544,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an object that represents the integral of the function over one or more observables std::listed in iset.
+/// Create an object that represents the integral of the function over one or more observables listed in iset.
 /// The actual integration calculation is only performed when the return object is evaluated. The name
 /// of the integral object is automatically constructed from the name of the input function, the variables
 /// it integrates and the range integrates over. If nset is specified the integrand is request
@@ -643,7 +643,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
       integral->addOwnedComponents(std::move(innerIntegral));
     }
 
-    // Remove already integrated observables from to-do std::list
+    // Remove already integrated observables from to-do list
     iset.remove(innerSet) ;
 
     // Send info message on recursion if needed
@@ -704,7 +704,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
 
 void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& innerObs, const char* rangeName) const
 {
-  // Make std::lists of
+  // Make lists of
   // a) integrated observables with fixed ranges,
   // b) integrated observables with parameterized ranges depending on other integrated observables
   // c) integrated observables used in definition of any parameterized ranges of integrated observables
@@ -736,11 +736,11 @@ void RooAbsReal::findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& in
     }
   }
 
-  // Make std::list of fixed-range observables that are _not_ involved in the parameterization of ranges of other observables
+  // Make list of fixed-range observables that are _not_ involved in the parameterization of ranges of other observables
   RooArgSet obsWithFixedRangeNP(obsWithFixedRange) ;
   obsWithFixedRangeNP.remove(obsServingAsRangeParams) ;
 
-  // Make std::list of param-range observables that are _not_ involved in the parameterization of ranges of other observables
+  // Make list of param-range observables that are _not_ involved in the parameterization of ranges of other observables
   RooArgSet obsWithParamRangeNP(obsWithParamRange) ;
   obsWithParamRangeNP.remove(obsServingAsRangeParams) ;
 
@@ -856,7 +856,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
 
   // Check that the dependents are all fundamental. Filter out any that we
-  // do not depend on, and make substitutions by name in our leaf std::list.
+  // do not depend on, and make substitutions by name in our leaf list.
   // Check for overlaps with the projection variables.
   for (const auto arg : dependentVars) {
     if(!arg->isFundamental() && !dynamic_cast<const RooAbsLValue*>(arg)) {
@@ -898,7 +898,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     }
   }
 
-  // Remove the projected variables from the std::list of leaf nodes, if necessary.
+  // Remove the projected variables from the list of leaf nodes, if necessary.
   if(nullptr != projectedVars) leafNodes.remove(*projectedVars,true);
 
   // Make a deep-clone of ourself so later operations do not disturb our original state
@@ -909,7 +909,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   }
   RooAbsReal *theClone= (RooAbsReal*)cloneSet->find(GetName());
 
-  // The remaining entries in our std::list of leaf nodes are the external
+  // The remaining entries in our list of leaf nodes are the external
   // dependents (x) and parameters (p) of the projection. Patch them back
   // into the theClone. This orphans the nodes they replace, but the orphans
   // are still in the cloneList and so will be cleaned up eventually.
@@ -973,7 +973,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 /// be any TH1 subclass, and therefore of arbitrary
 /// dimension. Variables are matched with the (x,y,...) dimensions of
 /// the input histogram according to the order in which they appear
-/// in the input plotVars std::list. If scaleForDensity is true the
+/// in the input plotVars list. If scaleForDensity is true the
 /// histogram is filled with a the functions density rather than
 /// the functions value (i.e. the value at the bin center is multiplied
 /// with bin volume)
@@ -997,7 +997,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 
 
   // Check that the plot variables are all actually RooRealVars and print a warning if we do not
-  // explicitly depend on one of them. Fill a set (not std::list!) of cloned plot variables.
+  // explicitly depend on one of them. Fill a set (not list!) of cloned plot variables.
   RooArgSet plotClones;
   for(Int_t index= 0; index < plotVars.getSize(); index++) {
     const RooAbsArg *var= plotVars.at(index);
@@ -1221,7 +1221,7 @@ TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t y
     if(varNames[iVar].empty()) continue;
     if(iVar >= 3) {
       std::stringstream errMsg;
-      errMsg << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR more than three variable names passed, but maxumum number of supported variables is three";
+      errMsg << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR more than three variable names passed, but maximum number of supported variables is three";
       coutE(Plotting) << errMsg.str() << std::endl;
       throw std::invalid_argument(errMsg.str());
     }
@@ -1235,7 +1235,7 @@ TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t y
     histVars[iVar] = var;
   }
 
-  // Construct std::list of named arguments to pass to the implementation version of createHistogram()
+  // Construct list of named arguments to pass to the implementation version of createHistogram()
 
   RooLinkedList argList ;
   if (xbins>0) {
@@ -1253,7 +1253,7 @@ TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t y
   // Call implementation function
   TH1* result = createHistogram(GetName(), *histVars[0], argList) ;
 
-  // Delete temporary std::list of RooCmdArgs
+  // Delete temporary list of RooCmdArgs
   argList.Delete() ;
 
   return result ;
@@ -1266,7 +1266,7 @@ TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t y
 ///
 /// \param[in] name  Name of the ROOT histogram
 /// \param[in] xvar  Observable to be std::mapped on x axis of ROOT histogram
-/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8  Arguments according to std::list below
+/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8  Arguments according to list below
 /// \return TH1 *, one of TH{1,2,3}. The caller takes ownership.
 ///
 /// <table>
@@ -1462,7 +1462,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 /// Helper function for plotting of composite p.d.fs. Given
 /// a set of selected components that should be plotted,
 /// find all nodes that (in)directly depend on these selected
-/// nodes. Mark all directly and indirecty selected nodes
+/// nodes. Mark all directly and indirectly selected nodes
 /// as 'selected' using the selectComp() method
 
 void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
@@ -1538,7 +1538,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// This function takes the following named arguments
 /// <table>
 /// <tr><th><th> Projection control
-/// <tr><td> `Slice(const RooArgSet& set)`     <td> Override default projection behaviour by omitting observables std::listed
+/// <tr><td> `Slice(const RooArgSet& set)`     <td> Override default projection behaviour by omitting observables listed
 ///                                    in set from the projection, i.e. by not integrating over these.
 ///                                    Slicing is usually only sensible in discrete observables, by e.g. creating a slice
 ///                                    of the PDF at the current value of the category observable.
@@ -1549,7 +1549,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///                                    Slice(std::map<RooCategory*, std::string> const&) argument explained below.
 ///
 /// <tr><td> `Slice(std::map<RooCategory*, std::string> const&)`        <td> Omits multiple categories from the projection, as explianed above.
-///                                    Can be used with initializer std::lists for convenience, e.g.
+///                                    Can be used with initializer lists for convenience, e.g.
 /// ```{.cpp}
 ///   pdf.plotOn(frame, Slice({{&tagCategory, "2tag"}, {&jetCategory, "3jet"}});
 /// ```
@@ -1563,7 +1563,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///
 /// <tr><td> `ProjWData(const RooArgSet& s, const RooAbsData& d)`   <td> As above but only consider subset 's' of observables in dataset 'd' for projection through data averaging
 ///
-/// <tr><td> `ProjectionRange(const char* rn)` <td> Override default range of projection integrals to a different range speficied by given range name.
+/// <tr><td> `ProjectionRange(const char* rn)` <td> Override default range of projection integrals to a different range specified by given range name.
 ///                                    This technique allows you to project a finite width slice in a real-valued observable
 ///
 /// <tr><td> `NumCPU(Int_t ncpu)`              <td> Number of CPUs to use simultaneously to calculate data-weighted projections (only in combination with ProjWData)
@@ -1586,7 +1586,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///
 /// <tr><td> `Asymmetry(const RooCategory& c)` <td> Show the asymmetry of the PDF in given two-state category [F(+)-F(-)] / [F(+)+F(-)] rather than
 ///                                    the PDF projection. Category must have two states with indices -1 and +1 or three states with
-///                                    indeces -1,0 and +1.
+///                                    indices -1,0 and +1.
 ///
 /// <tr><td> `ShiftToZero(bool flag)`        <td> Shift entire curve such that lowest visible point is at exactly zero. Mostly useful when plotting \f$ -\log(L) \f$ or \f$ \chi^2 \f$ distributions
 ///
@@ -1782,7 +1782,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
 
 
-  // Look for category slice arguments and add them to the master slice std::list if found
+  // Look for category slice arguments and add them to the master slice list if found
   const char* sliceCatState = pc.getString("sliceCatState",nullptr,true) ;
   const RooLinkedList& sliceCatList = pc.getObjectList("sliceCatList") ;
   if (sliceCatState) {
@@ -1925,7 +1925,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 /// of the scale factor is unique for generic real functions, for PDFs there are various interpretations
 /// possible, which can be selection with 'stype' (see RooAbsPdf::plotOn() for details).
 ///
-/// The default projection behaviour can be overriden by supplying an optional set of dependents
+/// The default projection behaviour can be overridden by supplying an optional set of dependents
 /// to project. For most cases, plotSliceOn() and plotProjOn() provide a more intuitive interface
 /// to modify the default projection behaviour.
 //_____________________________________________________________________________
@@ -1953,7 +1953,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
   cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") ProjDataVars = " << projDataVars << std::endl ;
 
-  // Make std::list of variables to be projected
+  // Make list of variables to be projected
   RooArgSet projectedVars ;
   RooArgSet sliceSet ;
   if (o.projSet) {
@@ -1961,7 +1961,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     makeProjectionSet(frame->getPlotVar(),o.projSet,projectedVars,false) ;
     cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") calculated projectedVars = " << *o.projSet << std::endl ;
 
-    // Print std::list of non-projected variables
+    // Print list of non-projected variables
     if (frame->getNormVars()) {
       RooArgSet sliceSetTmp;
       getObservables(frame->getNormVars(), sliceSetTmp) ;
@@ -2297,7 +2297,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   // Otherwise no projections are performed,
   //
   // The asymmetry function can be multiplied with an optional scale factor. The default projection
-  // behaviour can be overriden by supplying an optional set of dependents to project.
+  // behaviour can be overridden by supplying an optional set of dependents to project.
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
@@ -2327,13 +2327,13 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     return frame ;
   }
 
-  // Make std::list of variables to be projected
+  // Make list of variables to be projected
   RooArgSet projectedVars ;
   RooArgSet sliceSet ;
   if (o.projSet) {
     makeProjectionSet(frame->getPlotVar(),o.projSet,projectedVars,false) ;
 
-    // Print std::list of non-projected variables
+    // Print list of non-projected variables
     if (frame->getNormVars()) {
       RooArgSet sliceSetTmp;
       getObservables(frame->getNormVars(), sliceSetTmp) ;
@@ -2620,7 +2620,7 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
 
   // Re-evaluate this RooAbsReal with the central parameters just to be
   // extra-safe that a call to `getPropagatedError()` doesn't change any state.
-  // It should not be necessarry because thanks to the dirty flag propagation
+  // It should not be necessary because thanks to the dirty flag propagation
   // the RooAbsReal is re-evaluated anyway the next time getVal() is called.
   // Still there are imaginable corner cases where it would not be triggered,
   // for example if the user changes the RooFit operation more after the error
@@ -2689,7 +2689,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
   RooLinkedList plotArgListTmp(argList) ;
   RooCmdConfig::stripCmdList(plotArgListTmp,"VisualizeError,MoveToBack") ;
 
-  // Strip any 'internal normalization' arguments from std::list
+  // Strip any 'internal normalization' arguments from list
   RooLinkedList plotArgList ;
   for (auto * cmd : static_range_cast<RooCmdArg*>(plotArgListTmp)) {
     if (std::string("Normalization")==cmd->GetName()) {
@@ -2801,7 +2801,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     }
 
 
-    // Make std::list of parameter instances of cloneFunc in order of error matrix
+    // Make list of parameter instances of cloneFunc in order of error matrix
     RooArgList paramList ;
     const RooArgList& fpf = fr.floatParsFinal() ;
     std::vector<int> fpf_idx ;
@@ -2980,7 +2980,7 @@ bool RooAbsReal::plotSanityChecks(RooPlot* frame) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for plotOn() that constructs the set of
 /// observables to project when plotting ourselves as function of
-/// 'plotVar'. 'allVars' is the std::list of variables that must be
+/// 'plotVar'. 'allVars' is the list of variables that must be
 /// projected, but may contain variables that we do not depend on. If
 /// 'silent' is cleared, warnings about inconsistent input parameters
 /// will be printed.
@@ -2994,7 +2994,7 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
   projectedVars.removeAll() ;
   if (!allVars) return ;
 
-  // Start out with suggested std::list of variables
+  // Start out with suggested list of variables
   projectedVars.add(*allVars) ;
 
   // Take out plot variable
@@ -3485,7 +3485,7 @@ double RooAbsReal::maxVal(Int_t /*code*/) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface to insert remote error logging messages received by RooRealMPFE into current error loggin stream
+/// Interface to insert remote error logging messages received by RooRealMPFE into current error logging stream.
 
 void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString)
 {
@@ -3533,10 +3533,10 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
 /// protocol than generic RooFit warning message (which go straight through RooMsgService)
 /// because evaluation errors can occur in very large numbers in the use of likelihood
 /// evaluations. In logEvalError mode, controlled by global method enableEvalErrorLogging()
-/// messages reported through this function are not printed but all stored in a std::list,
+/// messages reported through this function are not printed but all stored in a list,
 /// along with server values at the time of reporting. Error messages logged in this
 /// way can be printed in a structured way, eliminating duplicates and with the ability
-/// to truncate the std::list by printEvalErrors. This is the standard mode of error logging
+/// to truncate the list by printEvalErrors. This is the standard mode of error logging
 /// during MINUIT operations. If enableEvalErrorLogging() is false, all errors
 /// reported through this method are passed for immediate printing through RooMsgService.
 /// A string with server names and values is constructed automatically for error logging
@@ -3593,8 +3593,8 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
           << " server values: " << ee._srvval << std::endl ;
   } else if (_evalErrorMode==CollectErrors) {
     if (_evalErrorList[this].second.size() >= 2048) {
-       // avoid overflowing the error std::list, so if there are very many, print
-       // the oldest one first, and pop it off the std::list
+       // avoid overflowing the error list, so if there are very many, print
+       // the oldest one first, and pop it off the list
        const EvalError& oee = _evalErrorList[this].second.front();
        // print to debug stream, since these would normally be suppressed, and
        // we do not want to increase the error count in the message service...
@@ -3654,7 +3654,7 @@ std::list<double>* RooAbsReal::plotSamplingHint(RooAbsRealLValue& /*obs*/, doubl
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print all outstanding logged evaluation error on the given ostream. If maxPerNode
-/// is zero, only the number of errors for each source (object with unique name) is std::listed.
+/// is zero, only the number of errors for each source (object with unique name) is listed.
 /// If maxPerNode is greater than zero, up to maxPerNode detailed error messages are shown
 /// per source of errors. A truncation message is shown if there were more errors logged
 /// than shown.
@@ -3764,7 +3764,7 @@ void RooAbsReal::fixAddCoefRange(const char* rangeName, bool force)
 /// Interface method for function objects to indicate their preferred order of observables
 /// for scanning their values into a (multi-dimensional) histogram or RooDataSet. The observables
 /// to be ordered are offered in argument 'obs' and should be copied in their preferred
-/// order into argument 'orderdObs', This default implementation indicates no preference
+/// order into argument 'orderedObs', This default implementation indicates no preference
 /// and copies the original order of 'obs' into 'orderedObs'
 
 void RooAbsReal::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const
@@ -3787,7 +3787,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an object that represents the running integral of the function over one or more observables std::listed in iset, i.e.
+/// Create an object that represents the running integral of the function over one or more observables listed in iset, i.e.
 /// \f[
 ///   \int_{x_\mathrm{lo}}^x f(x') \, \mathrm{d}x'
 /// \f]
@@ -3902,7 +3902,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createScanRI(const RooArgSet& iset, co
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset)
 {
-  // Make std::list of input arguments keeping only RooRealVars
+  // Make list of input arguments keeping only RooRealVars
   RooArgList ilist ;
   for(RooAbsArg * arg : iset) {
     if (dynamic_cast<RooRealVar*>(arg)) {
@@ -3916,7 +3916,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, con
   RooArgList loList ;
   RooArgSet clonedBranchNodes ;
 
-  // Setup customizer that stores all cloned branches in our non-owning std::list
+  // Setup customizer that stores all cloned branches in our non-owning list
   RooCustomizer cust(*this,"cdf") ;
   cust.setCloneBranchSet(clonedBranchNodes) ;
   cust.setOwning(false) ;
@@ -4195,7 +4195,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
 
-  // Pull arguments to be passed to chi2 construction from std::list
+  // Pull arguments to be passed to chi2 construction from list
   RooLinkedList fitCmdList(cmdList) ;
   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataHistCmdArgs().c_str());
 
@@ -4211,7 +4211,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 ///
 /// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
 ///
-/// The std::list of supported command arguments is given in the documentation for
+/// The list of supported command arguments is given in the documentation for
 ///     RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
 ///
 /// \param data Histogram with data
@@ -4310,7 +4310,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
 
-  // Pull arguments to be passed to chi2 construction from std::list
+  // Pull arguments to be passed to chi2 construction from list
   RooLinkedList fitCmdList(cmdList) ;
   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"YVar,Integrate") ;
 
@@ -4530,7 +4530,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   for (auto const* arg : paramVars) {
     if (!dependsOnValue(*arg)) {
       coutW(InputArguments) << "RooAbsReal::setParameterizeIntegral(" << GetName()
-             << ") function does not depend on std::listed parameter " << arg->GetName() << ", ignoring" << std::endl ;
+             << ") function does not depend on listed parameter " << arg->GetName() << ", ignoring" << std::endl ;
       continue ;
     }
     if (!plist.empty()) plist += ":" ;
@@ -4621,7 +4621,7 @@ void RooAbsReal::computeBatch(double* output, size_t nEvents, RooFit::Detail::Da
 ///
 /// \param[in] code The code that decides the integrands.
 /// \param[in] rangeName Name of the normalization range.
-/// \param[in] ctx An object to manage auxilary information for code-squashing.
+/// \param[in] ctx An object to manage auxiliary information for code-squashing.
 ///
 /// \returns The representative code string of the integral for the given object.
 std::string RooAbsReal::buildCallToAnalyticIntegral(Int_t /* code */, const char * /* rangeName */,

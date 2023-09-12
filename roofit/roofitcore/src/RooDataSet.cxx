@@ -207,18 +207,18 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
 
    // Gather all imported weighted datasets to infer the weight variable name
    // and whether we need weight errors
-   std::vector<RooAbsData*> weightedImpDatas;
-   if(impData && impData->isWeighted()) weightedImpDatas.push_back(impData);
+   std::vector<RooAbsData*> weightedImpDatasets;
+   if(impData && impData->isWeighted()) weightedImpDatasets.push_back(impData);
    for(auto * data : static_range_cast<RooAbsData*>(impSliceData)) {
       if(data->isWeighted()) {
-         weightedImpDatas.push_back(data);
+         weightedImpDatasets.push_back(data);
       }
    }
 
    bool needsWeightErrors = false;
 
    // Figure out if the weight needs to store errors
-   for(RooAbsData * data : weightedImpDatas) {
+   for(RooAbsData * data : weightedImpDatasets) {
       if(dynamic_cast<RooDataHist const*>(data)) {
          needsWeightErrors = true;
       }
@@ -233,7 +233,7 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
    if(out.weightVarName.empty()) {
       // Even if no weight variable is specified, we want to have one if we are
       // importing weighted datasets
-      for(RooAbsData * data : weightedImpDatas) {
+      for(RooAbsData * data : weightedImpDatasets) {
          if(auto ds = dynamic_cast<RooDataSet const*>(data)) {
             // If the imported data is a RooDataSet, we take over its weight variable name
             out.weightVarName = ds->weightVar()->GetName();
@@ -296,7 +296,7 @@ std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
 ///
 /// <table>
 /// <tr><th> %RooCmdArg <th> Effect
-/// <tr><td> Import(TTree*)              <td> Import contents of given TTree. Only braches of the TTree that have names
+/// <tr><td> Import(TTree*)              <td> Import contents of given TTree. Only branches of the TTree that have names
 ///                                corresponding to those of the RooAbsArgs that define the RooDataSet are
 ///                                imported.
 /// <tr><td> ImportFromFile(const char* fileName, const char* treeName) <td> Import tree with given name from file with given name.
@@ -1728,7 +1728,7 @@ bool RooDataSet::write(ostream & ofs) const {
   }
 
   if (ofs.fail()) {
-    coutW(DataHandling) << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occured in writing" << endl ;
+    coutW(DataHandling) << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occurred in writing" << endl ;
   }
 
   return ofs.fail() ;

@@ -149,7 +149,7 @@ struct NodeInfo {
 ///
 /// \param[in] absReal The RooAbsReal object that sits on top of the
 ///            computation graph that we want to evaluate.
-/// \param[in] useGPU Whether the evaluation should be preferrably done on the GPU.
+/// \param[in] useGPU Whether the evaluation should be preferably done on the GPU.
 Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    : _bufferManager{std::make_unique<Detail::BufferManager>()},
      _topNode{const_cast<RooAbsReal &>(absReal)},

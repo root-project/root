@@ -80,7 +80,7 @@ public:
    }
 };
 
-// Defines the actual argument type of the compute funciton.
+// Defines the actual argument type of the compute function.
 using BatchesHandle = Batches &;
 
 } // End namespace RF_ARCH

@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 RooErrorVar is an auxilary class that represents the error
-of a RooRealVar as a seperate object. The main reason of
+of a RooRealVar as a separate object. The main reason of
 existence of this class is to facilitate the reuse of existing
 techniques to perform calculations that involve a RooRealVars
 error, such as calculating the pull value.
