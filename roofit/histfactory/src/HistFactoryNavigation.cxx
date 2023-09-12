@@ -488,7 +488,7 @@ namespace RooStats {
 
 
     RooAbsReal* HistFactoryNavigation::SampleFunction(const std::string& channel, const std::string& sample){
-      // Return the function object pointer cooresponding
+      // Return the function object pointer corresponding
       // to a particular sample in a particular channel
 
       std::map< std::string, std::map< std::string, RooAbsReal*> >::iterator channel_itr;

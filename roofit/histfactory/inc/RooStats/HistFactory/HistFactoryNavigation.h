@@ -21,7 +21,7 @@ namespace RooStats {
 
     public:
 
-      /// Initialze based on an already-created HistFactory Model
+      /// Initialize based on an already-created HistFactory Model
       HistFactoryNavigation(ModelConfig* mc);
       HistFactoryNavigation(const std::string& File,
              const std::string& WorkspaceName="combined",
@@ -92,7 +92,7 @@ namespace RooStats {
 
       /// Find a node in the pdf and replace it with a new node
       /// These nodes can be functions, pdf's, RooRealVar's, etc
-      /// Will do minimial checking to make sure the replacement makes sense
+      /// Will do minimal checking to make sure the replacement makes sense
       void ReplaceNode(const std::string& ToReplace, RooAbsArg* ReplaceWith);
 
       // Set any RooRealVar's const (or not const) if they match
@@ -141,7 +141,7 @@ namespace RooStats {
       void SetPrintWidths(const std::string& channel);
 
       /// Fetch the node information for the pdf in question, and
-      /// save it in the varous collections in this class
+      /// save it in the various collections in this class
       void _GetNodes(ModelConfig* mc);
       void _GetNodes(RooAbsPdf* model, const RooArgSet* observables);
 

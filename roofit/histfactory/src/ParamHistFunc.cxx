@@ -718,7 +718,7 @@ std::list<double>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double
 
   std::list<double>* hint = new std::list<double> ;
 
-  // Widen range slighty
+  // Widen range slightly
   xlo = xlo - 0.01*(xhi-xlo) ;
   xhi = xhi + 0.01*(xhi-xlo) ;
 

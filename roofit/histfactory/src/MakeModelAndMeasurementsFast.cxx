@@ -188,7 +188,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
         cxcoutPHF << "Successfully wrote channel to file" << std::endl;
       }
 
-      // Get the Paramater of Interest as a RooRealVar
+      // Get the Parameter of Interest as a RooRealVar
       RooRealVar* poi = dynamic_cast<RooRealVar*>( ws_single->var(measurement.GetPOI()));
 
       // do fit unless exportOnly requested

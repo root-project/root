@@ -501,7 +501,7 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
       else
    value += param->getVal()*(nominal - low->getVal());
     } else if(_interpCode.at(i)==1){
-      // pice-wise log
+      // piece-wise log
       if(param->getVal()>=0)
    value *= pow(high->getVal()/nominal, +param->getVal());
       else

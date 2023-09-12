@@ -56,7 +56,7 @@ TEST(ParamHistFunc, ValidateND)
    std::vector<double> resultsScalar(nEntries);
 
    // Do some things in one go:
-   //   * assing random integer values to each variable in each iteration
+   //   * assign random integer values to each variable in each iteration
    //   * fill the dataset used for batched evaluation
    //   * compute the reference result manually
    //   * compute the result with the ParamHistFunc without BatchMode
