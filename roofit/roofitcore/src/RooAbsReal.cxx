@@ -4141,6 +4141,16 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 ///
 /// <table>
 /// <tr><th> <th> Options to control construction of chi2
+/// <tr><td> `Extended(bool flag)` <td> **Only applicable when fitting a RooAbsPdf**. Scale the normalized pdf by the number of events predicted by the model instead of scaling by the total data weight.
+///                                     This imposes a constraint on the predicted number of events analogous to the extended term in a likelihood fit.
+///                                     - If you don't pass this command, an extended fit will be done by default if the pdf makes a prediction on the number of events
+///                                       (in RooFit jargon, "if the pdf can be extended").
+///                                     - Passing `Extended(true)` when the the pdf makes no prediction on the expected number of events will result in error messages,
+///                                       and the chi2 will fall back to the total data weight to scale the normalized pdf.
+///                                     - There are cases where the fit **must** be done in extended mode. This happens for example when you have a RooAddPdf
+///                                       where the coefficients represent component yields. If the fit is not extended, these coefficients will not be
+///                                       well-defined, as the RooAddPdf always normalizes itself. If you pass `Extended(false)` in such a case, an error will be
+///                                       printed and you'll most likely get garbage results.
 /// <tr><td> `Range(const char* name)`         <td> Fit only data inside range with given name
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.

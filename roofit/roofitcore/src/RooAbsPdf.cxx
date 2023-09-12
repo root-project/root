@@ -897,7 +897,15 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
 /// <tr><th> Type of CmdArg    <th>    Effect on nll
 /// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Do not normalize PDF over listed observables.
 //                                                  Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
-/// <tr><td> `Extended(bool flag)`           <td> Add extended likelihood term, off by default
+/// <tr><td> `Extended(bool flag)` <td> Include the extended likelihood term, i.e., a Poisson term constraining the models predicted number of events.
+///                                     - If you don't pass this command, an extended fit will be done by default if the pdf makes a prediction on the number of events
+///                                       (in RooFit jargon, "if the pdf can be extended").
+///                                     - Passing `Extended(true)` when the the pdf makes no prediction on the expected number of events will result in error messages,
+///                                       and no extended term is added after all.
+///                                     - There are cases where the fit **must** be done with an extended term. This happens for example when you have a RooAddPdf
+///                                       where the coefficients represent component yields. If the extended term is not included, these coefficients will not be
+///                                       well-defined, as the RooAddPdf always normalizes itself. If you pass `Extended(false)` in such a case, an error will be
+///                                       printed and you'll most likely get garbage results.
 /// <tr><td> `Range(const char* name)`         <td> Fit only data inside range with given name
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
