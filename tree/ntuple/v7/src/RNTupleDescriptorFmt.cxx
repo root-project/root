@@ -98,6 +98,11 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::uint64_t nPages = 0;
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
+      // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
+      // but don't add the the page sizes to the overall volume.
+      if (column.second.IsAliasColumn())
+         continue;
+
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
       auto elementSize = Detail::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();
@@ -109,11 +114,6 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       info.fLocalOrder = column.second.GetIndex();
       info.fElementSize = elementSize;
       info.fType = column.second.GetModel().GetType();
-
-      // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
-      // but don't add the the page sizes to the overall volume.
-      if (column.second.IsAliasColumn())
-         continue;
 
       for (const auto &cluster : fClusterDescriptors) {
          auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
