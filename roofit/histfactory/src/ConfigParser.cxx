@@ -220,7 +220,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
     // and then we add them to all measurements
 
     // For now, we create this list twice
-    // simply for compatability
+    // simply for compatibility
     // std::vector< std::string > preprocessFunctions;
     std::vector< RooStats::HistFactory::PreprocessFunction > functionObjects;
 
@@ -229,7 +229,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
       if( node->GetNodeName() == TString( "Function" ) ) {
 
    // For now, add both the objects itself and
-   // it's command string (for easy compatability)
+   // it's command string (for easy compatibility)
    RooStats::HistFactory::PreprocessFunction Func = ParseFunctionConfig( node );
    // preprocessFunctions.push_back( Func.GetCommand() );
    functionObjects.push_back( Func );
@@ -570,7 +570,7 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
 
   if( rootNode->GetNodeName() != TString( "Channel" ) ){
     cxcoutEHF << "Error: In parsing a Channel XML, "
-         << "Encounterd XML with DOCTYPE: " << rootNode->GetNodeName()
+         << "Encountered XML with DOCTYPE: " << rootNode->GetNodeName()
          << std::endl;
     cxcoutEHF << " DOCTYPE for channels must be 'Channel' "
          << " Check that your XML is properly written" << std::endl;

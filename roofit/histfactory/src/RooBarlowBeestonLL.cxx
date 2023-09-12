@@ -153,7 +153,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
   RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
   for (const auto& nameIdx : *channelCat) {
 
-    // Warning: channel cat name is not necesarily the same name
+    // Warning: channel cat name is not necessarily the same name
     // as the pdf's (for example, if someone does edits)
     RooAbsPdf* channelPdf = simPdf->getPdf(nameIdx.first.c_str());
     std::string channel_name = channelPdf->GetName();
