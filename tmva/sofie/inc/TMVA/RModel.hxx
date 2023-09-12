@@ -82,10 +82,18 @@ public:
         Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos);
     }
 
+    const std::vector<std::string> & GetInputTensorNames() const {
+        return fInputTensorNames;
+    }
+    const std::vector<std::string> & GetOutputTensorNames() const {
+        return fOutputTensorNames;
+    }
+
     void ReadInitializedTensorsFromFile(long);
     long WriteInitializedTensorsToFile(std::string filename = "");
 
     void PrintIntermediateTensors();
+    void PrintOutputTensors();
     void OutputGenerated(std::string filename = "", bool append = false);
     std::vector<std::string> GetOutputTensorNames() {
         return fOutputTensorNames;
