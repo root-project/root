@@ -170,6 +170,11 @@ public:
       ~RValue() { DestroyIfOwning(); }
 
       RValue GetNonOwningCopy() { return RValue(fField, fObjPtr, false); }
+      void *Release()
+      {
+         fIsOwning = false;
+         return fObjPtr;
+      }
 
       std::size_t Append() { return fField->Append(fObjPtr); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
