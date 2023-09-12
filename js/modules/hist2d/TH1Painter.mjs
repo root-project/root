@@ -682,7 +682,14 @@ class TH1Painter extends THistPainter {
          }
       }
 
-      const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve;
+      const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve,
+      add_hist = () => {
+         this.draw_g.append('svg:path')
+                    .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
+                    .style('stroke-linejoin', 'miter')
+                    .call(this.lineatt.func)
+                    .call(this.fillatt.func);
+      };
       let h0 = height + 3;
       if (!fill_for_interactive) {
          const gry0 = Math.round(funcs.gry(0));
@@ -693,11 +700,23 @@ class TH1Painter extends THistPainter {
       }
       const close_path = `L${currx},${h0}H${startx}Z`;
 
+      if (res && draw_hist && !this.fillatt.empty()) {
+         add_hist();
+         res = '';
+      }
+
       if (draw_markers || show_line || show_curve) {
+         if (!path_line && grpnts.length)
+            path_line = buildSvgCurve(grpnts);
+
          if (path_fill) {
             this.draw_g.append('svg:path')
                        .attr('d', path_fill)
                        .call(this.fillatt.func);
+         } else if (path_line && !this.fillatt.empty() && !draw_hist) {
+            this.draw_g.append('svg:path')
+                .attr('d', path_line + close_path)
+                .call(this.fillatt.func);
          }
 
          if (path_err) {
@@ -714,24 +733,6 @@ class TH1Painter extends THistPainter {
          }
 
          if (path_line) {
-            if (!this.fillatt.empty() && !draw_hist) {
-               this.draw_g.append('svg:path')
-                   .attr('d', path_line + close_path)
-                   .call(this.fillatt.func);
-            }
-
-            this.draw_g.append('svg:path')
-                   .attr('d', path_line)
-                   .style('fill', 'none')
-                   .call(this.lineatt.func);
-         } else if (grpnts.length) {
-            path_line = buildSvgCurve(grpnts);
-            if (!this.fillatt.empty() && !draw_hist) {
-               this.draw_g.append('svg:path')
-                   .attr('d', path_line + close_path)
-                   .call(this.fillatt.func);
-            }
-
             this.draw_g.append('svg:path')
                    .attr('d', path_line)
                    .style('fill', 'none')
@@ -752,13 +753,8 @@ class TH1Painter extends THistPainter {
          }
       }
 
-      if (res && draw_hist) {
-         this.draw_g.append('svg:path')
-                    .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
-                    .style('stroke-linejoin', 'miter')
-                    .call(this.lineatt.func)
-                    .call(this.fillatt.func);
-      }
+      if (res && draw_hist)
+         add_hist();
 
       if (show_text)
          return this.finishTextDrawing();
@@ -920,7 +916,7 @@ class TH1Painter extends THistPainter {
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
-      } else if (this.options.Error || this.options.Mark || this.options.Line || this.options.Curve) {
+      } else if ((this.options.Error && (this.options.Hist !== true)) || this.options.Mark || this.options.Line || this.options.Curve) {
          show_rect = !this.isTF1();
 
          let msize = 3;
