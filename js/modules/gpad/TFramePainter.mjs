@@ -2153,10 +2153,10 @@ class TFramePainter extends ObjectPainter {
       if (AxisPos === undefined) AxisPos = 0;
 
       const layer = this.getFrameSvg().selectChild('.axis_layer'),
-          w = this.getFrameWidth(),
-          h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad(true);
+            w = this.getFrameWidth(),
+            h = this.getFrameHeight(),
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad(true);
 
       this.x_handle.invert_side = (AxisPos >= 10);
       this.x_handle.lbls_both_sides = !this.x_handle.invert_side && (pad?.fTickx > 1); // labels on both sides
@@ -2167,7 +2167,7 @@ class TFramePainter extends ObjectPainter {
       this.y_handle.has_obstacle = has_y_obstacle;
 
       const draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
-          draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
+            draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
 
       if ((!disable_x_draw || !disable_y_draw) && pp._fast_drawing)
          disable_x_draw = disable_y_draw = true;
@@ -2177,15 +2177,15 @@ class TFramePainter extends ObjectPainter {
       if (!disable_x_draw || !disable_y_draw) {
          const can_adjust_frame = !shrink_forbidden && settings.CanAdjustFrame,
 
-          pr1 = draw_horiz.drawAxis(layer, w, h,
-                                       draw_horiz.invert_side ? null : `translate(0,${h})`,
-                                       pad?.fTickx ? -h : 0, disable_x_draw,
-                                       undefined, false),
+         pr1 = draw_horiz.drawAxis(layer, w, h,
+                                   draw_horiz.invert_side ? null : `translate(0,${h})`,
+                                   pad?.fTickx ? -h : 0, disable_x_draw,
+                                   undefined, false, pp.getPadHeight() - h - this.getFrameY()),
 
-          pr2 = draw_vertical.drawAxis(layer, w, h,
-                                          draw_vertical.invert_side ? `translate(${w})` : null,
-                                          pad?.fTicky ? w : 0, disable_y_draw,
-                                          draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
+         pr2 = draw_vertical.drawAxis(layer, w, h,
+                                      draw_vertical.invert_side ? `translate(${w})` : null,
+                                      pad?.fTicky ? w : 0, disable_y_draw,
+                                      draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
 
          pr = Promise.all([pr1, pr2]).then(() => {
             this.drawGrids();
@@ -2665,6 +2665,12 @@ class TFramePainter extends ObjectPainter {
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
       return res;
    }
+
+   /** @summary Returns frame X position */
+   getFrameX() { return this._frame_x || 0; }
+
+   /** @summary Returns frame Y position */
+   getFrameY() { return this._frame_y || 0; }
 
    /** @summary Returns frame width */
    getFrameWidth() { return this._frame_width || 0; }

@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '8/09/2023',
+version_date = '12/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -271,7 +271,9 @@ settings = {
    /** @summary Configures dark mode for the GUI */
    DarkMode: false,
    /** @summary Prefer to use saved points in TF1/TF2, avoids eval() and Function() when possible */
-   PreferSavedPoints: false
+   PreferSavedPoints: false,
+   /** @summary Angle in degree for axis labels tilt when available space is not enough */
+   AxisTiltAngle: 25
 },
 
 /** @namespace
@@ -60469,16 +60471,20 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Draw axis labels
      * @return {Promise} with array label size and max width */
-   async drawLabels(axis_g, axis, w, h, handle, side, labelsFont, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
+   async drawLabels(axis_g, axis, w, h, handle, side, labelsFont, labeloffset, tickSize, ticksPlusMinus, max_text_width, frame_ygap) {
       const center_lbls = this.isCenteredLabels(),
             rotate_lbls = axis.TestBit(EAxisBits.kLabelsVert),
             label_g = [axis_g.append('svg:g').attr('class', 'axis_labels')],
-            lbl_pos = handle.lbl_pos || handle.major;
+            lbl_pos = handle.lbl_pos || handle.major,
+            tilt_angle = gStyle.AxisTiltAngle ?? 25;
       let textscale = 1, maxtextlen = 0, applied_scale = 0,
-          lbl_tilt = false, any_modified = false, max_textwidth = 0;
+          lbl_tilt = false, any_modified = false, max_textwidth = 0, max_tiltsize = 0;
 
       if (this.lbls_both_sides)
          label_g.push(axis_g.append('svg:g').attr('class', 'axis_labels').attr('transform', this.vertical ? `translate(${w})` : `translate(0,${-h})`));
+
+       if (frame_ygap > 0)
+          max_tiltsize = frame_ygap / Math.sin(tilt_angle/180*Math.PI) - Math.tan(tilt_angle/180*Math.PI);
 
       // function called when text is drawn to analyze width, required to correctly scale all labels
       // must be function to correctly handle 'this' argument
@@ -60488,19 +60494,33 @@ class TAxisPainter extends ObjectPainter {
 
          if (textwidth && ((!painter.vertical && !rotate_lbls) || (painter.vertical && rotate_lbls)) && !painter.log) {
             let maxwidth = this.gap_before*0.45 + this.gap_after*0.45;
-            if (!this.gap_before) maxwidth = 0.9*this.gap_after; else
-            if (!this.gap_after) maxwidth = 0.9*this.gap_before;
+            if (!this.gap_before)
+               maxwidth = 0.9*this.gap_after;
+            else if (!this.gap_after)
+               maxwidth = 0.9*this.gap_before;
             textscale = Math.min(textscale, maxwidth / textwidth);
          } else if (painter.vertical && max_text_width && this.normal_side && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset))
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
 
          if ((textscale > 0.0001) && (textscale < 0.7) && !any_modified &&
-              !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length === 1))
+              !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length === 1) && (lbl_tilt === false))
             lbl_tilt = true;
 
-         const scale = textscale * (lbl_tilt ? 3 : 1);
+         let scale = textscale;
 
-         if ((scale > 0.0001) && (scale < 1)) {
+         if (lbl_tilt) {
+            if (max_tiltsize && max_textwidth) {
+               scale = Math.min(1, 0.8*max_tiltsize/max_textwidth);
+               if (scale < textscale) {
+                  // if due to tilt scale is even smaller - ignore tilting
+                  lbl_tilt = 0;
+                  scale = textscale;
+               }
+            } else
+               scale *= 3;
+         }
+
+         if (((scale > 0.0001) && (scale < 1)) || (lbl_tilt !== false)) {
             applied_scale = 1/scale;
             painter.scaleTextDrawing(applied_scale, label_g[0]);
          }
@@ -60563,7 +60583,7 @@ class TAxisPainter extends ObjectPainter {
             this.drawText(arg);
 
             if (lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
-               const axis_step = Math.abs(pos-lastpos);
+               const axis_step = Math.abs(pos - lastpos);
                textscale = Math.min(textscale, 0.9*axis_step/labelsFont.size);
             }
 
@@ -60606,7 +60626,7 @@ class TAxisPainter extends ObjectPainter {
          if (lbl_tilt) {
             label_g[0].selectAll('text').each(function() {
                const txt = select(this), tr = txt.attr('transform');
-               txt.attr('transform', tr + ' rotate(25)').style('text-anchor', 'start');
+               txt.attr('transform', `${tr} rotate(${tilt_angle})`).style('text-anchor', 'start');
             });
          }
 
@@ -60690,7 +60710,7 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary function draws TAxis or TGaxis object
      * @return {Promise} for drawing ready */
-   async drawAxis(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
+   async drawAxis(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position, frame_ygap) {
       const axis = this.getObject(),
             swap_side = this.swap_side || false;
       let axis_g = layer, draw_lines = true;
@@ -60751,7 +60771,7 @@ class TAxisPainter extends ObjectPainter {
       // draw labels (sometime on both sides)
       const pr = (disable_axis_drawing || this.optionUnlab)
                 ? Promise.resolve(0)
-                : this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width);
+                : this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width, frame_ygap);
 
       return pr.then(maxw => {
          labelsMaxWidth = maxw;
@@ -62989,10 +63009,10 @@ class TFramePainter extends ObjectPainter {
       if (AxisPos === undefined) AxisPos = 0;
 
       const layer = this.getFrameSvg().selectChild('.axis_layer'),
-          w = this.getFrameWidth(),
-          h = this.getFrameHeight(),
-          pp = this.getPadPainter(),
-          pad = pp.getRootPad(true);
+            w = this.getFrameWidth(),
+            h = this.getFrameHeight(),
+            pp = this.getPadPainter(),
+            pad = pp.getRootPad(true);
 
       this.x_handle.invert_side = (AxisPos >= 10);
       this.x_handle.lbls_both_sides = !this.x_handle.invert_side && (pad?.fTickx > 1); // labels on both sides
@@ -63003,7 +63023,7 @@ class TFramePainter extends ObjectPainter {
       this.y_handle.has_obstacle = has_y_obstacle;
 
       const draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
-          draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
+            draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
 
       if ((!disable_x_draw || !disable_y_draw) && pp._fast_drawing)
          disable_x_draw = disable_y_draw = true;
@@ -63013,15 +63033,15 @@ class TFramePainter extends ObjectPainter {
       if (!disable_x_draw || !disable_y_draw) {
          const can_adjust_frame = !shrink_forbidden && settings.CanAdjustFrame,
 
-          pr1 = draw_horiz.drawAxis(layer, w, h,
-                                       draw_horiz.invert_side ? null : `translate(0,${h})`,
-                                       pad?.fTickx ? -h : 0, disable_x_draw,
-                                       undefined, false),
+         pr1 = draw_horiz.drawAxis(layer, w, h,
+                                   draw_horiz.invert_side ? null : `translate(0,${h})`,
+                                   pad?.fTickx ? -h : 0, disable_x_draw,
+                                   undefined, false, pp.getPadHeight() - h - this.getFrameY()),
 
-          pr2 = draw_vertical.drawAxis(layer, w, h,
-                                          draw_vertical.invert_side ? `translate(${w})` : null,
-                                          pad?.fTicky ? w : 0, disable_y_draw,
-                                          draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
+         pr2 = draw_vertical.drawAxis(layer, w, h,
+                                      draw_vertical.invert_side ? `translate(${w})` : null,
+                                      pad?.fTicky ? w : 0, disable_y_draw,
+                                      draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
 
          pr = Promise.all([pr1, pr2]).then(() => {
             this.drawGrids();
@@ -63501,6 +63521,12 @@ class TFramePainter extends ObjectPainter {
       res.fopt = [this.scale_xmin || 0, this.scale_ymin || 0, this.scale_xmax || 0, this.scale_ymax || 0];
       return res;
    }
+
+   /** @summary Returns frame X position */
+   getFrameX() { return this._frame_x || 0; }
+
+   /** @summary Returns frame Y position */
+   getFrameY() { return this._frame_y || 0; }
 
    /** @summary Returns frame width */
    getFrameWidth() { return this._frame_width || 0; }
@@ -70444,7 +70470,7 @@ class THistDrawOptions {
          this.Error = true;
          if (hdim === 1) {
             this.Zero = false; // do not draw empty bins with errors
-            this.Hist = false;
+            if (this.Hist === 1) this.Hist = false;
             if (Number.isInteger(parseInt(d.part[0]))) this.ErrorKind = parseInt(d.part[0]);
             if ((this.ErrorKind === 3) || (this.ErrorKind === 4)) this.need_fillcol = true;
             if (this.ErrorKind === 0) this.Zero = true; // enable drawing of empty bins
@@ -78299,7 +78325,14 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
       }
 
-      const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve;
+      const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve,
+      add_hist = () => {
+         this.draw_g.append('svg:path')
+                    .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
+                    .style('stroke-linejoin', 'miter')
+                    .call(this.lineatt.func)
+                    .call(this.fillatt.func);
+      };
       let h0 = height + 3;
       if (!fill_for_interactive) {
          const gry0 = Math.round(funcs.gry(0));
@@ -78310,11 +78343,23 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
       const close_path = `L${currx},${h0}H${startx}Z`;
 
+      if (res && draw_hist && !this.fillatt.empty()) {
+         add_hist();
+         res = '';
+      }
+
       if (draw_markers || show_line || show_curve) {
+         if (!path_line && grpnts.length)
+            path_line = buildSvgCurve(grpnts);
+
          if (path_fill) {
             this.draw_g.append('svg:path')
                        .attr('d', path_fill)
                        .call(this.fillatt.func);
+         } else if (path_line && !this.fillatt.empty() && !draw_hist) {
+            this.draw_g.append('svg:path')
+                .attr('d', path_line + close_path)
+                .call(this.fillatt.func);
          }
 
          if (path_err) {
@@ -78331,24 +78376,6 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
 
          if (path_line) {
-            if (!this.fillatt.empty() && !draw_hist) {
-               this.draw_g.append('svg:path')
-                   .attr('d', path_line + close_path)
-                   .call(this.fillatt.func);
-            }
-
-            this.draw_g.append('svg:path')
-                   .attr('d', path_line)
-                   .style('fill', 'none')
-                   .call(this.lineatt.func);
-         } else if (grpnts.length) {
-            path_line = buildSvgCurve(grpnts);
-            if (!this.fillatt.empty() && !draw_hist) {
-               this.draw_g.append('svg:path')
-                   .attr('d', path_line + close_path)
-                   .call(this.fillatt.func);
-            }
-
             this.draw_g.append('svg:path')
                    .attr('d', path_line)
                    .style('fill', 'none')
@@ -78369,13 +78396,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
       }
 
-      if (res && draw_hist) {
-         this.draw_g.append('svg:path')
-                    .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
-                    .style('stroke-linejoin', 'miter')
-                    .call(this.lineatt.func)
-                    .call(this.fillatt.func);
-      }
+      if (res && draw_hist)
+         add_hist();
 
       if (show_text)
          return this.finishTextDrawing();
@@ -78537,7 +78559,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
-      } else if (this.options.Error || this.options.Mark || this.options.Line || this.options.Curve) {
+      } else if ((this.options.Error && (this.options.Hist !== true)) || this.options.Mark || this.options.Line || this.options.Curve) {
          show_rect = !this.isTF1();
 
          let msize = 3;
@@ -107158,8 +107180,8 @@ class THStackPainter extends ObjectPainter {
    /** @summary Draw next stack histogram */
    async drawNextHisto(indx, pad_painter) {
       const stack = this.getObject(),
-          hlst = this.options.nostack ? stack.fHists : stack.fStack,
-          nhists = hlst?.arr?.length || 0;
+            hlst = this.options.nostack ? stack.fHists : stack.fStack,
+            nhists = hlst?.arr?.length || 0;
 
       if (indx >= nhists)
          return this;
@@ -107219,7 +107241,7 @@ class THStackPainter extends ObjectPainter {
       Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '' });
 
       const stack = this.getObject(),
-          hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null),
+            hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null),
 
        hasErrors = hist => {
          if (hist.fSumw2 && (hist.fSumw2.length > 0)) {
@@ -107358,9 +107380,9 @@ class THStackPainter extends ObjectPainter {
       } else {
          for (let indx = 0; indx < nhists; ++indx) {
             const rindx = this.options.horder ? indx : nhists - indx - 1,
-                hist = hlst.arr[rindx],
-                hopt = hlst.opt[rindx];
-            this.painters[indx].updateObject(hist, hopt);
+                  hist = hlst.arr[rindx],
+                  hopt = hlst.opt[rindx];
+            this.painters[indx].updateObject(hist, hopt || hist.fOption || this.options.hopt);
          }
       }
 
@@ -114175,7 +114197,7 @@ class RFramePainter extends RObjectPainter {
          const pr1 = draw_horiz.drawAxis(layer, w, h,
                                    draw_horiz.invert_side ? null : `translate(0,${h})`,
                                    (ticksx > 1) ? -h : 0, disable_x_draw,
-                                   undefined, false),
+                                   undefined, false, this.getPadPainter().getPadHeight() - h - this.getFrameY()),
 
           pr2 = draw_vertical.drawAxis(layer, w, h,
                                    draw_vertical.invert_side ? `translate(${w})` : null,
@@ -114497,6 +114519,12 @@ class RFramePainter extends RObjectPainter {
          return this;
       });
    }
+
+   /** @summary Returns frame X position */
+   getFrameX() { return this._frame_x || 0; }
+
+   /** @summary Returns frame Y position */
+   getFrameY() { return this._frame_y || 0; }
 
    /** @summary Returns frame width */
    getFrameWidth() { return this._frame_width || 0; }

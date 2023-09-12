@@ -917,16 +917,20 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Draw axis labels
      * @return {Promise} with array label size and max width */
-   async drawLabels(axis_g, axis, w, h, handle, side, labelsFont, labeloffset, tickSize, ticksPlusMinus, max_text_width) {
+   async drawLabels(axis_g, axis, w, h, handle, side, labelsFont, labeloffset, tickSize, ticksPlusMinus, max_text_width, frame_ygap) {
       const center_lbls = this.isCenteredLabels(),
             rotate_lbls = axis.TestBit(EAxisBits.kLabelsVert),
             label_g = [axis_g.append('svg:g').attr('class', 'axis_labels')],
-            lbl_pos = handle.lbl_pos || handle.major;
+            lbl_pos = handle.lbl_pos || handle.major,
+            tilt_angle = gStyle.AxisTiltAngle ?? 25;
       let textscale = 1, maxtextlen = 0, applied_scale = 0,
-          lbl_tilt = false, any_modified = false, max_textwidth = 0;
+          lbl_tilt = false, any_modified = false, max_textwidth = 0, max_tiltsize = 0;
 
       if (this.lbls_both_sides)
          label_g.push(axis_g.append('svg:g').attr('class', 'axis_labels').attr('transform', this.vertical ? `translate(${w})` : `translate(0,${-h})`));
+
+       if (frame_ygap > 0)
+          max_tiltsize = frame_ygap / Math.sin(tilt_angle/180*Math.PI) - Math.tan(tilt_angle/180*Math.PI);
 
       // function called when text is drawn to analyze width, required to correctly scale all labels
       // must be function to correctly handle 'this' argument
@@ -936,19 +940,33 @@ class TAxisPainter extends ObjectPainter {
 
          if (textwidth && ((!painter.vertical && !rotate_lbls) || (painter.vertical && rotate_lbls)) && !painter.log) {
             let maxwidth = this.gap_before*0.45 + this.gap_after*0.45;
-            if (!this.gap_before) maxwidth = 0.9*this.gap_after; else
-            if (!this.gap_after) maxwidth = 0.9*this.gap_before;
+            if (!this.gap_before)
+               maxwidth = 0.9*this.gap_after;
+            else if (!this.gap_after)
+               maxwidth = 0.9*this.gap_before;
             textscale = Math.min(textscale, maxwidth / textwidth);
          } else if (painter.vertical && max_text_width && this.normal_side && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset))
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
 
          if ((textscale > 0.0001) && (textscale < 0.7) && !any_modified &&
-              !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length === 1))
+              !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length === 1) && (lbl_tilt === false))
             lbl_tilt = true;
 
-         const scale = textscale * (lbl_tilt ? 3 : 1);
+         let scale = textscale;
 
-         if ((scale > 0.0001) && (scale < 1)) {
+         if (lbl_tilt) {
+            if (max_tiltsize && max_textwidth) {
+               scale = Math.min(1, 0.8*max_tiltsize/max_textwidth);
+               if (scale < textscale) {
+                  // if due to tilt scale is even smaller - ignore tilting
+                  lbl_tilt = 0;
+                  scale = textscale;
+               }
+            } else
+               scale *= 3;
+         }
+
+         if (((scale > 0.0001) && (scale < 1)) || (lbl_tilt !== false)) {
             applied_scale = 1/scale;
             painter.scaleTextDrawing(applied_scale, label_g[0]);
          }
@@ -1011,7 +1029,7 @@ class TAxisPainter extends ObjectPainter {
             this.drawText(arg);
 
             if (lastpos && (pos !== lastpos) && ((this.vertical && !rotate_lbls) || (!this.vertical && rotate_lbls))) {
-               const axis_step = Math.abs(pos-lastpos);
+               const axis_step = Math.abs(pos - lastpos);
                textscale = Math.min(textscale, 0.9*axis_step/labelsFont.size);
             }
 
@@ -1054,7 +1072,7 @@ class TAxisPainter extends ObjectPainter {
          if (lbl_tilt) {
             label_g[0].selectAll('text').each(function() {
                const txt = d3_select(this), tr = txt.attr('transform');
-               txt.attr('transform', tr + ' rotate(25)').style('text-anchor', 'start');
+               txt.attr('transform', `${tr} rotate(${tilt_angle})`).style('text-anchor', 'start');
             });
          }
 
@@ -1138,7 +1156,7 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary function draws TAxis or TGaxis object
      * @return {Promise} for drawing ready */
-   async drawAxis(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
+   async drawAxis(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position, frame_ygap) {
       const axis = this.getObject(),
             swap_side = this.swap_side || false;
       let axis_g = layer, draw_lines = true;
@@ -1199,7 +1217,7 @@ class TAxisPainter extends ObjectPainter {
       // draw labels (sometime on both sides)
       const pr = (disable_axis_drawing || this.optionUnlab)
                 ? Promise.resolve(0)
-                : this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width);
+                : this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width, frame_ygap);
 
       return pr.then(maxw => {
          labelsMaxWidth = maxw;
