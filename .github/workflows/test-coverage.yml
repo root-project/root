@@ -105,6 +105,31 @@ jobs:
           echo $OVERRIDE >> "$FILE"
           cat "$FILE" || true
 
+      - name: Apply option overrides from matrix for this job
+        env:
+          OVERRIDES: "coverage=On CMAKE_CXX_COMPILER=clang++ CMAKE_C_COMPILER=clang CMAKE_BUILD_TYPE=Release"
+          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/fedora38.txt'
+        shell: bash
+        run: |
+          set -x
+  
+          echo '' >> "$CONFIGFILE"
+  
+          for ENTRY in $OVERRIDES; do
+              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+  
+              # Add entry to file if not exists, otherwise replace
+  
+              if grep -q "$KEY=" "$CONFIGFILE"; then
+                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
+              else
+                  echo "$ENTRY" >> "$CONFIGFILE"
+              fi
+          done
+  
+          cat "$CONFIGFILE" || true
+  
+
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
