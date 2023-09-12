@@ -878,7 +878,7 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
-   std::vector<Double_t> mvaValues(nEvents);// = GetMvaValues(0, nEvents, true);
+   std::vector<Double_t> mvaValues = GetMvaValues(0, nEvents, true);
 
    // store time used for testing
    if (type==Types::kTesting)
