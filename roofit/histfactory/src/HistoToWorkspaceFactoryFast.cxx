@@ -207,7 +207,7 @@ namespace HistFactory{
   }
 
 
-  // We want to eliminate this interface and use the measurment directly
+  // We want to eliminate this interface and use the measurement directly
   RooFit::OwningPtr<RooWorkspace> HistoToWorkspaceFactoryFast::MakeSingleChannelModel( Measurement& measurement, Channel& channel ) {
 
     // This is a pretty light-weight wrapper function
@@ -359,7 +359,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       // do nothing if the constraint term already exists
       if(proto.pdf(constraintName)) return;
 
-      // case systematic is uniform (asssume they are like a Gaussian but with
+      // case systematic is uniform (assume they are like a Gaussian but with
       // a large width (100 instead of 1)
       const double gaussSigma = isUniform ? 100. : 1.0;
       if (isUniform) {
@@ -481,7 +481,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         cxcoutI(HistFactory) <<"<NormFactor Name =\""<<*nit<<"\"> is duplicated for <Sample Name=\""
             << sample.GetName() << "\">, but only one factor will be included.  \n Instead, define something like"
             << "\n\t<Function Name=\""<<*nit<<"Squared\" Expression=\""<<*nit<<"*"<<*nit<<"\" Var=\""<<*nit<<rangeNames.at(rangeIndex)
-            << "\"> \nin your top-level XML's <Measurment> entry and use <NormFactor Name=\""<<*nit<<"Squared\" in your channel XML file."<< endl;
+            << "\"> \nin your top-level XML's <Measurement> entry and use <NormFactor Name=\""<<*nit<<"Squared\" in your channel XML file."<< endl;
       }
       ++rangeIndex;
     }
@@ -883,7 +883,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         // make list of abstract parameters that interpolate in space of variations
         RooArgList interpParams = makeInterpolationParameters(sample.GetHistoSysList(), proto);
 
-        // next, cerate the constraint terms
+        // next, create the constraint terms
         for(std::size_t i = 0; i < interpParams.size(); ++i) {
           bool isUniform = measurement.GetUniformSyst().count(sample.GetHistoSysList()[i].GetName()) > 0;
           makeGaussianConstraint(interpParams[i], proto, isUniform, constraintTermNames);
@@ -1156,7 +1156,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
           // Now that we have the list of ShapeSys ParamHistFunc names,
           // we create the total RooProduct
-          // we multiply the expected functio
+          // we multiply the expected function
 
           for(std::string const& name : ShapeSysNames) {
             sampleHistFuncs.push_back(proto.function(name));
@@ -1294,7 +1294,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       observablesStr += name;
     }
 
-    // We create two sets, one for backwards compatability
+    // We create two sets, one for backwards compatibility
     // The other to make a consistent naming convention
     // between individual channels and the combined workspace
     proto.defineSet("observables", observablesStr.c_str());
@@ -1308,7 +1308,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     auto model = make_unique<RooProdPdf>(
         ("model_"+channel_name).c_str(),    // MB : have changed this into conditional pdf. Much faster for toys!
-        "product of Poissons accross bins for a single channel",
+        "product of Poissons across bins for a single channel",
         constraintTerms, RooFit::Conditional(likelihoodTerms,observables));
     // can give channel a title by setting title of corresponding data histogram
     if (channel.GetData().GetHisto() && strlen(channel.GetData().GetHisto()->GetTitle())>0) {
