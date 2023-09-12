@@ -1079,7 +1079,7 @@ void RooPlot::SetMinimum(double minimum)
 ///
 /// \note The \f$ \chi^2 \f$ is calculated between a *plot of the original distribution* and the data.
 /// It therefore has more rounding errors than directly calculating the \f$ \chi^2 \f$ from a PDF or
-/// function. To do this, use RooChi2Var.
+/// function. To do this, use RooAbsReal::createChi2(RooDataHist&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&, const RooCmdArg&,  const RooCmdArg&, const RooCmdArg&).
 double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitParam) const
 {
 
