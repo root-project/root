@@ -444,7 +444,7 @@ bool hasConsistentLayoutAndBinning(RooDataHist const& h1, RooDataHist const& h2)
   auto const& vars1 = *h1.get();
   auto const& vars2 = *h2.get();
 
-  // Check if numer of variables and names is consistent
+  // Check if number of variables and names is consistent
   if(!vars1.hasSameLayout(vars2)) {
     return false;
   }
@@ -658,7 +658,7 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
    const std::string ourVarName(ourVar->GetName() ? ourVar->GetName() : ""), ownName(GetName() ? GetName() : "");
    // RooRealVar is derived from RooAbsRealLValue which is itself
    // derived from RooAbsReal and a virtual class RooAbsLValue
-   // supplying setter fuctions, check if ourVar is indeed derived
+   // supplying setter functions, check if ourVar is indeed derived
    // as real
    if (!dynamic_cast<RooAbsReal *>(ourVar)) {
       coutE(InputArguments) << "RooDataHist::adjustBinning(" << ownName << ") ERROR: dimension " << ourVarName
@@ -1143,7 +1143,7 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 /// \param[in] xVals An array of event coordinates for which the weights should be
 ///                  calculated.
 /// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
-/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+/// \param[in] cdfBoundaries Enable the special boundary condition for a cdf:
 ///                          Underflow bins are assumed to have weight zero and
 ///                          overflow bins have weight one. Otherwise, the
 ///                          histogram is mirrored at the boundaries for the
@@ -1250,7 +1250,7 @@ void RooDataHist::interpolateQuadratic(double* output, std::span<const double> x
 /// \param[in] xVals An array of event coordinates for which the weights should be
 ///                  calculated.
 /// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
-/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+/// \param[in] cdfBoundaries Enable the special boundary condition for a cdf:
 ///                          Underflow bins are assumed to have weight zero and
 ///                          overflow bins have weight one. Otherwise, the
 ///                          histogram is mirrored at the boundaries for the
@@ -1338,7 +1338,7 @@ void RooDataHist::interpolateLinear(double* output, std::span<const double> xVal
 ///                  calculated.
 /// \param[in] intOrder Interpolation order; 0th and 1st order are supported.
 /// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
-/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+/// \param[in] cdfBoundaries Enable the special boundary condition for a cdf:
 ///                          Underflow bins are assumed to have weight zero and
 ///                          overflow bins have weight one. Otherwise, the
 ///                          histogram is mirrored at the boundaries for the
@@ -1386,7 +1386,7 @@ void RooDataHist::weights(double* output, std::span<double const> xVals, int int
 ///                     used for the interpolation. If zero, the bare weight for
 ///                     the bin enclosing the coordinatesis returned.
 /// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
-/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+/// \param[in] cdfBoundaries Enable the special boundary condition for a cdf:
 ///                          underflow bins are assumed to have weight zero and
 ///                          overflow bins have weight one. Otherwise, the
 ///                          histogram is mirrored at the boundaries for the
@@ -1420,7 +1420,7 @@ double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, bool correc
 ///                     used for the interpolation. If zero, the bare weight for
 ///                     the bin enclosing the coordinatesis returned.
 /// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
-/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+/// \param[in] cdfBoundaries Enable the special boundary condition for a cdf:
 ///                          underflow bins are assumed to have weight zero and
 ///                          overflow bins have weight one. Otherwise, the
 ///                          histogram is mirrored at the boundaries for the
@@ -1457,7 +1457,7 @@ double RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, bool correctFor
 /// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
 ///                     used for the interpolation.
 /// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
-/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+/// \param[in] cdfBoundaries Enable the special boundary condition for a cdf:
 ///                          underflow bins are assumed to have weight zero and
 ///                          overflow bins have weight one. Otherwise, the
 ///                          histogram is mirrored at the boundaries for the
@@ -1625,7 +1625,7 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
 /// \param[in] intOrder Interpolation order, i.e. how many neighbouring bins are
 ///                     used for the interpolation.
 /// \param[in] correctForBinSize Enable the inverse bin volume correction factor.
-/// \param[in] cdfBoundaries Enable the special boundary coundition for a cdf:
+/// \param[in] cdfBoundaries Enable the special boundary condition for a cdf:
 ///                          underflow bins are assumed to have weight zero and
 ///                          overflow bins have weight one. Otherwise, the
 ///                          histogram is mirrored at the boundaries for the
@@ -1900,7 +1900,7 @@ double RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bool
      pbinv = &calculatePartialBinVolume(sumSet);
   }
 
-  // Calculate mask and refence plot bins for non-iterating variables
+  // Calculate mask and reference plot bins for non-iterating variables
   std::vector<bool> mask(_vars.size());
   std::vector<int> refBin(_vars.size());
 
@@ -2013,7 +2013,7 @@ double RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     if (skip) continue;
 
     // Work out bin volume
-    // It's not necessary to figure out the bin volume for the slice-only set explicitely here.
+    // It's not necessary to figure out the bin volume for the slice-only set explicitly here.
     // We need to loop over the sumSet anyway to get the partial bin containment correction,
     // so we can get the slice-only set volume later by dividing _binv[ibin] / binVolumeSumSetFull.
     double binVolumeSumSetFull = 1.;

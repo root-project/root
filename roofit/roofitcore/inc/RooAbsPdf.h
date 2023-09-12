@@ -386,7 +386,7 @@ protected:
 
   mutable Int_t _errorCount ;        ///< Number of errors remaining to print
   mutable Int_t _traceCount ;        ///< Number of traces remaining to print
-  mutable Int_t _negCount ;          ///< Number of negative probablities remaining to print
+  mutable Int_t _negCount ;          ///< Number of negative probabilities remaining to print
 
   bool _selectComp ;               ///< Component selection flag for RooAbsPdf::plotCompOn
 

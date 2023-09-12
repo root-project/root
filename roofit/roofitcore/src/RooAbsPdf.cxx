@@ -63,7 +63,7 @@ PDFs can advertise one or more (partial) analytical integrals of
 their function, and these will be used by RooRealIntegral, if it
 determines that this is safe (i.e., no hidden Jacobian terms,
 multiplication with other PDFs that have one or more dependents in
-commen etc).
+common, etc).
 
 #### Implementing analytical integrals
 To implement analytical integrals, two functions must be implemented. First,
@@ -256,7 +256,7 @@ void resetFitrangeAttributes(RooAbsArg& pdf, RooAbsData const& data, std::string
    // Clear possible range attributes from previous fits.
    pdf.removeStringAttribute("fitrange");
 
-   // No fitrange was speficied, so we do nothing. Or "SplitRange" is used, and
+   // No fitrange was specified, so we do nothing. Or "SplitRange" is used, and
    // then there are no uniquely defined ranges for the observables (as they
    // are different in each category).
    if(!rangeName || splitRange) return;
@@ -793,7 +793,7 @@ void RooAbsPdf::getLogProbabilities(std::span<const double> pdfValues, double * 
 /// weighted by the effective weight \f$ \sum w_{i}^2 / \sum w_{i} \f$ in the likelihood.
 /// Since here we compute the likelihood with the weight square, we need to multiply by the
 /// square of the effective weight:
-///   - \f$ W_\mathrm{expect}   = N_\mathrm{expect} \cdot \sum w_{i} / \sum w_{i}^2 \f$ : effective expected entrie
+///   - \f$ W_\mathrm{expect}   = N_\mathrm{expect} \cdot \sum w_{i} / \sum w_{i}^2 \f$ : effective expected entries
 ///   - \f$ W_\mathrm{observed} = \sum w_{i} \cdot \sum w_{i} / \sum w_{i}^2 \f$        : effective observed entries
 ///
 /// The extended term for the likelihood weighted by the square of the weight will be then:
@@ -871,7 +871,7 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 /// \param[in] weightSquared If set to `true`, the extended term will be scaled by
 ///            the ratio of squared event weights over event weights:
 ///            \f$ \sum w_{i}^2 / \sum w_{i} \f$.
-///            Indended to be used by fits with the `SumW2Error()` option that
+///            Intended to be used by fits with the `SumW2Error()` option that
 ///            can be passed to RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&)
 ///            (see the documentation of said function to learn more about the
 ///            interpretation of fits with squared weights).
@@ -909,7 +909,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
 ///   <tr><td> 1 = RooFit::Interleave <td> Process event i%N in process N. Recommended for binned data with
 ///                     a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
 ///   <tr><td> 2 = RooFit::SimComponents <td> Process each component likelihood of a RooSimultaneous fully in a single process
-///                     and distribute components over processes. This approach can be benificial if normalization calculation time
+///                     and distribute components over processes. This approach can be beneficial if normalization calculation time
 ///                     dominates the total computation time of a component (since the normalization calculation must be performed
 ///                     in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
 ///                     parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
@@ -1070,7 +1070,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
 
   if(offset == RooFit::OffsetMode::Bin && dynamic_cast<RooDataSet*>(&data)) {
-    coutE(Minimization) << "The Offset(\"bin\") option doesn't suppot fits to RooDataSet yet, only to RooDataHist."
+    coutE(Minimization) << "The Offset(\"bin\") option doesn't support fits to RooDataSet yet, only to RooDataHist."
                            " Falling back to no offsetting."  << endl;
     offset = RooFit::OffsetMode::None;
   }
@@ -1384,7 +1384,7 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
       }
    }
    matC.Similarity(matV);
-   // C now contiains V C^-1 V
+   // C now contains V C^-1 V
    // Propagate corrected errors to parameters objects
    minimizer.applyCovarianceMatrix(matC);
 
@@ -1398,7 +1398,7 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 /// If you are looking for a function that combines likelihood creation with
 /// fitting, see RooAbsPdf::fitTo.
 /// \param[in] nll The negative log-likelihood variable to minimize.
-/// \param[in] data The dataset that was als used for the NLL. It's a necessary
+/// \param[in] data The dataset that was also used for the NLL. It's a necessary
 ///            parameter because it is used in the asymptotic error correction.
 /// \param[in] cfg Configuration struct with all the configuration options for
 ///            the RooMinimizer. These are a subset of the options that you can
@@ -1514,7 +1514,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 ///   <tr><td> 1 = RooFit::Interleave <td> Process event i%N in process N. Recommended for binned data with
 ///                     a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
 ///   <tr><td> 2 = RooFit::SimComponents <td> Process each component likelihood of a RooSimultaneous fully in a single process
-///                     and distribute components over processes. This approach can be benificial if normalization calculation time
+///                     and distribute components over processes. This approach can be beneficial if normalization calculation time
 ///                     dominates the total computation time of a component (since the normalization calculation must be performed
 ///                     in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
 ///                     parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
@@ -1570,7 +1570,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 /// <tr><td> `Minos(const RooArgSet& set)`     <td>  Only run MINOS on given subset of arguments
 /// <tr><td> `Save(bool flag)`               <td>  Flag controls if RooFitResult object is produced and returned, off by default
 /// <tr><td> `Strategy(Int_t flag)`            <td>  Set Minuit strategy (0 to 2, default is 1)
-/// <tr><td> `MaxCalls(int n)`              <td> Change maximum number of likelihood function calss from MINUIT (if `n <= 0`, the default of 500 * #%parameters is used)
+/// <tr><td> `MaxCalls(int n)`              <td> Change maximum number of likelihood function calls from MINUIT (if `n <= 0`, the default of 500 * #%parameters is used)
 /// <tr><td> `EvalErrorWall(bool flag=true)`    <td>  When parameters are in disallowed regions (e.g. PDF is negative), return very high value to fitter
 ///                                                  to force it out of that region. This can, however, mean that the fitter gets lost in this region. If
 ///                                                  this happens, try switching it off.
@@ -1697,8 +1697,8 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
 
   // TimingAnalysis works only for RooSimultaneous.
   if (pc.getInt("timingAnalysis") && !this->InheritsFrom("RooSimultaneous") ) {
-     coutW(Minimization) << "The timingAnalysis feature was built for minimization with RooSimulteneous "
-                            "and is not implemented for other PDF's. Please create a RooSimultenous to "
+     coutW(Minimization) << "The timingAnalysis feature was built for minimization with RooSimultaneous "
+                            "and is not implemented for other PDF's. Please create a RooSimultaneous to "
                             "enable this feature."  << endl;
   }
 
@@ -1707,7 +1707,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
   Int_t optConst = pc.getInt("optConst") ;
 
   if (optConst > 1) {
-    // optConst >= 2 is pre-computating values, which are never used when
+    // optConst >= 2 is pre-computing values, which are never used when
     // the batchMode is on. This just wastes time.
 
     RooCmdConfig conf("RooAbsPdf::fitTo(" + std::string(GetName()) + ")");
@@ -2341,7 +2341,7 @@ Int_t* RooAbsPdf::randomizeProtoOrder(Int_t nProto, Int_t, bool resampleProto) c
 /// and return a code that specifies the generator algorithm we will use. A code of
 /// zero indicates that we cannot generate any of the directVars (in this case, nothing
 /// should be added to generatedVars). Any non-zero codes will be passed to our generateEvent()
-/// implementation, but otherwise its value is arbitrary. The default implemetation of
+/// implementation, but otherwise its value is arbitrary. The default implementation of
 /// this method returns zero. Subclasses will usually implement this method using the
 /// matchArgs() methods to advertise the algorithms they provide.
 
@@ -2697,7 +2697,7 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 /// <tr><td> `Name(const chat* name)`           <td>  Give curve specified name in frame. Useful if curve is to be referenced later
 /// <tr><td> `Asymmetry(const RooCategory& c)`  <td>  Show the asymmetry of the PDF in given two-state category
 ///               \f$ \frac{F(+)-F(-)}{F(+)+F(-)} \f$ rather than the PDF projection. Category must have two
-///               states with indices -1 and +1 or three states with indeces -1,0 and +1.
+///               states with indices -1 and +1 or three states with indices -1,0 and +1.
 /// <tr><td> `ShiftToZero(bool flag)`         <td>  Shift entire curve such that lowest visible point is at exactly zero.
 ///               Mostly useful when plotting -log(L) or \f$ \chi^2 \f$ distributions
 /// <tr><td> `AddTo(const char* name, double_t wgtSelf, double_t wgtOther)`  <td>  Create a projection of this PDF onto the x-axis, but
@@ -2931,7 +2931,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
         if (oldSize != rangeLim.size() && !pc.hasProcessed("NormRange")) {
           // User gave overlapping ranges. This leads to double-counting events and integrals, and must
-          // therefore be avoided. If a NormRange has been given, the overlap is alreay gone.
+          // therefore be avoided. If a NormRange has been given, the overlap is already gone.
           // It's safe to plot even with overlap now.
           coutE(Plotting) << "Requested plot/integration ranges overlap. For correct plotting, new ranges "
               "will be defined." << std::endl;
