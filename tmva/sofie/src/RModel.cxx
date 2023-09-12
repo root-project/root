@@ -596,7 +596,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
 
         // this needs to be changed, similar to the text file
         return -1;
-   
+
     } else if (fWeightFile == WeightFileType::Text) {
         std::ofstream f;
         if(fIsGNNComponent) {
@@ -687,6 +687,14 @@ void RModel::PrintIntermediateTensors() {
             if (i < it.second.shape.size() - 1) std::cout << ",";
         }
         std::cout << "]" << std::endl;
+    }
+}
+
+void RModel::PrintOutputTensors() {
+    std::cout << "Model specify the following output tensors:\n";
+    for (auto& it: fOutputTensorNames) {
+        std::cout << "Tensor name: \"" << it << "\"\t";
+        std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
     }
 }
 
