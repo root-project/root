@@ -381,7 +381,7 @@ public:
     return true ;
   }
   virtual bool hasRange(const char*) const {
-    // Has this argument a defined range (dummy interface always returns flase)
+    // Has this argument a defined range (dummy interface always returns false)
     return false ;
   }
 
@@ -531,7 +531,7 @@ public:
   //   * passing an initializer list
   // Before, there was only an overload taking a RooArg set, which caused an
   // implicit creation of a RooArgSet when a RooArgList was passed. This needs
-  // to be avoided, because if the passed RooArgList is owning the argumnets,
+  // to be avoided, because if the passed RooArgList is owning the arguments,
   // this information will be lost with the copy. The solution is to have one
   // overload that takes a general RooAbsCollection, and one overload for
   // RooArgList that is invoked in the case of passing an initializer list.

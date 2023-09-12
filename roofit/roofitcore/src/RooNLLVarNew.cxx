@@ -182,7 +182,7 @@ double RooNLLVarNew::computeBatchBinnedL(std::span<const double> preds, std::spa
    return finalizeResult(result, sumWeightKahanSum.Sum());
 }
 
-/** Compute multiple negative logs of propabilities
+/** Compute multiple negative logs of probabilities.
 
 \param output An array of doubles where the computation results will be stored
 \param nOut not used

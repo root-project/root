@@ -606,7 +606,7 @@ __rooglobal__ void computeNovosibirsk(BatchesHandle batches)
       batches._output[i] -= 2.0 / xi / xi * asinh * asinh;
    }
 
-   // faster if you exponentiate in a seperate loop (dark magic!)
+   // faster if you exponentiate in a separate loop (dark magic!)
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = fast_exp(batches._output[i]);
 }
