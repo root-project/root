@@ -858,9 +858,9 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 /// of this PDF for the given number of observed events.
 ///
 /// This function is a wrapper around
-/// RooAbsPdf::extendedTerm(double, const RooArgSet*, double, bool), where the
-/// number of observed events and observables to be used as the normalization
-/// set for the pdf is extracted from a RooAbsData.
+/// RooAbsPdf::extendedTerm(double, RooArgSet const *, double, bool) const,
+/// where the number of observed events and observables to be used as the
+/// normalization set for the pdf is extracted from a RooAbsData.
 ///
 /// For successful operation, the PDF implementation must indicate that
 /// it is extendable by overloading `canBeExtended()`, and must
@@ -875,7 +875,7 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 ///            can be passed to RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&)
 ///            (see the documentation of said function to learn more about the
 ///            interpretation of fits with squared weights).
-/// \param[in] doOffset See RooAbsPdf::extendedTerm(double, RooArgSet const*, double bool).
+/// \param[in] doOffset See RooAbsPdf::extendedTerm(double, RooArgSet const*, double, bool) const.
 
 double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool doOffset) const {
   double sumW = data.sumEntries();
@@ -1786,26 +1786,6 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
   cfg.timingAnalysis = pc.getInt("timingAnalysis");
   return RooFit::Detail::owningPtr(minimizeNLL(*nll, data, cfg));
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Calls RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList) and returns fit result.
-
-RooFit::OwningPtr<RooFitResult> RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
-{
-  // Select the pdf-specific commands
-  RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
-
-  // Pull arguments to be passed to chi2 construction from list
-  RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,ProjectedObservables,AddCoefRange,SplitRange,DataError,Extended,IntegrateBins") ;
-
-  std::unique_ptr<RooAbsReal> chi2{createChi2(data,chi2CmdList)};
-  return chi2FitDriver(*chi2,fitCmdList) ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

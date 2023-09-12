@@ -203,9 +203,7 @@ public:
   }
 
   // Chi^2 fits to histograms
-  using RooAbsReal::chi2FitTo ;
   using RooAbsReal::createChi2 ;
-  RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
   RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
              const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) override ;
@@ -213,6 +211,13 @@ public:
   // Chi^2 fits to X-Y datasets
   RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
 
+  /// \cond ROOFIT_INTERNAL
+  std::string createChi2DataHistCmdArgs() const override
+  {
+     return "Range,RangeWithName,NumCPU,Optimize,ProjectedObservables,"
+            "AddCoefRange,SplitRange,DataError,Extended,IntegrateBins";
+  }
+  /// \endcond ROOFIT_INTERNAL
 
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/,
@@ -278,7 +283,7 @@ public:
   /// Return expected number of events to be used in calculation of extended
   /// likelihood. This function should not be overridden, as it just redirects
   /// to the actual virtual function but takes a RooArgSet reference instead of
-  /// pointer (\see expectedEvents(const RooArgSet*) const).
+  /// pointer. \see expectedEvents(const RooArgSet*) const
   double expectedEvents(const RooArgSet& nset) const {
     return expectedEvents(&nset) ;
   }

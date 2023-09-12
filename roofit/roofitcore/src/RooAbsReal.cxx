@@ -4153,7 +4153,7 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// <tr><td> `Hesse(bool flag)`             <td> Flag controls if HESSE is run after MIGRAD, on by default
 /// <tr><td> `Minos(bool flag)`             <td> Flag controls if MINOS is run after HESSE, on by default
 /// <tr><td> `Minos(const RooArgSet& set)`    <td> Only run MINOS on given subset of arguments
-/// <tr><td> `Save(bool flag)`              <td> Flac controls if RooFitResult object is produced and returned, off by default
+/// <tr><td> `Save(bool flag)`              <td> Flag controls if RooFitResult object is produced and returned, off by default
 /// <tr><td> `Strategy(Int_t flag)`           <td> Set Minuit strategy (0 through 2, default is 1)
 ///
 /// <tr><th> <th> Options to control informational output
@@ -4184,7 +4184,11 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc RooAbsReal::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+/// Calls RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList) and returns fit result.
+///
+/// For the list of possible commands in the `cmdList`, see
+/// RooAbsReal::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&) and
+/// RooAbsPdf::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
 
 RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
 {
@@ -4193,7 +4197,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 
   // Pull arguments to be passed to chi2 construction from std::list
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,IntegrateBins") ;
+  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataHistCmdArgs().c_str());
 
   std::unique_ptr<RooAbsReal> chi2{createChi2(data,chi2CmdList)};
   return chi2FitDriver(*chi2,fitCmdList) ;
@@ -4269,7 +4273,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const Ro
 /// <tr><td> `Hesse(bool flag)`             <td>  Flag controls if HESSE is run after MIGRAD, on by default
 /// <tr><td> `Minos(bool flag)`             <td>  Flag controls if MINOS is run after HESSE, on by default
 /// <tr><td> `Minos(const RooArgSet& set)`    <td>  Only run MINOS on given subset of arguments
-/// <tr><td> `Save(bool flag)`              <td>  Flac controls if RooFitResult object is produced and returned, off by default
+/// <tr><td> `Save(bool flag)`              <td>  Flag controls if RooFitResult object is produced and returned, off by default
 /// <tr><td> `Strategy(Int_t flag)`           <td>  Set Minuit strategy (0 through 2, default is 1)
 ///
 /// <tr><th><th> Options to control informational output
