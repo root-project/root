@@ -60,14 +60,14 @@ std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
    x1.setBins(20);
    x2.setBins(20);
 
-   std::map<std::string, std::unique_ptr<RooAbsData>> datas;
-   datas["channel_1"] = std::unique_ptr<RooDataHist>{ws.pdf("model_1")->generateBinned(x1)};
-   datas["channel_2"] = std::unique_ptr<RooDataHist>{ws.pdf("model_2")->generateBinned(x2)};
+   std::map<std::string, std::unique_ptr<RooAbsData>> datasets;
+   datasets["channel_1"] = std::unique_ptr<RooDataHist>{ws.pdf("model_1")->generateBinned(x1)};
+   datasets["channel_2"] = std::unique_ptr<RooDataHist>{ws.pdf("model_2")->generateBinned(x2)};
 
-   datas["channel_1"]->SetName("obsData_channel_1");
-   datas["channel_2"]->SetName("obsData_channel_2");
+   datasets["channel_1"]->SetName("obsData_channel_1");
+   datasets["channel_2"]->SetName("obsData_channel_2");
 
-   RooDataSet obsData{"obsData", "obsData", {x1, x2}, Index(*ws.cat("channelCat")), Import(datas)};
+   RooDataSet obsData{"obsData", "obsData", {x1, x2}, Index(*ws.cat("channelCat")), Import(datasets)};
    ws.import(obsData);
 
    auto &pdf = *ws.pdf("simPdf");

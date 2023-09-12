@@ -321,7 +321,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &child1 = n.get("misc", "ROOT_internal", "combined_datas").set_map()["obsData"].set_map();
+   auto &child1 = n.get("misc", "ROOT_internal", "combined_datasets").set_map()["obsData"].set_map();
    auto &child2 = n.get("misc", "ROOT_internal", "combined_distributions").set_map()["simPdf"].set_map();
 
    child1["index_cat"] << "channelCat";
