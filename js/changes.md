@@ -22,6 +22,7 @@
 19. Support `inspectN` draw option, allows automatically expand object content to specified level
 20. Implement `allfunc` draw option for histograms, force drawing disregard of TF1::kNotDraw bit
 21. Use `eslint` for static code checking, add testing of interactive features
+22. Fix - correct scaling of axis lables when tilt them by 25 degree
 
 
 ## Changes in 7.4.3

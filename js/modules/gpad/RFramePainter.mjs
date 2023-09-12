@@ -416,7 +416,7 @@ class RFramePainter extends RObjectPainter {
          const pr1 = draw_horiz.drawAxis(layer, w, h,
                                    draw_horiz.invert_side ? null : `translate(0,${h})`,
                                    (ticksx > 1) ? -h : 0, disable_x_draw,
-                                   undefined, false),
+                                   undefined, false, this.getPadPainter().getPadHeight() - h - this.getFrameY()),
 
           pr2 = draw_vertical.drawAxis(layer, w, h,
                                    draw_vertical.invert_side ? `translate(${w})` : null,
@@ -738,6 +738,12 @@ class RFramePainter extends RObjectPainter {
          return this;
       });
    }
+
+   /** @summary Returns frame X position */
+   getFrameX() { return this._frame_x || 0; }
+
+   /** @summary Returns frame Y position */
+   getFrameY() { return this._frame_y || 0; }
 
    /** @summary Returns frame width */
    getFrameWidth() { return this._frame_width || 0; }

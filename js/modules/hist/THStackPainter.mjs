@@ -166,8 +166,8 @@ class THStackPainter extends ObjectPainter {
    /** @summary Draw next stack histogram */
    async drawNextHisto(indx, pad_painter) {
       const stack = this.getObject(),
-          hlst = this.options.nostack ? stack.fHists : stack.fStack,
-          nhists = hlst?.arr?.length || 0;
+            hlst = this.options.nostack ? stack.fHists : stack.fStack,
+            nhists = hlst?.arr?.length || 0;
 
       if (indx >= nhists)
          return this;
@@ -227,7 +227,7 @@ class THStackPainter extends ObjectPainter {
       Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '' });
 
       const stack = this.getObject(),
-          hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null),
+            hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null),
 
        hasErrors = hist => {
          if (hist.fSumw2 && (hist.fSumw2.length > 0)) {
@@ -366,9 +366,9 @@ class THStackPainter extends ObjectPainter {
       } else {
          for (let indx = 0; indx < nhists; ++indx) {
             const rindx = this.options.horder ? indx : nhists - indx - 1,
-                hist = hlst.arr[rindx],
-                hopt = hlst.opt[rindx];
-            this.painters[indx].updateObject(hist, hopt);
+                  hist = hlst.arr[rindx],
+                  hopt = hlst.opt[rindx];
+            this.painters[indx].updateObject(hist, hopt || hist.fOption || this.options.hopt);
          }
       }
 

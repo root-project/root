@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '8/09/2023',
+version_date = '12/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -265,7 +265,9 @@ settings = {
    /** @summary Configures dark mode for the GUI */
    DarkMode: false,
    /** @summary Prefer to use saved points in TF1/TF2, avoids eval() and Function() when possible */
-   PreferSavedPoints: false
+   PreferSavedPoints: false,
+   /** @summary Angle in degree for axis labels tilt when available space is not enough */
+   AxisTiltAngle: 25
 },
 
 /** @namespace

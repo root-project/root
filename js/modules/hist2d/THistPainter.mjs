@@ -404,7 +404,7 @@ class THistDrawOptions {
          this.Error = true;
          if (hdim === 1) {
             this.Zero = false; // do not draw empty bins with errors
-            this.Hist = false;
+            if (this.Hist === 1) this.Hist = false;
             if (Number.isInteger(parseInt(d.part[0]))) this.ErrorKind = parseInt(d.part[0]);
             if ((this.ErrorKind === 3) || (this.ErrorKind === 4)) this.need_fillcol = true;
             if (this.ErrorKind === 0) this.Zero = true; // enable drawing of empty bins
