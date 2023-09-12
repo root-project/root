@@ -880,6 +880,38 @@ void TGraphMultiErrors::SwapPoints(Int_t pos1, Int_t pos2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Update the fX, fY, fExL, fExH, fEyL and fEyH arrays with the sorted values.
+
+void TGraphMultiErrors::UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low)
+{
+   std::vector<Double_t> fExLSorted(numSortedPoints);
+   std::vector<Double_t> fExHSorted(numSortedPoints);
+
+   std::generate(fExLSorted.begin(), fExLSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fExL[sorting_indices[begin++]]; });
+   std::generate(fExHSorted.begin(), fExHSorted.end(),
+                 [begin = low, &sorting_indices, this]() mutable { return fExH[sorting_indices[begin++]]; });
+
+   std::copy(fExLSorted.begin(), fExLSorted.end(), fExL + low);
+   std::copy(fExHSorted.begin(), fExHSorted.end(), fExH + low);
+
+   for (Int_t j = 0; j < fNYErrors; j++) {
+      std::vector<Double_t> fEyLSorted(numSortedPoints);
+      std::vector<Double_t> fEyHSorted(numSortedPoints);
+
+      std::generate(fEyLSorted.begin(), fEyLSorted.end(),
+                  [begin = low, &sorting_indices, &j, this]() mutable { return fEyL[j].GetArray()[sorting_indices[begin++]]; });
+      std::generate(fEyHSorted.begin(), fEyHSorted.end(),
+                  [begin = low, &sorting_indices, &j, this]() mutable { return fEyL[j].GetArray()[sorting_indices[begin++]]; });
+
+      std::copy(fEyLSorted.begin(), fEyLSorted.end(), fEyL[j].GetArray() + low);
+      std::copy(fEyHSorted.begin(), fEyHSorted.end(), fEyL[j].GetArray() + low);
+   }
+
+   TGraph::UpdateArrays(sorting_indices, numSortedPoints, low);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a new y error to the graph and fill it with the values from `eyL` and `eyH`
 
 void TGraphMultiErrors::AddYError(Int_t np, const Double_t *eyL, const Double_t *eyH)
