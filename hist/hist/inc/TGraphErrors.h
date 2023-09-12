@@ -30,6 +30,7 @@ protected:
    Double_t    *fEY{nullptr};    ///<[fNpoints] array of Y errors
 
    void       SwapPoints(Int_t pos1, Int_t pos2) override;
+   void       UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low) override;
 
    Double_t** Allocate(Int_t size) override;
    void       CopyAndRelease(Double_t **newarrays,

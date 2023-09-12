@@ -53,6 +53,7 @@ protected:
 
    static void        SwapValues(Double_t* arr, Int_t pos1, Int_t pos2);
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
+   virtual void       UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low);
 
    virtual Double_t **Allocate(Int_t newsize);
    Double_t         **AllocateArrays(Int_t Narrays, Int_t arraySize);

@@ -51,6 +51,7 @@ protected:
    void CalcYErrorsSum() const;
    Bool_t DoMerge(const TGraph *tg) override;
    void SwapPoints(Int_t pos1, Int_t pos2) override;
+   void UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low) override;
 
 public:
    enum ESummationModes {
