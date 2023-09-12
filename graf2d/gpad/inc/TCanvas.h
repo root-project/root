@@ -61,6 +61,7 @@ protected:
    Bool_t        fRetained;        ///< Retain structure flag
    Bool_t        fUseGL;           ///<! True when rendering is with GL
    Bool_t        fDrawn;           ///<! Set to True when the Draw method is called
+   Bool_t        fUpdated;         ///<! Set to True when Update method was called
    //
    TVirtualPadPainter *fPainter;   ///<! Canvas (pad) painter.
 
@@ -168,7 +169,8 @@ public:
    virtual void      HighlightConnect(const char *slot);
    void              Iconify();
    Bool_t            IsBatch() const override { return fBatch; }
-   Bool_t            IsDrawn() { return fDrawn; }
+   Bool_t            IsDrawn() const { return fDrawn; }
+   Bool_t            IsUpdated() const { return fUpdated; }
    Bool_t            IsFolder() const override;
    Bool_t            IsGrayscale();
    Bool_t            IsRetained() const override { return fRetained; }
@@ -187,7 +189,8 @@ public:
    virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*
    void              Closed() override;                                                // *SIGNAL*
    void              RaiseWindow();
-   void              ResetDrawn() { fDrawn=kFALSE; }
+   void              ResetDrawn() { fDrawn = kFALSE; }
+   void              ResetUpdated() { fUpdated = kFALSE; }
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");
