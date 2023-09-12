@@ -195,6 +195,12 @@ public:
                const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
                const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
+  /// \cond ROOFIT_INTERNAL
+  /// If the overriding classes support more command args in the createChi2()
+  /// overload for RooDataHist, they can override this (like RooAbsPdf).
+  virtual std::string createChi2DataHistCmdArgs() const {return "Range,RangeWithName,NumCPU,Optimize,IntegrateBins"; }
+  /// \endcond ROOFIT_INTERNAL
+
 
   virtual RooFit::OwningPtr<RooAbsReal> createProfile(const RooArgSet& paramsOfInterest) ;
 
