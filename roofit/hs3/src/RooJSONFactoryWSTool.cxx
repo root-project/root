@@ -80,7 +80,7 @@ consult the <a
 href="https://github.com/root-project/root/blob/master/roofit/hs3/README.md">README</a>
 to learn how to do that.
 
-You can always get a list of all the avialable importers and exporters by calling the following functions:
+You can always get a list of all the available importers and exporters by calling the following functions:
 ~~ {.py}
 ROOT.RooFit.JSONIO.printImporters()
 ROOT.RooFit.JSONIO.printExporters()
@@ -127,9 +127,9 @@ bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneo
  * and a vector of binning edges for a variable.
  */
 struct Var {
-   int nbins;                  // Number of bins
-   double min;                 // Minimum value
-   double max;                 // Maximum value
+   int nbins;                 // Number of bins
+   double min;                // Minimum value
+   double max;                // Maximum value
    std::vector<double> edges; // Vector of edges
 
    /**
@@ -564,11 +564,11 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
  * @param analysisNode The JSONNode representing the analysis to be imported.
  * @param likelihoodsNode The JSONNode containing information about likelihoods associated with the analysis.
  * @param workspace The RooWorkspace to which the analysis will be imported.
- * @param datas A vector of unique pointers to RooAbsData objects representing the data associated with the analysis.
+ * @param datasets A vector of unique pointers to RooAbsData objects representing the data associated with the analysis.
  * @return void
  */
 void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, const JSONNode &likelihoodsNode,
-                    RooWorkspace &workspace, const std::vector<std::unique_ptr<RooAbsData>> &datas)
+                    RooWorkspace &workspace, const std::vector<std::unique_ptr<RooAbsData>> &datasets)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string const &analysisName = RooJSONFactoryWSTool::name(analysisNode);
@@ -603,7 +603,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    RooArgSet observables;
    for (auto &nameNode : (*nllNode)["data"].children()) {
       nllDataNames.push_back(nameNode.val());
-      for (const auto &d : datas) {
+      for (const auto &d : datasets) {
          if (d->GetName() == nameNode.val()) {
             observables.add(*d->get());
          }
@@ -720,9 +720,9 @@ void combinePdfs(const JSONNode &rootnode, RooWorkspace &ws)
    }
 }
 
-void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAbsData>> &datas)
+void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAbsData>> &datasets)
 {
-   auto *combinedDataInfoNode = findRooFitInternal(rootnode, "combined_datas");
+   auto *combinedDataInfoNode = findRooFitInternal(rootnode, "combined_datasets");
 
    // If there is no info on combining datasets
    if (combinedDataInfoNode == nullptr) {
@@ -749,10 +749,10 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
       RooArgSet allVars{indexCat};
       for (std::size_t iChannel = 0; iChannel < labels.size(); ++iChannel) {
          auto componentName = combinedName + "_" + labels[iChannel];
-         // We move the found channel data out of the "datas" vector, such that
+         // We move the found channel data out of the "datasets" vector, such that
          // the data components don't get imported anymore.
-         std::unique_ptr<RooAbsData> &component =
-            *std::find_if(datas.begin(), datas.end(), [&](auto &d) { return d && d->GetName() == componentName; });
+         std::unique_ptr<RooAbsData> &component = *std::find_if(
+            datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == componentName; });
          allVars.add(*component->get());
          dsMap.insert({labels[iChannel], std::move(component)});
          indexCat.defineType(labels[iChannel], indices[iChannel]);
@@ -760,7 +760,7 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
 
       auto combined = std::make_unique<RooDataSet>(combinedName, combinedName, allVars, RooFit::Import(dsMap),
                                                    RooFit::Index(indexCat));
-      datas.emplace_back(std::move(combined));
+      datasets.emplace_back(std::move(combined));
    }
 }
 
@@ -1371,7 +1371,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
    datamap.name = data.GetName();
 
    // Write information necessary to reconstruct the combined dataset upon import
-   auto &child = getRooFitInternal(*_rootnodeOutput, "combined_datas").set_map()[data.GetName()].set_map();
+   auto &child = getRooFitInternal(*_rootnodeOutput, "combined_datasets").set_map()[data.GetName()].set_map();
    child["index_cat"] << cat->GetName();
    exportCategory(*cat, child);
 
@@ -1438,7 +1438,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // this is a regular unbinned dataset
 
    // This works around a problem in RooStats/HistFactory that was only fixed
-   // in ROOT 6.30: until then, the weight variable of the observerd dataset,
+   // in ROOT 6.30: until then, the weight variable of the observed dataset,
    // called "weightVar", was added to the observables. Therefore, it also got
    // added to the Asimov dataset. But the Asimov has its own weight variable,
    // called "binWeightAsimov", making "weightVar" an actual observable in the
@@ -1494,20 +1494,20 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
  * This function reads axes information from the given JSONNode and
  * creates a RooArgSet with variables representing these axes.
  *
- * @param node The JSONNode containing the axes information to be read.
+ * @param topNode The JSONNode containing the axes information to be read.
  * @return RooArgSet A RooArgSet containing the variables created from the JSONNode.
  */
-RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
+RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 {
    RooArgSet vars;
 
-   for (JSONNode const &nd : node["axes"].children()) {
-      if (nd.has_child("edges")) {
+   for (JSONNode const &node : topNode["axes"].children()) {
+      if (node.has_child("edges")) {
          std::vector<double> edges;
-         for (auto const &bound : nd["edges"].children()) {
+         for (auto const &bound : node["edges"].children()) {
             edges.push_back(bound.val_double());
          }
-         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(), edges[0],
+         auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(), edges[0],
                                                  edges[edges.size() - 1]);
          RooBinning bins(obs->getMin(), obs->getMax());
          for (auto b : edges) {
@@ -1516,9 +1516,9 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &node)
          obs->setBinning(bins);
          vars.addOwned(std::move(obs));
       } else {
-         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(),
-                                                 nd["min"].val_double(), nd["max"].val_double());
-         obs->setBins(nd["nbins"].val_int());
+         auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(),
+                                                 node["min"].val_double(), node["max"].val_double());
+         obs->setBins(node["nbins"].val_int());
          vars.addOwned(std::move(obs));
       }
    }
@@ -2060,12 +2060,12 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    // We delay the import of the data to after combineDatasets(), because it
    // might be that some datasets are merged to combined datasets there. In
-   // that case, we will remove the components from the "datas" vector so they
+   // that case, we will remove the components from the "datasets" vector so they
    // don't get imported.
-   std::vector<std::unique_ptr<RooAbsData>> datas;
+   std::vector<std::unique_ptr<RooAbsData>> datasets;
    if (auto dataNode = n.find("data")) {
       for (const auto &p : dataNode->children()) {
-         datas.push_back(loadData(p, _workspace));
+         datasets.push_back(loadData(p, _workspace));
       }
    }
 
@@ -2073,13 +2073,13 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
    if (auto analysesNode = n.find("analyses")) {
       for (JSONNode const &analysisNode : analysesNode->children()) {
-         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], _workspace, datas);
+         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], _workspace, datasets);
       }
    }
 
-   combineDatasets(*_rootnodeInput, datas);
+   combineDatasets(*_rootnodeInput, datasets);
 
-   for (auto const &d : datas) {
+   for (auto const &d : datasets) {
       if (d)
          _workspace.import(*d);
    }
