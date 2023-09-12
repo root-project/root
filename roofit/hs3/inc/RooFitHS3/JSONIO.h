@@ -39,7 +39,7 @@ public:
       return importFunction(tool, node);
    }
    // These two functions importPdf() and importFunction() are supposed to get
-   // deprecated at some point, and get superseeded by the general importArg().
+   // deprecated at some point, and get superseded by the general importArg().
    // The reason for having these functions call each other in a loop by
    // default is backwards compatibility: no matter which function is
    // overridden, it will be called eventually.

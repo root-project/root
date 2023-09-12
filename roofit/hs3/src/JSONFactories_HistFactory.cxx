@@ -795,7 +795,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             const int i = bin.first;
             const double relerr_tot = bin.second;
             const double count = sample.hist[i - 1];
-            // this reconstruction is inherently unprecise, so we truncate it at some decimal places to make sure that
+            // this reconstruction is inherently imprecise, so we truncate it at some decimal places to make sure that
             // we don't carry around too many useless digits
             sample.histError[i - 1] = round_prec(relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count, 7);
          }

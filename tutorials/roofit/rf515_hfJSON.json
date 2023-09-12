@@ -1,7 +1,7 @@
 {
     "misc": {
         "ROOT_internal": {
-            "combined_datas": {
+            "combined_datasets": {
                 "observed" : {
                     "index_cat": "channelCat",
                     "indices": [0],
