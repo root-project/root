@@ -20,6 +20,7 @@
 #include "clang/Lex/ModuleMap.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/PagedVector.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallString.h"
@@ -202,7 +203,7 @@ class HeaderSearch {
 
   /// All of the preprocessor-specific data about files that are
   /// included, indexed by the FileEntry's UID.
-  mutable std::vector<HeaderFileInfo> FileInfo;
+  mutable llvm::PagedVector<HeaderFileInfo> FileInfo;
 
   /// Keeps track of each lookup performed by LookupFile.
   struct LookupFileCacheInfo {

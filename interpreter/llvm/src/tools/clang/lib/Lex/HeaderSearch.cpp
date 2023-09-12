@@ -1200,7 +1200,7 @@ static void mergeHeaderFileInfo(HeaderFileInfo &HFI,
 /// FileEntry.
 HeaderFileInfo &HeaderSearch::getFileInfo(const FileEntry *FE) {
   if (FE->getUID() >= FileInfo.size())
-    FileInfo.resize(FE->getUID() + 1);
+    FileInfo.expand(FE->getUID() + 1);
 
   HeaderFileInfo *HFI = &FileInfo[FE->getUID()];
   // FIXME: Use a generation count to check whether this is really up to date.
@@ -1230,7 +1230,7 @@ HeaderSearch::getExistingFileInfo(const FileEntry *FE,
     if (FE->getUID() >= FileInfo.size()) {
       if (!WantExternal)
         return nullptr;
-      FileInfo.resize(FE->getUID() + 1);
+      FileInfo.expand(FE->getUID() + 1);
     }
 
     HFI = &FileInfo[FE->getUID()];
@@ -1368,11 +1368,11 @@ bool HeaderSearch::ShouldEnterIncludeFile(Preprocessor &PP,
 }
 
 size_t HeaderSearch::getTotalMemory() const {
-  return SearchDirs.capacity()
-    + llvm::capacity_in_bytes(FileInfo)
-    + llvm::capacity_in_bytes(HeaderMaps)
-    + LookupFileCache.getAllocator().getTotalMemory()
-    + FrameworkMap.getAllocator().getTotalMemory();
+  return SearchDirs.capacity() +
+         llvm::capacity_in_bytes(FileInfo.materialised()) +
+         llvm::capacity_in_bytes(HeaderMaps) +
+         LookupFileCache.getAllocator().getTotalMemory() +
+         FrameworkMap.getAllocator().getTotalMemory();
 }
 
 StringRef HeaderSearch::getUniqueFrameworkName(StringRef Framework) {

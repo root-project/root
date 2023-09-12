@@ -3176,7 +3176,8 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
           std::make_pair(LocalBaseTypeIndex,
                          F.BaseTypeIndex - LocalBaseTypeIndex));
 
-        TypesLoaded.resize(TypesLoaded.size() + F.LocalNumTypes);
+        // A resize operation is really a new range filled with empty values.
+        TypesLoaded.expand(TypesLoaded.size() + F.LocalNumTypes);
       }
       break;
     }
@@ -3206,7 +3207,9 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
         // module.
         F.GlobalToLocalDeclIDs[&F] = LocalBaseDeclID;
 
-        DeclsLoaded.resize(DeclsLoaded.size() + F.LocalNumDecls);
+        // Split in pages, since we do not actually need all of them
+        // immediately.
+        DeclsLoaded.expand(DeclsLoaded.size() + F.LocalNumDecls);
       }
       break;
     }
@@ -7793,11 +7796,13 @@ void ASTReader::StartTranslationUnit(ASTConsumer *Consumer) {
 void ASTReader::PrintStats() {
   std::fprintf(stderr, "*** AST File Statistics:\n");
 
-  unsigned NumTypesLoaded
-    = TypesLoaded.size() - std::count(TypesLoaded.begin(), TypesLoaded.end(),
+  unsigned NumTypesLoaded =
+      TypesLoaded.size() - std::count(TypesLoaded.materialised().begin(),
+                                      TypesLoaded.materialised().end(),
                                       QualType());
-  unsigned NumDeclsLoaded
-    = DeclsLoaded.size() - std::count(DeclsLoaded.begin(), DeclsLoaded.end(),
+  unsigned NumDeclsLoaded =
+      DeclsLoaded.size() - std::count(DeclsLoaded.materialised().begin(),
+                                      DeclsLoaded.materialised().end(),
                                       (Decl *)nullptr);
   unsigned NumIdentifiersLoaded
     = IdentifiersLoaded.size() - std::count(IdentifiersLoaded.begin(),
@@ -7825,9 +7830,10 @@ void ASTReader::PrintStats() {
                  NumDeclsLoaded, (unsigned)DeclsLoaded.size(),
                  ((float)NumDeclsLoaded/DeclsLoaded.size() * 100));
   if (!IdentifiersLoaded.empty())
-    std::fprintf(stderr, "  %u/%u identifiers read (%f%%)\n",
-                 NumIdentifiersLoaded, (unsigned)IdentifiersLoaded.size(),
-                 ((float)NumIdentifiersLoaded/IdentifiersLoaded.size() * 100));
+    std::fprintf(
+        stderr, "  %u/%u identifiers read (%f%%)\n", NumIdentifiersLoaded,
+        (unsigned)IdentifiersLoaded.size(),
+        ((float)NumIdentifiersLoaded / IdentifiersLoaded.size() * 100));
   if (!MacrosLoaded.empty())
     std::fprintf(stderr, "  %u/%u macros read (%f%%)\n",
                  NumMacrosLoaded, (unsigned)MacrosLoaded.size(),
