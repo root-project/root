@@ -325,7 +325,7 @@ def cmake_build(buildtype):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
 
     result = subprocess_with_log(f"""
-        time cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
+        time cmake --build '{WORKDIR}/build' --config '{buildtype}' -j1 {generator_flags}
     """)
 
     if result != 0:
