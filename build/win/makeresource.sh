@@ -30,26 +30,25 @@ else
 fi
 
 # Use gitinfo.txt: more precise than the info in Rversion.h
-GITBRANCH=`cat etc/gitinfo.txt|head -n1`
-GITREV=`cat etc/gitinfo.txt|head -n2|tail -n1`
-GITDATE="`cat etc/gitinfo.txt|tail -n1`"
-GITYEARCOMMA=`echo $GITDATE|cut -d' ' -f3`
+GITBRANCH=`cat include/RGitCommit.h|head -n1`
+GITREV=`cat include/RGitCommit.h|head -n2|tail -n1`
 
 # Can't do that inside the .rc file: FILEVERSION doesn't evaluate a>>b
-VERSION=`grep "ROOT_RELEASE " include/RVersion.h | sed 's,^.*"\([^"]*\)".*$,\1,' | sed 's,[^[:digit:]], ,g'`
+VERSION=`grep "ROOT_RELEASE " include/ROOT/RVersion.hxx | sed 's,^.*"\([^"]*\)".*$,\1,' | sed 's,[^[:digit:]], ,g'`
 VER1=`echo $VERSION| cut -d ' ' -f 1| sed 's,^0,,'`
 VER2=`echo $VERSION| cut -d ' ' -f 2| sed 's,^0,,'`
 VER3=`echo $VERSION| cut -d ' ' -f 3| sed 's,^0,,'`
 
-# 0: tag, 1: trunk, 2: branch
-VERBRANCHFLAG=1
-if [ "x${GITBRANCH/tag/}" != "x${GITBRANCH}" ]; then
+# 0: tag, 1: master, 2: branch
+VERBRANCHFLAG=2
+if [ "x${GITBRANCH/tags/}" != "x${GITBRANCH}" ]; then
    VERBRANCHFLAG=0
-elif [ "x${GITBRANCH/branch/}" != "x${GITBRANCH}" ]; then
-   VERBRANCHFLAG=2
+elif [ "x${GITBRANCH/heads/master}" != "x${GITBRANCH}" ]; then
+   VERBRANCHFLAG=1
 fi
 
 DATE="`date +'%F %T'`"
+YEAR=`date +%Y`
 HOST=`hostname`
 
 cat > $RC <<EOF
@@ -66,7 +65,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 ${RCFILEICON}
 #endif
 
-#define ROOT_VERSION_STR ROOT_RELEASE " (${GITREV}@${GITBRANCH}, ${GITDATE})\0"
+#define ROOT_VERSION_STR ROOT_RELEASE " (${GITREV}@${GITBRANCH}, ${DATE})\0"
 
 #if (${VERBRANCHFLAG} != 0)
 # define ROOT_IS_PRERELEASE VS_FF_PRERELEASE
@@ -105,7 +104,7 @@ BEGIN
          VALUE "FileDescription", "ROOT ${RCFILETITLE} ${FILESTEM}\0"
          VALUE "FileVersion",      ROOT_VERSION_STR
          VALUE "InternalName",     "${FILESTEM}\0"
-         VALUE "LegalCopyright",  "Copyright (C) 1995-${GITYEARCOMMA} Rene Brun and Fons Rademakers.\0"
+         VALUE "LegalCopyright",  "Copyright (C) 1995-${YEAR}, Rene Brun and Fons Rademakers.\0"
          VALUE "OriginalFilename","${FILENAME}\0"
          VALUE "ProductName",     "ROOT\0"
          VALUE "ProductVersion",  ROOT_VERSION_STR
