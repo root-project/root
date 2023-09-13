@@ -547,22 +547,22 @@ class NotebookDrawer(object):
 
         divId = self._getUniqueDivId()
 
+        width = _jsCanvasWidth
         height = _jsCanvasHeight
-        width = _jsCanvasHeight
         options = "all"
 
         if self.isCanvas:
-            height = self.drawableObject.GetWw()
-            width = self.drawableObject.GetWh()
+            if self.drawableObject.GetWindowWidth() > 0: width = self.drawableObject.GetWindowWidth()
+            if self.drawableObject.GetWindowHeight() > 0: height = self.drawableObject.GetWindowHeight()
             options = ""
 
         if self.isRCanvas:
-            if (self.drawableObject.GetWidth() > 0): width = self.drawableObject.GetWidth()
-            if (self.drawableObject.GetHeight() > 0): height = self.drawableObject.GetHeight()
+            if self.drawableObject.GetWidth() > 0: width = self.drawableObject.GetWidth()
+            if self.drawableObject.GetHeight() > 0: height = self.drawableObject.GetHeight()
             options = ""
 
-        thisJsCode = _jsCode.format(jsCanvasWidth = height,
-                                    jsCanvasHeight = width,
+        thisJsCode = _jsCode.format(jsCanvasWidth = width,
+                                    jsCanvasHeight = height,
                                     jsonContent = json,
                                     jsDrawOptions = options,
                                     jsDivId = divId)
