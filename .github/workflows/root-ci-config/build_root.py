@@ -135,6 +135,7 @@ def handle_test_failure(ctest_returncode):
     logloc = f'{WORKDIR}/build/Testing/Temporary/LastTestsFailed.log'
     if os.path.isfile(logloc):
         with open(logloc, 'r') as logf:
+            print("TEST FAILURES:")
             print(logf.read())
     else:
         print(f'Internal error: cannot find {logloc}\nAdding some debug output:')
