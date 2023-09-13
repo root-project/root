@@ -128,14 +128,15 @@ def load_config(filename) -> dict:
     except OSError as err:
         print_warning(f"couldn't load {filename}: {err.strerror}")
         return {}
-
+    
+    print(file)
     with file:
         for line in file:
             if '=' not in line:
                 continue
-
+            print(line)
             key, val = line.rstrip().split('=')
-
+            print(key, val)
             if val.lower() in ["on", "off"]:
                 val = val.lower()
 
