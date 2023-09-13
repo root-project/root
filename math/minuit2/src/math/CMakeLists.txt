@@ -26,7 +26,10 @@ set(MATH_HEADERS
 
 set(MATH_SOURCES
     GenAlgoOptions.cxx
+    IOptions.cxx
+    Minimizer.cxx
     MinimizerOptions.cxx
+    ParameterSettings.cxx
     )
 
 copy_standalone(SOURCE ../../../mathcore/inc/Fit DESTINATION ../../inc/Fit

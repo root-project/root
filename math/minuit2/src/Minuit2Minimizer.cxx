@@ -44,6 +44,7 @@
 #include <functional>
 
 #ifdef USE_ROOT_ERROR
+#include "TError.h"
 #include "TROOT.h"
 #include "TMinuit2TraceObject.h"
 #endif

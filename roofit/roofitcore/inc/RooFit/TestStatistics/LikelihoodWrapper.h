@@ -17,7 +17,8 @@
 #include "RooAbsArg.h" // enum ConstOpCode
 
 #include <Fit/ParameterSettings.h>
-#include "Math/MinimizerOptions.h"
+#include <Math/MinimizerOptions.h>
+#include <Math/Util.h>
 
 #include <memory> // shared_ptr
 #include <string>
