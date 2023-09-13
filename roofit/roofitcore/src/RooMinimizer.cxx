@@ -323,7 +323,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    setMinimizerType(type);
-   _theFitter->Config().SetMinimizer(type, alg);
+   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), alg);
 
    profileStart();
    {
