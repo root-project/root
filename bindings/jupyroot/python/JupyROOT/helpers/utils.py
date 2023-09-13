@@ -71,7 +71,7 @@ if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
     requirejs.config({{
-       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.2.1/build/jsroot', 'https://jsroot.gsi.de/7.2.1/build/jsroot' ] }}
+       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.3.4/build/jsroot', 'https://jsroot.gsi.de/7.3.4/build/jsroot' ] }}
     }})(['JSRootCore'],  function(Core) {{
        display_{jsDivId}(Core);
     }});
@@ -94,7 +94,7 @@ if (typeof requirejs !== 'undefined') {{
     // Try loading a local version of requirejs and fallback to cdn if not possible.
     script_load_{jsDivId}(base_url + 'static/build/jsroot.js', function(){{
         console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
-        script_load_{jsDivId}('https://root.cern/js/7.2.1/build/jsroot.js', function(){{
+        script_load_{jsDivId}('https://root.cern/js/7.3.4/build/jsroot.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
@@ -529,21 +529,21 @@ class NotebookDrawer(object):
         divId = 'root_plot_' + str(self._getUID())
 
         height = _jsCanvasHeight
-        width = _jsCanvasHeight
+        width = _jsCanvasWidth
         options = "all"
 
         if self.isCanvas:
-            height = self.drawableObject.GetWw()
-            width = self.drawableObject.GetWh()
+            if self.drawableObject.GetWindowWidth() > 0: width = self.drawableObject.GetWindowWidth()
+            if self.drawableObject.GetWindowHeight() > 0: height = self.drawableObject.GetWindowHeight()
             options = ""
 
         if self.isRCanvas:
-            if (self.drawableObject.GetWidth() > 0): width = self.drawableObject.GetWidth()
-            if (self.drawableObject.GetHeight() > 0): height = self.drawableObject.GetHeight()
+            if self.drawableObject.GetWidth() > 0: width = self.drawableObject.GetWidth()
+            if self.drawableObject.GetHeight() > 0: height = self.drawableObject.GetHeight()
             options = ""
 
-        thisJsCode = _jsCode.format(jsCanvasWidth = height,
-                                    jsCanvasHeight = width,
+        thisJsCode = _jsCode.format(jsCanvasWidth = width,
+                                    jsCanvasHeight = height,
                                     jsonContent = json,
                                     jsDrawOptions = options,
                                     jsDivId = divId)
