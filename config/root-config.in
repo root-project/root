@@ -556,13 +556,7 @@ while test $# -gt 0; do
       out="$out @ROOT_VERSION@"
       ;;
     --git-revision)
-      ### Output the git revision number.  If RGitCommit.h can not be found, give up.
-      if test -r "${incdir}/RGitCommit.h"; then
-         out="$out `sed -n 's,.*ROOT_GIT_COMMIT *\"\(.*\)\".*,\1,p' < \"${incdir}/RGitCommit.h\"`"
-      else
-         echo "cannot read ${incdir}/RGitCommit.h"
-         exit 1
-      fi
+      out="$out @ROOT_GIT_COMMIT@"
       ;;
     --python-version)
       out="$out @pythonvers@"

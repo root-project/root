@@ -174,7 +174,6 @@ protected:
    void           InitSystem();             ///< Operating System interface
    void           InitThreads();            ///< Initialize threads library
    void           InitInterpreter();        ///< Initialize interpreter (cling)
-   void           ReadGitInfo();            ///< Read Git commit SHA1 and branch name
    void          *operator new(size_t l) { return TObject::operator new(l); }
    void          *operator new(size_t l, void *ptr) { return TObject::operator new(l,ptr); }
 

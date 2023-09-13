@@ -705,7 +705,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fBuiltDate       = IDATQQ(__DATE__);
    fBuiltTime       = ITIMQQ(__TIME__);
 
-   ReadGitInfo();
+   fGitCommit       = ROOT_GIT_COMMIT;
+   fGitBranch       = ROOT_GIT_BRANCH;
 
    fClasses         = new THashTable(800,3); fClasses->UseRWLock();
    //fIdMap           = new IdMap_t;
@@ -2382,39 +2383,6 @@ Longptr_t TROOT::ProcessLineFast(const char *line, Int_t *error)
    }
 
    return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read Git commit information and branch name from the
-/// etc/gitinfo.txt file.
-
-void TROOT::ReadGitInfo()
-{
-#ifdef ROOT_GIT_COMMIT
-   fGitCommit = ROOT_GIT_COMMIT;
-#endif
-#ifdef ROOT_GIT_BRANCH
-   fGitBranch = ROOT_GIT_BRANCH;
-#endif
-
-   TString gitinfo = "gitinfo.txt";
-   char *filename = gSystem->ConcatFileName(TROOT::GetEtcDir(), gitinfo);
-
-   FILE *fp = fopen(filename, "r");
-   if (fp) {
-      TString s;
-      // read branch name
-      s.Gets(fp);
-      fGitBranch = s;
-      // read commit SHA1
-      s.Gets(fp);
-      fGitCommit = s;
-      // read date/time make was run
-      s.Gets(fp);
-      fGitDate = s;
-      fclose(fp);
-   }
-   delete [] filename;
 }
 
 Bool_t &GetReadingObject() {

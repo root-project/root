@@ -7,17 +7,36 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
-
-file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-  "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${GIT_TIMESTAMP}\n")
-
-file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+if(GIT_DESCRIBE_ALL)
+  file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 "#ifndef ROOT_RGITCOMMIT_H
 #define ROOT_RGITCOMMIT_H
   #define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
   #define ROOT_GIT_COMMIT \"${GIT_DESCRIBE_ALWAYS}\"
 #endif"
-)
+  )
+else()
+  math(EXPR ROOT_MINOR_VERSION_ODD ${ROOT_MINOR_VERSION}%2)
+  if(${ROOT_MINOR_VERSION_ODD} EQUAL 1)
+    # Dev release
+    file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+  "#ifndef ROOT_RGITCOMMIT_H
+  #define ROOT_RGITCOMMIT_H
+    #define ROOT_GIT_BRANCH \"heads/master\"
+    #define ROOT_GIT_COMMIT \"v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}\"
+  #endif"
+    )
+  else()
+    # Production release / patch release
+    file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+    "#ifndef ROOT_RGITCOMMIT_H
+    #define ROOT_RGITCOMMIT_H
+      #define ROOT_GIT_BRANCH \"heads/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-patches\"
+      #define ROOT_GIT_COMMIT \"v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}\"
+    #endif"
+      )
+  endif()
+endif()
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
