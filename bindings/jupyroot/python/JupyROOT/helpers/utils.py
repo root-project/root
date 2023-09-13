@@ -51,9 +51,9 @@ _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 _jsCode = """
 
-<div id="{jsDivId}"
-     style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
+<div id="{jsDivId}" style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px; position: relative">
 </div>
+
 <script>
 
 function display_{jsDivId}(Core) {{
@@ -74,7 +74,7 @@ if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
     requirejs.config({{
-       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.2.1/build/jsroot', 'https://jsroot.gsi.de/7.2.1/build/jsroot' ] }}
+       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.4.3/build/jsroot', 'https://jsroot.gsi.de/7.4.3/build/jsroot' ] }}
     }})(['JSRootCore'],  function(Core) {{
        display_{jsDivId}(Core);
     }});
@@ -97,7 +97,7 @@ if (typeof requirejs !== 'undefined') {{
     // Try loading a local version of requirejs and fallback to cdn if not possible.
     script_load_{jsDivId}(base_url + 'static/build/jsroot.js', function(){{
         console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
-        script_load_{jsDivId}('https://root.cern/js/7.2.1/build/jsroot.js', function(){{
+        script_load_{jsDivId}('https://root.cern/js/7.4.3/build/jsroot.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
@@ -112,6 +112,11 @@ def TBufferJSONAvailable():
    if hasattr(ROOT,"TBufferJSON"):
        return True
    print(TBufferJSONErrorMessage, file=sys.stderr)
+   return False
+
+def TWebCanvasAvailable():
+   if hasattr(ROOT,"TWebCanvas"):
+       return True
    return False
 
 def RCanvasAvailable():
@@ -292,7 +297,15 @@ def invokeAclic(cell):
         processCppCode(".L %s+" %fileName)
 
 def produceCanvasJson(canvas):
+
+   if canvas.IsUpdated() and not canvas.IsDrawn():
+       canvas.Draw()
+
+   if TWebCanvasAvailable():
+       return ROOT.TWebCanvas.CreateCanvasJSON(canvas, 3)
+
    # Add extra primitives to canvas with custom colors, palette, gStyle
+
    prim = canvas.GetListOfPrimitives()
 
    style = ROOT.gStyle
@@ -513,6 +526,8 @@ class NotebookDrawer(object):
            return False
         if self.isRCanvas: return True
         if not self.isCanvas: return True
+        if TWebCanvasAvailable(): return True
+
         # to be optimised
         if not _enableJSVis: return False
         primitivesTypesNames = self._getListOfPrimitivesNamesAndTypes()
