@@ -414,7 +414,7 @@ def GetCanvasDrawers():
 def GetRCanvasDrawers():
     if not RCanvasAvailable(): return []
     lOfC = ROOT.Experimental.RCanvas.GetCanvases()
-    return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown()]
+    return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown() or can.IsUpdated()]
 
 def GetGeometryDrawer():
     if not hasattr(ROOT,'gGeoManager'): return
@@ -481,6 +481,7 @@ class NotebookDrawer(object):
     def __del__(self):
         if self.isRCanvas:
             self.drawableObject.ClearShown()
+            self.drawableObject.ClearUpdated()
         elif self.isCanvas:
             self.drawableObject.ResetDrawn()
             self.drawableObject.ResetUpdated()
@@ -496,7 +497,7 @@ class NotebookDrawer(object):
        primitivesNames = map(lambda p: p.ClassName(), primitives)
        return sorted(primitivesNames)
 
-    def _getUID(self):
+    def _getUniqueDivId(self):
         '''
         Every DIV containing a JavaScript snippet must be unique in the
         notebook. This method provides a unique identifier.
@@ -505,7 +506,7 @@ class NotebookDrawer(object):
         identifier with the UID throughout all open Notebooks the UID is
         generated as a timestamp.
         '''
-        return int(round(time.time() * 1000))
+        return  'root_plot_' + str(int(round(time.time() * 1000)))
 
     def _canJsDisplay(self):
         if not TBufferJSONAvailable():
@@ -529,8 +530,7 @@ class NotebookDrawer(object):
         else:
             json = produceCanvasJson(self.drawableObject).Data()
 
-        # Here we could optimise the string manipulation
-        divId = 'root_plot_' + str(self._getUID())
+        divId = self._getUniqueDivId()
 
         height = _jsCanvasHeight
         width = _jsCanvasHeight
@@ -556,20 +556,24 @@ class NotebookDrawer(object):
     def _getJsDiv(self):
         return display.HTML(self._getJsCode())
 
-    def _getName(self):
+    def _getDrawId(self):
         if self.isCanvas:
             return self.drawableObject.GetName()
+        if self.isRCanvas:
+            return self.drawableObject.GetUID()
         # all other objects do not support update and can be ignored
         return ''
 
     def _getUpdated(self):
         if self.isCanvas:
             return self.drawableObject.IsUpdated()
+        if self.isRCanvas:
+            return self.drawableObject.IsUpdated()
         return False
 
     def _jsDisplay(self):
         global _canvasHandles
-        name = self._getName()
+        name = self._getDrawId()
         updated = self._getUpdated()
         jsdiv = self._getJsDiv()
         if name and (name in _canvasHandles) and updated:
@@ -591,7 +595,7 @@ class NotebookDrawer(object):
 
     def _pngDisplay(self):
         global _canvasHandles
-        name = self._getName()
+        name = self._getDrawId()
         updated = self._getUpdated()
         img = self._getPngImage()
         if updated and name and (name in _canvasHandles):
