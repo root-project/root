@@ -37,6 +37,9 @@ ROOT.gROOT.SetBatch()
 
 cppMIME = 'text/x-c++src'
 
+# Keep display handle for canvases to be able update them
+_canvasHandles = {}
+
 _jsMagicHighlight = """
 Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
 console.log("JupyROOT - %%cpp magic configured");
@@ -406,7 +409,7 @@ class StreamCapture(object):
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
-    return [NotebookDrawer(can) for can in lOfC if can.IsDrawn()]
+    return [NotebookDrawer(can) for can in lOfC if can.IsDrawn() or can.IsUpdated()]
 
 def GetRCanvasDrawers():
     if not RCanvasAvailable(): return []
@@ -480,6 +483,7 @@ class NotebookDrawer(object):
             self.drawableObject.ClearShown()
         elif self.isCanvas:
             self.drawableObject.ResetDrawn()
+            self.drawableObject.ResetUpdated()
         else:
             ROOT.gGeoManager.SetUserPaintVolume(None)
 
@@ -552,8 +556,28 @@ class NotebookDrawer(object):
     def _getJsDiv(self):
         return display.HTML(self._getJsCode())
 
+    def _getName(self):
+        if self.isCanvas:
+            return self.drawableObject.GetName()
+        # all other objects do not support update and can be ignored
+        return ''
+
+    def _getUpdated(self):
+        if self.isCanvas:
+            return self.drawableObject.IsUpdated()
+        return False
+
     def _jsDisplay(self):
-        display.display(self._getJsDiv())
+        global _canvasHandles
+        name = self._getName()
+        updated = self._getUpdated()
+        jsdiv = self._getJsDiv()
+        if name and (name in _canvasHandles) and updated:
+            _canvasHandles[name].update(jsdiv)
+        elif name:
+            _canvasHandles[name] = display.display(jsdiv, display_id=True)
+        else:
+            display.display(jsdiv)
         return 0
 
     def _getPngImage(self):
@@ -566,8 +590,16 @@ class NotebookDrawer(object):
         return img
 
     def _pngDisplay(self):
+        global _canvasHandles
+        name = self._getName()
+        updated = self._getUpdated()
         img = self._getPngImage()
-        display.display(img)
+        if updated and name and (name in _canvasHandles):
+            _canvasHandles[name].update(img)
+        elif name:
+            _canvasHandles[name] = display.display(img, display_id=True)
+        else:
+            display.display(img)
 
     def _display(self):
        if _enableJSVisDebug:
