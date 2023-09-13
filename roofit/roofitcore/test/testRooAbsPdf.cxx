@@ -311,20 +311,18 @@ TEST_P(FitTest, ProblemsWith2DSimultaneousFit)
    // Complete model
    ws.factory("AddPdf::model({sig, sig_y, uniform2, uniform1}, {yield[100], yield, yield, yield})");
 
-   RooAbsPdf &model = *ws.pdf("model");
-
    // Define category to distinguish d0 and d0bar samples events
    RooCategory sample("sample", "sample", {{"cat0", 0}, {"cat1", 1}});
 
-   // Construct a dummy dataset
-   RooDataSet data("data", "data", RooArgSet(sample, *ws.var("x"), *ws.var("y")));
-
    // Construct a simultaneous pdf using category sample as index
    RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
-   simPdf.addPdf(model, "cat0");
-   simPdf.addPdf(model, "cat1");
+   simPdf.addPdf(*ws.pdf("model"), "cat0");
+   simPdf.addPdf(*ws.pdf("model"), "cat1");
 
-   simPdf.fitTo(data, PrintLevel(-1), BatchMode(_batchMode));
+   // Construct a dummy dataset
+   std::unique_ptr<RooDataSet> data{simPdf.generate({sample, *ws.var("x"), *ws.var("y")})};
+
+   simPdf.fitTo(*data, PrintLevel(-1), BatchMode(_batchMode));
 }
 
 // Verifies that a server pdf gets correctly reevaluated when the normalization
