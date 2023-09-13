@@ -69,6 +69,9 @@ private:
    /// indicate if Show() method was called before
    bool fShown{false}; ///<!
 
+   /// indicate if Update() method was called before
+   bool fUpdated{false}; ///<!
+
    /// Disable copy construction for now.
    RCanvas(const RCanvas &) = delete;
 
@@ -113,7 +116,10 @@ public:
    /// Display the canvas.
    void Show(const std::string &where = "");
 
+   /// returns true if Show() method was called
    bool IsShown() const { return fShown; }
+
+   /// clear IsShown() flag
    void ClearShown() { fShown = false; }
 
    /// Returns window name used to display canvas
@@ -153,6 +159,12 @@ public:
    /// update drawing
    void Update(bool async = false, CanvasCallback_t callback = nullptr);
 
+   /// returns true if Update() method was called
+   bool IsUpdated() const { return fUpdated; }
+
+   /// clear IsUpdated() flag
+   void ClearUpdated() { fUpdated = false; }
+
    /// Run canvas functionality for given time (in seconds)
    void Run(double tm = 0.);
 
@@ -161,6 +173,8 @@ public:
 
    /// Provide JSON which can be used for offline display
    std::string CreateJSON();
+
+   std::string GetUID() const;
 
    /// Get the canvas's title.
    const std::string &GetTitle() const { return fTitle; }
