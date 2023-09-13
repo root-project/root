@@ -155,10 +155,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/GaussLegendreIntegrator.cxx
     src/GenAlgoOptions.cxx
     src/GoFTest.cxx
+    src/IOptions.cxx
     src/Integrator.cxx
     src/IntegratorOptions.cxx
     src/MersenneTwisterEngine.cxx
     src/MinimTransformFunction.cxx
+    src/Minimizer.cxx
     src/MinimizerOptions.cxx
     src/MinimizerVariableTransformation.cxx
     src/MixMaxEngineImpl17.cxx
