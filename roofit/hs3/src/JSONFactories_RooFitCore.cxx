@@ -237,11 +237,12 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
+      RooAbsReal *mu = tool->requestArg<RooAbsReal>(p, "mu");
+      RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
 
-      RooAbsReal *m0 = tool->importTransformed(p["mu"].val(), "lognormal", "exp", "exp(%s)");
-      RooAbsReal *k = tool->importTransformed(p["sigma"].val(), "lognormal", "exp", "exp(%s)");
-
-      tool->wsEmplace<RooLognormal>(name, *x, *m0, *k);
+      // TODO: check if the pdf was originally exported by ROOT, in which case
+      // it can be imported back without using the standard parametrization.
+      tool->wsEmplace<RooLognormal>(name, *x, *mu, *sigma, true);
       return true;
    }
 };
@@ -254,6 +255,8 @@ public:
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
       RooAbsReal *c = tool->requestArg<RooAbsReal>(p, "c");
 
+      // TODO: check if the pdf was originally exported by ROOT, in which case
+      // it can be imported back without using the standard parametrization.
       tool->wsEmplace<RooExponential>(name, *x, *c, true);
       return true;
    }
@@ -559,8 +562,13 @@ public:
       auto &m0 = pdf->getMedian();
       auto &k = pdf->getShapeK();
 
-      elem["mu"] << tool->exportTransformed(&m0, "lognormal", "log", "log(%s)");
-      elem["sigma"] << tool->exportTransformed(&k, "lognormal", "log", "log(%s)");
+      if(pdf->useStandardParametrization()) {
+         elem["mu"] << m0.GetName();
+         elem["sigma"] << k.GetName();
+      } else {
+         elem["mu"] << tool->exportTransformed(&m0, "lognormal", "log", "log(%s)");
+         elem["sigma"] << tool->exportTransformed(&k, "lognormal", "log", "log(%s)");
+      }
 
       return true;
    }

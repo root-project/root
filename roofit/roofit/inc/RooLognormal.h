@@ -17,7 +17,8 @@
 class RooLognormal : public RooAbsPdf {
 public:
    RooLognormal() {}
-   RooLognormal(const char *name, const char *title, RooAbsReal &_x, RooAbsReal &_m0, RooAbsReal &_k);
+   RooLognormal(const char *name, const char *title, RooAbsReal &_x, RooAbsReal &_m0, RooAbsReal &_k,
+                bool useStandardParametrization = false);
    RooLognormal(const RooLognormal &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooLognormal(*this, newname); }
 
@@ -40,17 +41,20 @@ public:
    /// Get the shape parameter.
    RooAbsReal const &getShapeK() const { return k.arg(); }
 
+   bool useStandardParametrization() const { return _useStandardParametrization; }
+
 protected:
    RooRealProxy x;  ///< the variable
    RooRealProxy m0; ///< the median, exp(mu)
    RooRealProxy k;  ///< the shape parameter, exp(sigma)
+   bool _useStandardParametrization = false;
 
    double evaluate() const override;
    void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
    inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
-   ClassDefOverride(RooLognormal, 1) // log-normal PDF
+   ClassDefOverride(RooLognormal, 2) // log-normal PDF
 };
 
 #endif

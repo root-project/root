@@ -537,6 +537,18 @@ FactoryTestParams param8{"Lognormal",
                          1e-4,
                          /*randomizeParameters=*/true};
 
+FactoryTestParams param8p1{"LognormalStandard",
+                           [](RooWorkspace &ws) {
+                              ws.factory(
+                                 "Lognormal::model(x[1.0, 1.1, 10], mu[0.7, 0.1, 2.3], k[0.7, 0.1, 1.6], true)");
+                              ws.defineSet("observables", "x");
+                           },
+                           [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
+                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
+                           },
+                           1e-4,
+                           /*randomizeParameters=*/true};
+
 FactoryTestParams param9{"Poisson",
                          [](RooWorkspace &ws) {
                             ws.factory("Poisson::model(x[5, 0, 10], mu[5, 0, 10])");
@@ -563,7 +575,7 @@ FactoryTestParams param10{"PoissonNoRounding",
                           /*randomizeParameters=*/true};
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
-                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param9,
+                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param8p1, param9,
                                          param10),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;

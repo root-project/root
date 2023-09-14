@@ -8,11 +8,13 @@
 #include <RooAddPdf.h>
 #include <RooCategory.h>
 #include <RooConstVar.h>
+#include <RooExponential.h>
 #include <RooGaussian.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
 #include <RooProdPdf.h>
@@ -28,7 +30,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = false;
+const bool writeJsonFiles = true;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -172,9 +174,13 @@ TEST(RooFitHS3, RooConstVar)
 
 TEST(RooFitHS3, RooExponential)
 {
-   int status = validate({"Exponential::exponential(x[0, 10], c[-0.1], false)"});
+   int status = validate({"Exponential::exponential_1(x[0, 10], c[-0.1])"});
    EXPECT_EQ(status, 0);
-   status = validate({"Exponential::exponential(x[0, 10], c[-0.1], true)"});
+   RooWorkspace ws;
+   ws.factory("x[0, 10]");
+   ws.factory("c[-0.1]");
+   RooExponential exponential2{"exponential_2", "exponential_2", *ws.var("x"), *ws.var("c"), true};
+   status = validate(exponential2);
    EXPECT_EQ(status, 0);
 }
 
@@ -252,7 +258,14 @@ TEST(RooFitHS3, RooLandau)
 
 TEST(RooFitHS3, RooLognormal)
 {
-   int status = validate({"Lognormal::lognormal(x[0.1, 2.0], m0[0.0, 0.1, 10], k[3.0, 1.1, 10])"}, true);
+   RooWorkspace ws;
+   int status = validate({"Lognormal::lognormal_1(x[1.0, 1.1, 10], mu_2[2.0, 1.1, 10], k_1[2.0, 1.1, 5.0])"});
+   EXPECT_EQ(status, 0);
+   ws.factory("x[1.0, 1.1, 10]");
+   ws.factory("mu_2[0.7, 0.1, 2.3]");
+   ws.factory("k_2[0.7, 0.1, 1.6]");
+   RooLognormal lognormal2{"lognormal_2", "lognormal_2", *ws.var("x"), *ws.var("mu_2"), *ws.var("k_2"), true};
+   status = validate(lognormal2);
    EXPECT_EQ(status, 0);
 }
 
