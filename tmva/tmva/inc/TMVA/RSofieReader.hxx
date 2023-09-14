@@ -305,6 +305,17 @@ public:
       return DoCompute(x...);
 
    }
+   std::vector<float> Compute(const std::vector<float> &x) {
+      if(!fInitialized) {
+         return std::vector<float>();
+      }
+
+      // Take lock to protect model evaluation
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+      // Evaluate TMVA model (need to add support for multiple outputs)
+      return DoCompute(x);
+   }
    /// Compute model prediction on input RTensor
    /// The shape of the input tensor should be {nevents, nfeatures}
    /// and the return shape will be {nevents, noutputs}
