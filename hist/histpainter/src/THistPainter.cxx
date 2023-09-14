@@ -6957,6 +6957,7 @@ void THistPainter::PaintHist(Option_t *)
    graph.SetFillStyle(htype);
    graph.SetFillColor(fH->GetFillColor());
    graph.SetMarkerStyle(fH->GetMarkerStyle());
+   if (Hoption.Mark && fH->GetMarkerStyle() == 1 ) graph.SetMarkerStyle(8); // Make sure a visible marker is used.
    graph.SetMarkerSize(fH->GetMarkerSize());
    graph.SetMarkerColor(fH->GetMarkerColor());
    if (!Hoption.Same) graph.ResetBit(TGraph::kClipFrame);
