@@ -170,10 +170,12 @@ public:
       ~RValue() { DestroyIfOwning(); }
 
       RValue GetNonOwningCopy() { return RValue(fField, fObjPtr, false); }
+
+      template <typename T>
       void *Release()
       {
          fIsOwning = false;
-         return fObjPtr;
+         return static_cast<T *>(fObjPtr);
       }
 
       std::size_t Append() { return fField->Append(fObjPtr); }
