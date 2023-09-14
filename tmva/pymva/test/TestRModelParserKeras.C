@@ -7,6 +7,7 @@
 
 #include "TSystem.h"
 #include "TMVA/RSofieReader.hxx"
+#include "TMVA/PyMethodBase.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-6f;
 
@@ -496,22 +497,12 @@ TEST(RModel, CUSTOM_OP)
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     std::vector<float>input_custom ={1,1,1,1,1,1,1,1};
 
-     Py_Initialize();
+    Py_Initialize();
     if (gSystem->AccessPathName("KerasModelCustomOp.h5",kFileExists))
        GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r;
-    r.AddCustomOperator(/*OpName*/ "Scale_by_2",
-                        /*input tensor names where to insert custom op */"{\"denseRelu0\"}",
-                        /*output tensor names*/"{\"Scale2Output\"}",
-                        /*output shapes*/"{{1,4}}",
-                       /*header file name with the compute function*/ "scale_by_2_op.hxx");
-    // need to load model afterwards
-    r.Load("KerasModelCustomOp.h5",{}, false);
-    std::vector<float> outputCustomOp =  r.Compute(input_custom);
 
 
-    Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
@@ -533,6 +524,20 @@ TEST(RModel, CUSTOM_OP)
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
     std::size_t pOutputCustomOpSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+
+    // get input name for custom (it is output of one before last)
+    PyRun_String("outputName = model.get_layer(index=len(model.layers)-2).output.name",Py_single_input,fGlobalNS,fLocalNS);
+    PyObject *pOutputName = PyDict_GetItemString(fLocalNS, "outputName");
+    std::string outputName = TMVA::PyMethodBase::PyStringAsString(pOutputName);
+     TMVA::Experimental:: RSofieReader r;
+    r.AddCustomOperator(/*OpName*/ "Scale_by_2",
+                        /*input tensor names where to insert custom op */std::string("{\"" + outputName + "\"}"),
+                        /*output tensor names*/"{\"Scale2Output\"}",
+                        /*output shapes*/"{{1,4}}",
+                       /*header file name with the compute function*/ "scale_by_2_op.hxx");
+    // need to load model afterwards
+    r.Load("KerasModelCustomOp.h5",{}, false);
+    std::vector<float> outputCustomOp =  r.Compute(input_custom);
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputCustomOp.size(), pOutputCustomOpSize);
