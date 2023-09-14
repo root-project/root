@@ -86,6 +86,7 @@ enum Computer {
    DstD0BG,
    ExpPoly,
    Exponential,
+   ExponentialNeg,
    Gamma,
    GaussModelExpBasis,
    Gaussian,

@@ -328,9 +328,20 @@ __rooglobal__ void computeExpPoly(BatchesHandle batches)
 
 __rooglobal__ void computeExponential(BatchesHandle batches)
 {
-   Batch x = batches[0], c = batches[1];
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   Batch x = batches[0];
+   Batch c = batches[1];
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       batches._output[i] = fast_exp(x[i] * c[i]);
+   }
+}
+
+__rooglobal__ void computeExponentialNeg(BatchesHandle batches)
+{
+   Batch x = batches[0];
+   Batch c = batches[1];
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = fast_exp(-x[i] * c[i]);
+   }
 }
 
 __rooglobal__ void computeGamma(BatchesHandle batches)
@@ -830,6 +841,7 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeDstD0BG,
            computeExpPoly,
            computeExponential,
+           computeExponentialNeg,
            computeGamma,
            computeGaussModelExpBasis,
            computeGaussian,
