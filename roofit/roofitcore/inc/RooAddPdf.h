@@ -33,7 +33,7 @@ class AddCacheElem;
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE }
+  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE; }
   RooAddPdf(const char *name, const char *title=nullptr);
   RooAddPdf(const char *name, const char *title,
             RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
@@ -42,7 +42,7 @@ public:
 
   RooAddPdf(const RooAddPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooAddPdf(*this,newname) ; }
-  ~RooAddPdf() override { TRACE_DESTROY }
+  ~RooAddPdf() override { TRACE_DESTROY; }
 
   bool checkObservables(const RooArgSet* nset) const override;
 
@@ -79,7 +79,7 @@ public:
   void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
   void fixCoefRange(const char* rangeName) ;
 
-  const RooArgSet& getCoefNormalization() const { return _refCoefNorm ; }
+  const RooArgSet& getCoefNormalization() const;
   const char* getCoefRange() const { return _refCoefRangeName?RooNameReg::str(_refCoefRangeName):"" ; }
 
   void resetErrorCounters(Int_t resetValue=10) override;
@@ -146,6 +146,7 @@ private:
   mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; ///<!
 
   void finalizeConstruction();
+  void materializeRefCoefNormFromAttribute() const;
 
   ClassDefOverride(RooAddPdf,5) // PDF representing a sum of PDFs
 };
