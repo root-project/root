@@ -94,6 +94,7 @@ enum Computer {
    Johnson,
    Landau,
    Lognormal,
+   LognormalStandard,
    NegativeLogarithms,
    NormalizedPdf,
    Novosibirsk,
@@ -150,9 +151,9 @@ public:
    }
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
-   virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weightSpan,
-                                     std::span<const double> weights, double weightSum,
-                                     std::span<const double> binVolumes) = 0;
+   virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas,
+                                     std::span<const double> weightSpan, std::span<const double> weights,
+                                     double weightSum, std::span<const double> binVolumes) = 0;
 
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
