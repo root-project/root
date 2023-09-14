@@ -134,7 +134,7 @@ std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const 
 
 bool checkIfRangesOverlap(RooArgSet const& observables, std::vector<std::string> const& rangeNames);
 
-std::string getColonSeparatedNameString(RooArgSet const& argSet);
+std::string getColonSeparatedNameString(RooArgSet const& argSet, char delim=':');
 RooArgSet selectFromArgSet(RooArgSet const&, std::string const& names);
 
 namespace Detail {
