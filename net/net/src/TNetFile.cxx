@@ -16,7 +16,7 @@
 
 A TNetFile is like a normal TFile except that it reads and writes
 its data via a rootd server (for more on the rootd daemon see the
-source files `root/rootd/src/*.cxx`). TNetFile file names are in
+source files in `root/rootd/src/`). TNetFile file names are in
 standard URL format with protocol "root" or "roots". The following
 are valid TNetFile URL's:
 - `root://hpbrun.cern.ch/root/hsimple.root`
