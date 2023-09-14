@@ -236,11 +236,22 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
 
 inline double logNormalIntegral(double xMin, double xMax, double m0, double k)
 {
-   double root2 = std::sqrt(2.);
+   const double root2 = std::sqrt(2.);
 
-   double ln_k = TMath::Abs(TMath::Log(k));
+   double ln_k = TMath::Abs(std::log(k));
    double ret =
-      0.5 * (TMath::Erf(TMath::Log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(TMath::Log(xMin / m0) / (root2 * ln_k)));
+      0.5 * (TMath::Erf(std::log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(std::log(xMin / m0) / (root2 * ln_k)));
+
+   return ret;
+}
+
+inline double logNormalIntegralStandard(double xMin, double xMax, double mu, double sigma)
+{
+   const double root2 = std::sqrt(2.);
+
+   double ln_k = std::abs(sigma);
+   double ret =
+      0.5 * (TMath::Erf((std::log(xMax) - mu) / (root2 * ln_k)) - TMath::Erf((std::log(xMin) - mu) / (root2 * ln_k)));
 
    return ret;
 }
