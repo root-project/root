@@ -230,9 +230,9 @@ bool checkIfRangesOverlap(RooArgSet const& observables, std::vector<std::string>
 }
 
 
-/// Create a string with all sorted names of RooArgSet elements separated by colons.
+/// Create a string with all sorted names of RooArgSet elements separated by delimiters.
 /// \param[in] argSet The input RooArgSet.
-std::string getColonSeparatedNameString(RooArgSet const& argSet) {
+std::string getColonSeparatedNameString(RooArgSet const& argSet, char delim) {
 
   RooArgList tmp(argSet);
   tmp.sort();
@@ -240,7 +240,7 @@ std::string getColonSeparatedNameString(RooArgSet const& argSet) {
   std::string content;
   for(auto const& arg : tmp) {
     content += arg->GetName();
-    content += ":";
+    content += delim;
   }
   if(!content.empty()) {
     content.pop_back();

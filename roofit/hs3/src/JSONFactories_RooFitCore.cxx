@@ -118,11 +118,8 @@ public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      auto &pdf = tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
-                                             tool->requestArgList<RooAbsReal>(p, "coefficients"));
-      if (p.has_child("reference_observables")) {
-         pdf.fixCoefNormalization(tool->requestArgSet<RooAbsReal>(p, "reference_observables"));
-      }
+      tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
+                                 tool->requestArgList<RooAbsReal>(p, "coefficients"));
       return true;
    }
 };
@@ -353,9 +350,6 @@ public:
       elem["type"] << key();
       RooJSONFactoryWSTool::fillSeq(elem["summands"], pdf->pdfList());
       RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
-      if (!pdf->getCoefNormalization().empty()) {
-         RooJSONFactoryWSTool::fillSeq(elem["reference_observables"], pdf->getCoefNormalization());
-      }
       elem["extended"] << (pdf->extendMode() != RooAbsPdf::CanNotBeExtended);
       return true;
    }
