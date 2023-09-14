@@ -172,7 +172,9 @@ TEST(RooFitHS3, RooConstVar)
 
 TEST(RooFitHS3, RooExponential)
 {
-   int status = validate({"Exponential::exponential(x[0, 10], c[-0.1])"});
+   int status = validate({"Exponential::exponential(x[0, 10], c[-0.1], false)"});
+   EXPECT_EQ(status, 0);
+   status = validate({"Exponential::exponential(x[0, 10], c[-0.1], true)"});
    EXPECT_EQ(status, 0);
 }
 

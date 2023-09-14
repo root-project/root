@@ -252,9 +252,9 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-      RooAbsReal *c = tool->importTransformed(p["c"].val(), "exponential", "inverted", "-%s");
+      RooAbsReal *c = tool->requestArg<RooAbsReal>(p, "c");
 
-      tool->wsEmplace<RooExponential>(name, *x, *c);
+      tool->wsEmplace<RooExponential>(name, *x, *c, true);
       return true;
    }
 };
@@ -575,7 +575,11 @@ public:
       elem["type"] << key();
       elem["x"] << pdf->variable().GetName();
       auto &c = pdf->coefficient();
-      elem["c"] << tool->exportTransformed(&c, "exponential", "inverted", "-%s");
+      if (pdf->negateCoefficient()) {
+         elem["c"] << c.GetName();
+      } else {
+         elem["c"] << tool->exportTransformed(&c, "exponential", "inverted", "-%s");
+      }
 
       return true;
    }
