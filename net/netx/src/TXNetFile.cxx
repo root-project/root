@@ -1,5 +1,5 @@
 // @(#)root/netx:$Id$
-// Author: Alvise Dorigo, Fabrizio Furano
+// Author: Alvise Dorigo, Fabrizio Furano INFN Padova, 2003
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -9,38 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXNetFile                                                            //
-//                                                                      //
-// Authors: Alvise Dorigo, Fabrizio Furano                              //
-//          INFN Padova, 2003                                           //
-// Interfaced to the standalone client (XrdClient): G. Ganis, CERN      //
-//                                                                      //
-// TXNetFile is an extension of TNetFile able to deal with new xrootd   //
-// server. Its new features are:                                        //
-//  - Automatic server kind recognition (xrootd load balancer, xrootd   //
-//    data server, old rootd)                                           //
-//  - Backward compatibility with old rootd server (acts as an old      //
-//    TNetFile)                                                         //
-//  - Fault tolerance for read/write operations (read/write timeouts    //
-//    and retry)                                                        //
-//  - Internal connection timeout (tunable indipendently from the OS    //
-//    one) handled by threads                                           //
-//  - handling of redirections from server                              //
-//  - Single TCP physical channel for multiple TXNetFile's instances    //
-//    inside the same application                                       //
-//    So, each TXNetFile object client must send messages containing    //
-//    its ID (streamid). The server, of course, will respond with       //
-//    messages containing the client's ID, in order to make the client  //
-//    able to recognize its message by matching its streamid with that  //
-//    one contained in the server's response.                           //
-//  - Tunable log verbosity level (0 = nothing, 3 = dump read/write     //
-//    buffers too!)                                                     //
-//  - Many parameters configurable via TEnv facility (see SetParm()     //
-//    methods)                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TXNetFile.cxx
+\class TXNetFile
+\ingroup IO
+
+TXNetFile is an extension of TNetFile able to deal with new xrootd server. Its
+new features are:
+- Automatic server kind recognition (xrootd load balancer, xrootd data server,
+  old rootd.
+- Backward compatibility with old rootd server (acts as an old TNetFile)
+- Fault tolerance for read/write operations (read/write timeouts and retry)
+- Internal connection timeout (tunable independently from the OS one) handled
+by threads.
+- Handling of redirections from server.
+- Single TCP physical channel for multiple TXNetFile's instances inside the
+  same application. So, each TXNetFile object client must send messages
+  containing its ID (streamid). The server, of course, will respond with
+  messages containing the client's ID, in order to make the client able to
+  recognize its message by matching its streamid with that one contained in
+  the server's response.
+- Tunable log verbosity level (0 = nothing, 3 = dump read/write buffers too!)
+- Many parameters configurable via TEnv facility (see SetParm() methods)
+
+Interfaced to the standalone client (XrdClient): G. Ganis, CERN
+**/
 
 #include "Bytes.h"
 
@@ -77,9 +70,7 @@ TFileStager *TXNetFile::fgFileStager = 0;
 /// server.
 ///
 /// The "url" argument must be of the form
-///
-///   root://server1:port1[,server2:port2,...,serverN:portN]/pathfile,
-///
+/// `root://server1:port1[,server2:port2,...,serverN:portN]/pathfile,`
 /// Note that this means that multiple servers (>= 1) can be specified in
 /// the url. The connection will try to connect to the first server:port
 /// and if that does not succeed, it will try the second one, and so on
@@ -95,20 +86,20 @@ TFileStager *TXNetFile::fgFileStager = 0;
 /// recognizing the remote server (if an old rootd the TNetFile's Create
 /// method will be called).
 ///
-/// The options field of the URL can be used for the following purposes:
-///   a. open a non-ROOT generic file
-///      "root://server1:port1[,server2:port2,...]/pathfile?filetype=raw"
-///   b. re-check the environment variables
-///      "root://server1:port1[,server2:port2,...]/pathfile?checkenv"
-///   c. set the cache size (in bytes)
-///      "root://server1:port1[,server2:port2,...]/pathfile?cachesz=20000000"
-///   d. set the read-ahead size (in bytes)
-///      "root://server1:port1[,server2:port2,...]/pathfile?readaheadsz=100000"
-///   e. set the cache remove policy
-///      "root://server1:port1[,server2:port2,...]/pathfile?rmpolicy=1"
-///   f. set the max number of redirections
-///      "root://server1:port1[,server2:port2,...]/pathfile?mxredir=2"
-/// (multiple options can be set concurrently)
+/// The options field of the URL can be used for the following purposes
+/// (multiple options can be set):
+/// 1. open a non-ROOT generic file
+///    `root://server1:port1[,server2:port2,...]/pathfile?filetype=raw`
+/// 2. re-check the environment variables
+///    `root://server1:port1[,server2:port2,...]/pathfile?checkenv`
+/// 3. set the cache size (in bytes)
+///    `root://server1:port1[,server2:port2,...]/pathfile?cachesz=20000000`
+/// 4. set the read-ahead size (in bytes)
+///    `root://server1:port1[,server2:port2,...]/pathfile?readaheadsz=100000`
+/// 5. set the cache remove policy
+///    `root://server1:port1[,server2:port2,...]/pathfile?rmpolicy=1`
+/// 6. set the max number of redirections
+///    `root://server1:port1[,server2:port2,...]/pathfile?mxredir=2`
 
 TXNetFile::TXNetFile(const char *url, Option_t *option, const char* ftitle,
                      Int_t compress, Int_t netopt, Bool_t parallelopen,
