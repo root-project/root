@@ -74,12 +74,13 @@ void RooExponential::computeBatch(double *output, size_t nEvents, RooFit::Detail
    RooBatchCompute::compute(dataMap.config(this), computer, output, nEvents, {dataMap.at(x), dataMap.at(c)});
 }
 
-
-Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+Int_t RooExponential::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-  if (matchArgs(allVars,analVars,x)) return 1;
-  if (matchArgs(allVars,analVars,c)) return 2;
-  return 0 ;
+   if (matchArgs(allVars, analVars, x))
+      return 1;
+   if (matchArgs(allVars, analVars, c))
+      return 2;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +117,8 @@ void RooExponential::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
    // Build a call to the stateless exponential defined later.
    std::string coef;
-   if(_negateCoefficient) {
-       coef += "-";
+   if (_negateCoefficient) {
+      coef += "-";
    }
    coef += ctx.getResult(c);
    ctx.addResult(this, "std::exp(" + coef + " * " + ctx.getResult(x) + ")");
