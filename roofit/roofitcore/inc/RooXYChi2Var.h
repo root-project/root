@@ -32,8 +32,6 @@ public:
   // Constructors, assignment etc
   RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& data, bool integrate=false) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& data, RooRealVar& yvar, bool integrate=false) ;
-  RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, bool integrate=false) ;
-  RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, RooRealVar& yvar, bool integrate=false) ;
 
   RooXYChi2Var(const RooXYChi2Var& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooXYChi2Var(*this,newname); }
