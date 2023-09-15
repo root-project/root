@@ -7148,7 +7148,6 @@ QualType ASTReader::GetType(TypeID ID) {
   }
 
   Index -= NUM_PREDEF_TYPE_IDS;
-  assert(Index < TypesLoaded.size() && "Type index out-of-range");
   if (TypesLoaded[Index].isNull()) {
     TypesLoaded[Index] = readTypeRecord(Index);
     if (TypesLoaded[Index].isNull())
