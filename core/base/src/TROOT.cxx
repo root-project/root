@@ -68,10 +68,9 @@ of a main program creating an interactive version is shown below:
 
 #include <ROOT/RConfig.hxx>
 #include <ROOT/TErrorDefaultHandler.hxx>
+#include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
-#include "RVersion.h"
-#include "RGitCommit.h"
 #include <string>
 #include <map>
 #include <cstdlib>
@@ -2390,15 +2389,8 @@ Longptr_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 
 void TROOT::ReadGitInfo()
 {
-#ifdef ROOT_GIT_COMMIT
-   fGitCommit = ROOT_GIT_COMMIT;
-#endif
-#ifdef ROOT_GIT_BRANCH
-   fGitBranch = ROOT_GIT_BRANCH;
-#endif
-
-   TString gitinfo = "gitinfo.txt";
-   char *filename = gSystem->ConcatFileName(TROOT::GetEtcDir(), gitinfo);
+   TString filename = "gitinfo.txt";
+   gSystem->PrependPathName(TROOT::GetEtcDir(), filename);
 
    FILE *fp = fopen(filename, "r");
    if (fp) {
@@ -2406,15 +2398,16 @@ void TROOT::ReadGitInfo()
       // read branch name
       s.Gets(fp);
       fGitBranch = s;
-      // read commit SHA1
+      // read commit hash
       s.Gets(fp);
       fGitCommit = s;
       // read date/time make was run
       s.Gets(fp);
       fGitDate = s;
       fclose(fp);
+   } else {
+      Error("ReadGitInfo()", "Cannot determine git info: etc/gitinfo.txt not found!");
    }
-   delete [] filename;
 }
 
 Bool_t &GetReadingObject() {
