@@ -31,11 +31,6 @@ public:
         const RooCmdArg& arg4={}, const RooCmdArg& arg5={},const RooCmdArg& arg6={},
         const RooCmdArg& arg7={}, const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
 
-  RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& data,
-        const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={},
-        const RooCmdArg& arg4={}, const RooCmdArg& arg5={},const RooCmdArg& arg6={},
-        const RooCmdArg& arg7={}, const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
-
   enum FuncMode { Function, Pdf, ExtendedPdf } ;
 
   RooChi2Var(const RooChi2Var& other, const char* name=nullptr);
