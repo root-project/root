@@ -18,7 +18,15 @@
 <script type="text/javascript" src="$relpath^dynsections.js"></script>
 $treeview
 $search
-$mathjax
+<script type="text/javascript">
+  window.MathJax = {
+    options: {
+      ignoreHtmlClass: 'tex2jax_ignore',
+      processHtmlClass: 'tex2jax_process'
+    }
+  };
+</script>
+<script type="text/javascript" id="MathJax-script" async="async" src="./mathjax/es5/tex-chtml.js"></script>
 $darkmode
 <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
 $extrastylesheet
