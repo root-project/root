@@ -60,7 +60,11 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  RooXYChi2Var constructor with function and X-Y values dataset
+/// RooXYChi2Var constructor with function and X-Y values dataset
+///
+/// If the function is a pdf, it must be extendable. in this case, hhe value of
+/// the function that defines the chi^2 in this form is takes as the p.d.f.
+/// times the expected number of events
 ///
 /// An X-Y dataset is a weighted dataset with one or more observables X where the weight is interpreted
 /// as the Y value and the weight error is interpreted as the Y value error. The weight must have an
@@ -73,22 +77,34 @@ namespace {
 ///                                 are the double values that correspond to the Y and its error
 ///
 
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, bool integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(false),
-  _integrate(integrate),
-  _intConfig(*defaultIntegratorConfig())
+RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataSet &xydata, bool integrate)
+   : RooAbsOptTestStatistic(name, title, func, xydata, RooArgSet(), makeRooAbsTestStatisticCfg()),
+     _integrate(integrate),
+     _intConfig(*defaultIntegratorConfig())
 {
-  _extended = false ;
-  _yvar = nullptr ;
+   bool isPdf = dynamic_cast<RooAbsPdf const *>(&func) != nullptr;
 
-  initialize() ;
+   if (isPdf) {
+      auto &extPdf = static_cast<RooAbsPdf const &>(func);
+      if (!extPdf.canBeExtended()) {
+         throw std::runtime_error(
+            Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible", GetName()));
+      }
+   }
+
+   _extended = isPdf;
+   _yvar = nullptr;
+
+   initialize();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-///  RooXYChi2Var constructor with function and X-Y values dataset
+/// RooXYChi2Var constructor with function and X-Y values dataset.
+///
+/// If the function is a pdf, it must be extendable. in this case, hhe value of
+/// the function that defines the chi^2 in this form is takes as the p.d.f.
+/// times the expected number of events
 ///
 /// An X-Y dataset is a weighted dataset with one or more observables X where given yvar is interpreted
 /// as the Y value. The Y variable must have a non-zero error defined at each point for the chi^2 calculation to be meaningful.
@@ -100,83 +116,27 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 ///                                 are the double values that correspond to the Y and its error
 ///
 
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, RooRealVar& yvar, bool integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(false),
-  _integrate(integrate),
-  _intConfig(*defaultIntegratorConfig())
+RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataSet &xydata, RooRealVar &yvar,
+                           bool integrate)
+   : RooAbsOptTestStatistic(name, title, func, xydata, RooArgSet(), makeRooAbsTestStatisticCfg()),
+     _integrate(integrate),
+     _intConfig(*defaultIntegratorConfig())
 {
-  _extended = false ;
-  _yvar = (RooRealVar*) _dataClone->get()->find(yvar.GetName()) ;
+   bool isPdf = dynamic_cast<RooAbsPdf const *>(&func) != nullptr;
 
-  initialize() ;
+   if (isPdf) {
+      auto &extPdf = static_cast<RooAbsPdf const &>(func);
+      if (!extPdf.canBeExtended()) {
+         throw std::runtime_error(
+            Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible", GetName()));
+      }
+   }
+
+   _extended = isPdf;
+   _yvar = static_cast<RooRealVar *>(_dataClone->get()->find(yvar.GetName()));
+
+   initialize();
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-///
-/// RooXYChi2Var constructor with an extended p.d.f. and X-Y values dataset
-/// The value of the function that defines the chi^2 in this form is takes as
-/// the p.d.f. times the expected number of events
-///
-/// An X-Y dataset is a weighted dataset with one or more observables X where the weight is interpreted
-/// as the Y value and the weight error is interpreted as the Y value error. The weight must have an
-/// non-zero error defined at each point for the chi^2 calculation to be meaningful.
-///
-/// To store errors associated with the x and y values in a RooDataSet, call RooRealVar::setAttribute("StoreError")
-/// on each X-type observable for which the error should be stored and add datapoints to the dataset as follows
-///
-/// RooDataSet::add(xset,yval,yerr) where xset is the RooArgSet of x observables (with or without errors) and yval and yerr
-///                                 are the double values that correspond to the Y and its error
-///
-
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, bool integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(true),
-  _integrate(integrate),
-  _intConfig(*defaultIntegratorConfig())
-{
-  if (!extPdf.canBeExtended()) {
-    throw std::runtime_error(Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible",GetName()));
-  }
-  _yvar = nullptr ;
-  initialize() ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-///
-/// RooXYChi2Var constructor with an extended p.d.f. and X-Y values dataset
-/// The value of the function that defines the chi^2 in this form is takes as
-/// the p.d.f. times the expected number of events
-///
-/// An X-Y dataset is a weighted dataset with one or more observables X where the weight is interpreted
-/// as the Y value and the weight error is interpreted as the Y value error. The weight must have an
-/// non-zero error defined at each point for the chi^2 calculation to be meaningful.
-///
-/// To store errors associated with the x and y values in a RooDataSet, call RooRealVar::setAttribute("StoreError")
-/// on each X-type observable for which the error should be stored and add datapoints to the dataset as follows
-///
-/// RooDataSet::add(xset,yval,yerr) where xset is the RooArgSet of x observables (with or without errors) and yval and yerr
-///                                 are the double values that correspond to the Y and its error
-///
-
-RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, RooRealVar& yvar, bool integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),makeRooAbsTestStatisticCfg()),
-  _extended(true),
-  _integrate(integrate),
-  _intConfig(*defaultIntegratorConfig())
-{
-  if (!extPdf.canBeExtended()) {
-    throw std::runtime_error(Form("RooXYChi2Var::ctor(%s) ERROR: Input p.d.f. must be an extendible",GetName()));
-  }
-  _yvar = (RooRealVar*) _dataClone->get()->find(yvar.GetName()) ;
-  initialize() ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

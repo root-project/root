@@ -161,7 +161,6 @@ called for each data event.
 #include "RooFitResult.h"
 #include "RooNumGenConfig.h"
 #include "RooCachedReal.h"
-#include "RooXYChi2Var.h"
 #include "RooChi2Var.h"
 #include "RooMinimizer.h"
 #include "RooRealIntegral.h"
@@ -1794,41 +1793,6 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
   cfg.timingAnalysis = pc.getInt("timingAnalysis");
   return RooFit::Detail::owningPtr(minimizeNLL(*nll, data, cfg));
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Argument-list version of RooAbsPdf::createChi2()
-
-RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
-{
-  // Select the pdf-specific commands
-  RooCmdConfig pc("RooAbsPdf::createChi2(" + std::string(GetName()) + ")");
-
-  pc.defineInt("integrate","Integrate",0,0) ;
-  pc.defineObject("yvar","YVar",0,0) ;
-
-  // Process and check varargs
-  pc.process(cmdList) ;
-  if (!pc.ok(true)) {
-    return nullptr;
-  }
-
-  // Decode command line arguments
-  bool integrate = pc.getInt("integrate") ;
-  RooRealVar* yvar = (RooRealVar*) pc.getObject("yvar") ;
-
-  std::string name = "chi2_" + std::string(GetName()) + "_" + std::string(data.GetName());
-
-  std::unique_ptr<RooAbsReal> out;
-  if (yvar) {
-    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
-  } else {
-    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,integrate) ;
-  }
-  return RooFit::Detail::owningPtr(std::move(out));
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
