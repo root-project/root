@@ -7,9 +7,10 @@ namespace Internal {
 bool IsEqual(const ROOT::Experimental::Internal::RFileNTupleAnchor &a,
              const ROOT::Experimental::Internal::RFileNTupleAnchor &b)
 {
-   return a.fVersion == b.fVersion && a.fSize == b.fSize && a.fSeekHeader == b.fSeekHeader &&
+   return a.fVersionEpoch == b.fVersionEpoch && a.fVersionMajor == b.fVersionMajor &&
+          a.fVersionMinor == b.fVersionMinor && a.fVersionPatch == b.fVersionPatch && a.fSeekHeader == b.fSeekHeader &&
           a.fNBytesHeader == b.fNBytesHeader && a.fLenHeader == b.fLenHeader && a.fSeekFooter == b.fSeekFooter &&
-          a.fNBytesFooter == b.fNBytesFooter && a.fLenFooter == b.fLenFooter && a.fReserved == b.fReserved;
+          a.fNBytesFooter == b.fNBytesFooter && a.fLenFooter == b.fLenFooter && a.fChecksum == b.fChecksum;
 }
 
 struct RNTupleTester {
