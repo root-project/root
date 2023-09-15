@@ -202,12 +202,6 @@ public:
     return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
   }
 
-  // Chi^2 fits to histograms
-  using RooAbsReal::createChi2 ;
-
-  // Chi^2 fits to X-Y datasets
-  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
-
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/,
                                     bool /*stripDisconnected*/, bool /*removeConstraintsFromPdf*/=false) const

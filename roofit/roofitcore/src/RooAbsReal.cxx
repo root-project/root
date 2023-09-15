@@ -4376,7 +4376,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const Roo
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
-  RooCmdConfig pc("RooAbsPdf::fitTo(" + std::string(GetName()) + ")");
+  RooCmdConfig pc("RooAbsReal::createChi2(" + std::string(GetName()) + ")");
 
   pc.defineInt("integrate","Integrate",0,0) ;
   pc.defineObject("yvar","YVar",0,nullptr) ;
