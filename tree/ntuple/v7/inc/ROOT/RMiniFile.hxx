@@ -63,27 +63,32 @@ the experimental namespace.
 */
 // clang-format on
 struct RFileNTupleAnchor {
-   /// The ROOT streamer info checksum. Older RNTuple versions used class version 0 and a serialized checksum,
-   /// now we use class version 3 and "promote" the checksum as a class member
-   std::int32_t fChecksum = 0;
-   /// Allows for evolving the struct in future versions
-   std::uint32_t fVersion = 0;
-   /// Allows for skipping the struct
-   std::uint32_t fSize = sizeof(RFileNTupleAnchor);
+   /// Version of the RNTuple binary format that the writer supports (see specification).
+   /// Changing the epoch indicates backward-incompatible changes
+   std::uint16_t fVersionEpoch = 0;
+   /// Changing the major version indicates forward incompatible changes; such changes shoudl correspond to a new
+   /// bit in the feature flag of the RNTuple header.
+   /// For the pre-release epoch 0, indicates the release candidate number
+   std::uint16_t fVersionMajor = 0;
+   /// Changing the minor version indicates new optional fields added to the RNTuple meta-data
+   std::uint16_t fVersionMinor = 0;
+   /// Changing the patch version indicate new backported features from newer binary format versions
+   std::uint16_t fVersionPatch = 0;
    /// The file offset of the header excluding the TKey part
    std::uint64_t fSeekHeader = 0;
    /// The size of the compressed ntuple header
-   std::uint32_t fNBytesHeader = 0;
+   std::uint64_t fNBytesHeader = 0;
    /// The size of the uncompressed ntuple header
-   std::uint32_t fLenHeader = 0;
+   std::uint64_t fLenHeader = 0;
    /// The file offset of the footer excluding the TKey part
    std::uint64_t fSeekFooter = 0;
    /// The size of the compressed ntuple footer
-   std::uint32_t fNBytesFooter = 0;
+   std::uint64_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
-   std::uint32_t fLenFooter = 0;
-   /// Currently unused, reserved for later use
-   std::uint64_t fReserved = 0;
+   std::uint64_t fLenFooter = 0;
+   /// The xxhash3 checksum of the other data members. When adding new members to the class,
+   /// this member should remain the last one.
+   std::uint64_t fChecksum = 0;
 };
 
 /// Holds status information of an open ROOT file during writing

@@ -543,7 +543,7 @@ public:
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
    // The version must match the RFileNTupleAnchor version in the LinkDef.h
-   ClassDefNV(RNTuple, 3);
+   ClassDefNV(RNTuple, 4);
 };
 
 } // namespace Experimental
