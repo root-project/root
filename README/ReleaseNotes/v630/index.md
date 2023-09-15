@@ -45,6 +45,7 @@ The following people have contributed to this new version:
 - The `RooSpan` class was removed and its place in the implementation details of RooFit is now taken by `std::span`.
 - The `RooAbsArg::isCloneOf()` and `RooAbsArg::getCloningAncestors()` member functions were removed because they didn't work (always returned `false` and an empty list respectively)
 - `ROOT::Math::KelvinFunctions` had an incompatible license and needed to be removed without deprecation.
+- The use of `ROOT_GIT_BRANCH` and `ROOT_GIT_COMMIT` have been deprecated in favor of parsing `etc/gitinfo.txt`. This later file is now generated as part of the build of ROOT; `RGitCommit.h` (defining `ROOT_GIT_BRANCH` and `ROOT_GIT_COMMIT`) is not updated anymore. This simplifies ROOT's build and release procedure.
 
 ## Core Libraries
 
