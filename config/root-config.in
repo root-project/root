@@ -556,11 +556,11 @@ while test $# -gt 0; do
       out="$out @ROOT_VERSION@"
       ;;
     --git-revision)
-      ### Output the git revision number.  If RGitCommit.h can not be found, give up.
-      if test -r "${incdir}/RGitCommit.h"; then
-         out="$out `sed -n 's,.*ROOT_GIT_COMMIT *\"\(.*\)\".*,\1,p' < \"${incdir}/RGitCommit.h\"`"
+      ### Output the git revision. Give up if gitinfo.txt can not be found.
+      if test -r "${etcdir}/gitinfo.txt"; then
+         out="$out `head -m2 \"${etcdir}/gitinfo.txt\" | tail -n`"
       else
-         echo "cannot read ${incdir}/RGitCommit.h"
+         echo "cannot read ${etcdir}/gitinfo.txt"
          exit 1
       fi
       ;;
