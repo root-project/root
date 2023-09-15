@@ -25,3 +25,5 @@ ROOT_ADD_GTEST(CoreBaseTests
   LIBRARIES ${extralibs} RIO Core)
 
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
+
+ROOT_ADD_GTEST(TSystemCompileMacro TSystemCompileMacro.cxx LIBRARIES Core)
