@@ -8,16 +8,28 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
-file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-  "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${GIT_TIMESTAMP}\n")
-
-file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-"#ifndef ROOT_RGITCOMMIT_H
-#define ROOT_RGITCOMMIT_H
-  #define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
-  #define ROOT_GIT_COMMIT \"${GIT_DESCRIBE_ALWAYS}\"
-#endif"
-)
+string(TIMESTAMP PSEUDO_GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
+if(GIT_DESCRIBE_ALL)
+  file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+    "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${PSEUDO_GIT_TIMESTAMP}\n")
+else()
+  math(EXPR ROOT_PATCH_VERSION_ODD ${ROOT_PATCH_VERSION}%2)
+  if(${ROOT_PATCH_VERSION} EQUAL 0)
+    # A release.
+    math(EXPR ROOT_MINOR_VERSION_ODD ${ROOT_MINOR_VERSION}%2)
+    if(${ROOT_MINOR_VERSION_ODD} EQUAL 1)
+      # Dev release.
+      file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+        "heads/master\ntags/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}\n${PSEUDO_GIT_TIMESTAMP}\n")
+    else()
+      # Production release / patch release.
+      file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+        "heads/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-patches\ntags/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}\n${PSEUDO_GIT_TIMESTAMP}\n")
+    endif()
+  else()
+    message(FATAL_ERROR "Cannot determine git revision info: source is not a release and not a git repo")
+  endif()
+endif()
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
@@ -33,38 +45,6 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
 
 add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-)
-
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-)
-
-add_custom_target(gitcommit ALL DEPENDS
-  ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-)
-
-set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
-
-set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
-
-install(FILES ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
 
 generateHeader(Core
@@ -72,7 +52,7 @@ generateHeader(Core
   ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
 )
 
-add_dependencies(Core CLING gitcommit rconfigure)
+add_dependencies(Core CLING rconfigure)
 
 target_link_libraries(Core
   PRIVATE
