@@ -741,23 +741,6 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   TRACE_CREATE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Protected constructor for internal use only
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
-             const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-             std::size_t nStart, std::size_t nStop) :
-  RooAbsData(name,title,vars)
-{
-  _dstore = dset->_dstore->reduce(name, title, _vars, cutVar, cutRange, nStart, nStop);
-
-   _cachedVars.add(_dstore->cachedVars());
-
-   appendToDir(this, true);
-   initialize(dset->_wgtVar ? dset->_wgtVar->GetName() : nullptr);
-   TRACE_CREATE;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an empty clone of this dataset. If vars is not null, only the variables in vars
@@ -832,37 +815,40 @@ void RooDataSet::initialize(const char* wgtVarName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
-std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
-              std::size_t nStart, std::size_t nStop)
+std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, const RooFormulaVar *cutVar,
+                                                  const char *cutRange, std::size_t nStart, std::size_t nStop)
 {
-  checkInit() ;
-  RooArgSet tmp(varSubset) ;
-  if (_wgtVar) {
-    tmp.add(*_wgtVar) ;
-  }
+   checkInit();
+   RooArgSet tmp(varSubset);
+   if (_wgtVar) {
+      tmp.add(*_wgtVar);
+   }
 
-  std::unique_ptr<RooDataSet> out;
+   auto createEmptyClone = [&]() { return emptyClone(GetName(), GetTitle(), &tmp); };
 
-  if (!cutRange || strchr(cutRange,',')==nullptr) {
-    out.reset(new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop));
-  } else {
-    // Composite case: multiple ranges
-    auto tokens = ROOT::Split(cutRange, ",");
-    if (RooHelpers::checkIfRangesOverlap(tmp, tokens)) {
-      std::stringstream errMsg;
-      errMsg << "Error in RooAbsData::reduce! The ranges " << cutRange << " are overlapping!";
-      throw std::runtime_error(errMsg.str());
-    }
-    for (const auto& token : tokens) {
-      if(!out) {
-        out.reset(new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop));
-      } else {
-        RooDataSet appendedData{GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop};
-        out->append(appendedData);
+   std::unique_ptr<RooAbsData> out{createEmptyClone()};
+
+   if (!cutRange || strchr(cutRange, ',') == nullptr) {
+      auto &ds = static_cast<RooDataSet &>(*out);
+      ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, cutRange, nStart, nStop);
+      ds._cachedVars.add(_dstore->cachedVars());
+   } else {
+      // Composite case: multiple ranges
+      auto tokens = ROOT::Split(cutRange, ",");
+      if (RooHelpers::checkIfRangesOverlap(tmp, tokens)) {
+         std::stringstream errMsg;
+         errMsg << "Error in RooAbsData::reduce! The ranges " << cutRange << " are overlapping!";
+         throw std::runtime_error(errMsg.str());
       }
-    }
-  }
-  return out;
+      for (const auto &token : tokens) {
+         std::unique_ptr<RooAbsData> appendedData{createEmptyClone()};
+         auto &ds = static_cast<RooDataSet &>(*appendedData);
+         ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, token.c_str(), nStart, nStop);
+         ds._cachedVars.add(_dstore->cachedVars());
+         static_cast<RooDataSet &>(*out).append(ds);
+      }
+   }
+   return out;
 }
 
 

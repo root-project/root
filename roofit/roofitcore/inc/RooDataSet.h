@@ -166,9 +166,6 @@ protected:
   // Cache copy feature is not publicly accessible
   std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
                         std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
-  RooDataSet(RooStringView name, RooStringView title, RooDataSet *ntuple,
-             const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-             std::size_t nStart, std::size_t nStop);
 
   RooArgSet _varsNoWgt;          ///< Vars without weight variable
   RooRealVar *_wgtVar = nullptr; ///< Pointer to weight variable (if set)
