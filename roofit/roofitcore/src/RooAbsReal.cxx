@@ -4200,17 +4200,20 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 /// RooAbsReal::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&) and
 /// RooAbsPdf::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
 
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const RooLinkedList &cmdList)
 {
-  // Select the pdf-specific commands
-  RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
+   // Select the pdf-specific commands
+   RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
 
-  // Pull arguments to be passed to chi2 construction from list
-  RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataHistCmdArgs().c_str());
+   // Pull arguments to be passed to chi2 construction from list
+   RooLinkedList fitCmdList(cmdList);
 
-  std::unique_ptr<RooAbsReal> chi2{createChi2(data,chi2CmdList)};
-  return chi2FitDriver(*chi2,fitCmdList) ;
+   auto createChi2DataHistCmdArgs = "Range,RangeWithName,NumCPU,Optimize,IntegrateBins,ProjectedObservables,"
+                                    "AddCoefRange,SplitRange,DataError,Extended";
+   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataHistCmdArgs);
+
+   std::unique_ptr<RooAbsReal> chi2{createChi2(data, chi2CmdList)};
+   return chi2FitDriver(*chi2, fitCmdList);
 }
 
 
@@ -4232,10 +4235,18 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const Ro
                                                      const RooCmdArg &arg5, const RooCmdArg &arg6,
                                                      const RooCmdArg &arg7, const RooCmdArg &arg8)
 {
-   std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
+   // Construct Chi2
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
+   std::string baseName = "chi2_" + std::string(GetName()) + "_" + data.GetName();
 
-   return RooFit::Detail::owningPtr(std::make_unique<RooChi2Var>(name.c_str(), name.c_str(), *this, data, arg1, arg2,
-                                                                 arg3, arg4, arg5, arg6, arg7, arg8));
+   // Clear possible range attributes from previous fits.
+   removeStringAttribute("fitrange");
+
+   auto chi2 = std::make_unique<RooChi2Var>(baseName.c_str(), baseName.c_str(), *this, data, arg1, arg2, arg3, arg4,
+                                            arg5, arg6, arg7, arg8);
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+
+   return RooFit::Detail::owningPtr(std::move(chi2));
 }
 
 
