@@ -78,24 +78,8 @@ namespace {
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataSet &xydata, bool integrate)
-   : RooAbsOptTestStatistic(name, title, func, xydata, RooArgSet(), makeRooAbsTestStatisticCfg()),
-     _integrate(integrate),
-     _intConfig(*defaultIntegratorConfig())
+   : RooXYChi2Var{name, title, func, xydata, nullptr, integrate, makeRooAbsTestStatisticCfg()}
 {
-   bool isPdf = dynamic_cast<RooAbsPdf const *>(&func) != nullptr;
-
-   if (isPdf) {
-      auto &extPdf = static_cast<RooAbsPdf const &>(func);
-      if (!extPdf.canBeExtended()) {
-         throw std::runtime_error(
-            Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible", GetName()));
-      }
-   }
-
-   _extended = isPdf;
-   _yvar = nullptr;
-
-   initialize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +102,16 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataSet &xydata, RooRealVar &yvar,
                            bool integrate)
-   : RooAbsOptTestStatistic(name, title, func, xydata, RooArgSet(), makeRooAbsTestStatisticCfg()),
+   : RooXYChi2Var{name, title, func, xydata, &yvar, integrate, makeRooAbsTestStatisticCfg()}
+{
+}
+
+
+/// \cond ROOFIT_INTERNAL
+// For internal use in RooAbsReal::createChi2().
+RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func, RooAbsData &data, RooRealVar *yvar,
+                           bool integrate, RooAbsTestStatistic::Configuration const &cfg)
+   : RooAbsOptTestStatistic(name, title, func, data, RooArgSet(), cfg),
      _integrate(integrate),
      _intConfig(*defaultIntegratorConfig())
 {
@@ -133,10 +126,11 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func
    }
 
    _extended = isPdf;
-   _yvar = static_cast<RooRealVar *>(_dataClone->get()->find(yvar.GetName()));
+   _yvar = yvar ? static_cast<RooRealVar *>(_dataClone->get()->find(yvar->GetName())) : nullptr;
 
    initialize();
 }
+/// \endcond ROOFIT_INTERNAL
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,8 +146,6 @@ RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
   initialize() ;
 
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

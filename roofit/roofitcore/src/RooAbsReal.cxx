@@ -4326,17 +4326,18 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsReal::chi2FitTo(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const RooLinkedList &cmdList)
 {
-  // Select the pdf-specific commands
-  RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
+   // Select the pdf-specific commands
+   RooCmdConfig pc("RooAbsPdf::chi2FitTo(" + std::string(GetName()) + ")");
 
-  // Pull arguments to be passed to chi2 construction from list
-  RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"YVar,Integrate") ;
+   // Pull arguments to be passed to chi2 construction from list
+   RooLinkedList fitCmdList(cmdList);
+   auto createChi2DataSetCmdArgs = "YVar,Integrate,RangeWithName,NumCPU,Verbose";
+   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataSetCmdArgs);
 
-  std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata,chi2CmdList)};
-  return chi2FitDriver(*xychi2,fitCmdList) ;
+   std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata, chi2CmdList)};
+   return chi2FitDriver(*xychi2, fitCmdList);
 }
 
 
@@ -4369,42 +4370,55 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const Roo
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const RooLinkedList &cmdList)
 {
-  // Select the pdf-specific commands
-  RooCmdConfig pc("RooAbsReal::createChi2(" + std::string(GetName()) + ")");
+   // Select the pdf-specific commands
+   RooCmdConfig pc("RooAbsReal::createChi2(" + std::string(GetName()) + ")");
 
-  pc.defineInt("integrate","Integrate",0,0) ;
-  pc.defineObject("yvar","YVar",0,nullptr) ;
+   pc.defineInt("integrate", "Integrate", 0, 0);
+   pc.defineObject("yvar", "YVar", 0, nullptr);
+   pc.defineString("rangeName", "RangeWithName", 0, "", true);
+   pc.defineInt("numcpu", "NumCPU", 0, 1);
+   pc.defineInt("interleave", "NumCPU", 1, 0);
+   pc.defineInt("verbose", "Verbose", 0, 0);
 
-  // Process and check varargs
-  pc.process(cmdList) ;
-  if (!pc.ok(true)) {
-    return nullptr;
-  }
+   // Process and check varargs
+   pc.process(cmdList);
+   if (!pc.ok(true)) {
+      return nullptr;
+   }
 
-  // Decode command line arguments
-  bool integrate = pc.getInt("integrate") ;
-  RooRealVar* yvar = (RooRealVar*) pc.getObject("yvar") ;
+   // Decode command line arguments
+   bool integrate = pc.getInt("integrate");
+   RooRealVar *yvar = static_cast<RooRealVar *>(pc.getObject("yvar"));
+   const char *rangeName = pc.getString("rangeName", 0, true);
+   Int_t numcpu = pc.getInt("numcpu");
+   Int_t numcpu_strategy = pc.getInt("interleave");
+   // strategy 3 works only for RooSimultaneous.
+   if (numcpu_strategy == 3 && !this->InheritsFrom("RooSimultaneous")) {
+      coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
+                             "falling back to default strategy = 0"
+                          << endl;
+      numcpu_strategy = 0;
+   }
+   RooFit::MPSplit interl = (RooFit::MPSplit)numcpu_strategy;
+   bool verbose = pc.getInt("verbose");
 
-  std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
+   RooAbsTestStatistic::Configuration cfg;
+   cfg.rangeName = rangeName ? rangeName : "";
+   cfg.nCPU = numcpu;
+   cfg.interleave = interl;
+   cfg.verbose = verbose;
+   cfg.verbose = false;
 
-  std::unique_ptr<RooAbsReal> out;
-  if (yvar) {
-    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
-  } else {
-    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,integrate) ;
-  }
-  return RooFit::Detail::owningPtr(std::move(out));
+   std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
+
+   return RooFit::Detail::owningPtr(
+      std::make_unique<RooXYChi2Var>(name.c_str(), name.c_str(), *this, data, yvar, integrate, cfg));
 }
-
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4430,6 +4444,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLi
   pc.defineString("mintype","Minimizer",0,"") ;
   pc.defineString("minalg","Minimizer",1,"minuit") ;
   pc.defineSet("minosSet","Minos",0,nullptr) ;
+  pc.allowUndefined() ;
 
   // Process and check varargs
   pc.process(cmdList) ;
