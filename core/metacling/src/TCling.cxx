@@ -4289,6 +4289,8 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
 Bool_t TCling::CheckClassTemplate(const char *name)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+   // Interpreter transaction ahead, needs locking
+   R__LOCKGUARD(gInterpreterMutex);
    const clang::Decl *decl
       = lh.findClassTemplate(name,
                              gDebug > 5 ? cling::LookupHelper::WithDiagnostics
