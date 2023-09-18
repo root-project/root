@@ -1437,7 +1437,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
   // Process and check varargs
   pc.process(fitCmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // TimingAnalysis works only for RooSimultaneous.

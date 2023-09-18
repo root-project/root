@@ -32,8 +32,7 @@ int calcAsymptoticCorrectedCovariance(RooAbsPdf &pdf, RooMinimizer &minimizer, R
 int calcSumW2CorrectedCovariance(RooAbsPdf const &pdf, RooMinimizer &minimizer, RooAbsReal &nll);
 
 void defineMinimizationOptions(RooCmdConfig &pc);
-std::unique_ptr<RooFitResult> minimize(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc);
-std::unique_ptr<RooFitResult> chi2FitDriver(RooAbsReal &fcn, RooLinkedList &cmdList);
+std::unique_ptr<RooFitResult> minimize(RooAbsReal &model, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc);
 
 constexpr int extendedFitDefault = 2;
 

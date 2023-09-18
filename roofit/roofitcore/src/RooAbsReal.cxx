@@ -4212,8 +4212,16 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const R
                                     "AddCoefRange,SplitRange,DataError,Extended";
    RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataHistCmdArgs);
 
+   RooFit::FitHelpers::defineMinimizationOptions(pc);
+
+   // Process and check varargs
+   pc.process(fitCmdList);
+   if (!pc.ok(true)) {
+      return nullptr;
+   }
+
    std::unique_ptr<RooAbsReal> chi2{createChi2(data, chi2CmdList)};
-   return RooFit::Detail::owningPtr(RooFit::FitHelpers::chi2FitDriver(*chi2, fitCmdList));
+   return RooFit::Detail::owningPtr(RooFit::FitHelpers::minimize(*this, *chi2, data, pc));
 }
 
 
@@ -4336,8 +4344,16 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const 
    auto createChi2DataSetCmdArgs = "YVar,Integrate,RangeWithName,NumCPU,Verbose";
    RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataSetCmdArgs);
 
+   RooFit::FitHelpers::defineMinimizationOptions(pc);
+
+   // Process and check varargs
+   pc.process(fitCmdList);
+   if (!pc.ok(true)) {
+      return nullptr;
+   }
+
    std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata, chi2CmdList)};
-   return RooFit::Detail::owningPtr(RooFit::FitHelpers::chi2FitDriver(*xychi2, fitCmdList));
+   return RooFit::Detail::owningPtr(RooFit::FitHelpers::minimize(*this, *xychi2, xydata, pc));
 }
 
 
