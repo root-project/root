@@ -17,7 +17,7 @@ ROOT_LINKER_LIBRARY(RooFitMultiProcess
         src/ProcessTimer.cxx
         src/HeatmapAnalyzer.cxx
     LIBRARIES
-        RooFitCommon
+        Core
     DEPENDENCIES
         RooFitZMQ
 )

@@ -12,7 +12,7 @@
 
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include "gtest/gtest.h"
 
@@ -100,8 +100,7 @@ void elaborate_bind(const ZmqLingeringSocketPtr<> &socket, std::string name)
 
 class AllSocketTypes
    : public ::testing::TestWithParam<std::tuple<int, std::pair<zmq::socket_type, zmq::socket_type>,
-                                                std::pair<std::string, std::string> /* socket_names */>> {
-};
+                                                std::pair<std::string, std::string> /* socket_names */>> {};
 
 TEST_P(AllSocketTypes, forkHandshake)
 {
@@ -146,7 +145,8 @@ TEST_P(AllSocketTypes, forkHandshake)
    }
 }
 
-std::string ipc{"ipc://" + RooFit::tmpPath() + "ZMQ_test_fork.ipc"};
+std::string tmpPath = gSystem->TempDirectory();
+std::string ipc{"ipc://" + tmpPath + "/roofit_ZMQ_test_fork.ipc"};
 std::string tcp_server{"tcp://127.0.0.1:6660"};
 std::string tcp_client{"tcp://*:6660"};
 auto socket_name_options = ::testing::Values(std::make_pair(tcp_server, tcp_client), std::make_pair(ipc, ipc));
@@ -165,8 +165,7 @@ INSTANTIATE_TEST_SUITE_P(PAIRPAIR, AllSocketTypes,
 class AsyncSocketTypes
    : public ::testing::TestWithParam<
         std::tuple<int /* repeat_nr */, std::pair<zmq::socket_type, zmq::socket_type>,
-                   std::pair<std::string, std::string> /* socket_names */, bool /* expect_throw */>> {
-};
+                   std::pair<std::string, std::string> /* socket_names */, bool /* expect_throw */>> {};
 
 TEST_P(AsyncSocketTypes, forkMultiSendReceive)
 {

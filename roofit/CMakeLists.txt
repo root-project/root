@@ -5,7 +5,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory(batchcompute)
-add_subdirectory(common)
 if (roofit_multiprocess)
   add_subdirectory(roofitZMQ)
   add_subdirectory(multiprocess)
