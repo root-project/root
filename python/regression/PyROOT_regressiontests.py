@@ -5,6 +5,7 @@
 
 """Regression tests, lacking a better place, for PyROOT package."""
 
+import platform
 import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -66,34 +67,26 @@ class Regression01TwiceImportStar( MyTestCase ):
       x = TestTChain()        # TestTChain defined in Amir.py
 
 
-### TPyException thrown from C++ code ========================================
-class Regression02PyException( MyTestCase ):
-   def test1RaiseAndTrapPyException( self ):
+# TPyException thrown from C++ code ========================================
+class Regression02PyException(MyTestCase):
+   def test1RaiseAndTrapPyException(self):
       """Test thrown TPyException object processing"""
+      # See https://github.com/root-project/root/issues/7541 and
+      # https://bugs.llvm.org/show_bug.cgi?id=49692 :
+      # llvm JIT fails to catch exceptions on M1, so we disable their testing
+      if platform.processor() != "arm" or platform.mac_ver()[0] == '':
+         if legacy_pyroot:
+            gROOT.LoadMacro("Scott.C+")
+         else:
+            gROOT.LoadMacro("ScottCppyy.C+")
 
-      # re-enabled as there are still issues with exceptions on Mac, and linker
-      # issues on some of the test machines
-      if FIXCLING:
-         return
+         # test of not overloaded global function
+         with self.assertRaisesRegex(SyntaxError, "test error message"):
+            ROOT.ThrowPyException()
 
-      if legacy_pyroot:
-         gROOT.LoadMacro( "Scott.C+" )
-      else:
-         gROOT.LoadMacro( "ScottCppyy.C+" )
-
-    # test of not overloaded global function
-      self.assertRaises( SyntaxError, ThrowPyException )
-      try:
-         ThrowPyException()
-      except SyntaxError:
-         self.assertEqual( str(sys.exc_info()[1]), "test error message" )
-
-    # test of overloaded function
-      self.assertRaises( SyntaxError, MyThrowingClass.ThrowPyException, 1 )
-      try:
-         MyThrowingClass.ThrowPyException( 1 )
-      except SyntaxError:
-         self.assertEqual( str(sys.exc_info()[1]), "overloaded int test error message" )
+         # test of overloaded function
+         with self.assertRaisesRegex(SyntaxError, "overloaded int test error message"):
+            ROOT.MyThrowingClass.ThrowPyException(1)
 
 
 ### Several tests that used to cause crashes =================================
@@ -441,15 +434,14 @@ class Regression12WriteTGraph( MyTestCase ):
 
 
 ### 'using' base class data members should make them accessible ==============
-class Regression13BaseClassUsing( MyTestCase ):
+class Regression13BaseClassUsing(MyTestCase):
    def test1AccessUsingBaseClassDataMember( self ):
       """Access a base class data member made availabe by 'using'"""
 
-      if FIXCLING:
-         return
-
-      p = TPySelector()
-      str( p.fInput )        # segfaults in case of failure
+      # The TPySelector class is only available in legacy PyROOT
+      if legacy_pyroot:
+         p = ROOT.TPySelector()
+         str(p.fInput)  # segfaults in case of failure
 
 
 ### TPyException had troubles due to its base class of std::exception ========
