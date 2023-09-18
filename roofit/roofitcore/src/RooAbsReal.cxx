@@ -29,53 +29,53 @@
    \ingroup Roofitcore
 */
 
-
-#include "RooFit/Evaluator.h"
-#include "RooMsgService.h"
 #include "RooAbsReal.h"
-#include "RooArgSet.h"
-#include "RooArgList.h"
-#include "RooBinning.h"
-#include "RooPlot.h"
-#include "RooConstVar.h"
-#include "RooCurve.h"
-#include "RooHist.h"
-#include "RooRealVar.h"
-#include "RooArgProxy.h"
-#include "RooFormulaVar.h"
-#include "RooRealBinding.h"
-#include "RooRealIntegral.h"
+
+#include "FitHelpers.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooCustomizer.h"
 #include "RooAbsData.h"
 #include "RooAddPdf.h"
-#include "RooCmdConfig.h"
-#include "RooCategory.h"
-#include "RooNumIntConfig.h"
 #include "RooAddition.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooNumRunningInt.h"
-#include "RooGlobalFunc.h"
-#include "RooParamBinning.h"
-#include "RooProfileLL.h"
-#include "RooProduct.h"
-#include "RooFunctor.h"
-#include "RooDerivative.h"
-#include "RooXYChi2Var.h"
-#include "RooMinimizer.h"
-#include "RooChi2Var.h"
-#include "RooFitResult.h"
-#include "RooMoment.h"
-#include "RooFirstMoment.h"
-#include "RooSecondMoment.h"
+#include "RooArgList.h"
+#include "RooArgProxy.h"
+#include "RooArgSet.h"
+#include "RooBinning.h"
 #include "RooBrentRootFinder.h"
-#include "RooVectorDataStore.h"
 #include "RooCachedReal.h"
+#include "RooCategory.h"
+#include "RooChi2Var.h"
+#include "RooCmdConfig.h"
+#include "RooConstVar.h"
+#include "RooCurve.h"
+#include "RooCustomizer.h"
+#include "RooDataHist.h"
+#include "RooDataSet.h"
+#include "RooDerivative.h"
+#include "RooFirstMoment.h"
+#include "RooFit/BatchModeDataHelpers.h"
+#include "RooFit/Evaluator.h"
+#include "RooFitResult.h"
+#include "RooFormulaVar.h"
+#include "RooFunctor.h"
+#include "RooGlobalFunc.h"
 #include "RooHelpers.h"
+#include "RooHist.h"
+#include "RooMoment.h"
+#include "RooMsgService.h"
+#include "RooNumIntConfig.h"
+#include "RooNumRunningInt.h"
+#include "RooParamBinning.h"
+#include "RooPlot.h"
+#include "RooProduct.h"
+#include "RooProfileLL.h"
+#include "RooRealBinding.h"
+#include "RooRealIntegral.h"
+#include "RooRealVar.h"
+#include "RooSecondMoment.h"
+#include "RooVectorDataStore.h"
+#include "RooXYChi2Var.h"
 #include "TreeReadBuffer.h"
 #include "ValueChecking.h"
-#include "RooFit/BatchModeDataHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "Compression.h"
@@ -4213,7 +4213,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist &data, const R
    RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataHistCmdArgs);
 
    std::unique_ptr<RooAbsReal> chi2{createChi2(data, chi2CmdList)};
-   return chi2FitDriver(*chi2, fitCmdList);
+   return RooFit::Detail::owningPtr(RooFit::FitHelpers::chi2FitDriver(*chi2, fitCmdList));
 }
 
 
@@ -4337,7 +4337,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet &xydata, const 
    RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList, createChi2DataSetCmdArgs);
 
    std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata, chi2CmdList)};
-   return chi2FitDriver(*xychi2, fitCmdList);
+   return RooFit::Detail::owningPtr(RooFit::FitHelpers::chi2FitDriver(*xychi2, fitCmdList));
 }
 
 
@@ -4420,119 +4420,6 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const Roo
       std::make_unique<RooXYChi2Var>(name.c_str(), name.c_str(), *this, data, yvar, integrate, cfg));
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Internal driver function for chi2 fits
-
-RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
-{
-  // Select the pdf-specific commands
-  RooCmdConfig pc("RooAbsPdf::chi2FitDriver(" + std::string(GetName()) + ")");
-
-  pc.defineInt("optConst","Optimize",0,1) ;
-  pc.defineInt("verbose","Verbose",0,0) ;
-  pc.defineInt("doSave","Save",0,0) ;
-  pc.defineInt("doTimer","Timer",0,0) ;
-  pc.defineInt("plevel","PrintLevel",0,1) ;
-  pc.defineInt("strat","Strategy",0,1) ;
-  pc.defineInt("initHesse","InitialHesse",0,0) ;
-  pc.defineInt("hesse","Hesse",0,1) ;
-  pc.defineInt("minos","Minos",0,0) ;
-  pc.defineInt("ext","Extended",0,RooAbsPdf::extendedFitDefault) ;
-  pc.defineInt("numee","PrintEvalErrors",0,10) ;
-  pc.defineInt("doWarn","Warnings",0,1) ;
-  pc.defineString("mintype","Minimizer",0,"") ;
-  pc.defineString("minalg","Minimizer",1,"minuit") ;
-  pc.defineSet("minosSet","Minos",0,nullptr) ;
-  pc.allowUndefined() ;
-
-  // Process and check varargs
-  pc.process(cmdList) ;
-  if (!pc.ok(true)) {
-    return nullptr;
-  }
-
-  // Decode command line arguments
-  const char* minType = pc.getString("mintype","") ;
-  const char* minAlg = pc.getString("minalg","minuit") ;
-  Int_t optConst = pc.getInt("optConst") ;
-  Int_t verbose  = pc.getInt("verbose") ;
-  Int_t doSave   = pc.getInt("doSave") ;
-  Int_t doTimer  = pc.getInt("doTimer") ;
-  Int_t plevel    = pc.getInt("plevel") ;
-  Int_t strat    = pc.getInt("strat") ;
-  Int_t initHesse= pc.getInt("initHesse") ;
-  Int_t hesse    = pc.getInt("hesse") ;
-  Int_t minos    = pc.getInt("minos") ;
-  Int_t numee    = pc.getInt("numee") ;
-  Int_t doWarn   = pc.getInt("doWarn") ;
-  const RooArgSet* minosSet = pc.getSet("minosSet");
-
-  std::unique_ptr<RooFitResult> ret;
-
-  // Instantiate MINUIT
-  RooMinimizer m(fcn) ;
-  m.setMinimizerType(minType);
-
-  if (doWarn==0) {
-    // m.setNoWarn() ; WVE FIX THIS
-  }
-
-  m.setPrintEvalErrors(numee) ;
-  if (plevel!=1) {
-    m.setPrintLevel(plevel) ;
-  }
-
-  if (optConst) {
-    // Activate constant term optimization
-    m.optimizeConst(optConst);
-  }
-
-  if (verbose) {
-    // Activate verbose options
-    m.setVerbose(true) ;
-  }
-  if (doTimer) {
-    // Activate timer options
-    m.setProfile(true) ;
-  }
-
-  if (strat!=1) {
-    // Modify fit strategy
-    m.setStrategy(strat) ;
-  }
-
-  if (initHesse) {
-    // Initialize errors with hesse
-    m.hesse() ;
-  }
-
-  // Minimize using migrad
-  m.minimize(minType, minAlg) ;
-
-  if (hesse) {
-    // Evaluate errors with Hesse
-    m.hesse() ;
-  }
-
-  if (minos) {
-    // Evaluate errs with Minos
-    if (minosSet) {
-      m.minos(*minosSet) ;
-    } else {
-      m.minos() ;
-    }
-  }
-
-  // Optionally return fit result
-  if (doSave) {
-    std::string name = "fitresult_" + std::string(fcn.GetName());
-    std::string title = "Result of fit of " + std::string(GetName()) + " ";
-    ret = std::unique_ptr<RooFitResult>{m.save(name.c_str(),title.c_str())};
-  }
-
-  return RooFit::Detail::owningPtr(std::move(ret));
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
