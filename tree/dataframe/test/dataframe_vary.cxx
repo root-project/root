@@ -1677,3 +1677,38 @@ INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 #ifdef R__USE_IMT
 INSTANTIATE_TEST_SUITE_P(MT, RDFVary, ::testing::Values(true));
 #endif
+
+TEST(RDFVary, CheckVariationNames)
+{
+   // Create an RDF with a nominal histogram
+   ROOT::RDataFrame df(10);
+   auto df1 = df.Define("x", [] { return 1; });
+
+   // Vary the 'x' column
+   auto df2 = df1.Vary("x", [] { return ROOT::RVecI{-2, 2}; }, {}, {"down", "up"});
+
+   // Create a histogram from the varied column
+   auto h = df2.Histo1D<int>({"MyName", "MyTitle", 10, -10, 10}, "x");
+
+   // Get the variations for the histogram
+   auto histos = VariationsFor(h);
+
+   // Create a map of keys to expected names
+   std::map<std::string, std::string> expectedNamesMap = {
+      {"nominal", "MyName"},
+      {"x:down", "MyName_x_down"},
+      {"x:up", "MyName_x_up"}
+   };
+
+   // Check if the keys correspond to the correct names
+   for (const auto &kv : histos) {
+      auto &variedHist = *kv.second;
+      const char* key = kv.first.c_str();
+      const char* variedName = variedHist.GetName();
+
+      // Compare the expected name in the map and with the actual name
+      EXPECT_STREQ(expectedNamesMap[key].c_str(), variedName);
+   }
+}
+
+

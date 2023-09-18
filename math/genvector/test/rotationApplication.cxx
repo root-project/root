@@ -54,8 +54,6 @@ using std::cos;
 
 using namespace ROOT::Math;
 
-#ifndef __CINT__
-
 template <typename T1, typename T2 >
 struct Precision {
    enum { result = std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits   };
@@ -69,9 +67,6 @@ template <typename T1, typename T2>
 struct LessPreciseType<T1, T2, false> {
    typedef T2 type;
 };
-
-
-const double machEpsilon = pow (2.0, -52.0);
 
 template <typename Scalar1, typename Scalar2>
 int
@@ -682,9 +677,6 @@ int exerciseAxialTest (XYZVector const & testVector)
 
    return ret;
 }
-
-
-#endif // endif on __CINT__
 
 // ======================================
 

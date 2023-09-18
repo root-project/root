@@ -120,6 +120,8 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
 PyMethodBase::~PyMethodBase()
 {
    // should we delete here fLocalNS ?
+   //PyFinalize();
+   if (fLocalNS) Py_DECREF(fLocalNS);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -321,6 +323,7 @@ Int_t PyMethodBase::UnSerialize(TString path, PyObject **obj)
 /// Py_single_input, Py_file_input)
 
 void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
+   //std::cout << "Run: >> " << code << std::endl;
    fPyReturn = PyRun_String(code, start, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
       Log() << kWARNING << "Failed to run python code: " << code << Endl;
@@ -397,7 +400,7 @@ std::vector<size_t> PyMethodBase::GetDataFromList(PyObject* listObject){
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Utility function which checks if a given key is present in a Python 
+/// \brief Utility function which checks if a given key is present in a Python
 ///        dictionary object and returns the associated value or throws runtime
 ///        error. This is to replace PyDict_GetItemWithError in Python 2.
 ///

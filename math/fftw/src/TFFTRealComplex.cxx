@@ -54,10 +54,10 @@ ClassImp(TFFTRealComplex);
 
 TFFTRealComplex::TFFTRealComplex()
 {
-   fIn   = 0;
-   fOut  = 0;
-   fPlan = 0;
-   fN    = 0;
+   fIn   = nullptr;
+   fOut  = nullptr;
+   fPlan = nullptr;
+   fN    = nullptr;
    fNdim = 0;
    fTotalSize = 0;
 }
@@ -74,13 +74,13 @@ TFFTRealComplex::TFFTRealComplex(Int_t n, Bool_t inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex)*(n/2+1));
    } else {
       fIn = fftw_malloc(sizeof(Double_t)*(2*(n/2+1)));
-      fOut = 0;
+      fOut = nullptr;
    }
    fN = new Int_t[1];
    fN[0] = n;
    fTotalSize = n;
    fNdim = 1;
-   fPlan = 0;
+   fPlan = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +106,9 @@ TFFTRealComplex::TFFTRealComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex)*sizeout);
    } else {
       fIn = fftw_malloc(sizeof(Double_t)*(2*sizeout));
-      fOut = 0;
+      fOut = nullptr;
    }
-   fPlan = 0;
+   fPlan = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,15 +119,15 @@ TFFTRealComplex::TFFTRealComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
 TFFTRealComplex::~TFFTRealComplex()
 {
    fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
    fftw_free(fIn);
-   fIn = 0;
+   fIn = nullptr;
    if (fOut)
       fftw_free((fftw_complex*)fOut);
-   fOut = 0;
+   fOut = nullptr;
    if (fN)
       delete [] fN;
-   fN = 0;
+   fN = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +155,7 @@ void TFFTRealComplex::Init(Option_t *flags,Int_t /*sign*/, const Int_t* /*kind*/
 
    if (fPlan)
       fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
 
    if (fOut)
       fPlan = (void*)fftw_plan_dft_r2c(fNdim, fN, (Double_t*)fIn, (fftw_complex*)fOut,MapFlag(flags));
@@ -369,7 +369,7 @@ Double_t* TFFTRealComplex::GetPointsReal(Bool_t fromInput) const
 {
    if (!fromInput){
       Error("GetPointsReal", "Output array is complex");
-      return 0;
+      return nullptr;
    }
    return (Double_t*)fIn;
 }

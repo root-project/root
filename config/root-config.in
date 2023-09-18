@@ -553,13 +553,7 @@ while test $# -gt 0; do
       noldflags="yes"
       ;;
     --version)
-      ### Output the version number.  If RVersion.h can not be found, give up.
-      if test -r "${incdir}/RVersion.h"; then
-         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < \"${incdir}/RVersion.h\"`"
-      else
-         echo "cannot read ${incdir}/RVersion.h"
-         exit 1
-      fi
+      out="$out @ROOT_VERSION@"
       ;;
     --git-revision)
       ### Output the git revision number.  If RGitCommit.h can not be found, give up.

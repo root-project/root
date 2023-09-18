@@ -136,8 +136,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooHist.h
     RooHistPdf.h
     RooImproperIntegrator1D.h
-    RooIntegrator1D.h
-    RooIntegrator2D.h
+    RooRombergIntegrator.h
     RooInvTransform.h
     RooLinearCombination.h
     RooLinearVar.h
@@ -201,8 +200,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSTLRefCountList.h
     RooResolutionModel.h
     RooSecondMoment.h
-    RooSegmentedIntegrator1D.h
-    RooSegmentedIntegrator2D.h
     RooSetProxy.h
     RooSharedProperties.h
     RooSimGenContext.h
@@ -354,8 +351,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooHistFunc.cxx
     src/RooHistPdf.cxx
     src/RooImproperIntegrator1D.cxx
-    src/RooIntegrator1D.cxx
-    src/RooIntegrator2D.cxx
+    src/RooRombergIntegrator.cxx
     src/RooInvTransform.cxx
     src/RooLinearCombination.cxx
     src/RooLinearVar.cxx
@@ -419,8 +415,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSTLRefCountList.cxx
     src/RooResolutionModel.cxx
     src/RooSecondMoment.cxx
-    src/RooSegmentedIntegrator1D.cxx
-    src/RooSegmentedIntegrator2D.cxx
     src/RooSentinel.cxx
     src/RooSharedProperties.cxx
     src/RooSimGenContext.cxx

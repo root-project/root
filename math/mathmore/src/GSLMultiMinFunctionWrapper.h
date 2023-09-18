@@ -61,9 +61,9 @@ public:
 
    GSLMultiMinFunctionWrapper()
    {
-      fFunc.f = 0;
+      fFunc.f = nullptr;
       fFunc.n = 0;
-      fFunc.params = 0;
+      fFunc.params = nullptr;
    }
 
    void SetFuncPointer( GSLMultiMinFuncPointer f) { fFunc.f = f; }
@@ -74,7 +74,7 @@ public:
    template<class FuncType>
    void SetFunction(const FuncType &f) {
       const void * p = &f;
-      assert (p != 0);
+      assert (p != nullptr);
       SetFuncPointer(&GSLMultiMinFunctionAdapter<FuncType >::F);
       SetDim( f.NDim() );
       SetParams(const_cast<void *>(p));
@@ -83,7 +83,7 @@ public:
    gsl_multimin_function * GetFunc() { return &fFunc; }
 
     bool IsValid() {
-       return (fFunc.f != 0) ? true : false;
+       return (fFunc.f != nullptr) ? true : false;
     }
 
 
@@ -107,11 +107,11 @@ public:
 
     GSLMultiMinDerivFunctionWrapper()
     {
-       fFunc.f = 0;
-       fFunc.df = 0;
-       fFunc.fdf = 0;
+       fFunc.f = nullptr;
+       fFunc.df = nullptr;
+       fFunc.fdf = nullptr;
        fFunc.n = 0;
-       fFunc.params = 0;
+       fFunc.params = nullptr;
     }
 
 
@@ -125,7 +125,7 @@ public:
     template<class FuncType>
     void SetFunction(const FuncType &f) {
        const void * p = &f;
-       assert (p != 0);
+       assert (p != nullptr);
        SetFuncPointer(&GSLMultiMinFunctionAdapter<FuncType >::F);
        SetDerivPointer(&GSLMultiMinFunctionAdapter<FuncType >::Df);
        SetFdfPointer(&GSLMultiMinFunctionAdapter<FuncType >::Fdf);
@@ -145,7 +145,7 @@ public:
 
    /// check if function is valid (has been set)
     bool IsValid() {
-       return (fFunc.f != 0) ? true : false;
+       return (fFunc.f != nullptr) ? true : false;
     }
 
  private:

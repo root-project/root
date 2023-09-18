@@ -8,7 +8,6 @@ class RH2Painter extends RH2Painter2D {
 
    /** Draw histogram bins in 3D, using provided draw options */
    draw3DBins() {
-
       if (!this.draw_content) return;
 
       if (this.options.Surf)
@@ -25,16 +24,14 @@ class RH2Painter extends RH2Painter2D {
    }
 
    draw3D(reason) {
-
       this.mode3d = true;
 
-      let main = this.getFramePainter(), // who makes axis drawing
-          is_main = this.isMainPainter(), // is main histogram
-          pr = Promise.resolve(this);
+      const main = this.getFramePainter(), // who makes axis drawing
+            is_main = this.isMainPainter(); // is main histogram
+      let pr = Promise.resolve(this);
 
-      if (reason == 'resize') {
+      if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
-
          return pr;
       }
 
@@ -62,7 +59,7 @@ class RH2Painter extends RH2Painter2D {
 
       return pr.then(() => this.drawingBins(reason)).then(() => {
          // called when bins received from server, must be reentrant
-         let main = this.getFramePainter();
+         const main = this.getFramePainter();
 
          this.draw3DBins();
          main.render3D();

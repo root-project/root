@@ -172,7 +172,7 @@ TGraph2DAsymmErrors::~TGraph2DAsymmErrors()
 /// Copy everything except list of functions
 
 TGraph2DAsymmErrors::TGraph2DAsymmErrors(const TGraph2DAsymmErrors &g)
-: TGraph2D(g), fEXlow(0), fEXhigh(0), fEYlow(0), fEYhigh(0), fEZlow(0), fEZhigh(0)
+: TGraph2D(g), fEXlow(nullptr), fEXhigh(nullptr), fEYlow(nullptr), fEYhigh(nullptr), fEZlow(nullptr), fEZhigh(nullptr)
 {
    if (fSize > 0) {
       fEXlow  = new Double_t[fSize];

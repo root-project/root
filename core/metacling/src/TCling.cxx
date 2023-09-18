@@ -7029,6 +7029,11 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
 const char* TCling::GetClassSharedLibs(const char* cls)
 {
    if (fCxxModulesEnabled) {
+      // Lock the interpreter mutex before interacting with cling.
+      // TODO: Can we move this further deep? In principle the lock should be in
+      // GetClassSharedLibsForModule, but it might be needed also for
+      // getLookupHelper?
+      R__LOCKGUARD(gInterpreterMutex);
       llvm::StringRef className = cls;
       // If we get a class name containing lambda, we cannot parse it and we
       // can exit early.
@@ -8936,6 +8941,7 @@ void TCling::MethodInfo_Delete(MethodInfo_t* minfo) const
 void TCling::MethodInfo_CreateSignature(MethodInfo_t* minfo, TString& signature) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    info->CreateSignature(signature);
 }
 
@@ -8976,6 +8982,7 @@ MethodInfo_t* TCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 void* TCling::MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->InterfaceMethod();
 }
 
@@ -9016,6 +9023,7 @@ int TCling::MethodInfo_Next(MethodInfo_t* minfo) const
 Long_t TCling::MethodInfo_Property(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->Property();
 }
 
@@ -9024,6 +9032,7 @@ Long_t TCling::MethodInfo_Property(MethodInfo_t* minfo) const
 Long_t TCling::MethodInfo_ExtraProperty(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->ExtraProperty();
 }
 
@@ -9032,6 +9041,7 @@ Long_t TCling::MethodInfo_ExtraProperty(MethodInfo_t* minfo) const
 TypeInfo_t* TCling::MethodInfo_Type(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return (TypeInfo_t*)info->Type();
 }
 
@@ -9041,6 +9051,7 @@ const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
    TTHREAD_TLS_DECL(TString, mangled_name);
+   // The next call locks the interpreter mutex.
    mangled_name = info->GetMangledName();
    return mangled_name;
 }
@@ -9050,6 +9061,7 @@ const char* TCling::MethodInfo_GetMangledName(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->GetPrototype();
 }
 
@@ -9058,6 +9070,7 @@ const char* TCling::MethodInfo_GetPrototype(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_Name(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->Name();
 }
 
@@ -9066,6 +9079,7 @@ const char* TCling::MethodInfo_Name(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->TypeName();
 }
 
@@ -9074,6 +9088,7 @@ const char* TCling::MethodInfo_TypeName(MethodInfo_t* minfo) const
 std::string TCling::MethodInfo_TypeNormalizedName(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next part locks the interpreter mutex.
    if (info && info->IsValid())
       return info->Type()->NormalizedName(*fNormalizedCtxt);
    else
@@ -9085,6 +9100,7 @@ std::string TCling::MethodInfo_TypeNormalizedName(MethodInfo_t* minfo) const
 const char* TCling::MethodInfo_Title(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
+   // The next call locks the interpreter mutex.
    return info->Title();
 }
 

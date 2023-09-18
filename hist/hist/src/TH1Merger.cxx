@@ -434,7 +434,7 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
       if (gDebug)
          Info("TH1Merger::ExamineHistogram","Examine histogram %s - labels %d - same limits %d - axis found %d",h->GetName(),allHaveLabels,allSameLimits,initialLimitsFound );
 
-   }    while ( ( h = dynamic_cast<TH1*> ( next() ) ) != NULL );
+   }    while ( ( h = dynamic_cast<TH1*> ( next() ) ) != nullptr );
 
    if (!h && (*next) ) {
       Error("Merge","Attempt to merge object of class: %s to a %s",
@@ -493,7 +493,7 @@ void TH1Merger::DefineNewAxes() {
       Bool_t mustCleanup = fH0->TestBit(kMustCleanup);
       if (mustCleanup) fH0->ResetBit(kMustCleanup);
       fHClone = (TH1*)fH0->IsA()->New();
-      fHClone->SetDirectory(0);
+      fHClone->SetDirectory(nullptr);
       fH0->Copy(*fHClone);
       if (mustCleanup) fH0->SetBit(kMustCleanup);
       fH0->BufferEmpty(1);         // To remove buffer.
@@ -556,7 +556,7 @@ void TH1Merger::CopyBuffer(TH1 *hsrc, TH1 *hdes)
    // Check inputs
    //if (!hsrc || !hsrc->fBuffer || !hdes || !hdes->fBuffer) {
    if (!hsrc || !hsrc->fBuffer || !hdes ) {
-      void *p1 = hsrc ? hsrc->fBuffer : 0;
+      void *p1 = hsrc ? hsrc->fBuffer : nullptr;
       //void *p2 = hdes ? hdes->fBuffer : 0;
       //Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, %p -> do nothing", hsrc, hdes, p1, p2);
       Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, -> do nothing", hsrc, hdes, p1);
@@ -588,7 +588,7 @@ void TH1Merger::CopyBuffer(TH1 *hsrc, TH1 *hdes)
 Bool_t TH1Merger::AutoP2BufferMerge()
 {
 
-   TH1 *href = 0, *hist = 0;
+   TH1 *href = nullptr, *hist = nullptr;
    TIter nextref(&fInputList);
    if (TH1Merger::AxesHaveLimits(fH0)) {
       href = fH0;
@@ -637,7 +637,7 @@ Bool_t TH1Merger::AutoP2Merge()
    }
 
    TIter next(&fInputList);
-   TH1 *hist = 0;
+   TH1 *hist = nullptr;
    // Calculate boundaries and bins
    Double_t xmin = 0., xmax = 0.;
    if (!(fH0->IsEmpty())) {
@@ -660,7 +660,7 @@ Bool_t TH1Merger::AutoP2Merge()
       Error("TH1Merger::AutoP2Merge", "cannot create axes from %s", hist->GetName());
       return kFALSE;
    }
-   TH1 *h = 0;
+   TH1 *h = nullptr;
    while ((h = (TH1 *)next())) {
       if (!AutoP2BuildAxes(h)) {
          Error("TH1Merger::AutoP2Merge", "cannot merge histogram %s: not merge compatible", h->GetName());

@@ -1266,8 +1266,8 @@ public:
     RooChebychev bkg1("bkg1","Background 1",x,RooArgSet(a0,a1)) ;
 
     // Build expontential pdf
-    RooRealVar alpha("alpha","alpha",-1) ;
-    RooExponential bkg2("bkg2","Background 2",x,alpha) ;
+    RooRealVar alpha("alpha","alpha", 1) ;
+    RooExponential bkg2("bkg2","Background 2",x,alpha, true);
 
     // Sum the background components into a composite background p.d.f.
     RooRealVar bkg1frac("bkg1frac","fraction of component 1 in background",0.8,0.,1.) ;

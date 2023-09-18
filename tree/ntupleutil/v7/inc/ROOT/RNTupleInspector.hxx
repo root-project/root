@@ -115,7 +115,9 @@ private:
    /// information will be stored in `fColumnInfo`, and the RNTuple-level information
    /// in `fCompressionSettings`, `fOnDiskSize` and `fInMemorySize`.
    ///
-   /// This method is called when the `RNTupleInspector` is initially created.
+   /// This method is called when the `RNTupleInspector` is initially created. This means that anything unexpected about
+   /// the RNTuple itself (e.g. inconsistent compression settings across clusters) will be detected here. Therefore, any
+   /// related exceptions will be thrown on creation of the inspector.
    void CollectColumnInfo();
 
    /// Recursively gather field-level information and store it in `fFieldTreeInfo`.
@@ -133,7 +135,9 @@ public:
    RNTupleInspector &operator=(RNTupleInspector &&other) = delete;
    ~RNTupleInspector() = default;
 
-   /// Create a new inspector for a given RNTuple.
+   /// Create a new inspector for a given RNTuple. When this factory method is called, all required static information
+   /// is collected from the RNTuple's fields and underlying columns are collected at ones. This means that when any
+   /// inconsistencies are encountered (e.g. inconsistent compression across clusters), it will throw an error here.
    static std::unique_ptr<RNTupleInspector> Create(std::unique_ptr<Detail::RPageSource> pageSource);
    static std::unique_ptr<RNTupleInspector> Create(RNTuple *sourceNTuple);
    static std::unique_ptr<RNTupleInspector> Create(std::string_view ntupleName, std::string_view storage);
@@ -141,7 +145,9 @@ public:
    /// Get the descriptor for the RNTuple being inspected.
    RNTupleDescriptor *GetDescriptor() const { return fDescriptor.get(); }
 
-   /// Get the compression settings of the RNTuple being inspected.
+   /// Get the compression settings of the RNTuple being inspected. Here, we assume that the compression settings are
+   /// consistent across all clusters and columns. If this is not the case, an exception will be thrown upon
+   /// `RNTupleInspector::Create`.
    int GetCompressionSettings() const { return fCompressionSettings; }
 
    /// Get the on-disk, compressed size of the RNTuple being inspected, in bytes.

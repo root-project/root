@@ -551,7 +551,7 @@ Int_t RunTests(Int_t argc, Char_t* argv[]) {
    return result;
 }
 
-Int_t stressGoFTest(Int_t argc = 1 , Char_t* argv[] = 0) {
+Int_t stressGoFTest(Int_t argc = 1 , Char_t* argv[] = nullptr) {
    return RunTests(argc, argv);
 }
 

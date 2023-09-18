@@ -135,13 +135,54 @@ class TestRooDataSetNumpy(unittest.TestCase):
         cat.defineType("minus", -1)
         cat.defineType("plus", +1)
 
-        in_x_range = (data["x"] <= x.getMax()) & (data["x"] >= x.getMin())
-        in_cat_range = (data["cat"] == -1) | (data["cat"] == +1)
-        n_in_range = np.sum(in_x_range & in_cat_range)
+        # Use manual loop because we had some problems with numpys boolean
+        # comparisions in the past (see GitHub issue #12162).
+        n_in_range = 0
+        for i in range(n_events):
+            in_x_range = data["x"][i] <= x.getMax() and data["x"][i] >= x.getMin()
+            in_cat_range = (data["cat"][i] == -1) or (data["cat"][i] == +1)
+            is_in_range = in_x_range and in_cat_range
+            if is_in_range:
+                n_in_range = n_in_range + 1
 
         dataset_numpy = ROOT.RooDataSet.from_numpy(data, {x, cat}, name="dataSetNumpy")
 
         self.assertEqual(dataset_numpy.numEntries(), n_in_range)
+
+    def test_non_contiguous_arrays(self):
+        """Test whether the import also works with non-continguous arrays.
+        Covers GitHub issue #13605.
+        """
+
+        import itertools
+
+        obs_1 = ROOT.RooRealVar("obs_1", "obs_1", 70, 70, 190)
+        obs_1.setBins(30)
+        obs_2 = ROOT.RooRealVar("obs_2", "obs_2", 100, 100, 180)
+        obs_2.setBins(80)
+
+        val_obs_1 = []
+        val_obs_2 = []
+        for i in range(obs_1.numBins()):
+            obs_1.setBin(i)
+            val_obs_1.append(obs_1.getVal())
+        for i in range(obs_2.numBins()):
+            obs_2.setBin(i)
+            val_obs_2.append(obs_2.getVal())
+
+        # so that all combination of values are in the dataset
+        val_cart_product = np.array(list(itertools.product(val_obs_1, val_obs_2)))
+        data = {"obs_1": val_cart_product[:, 0], "obs_2": val_cart_product[:, 1]}
+
+        # To make sure the array is really not C-contiguous
+        assert data["obs_1"].flags["C_CONTIGUOUS"] == False
+
+        dataset = ROOT.RooDataSet.from_numpy(data, ROOT.RooArgSet(obs_1, obs_2))
+
+        data_roundtripped = dataset.to_numpy()
+
+        np.testing.assert_equal(data["obs_1"], data_roundtripped["obs_1"])
+        np.testing.assert_equal(data["obs_2"], data_roundtripped["obs_2"])
 
 
 if __name__ == "__main__":

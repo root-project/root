@@ -103,12 +103,16 @@ TDatabasePDG::~TDatabasePDG()
 ////////////////////////////////////////////////////////////////////////////////
 ///static function
 
-TDatabasePDG* TDatabasePDG::Instance()
+TDatabasePDG *TDatabasePDG::Instance()
 {
    auto fgInstance = GetInstancePtr();
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
    if (*fgInstance == nullptr) {
-      // Constructor creates a new instance, inits fgInstance.
-      new TDatabasePDG();
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      if (!*fgInstance) {
+         // Constructor creates a new instance, inits fgInstance.
+         new TDatabasePDG();
+      }
    }
    return *fgInstance;
 }
@@ -122,11 +126,20 @@ TDatabasePDG* TDatabasePDG::Instance()
 
 void TDatabasePDG::BuildPdgMap() const
 {
-   fPdgMap = new TExMap(4*TMath::Max(600, fParticleList->GetEntries())/3 + 3);
+   // It is preferrable to waste some work in presence of high contention
+   // for the benefit of reducing the critical section to the bare minimum
+   auto pdgMap = new TExMap(4 * TMath::Max(600, fParticleList->GetEntries()) / 3 + 3);
    TIter next(fParticleList);
    TParticlePDG *p;
    while ((p = (TParticlePDG*)next())) {
-      fPdgMap->Add((Long64_t)p->PdgCode(), (Long64_t)p);
+      pdgMap->Add((Long64_t)p->PdgCode(), (Long64_t)p);
+   }
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   if (!fPdgMap) {
+      fPdgMap = pdgMap;
+   } else {
+      delete pdgMap;
    }
 }
 
@@ -151,7 +164,7 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
    TParticlePDG* old = GetParticle(PDGcode);
 
    if (old) {
-      printf(" *** TDatabasePDG::AddParticle: particle with PDGcode=%d already defined\n",PDGcode);
+      Warning("AddParticle", "Particle with PDGcode=%d already defined", PDGcode);
       return 0;
    }
 
@@ -182,7 +195,7 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
    TParticlePDG* old = GetParticle(PdgCode);
 
    if (old) {
-      printf(" *** TDatabasePDG::AddAntiParticle: can't redefine parameters\n");
+      Warning("AddAntiParticle", "Can't redefine parameters");
       return NULL;
    }
 
@@ -190,7 +203,7 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
    TParticlePDG* p = GetParticle(pdg_code);
 
    if (!p) {
-      printf(" *** TDatabasePDG::AddAntiParticle: particle with pdg code %d not known\n", pdg_code);
+      Warning("AddAntiParticle", "Particle with pdg code %d not known", pdg_code);
       return NULL;
    }
 
@@ -215,8 +228,11 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 
 TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
 {
-   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
-
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      if (fParticleList == 0)
+         ((TDatabasePDG *)this)->ReadPDGTableImpl("", false);
+   }
    TParticlePDG *def = (TParticlePDG *)fParticleList->FindObject(name);
 //     if (!def) {
 //        Error("GetParticle","No match for %s exists!",name);
@@ -231,8 +247,13 @@ TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
 
 TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
 {
-   if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
-   if (fPdgMap       == 0)  BuildPdgMap();
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      if (fParticleList == 0)
+         ((TDatabasePDG *)this)->ReadPDGTableImpl("", false);
+      if (fPdgMap == 0)
+         BuildPdgMap();
+   }
 
    return (TParticlePDG *)fPdgMap->GetValue((Long64_t)PDGcode);
 }
@@ -550,14 +571,22 @@ Int_t TDatabasePDG::ConvertIsajetToPdg(Int_t isaNumber) const
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// read list of particles from a file
-/// if the particle list does not exist, it is created, otherwise
-/// particles are added to the existing list
-/// See $ROOTSYS/etc/pdg_table.txt to see the file format
-
-void TDatabasePDG::ReadPDGTable(const char *FileName)
+void TDatabasePDG::ReadPDGTableImpl(const char *FileName, bool isParticleListInitializedWhenInvoking)
 {
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   // To avoid to rebuild the particle list from multiple threads, we check if at
+   // the moment of invoked ReadPDGTableImpl, the list was initialized. If it was not, and now it is, another
+   // thread filled it. Doing so again would result in an error.
+   // However, if the particle list was not initialized when ReadPDGTableImpl was invoked and it is still empty,
+   // we fill it.
+   // With the protection described above, ReadPDGTable can be invoked multiple times, for example once
+   // automatically by the system lazily and a second time by the user to complement the information
+   // already in memory with a second input file.
+   if (!isParticleListInitializedWhenInvoking && fParticleList) {
+      return;
+   }
+
    if (fParticleList == 0) {
       fParticleList  = new THashList;
       fListOfClasses = new TObjArray;
@@ -729,9 +758,19 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// read list of particles from a file
+/// if the particle list does not exist, it is created, otherwise
+/// particles are added to the existing list
+/// See $ROOTSYS/etc/pdg_table.txt to see the file format
+
+void TDatabasePDG::ReadPDGTable(const char *FileName)
+{
+   ReadPDGTableImpl(FileName, nullptr != fParticleList);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-///browse data base
+/// browse data base
 
 void TDatabasePDG::Browse(TBrowser* b)
 {

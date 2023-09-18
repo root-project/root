@@ -4,7 +4,6 @@ import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
 import { getRootColors } from '../base/colors.mjs';
 
-
 /** @summary Display progress message in the left bottom corner.
   * @desc Previous message will be overwritten
   * if no argument specified, any shown messages will be removed
@@ -14,13 +13,13 @@ import { getRootColors } from '../base/colors.mjs';
 function showProgress(msg, tmout) {
    if (isBatchMode() || (typeof document === 'undefined'))
       return;
-   let id = 'jsroot_progressbox',
-       box = d3_select('#' + id);
+   const id = 'jsroot_progressbox';
+   let box = d3_select('#' + id);
 
    if (!settings.ProgressBox)
       return box.remove();
 
-   if ((arguments.length == 0) || !msg) {
+   if ((arguments.length === 0) || !msg) {
       if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
       return;
    }
@@ -34,9 +33,9 @@ function showProgress(msg, tmout) {
 
    box.property('with_timeout', false);
 
-   if (isStr(msg)) {
+   if (isStr(msg))
       box.select('p').html(msg);
-   } else {
+    else {
       box.html('');
       box.node().appendChild(msg);
    }
@@ -62,8 +61,8 @@ function closeCurrentWindow() {
 /** @summary Tries to open ui5
   * @private */
 function tryOpenOpenUI(sources, args) {
-   if (!sources || (sources.length == 0)) {
-      if (args.rejectFunc) {
+   if (!sources || (sources.length === 0)) {
+      if (isFunc(args.rejectFunc)) {
          args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
       }
@@ -73,10 +72,10 @@ function tryOpenOpenUI(sources, args) {
    // where to take openui5 sources
    let src = sources.shift();
 
-   if ((src.indexOf('roothandler') == 0) && (src.indexOf('://') < 0))
-      src = src.replace(/\:\//g, '://');
+   if ((src.indexOf('roothandler') === 0) && (src.indexOf('://') < 0))
+      src = src.replace(/:\//g, '://');
 
-   let element = document.createElement('script');
+   const element = document.createElement('script');
    element.setAttribute('type', 'text/javascript');
    element.setAttribute('id', 'sap-ui-bootstrap');
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
@@ -115,23 +114,23 @@ function tryOpenOpenUI(sources, args) {
   * @private */
 async function loadOpenui5(args) {
    // very simple - openui5 was loaded before and will be used as is
-   if (typeof sap == 'object')
-      return sap;
+   if (typeof globalThis.sap === 'object')
+      return globalThis.sap;
 
    if (!args) args = {};
 
    let rootui5sys = source_dir.replace(/jsrootsys/g, 'rootui5sys');
 
-   if (rootui5sys == source_dir) {
+   if (rootui5sys === source_dir) {
       // if jsrootsys location not detected, try to guess it
-      if (window.location.port && (window.location.pathname.indexOf('/win') >= 0) && (!args.openui5src || args.openui5src == 'nojsroot' || args.openui5src == 'jsroot'))
+      if (window.location.port && (window.location.pathname.indexOf('/win') >= 0) && (!args.openui5src || args.openui5src === 'nojsroot' || args.openui5src === 'jsroot'))
          rootui5sys = window.location.origin + window.location.pathname + '../rootui5sys/';
       else
          rootui5sys = undefined;
    }
 
-   let openui5_sources = [],
-       openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
+   const openui5_sources = [];
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -142,9 +141,8 @@ async function loadOpenui5(args) {
          case 'jsroot': openui5_sources.push(openui5_root); openui5_root = ''; break;
          default: openui5_sources.push(args.openui5src); break;
       }
-   } else if (args.ui5dbg) {
+   } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
-   }
 
    if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
       openui5_sources.push(openui5_root);
@@ -152,12 +150,11 @@ async function loadOpenui5(args) {
       openui5_sources.push(openui5_dflt);
 
    return new Promise((resolve, reject) => {
-
       args.resolveFunc = resolve;
       args.rejectFunc = reject;
 
       globalThis.completeUI5Loading = function() {
-         sap.ui.loader.config({
+         globalThis.sap.ui.loader.config({
             paths: {
                jsroot: source_dir,
                rootui5: rootui5sys
@@ -165,7 +162,7 @@ async function loadOpenui5(args) {
          });
 
          if (args.resolveFunc) {
-            args.resolveFunc(sap);
+            args.resolveFunc(globalThis.sap);
             args.resolveFunc = null;
          }
       };
@@ -173,6 +170,10 @@ async function loadOpenui5(args) {
       tryOpenOpenUI(openui5_sources, args);
    });
 }
+
+/* eslint-disable key-spacing */
+/* eslint-disable comma-spacing */
+/* eslint-disable object-curly-spacing */
 
 // some icons taken from http://uxrepo.com/
 const ToolbarIcons = {
@@ -206,8 +207,8 @@ const ToolbarIcons = {
    },
 
    createSVG(group, btn, size, title, arg) {
-      let use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
-          opacity0 = (arg == 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
+      const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
+          opacity0 = (arg === 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
           svg = group.append('svg:svg')
                      .attr('width', size + 'px')
                      .attr('height', size + 'px')
@@ -219,29 +220,29 @@ const ToolbarIcons = {
                      .property('opacity0', opacity0)
                      .property('opacity1', use_dark ? 1 : 0.8)
                      .on('mouseenter', function() {
-                        let elem = d3_select(this);
+                        const elem = d3_select(this);
                         elem.style('opacity', elem.property('opacity1'));
-                        let func = elem.node()._mouseenter;
+                        const func = elem.node()._mouseenter;
                         if (isFunc(func)) func();
                      })
                      .on('mouseleave', function() {
-                        let elem = d3_select(this);
+                        const elem = d3_select(this);
                         elem.style('opacity', elem.property('opacity0'));
-                        let func = elem.node()._mouseleave;
+                        const func = elem.node()._mouseleave;
                         if (isFunc(func)) func();
                      });
 
       if ('recs' in btn) {
-         let rec = {};
+         const rec = {};
          for (let n = 0; n < btn.recs.length; ++n) {
             Object.assign(rec, btn.recs[n]);
             svg.append('rect').attr('x', rec.x).attr('y', rec.y)
                .attr('width', rec.w).attr('height', rec.h)
                .style('fill', rec.f);
          }
-      } else {
+      } else
          svg.append('svg:path').attr('d', btn.path);
-      }
+
 
       //  special rect to correctly get mouse events for whole button area
       svg.append('svg:rect').attr('x', 0).attr('y', 0).attr('width', 512).attr('height', 512)
@@ -262,11 +263,9 @@ const ToolbarIcons = {
   * @param {number} [delay] - one could specify delay after which resize event will be handled
   * @protected */
 function registerForResize(handle, delay) {
+   if (!handle || isBatchMode() || (typeof window === 'undefined') || (typeof document === 'undefined')) return;
 
-   if (!handle || isBatchMode() || (typeof window == 'undefined')) return;
-
-   let myInterval = null, myDelay = delay ? delay : 300;
-
+   let myInterval = null, myDelay = delay || 300;
    if (myDelay < 20) myDelay = 20;
 
    function ResizeTimer() {
@@ -275,17 +274,16 @@ function registerForResize(handle, delay) {
       document.body.style.cursor = 'wait';
       if (isFunc(handle))
          handle();
-      else if (isFunc(handle?.checkResize)) {
+      else if (isFunc(handle?.checkResize))
          handle.checkResize();
-      } else {
-         let node = new BasePainter(handle).selectDom();
+      else {
+         const node = new BasePainter(handle).selectDom();
          if (!node.empty()) {
-            let mdi = node.property('mdi');
-            if (isFunc(mdi?.checkMDIResize)) {
+            const mdi = node.property('mdi');
+            if (isFunc(mdi?.checkMDIResize))
                mdi.checkMDIResize();
-            } else {
+             else
                resize(node.node());
-            }
          }
       }
       document.body.style.cursor = 'auto';
@@ -305,16 +303,12 @@ function detectRightButton(event) {
 
 /** @summary Add move handlers for drawn element
   * @private */
-function addMoveHandler(painter, enabled) {
-
-   if (enabled === undefined)
-      enabled = true;
-
+function addMoveHandler(painter, enabled = true) {
    if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
 
    if (!enabled) {
       if (painter.draw_g.property('assigned_move')) {
-         let drag_move = d3_drag().subject(Object);
+         const drag_move = d3_drag().subject(Object);
          drag_move.on('start', null).on('drag', null).on('end', null);
          painter.draw_g
                .style('cursor', null)
@@ -326,8 +320,8 @@ function addMoveHandler(painter, enabled) {
 
    if (painter.draw_g.property('assigned_move')) return;
 
-   let drag_move = d3_drag().subject(Object),
-       not_changed = true, move_disabled = false;
+   const drag_move = d3_drag().subject(Object);
+   let not_changed = true, move_disabled = false;
 
    drag_move
       .on('start', function(evnt) {
@@ -336,7 +330,7 @@ function addMoveHandler(painter, enabled) {
          if (detectRightButton(evnt.sourceEvent)) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
-         let pos = d3_pointer(evnt, this.draw_g.node());
+         const pos = d3_pointer(evnt, this.draw_g.node());
          not_changed = true;
          if (this.moveStart)
             this.moveStart(pos[0], pos[1]);
@@ -357,7 +351,7 @@ function addMoveHandler(painter, enabled) {
          let arg = null;
          if (not_changed) {
             // if not changed - provide click position
-            let pos = d3_pointer(evnt, this.draw_g.node());
+            const pos = d3_pointer(evnt, this.draw_g.node());
             arg = { x: pos[0], y: pos[1], dbl: false };
          }
          this.getPadPainter()?.selectObjectPainter(this, arg);
@@ -376,18 +370,18 @@ function injectStyle(code, node, tag) {
    if (isBatchMode() || !code || (typeof document === 'undefined'))
       return true;
 
-   let styles = (node || document).getElementsByTagName('style');
+   const styles = (node || document).getElementsByTagName('style');
    for (let n = 0; n < styles.length; ++n) {
-      if (tag && styles[n].getAttribute('tag') == tag) {
+      if (tag && styles[n].getAttribute('tag') === tag) {
          styles[n].innerHTML = code;
          return true;
       }
 
-      if (styles[n].innerHTML == code)
+      if (styles[n].innerHTML === code)
          return true;
    }
 
-   let element = document.createElement('style');
+   const element = document.createElement('style');
    if (tag) element.setAttribute('tag', tag);
    element.innerHTML = code;
    (node || document.head).appendChild(element);
@@ -423,25 +417,27 @@ function selectgStyle(name) {
 /** @summary Save object as a cookie
   * @private */
 function saveCookie(obj, expires, name) {
-   let arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
-       d = new Date();
+   const arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
+         d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
-   document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
+   if (typeof document !== 'undefined')
+      document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
 /** @summary Read cookie with specified name
   * @private */
 function readCookie(name) {
-   if (typeof document == 'undefined') return null;
-   let decodedCookie = decodeURIComponent(document.cookie),
-       ca = decodedCookie.split(';');
+   if (typeof document === 'undefined')
+      return null;
+   const decodedCookie = decodeURIComponent(document.cookie),
+         ca = decodedCookie.split(';');
    name += '=';
-   for(let i = 0; i < ca.length; i++) {
+   for (let i = 0; i < ca.length; i++) {
       let c = ca[i];
-      while (c.charAt(0) == ' ')
+      while (c.charAt(0) === ' ')
         c = c.substring(1);
-      if (c.indexOf(name) == 0) {
-         let s = JSON.parse(atob_func(c.substring(name.length, c.length)));
+      if (c.indexOf(name) === 0) {
+         const s = JSON.parse(atob_func(c.substring(name.length, c.length)));
 
          return isObject(s) ? s : null;
       }
@@ -462,7 +458,7 @@ function saveSettings(expires = 365, name = 'jsroot_settings') {
   * @param {String} name - cookie parameter name
   * @private */
 function readSettings(only_check = false, name = 'jsroot_settings') {
-   let s = readCookie(name);
+   const s = readCookie(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(settings, s);
@@ -482,7 +478,7 @@ function saveStyle(expires = 365, name = 'jsroot_style') {
   * @param {String} name - cookie parameter name
   * @private */
 function readStyle(only_check = false, name = 'jsroot_style') {
-   let s = readCookie(name);
+   const s = readCookie(name);
    if (!s) return false;
    if (!only_check)
       Object.assign(gStyle, s);
@@ -498,13 +494,13 @@ let _saveFileFunc = null;
 function getBinFileContent(content) {
    const svg_prefix = 'data:image/svg+xml;charset=utf-8,';
 
-   if (content.indexOf(svg_prefix) == 0)
+   if (content.indexOf(svg_prefix) === 0)
       return decodeURIComponent(content.slice(svg_prefix.length));
 
-   if (content.indexOf('data:image/') == 0) {
-      let p = content.indexOf('base64,');
+   if (content.indexOf('data:image/') === 0) {
+      const p = content.indexOf('base64,');
       if (p > 0) {
-         let base64 = content.slice(p + 7);
+         const base64 = content.slice(p + 7);
          return atob_func(base64);
       }
    }
@@ -522,8 +518,8 @@ async function saveFile(filename, content) {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
       });
-   } else if (typeof document == 'object') {
-      let a = document.createElement('a');
+   } else if (typeof document !== 'undefined') {
+      const a = document.createElement('a');
       a.download = filename;
       a.href = content;
       document.body.appendChild(a);
@@ -547,15 +543,16 @@ function setSaveFile(func) {
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
   * @private */
 function getColorExec(col, method) {
-   let id = -1, arr = getRootColors();
+   const arr = getRootColors();
+   let id = -1;
    if (isStr(col)) {
-      if (!col || (col == 'none')) {
+      if (!col || (col === 'none'))
          id = 0;
-      } else {
+       else {
          for (let k = 1; k < arr.length; ++k)
-            if (arr[k] == col) { id = k; break; }
+            if (arr[k] === col) { id = k; break; }
       }
-      if ((id < 0) && (col.indexOf('rgb') == 0))
+      if ((id < 0) && (col.indexOf('rgb') === 0))
          id = 9999;
    } else if (Number.isInteger(col) && arr[col]) {
       id = col;
@@ -566,7 +563,7 @@ function getColorExec(col, method) {
 
    // for higher color numbers ensure that such color exists
    if (id >= 50) {
-      let c = d3_color(col);
+      const c = d3_color(col);
       id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
     }
 

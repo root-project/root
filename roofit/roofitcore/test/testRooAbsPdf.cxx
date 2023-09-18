@@ -192,11 +192,11 @@ TEST_P(FitTest, MultiRangeFit)
       nsig.setError(0.0);
    };
 
-   // loop over non-extended and extended fit
-   for (auto *model : {static_cast<RooAbsPdf *>(&modelSimple), static_cast<RooAbsPdf *>(&modelExtended)}) {
+   std::unique_ptr<RooAbsData> dataSet{modelSimple.generate(x, nEvents)};
+   std::unique_ptr<RooAbsData> dataHist{static_cast<RooDataSet &>(*dataSet).binnedClone()};
 
-      std::unique_ptr<RooAbsData> dataSet{model->generate(x, nEvents)};
-      std::unique_ptr<RooAbsData> dataHist{static_cast<RooDataSet &>(*dataSet).binnedClone()};
+   // loop over non-extended and extended fit
+   for (auto *model : {&modelSimple, &modelExtended}) {
 
       // loop over binned fit and unbinned fit
       for (auto *data : {dataSet.get(), dataHist.get()}) {
@@ -212,6 +212,29 @@ TEST_P(FitTest, MultiRangeFit)
 
          EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
             << "Results of fitting " << model->GetName() << " to a " << data->ClassName() << " should be very similar.";
+      }
+   }
+
+   // If the BatchMode is off, we are doing the same cross-check also with the
+   // chi-square fit on the RooDataHist.
+   if (_batchMode == "off") {
+
+      auto &dh = static_cast<RooDataHist &>(*dataHist);
+
+      // loop over non-extended and extended fit
+      for (auto *model : {&modelSimple, &modelExtended}) {
+
+         // full range
+         resetValues();
+         std::unique_ptr<RooFitResult> fitResultFull{model->chi2FitTo(dh, Range("full"), Save(), PrintLevel(-1))};
+
+         // part (side band fit, but the union of the side bands is the full range)
+         resetValues();
+         std::unique_ptr<RooFitResult> fitResultPart{model->chi2FitTo(dh, Range("low,high"), Save(), PrintLevel(-1))};
+
+         EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
+            << "Results of fitting " << model->GetName()
+            << " to a RooDataHist should be very similar also for chi2FitTo().";
       }
    }
 }
@@ -287,6 +310,25 @@ TEST_P(FitTest, MultiRangeFit2D)
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
          << "Results of fitting " << model.GetName() << " to a " << data->ClassName() << " should be very similar.";
    }
+
+   // If the BatchMode is off, we are doing the same cross-check also with the
+   // chi-square fit on the RooDataHist.
+   if (_batchMode == "off") {
+
+      // full range
+      resetValues();
+      std::unique_ptr<RooFitResult> fitResultFull{
+         model.fitTo(*dataHist, Range("FULL"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+
+      // part (side band fit, but the union of the side bands is the full range)
+      resetValues();
+      std::unique_ptr<RooFitResult> fitResultPart{
+         model.fitTo(*dataHist, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+
+      EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
+         << "Results of fitting " << model.GetName()
+         << " to a RooDataHist should be very similar also for chi2FitTo().";
+   }
 }
 
 // This test will crash if the cached normalization sets are not reset
@@ -311,20 +353,18 @@ TEST_P(FitTest, ProblemsWith2DSimultaneousFit)
    // Complete model
    ws.factory("AddPdf::model({sig, sig_y, uniform2, uniform1}, {yield[100], yield, yield, yield})");
 
-   RooAbsPdf &model = *ws.pdf("model");
-
    // Define category to distinguish d0 and d0bar samples events
    RooCategory sample("sample", "sample", {{"cat0", 0}, {"cat1", 1}});
 
-   // Construct a dummy dataset
-   RooDataSet data("data", "data", RooArgSet(sample, *ws.var("x"), *ws.var("y")));
-
    // Construct a simultaneous pdf using category sample as index
    RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
-   simPdf.addPdf(model, "cat0");
-   simPdf.addPdf(model, "cat1");
+   simPdf.addPdf(*ws.pdf("model"), "cat0");
+   simPdf.addPdf(*ws.pdf("model"), "cat1");
 
-   simPdf.fitTo(data, PrintLevel(-1), BatchMode(_batchMode));
+   // Construct a dummy dataset
+   std::unique_ptr<RooDataSet> data{simPdf.generate({sample, *ws.var("x"), *ws.var("y")})};
+
+   simPdf.fitTo(*data, PrintLevel(-1), BatchMode(_batchMode));
 }
 
 // Verifies that a server pdf gets correctly reevaluated when the normalization
@@ -349,7 +389,7 @@ TEST(RooAbsPdf, NormSetChange)
    EXPECT_NE(v1, v2);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values("Off", "Cpu"),
+INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values("off", "cpu"),
                          [](testing::TestParamInfo<FitTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "BatchMode" << std::get<0>(paramInfo.param);

@@ -20,7 +20,9 @@ class ComputeHelper<std::index_sequence<N...>, T, F> {
 
 public:
    ComputeHelper(F &&f) : fFunc(std::forward<F>(f)) {}
-   auto operator()(AlwaysT<N>... args) -> decltype(fFunc.Compute({args...})) { return fFunc.Compute({args...}); }
+   auto operator()(AlwaysT<N>... args) -> decltype(fFunc.Compute({args...})) {
+      return fFunc.Compute({args...});
+   }
 };
 
 } // namespace Internal

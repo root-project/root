@@ -178,7 +178,7 @@ void fit3DHist()
 ///////////////// CREATE THE SPARSE DATA
    cout << "Retrieving the Sparse Data Structure" << endl;
    ROOT::Fit::SparseData d(min,max);
-   ROOT::Fit::FillData(d, h1, 0);
+   ROOT::Fit::FillData(d, h1, nullptr);
    ROOT::Fit::BinData bd;
    d.GetBinData(bd);
 
@@ -206,7 +206,7 @@ void fit3DHist()
    /////////////////////////////////////////////////////////////////////////
    cout << "\n ******* Fit with Original BinData *******" << endl;
    ROOT::Fit::BinData bdOriginal;
-   ROOT::Fit::FillData(bdOriginal, h1, 0);
+   ROOT::Fit::FillData(bdOriginal, h1, nullptr);
    ret = fitter.LikelihoodFit(bdOriginal, if1, true);
    fitter.Result().Print(std::cout);
    if (!ret)
@@ -218,7 +218,7 @@ void fit3DHist()
    opt.fUseEmpty = true;
    opt.fIntegral = true;
    ROOT::Fit::BinData bdOriginalWithCeros(opt);
-   ROOT::Fit::FillData(bdOriginalWithCeros, h1, 0);
+   ROOT::Fit::FillData(bdOriginalWithCeros, h1, nullptr);
    ret = fitter.LikelihoodFit(bdOriginalWithCeros, if1, true);
    fitter.Result().Print(std::cout);
    if (!ret)
@@ -295,7 +295,7 @@ void fit2DHist()
 ///////////////// CREATE THE SPARSE DATA
    cout << "Retrieving the Sparse Data Structure" << endl;
    ROOT::Fit::SparseData d(min,max);
-   ROOT::Fit::FillData(d, h1, 0);
+   ROOT::Fit::FillData(d, h1, nullptr);
    ROOT::Fit::BinData bd;
    d.GetBinData(bd);
 
@@ -322,7 +322,7 @@ void fit2DHist()
    /////////////////////////////////////////////////////////////////////////
    cout << "\n ******* Fit with Original BinData *******" << endl;
    ROOT::Fit::BinData bdOriginal;
-   ROOT::Fit::FillData(bdOriginal, h1, 0);
+   ROOT::Fit::FillData(bdOriginal, h1, nullptr);
    ret = fitter.LikelihoodFit(bdOriginal, if2, true);
    fitter.Result().Print(std::cout);
    if (!ret)
@@ -334,7 +334,7 @@ void fit2DHist()
    opt.fUseEmpty = true;
    opt.fIntegral = true;
    ROOT::Fit::BinData bdOriginalWithCeros(opt);
-   ROOT::Fit::FillData(bdOriginalWithCeros, h1, 0);
+   ROOT::Fit::FillData(bdOriginalWithCeros, h1, nullptr);
    ret = fitter.LikelihoodFit(bdOriginalWithCeros, if2, true);
    fitter.Result().Print(std::cout);
    if (!ret)
@@ -482,7 +482,7 @@ void fit2DHist()
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
 
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
@@ -494,7 +494,7 @@ void fit2DHist()
    if ( showGraphics ) {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return 0;

@@ -25,10 +25,33 @@ For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as 
 RNTuple envelopes and pages are wrapped in compression blocks.
 In order to deserialize a page or an envelope, its compressed and ucompressed size needs to be known.
 
-TODO(jblomer): reference or describe the compression block format.
-  - Compressed size == uncompressed size --> uncompressed
-  - Otherwise: connected compressed chunks with the 9 byte header
+If the compressed size == uncompressed size, the data is stored unmodified in uncompressed form.
+Otherwise, data is represented as a series of compressed chunks.
+Each chunk is prepended with the following 9 byte header.
 
+```
+Byte
+0      1      2      3      4      5      6      7      8      9
++------+------+------+------+------+------+------+------+------+...
+|     Algorithm      |  Compressed size   |  Uncompressed size | <COMPRESSED DATA>
++------+------+------+------+------+------+------+------+------+...
+```
+
+_Algorithm_: Identifies the compression algorithm used to compress the data. This can take one of the following values
+
+| Algorithm                | Meaning                                      |
+|--------------------------|----------------------------------------------|
+| 'Z' 'L' '\x08'           | zlib                                         |
+| 'C' 'S' '\x08'           | Old Jean-loup Gailly's deflation algorithm   |
+| 'X' 'Z' '\x00'           | LZMA                                         |
+| 'L' '4' <VERSION_MAJOR>  | LZ4; third byte encodes major version number |
+| 'Z' 'S' '\x01'           | Zstd                                         |
+
+_Compressed size_: An unsigned, little-endian integer that indicates the compressed size of the data that follows the header.
+
+_Uncompressed size_: An unsigned, little-endian integer that indicates the uncompressed size of the data that follows.
+The maximum representable value is $(2^{24})-1$, i.e. 16777215, and thus each compressed chunk can represent up to 16 MiB of uncompressed data.
+If the original data is larger than this value, more compressed chunks will follow.
 
 ## Basic Types
 

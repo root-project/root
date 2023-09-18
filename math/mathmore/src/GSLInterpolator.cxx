@@ -40,8 +40,8 @@ namespace Math {
 
 GSLInterpolator::GSLInterpolator (unsigned int size, Interpolation::Type type) :
    fResetNErrors(true),
-   fAccel(0),
-   fSpline(0)
+   fAccel(nullptr),
+   fSpline(nullptr)
 {
    // constructor given type and vectors of (x,y) points
 
@@ -81,7 +81,7 @@ GSLInterpolator::GSLInterpolator (unsigned int size, Interpolation::Type type) :
 bool  GSLInterpolator::Init(unsigned int size, const double *x, const double * y) {
    // initialize interpolation object with the given data
    // if given size is different a new interpolator object is created
-   if (fSpline == 0)
+   if (fSpline == nullptr)
       fSpline = gsl_spline_alloc( fInterpType, size);
 
    else {
@@ -98,15 +98,15 @@ bool  GSLInterpolator::Init(unsigned int size, const double *x, const double * y
    int iret = gsl_spline_init( fSpline , x , y , size );
    if (iret != 0) return false;
 
-   if(fAccel==0)
+   if(fAccel==nullptr)
       fAccel = gsl_interp_accel_alloc() ;
    else
       gsl_interp_accel_reset(fAccel);
 
    //  if (fSpline == 0 || fAccel == 0)
    //  throw std::exception();
-   assert (fSpline != 0);
-   assert (fAccel != 0);
+   assert (fSpline != nullptr);
+   assert (fAccel != nullptr);
    // reset counter for error messages
    fResetNErrors = true;
    return true;
@@ -115,8 +115,8 @@ bool  GSLInterpolator::Init(unsigned int size, const double *x, const double * y
 GSLInterpolator::~GSLInterpolator()
 {
    // free gsl objects
-   if (fSpline != 0) gsl_spline_free(fSpline);
-   if (fAccel != 0) gsl_interp_accel_free( fAccel);
+   if (fSpline != nullptr) gsl_spline_free(fSpline);
+   if (fAccel != nullptr) gsl_interp_accel_free( fAccel);
 }
 
 GSLInterpolator::GSLInterpolator(const GSLInterpolator &)

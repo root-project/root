@@ -215,7 +215,7 @@ double read(const std::string & file_name) {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  Vector *v1 = 0;
+  Vector *v1 = nullptr;
 
   std::cout << "reading typeID  : " << typeid(*v1).name() << std::endl;
 
@@ -386,7 +386,7 @@ int testVectorIO(bool readOnly = false) {
   // test TrackD
   fname = "track";
   // load track dictionary
-  gSystem->Load("libTrackDict");
+  gInterpreter->ProcessLine(".L Track.h+");
 
   //nEvents = 10000;
 
@@ -455,7 +455,7 @@ int main(int argc, char ** ) {
    if (iret != 0)
       std::cerr << "testVectorIO:\t FAILED ! " << std::endl;
    else
-      std::cerr << "testVectorIO:\t OK ! " << std::endl;
+      std::cout << "testVectorIO:\t OK ! " << std::endl;
 
    return iret;
 

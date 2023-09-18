@@ -53,7 +53,7 @@ template <typename T> bool testSort(const int n, double* tTMath, double* tStd)
    vector<T> index2(n);
    TStopwatch t;
 
-   TRandom2 r( time( 0 ) );
+   TRandom2 r( time( nullptr ) );
    for ( Int_t i = 0; i < n; i++) {
       k[i] = (T) r.Integer( maxint );
 //      cout << k[i] << ' ' << endl;
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
    if ( showGraphics ) {
       theApp = new TApplication("App",&argc,argv);
 //      plotFile = std::string(gSystem->TempDirectory())+std::string("/test-stdsort.pdf");
@@ -187,7 +187,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return (ok) ? 0 : 1;

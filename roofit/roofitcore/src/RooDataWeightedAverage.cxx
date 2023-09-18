@@ -111,8 +111,6 @@ double RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::si
 {
   double result(0) ;
 
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,false) ;
-
   if (setNum()==0 && _showProgress) {
     ccoutP(Plotting) << "." ;
     cout.flush() ;
@@ -130,6 +128,3 @@ double RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::si
 
   return result  ;
 }
-
-
-

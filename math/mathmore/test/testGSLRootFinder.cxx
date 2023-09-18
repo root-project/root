@@ -141,7 +141,7 @@ int testGSLRootFinder() {
 
 
   ROOT::Math::Roots::Newton *rf5 = new ROOT::Math::Roots::Newton();
-  void * ptr2 = 0;
+  void * ptr2 = nullptr;
   timer.Reset(); timer.Start(); myfuncCalls = 0;
   for (int i = 0; i < iterTest; ++i)
   {
@@ -156,7 +156,7 @@ int testGSLRootFinder() {
   // the following two examples won't work when interpreted CINT
   //const FP funcPtr = &myfunc;
   ROOT::Math::GSLRootFinder::GSLFuncPointer funcPtr = &myfunc_gsl;
-  void * ptr1 = 0;
+  void * ptr1 = nullptr;
   ROOT::Math::Roots::Brent *rf6 = new ROOT::Math::Roots::Brent();
   //ROOT::Math::RootFinder<ROOT::Math::Roots::Brent> *rf6 = new ROOT::Math::RootFinder<ROOT::Math::Roots::Brent>;
   timer.Reset(); timer.Start(); myfuncCalls = 0;

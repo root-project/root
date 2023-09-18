@@ -242,6 +242,21 @@
 #include "GatherNegativeIndices_FromONNX.hxx"
 #include "input_models/references/GatherNegativeIndices.ref.hxx"
 
+#include "Slice_FromONNX.hxx"
+#include "input_models/references/Slice.ref.hxx"
+
+#include "Slice_Default_Axis_FromONNX.hxx"
+#include "input_models/references/Slice_Default_Axis.ref.hxx"
+
+#include "Slice_Default_Steps_FromONNX.hxx"
+#include "input_models/references/Slice_Default_Steps.ref.hxx"
+
+#include "Slice_Neg_FromONNX.hxx"
+#include "input_models/references/Slice_Neg.ref.hxx"
+
+#include "Log_FromONNX.hxx"
+#include "input_models/references/Log.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -548,6 +563,30 @@ TEST(ONNX, Erf)
    EXPECT_EQ(output.size(), sizeof(Erf_ExpectedOutput::outputs) / sizeof(float));
 
    float *correct = Erf_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Log)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({
+     1, 2, 3, 4
+   });
+
+   TMVA_SOFIE_Log::Session s("Log_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Log_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Log_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
@@ -1070,19 +1109,18 @@ TEST(ONNX, Shape){
    std::vector<float> input({
       1, 2
    });
-
+   
    TMVA_SOFIE_Shape::Session s("Shape_FromONNX.dat");
    auto output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
-
+   
    int *correct = Shape_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
-
 }
 
 TEST(ONNX, RNNBatchwise)
@@ -2353,4 +2391,68 @@ TEST(ONNX, GatherNegativeIndices) {
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
+}
+
+TEST(ONNX, Slice) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = Slice::input;
+   TMVA_SOFIE_Slice::Session s("Slice.dat");
+   std::vector<float> output(s.infer(input.data()));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice::output) / sizeof(float));
+   float *correct = Slice::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+TEST(ONNX, Slice_Default_Axis) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = Slice_Default_Axis::input;
+   TMVA_SOFIE_Slice_Default_Axis::Session s("Slice_Default_Axis.dat");
+   std::vector<float> output(s.infer(input.data()));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice_Default_Axis::output) / sizeof(float));
+   float *correct = Slice_Default_Axis::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+TEST(ONNX, Slice_Default_Steps) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = Slice_Default_Steps::input;
+   TMVA_SOFIE_Slice_Default_Steps::Session s("Slice_Default_Steps.dat");
+   std::vector<float> output(s.infer(input.data()));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice_Default_Steps::output) / sizeof(float));
+   float *correct = Slice_Default_Steps::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
+}
+
+TEST(ONNX, Slice_Neg) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> input = Slice_Neg::input;
+   TMVA_SOFIE_Slice_Neg::Session s("Slice_Neg.dat");
+   std::vector<float> output(s.infer(input.data()));
+   
+   EXPECT_EQ(output.size(), sizeof(Slice_Neg::output) / sizeof(float));
+   float *correct = Slice_Neg::output;
+
+   for (size_t i=0; i<output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+   
 }

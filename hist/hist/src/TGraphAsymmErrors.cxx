@@ -1028,7 +1028,7 @@ void TGraphAsymmErrors::CopyAndRelease(Double_t **newarrays,
 Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
                                      Int_t ibegin, Int_t iend, Int_t obegin)
 {
-   if (TGraph::CopyPoints(arrays ? arrays+4 : 0, ibegin, iend, obegin)) {
+   if (TGraph::CopyPoints(arrays ? arrays+4 : nullptr, ibegin, iend, obegin)) {
       Int_t n = (iend - ibegin)*sizeof(Double_t);
       if (arrays) {
          memmove(&arrays[0][obegin], &fEXlow[ibegin], n);

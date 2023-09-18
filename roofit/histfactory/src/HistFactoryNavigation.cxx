@@ -488,7 +488,7 @@ namespace RooStats {
 
 
     RooAbsReal* HistFactoryNavigation::SampleFunction(const std::string& channel, const std::string& sample){
-      // Return the function object pointer cooresponding
+      // Return the function object pointer corresponding
       // to a particular sample in a particular channel
 
       std::map< std::string, std::map< std::string, RooAbsReal*> >::iterator channel_itr;
@@ -1109,12 +1109,7 @@ namespace RooStats {
         RooFit::MsgLevel levelBefore = RooMsgService::instance().globalKillBelow();
         RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
         std::unique_ptr<TH1> hist;
-        try {
-          hist.reset(MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp"));
-        } catch(...) {
-        RooMsgService::instance().setGlobalKillBelow(levelBefore);
-        throw;
-        }
+        hist.reset(MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp"));
         RooMsgService::instance().setGlobalKillBelow(levelBefore);
 
         // Print the hist

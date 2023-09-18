@@ -22,7 +22,7 @@
 
 TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func, bool copyFunc) :
    fPmf(&func),
-   fCdf(0),
+   fCdf(nullptr),
    fXmin(1),
    fXmax(-1),
    fMode(0),
@@ -41,8 +41,8 @@ TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func, bool 
 
 
 TUnuranDiscrDist::TUnuranDiscrDist (TF1 * func) :
-   fPmf( (func) ? new ROOT::Math::WrappedTF1 ( *func) : 0 ),
-   fCdf(0),
+   fPmf( (func) ? new ROOT::Math::WrappedTF1 ( *func) : nullptr ),
+   fCdf(nullptr),
    fXmin(1),
    fXmax(-1),
    fMode(0),
@@ -58,8 +58,8 @@ TUnuranDiscrDist::TUnuranDiscrDist (TF1 * func) :
 
 TUnuranDiscrDist::TUnuranDiscrDist(const TUnuranDiscrDist & rhs) :
    TUnuranBaseDist(),
-   fPmf(0),
-   fCdf(0)
+   fPmf(nullptr),
+   fCdf(nullptr)
 {
    // Implementation of copy ctor using aassignment operator
    operator=(rhs);
@@ -86,8 +86,8 @@ TUnuranDiscrDist & TUnuranDiscrDist::operator = (const TUnuranDiscrDist &rhs)
    else {
       if (fPmf) delete fPmf;
       if (fCdf) delete fCdf;
-      fPmf  = (rhs.fPmf)  ? rhs.fPmf->Clone()  : 0;
-      fCdf  = (rhs.fCdf)  ? rhs.fCdf->Clone()  : 0;
+      fPmf  = (rhs.fPmf)  ? rhs.fPmf->Clone()  : nullptr;
+      fCdf  = (rhs.fCdf)  ? rhs.fCdf->Clone()  : nullptr;
    }
 
    return *this;
@@ -115,7 +115,7 @@ void TUnuranDiscrDist::SetCdf(TF1 *  cdf) {
    else
       if (fCdf) delete fCdf;
 
-   fCdf = (cdf) ? new ROOT::Math::WrappedTF1 ( *cdf) : 0;
+   fCdf = (cdf) ? new ROOT::Math::WrappedTF1 ( *cdf) : nullptr;
    fOwnFunc = true;
 }
 

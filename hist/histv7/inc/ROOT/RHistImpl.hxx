@@ -931,8 +931,8 @@ public:
       // hyperplane (overflow and regular) and the number of regular bins per
       // hyperplane on the hyperplanes that have them.
       //
-      std::array<int, NDIMS - 1> bins_per_hyperplane;
-      std::array<int, NDIMS - 1> regular_bins_per_hyperplane;
+      std::array<int, NDIMS - 1> bins_per_hyperplane{};
+      std::array<int, NDIMS - 1> regular_bins_per_hyperplane{};
       Internal::RComputeLocalBinsInitialisation<NDIMS - 1, NDIMS, decltype(fAxes)>()(bins_per_hyperplane, regular_bins_per_hyperplane, fAxes);
 
       int curr_bins_per_hyperplane = Internal::RGetNBinsCount<NDIMS - 1, decltype(fAxes)>()(fAxes);

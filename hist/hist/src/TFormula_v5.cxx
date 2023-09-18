@@ -140,20 +140,20 @@ TFormula::TFormula(): TNamed()
    fNoper  = 0;
    fNconst = 0;
    fNumber = 0;
-   fExpr   = 0;
-   fOper   = 0;
-   fConst  = 0;
-   fParams = 0;
+   fExpr   = nullptr;
+   fOper   = nullptr;
+   fConst  = nullptr;
+   fParams = nullptr;
    fNstring= 0;
-   fNames  = 0;
+   fNames  = nullptr;
    fNval   = 0;
    //
    //MI change
    fNOperOptimized = 0;
-   fExprOptimized  = 0;
-   fOperOptimized  = 0;
-   fOperOffset     = 0;
-   fPredefined     = 0;
+   fExprOptimized  = nullptr;
+   fOperOptimized  = nullptr;
+   fOperOffset     = nullptr;
+   fPredefined     = nullptr;
    fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 }
 
@@ -168,20 +168,20 @@ TFormula::TFormula(const char *name,const char *expression) :
    fNoper  = 0;
    fNconst = 0;
    fNumber = 0;
-   fExpr   = 0;
-   fOper   = 0;
-   fConst  = 0;
-   fParams = 0;
+   fExpr   = nullptr;
+   fOper   = nullptr;
+   fConst  = nullptr;
+   fParams = nullptr;
    fNstring= 0;
-   fNames  = 0;
+   fNames  = nullptr;
    fNval   = 0;
    //
    //MI change
    fNOperOptimized = 0;
-   fExprOptimized  = 0;
-   fOperOptimized  = 0;
-   fOperOffset     = 0;
-   fPredefined     = 0;
+   fExprOptimized  = nullptr;
+   fOperOptimized  = nullptr;
+   fOperOffset     = nullptr;
+   fPredefined     = nullptr;
    fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 
    if (!expression || !*expression) {
@@ -280,18 +280,18 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fNoper  = 0;
    fNconst = 0;
    fNumber = 0;
-   fExpr   = 0;
-   fOper   = 0;
-   fConst  = 0;
-   fParams = 0;
+   fExpr   = nullptr;
+   fOper   = nullptr;
+   fConst  = nullptr;
+   fParams = nullptr;
    fNstring= 0;
-   fNames  = 0;
+   fNames  = nullptr;
    fNval   = 0;
    fNOperOptimized = 0;
-   fPredefined     = 0;
-   fOperOffset     = 0;
-   fExprOptimized  = 0;
-   fOperOptimized  = 0;
+   fPredefined     = nullptr;
+   fOperOffset     = nullptr;
+   fExprOptimized  = nullptr;
+   fOperOptimized  = nullptr;
    fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 
    formula.TFormula::Copy(*this);
@@ -418,8 +418,8 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    // Now we need to lookup the function and check its arguments.
-   TClass *ns = (spaceName.Length()) ? TClass::GetClass(spaceName) : 0;
-   ClassInfo_t *cinfo = 0;
+   TClass *ns = (spaceName.Length()) ? TClass::GetClass(spaceName) : nullptr;
+   ClassInfo_t *cinfo = nullptr;
    if (ns) {
       cinfo = ns->GetClassInfo();
    } else {
@@ -478,7 +478,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
       cbase[args_paran]=0;
    }
 
-   ROOT::v5::TFormulaPrimitive *prim = ROOT::v5::TFormulaPrimitive::FindFormula(cbase, args_paran>0 ? cbase.Data() + args_paran + 1 : (const char*)0);
+   ROOT::v5::TFormulaPrimitive *prim = ROOT::v5::TFormulaPrimitive::FindFormula(cbase, args_paran>0 ? cbase.Data() + args_paran + 1 : (const char*)nullptr);
    if (prim &&   (!IsA()->GetBaseClass("TTreeFormula"))) {
       // TO BE DONE ALSO IN TTREFORMULA - temporary fix MI
       // Analyze the arguments
@@ -780,7 +780,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          puiss10=puiss10bis=0;
          if (i>2) {
             t = chaine[i-3];
-            isdecimal = isdecimal && (strchr("0123456789.",t)!=0);
+            isdecimal = isdecimal && (strchr("0123456789.",t)!=nullptr);
             if (isdecimal) {
                if ( chaine[i-2] == 'e' || chaine[i-2] == 'E' ) puiss10 = 1;
             } else if ( strchr("+-/[]()&|><=!*/%^\\",t) ) {
@@ -793,9 +793,9 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
                for(k=j-3; k>=0 && isrightdecimal; --k) {
                   t = chaine[k];
-                  isrightdecimal = isrightdecimal && (strchr("0123456789.",t)!=0);
+                  isrightdecimal = isrightdecimal && (strchr("0123456789.",t)!=nullptr);
                   if (!isrightdecimal) {
-                     if (strchr("+-/[]()&|><=!*/%^\\",t)!=0) {
+                     if (strchr("+-/[]()&|><=!*/%^\\",t)!=nullptr) {
                         puiss10bis = 1;
                      }
                   }
@@ -805,11 +805,11 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
          }
          if (puiss10 && (i<=lchain)) {
             t = chaine[i];
-            puiss10 = (strchr("0123456789.",t)!=0);
+            puiss10 = (strchr("0123456789.",t)!=nullptr);
          }
          if (puiss10bis && (j<=lchain)) {
             t = chaine[j];
-            puiss10bis = (strchr("0123456789.",t)!=0);
+            puiss10bis = (strchr("0123456789.",t)!=nullptr);
          }
 
          if (chaine(i-1,1) == "\"") inString = !inString;
@@ -1638,7 +1638,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            fExpr[fNoper] = chaine1ST;
                            for (j=0; j<ctemp.Length(); j++) {
                               t=ctemp[j];
-                              if (strchr("0123456789",t)==0 && (ctemp(j,1)!="+" || j!=0)) {
+                              if (strchr("0123456789",t)==nullptr && (ctemp(j,1)!="+" || j!=0)) {
                                  err=20;
                                  chaine_error=chaine1ST;
                               }
@@ -1724,7 +1724,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            fExpr[fNoper] = chaine1ST;
                            for (j=0; j<ctemp.Length(); j++) {
                               t=ctemp[j];
-                              if (strchr("0123456789",t)==0 && (ctemp(j,1)!="+" || j!=0)) {
+                              if (strchr("0123456789",t)==nullptr && (ctemp(j,1)!="+" || j!=0)) {
                                  err=20;
                                  chaine_error=chaine1ST;
                               }
@@ -1809,7 +1809,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            fExpr[fNoper] = chaine1ST;
                            for (j=0; j<ctemp.Length(); j++) {
                               t=ctemp[j];
-                              if (strchr("0123456789",t)==0 && (ctemp(j,1)!="+" || j!=0)) {
+                              if (strchr("0123456789",t)==nullptr && (ctemp(j,1)!="+" || j!=0)) {
                                  err=20;
                                  chaine_error=chaine1ST;
                               }
@@ -1866,7 +1866,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                            ctemp = chaine(nomb+1,lchain-nomb-2);
                            for (j=0; j<ctemp.Length(); j++) {
                               t=ctemp[j];
-                              if (strchr("0123456789",t)==0 && (ctemp(j,1)!="+" || j!=0)) {
+                              if (strchr("0123456789",t)==nullptr && (ctemp(j,1)!="+" || j!=0)) {
                                  err=20;
                                  chaine_error=chaine1ST;
                               }
@@ -2082,7 +2082,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
                         ctemp = chaine(1,lchain-2);
                         for (j=0; j<ctemp.Length(); j++) {
                            t=ctemp[j];
-                           if (strchr("0123456789",t)==0 && (ctemp(j,1)!="+" || j!=0)) {
+                           if (strchr("0123456789",t)==nullptr && (ctemp(j,1)!="+" || j!=0)) {
                               err=20;
                               chaine_error=chaine1ST; // le numero ? de par[?] n'est pas un entier }
                            }
@@ -2229,19 +2229,19 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    fNstring= 0;
    fNval   = 0;
 
-   if (fExpr)   { delete [] fExpr;   fExpr   = 0;}
-   if (fNames)  { delete [] fNames;  fNames  = 0;}
-   if (fOper)   { delete [] fOper;   fOper   = 0;}
-   if (fConst)  { delete [] fConst;  fConst  = 0;}
-   if (fParams) { delete [] fParams; fParams = 0;}
+   if (fExpr)   { delete [] fExpr;   fExpr   = nullptr;}
+   if (fNames)  { delete [] fNames;  fNames  = nullptr;}
+   if (fOper)   { delete [] fOper;   fOper   = nullptr;}
+   if (fConst)  { delete [] fConst;  fConst  = nullptr;}
+   if (fParams) { delete [] fParams; fParams = nullptr;}
    fFunctions.Delete();
    fLinearParts.Delete();
    //
    //MI change
-   if (fPredefined)    { delete [] fPredefined;    fPredefined    = 0;}
-   if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = 0;}
-   if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = 0;}
-   if (fOperOptimized) { delete [] fOperOptimized; fOperOptimized = 0;}
+   if (fPredefined)    { delete [] fPredefined;    fPredefined    = nullptr;}
+   if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = nullptr;}
+   if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = nullptr;}
+   if (fOperOptimized) { delete [] fOperOptimized; fOperOptimized = nullptr;}
    // should we also remove the object from the list?
    // gROOT->GetListOfFunctions()->Remove(this);
    // if we don't, what happens if it fails the new compilation?
@@ -2370,8 +2370,8 @@ Int_t TFormula::Compile(const char *expression)
 
    // if no parameters delete arrays fParams and fNames
    if (!fNpar) {
-      delete [] fParams; fParams = 0;
-      delete [] fNames;  fNames = 0;
+      delete [] fParams; fParams = nullptr;
+      delete [] fNames;  fNames = nullptr;
    }
 
    // if no errors, copy local parameters to formula objects
@@ -2469,10 +2469,10 @@ void TFormula::Copy(TObject &obj) const
    ((TFormula&)obj).fNconst = fNconst;
    ((TFormula&)obj).fNumber = fNumber;
    ((TFormula&)obj).fNval   = fNval;
-   ((TFormula&)obj).fExpr   = 0;
-   ((TFormula&)obj).fConst  = 0;
-   ((TFormula&)obj).fParams = 0;
-   ((TFormula&)obj).fNames  = 0;
+   ((TFormula&)obj).fExpr   = nullptr;
+   ((TFormula&)obj).fConst  = nullptr;
+   ((TFormula&)obj).fParams = nullptr;
+   ((TFormula&)obj).fNames  = nullptr;
    if (fExpr && fNoper) {
       ((TFormula&)obj).fExpr = new TString[fNoper];
       for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
@@ -2554,7 +2554,7 @@ void TFormula::Copy(TObject &obj) const
 
 char *TFormula::DefinedString(Int_t)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2689,9 +2689,9 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
    Int_t i,j;
    // coverity[uninit] the tab value of tab is guaranteed to be set properly by the control flow.
    Double_t tab[kMAXFOUND];
-   const char *stringStack[gMAXSTRINGFOUND] = {0};
+   const char *stringStack[gMAXSTRINGFOUND] = {nullptr};
    Double_t param_calc[kMAXFOUND];
-   char *string_calc[gMAXSTRINGFOUND] = {0};
+   char *string_calc[gMAXSTRINGFOUND] = {nullptr};
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
    Double_t *params;
@@ -3213,7 +3213,7 @@ const TObject* TFormula::GetLinearPart(Int_t i)
 {
    if (!fLinearParts.IsEmpty())
       return fLinearParts.UncheckedAt(i);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3513,8 +3513,8 @@ void TFormula::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TCl
          Double_t *param = fParams;
          TString *names = fNames;
          Int_t npar = fNpar;
-         fParams = 0;
-         fNames = 0;
+         fParams = nullptr;
+         fNames = nullptr;
          if (Compile()) {
             Error("Streamer","error compiling formula");
             return;
@@ -3761,7 +3761,7 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
    if (cbase=="==" && GetActionOptimized(pos)!=kStringEqual) cbase="XeY";
    if (cbase=="!=" && GetActionOptimized(pos)!=kStringNotEqual) cbase="XneY";
 
-   ROOT::v5::TFormulaPrimitive *prim = ROOT::v5::TFormulaPrimitive::FindFormula(cbase ,paran>0 ? cbase.Data() + paran + 1 : (const char*)0);
+   ROOT::v5::TFormulaPrimitive *prim = ROOT::v5::TFormulaPrimitive::FindFormula(cbase ,paran>0 ? cbase.Data() + paran + 1 : (const char*)nullptr);
    if (prim) {
       fPredefined[pos] = prim;
       if (prim->fType==10) {
@@ -3778,7 +3778,7 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
       }
       if (prim->fType==0){
          SetActionOptimized(pos,kConstant,fNconst);
-         fConst[fNconst] = prim->Eval(0);
+         fConst[fNconst] = prim->Eval(nullptr);
          fNconst++;
       }
       return;
@@ -3823,10 +3823,10 @@ void TFormula::Optimize()
 
    Int_t i;
 
-   if (fPredefined)    { delete [] fPredefined;    fPredefined    = 0;}
-   if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = 0;}
-   if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = 0;}
-   if (fOperOptimized) { delete [] fOperOptimized; fOperOptimized = 0;}
+   if (fPredefined)    { delete [] fPredefined;    fPredefined    = nullptr;}
+   if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = nullptr;}
+   if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = nullptr;}
+   if (fOperOptimized) { delete [] fOperOptimized; fOperOptimized = nullptr;}
 
    fExprOptimized   = new TString[fNoper];
    fOperOptimized   = new Int_t[fNoper];
@@ -3835,7 +3835,7 @@ void TFormula::Optimize()
    for (i=0; i<fNoper; i++) {
       fExprOptimized[i]   = fExpr[i] ;
       fOperOptimized[i]   = fOper[i];
-      fPredefined[i]= 0;
+      fPredefined[i]= nullptr;
    }
 
    //
@@ -4113,7 +4113,7 @@ void TFormula::Optimize()
 
 Double_t TFormula::EvalPrimitive(const Double_t *x, const Double_t *params)
 {
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   const Double_t  *pdata[3] = {x,(params!=nullptr)?params:fParams, fConst};
    Double_t result = pdata[fOperOffset->fType0][fOperOffset->fOffset0];
    switch((fOperOptimized[0] >> kTFOperShift)) {
       case kData          : return result;
@@ -4134,7 +4134,7 @@ Double_t TFormula::EvalPrimitive(const Double_t *x, const Double_t *params)
 
 Double_t TFormula::EvalPrimitive0(const Double_t *x, const Double_t *params)
 {
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   const Double_t  *pdata[3] = {x,(params!=nullptr)?params:fParams, fConst};
    return  pdata[fOperOffset->fType0][fOperOffset->fOffset0];
 }
 
@@ -4143,7 +4143,7 @@ Double_t TFormula::EvalPrimitive0(const Double_t *x, const Double_t *params)
 
 Double_t TFormula::EvalPrimitive1(const Double_t *x, const Double_t *params)
 {
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   const Double_t  *pdata[3] = {x,(params!=nullptr)?params:fParams, fConst};
    return (fPredefined[0]->fFunc10)(pdata[fOperOffset->fType0][fOperOffset->fOffset0]);
 }
 
@@ -4152,7 +4152,7 @@ Double_t TFormula::EvalPrimitive1(const Double_t *x, const Double_t *params)
 
 Double_t TFormula::EvalPrimitive2(const Double_t *x, const Double_t *params)
 {
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   const Double_t  *pdata[3] = {x,(params!=nullptr)?params:fParams, fConst};
    return (fPredefined[0]->fFunc110)(pdata[fOperOffset->fType0][fOperOffset->fOffset0],
       pdata[fOperOffset->fType1][fOperOffset->fOffset1]);
 }
@@ -4162,7 +4162,7 @@ Double_t TFormula::EvalPrimitive2(const Double_t *x, const Double_t *params)
 
 Double_t TFormula::EvalPrimitive3(const Double_t *x, const Double_t *params)
 {
-   const Double_t  *pdata[3] = {x,(params!=0)?params:fParams, fConst};
+   const Double_t  *pdata[3] = {x,(params!=nullptr)?params:fParams, fConst};
    return (fPredefined[0]->fFunc1110)(pdata[fOperOffset->fType0][fOperOffset->fOffset0], pdata[fOperOffset->fType1][fOperOffset->fOffset1],
       pdata[fOperOffset->fType2][fOperOffset->fOffset2]);
 }
@@ -4172,7 +4172,7 @@ Double_t TFormula::EvalPrimitive3(const Double_t *x, const Double_t *params)
 
 Double_t TFormula::EvalPrimitive4(const Double_t *x, const Double_t *params)
 {
-   const Double_t *par = (params!=0)?params:fParams;
+   const Double_t *par = (params!=nullptr)?params:fParams;
    return (fPredefined[0]->fFuncG)((Double_t*)&x[fOperOffset->fType0],
       (Double_t*)&par[fOperOffset->fOffset0]);
 }
@@ -4188,13 +4188,13 @@ Double_t TFormula::EvalPrimitive4(const Double_t *x, const Double_t *params)
 
 Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
 {
-   const Double_t  *pdata[3] = {x,(uparams!=0)?uparams:fParams, fConst};
+   const Double_t  *pdata[3] = {x,(uparams!=nullptr)?uparams:fParams, fConst};
    //
    Int_t i,j;
    Double_t tab[kMAXFOUND] = {0};
-   const char *stringStack[gMAXSTRINGFOUND] = {0};
+   const char *stringStack[gMAXSTRINGFOUND] = {nullptr};
    Double_t param_calc[kMAXFOUND];
-   char *string_calc[gMAXSTRINGFOUND] = {0};
+   char *string_calc[gMAXSTRINGFOUND] = {nullptr};
    Int_t precalculated = 0;
    Int_t precalculated_str = 0;
 
@@ -4492,7 +4492,7 @@ Int_t TFormula::PreCompile()
 
    FILE *hf;
    hf = fopen(fileName.Data(),"w");
-   if (hf == 0) {
+   if (hf == nullptr) {
       Error("PreCompile","Unable to open the file %s for writing.",fileName.Data());
       return 1;
    }

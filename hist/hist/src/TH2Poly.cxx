@@ -199,9 +199,9 @@ TH2Poly::~TH2Poly()
 
 TH2PolyBin *TH2Poly::CreateBin(TObject *poly)
 {
-   if (!poly) return 0;
+   if (!poly) return nullptr;
 
-   if (fBins == 0) {
+   if (fBins == nullptr) {
       fBins = new TList();
       fBins->SetOwner();
    }
@@ -1030,7 +1030,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    Int_t i;
    fDimension = 2;  //The dimension of the histogram
 
-   fBins   = 0;
+   fBins   = nullptr;
    fNcells = kNOverflow;
 
    // Sets the boundaries of the histogram
@@ -1372,7 +1372,7 @@ Helper class to represent a bin in the TH2Poly histogram
 
 TH2PolyBin::TH2PolyBin()
 {
-   fPoly    = 0;
+   fPoly    = nullptr;
    fContent = 0.;
    fNumber  = 0;
    fXmax    = -1111;
