@@ -51,6 +51,8 @@
  */
 
 #include "RooChi2Var.h"
+
+#include "FitHelpers.h"
 #include "RooDataHist.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
@@ -137,7 +139,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
-  pc.defineInt("extended","Extended",0,RooAbsPdf::extendedFitDefault);
+  pc.defineInt("extended","Extended",0,RooFit::FitHelpers::extendedFitDefault);
   pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
