@@ -155,6 +155,71 @@ int calcSumW2CorrectedCovariance(RooAbsPdf const &pdf, RooMinimizer &minimizer, 
    return std::min(rw->covQual(), rw2->covQual());
 }
 
+namespace {
+
+/// Configuration struct for RooAbsPdf::minimizeNLL with all the default values
+/// that also should be taked as the default values for RooAbsPdf::fitTo.
+struct MinimizerConfig {
+   double recoverFromNaN = 10.;
+   int optConst = 2;
+   int verbose = 0;
+   int doSave = 0;
+   int doTimer = 0;
+   int printLevel = 1;
+   int strategy = 1;
+   int initHesse = 0;
+   int hesse = 1;
+   int minos = 0;
+   int numee = 10;
+   int doEEWall = 1;
+   int doWarn = 1;
+   int doSumW2 = -1;
+   int doAsymptotic = -1;
+   int maxCalls = -1;
+   int doOffset = -1;
+   int parallelize = 0;
+   bool enableParallelGradient = true;
+   bool enableParallelDescent = false;
+   bool timingAnalysis = false;
+   const RooArgSet *minosSet = nullptr;
+   std::string minType;
+   std::string minAlg = "minuit";
+};
+
+} // namespace
+
+void defineMinimizationOptions(RooCmdConfig &pc)
+{
+   // Default-initialized instance of MinimizerConfig to get the default
+   // minimizer parameter values.
+   MinimizerConfig minimizerDefaults;
+
+   pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions", 0, minimizerDefaults.recoverFromNaN);
+   pc.defineInt("optConst", "Optimize", 0, minimizerDefaults.optConst);
+   pc.defineInt("verbose", "Verbose", 0, minimizerDefaults.verbose);
+   pc.defineInt("doSave", "Save", 0, minimizerDefaults.doSave);
+   pc.defineInt("doTimer", "Timer", 0, minimizerDefaults.doTimer);
+   pc.defineInt("printLevel", "PrintLevel", 0, minimizerDefaults.printLevel);
+   pc.defineInt("strategy", "Strategy", 0, minimizerDefaults.strategy);
+   pc.defineInt("initHesse", "InitialHesse", 0, minimizerDefaults.initHesse);
+   pc.defineInt("hesse", "Hesse", 0, minimizerDefaults.hesse);
+   pc.defineInt("minos", "Minos", 0, minimizerDefaults.minos);
+   pc.defineInt("numee", "PrintEvalErrors", 0, minimizerDefaults.numee);
+   pc.defineInt("doEEWall", "EvalErrorWall", 0, minimizerDefaults.doEEWall);
+   pc.defineInt("doWarn", "Warnings", 0, minimizerDefaults.doWarn);
+   pc.defineInt("doSumW2", "SumW2Error", 0, minimizerDefaults.doSumW2);
+   pc.defineInt("doAsymptoticError", "AsymptoticError", 0, minimizerDefaults.doAsymptotic);
+   pc.defineInt("maxCalls", "MaxCalls", 0, minimizerDefaults.maxCalls);
+   pc.defineInt("doOffset", "OffsetLikelihood", 0, 0);
+   pc.defineInt("parallelize", "Parallelize", 0, 0); // Three parallelize arguments
+   pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, 0);
+   pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, 0);
+   pc.defineInt("timingAnalysis", "TimingAnalysis", 0, 0);
+   pc.defineString("mintype", "Minimizer", 0, minimizerDefaults.minType.c_str());
+   pc.defineString("minalg", "Minimizer", 1, minimizerDefaults.minAlg.c_str());
+   pc.defineSet("minosSet", "Minos", 0, minimizerDefaults.minosSet);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Minimizes a given NLL variable by finding the optimal parameters with the
 /// RooMinimzer. The NLL variable can be created with RooAbsPdf::createNLL.
@@ -166,9 +231,33 @@ int calcSumW2CorrectedCovariance(RooAbsPdf const &pdf, RooMinimizer &minimizer, 
 /// \param[in] cfg Configuration struct with all the configuration options for
 ///            the RooMinimizer. These are a subset of the options that you can
 ///            also pass to RooAbsPdf::fitTo via the RooFit command arguments.
-std::unique_ptr<RooFitResult>
-minimizeNLL(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, MinimizerConfig const &cfg)
+std::unique_ptr<RooFitResult> minimize(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc)
 {
+   MinimizerConfig cfg;
+   cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
+   cfg.optConst = pc.getInt("optConst");
+   cfg.verbose = pc.getInt("verbose");
+   cfg.doSave = pc.getInt("doSave");
+   cfg.doTimer = pc.getInt("doTimer");
+   cfg.printLevel = pc.getInt("printLevel");
+   cfg.strategy = pc.getInt("strategy");
+   cfg.initHesse = pc.getInt("initHesse");
+   cfg.hesse = pc.getInt("hesse");
+   cfg.minos = pc.getInt("minos");
+   cfg.numee = pc.getInt("numee");
+   cfg.doEEWall = pc.getInt("doEEWall");
+   cfg.doWarn = pc.getInt("doWarn");
+   cfg.doSumW2 = pc.getInt("doSumW2");
+   cfg.doAsymptotic = pc.getInt("doAsymptoticError");
+   cfg.maxCalls = pc.getInt("maxCalls");
+   cfg.minosSet = pc.getSet("minosSet");
+   cfg.minType = pc.getString("mintype", "");
+   cfg.minAlg = pc.getString("minalg", "minuit");
+   cfg.doOffset = pc.getInt("doOffset");
+   cfg.parallelize = pc.getInt("parallelize");
+   cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
+   cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
+   cfg.timingAnalysis = pc.getInt("timingAnalysis");
 
    // Determine if the dataset has weights
    bool weightedData = data.isNonPoissonWeighted();
@@ -231,8 +320,8 @@ minimizeNLL(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, MinimizerCo
       m.setVerbose(1); // Activate verbose options
    if (cfg.doTimer)
       m.setProfile(1); // Activate timer options
-   if (cfg.strat != 1)
-      m.setStrategy(cfg.strat); // Modify fit strategy
+   if (cfg.strategy != 1)
+      m.setStrategy(cfg.strategy); // Modify fit strategy
    if (cfg.initHesse)
       m.hesse();                                        // Initialize errors with hesse
    m.minimize(cfg.minType.c_str(), cfg.minAlg.c_str()); // Minimize using chosen algorithm
@@ -243,8 +332,7 @@ minimizeNLL(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, MinimizerCo
 
    if (m.getNPar() > 0) {
       if (cfg.doAsymptotic == 1)
-         corrCovQual =
-            RooFit::FitHelpers::calcAsymptoticCorrectedCovariance(pdf, m, data); // Asymptotically correct
+         corrCovQual = RooFit::FitHelpers::calcAsymptoticCorrectedCovariance(pdf, m, data); // Asymptotically correct
       if (cfg.doSumW2 == 1)
          corrCovQual = RooFit::FitHelpers::calcSumW2CorrectedCovariance(pdf, m, nll);
    }
@@ -280,7 +368,7 @@ std::unique_ptr<RooFitResult> chi2FitDriver(RooAbsReal &fcn, RooLinkedList &cmdL
    pc.defineInt("doSave", "Save", 0, 0);
    pc.defineInt("doTimer", "Timer", 0, 0);
    pc.defineInt("plevel", "PrintLevel", 0, 1);
-   pc.defineInt("strat", "Strategy", 0, 1);
+   pc.defineInt("strategy", "Strategy", 0, 1);
    pc.defineInt("initHesse", "InitialHesse", 0, 0);
    pc.defineInt("hesse", "Hesse", 0, 1);
    pc.defineInt("minos", "Minos", 0, 0);
@@ -306,7 +394,7 @@ std::unique_ptr<RooFitResult> chi2FitDriver(RooAbsReal &fcn, RooLinkedList &cmdL
    Int_t doSave = pc.getInt("doSave");
    Int_t doTimer = pc.getInt("doTimer");
    Int_t plevel = pc.getInt("plevel");
-   Int_t strat = pc.getInt("strat");
+   Int_t strategy = pc.getInt("strategy");
    Int_t initHesse = pc.getInt("initHesse");
    Int_t hesse = pc.getInt("hesse");
    Int_t minos = pc.getInt("minos");
@@ -343,9 +431,9 @@ std::unique_ptr<RooFitResult> chi2FitDriver(RooAbsReal &fcn, RooLinkedList &cmdL
       m.setProfile(true);
    }
 
-   if (strat != 1) {
+   if (strategy != 1) {
       // Modify fit strategy
-      m.setStrategy(strat);
+      m.setStrategy(strategy);
    }
 
    if (initHesse) {

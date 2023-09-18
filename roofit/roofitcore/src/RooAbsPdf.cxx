@@ -1437,36 +1437,8 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
 
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList, nllCmdListString.c_str());
 
-  // Default-initialized instance of MinimizerConfig to get the default
-  // minimizer parameter values.
-  RooFit::FitHelpers::MinimizerConfig minimizerDefaults;
-
   pc.defineDouble("prefit", "Prefit",0,0);
-  pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,minimizerDefaults.recoverFromNaN);
-  pc.defineInt("optConst","Optimize",0,minimizerDefaults.optConst) ;
-  pc.defineInt("verbose","Verbose",0,minimizerDefaults.verbose) ;
-  pc.defineInt("doSave","Save",0,minimizerDefaults.doSave) ;
-  pc.defineInt("doTimer","Timer",0,minimizerDefaults.doTimer) ;
-  pc.defineInt("printLevel","PrintLevel",0,minimizerDefaults.printLevel) ;
-  pc.defineInt("strat","Strategy",0,minimizerDefaults.strat) ;
-  pc.defineInt("initHesse","InitialHesse",0,minimizerDefaults.initHesse) ;
-  pc.defineInt("hesse","Hesse",0,minimizerDefaults.hesse) ;
-  pc.defineInt("minos","Minos",0,minimizerDefaults.minos) ;
-  pc.defineInt("numee","PrintEvalErrors",0,minimizerDefaults.numee) ;
-  pc.defineInt("doEEWall","EvalErrorWall",0,minimizerDefaults.doEEWall) ;
-  pc.defineInt("doWarn","Warnings",0,minimizerDefaults.doWarn) ;
-  pc.defineInt("doSumW2","SumW2Error",0,minimizerDefaults.doSumW2) ;
-  pc.defineInt("doAsymptoticError","AsymptoticError",0,minimizerDefaults.doAsymptotic) ;
-  pc.defineInt("maxCalls","MaxCalls",0,minimizerDefaults.maxCalls);
-  pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
-  pc.defineInt("parallelize", "Parallelize", 0, 0); // Three parallelize arguments
-  pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, 0);
-  pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, 0);
-  pc.defineInt("timingAnalysis", "TimingAnalysis", 0, 0);
-  pc.defineString("mintype","Minimizer",0,minimizerDefaults.minType.c_str()) ;
-  pc.defineString("minalg","Minimizer",1,minimizerDefaults.minAlg.c_str()) ;
-  pc.defineSet("minosSet","Minos",0,minimizerDefaults.minosSet) ;
-  pc.defineMutex("Range","RangeWithName") ;
+  RooFit::FitHelpers::defineMinimizationOptions(pc);
 
   // Process and check varargs
   pc.process(fitCmdList) ;
@@ -1524,32 +1496,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
 
   std::unique_ptr<RooAbsReal> nll{createNLL(data,nllCmdList)};
 
-  RooFit::FitHelpers::MinimizerConfig cfg;
-  cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
-  cfg.optConst = pc.getInt("optConst");
-  cfg.verbose = pc.getInt("verbose");
-  cfg.doSave = pc.getInt("doSave");
-  cfg.doTimer = pc.getInt("doTimer");
-  cfg.printLevel = pc.getInt("printLevel");
-  cfg.strat = pc.getInt("strat");
-  cfg.initHesse = pc.getInt("initHesse");
-  cfg.hesse = pc.getInt("hesse");
-  cfg.minos = pc.getInt("minos");
-  cfg.numee = pc.getInt("numee");
-  cfg.doEEWall = pc.getInt("doEEWall");
-  cfg.doWarn = pc.getInt("doWarn");
-  cfg.doSumW2 = pc.getInt("doSumW2");
-  cfg.doAsymptotic = pc.getInt("doAsymptoticError");
-  cfg.maxCalls = pc.getInt("maxCalls");
-  cfg.minosSet = pc.getSet("minosSet");
-  cfg.minType = pc.getString("mintype","");
-  cfg.minAlg = pc.getString("minalg","minuit");
-  cfg.doOffset = pc.getInt("doOffset");
-  cfg.parallelize = pc.getInt("parallelize");
-  cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
-  cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
-  cfg.timingAnalysis = pc.getInt("timingAnalysis");
-  return RooFit::Detail::owningPtr(RooFit::FitHelpers::minimizeNLL(*this, *nll, data, cfg));
+  return RooFit::Detail::owningPtr(RooFit::FitHelpers::minimize(*this, *nll, data, pc));
 }
 
 
