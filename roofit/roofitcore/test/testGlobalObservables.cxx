@@ -8,10 +8,14 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
+#include "../src/FitHelpers.h"
+
 #include <gtest/gtest.h>
 
 #include <memory>
 #include <functional>
+
+using RooFit::FitHelpers::minimizeNLL;
 
 namespace {
 
@@ -287,17 +291,17 @@ TEST_F(TestGlobalObservables, ResetDataToWrongData)
 
    // check that the fit works when using the dataset with the correct values
    std::unique_ptr<RooAbsReal> nll{model.createNLL(dataWithMeanSigmaGlobs())};
-   RooAbsPdf::MinimizerConfig minimizerCfg;
+   RooFit::FitHelpers::MinimizerConfig minimizerCfg;
    minimizerCfg.doSave = true;
    minimizerCfg.printLevel = -1;
-   auto res2 = model.minimizeNLL(*nll, dataWithMeanSigmaGlobs(), minimizerCfg);
+   auto res2 = minimizeNLL(model, *nll, dataWithMeanSigmaGlobs(), minimizerCfg);
    EXPECT_TRUE(res1->isIdentical(*res2)) << "fitting an model with internal "
                                             "constraints in a RooPrdPdf gave a different result when global "
                                             "observables were stored in the dataset";
 
    nll->setData(*wrongData);
    resetParameters();
-   auto res3 = model.minimizeNLL(*nll, *wrongData, minimizerCfg);
+   auto res3 = minimizeNLL(model, *nll, *wrongData, minimizerCfg);
 
    // If resetting the dataset used for the nll worked correctly also for
    // global observables, the fit will now give the wrong result.
@@ -329,17 +333,17 @@ TEST_F(TestGlobalObservables, ResetDataToCorrectData)
 
    // check that the fit doesn't work when using the dataset with the wrong values
    std::unique_ptr<RooAbsReal> nll{model.createNLL(*wrongData)};
-   RooAbsPdf::MinimizerConfig minimizerCfg;
+   RooFit::FitHelpers::MinimizerConfig minimizerCfg;
    minimizerCfg.doSave = true;
    minimizerCfg.printLevel = -1;
-   auto res2 = model.minimizeNLL(*nll, *wrongData, minimizerCfg);
+   auto res2 = minimizeNLL(model, *nll, *wrongData, minimizerCfg);
    EXPECT_TRUE(isNotIdentical(*res1, *res2)) << "fitting an model with internal "
                                                 "constraints in a RooPrdPdf ignored the global "
                                                 "observables stored in the dataset";
 
    nll->setData(dataWithMeanSigmaGlobs());
    resetParameters();
-   auto res3 = model.minimizeNLL(*nll, dataWithMeanSigmaGlobs(), minimizerCfg);
+   auto res3 = minimizeNLL(model, *nll, dataWithMeanSigmaGlobs(), minimizerCfg);
    EXPECT_TRUE(res1->isIdentical(*res3)) << "resetting the dataset "
                                             "underlying a RooNLLVar didn't change the global observable value, but it "
                                             "should have";
@@ -397,15 +401,15 @@ TEST_F(TestGlobalObservables, ResetDataButSourceFromModel)
    // check that the fit works when using the dataset with the correct values
    std::unique_ptr<RooAbsReal> nll{
       model.createNLL(dataWithMeanSigmaGlobs(), GlobalObservablesSource("model"), GlobalObservables(gm, gs))};
-   RooAbsPdf::MinimizerConfig minimizerCfg;
+   RooFit::FitHelpers::MinimizerConfig minimizerCfg;
    minimizerCfg.doSave = true;
    minimizerCfg.printLevel = -1;
-   auto res2 = model.minimizeNLL(*nll, dataWithMeanSigmaGlobs(), minimizerCfg);
+   auto res2 = minimizeNLL(model, *nll, dataWithMeanSigmaGlobs(), minimizerCfg);
    EXPECT_TRUE(res1->isIdentical(*res2));
 
    nll->setData(*wrongData);
    resetParameters();
-   auto res3 = model.minimizeNLL(*nll, *wrongData, minimizerCfg);
+   auto res3 = minimizeNLL(model, *nll, *wrongData, minimizerCfg);
 
    // this time it should still be identical because even though we reset to
    // the wrong data, we set the global observables source to "model"

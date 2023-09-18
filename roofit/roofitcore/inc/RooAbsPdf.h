@@ -162,37 +162,6 @@ public:
     return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
   }
 
-  /// Configuration struct for RooAbsPdf::minimizeNLL with all the default
-  //values that also should be taked as the default values for
-  //RooAbsPdf::fitTo.
-  struct MinimizerConfig {
-      double recoverFromNaN = 10.;
-      int optConst = 2;
-      int verbose = 0;
-      int doSave = 0;
-      int doTimer = 0;
-      int printLevel = 1;
-      int strat = 1;
-      int initHesse = 0;
-      int hesse = 1;
-      int minos = 0;
-      int numee = 10;
-      int doEEWall = 1;
-      int doWarn = 1;
-      int doSumW2 = -1;
-      int doAsymptotic = -1;
-      int maxCalls = -1;
-      int doOffset = -1;
-      int parallelize = 0;
-      bool enableParallelGradient = true;
-      bool enableParallelDescent = false;
-      bool timingAnalysis = false;
-      const RooArgSet* minosSet = nullptr;
-      std::string minType;
-      std::string minAlg = "minuit";
-  };
-  std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
-
   virtual RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
   /// Takes an arbitrary number of RooCmdArg command options and calls
   /// RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList).
@@ -381,12 +350,8 @@ protected:
 private:
   mutable RooFit::UniqueId<RooArgSet>::Value_t _normSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<! Unique ID of the currently-active normalization set
 
-  int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
-  int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal & nll) const;
-
   friend class RooAbsReal;
   friend class RooChi2Var;
-  static constexpr int extendedFitDefault = 2; // implementation detail to avoid magic numbers
   bool interpretExtendedCmdArg(int extendedCmdArg) const;
 
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
