@@ -1477,20 +1477,6 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
 
   // Decode command line arguments
   double prefit = pc.getDouble("prefit");
-  Int_t optConst = pc.getInt("optConst") ;
-
-  if (optConst > 1) {
-    // optConst >= 2 is pre-computing values, which are never used when
-    // the batchMode is on. This just wastes time.
-
-    RooCmdConfig conf("RooAbsPdf::fitTo(" + std::string(GetName()) + ")");
-    conf.defineInt("BatchMode","BatchMode",0,0);
-    conf.allowUndefined(true);
-    conf.process(nllCmdList);
-    if (conf.getInt("BatchMode") != 0) {
-      optConst = 1;
-    }
-  }
 
   if (prefit != 0)  {
     size_t nEvents = static_cast<size_t>(prefit*data.numEntries());
@@ -1534,7 +1520,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
 
   RooFit::FitHelpers::MinimizerConfig cfg;
   cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
-  cfg.optConst = optConst;
+  cfg.optConst = pc.getInt("optConst");
   cfg.verbose = pc.getInt("verbose");
   cfg.doSave = pc.getInt("doSave");
   cfg.doTimer = pc.getInt("doTimer");
