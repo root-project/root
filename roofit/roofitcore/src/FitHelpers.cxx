@@ -38,7 +38,7 @@ namespace FitHelpers {
 ///            matrix caltulated here will be applied to it via
 ///            RooMinimizer::applyCovarianceMatrix().
 /// \param[in] data The dataset that was used for the fit.
-int calcAsymptoticCorrectedCovariance(RooAbsPdf &pdf, RooMinimizer &minimizer, RooAbsData const &data)
+int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, RooAbsData const &data)
 {
    // Calculated corrected errors for weighted likelihood fits
    std::unique_ptr<RooFitResult> rw(minimizer.save());
@@ -116,7 +116,7 @@ int calcAsymptoticCorrectedCovariance(RooAbsPdf &pdf, RooMinimizer &minimizer, R
 ///            matrix caltulated here will be applied to it via
 ///            RooMinimizer::applyCovarianceMatrix().
 /// \param[in] nll The NLL object that was used for the fit.
-int calcSumW2CorrectedCovariance(RooAbsPdf const &pdf, RooMinimizer &minimizer, RooAbsReal &nll)
+int calcSumW2CorrectedCovariance(RooAbsReal const &pdf, RooMinimizer &minimizer, RooAbsReal &nll)
 {
    // Calculated corrected errors for weighted likelihood fits
    std::unique_ptr<RooFitResult> rw{minimizer.save()};
@@ -231,7 +231,7 @@ void defineMinimizationOptions(RooCmdConfig &pc)
 /// \param[in] cfg Configuration struct with all the configuration options for
 ///            the RooMinimizer. These are a subset of the options that you can
 ///            also pass to RooAbsPdf::fitTo via the RooFit command arguments.
-std::unique_ptr<RooFitResult> minimize(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc)
+std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc)
 {
    MinimizerConfig cfg;
    cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
@@ -352,119 +352,6 @@ std::unique_ptr<RooFitResult> minimize(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsDa
 
    if (cfg.optConst)
       m.optimizeConst(0);
-   return ret;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Internal driver function for chi2 fits
-
-std::unique_ptr<RooFitResult> chi2FitDriver(RooAbsReal &fcn, RooLinkedList &cmdList)
-{
-   // Select the pdf-specific commands
-   RooCmdConfig pc("RooAbsPdf::chi2FitDriver(" + std::string(fcn.GetName()) + ")");
-
-   pc.defineInt("optConst", "Optimize", 0, 1);
-   pc.defineInt("verbose", "Verbose", 0, 0);
-   pc.defineInt("doSave", "Save", 0, 0);
-   pc.defineInt("doTimer", "Timer", 0, 0);
-   pc.defineInt("plevel", "PrintLevel", 0, 1);
-   pc.defineInt("strategy", "Strategy", 0, 1);
-   pc.defineInt("initHesse", "InitialHesse", 0, 0);
-   pc.defineInt("hesse", "Hesse", 0, 1);
-   pc.defineInt("minos", "Minos", 0, 0);
-   pc.defineInt("ext", "Extended", 0, extendedFitDefault);
-   pc.defineInt("numee", "PrintEvalErrors", 0, 10);
-   pc.defineInt("doWarn", "Warnings", 0, 1);
-   pc.defineString("mintype", "Minimizer", 0, "");
-   pc.defineString("minalg", "Minimizer", 1, "minuit");
-   pc.defineSet("minosSet", "Minos", 0, nullptr);
-   pc.allowUndefined();
-
-   // Process and check varargs
-   pc.process(cmdList);
-   if (!pc.ok(true)) {
-      return nullptr;
-   }
-
-   // Decode command line arguments
-   const char *minType = pc.getString("mintype", "");
-   const char *minAlg = pc.getString("minalg", "minuit");
-   Int_t optConst = pc.getInt("optConst");
-   Int_t verbose = pc.getInt("verbose");
-   Int_t doSave = pc.getInt("doSave");
-   Int_t doTimer = pc.getInt("doTimer");
-   Int_t plevel = pc.getInt("plevel");
-   Int_t strategy = pc.getInt("strategy");
-   Int_t initHesse = pc.getInt("initHesse");
-   Int_t hesse = pc.getInt("hesse");
-   Int_t minos = pc.getInt("minos");
-   Int_t numee = pc.getInt("numee");
-   Int_t doWarn = pc.getInt("doWarn");
-   const RooArgSet *minosSet = pc.getSet("minosSet");
-
-   std::unique_ptr<RooFitResult> ret;
-
-   // Instantiate MINUIT
-   RooMinimizer m(fcn);
-   m.setMinimizerType(minType);
-
-   if (doWarn == 0) {
-      // m.setNoWarn() ; WVE FIX THIS
-   }
-
-   m.setPrintEvalErrors(numee);
-   if (plevel != 1) {
-      m.setPrintLevel(plevel);
-   }
-
-   if (optConst) {
-      // Activate constant term optimization
-      m.optimizeConst(optConst);
-   }
-
-   if (verbose) {
-      // Activate verbose options
-      m.setVerbose(true);
-   }
-   if (doTimer) {
-      // Activate timer options
-      m.setProfile(true);
-   }
-
-   if (strategy != 1) {
-      // Modify fit strategy
-      m.setStrategy(strategy);
-   }
-
-   if (initHesse) {
-      // Initialize errors with hesse
-      m.hesse();
-   }
-
-   // Minimize using migrad
-   m.minimize(minType, minAlg);
-
-   if (hesse) {
-      // Evaluate errors with Hesse
-      m.hesse();
-   }
-
-   if (minos) {
-      // Evaluate errs with Minos
-      if (minosSet) {
-         m.minos(*minosSet);
-      } else {
-         m.minos();
-      }
-   }
-
-   // Optionally return fit result
-   if (doSave) {
-      std::string name = "fitresult_" + std::string(fcn.GetName());
-      std::string title = "Result of fit of " + std::string(fcn.GetName()) + " ";
-      ret = std::unique_ptr<RooFitResult>{m.save(name.c_str(), title.c_str())};
-   }
-
    return ret;
 }
 
