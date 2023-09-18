@@ -20,6 +20,7 @@ class RooAbsData;
 class RooAbsPdf;
 class RooAbsReal;
 class RooArgSet;
+class RooCmdConfig;
 class RooFitResult;
 class RooLinkedList;
 class RooMinimizer;
@@ -27,39 +28,11 @@ class RooMinimizer;
 namespace RooFit {
 namespace FitHelpers {
 
-/// Configuration struct for RooAbsPdf::minimizeNLL with all the default values
-/// that also should be taked as the default values for RooAbsPdf::fitTo.
-struct MinimizerConfig {
-   double recoverFromNaN = 10.;
-   int optConst = 2;
-   int verbose = 0;
-   int doSave = 0;
-   int doTimer = 0;
-   int printLevel = 1;
-   int strat = 1;
-   int initHesse = 0;
-   int hesse = 1;
-   int minos = 0;
-   int numee = 10;
-   int doEEWall = 1;
-   int doWarn = 1;
-   int doSumW2 = -1;
-   int doAsymptotic = -1;
-   int maxCalls = -1;
-   int doOffset = -1;
-   int parallelize = 0;
-   bool enableParallelGradient = true;
-   bool enableParallelDescent = false;
-   bool timingAnalysis = false;
-   const RooArgSet *minosSet = nullptr;
-   std::string minType;
-   std::string minAlg = "minuit";
-};
-
 int calcAsymptoticCorrectedCovariance(RooAbsPdf &pdf, RooMinimizer &minimizer, RooAbsData const &data);
 int calcSumW2CorrectedCovariance(RooAbsPdf const &pdf, RooMinimizer &minimizer, RooAbsReal &nll);
-std::unique_ptr<RooFitResult>
-minimizeNLL(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, MinimizerConfig const &cfg);
+
+void defineMinimizationOptions(RooCmdConfig &pc);
+std::unique_ptr<RooFitResult> minimize(RooAbsPdf &pdf, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc);
 std::unique_ptr<RooFitResult> chi2FitDriver(RooAbsReal &fcn, RooLinkedList &cmdList);
 
 constexpr int extendedFitDefault = 2;
