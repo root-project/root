@@ -2,8 +2,8 @@
 name: 'Test Coverage'
 
 on:
-  # schedule:
-  #   - cron: '0 1 * * *'
+  schedule:
+    - cron: '0 1 * * *'
 
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
   # DISABLED: takes 4 hours! Might clang-coverage be a solution?
@@ -14,9 +14,6 @@ on:
   #    - 'doc/**'
   #    - 'documentation/**'
 
-  push:
-    branches:
-      - '*'
 
   workflow_call:
     inputs:
@@ -49,7 +46,7 @@ env:
 jobs:
 
   build-linux:
-    # if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
 
     permissions:
       contents: read
@@ -72,8 +69,7 @@ jobs:
       - name: Install cov packages
         run: |
           sudo dnf -y update
-          # sudo dnf -y install lcov
-          sudo dnf -y install clang llvm
+          sudo dnf -y install lcov
           pip3 install gcovr
 
       - name: Checkout
@@ -91,11 +87,7 @@ jobs:
 
       - name: Apply option override from matrix for this job
         env:
-          OVERRIDE: |
-            coverage=On
-            CMAKE_CXX_COMPILER=clang++
-            CMAKE_C_COMPILER=clang
-            CMAKE_BUILD_TYPE=Release
+          OVERRIDE: "coverage=On"
           FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
         shell: bash
         run: |
@@ -104,31 +96,6 @@ jobs:
           echo '' >> "$FILE"
           echo $OVERRIDE >> "$FILE"
           cat "$FILE" || true
-
-      - name: Apply option overrides from matrix for this job
-        env:
-          OVERRIDES: "coverage=On CMAKE_CXX_COMPILER=clang++ CMAKE_C_COMPILER=clang CMAKE_BUILD_TYPE=Release"
-          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/fedora38.txt'
-        shell: bash
-        run: |
-          set -x
-  
-          echo '' >> "$CONFIGFILE"
-  
-          for ENTRY in $OVERRIDES; do
-              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-  
-              # Add entry to file if not exists, otherwise replace
-  
-              if grep -q "$KEY=" "$CONFIGFILE"; then
-                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-              else
-                  echo "$ENTRY" >> "$CONFIGFILE"
-              fi
-          done
-  
-          cat "$CONFIGFILE" || true
-  
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -141,16 +108,6 @@ jobs:
                     --coverage       true
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
-              "
-      - name: Push Build
-        if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      Debug
-                    --platform       fedora38
-                    --incremental    false
-                    --coverage       true
-                    --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 

@@ -320,20 +320,12 @@ endif()
 
 #---Enable test coverage -----------------------------------------------------------------------
 if(coverage)
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # GCC
-    set(COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-    set(COVERAGE_LINK_FLAGS    "-fprofile-arcs")
-  elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(COVERAGE_COMPILE_FLAGS "-fprofile-instr-generate -fcoverage-mapping")
-    set(COVERAGE_LINK_FLAGS    "-fprofile-instr-generate")
-  else()
-    message(FATAL_ERROR "Coverage currently only supported for GCC and clang!")
-  endif()
-  set(CMAKE_CXX_FLAGS            "${CMAKE_CXX_FLAGS} ${COVERAGE_COMPILE_FLAGS}")
-  set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
-  set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHAREDLINKER_FLAGS} ${COVERAGE_LINK_FLAGS}")
-  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${COVERAGE_COMPILE_FLAGS}")
+  set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+  set(GCC_COVERAGE_LINK_FLAGS    "-fprofile-arcs")
+  set(CMAKE_CXX_FLAGS            "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHAREDLINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
 #--- Enable build timing -----------------------------------------------------------------------

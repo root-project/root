@@ -270,7 +270,7 @@ def show_node_state() -> None:
 def run_ctest(extra_ctest_flags: str) -> int:
     ctest_result = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
-        time ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
+        ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
 
     return ctest_result
@@ -325,7 +325,7 @@ def cmake_build(buildtype):
     generator_flags = "-- '-verbosity:minimal'" if WINDOWS else ""
 
     result = subprocess_with_log(f"""
-        time cmake --build '{WORKDIR}/build' --config '{buildtype}' -j1 {generator_flags}
+        cmake --build '{WORKDIR}/build' --config '{buildtype}' -j1 {generator_flags}
     """)
 
     if result != 0:

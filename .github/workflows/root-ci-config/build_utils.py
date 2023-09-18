@@ -134,9 +134,9 @@ def load_config(filename) -> dict:
         for line in file:
             if '=' not in line:
                 continue
-            print(line)
+
             key, val = line.rstrip().split('=')
-            print(key, val)
+
             if val.lower() in ["on", "off"]:
                 val = val.lower()
 
