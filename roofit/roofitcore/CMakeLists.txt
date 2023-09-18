@@ -463,7 +463,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     "-writeEmptyRootPCM"
   LIBRARIES
     RooBatchCompute
-    RooFitCommon
     ${EXTRA_LIBRARIES}
   DEPENDENCIES
     Core
