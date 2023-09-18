@@ -129,7 +129,6 @@ def load_config(filename) -> dict:
         print_warning(f"couldn't load {filename}: {err.strerror}")
         return {}
     
-    print(file)
     with file:
         for line in file:
             if '=' not in line:
