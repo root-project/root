@@ -51,6 +51,9 @@ public:
 
    void dumpGradient();
 
+   /// No constant term optimization is possible in code-generation mode.
+   void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
+
 protected:
    double evaluate() const override;
 
