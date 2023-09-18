@@ -13,7 +13,7 @@
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 #include "RooFit_ZMQ/ZeroMQPoller.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include "gtest/gtest.h"
 
@@ -38,8 +38,9 @@ std::string unique_tmp_ipc_address(const char *filename_template)
    strcpy(filename_template_mutable, filename_template);
    while (mkstemp(filename_template_mutable) >= 0) {
    }
+   std::string tmpPath = gSystem->TempDirectory();
    std::stringstream ss;
-   ss << "ipc://" << RooFit::tmpPath() << filename_template_mutable << ".ipc";
+   ss << "ipc://" << tmpPath << "/roofit_" << filename_template_mutable << ".ipc";
    return ss.str();
 }
 

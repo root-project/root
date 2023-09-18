@@ -13,7 +13,7 @@
 
 #include "BidirMMapPipe.h"
 
-#include <RooFit/Common.h>
+#include <TSystem.h>
 
 #include <map>
 #include <cerrno>
@@ -464,7 +464,8 @@ namespace BidirMMapPipe_impl {
             return retVal;
         }
         if (FileBacked == s_mmapworks || Unknown == s_mmapworks) {
-            std::string name = RooFit::tmpPath() + "BidirMMapPipe-XXXXXX";
+            std::string tmpPath = gSystem->TempDirectory();
+            std::string name = tmpPath + "/roofit_BidirMMapPipe-XXXXXX";
             int fd;
             // open temp file
             if (-1 == (fd = ::mkstemp(const_cast<char*>(name.c_str())))) throw Exception("mkstemp", errno);
