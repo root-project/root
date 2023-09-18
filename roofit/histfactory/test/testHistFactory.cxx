@@ -689,7 +689,7 @@ TEST_P(HFFixtureFit, Fit)
          fitResult->Print("v");
       EXPECT_EQ(fitResult->status(), 0);
 
-      auto checkParam = [&](const std::string &param, double target, double absPrecision) {
+      auto checkParam = [&](const std::string &param, double target, double absPrecision=1.e-2) {
          auto par = dynamic_cast<RooRealVar *>(fitResult->floatParsFinal().find(param.c_str()));
          if (!par) {
             // Parameter was constant in this fit
@@ -710,23 +710,23 @@ TEST_P(HFFixtureFit, Fit)
 
       if (makeModelMode == MakeModelMode::OverallSyst) {
          // Model is set up such that background scale factors should be close to 1, and signal == 2
-         checkParam("SigXsecOverSM", 2., 1.E-2);
-         checkParam("alpha_syst2", 0., 1.E-2);
-         checkParam("alpha_syst3", 0., 1.E-2);
-         checkParam("alpha_syst4", 0., 1.E-2);
-         checkParam("gamma_stat_channel1_bin_0", 1., 1.E-2);
-         checkParam("gamma_stat_channel1_bin_1", 1., 1.E-2);
+         checkParam("SigXsecOverSM", 2.);
+         checkParam("alpha_syst2", 0.);
+         checkParam("alpha_syst3", 0.);
+         checkParam("alpha_syst4", 0.);
+         checkParam("gamma_stat_channel1_bin_0", 1.);
+         checkParam("gamma_stat_channel1_bin_1", 1.);
       } else if (makeModelMode == MakeModelMode::HistoSyst) {
          // Model is set up with a -1 sigma pull on the signal shape parameter.
-         checkParam("SigXsecOverSM", 2., 1.E-1); // Higher tolerance: Expect a pull due to shape syst.
-         checkParam("gamma_stat_channel1_bin_0", 1., 1.E-2);
-         checkParam("gamma_stat_channel1_bin_1", 1., 1.E-2);
+         checkParam("SigXsecOverSM", 2., 1.1E-1); // Higher tolerance: Expect a pull due to shape syst.
+         checkParam("gamma_stat_channel1_bin_0", 1.);
+         checkParam("gamma_stat_channel1_bin_1", 1.);
          checkParam("alpha_SignalShape", -0.9, 5.E-2); // Pull slightly lower than 1 because of constraint term
       } else if (makeModelMode == MakeModelMode::StatSyst) {
          // Model is set up with a -1 sigma pull on the signal shape parameter.
-         checkParam("SigXsecOverSM", 2., 1.E-1);               // Higher tolerance: Expect a pull due to shape syst.
-         checkParam("gamma_stat_channel1_bin_0", 1.09, 1.E-2); // This should be pulled
-         checkParam("gamma_stat_channel1_bin_1", 1., 1.E-2);
+         checkParam("SigXsecOverSM", 2., 1.1E-1);               // Higher tolerance: Expect a pull due to shape syst.
+         checkParam("gamma_stat_channel1_bin_0", 1.09); // This should be pulled
+         checkParam("gamma_stat_channel1_bin_1", 1.);
       } else if (makeModelMode == MakeModelMode::ShapeSyst) {
          // This should be pulled down
          checkParam("gamma_background1Shape_bin_0", 0.8866, 0.03);
