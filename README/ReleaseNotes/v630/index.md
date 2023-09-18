@@ -125,13 +125,29 @@ Thus, we appreciate feedback and suggestions for improvement.
 
 ## Math Libraries
 
+### Minuit2 is now the default minimizer
+
+Many ROOT-based frameworks and users employ Minuit2 as the minimizer of choice for a long time already.
+Therefore, Minuit2 is now the default minimizer used by ROOT.
+This affects also **RooFit**, which inherits the default minimizer from ROOT Math.
+
+The default can be changed back to the old Minuit implementation as follows:
+```c++
+ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit");
+```
+
+Alternatively, you can add this line to your `~/.rootrc` file:
+```
+Root.Fitter: Minuit
+```
+
 ### Behavior change of `TMath::AreEqualAbs()`
 
 The `TMath::AreEqualAbs()` compares two numbers for equality within a certain absolute range.
 So far, it would tell you that `inf != inf` if you define `inf` as `std::numeric_limits<double>::infinity()`, which is inconsistent with the regular `==` operator.
 
 This is unexpected, because one would expect that if two numbers are considered exactly equal, they would also be considered equal within any range.
-Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `true` if the `==` comparision would return `true`.
+Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `true` if the `==` comparison would return `true`.
 
 ## RooFit Libraries
 
@@ -214,13 +230,13 @@ RooMomentMorphFuncND already normalizes itself in pdf mode.
 RooWrapperPdf pdf{"pdf_name", "pdf_name", func, /*selfNormalized=*/true};
 ```
 
-### Removal of serveral internal classes from the public RooFit interface
+### Removal of several internal classes from the public RooFit interface
 
-Several RooFit classes of which the headers are publically exposed in the interface were only meant as implementation details of other RooFit classes.
+Several RooFit classes of which the headers are publicly exposed in the interface were only meant as implementation details of other RooFit classes.
 Some of these classes are now removed from the public interface:
 
 1. `RooGenProdProj`, which was an implementation detail of the `RooProdPdf`
-2. `RooScaledFunc`, which was an implementaiton detail of the plotting in RooFit
+2. `RooScaledFunc`, which was an implementation detail of the plotting in RooFit
    In the supposedly very rare case where you used this class in your own
    implementations, just multiply the underlying RooAbsReal function with the
    scale factor and create a RooRealBinding, e.g.:
