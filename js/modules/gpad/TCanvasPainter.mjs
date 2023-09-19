@@ -6,6 +6,15 @@ import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPaint
 import { TFramePainter } from './TFramePainter.mjs';
 import { TPadPainter, clTButton } from './TPadPainter.mjs';
 
+const kShowEventStatus = BIT(15),
+     // kAutoExec = BIT(16),
+      kMenuBar = BIT(17),
+      kShowToolBar = BIT(18),
+      kShowEditor = BIT(19),
+     // kMoveOpaque = BIT(20),
+     // kResizeOpaque = BIT(21),
+     // kIsGrayscale = BIT(22),
+      kShowToolTips = BIT(23);
 
 /** @summary direct draw of TFrame object,
   * @desc pad or canvas should already exist
@@ -16,18 +25,6 @@ function directDrawTFrame(dom, obj, opt) {
    if (opt === '3d') fp.mode3d = true;
    return fp.redraw();
 }
-
-const TCanvasStatusBits = {
-   kShowEventStatus: BIT(15),
-   kAutoExec: BIT(16),
-   kMenuBar: BIT(17),
-   kShowToolBar: BIT(18),
-   kShowEditor: BIT(19),
-   kMoveOpaque: BIT(20),
-   kResizeOpaque: BIT(21),
-   kIsGrayscale: BIT(22),
-   kShowToolTips: BIT(23)
-};
 
 /**
   * @summary Painter for TCanvas object
@@ -619,11 +616,11 @@ class TCanvasPainter extends TPadPainter {
 
       if (this._all_sections_showed) return;
       this._all_sections_showed = true;
-      this.showSection('Menu', this.pad.TestBit(TCanvasStatusBits.kMenuBar));
-      this.showSection('StatusBar', this.pad.TestBit(TCanvasStatusBits.kShowEventStatus));
-      this.showSection('ToolBar', this.pad.TestBit(TCanvasStatusBits.kShowToolBar));
-      this.showSection('Editor', this.pad.TestBit(TCanvasStatusBits.kShowEditor));
-      this.showSection('ToolTips', this.pad.TestBit(TCanvasStatusBits.kShowToolTips) || this._highlight_connect);
+      this.showSection('Menu', this.pad.TestBit(kMenuBar));
+      this.showSection('StatusBar', this.pad.TestBit(kShowEventStatus));
+      this.showSection('ToolBar', this.pad.TestBit(kShowToolBar));
+      this.showSection('Editor', this.pad.TestBit(kShowEditor));
+      this.showSection('ToolTips', this.pad.TestBit(kShowToolTips) || this._highlight_connect);
    }
 
    /** @summary Handle highlight in canvas - deliver information to server
@@ -750,10 +747,10 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Return actual TCanvas status bits  */
    getStatusBits() {
       let bits = 0;
-      if (this.hasEventStatus()) bits |= TCanvasStatusBits.kShowEventStatus;
-      if (this.hasGed()) bits |= TCanvasStatusBits.kShowEditor;
-      if (this.isTooltipAllowed()) bits |= TCanvasStatusBits.kShowToolTips;
-      if (this.use_openui) bits |= TCanvasStatusBits.kMenuBar;
+      if (this.hasEventStatus()) bits |= kShowEventStatus;
+      if (this.hasGed()) bits |= kShowEditor;
+      if (this.isTooltipAllowed()) bits |= kShowToolTips;
+      if (this.use_openui) bits |= kMenuBar;
       return bits;
    }
 

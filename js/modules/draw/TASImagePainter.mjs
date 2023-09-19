@@ -346,7 +346,7 @@ class TASImagePainter extends ObjectPainter {
          Object.assign(pal, { fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
          pal.fAxis.fChopt = '+';
          this.draw_palette = pal;
-         this.fPalette = true; // to emulate behaviour of hist painter
+         this._color_palette = true; // to emulate behaviour of hist painter
       }
 
       let pal_painter = this.getPadPainter().findPainterFor(this.draw_palette);

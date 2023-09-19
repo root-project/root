@@ -524,7 +524,7 @@ class TH3Painter extends THistPainter {
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
-         if (use_colors) fillcolor = this.fPalette.getColor(ncol);
+         if (use_colors) fillcolor = this._color_palette.getColor(ncol);
 
          const material = use_lambert
                             ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
