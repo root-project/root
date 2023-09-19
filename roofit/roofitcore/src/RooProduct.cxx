@@ -534,7 +534,7 @@ void RooProduct::ioStreamerPass2() {
   RooAbsReal::ioStreamerPass2(); // call the baseclass method
 
   if(numProxies() < 2) {
-    throw std::runtime_error("RooProduct::ioStreamerPass2(): the number of proxies in the proxy list should be at leat 2!");
+    throw std::runtime_error("RooProduct::ioStreamerPass2(): the number of proxies in the proxy list should be at least 2!");
   }
 
   // If the proxy data members are evolved by schema evolution, the proxy list

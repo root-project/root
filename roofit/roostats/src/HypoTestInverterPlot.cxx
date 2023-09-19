@@ -219,7 +219,7 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
       g0->SetPoint(np, fResults->GetXValue(i),  q[2]);
       if (g1) {
          g1->SetPoint(np, fResults->GetXValue(i),  q[2]);
-         g1->SetPointEYlow(np, q[2] - q[1]); // -1 sigma errorr
+         g1->SetPointEYlow(np, q[2] - q[1]); // -1 sigma error
          g1->SetPointEYhigh(np, q[3] - q[2]);//+1 sigma error
       }
       if (g2) {

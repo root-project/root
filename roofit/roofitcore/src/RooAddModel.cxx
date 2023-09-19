@@ -207,8 +207,8 @@ void RooAddModel::fixCoefNormalization(const RooArgSet& refCoefNorm)
 /// instructs RooAddModel to freeze its interpretation in the given
 /// named range. If the current normalization range is different
 /// from the reference range, the appropriate fraction coefficients
-/// are automically calculation from the reference fractions using
-/// ratios if integrals
+/// are automatically calculated from the reference fractions using
+/// ratios of integrals.
 
 void RooAddModel::fixCoefRange(const char* rangeName)
 {
@@ -429,7 +429,7 @@ void RooAddModel::resetErrorCounters(Int_t resetValue)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if PDF is valid for given normalization set.
-/// Coeffient and PDF must be non-overlapping, but pdf-coefficient
+/// Coefficient and PDF must be non-overlapping, but pdf-coefficient
 /// pairs may overlap each other
 
 bool RooAddModel::checkObservables(const RooArgSet* nset) const

@@ -84,7 +84,7 @@ public:
    enum PrintLevel { None = -1, Reduced = 0, Normal = 1, ExtraForProblem = 2, Maximum = 3 };
 
    // Setters on _theFitter
-   void setStrategy(int strat);
+   void setStrategy(int istrat);
    void setErrorLevel(double level);
    void setEps(double eps);
    void setMaxIterations(int n);

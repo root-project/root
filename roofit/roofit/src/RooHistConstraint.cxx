@@ -30,7 +30,7 @@ ClassImp(RooHistConstraint);
 /// \param[in] name Name of the PDF. This is used to identify it in a likelihood model.
 /// \param[in] title Title for plotting etc.
 /// \param[in] phfSet Set of parametrised histogram functions (RooParamHistFunc).
-/// \param[in] threshold Threshold (bin content) up to which statistcal uncertainties are taken into account.
+/// \param[in] threshold Threshold (bin content) up to which statistical uncertainties are taken into account.
 RooHistConstraint::RooHistConstraint(const char *name, const char *title,
     const RooArgSet& phfSet, int threshold) :
   RooAbsPdf(name,title),

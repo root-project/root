@@ -184,7 +184,7 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
    int status = -1;
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {
       status = minim.minimize(minimType,minimAlgo);
-      if (status%1000 == 0) {  // ignore erros from Improve
+      if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
          cout << "    ----> Doing a re-scan first" << endl;

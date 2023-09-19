@@ -37,7 +37,6 @@ generator context specific for binned pdfs.
 using namespace std;
 
 ClassImp(RooBinnedGenContext);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,9 +90,9 @@ void RooBinnedGenContext::attach(const RooArgSet& args)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// One-time initialization of generator contex. Attach theEvent
+/// One-time initialization of generator context. Attach theEvent
 /// to internal p.d.f clone and forward initialization call to
-/// the component generators
+/// the component generators.
 
 void RooBinnedGenContext::initGenerator(const RooArgSet &theEvent)
 {

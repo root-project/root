@@ -285,7 +285,7 @@ bool RooAddition::setData(RooAbsData& data, bool cloneData)
 
 void RooAddition::printMetaArgs(std::ostream& os) const
 {
-  // We can use the implementation of RooRealSumPdf with an empy coefficient list.
+  // We can use the implementation of RooRealSumPdf with an empty coefficient list.
   static const RooArgList coefs{};
   RooRealSumPdf::printMetaArgs(_set, coefs, os);
 }

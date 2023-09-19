@@ -131,12 +131,12 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   cache = createCache(nset) ;
 
   // Check if we have contents registered already in global expensive object cache
-  auto htmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
+  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
 
-  if (htmp) {
+  if (histTmp) {
 
     cache->hist()->reset() ;
-    cache->hist()->add(*htmp) ;
+    cache->hist()->add(*histTmp) ;
 
   } else {
 
@@ -154,7 +154,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
        << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
-  if (htmp) {
+  if (histTmp) {
     ccoutI(Caching) << " from preexisting content." ;
   }
   ccoutI(Caching) << std::endl ;

@@ -132,7 +132,7 @@ This applies constant term optimization to the cloned pdf and dataset inside the
 It will not modify anything outside of the likelihood.
 
 Optimization can also be activated through the minimizer, which may be more familiar to most users.
-Given the `RooMinimizer` object `m` as definied in the example above, we can do:
+Given the `RooMinimizer` object `m` as defined in the example above, we can do:
 ```c++
 m.optimizeConst(2);
 ```

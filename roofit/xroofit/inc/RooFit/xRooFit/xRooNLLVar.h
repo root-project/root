@@ -136,7 +136,7 @@ public:
          auto null = pNull_toys(nSigma);
          auto alt = pAlt_toys(nSigma);
          double pval = (null.first == 0) ? 0 : null.first / alt.first;
-         // TODO: should do error calculation like for asymp (calulate up and down separately and then take err)
+         // TODO: should do error calculation like for asymp (calculate up and down separately and then take err)
          return std::make_pair(pval, pval * sqrt(pow(null.second / null.first, 2) + pow(alt.second / alt.first, 2)));
       }
       std::pair<double, double>

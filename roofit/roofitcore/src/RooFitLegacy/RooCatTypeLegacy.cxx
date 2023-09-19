@@ -18,7 +18,7 @@
 \class RooCatType
 \ingroup Roofitlegacy
 
-RooCatType is an auxilary class for RooAbsCategory and defines a
+RooCatType is an auxiliary class for RooAbsCategory and defines a
 a single category state. The class holds a string label and an integer
 index value which define the state
 **/
@@ -28,12 +28,9 @@ index value which define the state
 #include <iostream>
 
 
-
 using namespace std;
 
 ClassImp(RooCatType);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

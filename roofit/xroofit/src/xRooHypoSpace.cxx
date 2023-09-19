@@ -250,7 +250,7 @@ std::map<std::string, std::pair<double, double>> xRooNLLVar::xRooHypoSpace::limi
       out[TString::Format("%d", nSigma).Data()] = matchPrecision(lim);
    }
 
-   // don't do the observed limit if all the NLL datas are generated
+   // don't do the observed limit if all the NLL datasets are generated
    bool doObs = true;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 00)
    bool allGen = true;

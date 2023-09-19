@@ -53,7 +53,7 @@ LikelihoodSerial::LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::sha
    // should also somehow be updated in this class.
 }
 
-/// \brief Helper function for the constuctor.
+/// \brief Helper function for the constructor.
 ///
 /// This is a separate function (instead of just in ctor) for historical reasons.
 /// Its predecessor RooRealMPFE::initVars() was used from multiple ctors, but also

@@ -69,7 +69,7 @@ namespace RooStats {
     /// for the 1D case a RooPlot is drawn by default of the profiled Log-Likelihood ratio
     /// if option "TF1" is used the objects are drawn using a TF1 scanning the LL function in a
     /// grid of the set points (by default
-    /// the TF1 can be costumized by setting maximum and the number of points to scan
+    /// the TF1 can be customized by setting maximum and the number of points to scan
     void Draw(const Option_t *options=nullptr) override;
 
   private:

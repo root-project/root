@@ -831,7 +831,7 @@ qag (const gsl_function * f,
 
   if (epsabs <= 0 && (epsrel < 50 * GSL_DBL_EPSILON || epsrel < 0.5e-28))
     {
-      GSL_ERROR ("tolerance cannot be acheived with given epsabs and epsrel",
+      GSL_ERROR ("tolerance cannot be acheieved with given epsabs and epsrel",
                  GSL_EBADTOL);
     }
 
@@ -2172,7 +2172,7 @@ qags (const gsl_function * f,
 
   if (epsabs <= 0 && (epsrel < 50 * GSL_DBL_EPSILON || epsrel < 0.5e-28))
     {
-      GSL_ERROR ("tolerance cannot be acheived with given epsabs and epsrel",
+      GSL_ERROR ("tolerance cannot be achieved with given epsabs and epsrel",
                  GSL_EBADTOL);
     }
 

@@ -68,7 +68,7 @@ RooRealVar::SharedPropertiesMap* RooRealVar::sharedPropList()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Explicitely deletes the shared properties list on exit to avoid problems
+/// Explicitly deletes the shared properties list on exit to avoid problems
 /// with the initialization order. Meant to be only used internally in RooFit
 /// by RooSentinel.
 
@@ -87,12 +87,12 @@ void RooRealVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
    if(!isConstant()) {
       ctx.addResult(this, GetName());
    }
-   // Just return a stringy-fied version of the const value.
+   // Just return a formatted version of the const value.
    // Formats to the maximum precision.
    constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
    std::stringstream ss;
    ss.precision(max_precision);
-   // Just use toString to make sure we do not ouput 'inf'.
+   // Just use toString to make sure we do not output 'inf'.
    // This is really ugly for large numbers...
    ss << std::fixed << RooNumber::toString(_value);
    ctx.addResult(this, ss.str());
@@ -217,7 +217,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 
 RooRealVar::~RooRealVar()
 {
-  // We should not forget to explicitely call deleteSharedProperties() in the
+  // We should not forget to explicitly call deleteSharedProperties() in the
   // destructor, because this is where the expired weak_ptrs in the
   // _sharedPropList get erased.
   deleteSharedProperties();
@@ -632,7 +632,7 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
             parser.readInteger(plotBins,true) ||
        parser.expectToken(")",true)) break ;
 //    setPlotRange(plotMin,plotMax) ;
-   coutW(Eval) << "RooRealVar::readFromStrem(" << GetName()
+   coutW(Eval) << "RooRealVar::readFromStream(" << GetName()
         << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
 
       } else if (!token.CompareTo("F")) {

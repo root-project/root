@@ -167,7 +167,7 @@ RooWorkspace* RooMsgService::debugWorkspace()
 /// <tr><td> ObjectName(const char*)   <td> Restrict stream to messages from object with given name
 /// <tr><td> ClassName(const char*)    <td> Restrict stream to messages from objects with given class name
 /// <tr><td> BaseClassName(const char*)<td> Restrict stream to messages from objects with given base class name
-/// <tr><td> LabelName(const chat*)    <td> Restrict stream to messages from objects setAtrribute(const char*) tag with given name
+/// <tr><td> LabelName(const chat*)    <td> Restrict stream to messages from objects setAttribute(const char*) tag with given name
 /// <tr><th> Output redirection options <th>
 /// <tr><td> OutputFile(const char*)  <td> Send output to file with given name. Multiple streams can write to same file.
 /// <tr><td> OutputStream(ostream&)   <td> Send output to given C++ stream. Multiple message streams can write to same c++ stream

@@ -1386,10 +1386,10 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
    coutI(InputArguments) << "RooAbsReal::createHistogram(" << GetName()
                << ") INFO: Model has intrinsic binning definition, selecting that binning for the histogram"<< std::endl ;
       }
-      std::vector<double> ba(bl->size());
+      std::vector<double> edges(bl->size());
       int i=0 ;
-      for (auto const& elem : *bl) { ba[i++] = elem ; }
-      intBinning = std::make_unique<RooBinning>(bl->size()-1,ba.data()) ;
+      for (auto const& elem : *bl) { edges[i++] = elem ; }
+      intBinning = std::make_unique<RooBinning>(bl->size()-1,edges.data()) ;
     }
   }
 

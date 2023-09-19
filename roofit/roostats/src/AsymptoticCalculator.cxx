@@ -918,12 +918,12 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
     for (auto *a : prod.pdfList()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = nullptr;
-        RooGaussian * gaus = nullptr;
+        RooGaussian * gauss = nullptr;
         if ((pois = dynamic_cast<RooPoisson *>(a)) != nullptr) {
             ret &= SetObsToExpected(*pois, obs);
             pois->setNoRounding(true);  //needed since expected value is not an integer
-        } else if ((gaus = dynamic_cast<RooGaussian *>(a)) != nullptr) {
-            ret &= SetObsToExpected(*gaus, obs);
+        } else if ((gauss = dynamic_cast<RooGaussian *>(a)) != nullptr) {
+            ret &= SetObsToExpected(*gauss, obs);
         } else {
            // should try to add also lognormal case ?
             RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a);
@@ -1009,7 +1009,7 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
     RooArgSet obs(observables);
     RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
     RooPoisson *pois = nullptr;
-    RooGaussian *gaus = nullptr;
+    RooGaussian *gauss = nullptr;
 
     if (fgPrintLevel > 1)
        std::cout << "generate counting Asimov data for pdf of type " << pdf.ClassName() << std::endl;
@@ -1021,8 +1021,8 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
         r = SetObsToExpected(*pois, observables);
         // we need in this case to set Poisson to real values
         pois->setNoRounding(true);
-    } else if ((gaus = dynamic_cast<RooGaussian *>(&pdf)) != nullptr) {
-        r = SetObsToExpected(*gaus, observables);
+    } else if ((gauss = dynamic_cast<RooGaussian *>(&pdf)) != nullptr) {
+        r = SetObsToExpected(*gauss, observables);
     } else {
        oocoutE(nullptr,InputArguments) << "A counting model pdf must be either a RooProdPdf or a RooPoisson or a RooGaussian" << endl;
     }
@@ -1313,7 +1313,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \param model ModelConfig that contains the model pdf and the model parameters
-/// \param allParamValues The parameters fo the model will be set to the values given in this set
+/// \param allParamValues The parameters of the model will be set to the values given in this set
 /// \param[out] asimovGlobObs Global observables set to values satisfying the constraints
 /// \return Asimov data set. The user takes ownership.
 ///

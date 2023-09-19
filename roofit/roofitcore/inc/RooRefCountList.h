@@ -18,7 +18,7 @@
 class RooRefCountList : public RooLinkedList {
 public:
    RooRefCountList() {}
-   ClassDefOverride(RooRefCountList, 1) // RooLinkedList alias for backwards commpatibility
+   ClassDefOverride(RooRefCountList, 1) // RooLinkedList alias for backwards compatibility
 };
 
 #endif

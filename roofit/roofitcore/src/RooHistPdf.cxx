@@ -19,7 +19,7 @@
 \class RooHistPdf
 \ingroup Roofitcore
 
-RooHistPdf implements a probablity density function sampled from a
+RooHistPdf implements a propability density function sampled from a
 multidimensional histogram. The histogram distribution is explicitly
 normalized by RooHistPdf and can have an arbitrary number of real or
 discrete dimensions.

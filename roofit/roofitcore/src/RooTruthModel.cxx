@@ -376,7 +376,7 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
          double term = exp(-xmax/tau);
          // We only multiply with the sine term if the coefficient is non zero,
          // i.e. if xmax was not infinity. Otherwise, we are evaluating the
-         // sine of infinity, whic is NAN! Same applies to the other terms
+         // sine of infinity, which is NAN! Same applies to the other terms
          // below.
          if(term > 0.0) term *= -1/tau*sin(dm*xmax) - dm*cos(dm*xmax);
          term += dm;

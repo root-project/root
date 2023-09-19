@@ -57,7 +57,7 @@ namespace RooStats {
 
    /// Compute the Asimov Median significance for a Poisson process
    /// with s = expected number of signal events, b = expected number of background events
-   /// and optionally sigma_b = expected uncertainty of backgorund events
+   /// and optionally sigma_b = expected uncertainty of background events
    double AsimovSignificance(double s, double b, double sigma_b = 0.0 );
 
    inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
@@ -83,7 +83,7 @@ namespace RooStats {
    /// utility function to set all variable constant in a collection
    /// (from G. Petrucciani)
    inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
-      bool changed = false; 
+      bool changed = false;
       for (auto *v : dynamic_range_cast<RooRealVar *>(coll)) {
          if (v && (v->isConstant() != constant)) {
             changed = true;

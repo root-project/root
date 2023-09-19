@@ -49,7 +49,7 @@ ClassImp(RooStats::HybridResult);
 using namespace RooStats;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construtor
+/// Constructor
 
 HybridResult::HybridResult( const char *name) :
    HypoTestResult(name),
@@ -62,7 +62,7 @@ HybridResult::HybridResult( const char *name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construtor
+/// Constructor
 
 HybridResult::HybridResult( const char *name,
                             const std::vector<double>& testStat_sb_vals,

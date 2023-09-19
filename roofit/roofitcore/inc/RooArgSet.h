@@ -32,7 +32,7 @@ class RooArgList ;
 // # Update April 2022:
 //
 // Using pointers comparisons for caching RooFit results caused too many bugs,
-// even wih the memory pool. For example, if the RooArgSet is created on the
+// even with the memory pool. For example, if the RooArgSet is created on the
 // stack, there is no guarantee that memory is not reused. Also, pointer
 // comparisons still work if the RooArgSets for the cache entry are already out
 // of scope, which can also cause problems. Therefore, when RooArgSets are used

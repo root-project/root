@@ -185,7 +185,7 @@ TEST(RooProdPdf, DISABLED_ChangeServerNormSetForProdPdfInAddPdf)
    x.setRange("FULL", -10, +10);
    y.setRange("FULL", -10, +10);
 
-   // Try different normalization sets to check if there is a false chache hit
+   // Try different normalization sets to check if there is a false cache hit
    // after changing the normalization range of the servers.
    RooArgSet normSet1{x, y};
    RooArgSet normSet2{x, y};

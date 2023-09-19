@@ -81,7 +81,7 @@ functions:
 \endcode
 
 However, as ROOT is not build with this by default, the RooTrace is not tested
-and there is no gurantee that this works.
+and there is no guarantee that this works.
 **/
 
 #include "RooTrace.h"

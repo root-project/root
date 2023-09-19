@@ -142,7 +142,7 @@ void RooCmdConfig::defineDependency(const char* refArgName, const char* neededAr
 bool RooCmdConfig::defineInt(const char* name, const char* argName, int intNum, int defVal)
 {
   if (findVar(_iList, name) != _iList.end()) {
-    coutE(InputArguments) << "RooCmdConfig::defintInt: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineInt: name '" << name << "' already defined" << endl ;
     return true ;
   }
 
@@ -309,7 +309,7 @@ bool RooCmdConfig::process(const RooLinkedList& argList)
 
 bool RooCmdConfig::process(const RooCmdArg& arg)
 {
-  // Retrive command code
+  // Retrieve command code
   const char* opc = arg.opcode() ;
 
   // Ignore empty commands

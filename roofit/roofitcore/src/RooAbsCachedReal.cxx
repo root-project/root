@@ -144,12 +144,12 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   }
 
   // Check if we have contents registered already in global expensive object cache
-  RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
+  RooDataHist* histTmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
 
-  if (htmp) {
+  if (histTmp) {
 
     cache->hist()->reset() ;
-    cache->hist()->add(*htmp) ;
+    cache->hist()->add(*histTmp) ;
 
   } else {
 

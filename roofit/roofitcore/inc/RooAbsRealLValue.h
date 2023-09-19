@@ -67,9 +67,9 @@ public:
 
   // Get fit range limits
 
-  /// Retrive binning configuration with given name or default binning.
+  /// Retrieve binning configuration with given name or default binning.
   virtual const RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) const = 0 ;
-  /// Retrive binning configuration with given name or default binning.
+  /// Retrieve binning configuration with given name or default binning.
   virtual RooAbsBinning& getBinning(const char* name=nullptr, bool verbose=true, bool createOnTheFly=false) = 0 ;
   /// Check if binning with given name has been defined.
   virtual bool hasBinning(const char* name) const = 0 ;

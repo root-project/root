@@ -197,7 +197,7 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    w.pdf("model_A")->setAttribute("BinnedLikelihood");
    w.pdf("model_B")->setAttribute("BinnedLikelihood");
 
-   // Construct simulatenous pdf
+   // Construct simultaneous pdf
    w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
 
    // Construct dataset
@@ -360,7 +360,7 @@ protected:
       w.factory("PROD::model_A(model_phys_A,model_subs_A)");
       w.factory("PROD::model_B(model_phys_B,model_subs_B)");
 
-      // Construct simulatenous pdf
+      // Construct simultaneous pdf
       w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
 
       pdf = w.pdf("model");

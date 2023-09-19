@@ -247,7 +247,7 @@ TEST(RooWorkspace, Issue_7965)
 }
 
 /// Covers an issue about the RooProdPdf constructor taking a RooFit collection
-/// not working and the RooProduct constuctors behaving inconsistently.
+/// not working and the RooProduct constructors behaving inconsistently.
 TEST(RooWorkspace, Issue_7809)
 {
    RooWorkspace ws;

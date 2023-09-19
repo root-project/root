@@ -55,7 +55,7 @@ public:
 //           ***********
   inline void     setWidthScaleFactor(double widthScaleFactor);
 
-// choose the kernel bandwith to use.  The default is 0
+// choose the kernel bandwidth to use.  The default is 0
 //    0 = use adaptive kernel estimator (uses local population to vary with of kernels)
 //    1 = use trivial kernel estimator (uses all data and sigma to estimate uniform kernel bandwidth)
   Int_t    calculateBandWidth(Int_t kernel = -999);

@@ -101,7 +101,7 @@ bool RooHistError::getPoissonIntervalCalc(Int_t n, double &mu1, double &mu2, dou
     return false;
   }
 
-  // use assymptotic error if possible
+  // use asymptotic error if possible
   if(n > 100) {
     mu1= n - sqrt(n+0.25) + 0.5;
     mu2= n + sqrt(n+0.25) + 0.5;

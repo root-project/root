@@ -348,7 +348,7 @@ void RooAddPdf::materializeRefCoefNormFromAttribute() const
 
    std::vector<std::string> names;
    if (auto attrib = getStringAttribute("ref_coef_norm")) {
-      names = ROOT::Split(attrib, ",", /*skipEmtpy=*/true);
+      names = ROOT::Split(attrib, ",", /*skipEmpty=*/true);
    } else {
       return;
    }
@@ -606,7 +606,7 @@ void RooAddPdf::resetErrorCounters(Int_t resetValue)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if PDF is valid for given normalization set.
-/// Coeffient and PDF must be non-overlapping, but pdf-coefficient
+/// Coefficient and PDF must be non-overlapping, but pdf-coefficient
 /// pairs may overlap each other
 
 bool RooAddPdf::checkObservables(const RooArgSet* nset) const
@@ -969,7 +969,7 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    ctx.markAsCompiled(*newArg);
 
    // In case conditional observables, e.g. p(x|y), the _refCoefNorm is set to
-   // all observables (x, y) and the normSet doesn't contain the condidional
+   // all observables (x, y) and the normSet doesn't contain the conditional
    // observables (so it only contains x in this example).
 
    // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
@@ -996,7 +996,7 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    //              Integral of p(x, y) over x
    //
    // What follows is the implementation of this formula in RooFit. By doing
-   // this here in complieForNormSet(), we don't invoke the old RooAddPdf
+   // this here in compileForNormSet(), we don't invoke the old RooAddPdf
    // projection caches (note that no conditional pdfs are on the right hand
    // side of the equation).
    std::string finalName = std::string(GetName()) + "_conditional";

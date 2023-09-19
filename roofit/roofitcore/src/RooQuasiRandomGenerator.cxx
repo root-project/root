@@ -200,7 +200,7 @@ void RooQuasiRandomGenerator::calculateV(const int px[], int px_degree,
                 int pb[], int * pb_degree, int v[], int maxv)
 {
   const int nonzero_element = 1;    /* nonzero element of Z_2  */
-  const int arbitrary_element = 1;  /* arbitray element of Z_2 */
+  const int arbitrary_element = 1;  /* arbitrary element of Z_2 */
 
   /* The polynomial ph is px**(J-1), which is the value of B on arrival.
    * In section 3.3, the values of Hi are defined with a minus sign:

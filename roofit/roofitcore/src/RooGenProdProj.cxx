@@ -149,7 +149,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   numIntSet.add(intSet) ;
 
   // The idea of the RooGenProdProj is that we divide two integral objects each
-  // created with this makeIntgral() function to get the normalized integral of
+  // created with this makeIntegral() function to get the normalized integral of
   // a product. Therefore, we don't need to normalize the numerater and
   // denominator integrals themselves. Doing the normalization would be
   // expensive and it would cancel out anyway. However, if we don't specify an

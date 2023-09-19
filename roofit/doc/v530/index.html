@@ -16,7 +16,7 @@ This new version supports a few types of interpolation for the normalization of 
 <li> code = 1: piece-wise log (new default)</li>
 <li> code = 2: parabolic interp with linear extrap ( common at tevatron, avoids kink for asymmetric uncert)</li>
 </ul>
-The piece-wise logarithmic interpolation paired with a Gaussian constraint is equivalent to a log-normal constraint in a transformed version of the nuisance parameter.  The benifit of this approach is that it is easy to avoid the normalization from taking on unphysical negative values.  This is the prescription used by the CMS Higgs group, and agreed upon by the LHC Higgs Combination Group.
+The piece-wise logarithmic interpolation paired with a Gaussian constraint is equivalent to a log-normal constraint in a transformed version of the nuisance parameter.  The benefit of this approach is that it is easy to avoid the normalization from taking on unphysical negative values.  This is the prescription used by the CMS Higgs group, and agreed upon by the LHC Higgs Combination Group.
 
 There is not yet XML-based steering for the different interpolation types, but there is a simple script to modify it. 
 <pre>

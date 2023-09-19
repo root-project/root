@@ -141,7 +141,7 @@ void RooAddGenContext::attach(const RooArgSet& args)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// One-time initialization of generator contex. Attach theEvent
+/// One-time initialization of generator context. Attach theEvent
 /// to internal p.d.f clone and forward initialization call to
 /// the component generators
 
@@ -170,7 +170,7 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 
 void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-  // Throw a random number to determin which component to generate
+  // Throw a random number to determine which component to generate
   updateThresholds() ;
   double rand = RooRandom::uniform() ;
   for (Int_t i=0 ; i<_nComp ; i++) {
@@ -199,7 +199,7 @@ void RooAddGenContext::updateThresholds()
         std::stringstream errMsgStream;
         errMsgStream << "RooAddGenContext::updateThresholds(): coefficient number " << i << " of the "
                      << pdf->ClassName() << " \"" << pdf->GetName() <<  "\"" << " is negative!"
-                     << " The current RooAddGenConext doesn't support negative coefficients."
+                     << " The current RooAddGenContext doesn't support negative coefficients."
                      << " Please recreate a new generator context with " << pdf->ClassName() << "::genContext()";
         auto const errMsg = errMsgStream.str();
         cxcoutE(Generation) << errMsg << std::endl;

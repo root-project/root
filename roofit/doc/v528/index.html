@@ -5,7 +5,7 @@
 
 <ul>
 <li>Assorted small bug fixes have been applied. No major new features have been introduced since 5.26</li>
-<li>Normalization of <li>RooRealSumPdf</li> changed from sum of coefficents to sum of coefficients*integrals of input functions.</li>
+<li>Normalization of <li>RooRealSumPdf</li> changed from sum of coefficients to sum of coefficients*integrals of input functions.</li>
 <li>New PDF <tt>RooNonCentralChiSquare</tt> which is useful for asymptotic analysis of likelihood ratio tests -- like expected significance and error bands.</li>
 <li>Ability to "seal" data in RooNLLVar, so that an experiment can publish likleihood functions without exposing the data necessary to evaluate the likelihood function.</li>
 </ul>
@@ -38,7 +38,7 @@ The  ROOT  release ships with a script <tt>prepareHistFactory</tt> and a binary 
               <li>what is the relative uncertainty on the luminosity
               <li>what is (are) the parameter(s) of interest that will be measured
               <li>which parameters should be fixed/floating (eg. nuisance parameters)
-              <li>which type of constriants are desired
+              <li>which type of constraints are desired
 		<ul>
 		  <li>Gaussian by default      
 		  <li>Gamma, LogNormal,  and  Uniform
@@ -158,7 +158,7 @@ The  ROOT  release ships with a script <tt>prepareHistFactory</tt> and a binary 
 <ul>
   <li>Cleanup of the interfaces.</li>
   <li>TestStatistics now have a method <tt>PValueIsRightTail</tt> to specify the sign conventions for the test statistic.  This is used when making plots and calculating p-values.</li>
-  <li>make clear that <tt>TestStatistic::Evaluate</tt> should take data and values of the parameters that defien the null.</li>
+  <li>make clear that <tt>TestStatistic::Evaluate</tt> should take data and values of the parameters that define the null.</li>
   <li>Add method <tt>TestStatSampler::SetParametersForTestStat</tt> that 
     allows for greater control of parameters used for generating toy data
     and parameters used for evaluating the test statistic.</li>
@@ -168,7 +168,7 @@ The  ROOT  release ships with a script <tt>prepareHistFactory</tt> and a binary 
   <ul>
     <li><tt>SimpleLikelihoodRatioTestStat</tt> : log L_1 / L_0</li>
     <li><tt>RatioOfProfiledLikelihoodsTestStat</tt>: log L(mu_1, hat(nu_1))/L(mu_0,hat(nu_0))</li>
-    <li><tt>MaxLikelihoodEstiamteTestStat</tt>: the MLE of a specified parameter</li>
+    <li><tt>MaxLikelihoodEstimateTestStat</tt>: the MLE of a specified parameter</li>
   </ul>
   </li>
   
@@ -229,7 +229,7 @@ The  ROOT  release ships with a script <tt>prepareHistFactory</tt> and a binary 
 <ul>
   <li>IntervalExamples.C: Standard Gaussian with known answer using 4 techniques</li>
   <li>FourBinInstructional.C: Example of a standard data-driven approach for estimating backgrounds.  A lot of discussion.</li>
-  <li>HybridInstructional.C: Example of protoype on/off problem with a data-driven background estimate.  A lot of discussion</li>
+  <li>HybridInstructional.C: Example of prototype on/off problem with a data-driven background estimate.  A lot of discussion</li>
   <li>HybridStandardForm.C: Variant on above in 'standard form'</li>
   <li>MultivariateGaussianTest.C: A validation example with an N-D multivariate Gaussian </li>
 </ul>

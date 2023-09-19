@@ -30,7 +30,7 @@ getGlobalObservables(RooAbsPdf const &pdf, RooArgSet const *globalObservables, c
       throw std::invalid_argument(errMsg);
    }
    if (globalObservables) {
-      // pass-throught of global observables
+      // pass-through of global observables
       return std::make_unique<RooArgSet>(*globalObservables);
    }
 

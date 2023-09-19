@@ -95,7 +95,7 @@ MetropolisHastings::MetropolisHastings(RooAbsReal& function, const RooArgSet& pa
 MarkovChain* MetropolisHastings::ConstructChain()
 {
    if (fParameters.empty() || !fPropFunc || !fFunction) {
-      coutE(Eval) << "Critical members unintialized: parameters, proposal " <<
+      coutE(Eval) << "Critical members uninitialized: parameters, proposal " <<
                      " function, or (log) likelihood function" << endl;
          return nullptr;
    }

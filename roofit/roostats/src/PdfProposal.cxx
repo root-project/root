@@ -156,7 +156,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine whether or not the proposal density is symmetric for
-/// points x1 and x2 - that is, whether the probabilty of reaching x2
+/// points x1 and x2 - that is, whether the propabilty of reaching x2
 /// from x1 is equal to the probability of reaching x1 from x2
 
 bool PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)

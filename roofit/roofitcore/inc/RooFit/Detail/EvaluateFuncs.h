@@ -119,7 +119,7 @@ inline double flexibleInterp(unsigned int code, double low, double high, double 
       else
          return total + paramVal * (nominal - low);
    } else if (code == 1) {
-      // pice-wise log
+      // piece-wise log
       if (paramVal >= 0)
          return total * std::pow(high / nominal, +paramVal);
       else

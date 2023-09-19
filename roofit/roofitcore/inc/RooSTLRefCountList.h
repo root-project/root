@@ -134,7 +134,7 @@ class RooSTLRefCountList {
     }
 
 
-    ///Find an item by comparing its adress.
+    ///Find an item by comparing its address.
     template<typename Obj_t>
     typename Container_t::const_iterator findByPointer(const Obj_t * item) const {
       return std::find(_storage.begin(), _storage.end(), item);
@@ -154,7 +154,7 @@ class RooSTLRefCountList {
     }
 
 
-    ///Find an item by comparing RooAbsArg::namePtr() adresses.
+    ///Find an item by comparing RooAbsArg::namePtr() addresses.
     inline T* findByNamePointer(const T * item) const {
       return findByNamePointer(item->namePtr());
     }
@@ -168,7 +168,7 @@ class RooSTLRefCountList {
         auto found = std::find_if(_storage.begin(), _storage.end(), byNamePointer);
         return found != _storage.end() ? *found : nullptr;
       } else {
-        //As the collection is guaranteed to be sorted by namePtr() adress, we
+        //As the collection is guaranteed to be sorted by namePtr() address, we
         //can use a binary search to look for `item` in this collection.
         auto first = lowerBoundByNamePointer(namePtr);
         if(first == _orderedStorage.end()) return nullptr;
@@ -263,7 +263,7 @@ class RooSTLRefCountList {
 
   private:
     //Return an iterator to the last element in this sorted collection with a
-    //RooAbsArg::namePtr() adress smaller than for `item`.
+    //RooAbsArg::namePtr() address smaller than for `item`.
     inline typename std::vector<T*>::const_iterator lowerBoundByNamePointer(const T * item) const {
       return lowerBoundByNamePointer(item->namePtr());
     }

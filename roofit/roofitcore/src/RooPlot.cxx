@@ -587,7 +587,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
 
     if (std::abs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
       coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac
-            << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+            << " will supersede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
     }
 
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
@@ -613,7 +613,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update our y-axis limits to accomodate an object whose spread
+/// Update our y-axis limits to accommodate an object whose spread
 /// in y is (ymin,ymax). Use the specified y-axis label if we don't
 /// have one assigned already.
 
@@ -954,14 +954,14 @@ bool RooPlot::drawAfter(const char *after, const char *target)
 /// methods to change the drawing style attributes of a contained
 /// object directly.
 
-TObject *RooPlot::findObject(const char *name, const TClass* clas) const
+TObject *RooPlot::findObject(const char *name, const TClass* tClass) const
 {
   TObject *ret = nullptr;
 
   for(auto const& item : _items) {
     TObject &obj = *item.first;
     if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName()))
-        && (!clas || (obj.IsA()==clas))) {
+        && (!tClass || (obj.IsA()==tClass))) {
       ret = &obj ;
     }
   }

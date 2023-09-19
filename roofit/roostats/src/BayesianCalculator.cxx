@@ -28,7 +28,7 @@ computing the posterior. Alternatively, the class can be constructed by passing 
 all the needed information (model pdf, prior pdf, parameter of interest, nuisance parameters, etc..)
 
 After configuring the calculator, one only needs to ask GetInterval(), which
-will return an SimpleInterval object. By default the extrem of the integral are obtained by inverting directly the
+will return an SimpleInterval object. By default the extreme of the integral are obtained by inverting directly the
 cumulative posterior distribution. By using the method SetScanOfPosterior(nbins) the interval is then obtained by
 scanning  the posterior function in the given number of points. The first method is in general faster but it requires an
 integration one extra dimension  ( in the poi in addition to the nuisance parameters), therefore in some case it can be

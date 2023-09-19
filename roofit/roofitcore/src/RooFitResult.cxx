@@ -22,7 +22,7 @@
 ///   * Values of all constant parameters
 ///   * Initial and final values of floating parameters with error
 ///   * Correlation matrix and global correlation coefficients
-///   * NLL and EDM at mininum
+///   * NLL and EDM at minimum
 ///
 /// No references to the fitted PDF and dataset are stored
 ///
@@ -522,7 +522,7 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
          os << TString::Format("%12.4e",v->getVal());
         } else {
           _constPars->at(i)->printValue(os); // for anything other than RooRealVar use printValue method to print
-        }  
+        }
         os << endl ;
       }
 
@@ -602,7 +602,7 @@ void RooFitResult::fillCorrMatrix(const std::vector<double>& globalCC, const TMa
     return ;
   }
 
-  // Delete eventual prevous correlation data holders
+  // Delete eventual previous correlation data holders
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
   if (_GC) delete _GC ;
@@ -628,7 +628,7 @@ void RooFitResult::fillLegacyCorrMatrix() const
 {
   if (!_CM) return ;
 
-  // Delete eventual prevous correlation data holders
+  // Delete eventual previous correlation data holders
   if (_globalCorr) delete _globalCorr ;
   _corrMatrix.Delete();
 
@@ -704,7 +704,7 @@ void RooFitResult::fillCorrMatrix()
     return ;
   }
 
-  // Delete eventual prevous correlation data holders
+  // Delete eventual previous correlation data holders
   if (_CM) delete _CM ;
   if (_VM) delete _VM ;
   if (_GC) delete _GC ;
@@ -750,7 +750,7 @@ void RooFitResult::fillCorrMatrix()
 void RooFitResult::fillPrefitCorrMatrix()
 {
 
-   // Delete eventual prevous correlation data holders
+   // Delete eventual previous correlation data holders
    if (_CM)
       delete _CM;
    if (_VM)
@@ -795,7 +795,7 @@ void isErrorIdenticalErrMsg(std::string const& msgHead, const RooRealVar* tv, co
 /// \param[in] other Fit result to test against.
 /// \param[in] tol **Relative** tolerance for parameters and NLL.
 /// \param[in] tolErr **Relative** tolerance for parameter errors.
-/// \param[in] verbose If this function will log to the standard output when comparisions fail.
+/// \param[in] verbose If this function will log to the standard output when comparisons fail.
 
 bool RooFitResult::isIdenticalNoCov(const RooFitResult& other, double tol, double tolErr, bool verbose) const
 {
@@ -854,7 +854,7 @@ bool RooFitResult::isIdenticalNoCov(const RooFitResult& other, double tol, doubl
 /// \param[in] other Fit result to test against.
 /// \param[in] tol **Relative** tolerance for parameters and NLL.
 /// \param[in] tolCorr **absolute** tolerance for correlation coefficients.
-/// \param[in] verbose If this function will log to the standard output when comparisions fail.
+/// \param[in] verbose If this function will log to the standard output when comparisons fail.
 ///
 /// As the relative tolerance for the parameter errors, the default value of
 /// `1e-3` will be used.

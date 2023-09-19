@@ -68,7 +68,7 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 class RooRealMPFE ;
 
 // RooMPSentinel is a singleton class that keeps track of all
-// parellel execution processes for goodness-of-fit calculations.
+// parallel execution processes for goodness-of-fit calculations.
 // The primary task of RooMPSentinel is to terminate all server processes
 // when the main ROOT process is exiting.
 struct RooMPSentinel {
@@ -228,7 +228,7 @@ void RooRealMPFE::initialize()
     delete _pipe;
     _exit(0) ;
   } else {
-    // Client process - fork successul
+    // Client process - fork successful
     if (_verboseClient) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
    GetName() << ") successfully forked server process " <<
        _pipe->pidOtherEnd() << endl ;
@@ -519,7 +519,7 @@ void RooRealMPFE::calculate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If value needs recalculation and calculation has not beed started
+/// If value needs recalculation and calculation has not been started
 /// with a call to calculate() start it now. This function blocks
 /// until remote process has finished calculation and returns
 /// remote value
@@ -529,7 +529,7 @@ double RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 
   if (isValueDirty()) {
     // Cache is dirty, no calculation has been started yet
-    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is dirty, caling calculate and evaluate" << endl ;
+    //cout << "RooRealMPFE::getValF(" << GetName() << ") cache is dirty, calling calculate and evaluate" << endl ;
     calculate() ;
     _value = evaluate() ;
   } else if (_calcInProgress) {
@@ -564,7 +564,7 @@ double RooRealMPFE::evaluate() const
     int msg;
     double value;
 
-    // If current error loggin state is not the same as remote state
+    // If current error logging state is not the same as remote state
     // update the remote state
     if (evalErrorLoggingMode() != _remoteEvalErrorLoggingState) {
       msg = LogEvalError ;

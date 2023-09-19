@@ -29,8 +29,6 @@ value.
 using namespace std;
 
 ClassImp(RooDouble);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +41,7 @@ RooDouble::RooDouble(double value) : TNamed(), _value(value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement comparison to other TObjects that are also RooDouble
-/// to faciliate sorting of RooDoubles in a ROOT container
+/// to facilitate sorting of RooDoubles in a ROOT container.
 
 Int_t RooDouble::Compare(const TObject* other) const
 {

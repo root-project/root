@@ -20,11 +20,11 @@
 #include <sstream>
 
 namespace {
-template <class Nd>
-class ChildItImpl final : public RooFit::Detail::JSONNode::child_iterator_t<Nd>::Impl {
+template <class Node_t>
+class ChildItImpl final : public RooFit::Detail::JSONNode::child_iterator_t<Node_t>::Impl {
 public:
-   using child_iterator = RooFit::Detail::JSONNode::child_iterator_t<Nd>;
-   ChildItImpl(Nd &n, size_t p) : node(n), pos(p) {}
+   using child_iterator = RooFit::Detail::JSONNode::child_iterator_t<Node_t>;
+   ChildItImpl(Node_t &n, size_t p) : node(n), pos(p) {}
    ChildItImpl(const ChildItImpl &other) : node(other.node), pos(other.pos) {}
    std::unique_ptr<typename child_iterator::Impl> clone() const override
    {
@@ -32,15 +32,15 @@ public:
    }
    void forward() override { ++pos; }
    void backward() override { --pos; }
-   Nd &current() override { return node.child(pos); }
+   Node_t &current() override { return node.child(pos); }
    bool equal(const typename child_iterator::Impl &other) const override
    {
-      auto it = dynamic_cast<const ChildItImpl<Nd> *>(&other);
+      auto it = dynamic_cast<const ChildItImpl<Node_t> *>(&other);
       return it && &(it->node) == &(this->node) && (it->pos) == this->pos;
    }
 
 private:
-   Nd &node;
+   Node_t &node;
    size_t pos;
 };
 } // namespace

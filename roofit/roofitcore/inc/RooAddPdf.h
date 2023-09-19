@@ -102,7 +102,7 @@ public:
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override;
 
   mutable RooSetProxy _refCoefNorm ;   ///< Reference observable set for coefficient interpretation
-  mutable TNamed* _refCoefRangeName = nullptr ;  ///< Reference range name for coefficient interpreation
+  mutable TNamed* _refCoefRangeName = nullptr ;  ///< Reference range name for coefficient interpretation
 
   mutable std::vector<double> _coefCache; ///<! Transient cache with transformed values of coefficients
 

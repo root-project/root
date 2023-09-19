@@ -167,7 +167,7 @@ RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 ////////////////////////////////////////////////////////////////////////////////
 /// Save likelihood from nominal fit, fix chosen parameter to its
 /// null hypothesis value and rerun fit Save difference in likelihood
-/// and associated Gaussian significance in auxilary dataset
+/// and associated Gaussian significance in auxiliary dataset
 
 bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
 {

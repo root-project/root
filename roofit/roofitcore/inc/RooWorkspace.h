@@ -45,7 +45,7 @@ public:
 
   RooWorkspace() ;
   RooWorkspace(const char* name, bool doCINTExport)
-  R__SUGGEST_ALTERNATIVE("The \"doCINTExprot\" argument has no effect anymore since ROOT 6."
+  R__SUGGEST_ALTERNATIVE("The \"doCINTExport\" argument has no effect anymore since ROOT 6."
           "Consider using RooWorkspace(const char* name, const char* title=nullptr).");
   RooWorkspace(const char* name, const char* title=nullptr) ;
   RooWorkspace(const RooWorkspace& other) ;

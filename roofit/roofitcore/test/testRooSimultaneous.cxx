@@ -206,7 +206,7 @@ TEST(RooSimultaneous, RangedCategory)
 
    using namespace RooFit;
 
-   // Create the model with the RooWorkspace to not explicitely depend on
+   // Create the model with the RooWorkspace to not explicitly depend on
    // non-RooFitCore classes like RooGaussian
    RooWorkspace ws;
    ws.factory("Gaussian::pdfA(x[-10, 10], mu[0, -10, 10], sigma[2.0, 0.1, 10.0])");
@@ -251,7 +251,7 @@ TEST(RooSimultaneous, RangedCategory)
 
    constexpr auto batchMode = "off";
 
-   // Funciton to do the fit
+   // Function to do the fit
    auto doFit = [&](RooAbsPdf &pdf, RooAbsData &dataset, const char *range = nullptr) {
       resetParameters();
       std::unique_ptr<RooFitResult> res{pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), BatchMode(batchMode))};

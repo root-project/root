@@ -325,7 +325,7 @@ TEST_P(FactoryTest, NLLFit)
    // Compare minimization results
    double tol = _params._fitResultTolerance;
    // Same tolerance for parameter values and error, don't compare correlations
-   // because for very small correlations it's usually not the same withing the
+   // because for very small correlations it's usually not the same within the
    // relative tolerance because you would compare two small values that are
    // only different from zero because of noise.
    EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, tol, tol));

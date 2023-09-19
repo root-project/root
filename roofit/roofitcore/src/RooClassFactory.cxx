@@ -403,12 +403,12 @@ std::string getFromVarSpans(std::vector<std::string> const &alist)
    return ss.str();
 }
 
-/// Replace all occurences of `what` with `with` inside of `inout`.
-void replaceAll(std::string &inout, std::string_view what, std::string_view with)
+/// Replace all occurrences of `what` with `with` inside of `inOut`.
+void replaceAll(std::string &inOut, std::string_view what, std::string_view with)
 {
-   for (std::string::size_type pos{}; inout.npos != (pos = inout.find(what.data(), pos, what.length()));
+   for (std::string::size_type pos{}; inOut.npos != (pos = inOut.find(what.data(), pos, what.length()));
         pos += with.length()) {
-      inout.replace(pos, what.length(), with.data(), with.length());
+      inOut.replace(pos, what.length(), with.data(), with.length());
    }
 }
 

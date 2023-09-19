@@ -529,8 +529,8 @@ bool RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to obejct with given name. If no such object
-/// is found return a null pointer
+/// Return pointer to object with given name. If no such object
+/// is found return a null pointer.
 
 TObject* RooLinkedList::FindObject(const char* name) const
 {

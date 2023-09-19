@@ -72,7 +72,7 @@ ClassImp(RooAbsTestStatistic);
 /// - rangeName Fit data only in range with given name
 /// - addCoefRangeName If not null, all RooAddPdf components of `real` will be instructed to fix their fraction definitions to the given named range.
 /// - nCPU If larger than one, the test statistic calculation will be parallelized over multiple processes.
-///   By default the data is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+///   By default the data is split with 'bulk' partitioning (each process calculates a contiguous block of fraction 1/nCPU
 ///   of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
 ///   in each processing block many vary greatly thereby distributing the workload rather unevenly.
 /// - interleave is set to true, the interleave partitioning strategy is used where each partition

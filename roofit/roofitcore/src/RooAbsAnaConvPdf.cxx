@@ -610,7 +610,7 @@ double RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const
 
 void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 {
-  // Instantate a coefficient variables
+  // Instantiate a coefficient variables
   for (Int_t i=0 ; i<_convSet.getSize() ; i++) {
     auto cvars = coefVars(i);
     varList.addOwned(std::make_unique<RooConvCoefVar>(Form("%s_coefVar_%d",GetName(),i),"coefVar",*this,i,&*cvars));

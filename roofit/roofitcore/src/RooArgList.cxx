@@ -110,7 +110,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Note that a copy of a list is always non-owning,
 /// even the source list is owning. To create an owning copy of
-/// a list (owning or not), use the snaphot() method.
+/// a list (owning or not), use the snapshot() method.
 
 RooArgList::RooArgList(const RooArgList& other, const char *name)
   : RooAbsCollection(other,name)

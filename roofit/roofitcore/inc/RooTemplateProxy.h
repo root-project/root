@@ -194,7 +194,7 @@ public:
   /// It will accept any RooTemplateProxy instance, and attempt a dynamic_cast on its payload.
   /// \param[in] theName Name of this proxy.
   /// \param[in] owner Pointer to the owner this proxy should be registered to.
-  /// \param[in] other Instance of a differen proxy whose payload should be copied.
+  /// \param[in] other Instance of a different proxy whose payload should be copied.
   /// \param[in] allowWrongTypes Instead of throwing a std::invalid_argument, only issue an
   /// error message when payload with wrong type is found. This is unsafe, but may be necessary
   /// when reading back legacy types. Defaults to false.
