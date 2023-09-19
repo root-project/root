@@ -98,7 +98,7 @@ void rf402_datahandling()
    d1->merge(d2);
    d1->Print("v");
 
-   // The append() function addes two datasets row-wise
+   // The append() function adds two datasets row-wise
    cout << endl << ">> append data points of d3 to d1" << endl;
    d1->append(*d3);
    d1->Print("v");

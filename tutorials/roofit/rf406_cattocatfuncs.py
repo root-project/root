@@ -44,7 +44,7 @@ tcatType = ROOT.RooMappedCategory("tcatType", "tagCat type", tagCat, "Cut based"
 tcatType.map("Lepton", "Cut based")
 tcatType.map("Kaon", "Cut based")
 
-# Enter a wilcard expression mapping
+# Enter a wildcard expression mapping
 tcatType.map("NetTagger*", "Neural Network")
 
 # Make a table of the mapped category state multiplicit in data

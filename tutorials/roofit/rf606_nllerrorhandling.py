@@ -55,7 +55,7 @@ argus.plotOn(frame1)
 
 argus.fitTo(data, PrintEvalErrors=10)
 
-# Peform another fit. In self configuration only the number of errors per
+# Perform another fit. In self configuration only the number of errors per
 # likelihood evaluation is shown, it is greater than zero. The
 # EvalErrorWall(kFALSE) arguments disables the default error handling strategy
 # and will cause the actual (problematic) value of the likelihood to be passed
