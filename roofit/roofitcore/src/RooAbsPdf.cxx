@@ -1654,7 +1654,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
       "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,"
       "BatchMode,IntegrateBins,ModularL";
 
-  if (((RooCmdArg*)cmdList.FindObject("ModularL")) && !((RooCmdArg*)cmdList.FindObject("ModularL"))->getInt(0))
+  if (!cmdList.FindObject("ModularL") || static_cast<RooCmdArg*>(cmdList.FindObject("ModularL"))->getInt(0) == 0)
     nllCmdListString += ",OffsetLikelihood";
 
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList, nllCmdListString.c_str());
