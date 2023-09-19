@@ -1,4 +1,5 @@
 import { clTColor, settings } from '../core.mjs';
+import { color as d3_color } from '../d3.mjs';
 
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
@@ -68,10 +69,27 @@ function getRGBfromTColor(col) {
    return rgb;
 }
 
+/** @ummary Return list of grey colors for the original array
+  * @private */
+function getGrayColors(rgb_array) {
+   const gray_colors = [];
+
+   if (!rgb_array) rgb_array = getRootColors();
+
+   for (let n = 0; n < rgb_array.length; ++n) {
+      if (!rgb_array[n]) continue;
+      const rgb = d3_color(rgb_array[n]),
+            gray = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
+      rgb.r = rgb.g = rgb.b = gray;
+      gray_colors[n] = rgb.hex();
+   }
+
+   return gray_colors;
+}
 
 /** @summary Add new colors from object array
   * @private */
-function extendRootColors(jsarr, objarr) {
+function extendRootColors(jsarr, objarr, grayscale) {
    if (!jsarr) {
       jsarr = [];
       for (let n = 0; n < gbl_colors_list.length; ++n)
@@ -97,7 +115,7 @@ function extendRootColors(jsarr, objarr) {
          jsarr[n] = rgb_array[n];
    }
 
-   return jsarr;
+   return grayscale ? getGrayColors(jsarr) : jsarr;
 }
 
 /** @ummary Set global list of colors.
@@ -150,8 +168,8 @@ function addColor(rgb, lst) {
 class ColorPalette {
 
    /** @summary constructor */
-   constructor(arr) {
-      this.palette = arr;
+   constructor(arr, grayscale) {
+      this.palette = grayscale ? getGrayColors(arr) : arr;
    }
 
    /** @summary Returns color index which correspond to contour index of provided length */
@@ -171,7 +189,7 @@ class ColorPalette {
 
 } // class ColorPalette
 
-function createDefaultPalette() {
+function createDefaultPalette(grayscale) {
    const hue2rgb = (p, q, t) => {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
@@ -191,7 +209,7 @@ function createDefaultPalette() {
       const hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360;
       palette.push(HLStoRGB(hue, 0.5, 1));
    }
-   return new ColorPalette(palette);
+   return new ColorPalette(palette, grayscale);
 }
 
 function createGrayPalette() {
@@ -208,10 +226,10 @@ function createGrayPalette() {
 
 /** @summary Create color palette
   * @private */
-function getColorPalette(id) {
+function getColorPalette(id, grayscale) {
    id = id || settings.Palette;
    if ((id > 0) && (id < 10)) return createGrayPalette();
-   if (id < 51) return createDefaultPalette();
+   if (id < 51) return createDefaultPalette(grayscale);
    if (id > 113) id = 57;
    const stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
    let rgb;
@@ -352,17 +370,18 @@ function getColorPalette(id) {
        const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
        for (let c = 0; c < nColorsGradient; c++) {
           const col = '#' + toHex(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) +
-                          toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
-                          toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
+                            toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
+                            toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
           palette.push(col);
        }
     }
 
-    return new ColorPalette(palette);
+    return new ColorPalette(palette, grayscale);
 }
 
 createRootColors();
 
 export { getColor, findColor, addColor, adoptRootColors,
-         getRootColors, extendRootColors, getRGBfromTColor, createRootColors, toHex,
+         getRootColors, getGrayColors,
+         extendRootColors, getRGBfromTColor, createRootColors, toHex,
          ColorPalette, getColorPalette };

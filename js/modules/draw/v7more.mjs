@@ -1,4 +1,4 @@
-import { addMethods, settings, nsREX } from '../core.mjs';
+import { addMethods, settings, nsREX, isFunc } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
 import { makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -100,10 +100,9 @@ class RPalettePainter extends RObjectPainter {
 
    /** @summary get palette */
    getHistPalette() {
-      const drawable = this.getObject(),
-          pal = drawable ? drawable.fPalette : null;
+      const pal = this.getObject()?.fPalette;
 
-      if (pal && !pal.getColor)
+      if (pal && !isFunc(pal.getColor))
          addMethods(pal, `${nsREX}RPalette`);
 
       return pal;

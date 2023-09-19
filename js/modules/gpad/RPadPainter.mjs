@@ -286,6 +286,18 @@ class RPadPainter extends RObjectPainter {
          this.showPadButtons();
    }
 
+   /** @summary Returns true if canvas configured with grayscale
+     * @private */
+   isGrayscale() {
+      return false;
+   }
+
+   /** @summary Set grayscale mode for the canvas
+     * @private */
+   setGrayscale(/* flag */) {
+      console.error('grayscale mode not implemented for RCanvas');
+   }
+
    /** @summary Create SVG element for the canvas */
    createCanvasSvg(check_resize, new_size) {
       const lmt = 5;
@@ -420,7 +432,7 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Enlarge pad draw element when possible */
-   enlargePad(evnt, is_dblclick) {
+   enlargePad(evnt, is_dblclick, is_escape) {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
@@ -433,15 +445,19 @@ class RPadPainter extends RObjectPainter {
 
       if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.hasObjectsToDraw() && !this.painters)) {
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlargeMain('toggle')) return;
-         if (this.enlargeMain('state') === 'off') svg_can.property('pad_enlarged', null);
-      } else if (!pad_enlarged) {
+         if (!this.enlargeMain(is_escape ? false : 'toggle')) return;
+         if (this.enlargeMain('state') === 'off')
+            svg_can.property('pad_enlarged', null);
+         else
+            selectActivePad({ pp: this, active: true });
+      } else if (!pad_enlarged && !is_escape) {
          this.enlargeMain(true, true);
          svg_can.property('pad_enlarged', this.pad);
+         selectActivePad({ pp: this, active: true });
       } else if (pad_enlarged === this.pad) {
          this.enlargeMain(false);
          svg_can.property('pad_enlarged', null);
-      } else
+      } else if (!is_escape && is_dblclick)
          console.error('missmatch with pad double click events');
 
       return this.checkResize(true);

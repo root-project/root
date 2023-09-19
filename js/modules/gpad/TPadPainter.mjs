@@ -1,9 +1,9 @@
-import { gStyle, settings, constants, browser, internals, btoa_func,
+import { gStyle, settings, constants, browser, internals, btoa_func, BIT,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, postponePromise,
          isObject, isFunc, isStr,
          clTObjArray, clTPaveText, clTColor, clTPad, clTStyle, clTLegend, clTLegendEntry } from '../core.mjs';
 import { color as d3_color, select as d3_select, rgb as d3_rgb } from '../d3.mjs';
-import { ColorPalette, adoptRootColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
+import { ColorPalette, adoptRootColors, getGrayColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -13,7 +13,7 @@ import { ToolbarIcons, registerForResize, saveFile } from '../gui/utils.mjs';
 import { BrowserLayout } from '../gui/display.mjs';
 
 
-const clTButton = 'TButton';
+const clTButton = 'TButton', kIsGrayscale = BIT(22);
 
 function getButtonSize(handler, fact) {
    return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
@@ -268,6 +268,10 @@ class TPadPainter extends ObjectPainter {
       delete this._doing_draw;
       delete this._interactively_changed;
       delete this._snap_primitives;
+      delete this._last_grayscale;
+      delete this._custom_colors;
+      delete this._custom_palette_colors;
+      delete this.root_colors;
 
       this.painters = [];
       this.pad = null;
@@ -431,6 +435,38 @@ class TPadPainter extends ObjectPainter {
          this.showPadButtons();
    }
 
+   /** @summary Returns true if canvas configured with grayscale
+     * @private */
+   isGrayscale() {
+      if (!this.iscan) return false;
+      return this.pad?.TestBit(kIsGrayscale) ?? false;
+   }
+
+   /** @summary Set grayscale mode for the canvas
+     * @private */
+   setGrayscale(flag) {
+      if (!this.iscan) return;
+
+      let changed = false;
+
+      if (flag === undefined) {
+         flag = this.pad?.TestBit(kIsGrayscale) ?? false;
+         changed = (this._last_grayscale !== undefined) && (this._last_grayscale !== flag);
+      } else if (flag !== this.pad?.TestBit(kIsGrayscale)) {
+         this.pad?.InvertBit(kIsGrayscale);
+         changed = true;
+      }
+
+      if (changed)
+         this.forEachPainter(p => { delete p._color_palette; });
+
+      this.root_colors = flag ? getGrayColors(this._custom_colors) : this._custom_colors;
+
+      this._last_grayscale = flag;
+
+      this.custom_palette = this._custom_palette_colors ? new ColorPalette(this._custom_palette_colors, flag) : null;
+   }
+
    /** @summary Create SVG element for canvas */
    createCanvasSvg(check_resize, new_size) {
       const is_batch = this.isBatchMode(), lmt = 5;
@@ -472,9 +508,8 @@ class TPadPainter extends ObjectPainter {
 
          if (is_batch)
             svg.attr('xmlns', 'http://www.w3.org/2000/svg');
-          else if (!this.online_canvas)
+         else if (!this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
-
 
          if (!is_batch || (this.pad.fFillStyle > 0))
             frect = svg.append('svg:path').attr('class', 'canvas_fillrect');
@@ -510,6 +545,8 @@ class TPadPainter extends ObjectPainter {
          } else
             rect = this.testMainResize(2, new_size, factor);
       }
+
+      this.setGrayscale();
 
       this.createAttFill({ attr: this.pad });
 
@@ -610,7 +647,7 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Enlarge pad draw element when possible */
-   enlargePad(evnt, is_dblclick) {
+   enlargePad(evnt, is_dblclick, is_escape) {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
@@ -623,16 +660,19 @@ class TPadPainter extends ObjectPainter {
 
       if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.hasObjectsToDraw() && !this.painters)) {
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlargeMain('toggle')) return;
+         if (!this.enlargeMain(is_escape ? false : 'toggle')) return;
          if (this.enlargeMain('state') === 'off')
             svg_can.property('pad_enlarged', null);
-      } else if (!pad_enlarged) {
+         else
+            selectActivePad({ pp: this, active: true });
+      } else if (!pad_enlarged && !is_escape) {
          this.enlargeMain(true, true);
          svg_can.property('pad_enlarged', this.pad);
+         selectActivePad({ pp: this, active: true });
       } else if (pad_enlarged === this.pad) {
          this.enlargeMain(false);
          svg_can.property('pad_enlarged', null);
-      } else
+      } else if (!is_escape && is_dblclick)
          console.error('missmatch with pad double click events');
 
       return this.checkResize(true);
@@ -769,8 +809,8 @@ class TPadPainter extends ObjectPainter {
          return;
 
       const svg_can = this.getCanvSvg(),
-          width = svg_can.property('draw_width'),
-          height = svg_can.property('draw_height');
+            width = svg_can.property('draw_width'),
+            height = svg_can.property('draw_height');
 
       addDragHandler(this, {
          cleanup, // do cleanup to let assign new handlers later on
@@ -834,8 +874,7 @@ class TPadPainter extends ObjectPainter {
             adoptRootColors(obj);
 
          // copy existing colors and extend with new values
-         if (this.options?.LocalColors)
-            this.root_colors = extendRootColors(null, obj);
+         this._custom_colors = this.options?.LocalColors ? extendRootColors(null, obj) : null;
          return true;
       }
 
@@ -850,8 +889,9 @@ class TPadPainter extends ObjectPainter {
                console.log(`Missing color with index ${n}`); missing = true;
             }
          }
-         if (!this.options || (!missing && !this.options.IgnorePalette))
-            this.custom_palette = new ColorPalette(arr);
+
+         this._custom_palette_colors = (!this.options || (!missing && !this.options.IgnorePalette)) ? arr : null;
+
          return true;
       }
 
@@ -1109,6 +1149,8 @@ class TPadPainter extends ObjectPainter {
          menu.addchk(this.pad?.fTicky === 1, 'ticks on both sides', '1fTicky', SetPadField);
          menu.addchk(this.pad?.fTicky === 2, 'labels on both sides', '2fTicky', SetPadField);
          menu.add('endsub:');
+         if (this.iscan)
+            menu.addchk(this.pad?.TestBit(kIsGrayscale), 'Gray scale', flag => { this.setGrayscale(flag); this.interactiveRedraw('pad'); });
 
          if (isFunc(this.drawObject))
             menu.add('Build legend', () => this.buildLegend());
@@ -1462,15 +1504,16 @@ class TPadPainter extends ObjectPainter {
          if (!this.options || this.options.GlobalColors)
             adoptRootColors(ListOfColors);
 
+         const colors = extendRootColors(null, ListOfColors, this.pad?.TestBit(kIsGrayscale));
+
          // copy existing colors and extend with new values
-         if (this.options?.LocalColors)
-            this.root_colors = extendRootColors(null, ListOfColors);
+         this._custom_colors = this.options?.LocalColors ? colors : null;
 
          // set palette
          if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
             const palette = [];
             for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
-               palette[n] = ListOfColors[Math.round(snap.fSnapshot.fBuf[n])];
+               palette[n] = colors[Math.round(snap.fSnapshot.fBuf[n])];
 
             this.custom_palette = new ColorPalette(palette);
          }
@@ -1648,7 +1691,6 @@ class TPadPainter extends ObjectPainter {
          this.createCanvasSvg(2);
        else
          this.createPadSvg(true);
-
 
       const MatchPrimitive = (painters, primitives, class_name, obj_name) => {
          const painter = painters.find(p => {
@@ -2220,6 +2262,8 @@ class TPadPainter extends ObjectPainter {
 
       if (d.check('NOZOOMX')) this.options.NoZoomX = true;
       if (d.check('NOZOOMY')) this.options.NoZoomY = true;
+      if (d.check('GRAYSCALE') && !pad.TestBit(kIsGrayscale))
+          pad.InvertBit(kIsGrayscale);
 
       function forEach(func, p) {
          if (!p) p = pad;
@@ -2298,4 +2342,4 @@ class TPadPainter extends ObjectPainter {
 
 } // class TPadPainter
 
-export { TPadPainter, PadButtonsHandler, clTButton };
+export { TPadPainter, PadButtonsHandler, clTButton, kIsGrayscale };

@@ -534,7 +534,6 @@ class TH2Painter extends THistPainter {
      * @param {object} histo - histogram object */
    constructor(dom, histo) {
       super(dom, histo);
-      this.fPalette = null;
       this.wheel_zoomy = true;
       this._show_empty_bins = false;
    }
@@ -1521,7 +1520,7 @@ class TH2Painter extends THistPainter {
          if (colPaths[colindx]) {
             item = this.draw_g
                      .append('svg:path')
-                     .style('fill', colindx ? this.fPalette.getColor(colindx) : 'none')
+                     .style('fill', colindx ? this._color_palette.getColor(colindx) : 'none')
                      .attr('d', colPaths[colindx]);
             if (draw_lines)
                item.call(this.lineatt.func);

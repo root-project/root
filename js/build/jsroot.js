@@ -10180,10 +10180,27 @@ function getRGBfromTColor(col) {
    return rgb;
 }
 
+/** @ummary Return list of grey colors for the original array
+  * @private */
+function getGrayColors(rgb_array) {
+   const gray_colors = [];
+
+   if (!rgb_array) rgb_array = getRootColors();
+
+   for (let n = 0; n < rgb_array.length; ++n) {
+      if (!rgb_array[n]) continue;
+      const rgb = color(rgb_array[n]),
+            gray = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
+      rgb.r = rgb.g = rgb.b = gray;
+      gray_colors[n] = rgb.hex();
+   }
+
+   return gray_colors;
+}
 
 /** @summary Add new colors from object array
   * @private */
-function extendRootColors(jsarr, objarr) {
+function extendRootColors(jsarr, objarr, grayscale) {
    if (!jsarr) {
       jsarr = [];
       for (let n = 0; n < gbl_colors_list.length; ++n)
@@ -10209,7 +10226,7 @@ function extendRootColors(jsarr, objarr) {
          jsarr[n] = rgb_array[n];
    }
 
-   return jsarr;
+   return grayscale ? getGrayColors(jsarr) : jsarr;
 }
 
 /** @ummary Set global list of colors.
@@ -10262,8 +10279,8 @@ function addColor(rgb, lst) {
 class ColorPalette {
 
    /** @summary constructor */
-   constructor(arr) {
-      this.palette = arr;
+   constructor(arr, grayscale) {
+      this.palette = grayscale ? getGrayColors(arr) : arr;
    }
 
    /** @summary Returns color index which correspond to contour index of provided length */
@@ -10283,7 +10300,7 @@ class ColorPalette {
 
 } // class ColorPalette
 
-function createDefaultPalette() {
+function createDefaultPalette(grayscale) {
    const hue2rgb = (p, q, t) => {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
@@ -10303,7 +10320,7 @@ function createDefaultPalette() {
       const hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360;
       palette.push(HLStoRGB(hue, 0.5, 1));
    }
-   return new ColorPalette(palette);
+   return new ColorPalette(palette, grayscale);
 }
 
 function createGrayPalette() {
@@ -10320,10 +10337,10 @@ function createGrayPalette() {
 
 /** @summary Create color palette
   * @private */
-function getColorPalette(id) {
+function getColorPalette(id, grayscale) {
    id = id || settings.Palette;
    if ((id > 0) && (id < 10)) return createGrayPalette();
-   if (id < 51) return createDefaultPalette();
+   if (id < 51) return createDefaultPalette(grayscale);
    if (id > 113) id = 57;
    const stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
    let rgb;
@@ -10464,13 +10481,13 @@ function getColorPalette(id) {
        const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
        for (let c = 0; c < nColorsGradient; c++) {
           const col = '#' + toHex(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) +
-                          toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
-                          toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
+                            toHex(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) +
+                            toHex(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1);
           palette.push(col);
        }
     }
 
-    return new ColorPalette(palette);
+    return new ColorPalette(palette, grayscale);
 }
 
 createRootColors();
@@ -61679,7 +61696,7 @@ const TooltipHandler = {
 
    /** @summary Handle key press */
    processKeyPress(evnt) {
-      const allowed = ['PageUp', 'PageDown', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'PrintScreen', '*'],
+      const allowed = ['PageUp', 'PageDown', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'PrintScreen', 'Escape', '*'],
             main = this.selectDom(),
             pp = this.getPadPainter();
       let key = evnt.key;
@@ -61702,6 +61719,7 @@ const TooltipHandler = {
          case 'ArrowDown': zoom.name = 'y'; zoom.dleft = -1; zoom.dright = 1; break;
          case 'Ctrl ArrowUp': zoom.name = 'y'; zoom.dleft = zoom.dright = 1; break;
          case 'Ctrl ArrowDown': zoom.name = 'y'; zoom.dleft = zoom.dright = -1; break;
+         case 'Escape': pp?.enlargePad(null, false, true); return true;
       }
 
       if (zoom.dleft || zoom.dright) {
@@ -65595,7 +65613,7 @@ class BrowserLayout {
 
 } // class BrowserLayout
 
-const clTButton = 'TButton';
+const clTButton = 'TButton', kIsGrayscale = BIT(22);
 
 function getButtonSize(handler, fact) {
    return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
@@ -65850,6 +65868,10 @@ class TPadPainter extends ObjectPainter {
       delete this._doing_draw;
       delete this._interactively_changed;
       delete this._snap_primitives;
+      delete this._last_grayscale;
+      delete this._custom_colors;
+      delete this._custom_palette_colors;
+      delete this.root_colors;
 
       this.painters = [];
       this.pad = null;
@@ -66013,6 +66035,38 @@ class TPadPainter extends ObjectPainter {
          this.showPadButtons();
    }
 
+   /** @summary Returns true if canvas configured with grayscale
+     * @private */
+   isGrayscale() {
+      if (!this.iscan) return false;
+      return this.pad?.TestBit(kIsGrayscale) ?? false;
+   }
+
+   /** @summary Set grayscale mode for the canvas
+     * @private */
+   setGrayscale(flag) {
+      if (!this.iscan) return;
+
+      let changed = false;
+
+      if (flag === undefined) {
+         flag = this.pad?.TestBit(kIsGrayscale) ?? false;
+         changed = (this._last_grayscale !== undefined) && (this._last_grayscale !== flag);
+      } else if (flag !== this.pad?.TestBit(kIsGrayscale)) {
+         this.pad?.InvertBit(kIsGrayscale);
+         changed = true;
+      }
+
+      if (changed)
+         this.forEachPainter(p => { delete p._color_palette; });
+
+      this.root_colors = flag ? getGrayColors(this._custom_colors) : this._custom_colors;
+
+      this._last_grayscale = flag;
+
+      this.custom_palette = this._custom_palette_colors ? new ColorPalette(this._custom_palette_colors, flag) : null;
+   }
+
    /** @summary Create SVG element for canvas */
    createCanvasSvg(check_resize, new_size) {
       const is_batch = this.isBatchMode(), lmt = 5;
@@ -66054,9 +66108,8 @@ class TPadPainter extends ObjectPainter {
 
          if (is_batch)
             svg.attr('xmlns', 'http://www.w3.org/2000/svg');
-          else if (!this.online_canvas)
+         else if (!this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
-
 
          if (!is_batch || (this.pad.fFillStyle > 0))
             frect = svg.append('svg:path').attr('class', 'canvas_fillrect');
@@ -66092,6 +66145,8 @@ class TPadPainter extends ObjectPainter {
          } else
             rect = this.testMainResize(2, new_size, factor);
       }
+
+      this.setGrayscale();
 
       this.createAttFill({ attr: this.pad });
 
@@ -66192,7 +66247,7 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Enlarge pad draw element when possible */
-   enlargePad(evnt, is_dblclick) {
+   enlargePad(evnt, is_dblclick, is_escape) {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
@@ -66205,16 +66260,19 @@ class TPadPainter extends ObjectPainter {
 
       if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.hasObjectsToDraw() && !this.painters)) {
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlargeMain('toggle')) return;
+         if (!this.enlargeMain(is_escape ? false : 'toggle')) return;
          if (this.enlargeMain('state') === 'off')
             svg_can.property('pad_enlarged', null);
-      } else if (!pad_enlarged) {
+         else
+            selectActivePad({ pp: this, active: true });
+      } else if (!pad_enlarged && !is_escape) {
          this.enlargeMain(true, true);
          svg_can.property('pad_enlarged', this.pad);
+         selectActivePad({ pp: this, active: true });
       } else if (pad_enlarged === this.pad) {
          this.enlargeMain(false);
          svg_can.property('pad_enlarged', null);
-      } else
+      } else if (!is_escape && is_dblclick)
          console.error('missmatch with pad double click events');
 
       return this.checkResize(true);
@@ -66351,8 +66409,8 @@ class TPadPainter extends ObjectPainter {
          return;
 
       const svg_can = this.getCanvSvg(),
-          width = svg_can.property('draw_width'),
-          height = svg_can.property('draw_height');
+            width = svg_can.property('draw_width'),
+            height = svg_can.property('draw_height');
 
       addDragHandler(this, {
          cleanup, // do cleanup to let assign new handlers later on
@@ -66416,8 +66474,7 @@ class TPadPainter extends ObjectPainter {
             adoptRootColors(obj);
 
          // copy existing colors and extend with new values
-         if (this.options?.LocalColors)
-            this.root_colors = extendRootColors(null, obj);
+         this._custom_colors = this.options?.LocalColors ? extendRootColors(null, obj) : null;
          return true;
       }
 
@@ -66432,8 +66489,9 @@ class TPadPainter extends ObjectPainter {
                console.log(`Missing color with index ${n}`); missing = true;
             }
          }
-         if (!this.options || (!missing && !this.options.IgnorePalette))
-            this.custom_palette = new ColorPalette(arr);
+
+         this._custom_palette_colors = (!this.options || (!missing && !this.options.IgnorePalette)) ? arr : null;
+
          return true;
       }
 
@@ -66691,6 +66749,8 @@ class TPadPainter extends ObjectPainter {
          menu.addchk(this.pad?.fTicky === 1, 'ticks on both sides', '1fTicky', SetPadField);
          menu.addchk(this.pad?.fTicky === 2, 'labels on both sides', '2fTicky', SetPadField);
          menu.add('endsub:');
+         if (this.iscan)
+            menu.addchk(this.pad?.TestBit(kIsGrayscale), 'Gray scale', flag => { this.setGrayscale(flag); this.interactiveRedraw('pad'); });
 
          if (isFunc(this.drawObject))
             menu.add('Build legend', () => this.buildLegend());
@@ -67044,15 +67104,16 @@ class TPadPainter extends ObjectPainter {
          if (!this.options || this.options.GlobalColors)
             adoptRootColors(ListOfColors);
 
+         const colors = extendRootColors(null, ListOfColors, this.pad?.TestBit(kIsGrayscale));
+
          // copy existing colors and extend with new values
-         if (this.options?.LocalColors)
-            this.root_colors = extendRootColors(null, ListOfColors);
+         this._custom_colors = this.options?.LocalColors ? colors : null;
 
          // set palette
          if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
             const palette = [];
             for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
-               palette[n] = ListOfColors[Math.round(snap.fSnapshot.fBuf[n])];
+               palette[n] = colors[Math.round(snap.fSnapshot.fBuf[n])];
 
             this.custom_palette = new ColorPalette(palette);
          }
@@ -67230,7 +67291,6 @@ class TPadPainter extends ObjectPainter {
          this.createCanvasSvg(2);
        else
          this.createPadSvg(true);
-
 
       const MatchPrimitive = (painters, primitives, class_name, obj_name) => {
          const painter = painters.find(p => {
@@ -67802,6 +67862,8 @@ class TPadPainter extends ObjectPainter {
 
       if (d.check('NOZOOMX')) this.options.NoZoomX = true;
       if (d.check('NOZOOMY')) this.options.NoZoomY = true;
+      if (d.check('GRAYSCALE') && !pad.TestBit(kIsGrayscale))
+          pad.InvertBit(kIsGrayscale);
 
       function forEach(func, p) {
          if (!p) p = pad;
@@ -67880,6 +67942,16 @@ class TPadPainter extends ObjectPainter {
 
 } // class TPadPainter
 
+const kShowEventStatus = BIT(15),
+     // kAutoExec = BIT(16),
+      kMenuBar = BIT(17),
+      kShowToolBar = BIT(18),
+      kShowEditor = BIT(19),
+     // kMoveOpaque = BIT(20),
+     // kResizeOpaque = BIT(21),
+     // kIsGrayscale = BIT(22),
+      kShowToolTips = BIT(23);
+
 /** @summary direct draw of TFrame object,
   * @desc pad or canvas should already exist
   * @private */
@@ -67889,18 +67961,6 @@ function directDrawTFrame(dom, obj, opt) {
    if (opt === '3d') fp.mode3d = true;
    return fp.redraw();
 }
-
-const TCanvasStatusBits = {
-   kShowEventStatus: BIT(15),
-   kAutoExec: BIT(16),
-   kMenuBar: BIT(17),
-   kShowToolBar: BIT(18),
-   kShowEditor: BIT(19),
-   kMoveOpaque: BIT(20),
-   kResizeOpaque: BIT(21),
-   kIsGrayscale: BIT(22),
-   kShowToolTips: BIT(23)
-};
 
 /**
   * @summary Painter for TCanvas object
@@ -68492,11 +68552,11 @@ class TCanvasPainter extends TPadPainter {
 
       if (this._all_sections_showed) return;
       this._all_sections_showed = true;
-      this.showSection('Menu', this.pad.TestBit(TCanvasStatusBits.kMenuBar));
-      this.showSection('StatusBar', this.pad.TestBit(TCanvasStatusBits.kShowEventStatus));
-      this.showSection('ToolBar', this.pad.TestBit(TCanvasStatusBits.kShowToolBar));
-      this.showSection('Editor', this.pad.TestBit(TCanvasStatusBits.kShowEditor));
-      this.showSection('ToolTips', this.pad.TestBit(TCanvasStatusBits.kShowToolTips) || this._highlight_connect);
+      this.showSection('Menu', this.pad.TestBit(kMenuBar));
+      this.showSection('StatusBar', this.pad.TestBit(kShowEventStatus));
+      this.showSection('ToolBar', this.pad.TestBit(kShowToolBar));
+      this.showSection('Editor', this.pad.TestBit(kShowEditor));
+      this.showSection('ToolTips', this.pad.TestBit(kShowToolTips) || this._highlight_connect);
    }
 
    /** @summary Handle highlight in canvas - deliver information to server
@@ -68623,10 +68683,10 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Return actual TCanvas status bits  */
    getStatusBits() {
       let bits = 0;
-      if (this.hasEventStatus()) bits |= TCanvasStatusBits.kShowEventStatus;
-      if (this.hasGed()) bits |= TCanvasStatusBits.kShowEditor;
-      if (this.isTooltipAllowed()) bits |= TCanvasStatusBits.kShowToolTips;
-      if (this.use_openui) bits |= TCanvasStatusBits.kMenuBar;
+      if (this.hasEventStatus()) bits |= kShowEventStatus;
+      if (this.hasGed()) bits |= kShowEditor;
+      if (this.isTooltipAllowed()) bits |= kShowToolTips;
+      if (this.use_openui) bits |= kMenuBar;
       return bits;
    }
 
@@ -69524,7 +69584,7 @@ class TPavePainter extends ObjectPainter {
             framep = this.getFramePainter(),
             contour = main.fContour,
             levels = contour?.getLevels(),
-            draw_palette = main.fPalette;
+            draw_palette = main._color_palette;
       let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '';
 
       this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
@@ -70271,6 +70331,8 @@ class THistDrawOptions {
       if (d.check('TICKXY') && pad) pad.fTickx = pad.fTicky = 1;
       if (d.check('TICKX') && pad) pad.fTickx = 1;
       if (d.check('TICKY') && pad) pad.fTicky = 1;
+      if (d.check('GRAYSCALE'))
+         pp?.setGrayscale(true);
 
       d.getColor = function() {
          this.color = this.partAsInt(1) - 1;
@@ -70789,7 +70851,7 @@ class THistPainter extends ObjectPainter {
    cleanup() {
       this.clear3DScene();
 
-      delete this.fPalette;
+      delete this._color_palette;
       delete this.fContour;
       delete this.options;
 
@@ -71989,15 +72051,15 @@ class THistPainter extends ObjectPainter {
    /** @summary Returns color palette associated with histogram
      * @desc Create if required, checks pad and canvas for custom palette */
    getHistPalette(force) {
-      if (force) this.fPalette = null;
-      if (!this.fPalette && !this.options.Palette) {
-         const pp = this.getPadPainter();
+      if (force) this._color_palette = null;
+      const pp = this.getPadPainter();
+      if (!this._color_palette && !this.options.Palette) {
          if (isFunc(pp?.getCustomPalette))
-            this.fPalette = pp.getCustomPalette();
+            this._color_palette = pp.getCustomPalette();
       }
-      if (!this.fPalette)
-         this.fPalette = getColorPalette(this.options.Palette);
-      return this.fPalette;
+      if (!this._color_palette)
+         this._color_palette = getColorPalette(this.options.Palette, pp?.isGrayscale());
+      return this._color_palette;
    }
 
    /** @summary Fill menu entries for palette */
@@ -72958,7 +73020,6 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
      * @param {object} histo - histogram object */
    constructor(dom, histo) {
       super(dom, histo);
-      this.fPalette = null;
       this.wheel_zoomy = true;
       this._show_empty_bins = false;
    }
@@ -73944,7 +74005,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          if (colPaths[colindx]) {
             item = this.draw_g
                      .append('svg:path')
-                     .style('fill', colindx ? this.fPalette.getColor(colindx) : 'none')
+                     .style('fill', colindx ? this._color_palette.getColor(colindx) : 'none')
                      .attr('d', colPaths[colindx]);
             if (draw_lines)
                item.call(this.lineatt.func);
@@ -77676,7 +77737,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 }
 
 const PadDrawOptions = ['USE_PAD_TITLE', 'LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
-                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'FB'];
+                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'FB', 'GRAYSCALE'];
 
 /**
  * @summary Painter for TH1 classes
@@ -79102,8 +79163,8 @@ function drawTH2PolyLego(painter) {
       geometry.setAttribute('position', new BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      const material = new MeshBasicMaterial(getMaterialArgs(painter.fPalette.getColor(colindx), { vertexColors: false })),
-          mesh = new Mesh(geometry, material);
+      const material = new MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false })),
+            mesh = new Mesh(geometry, material);
 
       pmain.toplevel.add(mesh);
 
@@ -79739,7 +79800,7 @@ class TH3Painter extends THistPainter {
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
-         if (use_colors) fillcolor = this.fPalette.getColor(ncol);
+         if (use_colors) fillcolor = this._color_palette.getColor(ncol);
 
          const material = use_lambert
                             ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
@@ -110217,19 +110278,16 @@ class TScatterPainter extends TGraphPainter$1 {
       let scale = 1, offset = 0;
       if (!fpainter || !hpainter || !scatter) return;
 
-
       if (scatter.fColor) {
          const pal = this.getPalette();
          if (pal)
             pal.$main_painter = this;
 
-         if (!this.fPalette) {
-            const pp = this.getPadPainter();
-            if (isFunc(pp?.getCustomPalette))
-               this.fPalette = pp.getCustomPalette();
-         }
-         if (!this.fPalette)
-            this.fPalette = getColorPalette(this.options.Palette);
+         const pp = this.getPadPainter();
+         if (!this._color_palette && isFunc(pp?.getCustomPalette))
+            this._color_palette = pp.getCustomPalette();
+         if (!this._color_palette)
+            this._color_palette = getColorPalette(this.options.Palette, pp?.isGrayscale());
 
          let minc = scatter.fColor[0], maxc = scatter.fColor[0];
          for (let i = 1; i < scatter.fColor.length; ++i) {
@@ -110270,7 +110328,7 @@ class TScatterPainter extends TGraphPainter$1 {
                grx = funcs.grx(pnt.x),
                gry = funcs.gry(pnt.y),
                size = scatter.fSize ? scatter.fMinMarkerSize + scale * (scatter.fSize[i] - offset) : scatter.fMarkerSize,
-               color = scatter.fColor ? this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
+               color = scatter.fColor ? this.fContour.getPaletteColor(this._color_palette, scatter.fColor[i]) : this.getColor(scatter.fMarkerColor),
                handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
 
           this.draw_g.append('svg:path')
@@ -112314,7 +112372,7 @@ class TASImagePainter extends ObjectPainter {
          Object.assign(pal, { fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
          pal.fAxis.fChopt = '+';
          this.draw_palette = pal;
-         this.fPalette = true; // to emulate behaviour of hist painter
+         this._color_palette = true; // to emulate behaviour of hist painter
       }
 
       let pal_painter = this.getPadPainter().findPainterFor(this.draw_palette);
@@ -115251,6 +115309,18 @@ class RPadPainter extends RObjectPainter {
          this.showPadButtons();
    }
 
+   /** @summary Returns true if canvas configured with grayscale
+     * @private */
+   isGrayscale() {
+      return false;
+   }
+
+   /** @summary Set grayscale mode for the canvas
+     * @private */
+   setGrayscale(/* flag */) {
+      console.error('grayscale mode not implemented for RCanvas');
+   }
+
    /** @summary Create SVG element for the canvas */
    createCanvasSvg(check_resize, new_size) {
       const lmt = 5;
@@ -115385,7 +115455,7 @@ class RPadPainter extends RObjectPainter {
    }
 
    /** @summary Enlarge pad draw element when possible */
-   enlargePad(evnt, is_dblclick) {
+   enlargePad(evnt, is_dblclick, is_escape) {
       evnt?.preventDefault();
       evnt?.stopPropagation();
 
@@ -115398,15 +115468,19 @@ class RPadPainter extends RObjectPainter {
 
       if (this.iscan || !this.has_canvas || (!pad_enlarged && !this.hasObjectsToDraw() && !this.painters)) {
          if (this._fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlargeMain('toggle')) return;
-         if (this.enlargeMain('state') === 'off') svg_can.property('pad_enlarged', null);
-      } else if (!pad_enlarged) {
+         if (!this.enlargeMain(is_escape ? false : 'toggle')) return;
+         if (this.enlargeMain('state') === 'off')
+            svg_can.property('pad_enlarged', null);
+         else
+            selectActivePad({ pp: this, active: true });
+      } else if (!pad_enlarged && !is_escape) {
          this.enlargeMain(true, true);
          svg_can.property('pad_enlarged', this.pad);
+         selectActivePad({ pp: this, active: true });
       } else if (pad_enlarged === this.pad) {
          this.enlargeMain(false);
          svg_can.property('pad_enlarged', null);
-      } else
+      } else if (!is_escape && is_dblclick)
          console.error('missmatch with pad double click events');
 
       return this.checkResize(true);
@@ -118265,10 +118339,9 @@ class RPalettePainter extends RObjectPainter {
 
    /** @summary get palette */
    getHistPalette() {
-      const drawable = this.getObject(),
-          pal = drawable ? drawable.fPalette : null;
+      const pal = this.getObject()?.fPalette;
 
-      if (pal && !pal.getColor)
+      if (pal && !isFunc(pal.getColor))
          addMethods(pal, `${nsREX}RPalette`);
 
       return pal;
