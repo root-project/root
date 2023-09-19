@@ -821,6 +821,14 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
       return false;
    }
 
+   int max_width = 0, max_height = 0, page_margin = 10;
+   for (auto &w : widths)
+      if (w > max_width)
+         max_width = w;
+   for (auto &h : heights)
+      if (h > max_height)
+         max_height = h;
+
    auto jsonw = TBufferJSON::ToJSON(&widths, TBufferJSON::kNoSpaces);
    auto jsonh = TBufferJSON::ToJSON(&heights, TBufferJSON::kNoSpaces);
 
@@ -835,6 +843,10 @@ bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vecto
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), jsrootsys);
    else
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), "file://"s + jsrootsys);
+
+   filecont = std::regex_replace(filecont, std::regex("\\$page_margin"), std::to_string(page_margin) + "px");
+   filecont = std::regex_replace(filecont, std::regex("\\$page_width"), std::to_string(max_width + 2*page_margin) + "px");
+   filecont = std::regex_replace(filecont, std::regex("\\$page_height"), std::to_string(max_height + 2*page_margin) + "px");
 
    filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
    filecont = std::regex_replace(filecont, std::regex("\\$draw_widths"), jsonw.Data());
