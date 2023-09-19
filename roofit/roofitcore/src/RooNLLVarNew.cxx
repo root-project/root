@@ -23,10 +23,13 @@ computation times.
 
 #include "RooNLLVarNew.h"
 
+#include <RooHistPdf.h>
 #include <RooBatchCompute.h>
+#include <RooDataHist.h>
 #include <RooNaNPacker.h>
 #include <RooConstVar.h>
 #include <RooRealVar.h>
+#include <RooSetProxy.h>
 #include "RooFit/Detail/Buffers.h"
 
 #include <ROOT/StringUtils.hxx>
@@ -38,8 +41,6 @@ computation times.
 #include <numeric>
 #include <stdexcept>
 #include <vector>
-
-using namespace ROOT::Experimental;
 
 // Declare constexpr static members to make them available if odr-used in C++14.
 constexpr const char *RooNLLVarNew::weightVarName;
@@ -60,6 +61,60 @@ RooConstVar *dummyVar(const char *name)
    return new RooConstVar(name, name, 1.0);
 }
 
+// Helper class to represent a template pdf based on the fit dataset.
+class RooOffsetPdf : public RooAbsPdf {
+public:
+   RooOffsetPdf(const char *name, const char *title, RooArgSet const &observables, RooAbsReal &weightVar)
+      : RooAbsPdf(name, title),
+        _observables("!observables", "List of observables", this),
+        _weightVar{"!weightVar", "weightVar", this, weightVar, true, false}
+   {
+      for (RooAbsArg *obs : observables) {
+         _observables.add(*obs);
+      }
+   }
+   RooOffsetPdf(const RooOffsetPdf &other, const char *name = nullptr)
+      : RooAbsPdf(other, name),
+        _observables("!servers", this, other._observables),
+        _weightVar{"!weightVar", this, other._weightVar}
+   {
+   }
+   TObject *clone(const char *newname) const override { return new RooOffsetPdf(*this, newname); }
+
+   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const override
+   {
+      std::span<const double> weights = dataMap.at(_weightVar);
+
+      // Create the template histogram from the data. This operation is very
+      // expensive, but since the offset only depends on the observables it
+      // only has to be done once.
+
+      RooDataHist dataHist{"data", "data", _observables};
+      // Loop over events to fill the histogram
+      for (std::size_t i = 0; i < nEvents; ++i) {
+         for (auto *var : static_range_cast<RooRealVar *>(_observables)) {
+            var->setVal(dataMap.at(var)[i]);
+         }
+         dataHist.add(_observables, weights[weights.size() == 1 ? 0 : i]);
+      }
+
+      // Lookup bin weights via RooHistPdf
+      RooHistPdf pdf{"offsetPdf", "offsetPdf", _observables, dataHist};
+      for (std::size_t i = 0; i < nEvents; ++i) {
+         for (auto *var : static_range_cast<RooRealVar *>(_observables)) {
+            var->setVal(dataMap.at(var)[i]);
+         }
+         output[i] = pdf.getVal(_observables);
+      }
+   }
+
+private:
+   double evaluate() const override { return 0.0; } // should never be called
+
+   RooSetProxy _observables;
+   RooTemplateProxy<RooAbsReal> _weightVar;
+};
+
 } // namespace
 
 /** Construct a RooNLLVarNew
@@ -75,7 +130,6 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
      _pdf{"pdf", "pdf", this, pdf},
      _weightVar{"weightVar", "weightVar", this, *dummyVar(weightVarName), true, false, true},
      _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
-     _binVolumeVar{"binVolumeVar", "binVolumeVar", this, *dummyVar("_bin_volume"), true, false, true},
      _binnedL{pdf.getAttribute("BinnedLikelihoodActive")}
 {
    RooArgSet obs{getObs(pdf, observables)};
@@ -99,6 +153,12 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
    resetWeightVarNames();
    enableOffsetting(offsetMode == RooFit::OffsetMode::Initial);
    enableBinOffsetting(offsetMode == RooFit::OffsetMode::Bin);
+
+   if (_doBinOffset) {
+      auto offsetPdf = std::make_unique<RooOffsetPdf>("_offset_pdf", "_offset_pdf", observables, *_weightVar);
+      _offsetPdf = std::make_unique<RooTemplateProxy<RooAbsPdf>>("offsetPdf", "offsetPdf", this, *offsetPdf);
+      addOwnedComponents(std::move(offsetPdf));
+   }
 }
 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
@@ -210,9 +270,8 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
                                         : RooBatchCompute::reduceSum(config, weightsSumW2.data(), weightsSumW2.size());
    }
 
-   auto nllOut =
-      RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights, weights, _sumWeight,
-                                 _doBinOffset ? dataMap.at(_binVolumeVar) : std::span<const double>{});
+   auto nllOut = RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights,
+                                            _doBinOffset ? dataMap.at(*_offsetPdf) : std::span<const double>{});
 
    if (nllOut.nLargeValues > 0) {
       oocoutW(&*_pdf, Eval) << "RooAbsPdf::getLogVal(" << _pdf->GetName()
@@ -236,7 +295,7 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
 {
    // strip away the special variables
-   params->remove(RooArgList{*_weightVar, *_weightSquaredVar, *_binVolumeVar}, true, true);
+   params->remove(RooArgList{*_weightVar, *_weightSquaredVar}, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +313,9 @@ void RooNLLVarNew::resetWeightVarNames()
 {
    _weightVar->SetName((_prefix + weightVarName).c_str());
    _weightSquaredVar->SetName((_prefix + weightVarNameSumW2).c_str());
-   _binVolumeVar->SetName((_prefix + "_bin_volume").c_str());
+   if (_offsetPdf) {
+      _offsetPdf->SetName((_prefix + "_offset_pdf").c_str());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
