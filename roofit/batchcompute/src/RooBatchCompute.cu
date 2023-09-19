@@ -155,8 +155,7 @@ public:
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
-                             std::span<const double> weightSpan, std::span<const double> weights, double weightSum,
-                             std::span<const double> binVolumes) override;
+                             std::span<const double> weights, std::span<const double> offsetProbas) override;
 }; // End class RooBatchComputeClass
 
 inline __device__ void kahanSumUpdate(double &sum, double &carry, double a, double otherCarry)
@@ -220,8 +219,8 @@ __global__ void kahanSum(const double *__restrict__ input, const double *__restr
    kahanSumReduction(shared, n, result, carry_index);
 }
 
-__global__ void kahanSumWeighted(const double *__restrict__ input, const double *__restrict__ weights, size_t n,
-                                 double *__restrict__ result)
+__global__ void nllSumKernel(const double *__restrict__ probas, const double *__restrict__ weights,
+                             const double *__restrict__ offsetProbas, size_t n, double *__restrict__ result)
 {
    int thIdx = threadIdx.x;
    int gthIdx = thIdx + blockIdx.x * blockSize;
@@ -237,7 +236,11 @@ __global__ void kahanSumWeighted(const double *__restrict__ input, const double 
    for (int i = gthIdx; i < n; i += nThreadsTotal) {
       // Note: it does not make sense to use the nll option and provide at the
       // same time external carries.
-      double val = -std::log(input[i]) * weights[i];
+      double val = -std::log(probas[i]);
+      if (offsetProbas)
+         val += std::log(offsetProbas[i]);
+      if (weights)
+         val = weights[i] * val;
       kahanSumUpdate(sum, carry, val, 0.0);
    }
 
@@ -264,8 +267,7 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
 }
 
 ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
-                                                std::span<const double> weightSpan, std::span<const double> /*weights*/,
-                                                double /*weightSum*/, std::span<const double> binVolumes)
+                                                std::span<const double> weights, std::span<const double> offsetProbas)
 {
    ReduceNLLOutput out;
    const int gridSize = getGridSize(probas.size());
@@ -273,12 +275,9 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    cudaStream_t stream = *cfg.cudaStream();
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
 
-   if (weightSpan.size() == 1) {
-      kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(probas.data(), nullptr, probas.size(), devOut.data(), 1);
-   } else {
-      kahanSumWeighted<<<gridSize, blockSize, shMemSize, stream>>>(probas.data(), weightSpan.data(), probas.size(),
-                                                                   devOut.data());
-   }
+   nllSumKernel<<<gridSize, blockSize, shMemSize, stream>>>(
+      probas.data(), weights.size() == 1 ? nullptr : weights.data(),
+      offsetProbas.empty() ? nullptr : offsetProbas.data(), probas.size(), devOut.data());
 
    kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut.data(), devOut.data() + gridSize, gridSize, devOut.data(), 0);
 
@@ -287,9 +286,9 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    CudaInterface::copyDeviceToHost(devOut.data(), &tmpSum, 1, cfg.cudaStream());
    CudaInterface::copyDeviceToHost(devOut.data() + 1, &tmpCarry, 1, cfg.cudaStream());
 
-   if (weightSpan.size() == 1) {
-      tmpSum *= weightSpan[0];
-      tmpCarry *= weightSpan[0];
+   if (weights.size() == 1) {
+      tmpSum *= weights[0];
+      tmpCarry *= weights[0];
    }
 
    out.nllSum = ROOT::Math::KahanSum<double>{tmpSum, tmpCarry};

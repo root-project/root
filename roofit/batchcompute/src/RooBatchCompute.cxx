@@ -179,9 +179,8 @@ public:
    }
    /// Return the sum of an input array
    double reduceSum(Config const &, InputArr input, size_t n) override;
-   ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weightSpan,
-                             std::span<const double> weights, double weightSum,
-                             std::span<const double> binVolumes) override;
+   ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
+                             std::span<const double> offsetProbas) override;
 }; // End class RooBatchComputeClass
 
 namespace {
@@ -213,8 +212,7 @@ double RooBatchComputeClass::reduceSum(Config const &, InputArr input, size_t n)
 }
 
 ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const double> probas,
-                                                std::span<const double> weightSpan, std::span<const double> weights,
-                                                double weightSum, std::span<const double> binVolumes)
+                                                std::span<const double> weights, std::span<const double> offsetProbas)
 {
    ReduceNLLOutput out;
 
@@ -222,7 +220,7 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
 
    for (std::size_t i = 0; i < probas.size(); ++i) {
 
-      const double eventWeight = weightSpan.size() > 1 ? weightSpan[i] : weightSpan[0];
+      const double eventWeight = weights.size() > 1 ? weights[i] : weights[0];
 
       if (0. == eventWeight)
          continue;
@@ -231,8 +229,8 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
       double term = logOut.first;
       badness += logOut.second;
 
-      if (!binVolumes.empty()) {
-         term -= std::log(weights[i]) - std::log(binVolumes[i]) - std::log(weightSum);
+      if (!offsetProbas.empty()) {
+         term -= std::log(offsetProbas[i]);
       }
 
       term *= -eventWeight;

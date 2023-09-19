@@ -12,7 +12,6 @@
 
 #include "RooFit/BatchModeDataHelpers.h"
 #include <RooAbsData.h>
-#include <RooDataHist.h>
 #include <RooHelpers.h>
 #include "RooNLLVarNew.h"
 #include <RooRealVar.h>
@@ -96,24 +95,8 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
          assignSpan(weight, {buffer.data(), nNonZeroWeight});
          assignSpan(weightSumW2, {bufferSumW2.data(), nNonZeroWeight});
       }
-      using namespace ROOT::Experimental;
       insert(RooNLLVarNew::weightVarName, weight);
       insert(RooNLLVarNew::weightVarNameSumW2, weightSumW2);
-   }
-
-   // Add also bin volume information if we are dealing with a RooDataHist
-   if (auto dataHist = dynamic_cast<RooDataHist const *>(&data)) {
-      buffers.emplace();
-      auto &buffer = buffers.top();
-      buffer.reserve(nNonZeroWeight);
-
-      for (std::size_t i = 0; i < nEvents; ++i) {
-         if (!hasZeroWeight[i]) {
-            buffer.push_back(dataHist->binVolume(i));
-         }
-      }
-
-      insert("_bin_volume", {buffer.data(), buffer.size()});
    }
 
    // Get the real-valued batches and cast the also to double branches to put in
@@ -203,9 +186,7 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
 /// Spans with the weights and squared weights will be also stored in the map,
 /// keyed with the names `_weight` and the `_weight_sumW2`. If the dataset is
 /// unweighted, these weight spans will only contain the single value `1.0`.
-/// Entries with zero weight will be skipped. If the input dataset is a
-/// RooDataHist, the output map will also contain an item for the key
-/// `_bin_volume` with the bin volumes.
+/// Entries with zero weight will be skipped.
 ///
 /// \return A `std::map` with spans keyed to name pointers.
 /// \param[in] data The input dataset.

@@ -188,8 +188,7 @@ fit6.Print()
 # initial model is not extremely off. Proving this mathematically is left
 # as an excercise to the reader.
 
-# This counterterms can be enabled in RooFit if you use a binned
-# RooDataHist to do your fit and pass the Offset("bin") option to
+# This counterterms can be enabled by passing the Offset("bin") option to
 # RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
 
 fit7 = model.fitTo(model_data, Offset="bin", Save=True, PrintLevel=-1, SumW2Error=False)

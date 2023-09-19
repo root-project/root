@@ -240,7 +240,7 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<ROOT::Experimental::RooNLLVarNew*>(arg)) {
+    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<RooNLLVarNew*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {

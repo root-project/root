@@ -2,20 +2,20 @@
 // Authors: Stephan Hageboeck, CERN 10/2020
 //          Jonas Rembser, CERN 10/2022
 
-#include <RooAddPdf.h>
 #include <RooBinning.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooExtendPdf.h>
 #include <RooFitResult.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooNLLVar.h>
-#include <RooRandom.h>
 #include <RooPlot.h>
 #include <RooPolyVar.h>
 #include <RooProdPdf.h>
+#include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
@@ -456,7 +456,7 @@ TEST_P(OffsetBinTest, CrossCheck)
 
    // Create template PDF based on data
    RooHistPdf histPdf{"histPdf", "histPdf", x, *hist};
-   RooAddPdf extHistPdf("extHistPdf", "extHistPdf", histPdf, nEvents);
+   RooExtendPdf extHistPdf("extHistPdf", "extHistPdf", histPdf, nEvents);
 
    RooAbsData *fitData = _binned ? static_cast<RooAbsData *>(hist.get()) : static_cast<RooAbsData *>(data.get());
 
@@ -535,25 +535,30 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
    EXPECT_DOUBLE_EQ(prodNllVal, simNllVal);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values("Off", "Cpu"),
+#ifdef R__HAS_CUDA
+#define BATCH_MODE_VALS "Off", "Cpu", "Cuda"
+#else
+#define BATCH_MODE_VALS "Off", "Cpu"
+#endif
+
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(BATCH_MODE_VALS),
                          [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "BatchMode" << std::get<0>(paramInfo.param);
                             return ss.str();
                          });
 
-INSTANTIATE_TEST_SUITE_P(
-   RooNLLVar, OffsetBinTest,
-   testing::Combine(testing::Values("Off", "Cpu"), // BatchMode
-                    testing::Values(true),         // unbinned or binned (we don't support unbinned fits yet)
-                    testing::Values(false, true),  // extended fit
-                    testing::Values(false, true)   // use sumW2
-                    ),
-   [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
-      std::stringstream ss;
-      ss << "BatchMode" << std::get<0>(paramInfo.param);
-      ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
-      ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
-      ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
-      return ss.str();
-   });
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
+                         testing::Combine(testing::Values(BATCH_MODE_VALS), // BatchMode
+                                          testing::Values(false, true),     // unbinned or binned
+                                          testing::Values(false, true),     // extended fit
+                                          testing::Values(false, true)      // use sumW2
+                                          ),
+                         [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
+                            ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
+                            ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
+                            return ss.str();
+                         });

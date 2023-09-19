@@ -28,19 +28,20 @@ In extended mode, a
 \f$ N_\mathrm{expect} - N_\mathrm{observed}*log(N_\mathrm{expect}) \f$ term is added.
 **/
 
-#include "RooNLLVar.h"
+#include <RooNLLVar.h>
 
-#include "RooAbsData.h"
-#include "RooAbsPdf.h"
-#include "RooCmdConfig.h"
-#include "RooMsgService.h"
-#include "RooAbsDataStore.h"
-#include "RooRealMPFE.h"
-#include "RooRealSumPdf.h"
-#include "RooRealVar.h"
-#include "RooProdPdf.h"
-#include "RooNaNPacker.h"
-#include "RooDataHist.h"
+#include <RooAbsData.h>
+#include <RooAbsDataStore.h>
+#include <RooAbsPdf.h>
+#include <RooCmdConfig.h>
+#include <RooDataHist.h>
+#include <RooHistPdf.h>
+#include <RooMsgService.h>
+#include <RooNaNPacker.h>
+#include <RooProdPdf.h>
+#include <RooRealMPFE.h>
+#include <RooRealSumPdf.h>
+#include <RooRealVar.h>
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 #include <iomanip>
@@ -316,34 +317,30 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
 RooNLLVar::ComputeResult RooNLLVar::computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const {
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
-  return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent, _doBinOffset);
+  return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent, _offsetPdf.get());
 }
 
 // static function, also used from TestStatistics::RooUnbinnedL
 RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
                                                       RooArgSet *normSet, bool weightSq, std::size_t stepSize,
-                                                      std::size_t firstEvent, std::size_t lastEvent, bool doBinOffset)
+                                                      std::size_t firstEvent, std::size_t lastEvent, RooAbsPdf const* offsetPdf)
 {
   ROOT::Math::KahanSum<double> kahanWeight;
   ROOT::Math::KahanSum<double> kahanProb;
   RooNaNPacker packedNaN(0.f);
-  const double logSumW = std::log(dataClone->sumEntries());
-
-  auto* dataHist = doBinOffset ? static_cast<RooDataHist*>(dataClone) : nullptr;
 
   for (auto i=firstEvent; i<lastEvent; i+=stepSize) {
     dataClone->get(i) ;
 
     double weight = dataClone->weight(); //FIXME
-    const double ni = weight;
 
     if (0. == weight * weight) continue ;
     if (weightSq) weight = dataClone->weightSquared() ;
 
     double logProba = pdfClone->getLogVal(normSet);
 
-    if(doBinOffset) {
-      logProba -= std::log(ni) - std::log(dataHist->binVolume(i)) - logSumW;
+    if(offsetPdf) {
+      logProba -= offsetPdf->getLogVal(normSet);
     }
 
     const double term = -weight * logProba;
@@ -359,4 +356,29 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone,
   }
 
   return {kahanProb, kahanWeight.Sum()};
+}
+
+bool RooNLLVar::setData(RooAbsData &data, bool cloneData)
+{
+   bool ret = RooAbsOptTestStatistic::setData(data, cloneData);
+   // To re-create the data template pdf if necessary
+   _offsetPdf.reset();
+   enableBinOffsetting(_doBinOffset);
+   return ret;
+}
+
+void RooNLLVar::enableBinOffsetting(bool on)
+{
+   if (on && !_offsetPdf) {
+      std::string name = std::string{GetName()} + "_offsetPdf";
+      std::unique_ptr<RooDataHist> dataTemplate;
+      if (auto dh = dynamic_cast<RooDataHist *>(_dataClone)) {
+         dataTemplate = std::make_unique<RooDataHist>(*dh);
+      } else {
+         dataTemplate = std::unique_ptr<RooDataHist>(static_cast<RooDataSet const &>(*_dataClone).binnedClone());
+      }
+      _offsetPdf = std::make_unique<RooHistPdf>(name.c_str(), name.c_str(), *_funcObsSet, std::move(dataTemplate));
+      _offsetPdf->setOperMode(ADirty);
+   }
+   _doBinOffset = on;
 }
