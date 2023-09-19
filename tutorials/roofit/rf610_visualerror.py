@@ -68,7 +68,7 @@ model.plotOn(frame, VisualizeError=(r, 1), FillColor="kOrange")
 # In self method a number of curves is calculated with variations of the parameter values, sampled
 # from a multi-variate Gaussian pdf that is constructed from the fit results covariance matrix.
 # The error(x) is determined by calculating a central interval that capture N% of the variations
-# for each valye of x, N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves
+# for each value of x, N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves
 # is chosen to be such that at least 100 curves are expected to be outside the N% interval, is minimally
 # 100 (e.g. Z=1.Ncurve=356, Z=2.Ncurve=2156)) Intervals from the sampling method can be asymmetric,
 # and may perform better in the presence of strong correlations, may take

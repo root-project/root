@@ -56,7 +56,7 @@ print("gx_Norm[x] = ", gxy.getVal(nset_x))
 nset_y = {y}
 print("gx_Norm[y] = ", gxy.getVal(nset_y))
 
-# Integarte normalizes pdf over subrange
+# Integrate normalized pdf over subrange
 # ----------------------------------------------------------------------------
 
 # Define a range named "signal" in x from -5,5

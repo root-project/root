@@ -88,7 +88,7 @@ r = model.fitTo(d, PrintLevel=-1)
 frame = x.frame()
 d.plotOn(frame)
 
-# OLD syntax to ommit x.
+# OLD syntax to omit x.
 # NB: The 'w.' prefix can be omitted if namespace w is imported in local namespace
 # in the usual C++ way
 #

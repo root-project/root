@@ -3,7 +3,7 @@
 ## \notebook
 ## Convert between NumPy arrays or Pandas DataFrames and RooDataSets.
 ##
-## This totorial first how to export a RooDataSet to NumPy arrays or a Pandas
+## This tutorials first how to export a RooDataSet to NumPy arrays or a Pandas
 ## DataFrame, and then it shows you how to create a RooDataSet from a Pandas
 ## DataFrame.
 ##
@@ -107,14 +107,14 @@ datahist = data.binnedClone()
 # You can also export a RooDataHist to numpy arrays with
 # RooDataHist.to_numpy(). As output, you will get a multidimensional array with
 # the histogram counts and a list of arrays with bin edges. This is comparable
-# to the ouput of numpy.histogram (or numpy.histogramdd for the
+# to the output of numpy.histogram (or numpy.histogramdd for the
 # multidimensional case).
 counts, bin_edges = datahist.to_numpy()
 
 print("Counts and bin edges from RooDataHist.to_numpy:")
 print_histogram_output((counts, bin_edges))
 
-# Let's compare the ouput to the counts and bin edges we get with
+# Let's compare the output to the counts and bin edges we get with
 # numpy.histogramdd when we pass it the original samples:
 print("Counts and bin edges from np.histogram:")
 print_histogram_output(np.histogramdd([x_arr], bins=[x.bins()]))
