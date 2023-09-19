@@ -1076,12 +1076,6 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   Int_t cloneData = pc.getInt("cloneData") ;
   auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
 
-  if(offset == RooFit::OffsetMode::Bin && dynamic_cast<RooDataSet*>(&data)) {
-    coutE(Minimization) << "The Offset(\"bin\") option doesn't support fits to RooDataSet yet, only to RooDataHist."
-                           " Falling back to no offsetting."  << endl;
-    offset = RooFit::OffsetMode::None;
-  }
-
   // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
   if (cloneData==2) {
     cloneData = optConst ;

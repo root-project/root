@@ -184,8 +184,7 @@ void rf614_binned_fit_problems()
    // initial model is not extremely off. Proving this mathematically is left
    // as an excercise to the reader.
 
-   // This counterterms can be enabled in RooFit if you use a binned
-   // RooDataHist to do your fit and pass the Offset("bin") option to
+   // This counterterms can be enabled by passing the Offset("bin") option to
    // RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
 
    std::unique_ptr<RooFitResult> fit7{

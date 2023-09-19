@@ -25,8 +25,6 @@
 
 #include <string>
 
-using ROOT::Experimental::RooNLLVarNew;
-
 namespace {
 
 std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, bool isExtended,

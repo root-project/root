@@ -22,8 +22,6 @@
 #include <vector>
 #include <utility>
 
-class RooRealSumPdf ;
-
 class RooNLLVar : public RooAbsOptTestStatistic {
 public:
 
@@ -53,15 +51,15 @@ public:
 
   double defaultErrorLevel() const override { return 0.5 ; }
 
-  void enableBinOffsetting(bool on = true) {
-    _doBinOffset = on;
-  }
+  void enableBinOffsetting(bool on = true);
 
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
 
   static RooNLLVar::ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet,
                                                 bool weightSq, std::size_t stepSize, std::size_t firstEvent,
-                                                std::size_t lastEvent, bool doBinOffset=false);
+                                                std::size_t lastEvent, RooAbsPdf const* offsetPdf = nullptr);
+
+  bool setData(RooAbsData& data, bool cloneData=true) override;
 
 protected:
 
@@ -80,7 +78,8 @@ private:
   ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; ///<!
 
   mutable std::vector<double> _binw ; ///<!
-  mutable RooRealSumPdf* _binnedPdf{nullptr}; ///<!
+  mutable RooAbsPdf* _binnedPdf{nullptr}; ///<!
+  std::unique_ptr<RooAbsPdf> _offsetPdf; ///<! An optional per-bin likelihood offset
 
   ClassDefOverride(RooNLLVar,0) // Function representing (extended) -log(L) of p.d.f and dataset
 };
