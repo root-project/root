@@ -207,7 +207,7 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
 
   std::string msgPrefix = "RooSimultaneous::initialize(" + name + ") ";
 
-  // Issue info message that we are about to do some rearraning
+  // Issue info message that we are about to do some rearranging
   oocoutI(nullptr, InputArguments) << msgPrefix << "INFO: one or more input component of simultaneous p.d.f.s are"
          << " simultaneous p.d.f.s themselves, rewriting composite expressions as one-level simultaneous p.d.f. in terms of"
          << " final constituents and extended index category" << std::endl;
@@ -417,9 +417,9 @@ bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Examine the pdf components and check if one of them can be extended or must be extended
-/// It is enough to have one component that can be exteded or must be extended to return the flag in
-///  the total simultaneous pdf
+/// Examine the pdf components and check if one of them can be extended or must be extended.
+/// It is enough to have one component that can be extended or must be extended to return the flag in
+/// the total simultaneous pdf.
 
 RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 {
@@ -1084,7 +1084,7 @@ void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double p
 
     if (auto newSamplingPdf = RooBinSamplingPdf::create(pdf, data, precision)) {
       // Set the "ORIGNAME" attribute the indicate to
-      // RooAbsArg::redirectServers() wich pdf should be replaced by this
+      // RooAbsArg::redirectServers() which pdf should be replaced by this
       // RooBinSamplingPdf in the RooSimultaneous.
       newSamplingPdf->setAttribute(
           (std::string("ORIGNAME:") + pdf.GetName()).c_str());
@@ -1131,7 +1131,7 @@ void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data,
 
     if (auto newSamplingPdf = RooBinSamplingPdf::create(pdf, data, precision)) {
       // Set the "ORIGNAME" attribute the indicate to
-      // RooAbsArg::redirectServers() wich pdf should be replaced by this
+      // RooAbsArg::redirectServers() which pdf should be replaced by this
       // RooBinSamplingPdf in the RooSimultaneous.
       newSamplingPdf->setAttribute(
           (std::string("ORIGNAME:") + pdf.GetName()).c_str());

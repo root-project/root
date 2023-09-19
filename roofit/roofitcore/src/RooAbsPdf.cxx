@@ -906,7 +906,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
 /// <tr><td> `SumCoefRange(const char* name)`  <td> Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on num CPUs
+/// <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on num CPUs
 ///   <table>
 ///   <tr><th> Strategy   <th> Effect
 ///   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks
@@ -1280,7 +1280,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
 ///                                                  \f]
 /// <tr><td> `Range(double lo, double hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 /// <tr><td> `SumCoefRange(const char* name)`  <td>  Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on `num` CPUs
+/// <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on `num` CPUs
 ///   <table>
 ///   <tr><th> Strategy   <th> Effect
 ///   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks

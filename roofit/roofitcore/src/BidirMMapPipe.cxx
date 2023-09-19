@@ -117,7 +117,7 @@ namespace BidirMMapPipe_impl {
             unsigned short m_pos;       ///< index of next byte in payload area
             /// copy construction forbidden
             Page(const Page&) {}
-            /// assigment forbidden
+            /// assignment forbidden
             Page& operator=(const Page&) = delete;
         public:
             /// constructor
@@ -832,7 +832,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
                 pthread_mutex_unlock(&s_openpipesmutex);
                 // ok, put our pages on freelist
                 m_freelist = m_pages[PagesPerEnd];
-                // handshare with other end (to make sure it's alive)...
+                // handshake with other end (to make sure it's alive)...
                 c = 'C'; // ...hild
                 if (1 != xferraw(m_outpipe, &c, 1, ::write))
                     throw Exception("handshake: xferraw write", EPIPE);
@@ -868,7 +868,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
                 pthread_mutex_unlock(&s_openpipesmutex);
                 // ok, put our pages on freelist
                 m_freelist = m_pages[0u];
-                // handshare with other end (to make sure it's alive)...
+                // handshake with other end (to make sure it's alive)...
                 c = 'P'; // ...arent
                 if (1 != xferraw(m_outpipe, &c, 1, ::write))
                     throw Exception("handshake: xferraw write", EPIPE);

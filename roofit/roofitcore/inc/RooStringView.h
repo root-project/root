@@ -18,7 +18,7 @@
 
 #include <string>
 
-/// The RooStringView is a wrapper around a C-syle string that can also be
+/// The RooStringView is a wrapper around a C-style string that can also be
 /// constructed from a `std::string` or a TString. As such, it serves as a
 /// drop-in replacement for `const char*` in public RooFit interfaces, keeping
 /// the possibility to pass a C-style string without copying but also accepting

@@ -39,20 +39,21 @@ TEST(RooDataSet, ImportFromTreeWithCut)
    RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::InputArguments);
 
    TTree tree("tree", "tree");
-   double thex, they;
-   tree.Branch("x", &thex);
-   tree.Branch("y", &they);
-   tree.Branch("z", &they);
-   thex = -0.337;
-   they = 1.;
+   double theXVal;
+   double theYVal;
+   tree.Branch("x", &theXVal);
+   tree.Branch("y", &theYVal);
+   tree.Branch("z", &theYVal);
+   theXVal = -0.337;
+   theYVal = 1.;
    tree.Fill();
 
-   thex = 0.337;
-   they = 1.;
+   theXVal = 0.337;
+   theYVal = 1.;
    tree.Fill();
 
-   thex = 1.337;
-   they = 1.;
+   theXVal = 1.337;
+   theYVal = 1.;
    tree.Fill();
 
    RooRealVar x("x", "x", 0);
@@ -74,11 +75,11 @@ TEST(RooDataSet, ImportLongBranchNames)
 {
 
    TTree tree("theTree", "theTree");
-   double doub = 0.;
-   tree.Branch("HLT_mu6_mu4_bBmumux_BsmumuPhi_delayed_L1BPH_2M8_MU6MU4_BPH_0DR15_MU6MU4", &doub);
-   doub = 2.;
+   double myDouble = 0.;
+   tree.Branch("HLT_mu6_mu4_bBmumux_BsmumuPhi_delayed_L1BPH_2M8_MU6MU4_BPH_0DR15_MU6MU4", &myDouble);
+   myDouble = 2.;
    tree.Fill();
-   doub = 4.;
+   myDouble = 4.;
    tree.Fill();
 
    RooRealVar *v =

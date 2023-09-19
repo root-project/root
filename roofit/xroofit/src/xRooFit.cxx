@@ -866,11 +866,11 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
          }
          if (limit_status == 900) {
             if (printLevel >= 0)
-               Warning("miminize", "BOUNDCHK: Parameters within %g%% limit in fit result: %s", boundaryCheck * 100,
+               Warning("minimize", "BOUNDCHK: Parameters within %g%% limit in fit result: %s", boundaryCheck * 100,
                        listpars.c_str());
          } else if (limit_status > 0) {
             if (printLevel >= 0)
-               Warning("miminize", "BOUNDCHK: Parameters near limit in fit result");
+               Warning("minimize", "BOUNDCHK: Parameters near limit in fit result");
          }
 
          // store the limit check result

@@ -445,11 +445,11 @@ TEST(RooDataHist, AnalyticalIntegration)
 
    RooRealVar x("x", "x", 0, 3.5);
    x.setRange("R1", 1.0, 3.0);  // subrange that respects the bin edges
-   x.setRange("R2", 0.5, 3.25); // subrange that slices throught the bins
+   x.setRange("R2", 0.5, 3.25); // subrange that slices through the bins
 
    RooRealVar y("y", "y", 0.5, 0, 3.5);
    y.setRange("R1", 0, 2.5); // subrange that respects the bin edges
-   y.setRange("R2", 0, 3.3); // subrange that slices throught the bins
+   y.setRange("R2", 0, 3.3); // subrange that slices through the bins
 
    RooArgSet bothXandY{x, y};
 

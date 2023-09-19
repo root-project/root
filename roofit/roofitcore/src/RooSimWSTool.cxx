@@ -18,7 +18,7 @@
 /// \class RooSimWSTool
 /// The RooSimWSTool is a tool operating on RooWorkspace objects that
 /// can clone PDFs into a series of variations that are joined together
-/// into a RooSimultanous PDF.
+/// into a RooSimultaneous PDF.
 ///
 /// ## Splitting a single PDF
 /// The simplest use case is to take a workspace PDF as prototype and
@@ -164,7 +164,7 @@ RooSimWSTool::~RooSimWSTool()
 /// <table>
 /// <tr><th> Optional Arguments <th> Effect
 /// <tr><td> SplitParam(varname, catname)                   <td> Split parameter(s) with given name(s) in category(s) with given names
-/// <tr><td> SplitParam(var, cat)                           <td> Split given parameter(s) in givem category(s)
+/// <tr><td> SplitParam(var, cat)                           <td> Split given parameter(s) in given category(s)
 /// <tr><td> SplitParamConstrained(vname, cname, remainder) <td> Make constrained split in parameter(s) with given name(s) in category(s) with given names
 ///                                                   putting remainder fraction formula in state with name "remainder"
 /// <tr><td> SplitParamConstrained(var,cat,remainder)       <td> Make constrained split in parameter(s) with given name(s) in category(s) with given names
@@ -809,7 +809,7 @@ RooSimWSTool::MultiBuildConfig::MultiBuildConfig(const char* masterIndexCat)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master indes states 'miStateList'. This
+/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master index states 'miStateList'. This
 /// method parses the SplitParam() and SplitParamConstrained() arguments
 
 void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char* pdfName, const RooCmdArg& arg1,const RooCmdArg& arg2,
@@ -823,7 +823,7 @@ void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char*
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master indes states 'miStateList'.
+/// Add protytpe p.d.f 'pdfName' to MultiBuildConfig associated with master index states 'miStateList'.
 
 void RooSimWSTool::MultiBuildConfig::addPdf(const char* miStateList, const char* pdfName, SplitRule& sr)
 {

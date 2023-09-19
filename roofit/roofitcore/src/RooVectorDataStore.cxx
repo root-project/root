@@ -217,12 +217,12 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
     }
   }
 
-  vector<RealFullVector*>::const_iterator fiter = other._realfStoreList.begin() ;
-  for (; fiter!=other._realfStoreList.end() ; ++fiter) {
-    RooAbsReal* real = (RooAbsReal*) vars.find((*fiter)->bufArg()->GetName()) ;
+  auto forwardIter = other._realfStoreList.begin() ;
+  for (; forwardIter!=other._realfStoreList.end() ; ++forwardIter) {
+    RooAbsReal* real = (RooAbsReal*) vars.find((*forwardIter)->bufArg()->GetName()) ;
     if (real) {
       // Clone vector
-      _realfStoreList.push_back(new RealFullVector(**fiter,real)) ;
+      _realfStoreList.push_back(new RealFullVector(**forwardIter,real)) ;
       // Adjust buffer pointer
       real->attachToVStore(*this) ;
     }

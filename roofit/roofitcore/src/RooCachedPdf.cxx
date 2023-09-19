@@ -40,7 +40,7 @@ ClassImp(RooCachedPdf);
 /// in the binning named "cache" in the observables of the function. The dimensions
 /// of the cache are automatically matched to the number of observables used
 /// in each use context. Multiple cache in different observable may exists
-/// simultanously if the cached p.d.f is used with multiple observable
+/// simultaneously if the cached p.d.f is used with multiple observable
 /// configurations simultaneously
 
 RooCachedPdf::RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf) :

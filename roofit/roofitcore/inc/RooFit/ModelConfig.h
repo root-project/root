@@ -148,7 +148,7 @@ public:
    /// Specify the constraint parameters
    virtual void SetConstraintParameters(const RooArgSet &set)
    {
-      if (!SetHasOnlyParameters(set, "ModelConfig::SetConstainedParameters"))
+      if (!SetHasOnlyParameters(set, "ModelConfig::SetConstrainedParameters"))
          return;
       fConstrParamsName = std::string(GetName()) + "_ConstrainedParams";
       DefineSetInWS(fConstrParamsName.c_str(), set);

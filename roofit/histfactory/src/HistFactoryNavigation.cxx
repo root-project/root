@@ -749,11 +749,6 @@ namespace RooStats {
       //RooAbsPdf* modelPdf = mc->GetPdf();
       //RooArgSet* observables = mc->GetObservables();
 
-      // Create vectors to hold the channel pdf's
-      // as well as the set of observables for each channel
-      //std::map< std::string, RooAbsPdf* >  channelPdfMap;
-      //std::map< std::string, RooArgSet* >  channelObservMap;
-
       // Check if it is a simultaneous pdf or not
       // (if it's an individual channel, it won't be, if it's
       // combined, it's simultaneous)

@@ -158,7 +158,7 @@ class RooDataSet(object):
         return dataset
 
     def to_numpy(self, copy=True):
-        """Export a RooDataSet to a dictinary of numpy arrays.
+        """Export a RooDataSet to a dictionary of numpy arrays.
 
         Args:
             copy (bool): If False, the data will not be copied. Use with

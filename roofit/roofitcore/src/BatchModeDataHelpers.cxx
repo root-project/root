@@ -73,7 +73,7 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
       auto &bufferSumW2 = buffers.top();
       if (weight.empty()) {
          // If the dataset has no weight, we fill the data spans with a scalar
-         // unity weight so we don't need to check for the existance of weights
+         // unity weight so we don't need to check for the existence of weights
          // later in the likelihood.
          buffer.push_back(1.0);
          bufferSumW2.push_back(1.0);
@@ -210,10 +210,10 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
                                            RooSimultaneous const *simPdf, bool skipZeroWeights,
                                            bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers)
 {
-   std::vector<std::pair<std::string, RooAbsData const *>> datas;
+   std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
    bool splitRange = false;
-   std::vector<std::unique_ptr<RooAbsData>> splittedDataSets;
+   std::vector<std::unique_ptr<RooAbsData>> splitDataSets;
 
    if (simPdf) {
       std::unique_ptr<TList> splits{data.split(*simPdf, true)};
@@ -223,21 +223,21 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
          if (!simComponent) {
             continue;
          }
-         datas.emplace_back(std::string("_") + d->GetName() + "_", d);
+         datasets.emplace_back(std::string("_") + d->GetName() + "_", d);
          isBinnedL.emplace_back(simComponent->getAttribute("BinnedLikelihoodActive"));
          // The dataset need to be kept alive because the datamap points to their content
-         splittedDataSets.emplace_back(d);
+         splitDataSets.emplace_back(d);
       }
       splitRange = simPdf->getAttribute("SplitRange");
    } else {
-      datas.emplace_back("", &data);
+      datasets.emplace_back("", &data);
       isBinnedL.emplace_back(false);
    }
 
    std::map<RooFit::Detail::DataKey, std::span<const double>> dataSpans; // output variable
 
-   for (std::size_t iData = 0; iData < datas.size(); ++iData) {
-      auto const &toAdd = datas[iData];
+   for (std::size_t iData = 0; iData < datasets.size(); ++iData) {
+      auto const &toAdd = datasets[iData];
       auto spans = getSingleDataSpans(
          *toAdd.second, RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, toAdd.second->GetName()),
          toAdd.first, buffers, skipZeroWeights && !isBinnedL[iData]);

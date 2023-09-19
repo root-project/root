@@ -79,7 +79,7 @@ RooRangeBoolean::~RooRangeBoolean()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return 1 if x is in range, zero otherwis
+/// Return 1 if x is in range, zero otherwise.
 
 double RooRangeBoolean::evaluate() const
 {

@@ -75,7 +75,7 @@ ClassImp(RooResolutionModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with convolution variable 'x'.
-/// The convolution variable needs to be convertable to real values, and be able
+/// The convolution variable needs to be convertible to real values, and be able
 /// to give information about its range. This is supported by e.g. RooRealVar or RooLinearVar, which
 /// accepts offsetting and scaling an observable.
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& _x) :

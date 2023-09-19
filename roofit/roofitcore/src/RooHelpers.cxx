@@ -167,7 +167,7 @@ namespace {
 /// Get the lower and upper bound of parameter range if arg can be casted to RooAbsRealLValue.
 /// If no range with rangeName is defined for the argument, this will check if a binning of the
 /// same name exists and return the interval covered by the binning.
-/// Returns `{-infinity, infinity}` if agument can't be casted to RooAbsRealLValue* or if no
+/// Returns `{-infinity, infinity}` if argument can't be casted to RooAbsRealLValue* or if no
 /// range or binning with the requested name exists.
 /// \param[in] arg RooAbsArg for which to get the range.
 /// \param[in] rangeName The name of the range.
@@ -348,7 +348,7 @@ void addServerClonesToList(const RooAbsArg &var, ToCloneList &outlist, ToCloneMa
 /// to be used in other RooHelpers functions.
 /// param[in] input The input collection.
 /// param[in] output The output collection.
-/// param[in] deepCopy If the whole computation graph should be cloned recursivly.
+/// param[in] deepCopy If the whole computation graph should be cloned recursively.
 /// param[in] observables If this is not a nullptr, only the fundamental
 ///                       variables that are in observables are deep cloned.
 bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool deepCopy, RooArgSet const *observables)

@@ -193,7 +193,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    // TODO
 
    // Jonas R.: The following code is commented out, because the functionality
-   // to mask out-ot-range entries with `RooDataHist::cacheValidEntries` has
+   // to mask out-of-range entries with `RooDataHist::cacheValidEntries` has
    // been removed from the RooDataHist. If you want to implement ranged fits
    // properly, please create a RooDataHist for the requested range with
    // `RooDataHist::reduce`.

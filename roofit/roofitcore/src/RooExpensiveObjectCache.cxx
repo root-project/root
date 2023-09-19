@@ -172,7 +172,7 @@ void RooExpensiveObjectCache::clearAll()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct ExpensiveObject oject for inPayLoad and store reference values
+/// Construct ExpensiveObject object for inPayLoad and store reference values
 /// for all RooAbsReal and RooAbsCategory parameters in params.
 
 RooExpensiveObjectCache::ExpensiveObject::ExpensiveObject(Int_t uidIn, const char* inOwnerName, TObject& inPayload, RooArgSet const& params)
