@@ -97,7 +97,7 @@ std::string MakePathRelative(const std::string &path, const std::string &base, b
       // For ROOT, convert module directories like core/base/inc/ to include/
       int posInc = result.find("/inc/");
       if (posInc != -1) {
-         result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
+         result = /*std::string("include") +*/ result.substr(posInc + 5);
       }
    }
    return result;
