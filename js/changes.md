@@ -23,7 +23,9 @@
 20. Implement `allfunc` draw option for histograms, force drawing disregard of TF1::kNotDraw bit
 21. Use `eslint` for static code checking, add testing of interactive features
 22. Provide `Build legend` context menu command for the pad
-23. Fix - correct scaling of axis labels when tilt them by 25 degree, make this angle configurable
+23. Reset pad enlarge state when pressing Escape key #265
+24. Support canvas grayscale, let toggle via context menu
+25. Fix - correct scaling of axis labels when tilt them by 25 degree, make this angle configurable
 
 
 ## Changes in 7.4.3

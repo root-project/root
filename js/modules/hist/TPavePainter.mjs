@@ -776,7 +776,7 @@ class TPavePainter extends ObjectPainter {
             framep = this.getFramePainter(),
             contour = main.fContour,
             levels = contour?.getLevels(),
-            draw_palette = main.fPalette;
+            draw_palette = main._color_palette;
       let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '';
 
       this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);

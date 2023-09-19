@@ -807,7 +807,7 @@ const TooltipHandler = {
 
    /** @summary Handle key press */
    processKeyPress(evnt) {
-      const allowed = ['PageUp', 'PageDown', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'PrintScreen', '*'],
+      const allowed = ['PageUp', 'PageDown', 'ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'PrintScreen', 'Escape', '*'],
             main = this.selectDom(),
             pp = this.getPadPainter();
       let key = evnt.key;
@@ -830,6 +830,7 @@ const TooltipHandler = {
          case 'ArrowDown': zoom.name = 'y'; zoom.dleft = -1; zoom.dright = 1; break;
          case 'Ctrl ArrowUp': zoom.name = 'y'; zoom.dleft = zoom.dright = 1; break;
          case 'Ctrl ArrowDown': zoom.name = 'y'; zoom.dleft = zoom.dright = -1; break;
+         case 'Escape': pp?.enlargePad(null, false, true); return true;
       }
 
       if (zoom.dleft || zoom.dright) {
