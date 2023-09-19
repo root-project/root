@@ -223,7 +223,7 @@ void StandardBayesianNumericalDemo(const char *infile = "", const char *workspac
 
    cout << "\nDrawing plot of posterior function....." << endl;
 
-   // always plot using numer of scan points
+   // always plot using number of scan points
    bayesianCalc.SetScanOfPosterior(nScanPoints);
 
    RooPlot *plot = bayesianCalc.GetPosteriorPlot();

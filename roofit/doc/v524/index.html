@@ -21,7 +21,7 @@ in a plotOn call
 </pre>
 
 Two techniques for error visualization are implemented. The default is
-linear error progation, and results in an error band that is by
+linear error propagation, and results in an error band that is by
 construction symmetric. The linear error is calculated as 
 <pre>
 
@@ -119,7 +119,7 @@ Minimizer do not implement error analysis.
 
 <h4>New numeric integration algorithms available</h4>
 
-<p>RooFit can now interface all MathCore numeric intergration
+<p>RooFit can now interface all MathCore numeric integration
 algorithms. In this release <tt>ROOT::Math::AdaptiveIntegratorMultiDim</tt>,
 which implements the 'Genz & Malik' algorithm has been interfaced
 in <tt>RooAdaptiveIntegratorND</tt> and is now the default numeric integrator
@@ -395,7 +395,7 @@ respective p.d.f.s, but are most relevant in the context of a workspace).<br><br
 
 <h4>New object factory interface to workspace to facilitate script driven model definition</h4>
 
-<p>A object factory has been added to RooFit to simplify the proces of creating p.d.f. 
+<p>A object factory has been added to RooFit to simplify the process of creating p.d.f. 
 and function expressions consisting of multiple objects. The factory has two goals:
 the first is to provide a back-end for higher level factories and tools to process
 the creation of objects. The second is to provide a simple end-user language to
@@ -500,7 +500,7 @@ The macro below demonstrates in a couple of lines a number of major new features
 <li> workspace CINT interface to easily access contents in a typesafe way
 <li> new adaptive ND numeric integration technique to normalize arbitrary p.d.f. in fast 
      and reliable way
-<li> new adapative TFoam sampling technique to efficiently generate toy MC data from strongly
+<li> new adaptive TFoam sampling technique to efficiently generate toy MC data from strongly
      peaked datasets
 <li> parallel processing in likelihood construction and use of profile likelihood operator
      to represent profile likelihoods as regular RooFit functions
@@ -589,7 +589,7 @@ Bayesian, and Likelihood intervals for a simple number counting experiment
 implementation</li>
 <li><tt>rs401c_FeldmanCousins.C</tt> Demonstrates use of
 FeldmanCousins interval calculator with a Poisson problem, reproduces
-resulst from table IV and V of the original
+results from table IV and V of the original
 paper Phys.Rev.D57:3873-3889,1998.</li>
 <li><tt>rs401d_FeldmanCousins.C</tt> Demonstrates use of
 FeldmanCousins interval calculator with the neutrino oscillation toy
@@ -717,7 +717,7 @@ The initial implementation is independent work.  The major step forward
 in the approach was 
 to provide a well defined algorithm that specifies the order of
 polynomial to be included 
-in the correction.  This is an emperical algorithm, so in addition to the
+in the correction.  This is an empirical algorithm, so in addition to the
 nominal model it 
 needs either a real data set or a simulated one.  In the early work, the
 nominal model was taken

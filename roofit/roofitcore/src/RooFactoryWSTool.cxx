@@ -355,7 +355,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   }
 
 
-  // Check if number of provided args is in valid range (add two to accomodate name and title strings)
+  // Check if number of provided args is in valid range (add two to accomomdate name and title strings)
   if (_args.size()+2<ca.second || _args.size()+2>ca.first.size()) {
     if (ca.second==ca.first.size()) {
       coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid, " << className

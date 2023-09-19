@@ -116,7 +116,7 @@ public:
   // List content management
   virtual bool add(const RooAbsArg& var, bool silent=false) ;
 // The following function is not memory safe, because it takes ownership of var
-// without moving it. It is not publically available in the memory safe
+// without moving it. It is not publicly available in the memory safe
 // interfaces mode.
 #ifdef ROOFIT_MEMORY_SAFE_INTERFACES
 protected:

@@ -223,7 +223,7 @@ void RooMinimizer::setMaxIterations(int n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change maximum number of likelihood function calss from MINUIT
+/// Change maximum number of likelihood function class from MINUIT
 /// (RooMinimizer default 500 * #%parameters)
 
 void RooMinimizer::setMaxFunctionCalls(int n)
@@ -457,7 +457,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
          }
 
          if (paramInd.size()) {
-            // set the parameter indeces
+            // set the parameter indices
             _theFitter->Config().SetMinosErrors(paramInd);
 
             _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());

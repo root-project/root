@@ -316,7 +316,7 @@ T* RooCacheManager<T>::getObjByIndex(Int_t index) const
 }
 
 
-/// Create RooArgSet contatining the objects that are both in the cached set 1
+/// Create RooArgSet containing the objects that are both in the cached set 1
 //with a given index and an input argSet.
 template<class T>
 RooArgSet RooCacheManager<T>::selectFromSet1(RooArgSet const& argSet, int index) const
@@ -325,7 +325,7 @@ RooArgSet RooCacheManager<T>::selectFromSet1(RooArgSet const& argSet, int index)
 }
 
 
-/// Create RooArgSet contatining the objects that are both in the cached set 2
+/// Create RooArgSet containing the objects that are both in the cached set 2
 //with a given index and an input argSet.
 template<class T>
 RooArgSet RooCacheManager<T>::selectFromSet2(RooArgSet const& argSet, int index) const

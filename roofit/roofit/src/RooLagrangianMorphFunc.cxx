@@ -255,7 +255,7 @@ inline RooFit::SuperFloat invertMatrix(const Matrix &matrix, Matrix &inverse)
       // back-substitute to get the inverse
       lu_substitute(lu, pm, inverse);
    } catch (boost::numeric::ublas::internal_logic &error) {
-      // coutE(Eval) << "boost::numberic::ublas error: matrix is not invertible!"
+      // coutE(Eval) << "boost::numeric::ublas error: matrix is not invertible!"
       // << std::endl;
    }
    RooFit::SuperFloat inorm = norm_inf(inverse);
@@ -1882,7 +1882,7 @@ void RooLagrangianMorphFunc::disableInterference(const std::vector<const char *>
 {
    // disable interference between the listed operators
    std::stringstream name;
-   name << "noInteference";
+   name << "noInterference";
    for (auto c : nonInterfering) {
       name << c;
    }
@@ -2231,8 +2231,8 @@ void RooLagrangianMorphFunc::randomizeParameters(double z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// retrive the new physics objects and update the weights in the morphing
-/// function
+/// Retrieve the new physics objects and update the weights in the morphing
+/// function.
 
 bool RooLagrangianMorphFunc::updateCoefficients()
 {

@@ -267,7 +267,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      lvalues that are higher in the expression tree
   //
   //   C) Check for dependents that the PDF insists on integrating
-  //      analytically iself
+  //      analytically itself
   //
   //   D) Make list of servers that can be integrated analytically
   //      Add all parameters/dependents as value/shape servers
@@ -422,7 +422,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Check for dependents that the PDF insists on integrating *
-  //      analytically iself                                       *
+  //      analytically itself                                       *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntOKDepList ;

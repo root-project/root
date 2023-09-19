@@ -154,7 +154,7 @@ protected:
   Int_t          _nCPU = 1;            ///<  Number of processors to use in parallel calculation mode
   pRooRealMPFE*  _mpfeArray = nullptr; ///<! Array of parallel execution frond ends
 
-  RooFit::MPSplit _mpinterl = RooFit::BulkPartition;  ///< Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  RooFit::MPSplit _mpinterl = RooFit::BulkPartition;  ///< Use interleaving strategy rather than N-wise split for partitioning of dataset for multiprocessor-split
   bool         _doOffset = false;                   ///< Apply interval value offset to control numeric precision?
   const bool  _takeGlobalObservablesFromData = false; ///< If the global observable values are taken from data
   mutable ROOT::Math::KahanSum<double> _offset {0.0}; ///<! Offset as KahanSum to avoid loss of precision

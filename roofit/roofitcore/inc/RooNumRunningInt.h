@@ -55,7 +55,7 @@ protected:
   const char* payloadUniqueSuffix() const override { return func.arg().aggregateCacheUniqueSuffix() ; }
 
   RooRealProxy func ; ///< Proxy to functions whose running integral is calculated
-  RooRealProxy x   ; ///< Intergrated observable
+  RooRealProxy x   ; ///< Integrated observable
   std::string _binningName ; ///< Name of binning to be used for cache histogram
 
 private:

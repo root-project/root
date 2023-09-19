@@ -58,7 +58,7 @@ ClassImp(RooNDKeysPdf);
 ///  - 'v' = Verbose flag
 ///
 /// The parameter rho (default = 1) provides an overall scale factor that can
-/// be applied to the bandwith calculated for each kernel. The nSigma parameter
+/// be applied to the bandwidth calculated for each kernel. The nSigma parameter
 /// determines the size of the box that is used to search for contributing kernels
 /// around a given point in observable space. The nSigma parameters is used
 /// in case of non-adaptive bandwidths and for the 1st non-adaptive pass for

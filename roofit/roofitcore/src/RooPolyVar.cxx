@@ -44,7 +44,7 @@ ClassImp(RooPolyVar);
 /// Construct polynomial in x with coefficients in coefList. If
 /// lowestOrder is not zero, then the first element in coefList is
 /// interpreted as as the 'lowestOrder' coefficients and all
-/// subsequent coeffient elements are shifted by a similar amount.
+/// subsequent coefficient elements are shifted by a similar amount.
 RooPolyVar::RooPolyVar(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList,
                        Int_t lowestOrder)
    : RooAbsReal(name, title),

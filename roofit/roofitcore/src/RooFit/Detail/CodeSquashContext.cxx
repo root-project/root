@@ -23,7 +23,7 @@ namespace Detail {
 /// \note The implementation was copy-pasted from `TSystem.cxx`.
 /// characters with underscores.
 /// @param in The input string.
-/// @return A new string vaild variable name.
+/// @return A new string valid variable name.
 std::string CodeSquashContext::makeValidVarName(TString in) const
 {
 

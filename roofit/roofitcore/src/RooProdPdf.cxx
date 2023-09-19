@@ -196,7 +196,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
 /// \f$ F \f$ only is used to determine the correlation between \f$ X \f$ and \f$ Y \f$. In the latter
 /// case, the \f$ Y \f$ distribution is defined by the product of \f$ F \f$ and \f$ G \f$.
 ///
-/// This \f$ P(x,y) \f$ construction is analoguous to generating events from \f$ F(x,y) \f$ with
+/// This \f$ P(x,y) \f$ construction is analogous to generating events from \f$ F(x,y) \f$ with
 /// a prototype dataset sampled from \f$ G(y) \f$.
 
 RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
@@ -502,7 +502,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     pdfCSet.clear();
 
     // Make iterator over tree leaf node list to get the observables.
-    // This code is borrowed from RooAgsPdf::getObservables.
+    // This code is borrowed from RooAbsPdf::getObservables().
     // RooAbsArg::treeNodeServer list is relatively expensive, so we only do it
     // once and use it in a lambda function.
     RooArgSet pdfLeafList("leafNodeServerList") ;
@@ -2032,7 +2032,7 @@ RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) cons
   RooArgSet* connectedPars  = new RooArgSet("connectedPars") ;
   for (std::size_t iPdf = 0; iPdf < _pdfList.size(); ++iPdf) {
     auto * pdf = static_cast<RooAbsPdf*>(&_pdfList[iPdf]);
-    // Check if term is relevant, either because it provides a probablity
+    // Check if term is relevant, either because it provides a propablity
     // density in the observables or because it is used for the expected
     // events.
     if (static_cast<int>(iPdf) == _extendedIndex || pdf->dependsOn(observables)) {

@@ -1,0 +1,13 @@
+[default.extend-identifiers]
+BaBar = "BaBar"
+exportJSONtoString = "exportJSONtoString" # Maybe it's worth to rename this function to consistent camelCase
+fChannelObservMap = "fChannelObservMap"
+
+[default.extend-words]
+Gaus = "Gaus"
+gaus = "gaus"
+ND = "ND"
+SEH = "SEH"
+SLAC = "SLAC"
+Strat = "Strat"
+UE = "UE"

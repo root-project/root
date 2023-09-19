@@ -34,7 +34,7 @@ public:
   RooAbsMCStudyModule(const RooAbsMCStudyModule& other) ;
   ~RooAbsMCStudyModule() override {} ;
 
-  /// Initializer method called upon attachement to given RooMCStudy object
+  /// Initializer method called upon attachment to given RooMCStudy object
   bool doInitializeInstance(RooMCStudy& /*study*/) ;
 
   /// Initializer called immediately after attachment to RooMCStudy object and initialization of module base class

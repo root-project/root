@@ -106,7 +106,7 @@ TEST(RooAddPdf, Issue10988)
    auto &x2 = *w2.var("x");
 
    // Call createIntegral on workspace w1 only. It's important that this
-   // integral lives longer than "interal1" to reproduce the problem.
+   // integral lives longer than "integral1" to reproduce the problem.
    std::unique_ptr<RooAbsReal> integral0{pdf1.createIntegral(x1, NormSet(x1), Range("range_int"))};
    double val0 = integral0->getVal();
 
@@ -120,7 +120,7 @@ TEST(RooAddPdf, Issue10988)
    std::unique_ptr<RooAbsReal> integral2{pdf2.createIntegral(x2, NormSet(x2), Range("range_int"))};
    double val2 = integral2->getVal();
 
-   // Check that the integrals have differnt values, now that the coefficient
+   // Check that the integrals have different values, now that the coefficient
    // range was fixed to a different one.
    EXPECT_NE(val0, val1);
    EXPECT_EQ(val1, val2);
@@ -274,7 +274,7 @@ TEST(RooAddPdf, ResetServerNormRange)
    }
 
    // We first use the same normalization set to re-evaluate, then a different
-   // one to confuse to first trigger the chache and then have a another
+   // one to confuse to first trigger the cache and then have a another
    // reference.
    const double val2 = model.getVal(normSet1);
    const double val3 = model.getVal(normSet2);
@@ -359,7 +359,7 @@ TEST(RooAddPdf, ImplicitDimensions)
    RooRealVar y{"y", "y", 5, 0, 10};
 
    // Define the PDFs such that they explicitly depend on only one of the
-   // observables each. This means the RooAddPdf needs to figure out iteself
+   // observables each. This means the RooAddPdf needs to figure out itself
    // that in the other dimensions (y for uniformX and x for uniformY), the
    // distribution is implicitly uniform.
    RooGenericPdf uniformX{"uniform_x", "x - x + 1.0", x};
