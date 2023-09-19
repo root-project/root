@@ -730,6 +730,11 @@ class THistPainter extends ObjectPainter {
       else
          this.options.reset();
 
+      // when changing draw option, reset attributes usage
+      this.lineatt?.setUsed(false);
+      this.fillatt?.setUsed(false);
+      this.markeratt?.setUsed(false);
+
       this.options.decode(opt || histo.fOption, hdim, histo, pp, pad, this);
 
       this.storeDrawOpt(opt); // opt will be return as default draw option, used in webcanvas

@@ -8,7 +8,6 @@ import { getRGBfromTColor } from '../base/colors.mjs';
 import { BasePainter, getElementRect, _loadJSDOM } from '../base/BasePainter.mjs';
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
-import { produceLegend } from '../hist/TPavePainter.mjs';
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
 import { BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout, getHPainter, setHPainter } from './display.mjs';
 import { showProgress, ToolbarIcons, registerForResize, injectStyle } from './utils.mjs';
@@ -2092,8 +2091,13 @@ class HierarchyPainter extends BasePainter {
          return drop_painter;
       }
 
-      if (itemname === '$legend')
-         return produceLegend(divid, opt).then(legend_painter => drop_complete(legend_painter));
+      if (itemname === '$legend') {
+         const cp = getElementCanvPainter(divid);
+         if (isFunc(cp?.buildLegend))
+            return cp.buildLegend(opt).then(lp => drop_complete(lp));
+         console.error('Not possible to build legend');
+         return drop_complete(null);
+      }
 
       return this.getObject(itemname).then(res => {
          if (!res.obj) return null;

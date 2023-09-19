@@ -1,8 +1,8 @@
 import { gStyle, settings, constants, browser, internals, btoa_func,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, postponePromise,
          isObject, isFunc, isStr,
-         clTObjArray, clTPaveText, clTColor, clTPad, clTStyle } from '../core.mjs';
-import { color as d3_color, pointer as d3_pointer, select as d3_select, rgb as d3_rgb } from '../d3.mjs';
+         clTObjArray, clTPaveText, clTColor, clTPad, clTStyle, clTLegend, clTLegendEntry } from '../core.mjs';
+import { color as d3_color, select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
@@ -1110,6 +1110,9 @@ class TPadPainter extends ObjectPainter {
          menu.addchk(this.pad?.fTicky === 2, 'labels on both sides', '2fTicky', SetPadField);
          menu.add('endsub:');
 
+         if (isFunc(this.drawObject))
+            menu.add('Build legend', () => this.buildLegend());
+
          menu.addAttributesMenu(this);
          menu.add('Save to gStyle', () => {
             if (!this.pad) return;
@@ -1153,15 +1156,10 @@ class TPadPainter extends ObjectPainter {
    /** @summary Show pad context menu
      * @private */
    padContextMenu(evnt) {
-      if (evnt.stopPropagation) { // this is normal event processing and not emulated jsroot event
-         // for debug purposes keep original context menu for small region in top-left corner
-         const pos = d3_pointer(evnt, this.svg_this_pad().node());
-
-         if ((pos.length === 2) && (pos[0] >= 0) && (pos[0] < 10) && (pos[1] >= 0) && (pos[1] < 10)) return;
-
+      if (evnt.stopPropagation) {
+         // this is normal event processing and not emulated jsroot event
          evnt.stopPropagation(); // disable main context menu
          evnt.preventDefault();  // disable browser context menu
-
          this.getFramePainter()?.setLastEventPos();
       }
 
@@ -1332,6 +1330,69 @@ class TPadPainter extends ObjectPainter {
       }
 
       return isany;
+   }
+
+   /** @summary add legend object to the pad and redraw it
+     * @private */
+   async buildLegend(opt) {
+      const lp = this.findPainterFor(null, '', clTLegend);
+
+      if (!lp && !isFunc(this.drawObject))
+         return Promise.reject(Error('Not possible to build legend while module draw.mjs was not load'));
+
+      const leg = lp?.getObject() ?? create(clTLegend),
+            pad = this.getRootPad(true);
+
+      leg.fPrimitives.Clear();
+
+      for (let k = 0; k < this.painters.length; ++k) {
+         const painter = this.painters[k],
+               obj = painter.getObject();
+         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.$secondary || obj._typename === clTLegend)
+            continue;
+
+         const entry = create(clTLegendEntry);
+         entry.fObject = obj;
+         entry.fLabel = painter.getItemName();
+         if ((opt === 'all') || !entry.fLabel)
+             entry.fLabel = obj.fName;
+         entry.fOption = '';
+         if (!entry.fLabel) continue;
+
+         if (painter.lineatt?.used)
+            entry.fOption += 'l';
+         if (painter.fillatt?.used)
+            entry.fOption += 'f';
+         if (painter.markeratt?.used)
+            entry.fOption += 'p';
+         if (!entry.fOption)
+            entry.fOption = 'l';
+
+         leg.fPrimitives.Add(entry);
+      }
+
+      // no entries - no need to draw legend
+      if (lp)
+         return lp.redraw();
+
+      const szx = 0.4;
+      let szy = leg.fPrimitives.arr.length;
+      if (!szy) return null;
+      if (szy > 8) szy = 8;
+      szy *= 0.1;
+
+      leg.fX1NDC = szx * pad.fLeftMargin + (1 - szx) * (1 - pad.fRightMargin);
+      leg.fY1NDC = (1 - szy) * (1 - pad.fTopMargin) + szy * pad.fBottomMargin;
+      leg.fX2NDC = 0.99 - pad.fRightMargin;
+      leg.fY2NDC = 0.99 - pad.fTopMargin;
+      leg.fFillStyle = 1001;
+
+      const prev_name = this.has_canvas ? this.selectCurrentPad(this.this_pad_name) : undefined;
+
+      return this.drawObject(this.getDom(), leg, opt ?? 'autoplace').then(p => {
+         this.selectCurrentPad(prev_name);
+         return p;
+      });
    }
 
    /** @summary Add object painter to list of primitives

@@ -80,6 +80,11 @@ class TAttLineHandler {
    /** @summary returns true if line attribute is empty and will not be applied. */
    empty() { return this.color === 'none'; }
 
+   /** @summary Set usage flag of attribute */
+   setUsed(flag) {
+      this.used = flag;
+   }
+
    /** @summary set border parameters, used for rect drawing */
    setBorder(rx, ry) {
       this.rx = rx;

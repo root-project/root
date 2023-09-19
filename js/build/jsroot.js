@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.4.99
+// https://root.cern/js/ v7.5.0
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = '7.5.pre',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '12/09/2023',
+version_date = '19/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -10539,6 +10539,11 @@ class TAttMarkerHandler {
       this._configure();
    }
 
+   /** @summary Set usage flag of attribute */
+   setUsed(flag) {
+      this.used = flag;
+   }
+
    /** @summary Reset position, used for optimization of drawing of multiple markers
     * @private */
    resetPos() { this.lastx = this.lasty = null; }
@@ -10736,6 +10741,7 @@ class TAttMarkerHandler {
 
    /** @summary Apply marker styles to created element */
    apply(selection) {
+      this.used = true;
       selection.style('stroke', this.stroke ? this.color : 'none')
                .style('fill', this.fill ? this.color : 'none');
    }
@@ -10827,6 +10833,11 @@ class TAttFillHandler {
    empty() {
       const fill = this.getFillColor();
       return !fill || (fill === 'none');
+   }
+
+   /** @summary Set usage flag of attribute */
+   setUsed(flag) {
+      this.used = flag;
    }
 
    /** @summary Returns true if fill attributes has real color */
@@ -11186,6 +11197,11 @@ class TAttLineHandler {
 
    /** @summary returns true if line attribute is empty and will not be applied. */
    empty() { return this.color === 'none'; }
+
+   /** @summary Set usage flag of attribute */
+   setUsed(flag) {
+      this.used = flag;
+   }
 
    /** @summary set border parameters, used for rect drawing */
    setBorder(rx, ry) {
@@ -66676,6 +66692,9 @@ class TPadPainter extends ObjectPainter {
          menu.addchk(this.pad?.fTicky === 2, 'labels on both sides', '2fTicky', SetPadField);
          menu.add('endsub:');
 
+         if (isFunc(this.drawObject))
+            menu.add('Build legend', () => this.buildLegend());
+
          menu.addAttributesMenu(this);
          menu.add('Save to gStyle', () => {
             if (!this.pad) return;
@@ -66719,15 +66738,10 @@ class TPadPainter extends ObjectPainter {
    /** @summary Show pad context menu
      * @private */
    padContextMenu(evnt) {
-      if (evnt.stopPropagation) { // this is normal event processing and not emulated jsroot event
-         // for debug purposes keep original context menu for small region in top-left corner
-         const pos = pointer(evnt, this.svg_this_pad().node());
-
-         if ((pos.length === 2) && (pos[0] >= 0) && (pos[0] < 10) && (pos[1] >= 0) && (pos[1] < 10)) return;
-
+      if (evnt.stopPropagation) {
+         // this is normal event processing and not emulated jsroot event
          evnt.stopPropagation(); // disable main context menu
          evnt.preventDefault();  // disable browser context menu
-
          this.getFramePainter()?.setLastEventPos();
       }
 
@@ -66898,6 +66912,69 @@ class TPadPainter extends ObjectPainter {
       }
 
       return isany;
+   }
+
+   /** @summary add legend object to the pad and redraw it
+     * @private */
+   async buildLegend(opt) {
+      const lp = this.findPainterFor(null, '', clTLegend);
+
+      if (!lp && !isFunc(this.drawObject))
+         return Promise.reject(Error('Not possible to build legend while module draw.mjs was not load'));
+
+      const leg = lp?.getObject() ?? create$1(clTLegend),
+            pad = this.getRootPad(true);
+
+      leg.fPrimitives.Clear();
+
+      for (let k = 0; k < this.painters.length; ++k) {
+         const painter = this.painters[k],
+               obj = painter.getObject();
+         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.$secondary || obj._typename === clTLegend)
+            continue;
+
+         const entry = create$1(clTLegendEntry);
+         entry.fObject = obj;
+         entry.fLabel = painter.getItemName();
+         if ((opt === 'all') || !entry.fLabel)
+             entry.fLabel = obj.fName;
+         entry.fOption = '';
+         if (!entry.fLabel) continue;
+
+         if (painter.lineatt?.used)
+            entry.fOption += 'l';
+         if (painter.fillatt?.used)
+            entry.fOption += 'f';
+         if (painter.markeratt?.used)
+            entry.fOption += 'p';
+         if (!entry.fOption)
+            entry.fOption = 'l';
+
+         leg.fPrimitives.Add(entry);
+      }
+
+      // no entries - no need to draw legend
+      if (lp)
+         return lp.redraw();
+
+      const szx = 0.4;
+      let szy = leg.fPrimitives.arr.length;
+      if (!szy) return null;
+      if (szy > 8) szy = 8;
+      szy *= 0.1;
+
+      leg.fX1NDC = szx * pad.fLeftMargin + (1 - szx) * (1 - pad.fRightMargin);
+      leg.fY1NDC = (1 - szy) * (1 - pad.fTopMargin) + szy * pad.fBottomMargin;
+      leg.fX2NDC = 0.99 - pad.fRightMargin;
+      leg.fY2NDC = 0.99 - pad.fTopMargin;
+      leg.fFillStyle = 1001;
+
+      const prev_name = this.has_canvas ? this.selectCurrentPad(this.this_pad_name) : undefined;
+
+      return this.drawObject(this.getDom(), leg, opt ?? 'autoplace').then(p => {
+         this.selectCurrentPad(prev_name);
+         return p;
+      });
    }
 
    /** @summary Add object painter to list of primitives
@@ -69347,33 +69424,34 @@ class TPavePainter extends ObjectPainter {
 
          // Draw fill pattern (in a box)
          if (draw_fill) {
-            const fillatt = painter?.fillatt || this.createAttFill(o_fill);
+            const fillatt = painter?.fillatt?.used ? painter.fillatt : this.createAttFill(o_fill);
             let lineatt;
-            if ((lopt.indexOf('l') < 0 && lopt.indexOf('e') < 0) && (lopt.indexOf('p') < 0)) {
-               lineatt = painter?.lineatt || new TAttLineHandler(o_line);
+            if (!draw_line && !draw_error && !draw_marker) {
+               lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
                if (lineatt.empty()) lineatt = null;
             }
 
             if (!fillatt.empty() || lineatt) {
-                isany = true;
+               isany = true;
                // box total height is yspace*0.7
                // define x,y as the center of the symbol for this entry
                const rect = this.draw_g.append('svg:path')
-                              .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
-                              .call(fillatt.func);
-                if (lineatt)
-                   rect.call(lineatt.func);
+                              .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`);
+               if (!fillatt.empty())
+                  rect.call(fillatt.func);
+               if (lineatt)
+                  rect.call(lineatt.func);
             }
          }
 
          // Draw line and error (when specified)
          if (draw_line || draw_error) {
-            const lineatt = painter?.lineatt || new TAttLineHandler(o_line);
+            const lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
             if (!lineatt.empty()) {
                isany = true;
                this.draw_g.append('svg:path')
-                  .attr('d', `M${x0 + padding_x},${mid_y}H${tpos_x - padding_x}`)
-                  .call(lineatt.func);
+                   .attr('d', `M${x0 + padding_x},${mid_y}H${tpos_x - padding_x}`)
+                   .call(lineatt.func);
                if (draw_error) {
                   this.draw_g.append('svg:path')
                       .attr('d', `M${mid_x},${Math.round(pos_y+step_y*0.1)}V${Math.round(pos_y+step_y*0.9)}`)
@@ -69384,7 +69462,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw Polymarker
          if (draw_marker) {
-            const marker = painter?.markeratt || new TAttMarkerHandler(o_marker);
+            const marker = painter?.markeratt?.used ? painter.markeratt : new TAttMarkerHandler(o_marker);
             if (!marker.empty()) {
                isany = true;
                this.draw_g
@@ -70014,64 +70092,9 @@ class TPavePainter extends ObjectPainter {
 
 } // class TPavePainter
 
-/** @summary Produce and draw TLegend object for the specified dom
-  * @desc Should be called when all other objects are painted
-  * Invoked when item '$legend' specified in url string
-  * @return {Promise} with TLegend painter
-  * @private */
-async function produceLegend(dom, opt) {
-   const main_painter = getElementMainPainter(dom),
-       pp = main_painter ? main_painter.getPadPainter() : null,
-       pad = pp?.getRootPad(true);
-
-   if (!pad) return null;
-
-   const leg = create$1(clTLegend);
-
-   for (let k = 0; k < pp.painters.length; ++k) {
-      const painter = pp.painters[k],
-          obj = painter.getObject();
-
-      if (!obj) continue;
-
-      const entry = create$1(clTLegendEntry);
-      entry.fObject = obj;
-      entry.fLabel = (opt === 'all') ? obj.fName : painter.getItemName();
-      entry.fOption = '';
-      if (!entry.fLabel) continue;
-
-      if (painter.lineatt?.used)
-         entry.fOption += 'l';
-      if (painter.fillatt?.used)
-         entry.fOption += 'f';
-      if (painter.markeratt?.used)
-         entry.fOption += 'm';
-      if (!entry.fOption)
-         entry.fOption = 'l';
-
-      leg.fPrimitives.Add(entry);
-   }
-
-   // no entries - no need to draw legend
-   const szx = 0.4;
-   let szy = leg.fPrimitives.arr.length;
-   if (!szy) return null;
-   if (szy > 8) szy = 8;
-   szy *= 0.1;
-
-   leg.fX1NDC = szx*pad.fLeftMargin + (1-szx)*(1-pad.fRightMargin);
-   leg.fY1NDC = (1-szy)*(1-pad.fTopMargin) + szy*pad.fBottomMargin;
-   leg.fX2NDC = 0.99-pad.fRightMargin;
-   leg.fY2NDC = 0.99-pad.fTopMargin;
-   leg.fFillStyle = 1001;
-
-   return TPavePainter.draw(dom, leg);
-}
-
 var TPavePainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
-TPavePainter: TPavePainter,
-produceLegend: produceLegend
+TPavePainter: TPavePainter
 });
 
 const kCARTESIAN = 1, kPOLAR = 2, kCYLINDRICAL = 3, kSPHERICAL = 4, kRAPIDITY = 5;
@@ -70795,6 +70818,11 @@ class THistPainter extends ObjectPainter {
          this.options = new THistDrawOptions();
       else
          this.options.reset();
+
+      // when changing draw option, reset attributes usage
+      this.lineatt?.setUsed(false);
+      this.fillatt?.setUsed(false);
+      this.markeratt?.setUsed(false);
 
       this.options.decode(opt || histo.fOption, hdim, histo, pp, pad, this);
 
@@ -78104,7 +78132,9 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         this.createAttMarker({ attr: histo, style: this.options.MarkStyle }); // when style not configured, it will be ignored
+         let style = this.options.MarkStyle;
+         if (!style && (histo.fMarkerStyle === 1)) style = 8; // as in recent ROOT changes
+         this.createAttMarker({ attr: histo, style }); // when style not configured, it will be ignored
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = '';
@@ -78721,8 +78751,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    /** @summary Rebin histogram, used via context menu */
    rebinHist(sz) {
       const histo = this.getHisto(),
-          xaxis = histo.fXaxis,
-          nbins = Math.floor(xaxis.fNbins/ sz);
+            xaxis = histo.fXaxis,
+            nbins = Math.floor(xaxis.fNbins/ sz);
       if (nbins < 2) return;
 
       const arr = new Array(nbins+2),
@@ -102412,8 +102442,13 @@ class HierarchyPainter extends BasePainter {
          return drop_painter;
       };
 
-      if (itemname === '$legend')
-         return produceLegend(divid, opt).then(legend_painter => drop_complete(legend_painter));
+      if (itemname === '$legend') {
+         const cp = getElementCanvPainter(divid);
+         if (isFunc(cp?.buildLegend))
+            return cp.buildLegend(opt).then(lp => drop_complete(lp));
+         console.error('Not possible to build legend');
+         return drop_complete(null);
+      }
 
       return this.getObject(itemname).then(res => {
          if (!res.obj) return null;
@@ -115634,10 +115669,7 @@ class RPadPainter extends RObjectPainter {
      * @private */
    padContextMenu(evnt) {
       if (evnt.stopPropagation) {
-         const pos = pointer(evnt, this.svg_this_pad().node());
          // this is normal event processing and not emulated jsroot event
-         // for debug purposes keep original context menu for small region in top-left corner
-         if ((pos.length === 2) && (pos[0] >= 0) && (pos[0] < 10) && (pos[1] >= 0) && (pos[1] < 10)) return;
 
          evnt.stopPropagation(); // disable main context menu
          evnt.preventDefault();  // disable browser context menu

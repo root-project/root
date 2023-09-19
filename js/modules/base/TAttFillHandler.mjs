@@ -71,6 +71,11 @@ class TAttFillHandler {
       return !fill || (fill === 'none');
    }
 
+   /** @summary Set usage flag of attribute */
+   setUsed(flag) {
+      this.used = flag;
+   }
+
    /** @summary Returns true if fill attributes has real color */
    hasColor() {
       return this.color && (this.color !== 'none');

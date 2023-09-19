@@ -67,6 +67,11 @@ class TAttMarkerHandler {
       this._configure();
    }
 
+   /** @summary Set usage flag of attribute */
+   setUsed(flag) {
+      this.used = flag;
+   }
+
    /** @summary Reset position, used for optimization of drawing of multiple markers
     * @private */
    resetPos() { this.lastx = this.lasty = null; }
@@ -264,6 +269,7 @@ class TAttMarkerHandler {
 
    /** @summary Apply marker styles to created element */
    apply(selection) {
+      this.used = true;
       selection.style('stroke', this.stroke ? this.color : 'none')
                .style('fill', this.fill ? this.color : 'none');
    }

@@ -1,10 +1,10 @@
-import { gStyle, browser, settings, clone, create, isObject, isFunc, isStr,
-         clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTLegendEntry, clTPaletteAxis,
+import { gStyle, browser, settings, clone, isObject, isFunc, isStr,
+         clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
          clTText, clTLatex, clTLine, clTBox } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
 import { Prob } from '../base/math.mjs';
 import { floatToString, makeTranslate, compressSVG, svgToImage, addHighlightStyle } from '../base/BasePainter.mjs';
-import { getElementMainPainter, ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { showPainterMenu } from '../gui/menu.mjs';
@@ -676,33 +676,34 @@ class TPavePainter extends ObjectPainter {
 
          // Draw fill pattern (in a box)
          if (draw_fill) {
-            const fillatt = painter?.fillatt || this.createAttFill(o_fill);
+            const fillatt = painter?.fillatt?.used ? painter.fillatt : this.createAttFill(o_fill);
             let lineatt;
-            if ((lopt.indexOf('l') < 0 && lopt.indexOf('e') < 0) && (lopt.indexOf('p') < 0)) {
-               lineatt = painter?.lineatt || new TAttLineHandler(o_line);
+            if (!draw_line && !draw_error && !draw_marker) {
+               lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
                if (lineatt.empty()) lineatt = null;
             }
 
             if (!fillatt.empty() || lineatt) {
-                isany = true;
+               isany = true;
                // box total height is yspace*0.7
                // define x,y as the center of the symbol for this entry
                const rect = this.draw_g.append('svg:path')
-                              .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
-                              .call(fillatt.func);
-                if (lineatt)
-                   rect.call(lineatt.func);
+                              .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`);
+               if (!fillatt.empty())
+                  rect.call(fillatt.func);
+               if (lineatt)
+                  rect.call(lineatt.func);
             }
          }
 
          // Draw line and error (when specified)
          if (draw_line || draw_error) {
-            const lineatt = painter?.lineatt || new TAttLineHandler(o_line);
+            const lineatt = painter?.lineatt?.used ? painter.lineatt : new TAttLineHandler(o_line);
             if (!lineatt.empty()) {
                isany = true;
                this.draw_g.append('svg:path')
-                  .attr('d', `M${x0 + padding_x},${mid_y}H${tpos_x - padding_x}`)
-                  .call(lineatt.func);
+                   .attr('d', `M${x0 + padding_x},${mid_y}H${tpos_x - padding_x}`)
+                   .call(lineatt.func);
                if (draw_error) {
                   this.draw_g.append('svg:path')
                       .attr('d', `M${mid_x},${Math.round(pos_y+step_y*0.1)}V${Math.round(pos_y+step_y*0.9)}`)
@@ -713,7 +714,7 @@ class TPavePainter extends ObjectPainter {
 
          // Draw Polymarker
          if (draw_marker) {
-            const marker = painter?.markeratt || new TAttMarkerHandler(o_marker);
+            const marker = painter?.markeratt?.used ? painter.markeratt : new TAttMarkerHandler(o_marker);
             if (!marker.empty()) {
                isany = true;
                this.draw_g
@@ -1343,58 +1344,5 @@ class TPavePainter extends ObjectPainter {
 
 } // class TPavePainter
 
-/** @summary Produce and draw TLegend object for the specified dom
-  * @desc Should be called when all other objects are painted
-  * Invoked when item '$legend' specified in url string
-  * @return {Promise} with TLegend painter
-  * @private */
-async function produceLegend(dom, opt) {
-   const main_painter = getElementMainPainter(dom),
-       pp = main_painter ? main_painter.getPadPainter() : null,
-       pad = pp?.getRootPad(true);
 
-   if (!pad) return null;
-
-   const leg = create(clTLegend);
-
-   for (let k = 0; k < pp.painters.length; ++k) {
-      const painter = pp.painters[k],
-          obj = painter.getObject();
-
-      if (!obj) continue;
-
-      const entry = create(clTLegendEntry);
-      entry.fObject = obj;
-      entry.fLabel = (opt === 'all') ? obj.fName : painter.getItemName();
-      entry.fOption = '';
-      if (!entry.fLabel) continue;
-
-      if (painter.lineatt?.used)
-         entry.fOption += 'l';
-      if (painter.fillatt?.used)
-         entry.fOption += 'f';
-      if (painter.markeratt?.used)
-         entry.fOption += 'm';
-      if (!entry.fOption)
-         entry.fOption = 'l';
-
-      leg.fPrimitives.Add(entry);
-   }
-
-   // no entries - no need to draw legend
-   const szx = 0.4;
-   let szy = leg.fPrimitives.arr.length;
-   if (!szy) return null;
-   if (szy > 8) szy = 8;
-   szy *= 0.1;
-
-   leg.fX1NDC = szx*pad.fLeftMargin + (1-szx)*(1-pad.fRightMargin);
-   leg.fY1NDC = (1-szy)*(1-pad.fTopMargin) + szy*pad.fBottomMargin;
-   leg.fX2NDC = 0.99-pad.fRightMargin;
-   leg.fY2NDC = 0.99-pad.fTopMargin;
-   leg.fFillStyle = 1001;
-
-   return TPavePainter.draw(dom, leg);
-}
-
-export { TPavePainter, produceLegend };
+export { TPavePainter };
