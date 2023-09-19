@@ -1284,7 +1284,12 @@ void TPad::Draw(Option_t *option)
       if (oldMother != fMother || fPixmapID == -1) ResizePad();
    }
 
-   Paint();
+   if (fCanvas && fCanvas->IsWeb()) {
+      Modified();
+      fCanvas->UpdateAsync();
+   } else {
+      Paint();
+   }
 
    if (gPad->IsRetained() && gPad != this && fMother)
       if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);

@@ -860,7 +860,12 @@ void TCanvas::Draw(Option_t *)
 
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
    if (old == this) {
-      Paint();
+      if (IsWeb()) {
+         Modified();
+         UpdateAsync();
+      } else {
+         Paint();
+      }
       return;
    }
    if (old) { gROOT->GetListOfCanvases()->Remove(old); delete old;}
@@ -2568,7 +2573,12 @@ void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
 {
    if (IsGrayscale() == set) return;
    SetBit(kIsGrayscale, set);
-   Paint(); // update canvas and all sub-pads, unconditionally!
+   if (IsWeb()) {
+      Modified();
+      UpdateAsync();
+   } else {
+      Paint(); // update canvas and all sub-pads, unconditionally!
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
