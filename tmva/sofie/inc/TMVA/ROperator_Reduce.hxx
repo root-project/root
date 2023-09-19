@@ -16,7 +16,7 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum EReduceOpMode { ReduceMean, ReduceSumsquare, ReduceProd, InvalidReduceOp };
+enum EReduceOpMode { ReduceMean, ReduceSum, ReduceSumsquare, ReduceProd, InvalidReduceOp };
 
 template <typename T, EReduceOpMode Op>
 class ROperator_Reduce final : public ROperator
@@ -38,6 +38,7 @@ public:
       if (fReduceOpMode == ReduceMean)  return "ReduceMean";
       else if (fReduceOpMode == ReduceSumsquare )  return "ReduceSumsquare";
       else if (fReduceOpMode == ReduceProd ) return "ReduceProd";
+      else if (fReduceOpMode == ReduceSum) return "ReduceSum";
       return "Invalid";
    }
 
@@ -132,6 +133,11 @@ public:
          out << SP << SP << SP << "sum += tensor_" << fNX << "[l];\n";
          out << SP << SP << "}\n";
          out << SP << SP << "float reduceResult = sum/static_cast<float>(" << fShapeX[fAttrAxes] << ");\n";
+      }
+      else if(fReduceOpMode == ReduceSum){
+         out << SP << SP << SP << "sum += tensor_" << fNX << "[l];\n";
+         out << SP << SP << "}\n";
+         out << SP << SP << "float reduceResult = sum;\n";
       }
       else if(fReduceOpMode == ReduceSumsquare){
          out << SP << SP << SP << "sum += tensor_" << fNX << "[l] * tensor_" << fNX << "[l];\n";

@@ -443,7 +443,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
 void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
 {
 
-  // Create a tempory measurement
+  // Create a temporary measurement
   // (This is the one that is actually written)
   RooStats::HistFactory::Measurement outMeas( *this );
 

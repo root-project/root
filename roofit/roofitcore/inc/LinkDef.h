@@ -122,9 +122,8 @@
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
-#pragma link C++ class RooIntegrator1D+ ;
+#pragma link C++ class RooRombergIntegrator+ ;
 #pragma link C++ class RooBinIntegrator+ ;
-#pragma link C++ class RooIntegrator2D+ ;
 #pragma link C++ class RooInvTransform+ ;
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinearCombination+ ;
@@ -206,8 +205,6 @@
     for (TObject * binning : onfile._altBinning) { _altBinning[binning->GetName()] = static_cast<RooAbsBinning*>(binning); } \
   }"
 #pragma link C++ class RooRefCountList+ ;
-#pragma link C++ class RooSegmentedIntegrator1D+ ;
-#pragma link C++ class RooSegmentedIntegrator2D+ ;
 #pragma link C++ class RooSetProxy+ ;
 #pragma link C++ class RooCollectionProxy<RooArgSet>+ ;
 #pragma read sourceClass="RooSetProxy" targetClass="RooCollectionProxy<RooArgSet>";

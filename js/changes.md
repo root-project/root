@@ -17,9 +17,18 @@
 14. Support orthographic camera for lego and surface plots
 15. Implement "tri1", "tri2", "triw" draw options for TGraph2D with Delaunay algorithm
 16. Draw axes grids in front of objects - making it equivalent to original ROOT
-17. Fix very old problem of correct use of GMT time format
-18. Put `gl` in "devDependencies" of package.json. One can skip it installation with `npm i --production`.
-19. Add support of `TPaveClass`
+17. Put `gl` in "devDependencies" of package.json. One can skip it installation with `npm i --production`.
+18. Add support of `TPaveClass`
+19. Support `inspectN` draw option, allows automatically expand object content to specified level
+20. Implement `allfunc` draw option for histograms, force drawing disregard of TF1::kNotDraw bit
+21. Use `eslint` for static code checking, add testing of interactive features
+22. Fix - correct scaling of axis lables when tilt them by 25 degree
+
+
+## Changes in 7.4.3
+1. Fix - correctly use GMT specifier in time format
+2. Fix - logical error in `decodeUrl`
+3. Fix - member-wise streaming of std::map   #262
 
 
 ## Changes in 7.4.2

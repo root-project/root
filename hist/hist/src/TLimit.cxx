@@ -232,11 +232,11 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
    if (init) {
       // create a "map" with the systematics names
       TIter errornames = input->GetErrorNames()->MakeIterator();
-      TObjArray *listofnames = 0;
+      TObjArray *listofnames = nullptr;
       delete fgSystNames;
       fgSystNames = new TOrdCollection();
       while ((listofnames = ((TObjArray *) errornames.Next()))) {
-         TObjString *name = 0;
+         TObjString *name = nullptr;
          TIter loniter = listofnames->MakeIterator();
          while ((name = (TObjString *) loniter.Next()))
             if ((fgSystNames->IndexOf(name)) < 0)
@@ -261,13 +261,13 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
             for(int i=1; i<=newsignal->GetNbinsX(); i++) {
                newsignal->SetBinContent(i,oldsignal->GetBinContent(i)+generator->Gaus(0,oldsignal->GetBinError(i)));
             }
-         newsignal->SetDirectory(0);
+         newsignal->SetDirectory(nullptr);
          TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
          TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
          if(stat)
             for(int i=1; i<=newbackground->GetNbinsX(); i++)
                newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
-         newbackground->SetDirectory(0);
+         newbackground->SetDirectory(nullptr);
       }
       return 1;
    }
@@ -317,7 +317,7 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
          for(int i=1; i<=newsignal->GetNbinsX(); i++)
             newsignal->SetBinContent(i,oldsignal->GetBinContent(i));
       newsignal->Scale(1 + serrf[channel]);
-      newsignal->SetDirectory(0);
+      newsignal->SetDirectory(nullptr);
       TH1 *newbackground = (TH1*)(output->GetBackground()->At(channel));
       TH1 *oldbackground = (TH1*)(input->GetBackground()->At(channel));
       if(stat)
@@ -327,7 +327,7 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
          for(int i=1; i<=newbackground->GetNbinsX(); i++)
             newbackground->SetBinContent(i,oldbackground->GetBinContent(i));
       newbackground->Scale(1 + berrf[channel]);
-      newbackground->SetDirectory(0);
+      newbackground->SetDirectory(nullptr);
    }
    delete[] serrf;
    delete[] berrf;

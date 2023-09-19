@@ -837,8 +837,22 @@ void RLoopManager::Run(bool jit)
 
    InitNodes();
 
+   // Exceptions can occur during the event loop. In order to ensure proper cleanup of nodes
+   // we use RAII: even in case of an exception, the destructor of the object is invoked and
+   // all the cleanup takes place.
+   class NodesCleanerRAII {
+      RLoopManager &fRLM;
+
+   public:
+      NodesCleanerRAII(RLoopManager &thisRLM) : fRLM(thisRLM) {}
+      ~NodesCleanerRAII() { fRLM.CleanUpNodes(); }
+   };
+
+   NodesCleanerRAII runKeeper(*this);
+
    TStopwatch s;
    s.Start();
+
    switch (fLoopType) {
    case ELoopType::kNoFilesMT: RunEmptySourceMT(); break;
    case ELoopType::kROOTFilesMT: RunTreeProcessorMT(); break;
@@ -848,8 +862,6 @@ void RLoopManager::Run(bool jit)
    case ELoopType::kDataSource: RunDataSource(); break;
    }
    s.Stop();
-
-   CleanUpNodes();
 
    fNRuns++;
 

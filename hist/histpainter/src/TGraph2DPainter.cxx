@@ -50,23 +50,23 @@ drawing options for these classes.
 
 TGraph2DPainter::TGraph2DPainter()
 {
-   fX        = 0;
-   fY        = 0;
-   fZ        = 0;
-   fEXlow    = 0;
-   fEXhigh   = 0;
-   fEYlow    = 0;
-   fEYhigh   = 0;
-   fEZlow    = 0;
-   fEZhigh   = 0;
-   fXN       = 0;
-   fYN       = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
-   fGraph2D  = 0;
-   fDelaunay = 0;
-   fDelaunay2D = 0;
+   fX        = nullptr;
+   fY        = nullptr;
+   fZ        = nullptr;
+   fEXlow    = nullptr;
+   fEXhigh   = nullptr;
+   fEYlow    = nullptr;
+   fEYhigh   = nullptr;
+   fEZlow    = nullptr;
+   fEZhigh   = nullptr;
+   fXN       = nullptr;
+   fYN       = nullptr;
+   fPTried   = nullptr;
+   fNTried   = nullptr;
+   fMTried   = nullptr;
+   fGraph2D  = nullptr;
+   fDelaunay = nullptr;
+   fDelaunay2D = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -88,7 +88,7 @@ TGraph2DPainter::TGraph2DPainter()
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 {
    fDelaunay = gd;
-   fDelaunay2D = 0;
+   fDelaunay2D = nullptr;
    fGraph2D  = fDelaunay->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
    fX        = fGraph2D->GetX();
@@ -107,15 +107,15 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
    if (fGraph2D->GetEZhigh()) fEZhigh = fGraph2D->GetEZhigh();
    else                       fEZhigh = fGraph2D->GetEZ();
    fNdt      = 0;
-   fXN       = 0;
-   fYN       = 0;
+   fXN       = nullptr;
+   fYN       = nullptr;
    fXNmin    = 0;
    fXNmax    = 0;
    fYNmin    = 0;
    fYNmax    = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
+   fPTried   = nullptr;
+   fNTried   = nullptr;
+   fMTried   = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -129,7 +129,7 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
 {
-   fDelaunay = 0;
+   fDelaunay = nullptr;
    fDelaunay2D = gd;
    fGraph2D  = fDelaunay2D->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
@@ -149,15 +149,15 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
    if (fGraph2D->GetEZhigh()) fEZhigh = fGraph2D->GetEZhigh();
    else                       fEZhigh = fGraph2D->GetEZ();
    fNdt      = 0;
-   fXN       = 0;
-   fYN       = 0;
+   fXN       = nullptr;
+   fYN       = nullptr;
    fXNmin    = 0;
    fXNmax    = 0;
    fYNmin    = 0;
    fYNmax    = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
+   fPTried   = nullptr;
+   fNTried   = nullptr;
+   fMTried   = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -220,13 +220,13 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          zmin = TMath::Log10(zmin);
          zmax = TMath::Log10(zmax);
       } else {
-         return 0;
+         return nullptr;
       }
    }
    if(contour<zmin || contour>zmax) {
       Error("GetContourList", "Contour level (%g) outside the Z scope [%g,%g]",
       contour,zmin,zmax);
-      return 0;
+      return nullptr;
    }
 
    if (!fNdt) FindTriangles();
@@ -1176,13 +1176,16 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
    fGraph2D->SetLineColor(fGraph2D->GetLineColor());
    fGraph2D->TAttLine::Modify();
    int lst = fGraph2D->GetLineStyle();
-   for (it=0; it<fNdt; it++) {
+   Double_t zmin = gCurrentHist->GetMinimum();
+   Double_t zmax = gCurrentHist->GetMaximum();
+    for (it=0; it<fNdt; it++) {
       t[0] = fPTried[order[it]];
       t[1] = fNTried[order[it]];
       t[2] = fMTried[order[it]];
       for (Int_t k=0; k<3; k++) {
          if(fX[t[k]-1] < fXmin || fX[t[k]-1] > fXmax) goto endloop;
          if(fY[t[k]-1] < fYmin || fY[t[k]-1] > fYmax) goto endloop;
+         if(fZ[t[k]-1] < zmin  || fZ[t[k]-1] > zmax)  goto endloop;
          temp1[0] = fX[t[k]-1];
          temp1[1] = fY[t[k]-1];
          temp1[2] = fZ[t[k]-1];
@@ -1331,6 +1334,8 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    fGraph2D->SetLineColor(fGraph2D->GetLineColor());
    fGraph2D->TAttLine::Modify();
    int lst = fGraph2D->GetLineStyle();
+   Double_t zmin = gCurrentHist->GetMinimum();
+   Double_t zmax = gCurrentHist->GetMaximum();
    for (const auto & it : dist) {
       p[0] = it.second->idx[0];
       p[1] = it.second->idx[1];
@@ -1338,6 +1343,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
       for (Int_t k=0; k<3; k++) {
          if(fX[p[k]] < fXmin || fX[p[k]] > fXmax) goto endloop;
          if(fY[p[k]] < fYmin || fY[p[k]] > fYmax) goto endloop;
+         if(fZ[p[k]] < zmin  || fZ[p[k]] > zmax)  goto endloop;
          temp1[0] = fX[p[k]];
          temp1[1] = fY[p[k]];
          temp1[2] = fZ[p[k]];

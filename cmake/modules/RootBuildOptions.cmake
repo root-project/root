@@ -155,6 +155,7 @@ ROOT_BUILD_OPTION(odbc OFF "Enable support for ODBC databases (requires libiodbc
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
 ROOT_BUILD_OPTION(oracle ON "Enable support for Oracle databases (requires Oracle Instant Client)")
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
+ROOT_BUILD_OPTION(proof ON "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pyroot_legacy OFF "Use legacy Python bindings for ROOT, deprecated")
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library")
@@ -253,6 +254,7 @@ if(all)
  set(opengl_defvalue ON)
  set(oracle_defvalue ON)
  set(pgsql_defvalue ON)
+ set(proof_defvalue ON)
  set(pythia6_defvalue ON)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
@@ -408,7 +410,7 @@ if(NOT webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs alien bonjour castor chirp geocad glite globus hdfs ios
+foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17 geocad glite globus hdfs ios
             krb5 ldap memstat qt qtgsi rfio ruby sapdb srp table python vmc)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")

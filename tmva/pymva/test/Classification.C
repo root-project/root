@@ -21,7 +21,7 @@ void Classification()
    TMVA::Tools::Instance();
    TMVA::PyMethodBase::PyInitialize();
 
-   TString outfileName("TMVA.root");
+   TString outfileName("RMVAC.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    TMVA::Factory *factory = new TMVA::Factory("TMVAClassification", outputFile,

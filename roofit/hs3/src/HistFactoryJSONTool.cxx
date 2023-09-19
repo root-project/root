@@ -14,13 +14,13 @@
 #include <RooFitHS3/HistFactoryJSONTool.h>
 #include <RooFit/Detail/JSONInterface.h>
 
-#include "RooStats/HistFactory/Measurement.h"
-#include "RooStats/HistFactory/Channel.h"
-#include "RooStats/HistFactory/Sample.h"
+#include <RooStats/HistFactory/Measurement.h>
+#include <RooStats/HistFactory/Channel.h>
+#include <RooStats/HistFactory/Sample.h>
 
 #include "Domains.h"
 
-#include "TH1.h"
+#include <TH1.h>
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -47,10 +47,10 @@ inline void writeAxis(JSONNode &axis, const TAxis &ax)
       axis["min"] << ax.GetXmin();
       axis["max"] << ax.GetXmax();
    } else {
-      auto &bounds = axis["bounds"];
-      bounds.set_seq();
+      auto &edges = axis["edges"];
+      edges.set_seq();
       for (int i = 0; i <= ax.GetNbins(); ++i) {
-         bounds.append_child() << ax.GetBinUpEdge(i);
+         edges.append_child() << ax.GetBinUpEdge(i);
       }
    }
 }
@@ -78,6 +78,16 @@ void writeObservables(const TH1 &h, JSONNode &n, const std::vector<std::string> 
          z["name"] << varnames[2];
          writeAxis(z, *(h.GetZaxis()));
       }
+   }
+}
+
+void exportSimpleHistogram(const TH1 &histo, JSONNode &node)
+{
+   node.set_seq();
+   const int nBins = histo.GetNbinsX() * histo.GetNbinsY() * histo.GetNbinsZ();
+   for (int i = 1; i <= nBins; ++i) {
+      const double val = histo.GetBinContent(i);
+      node.append_child() << val;
    }
 }
 
@@ -110,9 +120,10 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
    auto &s = RooJSONFactoryWSTool::appendNamedChild(channelNode["samples"], sample.GetName());
 
    if (!sample.GetOverallSysList().empty()) {
-      auto &modifiers = s["modifiers"];
+      auto &modifiers = s["modifiers"].set_seq();
       for (const auto &sys : sample.GetOverallSysList()) {
-         auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
+         auto &node = modifiers.append_child().set_map();
+         node["name"] << sys.GetName();
          node["type"] << "normsys";
          auto &data = node["data"];
          data.set_map();
@@ -122,24 +133,44 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
    }
 
    if (!sample.GetNormFactorList().empty()) {
-      auto &modifiers = s["modifiers"];
+      auto &modifiers = s["modifiers"].set_seq();
       for (const auto &nf : sample.GetNormFactorList()) {
-         RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.GetName())["type"] << "normfactor";
+         auto &mod = modifiers.append_child().set_map();
+         mod["name"] << nf.GetName();
+         mod["type"] << "normfactor";
       }
-      auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, "Lumi");
+      auto &mod = modifiers.append_child().set_map();
+      mod["name"] << "Lumi";
       mod["type"] << "normfactor";
       mod["constraint_name"] << "lumiConstraint";
    }
 
    if (!sample.GetHistoSysList().empty()) {
-      auto &modifiers = s["modifiers"];
+      auto &modifiers = s["modifiers"].set_seq();
       for (size_t i = 0; i < sample.GetHistoSysList().size(); ++i) {
          auto &sys = sample.GetHistoSysList()[i];
-         auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
+         auto &node = modifiers.append_child().set_map();
+         node["name"] << sys.GetName();
          node["type"] << "histosys";
          auto &data = node["data"].set_map();
-         exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames, nullptr, false);
-         exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames, nullptr, false);
+         exportSimpleHistogram(*sys.GetHistoLow(), data["lo"].set_map()["contents"]);
+         exportSimpleHistogram(*sys.GetHistoHigh(), data["hi"].set_map()["contents"]);
+      }
+   }
+
+   if (!sample.GetShapeSysList().empty()) {
+      auto &modifiers = s["modifiers"].set_seq();
+      for (size_t i = 0; i < sample.GetShapeSysList().size(); ++i) {
+         auto &sys = sample.GetShapeSysList()[i];
+         auto &node = modifiers.append_child().set_map();
+         node["name"] << sys.GetName();
+         node["type"] << "shapesys";
+         if (sys.GetConstraintType() == RooStats::HistFactory::Constraint::Gaussian)
+            node["constraint"] << "Gauss";
+         if (sys.GetConstraintType() == RooStats::HistFactory::Constraint::Poisson)
+            node["constraint"] << "Poisson";
+         auto &data = node["data"].set_map();
+         exportSimpleHistogram(*sys.GetErrorHist(), data["vals"]);
       }
    }
 
@@ -183,26 +214,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    for (const auto &ch : measurement.GetChannels()) {
       if (!ch.CheckHistograms())
          throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
-   }
-
-   // collect information
-   std::map<std::string, RooStats::HistFactory::Constraint::Type> constraints;
-   std::map<std::string, NormFactor> normfactors;
-   for (const auto &ch : measurement.GetChannels()) {
-      for (const auto &s : ch.GetSamples()) {
-         for (const auto &sys : s.GetOverallSysList()) {
-            constraints[sys.GetName()] = RooStats::HistFactory::Constraint::Gaussian;
-         }
-         for (const auto &sys : s.GetHistoSysList()) {
-            constraints[sys.GetName()] = RooStats::HistFactory::Constraint::Gaussian;
-         }
-         for (const auto &sys : s.GetShapeSysList()) {
-            constraints[sys.GetName()] = sys.GetConstraintType();
-         }
-         for (const auto &norm : s.GetNormFactorList()) {
-            normfactors[norm.GetName()] = norm;
-         }
-      }
    }
 
    // preprocess functions
@@ -310,7 +321,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &child1 = n.get("misc", "ROOT_internal", "combined_datas").set_map()["obsData"].set_map();
+   auto &child1 = n.get("misc", "ROOT_internal", "combined_datasets").set_map()["obsData"].set_map();
    auto &child2 = n.get("misc", "ROOT_internal", "combined_distributions").set_map()["simPdf"].set_map();
 
    child1["index_cat"] << "channelCat";
@@ -385,6 +396,7 @@ void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)
 
 void RooStats::HistFactory::JSONTool::activateStatError(JSONNode &sampleNode)
 {
-   auto &node = RooJSONFactoryWSTool::appendNamedChild(sampleNode["modifiers"], "mcstat");
+   auto &node = sampleNode["modifiers"].set_seq().append_child().set_map();
+   node["name"] << "mcstat";
    node["type"] << "staterror";
 }

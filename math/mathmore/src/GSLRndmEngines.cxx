@@ -191,15 +191,15 @@ namespace Math {
    std::string GSLRandomEngine::Name() const {
       //////////////////////////////////////////////////////////////////////////
 
-      assert ( fRng != 0);
-      assert ( fRng->Rng() != 0 );
+      assert ( fRng != nullptr);
+      assert ( fRng->Rng() != nullptr );
       return std::string( gsl_rng_name( fRng->Rng() ) );
    }
 
    unsigned int GSLRandomEngine::Size() const {
       //////////////////////////////////////////////////////////////////////////
 
-      assert (fRng != 0);
+      assert (fRng != nullptr);
       return gsl_rng_size( fRng->Rng() );
    }
 

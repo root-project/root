@@ -32,8 +32,8 @@
 #include <vector>
 #include <iostream>
 
-TLegend *legend = 0;
-TCanvas *c1 = 0;
+TLegend *legend = nullptr;
+TCanvas *c1 = nullptr;
 TStopwatch timer;
 Double_t cputot = 0;
 

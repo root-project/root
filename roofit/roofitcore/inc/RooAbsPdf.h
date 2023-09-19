@@ -202,18 +202,6 @@ public:
     return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
   }
 
-  // Chi^2 fits to histograms
-  using RooAbsReal::chi2FitTo ;
-  using RooAbsReal::createChi2 ;
-  RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
-  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-             const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-             const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) override ;
-
-  // Chi^2 fits to X-Y datasets
-  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
-
-
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/,
                                     bool /*stripDisconnected*/, bool /*removeConstraintsFromPdf*/=false) const
@@ -278,7 +266,7 @@ public:
   /// Return expected number of events to be used in calculation of extended
   /// likelihood. This function should not be overridden, as it just redirects
   /// to the actual virtual function but takes a RooArgSet reference instead of
-  /// pointer (\see expectedEvents(const RooArgSet*) const).
+  /// pointer. \see expectedEvents(const RooArgSet*) const
   double expectedEvents(const RooArgSet& nset) const {
     return expectedEvents(&nset) ;
   }
@@ -381,7 +369,7 @@ protected:
 
   mutable Int_t _errorCount ;        ///< Number of errors remaining to print
   mutable Int_t _traceCount ;        ///< Number of traces remaining to print
-  mutable Int_t _negCount ;          ///< Number of negative probablities remaining to print
+  mutable Int_t _negCount ;          ///< Number of negative probabilities remaining to print
 
   bool _selectComp ;               ///< Component selection flag for RooAbsPdf::plotCompOn
 
@@ -395,6 +383,11 @@ private:
 
   int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
   int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal & nll) const;
+
+  friend class RooAbsReal;
+  friend class RooChi2Var;
+  static constexpr int extendedFitDefault = 2; // implementation detail to avoid magic numbers
+  bool interpretExtendedCmdArg(int extendedCmdArg) const;
 
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };

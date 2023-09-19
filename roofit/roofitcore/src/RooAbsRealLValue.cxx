@@ -102,7 +102,7 @@ RooAbsRealLValue::~RooAbsRealLValue()
 /// but this should be only done if there is no other solution.
 bool RooAbsRealLValue::inRange(double value, const char* rangeName, double* clippedValPtr) const
 {
-  // double range = getMax() - getMin() ; // ok for +/-INIFINITY
+  // double range = getMax() - getMin() ; // ok for +/-INFINITY
   double clippedValue(value);
   bool isInRange(true) ;
 

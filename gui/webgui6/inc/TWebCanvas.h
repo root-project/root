@@ -64,6 +64,8 @@ protected:
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
 
       WebConn(unsigned id) : fConnId(id) {}
+      bool is_batch() const { return fConnId == 0; }
+      bool match(unsigned id) const { return !is_batch() && ((fConnId == id) || (id == 0)); }
       void reset()
       {
          fCheckedVersion = fSendVersion = fDrawVersion = 0;
@@ -135,15 +137,15 @@ protected:
 
    void AddSendQueue(unsigned connid, const std::string &msg);
 
-   void CheckDataToSend(unsigned connid = 0);
+   Bool_t CheckDataToSend(unsigned connid = 0);
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
    virtual Bool_t IsJSSupportedClass(TObject *obj, Bool_t many_primitives = kFALSE);
 
-   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 0) && (fWebConn[0].fConnId == connid); }
+   Bool_t IsFirstConn(unsigned connid) const { return (connid != 0) && (fWebConn.size() > 1) && (fWebConn[1].fConnId == connid); }
 
-   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 0) && (fWebConn[0].fDrawVersion > 0); }
+   Bool_t IsFirstDrawn() const { return (fWebConn.size() > 1) && (fWebConn[1].fDrawVersion > 0); }
 
    void ShowCmd(const std::string &arg, Bool_t show);
 

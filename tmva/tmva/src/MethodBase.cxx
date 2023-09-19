@@ -364,7 +364,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
 TMVA::MethodBase::~MethodBase( void )
 {
    // destructor
-   if (!fSetupCompleted) Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Calling destructor of method which got never setup" << Endl;
+   if (!fSetupCompleted) Log() << kWARNING <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Calling destructor of method which got never setup" << Endl;
 
    // destructor
    if (fInputVars != 0)  { fInputVars->clear(); delete fInputVars; }
@@ -385,14 +385,14 @@ TMVA::MethodBase::~MethodBase( void )
    if (fSplTrainRefB)    { delete fSplTrainRefB; fSplTrainRefB = 0; }
    if (fSplTrainEffBvsS) { delete fSplTrainEffBvsS; fSplTrainEffBvsS = 0; }
 
-   for (Int_t i = 0; i < 2; i++ ) {
+   for (size_t i = 0; i < fEventCollections.size(); i++ ) {
       if (fEventCollections.at(i)) {
          for (std::vector<Event*>::const_iterator it = fEventCollections.at(i)->begin();
               it != fEventCollections.at(i)->end(); ++it) {
             delete (*it);
          }
          delete fEventCollections.at(i);
-         fEventCollections.at(i) = 0;
+         fEventCollections.at(i) = nullptr;
       }
    }
 

@@ -28,7 +28,7 @@ namespace Math {
 
 DistSampler::~DistSampler() {
    // destructor
-   if (fOwnFunc && fFunc != 0) delete fFunc;
+   if (fOwnFunc && fFunc != nullptr) delete fFunc;
    if (fRange) delete fRange;
 }
 
@@ -63,7 +63,7 @@ void DistSampler::SetRange(const ROOT::Fit::DataRange & range) {
 void DistSampler::DoSetFunction(const ROOT::Math::IMultiGenFunction & func, bool copy) {
    // set the internal function
    // if a range exists and it is compatible it will be re-used
-   if (fOwnFunc && fFunc != 0) delete fFunc;
+   if (fOwnFunc && fFunc != nullptr) delete fFunc;
    if (copy) {
       fOwnFunc = true;
       fFunc = func.Clone();

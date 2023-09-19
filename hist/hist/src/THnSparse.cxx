@@ -34,7 +34,7 @@ namespace {
       ~THnSparseBinIter() override { delete [] fCoord; }
 
       Int_t GetCoord(Int_t dim) const override;
-      Long64_t Next(Int_t* coord = 0) override;
+      Long64_t Next(Int_t* coord = nullptr) override;
 
    private:
       THnSparseBinIter(const THnSparseBinIter&); // intentionally unimplemented
@@ -72,7 +72,7 @@ Long64_t THnSparseBinIter::Next(Int_t* coord /*= 0*/)
    do {
       ++fIndex;
       if (fIndex >= fHist->GetNbins()) {
-         fHist = 0;
+         fHist = nullptr;
          return -1;
       }
       if (RespectsAxisRange()) {
@@ -147,7 +147,7 @@ private:
 /// stores the
 
 THnSparseCoordCompression::THnSparseCoordCompression(Int_t dim, const Int_t* nbins):
-   fNdimensions(dim), fCoordBufferSize(0), fBitOffsets(0)
+   fNdimensions(dim), fCoordBufferSize(0), fBitOffsets(nullptr)
 {
    fBitOffsets = new Int_t[dim + 1];
 
@@ -390,7 +390,7 @@ private:
 
 THnSparseCompactBinCoord::THnSparseCompactBinCoord(Int_t dim, const Int_t* nbins):
    THnSparseCoordCompression(dim, nbins),
-   fHash(0), fCoordBuffer(0), fCurrentBin(0)
+   fHash(0), fCoordBuffer(nullptr), fCurrentBin(nullptr)
 {
    fCurrentBin = new Int_t[dim];
    size_t bufAllocSize = GetBufferSize();
@@ -426,8 +426,8 @@ ClassImp(THnSparseArrayChunk);
 
 THnSparseArrayChunk::THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont):
       fCoordinateAllocationSize(-1), fSingleCoordinateSize(coordsize), fCoordinatesSize(0),
-      fCoordinates(0), fContent(cont),
-      fSumw2(0)
+      fCoordinates(nullptr), fContent(cont),
+      fSumw2(nullptr)
 {
    fCoordinateAllocationSize = fSingleCoordinateSize * cont->GetSize();
    fCoordinates = new Char_t[fCoordinateAllocationSize];
@@ -587,7 +587,7 @@ ClassImp(THnSparse);
 /// Construct an empty THnSparse.
 
 THnSparse::THnSparse():
-   fChunkSize(1024), fFilledBins(0), fCompactCoord(0)
+   fChunkSize(1024), fFilledBins(0), fCompactCoord(nullptr)
 {
    fBinContent.SetOwner();
 }
@@ -604,7 +604,7 @@ THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
                      const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
                      Int_t chunksize):
    THnBase(name, title, dim, nbins, xmin, xmax),
-   fChunkSize(chunksize), fFilledBins(0), fCompactCoord(0)
+   fChunkSize(chunksize), fFilledBins(0), fCompactCoord(nullptr)
 {
    fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
    fBinContent.SetOwner();
@@ -655,7 +655,7 @@ void THnSparse::InitStorage(Int_t* nbins, Int_t chunkSize)
 void THnSparse::FillExMap()
 {
    TIter iChunk(&fBinContent);
-   THnSparseArrayChunk* chunk = 0;
+   THnSparseArrayChunk* chunk = nullptr;
    THnSparseCoordCompression compactCoord(*GetCompactCoord());
    Long64_t idx = 0;
    if (2 * GetNbins() > fBins.Capacity())
@@ -866,7 +866,7 @@ Double_t THnSparse::GetSparseFractionMem() const {
    Int_t arrayElementSize = 0;
    if (fFilledBins) {
       TClass* clArray = GetChunk(0)->fContent->IsA();
-      TDataMember* dm = clArray ? clArray->GetDataMember("fArray") : 0;
+      TDataMember* dm = clArray ? clArray->GetDataMember("fArray") : nullptr;
       arrayElementSize = dm ? dm->GetDataType()->Size() : 0;
    }
    if (!arrayElementSize) {
@@ -951,7 +951,7 @@ void THnSparse::Sumw2()
 
    fTsumw2 = 0.;
    TIter iChunk(&fBinContent);
-   THnSparseArrayChunk* chunk = 0;
+   THnSparseArrayChunk* chunk = nullptr;
    while ((chunk = (THnSparseArrayChunk*) iChunk()))
       chunk->Sumw2();
 }

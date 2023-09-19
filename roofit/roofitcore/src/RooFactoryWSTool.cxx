@@ -794,7 +794,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 /// creates the sum of a Gaussian and a Chebychev and all its variables.
 ///
 ///
-/// A seperate series of operator meta-type exists to simplify the construction of composite expressions
+/// A separate series of operator meta-type exists to simplify the construction of composite expressions
 /// meta-types in all capitals (SUM) create pdfs, meta types in lower case (sum) create
 /// functions.
 ///

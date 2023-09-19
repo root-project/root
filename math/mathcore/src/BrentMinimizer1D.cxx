@@ -42,7 +42,7 @@ static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -
 
 
    BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(),
-                                         fFunction(0),
+                                         fFunction(nullptr),
                                          fLogScan(false), fNIter(0),
                                          fNpx(0), fStatus(-1),
                                          fXMin(0), fXMax(0), fXMinimum(0)

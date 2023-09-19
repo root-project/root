@@ -153,34 +153,34 @@ void TUnfold::InitTUnfold(void)
    fXToHist.Set(0);
    fHistToX.Set(0);
    fSumOverY.Set(0);
-   fA = 0;
-   fL = 0;
-   fVyy = 0;
-   fY = 0;
-   fX0 = 0;
+   fA = nullptr;
+   fL = nullptr;
+   fVyy = nullptr;
+   fY = nullptr;
+   fX0 = nullptr;
    fTauSquared = 0.0;
    fBiasScale = 0.0;
    fConstraint = kEConstraintNone;
    fRegMode = kRegModeNone;
    // output
-   fX = 0;
-   fVyyInv = 0;
-   fVxx = 0;
-   fVxxInv = 0;
-   fAx = 0;
+   fX = nullptr;
+   fVyyInv = nullptr;
+   fVxx = nullptr;
+   fVxxInv = nullptr;
+   fAx = nullptr;
    fChi2A = 0.0;
    fLXsquared = 0.0;
    fRhoMax = 999.0;
    fRhoAvg = -1.0;
    fNdf = 0;
-   fDXDAM[0] = 0;
-   fDXDAZ[0] = 0;
-   fDXDAM[1] = 0;
-   fDXDAZ[1] = 0;
-   fDXDtauSquared = 0;
-   fDXDY = 0;
-   fEinv = 0;
-   fE = 0;
+   fDXDAM[0] = nullptr;
+   fDXDAZ[0] = nullptr;
+   fDXDAM[1] = nullptr;
+   fDXDAZ[1] = nullptr;
+   fDXDtauSquared = nullptr;
+   fDXDY = nullptr;
+   fEinv = nullptr;
+   fE = nullptr;
    fEpsMatrix=1.E-13;
    fIgnoredBins=0;
 }
@@ -196,7 +196,7 @@ void TUnfold::InitTUnfold(void)
 void TUnfold::DeleteMatrix(TMatrixD **m)
 {
    if(*m) delete *m;
-   *m=0;
+   *m=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,7 +210,7 @@ void TUnfold::DeleteMatrix(TMatrixD **m)
 void TUnfold::DeleteMatrix(TMatrixDSparse **m)
 {
    if(*m) delete *m;
-   *m=0;
+   *m=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -294,7 +294,7 @@ Double_t TUnfold::DoUnfold(void)
 
    // get pseudo-inverse matrix Vyyinv and NDF
    if(!fVyyInv) {
-      GetInputInverseEmatrix(0);
+      GetInputInverseEmatrix(nullptr);
       if(fConstraint != kEConstraintNone) {
    fNdf--;
       }
@@ -348,8 +348,8 @@ Double_t TUnfold::DoUnfold(void)
    // additional correction for constraint
    Double_t lambda_half=0.0;
    Double_t one_over_epsEeps=0.0;
-   TMatrixDSparse *epsilon=0;
-   TMatrixDSparse *Eepsilon=0;
+   TMatrixDSparse *epsilon=nullptr;
+   TMatrixDSparse *Eepsilon=nullptr;
    if(fConstraint != kEConstraintNone) {
       // calculate epsilon: vector of efficiencies
       const Int_t *A_rows=fA->GetRowIndexArray();
@@ -434,7 +434,7 @@ Double_t TUnfold::DoUnfold(void)
    // get error matrix on x
    //   fDXDY * Vyy * fDXDY#
    TMatrixDSparse *fDXDYVyy = MultiplyMSparseMSparse(fDXDY,fVyy);
-   fVxx = MultiplyMSparseMSparseTranspVector(fDXDYVyy,fDXDY,0);
+   fVxx = MultiplyMSparseMSparseTranspVector(fDXDYVyy,fDXDY,nullptr);
 
    DeleteMatrix(&fDXDYVyy);
 
@@ -498,13 +498,13 @@ Double_t TUnfold::DoUnfold(void)
    fDXDAM[0]=new TMatrixDSparse(*fE);
    fDXDAM[1]=new TMatrixDSparse(*fDXDY); // create a copy
    fDXDAZ[0]=VyyinvDy; // instead of deleting VyyinvDy
-   VyyinvDy=0;
+   VyyinvDy=nullptr;
    fDXDAZ[1]=new TMatrixDSparse(*fX); // create a copy
 
    if(fConstraint != kEConstraintNone) {
       // add correction to fDXDAM[0]
       TMatrixDSparse *temp1=MultiplyMSparseMSparseTranspVector
-         (Eepsilon,Eepsilon,0);
+         (Eepsilon,Eepsilon,nullptr);
       AddMSparse(fDXDAM[0], -one_over_epsEeps,temp1);
       DeleteMatrix(&temp1);
       // add correction to fDXDAZ[0]
@@ -860,8 +860,8 @@ TMatrixDSparse *TUnfold::MultiplyMSparseMSparseTranspVector
       if(rows_m2[j]<rows_m2[j+1]) num_m2++;
    }
    const TMatrixDSparse *v_sparse=dynamic_cast<const TMatrixDSparse *>(v);
-   const Int_t *v_rows=0;
-   const Double_t *v_data=0;
+   const Int_t *v_rows=nullptr;
+   const Double_t *v_data=nullptr;
    if(v_sparse) {
       v_rows=v_sparse->GetRowIndexArray();
       v_data=v_sparse->GetMatrixArray();
@@ -1039,7 +1039,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
       Fatal("InvertMSparseSymmPos",
             "Matrix has %d negative elements on the diagonal", nError);
       delete[] isZero;
-      return 0;
+      return nullptr;
    }
 
    // reorder matrix such that the largest block of zeros is swapped
@@ -1232,7 +1232,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    //====================================================
    // invert D2
    Int_t nD2=iBlock-iDiagonal;
-   TMatrixDSparse *D2inv=0;
+   TMatrixDSparse *D2inv=nullptr;
    if((rNumEl>=0)&&(nD2>0)) {
       Double_t *D2inv_data=new Double_t[nD2];
       Int_t *D2inv_col=new Int_t[nD2];
@@ -1265,9 +1265,9 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    // invert F
 
    Int_t nF=A->GetNrows()-iBlock;
-   TMatrixDSparse *Finv=0;
-   TMatrixDSparse *B=0;
-   TMatrixDSparse *minusBD2inv=0;
+   TMatrixDSparse *Finv=nullptr;
+   TMatrixDSparse *B=nullptr;
+   TMatrixDSparse *minusBD2inv=nullptr;
    if((rNumEl>=0)&&(nF>0)&&((nD2==0)||D2inv)) {
       // construct matrices F and B
       Int_t nFmax=nF*nF;
@@ -1303,7 +1303,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
             }
          }
       }
-      TMatrixDSparse *F=0;
+      TMatrixDSparse *F=nullptr;
       if(FnumEl) {
 #ifndef FORCE_EIGENVALUE_DECOMPOSITION
          F=CreateSparseMatrix(nF,nF,FnumEl,F_row,F_col,F_data);
@@ -1332,7 +1332,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
       }
       if(minusBD2inv && F) {
          TMatrixDSparse *minusBD2invBt=
-            MultiplyMSparseMSparseTranspVector(minusBD2inv,B,0);
+            MultiplyMSparseMSparseTranspVector(minusBD2inv,B,nullptr);
          AddMSparse(F,1.,minusBD2invBt);
          DeleteMatrix(&minusBD2invBt);
       }
@@ -1423,11 +1423,11 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
          //        G = (F^-1) (-B/D2)
          //        E = 1/D2 + (-B#/D2) G)
 
-         TMatrixDSparse *G=0;
+         TMatrixDSparse *G=nullptr;
          if(Finv && minusBD2inv) {
             G=MultiplyMSparseMSparse(Finv,minusBD2inv);
          }
-         TMatrixDSparse *E=0;
+         TMatrixDSparse *E=nullptr;
          if(D2inv) E=new TMatrixDSparse(*D2inv);
          if(G && minusBD2inv) {
             TMatrixDSparse *minusBD2invTransG=
@@ -1615,7 +1615,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
 
    TMatrixDSparse *r=(rNumEl>=0) ?
       CreateSparseMatrix(A->GetNrows(),A->GetNrows(),rNumEl,
-                         rEl_row,rEl_col,rEl_data) : 0;
+                         rEl_row,rEl_col,rEl_data) : nullptr;
    delete [] rEl_data;
    delete [] rEl_col;
    delete [] rEl_row;

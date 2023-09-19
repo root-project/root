@@ -49,23 +49,23 @@ practical view of Delaunay triangulation and Voronoi diagram.
 TGraphDelaunay::TGraphDelaunay()
             : TNamed("TGraphDelaunay","TGraphDelaunay")
 {
-   fGraph2D      = 0;
-   fX            = 0;
-   fY            = 0;
-   fZ            = 0;
+   fGraph2D      = nullptr;
+   fX            = nullptr;
+   fY            = nullptr;
+   fZ            = nullptr;
    fNpoints      = 0;
    fTriedSize    = 0;
    fZout         = 0.;
    fNdt          = 0;
    fNhull        = 0;
-   fHullPoints   = 0;
-   fXN           = 0;
-   fYN           = 0;
-   fOrder        = 0;
-   fDist         = 0;
-   fPTried       = 0;
-   fNTried       = 0;
-   fMTried       = 0;
+   fHullPoints   = nullptr;
+   fXN           = nullptr;
+   fYN           = nullptr;
+   fOrder        = nullptr;
+   fDist         = nullptr;
+   fPTried       = nullptr;
+   fNTried       = nullptr;
+   fMTried       = nullptr;
    fInit         = kFALSE;
    fXNmin        = 0.;
    fXNmax        = 0.;
@@ -95,14 +95,14 @@ TGraphDelaunay::TGraphDelaunay(TGraph2D *g)
    fZout         = 0.;
    fNdt          = 0;
    fNhull        = 0;
-   fHullPoints   = 0;
-   fXN           = 0;
-   fYN           = 0;
-   fOrder        = 0;
-   fDist         = 0;
-   fPTried       = 0;
-   fNTried       = 0;
-   fMTried       = 0;
+   fHullPoints   = nullptr;
+   fXN           = nullptr;
+   fYN           = nullptr;
+   fOrder        = nullptr;
+   fDist         = nullptr;
+   fPTried       = nullptr;
+   fNTried       = nullptr;
+   fMTried       = nullptr;
    fInit         = kFALSE;
    fXNmin        = 0.;
    fXNmax        = 0.;
@@ -131,14 +131,14 @@ TGraphDelaunay::~TGraphDelaunay()
    if (fXN)         delete [] fXN;
    if (fYN)         delete [] fYN;
 
-   fPTried     = 0;
-   fNTried     = 0;
-   fMTried     = 0;
-   fHullPoints = 0;
-   fOrder      = 0;
-   fDist       = 0;
-   fXN         = 0;
-   fYN         = 0;
+   fPTried     = nullptr;
+   fNTried     = nullptr;
+   fMTried     = nullptr;
+   fHullPoints = nullptr;
+   fOrder      = nullptr;
+   fDist       = nullptr;
+   fXN         = nullptr;
+   fYN         = nullptr;
 }
 
 

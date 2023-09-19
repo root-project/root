@@ -247,6 +247,13 @@ Some of these classes are now removed from the public interface:
 6. The `RooRealAnalytic`, which was an implementation detail of the
    `RooRealIntegral` class.
 
+### Consistent default for `Extended()` command in RooAbsPdf::fitTo() and RooAbsPdf::chi2FitTo()
+
+If no `RooFit::Extended()` command argument is passed, `RooAbsPdf::chi2FitTo()`
+method now does an extended fit by default if the pdf is extendible. This makes
+the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
+`RooAbsPdf::createChi2()`.
+
 ## 2D Graphics Libraries
 
 - Introduce `TAxis::ChangeLabelByValue` to set custom label defined by axis value. It works also

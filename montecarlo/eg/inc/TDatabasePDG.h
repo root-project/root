@@ -36,6 +36,7 @@ protected:
       return *this;}
 
    void BuildPdgMap() const;
+   virtual void ReadPDGTableImpl(const char *filename, bool isParticleListInitializedWhenInvoking);
 
 public:
 

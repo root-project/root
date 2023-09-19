@@ -72,6 +72,11 @@ list(APPEND PYROOT_EXTRA_PY3_SOURCE
      ROOT/_pythonization/_tmva/_batchgenerator.py)
 endif()
 
+if(tmva)
+    list(APPEND PYROOT_EXTRA_PY3_SOURCE
+        ROOT/_pythonization/_tmva/_gnn.py)
+endif()
+
 list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 

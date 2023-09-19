@@ -234,10 +234,23 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
    if (nVariations > 0) {
       // clone the result once for each variation
       variedResults.reserve(nVariations);
-      for (auto i = 0u; i < nVariations; ++i)
+      for (auto i = 0u; i < nVariations; ++i){
          // implicitly assuming that T is copiable: this should be the case
          // for all result types in use, as they are copied for each slot
          variedResults.emplace_back(new T{*resPtr.fObjPtr});
+
+         // Check if the result's type T inherits from TNamed
+         if constexpr (std::is_base_of<TNamed, T>::value) {
+            // Get the current variation name
+            std::string variationName = variations[i];
+            // Replace the colon with an underscore
+            std::replace(variationName.begin(), variationName.end(), ':', '_'); 
+            // Get a pointer to the corresponding varied result
+            auto &variedResult = variedResults.back();
+            // Set the varied result's name to NOMINALNAME_VARIATIONAME
+            variedResult->SetName((std::string(variedResult->GetName()) + "_" + variationName).c_str());
+         }
+      }
 
       std::vector<void *> typeErasedResults;
       typeErasedResults.reserve(variedResults.size());

@@ -79,11 +79,11 @@ TVirtualFitter::TVirtualFitter() :
    fNpoints(0),
    fPointSize(0),
    fCacheSize(0),
-   fCache(0),
-   fObjectFit(0),
-   fUserFunc(0),
-   fMethodCall(0),
-   fFCN(0)
+   fCache(nullptr),
+   fObjectFit(nullptr),
+   fUserFunc(nullptr),
+   fMethodCall(nullptr),
+   fFCN(nullptr)
 {
 }
 
@@ -144,11 +144,11 @@ TVirtualFitter::~TVirtualFitter()
    delete fMethodCall;
    delete [] fCache;
    if ( GetGlobalFitter() == this ) {
-      GetGlobalFitter()    = 0;
+      GetGlobalFitter()    = nullptr;
       GetGlobalMaxPar()    = 0;
    }
-   fMethodCall = 0;
-   fFCN        = 0;
+   fMethodCall = nullptr;
+   fFCN        = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +160,7 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 {
    if (GetGlobalFitter() && maxpar > GetGlobalMaxPar()) {
       delete GetGlobalFitter();
-      GetGlobalFitter() = 0;
+      GetGlobalFitter() = nullptr;
    }
 
    if (!GetGlobalFitter()) {
@@ -168,7 +168,7 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
       if (GetGlobalDefault().Length() == 0) GetGlobalDefault() = gEnv->GetValue("Root.Fitter","Minuit");
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",GetGlobalDefault()))) {
          if (h->LoadPlugin() == -1)
-            return 0;
+            return nullptr;
          GetGlobalFitter() = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
          GetGlobalMaxPar() = maxpar;
       }
@@ -247,7 +247,7 @@ void TVirtualFitter::SetDefaultFitter(const char *name)
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(name,"");
    if (GetGlobalDefault() == name) return;
    delete GetGlobalFitter();
-   GetGlobalFitter() = 0;
+   GetGlobalFitter() = nullptr;
    GetGlobalDefault() = name;
 }
 

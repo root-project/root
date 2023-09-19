@@ -364,7 +364,7 @@ Double_t TF1Convolution::EvalNumConv(Double_t t)
 
 Double_t TF1Convolution::operator()(const Double_t *x, const Double_t *p)
 {
-   if (p!=0)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
+   if (p!=nullptr)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
 
    Double_t result = 0.;
    if (fFlagFFT)

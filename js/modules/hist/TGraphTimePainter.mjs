@@ -20,8 +20,7 @@ class TGraphTimePainter extends ObjectPainter {
 
    /** @summary Decode drawing options */
    decodeOptions(opt) {
-
-      let d = new DrawOptions(opt || 'REPEAT');
+      const d = new DrawOptions(opt || 'REPEAT');
 
       if (!this.options) this.options = {};
 
@@ -36,13 +35,12 @@ class TGraphTimePainter extends ObjectPainter {
 
    /** @summary Draw primitives */
    async drawPrimitives(indx) {
-
       if (!indx) {
          indx = 0;
          this._doing_primitives = true;
       }
 
-      let lst = this.getObject()?.fSteps.arr[this.step];
+      const lst = this.getObject()?.fSteps.arr[this.step];
 
       if (!lst || (indx >= lst.arr.length)) {
          delete this._doing_primitives;
@@ -50,13 +48,11 @@ class TGraphTimePainter extends ObjectPainter {
       }
 
       return draw(this.getDom(), lst.arr[indx], lst.opt[indx]).then(p => {
-
          if (p) {
             p.$grtimeid = this.selfid; // indicator that painter created by ourself
             p.$grstep = this.step; // remember step
          }
          return this.drawPrimitives(indx+1);
-
       });
    }
 
@@ -64,7 +60,7 @@ class TGraphTimePainter extends ObjectPainter {
    continueDrawing() {
       if (!this.options) return;
 
-      let gr = this.getObject();
+      const gr = this.getObject();
 
       if (this.options.first) {
          // draw only single frame, cancel all others
@@ -76,7 +72,7 @@ class TGraphTimePainter extends ObjectPainter {
          delete this.wait_animation_frame;
 
          // clear pad
-         let pp = this.getPadPainter();
+         const pp = this.getPadPainter();
          if (!pp) {
             // most probably, pad is cleared
             delete this.step;
@@ -98,7 +94,6 @@ class TGraphTimePainter extends ObjectPainter {
          // use animation frame to disable update in inactive form
          requestAnimationFrame(() => this.continueDrawing());
       } else {
-
          let sleeptime = Math.max(gr.fSleepTime, 10);
 
          if (++this.step > gr.fSteps.arr.length) {
@@ -132,7 +127,7 @@ class TGraphTimePainter extends ObjectPainter {
         return null;
       }
 
-      let painter = new TGraphTimePainter(dom, gr);
+      const painter = new TGraphTimePainter(dom, gr);
 
       if (painter.getMainPainter()) {
          console.error('Cannot draw graph time on top of other histograms');
@@ -142,7 +137,7 @@ class TGraphTimePainter extends ObjectPainter {
       painter.decodeOptions(opt);
 
       if (!gr.fFrame.fTitle && gr.fTitle) {
-         let arr = gr.fTitle.split(";");
+         const arr = gr.fTitle.split(';');
          gr.fFrame.fTitle = arr[0];
          if (arr[1]) gr.fFrame.fXaxis.fTitle = arr[1];
          if (arr[2]) gr.fFrame.fYaxis.fTitle = arr[2];

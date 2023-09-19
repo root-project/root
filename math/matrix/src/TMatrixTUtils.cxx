@@ -50,8 +50,8 @@ TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixT<Element> &matrix,In
    fRowInd = row-matrix.GetRowLwb();
    if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
       Error("TMatrixTRow_const(const TMatrixT<Element> &,Int_t)","row index out of bounds");
-      fMatrix = 0;
-      fPtr = 0;
+      fMatrix = nullptr;
+      fPtr = nullptr;
       fInc = 0;
       return;
    }
@@ -72,8 +72,8 @@ TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixTSym<Element> &matrix
    fRowInd = row-matrix.GetRowLwb();
    if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
       Error("TMatrixTRow_const(const TMatrixTSym &,Int_t)","row index out of bounds");
-      fMatrix = 0;
-      fPtr = 0;
+      fMatrix = nullptr;
+      fPtr = nullptr;
       fInc = 0;
       return;
    }
@@ -256,8 +256,8 @@ TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixT<Element> &mat
    this->fColInd = col-matrix.GetColLwb();
    if (this->fColInd >= matrix.GetNcols() || this->fColInd < 0) {
       Error("TMatrixTColumn_const(const TMatrixT &,Int_t)","column index out of bounds");
-      fMatrix = 0;
-      fPtr = 0;
+      fMatrix = nullptr;
+      fPtr = nullptr;
       fInc = 0;
       return;
    }
@@ -278,8 +278,8 @@ TMatrixTColumn_const<Element>::TMatrixTColumn_const(const TMatrixTSym<Element> &
    fColInd = col-matrix.GetColLwb();
    if (fColInd >= matrix.GetNcols() || fColInd < 0) {
       Error("TMatrixTColumn_const(const TMatrixTSym &,Int_t)","column index out of bounds");
-      fMatrix = 0;
-      fPtr = 0;
+      fMatrix = nullptr;
+      fPtr = nullptr;
       fInc = 0;
       return;
    }
@@ -1366,10 +1366,10 @@ TMatrixTSparseRow_const<Element>::TMatrixTSparseRow_const(const TMatrixTSparse<E
    fRowInd = row-matrix.GetRowLwb();
    if (fRowInd >= matrix.GetNrows() || fRowInd < 0) {
       Error("TMatrixTSparseRow_const(const TMatrixTSparse &,Int_t)","row index out of bounds");
-      fMatrix  = 0;
+      fMatrix  = nullptr;
       fNindex  = 0;
-      fColPtr  = 0;
-      fDataPtr = 0;
+      fColPtr  = nullptr;
+      fDataPtr = nullptr;
       return;
    }
 

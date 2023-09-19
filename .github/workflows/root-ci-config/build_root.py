@@ -135,6 +135,7 @@ def handle_test_failure(ctest_returncode):
     logloc = f'{WORKDIR}/build/Testing/Temporary/LastTestsFailed.log'
     if os.path.isfile(logloc):
         with open(logloc, 'r') as logf:
+            print("TEST FAILURES:")
             print(logf.read())
     else:
         print(f'Internal error: cannot find {logloc}\nAdding some debug output:')
@@ -295,9 +296,8 @@ def archive_and_upload(archive_name, prefix):
 
 @github_log_group("Configure")
 def cmake_configure(options, buildtype):
-    generator = "" if WINDOWS else "-G Ninja"
     result = subprocess_with_log(f"""
-        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype} {generator}
+        cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
     """)
 
     if result != 0:
@@ -372,7 +372,7 @@ def rebase(base_ref, head_ref) -> None:
 def create_coverage_xml() -> None:
     result = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
-        gcovr --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min -r ../src ../build -o cobertura-cov.xml
+        gcovr --output=cobertura-cov.xml --cobertura-pretty --gcov-ignore-errors=no_working_dir_found --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="roottest|runtutorials|interpreter" --exclude='.*/G__.*' --exclude='.*/(roottest|runtutorials|externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs|foam|genetic|mlp|quadp|splot|memstat|rpdutils|proof|odbc|llvm|test|interpreter)/.*' --gcov-exclude='.*_ACLiC_dict[.].*' '--exclude=.*_ACLiC_dict[.].*' -v -r ../src ../build
     """)
 
     if result != 0:

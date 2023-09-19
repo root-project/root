@@ -134,14 +134,14 @@ namespace Math {
    : fDist(kUndefined),
      fSamples(std::vector<std::vector<Double_t> >(2)),
      fTestSampleFromH0(kFALSE) {
-      Bool_t badSampleArg = sample1 == 0 || sample1Size == 0;
+      Bool_t badSampleArg = sample1 == nullptr || sample1Size == 0;
       if (badSampleArg) {
          std::string msg = "'sample1";
          msg += !sample1Size ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
-      badSampleArg = sample2 == 0 || sample2Size == 0;
+      badSampleArg = sample2 == nullptr || sample2Size == 0;
       if (badSampleArg) {
          std::string msg = "'sample2";
          msg += !sample2Size ? "Size' cannot be zero" : "' cannot be zero-length";
@@ -161,7 +161,7 @@ namespace Math {
    : fDist(dist),
      fSamples(std::vector<std::vector<Double_t> >(1)),
      fTestSampleFromH0(kTRUE) {
-      Bool_t badSampleArg = sample == 0 || sampleSize == 0;
+      Bool_t badSampleArg = sample == nullptr || sampleSize == 0;
       if (badSampleArg) {
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
@@ -241,7 +241,7 @@ namespace Math {
    }
 
    void GoFTest::SetCDF() { // Setting parameter-free distributions
-      IGenFunction* cdf = 0;
+      IGenFunction* cdf = nullptr;
       switch (fDist) {
       case kLogNormal:
          LogSample();
@@ -277,14 +277,14 @@ namespace Math {
 
    void GoFTest::Instantiate(const Double_t* sample, size_t sampleSize) {
       // initialization function for the template constructors
-      Bool_t badSampleArg = sample == 0 || sampleSize == 0;
+      Bool_t badSampleArg = sample == nullptr || sampleSize == 0;
       if (badSampleArg) {
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
-      fCDF.reset((IGenFunction*)0);
+      fCDF.reset((IGenFunction*)nullptr);
       fDist = kUserDefined;
       fSamples = std::vector<std::vector<Double_t> >(1);
       fTestSampleFromH0 = kTRUE;
@@ -905,7 +905,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       std::vector<Double_t> b(nb);
       std::copy(fSamples[0].begin(), fSamples[0].end(), a.begin());
       std::copy(fSamples[1].begin(), fSamples[1].end(), b.begin());
-      pvalue = TMath::KolmogorovTest(na, a.data(), nb, b.data(), 0);
+      pvalue = TMath::KolmogorovTest(na, a.data(), nb, b.data(), nullptr);
       testStat = TMath::KolmogorovTest(na, a.data(), nb, b.data(), "M");
    }
 

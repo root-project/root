@@ -77,7 +77,10 @@ if(NOT clad)
   set(clad_veto fit/minuit2GausFit.C)
 endif()
 
-if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8)
+# RBatchGenerator tutorials need Python 3.8+.
+# Also, they don't work on Windows at the moment.
+if (PYTHON_VERSION_STRING_Development_Main VERSION_LESS 3.8 OR
+    (MSVC AND NOT win_broken_tests))
   list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
   list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
@@ -302,6 +305,9 @@ else()
   #these depends on external packages
   find_python_module(torch QUIET)
   find_python_module(keras QUIET)
+  find_python_module(sonnet QUIET)
+  find_python_module(graph_nets QUIET)
+  find_python_module(sklearn QUIET)
   if (NOT PY_KERAS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras.C)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras_HiggsModel.C)
@@ -313,9 +319,15 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
     list(APPEND tmva_veto tmva/RBatchGenerator_TensorFlow.py)
   endif()
+  if (NOT PY_SKLEARN_FOUND)
+    list(APPEND tmva_veto tmva/TMVA_SOFIE_Models.py)
+  endif()
   if (NOT PY_TORCH_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_PyTorch.C)
     list(APPEND tmva_veto tmva/RBatchGenerator_PyTorch.py)
+  endif()
+  if (NOT PY_SONNET_FOUND OR NOT PY_GRAPH_NETS_FOUND)
+    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN.py)
   endif()
   if (NOT tmva-sofie)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
@@ -469,13 +481,6 @@ set(all_veto hsimple.C
              ${macm1_veto}
              ${clad_veto}
              )
-
-# These tutorials seem to trigger segfaults related to TClass* and RDataFrame
-# JITting on many platforms. Disable for now and revert once the issue is fixed
-list(APPEND all_veto tmva/RBatchGenerator_NumPy.py)
-list(APPEND all_veto tmva/RBatchGenerator_TensorFlow.py)
-list(APPEND all_veto tmva/RBatchGenerator_PyTorch.py)
-list(APPEND all_veto tmva/RBatchGenerator_filters_vectors.py)
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(root7 AND webgui)
@@ -748,6 +753,7 @@ if(ROOT_pyroot_FOUND)
   endif()
   if(NOT test_distrdf_dask)
     list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
+    list(APPEND pyveto dataframe/distrdf003_live_visualization.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)

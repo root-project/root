@@ -60,7 +60,7 @@ FitResult::FitResult(const FitConfig & fconfig) :
    fVal(0),
    fEdm(-1),
    fChi2(-1),
-   fFitFunc(0),
+   fFitFunc(nullptr),
    fParams(std::vector<double>( fconfig.NPar() ) ),
    fErrors(std::vector<double>( fconfig.NPar() ) ),
    fParNames(std::vector<std::string> ( fconfig.NPar() ) )
@@ -177,7 +177,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // if flag is binned compute a chi2 when a chi2 function is given
    if (fitType == 1) {
-      if (chi2func == 0)
+      if (chi2func == nullptr)
          fChi2 = fVal;
       else {
          // compute chi2 equivalent for likelihood fits
@@ -196,7 +196,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    if (!fCovMatrix.empty()) fCovMatrix.clear();
    if (!fGlobalCC.empty())  fGlobalCC.clear();
 
-   if (min->Errors() != 0) {
+   if (min->Errors() != nullptr) {
 
       fErrors = std::vector<double>(min->Errors(), min->Errors() + npar ) ;
 
@@ -235,7 +235,7 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const
       MATH_ERROR_MSG("FitResult::Update","Wrong minimizer status ");
       return false;
    }
-   if (min->X() == 0 ) {
+   if (min->X() == nullptr ) {
       MATH_ERROR_MSG("FitResult::Update","Invalid minimizer status ");
       return false;
    }
@@ -262,7 +262,7 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const
    // set parameters  in fit model function
    if (fFitFunc) fFitFunc->SetParameters(&fParams.front());
 
-   if (min->Errors() != 0)  {
+   if (min->Errors() != nullptr)  {
 
       if (fErrors.size() != npar) fErrors.resize(npar);
 

@@ -19,15 +19,15 @@ def github_log_group(title: str):
     def group(func: Callable):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            print("::group::" + title)
+            print(f"\n::group::{title}\n")
 
             try:
                 result = func(*args, **kwargs)
             except Exception as exc:
-                print("::endgroup::")
+                print("\n::endgroup::\n")
                 raise exc
 
-            print("::endgroup::")
+            print("\n::endgroup::\n")
 
             return result
 
@@ -128,7 +128,7 @@ def load_config(filename) -> dict:
     except OSError as err:
         print_warning(f"couldn't load {filename}: {err.strerror}")
         return {}
-
+    
     with file:
         for line in file:
             if '=' not in line:

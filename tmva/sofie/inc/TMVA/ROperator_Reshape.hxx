@@ -150,7 +150,6 @@ public:
          throw std::runtime_error("TMVA Reshape Op Input Tensor " + fNData + "  is not found in model");
       }
       fShapeInput = model.GetTensorShape(fNData);
-
       // check if optional shape tensor exist
       if (!fNShape.empty()) {
          if (model.CheckIfTensorAlreadyExist(fNShape)) {

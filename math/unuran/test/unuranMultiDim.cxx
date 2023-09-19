@@ -72,7 +72,7 @@ double gaus100d(double * x, double *) {
 }
 
 
-int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiContDist & dist, TH3 * h1, const TH3 * href = 0, const int dim = 3 ) {
+int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiContDist & dist, TH3 * h1, const TH3 * href = nullptr, const int dim = 3 ) {
 
 
    assert (dim >=3);
@@ -100,7 +100,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    double time = w.CpuTime()*1.E9/n;
 
    std::cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call\t";
-   if (href != 0)  {
+   if (href != nullptr)  {
       double prob = href->Chi2Test(h1,"UU");
       double ksprob = href->KolmogorovTest(h1);
       std::cout << "\tChi2 Prob = "<< prob << "\tKS Prob = " << ksprob << std::endl;
@@ -119,7 +119,7 @@ int testUnuran(TUnuran & unr, const std::string & method, const TUnuranMultiCont
    return 0;
 }
 
-int testGetRandom(TF3 * f, TH3 * h1, const TH3 * href = 0) {
+int testGetRandom(TF3 * f, TH3 * h1, const TH3 * href = nullptr) {
 
 
    // test first the time
@@ -137,7 +137,7 @@ int testGetRandom(TF3 * f, TH3 * h1, const TH3 * href = 0) {
    double time = w.CpuTime()*1.E9/n;
 
 
-   if (href != 0) {
+   if (href != nullptr) {
       double prob = href->Chi2Test(h1,"UU");
       double ksprob = href->KolmogorovTest(h1);
       std::cout << "Time using TF1::GetRandom()    \t=\t " << time << "\tns/call \t\tChi2 Prob = "<< prob

@@ -663,7 +663,7 @@ void THStack::ls(Option_t *option) const
 
 Long64_t THStack::Merge(TCollection* li, TFileMergeInfo * /* info */)
 {
-   if (li==0 || li->GetEntries()==0) {
+   if (li==nullptr || li->GetEntries()==0) {
       return fHists->GetEntries();
    }
    TIter next(li);

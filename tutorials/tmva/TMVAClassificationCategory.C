@@ -15,7 +15,7 @@
 ///
 ///     root -l TMVAClassificationCategory.C
 ///
-/// The output file "TMVA.root" can be analysed with the use of dedicated
+/// The output file "TMVACC.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
 ///
@@ -60,7 +60,7 @@ void TMVAClassificationCategory()
    bool batchMode = false;
 
    // Create a new root output file.
-   TString outfileName( "TMVA.root" );
+   TString outfileName( "TMVACC.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
    // Create the factory object (see TMVAClassification.C for more information)
