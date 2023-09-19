@@ -51,7 +51,7 @@ cust.splitArg(meanG, sample)
 
 # 2. Each sample should have its own signal yield, but there is an extra complication:
 # We need the yields 1 and 2 to be a function of the variable "mass".
-# For this, we pre-define nodes with exacly the names that the customiser would have created automatically,
+# For this, we pre-define nodes with exactly the names that the customiser would have created automatically,
 # that is, "<nodeName>_<categoryName>", and we register them in the set of customiser nodes.
 # The customiser will pick them up instead of creating new ones.
 # If we don't provide one (e.g. for "yieldSig_Sample3"), it will be created automatically by cloning `yieldSig`.
