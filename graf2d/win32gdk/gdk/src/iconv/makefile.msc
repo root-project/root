@@ -56,7 +56,6 @@ all :				\
 	iconv-$(ICONV_VER).dll
 
 iconv_OBJECTS =			\
-	relocatable.obj		\
 	localcharset.obj		\
 	iconv.obj		\
 
