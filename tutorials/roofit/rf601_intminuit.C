@@ -54,6 +54,9 @@ void rf601_intminuit()
    // Create MINUIT interface object
    RooMinimizer m(*nll);
 
+   // The contour algorithm in Minuit2 does not work for this tutorial
+   m.setMinimizerType("Minuit");
+
    // Activate verbose logging of MINUIT parameter space stepping
    m.setVerbose(true);
 
