@@ -16,6 +16,7 @@
 #include <ROOT/RNTuple.hxx>
 
 #include <ROOT/RFieldVisitor.hxx>
+#include <ROOT/RNTupleAnchor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -362,32 +363,4 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique_ptr<REntry> defaultEntry)
    : fOffset(0), fDefaultEntry(std::move(defaultEntry))
 {
-}
-
-//------------------------------------------------------------------------------
-
-void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
-{
-   static TClassRef RNTupleAnchorClass("ROOT::Experimental::Internal::RFileNTupleAnchor");
-
-   if (buf.IsReading()) {
-      RNTupleAnchorClass->ReadBuffer(buf, static_cast<Internal::RFileNTupleAnchor *>(this));
-      R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
-      fFile = reinterpret_cast<TFile *>(buf.GetParent());
-   } else {
-      RNTupleAnchorClass->WriteBuffer(buf, static_cast<Internal::RFileNTupleAnchor *>(this));
-   }
-}
-
-std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
-ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options)
-{
-   if (!fFile)
-      throw RException(R__FAIL("This RNTuple object was not streamed from a file"));
-
-   // TODO(jblomer): Add RRawFile factory that create a raw file from a TFile. This may then duplicate the file
-   // descriptor (to avoid re-open).  There could also be a raw file that uses a TFile as a "backend" for TFile cases
-   // that are unsupported by raw file.
-   auto path = fFile->GetEndpointUrl()->GetFile();
-   return Detail::RPageSourceFile::CreateFromAnchor(GetAnchor(), path, options);
 }

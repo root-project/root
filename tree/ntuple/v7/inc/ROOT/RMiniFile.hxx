@@ -17,6 +17,7 @@
 #define ROOT7_RMiniFile
 
 #include <ROOT/RError.hxx>
+#include <ROOT/RNTupleAnchor.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <string_view>
 
@@ -38,59 +39,6 @@ class RRawFile;
 namespace Experimental {
 
 namespace Internal {
-
-// clang-format off
-/**
-\class ROOT::Experimental::Internal::RFileNTupleAnchor
-\ingroup NTuple
-\brief Entry point for an RNTuple in a ROOT file
-
-The class points to the header and footer keys, which in turn have the references to the pages.
-Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
-Byte offset references in the RNTuple header and footer reference directly the data part of page records,
-skipping the TFile key part.
-
-In the list of keys, this object appears as "ROOT::Experimental::RNTuple".
-
-The RNTuple object is the user-facing representation of an RNTuple data set in a ROOT file.
-The RFileNTupleAnchor is the low-level entry point of an RNTuple in a ROOT file used by the page storage layer.
-
-The ROOT::Experimental::RNTuple object has the same on-disk layout as the RFileNTupleAnchor.
-It only adds methods and transient members. Reading and writing RNTuple anchors with TFile and the minifile writer
-is thus fully interoperable (same on-disk information).
-TODO(jblomer): Remove unneeded fChecksum, fVersion, fSize, fReserved once ROOT::Experimental::RNTuple moves out of
-the experimental namespace.
-*/
-// clang-format on
-struct RFileNTupleAnchor {
-   /// Version of the RNTuple binary format that the writer supports (see specification).
-   /// Changing the epoch indicates backward-incompatible changes
-   std::uint16_t fVersionEpoch = 0;
-   /// Changing the major version indicates forward incompatible changes; such changes shoudl correspond to a new
-   /// bit in the feature flag of the RNTuple header.
-   /// For the pre-release epoch 0, indicates the release candidate number
-   std::uint16_t fVersionMajor = 0;
-   /// Changing the minor version indicates new optional fields added to the RNTuple meta-data
-   std::uint16_t fVersionMinor = 0;
-   /// Changing the patch version indicate new backported features from newer binary format versions
-   std::uint16_t fVersionPatch = 0;
-   /// The file offset of the header excluding the TKey part
-   std::uint64_t fSeekHeader = 0;
-   /// The size of the compressed ntuple header
-   std::uint64_t fNBytesHeader = 0;
-   /// The size of the uncompressed ntuple header
-   std::uint64_t fLenHeader = 0;
-   /// The file offset of the footer excluding the TKey part
-   std::uint64_t fSeekFooter = 0;
-   /// The size of the compressed ntuple footer
-   std::uint64_t fNBytesFooter = 0;
-   /// The size of the uncompressed ntuple footer
-   std::uint64_t fLenFooter = 0;
-   /// The xxhash3 checksum of the other data members. When adding new members to the class,
-   /// this member should remain the last one.
-   std::uint64_t fChecksum = 0;
-};
-
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
@@ -111,16 +59,16 @@ private:
    /// Indicates whether the file is a TFile container or an RNTuple bare file
    bool fIsBare = false;
    /// Used when the file container turns out to be a bare file
-   RResult<RFileNTupleAnchor> GetNTupleBare(std::string_view ntupleName);
+   RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
-   RResult<RFileNTupleAnchor> GetNTupleProper(std::string_view ntupleName);
+   RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
 
 public:
    RMiniFileReader() = default;
    /// Uses the given raw file to read byte ranges
    explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
-   RResult<RFileNTupleAnchor> GetNTuple(std::string_view ntupleName);
+   RResult<RNTuple> GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
 };
@@ -189,7 +137,7 @@ private:
    /// The file name without parent directory; only required when writing with a C file stream
    std::string fFileName;
    /// Header and footer location of the ntuple, written on Commit()
-   RFileNTupleAnchor fNTupleAnchor;
+   RNTuple fNTupleAnchor;
 
    explicit RNTupleFileWriter(std::string_view name);
 
