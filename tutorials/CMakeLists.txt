@@ -165,8 +165,11 @@ endif()
 
 if(NOT ROOT_xml_FOUND)
   set(xml_veto  xml/*.C
-                histfactory/*.C    # histfactory requires xml
-                unfold/*.C)        # unfold requires xml
+                histfactory/*.C)   # histfactory requires xml
+endif()
+
+if(NOT ROOT_unfold_FOUND)
+  set(xml_veto  unfold/*.C)
 endif()
 
 if(NOT ROOT_mpi_FOUND)
