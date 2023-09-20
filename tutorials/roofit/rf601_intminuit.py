@@ -46,6 +46,9 @@ nll = model.createNLL(data)
 # Create MINUIT interface object
 m = ROOT.RooMinimizer(nll)
 
+# The contour algorithm in Minuit2 does not work for this tutorial
+m.setMinimizerType("Minuit")
+
 # Activate verbose logging of MINUIT parameter space stepping
 m.setVerbose(True)
 
