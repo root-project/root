@@ -3,8 +3,11 @@
 
 /**********************************************************************
  *                                                                    *
- * Copyright (c) 2006  LCG ROOT Math Team, CERN/PH-SFT                *
+ * Copyright (c) 2006  CERN                                           *
+ * All rights reserved.                                               *
  *                                                                    *
+ * For the licensing terms see $ROOTSYS/LICENSE.                      *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.          *
  *                                                                    *
  **********************************************************************/
 
