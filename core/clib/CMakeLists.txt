@@ -15,7 +15,6 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
 )
 
 ROOT_OBJECT_LIBRARY(Clib
-  src/Demangle.c
   src/attach.c
   src/detach.c
   src/getpagesize.c

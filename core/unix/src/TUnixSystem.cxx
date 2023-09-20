@@ -27,7 +27,6 @@
 #include "TRegexp.h"
 #include "TPRegexp.h"
 #include "TException.h"
-#include "Demangle.h"
 #include "TEnv.h"
 #include "Getline.h"
 #include "TInterpreter.h"
