@@ -356,6 +356,12 @@ if(roofit_multiprocess AND WIN32)
     message(FATAL_ERROR ">>> Option 'roofit_multiprocess' is not supported on Windows.")
 endif()
 
+# RooFit multiprocess only works with Minuit2. In fact, it depends on it at build time.
+if(roofit_multiprocess AND NOT minuit2)
+    message(WARNING "Option 'roofit_multiprocess' requires option `minuit2`. We're setting `minuit2=ON` for you. Consider setting `minuit=ON` yourself to silence this warning.")
+    set(minuit2 ON CACHE BOOL "" FORCE)
+endif()
+
 #---Options depending of CMake Generator-------------------------------------------------------
 if( CMAKE_GENERATOR STREQUAL Ninja)
    set(fortran_defvalue OFF)

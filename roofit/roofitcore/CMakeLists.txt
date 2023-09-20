@@ -21,6 +21,10 @@ if(cuda)
   list(APPEND EXTRA_LIBRARIES RooFitCuda)
 endif()
 
+if(roofit_multiprocess)
+  list(APPEND EXTRA_DEPENDENCIES Minuit2)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
@@ -471,11 +475,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Matrix
     Tree
     Minuit
-    Minuit2
     RIO
     MathCore
     Foam
     Smatrix
+    ${EXTRA_DEPENDENCIES}
   LINKDEF
     inc/LinkDef.h
   ${EXTRA_DICT_OPTS}
