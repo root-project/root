@@ -6,6 +6,9 @@
 #include <iostream>
 #include <iomanip>
 
+// Math headers
+#include "Math/MinimizerOptions.h"
+
 // ROOT headers
 #include "TWebFile.h"
 #include "TSystem.h"
@@ -39,7 +42,7 @@ using namespace RooFit ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
 
-void StatusPrint(const Int_t id, const TString &title, const Int_t status, const Int_t lineWidth)
+void StatusPrint(const int id, const TString &title, const int status, const int lineWidth)
 {
    TString header = TString::Format("Test %d : %s ", id, title.Data());
    cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
@@ -48,9 +51,9 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
 ////////////////////////////////////////////////////////////////////////////////
 /// width of lines when printing test results
 
-Int_t stressHistFactory(const char* refFile, bool writeRef, Int_t verbose, bool allTests, bool oneTest, Int_t testNumber, bool dryRun)
+int stressHistFactory(const char* refFile, bool writeRef, int verbose, bool allTests, bool oneTest, int testNumber, bool dryRun)
 {
-   const Int_t lineWidth = 120;
+   const int lineWidth = 120;
 
    // Save memory directory location
    RooUnitTest::setMemDir(gDirectory) ;
@@ -108,7 +111,7 @@ Int_t stressHistFactory(const char* refFile, bool writeRef, Int_t verbose, bool 
 
    int nFailed = 0;
    {
-      Int_t i;
+      int i;
       list<RooUnitTest*>::iterator iter;
 
       if (oneTest && (testNumber <= 0 || (UInt_t) testNumber > testList.size())) {
@@ -181,17 +184,18 @@ Int_t stressHistFactory(const char* refFile, bool writeRef, Int_t verbose, bool 
 int main(int argc, const char *argv[])
 {
    bool doWrite     = false;
-   Int_t  verbose     =      0;
+   int  verbose     =      0;
    bool allTests    = false;
    bool oneTest     = false;
-   Int_t testNumber   =      0;
+   int testNumber   =      0;
    bool dryRun      = false;
 
    string refFileName = "stressHistFactory_ref.root" ;
+   string minimizerName = "Minuit";
 
 
    // Parse command line arguments
-   for (Int_t i = 1 ;  i < argc ; i++) {
+   for (int i = 1 ;  i < argc ; i++) {
       string arg = argv[i] ;
 
       if (arg == "-f") {
@@ -203,6 +207,9 @@ int main(int argc, const char *argv[])
       } else if (arg == "-mc") {
          cout << "stressHistFactory: running in memcheck mode, no regression tests are performed" << endl;
          dryRun = true;
+      } else if (arg == "-min" || arg == "-minim") {
+         cout << "stressHistFactory: running using minimizer " << argv[i +1]  << endl;
+         minimizerName = argv[++i] ;
       } else if (arg == "-v") {
          cout << "stressHistFactory: running in verbose mode" << endl;
          verbose = 1;
@@ -219,22 +226,26 @@ int main(int argc, const char *argv[])
       } else if (arg == "-d") {
          cout << "stressHistFactory: setting gDebug to " << argv[i + 1] << endl;
          gDebug = atoi(argv[++i]);
-      } else if (arg == "-h") {
-         cout << "usage: stressHistFactory [ options ] " << endl;
-         cout << "" << endl;
-         cout << "       -f <file> : use given reference file instead of default (" << refFileName << ")" << endl;
-         cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl;
-         cout << "       -n N      : only run test with sequential number N" << endl;
-         cout << "       -a        : run full suite of tests (default is basic suite); this overrides the -n single test option" << endl;
-         cout << "       -mc       : memory check mode, no regression test are performed. Set this flag when running with valgrind" << endl;
-         cout << "       -vs       : use vector-based storage for all datasets (default is tree-based storage)" << endl;
-         cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl;
-         cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
-         cout << " " << endl ;
+      } else if (arg == "-h" || arg == "--help") {
+         cout << R"(usage: stressHistFactory [ options ]
+
+       -f <file>   : use given reference file instead of default ("stressHistFactory_ref.root")
+       -w          : write reference file, instead of reading file and running comparison tests
+       -n N        : only run test with sequential number N
+       -a          : run full suite of tests (default is basic suite); this overrides the -n single test option
+       -mc         : memory check mode, no regression test are performed. Set this flag when running with valgrind
+       -min <name> : minimizer name (default is Minuit, not Minuit2)
+       -vs         : use vector-based storage for all datasets (default is tree-based storage)
+       -v/-vv      : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)
+       -d N        : set ROOT gDebug flag to N
+)";
          return 0 ;
       }
 
    }
+
+   // set minimizer
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName.c_str());
 
    gBenchmark = new TBenchmark();
    return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
@@ -242,16 +253,19 @@ int main(int argc, const char *argv[])
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressHistFactory()
+int stressHistFactory()
 {
    bool doWrite     = false;
-   Int_t  verbose     =      0;
+   int  verbose     =     0;
    bool allTests    = false;
    bool oneTest     = false;
-   Int_t testNumber   =      0;
+   int testNumber   =     0;
    bool dryRun      = false;
-
    string refFileName = "stressHistFactory_ref.root" ;
+
+   // in interpreted mode, the minimizer is hardcoded to Minuit 1
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit");
+
    return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
 }
 
