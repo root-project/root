@@ -1202,7 +1202,8 @@ void TDirectory::pwd() const
 
 void TDirectory::RecursiveRemove(TObject *obj)
 {
-   fList->RecursiveRemove(obj);
+   if (fList)
+      fList->RecursiveRemove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
