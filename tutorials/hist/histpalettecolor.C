@@ -9,7 +9,7 @@
 /// the current pad.
 ///
 /// In this example five histograms are displayed with palette coloring for lines and
-/// and marker. The histograms are drawn with makers and error bars and one can see
+/// and marker. The histograms are drawn with markers and error bars and one can see
 /// the color of each histogram is picked inside the default palette `kBird`.
 ///
 /// \macro_image
