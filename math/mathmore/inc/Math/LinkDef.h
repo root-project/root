@@ -92,8 +92,6 @@
 
 
 
-#pragma link C++ class ROOT::Math::KelvinFunctions+;
-
 #pragma link C++ class ROOT::Math::GSLMinimizer+;
 #pragma link C++ class ROOT::Math::GSLSimAnMinimizer+;
 #pragma link C++ class ROOT::Math::GSLSimAnFunc+;
