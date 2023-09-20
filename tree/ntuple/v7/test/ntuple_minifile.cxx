@@ -1,11 +1,8 @@
 #include "ntuple_test.hxx"
 #include <TTree.h>
 
-namespace ROOT {
-namespace Experimental {
-namespace Internal {
-bool IsEqual(const ROOT::Experimental::Internal::RFileNTupleAnchor &a,
-             const ROOT::Experimental::Internal::RFileNTupleAnchor &b)
+namespace {
+bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
 {
    return a.fVersionEpoch == b.fVersionEpoch && a.fVersionMajor == b.fVersionMajor &&
           a.fVersionMinor == b.fVersionMinor && a.fVersionPatch == b.fVersionPatch && a.fSeekHeader == b.fSeekHeader &&
@@ -17,12 +14,9 @@ struct RNTupleTester {
    ROOT::Experimental::RNTuple fNtpl;
 
    explicit RNTupleTester(const ROOT::Experimental::RNTuple &ntpl) : fNtpl(ntpl) {}
-   Internal::RFileNTupleAnchor GetAnchor() const { return fNtpl.GetAnchor(); }
+   RNTuple GetAnchor() const { return fNtpl; }
 };
-
-} // namespace Internal
-} // namespace Experimental
-} // namespace ROOT
+} // namespace
 
 TEST(MiniFile, Raw)
 {
@@ -85,7 +79,7 @@ TEST(MiniFile, Stream)
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
    ASSERT_TRUE(file);
    auto k = std::unique_ptr<ROOT::Experimental::RNTuple>(file->Get<ROOT::Experimental::RNTuple>("MyNTuple"));
-   EXPECT_TRUE(IsEqual(ntuple, ROOT::Experimental::Internal::RNTupleTester(*k).GetAnchor()));
+   EXPECT_TRUE(IsEqual(ntuple, RNTupleTester(*k).GetAnchor()));
 }
 
 
@@ -188,7 +182,7 @@ TEST(MiniFile, Failures)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   ROOT::Experimental::Internal::RFileNTupleAnchor anchor;
+   ROOT::Experimental::RNTuple anchor;
    try {
       anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";

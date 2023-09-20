@@ -496,56 +496,6 @@ public:
    ClusterSize_t *GetOffsetPtr() { return &fOffset; }
 };
 
-// clang-format off
-/**
-\class ROOT::Experimental::RNTuple
-\ingroup NTuple
-\brief Representation of an RNTuple data set in a ROOT file
-
-This class provides an API entry point to an RNTuple stored in a ROOT file. Its main purpose is to
-construct a page source for an RNTuple, which in turn can be used to read an RNTuple with an RDF or
-an RNTupleReader.
-
-For instance, for an RNTuple called "Events" in a ROOT file, usage can be
-~~~ {.cpp}
-auto f = TFile::Open("data.root");
-auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Events");
-
-auto reader = RNTupleReader::Open(ntpl);
-or
-auto pageSource = ntpl->MakePageSource();
-~~~
-*/
-// clang-format on
-class RNTuple final : protected ROOT::Experimental::Internal::RFileNTupleAnchor {
-   friend class ROOT::Experimental::Internal::RNTupleFileWriter;
-   friend struct ROOT::Experimental::Internal::RNTupleTester;
-
-private:
-   // Only add transient members. The on-disk layout must be identical to RFileNTupleAnchor
-
-   TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
-
-   // Conversion between low-level anchor and RNTuple UI class
-   explicit RNTuple(const Internal::RFileNTupleAnchor &a) : Internal::RFileNTupleAnchor(a) {}
-   Internal::RFileNTupleAnchor GetAnchor() const { return *this; }
-
-public:
-   RNTuple() = default;
-   ~RNTuple() = default;
-
-   /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
-   /// If fFile is not set, an exception is thrown.
-   std::unique_ptr<Detail::RPageSource> MakePageSource(const RNTupleReadOptions &options = RNTupleReadOptions());
-
-   /// RNTuple implements the hadd MergeFile interface
-   /// Merge this NTuple with the input list entries
-   Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
-
-   // The version must match the RFileNTupleAnchor version in the LinkDef.h
-   ClassDefNV(RNTuple, 4);
-};
-
 } // namespace Experimental
 } // namespace ROOT
 
