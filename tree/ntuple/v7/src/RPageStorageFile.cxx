@@ -209,7 +209,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    fReader = Internal::RMiniFileReader(fFile.get());
 }
 
-void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const Internal::RFileNTupleAnchor &anchor)
+void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const RNTuple &anchor)
 {
    fDescriptorBuilder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
    auto buffer = std::make_unique<unsigned char[]>(anchor.fLenHeader);
@@ -227,8 +227,8 @@ void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const Internal:
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSourceFile>
-ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(const Internal::RFileNTupleAnchor &anchor,
-                                                              std::string_view path, const RNTupleReadOptions &options)
+ROOT::Experimental::Detail::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, std::string_view path,
+                                                              const RNTupleReadOptions &options)
 {
    auto pageSource = std::make_unique<RPageSourceFile>("", path, options);
    pageSource->InitDescriptor(anchor);

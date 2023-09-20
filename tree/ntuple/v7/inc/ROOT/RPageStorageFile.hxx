@@ -127,12 +127,12 @@ private:
    std::unique_ptr<RClusterPool> fClusterPool;
 
    /// Deserialized header and footer into a minimal descriptor held by fDescriptorBuilder
-   void InitDescriptor(const Internal::RFileNTupleAnchor &anchor);
+   void InitDescriptor(const RNTuple &anchor);
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    /// Used from the RNTuple class to build a datasource if the anchor is already available
-   static std::unique_ptr<RPageSourceFile> CreateFromAnchor(const Internal::RFileNTupleAnchor &anchor,
-                                                            std::string_view path, const RNTupleReadOptions &options);
+   static std::unique_ptr<RPageSourceFile>
+   CreateFromAnchor(const RNTuple &anchor, std::string_view path, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 

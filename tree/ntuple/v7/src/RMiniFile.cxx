@@ -792,7 +792,7 @@ struct RTFStreamerInfoObject {
    char fLTitle = 0;
 
    RInt32BE fChecksum{ChecksumRNTupleClass()};
-   RUInt32BE fVersionRNTuple{1};
+   RUInt32BE fVersionRNTuple{4};
 
    RUInt32BE fByteCountObjArr{0x40000000 |
       (sizeof(RUInt32BE) + 10 /* strlen(TObjArray) + 1 */ + sizeof(RUInt32BE) +
@@ -924,7 +924,7 @@ struct RTFNTuple {
    RUInt64BE fChecksum{0};
 
    RTFNTuple() = default;
-   explicit RTFNTuple(const ROOT::Experimental::Internal::RFileNTupleAnchor &inMemoryAnchor)
+   explicit RTFNTuple(const ROOT::Experimental::RNTuple &inMemoryAnchor)
    {
       fVersionEpoch = inMemoryAnchor.fVersionEpoch;
       fVersionMajor = inMemoryAnchor.fVersionMajor;
@@ -939,9 +939,9 @@ struct RTFNTuple {
       fChecksum = inMemoryAnchor.fChecksum;
    }
    std::uint32_t GetSize() const { return sizeof(RTFNTuple); }
-   ROOT::Experimental::Internal::RFileNTupleAnchor ToAnchor() const
+   ROOT::Experimental::RNTuple ToAnchor() const
    {
-      ROOT::Experimental::Internal::RFileNTupleAnchor anchor;
+      ROOT::Experimental::RNTuple anchor;
       anchor.fVersionEpoch = fVersionEpoch;
       anchor.fVersionMajor = fVersionMajor;
       anchor.fVersionMinor = fVersionMinor;
@@ -1017,7 +1017,7 @@ ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::R
 {
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::Internal::RFileNTupleAnchor>
+ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
 {
    char ident[4];
@@ -1028,7 +1028,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntuple
    return GetNTupleBare(ntupleName);
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::Internal::RFileNTupleAnchor>
+ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
 {
    RTFHeader fileHeader;
@@ -1094,7 +1094,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    return ntuple.ToAnchor();
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::Internal::RFileNTupleAnchor>
+ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
 {
    RBareFileHeader fileHeader;
@@ -1300,8 +1300,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 {
    if (fFileProper) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
-      ROOT::Experimental::RNTuple ntuple(fNTupleAnchor);
-      fFileProper.fFile->WriteObject(&ntuple, fNTupleName.c_str());
+      fFileProper.fFile->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
       fFileProper.fFile->Write();
       return;
    }
