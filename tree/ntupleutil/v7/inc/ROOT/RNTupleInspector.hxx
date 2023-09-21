@@ -185,11 +185,11 @@ public:
    /// ~~~
    /// Ouput:
    /// ~~~
-   ///        column type |   count |        # elements |     bytes on disk |     bytes in memory
-   /// ------------------------------------------------------------------------------------------
-   ///       SplitIndex64 |       2 |               150 |                72 |              1200
-   ///        SplitReal32 |       4 |               300 |               189 |              1200
-   ///        SplitUInt32 |       3 |               225 |               123 |               900
+   ///  column type    | count   | # elements      | bytes on disk   | bytes in memory
+   /// ----------------|---------|-----------------|-----------------|-----------------
+   ///    SplitIndex64 |       2 |             150 |              72 |            1200
+   ///     SplitReal32 |       4 |             300 |             189 |            1200
+   ///     SplitUInt32 |       3 |             225 |             123 |             900
    /// ~~~
    ///
    /// **Example: printing the column type information of an RNTuple in CSV format**
