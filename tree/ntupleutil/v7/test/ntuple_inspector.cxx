@@ -367,14 +367,13 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    std::stringstream tableOutput;
    inspector->PrintColumnTypeInfo(ROOT::Experimental::ENTupleInspectorPrintFormat::kTable, tableOutput);
 
-   std::string expectedTableHeader{
-      "       column type |   count |        # elements |     bytes on disk |     bytes in memory"};
    std::getline(tableOutput, line);
-   EXPECT_EQ(expectedTableHeader, line);
+   EXPECT_EQ(" column type    | count   | # elements      | bytes on disk   | bytes in memory", line);
+
+   std::getline(tableOutput, line);
+   EXPECT_EQ("----------------|---------|-----------------|-----------------|-----------------", line);
 
    nLines = 0;
-   // The table output contains a separator line
-   std::getline(tableOutput, line);
    while (std::getline(tableOutput, line)) {
       ++nLines;
       colTypeStr = line.substr(0, line.find("|"));

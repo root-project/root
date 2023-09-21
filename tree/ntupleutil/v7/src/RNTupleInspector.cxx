@@ -241,19 +241,14 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       colTypeInfo[colInfo.GetType()] += colInfo;
    }
 
-   int colWidth = 20;
    switch (format) {
    case ENTupleInspectorPrintFormat::kTable:
-      output << std::setw(colWidth) << "column type |" << std::setw(colWidth / 2) << "count |" << std::setw(colWidth)
-             << "# elements |" << std::setw(colWidth) << "bytes on disk |" << std::setw(colWidth) << "bytes in memory"
-             << std::endl;
-      output << std::setw(colWidth * 4 + (colWidth / 2)) << std::setfill('-') << "-" << std::setfill(' ') << std::endl;
-      colWidth -= 2;
+      output << " column type    | count   | # elements      | bytes on disk   | bytes in memory" << std::endl;
+      output << "----------------|---------|-----------------|-----------------|-----------------" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
-         output << std::setw(colWidth) << Detail::RColumnElementBase::GetTypeName(colType) << " |"
-                << std::setw(colWidth / 2 - 1) << typeInfo.count << " |" << std::setw(colWidth) << typeInfo.nElems
-                << " |" << std::setw(colWidth) << typeInfo.onDiskSize << " |" << std::setw(colWidth)
-                << typeInfo.inMemSize << std::endl;
+         output << std::setw(15) << Detail::RColumnElementBase::GetTypeName(colType) << " |" << std::setw(8)
+                << typeInfo.count << " |" << std::setw(16) << typeInfo.nElems << " |" << std::setw(16)
+                << typeInfo.onDiskSize << " |" << std::setw(16) << typeInfo.inMemSize << " " << std::endl;
       }
       break;
    case ENTupleInspectorPrintFormat::kCSV:
