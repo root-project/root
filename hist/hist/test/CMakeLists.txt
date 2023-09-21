@@ -26,3 +26,12 @@ if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
   ROOT_ADD_GTEST(TFormulaHessianTests TFormulaHessianTests.cxx LIBRARIES Core MathCore Hist)
 endif()
+
+# Regression test for https://github.com/root-project/root/issues/13691
+# The test needs the following to be actually useful:
+# - It must be compiled and run as a standalone executable, as it depends on
+#   gROOT not being initialized yet.
+# - It must link to any library that is not in `core`. See the linked issue
+#   for details.
+ROOT_EXECUTABLE(tdirectoryfile_destructor_segfault tdirectoryfile_destructor_segfault.cxx LIBRARIES RIO Hist)
+ROOT_ADD_TEST(test-tdirectoryfile_destructor_segfault COMMAND tdirectoryfile_destructor_segfault)
