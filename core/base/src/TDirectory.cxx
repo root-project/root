@@ -96,7 +96,9 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
 
 TDirectory::~TDirectory()
 {
-   if (!gROOT) {
+   // Use gROOTLocal to avoid triggering undesired initialization of gROOT.
+   // For example in compiled C++ programs that don't use it directly.
+   if (!ROOT::Internal::gROOTLocal) {
       delete fList;
       return; //when called by TROOT destructor
    }
