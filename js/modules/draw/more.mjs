@@ -10,18 +10,17 @@ import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 async function drawText() {
    const text = this.getObject(),
          pp = this.getPadPainter(),
-         main = this.getFramePainter();
-   let w = pp.getPadWidth(),
-       h = pp.getPadHeight(),
-       pos_x = text.fX, pos_y = text.fY,
-       use_frame = false,
+         w = pp.getPadWidth(),
+         h = pp.getPadHeight(),
+         fp = this.getFramePainter();
+   let pos_x = text.fX, pos_y = text.fY,
        fact = 1,
        annot = this.matchObjectType(clTAnnotation);
 
    this.createAttText({ attr: text });
 
-   if (annot && main?.mode3d && isFunc(main?.convert3DtoPadNDC)) {
-      const pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
+   if (annot && fp?.mode3d && isFunc(fp?.convert3DtoPadNDC)) {
+      const pos = fp.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
       pos_x = pos.x;
       pos_y = pos.y;
       this.isndc = true;
@@ -29,11 +28,6 @@ async function drawText() {
    } else if (text.TestBit(BIT(14))) {
       // NDC coordinates
       this.isndc = true;
-   } else if (main && !main.mode3d) {
-      // frame coordiantes
-      w = main.getFrameWidth();
-      h = main.getFrameHeight();
-      use_frame = 'upper_layer';
    } else if (pp.getRootPad(true)) {
       // force pad coordiantes
    } else {
@@ -43,7 +37,7 @@ async function drawText() {
       text.fTextAlign = 22;
    }
 
-   this.createG(use_frame);
+   this.createG();
 
    this.draw_g.attr('transform', null); // remove transofrm from interactive changes
 
@@ -90,9 +84,9 @@ async function drawText() {
       if (annot !== '3d')
          addMoveHandler(this);
       else {
-         main.processRender3D = true;
+         fp.processRender3D = true;
          this.handleRender3D = () => {
-            const pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
+            const pos = fp.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
                   new_x = this.axisToSvg('x', pos.x, true),
                   new_y = this.axisToSvg('y', pos.y, true);
             makeTranslate(this.draw_g, new_x - this.pos_x, new_y - this.pos_y);

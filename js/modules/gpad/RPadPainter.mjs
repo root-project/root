@@ -1276,12 +1276,20 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format) {
       const use_frame = (full_canvas === 'frame'),
-          elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
-          painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
-          items = []; // keep list of replaced elements, which should be moved back at the end
+            elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
+            painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
+            items = []; // keep list of replaced elements, which should be moved back at the end
 
       if (elem.empty())
          return '';
+
+      if (use_frame || !full_canvas) {
+         const defs = this.getCanvSvg().selectChild('.canvas_defs');
+         if (!defs.empty()) {
+            items.push({ prnt: this.getCanvSvg(), defs });
+            elem.node().insertBefore(defs.node(), elem.node().firstChild);
+         }
+      }
 
       if (!use_frame) {
          // do not make transformations for the frame
@@ -1306,7 +1314,7 @@ class RPadPainter extends RObjectPainter {
             if ((can3d !== constants.Embed3D.Overlay) && (can3d !== constants.Embed3D.Embed)) return;
 
             const sz2 = main.getSizeFor3d(constants.Embed3D.Embed), // get size and position of DOM element as it will be embed
-                canvas = main.renderer.domElement;
+                  canvas = main.renderer.domElement;
 
             main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
 
@@ -1361,6 +1369,9 @@ class RPadPainter extends RObjectPainter {
 
             if (item.btns_node) // reinsert buttons
                item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
+
+            if (item.defs) // reinsert defs
+               item.prnt.node().insertBefore(item.defs.node(), item.prnt.node().firstChild);
          }
          return res;
       });
