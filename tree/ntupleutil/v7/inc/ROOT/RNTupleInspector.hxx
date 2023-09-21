@@ -171,8 +171,43 @@ public:
    /// Get the IDs of all columns with the given type.
    const std::vector<DescriptorId_t> GetColumnsByType(EColumnType);
 
-   /// Print the per-column type information in CSV format. This includes the column type, its count, the total number
-   /// of elements, the on-disk size and the in-memory size.
+   /// Print the per-column type information, either as a table or in CSV format. The output includes the column type,
+   /// its count, the total number of elements, the on-disk size and the in-memory size.
+   ///
+   /// **Example: printing the column type information of an RNTuple as a table**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTupleInspector.hxx>
+   /// using ROOT::Experimental::RNTupleInspector;
+   /// using ROOT::Experimental::ENTupleInspectorPrintFormat;
+   ///
+   /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
+   /// inspector->PrintColumnTypeInfo();
+   /// ~~~
+   /// Ouput:
+   /// ~~~
+   ///        column type |   count |        # elements |     bytes on disk |     bytes in memory
+   /// ------------------------------------------------------------------------------------------
+   ///       SplitIndex64 |       2 |               150 |                72 |              1200
+   ///        SplitReal32 |       4 |               300 |               189 |              1200
+   ///        SplitUInt32 |       3 |               225 |               123 |               900
+   /// ~~~
+   ///
+   /// **Example: printing the column type information of an RNTuple in CSV format**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTupleInspector.hxx>
+   /// using ROOT::Experimental::RNTupleInspector;
+   /// using ROOT::Experimental::ENTupleInspectorPrintFormat;
+   ///
+   /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
+   /// inspector->PrintColumnTypeInfo();
+   /// ~~~
+   /// Ouput:
+   /// ~~~
+   /// columnType,count,nElements,onDiskSize,inMemSize
+   /// SplitIndex64,2,150,72,1200
+   /// SplitReal32,4,300,189,1200
+   /// SplitUInt32,3,225,123,900
+   /// ~~~
    void PrintColumnTypeInfo(ENTupleInspectorPrintFormat format = ENTupleInspectorPrintFormat::kTable,
                             std::ostream &output = std::cout);
 
