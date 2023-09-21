@@ -55,8 +55,8 @@ ClassImp(ROOT::Internal::TTreeReaderValueBase);
 ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /*= 0*/,
                                                  const char* branchname /*= 0*/,
                                                  TDictionary* dict /*= 0*/):
-   fHaveLeaf(0),
-   fHaveStaticClassOffsets(0),
+   fHaveLeaf(false),
+   fHaveStaticClassOffsets(false),
    fReadStatus(kReadNothingYet),
    fBranchName(branchname),
    fTreeReader(reader),
@@ -376,7 +376,7 @@ TBranch *ROOT::Internal::TTreeReaderValueBase::SearchBranchWithCompositeName(TLe
 
          if (found){
             fStaticClassOffsets = offsets;
-            fHaveStaticClassOffsets = 1;
+            fHaveStaticClassOffsets = true;
 
             if (fDict != finalDataType && fDict != elementClass){
                errMsg = "Wrong data type ";
@@ -503,7 +503,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       if (branch && branch->IsA() == TBranchElement::Class() && branchFromFullName){
         branch = branchFromFullName;
         fStaticClassOffsets = {};
-        fHaveStaticClassOffsets = 0;
+        fHaveStaticClassOffsets = false;
       }
    }
 
@@ -534,7 +534,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
          // We reset the state, we continue
          fSetupStatus = kSetupInternalError;
          fStaticClassOffsets = {};
-         fHaveStaticClassOffsets = 0;
+         fHaveStaticClassOffsets = false;
       }
    }
 
