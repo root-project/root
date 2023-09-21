@@ -226,7 +226,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       std::uint32_t count;
       std::uint64_t nElems, onDiskSize, inMemSize;
 
-      void operator()(const RColumnInfo &colInfo)
+      void operator+=(const RColumnInfo &colInfo)
       {
          this->count++;
          this->nElems += colInfo.GetNElements();
@@ -238,7 +238,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
    std::map<EColumnType, ColumnTypeInfo> colTypeInfo;
 
    for (const auto &[colId, colInfo] : fColumnInfo) {
-      colTypeInfo[colInfo.GetType()](colInfo);
+      colTypeInfo[colInfo.GetType()] += colInfo;
    }
 
    int colWidth = 20;
