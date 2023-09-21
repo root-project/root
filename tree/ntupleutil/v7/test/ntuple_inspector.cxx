@@ -57,7 +57,7 @@ TEST(RNTupleInspector, CompressionSettings)
       auto nFldInt = model->MakeField<std::int32_t>("int");
 
       auto writeOptions = RNTupleWriteOptions();
-      writeOptions.SetCompression(505);
+      writeOptions.SetCompression(207);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
       *nFldInt = 42;
@@ -66,7 +66,8 @@ TEST(RNTupleInspector, CompressionSettings)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(505, inspector->GetCompressionSettings());
+   EXPECT_EQ(207, inspector->GetCompressionSettings());
+   EXPECT_EQ("LZMA (level 7)", inspector->GetCompressionSettingsAsString());
 }
 
 TEST(RNTupleInspector, SizeUncompressedSimple)

@@ -147,10 +147,15 @@ public:
    /// Get the descriptor for the RNTuple being inspected.
    RNTupleDescriptor *GetDescriptor() const { return fDescriptor.get(); }
 
-   /// Get the compression settings of the RNTuple being inspected. Here, we assume that the compression settings are
-   /// consistent across all clusters and columns. If this is not the case, an exception will be thrown upon
-   /// `RNTupleInspector::Create`.
+   /// Get the compression settings of the RNTuple being inspected according to the format described in Compression.h.
+   /// Here, we assume that the compression settings are consistent across all clusters and columns. If this is not the
+   /// case, an exception will be thrown upon `RNTupleInspector::Create`.
    int GetCompressionSettings() const { return fCompressionSettings; }
+
+   /// Get a description of compression settings of the RNTuple being inspected. Here, we assume that the compression
+   /// settings are consistent across all clusters and columns. If this is not the case, an exception will be thrown
+   /// upon `RNTupleInspector::Create`.
+   std::string GetCompressionSettingsAsString() const;
 
    /// Get the compressed, on-disk size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
