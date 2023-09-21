@@ -110,7 +110,7 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldI
 }
 
 std::vector<ROOT::Experimental::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetColumnsForFieldTree(DescriptorId_t fieldId) const
+ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(DescriptorId_t fieldId) const
 {
    std::vector<DescriptorId_t> colIds;
    std::deque<DescriptorId_t> fieldIdQueue{fieldId};
@@ -193,7 +193,7 @@ ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColum
    return fColumnInfo.at(physicalColumnId);
 }
 
-size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
+size_t ROOT::Experimental::RNTupleInspector::GetColumnCountByType(ROOT::Experimental::EColumnType colType) const
 {
    size_t typeCount = 0;
 
@@ -243,8 +243,8 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(std::string_view fieldNam
    return GetFieldTreeInfo(fieldId);
 }
 
-size_t
-ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::regex &typeNamePattern, bool includeSubFields) const
+size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::regex &typeNamePattern,
+                                                                 bool includeSubFields) const
 {
    size_t typeCount = 0;
 

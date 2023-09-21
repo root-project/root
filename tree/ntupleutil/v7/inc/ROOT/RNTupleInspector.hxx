@@ -126,7 +126,7 @@ private:
    RFieldTreeInfo CollectFieldTreeInfo(DescriptorId_t fieldId);
 
    /// Get the IDs of the columns that make up the given field, including its sub-fields.
-   std::vector<DescriptorId_t> GetColumnsForFieldTree(DescriptorId_t fieldId) const;
+   std::vector<DescriptorId_t> GetColumnsByFieldId(DescriptorId_t fieldId) const;
 
 public:
    RNTupleInspector(const RNTupleInspector &other) = delete;
@@ -164,7 +164,7 @@ public:
    const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
 
    /// Get the number of columns of a given type present in the RNTuple.
-   size_t GetColumnTypeCount(EColumnType colType) const;
+   size_t GetColumnCountByType(EColumnType colType) const;
 
    /// Get the IDs of all columns with the given type.
    const std::vector<DescriptorId_t> GetColumnsByType(EColumnType);
@@ -174,10 +174,10 @@ public:
 
    /// Get the number of fields of a given type or class present in the RNTuple. The type name may contain regular
    /// expression patterns in order to be able to group multiple kinds of types or classes.
-   size_t GetFieldTypeCount(const std::regex &typeNamePattern, bool searchInSubFields = true) const;
-   size_t GetFieldTypeCount(std::string_view typeNamePattern, bool searchInSubFields = true) const
+   size_t GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubFields = true) const;
+   size_t GetFieldCountByType(std::string_view typeNamePattern, bool searchInSubFields = true) const
    {
-      return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, searchInSubFields);
+      return GetFieldCountByType(std::regex{std::string(typeNamePattern)}, searchInSubFields);
    }
 
    /// Get the IDs of (sub-)fields whose name matches the given string. Because field names are unique by design,
