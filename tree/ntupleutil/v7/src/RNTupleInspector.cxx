@@ -271,6 +271,49 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
    }
 }
 
+std::unique_ptr<TH1D>
+ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental::ENTupleInspectorHist histKind,
+                                                              std::string_view histName, std::string_view histTitle)
+{
+   if (histName == "") {
+      switch (histKind) {
+      case ENTupleInspectorHist::kCount: histName = "colTypeCountHist"; break;
+      case ENTupleInspectorHist::kNElems: histName = "colTypeElemCountHist"; break;
+      case ENTupleInspectorHist::kCompressedSize: histName = "colTypeCompSizeHist"; break;
+      case ENTupleInspectorHist::kUncompressedSize: histName = "colTypeUncompSizeHist"; break;
+      default: throw RException(R__FAIL("Unknown histogram type"));
+      }
+   }
+
+   if (histTitle == "") {
+      switch (histKind) {
+      case ENTupleInspectorHist::kCount: histTitle = "Column count by type"; break;
+      case ENTupleInspectorHist::kNElems: histTitle = "Number of elements by column type"; break;
+      case ENTupleInspectorHist::kCompressedSize: histTitle = "Compressed size by column type"; break;
+      case ENTupleInspectorHist::kUncompressedSize: histTitle = "Uncompressed size by column type"; break;
+      default: throw RException(R__FAIL("Unknown histogram type"));
+      }
+   }
+
+   auto hist = std::make_unique<TH1D>(std::string(histName).c_str(), std::string(histTitle).c_str(), 1, 0, 1);
+
+   double data;
+   for (const auto &[colId, colInfo] : fColumnInfo) {
+      switch (histKind) {
+      case ENTupleInspectorHist::kCount: data = 1.; break;
+      case ENTupleInspectorHist::kNElems: data = colInfo.GetNElements(); break;
+      case ENTupleInspectorHist::kCompressedSize: data = colInfo.GetCompressedSize(); break;
+      case ENTupleInspectorHist::kUncompressedSize: data = colInfo.GetUncompressedSize(); break;
+      default: throw RException(R__FAIL("Unknown histogram type"));
+      }
+
+      hist->AddBinContent(hist->GetXaxis()->FindBin(Detail::RColumnElementBase::GetTypeName(colInfo.GetType()).c_str()),
+                          data);
+   }
+
+   return hist;
+}
+
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RFieldTreeInfo &
