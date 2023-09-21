@@ -113,7 +113,7 @@ TEST(RNTupleInspector, SizeUncompressedComplex)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   int nIndexCols = inspector->GetColumnTypeCount(ROOT::Experimental::EColumnType::kIndex64);
+   int nIndexCols = inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kIndex64);
    int nEntries = inspector->GetDescriptor()->GetNEntries();
 
    EXPECT_EQ(2, nIndexCols);
@@ -279,9 +279,9 @@ TEST(RNTupleInspector, ColumnTypeCount)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(2, inspector->GetColumnTypeCount(ROOT::Experimental::EColumnType::kSplitIndex64));
-   EXPECT_EQ(4, inspector->GetColumnTypeCount(ROOT::Experimental::EColumnType::kSplitReal32));
-   EXPECT_EQ(3, inspector->GetColumnTypeCount(ROOT::Experimental::EColumnType::kSplitInt32));
+   EXPECT_EQ(2, inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kSplitIndex64));
+   EXPECT_EQ(4, inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kSplitReal32));
+   EXPECT_EQ(3, inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kSplitInt32));
 }
 
 TEST(RNTupleInspector, ColumnsByType)
@@ -424,23 +424,23 @@ TEST(RNTupleInspector, FieldTypeCount)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(1, inspector->GetFieldTypeCount("ComplexStructUtil"));
-   EXPECT_EQ(1, inspector->GetFieldTypeCount("ComplexStructUtil", false));
+   EXPECT_EQ(1, inspector->GetFieldCountByType("ComplexStructUtil"));
+   EXPECT_EQ(1, inspector->GetFieldCountByType("ComplexStructUtil", false));
 
-   EXPECT_EQ(1, inspector->GetFieldTypeCount("std::vector<HitUtil>"));
-   EXPECT_EQ(0, inspector->GetFieldTypeCount("std::vector<HitUtil>", false));
+   EXPECT_EQ(1, inspector->GetFieldCountByType("std::vector<HitUtil>"));
+   EXPECT_EQ(0, inspector->GetFieldCountByType("std::vector<HitUtil>", false));
 
-   EXPECT_EQ(2, inspector->GetFieldTypeCount("std::vector<.*>"));
-   EXPECT_EQ(0, inspector->GetFieldTypeCount("std::vector<.*>", false));
+   EXPECT_EQ(2, inspector->GetFieldCountByType("std::vector<.*>"));
+   EXPECT_EQ(0, inspector->GetFieldCountByType("std::vector<.*>", false));
 
-   EXPECT_EQ(3, inspector->GetFieldTypeCount("BaseUtil"));
-   EXPECT_EQ(0, inspector->GetFieldTypeCount("BaseUtil", false));
+   EXPECT_EQ(3, inspector->GetFieldCountByType("BaseUtil"));
+   EXPECT_EQ(0, inspector->GetFieldCountByType("BaseUtil", false));
 
-   EXPECT_EQ(6, inspector->GetFieldTypeCount("std::int32_t"));
-   EXPECT_EQ(3, inspector->GetFieldTypeCount("std::int32_t", false));
+   EXPECT_EQ(6, inspector->GetFieldCountByType("std::int32_t"));
+   EXPECT_EQ(3, inspector->GetFieldCountByType("std::int32_t", false));
 
-   EXPECT_EQ(4, inspector->GetFieldTypeCount("float"));
-   EXPECT_EQ(0, inspector->GetFieldTypeCount("float", false));
+   EXPECT_EQ(4, inspector->GetFieldCountByType("float"));
+   EXPECT_EQ(0, inspector->GetFieldCountByType("float", false));
 }
 
 TEST(RNTupleInspector, FieldsByName)
