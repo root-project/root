@@ -4,7 +4,7 @@ const version_id = '7.5.pre',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '19/09/2023',
+version_date = '21/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -388,7 +388,8 @@ gStyle = {
    fYAxisExpXOffset: 0,
    fYAxisExpYOffset: 0,
    fAxisMaxDigits: 5,
-   fStripDecimals: true
+   fStripDecimals: true,
+   fBarWidth: 1
 };
 
 /** @summary Method returns current document in use
