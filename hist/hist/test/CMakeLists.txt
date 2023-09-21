@@ -26,3 +26,7 @@ if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
   ROOT_ADD_GTEST(TFormulaHessianTests TFormulaHessianTests.cxx LIBRARIES Core MathCore Hist)
 endif()
+
+# Regression test for https://github.com/root-project/root/issues/13691
+ROOT_EXECUTABLE(tdirectoryfile_destructor_segfault tdirectoryfile_destructor_segfault.cxx LIBRARIES RIO Hist)
+ROOT_ADD_TEST(test-tdirectoryfile_destructor_segfault COMMAND tdirectoryfile_destructor_segfault)
