@@ -76,6 +76,8 @@ DEPENDENCIES
   ROOTVecOps
 )
 
+target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
+
 # Enable RNTuple support for Intel DAOS
 if(daos OR daos_mock)
   set(ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)

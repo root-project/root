@@ -91,8 +91,9 @@ public:
    std::uint64_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
    std::uint64_t fLenFooter = 0;
-   /// The xxhash3 checksum of the other data members. When adding new members to the class,
-   /// this member should remain the last one.
+   /// The xxhash3 checksum of the serialized other members of the struct (excluding byte count and class version).
+   /// This member can only be interpreted during streaming.
+   /// When adding new members to the class, this member must remain the last one.
    std::uint64_t fChecksum = 0;
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
