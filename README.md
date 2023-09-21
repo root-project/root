@@ -2,7 +2,7 @@
 
 ## About
 
-The ROOT system provides a set of OO frameworks with all the functionality
+The ROOT system provides a set of modules with all the functionality
 needed to handle and analyze large amounts of data in a very efficient way.
 Having the data defined as a set of objects, specialized storage methods are
 used to get direct access to the separate attributes of the selected objects,
