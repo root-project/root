@@ -429,29 +429,36 @@ finalizeCmdList(ModelConfig const &modelConfig, RooLinkedList const &cmdList, st
 
 } // namespace
 
-/// Wrapper around RooAbsPdf::createNLL(RooAbsData&, const RooLinkedList&), where
-/// the pdf and some configuration options are retrieved from the ModelConfig.
-///
-/// The options taken from the ModelConfig are:
-///
-///   * ConditionalObservables()
-///   * GlobalObservables()
-///   * ExternalConstraints()
-///
-/// Except for the options above, you can still pass all the other command
-/// arguments supported by RooAbsPdf::createNLL().
-std::unique_ptr<RooAbsReal> ModelConfig::createNLL(RooAbsData &data, const RooLinkedList &cmdList) const
+/** @fn RooStats::ModelConfig::createNLL()
+ *
+ * Wrapper around RooAbsPdf::createNLL(), where
+ * the pdf and some configuration options are retrieved from the ModelConfig.
+ *
+ * The options taken from the ModelConfig are:
+ *
+ *   * ConditionalObservables()
+ *   * GlobalObservables()
+ *   * ExternalConstraints()
+ *
+ * Except for the options above, you can still pass all the other command
+ * arguments supported by RooAbsPdf::createNLL().
+ */
+
+std::unique_ptr<RooAbsReal> ModelConfig::createNLLImpl(RooAbsData &data, const RooLinkedList &cmdList) const
 {
    std::vector<RooCmdArg> cmdArgs;
    auto finalCmdList = finalizeCmdList(*this, cmdList, cmdArgs);
    return std::unique_ptr<RooAbsReal>{GetPdf()->createNLL(data, *finalCmdList)};
 }
 
-/// Wrapper around RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&), where
-/// the pdf and some configuration options are retrieved from the ModelConfig.
-///
-/// Sett ModelConfig::createNLL() for more information.
-std::unique_ptr<RooFitResult> ModelConfig::fitTo(RooAbsData &data, const RooLinkedList &cmdList)
+/** @fn RooStats::ModelConfig::fitTo()
+ *
+ * Wrapper around RooAbsPdf::fitTo(), where
+ * the pdf and some configuration options are retrieved from the ModelConfig.
+ *
+ * See ModelConfig::createNLL() for more information.
+ */
+std::unique_ptr<RooFitResult> ModelConfig::fitToImpl(RooAbsData &data, const RooLinkedList &cmdList)
 {
    std::vector<RooCmdArg> cmdArgs;
    auto finalCmdList = finalizeCmdList(*this, cmdList, cmdArgs);

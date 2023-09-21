@@ -868,7 +868,7 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 ///            the ratio of squared event weights over event weights:
 ///            \f$ \sum w_{i}^2 / \sum w_{i} \f$.
 ///            Intended to be used by fits with the `SumW2Error()` option that
-///            can be passed to RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&)
+///            can be passed to RooAbsPdf::fitTo()
 ///            (see the documentation of said function to learn more about the
 ///            interpretation of fits with squared weights).
 /// \param[in] doOffset See RooAbsPdf::extendedTerm(double, RooArgSet const*, double, bool) const.
@@ -883,101 +883,123 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Construct representation of -log(L) of PDF with given dataset. If dataset is unbinned, an unbinned likelihood is constructed. If the dataset
-/// is binned, a binned likelihood is constructed.
-///
-/// The following named arguments are supported
-///
-/// <table>
-/// <tr><th> Type of CmdArg    <th>    Effect on nll
-/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Do not normalize PDF over listed observables.
-//                                                  Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
-/// <tr><td> `Extended(bool flag)` <td> Include the extended likelihood term, i.e., a Poisson term constraining the models predicted number of events.
-///                                     - If you don't pass this command, an extended fit will be done by default if the pdf makes a prediction on the number of events
-///                                       (in RooFit jargon, "if the pdf can be extended").
-///                                     - Passing `Extended(true)` when the the pdf makes no prediction on the expected number of events will result in error messages,
-///                                       and no extended term is added after all.
-///                                     - There are cases where the fit **must** be done with an extended term. This happens for example when you have a RooAddPdf
-///                                       where the coefficients represent component yields. If the extended term is not included, these coefficients will not be
-///                                       well-defined, as the RooAddPdf always normalizes itself. If you pass `Extended(false)` in such a case, an error will be
-///                                       printed and you'll most likely get garbage results.
-/// <tr><td> `Range(const char* name)`         <td> Fit only data inside range with given name
-/// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
-///                                               Multiple comma separated range names can be specified.
-/// <tr><td> `SumCoefRange(const char* name)`  <td> Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on num CPUs
-///   <table>
-///   <tr><th> Strategy   <th> Effect
-///   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks
-///   <tr><td> 1 = RooFit::Interleave <td> Process event i%N in process N. Recommended for binned data with
-///                     a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
-///   <tr><td> 2 = RooFit::SimComponents <td> Process each component likelihood of a RooSimultaneous fully in a single process
-///                     and distribute components over processes. This approach can be beneficial if normalization calculation time
-///                     dominates the total computation time of a component (since the normalization calculation must be performed
-///                     in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
-///                     parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
-///                     a single parameter, only 1 of the N processes will be active most of the time if RooSimultaneous components
-///                     do not share many parameters
-///   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
-///                     30 dataset entries, for which strategy 2 is followed.
-///   </table>
-/// <tr><td> `BatchMode(bool on)`              <td> Batch evaluation mode. See fitTo().
-/// <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization (on by default)
-/// <tr><td> `SplitRange(bool flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
-///                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
-/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
-/// ```
-/// myVariable.setRange("range_pi0", 135, 210);
-/// myVariable.setRange("range_gamma", 50, 210);
-/// ```
-/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms (that is usually product PDFs, where one
-///     term of the product depends on parameters but not on the observable(s),), only apply constraints to the given subset of parameters.
-/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
-/// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
-///                                                        If none are specified the constrained parameters are used.
-/// <tr><td> `GlobalObservablesSource(const char* sourceName)` <td> Which source to prioritize for global observable values.
-///                                                                 Can be either:
-///                                                                 - `data`: to take the values from the dataset,
-///                                                                   falling back to the pdf value if a given global observable is not available.
-///                                                                   If no `GlobalObservables` or `GlobalObservablesTag` command argument is given, the set
-///                                                                   of global observables will be automatically defined to be the set stored in the data.
-///                                                                 - `model`: to take all values from the pdf and completely ignore the set of global observables stored in the data
-///                                                                   (not even using it to automatically define the set of global observables
-///                                                                   if the `GlobalObservables` or `GlobalObservablesTag` command arguments are not given).
-///                                                                 The default option is `data`.
-/// <tr><td> `GlobalObservablesTag(const char* tagName)` <td> Define the set of normalization observables to be used for the constraint terms by
-///                                                         a string attribute associated with pdf observables that match the given tagName.
-/// <tr><td> `Verbose(bool flag)`           <td> Controls RooFit informational messages in likelihood construction
-/// <tr><td> `CloneData(bool flag)`            <td> Use clone of dataset in NLL (default is true).
-///                                                 \warning Deprecated option that is ignored. It is up to the implementation of the NLL creation method if the data is cloned or not.
-/// <tr><td> `Offset(std::string const& mode)` <td> Likelihood offsetting mode. Can be either:
-///                                                 - `"none"` (default): no offsetting
-///                                                 - `"initial"`: Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
-///                                                    This can improve numeric stability in simultaneous fits with components with large likelihood values.
-///                                                 - `"bin"`: Offset by the likelihood bin-by-bin with a template histogram model based on the obersved data.
-///                                                   This results in per-bin values that are all in the same order of magnitude, which reduces precision loss in the sum,
-///                                                   which can drastically improve numeric stability.
-///                                                   Furthermore, 2 * NLL defined like this is approximately chi-square distributed, allowing for goodness-of-fit tests.
-/// <tr><td> `IntegrateBins(double precision)` <td> In binned fits, integrate the PDF over the bins instead of using the probability density at the bin centre.
-///                                                 This can reduce the bias observed when fitting functions with high curvature to binned data.
-///                                                 - precision > 0: Activate bin integration everywhere. Use precision between 0.01 and 1.E-6, depending on binning.
-///                                                   Note that a low precision such as 0.01 might yield identical results to 1.E-4, since the integrator might reach 1.E-4 already in its first
-///                                                   integration step. If lower precision is desired (more speed), a RooBinSamplingPdf has to be created manually, and its integrator
-///                                                   has to be manipulated directly.
-///                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
-///                                                 - precision < 0: Deactivate.
-///                                                 \see RooBinSamplingPdf
-/// <tr><td> `ModularL(bool flag)`           <td>  Enable or disable modular likelihoods, which will become the default in a future release.
-///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end. Note that this
-///                                                should be set to true for parallel minimization of likelihoods!
-///                                                Note that it is currently not recommended to use Modular likelihoods without any parallelization enabled in the minimization, since
-///                                                some features such as offsetting might not yet work in this case.
-/// </table>
-///
-///
+/** @fn RooAbsPdf::createNLL()
+ *
+ * @brief Construct representation of -log(L) of PDF with given dataset.
+ *
+ * If dataset is unbinned, an unbinned likelihood is constructed.
+ * If the dataset is binned, a binned likelihood is constructed.
+ *
+ * @param data Reference to a RooAbsData object representing the dataset.
+ * @param cmdArgs Variadic template arguments representing optional command arguments.
+ *             You can pass either an arbitrary number of RooCmdArg instances
+ *             or a single RooLinkedList that points to the RooCmdArg objects.
+ * @return An owning pointer to the created RooAbsReal NLL object.
+ *
+ * @tparam CmdArgs_t Template types for optional command arguments.
+ *                   Can either be an arbitrary number of RooCmdArg or a single RooLinkedList.
+ *
+ * \note This front-end function should not be re-implemented in derived PDF types.
+ *       If you mean to customize the NLL creation routine,
+ *       you need to override the virtual RooAbsPdf::createNLLImpl() method.
+ *
+ * The following named arguments are supported:
+ *
+ * <table>
+ * <tr><th> Type of CmdArg    <th>    Effect on nll
+ * <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Do not normalize PDF over listed observables.
+ *                                                 Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
+ * <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
+ *                                                  In this case, the unnormalized PDF \f$f(x)\f$ is normalized by the integral over all ranges \f$r_i\f$:
+ *                                                  \f[
+ *                                                      p(x) = \frac{f(x)}{\sum_i \int_{r_i} f(x) dx}.
+ *                                                  \f]
+ * <tr><td> `Range(double lo, double hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
+ * <tr><td> `SumCoefRange(const char* name)`  <td> Set the range in which to interpret the coefficients of RooAddPdf components
+ * <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on num CPUs
+ *   <table>
+ *   <tr><th> Strategy   <th> Effect
+ *   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks
+ *   <tr><td> 1 = RooFit::Interleave <td> Process event i%N in process N. Recommended for binned data with
+ *                     a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
+ *   <tr><td> 2 = RooFit::SimComponents <td> Process each component likelihood of a RooSimultaneous fully in a single process
+ *                     and distribute components over processes. This approach can be beneficial if normalization calculation time
+ *                     dominates the total computation time of a component (since the normalization calculation must be performed
+ *                     in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
+ *                     parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
+ *                     a single parameter, only 1 of the N processes will be active most of the time if RooSimultaneous components
+ *                     do not share many parameters
+ *   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
+ *                     30 dataset entries, for which strategy 2 is followed.
+ *   </table>
+ * <tr><td> `BatchMode(bool on)`                       <td> **Experimental** batch evaluation mode. This computes a batch of likelihood values at a time,
+ *                                                          uses faster math functions and possibly auto vectorisation (this depends on the compiler flags).
+ *                                                          Depending on hardware capabilities, the compiler flags and whether a batch evaluation function was
+ *                                                          implemented for the PDFs of the model, likelihood computations are 2x to 10x faster.
+ *                                                          The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than 1.E-12,
+ *                                                          and fit parameters usually agree to better than 1.E-6.
+ * <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization (on by default)
+ * <tr><td> `SplitRange(bool flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
+ *                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
+ * Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+ * ```
+ * myVariable.setRange("range_pi0", 135, 210);
+ * myVariable.setRange("range_gamma", 50, 210);
+ * ```
+ * <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms (that is usually product PDFs, where one
+ *     term of the product depends on parameters but not on the observable(s),), only apply constraints to the given subset of parameters.
+ * <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
+ * <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
+ *                                                        If none are specified the constrained parameters are used.
+ * <tr><td> `GlobalObservablesSource(const char* sourceName)` <td> Which source to prioritize for global observable values.
+ *                                                                 Can be either:
+ *                                                                 - `data`: to take the values from the dataset,
+ *                                                                   falling back to the pdf value if a given global observable is not available.
+ *                                                                   If no `GlobalObservables` or `GlobalObservablesTag` command argument is given, the set
+ *                                                                   of global observables will be automatically defined to be the set stored in the data.
+ *                                                                 - `model`: to take all values from the pdf and completely ignore the set of global observables stored in the data
+ *                                                                   (not even using it to automatically define the set of global observables
+ *                                                                   if the `GlobalObservables` or `GlobalObservablesTag` command arguments are not given).
+ *                                                                 The default option is `data`.
+ * <tr><td> `GlobalObservablesTag(const char* tagName)` <td> Define the set of normalization observables to be used for the constraint terms by
+ *                                                         a string attribute associated with pdf observables that match the given tagName.
+ * <tr><td> `Verbose(bool flag)`           <td> Controls RooFit informational messages in likelihood construction
+ * <tr><td> `CloneData(bool flag)`            <td> Use clone of dataset in NLL (default is true).
+ *                                                 \warning Deprecated option that is ignored. It is up to the implementation of the NLL creation method if the data is cloned or not.
+ * <tr><td> `Offset(std::string const& mode)` <td> Likelihood offsetting mode. Can be either:
+ *                                                 - `"none"` (default): no offsetting
+ *                                                 - `"initial"`: Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
+ *                                                    This can improve numeric stability in simultaneous fits with components with large likelihood values.
+ *                                                 - `"bin"`: Offset by the likelihood bin-by-bin with a template histogram model based on the obersved data.
+ *                                                   This results in per-bin values that are all in the same order of magnitude, which reduces precision loss in the sum,
+ *                                                   which can drastically improve numeric stability.
+ *                                                   Furthermore, 2 * NLL defined like this is approximately chi-square distributed, allowing for goodness-of-fit tests.
+ * <tr><td> `IntegrateBins(double precision)` <td> In binned fits, integrate the PDF over the bins instead of using the probability density at the bin centre.
+ *                                                 This can reduce the bias observed when fitting functions with high curvature to binned data.
+ *                                                 - precision > 0: Activate bin integration everywhere. Use precision between 0.01 and 1.E-6, depending on binning.
+ *                                                   Note that a low precision such as 0.01 might yield identical results to 1.E-4, since the integrator might reach 1.E-4 already in its first
+ *                                                   integration step. If lower precision is desired (more speed), a RooBinSamplingPdf has to be created manually, and its integrator
+ *                                                   has to be manipulated directly.
+ *                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
+ *                                                 - precision < 0: Deactivate.
+ *                                                 \see RooBinSamplingPdf
+ * <tr><td> `ModularL(bool flag)`           <td>  Enable or disable modular likelihoods, which will become the default in a future release.
+ *                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end. Note that this
+ *                                                should be set to true for parallel minimization of likelihoods!
+ *                                                Note that it is currently not recommended to use Modular likelihoods without any parallelization enabled in the minimization, since
+ *                                                some features such as offsetting might not yet work in this case.
+ * </table>
+ */
 
-RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
+
+/** @brief Protected implementation of the NLL creation routine.
+ *
+ * This virtual function can be overridden in case you want to change the NLL creation logic for custom PDFs.
+ *
+ * \note Never call this function directly. Instead, call RooAbsPdf::createNLL().
+ */
+
+std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const RooLinkedList& cmdList)
 {
   auto baseName = std::string("nll_") + GetName() + "_" + data.GetName();
 
@@ -1047,7 +1069,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
              .GlobalObservables(glObsSet)
              .GlobalObservablesTag(rangeName.c_str());
 
-      return RooFit::Detail::owningPtr(std::make_unique<RooFit::TestStatistics::RooRealL>("likelihood", "", builder.build()));
+      return std::make_unique<RooFit::TestStatistics::RooRealL>("likelihood", "", builder.build());
   }
 
   // Decode command line arguments
@@ -1193,7 +1215,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
 
     nllWrapper->addOwnedComponents(std::move(nll));
     nllWrapper->addOwnedComponents(std::move(pdfClone));
-    return RooFit::Detail::owningPtr(std::move(nllWrapper));
+    return nllWrapper;
   }
 
   auto binnedLInfo = RooHelpers::getBinnedL(*this);
@@ -1250,169 +1272,135 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
     nll->enableOffsetting(true) ;
   }
 
-  return RooFit::Detail::owningPtr(std::move(nll));
+  return nll;
 }
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Fit PDF to given dataset. If dataset is unbinned, an unbinned maximum likelihood is performed. If the dataset
-/// is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
-/// commands MIGRAD, HESSE in succession.
-/// \param[in] data  Data to fit the PDF to
-/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8  One or more arguments to control the behaviour of the fit
-/// \return RooFitResult with fit status and parameters if option Save() is used, `nullptr` otherwise. The user takes ownership of the fit result.
-///
-/// The following named arguments are supported
-///
-/// <table>
-/// <tr><th> Type of CmdArg                  <th> Options to control construction of -log(L)
-/// <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Do not normalize PDF over listed observables.
-//                                                   Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
-/// <tr><td> `Extended(bool flag)`           <td>  Add extended likelihood term, off by default
-/// <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
-///                                                  In this case, the unnormalized PDF \f$f(x)\f$ is normalized by the integral over all ranges \f$r_i\f$:
-///                                                  \f[
-///                                                      p(x) = \frac{f(x)}{\sum_i \int_{r_i} f(x) dx}.
-///                                                  \f]
-/// <tr><td> `Range(double lo, double hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
-/// <tr><td> `SumCoefRange(const char* name)`  <td>  Set the range in which to interpret the coefficients of RooAddPdf components
-/// <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on `num` CPUs
-///   <table>
-///   <tr><th> Strategy   <th> Effect
-///   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks
-///   <tr><td> 1 = RooFit::Interleave <td> Process event i%N in process N. Recommended for binned data with
-///                     a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
-///   <tr><td> 2 = RooFit::SimComponents <td> Process each component likelihood of a RooSimultaneous fully in a single process
-///                     and distribute components over processes. This approach can be beneficial if normalization calculation time
-///                     dominates the total computation time of a component (since the normalization calculation must be performed
-///                     in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
-///                     parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
-///                     a single parameter, only 1 of the N processes will be active most of the time if RooSimultaneous components
-///                     do not share many parameters
-///   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
-///                     30 dataset entries, for which strategy 2 is followed.
-///   </table>
-/// <tr><td> `SplitRange(bool flag)`          <td>  Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed
-///                                                 to by `rangeName_indexState` where indexState is the state of the master index category of the simultaneous fit.
-/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
-/// ```
-/// myVariable.setRange("range_pi0", 135, 210);
-/// myVariable.setRange("range_gamma", 50, 210);
-/// ```
-/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms (that is usually product PDFs, where one
-///     term of the product depends on parameters but not on the observable(s),), only apply constraints to the given subset of parameters.
-/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
-/// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
-///                                                        If none are specified the constrained parameters are used.
-/// <tr><td> `Offset(std::string const& mode)`          <td>  Likelihood offsetting mode. See createNLL(RooAbsData&, RooLinkedList const&).
-/// <tr><td> `BatchMode(bool on)`                       <td> **Experimental** batch evaluation mode. This computes a batch of likelihood values at a time,
-///                                                          uses faster math functions and possibly auto vectorisation (this depends on the compiler flags).
-///                                                          Depending on hardware capabilities, the compiler flags and whether a batch evaluation function was
-///                                                          implemented for the PDFs of the model, likelihood computations are 2x to 10x faster.
-///                                                          The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than 1.E-12,
-///                                                          and fit parameters usually agree to better than 1.E-6.
-/// <tr><td> `IntegrateBins(double precision)` <td> In binned fits, integrate the PDF over the bins instead of using the probability density at the bin centre.
-///                                                 This can reduce the bias observed when fitting functions with high curvature to binned data.
-///                                                 - precision > 0: Activate bin integration everywhere. Use precision between 0.01 and 1.E-6, depending on binning.
-///                                                   Note that a low precision such as 0.01 might yield identical results to 1.E-4, since the integrator might reach 1.E-4 already in its first
-///                                                   integration step. If lower precision is desired (more speed), a RooBinSamplingPdf has to be created manually, and its integrator
-///                                                   has to be manipulated directly.
-///                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
-///                                                 - precision < 0: Deactivate.
-///                                                 \see RooBinSamplingPdf
-///
-/// <tr><th><th> Options to control flow of fit procedure
-/// <tr><td> `Minimizer("<type>", "<algo>")`   <td>  Choose minimization package and optionally the algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
-///                                       but others can be specified (through RooMinimizer interface).
-///   <table>
-///   <tr><th> Type         <th> Algorithm
-///   <tr><td> Minuit       <td>  migrad, simplex, minimize (=migrad+simplex), migradimproved (=migrad+improve)
-///   <tr><td> Minuit2      <td>  migrad, simplex, minimize, scan
-///   <tr><td> GSLMultiMin  <td>  conjugatefr, conjugatepr, bfgs, bfgs2, steepestdescent
-///   <tr><td> GSLSimAn     <td>  -
-///   </table>
-///
-/// <tr><td> `InitialHesse(bool flag)`       <td>  Flag controls if HESSE before MIGRAD as well, off by default
-/// <tr><td> `Optimize(bool flag)`           <td>  Activate constant term optimization of test statistic during minimization (on by default)
-/// <tr><td> `Hesse(bool flag)`              <td>  Flag controls if HESSE is run after MIGRAD, on by default
-/// <tr><td> `Minos(bool flag)`              <td>  Flag controls if MINOS is run after HESSE, off by default
-/// <tr><td> `Minos(const RooArgSet& set)`     <td>  Only run MINOS on given subset of arguments
-/// <tr><td> `Save(bool flag)`               <td>  Flag controls if RooFitResult object is produced and returned, off by default
-/// <tr><td> `Strategy(Int_t flag)`            <td>  Set Minuit strategy (0 to 2, default is 1)
-/// <tr><td> `MaxCalls(int n)`              <td> Change maximum number of likelihood function calls from MINUIT (if `n <= 0`, the default of 500 * #%parameters is used)
-/// <tr><td> `EvalErrorWall(bool flag=true)`    <td>  When parameters are in disallowed regions (e.g. PDF is negative), return very high value to fitter
-///                                                  to force it out of that region. This can, however, mean that the fitter gets lost in this region. If
-///                                                  this happens, try switching it off.
-/// <tr><td> `RecoverFromUndefinedRegions(double strength)` <td> When PDF is invalid (e.g. parameter in undefined region), try to direct minimiser away from that region.
-///                                                              `strength` controls the magnitude of the penalty term. Leaving out this argument defaults to 10. Switch off with `strength = 0.`.
-///
-/// <tr><td> `SumW2Error(bool flag)`         <td>  Apply correction to errors and covariance matrix.
-///       This uses two covariance matrices, one with the weights, the other with squared weights,
-///       to obtain the correct errors for weighted likelihood fits. If this option is activated, the
-///       corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where \f$ V \f$ is the original
-///       covariance matrix and \f$ C \f$ is the inverse of the covariance matrix calculated using the
-///       squared weights. This allows to switch between two interpretations of errors:
-///       <table>
-///       <tr><th> SumW2Error <th> Interpretation
-///       <tr><td> true       <td> The errors reflect the uncertainty of the Monte Carlo simulation.
-///                                Use this if you want to know how much accuracy you can get from the available Monte Carlo statistics.
-///
-///                                **Example**: Simulation with 1000 events, the average weight is 0.1.
-///                                The errors are as big as if one fitted to 1000 events.
-///       <tr><td> false      <td> The errors reflect the errors of a dataset, which is as big as the sum of weights.
-///                                Use this if you want to know what statistical errors you would get if you had a dataset with as many
-///                                events as the (weighted) Monte Carlo simulation represents.
-///
-///                                **Example** (Data as above):
-///                                The errors are as big as if one fitted to 100 events.
-///       </table>
-///       \note If the `SumW2Error` correction is enabled, the covariance matrix quality stored in the RooFitResult
-///             object will be the minimum of the original covariance matrix quality and the quality of the covariance
-///             matrix calculated with the squared weights.
-/// <tr><td> `AsymptoticError()`               <td> Use the asymptotically correct approach to estimate errors in the presence of weights.
-///                                                 This is slower but more accurate than `SumW2Error`. See also https://arxiv.org/abs/1911.01303).
-/// <tr><td> `PrefitDataFraction(double fraction)`
-///                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
-///                                                  by finding good starting values for the parameters for the actual fit.
-///                                                  \warning Prefitting may give bad results when used in binned analysis.
-///
-/// <tr><th><th> Options to control informational output
-/// <tr><td> `Verbose(bool flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit).
-/// <tr><td> `Timer(bool flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default.
-/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 to 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
-///                                                  See RooMinimizer::PrintLevel for the meaning of the levels.
-/// <tr><td> `Warnings(bool flag)`           <td>  Enable or disable MINUIT warnings (enabled by default)
-/// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
-///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
-///                                                a positive value will print details of each error up to `numErr` messages per p.d.f component.
-/// <tr><td> `ModularL(bool flag)`           <td>  Enable or disable modular likelihoods, which will become the default in a future release.
-///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end.
-///                                                This option is forced to true in case parallelization is requested with the `Parallelize` named argument.
-///                                                Note that it is currently not recommended to use modular likelihoods without any parallelization enabled, since
-///                                                some features such as offsetting might not yet work in this case.
-/// <tr><td> `Parallelize(Int_t nWorkers)`   <td>  Control global parallelization settings. Arguments 1 and above enable the use of RooFit's parallel minimization
-///                                                backend and uses the number given as the number of workers to use in the parallelization. -1 also enables
-///                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes.
-///                                                0 disables this feature.
-/// <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** Control gradient parallelization settings. The first argument
-///                                                                                                      only disables or enables gradient parallelization, this is on by default.
-///                                                                                                      The second argument determines the internal partial derivative calculation
-///                                                                                                      ordering strategy. The third argument determines the number of partial
-///                                                                                                      derivatives that are executed per task package on each worker.
-/// <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4)`   <td>  **Experimental** Control settings related to the parallelization of likelihoods
-///                                                                                                      outside of the gradient calculation but in the minimization, most prominently
-///                                                                                                      in the linesearch step. The first argument this disables or enables likelihood
-///                                                                                                      parallelization. The second argument determines whether to split the task batches
-///                                                                                                      per event or per likelihood component. And the third argument how many events or
-///                                                                                                      respectively components to include in each batch.
-/// <tr><td> `TimingAnalysis(bool flag)`   <td> **Experimental** log timings. This feature logs timings with NewStyle likelihoods on multiple processes simultaneously
-///                                         and outputs the timings at the end of a run to json log files, which can be analyzed with the
-///                                         `RooFit::MultiProcess::HeatmapAnalyzer`. Only works with simultaneous likelihoods.
-/// </table>
-///
+/** @fn RooAbsPdf::fitTo()
+ *
+ * @brief Fit PDF to given dataset.
+ *
+ * If dataset is unbinned, an unbinned maximum likelihood is performed.
+ * If the dataset is binned, a binned maximum likelihood is performed.
+ * By default the fit is executed through the MINUIT commands MIGRAD, HESSE in succession.
+ *
+ * @param data Reference to a RooAbsData object representing the dataset.
+ * @param cmdArgs Variadic template arguments representing optional command arguments.
+ *             You can pass either an arbitrary number of RooCmdArg instances
+ *             or a single RooLinkedList that points to the RooCmdArg objects.
+ * @return An owning pointer to the created RooAbsReal NLL object.
+ * @return RooFitResult with fit status and parameters if option Save() is used, `nullptr` otherwise. The user takes ownership of the fit result.
+ *
+ * @tparam CmdArgs_t Template types for optional command arguments.
+ *              Can either be an arbitrary number of RooCmdArg or a single RooLinkedList.
+ *
+ * \note This front-end function should not be re-implemented in derived PDF types.
+ *       If you mean to customize the likelihood fitting routine,
+ *       you need to override the virtual RooAbsPdf::fitToImpl() method.
+ *
+ * The following named arguments are supported:
+ *
+ * <table>
+ * <tr><th> Type of CmdArg                  <th> Options to control construction of -log(L)
+ * <tr><td> <td> All command arguments that can also be passed to the NLL creation method.
+ *                \see RooAbsPdf::createNLL()
+ *
+ * <tr><th><th> Options to control flow of fit procedure
+ * <tr><td> `Minimizer("<type>", "<algo>")`   <td>  Choose minimization package and optionally the algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
+ *                                       but others can be specified (through RooMinimizer interface).
+ *   <table>
+ *   <tr><th> Type         <th> Algorithm
+ *   <tr><td> Minuit       <td>  migrad, simplex, minimize (=migrad+simplex), migradimproved (=migrad+improve)
+ *   <tr><td> Minuit2      <td>  migrad, simplex, minimize, scan
+ *   <tr><td> GSLMultiMin  <td>  conjugatefr, conjugatepr, bfgs, bfgs2, steepestdescent
+ *   <tr><td> GSLSimAn     <td>  -
+ *   </table>
+ *
+ * <tr><td> `InitialHesse(bool flag)`       <td>  Flag controls if HESSE before MIGRAD as well, off by default
+ * <tr><td> `Optimize(bool flag)`           <td>  Activate constant term optimization of test statistic during minimization (on by default)
+ * <tr><td> `Hesse(bool flag)`              <td>  Flag controls if HESSE is run after MIGRAD, on by default
+ * <tr><td> `Minos(bool flag)`              <td>  Flag controls if MINOS is run after HESSE, off by default
+ * <tr><td> `Minos(const RooArgSet& set)`     <td>  Only run MINOS on given subset of arguments
+ * <tr><td> `Save(bool flag)`               <td>  Flag controls if RooFitResult object is produced and returned, off by default
+ * <tr><td> `Strategy(Int_t flag)`            <td>  Set Minuit strategy (0 to 2, default is 1)
+ * <tr><td> `MaxCalls(int n)`              <td> Change maximum number of likelihood function calls from MINUIT (if `n <= 0`, the default of 500 * #%parameters is used)
+ * <tr><td> `EvalErrorWall(bool flag=true)`    <td>  When parameters are in disallowed regions (e.g. PDF is negative), return very high value to fitter
+ *                                                  to force it out of that region. This can, however, mean that the fitter gets lost in this region. If
+ *                                                  this happens, try switching it off.
+ * <tr><td> `RecoverFromUndefinedRegions(double strength)` <td> When PDF is invalid (e.g. parameter in undefined region), try to direct minimiser away from that region.
+ *                                                              `strength` controls the magnitude of the penalty term. Leaving out this argument defaults to 10. Switch off with `strength = 0.`.
+ *
+ * <tr><td> `SumW2Error(bool flag)`         <td>  Apply correction to errors and covariance matrix.
+ *       This uses two covariance matrices, one with the weights, the other with squared weights,
+ *       to obtain the correct errors for weighted likelihood fits. If this option is activated, the
+ *       corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where \f$ V \f$ is the original
+ *       covariance matrix and \f$ C \f$ is the inverse of the covariance matrix calculated using the
+ *       squared weights. This allows to switch between two interpretations of errors:
+ *       <table>
+ *       <tr><th> SumW2Error <th> Interpretation
+ *       <tr><td> true       <td> The errors reflect the uncertainty of the Monte Carlo simulation.
+ *                                Use this if you want to know how much accuracy you can get from the available Monte Carlo statistics.
+ *
+ *                                **Example**: Simulation with 1000 events, the average weight is 0.1.
+ *                                The errors are as big as if one fitted to 1000 events.
+ *       <tr><td> false      <td> The errors reflect the errors of a dataset, which is as big as the sum of weights.
+ *                                Use this if you want to know what statistical errors you would get if you had a dataset with as many
+ *                                events as the (weighted) Monte Carlo simulation represents.
+ *
+ *                                **Example** (Data as above):
+ *                                The errors are as big as if one fitted to 100 events.
+ *       </table>
+ *       \note If the `SumW2Error` correction is enabled, the covariance matrix quality stored in the RooFitResult
+ *             object will be the minimum of the original covariance matrix quality and the quality of the covariance
+ *             matrix calculated with the squared weights.
+ * <tr><td> `AsymptoticError()`               <td> Use the asymptotically correct approach to estimate errors in the presence of weights.
+ *                                                 This is slower but more accurate than `SumW2Error`. See also https://arxiv.org/abs/1911.01303).
+ * <tr><td> `PrefitDataFraction(double fraction)`
+ *                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
+ *                                                  by finding good starting values for the parameters for the actual fit.
+ *                                                  \warning Prefitting may give bad results when used in binned analysis.
+ *
+ * <tr><th><th> Options to control informational output
+ * <tr><td> `Verbose(bool flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit).
+ * <tr><td> `Timer(bool flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default.
+ * <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 to 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
+ *                                                  See RooMinimizer::PrintLevel for the meaning of the levels.
+ * <tr><td> `Warnings(bool flag)`           <td>  Enable or disable MINUIT warnings (enabled by default)
+ * <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
+ *                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
+ *                                                a positive value will print details of each error up to `numErr` messages per p.d.f component.
+ * <tr><td> `Parallelize(Int_t nWorkers)`   <td>  Control global parallelization settings. Arguments 1 and above enable the use of RooFit's parallel minimization
+ *                                                backend and uses the number given as the number of workers to use in the parallelization. -1 also enables
+ *                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes.
+ *                                                0 disables this feature.
+ *                                                In case parallelization is requested, this option implies `ModularL(true)` in the internal call to the NLL creation method.
+ * <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** Control gradient parallelization settings. The first argument
+ *                                                                                                      only disables or enables gradient parallelization, this is on by default.
+ *                                                                                                      The second argument determines the internal partial derivative calculation
+ *                                                                                                      ordering strategy. The third argument determines the number of partial
+ *                                                                                                      derivatives that are executed per task package on each worker.
+ * <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4)`   <td>  **Experimental** Control settings related to the parallelization of likelihoods
+ *                                                                                                      outside of the gradient calculation but in the minimization, most prominently
+ *                                                                                                      in the linesearch step. The first argument this disables or enables likelihood
+ *                                                                                                      parallelization. The second argument determines whether to split the task batches
+ *                                                                                                      per event or per likelihood component. And the third argument how many events or
+ *                                                                                                      respectively components to include in each batch.
+ * <tr><td> `TimingAnalysis(bool flag)`   <td> **Experimental** log timings. This feature logs timings with NewStyle likelihoods on multiple processes simultaneously
+ *                                         and outputs the timings at the end of a run to json log files, which can be analyzed with the
+ *                                         `RooFit::MultiProcess::HeatmapAnalyzer`. Only works with simultaneous likelihoods.
+ * </table>
+ */
 
-RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
+
+/** @brief Protected implementation of the likelihood fitting routine.
+ *
+ * This virtual function can be overridden in case you want to change the likelihood fitting logic for custom PDFs.
+ *
+ * \note Never call this function directly. Instead, call RooAbsPdf::fitTo().
+ */
+
+std::unique_ptr<RooFitResult> RooAbsPdf::fitToImpl(RooAbsData& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::fitTo(" + std::string(GetName()) + ")");
@@ -1487,7 +1475,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
 
   std::unique_ptr<RooAbsReal> nll{createNLL(data,nllCmdList)};
 
-  return RooFit::Detail::owningPtr(RooFit::FitHelpers::minimize(*this, *nll, data, pc));
+  return RooFit::FitHelpers::minimize(*this, *nll, data, pc);
 }
 
 
