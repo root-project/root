@@ -21,6 +21,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include <TFile.h>
+#include <TH1D.h>
 
 #include <cstdlib>
 #include <memory>
@@ -31,6 +32,7 @@ namespace ROOT {
 namespace Experimental {
 
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
+enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
 
 // clang-format off
 /**
@@ -305,6 +307,20 @@ public:
    /// ~~~
    void PrintColumnTypeInfo(ENTupleInspectorPrintFormat format = ENTupleInspectorPrintFormat::kTable,
                             std::ostream &output = std::cout);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram showing information for each column type present,
+   ///
+   /// \param[in] histKind Which type of information should be returned.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   ///
+   /// \return A pointer to a `TH1D` containing the specified kind of information.
+   ///
+   /// Get a histogram showing the count, number of elements, size on disk, or size in memory for each column
+   /// type present in the inspected RNTuple.
+   std::unique_ptr<TH1D> GetColumnTypeInfoAsHist(ENTupleInspectorHist histKind, std::string_view histName = "",
+                                                 std::string_view histTitle = "");
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get storage information for a given (sub)field by ID.

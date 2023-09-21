@@ -385,6 +385,62 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    EXPECT_EQ(nLines, 3U);
 }
 
+TEST(RNTupleInspector, ColumnTypeInfoHist)
+{
+   FileRaii fileGuard("test_ntuple_inspector_column_type_info_hist.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt1 = model->MakeField<std::int64_t>("int1");
+      auto nFldInt2 = model->MakeField<std::int64_t>("int2");
+      auto nFldFloat = model->MakeField<float>("float");
+      auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+
+      for (unsigned i = 0; i < 10; ++i) {
+         *nFldInt1 = static_cast<std::int64_t>(i);
+         *nFldInt2 = static_cast<std::int64_t>(i) * 2;
+         *nFldFloat = static_cast<float>(i) * .1f;
+         *nFldFloatVec = {static_cast<float>(i), 3.14f, static_cast<float>(i) * *nFldFloat};
+         ntuple->Fill();
+      }
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+
+   auto countHist = inspector->GetColumnTypeInfoAsHist(ROOT::Experimental::ENTupleInspectorHist::kCount);
+   EXPECT_STREQ("colTypeCountHist", countHist->GetName());
+   EXPECT_STREQ("Column count by type", countHist->GetTitle());
+   EXPECT_EQ(4U, countHist->GetNbinsX());
+   EXPECT_EQ(inspector->GetDescriptor()->GetNPhysicalColumns(), countHist->Integral());
+
+   auto nElemsHist = inspector->GetColumnTypeInfoAsHist(ROOT::Experimental::ENTupleInspectorHist::kNElems, "elemsHist");
+   EXPECT_STREQ("elemsHist", nElemsHist->GetName());
+   EXPECT_STREQ("Number of elements by column type", nElemsHist->GetTitle());
+   EXPECT_EQ(4U, nElemsHist->GetNbinsX());
+   std::uint64_t nTotalElems = 0;
+   for (const auto &col : inspector->GetDescriptor()->GetColumnIterable()) {
+      nTotalElems += inspector->GetDescriptor()->GetNElements(col.GetPhysicalId());
+   }
+   EXPECT_EQ(nTotalElems, nElemsHist->Integral());
+
+   auto compressedSizeHist = inspector->GetColumnTypeInfoAsHist(
+      ROOT::Experimental::ENTupleInspectorHist::kCompressedSize, "compressedHist", "Compressed bytes per column type");
+   EXPECT_STREQ("compressedHist", compressedSizeHist->GetName());
+   EXPECT_STREQ("Compressed bytes per column type", compressedSizeHist->GetTitle());
+   EXPECT_EQ(4U, compressedSizeHist->GetNbinsX());
+   EXPECT_EQ(inspector->GetCompressedSize(), compressedSizeHist->Integral());
+
+   auto uncompressedSizeHist = inspector->GetColumnTypeInfoAsHist(
+      ROOT::Experimental::ENTupleInspectorHist::kUncompressedSize, "", "Uncompressed bytes per column type");
+   EXPECT_STREQ("colTypeUncompSizeHist", uncompressedSizeHist->GetName());
+   EXPECT_STREQ("Uncompressed bytes per column type", uncompressedSizeHist->GetTitle());
+   EXPECT_EQ(4U, uncompressedSizeHist->GetNbinsX());
+   EXPECT_EQ(inspector->GetUncompressedSize(), uncompressedSizeHist->Integral());
+}
+
 TEST(RNTupleInspector, FieldInfoCompressed)
 {
    FileRaii fileGuard("test_ntuple_inspector_field_info_compressed.root");
