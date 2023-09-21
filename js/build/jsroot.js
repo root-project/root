@@ -11,7 +11,7 @@ const version_id = '7.5.pre',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '19/09/2023',
+version_date = '21/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -394,7 +394,8 @@ gStyle = {
    fYAxisExpXOffset: 0,
    fYAxisExpYOffset: 0,
    fAxisMaxDigits: 5,
-   fStripDecimals: true
+   fStripDecimals: true,
+   fBarWidth: 1
 };
 
 /** @summary Method returns current document in use
@@ -10950,19 +10951,8 @@ class TAttFillHandler {
 
       if (!svg || svg.empty() || (this.pattern < 3000) || (this.color === 'none')) return false;
 
-      const id = `pat_${this.pattern}_${indx}`;
-      let defs = svg.selectChild('.canvas_defs');
-
-      if (defs.empty())
-         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
-
-      this.pattern_url = `url(#${id})`;
-      this.antialias = false;
-
-      if (!defs.selectChild('.' + id).empty())
-         return true;
-
-      let lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
+      let id = `pat_${this.pattern}_${indx}`,
+          lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
 
       switch (this.pattern) {
          case 3001: w = h = 2; fills = 'M0,0h1v1h-1zM1,1h1v1h-1z'; break;
@@ -11010,8 +11000,12 @@ class TAttFillHandler {
                   i = (code - j * 10 - k) / 100;
             if (!i) break;
 
-            const hatches_spacing = Math.round(Math.max(0.5, gStyle.fHatchesSpacing)*2) * 6,
+            const pp = painter?.getPadPainter(),
+                  scale_size = pp ? Math.max(pp.getPadWidth(), pp.getPadHeight()) : 600,
+                  hatches_spacing = Math.max(1, Math.round(Math.max(0.5, gStyle.fHatchesSpacing) * scale_size * 0.0015)) * 6,
                   sz = i * hatches_spacing; // axis distance between lines
+
+            id += `_h${hatches_spacing}`;
 
             let pos, step, x1, x2, y1, y2, max;
 
@@ -11097,17 +11091,26 @@ class TAttFillHandler {
 
       if (!fills && !lines) return false;
 
-      const patt = defs.append('svg:pattern')
-                       .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
-                       .attr('width', w).attr('height', h);
+      this.pattern_url = `url(#${id})`;
+      this.antialias = false;
 
-      if (fills2) {
-         const col = rgb(this.color);
-         col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
-         patt.append('svg:path').attr('d', fills2).style('fill', col);
+      let defs = svg.selectChild('.canvas_defs');
+      if (defs.empty())
+         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+
+      if (defs.selectChild('.' + id).empty()) {
+         const patt = defs.append('svg:pattern')
+                          .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
+                          .attr('width', w).attr('height', h);
+
+         if (fills2) {
+            const col = rgb(this.color);
+            col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
+            patt.append('svg:path').attr('d', fills2).style('fill', col);
+         }
+         if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
+         if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth || 1).style('fill', lfill);
       }
-      if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
-      if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth).style('fill', lfill);
 
       return true;
    }
@@ -12512,6 +12515,7 @@ class ObjectPainter extends BasePainter {
      * @param {number} [arg.y = 0] - y position
      * @param {number} [arg.width] - when specified, adjust font size in the specified box
      * @param {number} [arg.height] - when specified, adjust font size in the specified box
+     * @param {boolean} [arg.scale = true] - scale into draw box when width and height parameters are specified
      * @param {number} [arg.latex] - 0 - plain text, 1 - normal TLatex, 2 - math
      * @param {string} [arg.color=black] - text color
      * @param {number} [arg.rotate] - rotaion angle
@@ -12558,7 +12562,8 @@ class ObjectPainter extends BasePainter {
       arg.align = align;
       arg.x = arg.x || 0;
       arg.y = arg.y || 0;
-      arg.scale = arg.width && arg.height && !arg.font_size;
+      if (arg.scale !== false)
+         arg.scale = arg.width && arg.height && !arg.font_size;
       arg.width = arg.width || 0;
       arg.height = arg.height || 0;
 
@@ -60063,8 +60068,12 @@ class TAxisPainter extends ObjectPainter {
       let ndiv = 508;
       if (this.is_gaxis)
          ndiv = axis.fNdiv;
-       else if (axis)
-          ndiv = Math.max(axis.fNdivisions, 4);
+      else if (axis) {
+          if (!axis.fNdivisions)
+             ndiv = 0;
+          else
+             ndiv = Math.max(axis.fNdivisions, 4);
+      }
 
       this.nticks = ndiv % 100;
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
@@ -67627,6 +67636,14 @@ class TPadPainter extends ObjectPainter {
       if (elem.empty())
          return '';
 
+      if (use_frame || !full_canvas) {
+         const defs = this.getCanvSvg().selectChild('.canvas_defs');
+         if (!defs.empty()) {
+            items.push({ prnt: this.getCanvSvg(), defs });
+            elem.node().insertBefore(defs.node(), elem.node().firstChild);
+         }
+      }
+
       let active_pp = null;
       painter.forEachPainterInPad(pp => {
          if (pp.is_active_pad && !active_pp) {
@@ -67652,12 +67669,11 @@ class TPadPainter extends ObjectPainter {
          if (!isFunc(main?.render3D) || !isFunc(main?.access3dKind)) return;
 
          const can3d = main.access3dKind();
-
          if ((can3d !== constants$1.Embed3D.Overlay) && (can3d !== constants$1.Embed3D.Embed)) return;
 
          const sz2 = main.getSizeFor3d(constants$1.Embed3D.Embed), // get size and position of DOM element as it will be embed
 
-          canvas = main.renderer.domElement;
+         canvas = main.renderer.domElement;
          main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
          const dataUrl = canvas.toDataURL('image/png');
 
@@ -67713,6 +67729,9 @@ class TPadPainter extends ObjectPainter {
 
             if (item.btns_node) // reinsert buttons
                item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
+
+            if (item.defs) // reinsert defs
+               item.prnt.node().insertBefore(item.defs.node(), item.prnt.node().firstChild);
          }
          return res;
       });
@@ -67857,6 +67876,7 @@ class TPadPainter extends ObjectPainter {
       if (d.check('NOPALETTE') || d.check('NOPAL')) this.options.IgnorePalette = true;
       if (d.check('ROTATE')) this.options.RotateFrame = true;
       if (d.check('FIXFRAME')) this.options.FixFrame = true;
+      if (d.check('FIXSIZE') && this.iscan) this._fixed_size = true;
 
       if (d.check('CP', true)) this.options.CreatePalette = d.partAsInt(0, 0);
 
@@ -69415,7 +69435,6 @@ class TPavePainter extends ObjectPainter {
       else
          while ((nrows-1)*ncols >= nlines) nrows--;
 
-
       const isEmpty = entry => !entry.fObject && !entry.fOption && (!entry.fLabel || (entry.fLabel === ' '));
 
       for (let ii = 0; ii < nlines; ++ii) {
@@ -69426,21 +69445,42 @@ class TPavePainter extends ObjectPainter {
          } else if (entry.fLabel) {
             any_text = true;
             if ((entry.fTextFont && (entry.fTextFont !== legend.fTextFont)) ||
-                (entry.fTextSize && (entry.fTextSize !== legend.fTextSize))) custom_textg = true;
+                (entry.fTextSize && (entry.fTextSize !== legend.fTextSize)))
+                   custom_textg = true;
          }
       }
 
       if (nrows < 1) nrows = 1;
 
-      const column_width = Math.round(w/ncols),
-            padding_x = Math.round(0.03*w/ncols),
+      // calculate positions of columns by weight - means more letters, more weight
+      const column_pos = new Array(ncols + 1).fill(0);
+      if (ncols > 1) {
+         const column_weight = new Array(ncols).fill(1);
+
+         for (let ii = 0, i = -1; ii < nlines; ++ii) {
+            const entry = legend.fPrimitives.arr[ii];
+            if (isEmpty(entry)) continue; // let discard empty entry
+            if (ncols === 1) ++i; else i = ii;
+            const icol = i % ncols;
+            column_weight[icol] = Math.max(column_weight[icol], entry.fLabel.length);
+         }
+
+         let sum_weight = 0;
+         for (let icol = 0; icol < ncols; ++icol)
+            sum_weight += column_weight[icol];
+         for (let icol = 0; icol < ncols-1; ++icol)
+            column_pos[icol+1] = column_pos[icol] + legend.fMargin*w/ncols + column_weight[icol] * (1-legend.fMargin) * w / sum_weight;
+       }
+      column_pos[ncols] = w;
+
+      const padding_x = Math.round(0.03*w/ncols),
             padding_y = Math.round(0.03*h),
             step_y = (h - 2*padding_y)/nrows,
             text_promises = [],
             pp = this.getPadPainter();
       let font_size = 0.9*step_y,
           max_font_size = 0, // not limited in the beggining
-          any_opt = false, i = -1;
+          any_opt = false;
 
       this.createAttText({ attr: legend });
 
@@ -69451,17 +69491,17 @@ class TPavePainter extends ObjectPainter {
       if (any_text && !custom_textg)
          this.startTextDrawing(this.textatt.font, font_size, this.draw_g, max_font_size);
 
-      for (let ii = 0; ii < nlines; ++ii) {
+      for (let ii = 0, i = -1; ii < nlines; ++ii) {
          const entry = legend.fPrimitives.arr[ii];
-
          if (isEmpty(entry)) continue; // let discard empty entry
 
          if (ncols === 1) ++i; else i = ii;
 
          const lopt = entry.fOption.toLowerCase(),
                icol = i % ncols, irow = (i - icol) / ncols,
-               x0 = icol * column_width,
-               tpos_x = x0 + Math.round(legend.fMargin*column_width),
+               x0 = Math.round(column_pos[icol]),
+               column_width = Math.round(column_pos[icol + 1] - column_pos[icol]),
+               tpos_x = x0 + Math.round(legend.fMargin*w/ncols),
                mid_x = Math.round((x0 + tpos_x)/2),
                pos_y = Math.round(irow*step_y + padding_y), // top corner
                mid_y = Math.round((irow+0.5)*step_y + padding_y), // center line
@@ -69555,7 +69595,10 @@ class TPavePainter extends ObjectPainter {
                this.startTextDrawing(textatt.font, entry_font_size, lbl_g, max_font_size);
             }
 
-            this.drawText({ draw_g: lbl_g, align: textatt.align, x: pos_x, y: pos_y, width: x0+column_width-pos_x-padding_x, height: step_y, text: entry.fLabel, color: textatt.color });
+            this.drawText({ draw_g: lbl_g, align: textatt.align, x: pos_x, y: pos_y,
+                            scale: (custom_textg && !entry.fTextSize) || !legend.fTextSize,
+                            width: x0+column_width-pos_x-padding_x, height: step_y,
+                            text: entry.fLabel, color: textatt.color });
 
             if (custom_textg)
                text_promises.push(this.finishTextDrawing(lbl_g));
@@ -104447,18 +104490,17 @@ default: _rollup_plugin_ignore_empty_module_placeholder
 async function drawText$1() {
    const text = this.getObject(),
          pp = this.getPadPainter(),
-         main = this.getFramePainter();
-   let w = pp.getPadWidth(),
-       h = pp.getPadHeight(),
-       pos_x = text.fX, pos_y = text.fY,
-       use_frame = false,
+         w = pp.getPadWidth(),
+         h = pp.getPadHeight(),
+         fp = this.getFramePainter();
+   let pos_x = text.fX, pos_y = text.fY,
        fact = 1,
        annot = this.matchObjectType(clTAnnotation);
 
    this.createAttText({ attr: text });
 
-   if (annot && main?.mode3d && isFunc(main?.convert3DtoPadNDC)) {
-      const pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
+   if (annot && fp?.mode3d && isFunc(fp?.convert3DtoPadNDC)) {
+      const pos = fp.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
       pos_x = pos.x;
       pos_y = pos.y;
       this.isndc = true;
@@ -104466,11 +104508,6 @@ async function drawText$1() {
    } else if (text.TestBit(BIT(14))) {
       // NDC coordinates
       this.isndc = true;
-   } else if (main && !main.mode3d) {
-      // frame coordiantes
-      w = main.getFrameWidth();
-      h = main.getFrameHeight();
-      use_frame = 'upper_layer';
    } else if (pp.getRootPad(true)) ; else {
       // place in the middle
       this.isndc = true;
@@ -104478,7 +104515,7 @@ async function drawText$1() {
       text.fTextAlign = 22;
    }
 
-   this.createG(use_frame);
+   this.createG();
 
    this.draw_g.attr('transform', null); // remove transofrm from interactive changes
 
@@ -104525,9 +104562,9 @@ async function drawText$1() {
       if (annot !== '3d')
          addMoveHandler(this);
       else {
-         main.processRender3D = true;
+         fp.processRender3D = true;
          this.handleRender3D = () => {
-            const pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
+            const pos = fp.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
                   new_x = this.axisToSvg('x', pos.x, true),
                   new_y = this.axisToSvg('y', pos.y, true);
             makeTranslate(this.draw_g, new_x - this.pos_x, new_y - this.pos_y);
@@ -105606,17 +105643,22 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       if (options.Bar) {
          // calculate bar width
-         for (let i = 1; i < drawbins.length-1; ++i)
-            drawbins[i].width = Math.max(2, (drawbins[i+1].grx1 - drawbins[i-1].grx1) / 2 - 2);
 
-         // first and last bins
-         switch (drawbins.length) {
-            case 0: break;
-            case 1: drawbins[0].width = w/4; break; // pathologic case of single bin
-            case 2: drawbins[0].width = drawbins[1].width = (drawbins[1].grx1-drawbins[0].grx1)/2; break;
-            default:
-               drawbins[0].width = drawbins[1].width;
-               drawbins[drawbins.length-1].width = drawbins[drawbins.length-2].width;
+         let xmin = 0, xmax = 0;
+         for (let i = 0; i < drawbins.length; ++i) {
+            if (i === 0)
+               xmin = xmax = drawbins[i].grx1;
+            else {
+               xmin = Math.min(xmin, drawbins[i].grx1);
+               xmax = Math.max(xmax, drawbins[i].grx1);
+            }
+         }
+
+         if (drawbins.length === 1)
+            drawbins[0].width = w/4; // pathologic case of single bin
+         else {
+            for (let i = 0; i < drawbins.length; ++i)
+               drawbins[i].width = (xmax - xmin) / drawbins.length * gStyle.fBarWidth;
          }
 
          const yy0 = Math.round(funcs.gry(0));
@@ -105633,9 +105675,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
               .attr('d', d => {
                  d.bar = true; // element drawn as bar
                  const dx = Math.round(-d.width/2),
-                     dw = Math.round(d.width),
-                     dy = (options.Bar !== 1) ? 0 : ((d.gry1 > yy0) ? yy0-d.gry1 : 0),
-                     dh = (options.Bar !== 1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
+                       dw = Math.round(d.width),
+                       dy = (options.Bar !== 1) ? 0 : ((d.gry1 > yy0) ? yy0-d.gry1 : 0),
+                       dh = (options.Bar !== 1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
                  return `M${dx},${dy}h${dw}v${dh}h${-dw}z`;
               })
             .call(usefill.func);
@@ -116299,12 +116341,20 @@ class RPadPainter extends RObjectPainter {
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format) {
       const use_frame = (full_canvas === 'frame'),
-          elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
-          painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
-          items = []; // keep list of replaced elements, which should be moved back at the end
+            elem = use_frame ? this.getFrameSvg(this.this_pad_name) : (full_canvas ? this.getCanvSvg() : this.svg_this_pad()),
+            painter = (full_canvas && !use_frame) ? this.getCanvPainter() : this,
+            items = []; // keep list of replaced elements, which should be moved back at the end
 
       if (elem.empty())
          return '';
+
+      if (use_frame || !full_canvas) {
+         const defs = this.getCanvSvg().selectChild('.canvas_defs');
+         if (!defs.empty()) {
+            items.push({ prnt: this.getCanvSvg(), defs });
+            elem.node().insertBefore(defs.node(), elem.node().firstChild);
+         }
+      }
 
       if (!use_frame) {
          // do not make transformations for the frame
@@ -116329,7 +116379,7 @@ class RPadPainter extends RObjectPainter {
             if ((can3d !== constants$1.Embed3D.Overlay) && (can3d !== constants$1.Embed3D.Embed)) return;
 
             const sz2 = main.getSizeFor3d(constants$1.Embed3D.Embed), // get size and position of DOM element as it will be embed
-                canvas = main.renderer.domElement;
+                  canvas = main.renderer.domElement;
 
             main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
 
@@ -116384,6 +116434,9 @@ class RPadPainter extends RObjectPainter {
 
             if (item.btns_node) // reinsert buttons
                item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
+
+            if (item.defs) // reinsert defs
+               item.prnt.node().insertBefore(item.defs.node(), item.prnt.node().firstChild);
          }
          return res;
       });

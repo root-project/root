@@ -1095,6 +1095,7 @@ class ObjectPainter extends BasePainter {
      * @param {number} [arg.y = 0] - y position
      * @param {number} [arg.width] - when specified, adjust font size in the specified box
      * @param {number} [arg.height] - when specified, adjust font size in the specified box
+     * @param {boolean} [arg.scale = true] - scale into draw box when width and height parameters are specified
      * @param {number} [arg.latex] - 0 - plain text, 1 - normal TLatex, 2 - math
      * @param {string} [arg.color=black] - text color
      * @param {number} [arg.rotate] - rotaion angle
@@ -1141,7 +1142,8 @@ class ObjectPainter extends BasePainter {
       arg.align = align;
       arg.x = arg.x || 0;
       arg.y = arg.y || 0;
-      arg.scale = arg.width && arg.height && !arg.font_size;
+      if (arg.scale !== false)
+         arg.scale = arg.width && arg.height && !arg.font_size;
       arg.width = arg.width || 0;
       arg.height = arg.height || 0;
 

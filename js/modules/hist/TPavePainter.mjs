@@ -607,7 +607,6 @@ class TPavePainter extends ObjectPainter {
       else
          while ((nrows-1)*ncols >= nlines) nrows--;
 
-
       const isEmpty = entry => !entry.fObject && !entry.fOption && (!entry.fLabel || (entry.fLabel === ' '));
 
       for (let ii = 0; ii < nlines; ++ii) {
@@ -618,21 +617,42 @@ class TPavePainter extends ObjectPainter {
          } else if (entry.fLabel) {
             any_text = true;
             if ((entry.fTextFont && (entry.fTextFont !== legend.fTextFont)) ||
-                (entry.fTextSize && (entry.fTextSize !== legend.fTextSize))) custom_textg = true;
+                (entry.fTextSize && (entry.fTextSize !== legend.fTextSize)))
+                   custom_textg = true;
          }
       }
 
       if (nrows < 1) nrows = 1;
 
-      const column_width = Math.round(w/ncols),
-            padding_x = Math.round(0.03*w/ncols),
+      // calculate positions of columns by weight - means more letters, more weight
+      const column_pos = new Array(ncols + 1).fill(0);
+      if (ncols > 1) {
+         const column_weight = new Array(ncols).fill(1);
+
+         for (let ii = 0, i = -1; ii < nlines; ++ii) {
+            const entry = legend.fPrimitives.arr[ii];
+            if (isEmpty(entry)) continue; // let discard empty entry
+            if (ncols === 1) ++i; else i = ii;
+            const icol = i % ncols;
+            column_weight[icol] = Math.max(column_weight[icol], entry.fLabel.length);
+         }
+
+         let sum_weight = 0;
+         for (let icol = 0; icol < ncols; ++icol)
+            sum_weight += column_weight[icol];
+         for (let icol = 0; icol < ncols-1; ++icol)
+            column_pos[icol+1] = column_pos[icol] + legend.fMargin*w/ncols + column_weight[icol] * (1-legend.fMargin) * w / sum_weight;
+       }
+      column_pos[ncols] = w;
+
+      const padding_x = Math.round(0.03*w/ncols),
             padding_y = Math.round(0.03*h),
             step_y = (h - 2*padding_y)/nrows,
             text_promises = [],
             pp = this.getPadPainter();
       let font_size = 0.9*step_y,
           max_font_size = 0, // not limited in the beggining
-          any_opt = false, i = -1;
+          any_opt = false;
 
       this.createAttText({ attr: legend });
 
@@ -643,17 +663,17 @@ class TPavePainter extends ObjectPainter {
       if (any_text && !custom_textg)
          this.startTextDrawing(this.textatt.font, font_size, this.draw_g, max_font_size);
 
-      for (let ii = 0; ii < nlines; ++ii) {
+      for (let ii = 0, i = -1; ii < nlines; ++ii) {
          const entry = legend.fPrimitives.arr[ii];
-
          if (isEmpty(entry)) continue; // let discard empty entry
 
          if (ncols === 1) ++i; else i = ii;
 
          const lopt = entry.fOption.toLowerCase(),
                icol = i % ncols, irow = (i - icol) / ncols,
-               x0 = icol * column_width,
-               tpos_x = x0 + Math.round(legend.fMargin*column_width),
+               x0 = Math.round(column_pos[icol]),
+               column_width = Math.round(column_pos[icol + 1] - column_pos[icol]),
+               tpos_x = x0 + Math.round(legend.fMargin*w/ncols),
                mid_x = Math.round((x0 + tpos_x)/2),
                pos_y = Math.round(irow*step_y + padding_y), // top corner
                mid_y = Math.round((irow+0.5)*step_y + padding_y), // center line
@@ -747,7 +767,10 @@ class TPavePainter extends ObjectPainter {
                this.startTextDrawing(textatt.font, entry_font_size, lbl_g, max_font_size);
             }
 
-            this.drawText({ draw_g: lbl_g, align: textatt.align, x: pos_x, y: pos_y, width: x0+column_width-pos_x-padding_x, height: step_y, text: entry.fLabel, color: textatt.color });
+            this.drawText({ draw_g: lbl_g, align: textatt.align, x: pos_x, y: pos_y,
+                            scale: (custom_textg && !entry.fTextSize) || !legend.fTextSize,
+                            width: x0+column_width-pos_x-padding_x, height: step_y,
+                            text: entry.fLabel, color: textatt.color });
 
             if (custom_textg)
                text_promises.push(this.finishTextDrawing(lbl_g));

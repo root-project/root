@@ -2027,6 +2027,14 @@ class TPadPainter extends ObjectPainter {
       if (elem.empty())
          return '';
 
+      if (use_frame || !full_canvas) {
+         const defs = this.getCanvSvg().selectChild('.canvas_defs');
+         if (!defs.empty()) {
+            items.push({ prnt: this.getCanvSvg(), defs });
+            elem.node().insertBefore(defs.node(), elem.node().firstChild);
+         }
+      }
+
       let active_pp = null;
       painter.forEachPainterInPad(pp => {
          if (pp.is_active_pad && !active_pp) {
@@ -2052,12 +2060,11 @@ class TPadPainter extends ObjectPainter {
          if (!isFunc(main?.render3D) || !isFunc(main?.access3dKind)) return;
 
          const can3d = main.access3dKind();
-
          if ((can3d !== constants.Embed3D.Overlay) && (can3d !== constants.Embed3D.Embed)) return;
 
          const sz2 = main.getSizeFor3d(constants.Embed3D.Embed), // get size and position of DOM element as it will be embed
 
-          canvas = main.renderer.domElement;
+         canvas = main.renderer.domElement;
          main.render3D(0); // WebGL clears buffers, therefore we should render scene and convert immediately
          const dataUrl = canvas.toDataURL('image/png');
 
@@ -2113,6 +2120,9 @@ class TPadPainter extends ObjectPainter {
 
             if (item.btns_node) // reinsert buttons
                item.btns_prnt.insertBefore(item.btns_node, item.btns_next);
+
+            if (item.defs) // reinsert defs
+               item.prnt.node().insertBefore(item.defs.node(), item.prnt.node().firstChild);
          }
          return res;
       });
@@ -2257,6 +2267,7 @@ class TPadPainter extends ObjectPainter {
       if (d.check('NOPALETTE') || d.check('NOPAL')) this.options.IgnorePalette = true;
       if (d.check('ROTATE')) this.options.RotateFrame = true;
       if (d.check('FIXFRAME')) this.options.FixFrame = true;
+      if (d.check('FIXSIZE') && this.iscan) this._fixed_size = true;
 
       if (d.check('CP', true)) this.options.CreatePalette = d.partAsInt(0, 0);
 

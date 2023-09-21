@@ -169,19 +169,8 @@ class TAttFillHandler {
 
       if (!svg || svg.empty() || (this.pattern < 3000) || (this.color === 'none')) return false;
 
-      const id = `pat_${this.pattern}_${indx}`;
-      let defs = svg.selectChild('.canvas_defs');
-
-      if (defs.empty())
-         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
-
-      this.pattern_url = `url(#${id})`;
-      this.antialias = false;
-
-      if (!defs.selectChild('.' + id).empty())
-         return true;
-
-      let lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
+      let id = `pat_${this.pattern}_${indx}`,
+          lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
 
       switch (this.pattern) {
          case 3001: w = h = 2; fills = 'M0,0h1v1h-1zM1,1h1v1h-1z'; break;
@@ -229,8 +218,12 @@ class TAttFillHandler {
                   i = (code - j * 10 - k) / 100;
             if (!i) break;
 
-            const hatches_spacing = Math.round(Math.max(0.5, gStyle.fHatchesSpacing)*2) * 6,
+            const pp = painter?.getPadPainter(),
+                  scale_size = pp ? Math.max(pp.getPadWidth(), pp.getPadHeight()) : 600,
+                  hatches_spacing = Math.max(1, Math.round(Math.max(0.5, gStyle.fHatchesSpacing) * scale_size * 0.0015)) * 6,
                   sz = i * hatches_spacing; // axis distance between lines
+
+            id += `_h${hatches_spacing}`;
 
             let pos, step, x1, x2, y1, y2, max;
 
@@ -316,17 +309,26 @@ class TAttFillHandler {
 
       if (!fills && !lines) return false;
 
-      const patt = defs.append('svg:pattern')
-                       .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
-                       .attr('width', w).attr('height', h);
+      this.pattern_url = `url(#${id})`;
+      this.antialias = false;
 
-      if (fills2) {
-         const col = d3_rgb(this.color);
-         col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
-         patt.append('svg:path').attr('d', fills2).style('fill', col);
+      let defs = svg.selectChild('.canvas_defs');
+      if (defs.empty())
+         defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
+
+      if (defs.selectChild('.' + id).empty()) {
+         const patt = defs.append('svg:pattern')
+                          .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
+                          .attr('width', w).attr('height', h);
+
+         if (fills2) {
+            const col = d3_rgb(this.color);
+            col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
+            patt.append('svg:path').attr('d', fills2).style('fill', col);
+         }
+         if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
+         if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth || 1).style('fill', lfill);
       }
-      if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
-      if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth).style('fill', lfill);
 
       return true;
    }
