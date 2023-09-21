@@ -182,6 +182,15 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
    return inspector;
 }
 
+std::string ROOT::Experimental::RNTupleInspector::GetCompressionSettingsAsString() const
+{
+   int algorithm = fCompressionSettings / 100;
+   int level = fCompressionSettings - (algorithm * 100);
+
+   return RCompressionSetting::AlgorithmToString(static_cast<RCompressionSetting::EAlgorithm::EValues>(algorithm)) +
+          " (level " + std::to_string(level) + ")";
+}
+
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RColumnInfo &
