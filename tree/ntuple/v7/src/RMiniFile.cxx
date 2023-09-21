@@ -25,10 +25,14 @@
 #include <TFile.h>
 #include <TKey.h>
 
+#include <xxhash.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <memory>
+#include <new>
 #include <string>
 #include <utility>
 #include <chrono>
@@ -763,7 +767,7 @@ struct RTFStreamerLenFooter {
    RTFStreamerElementLenFooter fStreamerElementLenFooter;
 };
 
-/// Streamer info frame for data member RNTuple::fReserved
+/// Streamer info frame for data member RNTuple::fChecksum
 struct RTFStreamerChecksum {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerChecksum) - sizeof(RUInt32BE))};
    RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
@@ -936,7 +940,7 @@ struct RTFNTuple {
       fSeekFooter = inMemoryAnchor.fSeekFooter;
       fNBytesFooter = inMemoryAnchor.fNBytesFooter;
       fLenFooter = inMemoryAnchor.fLenFooter;
-      fChecksum = inMemoryAnchor.fChecksum;
+      fChecksum = XXH3_64bits(GetPtrCkData(), GetSizeCkData());
    }
    std::uint32_t GetSize() const { return sizeof(RTFNTuple); }
    ROOT::Experimental::RNTuple ToAnchor() const
@@ -955,6 +959,10 @@ struct RTFNTuple {
       anchor.fChecksum = fChecksum;
       return anchor;
    }
+   // The byte count and class version members are not checksummed
+   std::uint32_t GetOffsetCkData() { return sizeof(fByteCount) + sizeof(fVersionClass); }
+   std::uint32_t GetSizeCkData() { return GetSize() - GetOffsetCkData() - sizeof(fChecksum); }
+   unsigned char *GetPtrCkData() { return reinterpret_cast<unsigned char *>(this) + GetOffsetCkData(); }
 };
 
 /// The bare file global header
@@ -1079,19 +1087,35 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
 
    ReadBuffer(&key, sizeof(key), key.GetSeekKey());
    offset = key.GetSeekKey() + key.fKeyLen;
-   RTFNTuple ntuple;
-   if (key.fObjLen > sizeof(ntuple)) {
-      return R__FAIL("invalid anchor size: " + std::to_string(key.fObjLen) + " > " + std::to_string(sizeof(ntuple)));
+
+   if (key.fObjLen < sizeof(RTFNTuple)) {
+      return R__FAIL("invalid anchor size: " + std::to_string(key.fObjLen) + " > " + std::to_string(sizeof(RTFNTuple)));
    }
-   ReadBuffer(&ntuple, key.fObjLen, offset);
-   if (key.GetSize() - key.fKeyLen != key.fObjLen) {
+   // The object length can be larger than the size of RTFNTuple if it comes from a future RNTuple class version.
+   auto bufAnchor = std::make_unique<unsigned char[]>(key.fObjLen);
+   RTFNTuple *ntuple = new (bufAnchor.get()) RTFNTuple;
+
+   auto objNbytes = key.GetSize() - key.fKeyLen;
+   ReadBuffer(ntuple, objNbytes, offset);
+   if (objNbytes != key.fObjLen) {
       ROOT::Experimental::Detail::RNTupleDecompressor decompressor;
-      decompressor.Unzip(&ntuple, sizeof(ntuple), key.fObjLen);
+      decompressor.Unzip(bufAnchor.get(), objNbytes, key.fObjLen);
    }
-   if (ntuple.fVersionClass < 4) {
+
+   if (ntuple->fVersionClass < 4) {
       return R__FAIL("invalid anchor, unsupported pre-release of RNTuple");
    }
-   return ntuple.ToAnchor();
+
+   // We require that future class versions only append members and store the checksum in the last 8 bytes
+   // Checksum calculation: strip byte count, class version, fChecksum member
+   RUInt64BE *ckOnDisk = reinterpret_cast<RUInt64BE *>(bufAnchor.get() + key.fObjLen - sizeof(RUInt64BE));
+   auto lenCkData = ntuple->GetSizeCkData() + key.fObjLen - sizeof(RTFNTuple);
+   auto ckCalc = XXH3_64bits(ntuple->GetPtrCkData(), lenCkData);
+   if (ckCalc != (uint64_t)(*ckOnDisk)) {
+      return R__FAIL("RNTuple anchor checksum mismatch");
+   }
+
+   return ntuple->ToAnchor();
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RNTuple>
@@ -1113,6 +1137,9 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
 
    RTFNTuple ntuple;
    ReadBuffer(&ntuple, sizeof(ntuple), offset);
+   auto checksum = XXH3_64bits(ntuple.GetPtrCkData(), ntuple.GetSizeCkData());
+   if (checksum != static_cast<uint64_t>(ntuple.fChecksum))
+      return R__FAIL("RNTuple bare file: anchor checksum mismatch");
    return ntuple.ToAnchor();
 }
 
