@@ -906,7 +906,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * The following named arguments are supported:
  *
  * <table>
- * <tr><th> Type of CmdArg    <th>    Effect on nll
+ * <tr><th> Type of CmdArg    <th>    Effect on NLL
  * <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Do not normalize PDF over listed observables.
  *                                                 Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
  * <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
@@ -919,7 +919,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on num CPUs
  *   <table>
  *   <tr><th> Strategy   <th> Effect
- *   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks
+ *   <tr><td> 0 = RooFit::BulkPartition - *default* <td> Divide events in N equal chunks
  *   <tr><td> 1 = RooFit::Interleave <td> Process event i%N in process N. Recommended for binned data with
  *                     a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
  *   <tr><td> 2 = RooFit::SimComponents <td> Process each component likelihood of a RooSimultaneous fully in a single process
@@ -932,12 +932,29 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  *   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
  *                     30 dataset entries, for which strategy 2 is followed.
  *   </table>
- * <tr><td> `BatchMode(bool on)`                       <td> **Experimental** batch evaluation mode. This computes a batch of likelihood values at a time,
- *                                                          uses faster math functions and possibly auto vectorisation (this depends on the compiler flags).
- *                                                          Depending on hardware capabilities, the compiler flags and whether a batch evaluation function was
- *                                                          implemented for the PDFs of the model, likelihood computations are 2x to 10x faster.
- *                                                          The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than 1.E-12,
- *                                                          and fit parameters usually agree to better than 1.E-6.
+ * <tr><td> `EvalBackend(std::string const&)` <td> Choose a likelihood evaluation backend:
+ *   <table>
+ *   <tr><th> Backend <th> Description
+ *   <tr><td> **legacy** - *default* <td> The original likelihood evaluation method.
+ *                                        Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
+ *                                        This is the default if `EvalBackend()` is not passed.
+ *   <tr><td> **cpu** <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation.
+ *                         If all RooAbsArg objects in the model support it, likelihood computations are 2 to 10 times faster,
+ *                         unless your dataset is so small that the vectorization is not worth it.
+ *                         The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than \f$10^{-12}\f$,
+ *                         and for fit parameters it's usually better than \f$10^{-6}\f$. In past ROOT releases, this backend could be activated with the now deprecated `BatchMode()` option.
+ *   <tr><td> **cuda** <td> Evaluate the likelihood on a GPU that supports CUDA.
+ *                          This backend re-uses code from the **cpu** backend, but compiled in CUDA kernels.
+ *                          Hence, the results are expected to be identical, modulo some numerical differences that can arise from the different order in which the GPU is summing the log probabilities.
+ *                          This backend can drastically speed up the fit if all RooAbsArg object in the model support it.
+ *   <tr><td> **codegen** <td> **Experimental** - Generates and compiles minimal C++ code for the NLL on-the-fly and wraps it in the returned RooAbsReal.
+ *                             Also generates and compiles the code for the gradient using Automatic Differentiation (AD) with [Clad](https://github.com/vgvassilev/clad).
+ *                             This analytic gradient is passed to the minimizer, which can result in significant speedups for many-parameter fits,
+ *                             even compared to the **cpu** backend. However, if one of the RooAbsArg objects in the model does not support the code generation,
+ *                             this backend can't be used.
+ *   <tr><td> **codegen_no_grad** <td> **Experimental** - Same as **codegen**, but doesn't generate and compile the gradient code and use the regular numerical differentiation instead.
+ *                                     This is expected to be slower, but useful for debugging problems with the analytic gradient.
+ *   </table>
  * <tr><td> `Optimize(bool flag)`           <td> Activate constant term optimization (on by default)
  * <tr><td> `SplitRange(bool flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
  *                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
@@ -967,13 +984,16 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * <tr><td> `CloneData(bool flag)`            <td> Use clone of dataset in NLL (default is true).
  *                                                 \warning Deprecated option that is ignored. It is up to the implementation of the NLL creation method if the data is cloned or not.
  * <tr><td> `Offset(std::string const& mode)` <td> Likelihood offsetting mode. Can be either:
- *                                                 - `"none"` (default): no offsetting
- *                                                 - `"initial"`: Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
- *                                                    This can improve numeric stability in simultaneous fits with components with large likelihood values.
- *                                                 - `"bin"`: Offset by the likelihood bin-by-bin with a template histogram model based on the obersved data.
- *                                                   This results in per-bin values that are all in the same order of magnitude, which reduces precision loss in the sum,
- *                                                   which can drastically improve numeric stability.
- *                                                   Furthermore, 2 * NLL defined like this is approximately chi-square distributed, allowing for goodness-of-fit tests.
+ *   <table>
+ *   <tr><th> Mode <th> Description
+ *   <tr><td> **none** - *default* <td> No offsetting.
+ *   <tr><td> **initial** <td> Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
+ *                             This can improve numeric stability in simultaneous fits with components with large likelihood values.
+ *   <tr><td> **bin** <td> Offset likelihood bin-by-bin with a template histogram model based on the obersved data.
+ *                         This results in per-bin values that are all in the same order of magnitude, which reduces precision loss in the sum,
+ *                         which can drastically improve numeric stability.
+ *                         Furthermore, \f$2\cdot \text{NLL}\f$ defined like this is approximately chi-square distributed, allowing for goodness-of-fit tests.
+ *   </table>
  * <tr><td> `IntegrateBins(double precision)` <td> In binned fits, integrate the PDF over the bins instead of using the probability density at the bin centre.
  *                                                 This can reduce the bias observed when fitting functions with high curvature to binned data.
  *                                                 - precision > 0: Activate bin integration everywhere. Use precision between 0.01 and 1.E-6, depending on binning.
@@ -1375,18 +1395,18 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
  *                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes.
  *                                                0 disables this feature.
  *                                                In case parallelization is requested, this option implies `ModularL(true)` in the internal call to the NLL creation method.
- * <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** Control gradient parallelization settings. The first argument
+ * <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** - Control gradient parallelization settings. The first argument
  *                                                                                                      only disables or enables gradient parallelization, this is on by default.
  *                                                                                                      The second argument determines the internal partial derivative calculation
  *                                                                                                      ordering strategy. The third argument determines the number of partial
  *                                                                                                      derivatives that are executed per task package on each worker.
- * <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4)`   <td>  **Experimental** Control settings related to the parallelization of likelihoods
+ * <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4)`   <td>  **Experimental** - Control settings related to the parallelization of likelihoods
  *                                                                                                      outside of the gradient calculation but in the minimization, most prominently
  *                                                                                                      in the linesearch step. The first argument this disables or enables likelihood
  *                                                                                                      parallelization. The second argument determines whether to split the task batches
  *                                                                                                      per event or per likelihood component. And the third argument how many events or
  *                                                                                                      respectively components to include in each batch.
- * <tr><td> `TimingAnalysis(bool flag)`   <td> **Experimental** log timings. This feature logs timings with NewStyle likelihoods on multiple processes simultaneously
+ * <tr><td> `TimingAnalysis(bool flag)`   <td> **Experimental** - Log timings. This feature logs timings with NewStyle likelihoods on multiple processes simultaneously
  *                                         and outputs the timings at the end of a run to json log files, which can be analyzed with the
  *                                         `RooFit::MultiProcess::HeatmapAnalyzer`. Only works with simultaneous likelihoods.
  * </table>
