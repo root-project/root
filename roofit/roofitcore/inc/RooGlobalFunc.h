@@ -445,13 +445,27 @@ namespace Detail {
 
 // Function to pack an arbitrary number of RooCmdArgs into a RooLinkedList. Implementation detail of many high-level RooFit functions.
 template <typename... Args>
-inline std::unique_ptr<RooLinkedList> createCmdList(Args &&...args)
+inline std::unique_ptr<RooLinkedList> createCmdList(RooCmdArg const* arg1, Args &&...args)
 {
    auto cmdList = std::make_unique<RooLinkedList>();
-   for (auto *arg : {static_cast<RooCmdArg const *>(args)...}) {
+   for (auto &arg : {arg1, static_cast<RooCmdArg const *>(args)...}) {
       cmdList->Add(const_cast<RooCmdArg *>(arg));
    }
    return cmdList;
+}
+
+inline std::unique_ptr<RooLinkedList> createCmdList()
+{
+   return std::make_unique<RooLinkedList>();
+}
+
+inline std::unique_ptr<RooLinkedList> createCmdList(RooLinkedList const *cmdList)
+{
+   auto cmdListCopy = std::make_unique<RooLinkedList>();
+   for (auto *arg : *cmdList) {
+      cmdListCopy->Add(arg);
+   }
+   return cmdListCopy;
 }
 
 } // namespace Detail

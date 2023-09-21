@@ -152,23 +152,16 @@ public:
   void setGeneratorConfig() ;
   void setGeneratorConfig(const RooNumGenConfig& config) ;
 
-  // -log(L) fits to binned and unbinned data
-  virtual RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, const RooLinkedList& cmdList={}) ;
-  /// Takes an arbitrary number of RooCmdArg command options and calls
-  /// RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList).
-  template <typename... Args>
-  RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, CmdArgs_t const&... cmdArgs)
   {
-    return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+    return RooFit::Detail::owningPtr(fitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
 
-  virtual RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
-  /// Takes an arbitrary number of RooCmdArg command options and calls
-  /// RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList).
-  template <typename... Args>
-  RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, CmdArgs_t const&... cmdArgs)
   {
-    return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+    return RooFit::Detail::owningPtr(createNLLImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
 
   // Constraint management
@@ -296,6 +289,9 @@ private:
   }
 
 protected:
+
+  virtual std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData& data, const RooLinkedList& cmdList);
+  virtual std::unique_ptr<RooFitResult> fitToImpl(RooAbsData& data, const RooLinkedList& cmdList);
 
   /// Checks if `normSet` is the currently active normalization set of this
   /// PDF, meaning is exactly the same object as the one the `_normSet` member

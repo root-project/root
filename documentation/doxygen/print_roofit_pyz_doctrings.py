@@ -21,6 +21,11 @@ import inspect
 def clean_cpp_signature(sig):
     """Clean everything from the C++ signature that prohibits doxygen from automatically creating the correct link."""
 
+    # If the signature doesn't include the function parameters or they are
+    # empty, we are done.
+    if not "(" in sig or "()" in sig:
+        return sig
+
     def strip_defaults_from_param_sig(param_sig):
         # strip default parameter values
         split_was_at_equal_sign = [False]
