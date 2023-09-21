@@ -61,7 +61,7 @@ std::ostream& operator<<(std::ostream& str, MyTimer& timer) {
   return str;
 }
 
-class GaussBinnedFit : public testing::TestWithParam<bool> {
+class GaussBinnedFit : public testing::TestWithParam<RooFit::EvalBackend::Value> {
 public:
   void SetUp() override {
     RooRandom::randomGenerator()->SetSeed(10);
@@ -75,14 +75,17 @@ public:
 };
 
 TEST_P(GaussBinnedFit, BatchFit) {
+
+  using namespace RooFit;
+
   x.setBins(50);
   std::unique_ptr<RooDataHist> dataHist( gaus.generateBinned(x, 10000) );
 
-  const bool batchMode = GetParam();
+  const auto evalBackend = GetParam();
   m.setVal(-1.);
   s.setVal(3.);
-  MyTimer timer(batchMode ? "BatchBinned" : "ScalarBinned");
-  gaus.fitTo(*dataHist, RooFit::BatchMode(batchMode), RooFit::PrintLevel(-1), RooFit::Optimize(0));
+  MyTimer timer(evalBackend == EvalBackend::Value::Cpu ? "BatchBinned" : "ScalarBinned");
+  gaus.fitTo(*dataHist, EvalBackend(evalBackend), PrintLevel(-1), Optimize(0));
   timer.interval();
   std::cout << timer << std::endl;
   EXPECT_NEAR(m.getVal(), 1., m.getError());
@@ -92,15 +95,16 @@ TEST_P(GaussBinnedFit, BatchFit) {
 /// Test binned fit with a lot of bins. Because of ROOT-3874, it unfortunately
 /// has a biased sigma parameter.
 TEST_P(GaussBinnedFit, BatchFitFineBinsBiased) {
+  using namespace RooFit;
   x.setBins(1000);
   s.setVal(4.);
   std::unique_ptr<RooDataHist> dataHist( gaus.generateBinned(x, 20000) );
 
-  const bool batchMode = GetParam();
+  const auto evalBackend = GetParam();
   m.setVal(-1.);
   s.setVal(3.);
-  MyTimer timer(batchMode ? "BatchFineBinned" : "ScalarFineBinned");
-  gaus.fitTo(*dataHist, RooFit::BatchMode(batchMode), RooFit::PrintLevel(-1));
+  MyTimer timer(evalBackend == EvalBackend::Value::Cpu ? "BatchFineBinned" : "ScalarFineBinned");
+  gaus.fitTo(*dataHist, EvalBackend(evalBackend), PrintLevel(-1));
   timer.interval();
   std::cout << timer << std::endl;
   EXPECT_NEAR(m.getVal(), 1., m.getError());
@@ -112,15 +116,16 @@ TEST_P(GaussBinnedFit, BatchFitFineBinsBiased) {
 
 /// Enable instead of BatchFitFineBinsBiased once ROOT-3874 is fixed.
 TEST_P(GaussBinnedFit, DISABLED_BatchFitFineBins) {
+  using namespace RooFit;
   x.setBins(1000);
   s.setVal(4.);
   std::unique_ptr<RooDataHist> dataHist( gaus.generateBinned(x, 20000) );
 
-  const bool batchMode = GetParam();
+  const auto evalBackend = GetParam();
   m.setVal(-1.);
   s.setVal(3.);
-  MyTimer timer(batchMode ? "BatchFineBinned" : "ScalarFineBinned");
-  gaus.fitTo(*dataHist, RooFit::BatchMode(batchMode), RooFit::PrintLevel(-1));
+  MyTimer timer(evalBackend == EvalBackend::Value::Cpu ? "BatchFineBinned" : "ScalarFineBinned");
+  gaus.fitTo(*dataHist, EvalBackend(evalBackend), PrintLevel(-1));
   timer.interval();
   std::cout << timer << std::endl;
   EXPECT_NEAR(m.getVal(), 1., m.getError());
@@ -129,7 +134,7 @@ TEST_P(GaussBinnedFit, DISABLED_BatchFitFineBins) {
 
 INSTANTIATE_TEST_SUITE_P(RunFits,
     GaussBinnedFit,
-    testing::Bool());
+    testing::Values(RooFit::EvalBackend::Value::Legacy, RooFit::EvalBackend::Value::Cpu));
 
 // TODO Test a batch fit that uses categories once categories can be passed through the batch interface.
 
