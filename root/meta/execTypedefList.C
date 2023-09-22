@@ -95,7 +95,7 @@ int check_file(const char *filename, int expected_count)
       ++found;
    }
    if (found != expected_count) {
-      fprintf(stderr,"Found only %d typedefs (expected %d)\n",found, expected_count);
+      fprintf(stderr,"Found only %d typedefs in file %s (expected %d)\n",found, filename, expected_count);
       if (!res)
          res = 4;
    }
@@ -137,14 +137,17 @@ int execTypedefList() {
    // The iterator typedef is now desugared.
    // res = check_target("std::list<std::string>::const_iterator","list<string>::const_iterator"); if (res) return res;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
    res = check_file("typelist_win32.v5.txt",340); if (res) return res;
    #if __cplusplus > 201402L
       res = check_file("typelist_win32.v6.cxx17.txt",1408); if (res) return res;
    #else
       res = check_file("typelist_win32.v6.txt",1420); if (res) return res;
    #endif
-#else
+#elif defined(R__MACOSX) && __cplusplus > 201402L
+   res = check_file("typelist.v5.txt",340); if (res) return res;
+   res = check_file("typelist.v6.cxx17.txt",1310); if (res) return res;
+#else   
    res = check_file("typelist.v5.txt",340); if (res) return res;
    res = check_file("typelist.v6.txt",1322); if (res) return res;
 #endif
