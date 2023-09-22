@@ -223,12 +223,12 @@ RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
 RooCmdArg TimingAnalysis(bool timingAnalysis) ;
 
-RooCmdArg BatchMode(std::string const& batchMode="cpu");
-// The const char * overload is necessary, otherwise the compiler will cast a
-// C-Style string to a bool and choose the BatchMode(bool) overload if one
-// calls for example BatchMode("off").
-inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
-inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
+//RooCmdArg BatchMode(std::string const& batchMode="cpu");
+//// The const char * overload is necessary, otherwise the compiler will cast a
+//// C-Style string to a bool and choose the BatchMode(bool) overload if one
+//// calls for example BatchMode("off").
+//inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
+//inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
 
 RooCmdArg IntegrateBins(double precision);
 

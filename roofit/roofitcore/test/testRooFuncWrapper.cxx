@@ -109,7 +109,7 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
                       "const double sig = params[2];"
                       "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
                       "return 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;";
-   RooFuncWrapper gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, {});
+   RooFuncWrapper gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, nullptr, nullptr, true);
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
@@ -149,7 +149,7 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
    RooArgSet normSet{x};
 
-   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", gauss, normSet);
+   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", gauss, normSet, nullptr, nullptr, true);
 
    RooArgSet paramsGauss;
    gauss.getParameters(nullptr, paramsGauss);
@@ -189,7 +189,7 @@ TEST(RooFuncWrapper, Exponential)
 
       RooArgSet normSet{x};
 
-      RooFuncWrapper expoFunc(name.c_str(), name.c_str(), expo, normSet);
+      RooFuncWrapper expoFunc(name.c_str(), name.c_str(), expo, normSet, nullptr, nullptr, true);
 
       RooArgSet params;
       expo.getParameters(nullptr, params);

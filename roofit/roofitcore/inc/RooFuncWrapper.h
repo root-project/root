@@ -29,10 +29,10 @@ class RooSimultaneous;
 class RooFuncWrapper final : public RooAbsReal {
 public:
    RooFuncWrapper(const char *name, const char *title, std::string const &funcBody, RooArgSet const &paramSet,
-                  const RooAbsData *data = nullptr, RooSimultaneous const *simPdf = nullptr);
+                  const RooAbsData *data, RooSimultaneous const *simPdf, bool createGradient);
 
    RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
-                  const RooAbsData *data = nullptr, RooSimultaneous const *simPdf = nullptr);
+                  const RooAbsData *data, RooSimultaneous const *simPdf, bool createGradient);
 
    RooFuncWrapper(const RooFuncWrapper &other, const char *name = nullptr);
 
@@ -40,7 +40,7 @@ public:
 
    double defaultErrorLevel() const override { return 0.5; }
 
-   bool hasGradient() const override { return true; }
+   bool hasGradient() const override { return _hasGradient; }
    void gradient(double *out) const override;
 
    void gradient(const double *x, double *g) const;
@@ -65,7 +65,7 @@ private:
    void loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet,
                           const RooAbsData *data, RooSimultaneous const *simPdf);
 
-   void declareAndDiffFunction(std::string funcName, std::string const &funcBody);
+   void declareAndDiffFunction(std::string funcName, std::string const &funcBody, bool createGradient);
 
    void buildFuncAndGradFunctors();
 
@@ -81,6 +81,7 @@ private:
    RooListProxy _params;
    Func _func;
    Grad _grad;
+   bool _hasGradient = false;
    mutable std::vector<double> _gradientVarBuffer;
    std::vector<double> _observables;
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
