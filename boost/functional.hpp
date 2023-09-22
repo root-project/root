@@ -16,7 +16,7 @@
 #include <boost/call_traits.hpp>
 #include <functional>
 
-#if defined(_MSC_VER) && __cplusplus > 201402L
+#if __cplusplus > 201402L
 namespace std
 {
     // std::unary_function and std::binary_function were both removed
