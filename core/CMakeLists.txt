@@ -8,28 +8,16 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
-string(TIMESTAMP PSEUDO_GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
-if(GIT_DESCRIBE_ALL)
-  file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-    "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${PSEUDO_GIT_TIMESTAMP}\n")
-else()
-  math(EXPR ROOT_PATCH_VERSION_ODD ${ROOT_PATCH_VERSION}%2)
-  if(${ROOT_PATCH_VERSION} EQUAL 0)
-    # A release.
-    math(EXPR ROOT_MINOR_VERSION_ODD ${ROOT_MINOR_VERSION}%2)
-    if(${ROOT_MINOR_VERSION_ODD} EQUAL 1)
-      # Dev release.
-      file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-        "heads/master\ntags/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}\n${PSEUDO_GIT_TIMESTAMP}\n")
-    else()
-      # Production release / patch release.
-      file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-        "heads/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-patches\ntags/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}\n${PSEUDO_GIT_TIMESTAMP}\n")
-    endif()
-  else()
-    message(FATAL_ERROR "Cannot determine git revision info: source is not a release and not a git repo")
-  endif()
-endif()
+include(SetROOTVersion)
+
+# Update etc/gitinfo.txt for every build.
+add_custom_target(gitinfotxt
+  ALL
+  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
+  WORKING_DIRECTORY 
+  COMMENT "Updating etc/gitinfo.txt."
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+)
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
