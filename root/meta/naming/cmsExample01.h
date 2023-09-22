@@ -11,7 +11,6 @@ namespace reco {
 #include <functional>
 #include <algorithm>
 
-#if defined(_MSC_VER) && __cplusplus > 201402L
 namespace std {
    // std::unary_function and std::binary_function were both removed
    // in C++17.
@@ -29,7 +28,6 @@ namespace std {
       typedef Result result_type;
    };
 }
-#endif
 
 namespace edm {
    template<typename C, typename T, typename F> class RefVector;
