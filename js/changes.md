@@ -25,10 +25,12 @@
 22. Provide `Build legend` context menu command for the pad
 23. Reset pad enlarge state when pressing Escape key #265
 24. Support canvas grayscale, let toggle via context menu
-25. Fix - correct scaling of axis labels when tilt them by 25 degree, make this angle configurable
-26. Fix - legend multi-columns drawing and labels scaling
-27. Fix - graph "B" bar widths as in native ROOT
-28. Fix - use pad and not frame size for TText/TLatex scaling 
+25. Support `TProfile3D` class
+26. Scale special fill patterns like 3244 to pad size
+27. Fix - correct scaling of axis labels when tilt them by 25 degree, make this angle configurable
+28. Fix - legend multi-columns drawing and labels scaling
+29. Fix - graph "B" bar widths as in native ROOT
+30. Fix - use pad and not frame size for TText/TLatex scaling
 
 
 ## Changes in 7.4.3

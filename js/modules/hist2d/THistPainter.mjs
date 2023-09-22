@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, constants, internals, create, isObject, isFunc, isStr, getPromise,
-         clTList, clTPaveText, clTPaveStats, clTPaletteAxis,
+         clTList, clTPaveText, clTPaveStats, clTPaletteAxis, clTProfile2D, clTProfile3D,
          clTAxis, clTF1, clTF2, clTProfile, kNoZoom, clTCutG, kNoStats } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
@@ -714,8 +714,9 @@ class THistPainter extends ObjectPainter {
       const histo = this.getHisto();
       if (!histo) return 0;
       if (histo._typename.match(/^TH2/)) return 2;
-      if (histo._typename.match(/^TProfile2D/)) return 2;
+      if (histo._typename === clTProfile2D) return 2;
       if (histo._typename.match(/^TH3/)) return 3;
+      if (histo._typename === clTProfile3D) return 3;
       if (this.isTH2Poly()) return 2;
       return 1;
    }
