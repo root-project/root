@@ -11,7 +11,7 @@ namespace reco {
 #include <functional>
 #include <algorithm>
 
-#if __cplusplus > 201402L && (defined(_MSC_VER) || defined(R__MACOSX))
+#if __cplusplus > 201402L && (defined(_MSC_VER) || (defined(R__MACOSX) && _LIBCPP_VERSION >= 160000))
 namespace std {
    // std::unary_function and std::binary_function were both removed
    // in C++17.
