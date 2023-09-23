@@ -52,11 +52,11 @@ For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as 
 ## Compression Block
 
 RNTuple envelopes and pages are wrapped in compression blocks.
-In order to deserialize a page or an envelope, its compressed and ucompressed size needs to be known.
+In order to deserialize a page or an envelope, its compressed and uncompressed size needs to be known.
 
 If the compressed size == uncompressed size, the data is stored unmodified in uncompressed form.
 Otherwise, data is represented as a series of compressed chunks.
-Each chunk is prepended with the following 9 byte header.
+Each chunk is prepended with the following 9 bytes header.
 
 ```
 Byte
@@ -103,10 +103,18 @@ The meta-data envelope defines additional basic types (see below).
 
 ### Feature Flags
 
-Feature flags are 64bit integers where every bit represents a certain feature that is used
+Feature flags are 64bit integers where every bit represents a certain forward-incompatible feature that is used
 in the binary format of the RNTuple at hand.
 The most significant bit is used to indicate that there are more than 63 features to specify.
 That means that readers need to continue reading feature flags as long as their signed integer value is negative.
+
+Readers should gracefully abort reading when they encounter unknown bits set.
+
+The following feature bits are defined:
+
+| Bit                                | Feature              |
+------------------------------------ |----------------------|
+| 137 (0x09 of the 3rd feature int)  | Reserved for testing |
 
 
 ## Frames
