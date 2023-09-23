@@ -926,8 +926,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
-install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
-
 if(NOT gnuinstall)
   install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
                 ${CMAKE_BINARY_DIR}/config/Makefile.config
