@@ -217,9 +217,9 @@ public:
 
    // An empty flags vector will be serialized as a single, zero feature flag
    // The most significant bit in every flag is reserved and must _not_ be set
-   static std::uint32_t SerializeFeatureFlags(const std::vector<std::int64_t> &flags, void *buffer);
-   static RResult<std::uint32_t> DeserializeFeatureFlags(const void *buffer, std::uint32_t bufSize,
-                                                         std::vector<std::int64_t> &flags);
+   static std::uint32_t SerializeFeatureFlags(const std::vector<std::uint64_t> &flags, void *buffer);
+   static RResult<std::uint32_t>
+   DeserializeFeatureFlags(const void *buffer, std::uint32_t bufSize, std::vector<std::uint64_t> &flags);
 
    static std::uint32_t SerializeLocator(const RNTupleLocator &locator, void *buffer);
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);

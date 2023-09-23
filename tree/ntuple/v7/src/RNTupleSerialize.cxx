@@ -775,45 +775,47 @@ ROOT::Experimental::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTuple
    return R__FORWARD_RESULT(DeserializeFrameHeader(buffer, bufSize, frameSize, nitems));
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFeatureFlags(
-   const std::vector<std::int64_t> &flags, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeFeatureFlags(const std::vector<std::uint64_t> &flags,
+                                                                       void *buffer)
 {
    if (flags.empty())
-      return SerializeInt64(0, buffer);
+      return SerializeUInt64(0, buffer);
 
    if (buffer) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
 
       for (unsigned i = 0; i < flags.size(); ++i) {
-         if (flags[i] < 0)
+         if (flags[i] & 0x8000000000000000)
             throw RException(R__FAIL("feature flag out of bounds"));
 
          // The MSb indicates that another Int64 follows; set this bit to 1 for all except the last element
          if (i == (flags.size() - 1))
-            SerializeInt64(flags[i], bytes);
+            SerializeUInt64(flags[i], bytes);
          else
-            bytes += SerializeInt64(flags[i] | 0x8000000000000000, bytes);
+            bytes += SerializeUInt64(flags[i] | 0x8000000000000000, bytes);
       }
    }
    return (flags.size() * sizeof(std::int64_t));
 }
 
-RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFeatureFlags(
-   const void *buffer, std::uint32_t bufSize, std::vector<std::int64_t> &flags)
+RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFeatureFlags(const void *buffer, std::uint32_t bufSize,
+                                                                         std::vector<std::uint64_t> &flags)
 {
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
 
    flags.clear();
-   std::int64_t f;
+   std::uint64_t f;
    do {
-      if (bufSize < sizeof(std::int64_t))
+      if (bufSize < sizeof(std::uint64_t))
          return R__FAIL("feature flag buffer too short");
-      bytes += DeserializeInt64(bytes, f);
-      bufSize -= sizeof(std::int64_t);
+      bytes += DeserializeUInt64(bytes, f);
+      bufSize -= sizeof(std::uint64_t);
       flags.emplace_back(f & ~0x8000000000000000);
-   } while (f < 0);
+   } while (f & 0x8000000000000000);
 
-   return (flags.size() * sizeof(std::int64_t));
+   return (flags.size() * sizeof(std::uint64_t));
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
@@ -1233,7 +1235,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
 
    pos += SerializeEnvelopePreamble(*where);
    // So far we don't make use of feature flags
-   pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
+   pos += SerializeFeatureFlags(desc.GetFeatureFlags(), *where);
    pos += SerializeUInt32(kReleaseCandidateTag, *where);
    pos += SerializeString(desc.GetName(), *where);
    pos += SerializeString(desc.GetDescription(), *where);
@@ -1309,7 +1311,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
    pos += SerializeEnvelopePreamble(*where);
 
    // So far we don't make use of feature flags
-   pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
+   pos += SerializeFeatureFlags(std::vector<std::uint64_t>(), *where);
    pos += SerializeUInt32(context.GetHeaderCRC32(), *where);
 
    // Schema extension, i.e. incremental changes with respect to the header
@@ -1380,14 +1382,18 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    bytes += result.Unwrap();
    descBuilder.SetHeaderCRC32(crc32);
 
-   std::vector<std::int64_t> featureFlags;
+   std::vector<std::uint64_t> featureFlags;
    result = DeserializeFeatureFlags(bytes, fnBufSizeLeft(), featureFlags);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   for (auto f: featureFlags) {
-      if (f)
-         R__LOG_WARNING(NTupleLog()) << "Unsupported feature flag! " << f;
+   for (std::size_t i = 0; i < featureFlags.size(); ++i) {
+      if (!featureFlags[i])
+         continue;
+      unsigned int bit = 0;
+      while (!(featureFlags[i] & (static_cast<uint64_t>(1) << bit)))
+         bit++;
+      return R__FAIL("unsupported format feature: " + std::to_string(i * 64 + bit));
    }
 
    std::uint32_t rcTag;
@@ -1439,7 +1445,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
 
-   std::vector<std::int64_t> featureFlags;
+   std::vector<std::uint64_t> featureFlags;
    result = DeserializeFeatureFlags(bytes, fnBufSizeLeft(), featureFlags);
    if (!result)
       return R__FORWARD_ERROR(result);
