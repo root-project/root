@@ -1,6 +1,35 @@
-# RNTuple Reference Specifications (WIP)
+# RNTuple Reference Specifications 0.2.0.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
+
+## Versioning Notes
+
+The RNTuple binary format vesion is inspired by semantic versioning.
+It uses the following scheme: EPOCH.MAJOR.MINOR.PATCH
+
+_Epoch_: an increment of the epoch indicates backwards-incompatible changes.
+The RNTuple pre-release has epoch 0.
+The fist public release will get epoch 1.
+There is currently no further epoch foreseen.
+
+_Major_: an increment of the major version indicates forward-incompatible changes.
+The use of new, forward-incompatible features must be indicated in the feature flag in the header (see below).
+For the RNTuple pre-release (epoch == 0), the major version is the release candidate number.
+
+_Minor_: an increment of the minor version indicates new, optional format features.
+That is, old readers will safely ignore these features.
+
+_Patch_: an increment of the patch version indicates backported features from newer format versions.
+The backported features may correspond to a major or a minor release.
+
+Except for the epoch, the versioning is for reporting only.
+Readers should use the feature flag in the header to determine whether they support reading the file.
+
+### Changelog
+
+Version 1.0.0.0: first public release
+
+## Introduction
 
 This document describes version 1 of the RNTuple binary format.
 
@@ -15,8 +44,8 @@ Envelopes can reference other envelopes and pages by means of a **locator** or a
 for a file embedding, the locator consists of an offset and a size.
 The RNTuple format does _not_ establish a specific order of pages and envelopes.
 
-Every embedding must define an **anchor** that contains the envelope links (location, compressed and uncompressed size)
-of the header and footer envelopes.
+Every embedding must define an **anchor** that contains the format version supported by the writer,
+and envelope links (location, compressed and uncompressed size) of the header and footer envelopes.
 For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as an anchor.
 
 
