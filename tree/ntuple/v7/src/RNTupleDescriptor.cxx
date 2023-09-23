@@ -406,6 +406,26 @@ ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescrip
    }
 }
 
+std::vector<std::uint64_t> ROOT::Experimental::RNTupleDescriptor::GetFeatureFlags() const
+{
+   std::vector<std::uint64_t> result;
+   unsigned int base = 0;
+   std::uint64_t flags = 0;
+   for (auto f : fFeatureFlags) {
+      if ((f > 0) && ((f % 64) == 0))
+         throw RException(R__FAIL("invalid feature flag: " + std::to_string(f)));
+      while (f > base + 64) {
+         result.emplace_back(flags);
+         flags = 0;
+         base += 64;
+      }
+      f -= base;
+      flags |= 1 << f;
+   }
+   result.emplace_back(flags);
+   return result;
+}
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptor::AddClusterDetails(RClusterDescriptor &&clusterDesc)
 {
@@ -658,6 +678,13 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(const std::string_v
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
+{
+   if (flag % 64 == 0)
+      throw RException(R__FAIL("invalid feature flag: " + std::to_string(flag)));
+   fDescriptor.fFeatureFlags.insert(flag);
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RColumnDescriptor>

@@ -220,7 +220,7 @@ TEST(RNTuple, SerializeFrame)
 
 TEST(RNTuple, SerializeFeatureFlags)
 {
-   std::vector<std::int64_t> flags;
+   std::vector<std::uint64_t> flags;
    unsigned char buffer[16];
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, nullptr));
@@ -235,7 +235,7 @@ TEST(RNTuple, SerializeFeatureFlags)
    ASSERT_EQ(1u, flags.size());
    EXPECT_EQ(1, flags[0]);
 
-   flags.push_back(-2);
+   flags.push_back(std::uint64_t(-2));
    try {
       RNTupleSerializer::SerializeFeatureFlags(flags, buffer);
       FAIL() << "negative feature flag should throw";

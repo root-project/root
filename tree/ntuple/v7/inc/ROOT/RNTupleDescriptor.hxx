@@ -32,6 +32,7 @@
 #include <memory>
 #include <ostream>
 #include <vector>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -434,6 +435,7 @@ private:
     */
    std::uint64_t fGeneration = 0;
 
+   std::set<unsigned int> fFeatureFlags;
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
    std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
@@ -443,6 +445,8 @@ private:
    std::unique_ptr<RHeaderExtension> fHeaderExtension;
 
 public:
+   static constexpr unsigned int kFeatureFlagTest = 137; // Bit reserved for forward-compatibility testing
+
    // clang-format off
    /**
    \class ROOT::Experimental::RNTupleDescriptor::RHeaderExtension
@@ -778,6 +782,9 @@ public:
    /// In case of invalid field ID, an empty string is returned.
    std::string GetQualifiedFieldName(DescriptorId_t fieldId) const;
 
+   bool HasFeature(unsigned int flag) const { return fFeatureFlags.count(flag) > 0; }
+   std::vector<std::uint64_t> GetFeatureFlags() const;
+
    /// Return header extension information; if the descriptor does not have a header extension, return `nullptr`
    const RHeaderExtension *GetHeaderExtension() const { return fHeaderExtension.get(); }
 
@@ -1048,6 +1055,7 @@ public:
    RNTupleDescriptor MoveDescriptor();
 
    void SetNTuple(const std::string_view name, const std::string_view description);
+   void SetFeature(unsigned int flag);
    void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCRC32 = crc32; }
    std::uint32_t GetHeaderCRC32() const { return fHeaderCRC32; }
 
