@@ -71,7 +71,7 @@ public:
    /// Version of the RNTuple binary format that the writer supports (see specification).
    /// Changing the epoch indicates backward-incompatible changes
    std::uint16_t fVersionEpoch = 0;
-   /// Changing the major version indicates forward incompatible changes; such changes shoudl correspond to a new
+   /// Changing the major version indicates forward incompatible changes; such changes should correspond to a new
    /// bit in the feature flag of the RNTuple header.
    /// For the pre-release epoch 0, indicates the release candidate number
    std::uint16_t fVersionMajor = 2;
