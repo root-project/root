@@ -68,17 +68,22 @@ auto pageSource = ntpl->MakePageSource();
 // clang-format on
 class RNTuple final {
 public:
+   static constexpr std::uint16_t kVersionEpoch = 0;
+   static constexpr std::uint16_t kVersionMajor = 2;
+   static constexpr std::uint16_t kVersionMinor = 0;
+   static constexpr std::uint16_t kVersionPatch = 0;
+
    /// Version of the RNTuple binary format that the writer supports (see specification).
    /// Changing the epoch indicates backward-incompatible changes
-   std::uint16_t fVersionEpoch = 0;
+   std::uint16_t fVersionEpoch = kVersionEpoch;
    /// Changing the major version indicates forward incompatible changes; such changes should correspond to a new
    /// bit in the feature flag of the RNTuple header.
    /// For the pre-release epoch 0, indicates the release candidate number
-   std::uint16_t fVersionMajor = 2;
+   std::uint16_t fVersionMajor = kVersionMajor;
    /// Changing the minor version indicates new optional fields added to the RNTuple meta-data
-   std::uint16_t fVersionMinor = 0;
+   std::uint16_t fVersionMinor = kVersionMinor;
    /// Changing the patch version indicate new backported features from newer binary format versions
-   std::uint16_t fVersionPatch = 0;
+   std::uint16_t fVersionPatch = kVersionPatch;
    /// The file offset of the header excluding the TKey part
    std::uint64_t fSeekHeader = 0;
    /// The size of the compressed ntuple header

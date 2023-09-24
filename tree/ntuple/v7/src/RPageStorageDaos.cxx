@@ -129,25 +129,37 @@ std::uint32_t ROOT::Experimental::Detail::RDaosNTupleAnchor::Serialize(void *buf
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes += RNTupleSerializer::SerializeUInt32(fVersion, bytes);
+      bytes += RNTupleSerializer::SerializeUInt64(fVersionAnchor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionEpoch, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionMajor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionMajor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionMajor, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fNBytesHeader, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fLenHeader, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fNBytesFooter, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fLenFooter, bytes);
       bytes += RNTupleSerializer::SerializeString(fObjClass, bytes);
    }
-   return RNTupleSerializer::SerializeString(fObjClass, nullptr) + 20;
+   return RNTupleSerializer::SerializeString(fObjClass, nullptr) + 32;
 }
 
 ROOT::Experimental::RResult<std::uint32_t>
 ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer, std::uint32_t bufSize)
 {
-   if (bufSize < 20)
+   if (bufSize < 32)
       return R__FAIL("DAOS anchor too short");
 
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fVersion);
+   bytes += RNTupleSerializer::DeserializeUInt64(bytes, fVersionAnchor);
+   if (fVersionAnchor != RDaosNTupleAnchor().fVersionAnchor) {
+      return R__FAIL("unsupported DAOS anchor version: " + std::to_string(fVersionAnchor));
+   }
+
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionEpoch);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionMajor);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionMinor);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionPatch);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fNBytesHeader);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fLenHeader);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fNBytesFooter);
@@ -155,7 +167,7 @@ ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer, s
    auto result = RNTupleSerializer::DeserializeString(bytes, bufSize - 20, fObjClass);
    if (!result)
       return R__FORWARD_ERROR(result);
-   return result.Unwrap() + 20;
+   return result.Unwrap() + 32;
 }
 
 std::uint32_t ROOT::Experimental::Detail::RDaosNTupleAnchor::GetSize()
@@ -181,6 +193,12 @@ int ROOT::Experimental::Detail::RDaosContainerNTupleLocator::InitNTupleDescripto
       return err;
 
    anchor.Deserialize(buffer.get(), anchorSize).Unwrap();
+   if (anchor.fVersionEpoch != RNTuple::kVersionEpoch) {
+      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
+   }
+   if (anchor.fVersionEpoch == 0) {
+      R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << anchor.fVersionMajor;
+   }
 
    builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
    buffer = std::make_unique<unsigned char[]>(anchor.fLenHeader);
