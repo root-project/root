@@ -211,6 +211,13 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
 
 void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const RNTuple &anchor)
 {
+   if (anchor.fVersionEpoch != RNTuple::kVersionEpoch) {
+      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
+   }
+   if (anchor.fVersionEpoch == 0) {
+      R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << anchor.fVersionMajor;
+   }
+
    fDescriptorBuilder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
    auto buffer = std::make_unique<unsigned char[]>(anchor.fLenHeader);
    auto zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesHeader);

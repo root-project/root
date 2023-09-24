@@ -1400,9 +1400,6 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
       return R__FAIL("header too short");
    bytes += DeserializeUInt32(bytes, rcTag);
-   if (rcTag > 0) {
-      R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << rcTag;
-   }
 
    std::string name;
    std::string description;

@@ -18,6 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTupleAnchor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <string_view>
@@ -62,7 +63,14 @@ The length of a serialized anchor cannot be greater than the value returned by t
 // clang-format on
 struct RDaosNTupleAnchor {
    /// Allows for evolving the struct in future versions
-   std::uint32_t fVersion = 0;
+   std::uint64_t fVersionAnchor = 1;
+   /// Version of the binary format supported by the writer
+   std::uint16_t fVersionEpoch = RNTuple::kVersionEpoch;
+   std::uint16_t fVersionMajor = RNTuple::kVersionMajor;
+   std::uint16_t fVersionMinor = RNTuple::kVersionMinor;
+   std::uint16_t fVersionPatch = RNTuple::kVersionPatch;
+   /// The file offset of the header excluding the TKey part
+   /// The file offset of the header excluding the TKey part
    /// The size of the compressed ntuple header
    std::uint32_t fNBytesHeader = 0;
    /// The size of the uncompressed ntuple header
@@ -75,12 +83,11 @@ struct RDaosNTupleAnchor {
    std::string fObjClass{};
 
    bool operator ==(const RDaosNTupleAnchor &other) const {
-      return fVersion == other.fVersion &&
-         fNBytesHeader == other.fNBytesHeader &&
-         fLenHeader == other.fLenHeader &&
-         fNBytesFooter == other.fNBytesFooter &&
-         fLenFooter == other.fLenFooter &&
-         fObjClass == other.fObjClass;
+      return fVersionAnchor == other.fVersionAnchor && fVersionEpoch == other.fVersionEpoch &&
+             fVersionMajor == other.fVersionMajor && fVersionMinor == other.fVersionMinor &&
+             fVersionPatch == other.fVersionPatch && fNBytesHeader == other.fNBytesHeader &&
+             fLenHeader == other.fLenHeader && fNBytesFooter == other.fNBytesFooter && fLenFooter == other.fLenFooter &&
+             fObjClass == other.fObjClass;
    }
 
    std::uint32_t Serialize(void *buffer) const;
