@@ -102,54 +102,60 @@ TEST(RNTuple, SerializeFieldStructure)
 TEST(RNTuple, SerializeEnvelope)
 {
    try {
-      RNTupleSerializer::DeserializeEnvelope(nullptr, 0).Unwrap();
+      RNTupleSerializer::DeserializeEnvelope(nullptr, 0, 137).Unwrap();
       FAIL() << "too small envelope should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
    struct {
-      std::uint16_t writerVersion = static_cast<std::uint16_t>(1);
-      std::uint16_t minVersion = static_cast<std::uint16_t>(1);
-      std::uint32_t crc32 = 0;
+      std::uint64_t typeAndSize = 137;
+      std::uint64_t payload = 0;
+      std::uint64_t xxhash3 = 0;
    } testEnvelope;
 
+   EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
+   testEnvelope.xxhash3 = 0;
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
-      FAIL() << "CRC32 mismatch should throw";
+      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137).Unwrap();
+      FAIL() << "XxHash-3 mismatch should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("CRC32"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("XxHash-3"));
+   }
+   testEnvelope.typeAndSize = 137;
+
+   EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
+   try {
+      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 138).Unwrap();
+      FAIL() << "unsupported envelope type should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("envelope type mismatch"));
+   }
+   testEnvelope.typeAndSize = 137;
+
+   EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
+   try {
+      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope) - 1, 137).Unwrap();
+      FAIL() << "too small envelope buffer should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("envelope buffer size too small"));
    }
 
-   testEnvelope.writerVersion = testEnvelope.minVersion = 0;
-
-   EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(
-      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
+   testEnvelope.typeAndSize -= 9 << 16;
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
-      FAIL() << "unsupported version should throw";
+      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137).Unwrap();
+      FAIL() << "too small envelope buffer should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("too old"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid envelope, too short"));
    }
 
-   testEnvelope.writerVersion = RNTupleSerializer::kEnvelopeCurrentVersion;
-   std::uint32_t crc32_write;
-   RNTupleSerializer::SerializeEnvelopePostscript(
-      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, crc32_write, &testEnvelope.crc32);
-   std::uint32_t crc32_read;
-   EXPECT_EQ(4u, RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), crc32_read).Unwrap());
-   EXPECT_EQ(crc32_write, crc32_read);
-
-   testEnvelope.writerVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
-   testEnvelope.minVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
-   EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(
-      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
-   try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
-      FAIL() << "unsupported version should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("too new"));
-   }
+   testEnvelope.typeAndSize = 137;
+   std::uint64_t xxhash3_write;
+   RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16, xxhash3_write);
+   std::uint64_t xxhash3_read;
+   EXPECT_EQ(8u,
+             RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137, xxhash3_read).Unwrap());
+   EXPECT_EQ(xxhash3_write, xxhash3_read);
 }
 
 TEST(RNTuple, SerializeFrame)
@@ -351,9 +357,9 @@ TEST(RNTuple, SerializeEnvelopeLink)
    link.fLocator.fPosition = 137U;
    link.fLocator.fBytesOnStorage = 7;
 
-   unsigned char buffer[16];
-   EXPECT_EQ(16u, RNTupleSerializer::SerializeEnvelopeLink(link, nullptr));
-   EXPECT_EQ(16u, RNTupleSerializer::SerializeEnvelopeLink(link, buffer));
+   unsigned char buffer[20];
+   EXPECT_EQ(20u, RNTupleSerializer::SerializeEnvelopeLink(link, nullptr));
+   EXPECT_EQ(20u, RNTupleSerializer::SerializeEnvelopeLink(link, buffer));
    try {
       RNTupleSerializer::DeserializeEnvelopeLink(buffer, 3, link).Unwrap();
       FAIL() << "too short envelope link buffer should throw";
@@ -362,7 +368,7 @@ TEST(RNTuple, SerializeEnvelopeLink)
    }
 
    RNTupleSerializer::REnvelopeLink reconstructedLink;
-   EXPECT_EQ(16u, RNTupleSerializer::DeserializeEnvelopeLink(buffer, 16, reconstructedLink).Unwrap());
+   EXPECT_EQ(20u, RNTupleSerializer::DeserializeEnvelopeLink(buffer, 20, reconstructedLink).Unwrap());
    EXPECT_EQ(link.fUnzippedSize, reconstructedLink.fUnzippedSize);
    EXPECT_EQ(link.fLocator, reconstructedLink.fLocator);
 }
@@ -411,17 +417,17 @@ TEST(RNTuple, SerializeClusterGroup)
    group.fPageListEnvelopeLink.fLocator.fPosition = 137U;
    group.fPageListEnvelopeLink.fLocator.fBytesOnStorage = 7;
 
-   unsigned char buffer[28];
-   ASSERT_EQ(24u, RNTupleSerializer::SerializeClusterGroup(group, nullptr));
-   EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterGroup(group, buffer));
+   unsigned char buffer[32];
+   ASSERT_EQ(28u, RNTupleSerializer::SerializeClusterGroup(group, nullptr));
+   EXPECT_EQ(28u, RNTupleSerializer::SerializeClusterGroup(group, buffer));
    RNTupleSerializer::RClusterGroup reco;
    try {
-      RNTupleSerializer::DeserializeClusterGroup(buffer, 23, reco).Unwrap();
+      RNTupleSerializer::DeserializeClusterGroup(buffer, 27, reco).Unwrap();
       FAIL() << "too short cluster group should fail";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterGroup(buffer, 24, reco).Unwrap());
+   EXPECT_EQ(28u, RNTupleSerializer::DeserializeClusterGroup(buffer, 28, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
    EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
@@ -436,16 +442,16 @@ TEST(RNTuple, SerializeClusterGroup)
    pos += RNTupleSerializer::SerializeUInt16(7, pos);
    pos += RNTupleSerializer::SerializeFramePostscript(buffer, pos - buffer);
    pos += RNTupleSerializer::SerializeUInt16(13, pos);
-   EXPECT_EQ(26u, RNTupleSerializer::DeserializeClusterGroup(buffer, 26, reco).Unwrap());
+   EXPECT_EQ(30u, RNTupleSerializer::DeserializeClusterGroup(buffer, 30, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
    EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
              reco.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>());
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
    std::uint16_t remainder;
-   RNTupleSerializer::DeserializeUInt16(buffer + 24, remainder);
+   RNTupleSerializer::DeserializeUInt16(buffer + 28, remainder);
    EXPECT_EQ(7u, remainder);
-   RNTupleSerializer::DeserializeUInt16(buffer + 26, remainder);
+   RNTupleSerializer::DeserializeUInt16(buffer + 30, remainder);
    EXPECT_EQ(13u, remainder);
 }
 
