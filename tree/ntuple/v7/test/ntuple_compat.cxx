@@ -1,5 +1,24 @@
 #include "ntuple_test.hxx"
 
+TEST(RNTupleCompat, Epoch)
+{
+   FileRaii fileGuard("test_ntuple_compat_epoch.root");
+
+   RNTuple ntpl;
+   ntpl.fVersionEpoch++;
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   file->WriteObject(&ntpl, "ntpl");
+   file->Close();
+
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   try {
+      pageSource->Attach();
+      FAIL() << "opening an RNTuple with different epoch version should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unsupported RNTuple epoch version"));
+   }
+}
+
 TEST(RNTupleCompat, FeatureFlag)
 {
    FileRaii fileGuard("test_ntuple_compat_feature_flag.root");

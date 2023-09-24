@@ -26,7 +26,7 @@ protected:
       // Initialized at the start of each test to expect diagnostic messages from TestSupport
       fRootDiags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos",
                               "The DAOS backend is experimental and still under development.", false);
-      fRootDiags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+      fRootDiags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
       fRootDiags.optionalDiag(kWarning, "in int daos_init()",
                               "This RNTuple build uses libdaos_mock. Use only for testing!");
    }
