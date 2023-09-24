@@ -1043,7 +1043,7 @@ Used by RPageStorage implementations in order to construct the RNTupleDescriptor
 class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
-   std::uint32_t fHeaderCRC32 = 0;
+   std::uint64_t fHeaderXxHash3 = 0;
 
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
 public:
@@ -1056,8 +1056,8 @@ public:
 
    void SetNTuple(const std::string_view name, const std::string_view description);
    void SetFeature(unsigned int flag);
-   void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCRC32 = crc32; }
-   std::uint32_t GetHeaderCRC32() const { return fHeaderCRC32; }
+   void SetHeaderXxHash3(std::uint64_t xxhash3) { fHeaderXxHash3 = xxhash3; }
+   std::uint64_t GetHeaderXxHash3() const { return fHeaderXxHash3; }
 
    void SetOnDiskHeaderSize(std::uint64_t size) { fDescriptor.fOnDiskHeaderSize = size; }
    /// The real footer size also include the page list envelopes

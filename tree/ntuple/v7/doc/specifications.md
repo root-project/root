@@ -204,7 +204,7 @@ Each locator type follows a given format for the payload (see Section "Well-know
 
 _Reserved_ is an 8bit field that can be used by the storage backend corresponding to the type in order to store additional information about the locator.
 
-An envelope link consists of a 32bit unsigned integer that specifies the uncompressed size of the envelope
+An envelope link consists of a 64bit unsigned integer that specifies the uncompressed size of the envelope
 followed by a locator.
 
 ### Well-known Payload Formats
@@ -236,13 +236,13 @@ In particular, it might contain a partial address that can be qualified using so
 An Envelope is a data block containing information that describe the RNTuple data.
 The following envelope types exist
 
-| Type              | Contents                                                          |
-|-------------------|-------------------------------------------------------------------|
-| Header            | RNTuple schema: field and column types                            |
-| Footer            | Description of clusters, location of user meta-data               |
-| Page list         | Location of data pages                                            |
-| User meta-data    | Key-value pairs of additional information about the data          |
-| Checkpoint (?)    | Minimal footer at X MB boundaries for recovery of crashed writes  |
+| Type              |  ID  | Contents                                                          |
+|-------------------|------|-------------------------------------------------------------------|
+| Header            | 0x01 | RNTuple schema: field and column types                            |
+| Footer            | 0x02 | Description of clusters, location of user meta-data               |
+| Page list         | 0x03 | Location of data pages                                            |
+| User meta-data    | 0x04 | Key-value pairs of additional information about the data          |
+| Checkpoint (?)    | 0x05 | Minimal footer at X MB boundaries for recovery of crashed writes  |
 
 Envelopes have the following format
 
@@ -250,26 +250,28 @@ Envelopes have the following format
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|        Envelope Version       |        Minimum Version        |
+|        Envelope Type ID       |                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+         Envelope Size         +
+|                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
                          ENVELOPE PAYLOAD
                                ...
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                             CRC32                             |
+|                                                               |
++                            XxHash-3                           +
+|                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-_Envelope version_: Envelope types are versioned independently from each other.
-The envelope version is the version that the writer used to build the envelope.
+_Envelope type ID_: As specified in the table above,
+encoded in the least significant 16 bits of the first 64bit integer
 
-_Minimum version_:
-A reader must support at least this version in order to extract meaningful data from the envelope.
-If the envelope version is larger than the minimum version, there might be additional data in the envelope
-that older readers can safely ignore.
+_Envelope size_: Length (uncompressed size) of the envelope,
+encoded in the 48 most significant bits of the first 64bit integer
 
-_CRC32_: Checksum of the envelope and the payload bytes together (CRC32 has the property that `crc32("123456") == crc32("456", crc32("123")`)
+_XxHash-3_: Checksum of the envelope and the payload bytes together
 
-Note that the size of envelopes is given by the RNTuple anchor (header, footer)
+Note that the compressed (and uncompressed) size of envelopes is given by the RNTuple anchor (header, footer)
 or by a locator that references the envelope.
 
 
@@ -488,7 +490,7 @@ The following kinds of content are supported:
 The footer envelope has the following structure:
 
 - Feature flags
-- Header checksum (CRC32)
+- Header checksum (XxHash-3 64bit)
 - Schema extension record frame
 - List frame of column group record frames
 - List frame of cluster summary record frames
@@ -601,7 +603,7 @@ Every inner item (that describes a page) has the following structure:
 ```
 
 Followed by a locator for the page.
-If flag 0x01 is set, a CRC32 checksum of the uncompressed page data is stored just after the page.
+If flag 0x01 is set, a XxHash-3 64bit checksum of the uncompressed page data is stored just after the page.
 Note that columns might be empty, i.e. the number of pages is zero.
 
 Depending on the number of pages per column per cluster, every page induces
