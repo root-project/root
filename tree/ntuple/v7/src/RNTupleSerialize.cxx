@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleSerialize.hxx>
 
 #include <RVersion.h>
-#include <RZip.h> // for R__crc32
+#include <xxhash.h>
 
 #include <cstring> // for memcpy
 #include <deque>
@@ -346,35 +346,33 @@ RResult<std::uint32_t> DeserializeAliasColumn(const void *buffer, std::uint32_t 
 
 } // anonymous namespace
 
-
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeCRC32(
-   const unsigned char *data, std::uint32_t length, std::uint32_t &crc32, void *buffer)
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeXxHash3(const unsigned char *data,
+                                                                                std::uint64_t length,
+                                                                                std::uint64_t &xxhash3, void *buffer)
 {
    if (buffer != nullptr) {
-      crc32 = R__crc32(0, nullptr, 0);
-      crc32 = R__crc32(crc32, data, length);
-      SerializeUInt32(crc32, buffer);
+      xxhash3 = XXH3_64bits(data, length);
+      SerializeUInt64(xxhash3, buffer);
    }
-   return 4;
+   return 8;
 }
 
-RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::VerifyCRC32(
-   const unsigned char *data, std::uint32_t length, std::uint32_t &crc32)
+RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::VerifyXxHash3(const unsigned char *data,
+                                                                             std::uint64_t length,
+                                                                             std::uint64_t &xxhash3)
 {
-   auto checksumReal = R__crc32(0, nullptr, 0);
-   checksumReal = R__crc32(checksumReal, data, length);
-   DeserializeUInt32(data + length, crc32);
-   if (crc32 != checksumReal)
-      return R__FAIL("CRC32 checksum mismatch");
+   auto checksumReal = XXH3_64bits(data, length);
+   DeserializeUInt64(data + length, xxhash3);
+   if (xxhash3 != checksumReal)
+      return R__FAIL("XxHash-3 checksum mismatch");
    return RResult<void>::Success();
 }
 
-
-RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::VerifyCRC32(
-   const unsigned char *data, std::uint32_t length)
+RResult<void>
+ROOT::Experimental::Internal::RNTupleSerializer::VerifyXxHash3(const unsigned char *data, std::uint64_t length)
 {
-   std::uint32_t crc32;
-   return R__FORWARD_RESULT(VerifyCRC32(data, length, crc32));
+   std::uint64_t xxhash3;
+   return R__FORWARD_RESULT(VerifyXxHash3(data, length, xxhash3));
 }
 
 
@@ -627,72 +625,81 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return result;
 }
 
-
-/// Currently all enevelopes have the same version number (1). At a later point, different envelope types
-/// may have different version numbers
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePreamble(void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePreamble(std::uint16_t envelopeType, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += SerializeUInt16(kEnvelopeCurrentVersion, *where);
-   pos += SerializeUInt16(kEnvelopeMinVersion, *where);
+   pos += SerializeUInt64(envelopeType, *where);
+   // The 48bits size information is filled in the postscript
    return pos - base;
 }
 
-
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(
-   const unsigned char *envelope, std::uint32_t size, std::uint32_t &crc32, void *buffer)
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(unsigned char *envelope,
+                                                                                           std::uint64_t size,
+                                                                                           std::uint64_t &xxhash3)
 {
-   return SerializeCRC32(envelope, size, crc32, buffer);
+   if (size < sizeof(std::uint64_t))
+      throw RException(R__FAIL("envelope size too small"));
+   if (size >= static_cast<uint64_t>(1) << 48)
+      throw RException(R__FAIL("envelope size too big"));
+   if (envelope) {
+      std::uint64_t typeAndSize;
+      DeserializeUInt64(envelope, typeAndSize);
+      typeAndSize |= (size + 8) << 16;
+      SerializeUInt64(typeAndSize, envelope);
+   }
+   return SerializeXxHash3(envelope, size, xxhash3, envelope ? (envelope + size) : nullptr);
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(
-   const unsigned char *envelope, std::uint32_t size, void *buffer)
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(unsigned char *envelope,
+                                                                                           std::uint64_t size)
 {
-   std::uint32_t crc32;
-   return SerializeEnvelopePostscript(envelope, size, crc32, buffer);
+   std::uint64_t xxhash3;
+   return SerializeEnvelopePostscript(envelope, size, xxhash3);
 }
 
-/// Currently all enevelopes have the same version number (1). At a later point, different envelope types
-/// may have different version numbers
-RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(
-   const void *buffer, std::uint32_t bufSize, std::uint32_t &crc32)
+RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer, std::uint32_t bufSize,
+                                                                     std::uint16_t expectedType, std::uint64_t &xxhash3)
 {
-   if (bufSize < (2 * sizeof(std::uint16_t) + sizeof(std::uint32_t)))
-      return R__FAIL("invalid envelope, too short");
+   const std::uint64_t minEnvelopeSize = sizeof(std::uint64_t) + sizeof(std::uint64_t);
+   if (bufSize < minEnvelopeSize)
+      return R__FAIL("invalid envelope buffer, too short");
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
    auto base = bytes;
 
-   std::uint16_t protocolVersionAtWrite;
-   std::uint16_t protocolVersionMinRequired;
-   bytes += DeserializeUInt16(bytes, protocolVersionAtWrite);
-   // RNTuple compatible back to version 1 (but not to version 0)
-   if (protocolVersionAtWrite < 1)
-      return R__FAIL("The RNTuple format is too old (version 0)");
+   std::uint64_t typeAndSize;
+   bytes += DeserializeUInt64(bytes, typeAndSize);
 
-   bytes += DeserializeUInt16(bytes, protocolVersionMinRequired);
-   if (protocolVersionMinRequired > kEnvelopeCurrentVersion) {
-      return R__FAIL(std::string("The RNTuple format is too new (version ") +
-                                 std::to_string(protocolVersionMinRequired) + ")");
+   std::uint16_t envelopeType = typeAndSize & 0xFFFF;
+   if (envelopeType != expectedType) {
+      return R__FAIL("envelope type mismatch: expected " + std::to_string(expectedType) + ", found " +
+                     std::to_string(envelopeType));
    }
 
-   // We defer the CRC32 check to the end to faciliate testing of forward/backward incompatibilities
-   auto result = VerifyCRC32(base, bufSize - 4, crc32);
+   std::uint64_t envelopeSize = typeAndSize >> 16;
+   if (bufSize < envelopeSize)
+      return R__FAIL("envelope buffer size too small");
+   if (envelopeSize < minEnvelopeSize)
+      return R__FAIL("invalid envelope, too short");
+
+   auto result = VerifyXxHash3(base, envelopeSize - 8, xxhash3);
    if (!result)
       return R__FORWARD_ERROR(result);
 
-   return sizeof(protocolVersionAtWrite) + sizeof(protocolVersionMinRequired);
+   return sizeof(typeAndSize);
 }
 
-
-RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(
-   const void *buffer, std::uint32_t bufSize)
+RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer,
+                                                                                            std::uint32_t bufSize,
+                                                                                            std::uint16_t expectedType)
 {
-   std::uint32_t crc32;
-   return R__FORWARD_RESULT(DeserializeEnvelope(buffer, bufSize, crc32));
+   std::uint64_t xxhash3;
+   return R__FORWARD_RESULT(DeserializeEnvelope(buffer, bufSize, expectedType, xxhash3));
 }
 
 
@@ -888,7 +895,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopeLink(
    const REnvelopeLink &envelopeLink, void *buffer)
 {
-   auto size = SerializeUInt32(envelopeLink.fUnzippedSize, buffer);
+   auto size = SerializeUInt64(envelopeLink.fUnzippedSize, buffer);
    size += SerializeLocator(envelopeLink.fLocator,
                             buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
    return size;
@@ -897,12 +904,12 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelope
 RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelopeLink(
    const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink)
 {
-   if (bufSize < sizeof(std::int32_t))
+   if (bufSize < sizeof(std::int64_t))
       return R__FAIL("too short envelope link");
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   bytes += DeserializeUInt32(bytes, envelopeLink.fUnzippedSize);
-   bufSize -= sizeof(std::uint32_t);
+   bytes += DeserializeUInt64(bytes, envelopeLink.fUnzippedSize);
+   bufSize -= sizeof(std::uint64_t);
    auto result = DeserializeLocator(bytes, bufSize, envelopeLink.fLocator);
    if (!result)
       return R__FORWARD_ERROR(result);
@@ -1233,7 +1240,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
-   pos += SerializeEnvelopePreamble(*where);
+   pos += SerializeEnvelopePreamble(kEnvelopeTypeHeader, *where);
    // So far we don't make use of feature flags
    pos += SerializeFeatureFlags(desc.GetFeatureFlags(), *where);
    pos += SerializeUInt32(kReleaseCandidateTag, *where);
@@ -1244,12 +1251,12 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
    context.MapSchema(desc, /*forHeaderExtension=*/false);
    pos += SerializeSchemaDescription(*where, desc, context);
 
-   std::uint32_t size = pos - base;
-   std::uint32_t crc32 = 0;
-   size += SerializeEnvelopePostscript(base, size, crc32, *where);
+   std::uint64_t size = pos - base;
+   std::uint64_t xxhash3 = 0;
+   size += SerializeEnvelopePostscript(base, size, xxhash3);
 
    context.SetHeaderSize(size);
-   context.SetHeaderCRC32(crc32);
+   context.SetHeaderXxHash3(xxhash3);
    return context;
 }
 
@@ -1260,7 +1267,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += SerializeEnvelopePreamble(*where);
+   pos += SerializeEnvelopePreamble(kEnvelopeTypePageList, *where);
    auto topMostFrame = pos;
    pos += SerializeListFramePreamble(physClusterIDs.size(), *where);
 
@@ -1294,8 +1301,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
    }
 
    pos += SerializeFramePostscript(buffer ? topMostFrame : nullptr, pos - topMostFrame);
-   std::uint32_t size = pos - base;
-   size += SerializeEnvelopePostscript(base, size, *where);
+   std::uint64_t size = pos - base;
+   size += SerializeEnvelopePostscript(base, size);
    return size;
 }
 
@@ -1308,11 +1315,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   pos += SerializeEnvelopePreamble(*where);
+   pos += SerializeEnvelopePreamble(kEnvelopeTypeFooter, *where);
 
    // So far we don't make use of feature flags
    pos += SerializeFeatureFlags(std::vector<std::uint64_t>(), *where);
-   pos += SerializeUInt32(context.GetHeaderCRC32(), *where);
+   pos += SerializeUInt64(context.GetHeaderXxHash3(), *where);
 
    // Schema extension, i.e. incremental changes with respect to the header
    auto frame = pos;
@@ -1363,7 +1370,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    std::uint32_t size = pos - base;
-   size += SerializeEnvelopePostscript(base, size, *where);
+   size += SerializeEnvelopePostscript(base, size);
    return size;
 }
 
@@ -1375,12 +1382,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    auto fnBufSizeLeft = [&]() { return bufSize - (bytes - base); };
    RResult<std::uint32_t> result{0};
 
-   std::uint32_t crc32{0};
-   result = DeserializeEnvelope(bytes, fnBufSizeLeft(), crc32);
+   std::uint64_t xxhash3{0};
+   result = DeserializeEnvelope(bytes, fnBufSizeLeft(), kEnvelopeTypeHeader, xxhash3);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   descBuilder.SetHeaderCRC32(crc32);
+   descBuilder.SetHeaderXxHash3(xxhash3);
 
    std::vector<std::uint64_t> featureFlags;
    result = DeserializeFeatureFlags(bytes, fnBufSizeLeft(), featureFlags);
@@ -1437,7 +1444,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    auto fnBufSizeLeft = [&]() { return bufSize - (bytes - base); };
    RResult<std::uint32_t> result{0};
 
-   result = DeserializeEnvelope(bytes, fnBufSizeLeft());
+   result = DeserializeEnvelope(bytes, fnBufSizeLeft(), kEnvelopeTypeFooter);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
@@ -1452,12 +1459,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          R__LOG_WARNING(NTupleLog()) << "Unsupported feature flag! " << f;
    }
 
-   std::uint32_t crc32{0};
-   if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
+   std::uint64_t xxhash3{0};
+   if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint64_t)))
       return R__FAIL("footer too short");
-   bytes += DeserializeUInt32(bytes, crc32);
-   if (crc32 != descBuilder.GetHeaderCRC32())
-      return R__FAIL("CRC32 mismatch between header and footer");
+   bytes += DeserializeUInt64(bytes, xxhash3);
+   if (xxhash3 != descBuilder.GetHeaderXxHash3())
+      return R__FAIL("XxHash-3 mismatch between header and footer");
 
    std::uint32_t frameSize;
    auto frame = bytes;
@@ -1549,7 +1556,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    auto fnBufSizeLeft = [&]() { return bufSize - (bytes - base); };
    RResult<std::uint32_t> result{0};
 
-   result = DeserializeEnvelope(bytes, fnBufSizeLeft());
+   result = DeserializeEnvelope(bytes, fnBufSizeLeft(), kEnvelopeTypePageList);
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();

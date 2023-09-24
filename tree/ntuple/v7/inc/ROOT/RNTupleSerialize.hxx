@@ -59,6 +59,10 @@ public:
    static constexpr std::uint16_t kEnvelopeMinVersion     = 1;
    static constexpr std::uint32_t kReleaseCandidateTag    = 1;
 
+   static constexpr std::uint16_t kEnvelopeTypeHeader = 0x01;
+   static constexpr std::uint16_t kEnvelopeTypeFooter = 0x02;
+   static constexpr std::uint16_t kEnvelopeTypePageList = 0x03;
+
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
 
    static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
@@ -69,7 +73,7 @@ public:
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
    struct REnvelopeLink {
-      std::uint32_t fUnzippedSize = 0;
+      std::uint64_t fUnzippedSize = 0;
       RNTupleLocator fLocator;
    };
 
@@ -90,8 +94,8 @@ public:
    /// footer serialization in a second step.
    class RContext {
    private:
-      std::uint32_t fHeaderSize = 0;
-      std::uint32_t fHeaderCrc32 = 0;
+      std::uint64_t fHeaderSize = 0;
+      std::uint64_t fHeaderXxHash3 = 0;
       std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskFieldIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskColumnIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterIDs;
@@ -103,10 +107,10 @@ public:
       std::size_t fHeaderExtensionOffset = -1U;
 
    public:
-      void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
-      std::uint32_t GetHeaderSize() const { return fHeaderSize; }
-      void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
-      std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
+      void SetHeaderSize(std::uint64_t size) { fHeaderSize = size; }
+      std::uint64_t GetHeaderSize() const { return fHeaderSize; }
+      void SetHeaderXxHash3(std::uint64_t xxhash3) { fHeaderXxHash3 = xxhash3; }
+      std::uint64_t GetHeaderXxHash3() const { return fHeaderXxHash3; }
       /// Map an in-memory field ID to its on-disk counterpart. It is allowed to call this function multiple times for
       /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
@@ -167,12 +171,12 @@ public:
       std::size_t GetHeaderExtensionOffset() const { return fHeaderExtensionOffset; }
    };
 
-   /// Writes a CRC32 checksum of the byte range given by data and length.
-   static std::uint32_t SerializeCRC32(const unsigned char *data, std::uint32_t length,
-                                       std::uint32_t &crc32, void *buffer);
-   /// Expects a CRC32 checksum in the 4 bytes following data + length and verifies it.
-   static RResult<void> VerifyCRC32(const unsigned char *data, std::uint32_t length, std::uint32_t &crc32);
-   static RResult<void> VerifyCRC32(const unsigned char *data, std::uint32_t length);
+   /// Writes a XxHash-3 64bit checksum of the byte range given by data and length.
+   static std::uint32_t
+   SerializeXxHash3(const unsigned char *data, std::uint64_t length, std::uint64_t &xxhash3, void *buffer);
+   /// Expects an xxhash3 checksum in the 8 bytes following data + length and verifies it.
+   static RResult<void> VerifyXxHash3(const unsigned char *data, std::uint64_t length, std::uint64_t &xxhash3);
+   static RResult<void> VerifyXxHash3(const unsigned char *data, std::uint64_t length);
 
    static std::uint32_t SerializeInt16(std::int16_t val, void *buffer);
    static std::uint32_t DeserializeInt16(const void *buffer, std::int16_t &val);
@@ -199,13 +203,15 @@ public:
    static RResult<std::uint16_t> DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
    static RResult<std::uint16_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
 
-   static std::uint32_t SerializeEnvelopePreamble(void *buffer);
-   static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size, void *buffer);
-   static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size,
-                                                    std::uint32_t &crc32, void *buffer);
-   // The bufSize must include the 4 bytes for the final CRC32 checksum.
-   static RResult<std::uint32_t> DeserializeEnvelope(const void *buffer, std::uint32_t bufSize);
-   static RResult<std::uint32_t> DeserializeEnvelope(const void *buffer, std::uint32_t bufSize, std::uint32_t &crc32);
+   static std::uint32_t SerializeEnvelopePreamble(std::uint16_t envelopeType, void *buffer);
+   static std::uint32_t SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size);
+   static std::uint32_t
+   SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size, std::uint64_t &xxhash3);
+   // The bufSize must include the 8 bytes for the final xxhash3 checksum.
+   static RResult<std::uint32_t>
+   DeserializeEnvelope(const void *buffer, std::uint32_t bufSize, std::uint16_t expectedType);
+   static RResult<std::uint32_t>
+   DeserializeEnvelope(const void *buffer, std::uint32_t bufSize, std::uint16_t expectedType, std::uint64_t &xxhash3);
 
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
