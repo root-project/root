@@ -754,6 +754,12 @@ if(ROOT_pyroot_FOUND)
   if(NOT PY_KERAS_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
+  else()
+    if (ROOT_ARCHITECTURE MATCHES macosx)   #veto also keras tutorial on macos due to issue in disabling eager execution on macos
+       list(APPEND pyveto tmva/keras/RegressionKeras.py)
+       list(APPEND pyveto tmva/keras/ApplicationRegressionKeras.py)
+       list(APPEND pyveto tmva/keras/MultiClassKeras.py)
+    endif()
   endif()
 
   find_python_module(torch QUIET)
