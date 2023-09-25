@@ -713,9 +713,6 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeRecordFr
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeListFramePreamble(
    std::uint32_t nitems, void *buffer)
 {
-   if (nitems >= (1 << 28))
-      throw RException(R__FAIL("list frame too large: " + std::to_string(nitems)));
-
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
@@ -763,7 +760,6 @@ ROOT::Experimental::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTuple
       if (bufSize < 2 * sizeof(std::int32_t))
          return R__FAIL("frame too short");
       bytes += DeserializeUInt32(bytes, nitems);
-      nitems &= (2 << 28) - 1;
       *ssize = -(*ssize);
       if (frameSize < 2 * sizeof(std::int32_t))
          return R__FAIL("corrupt list frame size");
