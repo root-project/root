@@ -25,7 +25,7 @@ A version of the API is included in ROOT as an experimental feature, inside the 
 #include "RooFit/xRooFit/xRooFit.h"
 
 namespace ROOT::Experimental {
-    using XRooFit = XROOFIT_NAMESPACE;
+    namespace XRooFit = XROOFIT_NAMESPACE;
 }
 
 #endif
