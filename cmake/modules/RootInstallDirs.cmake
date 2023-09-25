@@ -21,7 +21,6 @@
 #  DOCDIR           - documentation root (DATAROOTDIR/doc/PROJECT_NAME)
 #  TUTDIR           - tutorials (DOCDIR/tutorials)
 #  CMAKEDIR         - cmake modules (DATAROOTDIR/cmake)
-#  ELISPDIR         - lisp files (DATAROOTDIR/emacs/site-lisp)
 #
 # Each CMAKE_INSTALL_<dir> value may be passed to the DESTINATION options of
 # install() commands for the corresponding file type.  If the includer does
@@ -184,15 +183,6 @@ if(NOT CMAKE_INSTALL_CMAKEDIR)
   endif()
 endif()
 
-if(NOT CMAKE_INSTALL_ELISPDIR)
-  set(CMAKE_INSTALL_ELISPDIR "" CACHE PATH "Lisp files (DATAROOTDIR/emacs/site-lisp)")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_ELISPDIR "${CMAKE_INSTALL_DATAROOTDIR}/emacs/site-lisp")
-  else()
-    set(CMAKE_INSTALL_ELISPDIR "emacs/site-lisp")
-  endif()
-endif()
-
 if(NOT CMAKE_INSTALL_DOCDIR)
   set(CMAKE_INSTALL_DOCDIR "" CACHE PATH "documentation root (DATAROOTDIR/doc/root)")
   if(gnuinstall)
@@ -229,7 +219,6 @@ mark_as_advanced(
   CMAKE_INSTALL_SRCDIR
   CMAKE_INSTALL_DOCDIR
   CMAKE_INSTALL_TUTDIR
-  CMAKE_INSTALL_ELISPDIR
   CMAKE_INSTALL_CMAKEDIR
   )
 
@@ -250,7 +239,6 @@ foreach(dir BINDIR
             SRCDIR
             DOCDIR
             TUTDIR
-            ELISPDIR
             CMAKEDIR )
   if(NOT IS_ABSOLUTE ${CMAKE_INSTALL_${dir}})
     set(CMAKE_INSTALL_FULL_${dir} "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_${dir}}")
