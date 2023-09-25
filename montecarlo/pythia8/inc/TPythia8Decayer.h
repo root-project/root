@@ -1,8 +1,13 @@
 // @(#)root/pythia8:$Name$:$Id$
 // Author: Andreas Morsch   04/07/2008
 
-/* Copyright(c) 1998-2008, ALICE Experiment at CERN, All rights reserved. *
- * See cxx source for full Copyright notice                               */
+/*************************************************************************
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef TPYTHIA8DECAYER_H
 #define TPYTHIA8DECAYER_H
