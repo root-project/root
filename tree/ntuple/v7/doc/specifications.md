@@ -512,10 +512,6 @@ In general, a schema extension is optional and thus this record frame might be e
 The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
 
-
-
-The ntuple meta-data can be split over multiple meta-data envelopes (see below).
-
 #### Column Group Record Frame
 The column group record frame is used to set IDs for certain subsets of column IDs.
 Column groups are only used when there are sharded clusters.
@@ -668,8 +664,8 @@ If the most significant bit of the type is set (i.e., the type has a negative va
 the value is a list of the type given by the absolute value of the type field.
 The list is stored as a list frame.
 
-Future versions of the file format may introduce addtional meta-data types
-without changing the minimum version of the meta-data envelope.
+Future versions of the file format may introduce additional meta-data types
+without setting a feature flag.
 Old readers need to ignore these key-value pairs.
 
 Key versioning starts with zero.
