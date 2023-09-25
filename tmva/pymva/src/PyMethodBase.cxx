@@ -16,7 +16,6 @@
 
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
-#include "TMVA/MsgLogger.h"
 #include "TMVA/Results.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Tools.h"
@@ -43,7 +42,7 @@ public:
 TString Python_Executable() {
    TString python_version = gSystem->GetFromPipe("root-config --python-version");
    if (python_version.IsNull()) {
-      TMVA::gTools().Log() << kFATAL << "Can't find a valid Python version used to build ROOT" << Endl;
+      throw std::runtime_error("Can't find a valid Python version used to build ROOT");
       return nullptr;
    }
 #ifdef _MSC_VER
@@ -58,7 +57,8 @@ TString Python_Executable() {
    else if (python_version[0] == '3')
       return "python3";
 
-   TMVA::gTools().Log() << kFATAL << "Invalid Python version used to build ROOT : " << python_version << Endl;
+   std::string msg = "Invalid Python version to build root: " + std::string(python_version);
+   throw std::runtime_error(msg);
    return nullptr;
 }
 
@@ -93,7 +93,7 @@ PyMethodBase::PyMethodBase(const TString &jobName, Types::EMVA methodType, const
    // Set up private local namespace for each method instance
    fLocalNS = PyDict_New();
    if (!fLocalNS) {
-      Log() << kFATAL << "Can't init local namespace" << Endl;
+      throw std::runtime_error("Can't init local namespace");
    }
 }
 
@@ -111,7 +111,7 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
    // Set up private local namespace for each method instance
    fLocalNS = PyDict_New();
    if (!fLocalNS) {
-      Log() << kFATAL << "Can't init local namespace" << Endl;
+      throw std::runtime_error("Can't init local namespace");
    }
 }
 
@@ -152,8 +152,6 @@ PyObject *PyMethodBase::Eval(TString code)
 
 void PyMethodBase::PyInitialize()
 {
-   TMVA::MsgLogger Log;
-
    bool pyIsInitialized = PyIsInitialized();
    if (!pyIsInitialized) {
       Py_Initialize();
@@ -167,15 +165,13 @@ void PyMethodBase::PyInitialize()
    // note fMain is a borrowed reference
    fMain = PyImport_AddModule("__main__");
    if (!fMain) {
-      Log << kFATAL << "Can't import __main__" << Endl;
-      Log << Endl;
+      throw std::runtime_error("Can't import __main__");
    }
    Py_INCREF(fMain);
 
    fGlobalNS = PyModule_GetDict(fMain);
    if (!fGlobalNS) {
-      Log << kFATAL << "Can't init global namespace" << Endl;
-      Log << Endl;
+      throw std::runtime_error("Can't init global namespace");
    }
    Py_INCREF(fGlobalNS);
 
@@ -186,8 +182,7 @@ void PyMethodBase::PyInitialize()
    // returns a new reference
    fModuleBuiltin = PyImport_Import(bName);
    if (!fModuleBuiltin) {
-      Log << kFATAL << "Can't import __builtin__" << Endl;
-      Log << Endl;
+      throw std::runtime_error("Can't import __builtin__");
    }
    #else
    //preparing objects for eval
@@ -195,8 +190,7 @@ void PyMethodBase::PyInitialize()
    // Import the file as a Python module.
    fModuleBuiltin = PyImport_Import(bName);
    if (!fModuleBuiltin) {
-      Log << kFATAL << "Can't import builtins" << Endl;
-      Log << Endl;
+      throw std::runtime_error("Can't import builtins");
    }
    #endif
 
@@ -217,8 +211,7 @@ void PyMethodBase::PyInitialize()
    // return object is a new reference !
    fModulePickle = PyImport_Import(pName);
    if (!fModulePickle) {
-      Log << kFATAL << "Can't import pickle" << Endl;
-      Log << Endl;
+      throw std::runtime_error("Can't import pickle");
    }
    PyObject *pDict = PyModule_GetDict(fModulePickle);
    // note the following return objects are borrowed references
