@@ -1243,7 +1243,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
    pos += SerializeEnvelopePreamble(kEnvelopeTypeHeader, *where);
    // So far we don't make use of feature flags
    pos += SerializeFeatureFlags(desc.GetFeatureFlags(), *where);
-   pos += SerializeUInt32(kReleaseCandidateTag, *where);
    pos += SerializeString(desc.GetName(), *where);
    pos += SerializeString(desc.GetDescription(), *where);
    pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
@@ -1402,11 +1401,6 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          bit++;
       return R__FAIL("unsupported format feature: " + std::to_string(i * 64 + bit));
    }
-
-   std::uint32_t rcTag;
-   if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
-      return R__FAIL("header too short");
-   bytes += DeserializeUInt32(bytes, rcTag);
 
    std::string name;
    std::string description;

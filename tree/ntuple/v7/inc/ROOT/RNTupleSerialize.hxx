@@ -54,11 +54,6 @@ Deserialization errors throw exceptions. Only when indicated or when passed as a
 // clang-format on
 class RNTupleSerializer {
 public:
-   /// In order to handle changes to the serialization routine in future ntuple versions
-   static constexpr std::uint16_t kEnvelopeCurrentVersion = 1;
-   static constexpr std::uint16_t kEnvelopeMinVersion     = 1;
-   static constexpr std::uint32_t kReleaseCandidateTag    = 1;
-
    static constexpr std::uint16_t kEnvelopeTypeHeader = 0x01;
    static constexpr std::uint16_t kEnvelopeTypeFooter = 0x02;
    static constexpr std::uint16_t kEnvelopeTypePageList = 0x03;
