@@ -9,7 +9,6 @@
  * with or without modification, are permitted according to the terms
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
-
 #include "Config.h"
 
 // when not using the namespace will use the once pragma.
@@ -18,9 +17,16 @@
 #ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if !defined(XROOFIT_XROOFIT_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
+#if (!defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H)) || (defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H_XROOFIT))
 #ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROOFIT_H
+#else
+#define XROOFIT_XROOFIT_H_XROOFIT
+// even with using pragma once, need include guard otherwise cannot include this header
+// as part of an interpreted file ... the other headers in xRooFit are similarly affected
+// however for now users of xRooFit should only need to include the main xRooFit header to use it all
+// in future we should try removing the pragma once altogether (undef XROOFIT_USE_PRAGMA_ONCE)
+// and see if it has negative consequences anywhere
 #endif
 
 /**
@@ -39,6 +45,7 @@ class RooWorkspace;
 #include "Fit/FitConfig.h"
 
 #include "RooCmdArg.h"
+#include "TNamed.h"
 
 class TCanvas;
 
@@ -53,6 +60,12 @@ class xRooFit {
 public:
    // Extra options for NLL creation:
    static RooCmdArg ReuseNLL(bool flag); // if should try to reuse the NLL object when it changes dataset
+   static RooCmdArg Tolerance(double value);
+   static RooCmdArg StrategySequence(const char* stratSeq); // control minimization strategy sequence
+   static constexpr double OBS = std::numeric_limits<double>::quiet_NaN();
+
+   // Helper function for matching precision of a value and its error
+   static std::pair<double, double> matchPrecision(const std::pair<double, double> &in);
 
    // Static methods that work with the 'first class' object types:
    //    Pdfs: RooAbsPdf
@@ -62,7 +75,7 @@ public:
 
    // fit result flags in its constPars list which are global observables with the "global" attribute
    static std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>>
-   generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> &fr, bool expected = false, int seed = 0);
+   generateFrom(RooAbsPdf &pdf, const RooFitResult &fr, bool expected = false, int seed = 0);
    static std::shared_ptr<const RooFitResult>
    fitTo(RooAbsPdf &pdf, const std::pair<std::shared_ptr<RooAbsData>, std::shared_ptr<const RooAbsCollection>> &data,
          const RooLinkedList &nllOpts, const ROOT::Fit::FitConfig &fitConf);
@@ -73,17 +86,32 @@ public:
    static xRooNLLVar createNLL(const std::shared_ptr<RooAbsPdf> pdf, const std::shared_ptr<RooAbsData> data,
                                const RooLinkedList &nllOpts);
    static xRooNLLVar createNLL(RooAbsPdf &pdf, RooAbsData *data, const RooLinkedList &nllOpts);
-   static xRooNLLVar createNLL(RooAbsPdf &pdf, RooAbsData *data, const RooCmdArg &arg1 = {}, const RooCmdArg &arg2 = {},
-                               const RooCmdArg &arg3 = {}, const RooCmdArg &arg4 = {}, const RooCmdArg &arg5 = {},
-                               const RooCmdArg &arg6 = {}, const RooCmdArg &arg7 = {}, const RooCmdArg &arg8 = {});
+   static xRooNLLVar createNLL(RooAbsPdf &pdf, RooAbsData *data, const RooCmdArg &arg1 = RooCmdArg::none(),
+                               const RooCmdArg &arg2 = RooCmdArg::none(), const RooCmdArg &arg3 = RooCmdArg::none(),
+                               const RooCmdArg &arg4 = RooCmdArg::none(), const RooCmdArg &arg5 = RooCmdArg::none(),
+                               const RooCmdArg &arg6 = RooCmdArg::none(), const RooCmdArg &arg7 = RooCmdArg::none(),
+                               const RooCmdArg &arg8 = RooCmdArg::none());
 
    static std::shared_ptr<ROOT::Fit::FitConfig> createFitConfig(); // obtain instance of default fit configuration
    static std::shared_ptr<RooLinkedList> createNLLOptions();       // obtain instance of default nll options
+   static std::shared_ptr<RooLinkedList> defaultNLLOptions();      // access default NLL options for modifications
+   static std::shared_ptr<ROOT::Fit::FitConfig> defaultFitConfig();
 
    static std::shared_ptr<const RooFitResult>
-   minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &fitConfig = nullptr);
+   minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &fitConfig = nullptr, const std::shared_ptr<RooLinkedList> &nllOpts = nullptr);
    static int minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parName = "",
                     const std::shared_ptr<ROOT::Fit::FitConfig> &_fitConfig = nullptr);
+
+   // this class is used to store a shared_ptr in a TDirectory's List, so that retrieval of cached fits
+   // can share the fit result (and avoid re-reading from disk as well)
+   class StoredFitResult : public TNamed {
+   public:
+      StoredFitResult(RooFitResult* _fr);
+       StoredFitResult(const std::shared_ptr<RooFitResult>& _fr);
+   public:
+      std::shared_ptr<RooFitResult> fr; //!
+      ClassDef(StoredFitResult, 0)
+   };
 
    class Asymptotics {
 
@@ -163,6 +191,9 @@ public:
       // return is x-axis value with potentially an error on that value if input pVals had errors
       // static RooRealVar FindLimit(TGraph *pVals, double target_pVal = 0.05);
    };
+
+   static std::shared_ptr<RooLinkedList> sDefaultNLLOptions;
+   static std::shared_ptr<ROOT::Fit::FitConfig> sDefaultFitConfig;
 
    // Run hypothesis test(s) on the given pdf
    // Uses hypoPoint binning on model parameters to determine points to scan

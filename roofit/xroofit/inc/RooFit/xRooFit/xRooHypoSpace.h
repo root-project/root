@@ -18,14 +18,15 @@
 #if !defined(XROOFIT_XROOHYPOSPACE_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
 #ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROOHYPOSPACE_H
-#endif
+# endif
 
 #include "xRooNLLVar.h"
 
 BEGIN_XROOFIT_NAMESPACE
 
 class xRooHypoSpace : public xRooNLLVar::xRooHypoSpace {
-
+  public:
+    using xRooNLLVar::xRooHypoSpace::xRooHypoSpace;
    ClassDef(xRooHypoSpace, 0)
 };
 

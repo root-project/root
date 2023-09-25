@@ -106,9 +106,18 @@ xRooBrowser::xRooBrowser()
         gEnv->SetValue("X11.Sync", "no");
         gEnv->SetValue("X11.FindBestVisual", "no");
         gEnv->SetValue("Browser.Name", "TRootBrowser"); // forces classic root browser (in 6.26 onwards)
+        gEnv->SetValue("Canvas.Name", "TRootCanvas");
         return new xRooNode("!Workspaces");
      }())
 {
+}
+
+xRooNode* xRooBrowser::Open(const char* filename) {
+   if(TString(filename).EndsWith(".root")) {
+      return fTopNode->emplace_back(std::make_shared<xRooNode>(std::make_shared<TFile>(filename))).get();
+   } else {
+      return fTopNode->emplace_back(std::make_shared<xRooNode>(filename)).get();
+   }
 }
 
 void xRooBrowser::ls(const char *path) const

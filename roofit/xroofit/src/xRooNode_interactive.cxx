@@ -61,7 +61,8 @@ void xRooNode::Interactive_Pull()
          _varyName = TString(_name(_name.Index(";") + 1, _name.Length()));
          _name = _name(0, _name.Index(";"));
       }
-      auto _h = static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetHistogram();
+      auto _h = static_cast<TH1*>(gPad->GetPrimitive("nominal")->FindObject("scales"));
+      if(!_h) return;
       for (int i = 1; i <= _h->GetNbinsX(); i++) {
          if (_name == _h->GetXaxis()->GetBinLabel(i)) {
             auto _gr = static_cast<TGraph *>(gPad->GetPrimitive("nominal"));
@@ -134,6 +135,7 @@ void xRooNode::Interactive_Pull()
       static_cast<TAttFill&>(*gStyle) = bak2;
       _pars = *snap;
       _tmpPad->GetCanvas()->cd();
+      gPad->GetCanvas()->Paint(); gPad->GetCanvas()->Update();
    }
 }
 
