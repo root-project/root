@@ -80,7 +80,6 @@ INCDIR         := @incdir@
 ETCDIR         := @etcdir@
 MANDIR         := @mandir@
 DATADIR        := @datadir@
-ELISPDIR       := @elispdir@
 TTFFONTDIR     := @ttffontdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
