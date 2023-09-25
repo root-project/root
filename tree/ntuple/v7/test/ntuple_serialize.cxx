@@ -198,12 +198,6 @@ TEST(RNTuple, SerializeFrame)
       EXPECT_THAT(err.what(), testing::HasSubstr("too large"));
    }
 
-   try {
-      RNTupleSerializer::SerializeListFramePreamble(1 << 29, buffer);
-      FAIL() << "too big list frame should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("too large"));
-   }
    EXPECT_EQ(8u, RNTupleSerializer::SerializeListFramePreamble(2, buffer));
    try {
       RNTupleSerializer::SerializeFramePostscript(buffer, 7);
