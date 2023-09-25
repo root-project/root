@@ -31,21 +31,15 @@ endif()
 # Enable parts dependent RDataFrame
 if(dataframe)
     set(TMVA_EXTRA_HEADERS
-        TMVA/RTensor.hxx
         TMVA/RTensorUtils.hxx
-        TMVA/RStandardScaler.hxx
-        TMVA/RReader.hxx
-        TMVA/RInferenceUtils.hxx
-        TMVA/RBDT.hxx
-        TMVA/RSofieReader.hxx
         TMVA/RBatchGenerator.hxx
         TMVA/RBatchLoader.hxx
         TMVA/RChunkLoader.hxx
     )
     set(TMVA_EXTRA_SOURCES
-        RBDT.cxx
     )
-    list(APPEND TMVA_EXTRA_DEPENDENCIES ROOTDataFrame ROOTVecOps)
+#    list(APPEND TMVA_EXTRA_DEPENDENCIES ROOTDataFrame ROOTVecOps)
+#    list(APPEND TMVA_EXTRA_DEPENDENCIES )
 endif()
 
 if (imt)
@@ -223,6 +217,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/VarTransformHandler.h
     TMVA/Version.h
     TMVA/Volume.h
+    TMVA/RStandardScaler.hxx
+    TMVA/RReader.hxx
+    TMVA/RInferenceUtils.hxx
+    TMVA/RBDT.hxx
+    TMVA/RSofieReader.hxx
+    TMVA/RTensor.hxx
     TMVA/TreeInference/PythonHelpers.hxx
     TMVA/TreeInference/BranchlessTree.hxx
     TMVA/TreeInference/Forest.hxx
@@ -357,6 +357,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/PDEFoamVect.cxx
     src/PDF.cxx
     src/QuickMVAProbEstimator.cxx
+    src/RBDT.cxx
     src/Ranking.cxx
     src/Reader.cxx
     src/RegressionVariance.cxx
