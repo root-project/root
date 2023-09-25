@@ -15,8 +15,12 @@
 #pragma link off all globals;
 #pragma link off all classes;
 
+#pragma link C++ class RooFit::Detail::XRooFit::xRooFit + ;
 #pragma link C++ class RooFit::Detail::XRooFit::xRooNode + ;
 #pragma link C++ class RooFit::Detail::XRooFit::xRooNode::InteractiveObject + ;
+#pragma link C++ class RooFit::Detail::XRooFit::xRooNLLVar + ;
 #pragma link C++ class RooFit::Detail::XRooFit::xRooBrowser + ;
+#pragma link C++ class RooFit::Detail::XRooFit::xRooHypoSpace + ;
+#pragma link C++ class RooFit::Detail::XRooFit::xRooFit::StoredFitResult + ;
 
 #endif
