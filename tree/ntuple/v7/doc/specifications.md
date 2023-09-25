@@ -280,7 +280,6 @@ or by a locator that references the envelope.
 The header consists of the following elements:
 
  - Feature flag
- - UInt32: Release candidate tag
  - String: name of the ntuple
  - String: description of the ntuple
  - String: identifier of the library or program that writes the data
@@ -290,8 +289,6 @@ The header consists of the following elements:
  - List frame: list of extra type information
 
 The last four list frames containing information about fields and columns are collectively referred to as _schema description_.
-The release candidate tag is used to mark unstable implementations of the file format.
-Production code sets the tag to zero.
 
 #### Field Description
 
