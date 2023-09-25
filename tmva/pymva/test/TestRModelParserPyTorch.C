@@ -3,6 +3,7 @@
 #include "TMVA/RSofieReader.hxx"
 
 #include <Python.h>
+#include "TROOT.h"
 #include "TSystem.h"
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
@@ -11,6 +12,11 @@
 #include <cmath>
 
 constexpr float DEFAULT_TOLERANCE = 1e-6f;
+
+void Initialize() {
+   // initialize Python and try to import torch
+   Py_Initialize();
+}
 
 void GenerateModels() {
     FILE* fPyTorchModels;
@@ -30,7 +36,7 @@ TEST(RModelParser_PyTorch, SEQUENTIAL_MODEL)
 
 
     // Generating PyTorch models for testing
-    Py_Initialize();
+    Initialize();
     if (gSystem->AccessPathName("PyTorchModelSequential.pt",kFileExists))
         GenerateModels();
 
@@ -86,7 +92,8 @@ TEST(RModelParser_PyTorch, MODULE_MODEL)
                        -1.8818,  0.4736,
                         1.1102,  1.8694};
 
-    Py_Initialize();
+    // Generating PyTorch models for testing
+    Initialize();
     if (gSystem->AccessPathName("PyTorchModelModule.pt",kFileExists))
         GenerateModels();
 
@@ -135,7 +142,8 @@ TEST(RModelParser_PyTorch, CONVOLUTION_MODEL)
     std::vector<float> inputConv(5*6*5*5);
     std::iota(inputConv.begin(), inputConv.end(), 1.0f);
 
-    Py_Initialize();
+    // Generating PyTorch models for testing
+    Initialize();
     if (gSystem->AccessPathName("PyTorchModelConvolution.pt",kFileExists))
         GenerateModels();
 

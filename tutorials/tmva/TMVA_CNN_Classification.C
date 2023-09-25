@@ -124,6 +124,15 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
    bool useTMVADNN = (opt.size() > 2) ? opt[2] : false;
    bool useTMVABDT = (opt.size() > 3) ? opt[3] : false;
    bool usePyTorchCNN = (opt.size() > 4) ? opt[4] : false;
+
+   if (usePyTorchCNN) {
+      bool ret = TPython::Exec("import torch");
+      if (!ret) usePyTorchCNN = false;
+   }
+    if (useKerasCNN) {
+      bool ret = TPython::Exec("import tensorflow");
+      if (!ret) useKerasCNN = false;
+   }
 #ifndef R__HAS_TMVACPU
 #ifndef R__HAS_TMVAGPU
    Warning("TMVA_CNN_Classification",
