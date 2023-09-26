@@ -668,7 +668,15 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       };
 
       for (RooAbsArg *e : elems) {
-         if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
+         if (TString(e->GetName()).Contains("binWidth")) {
+            // The bin width modifiers are handled separately. We can't just
+            // check for the RooBinWidthFunction type here, because prior to
+            // ROOT 6.26, the multiplication with the inverse bin width was
+            // done in a different way (like a normfactor with a RooRealVar,
+            // but it was stored in the dataset).
+            // Fortunately, the name was similar, so we can match the modifier
+            // name.
+         } else if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
             if (constVar->getVal() != 1.) {
                sample.normfactors.emplace_back(*e);
             }
@@ -681,9 +689,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          } else if (!fip && (fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e))) {
          } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
          } else if (auto real = dynamic_cast<RooAbsReal *>(e)) {
-            if (!dynamic_cast<RooBinWidthFunction *>(real)) {
-               sample.otherElements.push_back(real);
-            }
+            sample.otherElements.push_back(real);
          }
       }
 
