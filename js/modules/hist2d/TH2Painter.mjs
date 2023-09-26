@@ -3102,7 +3102,6 @@ class TH2Painter extends THistPainter {
           else
             pr = this.drawAxes().then(() => this.draw2DBins())
 
-
          return pr.then(() => this.completePalette(pp));
       }).then(() => this.drawHistTitle())
         .then(() => this.drawNextFunction(0, true))

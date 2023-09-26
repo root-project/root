@@ -421,7 +421,7 @@ class THStackPainter extends ObjectPainter {
              stack.fHistogram = painter.createHistogram(stack);
 
          const mm = painter.getMinMax(painter.options.errors || painter.options.draw_errors),
-               hopt = painter.options.hopt + ';axis;' + mm.hopt;
+               hopt = painter.options.hopt + ';' + mm.hopt;
 
          return painter.hdraw_func(dom, stack.fHistogram, hopt).then(subp => {
             painter.addToPadPrimitives();

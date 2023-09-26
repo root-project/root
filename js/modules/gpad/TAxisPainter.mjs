@@ -1102,6 +1102,7 @@ class TAxisPainter extends ObjectPainter {
          this.optionPlus = (axis.fChopt.indexOf('+') >= 0) || axis.TestBit(EAxisBits.kTickPlus);
          this.optionNoopt = (axis.fChopt.indexOf('N') >= 0);  // no ticks position optimization
          this.optionInt = (axis.fChopt.indexOf('I') >= 0);  // integer labels
+         this.optionText = (axis.fChopt.indexOf('T') >= 0);  // text scaling?
          this.createAttLine({ attr: axis });
          tickScalingSize = scalingSize || (this.vertical ? 1.7*h : 0.6*w);
          tickSize = optionSize ? axis.fTickSize : 0.03;
@@ -1112,11 +1113,15 @@ class TAxisPainter extends ObjectPainter {
          this.optionPlus = !this.optionMinus;
          this.optionNoopt = false;  // no ticks position optimization
          this.optionInt = false;  // integer labels
+         this.optionText = false;
          this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
          tickScalingSize = scalingSize || (this.vertical ? pad_w : pad_h);
          tickSize = axis.fTickLength;
          titleColor = this.getColor(axis.fTitleColor);
       }
+
+      if (this.kind === 'labels')
+         this.optionText = true;
 
       this.optionNoexp = axis.TestBit(EAxisBits.kNoExponent);
 
@@ -1130,7 +1135,8 @@ class TAxisPainter extends ObjectPainter {
       this.ticksColor = this.lineatt.color;
       this.ticksWidth = this.lineatt.width;
 
-      this.labelSize = Math.round((axis.fLabelSize < 1) ? axis.fLabelSize * this.scalingSize : axis.fLabelSize);
+      const k = this.optionText ? 0.66666 : 1; // set TGaxis.cxx, line 1504
+      this.labelSize = Math.round((axis.fLabelSize < 1) ? k * axis.fLabelSize * this.scalingSize : k * axis.fLabelSize);
       this.labelsOffset = Math.round(Math.abs(axis.fLabelOffset) * this.scalingSize);
       this.labelsFont = new FontHandler(axis.fLabelFont, this.labelSize, scalingSize);
       if ((this.labelSize <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) this.optionUnlab = true; // disable labels when size not specified

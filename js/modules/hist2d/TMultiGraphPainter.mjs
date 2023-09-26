@@ -1,4 +1,4 @@
-import { create, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats } from '../core.mjs';
+import { create, createHistogram, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
@@ -162,11 +162,10 @@ class TMultiGraphPainter extends ObjectPainter {
       if (!histo) {
          let xaxis, yaxis;
          if (this._3d) {
-            histo = create(clTH2I);
+            histo = createHistogram(clTH2I, graphs.arr.length, 10);
             xaxis = histo.fXaxis;
             xaxis.fXmin = 0;
             xaxis.fXmax = graphs.arr.length;
-            xaxis.fNbins = graphs.arr.length;
             xaxis.fLabels = create(clTHashList);
             for (let i = 0; i < graphs.arr.length; i++) {
                const lbl = create(clTObjString);
@@ -177,7 +176,7 @@ class TMultiGraphPainter extends ObjectPainter {
             xaxis = histo.fYaxis;
             yaxis = histo.fZaxis;
          } else {
-            histo = create(clTH1I);
+            histo = createHistogram(clTH1I, 10);
             xaxis = histo.fXaxis;
             yaxis = histo.fYaxis;
          }
@@ -208,7 +207,7 @@ class TMultiGraphPainter extends ObjectPainter {
    /** @summary draw speical histogram for axis
      * @return {Promise} when ready */
    async drawAxisHist(histo, hopt) {
-      return TH1Painter.draw(this.getDom(), histo, 'AXIS' + hopt);
+      return TH1Painter.draw(this.getDom(), histo, hopt);
    }
 
    /** @summary method draws next function from the functions list  */
@@ -272,12 +271,13 @@ class TMultiGraphPainter extends ObjectPainter {
       painter._pmc = d.check('PMC');
 
       let hopt = '';
+      if (d.check('FB') && painter._3d) hopt += 'FB'; // will be directly combined with LEGO
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
 
       let promise = Promise.resolve(true);
       if (d.check('A') || !painter.getMainPainter()) {
           const mgraph = painter.getObject(),
-              histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, painter.getPadPainter()?.getRootPad(true));
+                histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, painter.getPadPainter()?.getRootPad(true));
 
          promise = painter.drawAxisHist(histo, hopt).then(ap => {
             painter.firstpainter = ap;
