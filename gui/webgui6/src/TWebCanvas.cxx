@@ -655,11 +655,13 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                stats = dynamic_cast<TPaveStats *> (fobj);
          }
 
+         TString gropt = iter.GetOption();
+
          // ensure histogram exists on server to draw it properly on clients side
-         if (!IsReadOnly() && first_obj)
+         if (!IsReadOnly() && (first_obj || gropt.Index("A", 0, TString::kIgnoreCase) != kNPOS ||
+               (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS) || (gropt.Index("X+", 0, TString::kIgnoreCase) != kNPOS)))
             gr->GetHistogram();
 
-         TString gropt = iter.GetOption();
          if (title && first_obj) gropt.Append(";;use_pad_title");
          if (stats) gropt.Append(";;use_pad_stats");
 
