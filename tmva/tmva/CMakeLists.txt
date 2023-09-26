@@ -28,19 +28,6 @@ else()
   set(installoptions ${installoptions} FILTER "Cuda")
 endif()
 
-# Enable parts dependent RDataFrame
-if(dataframe)
-    set(TMVA_EXTRA_HEADERS
-        TMVA/RTensorUtils.hxx
-        TMVA/RBatchGenerator.hxx
-        TMVA/RBatchLoader.hxx
-        TMVA/RChunkLoader.hxx
-    )
-    set(TMVA_EXTRA_SOURCES
-    )
-#    list(APPEND TMVA_EXTRA_DEPENDENCIES ROOTDataFrame ROOTVecOps)
-#    list(APPEND TMVA_EXTRA_DEPENDENCIES )
-endif()
 
 if (imt)
   list(APPEND TMVA_EXTRA_DEPENDENCIES Imt)
@@ -217,16 +204,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/VarTransformHandler.h
     TMVA/Version.h
     TMVA/Volume.h
-    TMVA/RStandardScaler.hxx
-    TMVA/RReader.hxx
-    TMVA/RInferenceUtils.hxx
-    TMVA/RBDT.hxx
-    TMVA/RSofieReader.hxx
-    TMVA/RTensor.hxx
-    TMVA/TreeInference/PythonHelpers.hxx
-    TMVA/TreeInference/BranchlessTree.hxx
-    TMVA/TreeInference/Forest.hxx
-    TMVA/TreeInference/Objectives.hxx
     #  TMVA/DNN/Adadelta.h
     #  TMVA/DNN/Adagrad.h
     #  TMVA/DNN/Adam.h
@@ -493,6 +470,40 @@ if(tmva-gpu)
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/CudaTensor.cu )
    endif()
+endif()
+
+if(dataframe)
+ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
+  NO_INSTALL_HEADERS
+  HEADERS
+  TMVA/RTensorUtils.hxx
+  TMVA/RStandardScaler.hxx
+  TMVA/RReader.hxx
+  TMVA/RInferenceUtils.hxx
+  TMVA/RBDT.hxx
+  TMVA/RSofieReader.hxx
+  TMVA/RBatchGenerator.hxx
+  TMVA/RBatchLoader.hxx
+  TMVA/RChunkLoader.hxx
+  TMVA/TreeInference/PythonHelpers.hxx
+  TMVA/TreeInference/BranchlessTree.hxx
+  TMVA/TreeInference/Forest.hxx
+  TMVA/TreeInference/Objectives.hxx
+
+  SOURCES
+
+  src/RBDT.cxx
+
+  DEPENDENCIES
+    TMVA ROOTDataFrame ROOTVecOps
+    ${TMVA_EXTRA_DEPENDENCIES}
+
+  LINKDEF  LinkDefUtils.h
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+
+  ${EXTRA_DICT_OPTS}
+)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
