@@ -149,22 +149,21 @@ RooRealVar &createNominal(RooWorkspace &ws, std::string const &parname, double v
 {
    RooRealVar &nom = getOrCreate<RooRealVar>(ws, "nom_" + parname, val, min, max);
    nom.setConstant(true);
-   nom.setAttribute("globs");
    return nom;
 }
 
 /// Get the conventional name of the constraint pdf for a constrained
 /// parameter.
-std::string constraintName(std::string const &sysname)
+std::string constraintName(std::string const &paramName)
 {
-   return sysname + "_constraint";
+   return paramName + "Constraint";
 }
 
-RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &sysname, const std::string &pname)
+RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &pname)
 {
    RooRealVar *constrParam = ws.var(pname);
    constrParam->setError(1.0);
-   return getOrCreate<RooGaussian>(ws, constraintName(sysname), *constrParam, *ws.var("nom_" + pname), 1.);
+   return getOrCreate<RooGaussian>(ws, constraintName(pname), *constrParam, *ws.var("nom_" + pname), 1.);
 }
 
 ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname, const std::vector<double> &vals,
@@ -210,11 +209,14 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
 {
    RooWorkspace &ws = *tool.workspace();
 
-   std::string name = RooJSONFactoryWSTool::name(p);
-   std::string prefixedName = fprefix + "_" + name;
+   std::string sampleName = RooJSONFactoryWSTool::name(p);
+   std::string prefixedName = fprefix + "_" + sampleName;
+
+   std::string channelName = fprefix;
+   erasePrefix(channelName, "model_");
 
    if (!p.has_child("data")) {
-      RooJSONFactoryWSTool::error("sample '" + name + "' does not define a 'data' key");
+      RooJSONFactoryWSTool::error("sample '" + sampleName + "' does not define a 'data' key");
    }
 
    auto &hf = tool.wsEmplace<RooHistFunc>("hist_" + prefixedName, varlist, dh);
@@ -247,7 +249,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5);
             normElems.add(constrParam);
             if (auto constrInfo = mod.find("constraint_name")) {
-               auto constraint = tool.request<RooAbsReal>(constrInfo->val(), name);
+               auto constraint = tool.request<RooAbsReal>(constrInfo->val(), sampleName);
                if (auto gauss = dynamic_cast<RooGaussian const *>(constraint)) {
                   constrParam.setError(gauss->getSigma().getVal());
                }
@@ -267,7 +269,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                                                               : std::numeric_limits<double>::epsilon());
             overall_high.push_back(data["hi"].val_double() > 0 ? data["hi"].val_double()
                                                                : std::numeric_limits<double>::epsilon());
-            constraints.add(getConstraint(ws, sysname, parname));
+            constraints.add(getConstraint(ws, parname));
          } else if (modtype == "histosys") {
             auto *parameter = mod.find("parameter");
             std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
@@ -280,10 +282,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             histoHi.add(tool.wsEmplace<RooHistFunc>(
                sysname + "High_" + prefixedName, varlist,
                RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + prefixedName, varlist)));
-            constraints.add(getConstraint(ws, sysname, parname));
+            constraints.add(getConstraint(ws, parname));
          } else if (modtype == "shapesys") {
-            std::string funcName = fprefix + "_" + sysname + "_ShapeSys";
-            erasePrefix(funcName, "model_");
+            std::string funcName = channelName + "_" + sysname + "_ShapeSys";
             // funName should be "<channel_name>_<sysname>_ShapeSys"
             std::vector<double> vals;
             for (const auto &v : mod["data"]["vals"].children()) {
@@ -307,11 +308,15 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
          }
       }
 
+      std::string interpName = sampleName + "_" + channelName + "_epsilon";
       if (!overall_nps.empty()) {
-         auto &v = tool.wsEmplace<RooStats::HistFactory::FlexibleInterpVar>("overallSys_" + prefixedName, overall_nps,
-                                                                            1., overall_low, overall_high);
+         auto &v = tool.wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(interpName, overall_nps, 1., overall_low,
+                                                                            overall_high);
          v.setAllInterpCodes(4); // default HistFactory interpCode
          normElems.add(v);
+      } else {
+         RooConstVar interp(interpName.c_str(), "", 1.);
+         ws.import(interp);
       }
       if (!histNps.empty()) {
          auto &v = tool.wsEmplace<PiecewiseInterpolation>("histoSys_" + prefixedName, hf, histoLo, histoHi, histNps);
@@ -405,14 +410,12 @@ public:
       }
 
       if (constraints.empty()) {
-         auto &sum = tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true);
-         sum.setAttribute("BinnedLikelihood");
+         tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true);
       } else {
          std::string sumName = name + "_model";
          erasePrefix(sumName, "model_");
          auto &sum = tool->wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
          sum.SetTitle(name.c_str());
-         sum.setAttribute("BinnedLikelihood");
          tool->wsEmplace<RooProdPdf>(name, constraints, RooFit::Conditional(sum, observables));
       }
       return true;
