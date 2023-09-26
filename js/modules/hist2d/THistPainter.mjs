@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, constants, internals, create, isObject, isFunc, isStr, getPromise,
-         clTList, clTPaveText, clTPaveStats, clTPaletteAxis,
+         clTList, clTPaveText, clTPaveStats, clTPaletteAxis, clTProfile2D, clTProfile3D,
          clTAxis, clTF1, clTF2, clTProfile, kNoZoom, clTCutG, kNoStats } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
@@ -182,6 +182,8 @@ class THistDrawOptions {
       if (d.check('TICKXY') && pad) pad.fTickx = pad.fTicky = 1;
       if (d.check('TICKX') && pad) pad.fTickx = 1;
       if (d.check('TICKY') && pad) pad.fTicky = 1;
+      if (d.check('GRAYSCALE'))
+         pp?.setGrayscale(true);
 
       d.getColor = function() {
          this.color = this.partAsInt(1) - 1;
@@ -700,7 +702,7 @@ class THistPainter extends ObjectPainter {
    cleanup() {
       this.clear3DScene();
 
-      delete this.fPalette;
+      delete this._color_palette;
       delete this.fContour;
       delete this.options;
 
@@ -712,8 +714,9 @@ class THistPainter extends ObjectPainter {
       const histo = this.getHisto();
       if (!histo) return 0;
       if (histo._typename.match(/^TH2/)) return 2;
-      if (histo._typename.match(/^TProfile2D/)) return 2;
+      if (histo._typename === clTProfile2D) return 2;
       if (histo._typename.match(/^TH3/)) return 3;
+      if (histo._typename === clTProfile3D) return 3;
       if (this.isTH2Poly()) return 2;
       return 1;
    }
@@ -729,6 +732,11 @@ class THistPainter extends ObjectPainter {
          this.options = new THistDrawOptions();
       else
          this.options.reset();
+
+      // when changing draw option, reset attributes usage
+      this.lineatt?.setUsed(false);
+      this.fillatt?.setUsed(false);
+      this.markeratt?.setUsed(false);
 
       this.options.decode(opt || histo.fOption, hdim, histo, pp, pad, this);
 
@@ -1895,15 +1903,15 @@ class THistPainter extends ObjectPainter {
    /** @summary Returns color palette associated with histogram
      * @desc Create if required, checks pad and canvas for custom palette */
    getHistPalette(force) {
-      if (force) this.fPalette = null;
-      if (!this.fPalette && !this.options.Palette) {
-         const pp = this.getPadPainter();
+      if (force) this._color_palette = null;
+      const pp = this.getPadPainter();
+      if (!this._color_palette && !this.options.Palette) {
          if (isFunc(pp?.getCustomPalette))
-            this.fPalette = pp.getCustomPalette();
+            this._color_palette = pp.getCustomPalette();
       }
-      if (!this.fPalette)
-         this.fPalette = getColorPalette(this.options.Palette);
-      return this.fPalette;
+      if (!this._color_palette)
+         this._color_palette = getColorPalette(this.options.Palette, pp?.isGrayscale());
+      return this._color_palette;
    }
 
    /** @summary Fill menu entries for palette */

@@ -5,7 +5,7 @@ import { THistPainter } from './THistPainter.mjs';
 
 
 const PadDrawOptions = ['USE_PAD_TITLE', 'LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
-                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'FB'];
+                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'FB', 'GRAYSCALE'];
 
 /**
  * @summary Painter for TH1 classes
@@ -461,7 +461,9 @@ class TH1Painter extends THistPainter {
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         this.createAttMarker({ attr: histo, style: this.options.MarkStyle }); // when style not configured, it will be ignored
+         let style = this.options.MarkStyle;
+         if (!style && (histo.fMarkerStyle === 1)) style = 8; // as in recent ROOT changes
+         this.createAttMarker({ attr: histo, style }); // when style not configured, it will be ignored
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = '';
@@ -1078,8 +1080,8 @@ class TH1Painter extends THistPainter {
    /** @summary Rebin histogram, used via context menu */
    rebinHist(sz) {
       const histo = this.getHisto(),
-          xaxis = histo.fXaxis,
-          nbins = Math.floor(xaxis.fNbins/ sz);
+            xaxis = histo.fXaxis,
+            nbins = Math.floor(xaxis.fNbins/ sz);
       if (nbins < 2) return;
 
       const arr = new Array(nbins+2),

@@ -11,9 +11,6 @@
 #ifndef ROOT_Math_IOptions
 #define ROOT_Math_IOptions
 
-
-#include "Math/Error.h"
-
 #include <iostream>
 #include <string>
 
@@ -47,26 +44,9 @@ public:
    void SetValue(const char * name, const char * val) { SetNamedValue(name,val);}
 
 
-   double  RValue(const char * name) const {
-      double val = 0;
-      bool ret = GetRealValue(name,val);
-      if (!ret )  MATH_ERROR_MSGVAL("IOptions::RValue"," return 0 - real option not found",name);
-      return val;
-   }
-
-   int   IValue(const char * name) const {
-      int val = 0;
-      bool ret = GetIntValue(name,val);
-      if (!ret )   MATH_ERROR_MSGVAL("IOptions::IValue"," return 0 - integer option not found",name);
-      return val;
-   }
-
-   std::string  NamedValue(const char * name) const {
-      std::string val;
-      bool ret = GetNamedValue(name,val);
-      if (!ret )  MATH_ERROR_MSGVAL("IOptions::NamedValue"," return empty string - named option not found",name);
-      return val;
-   }
+   double  RValue(const char * name) const;
+   int   IValue(const char * name) const;
+   std::string  NamedValue(const char * name) const;
 
 
    // generic method to retrieve  a type
@@ -80,24 +60,15 @@ public:
 
    // methods to be re-implemented in the derived classes
 
-
    virtual bool GetRealValue(const char *, double &) const { return false; }
-
    virtual bool GetIntValue(const char *, int &) const { return false; }
-
    virtual bool GetNamedValue(const char *, std::string &) const { return false; }
 
-   /// method wich need to be re-implemented by the derived classes
-   virtual void SetRealValue(const char * , double )  {MATH_ERROR_MSG("IOptions::SetRealValue","Invalid setter method called"); }
+   virtual void SetRealValue(const char * , double );
+   virtual void SetIntValue(const char * , int );
+   virtual void SetNamedValue(const char * , const char * );
 
-   virtual void SetIntValue(const char * , int ) {MATH_ERROR_MSG("IOptions::SetIntValue","Invalid setter method called"); }
-
-   virtual void SetNamedValue(const char * , const char * ) {MATH_ERROR_MSG("IOptions::SetNamedValue","Invalid setter method called"); }
-
-
-   /// print options
-   virtual void Print(std::ostream & = std::cout ) const {MATH_INFO_MSG("IOptions::Print","it is not implemented");}
-
+   virtual void Print(std::ostream & = std::cout ) const;
 
 private:
 

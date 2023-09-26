@@ -25,6 +25,7 @@
 #include <cstring>
 #include <deque>
 #include <exception>
+#include <iomanip>
 #include <iostream>
 
 ROOT::Experimental::RNTupleInspector::RNTupleInspector(
@@ -110,7 +111,7 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldI
 }
 
 std::vector<ROOT::Experimental::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetColumnsForFieldTree(DescriptorId_t fieldId) const
+ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(DescriptorId_t fieldId) const
 {
    std::vector<DescriptorId_t> colIds;
    std::deque<DescriptorId_t> fieldIdQueue{fieldId};
@@ -193,7 +194,7 @@ ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColum
    return fColumnInfo.at(physicalColumnId);
 }
 
-size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
+size_t ROOT::Experimental::RNTupleInspector::GetColumnCountByType(ROOT::Experimental::EColumnType colType) const
 {
    size_t typeCount = 0;
 
@@ -217,6 +218,48 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::Experimental::EColu
    }
 
    return colIds;
+}
+
+void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorPrintFormat format, std::ostream &output)
+{
+   struct ColumnTypeInfo {
+      std::uint32_t count;
+      std::uint64_t nElems, onDiskSize, inMemSize;
+
+      void operator+=(const RColumnInfo &colInfo)
+      {
+         this->count++;
+         this->nElems += colInfo.GetNElements();
+         this->onDiskSize += colInfo.GetOnDiskSize();
+         this->inMemSize += colInfo.GetInMemorySize();
+      }
+   };
+
+   std::map<EColumnType, ColumnTypeInfo> colTypeInfo;
+
+   for (const auto &[colId, colInfo] : fColumnInfo) {
+      colTypeInfo[colInfo.GetType()] += colInfo;
+   }
+
+   switch (format) {
+   case ENTupleInspectorPrintFormat::kTable:
+      output << " column type    | count   | # elements      | bytes on disk   | bytes in memory" << std::endl;
+      output << "----------------|---------|-----------------|-----------------|-----------------" << std::endl;
+      for (const auto &[colType, typeInfo] : colTypeInfo) {
+         output << std::setw(15) << Detail::RColumnElementBase::GetTypeName(colType) << " |" << std::setw(8)
+                << typeInfo.count << " |" << std::setw(16) << typeInfo.nElems << " |" << std::setw(16)
+                << typeInfo.onDiskSize << " |" << std::setw(16) << typeInfo.inMemSize << " " << std::endl;
+      }
+      break;
+   case ENTupleInspectorPrintFormat::kCSV:
+      output << "columnType,count,nElements,onDiskSize,inMemSize" << std::endl;
+      for (const auto &[colType, typeInfo] : colTypeInfo) {
+         output << Detail::RColumnElementBase::GetTypeName(colType) << "," << typeInfo.count << "," << typeInfo.nElems
+                << "," << typeInfo.onDiskSize << "," << typeInfo.inMemSize << std::endl;
+      }
+      break;
+   default: throw RException(R__FAIL("Invalid print format"));
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -243,8 +286,8 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInfo(std::string_view fieldNam
    return GetFieldTreeInfo(fieldId);
 }
 
-size_t
-ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::regex &typeNamePattern, bool includeSubFields) const
+size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::regex &typeNamePattern,
+                                                                 bool includeSubFields) const
 {
    size_t typeCount = 0;
 

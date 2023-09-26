@@ -12,6 +12,8 @@
 
 #include "Math/GenAlgoOptions.h"
 
+#include <RConfig.h>
+
 // case of using ROOT plug-in manager
 #ifndef MATH_NO_PLUGIN_MANAGER
 #include "TEnv.h"
@@ -102,11 +104,20 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
    // return default minimizer
    // if is "" (no default is set) read from etc/system.rootrc
 
+
+   // The "default default" minimizer in case there is nothing set in .rootrc
+#ifdef R__HAS_MINUIT2
+   static constexpr auto defaultDefaultMinimizer = "Minuit2";
+#else
+   static constexpr auto defaultDefaultMinimizer = "Minuit";
+#endif // R__HAS_MINUIT2
+
+
 #ifdef MATH_NO_PLUGIN_MANAGER
    if (Minim::gDefaultMinimizer.size() != 0)
       return Minim::gDefaultMinimizer;
 
-   Minim::gDefaultMinimizer = "Minuit2";  // in case no PM exists
+   Minim::gDefaultMinimizer = defaultDefaultMinimizer;  // in case no PM exists
 
 #else
    R__READ_LOCKGUARD(ROOT::gCoreMutex);
@@ -123,7 +134,7 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 
    // use value defined in etc/system.rootrc  (if not found Minuit is used)
    if (gEnv)
-      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");
+      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter",defaultDefaultMinimizer);
 #endif
 
    return Minim::gDefaultMinimizer;

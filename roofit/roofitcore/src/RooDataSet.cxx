@@ -207,18 +207,18 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
 
    // Gather all imported weighted datasets to infer the weight variable name
    // and whether we need weight errors
-   std::vector<RooAbsData*> weightedImpDatas;
-   if(impData && impData->isWeighted()) weightedImpDatas.push_back(impData);
+   std::vector<RooAbsData*> weightedImpDatasets;
+   if(impData && impData->isWeighted()) weightedImpDatasets.push_back(impData);
    for(auto * data : static_range_cast<RooAbsData*>(impSliceData)) {
       if(data->isWeighted()) {
-         weightedImpDatas.push_back(data);
+         weightedImpDatasets.push_back(data);
       }
    }
 
    bool needsWeightErrors = false;
 
    // Figure out if the weight needs to store errors
-   for(RooAbsData * data : weightedImpDatas) {
+   for(RooAbsData * data : weightedImpDatasets) {
       if(dynamic_cast<RooDataHist const*>(data)) {
          needsWeightErrors = true;
       }
@@ -233,7 +233,7 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
    if(out.weightVarName.empty()) {
       // Even if no weight variable is specified, we want to have one if we are
       // importing weighted datasets
-      for(RooAbsData * data : weightedImpDatas) {
+      for(RooAbsData * data : weightedImpDatasets) {
          if(auto ds = dynamic_cast<RooDataSet const*>(data)) {
             // If the imported data is a RooDataSet, we take over its weight variable name
             out.weightVarName = ds->weightVar()->GetName();
@@ -296,7 +296,7 @@ std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
 ///
 /// <table>
 /// <tr><th> %RooCmdArg <th> Effect
-/// <tr><td> Import(TTree*)              <td> Import contents of given TTree. Only braches of the TTree that have names
+/// <tr><td> Import(TTree*)              <td> Import contents of given TTree. Only branches of the TTree that have names
 ///                                corresponding to those of the RooAbsArgs that define the RooDataSet are
 ///                                imported.
 /// <tr><td> ImportFromFile(const char* fileName, const char* treeName) <td> Import tree with given name from file with given name.
@@ -741,23 +741,6 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   TRACE_CREATE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Protected constructor for internal use only
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
-             const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-             std::size_t nStart, std::size_t nStop) :
-  RooAbsData(name,title,vars)
-{
-  _dstore = dset->_dstore->reduce(name, title, _vars, cutVar, cutRange, nStart, nStop);
-
-   _cachedVars.add(_dstore->cachedVars());
-
-   appendToDir(this, true);
-   initialize(dset->_wgtVar ? dset->_wgtVar->GetName() : nullptr);
-   TRACE_CREATE;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an empty clone of this dataset. If vars is not null, only the variables in vars
@@ -832,37 +815,40 @@ void RooDataSet::initialize(const char* wgtVarName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
-std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
-              std::size_t nStart, std::size_t nStop)
+std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, const RooFormulaVar *cutVar,
+                                                  const char *cutRange, std::size_t nStart, std::size_t nStop)
 {
-  checkInit() ;
-  RooArgSet tmp(varSubset) ;
-  if (_wgtVar) {
-    tmp.add(*_wgtVar) ;
-  }
+   checkInit();
+   RooArgSet tmp(varSubset);
+   if (_wgtVar) {
+      tmp.add(*_wgtVar);
+   }
 
-  std::unique_ptr<RooDataSet> out;
+   auto createEmptyClone = [&]() { return emptyClone(GetName(), GetTitle(), &tmp); };
 
-  if (!cutRange || strchr(cutRange,',')==nullptr) {
-    out.reset(new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop));
-  } else {
-    // Composite case: multiple ranges
-    auto tokens = ROOT::Split(cutRange, ",");
-    if (RooHelpers::checkIfRangesOverlap(tmp, tokens)) {
-      std::stringstream errMsg;
-      errMsg << "Error in RooAbsData::reduce! The ranges " << cutRange << " are overlapping!";
-      throw std::runtime_error(errMsg.str());
-    }
-    for (const auto& token : tokens) {
-      if(!out) {
-        out.reset(new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop));
-      } else {
-        RooDataSet appendedData{GetName(), GetTitle(), this, tmp, cutVar, token.c_str(), nStart, nStop};
-        out->append(appendedData);
+   std::unique_ptr<RooAbsData> out{createEmptyClone()};
+
+   if (!cutRange || strchr(cutRange, ',') == nullptr) {
+      auto &ds = static_cast<RooDataSet &>(*out);
+      ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, cutRange, nStart, nStop);
+      ds._cachedVars.add(_dstore->cachedVars());
+   } else {
+      // Composite case: multiple ranges
+      auto tokens = ROOT::Split(cutRange, ",");
+      if (RooHelpers::checkIfRangesOverlap(tmp, tokens)) {
+         std::stringstream errMsg;
+         errMsg << "Error in RooAbsData::reduce! The ranges " << cutRange << " are overlapping!";
+         throw std::runtime_error(errMsg.str());
       }
-    }
-  }
-  return out;
+      for (const auto &token : tokens) {
+         std::unique_ptr<RooAbsData> appendedData{createEmptyClone()};
+         auto &ds = static_cast<RooDataSet &>(*appendedData);
+         ds._dstore = _dstore->reduce(ds.GetName(), ds.GetTitle(), ds._vars, cutVar, token.c_str(), nStart, nStop);
+         ds._cachedVars.add(_dstore->cachedVars());
+         static_cast<RooDataSet &>(*out).append(ds);
+      }
+   }
+   return out;
 }
 
 
@@ -1728,7 +1714,7 @@ bool RooDataSet::write(ostream & ofs) const {
   }
 
   if (ofs.fail()) {
-    coutW(DataHandling) << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occured in writing" << endl ;
+    coutW(DataHandling) << "RooDataSet::write(" << GetName() << "): WARNING error(s) have occurred in writing" << endl ;
   }
 
   return ofs.fail() ;

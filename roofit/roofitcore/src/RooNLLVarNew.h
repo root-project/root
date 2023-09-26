@@ -21,9 +21,6 @@
 
 #include <Math/Util.h>
 
-namespace ROOT {
-namespace Experimental {
-
 class RooNLLVarNew : public RooAbsReal {
 
 public:
@@ -31,7 +28,6 @@ public:
    static constexpr const char *weightVarName = "_weight";
    static constexpr const char *weightVarNameSumW2 = "_weight_sumW2";
 
-   RooNLLVarNew() {}
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
                 RooFit::OffsetMode offsetMode);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
@@ -68,8 +64,8 @@ private:
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooTemplateProxy<RooAbsReal> _weightVar;
    RooTemplateProxy<RooAbsReal> _weightSquaredVar;
-   RooTemplateProxy<RooAbsReal> _binVolumeVar;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _expectedEvents;
+   std::unique_ptr<RooTemplateProxy<RooAbsPdf>> _offsetPdf;
    mutable double _sumWeight = 0.0;  //!
    mutable double _sumWeight2 = 0.0; //!
    bool _weightSquared = false;
@@ -82,8 +78,5 @@ private:
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
 
 }; // end class RooNLLVar
-
-} // end namespace Experimental
-} // end namespace ROOT
 
 #endif

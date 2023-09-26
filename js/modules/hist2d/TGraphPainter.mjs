@@ -647,17 +647,22 @@ class TGraphPainter extends ObjectPainter {
 
       if (options.Bar) {
          // calculate bar width
-         for (let i = 1; i < drawbins.length-1; ++i)
-            drawbins[i].width = Math.max(2, (drawbins[i+1].grx1 - drawbins[i-1].grx1) / 2 - 2);
 
-         // first and last bins
-         switch (drawbins.length) {
-            case 0: break;
-            case 1: drawbins[0].width = w/4; break; // pathologic case of single bin
-            case 2: drawbins[0].width = drawbins[1].width = (drawbins[1].grx1-drawbins[0].grx1)/2; break;
-            default:
-               drawbins[0].width = drawbins[1].width;
-               drawbins[drawbins.length-1].width = drawbins[drawbins.length-2].width;
+         let xmin = 0, xmax = 0;
+         for (let i = 0; i < drawbins.length; ++i) {
+            if (i === 0)
+               xmin = xmax = drawbins[i].grx1;
+            else {
+               xmin = Math.min(xmin, drawbins[i].grx1);
+               xmax = Math.max(xmax, drawbins[i].grx1);
+            }
+         }
+
+         if (drawbins.length === 1)
+            drawbins[0].width = w/4; // pathologic case of single bin
+         else {
+            for (let i = 0; i < drawbins.length; ++i)
+               drawbins[i].width = (xmax - xmin) / drawbins.length * gStyle.fBarWidth;
          }
 
          const yy0 = Math.round(funcs.gry(0));
@@ -674,9 +679,9 @@ class TGraphPainter extends ObjectPainter {
               .attr('d', d => {
                  d.bar = true; // element drawn as bar
                  const dx = Math.round(-d.width/2),
-                     dw = Math.round(d.width),
-                     dy = (options.Bar !== 1) ? 0 : ((d.gry1 > yy0) ? yy0-d.gry1 : 0),
-                     dh = (options.Bar !== 1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
+                       dw = Math.round(d.width),
+                       dy = (options.Bar !== 1) ? 0 : ((d.gry1 > yy0) ? yy0-d.gry1 : 0),
+                       dh = (options.Bar !== 1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
                  return `M${dx},${dy}h${dw}v${dh}h${-dw}z`;
               })
             .call(usefill.func);

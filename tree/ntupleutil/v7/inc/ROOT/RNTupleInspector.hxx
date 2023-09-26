@@ -24,11 +24,13 @@
 
 #include <cstdlib>
 #include <memory>
-#include <vector>
 #include <regex>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 
 // clang-format off
 /**
@@ -126,7 +128,7 @@ private:
    RFieldTreeInfo CollectFieldTreeInfo(DescriptorId_t fieldId);
 
    /// Get the IDs of the columns that make up the given field, including its sub-fields.
-   std::vector<DescriptorId_t> GetColumnsForFieldTree(DescriptorId_t fieldId) const;
+   std::vector<DescriptorId_t> GetColumnsByFieldId(DescriptorId_t fieldId) const;
 
 public:
    RNTupleInspector(const RNTupleInspector &other) = delete;
@@ -164,20 +166,60 @@ public:
    const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
 
    /// Get the number of columns of a given type present in the RNTuple.
-   size_t GetColumnTypeCount(EColumnType colType) const;
+   size_t GetColumnCountByType(EColumnType colType) const;
 
    /// Get the IDs of all columns with the given type.
    const std::vector<DescriptorId_t> GetColumnsByType(EColumnType);
+
+   /// Print the per-column type information, either as a table or in CSV format. The output includes the column type,
+   /// its count, the total number of elements, the on-disk size and the in-memory size.
+   ///
+   /// **Example: printing the column type information of an RNTuple as a table**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTupleInspector.hxx>
+   /// using ROOT::Experimental::RNTupleInspector;
+   /// using ROOT::Experimental::ENTupleInspectorPrintFormat;
+   ///
+   /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
+   /// inspector->PrintColumnTypeInfo();
+   /// ~~~
+   /// Ouput:
+   /// ~~~
+   ///  column type    | count   | # elements      | bytes on disk   | bytes in memory
+   /// ----------------|---------|-----------------|-----------------|-----------------
+   ///    SplitIndex64 |       2 |             150 |              72 |            1200
+   ///     SplitReal32 |       4 |             300 |             189 |            1200
+   ///     SplitUInt32 |       3 |             225 |             123 |             900
+   /// ~~~
+   ///
+   /// **Example: printing the column type information of an RNTuple in CSV format**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTupleInspector.hxx>
+   /// using ROOT::Experimental::RNTupleInspector;
+   /// using ROOT::Experimental::ENTupleInspectorPrintFormat;
+   ///
+   /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
+   /// inspector->PrintColumnTypeInfo();
+   /// ~~~
+   /// Ouput:
+   /// ~~~
+   /// columnType,count,nElements,onDiskSize,inMemSize
+   /// SplitIndex64,2,150,72,1200
+   /// SplitReal32,4,300,189,1200
+   /// SplitUInt32,3,225,123,900
+   /// ~~~
+   void PrintColumnTypeInfo(ENTupleInspectorPrintFormat format = ENTupleInspectorPrintFormat::kTable,
+                            std::ostream &output = std::cout);
 
    const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
    const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
 
    /// Get the number of fields of a given type or class present in the RNTuple. The type name may contain regular
    /// expression patterns in order to be able to group multiple kinds of types or classes.
-   size_t GetFieldTypeCount(const std::regex &typeNamePattern, bool searchInSubFields = true) const;
-   size_t GetFieldTypeCount(std::string_view typeNamePattern, bool searchInSubFields = true) const
+   size_t GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubFields = true) const;
+   size_t GetFieldCountByType(std::string_view typeNamePattern, bool searchInSubFields = true) const
    {
-      return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, searchInSubFields);
+      return GetFieldCountByType(std::regex{std::string(typeNamePattern)}, searchInSubFields);
    }
 
    /// Get the IDs of (sub-)fields whose name matches the given string. Because field names are unique by design,

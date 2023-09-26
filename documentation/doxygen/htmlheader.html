@@ -18,28 +18,20 @@
 <script type="text/javascript" src="$relpath^dynsections.js"></script>
 $treeview
 $search
-$mathjax
+<script type="text/javascript">
+  window.MathJax = {
+    options: {
+      ignoreHtmlClass: 'tex2jax_ignore',
+      processHtmlClass: 'tex2jax_process'
+    }
+  };
+</script>
+<script type="text/javascript" id="MathJax-script" async="async" src="./mathjax/es5/tex-chtml.js"></script>
 $darkmode
 <link href="$relpath^$stylesheet" rel="stylesheet" type="text/css" />
 $extrastylesheet
 
 <link rel="stylesheet" type="text/css" href="https://root.cern/doc/dropdown.css">
-
-<!-- Matomo -->
-<script>
-var _paq = window._paq = window._paq || [];
-/* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-_paq.push(['trackPageView']);
-_paq.push(['enableLinkTracking']);
-(function() {
-var u="https://webanalytics.web.cern.ch/";
-_paq.push(['setTrackerUrl', u+'matomo.php']);
-_paq.push(['setSiteId', '115']);
-var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-})();
-</script>
-<!-- End Matomo Code -->
 
 </head>
 <body>

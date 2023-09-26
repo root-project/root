@@ -109,7 +109,7 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
                       "const double sig = params[2];"
                       "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
                       "return 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;";
-   RooFuncWrapper gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, {});
+   RooFuncWrapper gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, nullptr, nullptr, true);
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
@@ -149,7 +149,7 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
    RooArgSet normSet{x};
 
-   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", gauss, normSet);
+   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", gauss, normSet, nullptr, nullptr, true);
 
    RooArgSet paramsGauss;
    gauss.getParameters(nullptr, paramsGauss);
@@ -172,34 +172,44 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
 TEST(RooFuncWrapper, Exponential)
 {
-   RooWorkspace ws;
-   ws.factory("Exponential::expo(x[1.0, 0, 10], c[0.1, 0, 10])");
 
-   RooAbsPdf &expo = *ws.pdf("expo");
-   RooRealVar &x = *ws.var("x");
+   for (auto negateCoefficient : {false, true}) {
 
-   RooArgSet normSet{x};
+      RooWorkspace ws;
+      if (negateCoefficient) {
+         ws.factory("Exponential::expo_2(x[1.0, 0, 10], c[0.1, 0, 10], true)");
+      } else {
+         ws.factory("Exponential::expo_1(x[1.0, 0, 10], c[0.1, 0, 10], false)");
+      }
 
-   RooFuncWrapper expoFunc("expo", "expo", expo, normSet);
+      std::string name = negateCoefficient ? "expo_2" : "expo_1";
 
-   RooArgSet params;
-   expo.getParameters(nullptr, params);
+      RooAbsPdf &expo = *ws.pdf(name);
+      RooRealVar &x = *ws.var("x");
 
-   EXPECT_NEAR(expo.getVal(normSet), expoFunc.getVal(), 1e-8);
+      RooArgSet normSet{x};
 
-   // Get AD based derivative
-   std::vector<double> dExpo(expoFunc.getNumParams(), 0);
-   expoFunc.gradient(dExpo.data());
+      RooFuncWrapper expoFunc(name.c_str(), name.c_str(), expo, normSet, nullptr, nullptr, true);
 
-   // Check if derivatives are equal
-   for (std::size_t i = 0; i < params.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(expo, static_cast<RooRealVar &>(*params[i]), normSet), dExpo[i], 1e-8)
-         << params[i]->GetName();
+      RooArgSet params;
+      expo.getParameters(nullptr, params);
+
+      EXPECT_NEAR(expo.getVal(normSet), expoFunc.getVal(), 1e-8);
+
+      // Get AD based derivative
+      std::vector<double> dExpo(expoFunc.getNumParams(), 0);
+      expoFunc.gradient(dExpo.data());
+
+      // Check if derivatives are equal
+      for (std::size_t i = 0; i < params.size(); ++i) {
+         EXPECT_NEAR(getNumDerivative(expo, static_cast<RooRealVar &>(*params[i]), normSet), dExpo[i], 1e-8)
+            << params[i]->GetName();
+      }
    }
 }
 
 using CreateNLLFunc =
-   std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &, std::string const &)>;
+   std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &, RooFit::EvalBackend)>;
 using WorkspaceSetupFunc = std::function<void(RooWorkspace &)>;
 
 class FactoryTestParams {
@@ -267,8 +277,8 @@ TEST_P(FactoryTest, NLLFit)
       data = ownedData.get();
    }
 
-   std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, "cpu");
-   std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, "codegen");
+   std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Cpu());
+   std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Codegen());
 
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), 1e-8);
 
@@ -315,7 +325,7 @@ TEST_P(FactoryTest, NLLFit)
    // Compare minimization results
    double tol = _params._fitResultTolerance;
    // Same tolerance for parameter values and error, don't compare correlations
-   // because for very small correlations it's usually not the same withing the
+   // because for very small correlations it's usually not the same within the
    // relative tolerance because you would compare two small values that are
    // only different from zero because of noise.
    EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, tol, tol));
@@ -331,9 +341,9 @@ FactoryTestParams param1{"Gaussian",
 
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                             using namespace RooFit;
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, BatchMode(backend))};
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -346,11 +356,10 @@ FactoryTestParams param2{"PolyVar",
 
                             ws.defineSet("observables", "x,y");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws, std::string const &backend) {
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws, RooFit::EvalBackend backend) {
                             using namespace RooFit;
                             RooRealVar &y = *ws.var("y");
-                            return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, ConditionalObservables(y), BatchMode(backend))};
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, ConditionalObservables(y), backend)};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -366,9 +375,9 @@ FactoryTestParams param3{"AddPdf",
 
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                             using namespace RooFit;
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, BatchMode(backend))};
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          5e-3,
                          /*randomizeParameters=*/true};
@@ -384,10 +393,10 @@ FactoryTestParams param4{"ConstraintSum",
 
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws, std::string const &backend) {
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws, RooFit::EvalBackend backend) {
                             using namespace RooFit;
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(
-                               data, ExternalConstraints(*ws.pdf("fconstext")), BatchMode(backend))};
+                            return std::unique_ptr<RooAbsReal>{
+                               pdf.createNLL(data, ExternalConstraints(*ws.pdf("fconstext")), backend)};
                          },
                          1e-4,
                          /*randomizeParameters=*/true};
@@ -463,9 +472,8 @@ void getSimPdfModel(RooWorkspace &ws)
 
 /// Test based on the simultaneous fit shown in CHEP'23 results
 FactoryTestParams param5{"SimPdf", getSimPdfModel,
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
-                            return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, RooFit::BatchMode(backend))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          5e-3,
                          /*randomizeParameters=*/true};
@@ -476,9 +484,8 @@ FactoryTestParams param6{"GaussianExtended",
                             ws.factory("ExtendPdf::model(gauss, n[100, 0, 10000])");
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
-                            return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, RooFit::BatchMode(backend))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -512,8 +519,8 @@ void getDataHistModel(RooWorkspace &ws)
 
 /// Test based on rf706 tutorial
 FactoryTestParams param7{"HistPdf", getDataHistModel,
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
                          /*randomizeParameters=*/true};
@@ -523,19 +530,31 @@ FactoryTestParams param8{"Lognormal",
                             ws.factory("Lognormal::model(x[1.0, 1.1, 10], mu[2.0, 1.1, 10], k[2.0, 1.1, 5.0])");
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
                          /*randomizeParameters=*/true};
+
+FactoryTestParams param8p1{"LognormalStandard",
+                           [](RooWorkspace &ws) {
+                              ws.factory(
+                                 "Lognormal::model(x[1.0, 1.1, 10], mu[0.7, 0.1, 2.3], k[0.7, 0.1, 1.6], true)");
+                              ws.defineSet("observables", "x");
+                           },
+                           [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                           },
+                           1e-4,
+                           /*randomizeParameters=*/true};
 
 FactoryTestParams param9{"Poisson",
                          [](RooWorkspace &ws) {
                             ws.factory("Poisson::model(x[5, 0, 10], mu[5, 0, 10])");
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
                          /*randomizeParameters=*/true};
@@ -548,15 +567,15 @@ FactoryTestParams param10{"PoissonNoRounding",
                              poisson->setNoRounding(true);
                              ws.defineSet("observables", "x");
                           },
-                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
-                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                           },
                           1e-4,
                           /*randomizeParameters=*/true};
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
-                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param9,
-                                         param10),
+                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param8p1,
+                                         param9, param10),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });

@@ -298,7 +298,7 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
 
 // Some helper functions
 // (Not strictly necessary because
-//  methods are publicly accessable)
+//  methods are publicly accessible)
 
 
 void RooStats::HistFactory::Sample::ActivateStatError() {

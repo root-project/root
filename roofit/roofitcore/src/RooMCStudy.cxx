@@ -138,7 +138,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
     // WVE do something here
-    throw std::string("RooMCStudy::RooMCStudy() Error in parsing arguments passed to contructor") ;
+    throw std::string("RooMCStudy::RooMCStudy() Error in parsing arguments passed to constructor") ;
     return ;
   }
 
@@ -815,9 +815,9 @@ const RooDataSet& RooMCStudy::fitParDataSet()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an argset with the fit parameters for the given sample number
 ///
-/// NB: The fit parameters are only stored for successfull fits,
+/// NB: The fit parameters are only stored for successful fits,
 ///     thus the maximum sampleNum can be less that the number
-///     of generated samples and if so, the indeces will
+///     of generated samples and if so, the indices will
 ///     be out of synch with genData() and fitResult()
 
 const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
@@ -1115,7 +1115,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
   RooPlot* frame = makeFrameAndPlotCmd(pvar, cmdList, true) ;
   if (frame) {
 
-    // Pick up optonal FitGauss command from list
+    // Pick up optional FitGauss command from list
     RooCmdConfig pc("RooMCStudy::plotPull(" + std::string(_genModel->GetName()) + ")");
     pc.defineInt("fitGauss","FitGauss",0,0) ;
     pc.allowUndefined() ;
@@ -1181,14 +1181,14 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
     // FrameBins, FrameRange or none are given, build custom frame command list
     RooCmdArg bins = RooFit::Bins(nbins) ;
     RooCmdArg range = RooFit::Range(xlo,xhi) ;
-    RooCmdArg autor = symRange ? RooFit::AutoSymRange(*_fitParData,0.2) : RooFit::AutoRange(*_fitParData,0.2) ;
+    RooCmdArg autoRange = symRange ? RooFit::AutoSymRange(*_fitParData,0.2) : RooFit::AutoRange(*_fitParData,0.2) ;
     RooLinkedList frameCmdList ;
 
     if (pc.hasProcessed("Bins")) frameCmdList.Add(&bins) ;
     if (pc.hasProcessed("Range")) {
       frameCmdList.Add(&range) ;
     } else {
-      frameCmdList.Add(&autor) ;
+      frameCmdList.Add(&autoRange) ;
     }
     frame = param.frame(frameCmdList) ;
   }

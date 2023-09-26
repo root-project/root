@@ -211,7 +211,7 @@ RooNonCPEigenDecay::~RooNonCPEigenDecay( void )
 ///  - B0bar : _tag  == +1
 ///  - rho+  : _rhoQ == +1
 ///  - rho-  : _rhoQ == -1
-///  - the charge correction factor "_correctQ" serves to implement mis-charges
+///  - the charge correction factor "_correctQ" serves to implement misidentified charges
 
 double RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
 {

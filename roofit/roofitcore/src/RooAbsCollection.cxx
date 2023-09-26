@@ -66,7 +66,7 @@ namespace Detail {
  */
 struct HashAssistedFind {
 
-  /// Inititalise empty hash map for fast finding by name.
+  /// Initialise empty hash map for fast finding by name.
   template<typename It_t>
   HashAssistedFind(It_t first, It_t last) :
     currentRooNameRegCounter{ RooNameReg::instance().renameCounter() },
@@ -291,10 +291,10 @@ void RooAbsCollection::assign(const RooAbsCollection& other) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the value of any argument in our set that also appears in the other set.
-/// \param[in] other Collection holding the arguments to syncronize values with.
+/// \param[in] other Collection holding the arguments to synchronize values with.
 /// \param[in] forceIfSizeOne If set to true and both our collection
 ///                and the other collection have a size of one, the arguments are
-///                always syncronized without checking if they have the same name.
+///                always synchronized without checking if they have the same name.
 
 RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, bool forceIfSizeOne)
 {
@@ -690,7 +690,7 @@ bool RooAbsCollection::remove(const RooAbsCollection& list, bool /*silent*/, boo
       _hashAssistedFind->erase(var);
     }
   }
-  
+
   if (matchByNameOnly && _ownCont) {
     std::set<const RooAbsArg*> toBeDeleted(markedItems.begin(), markedItems.end());
     for (auto arg : toBeDeleted) {
@@ -739,7 +739,7 @@ void RooAbsCollection::setAttribAll(const Text_t* name, bool value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a subset of the current collection, consisting only of those
-/// elements with the specified attribute set. The caller is responsibe
+/// elements with the specified attribute set. The caller is responsible
 /// for deleting the returned collection
 
 RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, bool value) const
@@ -945,7 +945,7 @@ double RooAbsCollection::getRealValue(const char* name, double defVal, bool verb
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set value of a RooAbsRealLValye stored in set with given name to newVal
+/// Set value of a RooAbsRealLValue stored in set with given name to newVal
 /// No error messages are printed unless the verbose flag is set
 
 bool RooAbsCollection::setRealValue(const char* name, double newVal, bool verbose)
@@ -1146,7 +1146,7 @@ void RooAbsCollection::printClassName(std::ostream& os) const
 /// Define default RooPrinable print options for given Print() flag string
 /// For inline printing only show value of objects, for default print show
 /// name,class name value and extras of each object. In verbose mode
-/// also add object adress, argument and title
+/// also add object address, argument and title
 
 Int_t RooAbsCollection::defaultPrintContents(Option_t* opt) const
 {

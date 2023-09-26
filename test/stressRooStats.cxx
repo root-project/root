@@ -8,6 +8,9 @@
 #include <iomanip>
 #include <cmath>
 
+// Math headers
+#include "Math/MinimizerOptions.h"
+
 // ROOT headers
 #include "TWebFile.h"
 #include "TSystem.h"
@@ -46,7 +49,7 @@ using namespace RooFit ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
 
-void StatusPrint(const Int_t id, const TString &title, const Int_t status, const Int_t lineWidth)
+void StatusPrint(const int id, const TString &title, const int status, const int lineWidth)
 {
    TString header = TString::Format("Test %d : %s ", id, title.Data());
    cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
@@ -55,9 +58,9 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
 ////////////////////////////////////////////////////////////////////////////////
 /// width of lines when printing test results
 
-Int_t stressRooStats(const char* refFile, bool writeRef, Int_t verbose, bool allTests, bool oneTest, Int_t testNumber, bool dryRun, bool doDump, bool doTreeStore)
+int stressRooStats(const char* refFile, bool writeRef, int verbose, bool allTests, bool oneTest, int testNumber, bool dryRun, bool doDump, bool doTreeStore)
 {
-   const Int_t lineWidth = 120;
+   const int lineWidth = 120;
 
    // Save memory directory location
    auto memDir = gDirectory;
@@ -199,7 +202,7 @@ Int_t stressRooStats(const char* refFile, bool writeRef, Int_t verbose, bool all
 
    int nFailed = 0;
    {
-      Int_t i;
+      int i;
       list<RooUnitTest*>::iterator iter;
 
       if (oneTest && (testNumber <= 0 || (UInt_t) testNumber > testList.size())) {
@@ -288,27 +291,27 @@ Int_t stressRooStats(const char* refFile, bool writeRef, Int_t verbose, bool all
 int main(int argc, const char *argv[])
 {
    bool doWrite     = false;
-   Int_t  verbose     =      0;
+   int  verbose     =      0;
    bool allTests    = false;
    bool oneTest     = false;
-   Int_t testNumber   =      0;
+   int testNumber   =      0;
    bool dryRun      = false;
    bool doDump      = false;
    bool doTreeStore = false;
-   std::string batchMode = "off";
+   auto backend = RooFit::EvalBackend::Legacy();
 
    //string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
    string refFileName = "stressRooStats_ref.root" ;
    string minimizerName = "Minuit";
 
    // Parse command line arguments
-   for (Int_t i = 1 ;  i < argc ; i++) {
+   for (int i = 1 ;  i < argc ; i++) {
       string arg = argv[i] ;
 
       if (arg=="-b") {
-         std::string mode = argv[i+1];
-         batchMode = mode;
-         std::cout << "stressRooStats: BatchMode set to " << mode << std::endl;
+         std::string mode = argv[++i];
+         backend = RooFit::EvalBackend(mode);
+         std::cout << "stressRooStats: NLL evaluation backend set to " << mode << std::endl;
       } else if (arg == "-f") {
          cout << "stressRooStats: using reference file " << argv[i + 1] << endl ;
          refFileName = argv[++i] ;
@@ -346,20 +349,21 @@ int main(int argc, const char *argv[])
       } else if (arg == "-c") {
          cout << "stressRooStats: dumping comparison file for failed tests " << endl;
          doDump = true;
-      } else if (arg == "-h") {
-         cout << "usage: stressRooStats [ options ] " << endl;
-         cout << "" << endl;
-         cout << "       -f <file> : use given reference file instead of default (" << refFileName << ")" << endl;
-         cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl;
-         cout << "       -n N      : only run test with sequential number N" << endl;
-         cout << "       -a        : run full suite of tests (default is basic suite); this overrides the -n single test option" << endl;
-         cout << "       -c        : dump file stressRooStats_DEBUG.root to which results of both current result and reference for each failed test are written" << endl;
-         cout << "       -mc       : memory check mode, no regression test are performed. Set this flag when running with valgrind" << endl;
-         cout << "     -min <name> : minimizer name (default is Minuit2_ if available" << endl;
-         cout << "       -vs       : use vector-based storage for all datasets (default is tree-based storage)" << endl;
-         cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl;
-         cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
-         cout << " " << endl ;
+      } else if (arg == "-h" || arg == "--help") {
+         cout << R"(usage: stressRooStats [ options ]
+
+       -b <mode>   : Perform every fit in the tests with the EvalBackend(<mode>) command argument, where <mode> is a string
+       -f <file>   : use given reference file instead of default ("stressRooStats_ref.root")
+       -w          : write reference file, instead of reading file and running comparison tests
+       -n N        : only run test with sequential number N
+       -a          : run full suite of tests (default is basic suite); this overrides the -n single test option
+       -c          : dump file stressRooStats_DEBUG.root to which results of both current result and reference for each failed test are written
+       -mc         : memory check mode, no regression test are performed. Set this flag when running with valgrind
+       -min <name> : minimizer name (default is Minuit, not Minuit2)
+       -vs         : use vector-based storage for all datasets (default is tree-based storage)
+       -v/-vv      : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)
+       -d N        : set ROOT gDebug flag to N
+)";
          return 0 ;
       }
 
@@ -380,18 +384,10 @@ int main(int argc, const char *argv[])
 //    }
 
    // set minimizer
-    // use Minut2 if available
-   // check in case of Minuit2 and set Minuit in case we cannot use it
-   if (minimizerName == "Minuit2") {
-      int prec = gErrorIgnoreLevel;
-      gErrorIgnoreLevel = kFatal;
-      if (gSystem->Load("libMinuit2") < 0) minimizerName = "Minuit";
-      gErrorIgnoreLevel=prec;
-   }
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName.c_str());
 
-   // set default BatchMode backend
-   RooFit::Experimental::defaultBatchMode() = batchMode;
+   // set default NLL backend
+   RooFit::EvalBackend::defaultValue() = backend.value();
 
    gBenchmark = new TBenchmark();
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
@@ -399,17 +395,20 @@ int main(int argc, const char *argv[])
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressRooStats()
+int stressRooStats()
 {
    bool doWrite     = false;
-   Int_t  verbose     =      0;
+   int  verbose     =      0;
    bool allTests    = false;
    bool oneTest     = false;
-   Int_t testNumber   =      0;
+   int testNumber   =      0;
    bool dryRun      = false;
    bool doDump      = false;
    bool doTreeStore = false;
    string refFileName = "stressRooStats_ref.root";
+
+   // in interpreted mode, the minimizer is hardcoded to Minuit 1
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit");
 
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }

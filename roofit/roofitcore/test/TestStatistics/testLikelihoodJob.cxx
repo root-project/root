@@ -136,12 +136,12 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1DTwice)
 
 TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
 {
+   using namespace RooFit;
    unsigned int N = 4;
 
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts =
-      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, EvalBackend::Legacy());
+   likelihood = TestStatistics::buildLikelihood(pdf, data.get());
+   auto nll_ts = LikelihoodWrapper::create(TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -216,7 +216,7 @@ TEST_F(LikelihoodJobTest, SimBinned)
    w.pdf("model_A")->setAttribute("BinnedLikelihood");
    w.pdf("model_B")->setAttribute("BinnedLikelihood");
 
-   // Construct simulatenous pdf
+   // Construct simultaneous pdf
    w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
 
    // Construct dataset
@@ -383,7 +383,7 @@ protected:
       w.factory("PROD::model_A(model_phys_A,model_subs_A)");
       w.factory("PROD::model_B(model_phys_B,model_subs_B)");
 
-      // Construct simulatenous pdf
+      // Construct simultaneous pdf
       w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
 
       pdf = w.pdf("model");
@@ -457,12 +457,12 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
 {
    unsigned int N = 4;
 
-   bool batch_mode = true;
+   auto backend = RooFit::EvalBackend::Cpu();
 
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, batch_mode);
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, backend);
    auto nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.BatchMode(RooFit::BatchModeOption::Cpu).build();
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.EvalBackend(backend).build();
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 

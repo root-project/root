@@ -6,6 +6,8 @@
 #include "RooRandom.h"
 #include "RooTrace.h"
 
+#include "Math/MinimizerOptions.h"
+
 #include "TWebFile.h"
 #include "TSystem.h"
 #include "TString.h"
@@ -31,19 +33,19 @@ using namespace RooFit ;
 //                                                                           //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
-Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t oneTest, bool dryRun) ;
+int stressRooFit(const char* refFile, bool writeRef, int doVerbose, int oneTest, bool dryRun) ;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
 
-void StatusPrint(Int_t id,const TString &title,Int_t status)
+void StatusPrint(int id,const TString &title,int status)
 {
-  const Int_t kMAX = 65;
+  const int kMAX = 65;
   Char_t number[4];
   snprintf(number, 4, "%2d", id);
   TString header = TString("Test ")+number+" : "+title;
-  const Int_t nch = header.Length();
-  for (Int_t i = nch; i < kMAX; i++) header += '.';
+  const int nch = header.Length();
+  for (int i = nch; i < kMAX; i++) header += '.';
   cout << header << (status>0 ? "OK" : (status<0 ? "SKIPPED" : "FAILED")) << endl;
 }
 
@@ -52,9 +54,9 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t oneTest, bool dryRun, bool doDump, bool doTreeStore)
+int stressRooFit(const char* refFile, bool writeRef, int doVerbose, int oneTest, bool dryRun, bool doDump, bool doTreeStore)
 {
-  Int_t retVal = 0;
+  int retVal = 0;
   // Save memory directory location
   RooUnitTest::setMemDir(gDirectory) ;
 
@@ -168,13 +170,13 @@ Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t on
 
   gBenchmark->Start("StressRooFit");
 
-  Int_t i(1) ;
+  int i(1) ;
   for (list<RooUnitTest*>::iterator iter = testList.begin () ; iter != testList.end() ; ++iter) {
     if (oneTest<0 || oneTest==i) {
       if (doDump) {
          (*iter)->setDebug(true) ;
       }
-      Int_t status = (*iter)->isTestAvailable()?(*iter)->runTest():-1;
+      int status = (*iter)->isTestAvailable()?(*iter)->runTest():-1;
       StatusPrint( i,(*iter)->GetName(), status);
       // increment retVal for every failed test
       if (!status) ++retVal;
@@ -241,97 +243,81 @@ Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t on
 int main(int argc,const char *argv[])
 {
   bool doWrite     = false ;
-  Int_t doVerbose    = 0 ;
-  Int_t oneTest      = -1 ;
-  Int_t dryRun       = false ;
+  int doVerbose    = 0 ;
+  int oneTest      = -1 ;
+  int dryRun       = false ;
   bool doDump      = false ;
   bool doTreeStore = false ;
-  std::string batchMode = "off";
+  auto backend = RooFit::EvalBackend::Legacy();
 
   //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
   string refFileName = "stressRooFit_ref.root" ;
+  string minimizerName = "Minuit";
+
+  auto verbosityOptionErrorMsg = "Multiple verbosity-related options have been passed to stressRooFit! The options -v, -vv, and -q are mutually exclusive.";
 
   // Parse command line arguments
-  for (Int_t i=1 ;  i<argc ; i++) {
+  for (int i=1 ;  i<argc ; i++) {
     string arg = argv[i] ;
 
     if (arg=="-b") {
-      string mode = argv[i+1];
-      batchMode = mode;
-      cout << "stressRooFit: BatchMode set to " << mode << endl;
-    }
-
-    if (arg=="-f") {
+      string mode = argv[++i];
+      backend = RooFit::EvalBackend(mode);
+      cout << "stressRooFit: NLL evaluation backend set to " << mode << endl;
+    } else if (arg=="-f") {
       cout << "stressRooFit: using reference file " << argv[i+1] << endl ;
       refFileName = argv[++i] ;
-    }
-
-    if (arg=="-w") {
+    } else if (arg=="-w") {
       cout << "stressRooFit: running in writing mode to updating reference file" << endl ;
       doWrite = true ;
-    }
-
-    if (arg=="-mc") {
+    } else if (arg=="-mc") {
       cout << "stressRooFit: running in memcheck mode, no regression tests are performed" << endl ;
       dryRun=true ;
-    }
-
-    if (arg=="-ts") {
+    } else if (arg=="-ts") {
       cout << "stressRooFit: setting tree-based storage for datasets" << endl ;
       doTreeStore=true ;
-    }
-
-    auto verbosityOptionErrorMsg = std::string("Multiple verbosity-related options have been passed to stressRooFit! ")
-                                   + "The options -v, -vv, and -q are mutually exclusive.";
-
-    if (arg=="-v") {
+    } else if (arg == "-min" || arg == "-minim") {
+         cout << "stressRooFit: running using minimizer " << argv[i +1]  << endl;
+         minimizerName = argv[++i] ;
+    } else if (arg=="-v") {
       cout << "stressRooFit: running in verbose mode" << endl ;
       if(doVerbose != 0) throw std::runtime_error(verbosityOptionErrorMsg);
       doVerbose = 1 ;
-    }
-
-    if (arg=="-vv") {
+    } else if (arg=="-vv") {
       cout << "stressRooFit: running in very verbose mode" << endl ;
       if(doVerbose != 0) throw std::runtime_error(verbosityOptionErrorMsg);
       doVerbose = 2 ;
-    }
-
-    if (arg=="-q") {
+    } else if (arg=="-q") {
       cout << "stressRooFit: running in quiet mode" << endl ;
       if(doVerbose != 0) throw std::runtime_error(verbosityOptionErrorMsg);
       doVerbose = -1 ;
-    }
-
-    if (arg=="-n") {
+    } else if (arg=="-n") {
       cout << "stressRooFit: running single test " << argv[i+1] << endl ;
       oneTest = atoi(argv[++i]) ;
-    }
-
-    if (arg=="-d") {
+    } else if (arg=="-d") {
       cout << "stressRooFit: setting gDebug to " << argv[i+1] << endl ;
       gDebug = atoi(argv[++i]) ;
-    }
-
-    if (arg=="-c") {
+    } else if (arg=="-c") {
       cout << "stressRooFit: dumping comparison file for failed tests " << endl ;
       doDump=true ;
     }
 
     if (arg=="-h" || arg == "--help") {
-      cout << "usage: stressRooFit [ options ] " << endl ;
-      cout << "" << endl ;
-      cout << "       -b <mode> : Perform every fit in the tests with the BatchMode(<mode>) command argument, where <mode> is a string" << endl ;
-      cout << "       -f <file> : use given reference file instead of default (" <<  refFileName << ")" << endl ;
-      cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl ;
-      cout << " " << endl ;
-      cout << "       -n N      : Only run test with sequential number N instead of full suite of tests" << endl ;
-      cout << "       -c        : dump file stressRooFit_DEBUG.root to which results of both current result and reference for each failed test are written" << endl ;
-      cout << "       -mc       : memory check mode, no regression test are performed. Set this flag when running with valgrind" << endl ;
-      cout << "       -vs       : Use vector-based storage for all datasets (default is tree-based storage)" << endl ;
-      cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl ;
-      cout << "       -q        : quiet mode where errors are not logged" << endl ;
-      cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
-      cout << " " << endl ;
+      cout << R"(usage: stressRooFit [ options ]
+
+       -b <mode>   : Perform every fit in the tests with the EvalBackend(<mode>) command argument, where <mode> is a string
+       -f <file>   : use given reference file instead of default ("stressRooFit_ref.root")
+       -w          : write reference file, instead of reading file and running comparison tests
+
+       -n N        : Only run test with sequential number N instead of full suite of tests
+       -c          : dump file stressRooFit_DEBUG.root to which results of both current result and reference for each failed test are written
+       -mc         : memory check mode, no regression test are performed. Set this flag when running with valgrind
+       -min <name> : minimizer name (default is Minuit, not Minuit2)
+       -vs         : Use vector-based storage for all datasets (default is tree-based storage)
+       -v/-vv      : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)
+       -q          : quiet mode where errors are not logged
+       -d N        : set ROOT gDebug flag to N
+)";
       return 0 ;
     }
 
@@ -352,27 +338,33 @@ int main(int argc,const char *argv[])
     cout << "stressRooFit: WARNING running in write mode, but reference file is web file, writing local file instead: " << refFileName << endl ;
   }
 
+  // set minimizer
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName.c_str());
+
   // set default BatchMode backend
-  RooFit::Experimental::defaultBatchMode() = batchMode;
+  RooFit::EvalBackend::defaultValue() = backend.value();
 
   gBenchmark = new TBenchmark();
-  Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
+  int retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
   return retVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressRooFit()
+int stressRooFit()
 {
    bool doWrite     = false ;
-   Int_t doVerbose    = 0 ;
-   Int_t oneTest      = -1 ;
-   Int_t dryRun       = false ;
+   int doVerbose    = 0 ;
+   int oneTest      = -1 ;
+   int dryRun       = false ;
    bool doDump      = false ;
    bool doTreeStore = false ;
-
    //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
    string refFileName = "stressRooFit_ref.root" ;
+
+   // in interpreted mode, the minimizer is hardcoded to Minuit 1
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit");
+
    return stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
 }
 

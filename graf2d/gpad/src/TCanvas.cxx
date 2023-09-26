@@ -162,6 +162,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    fSelectedY        = 0;
    fRetained         = kTRUE;
    fDrawn            = kFALSE;
+   fUpdated          = kFALSE;
    fSelected         = nullptr;
    fClickSelected    = nullptr;
    fSelectedPad      = nullptr;
@@ -574,6 +575,7 @@ void TCanvas::Init()
    fEventY          = -1;
    fContextMenu     = nullptr;
    fDrawn           = kFALSE;
+   fUpdated          = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -858,7 +860,12 @@ void TCanvas::Draw(Option_t *)
 
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
    if (old == this) {
-      Paint();
+      if (IsWeb()) {
+         Modified();
+         UpdateAsync();
+      } else {
+         Paint();
+      }
       return;
    }
    if (old) { gROOT->GetListOfCanvases()->Remove(old); delete old;}
@@ -2477,6 +2484,8 @@ extern "C" void ROOT_TCanvas_Update(void* TheCanvas) {
 
 void TCanvas::Update()
 {
+   fUpdated = kTRUE;
+
    if (fUpdating) return;
 
    if (fPixmapID == -1) return;
@@ -2531,6 +2540,8 @@ void TCanvas::Update()
 
 void TCanvas::UpdateAsync()
 {
+   fUpdated = kTRUE;
+
    if (IsWeb())
       fCanvasImp->PerformUpdate(kTRUE);
    else
@@ -2562,7 +2573,12 @@ void TCanvas::SetGrayscale(Bool_t set /*= kTRUE*/)
 {
    if (IsGrayscale() == set) return;
    SetBit(kIsGrayscale, set);
-   Paint(); // update canvas and all sub-pads, unconditionally!
+   if (IsWeb()) {
+      Modified();
+      UpdateAsync();
+   } else {
+      Paint(); // update canvas and all sub-pads, unconditionally!
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

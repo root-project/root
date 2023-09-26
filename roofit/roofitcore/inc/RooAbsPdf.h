@@ -152,67 +152,17 @@ public:
   void setGeneratorConfig() ;
   void setGeneratorConfig(const RooNumGenConfig& config) ;
 
-  // -log(L) fits to binned and unbinned data
-  virtual RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, const RooLinkedList& cmdList={}) ;
-  /// Takes an arbitrary number of RooCmdArg command options and calls
-  /// RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList).
-  template <typename... Args>
-  RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, CmdArgs_t const&... cmdArgs)
   {
-    return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+    return RooFit::Detail::owningPtr(fitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
 
-  /// Configuration struct for RooAbsPdf::minimizeNLL with all the default
-  //values that also should be taked as the default values for
-  //RooAbsPdf::fitTo.
-  struct MinimizerConfig {
-      double recoverFromNaN = 10.;
-      int optConst = 2;
-      int verbose = 0;
-      int doSave = 0;
-      int doTimer = 0;
-      int printLevel = 1;
-      int strat = 1;
-      int initHesse = 0;
-      int hesse = 1;
-      int minos = 0;
-      int numee = 10;
-      int doEEWall = 1;
-      int doWarn = 1;
-      int doSumW2 = -1;
-      int doAsymptotic = -1;
-      int maxCalls = -1;
-      int doOffset = -1;
-      int parallelize = 0;
-      bool enableParallelGradient = true;
-      bool enableParallelDescent = false;
-      bool timingAnalysis = false;
-      const RooArgSet* minosSet = nullptr;
-      std::string minType;
-      std::string minAlg = "minuit";
-  };
-  std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
-
-  virtual RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
-  /// Takes an arbitrary number of RooCmdArg command options and calls
-  /// RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList).
-  template <typename... Args>
-  RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  template <typename... CmdArgs_t>
+  RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, CmdArgs_t const&... cmdArgs)
   {
-    return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+    return RooFit::Detail::owningPtr(createNLLImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
-
-  // Chi^2 fits to histograms
-  using RooAbsReal::chi2FitTo ;
-  using RooAbsReal::createChi2 ;
-  RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
-  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
-             const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
-             const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) override ;
-
-  // Chi^2 fits to X-Y datasets
-  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
-
 
   // Constraint management
   virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/,
@@ -278,7 +228,7 @@ public:
   /// Return expected number of events to be used in calculation of extended
   /// likelihood. This function should not be overridden, as it just redirects
   /// to the actual virtual function but takes a RooArgSet reference instead of
-  /// pointer (\see expectedEvents(const RooArgSet*) const).
+  /// pointer. \see expectedEvents(const RooArgSet*) const
   double expectedEvents(const RooArgSet& nset) const {
     return expectedEvents(&nset) ;
   }
@@ -340,6 +290,9 @@ private:
 
 protected:
 
+  virtual std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData& data, const RooLinkedList& cmdList);
+  virtual std::unique_ptr<RooFitResult> fitToImpl(RooAbsData& data, const RooLinkedList& cmdList);
+
   /// Checks if `normSet` is the currently active normalization set of this
   /// PDF, meaning is exactly the same object as the one the `_normSet` member
   /// points to (or both are `nullptr`).
@@ -381,7 +334,7 @@ protected:
 
   mutable Int_t _errorCount ;        ///< Number of errors remaining to print
   mutable Int_t _traceCount ;        ///< Number of traces remaining to print
-  mutable Int_t _negCount ;          ///< Number of negative probablities remaining to print
+  mutable Int_t _negCount ;          ///< Number of negative probabilities remaining to print
 
   bool _selectComp ;               ///< Component selection flag for RooAbsPdf::plotCompOn
 
@@ -393,8 +346,9 @@ protected:
 private:
   mutable RooFit::UniqueId<RooArgSet>::Value_t _normSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<! Unique ID of the currently-active normalization set
 
-  int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
-  int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal & nll) const;
+  friend class RooAbsReal;
+  friend class RooChi2Var;
+  bool interpretExtendedCmdArg(int extendedCmdArg) const;
 
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };

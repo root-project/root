@@ -51,13 +51,13 @@ inline void writeAxis(JSONNode &axis, RooRealVar const &obs)
       axis["min"] << obs.getMin();
       axis["max"] << obs.getMax();
    } else {
-      auto &bounds = axis["bounds"];
-      bounds.set_seq();
+      auto &edges = axis["edges"];
+      edges.set_seq();
       double val = binning.binLow(0);
-      bounds.append_child() << val;
+      edges.append_child() << val;
       for (int i = 0; i < binning.numBins(); ++i) {
          val = binning.binHigh(i);
-         bounds.append_child() << val;
+         edges.append_child() << val;
       }
    }
 }
@@ -795,7 +795,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             const int i = bin.first;
             const double relerr_tot = bin.second;
             const double count = sample.hist[i - 1];
-            // this reconstruction is inherently unprecise, so we truncate it at some decimal places to make sure that
+            // this reconstruction is inherently imprecise, so we truncate it at some decimal places to make sure that
             // we don't carry around too many useless digits
             sample.histError[i - 1] = round_prec(relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count, 7);
          }

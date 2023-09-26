@@ -71,6 +71,9 @@ def main():
         **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
     }
 
+    if args.binaries:
+        options_dict = remove_gpl_options(options_dict)
+
     options = build_utils.cmake_options_from_dict(options_dict)
 
     if WINDOWS:
@@ -113,6 +116,9 @@ def main():
     if not pull_request and not args.incremental and not args.coverage:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
+    if args.binaries:
+        create_binaries(args.buildtype)
+
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
     if testing:
@@ -135,6 +141,7 @@ def handle_test_failure(ctest_returncode):
     logloc = f'{WORKDIR}/build/Testing/Temporary/LastTestsFailed.log'
     if os.path.isfile(logloc):
         with open(logloc, 'r') as logf:
+            print("TEST FAILURES:")
             print(logf.read())
     else:
         print(f'Internal error: cannot find {logloc}\nAdding some debug output:')
@@ -157,6 +164,7 @@ def parse_args():
     parser.add_argument("--coverage",     default="false",   help="Create Coverage report in XML")
     parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
     parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
+    parser.add_argument("--binaries",     default="false",   help="Whether to create binary artifacts")
     parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
                         help="url to repository")
@@ -166,6 +174,7 @@ def parse_args():
     # Set argument to True if matched
     args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
     args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
+    args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
 
     if not args.base_ref:
         die(os.EX_USAGE, "base_ref not specified")
@@ -175,6 +184,13 @@ def parse_args():
 
 def print_trace():
     build_utils.log.print()
+
+def remove_gpl_options(options_dict: dict):
+    gpl_options = ['fftw3', 'mathmore', 'pythia6', 'pythia8', 'unuran']
+    for opt in gpl_options:
+        options_dict[opt] = 'off'
+    return options_dict
+
 
 @github_log_group("Clean up from previous runs")
 def cleanup_previous_build():
@@ -346,6 +362,17 @@ def build(options, buildtype):
     dump_requested_config(options)
 
     cmake_build(buildtype)
+
+
+@github_log_group("Create binary packages")
+def create_binaries(buildtype):
+    result = subprocess_with_log(f"""
+        cd '{WORKDIR}/build' && cpack --verbose -C ${buildtype}
+    """)
+
+    if result != 0:
+        die(result, "Failed to generate binary package")
+
 
 @github_log_group("Rebase")
 def rebase(base_ref, head_ref) -> None:

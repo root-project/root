@@ -23,7 +23,7 @@ Class RooDataWeightedAverage calculate a weighted
 average of a function or p.d.f given a dataset with observable
 values, i.e. DWA(f(x),D(x)) = sum_i f(x_i) where x_i is draw from
 D(i). This class is an implementation of RooAbsOptTestStatistics
-can make use of the optimization and parallization infrastructure
+can make use of the optimization and parallelization infrastructure
 of that base class. The main use of RooDataWeightedAverage is
 to calculate curves in RooPlots that are added with ProjWData()
 plot option.
@@ -94,7 +94,7 @@ RooDataWeightedAverage::~RooDataWeightedAverage()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return global normalization term by which raw (combined) test statistic should
-/// be defined to obtain final test statistic. For a data weighted avarage this
+/// be defined to obtain final test statistic. For a data weighted average this
 /// the sum of all weights
 
 double RooDataWeightedAverage::globalNormalization() const
@@ -110,8 +110,6 @@ double RooDataWeightedAverage::globalNormalization() const
 double RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
   double result(0) ;
-
-  _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,false) ;
 
   if (setNum()==0 && _showProgress) {
     ccoutP(Plotting) << "." ;
@@ -130,6 +128,3 @@ double RooDataWeightedAverage::evaluatePartition(std::size_t firstEvent, std::si
 
   return result  ;
 }
-
-
-

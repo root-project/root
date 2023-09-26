@@ -34,7 +34,7 @@
 ##  fit of these regions with different interpretations of the same model parameter results
 ##  in a number that is not easily interpreted.
 ##
-##  If both regions correct their interpretatin such that N_expected refers to the full range,
+##  If both regions correct their interpretation such that N_expected refers to the full range,
 ##  it is interpreted easily, and consistent in both regions.
 ##
 ##  This requires that the likelihood model is extended using RooAddPdf in the

@@ -86,6 +86,7 @@ enum Computer {
    DstD0BG,
    ExpPoly,
    Exponential,
+   ExponentialNeg,
    Gamma,
    GaussModelExpBasis,
    Gaussian,
@@ -93,6 +94,7 @@ enum Computer {
    Johnson,
    Landau,
    Lognormal,
+   LognormalStandard,
    NegativeLogarithms,
    NormalizedPdf,
    Novosibirsk,
@@ -149,9 +151,8 @@ public:
    }
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
-   virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weightSpan,
-                                     std::span<const double> weights, double weightSum,
-                                     std::span<const double> binVolumes) = 0;
+   virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weights,
+                                     std::span<const double> offsetProbas) = 0;
 
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
@@ -205,12 +206,12 @@ inline double reduceSum(Config cfg, InputArr input, size_t n)
    return dispatch->reduceSum(cfg, input, n);
 }
 
-inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std::span<const double> weightSpan,
-                                 std::span<const double> weights, double weightSum, std::span<const double> binVolumes)
+inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std::span<const double> weights,
+                                 std::span<const double> offsetProbas)
 {
    init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
-   return dispatch->reduceNLL(cfg, probas, weightSpan, weights, weightSum, binVolumes);
+   return dispatch->reduceNLL(cfg, probas, weights, offsetProbas);
 }
 
 } // End namespace RooBatchCompute

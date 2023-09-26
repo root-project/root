@@ -24,7 +24,7 @@
  * RooCustomizer supports two kinds of modifications:
  *
  * - replaceArg(leaf_arg, repl_arg):
- * Replaces each occurence of leaf_arg with repl_arg in the composite pdf.
+ * Replaces each occurrence of leaf_arg with repl_arg in the composite pdf.
  *
  * - splitArg(split_arg):
  * Build multiple clones of the same prototype. Each
@@ -341,7 +341,7 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace any occurence of arg 'orig' with arg 'subst'
+/// Replace any occurrence of arg 'orig' with arg 'subst'
 
 void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 {
@@ -598,7 +598,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     _cloneBranchList->add(clonedMasterBranches) ;
   }
 
-  // Reconnect cloned branches to each other and to cloned nodess
+  // Reconnect cloned branches to each other and to cloned nodes
   for (auto branch : clonedMasterBranches) {
     branch->redirectServers(clonedMasterBranches,false,true) ;
     branch->redirectServers(clonedMasterNodes,false,true) ;

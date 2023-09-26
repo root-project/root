@@ -75,11 +75,6 @@ if(IS_ABSOLUTE ${CMAKE_INSTALL_DATADIR})
 else()
   set(datadir ${prefix}/${CMAKE_INSTALL_DATADIR})
 endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_ELISPDIR})
-  set(elispdir ${CMAKE_INSTALL_ELISPDIR})
-else()
-  set(elispdir ${prefix}/${CMAKE_INSTALL_ELISPDIR})
-endif()
 if(IS_ABSOLUTE ${CMAKE_INSTALL_FONTDIR})
   set(ttffontdir ${CMAKE_INSTALL_FONTDIR})
 else()
@@ -424,6 +419,11 @@ if((tbb OR builtin_tbb) AND NOT MSVC)
   set(hastbb define)
 else()
   set(hastbb undef)
+endif()
+if(minuit2)
+  set(hasminuit2 define)
+else()
+  set(hasminuit2 undef)
 endif()
 
 set(uselz4 undef)
@@ -849,7 +849,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRE
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
 if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
   configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY NEWLINE_STYLE UNIX)
@@ -921,8 +920,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
-install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
 if(NOT gnuinstall)
   install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp

@@ -260,7 +260,7 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, double wgt1, double
 /// More details.
 /// \param[in] f The function to be plotted.
 /// \param[in] x The variable on the x-axis
-/// \param[in] xErrorFrac Size of the errror in x as a fraction of the bin width
+/// \param[in] xErrorFrac Size of the error in x as a fraction of the bin width
 /// \param[in] scaleFactor arbitrary scaling of the y-values
 /// \param[in] normVars variables over which to normalize
 /// \param[in] fr fit result

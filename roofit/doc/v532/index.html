@@ -10,7 +10,7 @@
     transparent to end-use cases 
  
     <ul>
-    <li><p> New implementation of RooFit data types. The implentation of data stored in RooDataSet and RooDataHist
+    <li><p> New implementation of RooFit data types. The implementation of data stored in RooDataSet and RooDataHist
          was historically handled by ROOT TTrees (though class RooTreeDataStore). The default storage type
          has now been changed to class RooVectorDataStore which stores the information in STL arrays. Existing
          datasets based on trees can be read in transparently, and are converted to vector form in the 
@@ -20,7 +20,7 @@
          faster than for TTrees), 2) ability to rewrite columns on the fly. The first advantage is important
          for the existing constant-term precalculation optimization in roofit likelihoods as these are now
          also stored in vectors rather than trees. The faster access speed of vectors make that the constant
-         term optimization inside likelihoods results in a larger speed increase. This is particulatly noticable in pdfs with
+         term optimization inside likelihoods results in a larger speed increase. This is particulatly noticeable in pdfs with
          many constant expressions from pdfs that were moderately fast to begin with (e.g. RooHistPdf).
          The second advantages allows new types of algorithmic likelihood optimization in RooFit detailed below.
 </p></li>
@@ -33,7 +33,7 @@
 </p><p>
          For composite pdfs a further optimization has been included: for a M(x,a,b) = f*F(x,a)+(1-f)G(x,b) 
          it is e.g. not needed to recalculate G(x,b) if only parameter a has changed w.r.t to the previous likelihood
-         calculation. This optimization is now implemented by extending the value caching orignally designed
+         calculation. This optimization is now implemented by extending the value caching originally designed
          for constant terms to be usable for non-constant terms, with a check executed at the beginning of each
          likelihood evaluation if selected columns need to be updated because parameters have changed. The speed gain
          of this optimization depends much on the structure of the pdf: in models with many free parameters most of the
@@ -73,7 +73,7 @@
          but it is also possible to generate other component pdfs forcibly binned by adding GenBinned(tagname)
          to generate(). In that case all component pdfs labeled with pdf->setAttribute(tagname) will be generated
          binned. To generate all component binned, the shorthand method AllBinned() can be used. All binned
-         datasets made by generate are repesented as weighted unbinned datasets (of type RooDataSet) rather
+         datasets made by generate are represented as weighted unbinned datasets (of type RooDataSet) rather
          than binned datasets of type RooDataHist so that mixed binned/unbinned data is always represented
          through a uniform interface.
 </li>
@@ -102,7 +102,7 @@
    <li>The Asimov data set is generated with the utility function <tt>AsymptoticCalculator::MakeAsimovData</tt> and then
    it is used to evaluate the likelihood. 
    </li>
-<li>This class implements the HypoTestCalculatorGeneric interface and can be used as an alternative Hypotesis test
+<li>This class implements the HypoTestCalculatorGeneric interface and can be used as an alternative Hypothesis test
    calculator in the HypoTestInverter class. It can then plugged in the HypoTestInverter for computing asymptotic CLs and CLs+b
    limits. In this way the limits will be computed by just performing a fit for each test parameter value and without
    generating any toys.  

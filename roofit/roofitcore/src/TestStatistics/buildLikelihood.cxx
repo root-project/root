@@ -152,7 +152,7 @@ std::unique_ptr<RooSubsidiaryL> buildSubsidiaryL(RooAbsPdf *pdf, RooAbsData *dat
    // Include constraints, if any, in likelihood
    if (!allConstraints.empty()) {
 
-      oocoutI(nullptr, Minimization) << " Including the following contraint terms in minimization: " << allConstraints
+      oocoutI(nullptr, Minimization) << " Including the following constraint terms in minimization: " << allConstraints
                                      << std::endl;
       if (!global_observables.empty()) {
          oocoutI(nullptr, Minimization) << "The following global observables have been defined: " << global_observables
@@ -272,7 +272,7 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
             components.push_back(std::make_unique<RooBinnedL>((binnedPdf ? binnedPdf : component_pdf), dset));
          } else {
             components.push_back(
-               std::make_unique<RooUnbinnedL>((binnedPdf ? binnedPdf : component_pdf), dset, _extended, _batchMode));
+               std::make_unique<RooUnbinnedL>((binnedPdf ? binnedPdf : component_pdf), dset, _extended, _evalBackend));
          }
          //         }
          components.back()->setSimCount(N_components);
@@ -331,7 +331,7 @@ std::unique_ptr<RooAbsL> NLLFactory::build()
    } else if (auto binnedPdf = getBinnedPdf(&_pdf)) {
       likelihood = std::make_unique<RooBinnedL>(binnedPdf, &_data);
    } else { // unbinned
-      likelihood = std::make_unique<RooUnbinnedL>(&_pdf, &_data, _extended, _batchMode);
+      likelihood = std::make_unique<RooUnbinnedL>(&_pdf, &_data, _extended, _evalBackend);
    }
 
    auto subsidiary = buildSubsidiaryL(&_pdf, &_data, _constrainedParameters, _externalConstraints, _globalObservables,
@@ -396,9 +396,9 @@ NLLFactory &NLLFactory::GlobalObservablesTag(const char *globalObservablesTag)
    return *this;
 }
 
-NLLFactory &NLLFactory::BatchMode(RooFit::BatchModeOption batchMode)
+NLLFactory &NLLFactory::EvalBackend(RooFit::EvalBackend evalBackend)
 {
-   _batchMode = batchMode;
+   _evalBackend = evalBackend;
    return *this;
 }
 

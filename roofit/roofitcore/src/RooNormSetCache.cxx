@@ -26,7 +26,7 @@ RooArgSets with the same contents may be passed to an object that
 caches intermediate results dependent on the normalization/integration set
 To avoid unnecessary cache faulting, This class tracks all instances
 with the same contents and reports to the owner if the present nset/iset
-is truely different from the current reference. Class RooNormSet only
+is truly different from the current reference. Class RooNormSet only
 evaluates each RooArgSet pointer once, it therefore assumes that
 RooArgSets with normalization and/or integration sets are not changes
 during their lifetime.

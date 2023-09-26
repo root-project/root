@@ -77,7 +77,7 @@
 /// and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
 /// would be ~1.35 once the cross-section is far enough away from 0 that it is essentially
 /// unaffected by the boundary.  As one reaches the last points in the scan, the
-/// theshold starts to get artificially high.  This is because the range of the parameter in
+/// threshold starts to get artificially high.  This is because the range of the parameter in
 /// the fit is the same as the range in the scan.  In the future, these should be independently
 /// controlled, but they are not now.  As a result the ~50% of pseudo-experiments that have an
 /// upward fluctuation end up with muhat = muMax.  Because of this, the upper range of the

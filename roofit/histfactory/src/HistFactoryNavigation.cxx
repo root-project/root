@@ -488,7 +488,7 @@ namespace RooStats {
 
 
     RooAbsReal* HistFactoryNavigation::SampleFunction(const std::string& channel, const std::string& sample){
-      // Return the function object pointer cooresponding
+      // Return the function object pointer corresponding
       // to a particular sample in a particular channel
 
       std::map< std::string, std::map< std::string, RooAbsReal*> >::iterator channel_itr;
@@ -748,11 +748,6 @@ namespace RooStats {
       // Get the pdf from the ModelConfig
       //RooAbsPdf* modelPdf = mc->GetPdf();
       //RooArgSet* observables = mc->GetObservables();
-
-      // Create vectors to hold the channel pdf's
-      // as well as the set of observables for each channel
-      //std::map< std::string, RooAbsPdf* >  channelPdfMap;
-      //std::map< std::string, RooArgSet* >  channelObservMap;
 
       // Check if it is a simultaneous pdf or not
       // (if it's an individual channel, it won't be, if it's

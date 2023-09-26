@@ -21,7 +21,7 @@ ROOT.gROOT.SetBatch(True)
 observablename = "pTV"
 obsvar = ROOT.RooRealVar(observablename, "observable of pTV", 10, 600)
 
-# Setup three EFT coefficent and constant SM modifier
+# Setup three EFT coefficient and constant SM modifier
 kSM = ROOT.RooRealVar("kSM", "sm modifier", 1.0)
 cHq3 = ROOT.RooRealVar("cHq3", "EFT modifier", -10.0, 10.0)
 cHq3.setAttribute("NewPhysics", True)

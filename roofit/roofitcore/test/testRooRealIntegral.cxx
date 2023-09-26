@@ -226,7 +226,7 @@ TEST(RooRealIntegral, UseCloneAsIntegrationVariable2)
 /// factors. Covers GitHub #11476 and JIRA issue ROOT-9436.
 ///
 /// Disabled for now because the fix to the bug that is covered by this unit
-/// test caused a severe performance problem and was reverted. The performace
+/// test caused a severe performance problem and was reverted. The performance
 /// regression is covered by another unit test in this file, called
 /// "ProjectConditional".
 TEST(RooRealIntegral, DISABLED_Issue11476)

@@ -41,8 +41,9 @@ for branch in tree.GetListOfBranches():
 dataloader.AddTarget('fvalue')
 
 dataloader.AddRegressionTree(tree, 1.0)
+#use only 1000 events since evaluation is very slow (especially on MacOS). Increase it to get meaningful results
 dataloader.PrepareTrainingAndTestTree(TCut(''),
-        'nTrain_Regression=4000:SplitMode=Random:NormMode=NumEvents:!V')
+        'nTrain_Regression=1000:SplitMode=Random:NormMode=NumEvents:!V')
 
 # Generate model
 

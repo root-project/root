@@ -2,20 +2,20 @@
 // Authors: Stephan Hageboeck, CERN 10/2020
 //          Jonas Rembser, CERN 10/2022
 
-#include <RooAddPdf.h>
 #include <RooBinning.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooExtendPdf.h>
 #include <RooFitResult.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooNLLVar.h>
-#include <RooRandom.h>
 #include <RooPlot.h>
 #include <RooPolyVar.h>
 #include <RooProdPdf.h>
+#include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
@@ -52,18 +52,22 @@ std::unique_ptr<RooDataHist> generateBinnedAsimov(RooAbsPdf const &pdf, RooRealV
 
 } // namespace
 
-class TestStatisticTest : public testing::TestWithParam<std::tuple<std::string>> {
+class TestStatisticTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
+public:
+   TestStatisticTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
+private:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(1337ul);
-      _batchMode = std::get<0>(GetParam());
+      _evalBackend = std::get<0>(GetParam());
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
-   std::string _batchMode;
+   RooFit::EvalBackend _evalBackend;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
@@ -93,13 +97,12 @@ TEST_P(TestStatisticTest, IntegrateBins)
    dataS->plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false)));
+   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(*dataS, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit2(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), IntegrateBins(1.E-3)));
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -143,12 +146,12 @@ TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(_batchMode), SumW2Error(false)));
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"), _evalBackend, SumW2Error(false)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"), Range("range"), NormRange("range"));
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit2(pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"),
-                                                BatchMode(_batchMode), SumW2Error(false), IntegrateBins(1.E-3)));
+                                                _evalBackend, SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"), Range("range"), NormRange("range"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -195,12 +198,12 @@ TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), Optimize(0)));
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false), Optimize(0)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), BatchMode(_batchMode),
-                                                SumW2Error(false), IntegrateBins(1.E-3)));
+   std::unique_ptr<RooFitResult> fit2(
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), _evalBackend, SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -242,13 +245,13 @@ TEST_P(TestStatisticTest, IntegrateBins_RooDataHist)
    a.setVal(3.);
    // Disable IntegrateBins forcefully
    std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), IntegrateBins(-1.)));
+      pdf.fitTo(*data, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false), IntegrateBins(-1.)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
    // Auto-enable IntegrateBins for all RooDataHists.
    std::unique_ptr<RooFitResult> fit2(
-      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), IntegrateBins(0.)));
+      pdf.fitTo(*data, Save(), PrintLevel(-1), _evalBackend, SumW2Error(false), IntegrateBins(0.)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -322,10 +325,11 @@ TEST(RooNLLVar, CopyRangedNLL)
 
    std::unique_ptr<RooDataSet> ds{model.generate(x, 20)};
 
-   // This bug is related to the implementation details of the old test statistics, so BatchMode is forced to be off
+   // This bug is related to the implementation details of the old test
+   // statistics, so the EvalBackend is forced to be Legacy
    using namespace RooFit;
-   std::unique_ptr<RooAbsReal> nll{model.createNLL(*ds, BatchMode("off"))};
-   std::unique_ptr<RooAbsReal> nllrange{model.createNLL(*ds, Range("fitrange"), BatchMode("off"))};
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*ds, EvalBackend::Legacy())};
+   std::unique_ptr<RooAbsReal> nllrange{model.createNLL(*ds, Range("fitrange"), EvalBackend::Legacy())};
 
    auto nllClone = std::make_unique<RooNLLVar>(static_cast<RooNLLVar &>(*nll));
    auto nllrangeClone = std::make_unique<RooNLLVar>(static_cast<RooNLLVar &>(*nllrange));
@@ -394,11 +398,15 @@ TEST(RooXYChi2Var, IntegrateLinearFunction)
    EXPECT_NEAR(getVal("b", fit2->floatParsFinal()), bTrue, getErr("b", fit2->floatParsFinal()));
 }
 
-class OffsetBinTest : public testing::TestWithParam<std::tuple<std::string, bool, bool, bool>> {
+class OffsetBinTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend, bool, bool, bool>> {
+public:
+   OffsetBinTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
+private:
    void SetUp() override
    {
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
-      _batchMode = std::get<0>(GetParam());
+      _evalBackend = std::get<0>(GetParam());
       _binned = std::get<1>(GetParam());
       _ext = std::get<2>(GetParam());
       _sumw2 = std::get<3>(GetParam());
@@ -407,7 +415,7 @@ class OffsetBinTest : public testing::TestWithParam<std::tuple<std::string, bool
    void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
-   std::string _batchMode;
+   RooFit::EvalBackend _evalBackend;
    bool _binned = false;
    bool _ext = false;
    bool _sumw2 = false;
@@ -456,12 +464,12 @@ TEST_P(OffsetBinTest, CrossCheck)
 
    // Create template PDF based on data
    RooHistPdf histPdf{"histPdf", "histPdf", x, *hist};
-   RooAddPdf extHistPdf("extHistPdf", "extHistPdf", histPdf, nEvents);
+   RooExtendPdf extHistPdf("extHistPdf", "extHistPdf", histPdf, nEvents);
 
    RooAbsData *fitData = _binned ? static_cast<RooAbsData *>(hist.get()) : static_cast<RooAbsData *>(data.get());
 
-   RealPtr nll0{extHistPdf.createNLL(*fitData, BatchMode(_batchMode), Extended(_ext))};
-   RealPtr nll1{extHistPdf.createNLL(*fitData, Offset("bin"), BatchMode(_batchMode), Extended(_ext))};
+   RealPtr nll0{extHistPdf.createNLL(*fitData, _evalBackend, Extended(_ext))};
+   RealPtr nll1{extHistPdf.createNLL(*fitData, Offset("bin"), _evalBackend, Extended(_ext))};
 
    if (_sumw2) {
       nll0->applyWeightSquared(true);
@@ -520,9 +528,9 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
 
    std::unique_ptr<RooDataHist> data{simPdf.generateBinned({x, cat}, nEvents)};
 
-   std::unique_ptr<RooAbsReal> realSumNll{realSumPdf.createNLL(*data, BatchMode(_batchMode))};
-   std::unique_ptr<RooAbsReal> prodNll{prodPdf.createNLL(*data, BatchMode(_batchMode))};
-   std::unique_ptr<RooAbsReal> simNll{simPdf.createNLL(*data, BatchMode(_batchMode))};
+   std::unique_ptr<RooAbsReal> realSumNll{realSumPdf.createNLL(*data, _evalBackend)};
+   std::unique_ptr<RooAbsReal> prodNll{prodPdf.createNLL(*data, _evalBackend)};
+   std::unique_ptr<RooAbsReal> simNll{simPdf.createNLL(*data, _evalBackend)};
 
    double realSumNllVal = realSumNll->getVal();
    double prodNllVal = prodNll->getVal();
@@ -535,25 +543,30 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
    EXPECT_DOUBLE_EQ(prodNllVal, simNllVal);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values("Off", "Cpu"),
+#ifdef R__HAS_CUDA
+#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu(), RooFit::EvalBackend::Cuda()
+#else
+#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()
+#endif
+
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
-                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
                             return ss.str();
                          });
 
-INSTANTIATE_TEST_SUITE_P(
-   RooNLLVar, OffsetBinTest,
-   testing::Combine(testing::Values("Off", "Cpu"), // BatchMode
-                    testing::Values(true),         // unbinned or binned (we don't support unbinned fits yet)
-                    testing::Values(false, true),  // extended fit
-                    testing::Values(false, true)   // use sumW2
-                    ),
-   [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
-      std::stringstream ss;
-      ss << "BatchMode" << std::get<0>(paramInfo.param);
-      ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
-      ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
-      ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
-      return ss.str();
-   });
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
+                         testing::Combine(testing::Values(EVAL_BACKENDS), // EvalBackend
+                                          testing::Values(false, true),   // unbinned or binned
+                                          testing::Values(false, true),   // extended fit
+                                          testing::Values(false, true)    // use sumW2
+                                          ),
+                         [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
+                            ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
+                            ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
+                            ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
+                            return ss.str();
+                         });

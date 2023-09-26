@@ -14,13 +14,13 @@
 #include <RooFitHS3/HistFactoryJSONTool.h>
 #include <RooFit/Detail/JSONInterface.h>
 
-#include "RooStats/HistFactory/Measurement.h"
-#include "RooStats/HistFactory/Channel.h"
-#include "RooStats/HistFactory/Sample.h"
+#include <RooStats/HistFactory/Measurement.h>
+#include <RooStats/HistFactory/Channel.h>
+#include <RooStats/HistFactory/Sample.h>
 
 #include "Domains.h"
 
-#include "TH1.h"
+#include <TH1.h>
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -47,10 +47,10 @@ inline void writeAxis(JSONNode &axis, const TAxis &ax)
       axis["min"] << ax.GetXmin();
       axis["max"] << ax.GetXmax();
    } else {
-      auto &bounds = axis["bounds"];
-      bounds.set_seq();
+      auto &edges = axis["edges"];
+      edges.set_seq();
       for (int i = 0; i <= ax.GetNbins(); ++i) {
-         bounds.append_child() << ax.GetBinUpEdge(i);
+         edges.append_child() << ax.GetBinUpEdge(i);
       }
    }
 }
@@ -321,7 +321,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &child1 = n.get("misc", "ROOT_internal", "combined_datas").set_map()["obsData"].set_map();
+   auto &child1 = n.get("misc", "ROOT_internal", "combined_datasets").set_map()["obsData"].set_map();
    auto &child2 = n.get("misc", "ROOT_internal", "combined_distributions").set_map()["simPdf"].set_map();
 
    child1["index_cat"] << "channelCat";

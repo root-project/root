@@ -21,6 +21,10 @@ if(cuda)
   list(APPEND EXTRA_LIBRARIES RooFitCuda)
 endif()
 
+if(roofit_multiprocess)
+  list(APPEND EXTRA_DEPENDENCIES Minuit2)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
@@ -247,6 +251,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/Buffers.cxx
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
+    src/FitHelpers.cxx
     src/ModelConfig.cxx
     src/NormalizationHelpers.cxx
     src/Roo1DTable.cxx
@@ -462,7 +467,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     "-writeEmptyRootPCM"
   LIBRARIES
     RooBatchCompute
-    RooFitCommon
     ${EXTRA_LIBRARIES}
   DEPENDENCIES
     Core
@@ -471,11 +475,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Matrix
     Tree
     Minuit
-    Minuit2
     RIO
     MathCore
     Foam
     Smatrix
+    ${EXTRA_DEPENDENCIES}
   LINKDEF
     inc/LinkDef.h
   ${EXTRA_DICT_OPTS}

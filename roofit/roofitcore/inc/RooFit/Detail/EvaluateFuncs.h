@@ -119,7 +119,7 @@ inline double flexibleInterp(unsigned int code, double low, double high, double 
       else
          return total + paramVal * (nominal - low);
    } else if (code == 1) {
-      // pice-wise log
+      // piece-wise log
       if (paramVal >= 0)
          return total * std::pow(high / nominal, +paramVal);
       else
@@ -221,11 +221,12 @@ piecewiseInterpolation(unsigned int code, double low, double high, double nomina
 
 inline double logNormalEvaluate(double x, double k, double m0)
 {
-   double ln_k = TMath::Abs(TMath::Log(k));
-   double ln_m0 = TMath::Log(m0);
+   return ROOT::Math::lognormal_pdf(x, std::log(m0), std::abs(std::log(k)));
+}
 
-   double ret = ROOT::Math::lognormal_pdf(x, ln_m0, ln_k);
-   return ret;
+inline double logNormalEvaluateStandard(double x, double sigma, double mu)
+{
+   return ROOT::Math::lognormal_pdf(x, mu, std::abs(sigma));
 }
 
 } // namespace EvaluateFuncs

@@ -63,28 +63,32 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 
 */
 
-#include "RooAddPdf.h"
+#include <RooAddPdf.h>
 
-#include "RooAddition.h"
-#include "RooRealSumFunc.h"
+#include <RooAddGenContext.h>
+#include <RooAddition.h>
+#include <RooBatchCompute.h>
+#include <RooDataSet.h>
+#include <RooGenericPdf.h>
+#include <RooGlobalFunc.h>
+#include <RooHelpers.h>
+#include <RooProduct.h>
+#include <RooRatio.h>
+#include <RooRealConstant.h>
+#include <RooRealProxy.h>
+#include <RooRealSumFunc.h>
+#include <RooRealSumPdf.h>
+#include <RooRealVar.h>
+#include <RooRecursiveFraction.h>
+
 #include "RooAddHelpers.h"
-#include "RooAddGenContext.h"
-#include "RooBatchCompute.h"
-#include "RooDataSet.h"
-#include "RooGlobalFunc.h"
-#include "RooRealProxy.h"
-#include "RooRealVar.h"
-#include "RooRealConstant.h"
-#include "RooRealSumPdf.h"
-#include "RooRecursiveFraction.h"
-#include "RooGenericPdf.h"
-#include "RooProduct.h"
-#include "RooRatio.h"
+
+#include <ROOT/StringUtils.hxx>
 
 #include <algorithm>
 #include <memory>
-#include <sstream>
 #include <set>
+#include <sstream>
 
 ClassImp(RooAddPdf);
 
@@ -100,7 +104,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
   _coefList("!coefficients","List of coefficients",this),
   _coefErrCount{_errorCount}
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -296,7 +300,7 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
 {
   _coefErrCount = _errorCount ;
   finalizeConstruction();
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -316,12 +320,53 @@ void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
     return ;
   }
 
+   // Also set an attribute with this information, which is the easiest way to
+  // preserve this in the JSON IO.
+  setStringAttribute("ref_coef_norm", RooHelpers::getColonSeparatedNameString(refCoefNorm, ',').c_str());
+
   _refCoefNorm.removeAll() ;
   _refCoefNorm.add(refCoefNorm) ;
 
   _projCacheMgr.reset() ;
 }
 
+const RooArgSet &RooAddPdf::getCoefNormalization() const
+{
+   materializeRefCoefNormFromAttribute();
+   return _refCoefNorm;
+}
+
+// For the JSON IO, we are not storing the _refCoefNorm directly. Instead, it
+// is stored by names in a string attribute. This function should be called
+// internally before _refCoefNorm is used to materialize it from the attribute
+// if necessary.
+void RooAddPdf::materializeRefCoefNormFromAttribute() const
+{
+   // _refCoefNorm was already materialized
+   if (!_refCoefNorm.empty())
+      return;
+
+   std::vector<std::string> names;
+   if (auto attrib = getStringAttribute("ref_coef_norm")) {
+      names = ROOT::Split(attrib, ",", /*skipEmpty=*/true);
+   } else {
+      return;
+   }
+
+   RooArgSet refCoefNorm;
+
+   RooArgSet serverSet;
+   RooHelpers::getSortedComputationGraph(*this, serverSet);
+   for (std::string const &name : names) {
+      if (RooAbsArg *arg = serverSet.find(name.c_str())) {
+         refCoefNorm.add(*arg);
+      } else {
+         throw std::runtime_error("Internal logic error in RooAddPdf::materializeRefCoefNormFromAttribute()");
+      }
+   }
+
+   const_cast<RooAddPdf *>(this)->fixCoefNormalization(refCoefNorm);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,13 +410,13 @@ AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* is
     return cache ;
   }
 
+  // Make sure _refCoefNorm is defined
+  materializeRefCoefNormFromAttribute();
+
   //Create new cache
   cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, _refCoefNorm,
                            _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
                            _verboseEval};
-  //std::cout << std::endl;
-  //cache->print();
-  //std::cout << std::endl;
 
   _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(normRange())) ;
 
@@ -415,6 +460,9 @@ std::pair<const RooArgSet*, AddCacheElem*> RooAddPdf::getNormAndCache(const RooA
   if(nset && nset->empty()) nset = nullptr;
 
   if (nset == nullptr) {
+    // Make sure _refCoefNorm is defined
+    materializeRefCoefNormFromAttribute();
+
     if (!_refCoefNorm.empty()) {
       nset = &_refCoefNorm ;
     }
@@ -558,7 +606,7 @@ void RooAddPdf::resetErrorCounters(Int_t resetValue)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if PDF is valid for given normalization set.
-/// Coeffient and PDF must be non-overlapping, but pdf-coefficient
+/// Coefficient and PDF must be non-overlapping, but pdf-coefficient
 /// pairs may overlap each other
 
 bool RooAddPdf::checkObservables(const RooArgSet* nset) const
@@ -580,6 +628,8 @@ bool RooAddPdf::checkObservables(const RooArgSet* nset) const
 Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                 const RooArgSet* normSet, const char* rangeName) const
 {
+  // Make sure _refCoefNorm is defined
+  materializeRefCoefNormFromAttribute();
 
   RooArgSet allAnalVars(*std::unique_ptr<RooArgSet>{getObservables(allVars)}) ;
 
@@ -752,6 +802,9 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
 
    RooArgList prodList;
 
+   // Make sure _refCoefNorm is defined
+   materializeRefCoefNormFromAttribute();
+
    if (!_allExtendable) {
       // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
       // a conditional pdf and we don't need to do any transformation. See also
@@ -806,6 +859,8 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
 
 void RooAddPdf::selectNormalization(const RooArgSet* depSet, bool force)
 {
+  // Make sure _refCoefNorm is defined
+  materializeRefCoefNormFromAttribute();
 
   if (!force && !_refCoefNorm.empty()) {
     return ;
@@ -907,11 +962,14 @@ bool RooAddPdf::redirectServersHook(const RooAbsCollection & newServerList, bool
 std::unique_ptr<RooAbsArg>
 RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
+   // Make sure _refCoefNorm is defined
+   materializeRefCoefNormFromAttribute();
+
    auto newArg = std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(Clone())};
    ctx.markAsCompiled(*newArg);
 
    // In case conditional observables, e.g. p(x|y), the _refCoefNorm is set to
-   // all observables (x, y) and the normSet doesn't contain the condidional
+   // all observables (x, y) and the normSet doesn't contain the conditional
    // observables (so it only contains x in this example).
 
    // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
@@ -938,7 +996,7 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    //              Integral of p(x, y) over x
    //
    // What follows is the implementation of this formula in RooFit. By doing
-   // this here in complieForNormSet(), we don't invoke the old RooAddPdf
+   // this here in compileForNormSet(), we don't invoke the old RooAddPdf
    // projection caches (note that no conditional pdfs are on the right hand
    // side of the equation).
    std::string finalName = std::string(GetName()) + "_conditional";

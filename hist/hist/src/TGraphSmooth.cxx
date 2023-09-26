@@ -10,16 +10,11 @@
  *************************************************************************/
 
 /******************************************************************************
-* Copyright(c) 2001-    , Dr. Christian Stratowa, Vienna, Austria.            *
+* Copyright(c) 2001-2006, Dr. Christian Stratowa, Vienna, Austria.            *
 * Author: Christian Stratowa with help from Rene Brun.                        *
 *                                                                             *
 * Algorithms for smooth regression adapted from:                              *
 * R: A Computer Language for Statistical Data Analysis                        *
-* Copyright (C) 1996 Robert Gentleman and Ross Ihaka                          *
-* Copyright (C) 1999-2001 Robert Gentleman, Ross Ihaka and the                *
-* R Development Core Team                                                     *
-* R is free software, for licensing see the GNU General Public License        *
-* http://www.ci.tuwien.ac.at/R-project/welcome.html                           *
 *                                                                             *
 ******************************************************************************/
 

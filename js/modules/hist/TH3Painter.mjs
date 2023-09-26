@@ -1,4 +1,4 @@
-import { gStyle, settings, kInspect } from '../core.mjs';
+import { gStyle, settings, kInspect, clTProfile3D } from '../core.mjs';
 import { Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
@@ -16,6 +16,9 @@ import { assignFrame3DMethods } from './hist3d.mjs';
  */
 
 class TH3Painter extends THistPainter {
+
+   /** @summary Returns number of histogram dimensions */
+   getDimension() { return 3; }
 
    /** @summary Scan TH3 histogram content */
    scanContent(when_axis_changed) {
@@ -177,6 +180,11 @@ class TH3Painter extends THistPainter {
          lines.push(`entries = ${binz}`);
       else
          lines.push(`entries = ${floatToString(binz, gStyle.fStatFormat)}`);
+
+      if (this.matchObjectType(clTProfile3D)) {
+         const errz = histo.getBinError(histo.getBin(ix+1, iy+1, iz+1));
+         lines.push('error = ' + ((errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat)));
+      }
 
       return lines;
    }
@@ -524,7 +532,7 @@ class TH3Painter extends THistPainter {
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
-         if (use_colors) fillcolor = this.fPalette.getColor(ncol);
+         if (use_colors) fillcolor = this._color_palette.getColor(ncol);
 
          const material = use_lambert
                             ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })

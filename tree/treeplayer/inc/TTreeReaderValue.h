@@ -118,8 +118,8 @@ Base class of TTreeReaderValue.
       /// Stringify the template argument.
       static std::string GetElementTypeName(const std::type_info& ti);
 
-      int          fHaveLeaf : 1;                 ///< Whether the data is in a leaf
-      int          fHaveStaticClassOffsets : 1;   ///< Whether !fStaticClassOffsets.empty()
+      bool         fHaveLeaf : 1;                 ///< Whether the data is in a leaf
+      bool         fHaveStaticClassOffsets : 1;   ///< Whether !fStaticClassOffsets.empty()
       EReadStatus  fReadStatus : 2;               ///< Read status of this data access
       ESetupStatus fSetupStatus = kSetupNotSetup; ///< Setup status of this data access
       TString      fBranchName;                   ///< Name of the branch to read data from.

@@ -826,7 +826,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
    std::cout << "finding " << lowSearch << " limit between " << xmin << "  " << xmax << endl;
 #endif
 
-   // compute noe the limit using the TGraph interpolations routine
+   // compute now the limit using the TGraph interpolations routine
    double limit =  GetGraphX(graph, target, lowSearch, xmin, xmax);
    if (lowSearch) fLowerLimit = limit;
    else fUpperLimit = limit;

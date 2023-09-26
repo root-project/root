@@ -476,8 +476,12 @@ class TAxisPainter extends ObjectPainter {
       let ndiv = 508;
       if (this.is_gaxis)
          ndiv = axis.fNdiv;
-       else if (axis)
-          ndiv = Math.max(axis.fNdivisions, 4);
+      else if (axis) {
+          if (!axis.fNdivisions)
+             ndiv = 0;
+          else
+             ndiv = Math.max(axis.fNdivisions, 4);
+      }
 
       this.nticks = ndiv % 100;
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;

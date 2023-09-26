@@ -295,7 +295,7 @@ if doMCMC:
     mcPlot.Draw()
 
 # ----------------------------------
-# querry intervals
+# query intervals
 print(
     "Profile Likelihood interval on s = [{}, {}]".format(plInt.LowerLimit(wspace["s"]), plInt.UpperLimit(wspace["s"]))
 )

@@ -3,11 +3,11 @@
 
 #include <RooAddPdf.h>
 #include <RooDataSet.h>
-#include <RooGenericPdf.h>
 #include <RooFitResult.h>
+#include <RooGenericPdf.h>
 #include <RooHelpers.h>
-#include <RooNaNPacker.h>
 #include <RooMinimizer.h>
+#include <RooNaNPacker.h>
 #include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
@@ -128,18 +128,22 @@ TEST(RooNaNPacker, FitSimpleLinear)
    EXPECT_NEAR(a1.getVal(), 12., a1.getError());
 }
 
-class TestForDifferentBackends : public testing::TestWithParam<std::tuple<std::string>> {
+class TestForDifferentBackends : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
+public:
+   TestForDifferentBackends() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
+private:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(1337ul);
-      _batchMode = std::get<0>(GetParam());
+      _evalBackend = std::get<0>(GetParam());
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
-   std::string _batchMode;
+   RooFit::EvalBackend _evalBackend;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
@@ -166,15 +170,17 @@ TEST_P(TestForDifferentBackends, FitParabola)
 
    using namespace RooFit;
    params.assign(evilValues);
+   // Note: we can't use Hesse or Minos. Without the error recovery, Minuit2
+   // would print errors that would cause the unit test to fail.
    std::unique_ptr<RooFitResult> fitResultOld(
       pdf.fitTo(*data, RecoverFromUndefinedRegions(0.), Save(),
                 PrintLevel(-1),      // Don't need fit status printed
                 PrintEvalErrors(-1), // We provoke a lot of evaluation errors in this test. Don't print those.
-                BatchMode(_batchMode), Minos()));
+                _evalBackend, Hesse(false), Minos(false)));
 
    params.assign(evilValues);
    std::unique_ptr<RooFitResult> fitResultNew(
-      pdf.fitTo(*data, Save(), PrintLevel(-1), PrintEvalErrors(-1), BatchMode(_batchMode), Minos()));
+      pdf.fitTo(*data, Save(), PrintLevel(-1), PrintEvalErrors(-1), _evalBackend));
 
    ASSERT_NE(fitResultOld, nullptr);
    ASSERT_NE(fitResultNew, nullptr);
@@ -185,6 +191,7 @@ TEST_P(TestForDifferentBackends, FitParabola)
    const auto &a1Recover = static_cast<RooRealVar &>(fitResultNew->floatParsFinal()[0]);
    const auto &a2Recover = static_cast<RooRealVar &>(fitResultNew->floatParsFinal()[1]);
 
+   EXPECT_NE(fitResultOld->status(), 0);
    EXPECT_EQ(fitResultNew->status(), 0);
    EXPECT_NEAR(a1Recover.getVal(), static_cast<RooAbsReal &>(paramsInit["a1"]).getVal(), a1Recover.getError());
    EXPECT_NEAR(a2Recover.getVal(), static_cast<RooAbsReal &>(paramsInit["a2"]).getVal(), a2Recover.getError());
@@ -192,19 +199,28 @@ TEST_P(TestForDifferentBackends, FitParabola)
    EXPECT_LT(a1Old.getVal(), 0.);
    EXPECT_LT(a2Old.getVal(), 0.);
 
-   EXPECT_LT(fitResultNew->numInvalidNLL(), fitResultOld->numInvalidNLL());
+   // In the past, when Minuit2 was not the default minimizer yet, there was
+   // also a check that the number of invalid NLL evaluations was reduced with
+   // the error recovery:
+   //
+   //   EXPECT_LT(fitResultNew->numInvalidNLL(), fitResultOld->numInvalidNLL());
+   //
+   // However, Minuit2 takes less evaluations to realize that the minimization
+   // without error recovery is hopeless, resulting in less invalid NLL
+   // evaluations when the error recovery is off. Hence, the comparison is not
+   // meaningful and was commended out.
 }
 
 #ifdef R__HAS_CUDA
-#define BATCH_MODE_VALS "Off", "Cpu", "Cuda"
+#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu(), RooFit::EvalBackend::Cuda()
 #else
-#define BATCH_MODE_VALS "Off", "Cpu"
+#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()
 #endif
 
-INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(BATCH_MODE_VALS),
+INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestForDifferentBackends::ParamType> const &paramInfo) {
                             std::stringstream ss;
-                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
                             return ss.str();
                          });
 
@@ -250,11 +266,13 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
       minim.setPrintLevel(-1);
       minim.setPrintEvalErrors(-1);
       minim.migrad();
-      minim.hesse();
       std::unique_ptr<RooFitResult> fitResult{minim.save()};
 
       const auto &a1Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[0]);
       const auto &a2Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[1]);
+
+      // Only the fit with error recovery should have status zero.
+      EXPECT_EQ(fitResult->status() == 0, tryRecover != 0.0);
 
       if (tryRecover != 0.) {
          EXPECT_EQ(fitResult->status(), 0) << "Recovery strength=" << tryRecover;
@@ -264,9 +282,6 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
             << "Recovery strength=" << tryRecover;
          EXPECT_NEAR(a1Final.getVal() + a2Final.getVal(), 0.8, 0.02) << "Check that coefficients sum to 1. "
                                                                      << "Recovery strength=" << tryRecover;
-      } else {
-         EXPECT_TRUE(a1Final.getVal() < 0. || a1Final.getVal() > 1. || a2Final.getVal() < 0. || a2Final.getVal() > 1.)
-            << "Recovery strength=" << tryRecover;
       }
 
       if (verbose) {
@@ -280,9 +295,6 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
    // This makes clang-tidy happy:
    ASSERT_NE(fitResult1, nullptr);
    ASSERT_NE(fitResult2, nullptr);
-   if (fitResult1 && fitResult2) { // makes clang-tidy happy
-      EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
-   }
 }
 
 /// Make coefficients of RooRealSumPdf sum to more than 1. Fitter should recover from this.
@@ -319,11 +331,16 @@ TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff)
       params.assign(evilValues);
 
       using namespace RooFit;
-      std::unique_ptr<RooFitResult> fitResult{
-         pdf.fitTo(*data, PrintLevel(-1), PrintEvalErrors(-1), Save(), RecoverFromUndefinedRegions(tryRecover))};
+      // Note: we can't do Hesse here. Without the error recovery, Minuit2
+      // would print errors that would cause the unit test to fail.
+      std::unique_ptr<RooFitResult> fitResult{pdf.fitTo(*data, PrintLevel(-1), PrintEvalErrors(-1), Save(),
+                                                        RecoverFromUndefinedRegions(tryRecover), Hesse(false))};
 
       const auto &a1Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[0]);
       const auto &a2Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[1]);
+
+      // Only the fit with error recovery should have status zero.
+      EXPECT_EQ(fitResult->status() == 0, tryRecover != 0.0);
 
       if (tryRecover != 0.) {
          EXPECT_EQ(fitResult->status(), 0) << "Recovery strength=" << tryRecover;
@@ -335,9 +352,6 @@ TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff)
                                                             << "Recovery strength=" << tryRecover;
          EXPECT_LE(a1Final.getVal() + a2Final.getVal(), 1.) << "Check that coefficients sum to [0, 1]. "
                                                             << "Recovery strength=" << tryRecover;
-      } else {
-         EXPECT_TRUE(a1Final.getVal() < 0. || a1Final.getVal() > 1. || a2Final.getVal() < 0. || a2Final.getVal() > 1.)
-            << "Recovery strength=" << tryRecover;
       }
 
       if (verbose) {
@@ -351,8 +365,4 @@ TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff)
    // This makes clang-tidy happy:
    ASSERT_NE(fitResult1, nullptr);
    ASSERT_NE(fitResult2, nullptr);
-
-   if (fitResult1 && fitResult2) { // makes clang-tidy happy
-      EXPECT_LT(fitResult1->numInvalidNLL(), fitResult2->numInvalidNLL());
-   }
 }

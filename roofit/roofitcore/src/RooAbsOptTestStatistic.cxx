@@ -114,6 +114,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic &oth
    : RooAbsTestStatistic(other, name),
      _sealed(other._sealed),
      _sealNotice(other._sealNotice),
+     _skipZeroWeights(other._skipZeroWeights),
      _integrateBinsPrecision(other._integrateBinsPrecision)
 {
    // Don't do a thing in master mode
@@ -582,7 +583,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
     _funcClone->findConstantNodes(*_dataClone->get(),_cachedNodes) ;
 
     // Cache constant nodes with dataset - also cache entries corresponding to zero-weights in data when using BinnedLikelihood
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet,!_funcClone->getAttribute("BinnedLikelihood")) ;
+    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
 
     // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
     for (auto cacheArg : _cachedNodes) {
@@ -693,8 +694,8 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
   _data = _dataClone ;
 
   // ReCache constant nodes with dataset
-  if (_cachedNodes.getSize()>0) {
-    _dataClone->cacheArgs(this,_cachedNodes,_normSet) ;
+  if (!_cachedNodes.empty()) {
+    _dataClone->cacheArgs(this,_cachedNodes,_normSet, _skipZeroWeights);
   }
 
   // Adjust internal event count
@@ -771,3 +772,8 @@ const char* RooAbsOptTestStatistic::cacheUniqueSuffix() const {
    return Form("_%lx", _dataClone->uniqueId().value()) ;
 }
 
+
+void RooAbsOptTestStatistic::runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
+{
+   _dataClone->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, _skipZeroWeights);
+}

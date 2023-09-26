@@ -240,7 +240,7 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<ROOT::Experimental::RooNLLVarNew*>(arg)) {
+    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<RooNLLVarNew*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
@@ -285,7 +285,7 @@ bool RooAddition::setData(RooAbsData& data, bool cloneData)
 
 void RooAddition::printMetaArgs(std::ostream& os) const
 {
-  // We can use the implementation of RooRealSumPdf with an empy coefficient list.
+  // We can use the implementation of RooRealSumPdf with an empty coefficient list.
   static const RooArgList coefs{};
   RooRealSumPdf::printMetaArgs(_set, coefs, os);
 }

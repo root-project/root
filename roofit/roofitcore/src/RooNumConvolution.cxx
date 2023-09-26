@@ -98,7 +98,7 @@ RooNumConvolution::RooNumConvolution() :
 ///
 /// convVar  :  convolution variable (on which both pdf and resmodel should depend)
 /// pdf      :  input 'physics' pdf
-/// resmodel :  input 'resultion' pdf
+/// resmodel :  input 'resolution' pdf
 ///
 /// output is pdf(x) (X) resmodel(x) = Int [ pdf(x') resmodel (x-x') ] dx'
 ///
@@ -246,7 +246,7 @@ double RooNumConvolution::evaluate() const
   if (_doProf) {
     _callHist->Fill(x,_integrand->numCall()) ;
     if (_integrand->numCall()>_verboseThresh) {
-      coutW(Integration) << "RooNumConvolution::eveluate(" << GetName() << ") WARNING convolution integral at x=" << x
+      coutW(Integration) << "RooNumConvolution::evaluate(" << GetName() << ") WARNING convolution integral at x=" << x
           << " required " << _integrand->numCall() << " function evaluations" << endl ;
     }
   }

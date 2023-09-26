@@ -1,12 +1,15 @@
 // @(#)root/mathcore:$Id$
 // Authors: David Gonzalez Maline    01/2008
 
-/**********************************************************************
- *                                                                    *
- * Copyright (c) 2006 , LCG ROOT MathLib Team                         *
- *                                                                    *
- *                                                                    *
- **********************************************************************/
+ /**********************************************************************
+  *                                                                    *
+  * Copyright (c) 2006  CERN                                           *
+  * All rights reserved.                                               *
+  *                                                                    *
+  * For the licensing terms see $ROOTSYS/LICENSE.                      *
+  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
+  *                                                                    *
+  **********************************************************************/
 
 #include "Math/BrentRootFinder.h"
 #include "Math/BrentMethods.h"

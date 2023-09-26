@@ -355,7 +355,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   }
 
 
-  // Check if number of provided args is in valid range (add two to accomodate name and title strings)
+  // Check if number of provided args is in valid range (add two to accomomdate name and title strings)
   if (_args.size()+2<ca.second || _args.size()+2>ca.first.size()) {
     if (ca.second==ca.first.size()) {
       coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid, " << className
@@ -794,7 +794,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 /// creates the sum of a Gaussian and a Chebychev and all its variables.
 ///
 ///
-/// A seperate series of operator meta-type exists to simplify the construction of composite expressions
+/// A separate series of operator meta-type exists to simplify the construction of composite expressions
 /// meta-types in all capitals (SUM) create pdfs, meta types in lower case (sum) create
 /// functions.
 ///

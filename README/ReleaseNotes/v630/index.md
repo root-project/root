@@ -44,6 +44,7 @@ The following people have contributed to this new version:
 - The `RooDataWeightedAverage` is now deprecated and will be removed in 6.32. It was only supposed to be an implementation detail of RooFits plotting that is now not necessary anymore.
 - The `RooSpan` class was removed and its place in the implementation details of RooFit is now taken by `std::span`.
 - The `RooAbsArg::isCloneOf()` and `RooAbsArg::getCloningAncestors()` member functions were removed because they didn't work (always returned `false` and an empty list respectively)
+- `ROOT::Math::KelvinFunctions` had an incompatible license and needed to be removed without deprecation.
 
 ## Core Libraries
 
@@ -125,13 +126,29 @@ Thus, we appreciate feedback and suggestions for improvement.
 
 ## Math Libraries
 
+### Minuit2 is now the default minimizer
+
+Many ROOT-based frameworks and users employ Minuit2 as the minimizer of choice for a long time already.
+Therefore, Minuit2 is now the default minimizer used by ROOT.
+This affects also **RooFit**, which inherits the default minimizer from ROOT Math.
+
+The default can be changed back to the old Minuit implementation as follows:
+```c++
+ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit");
+```
+
+Alternatively, you can add this line to your `~/.rootrc` file:
+```
+Root.Fitter: Minuit
+```
+
 ### Behavior change of `TMath::AreEqualAbs()`
 
 The `TMath::AreEqualAbs()` compares two numbers for equality within a certain absolute range.
 So far, it would tell you that `inf != inf` if you define `inf` as `std::numeric_limits<double>::infinity()`, which is inconsistent with the regular `==` operator.
 
 This is unexpected, because one would expect that if two numbers are considered exactly equal, they would also be considered equal within any range.
-Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `true` if the `==` comparision would return `true`.
+Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `true` if the `==` comparison would return `true`.
 
 ## RooFit Libraries
 
@@ -214,13 +231,13 @@ RooMomentMorphFuncND already normalizes itself in pdf mode.
 RooWrapperPdf pdf{"pdf_name", "pdf_name", func, /*selfNormalized=*/true};
 ```
 
-### Removal of serveral internal classes from the public RooFit interface
+### Removal of several internal classes from the public RooFit interface
 
-Several RooFit classes of which the headers are publically exposed in the interface were only meant as implementation details of other RooFit classes.
+Several RooFit classes of which the headers are publicly exposed in the interface were only meant as implementation details of other RooFit classes.
 Some of these classes are now removed from the public interface:
 
 1. `RooGenProdProj`, which was an implementation detail of the `RooProdPdf`
-2. `RooScaledFunc`, which was an implementaiton detail of the plotting in RooFit
+2. `RooScaledFunc`, which was an implementation detail of the plotting in RooFit
    In the supposedly very rare case where you used this class in your own
    implementations, just multiply the underlying RooAbsReal function with the
    scale factor and create a RooRealBinding, e.g.:
@@ -246,6 +263,13 @@ Some of these classes are now removed from the public interface:
    `RooIntegrator2D` and `RooSegmentedIntegrator2D` classes.
 6. The `RooRealAnalytic`, which was an implementation detail of the
    `RooRealIntegral` class.
+
+### Consistent default for `Extended()` command in RooAbsPdf::fitTo() and RooAbsPdf::chi2FitTo()
+
+If no `RooFit::Extended()` command argument is passed, `RooAbsPdf::chi2FitTo()`
+method now does an extended fit by default if the pdf is extendible. This makes
+the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
+`RooAbsPdf::createChi2()`.
 
 ## 2D Graphics Libraries
 
