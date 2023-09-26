@@ -46,6 +46,7 @@ sap.ui.define([
                                      ToolbarIcon: chk_icon(false),
                                      TooltipIcon: chk_icon(true),
                                      AutoResizeIcon: chk_icon(true),
+                                     HighlightPadIcon: chk_icon(false),
                                      StatusLbl1: '', StatusLbl2: '', StatusLbl3: '', StatusLbl4: '',
                                      Standalone: true, isRoot6: true, canResize: true, FixedSize: false });
          this.getView().setModel(model);
@@ -85,6 +86,7 @@ sap.ui.define([
             if (cp.v7canvas) model.setProperty('/isRoot6', false);
 
             cp.enforceCanvasSize = !cp.embed_canvas && cp.online_canvas;
+            cp.highlight_gpad = false;
 
             model.setProperty('/canResize', !cp.embed_canvas && cp.online_canvas);
 
@@ -696,6 +698,13 @@ sap.ui.define([
                 cp._online_fixed_size = is_fixed;
                 cp.sendResized(true);
              }
+         } else if (item.getText() == 'Highlight gPad') {
+            cp = this.getCanvasPainter();
+            if (cp) {
+               cp.highlight_gpad = !cp.highlight_gpad;
+               this.getView().getModel().setProperty('/HighlightPadIcon', chk_icon(cp.highlight_gpad));
+               cp.redraw();
+            }
          }
       },
 

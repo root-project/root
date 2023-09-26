@@ -83,6 +83,7 @@
                   <Menu itemSelected="onOptionsMenuAction">
                      <items>
                         <MenuItem text="Auto resize" icon="{/AutoResizeIcon}" tooltip="Canvas automatically resized with web browser"/>
+                        <MenuItem text="Highlight gPad" icon="{/HighlightPadIcon}" enabled="{/isRoot6}" tooltip="Highlight active pad in the canvas"/>
                      </items>
                   </Menu>
                </menu>
