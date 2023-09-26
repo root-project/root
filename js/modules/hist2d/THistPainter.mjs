@@ -165,7 +165,7 @@ class THistDrawOptions {
       if (d.check('PERSPECTIVE') || d.check('PERSP')) this.Ortho = false;
       if (d.check('ORTHO')) this.Ortho = true;
 
-      let lx = 0, ly = 0, check3dbox = '', check3d = (hdim === 3);
+      let lx = 0, ly = 0, check3dbox = '';
       if (d.check('LOG2XY')) lx = ly = 2;
       if (d.check('LOGXY')) lx = ly = 1;
       if (d.check('LOG2X')) lx = 2;
@@ -308,7 +308,6 @@ class THistDrawOptions {
       if (d.check('CHAR')) this.Char = 1;
       if (d.check('ALLFUNC')) this.AllFunc = true;
       if (d.check('FUNC')) { this.Func = true; this.Hist = false; }
-      if (d.check('AXIS3D')) { this.Axis = 1; this.Lego = 1; check3d = true; }
       if (d.check('AXIS')) this.Axis = 1;
       if (d.check('AXIG')) this.Axis = 2;
 
@@ -357,8 +356,8 @@ class THistDrawOptions {
          if (check3dbox.indexOf('BB') >= 0) this.BackBox = false;
       }
 
-      if (check3d && d.check('FB')) this.FrontBox = false;
-      if (check3d && d.check('BB')) this.BackBox = false;
+      if ((hdim === 3) && d.check('FB')) this.FrontBox = false;
+      if ((hdim === 3) && d.check('BB')) this.BackBox = false;
 
       this._pfc = d.check('PFC');
       this._plc = d.check('PLC') || this.AutoColor;
@@ -1173,7 +1172,9 @@ class THistPainter extends ObjectPainter {
       if (this.options.Same)
          return false;
 
-      return fp.drawAxes(false, this.options.Axis < 0, this.options.Axis < 0,
+      const disable_axis_draw = (this.options.Axis < 0) || (this.options.Axis === 2);
+
+      return fp.drawAxes(false, disable_axis_draw, disable_axis_draw,
                          this.options.AxisPos, this.options.Zscale && this.options.Zvert, this.options.Zscale && !this.options.Zvert);
    }
 
@@ -1199,7 +1200,6 @@ class THistPainter extends ObjectPainter {
       return res;
    }
 
-
    /** @summary Toggle histogram title drawing */
    toggleTitle(arg) {
       const histo = this.getHisto();
@@ -1215,7 +1215,7 @@ class THistPainter extends ObjectPainter {
      * @return {Promise} with painter */
    async drawHistTitle() {
       // case when histogram drawn over other histogram (same option)
-      if (!this.isMainPainter() || this.options.Same)
+      if (!this.isMainPainter() || this.options.Same || this.options.Axis > 0)
          return this;
 
       const histo = this.getHisto(), st = gStyle,

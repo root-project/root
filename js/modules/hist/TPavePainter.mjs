@@ -204,9 +204,10 @@ class TPavePainter extends ObjectPainter {
          }
 
          const pad_rect = pp.getPadRect(),
-             brd = pt.fBorderSize,
-             dx = (opt.indexOf('L') >= 0) ? -1 : ((opt.indexOf('R') >= 0) ? 1 : 0),
-             dy = (opt.indexOf('T') >= 0) ? -1 : ((opt.indexOf('B') >= 0) ? 1 : 0);
+               brd = pt.fBorderSize,
+               noborder = opt.indexOf('NB') >= 0,
+               dx = (opt.indexOf('L') >= 0) ? -1 : ((opt.indexOf('R') >= 0) ? 1 : 0),
+               dy = (opt.indexOf('T') >= 0) ? -1 : ((opt.indexOf('B') >= 0) ? 1 : 0);
 
          // container used to recalculate coordinates
          this.createG();
@@ -226,7 +227,7 @@ class TPavePainter extends ObjectPainter {
             const h2 = Math.round(height/2), w2 = Math.round(width/2),
                   dpath = `l${w2},${-h2}l${w2},${h2}l${-w2},${h2}z`;
 
-            if ((brd > 1) && (pt.fShadowColor > 0) && (dx || dy) && !this.fillatt.empty()) {
+            if ((brd > 1) && (pt.fShadowColor > 0) && (dx || dy) && !this.fillatt.empty() && !noborder) {
                 this.draw_g.append('svg:path')
                     .attr('d', 'M0,'+(h2+brd) + dpath)
                     .style('fill', this.getColor(pt.fShadowColor))
@@ -245,7 +246,7 @@ class TPavePainter extends ObjectPainter {
             return this.drawPaveText(w2, h2, arg, text_g);
          } else {
             // add shadow decoration before main rect
-            if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy)) {
+            if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy) && !noborder) {
                const scol = this.getColor(pt.fShadowColor);
                let spath = '';
                if (this.fillatt.empty()) {
@@ -273,11 +274,12 @@ class TPavePainter extends ObjectPainter {
                }
             }
 
-            if (!this.isBatchMode() || !this.fillatt.empty() || !this.lineatt.empty()) {
+            if (!this.isBatchMode() || !this.fillatt.empty() || (!this.lineatt.empty() && !noborder)) {
                interactive_element = this.draw_g.append('svg:path')
                                                 .attr('d', `M0,0H${width}V${height}H0Z`)
-                                                .call(this.fillatt.func)
-                                                .call(this.lineatt.func);
+                                                .call(this.fillatt.func);
+               if (!noborder)
+                  interactive_element.call(this.lineatt.func)
             }
 
             return isFunc(this.paveDrawFunc) ? this.paveDrawFunc(width, height, arg) : true;
@@ -484,6 +486,7 @@ class TPavePainter extends ObjectPainter {
                   // individual positioning
                   const x = entry.fX ? entry.fX*width : margin_x,
                         y = entry.fY ? (1 - entry.fY)*height : texty;
+
                   let color = entry.fTextColor ? this.getColor(entry.fTextColor) : '';
                   if (!color) color = this.textatt.color;
 
@@ -501,19 +504,19 @@ class TPavePainter extends ObjectPainter {
                      this.startTextDrawing(this.textatt.font, height/(nlines * 1.2), text_g, max_font_size);
 
                   const arg = { x: 0, y: 0, width, height, align: entry.fTextAlign || this.textatt.align,
-                              draw_g: text_g, latex: entry._typename === clTText ? 0 : 1,
-                              text: entry.fTitle, fast },
-                   halign = Math.floor(arg.align / 10);
+                                draw_g: text_g, latex: (entry._typename === clTText) ? 0 : 1,
+                                text: entry.fTitle, fast },
+                  halign = Math.floor(arg.align / 10);
                   // when horizontal align applied, just shift text, not change width to keep scaling
                   arg.x = (halign === 1) ? margin_x : (halign === 3 ? -margin_x : 0);
 
                   if (nlines > 1) {
                      arg.y = texty;
                      arg.height = stepy;
-                     if (entry.fTextColor) arg.color = this.getColor(entry.fTextColor);
-                     if (entry.fTextSize) arg.font_size = this.textatt.getAltSize(entry.fTextSize, pad_height);
                   }
+                  if (entry.fTextColor) arg.color = this.getColor(entry.fTextColor);
                   if (!arg.color) arg.color = this.textatt.color;
+                  if (entry.fTextSize) arg.font_size = this.textatt.getAltSize(entry.fTextSize, pad_height);
                   this.drawText(arg);
                }
                break;

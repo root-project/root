@@ -1,4 +1,4 @@
-import { gStyle, create, clTH1I, kNoStats } from '../core.mjs';
+import { gStyle, clTH1I, kNoStats, createHistogram } from '../core.mjs';
 import { DrawOptions, floatToString, buildSvgCurve } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist/TH1Painter.mjs';
@@ -89,7 +89,7 @@ class TSplinePainter extends ObjectPainter {
          if (ymin < 0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
-      const histo = create(clTH1I);
+      const histo = createHistogram(clTH1I, 10);
 
       histo.fName = spline.fName + '_hist';
       histo.fTitle = spline.fTitle;
@@ -274,7 +274,7 @@ class TSplinePainter extends ObjectPainter {
          Line: d.check('L'),
          Curve: d.check('C'),
          Mark: d.check('P'),
-         Hopt: 'AXIS',
+         Hopt: '',
          second_x: false,
          second_y: false
       });

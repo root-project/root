@@ -145,7 +145,7 @@ class TGraphTimePainter extends ObjectPainter {
 
       painter.selfid = 'grtime_' + internals.id_counter++; // use to identify primitives which should be clean
 
-      return TH1Painter.draw(dom, gr.fFrame, 'AXIS').then(() => {
+      return TH1Painter.draw(dom, gr.fFrame, '').then(() => {
          painter.addToPadPrimitives();
          return painter.startDrawing();
       });

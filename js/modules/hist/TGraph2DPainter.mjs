@@ -1,4 +1,5 @@
-import { settings, createHistogram, setHistogramTitle, kNoZoom, clTH2I, clTGraph2DErrors, clTGraph2DAsymmErrors, kNoStats } from '../core.mjs';
+import { settings, createHistogram, setHistogramTitle, kNoZoom,
+         clTH2I, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
 import { Color, DoubleSide, LineBasicMaterial, MeshBasicMaterial, Mesh } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -1229,6 +1230,12 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       return Promise.all(promises).then(() => {
+         if (this.options.Zscale && this.ownhisto) {
+            const pal = this.getMainPainter()?.findFunction(clTPaletteAxis),
+                  pal_painter = this.getPadPainter()?.findPainterFor(pal);
+            return pal_painter?.drawPave();
+         }
+      }).then(() => {
          fp.render3D(100);
          return this;
       });
@@ -1245,7 +1252,7 @@ class TGraph2DPainter extends ObjectPainter {
          if (!gr.fHistogram)
             gr.fHistogram = painter.createHistogram();
 
-         promise = TH2Painter.draw(dom, gr.fHistogram, painter.options.Zscale ? 'lego2z;axis' : 'lego2;axis');
+         promise = TH2Painter.draw(dom, gr.fHistogram, painter.options.Zscale ? 'lego2z' : 'lego2');
          painter.ownhisto = true;
       }
 
