@@ -451,7 +451,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
          has_histo = true;
-         if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && (strlen(obj->GetTitle()) > 0))
+         if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && !opt.Contains("AXIS") && !opt.Contains("AXIG") && (strlen(obj->GetTitle()) > 0))
             need_title = obj->GetTitle();
          if (obj->InheritsFrom(TH2::Class()) && (opt.Contains("COLZ") || opt.Contains("LEGO2Z") || opt.Contains("LEGO4Z") || opt.Contains("SURF2Z")))
             need_palette = true;
