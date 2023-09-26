@@ -1445,6 +1445,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    if (indx >= fWebConn.size())
       return kTRUE;
 
+   Bool_t is_main_connection = indx == 1; // first connection allow to make changes
+
    struct FlagGuard {
       Bool_t &flag;
       FlagGuard(Bool_t &_flag) : flag(_flag) { flag = true; }
@@ -1475,7 +1477,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          fWebConn[indx].fDrawVersion = std::stoll(cdata);
       } else {
          fWebConn[indx].fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
-         if ((indx == 0) && !IsReadOnly())
+         if (is_main_connection && !IsReadOnly())
             if (DecodePadOptions(separ+1, false))
                CheckCanvasModified();
       }
@@ -1516,18 +1518,18 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
-      if ((indx == 0) && !IsReadOnly())
+      if (is_main_connection && !IsReadOnly())
          if (DecodePadOptions(arg.substr(9), true))
             CheckCanvasModified();
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
-      if (indx == 0) {
+      if (is_main_connection) {
          AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
    } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
-      if (indx == 0) {
+      if (is_main_connection) {
          auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
          if (!arr || (arr->size() != 4)) {
             Error("ProcessData", "Wrong arguments count %d in highlight message", (int)(arr ? arr->size() : -1));
