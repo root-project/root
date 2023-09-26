@@ -10,6 +10,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+/** \class ROOT::Experimental::XRooFit::xRooNLLVar
+\ingroup xroofit
+
+This xRooNLLVar object has several special methods, e.g. for fitting and toy dataset generation.
+
+ */
+
 #include "RVersion.h"
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
@@ -86,7 +93,7 @@
 #include "TKey.h"
 #include "TRegexp.h"
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 std::set<int> xRooNLLVar::xRooHypoPoint::allowedStatusCodes = {0};
 
@@ -2860,4 +2867,4 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
    return out;
 }
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;

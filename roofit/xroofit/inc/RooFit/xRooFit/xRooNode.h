@@ -43,7 +43,7 @@ class TStyle;
 #include "RooCmdArg.h"
 #include "TQObject.h"
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 class xRooNode;
 class xRooNLLVar;
@@ -449,6 +449,6 @@ public:
    ClassDefOverride(xRooNode, 0)
 };
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;
 
 #endif // include guard

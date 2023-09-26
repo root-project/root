@@ -11,7 +11,7 @@
  */
 
 /** \namespace ROOT::Experimental::XRooFit
-\ingroup RooFit
+\ingroup xroofit
 
 <a href="https://gitlab.cern.ch/will/xroofit">xRooFit</a> is a high-level API for RooFit.
 
@@ -23,9 +23,5 @@ A version of the API is included in ROOT as an experimental feature, inside the 
 #define RooFit_XRooFit_h
 
 #include "RooFit/xRooFit/xRooFit.h"
-
-namespace ROOT::Experimental {
-    namespace XRooFit = XROOFIT_NAMESPACE;
-}
 
 #endif

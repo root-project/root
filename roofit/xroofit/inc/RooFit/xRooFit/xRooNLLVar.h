@@ -52,7 +52,7 @@ class HypoTestResult;
 class HypoTestInverterResult;
 } // namespace RooStats
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 class xRooNode;
 
@@ -467,6 +467,6 @@ public:
    bool kReuseNLL = true;
 };
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;
 
 #endif // include guard

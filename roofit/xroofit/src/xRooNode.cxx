@@ -10,6 +10,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+/** \class ROOT::Experimental::XRooFit::xRooNode
+\ingroup xroofit
+
+The xRooNode class is designed to wrap over an existing TObject and provide functionality to aid with interacting with that object.
+It is a smart pointer to the object, so you have access to all the methods of the object too.
+ */
+
 #include "RVersion.h"
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
@@ -174,7 +181,7 @@ auto GETLISTTREE(TGFileBrowser *b)
 #include "RooNaNPacker.h"
 #endif
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 xRooNode::InteractiveObject *xRooNode::gIntObj = nullptr;
 std::map<std::string, std::tuple<std::function<double(double, double, double)>, bool>> xRooNode::auxFunctions;
@@ -10480,4 +10487,4 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
    return out;
 }
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;
