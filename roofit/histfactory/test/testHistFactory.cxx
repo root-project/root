@@ -38,7 +38,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = true;
+const bool writeJsonFiles = false;
 
 std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool normalize, bool useBatchMode)
 {

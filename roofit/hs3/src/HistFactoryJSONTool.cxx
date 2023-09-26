@@ -62,10 +62,10 @@ std::vector<std::string> getObsnames(RooStats::HistFactory::Channel const &c)
    return obsnames;
 }
 
-void writeObservables(const TH1 &h, JSONNode &n, const std::vector<std::string> &varnames)
+void writeObservables(const TH1 &h, JSONNode &node, const std::vector<std::string> &varnames)
 {
    // axes need to be ordered, so this is a sequence and not a map
-   auto &observables = n["axes"].set_seq();
+   auto &observables = node["axes"].set_seq();
    auto &x = observables.append_child().set_map();
    x["name"] << varnames[0];
    writeAxis(x, *h.GetXaxis());
@@ -206,7 +206,15 @@ void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
    }
 }
 
-void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode &n,
+void setAttribute(JSONNode &rootnode, const std::string &obj, const std::string &attrib)
+{
+   auto node = &RooJSONFactoryWSTool::getRooFitInternal(rootnode, "attributes").set_map()[obj].set_map();
+   auto &tags = (*node)["tags"];
+   tags.set_seq();
+   tags.append_child() << attrib;
+}
+
+void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode &rootnode,
                        RooFit::JSONIO::Detail::Domains &domains)
 {
    using namespace RooStats::HistFactory;
@@ -218,7 +226,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
    // preprocess functions
    if (!measurement.GetFunctionObjects().empty()) {
-      auto &funclist = n["functions"];
+      auto &funclist = rootnode["functions"];
       for (const auto &func : measurement.GetFunctionObjects()) {
          auto &f = RooJSONFactoryWSTool::appendNamedChild(funclist, func.GetName());
          f["name"] << func.GetName();
@@ -228,9 +236,9 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       }
    }
 
-   auto &pdflist = n["distributions"];
+   auto &pdflist = rootnode["distributions"];
 
-   auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], "simPdf");
+   auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(rootnode["analyses"], "simPdf");
    analysisNode["domains"].set_seq().append_child() << "default_domain";
 
    auto &analysisPois = analysisNode["parameters_of_interest"].set_seq();
@@ -241,7 +249,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
    analysisNode["likelihood"] << measurement.GetName();
 
-   auto &likelihoodNode = RooJSONFactoryWSTool::appendNamedChild(n["likelihoods"], measurement.GetName());
+   auto &likelihoodNode = RooJSONFactoryWSTool::appendNamedChild(rootnode["likelihoods"], measurement.GetName());
    likelihoodNode["distributions"].set_seq();
    likelihoodNode["data"].set_seq();
 
@@ -249,10 +257,12 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    for (const auto &c : measurement.GetChannels()) {
 
       auto pdfName = std::string("model_") + c.GetName();
+      auto realSumPdfName = c.GetName() + std::string("_model");
 
       likelihoodNode["distributions"].append_child() << pdfName;
       likelihoodNode["data"].append_child() << std::string("obsData_") + c.GetName();
       exportChannel(c, RooJSONFactoryWSTool::appendNamedChild(pdflist, pdfName));
+      setAttribute(rootnode, realSumPdfName, "BinnedLikelihood");
    }
 
    struct VariableInfo {
@@ -306,7 +316,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       info2.isConstant = true;
    }
 
-   JSONNode &varlist = RooJSONFactoryWSTool::makeVariablesNode(n);
+   JSONNode &varlist = RooJSONFactoryWSTool::makeVariablesNode(rootnode);
    for (auto const &item : variables) {
       std::string const &parname = item.first;
       VariableInfo const &info = item.second;
@@ -321,8 +331,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &child1 = n.get("misc", "ROOT_internal", "combined_datasets").set_map()["obsData"].set_map();
-   auto &child2 = n.get("misc", "ROOT_internal", "combined_distributions").set_map()["simPdf"].set_map();
+   auto &child1 = rootnode.get("misc", "ROOT_internal", "combined_datasets").set_map()["obsData"].set_map();
+   auto &child2 = rootnode.get("misc", "ROOT_internal", "combined_distributions").set_map()["simPdf"].set_map();
 
    child1["index_cat"] << "channelCat";
    auto &labels1 = child1["labels"].set_seq();
@@ -341,14 +351,15 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       indices2.append_child() << int(channelNames.size());
       pdfs2.append_child() << (std::string("model_") + c.GetName());
 
-      JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
+      JSONNode &dataOutput =
+         RooJSONFactoryWSTool::appendNamedChild(rootnode["data"], std::string("obsData_") + c.GetName());
       dataOutput["type"] << "binned";
 
       exportHistogram(*c.GetData().GetHisto(), dataOutput, getObsnames(c));
       channelNames.push_back(c.GetName());
    }
 
-   auto &modelConfigAux = RooJSONFactoryWSTool::getRooFitInternal(n, "ModelConfigs", "simPdf").set_map();
+   auto &modelConfigAux = RooJSONFactoryWSTool::getRooFitInternal(rootnode, "ModelConfigs", "simPdf").set_map();
    modelConfigAux["combined_data_name"] << "obsData";
    modelConfigAux["pdfName"] << "simPdf";
    modelConfigAux["mcName"] << "ModelConfig";
@@ -366,11 +377,11 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 void RooStats::HistFactory::JSONTool::PrintJSON(std::ostream &os)
 {
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
-   auto &n = tree->rootnode();
+   auto &rootnode = tree->rootnode();
    RooFit::JSONIO::Detail::Domains domains;
-   exportMeasurement(_measurement, n, domains);
-   domains.writeJSON(n["domains"]);
-   n.writeJSON(os);
+   exportMeasurement(_measurement, rootnode, domains);
+   domains.writeJSON(rootnode["domains"]);
+   rootnode.writeJSON(os);
 }
 void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
 {
@@ -381,11 +392,11 @@ void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
 void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)
 {
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
-   auto &n = tree->rootnode().set_map();
+   auto &rootnode = tree->rootnode().set_map();
    RooFit::JSONIO::Detail::Domains domains;
-   exportMeasurement(_measurement, n, domains);
-   domains.writeJSON(n["domains"]);
-   n.writeYML(os);
+   exportMeasurement(_measurement, rootnode, domains);
+   domains.writeJSON(rootnode["domains"]);
+   rootnode.writeYML(os);
 }
 
 void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)

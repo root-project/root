@@ -1754,9 +1754,9 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       this->exportObject(*p, exportedObjectNames);
    }
 
-   // export attributes of exported objects
-   for (std::string const &name : exportedObjectNames) {
-      exportAttributes(_workspace.arg(name), n);
+   // export attributes of all objects
+   for (RooAbsArg *arg : _workspace.components()) {
+      exportAttributes(arg, n);
    }
 
    // export all datasets
