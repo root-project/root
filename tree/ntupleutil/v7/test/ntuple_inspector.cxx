@@ -88,8 +88,8 @@ TEST(RNTupleInspector, SizeUncompressedSimple)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(sizeof(int32_t) * 5, inspector->GetInMemorySize());
-   EXPECT_EQ(inspector->GetOnDiskSize(), inspector->GetInMemorySize());
+   EXPECT_EQ(sizeof(int32_t) * 5, inspector->GetUncompressedSize());
+   EXPECT_EQ(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
 }
 
 TEST(RNTupleInspector, SizeUncompressedComplex)
@@ -119,7 +119,7 @@ TEST(RNTupleInspector, SizeUncompressedComplex)
    EXPECT_EQ(2, nIndexCols);
    EXPECT_EQ(3, nEntries);
 
-   EXPECT_EQ(inspector->GetOnDiskSize(), inspector->GetInMemorySize());
+   EXPECT_EQ(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
 }
 
 TEST(RNTupleInspector, SizeCompressedInt)
@@ -141,9 +141,9 @@ TEST(RNTupleInspector, SizeCompressedInt)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(sizeof(int32_t) * 50, inspector->GetInMemorySize());
-   EXPECT_GT(inspector->GetOnDiskSize(), 0);
-   EXPECT_LT(inspector->GetOnDiskSize(), inspector->GetInMemorySize());
+   EXPECT_EQ(sizeof(int32_t) * 50, inspector->GetUncompressedSize());
+   EXPECT_GT(inspector->GetCompressedSize(), 0);
+   EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
@@ -170,8 +170,8 @@ TEST(RNTupleInspector, SizeCompressedComplex)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_GT(inspector->GetOnDiskSize(), 0);
-   EXPECT_LT(inspector->GetOnDiskSize(), inspector->GetInMemorySize());
+   EXPECT_GT(inspector->GetCompressedSize(), 0);
+   EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
@@ -185,8 +185,8 @@ TEST(RNTupleInspector, SizeEmpty)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(0, inspector->GetOnDiskSize());
-   EXPECT_EQ(0, inspector->GetInMemorySize());
+   EXPECT_EQ(0, inspector->GetCompressedSize());
+   EXPECT_EQ(0, inspector->GetUncompressedSize());
 }
 
 TEST(RNTupleInspector, ColumnInfoCompressed)
@@ -216,14 +216,14 @@ TEST(RNTupleInspector, ColumnInfoCompressed)
 
    for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
       auto colInfo = inspector->GetColumnInfo(i);
-      totalOnDiskSize += colInfo.GetOnDiskSize();
+      totalOnDiskSize += colInfo.GetCompressedSize();
 
-      EXPECT_GT(colInfo.GetOnDiskSize(), 0);
-      EXPECT_GT(colInfo.GetInMemorySize(), 0);
-      EXPECT_LT(colInfo.GetOnDiskSize(), colInfo.GetInMemorySize());
+      EXPECT_GT(colInfo.GetCompressedSize(), 0);
+      EXPECT_GT(colInfo.GetUncompressedSize(), 0);
+      EXPECT_LT(colInfo.GetCompressedSize(), colInfo.GetUncompressedSize());
    }
 
-   EXPECT_EQ(totalOnDiskSize, inspector->GetOnDiskSize());
+   EXPECT_EQ(totalOnDiskSize, inspector->GetCompressedSize());
 
    EXPECT_THROW(inspector->GetColumnInfo(42), ROOT::Experimental::RException);
 }
@@ -260,8 +260,8 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
 
    for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
       auto colInfo = inspector->GetColumnInfo(i);
-      EXPECT_EQ(colInfo.GetOnDiskSize(), colInfo.GetInMemorySize());
-      EXPECT_EQ(colInfo.GetOnDiskSize(), colTypeSizes[i] * 5);
+      EXPECT_EQ(colInfo.GetCompressedSize(), colInfo.GetUncompressedSize());
+      EXPECT_EQ(colInfo.GetCompressedSize(), colTypeSizes[i] * 5);
    }
 }
 
@@ -349,9 +349,8 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    inspector->PrintColumnTypeInfo(ROOT::Experimental::ENTupleInspectorPrintFormat::kCSV, csvOutput);
 
    std::string line;
-   std::string expectedCsvHeader{"columnType,count,nElements,onDiskSize,inMemSize"};
    std::getline(csvOutput, line);
-   EXPECT_EQ(expectedCsvHeader, line);
+   EXPECT_EQ("columnType,count,nElements,compressedSize,uncompressedSize", line);
 
    size_t nLines = 0;
    std::string colTypeStr;
@@ -368,10 +367,10 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    inspector->PrintColumnTypeInfo(ROOT::Experimental::ENTupleInspectorPrintFormat::kTable, tableOutput);
 
    std::getline(tableOutput, line);
-   EXPECT_EQ(" column type    | count   | # elements      | bytes on disk   | bytes in memory", line);
+   EXPECT_EQ(" column type    | count   | # elements      | compressed bytes  | uncompressed bytes", line);
 
    std::getline(tableOutput, line);
-   EXPECT_EQ("----------------|---------|-----------------|-----------------|-----------------", line);
+   EXPECT_EQ("----------------|---------|-----------------|-------------------|--------------------", line);
 
    nLines = 0;
    while (std::getline(tableOutput, line)) {
@@ -410,21 +409,21 @@ TEST(RNTupleInspector, FieldInfoCompressed)
 
    auto topFieldInfo = inspector->GetFieldTreeInfo("object");
 
-   EXPECT_GT(topFieldInfo.GetOnDiskSize(), 0);
-   EXPECT_EQ(topFieldInfo.GetInMemorySize(), inspector->GetInMemorySize());
-   EXPECT_LT(topFieldInfo.GetOnDiskSize(), topFieldInfo.GetInMemorySize());
+   EXPECT_GT(topFieldInfo.GetCompressedSize(), 0);
+   EXPECT_EQ(topFieldInfo.GetUncompressedSize(), inspector->GetUncompressedSize());
+   EXPECT_LT(topFieldInfo.GetCompressedSize(), topFieldInfo.GetUncompressedSize());
 
    std::uint64_t subFieldOnDiskSize = 0;
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
       auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
-      subFieldOnDiskSize += subFieldInfo.GetOnDiskSize();
-      subFieldInMemorySize += subFieldInfo.GetInMemorySize();
+      subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
+      subFieldInMemorySize += subFieldInfo.GetUncompressedSize();
    }
 
-   EXPECT_EQ(topFieldInfo.GetOnDiskSize(), subFieldOnDiskSize);
-   EXPECT_EQ(topFieldInfo.GetInMemorySize(), subFieldInMemorySize);
+   EXPECT_EQ(topFieldInfo.GetCompressedSize(), subFieldOnDiskSize);
+   EXPECT_EQ(topFieldInfo.GetUncompressedSize(), subFieldInMemorySize);
 
    EXPECT_THROW(inspector->GetFieldTreeInfo("invalid_field"), ROOT::Experimental::RException);
    EXPECT_THROW(inspector->GetFieldTreeInfo(inspector->GetDescriptor()->GetNFields()), ROOT::Experimental::RException);
@@ -455,19 +454,19 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
 
    auto topFieldInfo = inspector->GetFieldTreeInfo("object");
 
-   EXPECT_EQ(topFieldInfo.GetOnDiskSize(), topFieldInfo.GetInMemorySize());
+   EXPECT_EQ(topFieldInfo.GetCompressedSize(), topFieldInfo.GetUncompressedSize());
 
    std::uint64_t subFieldOnDiskSize = 0;
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
       auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
-      subFieldOnDiskSize += subFieldInfo.GetOnDiskSize();
-      subFieldInMemorySize += subFieldInfo.GetInMemorySize();
+      subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
+      subFieldInMemorySize += subFieldInfo.GetUncompressedSize();
    }
 
-   EXPECT_EQ(topFieldInfo.GetOnDiskSize(), subFieldOnDiskSize);
-   EXPECT_EQ(topFieldInfo.GetInMemorySize(), subFieldInMemorySize);
+   EXPECT_EQ(topFieldInfo.GetCompressedSize(), subFieldOnDiskSize);
+   EXPECT_EQ(topFieldInfo.GetUncompressedSize(), subFieldInMemorySize);
 }
 
 TEST(RNTupleInspector, FieldTypeCount)

@@ -39,8 +39,8 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(
 
 void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 {
-   fOnDiskSize = 0;
-   fInMemorySize = 0;
+   fCompressedSize = 0;
+   fUncompressedSize = 0;
 
    for (const auto &colDesc : fDescriptor->GetColumnIterable()) {
       auto colId = colDesc.GetPhysicalId();
@@ -50,7 +50,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
       auto colType = colDesc.GetModel().GetType();
       std::uint32_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(colType)->GetSize();
       std::uint64_t nElems = 0;
-      std::uint64_t onDiskSize = 0;
+      std::uint64_t compressedSize = 0;
 
       for (const auto &clusterDescriptor : fDescriptor->GetClusterIterable()) {
          if (!clusterDescriptor.ContainsColumn(colId)) {
@@ -74,26 +74,26 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
 
          for (const auto &page : pageRange.fPageInfos) {
-            onDiskSize += page.fLocator.fBytesOnStorage;
-            fOnDiskSize += page.fLocator.fBytesOnStorage;
-            fInMemorySize += page.fNElements * elemSize;
+            compressedSize += page.fLocator.fBytesOnStorage;
+            fCompressedSize += page.fLocator.fBytesOnStorage;
+            fUncompressedSize += page.fNElements * elemSize;
          }
       }
 
-      fColumnInfo.emplace(colId, RColumnInfo(colDesc, onDiskSize, elemSize, nElems));
+      fColumnInfo.emplace(colId, RColumnInfo(colDesc, compressedSize, elemSize, nElems));
    }
 }
 
 ROOT::Experimental::RNTupleInspector::RFieldTreeInfo
 ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldId)
 {
-   std::uint64_t onDiskSize = 0;
-   std::uint64_t inMemSize = 0;
+   std::uint64_t compressedSize = 0;
+   std::uint64_t uncompressedSize = 0;
 
    for (const auto &colDescriptor : fDescriptor->GetColumnIterable(fieldId)) {
       auto colInfo = GetColumnInfo(colDescriptor.GetPhysicalId());
-      onDiskSize += colInfo.GetOnDiskSize();
-      inMemSize += colInfo.GetInMemorySize();
+      compressedSize += colInfo.GetCompressedSize();
+      uncompressedSize += colInfo.GetUncompressedSize();
    }
 
    for (const auto &subFieldDescriptor : fDescriptor->GetFieldIterable(fieldId)) {
@@ -101,11 +101,11 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldI
 
       auto subFieldInfo = CollectFieldTreeInfo(subFieldId);
 
-      onDiskSize += subFieldInfo.GetOnDiskSize();
-      inMemSize += subFieldInfo.GetInMemorySize();
+      compressedSize += subFieldInfo.GetCompressedSize();
+      uncompressedSize += subFieldInfo.GetUncompressedSize();
    }
 
-   auto fieldInfo = RFieldTreeInfo(fDescriptor->GetFieldDescriptor(fieldId), onDiskSize, inMemSize);
+   auto fieldInfo = RFieldTreeInfo(fDescriptor->GetFieldDescriptor(fieldId), compressedSize, uncompressedSize);
    fFieldTreeInfo.emplace(fieldId, fieldInfo);
    return fieldInfo;
 }
@@ -224,14 +224,14 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
 {
    struct ColumnTypeInfo {
       std::uint32_t count;
-      std::uint64_t nElems, onDiskSize, inMemSize;
+      std::uint64_t nElems, compressedSize, uncompressedSize;
 
       void operator+=(const RColumnInfo &colInfo)
       {
          this->count++;
          this->nElems += colInfo.GetNElements();
-         this->onDiskSize += colInfo.GetOnDiskSize();
-         this->inMemSize += colInfo.GetInMemorySize();
+         this->compressedSize += colInfo.GetCompressedSize();
+         this->uncompressedSize += colInfo.GetUncompressedSize();
       }
    };
 
@@ -243,19 +243,19 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
 
    switch (format) {
    case ENTupleInspectorPrintFormat::kTable:
-      output << " column type    | count   | # elements      | bytes on disk   | bytes in memory" << std::endl;
-      output << "----------------|---------|-----------------|-----------------|-----------------" << std::endl;
+      output << " column type    | count   | # elements      | compressed bytes  | uncompressed bytes\n"
+             << "----------------|---------|-----------------|-------------------|--------------------" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
          output << std::setw(15) << Detail::RColumnElementBase::GetTypeName(colType) << " |" << std::setw(8)
-                << typeInfo.count << " |" << std::setw(16) << typeInfo.nElems << " |" << std::setw(16)
-                << typeInfo.onDiskSize << " |" << std::setw(16) << typeInfo.inMemSize << " " << std::endl;
+                << typeInfo.count << " |" << std::setw(16) << typeInfo.nElems << " |" << std::setw(18)
+                << typeInfo.compressedSize << " |" << std::setw(18) << typeInfo.uncompressedSize << " " << std::endl;
       }
       break;
    case ENTupleInspectorPrintFormat::kCSV:
-      output << "columnType,count,nElements,onDiskSize,inMemSize" << std::endl;
+      output << "columnType,count,nElements,compressedSize,uncompressedSize" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
          output << Detail::RColumnElementBase::GetTypeName(colType) << "," << typeInfo.count << "," << typeInfo.nElems
-                << "," << typeInfo.onDiskSize << "," << typeInfo.inMemSize << std::endl;
+                << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << std::endl;
       }
       break;
    default: throw RException(R__FAIL("Invalid print format"));
