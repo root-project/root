@@ -65,19 +65,19 @@ public:
    class RColumnInfo {
    private:
       const RColumnDescriptor &fColumnDescriptor;
-      std::uint64_t fOnDiskSize = 0;
+      std::uint64_t fCompressedSize = 0;
       std::uint32_t fElementSize = 0;
       std::uint64_t fNElements = 0;
 
    public:
       RColumnInfo(const RColumnDescriptor &colDesc, std::uint64_t onDiskSize, std::uint32_t elemSize,
                   std::uint64_t nElems)
-         : fColumnDescriptor(colDesc), fOnDiskSize(onDiskSize), fElementSize(elemSize), fNElements(nElems){};
+         : fColumnDescriptor(colDesc), fCompressedSize(onDiskSize), fElementSize(elemSize), fNElements(nElems){};
       ~RColumnInfo() = default;
 
       const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
-      std::uint64_t GetOnDiskSize() const { return fOnDiskSize; }
-      std::uint64_t GetInMemorySize() const { return fElementSize * fNElements; }
+      std::uint64_t GetCompressedSize() const { return fCompressedSize; }
+      std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
       EColumnType GetType() const { return fColumnDescriptor.GetModel().GetType(); }
@@ -87,17 +87,17 @@ public:
    class RFieldTreeInfo {
    private:
       const RFieldDescriptor &fRootFieldDescriptor;
-      std::uint64_t fOnDiskSize = 0;
-      std::uint64_t fInMemorySize = 0;
+      std::uint64_t fCompressedSize = 0;
+      std::uint64_t fUncompressedSize = 0;
 
    public:
       RFieldTreeInfo(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
-         : fRootFieldDescriptor(fieldDesc), fOnDiskSize(onDiskSize), fInMemorySize(inMemSize){};
+         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
       ~RFieldTreeInfo() = default;
 
       const RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
-      std::uint64_t GetOnDiskSize() const { return fOnDiskSize; }
-      std::uint64_t GetInMemorySize() const { return fInMemorySize; }
+      std::uint64_t GetCompressedSize() const { return fCompressedSize; }
+      std::uint64_t GetUncompressedSize() const { return fUncompressedSize; }
    };
 
 private:
@@ -105,8 +105,8 @@ private:
    std::unique_ptr<Detail::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
    int fCompressionSettings = -1;
-   std::uint64_t fOnDiskSize = 0;
-   std::uint64_t fInMemorySize = 0;
+   std::uint64_t fCompressedSize = 0;
+   std::uint64_t fUncompressedSize = 0;
 
    std::map<int, RColumnInfo> fColumnInfo;
    std::map<int, RFieldTreeInfo> fFieldTreeInfo;
@@ -115,7 +115,7 @@ private:
 
    /// Gather column-level, as well as RNTuple-level information. The column-level
    /// information will be stored in `fColumnInfo`, and the RNTuple-level information
-   /// in `fCompressionSettings`, `fOnDiskSize` and `fInMemorySize`.
+   /// in `fCompressionSettings`, `fCompressedSize` and `fUncompressedSize`.
    ///
    /// This method is called when the `RNTupleInspector` is initially created. This means that anything unexpected about
    /// the RNTuple itself (e.g. inconsistent compression settings across clusters) will be detected here. Therefore, any
@@ -152,16 +152,16 @@ public:
    /// `RNTupleInspector::Create`.
    int GetCompressionSettings() const { return fCompressionSettings; }
 
-   /// Get the on-disk, compressed size of the RNTuple being inspected, in bytes.
+   /// Get the compressed, on-disk size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetOnDiskSize() const { return fOnDiskSize; }
+   std::uint64_t GetCompressedSize() const { return fCompressedSize; }
 
-   /// Get the total, in-memory size of the RNTuple being inspected, in bytes.
+   /// Get the uncompressed total size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetInMemorySize() const { return fInMemorySize; }
+   std::uint64_t GetUncompressedSize() const { return fUncompressedSize; }
 
    /// Get the compression factor of the RNTuple being inspected.
-   float GetCompressionFactor() const { return (float)fInMemorySize / (float)fOnDiskSize; }
+   float GetCompressionFactor() const { return (float)fUncompressedSize / (float)fCompressedSize; }
 
    const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
 
@@ -172,7 +172,7 @@ public:
    const std::vector<DescriptorId_t> GetColumnsByType(EColumnType);
 
    /// Print the per-column type information, either as a table or in CSV format. The output includes the column type,
-   /// its count, the total number of elements, the on-disk size and the in-memory size.
+   /// its count, the total number of elements, the compressed size and the uncompressed size.
    ///
    /// **Example: printing the column type information of an RNTuple as a table**
    /// ~~~ {.cpp}
@@ -185,11 +185,11 @@ public:
    /// ~~~
    /// Ouput:
    /// ~~~
-   ///  column type    | count   | # elements      | bytes on disk   | bytes in memory
-   /// ----------------|---------|-----------------|-----------------|-----------------
-   ///    SplitIndex64 |       2 |             150 |              72 |            1200
-   ///     SplitReal32 |       4 |             300 |             189 |            1200
-   ///     SplitUInt32 |       3 |             225 |             123 |             900
+   ///  column type    | count   | # elements      | compressed bytes  | uncompressed bytes
+   /// ----------------|---------|-----------------|-------------------|--------------------
+   ///    SplitIndex64 |       2 |             150 |                72 |               1200
+   ///     SplitReal32 |       4 |             300 |               189 |               1200
+   ///     SplitUInt32 |       3 |             225 |               123 |                900
    /// ~~~
    ///
    /// **Example: printing the column type information of an RNTuple in CSV format**
@@ -203,7 +203,7 @@ public:
    /// ~~~
    /// Ouput:
    /// ~~~
-   /// columnType,count,nElements,onDiskSize,inMemSize
+   /// columnType,count,nElements,compressedSize,uncompressedSize
    /// SplitIndex64,2,150,72,1200
    /// SplitReal32,4,300,189,1200
    /// SplitUInt32,3,225,123,900
