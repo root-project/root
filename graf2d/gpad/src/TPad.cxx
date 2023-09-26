@@ -1586,7 +1586,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 
    if (this != gPad) {
       Warning("DrawFrame", "Must be called for the current pad only");
-      return gPad->DrawFrame(xmin,ymin,xmax,ymax,title);
+      if (gPad) return gPad->DrawFrame(xmin,ymin,xmax,ymax,title);
    }
 
    cd();
