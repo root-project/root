@@ -447,7 +447,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             has_histo = true;
          }
       } else if (obj->InheritsFrom(TFrame::Class())) {
-         frame = static_cast<TFrame *>(obj);
+         if (!frame)
+            frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
          has_histo = true;
@@ -745,6 +746,12 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             paddata.NewPrimitive(func, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, func);
 
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+      } else if (obj->InheritsFrom(TFrame::Class())) {
+         flush_master();
+         if (frame && (obj == frame)) {
+            paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+            frame = nullptr; // add frame only once
+         }
       } else if (IsJSSupportedClass(obj, usemaster)) {
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
