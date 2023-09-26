@@ -17,7 +17,8 @@
 #ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if (!defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H)) || (defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H_XROOFIT))
+#if (!defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H)) || \
+   (defined(XROOFIT_USE_PRAGMA_ONCE) && !defined(XROOFIT_XROOFIT_H_XROOFIT))
 #ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROOFIT_H
 #else
@@ -61,7 +62,7 @@ public:
    // Extra options for NLL creation:
    static RooCmdArg ReuseNLL(bool flag); // if should try to reuse the NLL object when it changes dataset
    static RooCmdArg Tolerance(double value);
-   static RooCmdArg StrategySequence(const char* stratSeq); // control minimization strategy sequence
+   static RooCmdArg StrategySequence(const char *stratSeq); // control minimization strategy sequence
    static constexpr double OBS = std::numeric_limits<double>::quiet_NaN();
 
    // Helper function for matching precision of a value and its error
@@ -97,8 +98,9 @@ public:
    static std::shared_ptr<RooLinkedList> defaultNLLOptions();      // access default NLL options for modifications
    static std::shared_ptr<ROOT::Fit::FitConfig> defaultFitConfig();
 
-   static std::shared_ptr<const RooFitResult>
-   minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &fitConfig = nullptr, const std::shared_ptr<RooLinkedList> &nllOpts = nullptr);
+   static std::shared_ptr<const RooFitResult> minimize(RooAbsReal &nll,
+                                                       const std::shared_ptr<ROOT::Fit::FitConfig> &fitConfig = nullptr,
+                                                       const std::shared_ptr<RooLinkedList> &nllOpts = nullptr);
    static int minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parName = "",
                     const std::shared_ptr<ROOT::Fit::FitConfig> &_fitConfig = nullptr);
 
@@ -106,8 +108,9 @@ public:
    // can share the fit result (and avoid re-reading from disk as well)
    class StoredFitResult : public TNamed {
    public:
-      StoredFitResult(RooFitResult* _fr);
-       StoredFitResult(const std::shared_ptr<RooFitResult>& _fr);
+      StoredFitResult(RooFitResult *_fr);
+      StoredFitResult(const std::shared_ptr<RooFitResult> &_fr);
+
    public:
       std::shared_ptr<RooFitResult> fr; //!
       ClassDef(StoredFitResult, 0)
@@ -155,30 +158,30 @@ public:
       }
 
       // inverse of PValue function
-      static Double_t k(const IncompatFunc &compatRegions, double pValue, double poiVal, double poiPrimeVal,
-                        double sigma_mu = 0, double mu_low = -std::numeric_limits<double>::infinity(),
-                        double mu_high = std::numeric_limits<double>::infinity());
+      static double k(const IncompatFunc &compatRegions, double pValue, double poiVal, double poiPrimeVal,
+                      double sigma_mu = 0, double mu_low = -std::numeric_limits<double>::infinity(),
+                      double mu_high = std::numeric_limits<double>::infinity());
 
-      static Double_t k(const PLLType &pllType, double pValue, double mu, double mu_prime, double sigma_mu = 0,
-                        double mu_low = -std::numeric_limits<double>::infinity(),
-                        double mu_high = std::numeric_limits<double>::infinity())
+      static double k(const PLLType &pllType, double pValue, double mu, double mu_prime, double sigma_mu = 0,
+                      double mu_low = -std::numeric_limits<double>::infinity(),
+                      double mu_high = std::numeric_limits<double>::infinity())
       {
          return k(IncompatibilityFunction(pllType, mu), pValue, mu, mu_prime, sigma_mu, mu_low, mu_high);
       }
 
       // Recommend sigma_mu = |mu - mu_prime|/sqrt(pll_mu(asimov_mu_prime))
-      static Double_t PValue(const IncompatFunc &compatRegions, double k, double mu, double mu_prime,
-                             double sigma_mu = 0, double mu_low = -std::numeric_limits<double>::infinity(),
-                             double mu_high = std::numeric_limits<double>::infinity());
+      static double PValue(const IncompatFunc &compatRegions, double k, double mu, double mu_prime, double sigma_mu = 0,
+                           double mu_low = -std::numeric_limits<double>::infinity(),
+                           double mu_high = std::numeric_limits<double>::infinity());
 
-      static Double_t PValue(const PLLType &pllType, double k, double mu, double mu_prime, double sigma_mu = 0,
-                             double mu_low = -std::numeric_limits<double>::infinity(),
-                             double mu_high = std::numeric_limits<double>::infinity())
+      static double PValue(const PLLType &pllType, double k, double mu, double mu_prime, double sigma_mu = 0,
+                           double mu_low = -std::numeric_limits<double>::infinity(),
+                           double mu_high = std::numeric_limits<double>::infinity())
       {
          return PValue(IncompatibilityFunction(pllType, mu), k, mu, mu_prime, sigma_mu, mu_low, mu_high);
       }
 
-      static Double_t Phi_m(double mu, double mu_prime, double a, double sigma, const IncompatFunc &compatRegions);
+      static double Phi_m(double mu, double mu_prime, double a, double sigma, const IncompatFunc &compatRegions);
 
       static int CompatFactor(const IncompatFunc &func, double mu_hat);
 

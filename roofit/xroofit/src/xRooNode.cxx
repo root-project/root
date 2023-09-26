@@ -41,7 +41,7 @@
 #define GETACTBROWSER(b) b->fActBrowser
 #define GETROOTDIR(b) b->fRootDir
 #define GETLISTTREE(b) b->fListTree
-#define GETDMP(o,m) o->m
+#define GETDMP(o, m) o->m
 
 #else
 
@@ -62,13 +62,31 @@
 #include "TRootBrowser.h"
 #include "TGFileBrowser.h"
 
-RooWorkspace* GETWS(RooAbsArg * a) { return a->workspace(); }
-const auto& GETWSSETS(RooWorkspace * w){ return  w->sets(); }
-auto& GETWSSNAPSHOTS(RooWorkspace * w){ return  w->getSnapshots(); }
-auto GETACTBROWSER(TRootBrowser * b){ return  b->GetActBrowser(); }
-auto GETROOTDIR(TGFileBrowser * b){ return  b->GetRootDir(); }
-auto GETLISTTREE(TGFileBrowser * b) { return b->GetListTree(); }
-#define GETDMP(o,m) (*(void**)(((unsigned char*)o) + o->Class()->GetDataMemberOffset(#m)))
+RooWorkspace *GETWS(RooAbsArg *a)
+{
+   return a->workspace();
+}
+const auto &GETWSSETS(RooWorkspace *w)
+{
+   return w->sets();
+}
+auto &GETWSSNAPSHOTS(RooWorkspace *w)
+{
+   return w->getSnapshots();
+}
+auto GETACTBROWSER(TRootBrowser *b)
+{
+   return b->GetActBrowser();
+}
+auto GETROOTDIR(TGFileBrowser *b)
+{
+   return b->GetRootDir();
+}
+auto GETLISTTREE(TGFileBrowser *b)
+{
+   return b->GetListTree();
+}
+#define GETDMP(o, m) (*(void **)(((unsigned char *)o) + o->Class()->GetDataMemberOffset(#m)))
 
 #endif
 
@@ -111,8 +129,8 @@ auto GETLISTTREE(TGFileBrowser * b) { return b->GetListTree(); }
 
 #include "coutCapture.h"
 
-//#include "RooFitTrees/RooFitResultTree.h"
-//#include "RooFitTrees/RooDataTree.h"
+// #include "RooFitTrees/RooFitResultTree.h"
+// #include "RooFitTrees/RooDataTree.h"
 #include "TFile.h"
 #include "TSystem.h"
 #include "TKey.h"
@@ -149,8 +167,8 @@ auto GETLISTTREE(TGFileBrowser * b) { return b->GetListTree(); }
 #include "TMemFile.h"
 #include "TGaxis.h"
 #include "TPie.h"
-//#include <thread>
-//#include <future>
+// #include <thread>
+// #include <future>
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
 #include "RooNaNPacker.h"
@@ -197,10 +215,10 @@ xRooNode::xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const
    : TNamed(name, ""), fComp(comp), fParent(parent)
 {
 
-   if (!fComp && !fParent && name && strlen(name)>0) {
-      char* _path = gSystem->ExpandPathName(name);
+   if (!fComp && !fParent && name && strlen(name) > 0) {
+      char *_path = gSystem->ExpandPathName(name);
       TString pathName = TString(_path);
-      delete [] _path;
+      delete[] _path;
       if (!gSystem->AccessPathName(pathName)) {
          // if file is json can try to read
          if (pathName.EndsWith(".json")) {
@@ -310,15 +328,15 @@ xRooNode::xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const
                auto _v = dynamic_cast<RooRealVar *>(s);
                if (!_v)
                   continue;
-//               if (!_v->hasRange("physical")) {
-//                  _v->setRange("physical", 0, std::numeric_limits<double>::infinity());
-//                  // ensure range of poi is also straddling 0
-//                  if (_v->getMin() >= 0)
-//                     _v->setMin(-1e-5);
-//               }
+               //               if (!_v->hasRange("physical")) {
+               //                  _v->setRange("physical", 0, std::numeric_limits<double>::infinity());
+               //                  // ensure range of poi is also straddling 0
+               //                  if (_v->getMin() >= 0)
+               //                     _v->setMin(-1e-5);
+               //               }
             }
          } else if (TString(k).EndsWith("_NuisParams")) {
-            const_cast<RooArgSet&>(v).setAttribAll("np");
+            const_cast<RooArgSet &>(v).setAttribAll("np");
          }
       }
       if (!_allGlobs.empty() && GETWSSETS(_ws).count("globalObservables") == 0) {
@@ -336,12 +354,16 @@ xRooNode::xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const
                continue;
             if (!v->hasError()) {
                noErrorPars.insert(v);
-               if(!parNames.empty()) parNames += ",";
+               if (!parNames.empty())
+                  parNames += ",";
                parNames += v->GetName();
             }
          }
          if (!noErrorPars.empty()) {
-            Warning("xRooNode","Inferring initial errors of %d parameters (give all nuisance parameters an error to avoid this msg)",int(noErrorPars.size()));
+            Warning(
+               "xRooNode",
+               "Inferring initial errors of %d parameters (give all nuisance parameters an error to avoid this msg)",
+               int(noErrorPars.size()));
             // get the first top-level pdf
             browse();
             for (auto &a : *this) {
@@ -525,19 +547,19 @@ void xRooNode::Browse(TBrowser *b)
 
    browse();
 
-    // for top-level pdfs default to having the .vars browsable too
-    if (get<RooAbsPdf>() && fFolder=="!models" && !_IsShowVars_()) {
-        fBrowsables.push_back(std::make_shared<xRooNode>(vars()));
-    }
+   // for top-level pdfs default to having the .vars browsable too
+   if (get<RooAbsPdf>() && fFolder == "!models" && !_IsShowVars_()) {
+      fBrowsables.push_back(std::make_shared<xRooNode>(vars()));
+   }
 
-    if(auto _fr = get<RooFitResult>(); _fr && fBrowsables.empty()) {
-        // have some common drawing options
-        fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"pull\")",nullptr,*this));
-        fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"corrcolztext\")",nullptr,*this));
-        if(std::unique_ptr<RooAbsCollection>(_fr->floatParsFinal().selectByAttrib("poi",true))->size()==1) {
-           fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"impact\")",nullptr,*this));
-        }
-    }
+   if (auto _fr = get<RooFitResult>(); _fr && fBrowsables.empty()) {
+      // have some common drawing options
+      fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"pull\")", nullptr, *this));
+      fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"corrcolztext\")", nullptr, *this));
+      if (std::unique_ptr<RooAbsCollection>(_fr->floatParsFinal().selectByAttrib("poi", true))->size() == 1) {
+         fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"impact\")", nullptr, *this));
+      }
+   }
 
    if (empty() && fBrowsables.empty()) {
       try {
@@ -546,15 +568,19 @@ void xRooNode::Browse(TBrowser *b)
             if (auto ed = dynamic_cast<TGedEditor *>(TVirtualPadEditor::GetPadEditor())) {
                ed->SetModel(gPad, s, kButton1Down, true);
             }
-         } else if(TString(GetName()).BeginsWith(".Draw(\"") && fParent) {
-             fParent->Draw(TString(TString(GetName())(7,strlen(GetName())-9)) + b->GetDrawOption());
+         } else if (TString(GetName()).BeginsWith(".Draw(\"") && fParent) {
+            fParent->Draw(TString(TString(GetName())(7, strlen(GetName()) - 9)) + b->GetDrawOption());
          } else {
-             Draw(b->GetDrawOption());
+            Draw(b->GetDrawOption());
          }
       } catch (const std::exception &e) {
-         new TGMsgBox(gClient->GetRoot(), (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot()
-         , "Exception", e.what(),
-                      kMBIconExclamation); // deletes self on dismiss?
+         new TGMsgBox(
+            gClient->GetRoot(),
+            (gROOT->GetListOfBrowsers()->At(0))
+               ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+               : gClient->GetRoot(),
+            "Exception", e.what(),
+            kMBIconExclamation); // deletes self on dismiss?
       }
    }
 
@@ -576,7 +602,7 @@ void xRooNode::Browse(TBrowser *b)
       }
       // ensure entry in folders for every folder type ...
       for (auto &v : *this) {
-         if (v->fFolder != "" && !_folders->find(v->fFolder,false)) {
+         if (v->fFolder != "" && !_folders->find(v->fFolder, false)) {
             _folders->emplace_back(std::make_shared<xRooNode>(v->fFolder.c_str(), nullptr, *this));
          }
       }
@@ -594,9 +620,9 @@ void xRooNode::Browse(TBrowser *b)
          continue; // in the folders
       if (strcmp(v->GetName(), ".folders") == 0)
          continue; // never 'browse' the folders property
-      auto _fr =  v->get<RooFitResult>();
+      auto _fr = v->get<RooFitResult>();
       int _checked = (v->get<RooAbsData>() || _fr) ? v->get()->TestBit(1 << 20) : -1;
-      if(_fr && ((_fr->status()==0 && _fr->numStatusHistory()==0)||(_fr->floatParsFinal().empty()))) {
+      if (_fr && ((_fr->status() == 0 && _fr->numStatusHistory() == 0) || (_fr->floatParsFinal().empty()))) {
          // this is a "PARTIAL" fit result ... don't allow it to be selected
          _checked = -1;
       }
@@ -621,16 +647,16 @@ void xRooNode::Browse(TBrowser *b)
          else*/
          _name += TString::Format(" [%s]", _type);
       }
-      if(auto fv = v->get<RooFormulaVar>()) {
-         TString formu = TString::Format(" [%s]",fv->expression());
-         for(size_t i=0;i<fv->dependents().size();i++) {
-            formu.ReplaceAll(TString::Format("x[%zu]",i),fv->dependents()[i].GetName());
+      if (auto fv = v->get<RooFormulaVar>()) {
+         TString formu = TString::Format(" [%s]", fv->expression());
+         for (size_t i = 0; i < fv->dependents().size(); i++) {
+            formu.ReplaceAll(TString::Format("x[%zu]", i), fv->dependents()[i].GetName());
          }
          _name += formu;
-      } else if(auto gv = v->get<RooGenericPdf>()) {
-         TString formu = TString::Format(" [%s]",gv->expression());
-         for(size_t i=0;i<gv->dependents().size();i++) {
-            formu.ReplaceAll(TString::Format("x[%zu]",i),gv->dependents()[i].GetName());
+      } else if (auto gv = v->get<RooGenericPdf>()) {
+         TString formu = TString::Format(" [%s]", gv->expression());
+         for (size_t i = 0; i < gv->dependents().size(); i++) {
+            formu.ReplaceAll(TString::Format("x[%zu]", i), gv->dependents()[i].GetName());
          }
          _name += formu;
       }
@@ -645,28 +671,29 @@ void xRooNode::Browse(TBrowser *b)
          v->TNamed::SetNameTitle(nameSave, titleSave);
       if (_checked != -1) {
          dynamic_cast<TQObject *>(b->GetBrowserImp())
-            ->Connect("Checked(TObject *, Bool_t)", ClassName(), v.get(), "Checked(TObject *, Bool_t)");
+            ->Connect("Checked(TObject *, bool)", ClassName(), v.get(), "Checked(TObject *, bool)");
       }
       if (_fr) {
-         if(_fr->status() || _fr->covQual()!=3) { // snapshots or bad fits
+         if (_fr->status() || _fr->covQual() != 3) { // snapshots or bad fits
             v->GetTreeItem(b)->SetColor((_fr->numStatusHistory() || _fr->floatParsFinal().empty()) ? kRed : kBlue);
-         } else if(_fr->numStatusHistory()==0) { // partial fit result ..
+         } else if (_fr->numStatusHistory() == 0) { // partial fit result ..
             v->GetTreeItem(b)->SetColor(kGray);
          }
       }
-      if ((v->fFolder=="!np"||v->fFolder=="!poi")) {
-         if(v->get<RooAbsArg>()->getAttribute("Constant")) {
+      if ((v->fFolder == "!np" || v->fFolder == "!poi")) {
+         if (v->get<RooAbsArg>()->getAttribute("Constant")) {
             v->GetTreeItem(b)->SetColor(kGray);
-         }
-         else v->GetTreeItem(b)->ClearColor();
+         } else
+            v->GetTreeItem(b)->ClearColor();
       }
       if (auto _htr = v->get<RooStats::HypoTestResult>(); _htr) {
          // check for fit statuses
-         if(auto fits = _htr->GetFitInfo()) {
-            for(int i=0;i<fits->numEntries();i++) {
+         if (auto fits = _htr->GetFitInfo()) {
+            for (int i = 0; i < fits->numEntries(); i++) {
                // if any fit (other than a genFit) is bad, flag point as bad
-               if( fits->get(i)->getCatIndex("type") != 5 && fits->get(i)->getRealValue("status") != 0 ) {
-                  v->GetTreeItem(b)->SetColor(kRed); break;
+               if (fits->get(i)->getCatIndex("type") != 5 && fits->get(i)->getRealValue("status") != 0) {
+                  v->GetTreeItem(b)->SetColor(kRed);
+                  break;
                }
             }
          } else {
@@ -676,8 +703,6 @@ void xRooNode::Browse(TBrowser *b)
 
       // v.fBrowsers.insert(b);
    }
-
-
 
    // for pdfs, check for datasets too and add to list
    /*if (get<RooAbsPdf>()) {
@@ -699,7 +724,8 @@ void xRooNode::Browse(TBrowser *b)
    // browse the browsables too
    for (auto &v : fBrowsables) {
       TString _name = v->GetName();
-      if(_name==".memory") continue; // hide the memory from browsing, if put in browsables
+      if (_name == ".memory")
+         continue; // hide the memory from browsing, if put in browsables
       TString nameSave(v->TNamed::GetName());
       TString titleSave(v->TNamed::GetTitle());
       if (auto o = v->get(); o)
@@ -712,7 +738,7 @@ void xRooNode::Browse(TBrowser *b)
    b->SetSelected(this);
 }
 
-void xRooNode::_ShowVars_(Bool_t set)
+void xRooNode::_ShowVars_(bool set)
 {
    if (!set) {
       // can't remove as causes a crash, need to remove from the browser first
@@ -754,22 +780,23 @@ class Axis2 : public TAxis {
 
 public:
    using TAxis::TAxis;
-   Double_t GetBinWidth(Int_t bin) const override
+   double GetBinWidth(Int_t bin) const override
    {
       if (auto v = var(); v)
          return v->getBinWidth(bin - 1, GetName());
       return 1;
    }
-   Double_t GetBinLowEdge(Int_t bin) const override
+   double GetBinLowEdge(Int_t bin) const override
    {
       if (auto v = rvar(); v)
-         return (bin==v->getBinning(GetName()).numBins()+1) ? v->getBinning(GetName()).binHigh(bin-2) : v->getBinning(GetName()).binLow(bin - 1);
+         return (bin == v->getBinning(GetName()).numBins() + 1) ? v->getBinning(GetName()).binHigh(bin - 2)
+                                                                : v->getBinning(GetName()).binLow(bin - 1);
       return bin - 1;
    }
-   Double_t GetBinUpEdge(Int_t bin) const override
+   double GetBinUpEdge(Int_t bin) const override
    {
       if (auto v = rvar(); v)
-         return (bin==0) ? v->getBinning(GetName()).binLow(bin) : v->getBinning(GetName()).binHigh(bin - 1);
+         return (bin == 0) ? v->getBinning(GetName()).binLow(bin) : v->getBinning(GetName()).binHigh(bin - 1);
       return bin;
    }
 
@@ -785,20 +812,20 @@ public:
          dynamic_cast<TNamed *>(GetParent())->SetTitle(title);
    }
 
-   void Set(Int_t nbins, const Double_t *xbins) override
+   void Set(Int_t nbins, const double *xbins) override
    {
       if (auto v = dynamic_cast<RooRealVar *>(rvar()))
          v->setBinning(RooBinning(nbins, xbins), GetName());
       TAxis::Set(nbins, xbins);
    }
-   void Set(Int_t nbins, const Float_t *xbins) override
+   void Set(Int_t nbins, const float *xbins) override
    {
       std::vector<double> bins(nbins + 1);
       for (int i = 0; i <= nbins; i++)
          bins.at(i) = xbins[i];
       return Set(nbins, &bins[0]);
    }
-   void Set(Int_t nbins, Double_t xmin, Double_t xmax) override
+   void Set(Int_t nbins, double xmin, double xmax) override
    {
       if (auto v = dynamic_cast<RooRealVar *>(rvar()))
          v->setBinning(RooUniformBinning(xmin, xmax, nbins), GetName());
@@ -808,7 +835,7 @@ public:
    const RooAbsBinning *binning() const { return var()->getBinningPtr(GetName()); }
 
    Int_t FindFixBin(const char *label) const override { return TAxis::FindFixBin(label); }
-   Int_t FindFixBin(Double_t x) const override { return (binning()) ? (binning()->binNumber(x) + 1) : x; }
+   Int_t FindFixBin(double x) const override { return (binning()) ? (binning()->binNumber(x) + 1) : x; }
 
 private:
    RooAbsLValue *var() const { return dynamic_cast<RooAbsLValue *>(GetParent()); }
@@ -884,7 +911,8 @@ TAxis *xRooNode::GetXaxis() const
 {
    if (fXAxis) {
       // check if num bins needs update or not
-      if(auto cat = dynamic_cast<RooAbsCategory*>(fXAxis->GetParent()); cat && cat->numTypes()!=fXAxis->GetNbins()) {
+      if (auto cat = dynamic_cast<RooAbsCategory *>(fXAxis->GetParent());
+          cat && cat->numTypes() != fXAxis->GetNbins()) {
          fXAxis.reset();
       } else {
          return fXAxis.get();
@@ -909,7 +937,8 @@ TAxis *xRooNode::GetXaxis() const
       // need to choose from dependent fundamentals, in following order:
       // parentX (if not a glob), robs, globs, vars, args
 
-      if (_parentX && !dynamic_cast<RooAbsArg*>(_parentX->GetParent())->getAttribute("global") && (o->dependsOn(*dynamic_cast<RooAbsArg *>(_parentX->GetParent())) || vars().size() == 0)) {
+      if (_parentX && !dynamic_cast<RooAbsArg *>(_parentX->GetParent())->getAttribute("global") &&
+          (o->dependsOn(*dynamic_cast<RooAbsArg *>(_parentX->GetParent())) || vars().size() == 0)) {
          x = dynamic_cast<RooAbsLValue *>(_parentX->GetParent());
       } else if (auto _obs = obs(); !_obs.empty()) {
          for (auto &v : _obs) {
@@ -977,7 +1006,7 @@ TAxis *xRooNode::GetXaxis() const
          if (/*o->isBinnedDistribution(*dynamic_cast<RooAbsArg *>(x))*/
              auto bins = _or_func(
                 /*o->plotSamplingHint(*dynamic_cast<RooAbsRealLValue
-                   *>(x),-std::numeric_limits<double>::infinity(),std::numeric_limits<double>::infinity())*/
+                 *>(x),-std::numeric_limits<double>::infinity(),std::numeric_limits<double>::infinity())*/
                 (std::list<double> *)(nullptr),
                 o->binBoundaries(*dynamic_cast<RooAbsRealLValue *>(x), -std::numeric_limits<double>::infinity(),
                                  std::numeric_limits<double>::infinity()));
@@ -994,7 +1023,7 @@ TAxis *xRooNode::GetXaxis() const
                _v->getBinning(o->GetName())
                   .SetTitle(""); // indicates to use the current var title when building histograms etc
                                  //_v->getBinning(o->GetName()).SetTitle(strlen(dynamic_cast<TObject*>(x)->GetTitle()) ?
-                                 //dynamic_cast<TObject*>(x)->GetTitle() : dynamic_cast<TObject*>(x)->GetName());
+                                 // dynamic_cast<TObject*>(x)->GetTitle() : dynamic_cast<TObject*>(x)->GetName());
             }
             binningName = o->GetName();
             delete bins;
@@ -1012,14 +1041,14 @@ TAxis *xRooNode::GetXaxis() const
          } else {
             fXAxis = std::make_shared<Axis2>(x->numBins(binningName), r->getBinning(binningName).array());
          }
-      } else if(dynamic_cast<RooAbsCategory*>(x)) {
+      } else if (dynamic_cast<RooAbsCategory *>(x)) {
          std::vector<double> bins = {};
          for (int i = 0; i <= x->numBins(binningName); i++)
             bins.push_back(i);
          fXAxis = std::make_shared<Axis2>(x->numBins(binningName), &bins[0]);
          // TODO have to load current state of bin labels if was a category (sadly not a virtual method)
          for (int i = 0; i < x->numBins(binningName); i++) {
-            fXAxis->SetBinLabel(i+1,dynamic_cast<RooAbsCategory *>(x)->lookupName(i).c_str());
+            fXAxis->SetBinLabel(i + 1, dynamic_cast<RooAbsCategory *>(x)->lookupName(i).c_str());
          }
       }
    }
@@ -1081,15 +1110,15 @@ const char *xRooNode::GetIconName() const
       }
       if (o->InheritsFrom("RooStats::HypoTestInverterResult")) {
          if (!gClient->GetMimeTypeList()->GetIcon("xRooFitScanStyle", true)) {
-            gClient->GetMimeTypeList()->AddType("xRooFitScanStyle", "xRooFitScanStyle", "f2_s.xpm",
-                                                "f2_s.xpm", "->Browse()");
+            gClient->GetMimeTypeList()->AddType("xRooFitScanStyle", "xRooFitScanStyle", "f2_s.xpm", "f2_s.xpm",
+                                                "->Browse()");
          }
          return "xRooFitScanStyle";
       }
       if (o->InheritsFrom("RooStats::HypoTestResult")) {
          if (!gClient->GetMimeTypeList()->GetIcon("xRooFitTestStyle", true)) {
-            gClient->GetMimeTypeList()->AddType("xRooFitTestStyle", "xRooFitTestStyle", "diamond.xpm",
-                                                "diamond.xpm", "->Browse()");
+            gClient->GetMimeTypeList()->AddType("xRooFitTestStyle", "xRooFitTestStyle", "diamond.xpm", "diamond.xpm",
+                                                "->Browse()");
          }
          return "xRooFitTestStyle";
       }
@@ -1097,8 +1126,8 @@ const char *xRooNode::GetIconName() const
          return "TBranchElement-folder";
       if (o->InheritsFrom("RooAbsPdf")) {
          if (!gClient->GetMimeTypeList()->GetIcon("xRooFitPDFStyle", true)) {
-            gClient->GetMimeTypeList()->AddType("xRooFitPDFStyle", "xRooFitPDFStyle", "pdf.xpm",
-                                                "pdf.xpm", "->Browse()");
+            gClient->GetMimeTypeList()->AddType("xRooFitPDFStyle", "xRooFitPDFStyle", "pdf.xpm", "pdf.xpm",
+                                                "->Browse()");
          }
          return "xRooFitPDFStyle";
       }
@@ -1150,21 +1179,22 @@ xRooNode xRooNode::coords(bool setVals) const
    while (_p) {
       TString pName(_p->GetName());
       if (auto pos = pName.Index('='); pos != -1) {
-         if (pos > 0 && pName(pos-1)=='<') {
+         if (pos > 0 && pName(pos - 1) == '<') {
             // should be a range on a real lvalue, of form low<=name<high
-            double low = TString(pName(0,pos-1)).Atof();
-            pName = pName(pos+1,pName.Length());
-            double high = TString(pName(pName.Index('<')+1,pName.Length())).Atof();
-            pName = pName(0,pName.Index('<'));
-            if(auto _obs = _p->getObject<RooAbsRealLValue>(pName.Data());_obs) {
-               if(setVals) {
-                  _obs->setVal((high+low)/2.);
-                  static_cast<RooRealVar*>(_obs.get())->setRange("coordRange",low,high);
-                  _obs->setStringAttribute("coordRange","coordRange"); // will need if we allow multi disconnected regions, need comma list
+            double low = TString(pName(0, pos - 1)).Atof();
+            pName = pName(pos + 1, pName.Length());
+            double high = TString(pName(pName.Index('<') + 1, pName.Length())).Atof();
+            pName = pName(0, pName.Index('<'));
+            if (auto _obs = _p->getObject<RooAbsRealLValue>(pName.Data()); _obs) {
+               if (setVals) {
+                  _obs->setVal((high + low) / 2.);
+                  static_cast<RooRealVar *>(_obs.get())->setRange("coordRange", low, high);
+                  _obs->setStringAttribute(
+                     "coordRange", "coordRange"); // will need if we allow multi disconnected regions, need comma list
                }
                out.emplace_back(std::make_shared<xRooNode>(_obs->GetName(), _obs, _p));
             } else {
-               throw std::runtime_error(TString::Format("Unknown observable: %s",pName.Data()) );
+               throw std::runtime_error(TString::Format("Unknown observable: %s", pName.Data()));
             }
 
          } else if (auto _obs = _p->getObject<RooAbsArg>(pName(0, pos)); _obs) {
@@ -1207,19 +1237,19 @@ void xRooNode::_Vary_(const char *what)
 xRooNode xRooNode::Remove(const xRooNode &child)
 {
 
-   if (strcmp(GetName(),".poi") == 0) {
-       // demote a parameter from being a poi
-       auto toRemove =
-               (child.get<RooAbsArg>() || !find(child.GetName())) ? child : xRooNode(find(child.GetName())->fComp);
-       if(toRemove) {
-           if (!toRemove.get<RooAbsArg>()->getAttribute("poi")) {
-               throw std::runtime_error(TString::Format("%s is not a poi",toRemove.GetName()));
-           }
-           toRemove.get<RooAbsArg>()->setAttribute("poi",false);
-           return toRemove;
-       }
+   if (strcmp(GetName(), ".poi") == 0) {
+      // demote a parameter from being a poi
+      auto toRemove =
+         (child.get<RooAbsArg>() || !find(child.GetName())) ? child : xRooNode(find(child.GetName())->fComp);
+      if (toRemove) {
+         if (!toRemove.get<RooAbsArg>()->getAttribute("poi")) {
+            throw std::runtime_error(TString::Format("%s is not a poi", toRemove.GetName()));
+         }
+         toRemove.get<RooAbsArg>()->setAttribute("poi", false);
+         return toRemove;
+      }
    } else if (strcmp(GetName(), ".factors") == 0 || strcmp(GetName(), ".constraints") == 0 ||
-       strcmp(GetName(), ".components") == 0) {
+              strcmp(GetName(), ".components") == 0) {
       auto toRemove =
          (child.get<RooAbsArg>() || !find(child.GetName())) ? child : xRooNode(find(child.GetName())->fComp);
       if (auto p = fParent->get<RooProdPdf>(); p) {
@@ -1231,7 +1261,7 @@ xRooNode xRooNode::Remove(const xRooNode &child)
          auto i = p->pdfList().index(*pdf);
          if (i >= 0) {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-            const_cast<RooArgList&>(p->pdfList()).remove(*pdf);
+            const_cast<RooArgList &>(p->pdfList()).remove(*pdf);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 00)
             p->_pdfNSetList.erase(p->_pdfNSetList.begin() + i);
 #else
@@ -1257,11 +1287,11 @@ xRooNode xRooNode::Remove(const xRooNode &child)
             arg = p2->components().find(child.GetName());
          if (!arg)
             throw std::runtime_error(TString::Format("Cannot find %s in %s", child.GetName(), fParent->GetName()));
-         // remove server ... doesn't seem to trigger removal from proxy
+            // remove server ... doesn't seem to trigger removal from proxy
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
          p2->_compRSet.remove(*arg);
 #else
-         const_cast<RooArgList&>(p2->realComponents()).remove(*arg);
+         const_cast<RooArgList &>(p2->realComponents()).remove(*arg);
 #endif
          p2->removeServer(*arg, true);
          sterilize();
@@ -1291,17 +1321,17 @@ xRooNode xRooNode::Remove(const xRooNode &child)
 
          if (idx != -1) {
 
-            const_cast<RooArgList&>(p4->funcList()).remove(*arg);
+            const_cast<RooArgList &>(p4->funcList()).remove(*arg);
             p4->removeServer(*arg, true);
             // have to be careful removing coef because if shared will end up removing them all!!
             std::vector<RooAbsArg *> _coefs;
-            for (size_t ii = 0; ii < const_cast<RooArgList&>(p4->coefList()).size(); ii++) {
+            for (size_t ii = 0; ii < const_cast<RooArgList &>(p4->coefList()).size(); ii++) {
                if (ii != size_t(idx))
-                  _coefs.push_back(const_cast<RooArgList&>(p4->coefList()).at(ii));
+                  _coefs.push_back(const_cast<RooArgList &>(p4->coefList()).at(ii));
             }
-            const_cast<RooArgList&>(p4->coefList()).removeAll();
+            const_cast<RooArgList &>(p4->coefList()).removeAll();
             for (auto &a : _coefs)
-               const_cast<RooArgList&>(p4->coefList()).add(*a);
+               const_cast<RooArgList &>(p4->coefList()).add(*a);
 
             sterilize();
          } else {
@@ -1325,7 +1355,7 @@ xRooNode xRooNode::Remove(const xRooNode &child)
             TString::Format("Cannot remove %s from workspace %s, because it has dependencies - first remove from those",
                             child.GetName(), GetName()));
       }
-      const_cast<RooArgSet&>(w->components()).remove(*arg); // deletes arg
+      const_cast<RooArgSet &>(w->components()).remove(*arg); // deletes arg
       Info("Remove", "Deleted %s from workspace %s", out.GetName(), GetName());
       return out;
    } else if (get<RooProduct>() || get<RooProdPdf>()) {
@@ -1380,22 +1410,22 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
    } else if (strcmp(GetName(), ".bins") == 0 && fParent->get<RooSimultaneous>()) {
       // adding a channel (should adding a 'bin' be an 'Extend' operation?)
       return fParent->Vary(child);
-   } else if((strcmp(GetName(),".globs")==0)) {
+   } else if ((strcmp(GetName(), ".globs") == 0)) {
       if (child.get<RooAbsArg>() || (!child.fComp && getObject<RooAbsArg>(child.GetName()))) {
-          auto out = (child.get<RooAbsArg>()) ? child.get<RooAbsArg>() : getObject<RooAbsArg>(child.GetName()).get();
-          out->setAttribute("obs");
-          out->setAttribute("global");
-          return xRooNode(*out,*this);
+         auto out = (child.get<RooAbsArg>()) ? child.get<RooAbsArg>() : getObject<RooAbsArg>(child.GetName()).get();
+         out->setAttribute("obs");
+         out->setAttribute("global");
+         return xRooNode(*out, *this);
       }
       throw std::runtime_error("Failed to add global observable");
-   } else if((strcmp(GetName(),".poi")==0)) {
-       if (child.get<RooAbsLValue>() || (!child.fComp && getObject<RooAbsLValue>(child.GetName()))) {
-           auto out = (child.get<RooAbsArg>()) ? child.get<RooAbsArg>() : getObject<RooAbsArg>(child.GetName()).get();
-           out->setAttribute("poi");
-           return xRooNode(*out,*this);
-       }
-       throw std::runtime_error("Failed to add parameter of interest");
-   } else if ((strcmp(GetName(), ".pars") == 0 || strcmp(GetName(),".vars")==0) && fParent->get<RooWorkspace>()) {
+   } else if ((strcmp(GetName(), ".poi") == 0)) {
+      if (child.get<RooAbsLValue>() || (!child.fComp && getObject<RooAbsLValue>(child.GetName()))) {
+         auto out = (child.get<RooAbsArg>()) ? child.get<RooAbsArg>() : getObject<RooAbsArg>(child.GetName()).get();
+         out->setAttribute("poi");
+         return xRooNode(*out, *this);
+      }
+      throw std::runtime_error("Failed to add parameter of interest");
+   } else if ((strcmp(GetName(), ".pars") == 0 || strcmp(GetName(), ".vars") == 0) && fParent->get<RooWorkspace>()) {
       // adding a parameter, interpret as factory string unless no "[" then create RooRealVar
       TString fac(child.GetName());
       if (!fac.Contains("["))
@@ -1421,9 +1451,9 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             if (asi.first) {
                _ws->import(*asi.first);
             }
-            if(_fr->numStatusHistory()==0) {
+            if (_fr->numStatusHistory() == 0) {
                if (!GETWSSNAPSHOTS(_ws).find(_fr->GetName())) {
-                  const_cast<RooLinkedList&>(GETWSSNAPSHOTS(_ws)).Add(_fr->Clone());
+                  const_cast<RooLinkedList &>(GETWSSNAPSHOTS(_ws)).Add(_fr->Clone());
                }
             } else if (!_ws->obj(_fr->GetName())) {
                _ws->import(const_cast<RooFitResult &>(*_fr));
@@ -1512,42 +1542,44 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
    }
 
    if (auto p = get<RooAbsData>(); p) {
-      if (auto bb = getBrowsable(".sourceds")) bb->Add(child,opt);
-       if(auto _data = child.get<RooDataSet>()) {
-          auto ds = dynamic_cast<RooDataSet*>(p);
-           if(!ds) {
-               throw std::runtime_error("Can only add datasets to a dataset");
-           }
+      if (auto bb = getBrowsable(".sourceds"))
+         bb->Add(child, opt);
+      if (auto _data = child.get<RooDataSet>()) {
+         auto ds = dynamic_cast<RooDataSet *>(p);
+         if (!ds) {
+            throw std::runtime_error("Can only add datasets to a dataset");
+         }
 
-           // append any missing globs, and check any existing globs have matching values
-           RooArgList globsToAdd;
-           auto _globs = globs();
-           for(auto& glob : child.globs()) {
-              if(auto g = _globs.find(glob->GetName()); !g) {
-                 globsToAdd.addClone(*glob->get<RooAbsArg>());
-              } else if(g->GetContent() != glob->GetContent()) {
-                 Warning("Add","Global observable %s=%g in dataset mismatches child value %g ... ignoring child",g->GetName(),g->GetContent(),glob->GetContent());
-              }
-           }
-           // add any existing globs to list then set the list
-          if (auto _dglobs = p->getGlobalObservables()) {
-             globsToAdd.addClone(*_dglobs);
-          } else {
-             for(auto g : _globs) globsToAdd.addClone(*g->get<RooAbsArg>());
-          }
-          p->setGlobalObservables(globsToAdd);
+         // append any missing globs, and check any existing globs have matching values
+         RooArgList globsToAdd;
+         auto _globs = globs();
+         for (auto &glob : child.globs()) {
+            if (auto g = _globs.find(glob->GetName()); !g) {
+               globsToAdd.addClone(*glob->get<RooAbsArg>());
+            } else if (g->GetContent() != glob->GetContent()) {
+               Warning("Add", "Global observable %s=%g in dataset mismatches child value %g ... ignoring child",
+                       g->GetName(), g->GetContent(), glob->GetContent());
+            }
+         }
+         // add any existing globs to list then set the list
+         if (auto _dglobs = p->getGlobalObservables()) {
+            globsToAdd.addClone(*_dglobs);
+         } else {
+            for (auto g : _globs)
+               globsToAdd.addClone(*g->get<RooAbsArg>());
+         }
+         p->setGlobalObservables(globsToAdd);
 
+         // append any missing observables to our dataset, then append the dataset
 
-           // append any missing observables to our dataset, then append the dataset
-
-           for(auto col : *_data->get()) {
-               if(!p->get()->contains(*col)) {
-                   ds->addColumn(*col);
-               }
-           }
-           ds->append(*_data);
-           return *this;
-       }
+         for (auto col : *_data->get()) {
+            if (!p->get()->contains(*col)) {
+               ds->addColumn(*col);
+            }
+         }
+         ds->append(*_data);
+         return *this;
+      }
       auto _h = child.get<TH1>();
       if (!_h) {
          throw std::runtime_error("Can only add histogram or dataset to data");
@@ -1576,30 +1608,32 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          }
       }
 
-       // before adding, ensure range is good to cover
-       for (auto &o : obs) {
-           if (auto v = dynamic_cast<RooRealVar *>(o); v) {
-               if (auto dv = dynamic_cast<RooRealVar *>(p->get()->find(v->GetName())); dv) {
-                   if (v->getMin() < dv->getMin())
-                       dv->setMin(v->getMin());
-                   if (v->getMax() > dv->getMax())
-                       dv->setMax(v->getMax());
+      // before adding, ensure range is good to cover
+      for (auto &o : obs) {
+         if (auto v = dynamic_cast<RooRealVar *>(o); v) {
+            if (auto dv = dynamic_cast<RooRealVar *>(p->get()->find(v->GetName())); dv) {
+               if (v->getMin() < dv->getMin())
+                  dv->setMin(v->getMin());
+               if (v->getMax() > dv->getMax())
+                  dv->setMax(v->getMax());
+            }
+         } else if (auto c = dynamic_cast<RooCategory *>(o); c) {
+            if (auto dc = dynamic_cast<RooCategory *>(p->get()->find(c->GetName())); dc) {
+               if (!dc->hasLabel(c->getCurrentLabel())) {
+                  dc->defineType(c->getCurrentLabel(), c->getCurrentIndex());
                }
-           } else if (auto c = dynamic_cast<RooCategory *>(o); c) {
-               if (auto dc = dynamic_cast<RooCategory *>(p->get()->find(c->GetName())); dc) {
-                   if (!dc->hasLabel(c->getCurrentLabel())) {
-                       dc->defineType(c->getCurrentLabel(), c->getCurrentIndex());
-                   }
-               }
-           }
-       }
+            }
+         }
+      }
 
       for (int i = 1; i <= _h->GetNbinsX(); i++) {
-         if(auto cat = dynamic_cast<RooAbsCategoryLValue*>(_ax->GetParent())) {
-            if(!_h->GetXaxis()->GetBinLabel(i)) {
-               throw std::runtime_error(TString::Format("Categorical observable %s requires bin labels",_ax->GetParent()->GetName()));
-            } else if(!cat->hasLabel(_h->GetXaxis()->GetBinLabel(i))) {
-               throw std::runtime_error(TString::Format("Categorical observable %s does not have label %s",_ax->GetParent()->GetName(),_h->GetXaxis()->GetBinLabel(i)));
+         if (auto cat = dynamic_cast<RooAbsCategoryLValue *>(_ax->GetParent())) {
+            if (!_h->GetXaxis()->GetBinLabel(i)) {
+               throw std::runtime_error(
+                  TString::Format("Categorical observable %s requires bin labels", _ax->GetParent()->GetName()));
+            } else if (!cat->hasLabel(_h->GetXaxis()->GetBinLabel(i))) {
+               throw std::runtime_error(TString::Format("Categorical observable %s does not have label %s",
+                                                        _ax->GetParent()->GetName(), _h->GetXaxis()->GetBinLabel(i)));
             } else {
                cat->setLabel(_h->GetXaxis()->GetBinLabel(i));
             }
@@ -1621,37 +1655,42 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             throw std::runtime_error("Something went wrong with pdf acquisition");
          }
 
-         if (auto _ax = GetXaxis(); _ax && dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()) && _pdf->dependsOn(*static_cast<RooAbsArg*>(_ax->GetParent()))) {
+         if (auto _ax = GetXaxis(); _ax && dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()) &&
+                                    _pdf->dependsOn(*static_cast<RooAbsArg *>(_ax->GetParent()))) {
             auto _p = _pdf;
 
             if (auto _boundaries = std::unique_ptr<std::list<double>>(_p->binBoundaries(
-                          *dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()), -std::numeric_limits<double>::infinity(),
-                          std::numeric_limits<double>::infinity())); !_boundaries && _ax->GetNbins() > 0) {
+                   *dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()), -std::numeric_limits<double>::infinity(),
+                   std::numeric_limits<double>::infinity()));
+                !_boundaries && _ax->GetNbins() > 0) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 24, 00)
-                  Warning("Add", "Adding unbinned pdf %s to binned %s - will wrap with RooBinSamplingPdf(...)",
-                          _p->GetName(), GetName());
-                  _p = acquireNew<RooBinSamplingPdf>(TString::Format("%s_binned", _p->GetName()), _p->GetTitle(),
-                                                     *dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()), *_p);
-                  _p->setStringAttribute("alias", std::dynamic_pointer_cast<RooAbsArg>(out)->getStringAttribute("alias"));
-                  if (!_p->getStringAttribute("alias"))
-                     _p->setStringAttribute("alias", out->GetName());
+               Warning("Add", "Adding unbinned pdf %s to binned %s - will wrap with RooBinSamplingPdf(...)",
+                       _p->GetName(), GetName());
+               _p = acquireNew<RooBinSamplingPdf>(TString::Format("%s_binned", _p->GetName()), _p->GetTitle(),
+                                                  *dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()), *_p);
+               _p->setStringAttribute("alias", std::dynamic_pointer_cast<RooAbsArg>(out)->getStringAttribute("alias"));
+               if (!_p->getStringAttribute("alias"))
+                  _p->setStringAttribute("alias", out->GetName());
 #else
-                  throw std::runtime_error(
+               throw std::runtime_error(
                   "unsupported addition of unbinned pdf to binned model - please upgrade to at least ROOT 6.24");
 #endif
-                  _pdf = _p;
+               _pdf = _p;
             }
-
          }
 
-         if(!(_pdf->canBeExtended() && p->coefList().empty())) {
+         if (!(_pdf->canBeExtended() && p->coefList().empty())) {
             // if extended, use an extended binding as the coef
             // otherwise e.g. if adding a RooRealSumPdf the stacked histograms will be above the
             // actual pdf histogram because the pdf histogram is just normalized down
-            if(_pdf->canBeExtended()) {
+            if (_pdf->canBeExtended()) {
                // FIXME: ExtendedBinding needs the obs list passing to it ... should be fixed in RooFit
-               // until then, this will return "1" and so the pdf's histograms wont be normalized properly in relation to stacks of its comps
-               const_cast<RooArgList &>(p->coefList()).add(*acquireNew<RooExtendedBinding>(TString::Format("%s_extBind",_pdf->GetName()), TString::Format("Expected Events of %s",_pdf->GetTitle()), *_pdf));
+               // until then, this will return "1" and so the pdf's histograms wont be normalized properly in relation
+               // to stacks of its comps
+               const_cast<RooArgList &>(p->coefList())
+                  .add(*acquireNew<RooExtendedBinding>(TString::Format("%s_extBind", _pdf->GetName()),
+                                                       TString::Format("Expected Events of %s", _pdf->GetTitle()),
+                                                       *_pdf));
             } else {
                const_cast<RooArgList &>(p->coefList()).add(*acquire2<RooAbsArg, RooRealVar>("1", "1", 1));
             }
@@ -1659,11 +1698,12 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          const_cast<RooArgList &>(p->pdfList()).add(*_pdf);
          sterilize();
          return xRooNode(*_pdf, *this);
-      } else if ((child.get<TH1>() || child.get<RooAbsReal>() || (!child.get() && getObject<RooAbsReal>(child.GetName()))) &&
+      } else if ((child.get<TH1>() || child.get<RooAbsReal>() ||
+                  (!child.get() && getObject<RooAbsReal>(child.GetName()))) &&
                  !child.get<RooAbsPdf>()) {
          RooRealSumPdf *_pdf = nullptr;
          bool tooMany(false);
-         for (auto &pp: factors()) {
+         for (auto &pp : factors()) {
             if (auto _p = pp->get<RooRealSumPdf>(); _p) {
                if (_pdf) {
                   _pdf = nullptr;
@@ -1677,8 +1717,10 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             return xRooNode(*_pdf, *this).Add(child);
          } else if (!tooMany) {
             // create a RooRealSumPdf to hold the child
-            auto _sumpdf = Add(*acquireNew<RooRealSumPdf>(TString::Format("%s_samples",p->GetName()),TString::Format("%s samples",GetTitle()),RooArgList(),RooArgList(),true));
-            _sumpdf.get<RooAbsArg>()->setStringAttribute("alias","samples");
+            auto _sumpdf = Add(*acquireNew<RooRealSumPdf>(TString::Format("%s_samples", p->GetName()),
+                                                          TString::Format("%s samples", GetTitle()), RooArgList(),
+                                                          RooArgList(), true));
+            _sumpdf.get<RooAbsArg>()->setStringAttribute("alias", "samples");
             return _sumpdf.Add(child);
          }
       }
@@ -1732,7 +1774,8 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
                   TString::Format("%s;%s", dynamic_cast<TObject *>(_x)->GetName(), binningName.Data()));
                // technically convertForAcquisition has already acquired so no need to re-acquire but should be harmless
                _func = std::dynamic_pointer_cast<RooAbsArg>(acquire(xRooNode(*h).convertForAcquisition(*this)));
-               Info("Add", "Created densityhisto factor %s (xaxis=%s) for %s", _func->GetName(), _obs.at(0)->GetName(), p->GetName());
+               Info("Add", "Created densityhisto factor %s (xaxis=%s) for %s", _func->GetName(), _obs.at(0)->GetName(),
+                    p->GetName());
             } else {
                throw std::runtime_error("Unsupported creation of new component in SumPdf for this many obs");
             }
@@ -1774,15 +1817,17 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          // if pdf is extended will use in the "no coefficients" state, where the expectedEvents are taking from
          // the pdf integrals
          TString newName(_p->GetName());
-         newName.ReplaceAll("_samples","");
+         newName.ReplaceAll("_samples", "");
          newName += "_components";
-         Warning("Add","converting samples to components");
+         Warning("Add", "converting samples to components");
 
-         if (auto _ax = GetXaxis(); _ax && dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()) && _p->dependsOn(*static_cast<RooAbsArg*>(_ax->GetParent()))) {
+         if (auto _ax = GetXaxis(); _ax && dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()) &&
+                                    _p->dependsOn(*static_cast<RooAbsArg *>(_ax->GetParent()))) {
 
             if (auto _boundaries = std::unique_ptr<std::list<double>>(_p->binBoundaries(
-                       *dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()), -std::numeric_limits<double>::infinity(),
-                       std::numeric_limits<double>::infinity())); !_boundaries && _ax->GetNbins() > 0 ) {
+                   *dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()), -std::numeric_limits<double>::infinity(),
+                   std::numeric_limits<double>::infinity()));
+                !_boundaries && _ax->GetNbins() > 0) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 24, 00)
                Warning("Add", "Adding unbinned pdf %s to binned %s - will wrap with RooBinSamplingPdf(...)",
                        _p->GetName(), GetName());
@@ -1801,12 +1846,12 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          // require to be extended to be in coefficient-free mode ...
          // otherwise would lose the integral of the sumPdf (can't think of way to have a coef be the integral)
          if (!_p->canBeExtended()) {
-            _p = acquireNew<RooExtendPdf>(TString::Format("%s_extended", _p->GetName()),_p->GetTitle(),*_p,*acquire2<RooAbsReal,RooRealVar>("1", "1", 1));
+            _p = acquireNew<RooExtendPdf>(TString::Format("%s_extended", _p->GetName()), _p->GetTitle(), *_p,
+                                          *acquire2<RooAbsReal, RooRealVar>("1", "1", 1));
          }
 
-         return *(Replace(*acquireNew<RooAddPdf>(newName, _p->GetTitle(),
-                                                 RooArgList(*p, *_p))).browse()[1]); // returns second node.
-
+         return *(Replace(*acquireNew<RooAddPdf>(newName, _p->GetTitle(), RooArgList(*p, *_p)))
+                     .browse()[1]); // returns second node.
       }
 
       if (auto _f = std::dynamic_pointer_cast<RooAbsReal>(out); _f) {
@@ -1815,17 +1860,20 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          // the sumPdf and *this* pdf inside that pdf
          // only exception is the binSamplingPdf below to integrate unbinned functions across bins
 
-         if (auto _ax = GetXaxis(); _ax && dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()) && _f->dependsOn(*static_cast<RooAbsArg*>(_ax->GetParent()))) {
+         if (auto _ax = GetXaxis(); _ax && dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()) &&
+                                    _f->dependsOn(*static_cast<RooAbsArg *>(_ax->GetParent()))) {
 
             if (auto _boundaries = std::unique_ptr<std::list<double>>(_f->binBoundaries(
                    *dynamic_cast<RooAbsRealLValue *>(_ax->GetParent()), -std::numeric_limits<double>::infinity(),
                    std::numeric_limits<double>::infinity()));
-                !_boundaries && _ax->GetNbins() > 0 ) {
+                !_boundaries && _ax->GetNbins() > 0) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 24, 00)
-               Warning("Add", "Adding unbinned function %s to binned %s - will wrap with RooRealSumPdf(RooBinSamplingPdf(...))",
-                       _f->GetName(), GetName());
+               Warning(
+                  "Add",
+                  "Adding unbinned function %s to binned %s - will wrap with RooRealSumPdf(RooBinSamplingPdf(...))",
+                  _f->GetName(), GetName());
                auto sumPdf = acquireNew<RooRealSumPdf>(TString::Format("%s_pdfWrapper", _f->GetName()), _f->GetTitle(),
-                                                       *_f, *acquire2<RooAbsArg,RooRealVar>("1", "1", 1), true);
+                                                       *_f, *acquire2<RooAbsArg, RooRealVar>("1", "1", 1), true);
                sumPdf->setStringAttribute("alias", _f->getStringAttribute("alias"));
                if (!sumPdf->getStringAttribute("alias"))
                   sumPdf->setStringAttribute("alias", out->GetName());
@@ -1841,8 +1889,8 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             }
          }
 
-         const_cast<RooArgList&>(p->coefList()).add(*acquire2<RooAbsArg,RooRealVar>("1", "1", 1));
-         const_cast<RooArgList&>(p->funcList()).add(*_f);
+         const_cast<RooArgList &>(p->coefList()).add(*acquire2<RooAbsArg, RooRealVar>("1", "1", 1));
+         const_cast<RooArgList &>(p->funcList()).add(*_f);
          // inherit binning if we dont have one yet
          if (!p->getStringAttribute("binning"))
             p->setStringAttribute("binning", _f->getStringAttribute("binning"));
@@ -1860,7 +1908,9 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          }
          sterilize();
          // clear children for reload and update shared axis
-         clear(); fXAxis.reset(); p->setStringAttribute("xvar",nullptr);
+         clear();
+         fXAxis.reset();
+         p->setStringAttribute("xvar", nullptr);
          browse();
          return _out;
       }
@@ -1888,10 +1938,11 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
             auto out = this->operator[]("components")->Add(child);
             return out;
          }
-      } else if ((child.get<TH1>() || child.get<RooAbsReal>() || (!child.get() && getObject<RooAbsReal>(child.GetName()))) &&
-          !child.get<RooAbsPdf>()) {
+      } else if ((child.get<TH1>() || child.get<RooAbsReal>() ||
+                  (!child.get() && getObject<RooAbsReal>(child.GetName()))) &&
+                 !child.get<RooAbsPdf>()) {
          RooRealSumPdf *_pdf = nullptr;
-         RooAddPdf* _backup = nullptr;
+         RooAddPdf *_backup = nullptr;
          bool tooMany(false);
          for (auto &pp : factors()) {
             if (auto _p = pp->get<RooRealSumPdf>(); _p) {
@@ -1901,9 +1952,9 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
                   break;
                } // more than one!
                _pdf = _p;
-            } else if(auto _p2 = pp->get<RooAddPdf>(); _p2) {
+            } else if (auto _p2 = pp->get<RooAddPdf>(); _p2) {
                _backup = _p2;
-               for(auto& _pdfa : pp->components()) {
+               for (auto &_pdfa : pp->components()) {
                   if (auto _p3 = _pdfa->get<RooRealSumPdf>(); _p3) {
                      if (_pdf) {
                         _pdf = nullptr;
@@ -1917,13 +1968,14 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          }
          if (_pdf) {
             return xRooNode(*_pdf, *this).Add(child);
-         } else if(_backup) {
+         } else if (_backup) {
             // added *INSIDE* the addPdf -- will create a RooRealSumPdf to hold it
             return xRooNode(*_backup, *this).Add(child);
          } else if (!tooMany) {
             auto out = this->operator[]("samples")->Add(child);
             // clear our x-axis to re-evaluate
-            fXAxis.reset(); p2->setStringAttribute("xvar",nullptr);
+            fXAxis.reset();
+            p2->setStringAttribute("xvar", nullptr);
             return out;
          }
       }
@@ -2003,7 +2055,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
       // interpret 'adding' here as dependent on the object type ...
       if (get<RooSimultaneous>()) {
          return bins().Add(child);
-      } else if(TString(child.GetName()).Contains('=')) {
+      } else if (TString(child.GetName()).Contains('=')) {
          return variations().Add(child);
       } else if (get<RooProduct>() || get<RooProdPdf>()) {
          return factors().Add(child);
@@ -2049,7 +2101,7 @@ xRooNode::~xRooNode()
    // std::cout << "deleting " << GetPath() << std::endl;
 }
 
-void xRooNode::SetHidden(Bool_t set)
+void xRooNode::SetHidden(bool set)
 {
    if (auto a = get<RooAbsArg>()) {
       a->setAttribute("hidden", set);
@@ -2141,15 +2193,16 @@ xRooNode xRooNode::shallowCopy(const std::string &name, std::shared_ptr<xRooNode
       }
    } else if (auto p = dynamic_cast<RooProdPdf *>(o); p) {
       // main pdf will be copied too
-      std::shared_ptr<RooProdPdf> pdf = std::dynamic_pointer_cast<RooProdPdf>(
-         out.acquire(std::shared_ptr<TObject>(p->Clone(/*name.c_str()*/)),false,true)); // use clone to copy all attributes etc too
+      std::shared_ptr<RooProdPdf> pdf =
+         std::dynamic_pointer_cast<RooProdPdf>(out.acquire(std::shared_ptr<TObject>(p->Clone(/*name.c_str()*/)), false,
+                                                           true)); // use clone to copy all attributes etc too
       auto main = mainChild();
       if (main) {
-         auto newMain = std::dynamic_pointer_cast<RooAbsArg>(
-            out.acquire(std::shared_ptr<TObject>(main->Clone()),false,true));
+         auto newMain =
+            std::dynamic_pointer_cast<RooAbsArg>(out.acquire(std::shared_ptr<TObject>(main->Clone()), false, true));
          std::cout << newMain << " " << newMain->GetName() << std::endl;
-         //pdf->replaceServer(*pdf->pdfList().find(main->GetName()), *newMain, true, true);
-         //const_cast<RooArgList&>(pdf->pdfList()).replace(*pdf->pdfList().find(main->GetName()), *newMain);
+         // pdf->replaceServer(*pdf->pdfList().find(main->GetName()), *newMain, true, true);
+         // const_cast<RooArgList&>(pdf->pdfList()).replace(*pdf->pdfList().find(main->GetName()), *newMain);
          pdf->redirectServers(RooArgList(*newMain));
       }
       out.fComp = pdf;
@@ -2163,7 +2216,8 @@ xRooNode xRooNode::shallowCopy(const std::string &name, std::shared_ptr<xRooNode
 void xRooNode::Print(Option_t *opt) const
 {
    static std::unique_ptr<cout_redirect> capture;
-   std::string captureStr; bool doCapture = false;
+   std::string captureStr;
+   bool doCapture = false;
    if (!capture && gROOT->FromPopUp()) { // FromPopUp means user executed from the context menu
       capture = std::make_unique<cout_redirect>(captureStr);
       doCapture = true;
@@ -2190,9 +2244,8 @@ void xRooNode::Print(Option_t *opt) const
       std::cout << GetPath();
       if (get() && get() != this) {
          std::cout << ": ";
-         if (_more ||
-             (get<RooAbsArg>() && get<RooAbsArg>()->isFundamental()) || get<RooConstVar>() || get<RooAbsData>() ||
-             get<RooProduct>() || get<RooFitResult>()) {
+         if (_more || (get<RooAbsArg>() && get<RooAbsArg>()->isFundamental()) || get<RooConstVar>() ||
+             get<RooAbsData>() || get<RooProduct>() || get<RooFitResult>()) {
             auto _deps = coords(false).argList(); // want to revert coords after print
             auto _snap = std::unique_ptr<RooAbsCollection>(_deps.snapshot());
             coords(); // move to coords before printing (in case this matters)
@@ -2207,20 +2260,20 @@ void xRooNode::Print(Option_t *opt) const
             TString _suffix = "";
             if (auto _type = GetNodeType(); strlen(_type)) {
                // decided not to show const values until figure out how to update if value changes
-               /*if (TString(_type)=="Const") _name += TString::Format(" [%s=%g]",_type,v->get<RooConstVar>()->getVal());
-               else*/
+               /*if (TString(_type)=="Const") _name += TString::Format("
+               [%s=%g]",_type,v->get<RooConstVar>()->getVal()); else*/
                _suffix += TString::Format(" [%s]", _type);
             }
-            if(auto fv = get<RooFormulaVar>()) {
-               TString formu = TString::Format(" [%s]",fv->expression());
-               for(size_t i=0;i<fv->dependents().size();i++) {
-                  formu.ReplaceAll(TString::Format("x[%zu]",i),fv->dependents()[i].GetName());
+            if (auto fv = get<RooFormulaVar>()) {
+               TString formu = TString::Format(" [%s]", fv->expression());
+               for (size_t i = 0; i < fv->dependents().size(); i++) {
+                  formu.ReplaceAll(TString::Format("x[%zu]", i), fv->dependents()[i].GetName());
                }
                _suffix += formu;
-            } else if(auto gv = get<RooGenericPdf>()) {
-               TString formu = TString::Format(" [%s]",gv->expression());
-               for(size_t i=0;i<gv->dependents().size();i++) {
-                  formu.ReplaceAll(TString::Format("x[%zu]",i),gv->dependents()[i].GetName());
+            } else if (auto gv = get<RooGenericPdf>()) {
+               TString formu = TString::Format(" [%s]", gv->expression());
+               for (size_t i = 0; i < gv->dependents().size(); i++) {
+                  formu.ReplaceAll(TString::Format("x[%zu]", i), gv->dependents()[i].GetName());
                }
                _suffix += formu;
             }
@@ -2257,7 +2310,7 @@ void xRooNode::Print(Option_t *opt) const
          std::cout << i++ << ") " << k->GetName() << " : ";
          if (k->get()) {
             if (_more || (k->get<RooAbsArg>() && k->get<RooAbsArg>()->isFundamental()) || k->get<RooConstVar>() ||
-                                                  k->get<RooAbsData>() /*|| k->get<RooProduct>()*/) {
+                k->get<RooAbsData>() /*|| k->get<RooProduct>()*/) {
                auto _deps = k->coords(false).argList();
                auto _snap = std::unique_ptr<RooAbsCollection>(_deps.snapshot());
                k->coords();           // move to coords before printing (in case this matters)
@@ -2267,20 +2320,20 @@ void xRooNode::Print(Option_t *opt) const
                TString _suffix = "";
                if (auto _type = k->GetNodeType(); strlen(_type)) {
                   // decided not to show const values until figure out how to update if value changes
-                  /*if (TString(_type)=="Const") _name += TString::Format(" [%s=%g]",_type,v->get<RooConstVar>()->getVal());
-                  else*/
+                  /*if (TString(_type)=="Const") _name += TString::Format("
+                  [%s=%g]",_type,v->get<RooConstVar>()->getVal()); else*/
                   _suffix += TString::Format(" [%s]", _type);
                }
-               if(auto fv = k->get<RooFormulaVar>()) {
-                  TString formu = TString::Format(" [%s]",fv->expression());
-                  for(size_t j=0;j<fv->dependents().size();j++) {
-                     formu.ReplaceAll(TString::Format("x[%zu]",j),fv->dependents()[j].GetName());
+               if (auto fv = k->get<RooFormulaVar>()) {
+                  TString formu = TString::Format(" [%s]", fv->expression());
+                  for (size_t j = 0; j < fv->dependents().size(); j++) {
+                     formu.ReplaceAll(TString::Format("x[%zu]", j), fv->dependents()[j].GetName());
                   }
                   _suffix += formu;
-               } else if(auto gv = k->get<RooGenericPdf>()) {
-                  TString formu = TString::Format(" [%s]",gv->expression());
-                  for(size_t j=0;j<gv->dependents().size();j++) {
-                     formu.ReplaceAll(TString::Format("x[%zu]",j),gv->dependents()[j].GetName());
+               } else if (auto gv = k->get<RooGenericPdf>()) {
+                  TString formu = TString::Format(" [%s]", gv->expression());
+                  for (size_t j = 0; j < gv->dependents().size(); j++) {
+                     formu.ReplaceAll(TString::Format("x[%zu]", j), gv->dependents()[j].GetName());
                   }
                   _suffix += formu;
                }
@@ -2293,23 +2346,27 @@ void xRooNode::Print(Option_t *opt) const
             std::cout << " NULL " << std::endl;
       }
    }
-   if(doCapture) {
+   if (doCapture) {
       capture.reset(); // no captureStr has the string to display
       // inject line breaks to avoid msgbox being too wide
       size_t lastBreak = 0;
       std::string captureStrWithBreaks;
-      for(size_t i=0; i<captureStr.size(); i++) {
+      for (size_t i = 0; i < captureStr.size(); i++) {
          captureStrWithBreaks += captureStr[i];
-         if(captureStr[i]=='\n') {
+         if (captureStr[i] == '\n') {
             lastBreak = i;
          }
-         if(i-lastBreak > 150) {
+         if (i - lastBreak > 150) {
             captureStrWithBreaks += '\n';
             lastBreak = i;
          }
       }
-      const TGWindow* w = (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot();
-         new TGMsgBox(gClient->GetRoot(), w, GetName(),captureStrWithBreaks.c_str());//,nullptr,kMBDismiss,nullptr,kVerticalFrame,kTextLeft|kTextCenterY);
+      const TGWindow *w =
+         (gROOT->GetListOfBrowsers()->At(0))
+            ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+            : gClient->GetRoot();
+      new TGMsgBox(gClient->GetRoot(), w, GetName(),
+                   captureStrWithBreaks.c_str()); //,nullptr,kMBDismiss,nullptr,kVerticalFrame,kTextLeft|kTextCenterY);
    }
 }
 
@@ -2496,14 +2553,14 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                i++;
             }
          }
-         // then scale the relevant bin ... if the relevent bin is a "1" then just drop in our factor (inside a
+         // then scale the relevant bin ... if the relevant bin is a "1" then just drop in our factor (inside a
          // RooProduct though, to avoid it getting modified by subsequent multiplies)
          auto _bin = binFactors->bins().at(fBinNumber - 1);
          if (auto phf = binFactors->get<ParamHistFunc>(); phf && _bin) {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-            RooArgList& pSet = phf->_paramSet;
+            RooArgList &pSet = phf->_paramSet;
 #else
-            RooArgList& pSet = const_cast<RooArgList&>(phf->paramList());
+            RooArgList &pSet = const_cast<RooArgList &>(phf->paramList());
 #endif
             if (strcmp(_bin->GetName(), "1") == 0) {
                RooArgList all;
@@ -2566,7 +2623,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                  mainChild().get() ? mainChild().get()->GetName() : get()->GetName(), o->ClassName(), o->GetName());
          return out;
       } else if (sOpt == "norm") {
-         if(TString(child.GetName()).Contains("[") && ws()) {
+         if (TString(child.GetName()).Contains("[") && ws()) {
             // assume factory method wanted
             auto arg = ws()->factory(child.GetName());
             if (arg) {
@@ -2576,7 +2633,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                        mainChild().get() ? mainChild().get()->GetName() : get()->GetName(), out->GetName());
                return out;
             }
-            throw std::runtime_error(TString::Format("Failed to create new normFactor %s",child.GetName()));
+            throw std::runtime_error(TString::Format("Failed to create new normFactor %s", child.GetName()));
          }
          auto out = Multiply(RooRealVar(child.GetName(), child.GetTitle(), 1, -1e-5, 100));
          if (get())
@@ -2654,8 +2711,8 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                      else
                         oldCoefs.add(*p->coefList().at(j));
                   }
-                  const_cast<RooArgList&>(p->coefList()).removeAll();
-                  const_cast<RooArgList&>(p->coefList()).add(oldCoefs);
+                  const_cast<RooArgList &>(p->coefList()).removeAll();
+                  const_cast<RooArgList &>(p->coefList()).add(oldCoefs);
                   coefs = newCoefs.get();
                }
                return xRooNode(*coefs, fParent).Multiply(child);
@@ -2714,7 +2771,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
          p->_compRSet.add(*_f);
 #else
-         const_cast<RooArgList&>(p->realComponents()).add(*_f);
+         const_cast<RooArgList &>(p->realComponents()).add(*_f);
 #endif
          p->setValueDirty();
 
@@ -2784,7 +2841,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
 
       if (auto _pdf = std::dynamic_pointer_cast<RooAbsPdf>(out); _pdf) {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-         const_cast<RooArgList&>(p2->pdfList()).add(*_pdf);
+         const_cast<RooArgList &>(p2->pdfList()).add(*_pdf);
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 26, 00)
          p2->_pdfNSetList.emplace_back(std::make_unique<RooArgSet>("nset"));
 #else
@@ -2794,7 +2851,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
             p2->_extendedIndex = p2->_pdfList.size() - 1;
          }
 #else
-            p2->addPdfs(RooArgSet(*_pdf));
+         p2->addPdfs(RooArgSet(*_pdf));
 #endif
          sterilize();
          browse();
@@ -2871,23 +2928,26 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                       (!child.get() && strlen(opt) == 0) ? " (forgot to specify factor type?)" : ""));
 }
 
-xRooNode xRooNode::Replace(const xRooNode& node) {
+xRooNode xRooNode::Replace(const xRooNode &node)
+{
 
    auto p5 = get<RooAbsArg>();
    if (!p5) {
       throw std::runtime_error("Only replacement of RooAbsArg is supported");
    }
-   node.convertForAcquisition(*this,"func");
+   node.convertForAcquisition(*this, "func");
 
    auto new_p = node.get<RooAbsArg>();
    if (!new_p) {
-      throw std::runtime_error(TString::Format("Cannot replace with %s",node.GetName()));
+      throw std::runtime_error(TString::Format("Cannot replace with %s", node.GetName()));
    }
-   auto out = acquire(node.fComp); new_p = std::dynamic_pointer_cast<RooAbsArg>(out).get();
+   auto out = acquire(node.fComp);
+   new_p = std::dynamic_pointer_cast<RooAbsArg>(out).get();
 
    std::set<RooAbsArg *> cl;
    for (auto &arg : p5->clients()) {
-      if(arg == new_p) continue; // do not replace in self ... although redirectServers will prevent that anyway
+      if (arg == new_p)
+         continue; // do not replace in self ... although redirectServers will prevent that anyway
       cl.insert(arg);
    }
 
@@ -2899,7 +2959,8 @@ xRooNode xRooNode::Replace(const xRooNode& node) {
          cl.insert(fParent->get<RooAbsArg>());
       } else {
          std::stringstream clientList;
-         for(auto c : cl) clientList << c->GetName() << ",";
+         for (auto c : cl)
+            clientList << c->GetName() << ",";
          Warning("Replace", "Replacing %s in all clients: %s", p5->GetName(), clientList.str().c_str());
       }
    }
@@ -2908,11 +2969,11 @@ xRooNode xRooNode::Replace(const xRooNode& node) {
    for (auto arg : cl) {
       // if RooFormulaVar need to ensure the internal formula has been "constructed" otherwise will try to construct
       // it from the original expression that may have old parameter in it.
-      if(auto p = dynamic_cast<RooFormulaVar*>(arg)) p->ok(); // triggers creation of RooFormula
+      if (auto p = dynamic_cast<RooFormulaVar *>(arg))
+         p->ok(); // triggers creation of RooFormula
       arg->redirectServers(RooArgSet(*new_p), false, true);
    }
    return node;
-
 }
 
 xRooNode xRooNode::Vary(const xRooNode &child)
@@ -2944,13 +3005,13 @@ xRooNode xRooNode::Vary(const xRooNode &child)
       return p.Vary(child);
    }
 
-   if (auto s = get<RooSimultaneous>(); s && s->indexCat().IsA()==RooCategory::Class()) {
+   if (auto s = get<RooSimultaneous>(); s && s->indexCat().IsA() == RooCategory::Class()) {
       // name is used as cat label
       std::string label = child.GetName();
       if (auto pos = label.find("="); pos != std::string::npos)
          label = label.substr(pos + 1);
       if (!s->indexCat().hasLabel(label)) {
-         static_cast<RooCategory&>(const_cast<RooAbsCategoryLValue &>(s->indexCat())).defineType(label.c_str());
+         static_cast<RooCategory &>(const_cast<RooAbsCategoryLValue &>(s->indexCat())).defineType(label.c_str());
       }
       std::shared_ptr<TObject> out;
       child.convertForAcquisition(*this);
@@ -2966,7 +3027,8 @@ xRooNode xRooNode::Vary(const xRooNode &child)
          s->addPdf(*_pdf, label.c_str());
          sterilize();
          // clear children for reload and update shared axis
-         clear(); fXAxis.reset();
+         clear();
+         fXAxis.reset();
          browse();
          return xRooNode(TString::Format("%s=%s", s->indexCat().GetName(), label.data()), _pdf, *this);
       }
@@ -3018,10 +3080,10 @@ xRooNode xRooNode::Vary(const xRooNode &child)
             p->_high.push_back(0);
             p->_interpCode.push_back(4);
 #else
-            const_cast<RooListProxy&>(p->variables()).add(*v);
-            const_cast<std::vector<double>&>(p->low()).push_back(0);
-            const_cast<std::vector<double>&>(p->high()).push_back(0);
-            const_cast<std::vector<int>&>(p->interpolationCodes()).push_back(4);
+            const_cast<RooListProxy &>(p->variables()).add(*v);
+            const_cast<std::vector<double> &>(p->low()).push_back(0);
+            const_cast<std::vector<double> &>(p->high()).push_back(0);
+            const_cast<std::vector<int> &>(p->interpolationCodes()).push_back(4);
 #endif
             v->setAttribute(Form("SYMMETRIC%s_%s", high ? "+" : "-", GetName())); // flag for symmetrized
          }
@@ -3062,7 +3124,7 @@ xRooNode xRooNode::Vary(const xRooNode &child)
             TString::Format("Interpolating %s instead of RooHistFunc", p2->_nominal.absArg()->ClassName()));
       }
 #else
-      RooHistFunc *f = dynamic_cast<RooHistFunc *>(const_cast<RooAbsReal*>(p2->nominalHist()));
+      RooHistFunc *f = dynamic_cast<RooHistFunc *>(const_cast<RooAbsReal *>(p2->nominalHist()));
       if (!f) {
          throw std::runtime_error(
             TString::Format("Interpolating %s instead of RooHistFunc", p2->nominalHist()->ClassName()));
@@ -3086,12 +3148,16 @@ xRooNode xRooNode::Vary(const xRooNode &child)
          if (!v->hasError())
             v->setError(1);
 
-         std::shared_ptr<RooHistFunc> up(static_cast<RooHistFunc *>(f->Clone(Form("%s_%s_up", f->GetName(), parName.Data()))));
-         std::shared_ptr<RooHistFunc> down(static_cast<RooHistFunc *>(f->Clone(Form("%s_%s_down", f->GetName(), parName.Data()))));
+         std::shared_ptr<RooHistFunc> up(
+            static_cast<RooHistFunc *>(f->Clone(Form("%s_%s_up", f->GetName(), parName.Data()))));
+         std::shared_ptr<RooHistFunc> down(
+            static_cast<RooHistFunc *>(f->Clone(Form("%s_%s_down", f->GetName(), parName.Data()))));
          // RooHistFunc doesn't clone it's data hist ... do it ourself (will be cloned again if imported into a ws)
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-         std::unique_ptr<RooDataHist> h1(static_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", up->GetName()))));
-         std::unique_ptr<RooDataHist> h2(static_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", down->GetName()))));
+         std::unique_ptr<RooDataHist> h1(
+            static_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", up->GetName()))));
+         std::unique_ptr<RooDataHist> h2(
+            static_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", down->GetName()))));
          up->_dataHist = dynamic_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", up->GetName())));
          down->_dataHist = dynamic_cast<RooDataHist *>(f->dataHist().Clone(Form("hist_%s", down->GetName())));
 #else
@@ -3106,10 +3172,10 @@ xRooNode xRooNode::Vary(const xRooNode &child)
          p2->_interpCode.push_back(4);
          p2->_paramSet.add(*v);
 #else
-         const_cast<RooArgList&>(p2->highList()).add(*ups.get());
-         const_cast<RooArgList&>(p2->lowList()).add(*downs.get());
-         const_cast<std::vector<int>&>(p2->interpolationCodes()).push_back(4);
-         const_cast<RooArgList&>(p2->paramList()).add(*v);
+         const_cast<RooArgList &>(p2->highList()).add(*ups.get());
+         const_cast<RooArgList &>(p2->lowList()).add(*downs.get());
+         const_cast<std::vector<int> &>(p2->interpolationCodes()).push_back(4);
+         const_cast<RooArgList &>(p2->paramList()).add(*v);
 #endif
          p2->setValueDirty();
          f = ((parVal > 0) ? ups : downs).get();
@@ -3314,8 +3380,8 @@ xRooNode &xRooNode::operator=(const TObject &o)
           (a && a->isFundamental()) || get<RooConstVar>() || get<RooStats::HistFactory::FlexibleInterpVar>()) {
          SetBinContent(1, _c->getVal());
          return *this;
-      } else if(get<RooAbsData>()) { // try to do assignment to a dataset (usually setting a bin content)
-         SetBinContent(0,_c->getVal());
+      } else if (get<RooAbsData>()) { // try to do assignment to a dataset (usually setting a bin content)
+         SetBinContent(0, _c->getVal());
          return *this;
       }
    }
@@ -3358,7 +3424,9 @@ void xRooNode::_fit_(const char *constParValues)
          for (auto p : _pars.argList()) {
             if (TString(p->GetName()).Contains(TRegexp(pat, true))) {
                p->setAttribute("Constant", true);
-               if (!std::isnan(val)) { dynamic_cast<RooAbsRealLValue *>(p)->setVal(val); }
+               if (!std::isnan(val)) {
+                  dynamic_cast<RooAbsRealLValue *>(p)->setVal(val);
+               }
             }
          }
       }
@@ -3380,24 +3448,35 @@ void xRooNode::_fit_(const char *constParValues)
          throw std::runtime_error("Fit Failed");
       SetFitResult(fr.get());
       TString statusCodes;
-      for(unsigned int i=0;i<fr->numStatusHistory();i++) {
-         statusCodes += TString::Format("\n%s = %d",fr->statusLabelHistory(i),fr->statusCodeHistory(i));
+      for (unsigned int i = 0; i < fr->numStatusHistory(); i++) {
+         statusCodes += TString::Format("\n%s = %d", fr->statusLabelHistory(i), fr->statusCodeHistory(i));
       }
-      const TGWindow* w = (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot();
+      const TGWindow *w =
+         (gROOT->GetListOfBrowsers()->At(0))
+            ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+            : gClient->GetRoot();
       if (fr->status() != 0) {
          new TGMsgBox(gClient->GetRoot(), w, "Fit Finished with Bad Status Code",
-                      TString::Format("%s\nData = %s\nFit Status Code = %d\nCov Quality = %d\n-------------%s", fr->GetName(), dsetName.Data(),fr->status(),fr->covQual(),statusCodes.Data()), kMBIconExclamation, kMBOk);
+                      TString::Format("%s\nData = %s\nFit Status Code = %d\nCov Quality = %d\n-------------%s",
+                                      fr->GetName(), dsetName.Data(), fr->status(), fr->covQual(), statusCodes.Data()),
+                      kMBIconExclamation, kMBOk);
       } else if (fr->covQual() != 3 && _nll.fitConfig()->ParabErrors()) {
          new TGMsgBox(gClient->GetRoot(), w, "Fit Finished with Bad Covariance Quality",
-                      TString::Format("%s\nData = %s\nFit Status Code = %d\nCov Quality = %d\n-------------%s", fr->GetName(), dsetName.Data(),fr->status(),fr->covQual(),statusCodes.Data()), kMBIconExclamation, kMBOk);
+                      TString::Format("%s\nData = %s\nFit Status Code = %d\nCov Quality = %d\n-------------%s",
+                                      fr->GetName(), dsetName.Data(), fr->status(), fr->covQual(), statusCodes.Data()),
+                      kMBIconExclamation, kMBOk);
       } else {
          new TGMsgBox(gClient->GetRoot(), w, "Fit Finished Successfully",
-                      TString::Format("%s\nData = %s\nFit Status Code = %d\nCov Quality = %d\n-------------%s", fr->GetName(), dsetName.Data(),fr->status(),fr->covQual(),statusCodes.Data()));
+                      TString::Format("%s\nData = %s\nFit Status Code = %d\nCov Quality = %d\n-------------%s",
+                                      fr->GetName(), dsetName.Data(), fr->status(), fr->covQual(), statusCodes.Data()));
       }
    } catch (const std::exception &e) {
-      new TGMsgBox(gClient->GetRoot(), (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot()
-      , "Exception", e.what(),
-                   kMBIconExclamation, kMBOk); // deletes self on dismiss?
+      new TGMsgBox(
+         gClient->GetRoot(),
+         (gROOT->GetListOfBrowsers()->At(0))
+            ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+            : gClient->GetRoot(),
+         "Exception", e.what(), kMBIconExclamation, kMBOk); // deletes self on dismiss?
    }
 }
 
@@ -3406,13 +3485,19 @@ void xRooNode::_generate_(const char *datasetName, bool expected)
    try {
       datasets().Add(datasetName, expected ? "asimov" : "toy");
    } catch (const std::exception &e) {
-      new TGMsgBox(gClient->GetRoot(), (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot()
-      , "Exception", e.what(),
-                   kMBIconExclamation); // deletes self on dismiss?
+      new TGMsgBox(
+         gClient->GetRoot(),
+         (gROOT->GetListOfBrowsers()->At(0))
+            ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+            : gClient->GetRoot(),
+         "Exception", e.what(),
+         kMBIconExclamation); // deletes self on dismiss?
    }
 }
 
-void xRooNode::_scan_(const char* what, double nToys,const char* xvar, int nBinsX, double lowX, double highX/*, const char*, int, double, double*/, const char *constParValues) {
+void xRooNode::_scan_(const char *what, double nToys, const char *xvar, int nBinsX, double lowX,
+                      double highX /*, const char*, int, double, double*/, const char *constParValues)
+{
    try {
       TString sXvar(xvar);
       TString sWhat(what);
@@ -3433,42 +3518,52 @@ void xRooNode::_scan_(const char* what, double nToys,const char* xvar, int nBins
          auto idx = pattern.Index('=');
          TString pat = (idx == -1) ? TString(pattern) : TString(pattern(0, idx));
          double val =
-                 (idx == -1) ? std::numeric_limits<double>::quiet_NaN() : TString(pattern(idx + 1, pattern.Length())).Atof();
+            (idx == -1) ? std::numeric_limits<double>::quiet_NaN() : TString(pattern(idx + 1, pattern.Length())).Atof();
          for (auto par : _pars.argList()) {
             if (TString(par->GetName()).Contains(TRegexp(pat, true))) {
                par->setAttribute("Constant", true);
-               if (!std::isnan(val)) { dynamic_cast<RooAbsRealLValue *>(par)->setVal(val); }
+               if (!std::isnan(val)) {
+                  dynamic_cast<RooAbsRealLValue *>(par)->setVal(val);
+               }
             }
          }
       }
       auto hs = nll(dsetName.Data()).hypoSpace(sXvar);
-      if(nToys) {
+      if (nToys) {
          sWhat += " toys";
-         if(nToys > 0) {
-            sWhat += TString::Format("=%g",nToys);
+         if (nToys > 0) {
+            sWhat += TString::Format("=%g", nToys);
          }
       }
-      hs.SetTitle(sWhat + " scan" + ((dsetName!="") ? TString::Format(" [data=%s]",dsetName.Data()) : ""));
-      int scanStatus = hs.scan(sWhat + " visualize",nBinsX,lowX,highX);
-      if( scanStatus != 0) {
-         new TGMsgBox(gClient->GetRoot(), (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot(),
-                      "Scan Finished with Bad Status Code",
-                      TString::Format("%s\nData = %s\nScan Status Code = %d", hs.GetName(), dsetName.Data(),scanStatus), kMBIconExclamation, kMBOk);
+      hs.SetTitle(sWhat + " scan" + ((dsetName != "") ? TString::Format(" [data=%s]", dsetName.Data()) : ""));
+      int scanStatus = hs.scan(sWhat + " visualize", nBinsX, lowX, highX);
+      if (scanStatus != 0) {
+         new TGMsgBox(
+            gClient->GetRoot(),
+            (gROOT->GetListOfBrowsers()->At(0))
+               ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+               : gClient->GetRoot(),
+            "Scan Finished with Bad Status Code",
+            TString::Format("%s\nData = %s\nScan Status Code = %d", hs.GetName(), dsetName.Data(), scanStatus),
+            kMBIconExclamation, kMBOk);
       }
       hs.SetName(TUUID().AsString());
-      if(ws()) {
-          if(auto res = hs.result()) ws()->import( *res );
+      if (ws()) {
+         if (auto res = hs.result())
+            ws()->import(*res);
       }
 
       _pars.argList() = *snap; // restore pars
 
-   } catch(const std::exception& e) {
-      new TGMsgBox(gClient->GetRoot(), (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot()
-      , "Exception", e.what(),
-                   kMBIconExclamation);
+   } catch (const std::exception &e) {
+      new TGMsgBox(
+         gClient->GetRoot(),
+         (gROOT->GetListOfBrowsers()->At(0))
+            ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+            : gClient->GetRoot(),
+         "Exception", e.what(), kMBIconExclamation);
    }
 }
-
 
 void xRooNode::_SetBinContent_(int bin, double value, const char *par, double parVal)
 {
@@ -3541,11 +3636,13 @@ bool xRooNode::SetBinContent(int bin, double value, const char *par, double parV
                   cut += " && ";
                cut += TString::Format("%s==%d", _cat->GetName(), _cat->getCurrentIndex());
                obs.add(*_cat); // note: if we ever changed coords to return clones, would need to keep coords alive
-            } else if(auto _rv = _c->get<RooAbsRealLValue>(); _rv) {
+            } else if (auto _rv = _c->get<RooAbsRealLValue>(); _rv) {
                // todo: check coordRange is a single range rather than multirange
                if (cut != "")
                   cut += " && ";
-               cut += TString::Format("%s>=%f&&%s<%f", _rv->GetName(),_rv->getMin(_rv->getStringAttribute("coordRange")),_rv->GetName(),_rv->getMax(_rv->getStringAttribute("coordRange")));
+               cut +=
+                  TString::Format("%s>=%f&&%s<%f", _rv->GetName(), _rv->getMin(_rv->getStringAttribute("coordRange")),
+                                  _rv->GetName(), _rv->getMax(_rv->getStringAttribute("coordRange")));
                obs.add(*_rv); // note: if we ever changed coords to return clones, would need to keep coords alive
             } else {
                throw std::runtime_error("SetBinContent of data: Unsupported coordinate type");
@@ -3555,9 +3652,8 @@ bool xRooNode::SetBinContent(int bin, double value, const char *par, double parV
          RooFormulaVar cutFormula("cut1", cut, obs); // doing this to avoid complaints about unused vars
          RooFormulaVar icutFormula("icut1", TString::Format("!(%s)", cut.Data()), obs);
 
-
          TString cut2;
-         if(_ax) {
+         if (_ax) {
             cut2 = TString::Format("%s >= %f && %s < %f", _ax->GetParent()->GetName(), _ax->GetBinLowEdge(bin),
                                    _ax->GetParent()->GetName(), _ax->GetBinUpEdge(bin));
             obs.add(*dynamic_cast<RooAbsArg *>(_ax->GetParent()));
@@ -3625,7 +3721,7 @@ bool xRooNode::SetBinContent(int bin, double value, const char *par, double parV
 
          // using SetBinContent means dataset must take on a binned form at these coordinates
          // if number of entries doesnt match number of bins then will 'bin' the data
-         if(bin) {
+         if (bin) {
             if (auto _nentries = std::unique_ptr<RooAbsData>(_data->reduce(cutFormula))->numEntries();
                 _nentries != _ax->GetNbins()) {
                auto _contents = GetBinContents(1, _ax->GetNbins());
@@ -3657,9 +3753,11 @@ bool xRooNode::SetBinContent(int bin, double value, const char *par, double parV
                _data->add(*_obs, _reduced->weight());
             }
          }
-         if(_ax) dynamic_cast<RooAbsLValue *>(_ax->GetParent())->setBin(bin - 1, _ax->GetName());
+         if (_ax)
+            dynamic_cast<RooAbsLValue *>(_ax->GetParent())->setBin(bin - 1, _ax->GetName());
          _data->add(obs, value);
-         if (auto bb = getBrowsable(".sourceds")) return bb->SetBinContent(bin,value,par,parVal); // apply to source ds if we have one
+         if (auto bb = getBrowsable(".sourceds"))
+            return bb->SetBinContent(bin, value, par, parVal); // apply to source ds if we have one
          return true;
 
       } else if (get<RooDataHist>()) {
@@ -3748,8 +3846,9 @@ bool xRooNode::SetBinData(int bin, double value, const char *dataName)
    return datasets()[dataName]->SetBinContent(bin, value);
 }
 
-bool xRooNode::SetData(const TObject& obj, const char* dataName) {
-    return datasets()[dataName]->SetContents(obj);
+bool xRooNode::SetData(const TObject &obj, const char *dataName)
+{
+   return datasets()[dataName]->SetContents(obj);
 }
 
 bool xRooNode::SetBinError(int bin, double value)
@@ -3840,9 +3939,9 @@ bool xRooNode::SetBinError(int bin, double value)
                                  : acquire<RooRealVar>(Form("%s_bin%d", prefix.Data(), bin),
                                                        Form("%s_bin%d", prefix.Data(), bin), 1);
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-      RooArgList& pSet = phf->_paramSet;
+      RooArgList &pSet = phf->_paramSet;
 #else
-      RooArgList& pSet = const_cast<RooArgList&>(phf->paramList());
+      RooArgList &pSet = const_cast<RooArgList &>(phf->paramList());
 #endif
       auto var = dynamic_cast<RooRealVar *>(&pSet[bin - 1]);
 
@@ -3922,8 +4021,9 @@ bool xRooNode::SetBinError(int bin, double value)
 
 std::shared_ptr<xRooNode> xRooNode::at(const std::string &name, bool browseResult) const
 {
-   auto res = find(name,browseResult);
-   if (res==nullptr) throw std::out_of_range(name + " does not exist");
+   auto res = find(name, browseResult);
+   if (res == nullptr)
+      throw std::out_of_range(name + " does not exist");
    return res;
 }
 
@@ -3939,19 +4039,18 @@ RooWorkspace *xRooNode::ws() const
    return nullptr;
 }
 
-
-
 xRooNode xRooNode::constraints() const
 {
 
    xRooNode out(".constraints", nullptr, *this);
 
-   std::function<RooAbsPdf *(const xRooNode &n, RooAbsArg &par, std::set<RooAbsPdf*> ignore)> getConstraint;
-   getConstraint = [&](const xRooNode &n, RooAbsArg &par, std::set<RooAbsPdf*> ignore) {
-       if(auto _pdf = n.get<RooAbsPdf>()) {
-          if(ignore.count(_pdf)) return (RooAbsPdf*)nullptr;
-          ignore.insert(_pdf);
-       }
+   std::function<RooAbsPdf *(const xRooNode &n, RooAbsArg &par, std::set<RooAbsPdf *> ignore)> getConstraint;
+   getConstraint = [&](const xRooNode &n, RooAbsArg &par, std::set<RooAbsPdf *> ignore) {
+      if (auto _pdf = n.get<RooAbsPdf>()) {
+         if (ignore.count(_pdf))
+            return (RooAbsPdf *)nullptr;
+         ignore.insert(_pdf);
+      }
       auto o = n.get<RooProdPdf>();
       if (!o) {
          if (n.get<RooSimultaneous>()) {
@@ -3962,13 +4061,13 @@ xRooNode xRooNode::constraints() const
                }
             }
             return (RooAbsPdf *)nullptr;
-         } else if(n.get<RooAbsPdf>() && n.fParent && n.fParent->get<RooWorkspace>()) {
+         } else if (n.get<RooAbsPdf>() && n.fParent && n.fParent->get<RooWorkspace>()) {
             // reached top-level pdf, which wasn't a simultaneous, so stop here
             return (RooAbsPdf *)nullptr;
-         }else if (auto _ws = n.get<RooWorkspace>(); _ws) {
+         } else if (auto _ws = n.get<RooWorkspace>(); _ws) {
             // reached a workspace, check for any pdf depending on parameter that isnt the ignore
             for (auto p : _ws->allPdfs()) {
-               if (ignore.count(static_cast<RooAbsPdf*>(p)))
+               if (ignore.count(static_cast<RooAbsPdf *>(p)))
                   continue;
                if (p->dependsOn(par)) {
                   out.emplace_back(std::make_shared<xRooNode>(par.GetName(), *p, *this));
@@ -3980,7 +4079,7 @@ xRooNode xRooNode::constraints() const
          return getConstraint(*n.fParent.get(), par, ignore);
       }
       for (auto p : o->pdfList()) {
-         if (ignore.count(static_cast<RooAbsPdf*>(p)))
+         if (ignore.count(static_cast<RooAbsPdf *>(p)))
             continue;
          if (p->dependsOn(par)) {
             out.emplace_back(std::make_shared<xRooNode>(par.GetName(), *p, *this));
@@ -4148,7 +4247,7 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode &acquirer, con
          for (int i = 0; i < x->getBinning(binningName.c_str()).numBins(); i++) {
             std::shared_ptr<RooAbsArg> arg;
             if (sOpt2.Contains("blankshape")) {
-               arg = acquirer.acquire2<RooAbsArg,RooRealVar>("1", "1", 1);
+               arg = acquirer.acquire2<RooAbsArg, RooRealVar>("1", "1", 1);
             } else {
                if (!h) {
                   arg = acquirer.acquireNew<RooRealVar>(TString::Format("%s_bin%d", newObjName.Data(), i + 1), "", 1);
@@ -4172,9 +4271,10 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode &acquirer, con
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
          dynamic_cast<ParamHistFunc *>(_f.get())->_paramSet.setName("paramSet"); // so can see when print
 #else
-         const_cast<RooArgList&>(dynamic_cast<ParamHistFunc *>(_f.get())->paramList()).setName("paramSet"); // so can see when print
+         const_cast<RooArgList &>(dynamic_cast<ParamHistFunc *>(_f.get())->paramList())
+            .setName("paramSet"); // so can see when print
 #endif
-         x->setBinning(*tmp);                                                    // restore binning
+         x->setBinning(*tmp); // restore binning
          delete tmp;
          for (auto &[k, v] : stringAttrs) {
             _f->setStringAttribute(k.c_str(), v.c_str());
@@ -4242,9 +4342,9 @@ std::shared_ptr<TStyle> xRooNode::style(TObject *initObject, bool autoCreate) co
    } else if (arg) {
       if (arg->getStringAttribute("style"))
          t = arg->getStringAttribute("style");
-      else if(autoCreate) {
+      else if (autoCreate) {
          // args will default to histo's object styling, whatever that currently may be
-         argInitObject = std::make_unique<TH1D>(GetName(),GetTitle(),1,0,1);
+         argInitObject = std::make_unique<TH1D>(GetName(), GetTitle(), 1, 0, 1);
          initObject = argInitObject.get();
       } else {
          return nullptr;
@@ -4258,7 +4358,8 @@ std::shared_ptr<TStyle> xRooNode::style(TObject *initObject, bool autoCreate) co
          // loaded style (from workspace?) so put in list and use that
          gROOT->GetListOfStyles()->Add(style.get());
       } else {
-         if(!autoCreate) return nullptr;
+         if (!autoCreate)
+            return nullptr;
          // create new style - gets put in style list automatically so don't have to delete
          // acquire them so saved to workspaces for auto reload ...
          style = const_cast<xRooNode &>(*this).acquireNew<TStyle>(t.Data(),
@@ -4344,9 +4445,9 @@ std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject> &arg, 
          return std::shared_ptr<TObject>(_ws->embeddedData(arg->GetName()), [](TObject *) {});
       } else if (arg->InheritsFrom("RooFitResult") || arg->InheritsFrom("TTree") || arg->IsA() == TStyle::Class()) {
          // ensure will have a unique name for import if must be new
-         TNamed* aNamed = dynamic_cast<TNamed*>(arg.get());
+         TNamed *aNamed = dynamic_cast<TNamed *>(arg.get());
          TString aName = arg->GetName();
-         TObject* out_arg = _ws->genobj(arg->GetName());
+         TObject *out_arg = _ws->genobj(arg->GetName());
          int ii = 1;
          while (aNamed && out_arg && mustBeNew) {
             aNamed->SetName(TString::Format("%s;%d", aName.Data(), ii++));
@@ -4395,7 +4496,7 @@ std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject> &arg, 
    }
    // look for exact name, dont use 'find' because doesnt work if trying to find "1" and it doesn't exist, will get back
    // idx 1 instead
-   if(!mustBeNew) {
+   if (!mustBeNew) {
       for (auto &r : *_owned) {
          if (strcmp(r->GetName(), arg->GetName()) == 0 && strcmp(r->get()->ClassName(), arg->ClassName()) == 0) {
             return r->fComp;
@@ -4477,18 +4578,20 @@ bool xRooNode::SetXaxis(const RooAbsBinning &binning)
    return true;
 }
 
-bool xRooNode::SetXaxis(TAxis* ax) {
-   if(!ax) return false;
-   if(ax->IsVariableBinSize()) {
-      return SetXaxis(ax->GetName(),ax->GetTitle(),ax->GetNbins(),ax->GetXbins()->GetArray());
+bool xRooNode::SetXaxis(TAxis *ax)
+{
+   if (!ax)
+      return false;
+   if (ax->IsVariableBinSize()) {
+      return SetXaxis(ax->GetName(), ax->GetTitle(), ax->GetNbins(), ax->GetXbins()->GetArray());
    } else {
-      return SetXaxis(ax->GetName(),ax->GetTitle(),ax->GetNbins(),ax->GetXmin(),ax->GetXmax());
+      return SetXaxis(ax->GetName(), ax->GetTitle(), ax->GetNbins(), ax->GetXmin(), ax->GetXmax());
    }
 }
 
 bool xRooNode::contains(const std::string &name) const
 {
-   return find(name,false) != nullptr;
+   return find(name, false) != nullptr;
 }
 
 std::shared_ptr<xRooNode> xRooNode::find(const std::string &name, bool browseResult) const
@@ -4565,16 +4668,17 @@ std::shared_ptr<xRooNode> xRooNode::operator[](const std::string &name)
             }
          }
       }
-      if(child->fFolder == (std::string("!")+partname)) {
-         if(!folderNode) folderNode = std::make_shared<xRooNode>(child->fFolder.c_str(),nullptr,*this);
+      if (child->fFolder == (std::string("!") + partname)) {
+         if (!folderNode)
+            folderNode = std::make_shared<xRooNode>(child->fFolder.c_str(), nullptr, *this);
          folderNode->push_back(child);
       }
    }
-   if(folderNode) {
-       if (partname != name) {
-           return folderNode->operator[](name.substr(partname.length() + 1));
-       }
-       return folderNode;
+   if (folderNode) {
+      if (partname != name) {
+         return folderNode->operator[](name.substr(partname.length() + 1));
+      }
+      return folderNode;
    }
    // before giving up see if partName is numeric and indexes within the range
    if (TString s(partname); s.IsDec() && size_t(s.Atoi()) < size()) {
@@ -4606,7 +4710,8 @@ TGListTreeItem *xRooNode::GetTreeItem(TBrowser *b) const
    if (!b->GetBrowserImp())
       return nullptr;
    if (auto _b = dynamic_cast<TGFileBrowser *>(GETACTBROWSER(dynamic_cast<TRootBrowser *>(b->GetBrowserImp()))); _b) {
-      auto _root = GETROOTDIR(_b);;
+      auto _root = GETROOTDIR(_b);
+      ;
       if (!_root)
          _root = GETLISTTREE(_b)->GetFirstItem();
       GETLISTTREE(_b)->SetColorMode(TGListTree::EColorMarkupMode(TGListTree::kColorUnderline | TGListTree::kColorBox));
@@ -4628,7 +4733,8 @@ TGListTree *xRooNode::GetListTree(TBrowser *b) const
       return nullptr;
    }
    if (b->GetBrowserImp()) {
-      if (auto _b = dynamic_cast<TGFileBrowser *>(GETACTBROWSER(dynamic_cast<TRootBrowser *>(b->GetBrowserImp()))); _b) {
+      if (auto _b = dynamic_cast<TGFileBrowser *>(GETACTBROWSER(dynamic_cast<TRootBrowser *>(b->GetBrowserImp())));
+          _b) {
          auto _root = GETROOTDIR(_b);
          if (!_root)
             _root = GETLISTTREE(_b)->GetFirstItem();
@@ -4654,9 +4760,10 @@ void xRooNode::SetName(const char *name)
    }
 }
 
-void xRooNode::SetTitle(const char *title) {
+void xRooNode::SetTitle(const char *title)
+{
    if (auto o = (get<TNamed>()); o) {
-      if(auto c = mainChild(); c.get()) {
+      if (auto c = mainChild(); c.get()) {
          c.SetTitle(title);
       }
       o->SetTitle(title);
@@ -4671,7 +4778,7 @@ xRooNode &xRooNode::browse()
    // alternative could have been to mandate that the 'components' of a collection node are the children it has.
 
    auto findByObj = [&](const std::shared_ptr<xRooNode> &n) {
-      std::vector<std::shared_ptr<xRooNode>>& nn = *this;
+      std::vector<std::shared_ptr<xRooNode>> &nn = *this;
       for (auto &c : nn) {
          if (c->get() == n->get() && strcmp(n->GetName(), c->GetName()) == 0)
             return c;
@@ -4681,7 +4788,7 @@ xRooNode &xRooNode::browse()
 
    auto appendChildren = [&](const xRooNode &n) {
       size_t out = 0;
-      const std::vector<std::shared_ptr<xRooNode>>& nn(n);
+      const std::vector<std::shared_ptr<xRooNode>> &nn(n);
       for (auto &c : nn) {
          if (auto existing = findByObj(c); existing) {
             existing->fTimes++;
@@ -4695,7 +4802,7 @@ xRooNode &xRooNode::browse()
       return out;
    };
 
-   const std::vector<std::shared_ptr<xRooNode>>& nn2(*this);
+   const std::vector<std::shared_ptr<xRooNode>> &nn2(*this);
    for (auto &c : nn2) {
       if (strlen(c->GetName()) > 0 && (c->GetName()[0] == '.')) {
          c->fTimes = 1;
@@ -4736,8 +4843,7 @@ xRooNode &xRooNode::browse()
          addedChildren += appendChildren(factors());
       // include coefs if any
       auto _coefs = coefs();
-      if (_coefs.get() && strcmp(_coefs->GetName(), "1") != 0 &&
-                          strcmp(_coefs->GetName(), "ONE") != 0) {
+      if (_coefs.get() && strcmp(_coefs->GetName(), "1") != 0 && strcmp(_coefs->GetName(), "ONE") != 0) {
          if (_coefs.size() == 1 && _coefs.get<RooAddition>()) {
             if (strcmp(_coefs.at(0)->GetName(), "1") != 0 &&
                 strcmp(_coefs.at(0)->GetName(), "ONE") != 0) { // don't add the "1"
@@ -4779,7 +4885,9 @@ xRooNode &xRooNode::browse()
          } else if (auto s = dynamic_cast<RooAbsCollection *>(_proxy)) {
             for (auto a2 : *s) {
                auto c = std::make_shared<xRooNode>(*a2, *this);
-               if(arg->numProxies()!=1) c->fFolder = std::string("!.") + _proxy->name(); // don't put in a folder if there's just 1 proxy (the collection)
+               if (arg->numProxies() != 1)
+                  c->fFolder = std::string("!.") +
+                               _proxy->name(); // don't put in a folder if there's just 1 proxy (the collection)
                if (auto existing = findByObj(c); existing) {
                   existing->fTimes++;
                   existing->fFolder = c->fFolder; // transfer folder assignment
@@ -4798,83 +4906,89 @@ xRooNode &xRooNode::browse()
               emplace_back(c);
           }
       }*/
-   } else if( auto ir = get<RooStats::HypoTestInverterResult>() ) {
+   } else if (auto ir = get<RooStats::HypoTestInverterResult>()) {
       // check if we already have a hypoSpace in our memory
       bool hasHS = false;
       for (auto &c : fBrowsables) {
-         if(strcmp(c->GetName(),".memory")==0 && c->get<xRooHypoSpace>()) {
-            hasHS=true;
+         if (strcmp(c->GetName(), ".memory") == 0 && c->get<xRooHypoSpace>()) {
+            hasHS = true;
             break;
          }
       }
-      if(!hasHS) {
+      if (!hasHS) {
          // add the HS
-         auto hs = fBrowsables.emplace_back(std::make_shared<xRooNode>(".memory",std::make_shared<xRooHypoSpace>(ir),*this));
+         auto hs =
+            fBrowsables.emplace_back(std::make_shared<xRooNode>(".memory", std::make_shared<xRooHypoSpace>(ir), *this));
          // add the hypoPoints first so they appear first
          auto _axes = hs->get<xRooHypoSpace>()->axes();
 
-         int i=0;
-         for(auto& hp : *hs->get<xRooHypoSpace>()) {
+         int i = 0;
+         for (auto &hp : *hs->get<xRooHypoSpace>()) {
             TString coordString;
             for (auto a : _axes) {
                if (a != _axes.first())
                   coordString += ",";
-               coordString += TString::Format("%s=%g", a->GetName(),
-                                              hp.coords->getRealValue(a->GetName(), ir->GetXValue(i)));
+               coordString +=
+                  TString::Format("%s=%g", a->GetName(), hp.coords->getRealValue(a->GetName(), ir->GetXValue(i)));
             }
-            auto hpn = emplace_back( std::make_shared<xRooNode>(coordString,hp.hypoTestResult,hs));
+            auto hpn = emplace_back(std::make_shared<xRooNode>(coordString, hp.hypoTestResult, hs));
             hpn->fTimes++;
-            hpn->fBrowsables.emplace_back(std::make_shared<xRooNode>(".memory",std::shared_ptr<xRooNLLVar::xRooHypoPoint>(&hp,[](xRooNLLVar::xRooHypoPoint*){}),hpn));
+            hpn->fBrowsables.emplace_back(std::make_shared<xRooNode>(
+               ".memory", std::shared_ptr<xRooNLLVar::xRooHypoPoint>(&hp, [](xRooNLLVar::xRooHypoPoint *) {}), hpn));
             i++;
          }
       } else {
          // ensure all hypoTestResults are flagged as keep-alive
-         std::vector<std::shared_ptr<xRooNode>>& nn = *this;
+         std::vector<std::shared_ptr<xRooNode>> &nn = *this;
          for (auto &c : nn) {
-            if(c->get<RooStats::HypoTestResult>()) c->fTimes++;
+            if (c->get<RooStats::HypoTestResult>())
+               c->fTimes++;
          }
       }
-//      xRooNode tests;
-//      for(int i=0;i<ir->ArraySize();i++) {
-//         tests.push_back(std::make_shared<xRooNode>(TString::Format("%g",ir->GetXValue(i)),*ir->GetResult(i),*this));
-//      }
-//      appendChildren(tests);
-   } else if( get<RooStats::HypoTestResult>() ) {
+      //      xRooNode tests;
+      //      for(int i=0;i<ir->ArraySize();i++) {
+      //         tests.push_back(std::make_shared<xRooNode>(TString::Format("%g",ir->GetXValue(i)),*ir->GetResult(i),*this));
+      //      }
+      //      appendChildren(tests);
+   } else if (get<RooStats::HypoTestResult>()) {
 
       // create the xRooHypoPoint if necessary
-      xRooNLLVar::xRooHypoPoint* hp = nullptr;
+      xRooNLLVar::xRooHypoPoint *hp = nullptr;
       for (auto &c : fBrowsables) {
-         if(strcmp(c->GetName(),".memory")==0 && c->get<xRooNLLVar::xRooHypoPoint>()) {
+         if (strcmp(c->GetName(), ".memory") == 0 && c->get<xRooNLLVar::xRooHypoPoint>()) {
             hp = c->get<xRooNLLVar::xRooHypoPoint>();
             c->fTimes++; // keep it alive
             break;
          }
       }
-      if(!hp) {
-         auto shp = std::make_shared<xRooNLLVar::xRooHypoPoint>(std::dynamic_pointer_cast<RooStats::HypoTestResult>(fComp));
-         fBrowsables.emplace_back(std::make_shared<xRooNode>(".memory",shp,*this));
+      if (!hp) {
+         auto shp =
+            std::make_shared<xRooNLLVar::xRooHypoPoint>(std::dynamic_pointer_cast<RooStats::HypoTestResult>(fComp));
+         fBrowsables.emplace_back(std::make_shared<xRooNode>(".memory", shp, *this));
          hp = shp.get();
       }
 
       xRooNode fits;
 
-      if(auto fit = hp->ufit()) {
-         fits.emplace_back(std::make_shared<xRooNode>(fit,*this))->TNamed::SetName("ufit");
+      if (auto fit = hp->ufit()) {
+         fits.emplace_back(std::make_shared<xRooNode>(fit, *this))->TNamed::SetName("ufit");
       }
-      if(auto fit = hp->cfit_null()) {
-         fits.emplace_back(std::make_shared<xRooNode>(fit,*this))->TNamed::SetName("cfit_null");
+      if (auto fit = hp->cfit_null()) {
+         fits.emplace_back(std::make_shared<xRooNode>(fit, *this))->TNamed::SetName("cfit_null");
       }
-      if(auto fit = hp->cfit_alt()) {
-         fits.emplace_back(std::make_shared<xRooNode>(fit,*this))->TNamed::SetName("cfit_alt");
+      if (auto fit = hp->cfit_alt()) {
+         fits.emplace_back(std::make_shared<xRooNode>(fit, *this))->TNamed::SetName("cfit_alt");
       }
-       if(auto fit = hp->gfit()) {
-           fits.emplace_back(std::make_shared<xRooNode>(fit,*this))->TNamed::SetName("gfit");
-       }
-       if(auto asi = hp->asimov()) {
-          auto asiP = fits.emplace_back(std::make_shared<xRooNode>(asi->hypoTestResult ? asi->hypoTestResult : std::make_shared<RooStats::HypoTestResult>(asi->result()),*this));
-          asiP->TNamed::SetName("asimov");
-          asiP->fBrowsables.emplace_back( std::make_shared<xRooNode>(".memory",asi,asiP) );
-       }
+      if (auto fit = hp->gfit()) {
+         fits.emplace_back(std::make_shared<xRooNode>(fit, *this))->TNamed::SetName("gfit");
+      }
+      if (auto asi = hp->asimov()) {
+         auto asiP = fits.emplace_back(std::make_shared<xRooNode>(
+            asi->hypoTestResult ? asi->hypoTestResult : std::make_shared<RooStats::HypoTestResult>(asi->result()),
+            *this));
+         asiP->TNamed::SetName("asimov");
+         asiP->fBrowsables.emplace_back(std::make_shared<xRooNode>(".memory", asi, asiP));
+      }
       appendChildren(fits);
    }
 
@@ -5022,8 +5136,9 @@ xRooNode xRooNode::np() const
    xRooNode out(".np", std::make_shared<RooArgList>(), *this);
    out.get<RooArgList>()->setName((GetPath() + ".np").c_str());
    for (auto o : pars()) {
-      if (o->get<RooAbsArg>()->getAttribute("np") || (!o->get<RooAbsArg>()->getAttribute("Constant") && !o->get<RooAbsArg>()->getAttribute("poi") &&
-          !o->get<RooConstVar>())) {
+      if (o->get<RooAbsArg>()->getAttribute("np") ||
+          (!o->get<RooAbsArg>()->getAttribute("Constant") && !o->get<RooAbsArg>()->getAttribute("poi") &&
+           !o->get<RooConstVar>())) {
          out.get<RooArgList>()->add(*o->get<RooAbsArg>());
          out.emplace_back(o);
       }
@@ -5037,7 +5152,7 @@ xRooNode xRooNode::pp() const
    out.get<RooArgList>()->setName((GetPath() + ".pp").c_str());
    for (auto o : pars()) {
       if (!o->get<RooAbsArg>()->getAttribute("np") && !o->get<RooAbsArg>()->getAttribute("poi") &&
-             (o->get<RooAbsArg>()->getAttribute("Constant") || o->get<RooConstVar>())) {
+          (o->get<RooAbsArg>()->getAttribute("Constant") || o->get<RooConstVar>())) {
          out.get<RooArgList>()->add(*o->get<RooAbsArg>());
          out.emplace_back(o);
       }
@@ -5050,8 +5165,8 @@ xRooNode xRooNode::vars() const
    xRooNode out(".vars", std::make_shared<RooArgList>(), *this);
    out.get<RooArgList>()->setName((GetPath() + ".vars").c_str());
    if (auto coll = get<RooAbsCollection>(); coll) {
-      for(auto& x : *this) {
-         for(auto& y : x->vars()) {
+      for (auto &x : *this) {
+         for (auto &y : x->vars()) {
             out.push_back(y);
          }
       }
@@ -5077,16 +5192,16 @@ xRooNode xRooNode::vars() const
                out.back()->fFolder = "!robs";
             else if (c->getAttribute("poi"))
                out.back()->fFolder = "!poi";
-            else if (c->getAttribute("np") || (!c->getAttribute("Constant") && !c->getAttribute("poi") &&
-                                               c->IsA()!=RooConstVar::Class()))
+            else if (c->getAttribute("np") ||
+                     (!c->getAttribute("Constant") && !c->getAttribute("poi") && c->IsA() != RooConstVar::Class()))
                out.back()->fFolder = "!np";
-            else if(!c->getAttribute("Constant") && c->IsA()!=RooConstVar::Class())
+            else if (!c->getAttribute("Constant") && c->IsA() != RooConstVar::Class())
                out.back()->fFolder = "!floats";
             else
                out.back()->fFolder = "!pp";
          }
       }
-      for(auto g : _globs) {
+      for (auto g : _globs) {
          out.get<RooArgList>()->add(*g->get<RooAbsArg>());
          out.emplace_back(g);
       }
@@ -5160,9 +5275,10 @@ xRooNode xRooNode::components() const
 
    if (auto p = get<RooAddPdf>(); p) {
       // only add each pdf once (the coefs will be accumulated in coefs() method) ...
-      std::set<RooAbsArg*> donePdfs;
+      std::set<RooAbsArg *> donePdfs;
       for (auto &o : p->pdfList()) {
-         if(donePdfs.count(o)) continue;
+         if (donePdfs.count(o))
+            continue;
          out.emplace_back(std::make_shared<xRooNode>(*o, *this));
          donePdfs.insert(o);
       }
@@ -5180,9 +5296,10 @@ xRooNode xRooNode::components() const
       //                }
       //            }
       //        }
-      std::set<RooAbsArg*> doneFuncs;
+      std::set<RooAbsArg *> doneFuncs;
       for (auto &o : p2->funcList()) {
-         if(doneFuncs.count(o)) continue;
+         if (doneFuncs.count(o))
+            continue;
          out.emplace_back(std::make_shared<xRooNode>(*o, *this));
          doneFuncs.insert(o);
       }
@@ -5190,93 +5307,17 @@ xRooNode xRooNode::components() const
       for (auto &o : p3->list()) {
          out.emplace_back(std::make_shared<xRooNode>(*o, *this));
       }
-   } else if(auto p4 = get<RooAbsCollection>(); p4) {
-      for (auto& a : *p4) {
-         out.emplace_back(std::make_shared<xRooNode>(*a,*this));
+   } else if (auto p4 = get<RooAbsCollection>(); p4) {
+      for (auto &a : *p4) {
+         out.emplace_back(std::make_shared<xRooNode>(*a, *this));
       }
-   } /*else if(auto p = get<RooFitResultTree>(); p) {
-       long _nentries = p->GetEntries();
-
-       // iterate up through parents until we are out of the tree
-       int depth = 0;
-       auto _pdf = fParent;
-       while(_pdf && _pdf->get()==p) {
-           _pdf = _pdf->fParent;
-           depth++;
-       }
-
-       // first layer is organised by dsid ...
-       if (depth==0) {
-           long total = 0;
-           for (auto &_d : _pdf->datasets()) { // parent of a frt should be the pdf
-               auto _hash = RooAbsTree::nameToHash(_d->get()->GetName());
-               TString _sel = TString::Format("data_hash.first==%d&&data_hash.second==%d", _hash.first, _hash.second);
-               auto nFits = p->get()->GetEntries(_sel);
-               if (nFits > 0) {
-                   total += nFits;
-                   out.emplace_back(std::make_shared<xRooNode>( _d->GetName(), fComp, *this));
-               }
-               if (total >= _nentries) break;
-           }
-           if (total < _nentries) {
-               out.emplace_back(std::make_shared<xRooNode>("otherDatasets", fComp, *this));
-           }
-       } else if(depth==1) {
-           // get unconditional fit if we can ...
-           std::string dName = (strcmp(GetName(),"otherDatasets")==0) ? "*" : GetName();
-           long total = 0;
-           if(auto _ufits = p->GetEntrys(p->BuildSelection(dName, std::map<std::string, double>{})); !_ufits.empty()) {
-               for(auto i : _ufits) {
-                   auto _fr = p->GetFit(i);
-                   TUUID uuid(_fr->GetName());
-                   TString _name = (dName=="*") ? _fr->GetTitle() : "";
-                   if (_name!="") _name += ";";
-                   // before adding a copy of fit, see if fit already exists in this and reuse
-                   _name += uuid.GetTime().AsString();
-                   if (auto _existing = find(_name.Data()); _existing) {
-                       out.emplace_back(std::make_shared<xRooNode>(*_existing));
-                   } else {
-                       out.emplace_back(std::make_shared<xRooNode>(_name, _fr, *this));
-                       out.back()->fFolder = "!unconditional";
-                   }
-
-               }
-               total += _ufits.size();
-           }
-           for(auto& _par : *p->GetParameters()) {
-               if (total >= _nentries) break;
-               if (_par->getAttribute("Constant")) continue;
-               //auto _sel = p->BuildSelection(dName,{{_par->GetName(),
-   {dynamic_cast<RooRealVar*>(_par)->getMin(),dynamic_cast<RooRealVar*>(_par)->getMax()}}}); if (auto n = p->GetEntrys(
-                           p->BuildSelection(dName, {{_par->GetName(), std::numeric_limits<double>::quiet_NaN()}}),
-   1).size();n > 0) {
-               //if (p->get()->GetEntries(_sel) > 0) {
-                   out.emplace_back(std::make_shared<xRooNode>(_par->GetName(),fComp,*this));
-                   total += n;
-               }
-           }
-       } else if(depth==2) {
-           std::string dName = (strcmp(fParent->GetName(),"otherDatasets")==0) ? "*" : fParent->GetName();
-           //std::cout << p->BuildSelection(dName,{{GetName(),std::numeric_limits<double>::quiet_NaN()}}).GetTitle() <<
-   std::endl; for(auto& i : p->GetEntrys( p->BuildSelection(dName, {{GetName(),
-   std::numeric_limits<double>::quiet_NaN()}}), -1)) { auto _fr = p->GetFit(i); TString _name =
-   TString::Format("%f;%s",dynamic_cast<RooAbsReal*>(_fr->constPars().find(GetName()))->getVal(),TUUID(_fr->GetName()).GetTime().AsString());
-               if (auto _existing = find(_name.Data()); _existing) {
-                   out.emplace_back(std::make_shared<xRooNode>(*_existing));
-               } else {
-                   out.emplace_back(std::make_shared<xRooNode>(_name, _fr, *this));
-               }
-           }
-       }
-
-   }*/
-   else if (auto p5 = get<RooWorkspace>(); p5) {
+   } else if (auto p5 = get<RooWorkspace>(); p5) {
       for (auto &o : p5->components()) {
          // only top-level nodes (only clients are integrals or things that aren't part of the workspace)
          // if (o->hasClients()) continue;
          bool hasClients = false;
          for (auto &c : o->clients())
-            if (!c->InheritsFrom("RooRealIntegral") && p5==GETWS(o)) {
+            if (!c->InheritsFrom("RooRealIntegral") && p5 == GETWS(o)) {
                hasClients = true;
                break;
             }
@@ -5297,7 +5338,7 @@ xRooNode xRooNode::components() const
                // std::cout << " type = " << _pdf->get()->ClassName() << std::endl;
                out.emplace_back(std::make_shared<xRooNode>(fr->GetName(), *fr, _pdf));
                // for a while, this node's parent pointed to something of type Node2!!
-               // how to fix??? - I fxied it with a new constructo to avoid the shared_ptr<Node2> calling the const
+               // how to fix??? - I fxied it with a new constructor to avoid the shared_ptr<Node2> calling the const
                // Node2& constructor via getting wrapped in a Node2(shared_ptr<TObject>) call
                // out.back()->fParent = _pdf;
                // std::cout << " type2 = " << out.back()->fParent->get()->ClassName() << std::endl;
@@ -5307,9 +5348,9 @@ xRooNode xRooNode::components() const
             out.back()->fFolder = "!fits";
          } else {
             out.emplace_back(std::make_shared<xRooNode>(*o, *this));
-            if(strcmp(out.back()->get()->ClassName(),"TStyle")==0) {
+            if (strcmp(out.back()->get()->ClassName(), "TStyle") == 0) {
                out.back()->fFolder = "!styles";
-            }else if(strcmp(out.back()->get()->ClassName(),"RooStats::HypoTestInverterResult")==0) {
+            } else if (strcmp(out.back()->get()->ClassName(), "RooStats::HypoTestInverterResult") == 0) {
                out.back()->fFolder = "!scans";
             } else {
                out.back()->fFolder = "!objects";
@@ -5357,21 +5398,22 @@ xRooNode xRooNode::bins() const
    xRooNode out(".bins", nullptr, *this);
 
    if (auto p = get<RooSimultaneous>(); p) {
-      std::map<int,std::shared_ptr<xRooNode>> cats; // fill into a map to preserve index ordering
-      for (auto &c : p->indexCat()) { // is alphabetical in labels
+      std::map<int, std::shared_ptr<xRooNode>> cats; // fill into a map to preserve index ordering
+      for (auto &c : p->indexCat()) {                // is alphabetical in labels
          auto pp = p->getPdf(c.first.c_str());
          if (!pp)
             continue;
          cats[c.second] =
             std::make_shared<xRooNode>(TString::Format("%s=%s", p->indexCat().GetName(), c.first.c_str()), *pp, *this);
       }
-      for(auto& [_,n] : cats) out.emplace_back(n);
+      for (auto &[_, n] : cats)
+         out.emplace_back(n);
    } else if (auto phf = get<ParamHistFunc>(); phf) {
       int i = 1;
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-      auto& pSet = phf->_paramSet;
+      auto &pSet = phf->_paramSet;
 #else
-      auto& pSet = phf->paramList();
+      auto &pSet = phf->paramList();
 #endif
       for (auto par : pSet) {
          out.emplace_back(std::make_shared<xRooNode>(*par, *this));
@@ -5392,7 +5434,7 @@ xRooNode xRooNode::bins() const
             }
          }
          out.emplace_back(std::make_shared<xRooNode>(
-            TString::Format("%g<=%s<%g", ax->GetBinLowEdge(i), ax->GetParent()->GetName(), ax->GetBinLowEdge(i+1)),
+            TString::Format("%g<=%s<%g", ax->GetBinLowEdge(i), ax->GetParent()->GetName(), ax->GetBinLowEdge(i + 1)),
             _factors.empty() ? nullptr
                              : std::make_shared<RooProduct>(TString::Format("%s.binFactors.bin%d", GetName(), i),
                                                             "binFactors", RooArgList()),
@@ -5401,7 +5443,7 @@ xRooNode xRooNode::bins() const
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
             out.back()->get<RooProduct>()->_compRSet.add(*f);
 #else
-            const_cast<RooArgList&>(out.back()->get<RooProduct>()->realComponents()).add(*f);
+            const_cast<RooArgList &>(out.back()->get<RooProduct>()->realComponents()).add(*f);
 #endif
          }
          out.back()->fBinNumber = i;
@@ -5428,13 +5470,14 @@ xRooNode xRooNode::coefs() const
          }
          // parent should now be node above the filters ... need parent of that
          parent = parent->fParent;
-         if (!parent) parent = fParent; // revert t original parent in case something went wrong
+         if (!parent)
+            parent = fParent; // revert t original parent in case something went wrong
       }
       if (auto p = parent->get<RooRealSumPdf>(); p) {
          std::size_t i = 0;
          for (auto &o : p->funcList()) {
             if (o == get()) {
-               if (i>=p->coefList().size()) {
+               if (i >= p->coefList().size()) {
                   isResidual = true;
                   coefs.add(p->coefList());
                } else {
@@ -5445,12 +5488,12 @@ xRooNode xRooNode::coefs() const
          }
       } else if (auto p2 = parent->get<RooAddPdf>(); p2) {
          std::size_t i = 0;
-         if(p2->coefList().empty()) {
+         if (p2->coefList().empty()) {
             // this can happen if all pdfs are extended then the coef is effectively the
             // expected number of events
             // TODO: test behaviour of xRooNode under this scenario (are histograms correct?)
          } else {
-            for (auto &o: p2->pdfList()) {
+            for (auto &o : p2->pdfList()) {
                if (o == get()) {
                   if (i >= p2->coefList().size()) {
                      isResidual = true;
@@ -5464,31 +5507,43 @@ xRooNode xRooNode::coefs() const
          }
       }
    }
-   if(isResidual) {
+   if (isResidual) {
       // return a node representing 1.-sumOfCoefs
       // involves creating sumOfCoefs unless there is only 1 coef, then just use that
-      auto coefSum = coefs.empty() ? nullptr : ( coefs.size()==1 ? std::shared_ptr<RooAbsArg>( coefs.at(0), [](RooAbsArg*){} ) : std::make_shared<RooAddition>((isResidual) ? ".sumOfCoefs" : ".coefs", "Coefficients of", coefs) );
-      xRooNode out(".coef",coefSum ? std::dynamic_pointer_cast<RooAbsArg>(std::make_shared<RooFormulaVar>(".coef","1-sum(otherCoefs)","1. - @0",*coefSum)) : nullptr /* should we return a "1." instead? */ );
-      if(coefSum && coefs.size()!=1) {
+      auto coefSum = coefs.empty()
+                        ? nullptr
+                        : (coefs.size() == 1 ? std::shared_ptr<RooAbsArg>(coefs.at(0), [](RooAbsArg *) {})
+                                             : std::make_shared<RooAddition>((isResidual) ? ".sumOfCoefs" : ".coefs",
+                                                                             "Coefficients of", coefs));
+      xRooNode out(".coef", coefSum ? std::dynamic_pointer_cast<RooAbsArg>(std::make_shared<RooFormulaVar>(
+                                         ".coef", "1-sum(otherCoefs)", "1. - @0", *coefSum))
+                                    : nullptr /* should we return a "1." instead? */);
+      if (coefSum && coefs.size() != 1) {
          out.emplace_back(std::make_shared<xRooNode>(".memory", nullptr, *this))
             ->emplace_back(
                std::make_shared<xRooNode>(".sumOfCoefs", coefSum, out)); // added to keep the sum alive! with the node
       }
-      if(!coefs.empty()) {out.browse();}
+      if (!coefs.empty()) {
+         out.browse();
+      }
       return out;
-   } else if(coefs.size()==1) {
-      xRooNode out(".coef",std::shared_ptr<RooAbsArg>( coefs.at(0), [](RooAbsArg*){} ),*this);
-      if(!coefs.empty()) {out.browse();}
+   } else if (coefs.size() == 1) {
+      xRooNode out(".coef", std::shared_ptr<RooAbsArg>(coefs.at(0), [](RooAbsArg *) {}), *this);
+      if (!coefs.empty()) {
+         out.browse();
+      }
       return out;
    } else {
-      auto coefSum = coefs.empty() ? nullptr : std::make_shared<RooAddition>(".coefs", TString::Format("Coefficients of %s",GetName()), coefs);
-      xRooNode out(".coefs",coefSum,*this);
+      auto coefSum =
+         coefs.empty()
+            ? nullptr
+            : std::make_shared<RooAddition>(".coefs", TString::Format("Coefficients of %s", GetName()), coefs);
+      xRooNode out(".coefs", coefSum, *this);
       if (!coefs.empty())
          out.browse();
 
       return out;
    }
-
 }
 
 xRooNode xRooNode::factors() const
@@ -5538,7 +5593,6 @@ xRooNode xRooNode::factors() const
       }
    }
 
-
    /*
        // if parent is a sumpdf or addpdf then include the coefs
        // if func appears multiple times then coefs must be combined into a RooAddition temporary
@@ -5581,16 +5635,17 @@ xRooNode xRooNode::variations() const
 {
    xRooNode out(".variations", nullptr, *this);
 
-//   if (auto p = get<RooSimultaneous>(); p) {
-//      for (auto &c : p->indexCat()) {
-//         auto pp = p->getPdf(c.first.c_str());
-//         if (!pp)
-//            continue;
-//         out.emplace_back(
-//            std::make_shared<xRooNode>(TString::Format("%s=%s", p->indexCat().GetName(), c.first.c_str()), *pp, *this));
-//      }
-//   } else
-     if (auto p2 = get<PiecewiseInterpolation>(); p2) {
+   //   if (auto p = get<RooSimultaneous>(); p) {
+   //      for (auto &c : p->indexCat()) {
+   //         auto pp = p->getPdf(c.first.c_str());
+   //         if (!pp)
+   //            continue;
+   //         out.emplace_back(
+   //            std::make_shared<xRooNode>(TString::Format("%s=%s", p->indexCat().GetName(), c.first.c_str()), *pp,
+   //            *this));
+   //      }
+   //   } else
+   if (auto p2 = get<PiecewiseInterpolation>(); p2) {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
       out.emplace_back(std::make_shared<xRooNode>("nominal", p2->_nominal.arg(), *this));
 #else
@@ -5624,15 +5679,15 @@ xRooNode xRooNode::variations() const
 
    } else if (auto p4 = get<ParamHistFunc>(); p4) {
       // I *think* I put this here so that can browse into a ParamHistFunc
-//      int i = 0;
-//      for (auto par : p4->_paramSet) {
-//         TString _name = par->GetName();
-//         // if(auto _v = dynamic_cast<RooRealVar*>(p->_dataSet.get(i)->first()); _v) {
-//         //     _name = TString::Format("%s=%g",_v->GetName(),_v->getVal());
-//         // }
-//         // out.emplace_back(std::make_shared<xRooNode>(_name,*par,*this)); -- -removed cos now have bin() method
-//         i++;
-//      }
+      //      int i = 0;
+      //      for (auto par : p4->_paramSet) {
+      //         TString _name = par->GetName();
+      //         // if(auto _v = dynamic_cast<RooRealVar*>(p->_dataSet.get(i)->first()); _v) {
+      //         //     _name = TString::Format("%s=%g",_v->GetName(),_v->getVal());
+      //         // }
+      //         // out.emplace_back(std::make_shared<xRooNode>(_name,*par,*this)); -- -removed cos now have bin()
+      //         method i++;
+      //      }
    }
    return out;
 }
@@ -5659,43 +5714,54 @@ xRooNode xRooNode::datasets() const
          out.back()->fFolder = "!datasets";
       }
    } else if (auto __ws = ws(); __ws) {
-      if (get<RooAbsPdf>() || (!get() && fParent && fParent->get<RooAbsPdf>())) { // second condition handles 'bins' nodes of pdf, which have null ptr
+      if (get<RooAbsPdf>() ||
+          (!get() && fParent &&
+           fParent->get<RooAbsPdf>())) { // second condition handles 'bins' nodes of pdf, which have null ptr
          // only add datasets that have observables that cover all our observables
          RooArgSet _obs(obs().argList());
-         //_obs.add(coords(true).argList(), true); // include coord observables too, and current xaxis if there's one - added in loop below
+         //_obs.add(coords(true).argList(), true); // include coord observables too, and current xaxis if there's one -
+         //added in loop below
 
-         TString cut;RooArgSet cutobs;
+         TString cut;
+         RooArgSet cutobs;
          for (auto _c : coords()) { // coords() moves vars to their respective coordinates too
             if (auto _cat = _c->get<RooAbsCategoryLValue>(); _cat) {
                if (cut != "")
                   cut += " && ";
                cut += TString::Format("%s==%d", _cat->GetName(), _cat->getCurrentIndex());
-               _obs.add(*_cat,true); // note: if we ever changed coords to return clones, would need to keep coords alive
+               _obs.add(*_cat,
+                        true); // note: if we ever changed coords to return clones, would need to keep coords alive
                cutobs.add(*_cat);
-            } else if(auto _rv = _c->get<RooAbsRealLValue>(); _rv) {
+            } else if (auto _rv = _c->get<RooAbsRealLValue>(); _rv) {
                // todo: check coordRange is a single range rather than multirange
                if (cut != "")
                   cut += " && ";
-               cut += TString::Format("%s>=%f&&%s<%f", _rv->GetName(),_rv->getMin(_rv->getStringAttribute("coordRange")),_rv->GetName(),_rv->getMax(_rv->getStringAttribute("coordRange")));
-               _obs.add(*_rv,true); // note: if we ever changed coords to return clones, would need to keep coords alive
+               cut +=
+                  TString::Format("%s>=%f&&%s<%f", _rv->GetName(), _rv->getMin(_rv->getStringAttribute("coordRange")),
+                                  _rv->GetName(), _rv->getMax(_rv->getStringAttribute("coordRange")));
+               _obs.add(*_rv,
+                        true); // note: if we ever changed coords to return clones, would need to keep coords alive
                cutobs.add(*_rv);
             } else {
                throw std::runtime_error("datasets(): Unsupported coordinate type");
             }
          }
-         if(auto s = get<RooSimultaneous>()) {
+         if (auto s = get<RooSimultaneous>()) {
             // check if we have a pdf for every category ... if not then add to cut
             bool hasMissing = false;
             TString extraCut = "";
-            for(auto cat : s->indexCat()) {
-               if(!s->getPdf(cat.first.c_str())) { hasMissing=true; }
-               else {
-                  if(extraCut != "") extraCut += " && ";
+            for (auto cat : s->indexCat()) {
+               if (!s->getPdf(cat.first.c_str())) {
+                  hasMissing = true;
+               } else {
+                  if (extraCut != "")
+                     extraCut += " && ";
                   extraCut += TString::Format("%s==%d", s->indexCat().GetName(), cat.second);
                }
             }
-            if(hasMissing) {
-               if(cut != "") cut += " && ";
+            if (hasMissing) {
+               if (cut != "")
+                  cut += " && ";
                cut += extraCut;
                cutobs.add(s->indexCat());
             }
@@ -5710,20 +5776,21 @@ xRooNode xRooNode::datasets() const
             if (std::unique_ptr<RooAbsCollection>(d->obs().argList().selectCommon(_obs))->size() == _obs.size()) {
                // all obs present .. include
 
-               if(cut != "") {
+               if (cut != "") {
                   RooFormulaVar cutFormula("cut1", cut, cutobs); // doing this to avoid complaints about unused vars
                   // TODO: Could consider using a 'filter' node (see filter() method) applied to the dataset instead
                   // of creating and using a reduced dataset here
-                  out.emplace_back(std::make_shared<xRooNode>(std::shared_ptr<RooAbsData>(d->get<RooAbsData>()->reduce(cutFormula)),*this));
+                  out.emplace_back(std::make_shared<xRooNode>(
+                     std::shared_ptr<RooAbsData>(d->get<RooAbsData>()->reduce(cutFormula)), *this));
                   // put a subset of the globs in the returned dataset too
                   out.back()->get<RooAbsData>()->setGlobalObservables(*globs().get<RooArgList>());
-                  if(d->get()->TestBit(1<<20)) out.back()->get()->SetBit(1<<20);
+                  if (d->get()->TestBit(1 << 20))
+                     out.back()->get()->SetBit(1 << 20);
                   // need to attach the original dataset so that things like SetBinContent can interact with it
-                  out.back()->fBrowsables.emplace_back(std::make_shared<xRooNode>(".sourceds",d->fComp,*this));
+                  out.back()->fBrowsables.emplace_back(std::make_shared<xRooNode>(".sourceds", d->fComp, *this));
                } else {
                   out.emplace_back(std::make_shared<xRooNode>(d->fComp, *this));
                }
-
             }
          }
       } /*else if(auto p = get<RooFitResult>(); p) {
@@ -5740,8 +5807,11 @@ xRooNode xRooNode::datasets() const
    return out;
 }
 
-std::shared_ptr<xRooNode> xRooNode::getBrowsable(const char* name) const {
-   for(auto b : fBrowsables) if(b && strcmp(b->GetName(),name)==0) return b;
+std::shared_ptr<xRooNode> xRooNode::getBrowsable(const char *name) const
+{
+   for (auto b : fBrowsables)
+      if (b && strcmp(b->GetName(), name) == 0)
+         return b;
    return nullptr;
 }
 
@@ -5852,9 +5922,9 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
                   _skip = true;
                   break;
                }
-            } else if(auto rv = _c->get<RooAbsRealLValue>(); rv) {
+            } else if (auto rv = _c->get<RooAbsRealLValue>(); rv) {
                // must be in range
-               if(!rv->inRange(theData->get()->getRealValue(rv->GetName()),rv->getStringAttribute("coordRange"))) {
+               if (!rv->inRange(theData->get()->getRealValue(rv->GetName()), rv->getStringAttribute("coordRange"))) {
                   _skip = true;
                   break;
                }
@@ -5937,7 +6007,7 @@ TGraph *xRooNode::BuildGraph(RooAbsLValue *v, bool includeZeros, TVirtualPad *fr
       //            }
       //        }
       auto _style = style(dataGraph);
-      if(_style) {
+      if (_style) {
          *dynamic_cast<TAttLine *>(dataGraph) = *_style;
          *dynamic_cast<TAttFill *>(dataGraph) = *_style;
          *dynamic_cast<TAttMarker *>(dataGraph) = *_style;
@@ -5965,9 +6035,8 @@ void xRooNode::SetFitResult(const RooFitResult *fr)
          allVars = fr->constPars();
       } else {
          // need to add to memory as a specific name
-         throw std::runtime_error(
-            "Not supported yet"); // complication is how to replace an existing fitResult in .memory
-                                  // auto _clone = std::make_shared<RooFitResult>(*fr);
+         throw std::runtime_error("Not supported yet"); // complication is how to replace an existing fitResult in
+                                                        // .memory auto _clone = std::make_shared<RooFitResult>(*fr);
          //_clone->SetName("fitResult");
       }
    } else {
@@ -6011,8 +6080,9 @@ xRooNode xRooNode::fitResult(const char *opt) const
 
       // ensure coefs are included if there are any
       auto _coefs = coefs();
-      if(_coefs.get()) {
-         return xRooNode(RooProduct("tmp","tmp",RooArgList(*get<RooAbsArg>(),*_coefs.get<RooAbsReal>()))).fitResult(opt);
+      if (_coefs.get()) {
+         return xRooNode(RooProduct("tmp", "tmp", RooArgList(*get<RooAbsArg>(), *_coefs.get<RooAbsReal>())))
+            .fitResult(opt);
       }
 
       std::unique_ptr<RooArgList> _pars(dynamic_cast<RooArgList *>(pars().argList().selectByAttrib("Constant", false)));
@@ -6028,21 +6098,21 @@ xRooNode xRooNode::fitResult(const char *opt) const
          std::shared_ptr<xRooNode> pConstr;
          for (auto &c : _constr) {
             if (c->get<RooPoisson>() || c->get<RooGaussian>()) {
-                // require parameter to be a direct server of the constraint pdf to count
-                bool isServer=true;
-                if(c->get<RooGaussian>()) {
-                    isServer=false;
-                    for (auto s: c->get<RooAbsArg>()->servers()) {
-                        if (strcmp(s->GetName(), p->GetName()) == 0) {
-                            isServer = true;
-                            break;
-                        }
-                    }
-                }
-                if(isServer) {
-                    pConstr = c;
-                    break;
-                }
+               // require parameter to be a direct server of the constraint pdf to count
+               bool isServer = true;
+               if (c->get<RooGaussian>()) {
+                  isServer = false;
+                  for (auto s : c->get<RooAbsArg>()->servers()) {
+                     if (strcmp(s->GetName(), p->GetName()) == 0) {
+                        isServer = true;
+                        break;
+                     }
+                  }
+               }
+               if (isServer) {
+                  pConstr = c;
+                  break;
+               }
             }
          }
          if (pConstr) {
@@ -6081,7 +6151,8 @@ xRooNode xRooNode::fitResult(const char *opt) const
             _v->removeError();
          }
       }
-      auto _args = consts().argList();_args.add(pp().argList());
+      auto _args = consts().argList();
+      _args.add(pp().argList());
       // global obs are added to constPars list too
       auto _globs = globs(); // keep alive as may own glob
       _args.add(_globs.argList());
@@ -6097,71 +6168,74 @@ xRooNode xRooNode::fitResult(const char *opt) const
 
    // return first checked fit result present in the workspace
    if (auto _w = ws(); _w) {
-      auto checkFr = [&](TObject* o) {
-          if (auto _fr = dynamic_cast<RooFitResult *>(o); _fr && _fr->TestBit(1 << 20)) {
-             // check all pars match final/const values ... if mismatch need to create a new RooFitResult
-             bool match = true;
-             for (auto p : pars()) {
-                if (!p->get<RooAbsReal>())
-                   continue;
-                if (p->get<RooAbsArg>()->getAttribute("Constant")) {
-                   if (_fr->floatParsFinal().find(p->GetName()) ||
-                       std::abs(_fr->constPars().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
-                                p->get<RooAbsReal>()->getVal()) > 1e-15) {
-                      match = false;
-                      break;
-                   }
-                } else {
-                   if (_fr->constPars().find(p->GetName()) ||
-                       std::abs(
-                               _fr->floatParsFinal().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
+      auto checkFr = [&](TObject *o) {
+         if (auto _fr = dynamic_cast<RooFitResult *>(o); _fr && _fr->TestBit(1 << 20)) {
+            // check all pars match final/const values ... if mismatch need to create a new RooFitResult
+            bool match = true;
+            for (auto p : pars()) {
+               if (!p->get<RooAbsReal>())
+                  continue;
+               if (p->get<RooAbsArg>()->getAttribute("Constant")) {
+                  if (_fr->floatParsFinal().find(p->GetName()) ||
+                      std::abs(_fr->constPars().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
                                p->get<RooAbsReal>()->getVal()) > 1e-15) {
-                      match = false;
-                      break;
-                   }
-                }
-             }
-             if (!match) {
-                // create new fit result using covariances from this fit result
-                std::unique_ptr<RooArgList> _pars(
-                        dynamic_cast<RooArgList *>(pars().argList().selectByAttrib("Constant", false)));
-                auto fr = std::make_shared<RooFitResult>(TString::Format("%s-dirty",_fr->GetName()));
-                fr->SetTitle(TString::Format("%s parameter snapshot", GetName()));
-                fr->setFinalParList(*_pars);
-                TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t>*>(GETDMP(_fr,_VM));
-                if (prevCov) {
-                   auto cov = _fr->reducedCovarianceMatrix(*_pars);
-                   // make the diagonals all the current error values
-                   for(size_t i=0;i<_pars->size();i++) {
-                      cov(i,i) = pow(dynamic_cast<RooRealVar*>(_pars->at(i))->getError(),2);
-                   }
-                   fr->setCovarianceMatrix(cov);
-                }
+                     match = false;
+                     break;
+                  }
+               } else {
+                  if (_fr->constPars().find(p->GetName()) ||
+                      std::abs(
+                         _fr->floatParsFinal().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
+                         p->get<RooAbsReal>()->getVal()) > 1e-15) {
+                     match = false;
+                     break;
+                  }
+               }
+            }
+            if (!match) {
+               // create new fit result using covariances from this fit result
+               std::unique_ptr<RooArgList> _pars(
+                  dynamic_cast<RooArgList *>(pars().argList().selectByAttrib("Constant", false)));
+               auto fr = std::make_shared<RooFitResult>(TString::Format("%s-dirty", _fr->GetName()));
+               fr->SetTitle(TString::Format("%s parameter snapshot", GetName()));
+               fr->setFinalParList(*_pars);
+               TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(_fr, _VM));
+               if (prevCov) {
+                  auto cov = _fr->reducedCovarianceMatrix(*_pars);
+                  // make the diagonals all the current error values
+                  for (size_t i = 0; i < _pars->size(); i++) {
+                     cov(i, i) = pow(dynamic_cast<RooRealVar *>(_pars->at(i))->getError(), 2);
+                  }
+                  fr->setCovarianceMatrix(cov);
+               }
 
-                auto _args = consts().argList(); _args.add(pp().argList());
-                // global obs are added to constPars list too
-                auto _globs = globs(); // keep alive as may own glob
-                _args.add(_globs.argList());
-                fr->setConstParList(_args);
-                std::unique_ptr<RooArgList> _snap(dynamic_cast<RooArgList *>(_pars->snapshot()));
-                for (auto &p : *_snap) {
-                   if (auto atr = p->getStringAttribute("initVal"); atr && dynamic_cast<RooRealVar *>(p))
-                      dynamic_cast<RooRealVar *>(p)->setVal(TString(atr).Atof());
-                }
-                fr->setInitParList(*_snap);
-                return xRooNode(fr, *this);
-             }
-             return xRooNode(*_fr, std::make_shared<xRooNode>(*_w, std::make_shared<xRooNode>()));
-          }
-          return xRooNode();
+               auto _args = consts().argList();
+               _args.add(pp().argList());
+               // global obs are added to constPars list too
+               auto _globs = globs(); // keep alive as may own glob
+               _args.add(_globs.argList());
+               fr->setConstParList(_args);
+               std::unique_ptr<RooArgList> _snap(dynamic_cast<RooArgList *>(_pars->snapshot()));
+               for (auto &p : *_snap) {
+                  if (auto atr = p->getStringAttribute("initVal"); atr && dynamic_cast<RooRealVar *>(p))
+                     dynamic_cast<RooRealVar *>(p)->setVal(TString(atr).Atof());
+               }
+               fr->setInitParList(*_snap);
+               return xRooNode(fr, *this);
+            }
+            return xRooNode(*_fr, std::make_shared<xRooNode>(*_w, std::make_shared<xRooNode>()));
+         }
+         return xRooNode();
       };
       for (auto o : _w->allGenericObjects()) {
          auto out = checkFr(o);
-         if(out) return out;
+         if (out)
+            return out;
       }
       for (auto o : GETWSSNAPSHOTS(_w)) {
          auto out = checkFr(o);
-         if(out) return out;
+         if (out)
+            return out;
       }
    } else {
       // objects not in workspaces are allowed to have a fitResult set in their memory
@@ -6173,8 +6247,9 @@ xRooNode xRooNode::fitResult(const char *opt) const
 
    // ensure coefs are included if there are any
    auto _coefs = coefs();
-   if(_coefs.get()) {
-      return xRooNode(RooProduct("tmp","tmp",RooArgList(*get<RooAbsArg>(),*_coefs.get<RooAbsReal>()))).fitResult(opt);
+   if (_coefs.get()) {
+      return xRooNode(RooProduct("tmp", "tmp", RooArgList(*get<RooAbsArg>(), *_coefs.get<RooAbsReal>())))
+         .fitResult(opt);
    }
 
    std::unique_ptr<RooArgList> _pars(dynamic_cast<RooArgList *>(pars().argList().selectByAttrib("Constant", false)));
@@ -6184,7 +6259,7 @@ xRooNode xRooNode::fitResult(const char *opt) const
    fr->setStatus(-1);
 
    TMatrixDSym cov(fr->floatParsFinal().getSize());
-   TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t>*>(GETDMP(fr.get(),_VM));
+   TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(fr.get(), _VM));
    if (prevCov) {
       for (int i = 0; i < prevCov->GetNcols(); i++) {
          for (int j = 0; j < prevCov->GetNrows(); j++) {
@@ -6203,7 +6278,8 @@ xRooNode xRooNode::fitResult(const char *opt) const
    fr->setCovarianceMatrix(cov);
    fr->setCovQual(covQualBackup);
 
-   auto _args = consts().argList(); _args.add(pp().argList());
+   auto _args = consts().argList();
+   _args.add(pp().argList());
    // global obs are added to constPars list too
    auto _globs = globs(); // keep alive as may own glob
    _args.add(_globs.argList());
@@ -6271,12 +6347,12 @@ xRooNLLVar xRooNode::nll(const xRooNode &_data, std::initializer_list<RooCmdArg>
    auto defaultOpts = xRooFit::createNLLOptions(); // smart pointer will cleanup the list
    // add user-specified options to list ... if already existing in default list, override and warn
    RooLinkedList l;
-   for(auto opt : *defaultOpts) {
+   for (auto opt : *defaultOpts) {
       l.Add(opt);
    }
    for (auto &i : nllOpts) {
       if (auto o = l.FindObject(i.GetName())) {
-         Info("nll","Overriding NLL Option: %s",o->GetName());
+         Info("nll", "Overriding NLL Option: %s", o->GetName());
          l.Remove(o);
       }
       l.Add(const_cast<RooCmdArg *>(&i));
@@ -6285,27 +6361,32 @@ xRooNLLVar xRooNode::nll(const xRooNode &_data, std::initializer_list<RooCmdArg>
    return nll(_data, l);
 }
 
-xRooNode xRooNode::generate(const xRooNode& fr,bool expected, int seed) {
+xRooNode xRooNode::generate(const xRooNode &fr, bool expected, int seed)
+{
    if (!get<RooAbsPdf>()) {
       // before giving up, if this is a workspace we can proceed if we only have one model
       if (get<RooWorkspace>()) {
          std::shared_ptr<xRooNode> mainModel;
-         for(auto& c : const_cast<xRooNode*>(this)->browse()) {
+         for (auto &c : const_cast<xRooNode *>(this)->browse()) {
             if (c->get<RooAbsPdf>()) {
                if (!mainModel) {
                   mainModel = c;
                } else {
-                  throw std::runtime_error(
-                          TString::Format("Workspace has multiple models, you must specify which to generate with (found at least %s and %s)",mainModel->GetName(),c->GetName()));
+                  throw std::runtime_error(TString::Format("Workspace has multiple models, you must specify which to "
+                                                           "generate with (found at least %s and %s)",
+                                                           mainModel->GetName(), c->GetName()));
                }
             }
          }
-         if(mainModel) return mainModel->generate(fr,expected,seed);
+         if (mainModel)
+            return mainModel->generate(fr, expected, seed);
       }
       throw std::runtime_error(TString::Format("%s is not a pdf", GetName()));
    }
    auto _fr = fr.get<RooFitResult>();
-   return xRooNode(xRooFit::generateFrom(*get<RooAbsPdf>(), (_fr ? *_fr : *(fitResult().get<RooFitResult>())), expected, seed).first,*this);
+   return xRooNode(
+      xRooFit::generateFrom(*get<RooAbsPdf>(), (_fr ? *_fr : *(fitResult().get<RooFitResult>())), expected, seed).first,
+      *this);
 }
 
 xRooNLLVar xRooNode::nll(const xRooNode &_data, const RooLinkedList &opts) const
@@ -6315,21 +6396,22 @@ xRooNLLVar xRooNode::nll(const xRooNode &_data, const RooLinkedList &opts) const
       // before giving up, if this is a workspace we can proceed if we only have one model
       if (get<RooWorkspace>()) {
          std::shared_ptr<xRooNode> mainModel;
-         for(auto& c : const_cast<xRooNode*>(this)->browse()) {
+         for (auto &c : const_cast<xRooNode *>(this)->browse()) {
             if (c->get<RooAbsPdf>()) {
                if (!mainModel) {
                   mainModel = c;
                } else {
-                  throw std::runtime_error(
-                     TString::Format("Workspace has multiple models, you must specify which to build nll with (found at least %s and %s)",mainModel->GetName(),c->GetName()));
+                  throw std::runtime_error(TString::Format("Workspace has multiple models, you must specify which to "
+                                                           "build nll with (found at least %s and %s)",
+                                                           mainModel->GetName(), c->GetName()));
                }
             }
          }
-         if(mainModel) return mainModel->nll(_data,opts);
+         if (mainModel)
+            return mainModel->nll(_data, opts);
       }
       throw std::runtime_error(TString::Format("%s is not a pdf", GetName()));
    }
-
 
    // if simultaneous and any channels deselected then reduce and return
    if (get<RooSimultaneous>()) {
@@ -6355,12 +6437,11 @@ xRooNLLVar xRooNode::nll(const xRooNode &_data, const RooLinkedList &opts) const
       auto _d = strlen(_data.GetName()) ? datasets().find(_data.GetName()) : nullptr;
       if (strlen(_data.GetName()) == 0) {
          // create the EXPECTED (asimov) dataset with the observables
-         auto asi = xRooFit::generateFrom(*get<RooAbsPdf>(),
-                                          *(fitResult().get<RooFitResult>()), true);
+         auto asi = xRooFit::generateFrom(*get<RooAbsPdf>(), *(fitResult().get<RooFitResult>()), true);
          _d = std::make_shared<xRooNode>(asi.first, *this);
          if (asi.second) {
             _d->emplace_back(
-                    std::make_shared<xRooNode>(".globs", std::const_pointer_cast<RooAbsCollection>(asi.second), *_d));
+               std::make_shared<xRooNode>(".globs", std::const_pointer_cast<RooAbsCollection>(asi.second), *_d));
          }
       } else if (!_d) {
          throw std::runtime_error(TString::Format("Cannot find dataset %s", _data.GetName()));
@@ -6520,7 +6601,7 @@ xRooNode xRooNode::reduced(const std::string &_range, bool invert) const
                   break;
                }
             }
-            if ( (matchAny && !invert) || (!matchAny && invert) ) {
+            if ((matchAny && !invert) || (!matchAny && invert)) {
                newPdf->addPdf(*c->get<RooAbsPdf>(), cName);
             }
          }
@@ -6543,10 +6624,11 @@ xRooNode xRooNode::reduced(const std::string &_range, bool invert) const
          }
          for (auto &c : funcs)
             out.Remove(*c);
-         if(!funcs.empty()) {
-             if(auto _pdf = out.get<RooRealSumPdf>(); _pdf) {
-                 _pdf->setFloor(false); // remove floor if removed some functions, which allows evaluation of negative valued components
-             }
+         if (!funcs.empty()) {
+            if (auto _pdf = out.get<RooRealSumPdf>(); _pdf) {
+               _pdf->setFloor(false); // remove floor if removed some functions, which allows evaluation of negative
+                                      // valued components
+            }
          }
          out.browse();
          return out;
@@ -6574,7 +6656,8 @@ xRooNode xRooNode::reduced(const std::string &_range, bool invert) const
          int covQualBackup = fr->covQual();
          fr->setCovarianceMatrix(_tmp);
          fr->setCovQual(covQualBackup);
-         const_cast<RooArgList&>(fr->floatParsFinal()).remove(_remPars, true); // is this a memory leak ... should delete the remPars?
+         const_cast<RooArgList &>(fr->floatParsFinal())
+            .remove(_remPars, true); // is this a memory leak ... should delete the remPars?
          return out;
 
       } else if (!get() || get<RooAbsCollection>()) {
@@ -6582,12 +6665,13 @@ xRooNode xRooNode::reduced(const std::string &_range, bool invert) const
          xRooNode out(std::make_shared<RooArgList>(), fParent);
          size_t nobs = 0;
          bool notAllArgs = false;
-         bool isVars = (strcmp(GetName(),".vars")==0);
+         bool isVars = (strcmp(GetName(), ".vars") == 0);
          for (auto c : *this) {
-            nobs += (c->fFolder=="!robs" || c->fFolder=="!globs");
+            nobs += (c->fFolder == "!robs" || c->fFolder == "!globs");
             bool matchAny = false;
             for (auto &p : patterns) {
-               if (TString(c->GetName()).Contains(TRegexp(p, true)) || (isVars && p=="x" && (c->fFolder=="!robs"||c->fFolder=="!globs") && nobs==1)) {
+               if (TString(c->GetName()).Contains(TRegexp(p, true)) ||
+                   (isVars && p == "x" && (c->fFolder == "!robs" || c->fFolder == "!globs") && nobs == 1)) {
                   matchAny = true;
                   break;
                }
@@ -6601,7 +6685,7 @@ xRooNode xRooNode::reduced(const std::string &_range, bool invert) const
                }
             }
          }
-         if(notAllArgs) {
+         if (notAllArgs) {
             out.fComp.reset();
          }
          return out;
@@ -6689,43 +6773,55 @@ xRooNode xRooNode::reduced(const std::string &_range, bool invert) const
 class xRooProjectedPdf : public RooProjectedPdf {
 public:
    using RooProjectedPdf::RooProjectedPdf;
-   double expectedEvents(const RooArgSet* nset) const override {
-      return static_cast<RooAbsPdf*>(intpdf.absArg())->expectedEvents(nset);
+   double expectedEvents(const RooArgSet *nset) const override
+   {
+      return static_cast<RooAbsPdf *>(intpdf.absArg())->expectedEvents(nset);
    }
-   ExtendMode extendMode() const override { return static_cast<RooAbsPdf*>(intpdf.absArg())->extendMode(); }
+   ExtendMode extendMode() const override { return static_cast<RooAbsPdf *>(intpdf.absArg())->extendMode(); }
    virtual TObject *clone(const char *newname) const override { return new xRooProjectedPdf(*this, newname); }
 
 protected:
-   double evaluate() const override {
-      int code; return getProjection(&intobs,_normSet,(_normRange.Length()>0 ? _normRange.Data() : 0),code)->getVal();
+   double evaluate() const override
+   {
+      int code;
+      return getProjection(&intobs, _normSet, (_normRange.Length() > 0 ? _normRange.Data() : 0), code)->getVal();
    }
 };
 
 class PdfWrapper : public RooAbsPdf {
 public:
    // need expPdf option while RooProjectedPdf doesn't support keeping things extended
-   PdfWrapper(RooAbsReal &f, RooAbsReal *coef, bool expEvMode = false, RooAbsPdf* expPdf = nullptr)
-      : RooAbsPdf(Form("exp_%s", f.GetName())), fFunc("func", "func", this, f), fCoef("coef", "coef", this),
-        fExpPdf("expPdf","expPdf",this)
+   PdfWrapper(RooAbsReal &f, RooAbsReal *coef, bool expEvMode = false, RooAbsPdf *expPdf = nullptr)
+      : RooAbsPdf(Form("exp_%s", f.GetName())),
+        fFunc("func", "func", this, f),
+        fCoef("coef", "coef", this),
+        fExpPdf("expPdf", "expPdf", this)
    {
-      // don't treat pdf as extended if it has a coefficient and is RooAddPdf: RooAddPdf doesn't extend them unless no coefs for any (and all are extendable)
-      if (coef) { fCoef.setArg(*coef); }
-      if (expPdf && expPdf->canBeExtended() && !(coef && dynamic_cast<RooAddPdf*>(expPdf))) { fExpPdf.setArg(*expPdf); }
-      else if(auto _p = dynamic_cast<RooAbsPdf*>(&f); _p && _p->canBeExtended() && !(coef && dynamic_cast<RooAddPdf*>(_p))) {
+      // don't treat pdf as extended if it has a coefficient and is RooAddPdf: RooAddPdf doesn't extend them unless no
+      // coefs for any (and all are extendable)
+      if (coef) {
+         fCoef.setArg(*coef);
+      }
+      if (expPdf && expPdf->canBeExtended() && !(coef && dynamic_cast<RooAddPdf *>(expPdf))) {
+         fExpPdf.setArg(*expPdf);
+      } else if (auto _p = dynamic_cast<RooAbsPdf *>(&f);
+                 _p && _p->canBeExtended() && !(coef && dynamic_cast<RooAddPdf *>(_p))) {
          fExpPdf.setArg(f); // using self for expectation
       }
       fExpectedEventsMode = expEvMode;
    }
    virtual ~PdfWrapper(){};
    PdfWrapper(const PdfWrapper &other, const char *name = 0)
-      : RooAbsPdf(other, name), fFunc("func", this, other.fFunc), fCoef("coef", this, other.fCoef),
-        fExpPdf("expPdf",this,other.fExpPdf),
+      : RooAbsPdf(other, name),
+        fFunc("func", this, other.fFunc),
+        fCoef("coef", this, other.fCoef),
+        fExpPdf("expPdf", this, other.fExpPdf),
         fExpectedEventsMode(other.fExpectedEventsMode)
    {
    }
    virtual TObject *clone(const char *newname) const override { return new PdfWrapper(*this, newname); }
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const override { return fFunc->isBinnedDistribution(obs); }
-   std::list<Double_t> *binBoundaries(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const override
+   bool isBinnedDistribution(const RooArgSet &obs) const override { return fFunc->isBinnedDistribution(obs); }
+   std::list<double> *binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const override
    {
       return fFunc->binBoundaries(obs, xlo, xhi);
    }
@@ -6733,18 +6829,21 @@ public:
    double evaluate() const override
    {
       return (fExpectedEventsMode ? 1. : fFunc) *
-             ((fExpPdf.absArg()) ? static_cast<RooAbsPdf*>(fExpPdf.absArg())->expectedEvents(_normSet) : 1.) *
+             ((fExpPdf.absArg()) ? static_cast<RooAbsPdf *>(fExpPdf.absArg())->expectedEvents(_normSet) : 1.) *
              (fCoef.absArg() ? fCoef : 1.);
    }
 
-   bool selfNormalized() const override { return true; } // so that doesn't try to do an integral because we are passing integration onto fFunc in evaluate
+   bool selfNormalized() const override
+   {
+      return true;
+   } // so that doesn't try to do an integral because we are passing integration onto fFunc in evaluate
 
    // faster than full evaluation because doesnt make the integral dependent on the full expression
-   Double_t getSimplePropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
+   double getSimplePropagatedError(const RooFitResult &fr, const RooArgSet &nset_in) const
    {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 28, 00)
-      double oo = getPropagatedError(fr,nset_in); // method was improved in 6.28 so use this instead
-      if(std::isnan(oo)) {
+      double oo = getPropagatedError(fr, nset_in); // method was improved in 6.28 so use this instead
+      if (std::isnan(oo)) {
          // may be consequence of zero uncerts
          // Calling getParameters() might be costly, but necessary to get the right
          // parameters in the RooAbsReal. The RooFitResult only stores snapshots.
@@ -6752,33 +6851,39 @@ public:
          getParameters(&nset_in, allParamsInAbsReal);
 
          RooArgList paramList;
-         for(auto * rrvFitRes : static_range_cast<RooRealVar*>(fr.floatParsFinal())) {
+         for (auto *rrvFitRes : static_range_cast<RooRealVar *>(fr.floatParsFinal())) {
 
-            auto rrvInAbsReal = static_cast<RooRealVar const*>(allParamsInAbsReal.find(*rrvFitRes));
+            auto rrvInAbsReal = static_cast<RooRealVar const *>(allParamsInAbsReal.find(*rrvFitRes));
 
             // If this RooAbsReal is a RooRealVar in the fit result, we don't need to
             // propagate anything and can just return the error in the fit result
-            if(rrvFitRes->namePtr() == namePtr()) return rrvFitRes->getError();
+            if (rrvFitRes->namePtr() == namePtr())
+               return rrvFitRes->getError();
 
             // Strip out parameters with zero error
-            if (!rrvFitRes->hasError() || rrvFitRes->getError() <= std::abs(rrvFitRes->getVal()) * std::numeric_limits<double>::epsilon()) continue;
+            if (!rrvFitRes->hasError() ||
+                rrvFitRes->getError() <= std::abs(rrvFitRes->getVal()) * std::numeric_limits<double>::epsilon())
+               continue;
 
             // Ignore parameters in the fit result that this RooAbsReal doesn't depend on
-            if(!rrvInAbsReal) continue;
+            if (!rrvInAbsReal)
+               continue;
 
             // Checking for float equality is a bad. We check if the values are
             // negligibly far away from each other, relative to the uncertainty.
-            if(std::abs(rrvInAbsReal->getVal() - rrvFitRes->getVal()) > 0.01 * rrvFitRes->getError()) {
+            if (std::abs(rrvInAbsReal->getVal() - rrvFitRes->getVal()) > 0.01 * rrvFitRes->getError()) {
                std::stringstream errMsg;
-               errMsg << "RooAbsReal::getPropagatedError(): the parameters of the RooAbsReal don't have"
-                      << " the same values as in the fit result! The logic of getPropagatedError is broken in this case.";
+               errMsg
+                  << "RooAbsReal::getPropagatedError(): the parameters of the RooAbsReal don't have"
+                  << " the same values as in the fit result! The logic of getPropagatedError is broken in this case.";
 
                throw std::runtime_error(errMsg.str());
             }
 
             paramList.add(*rrvInAbsReal);
          }
-         if(paramList.empty()) return 0.;
+         if (paramList.empty())
+            return 0.;
 
          std::vector<double> plusVar;
          std::vector<double> minusVar;
@@ -6786,41 +6891,44 @@ public:
          minusVar.reserve(paramList.size());
 
          // Create std::vector of plus,minus variations for each parameter
-         TMatrixDSym V(paramList.size() == fr.floatParsFinal().size() ?
-                       fr.covarianceMatrix() :
-                       fr.reducedCovarianceMatrix(paramList)) ;
+         TMatrixDSym V(paramList.size() == fr.floatParsFinal().size() ? fr.covarianceMatrix()
+                                                                      : fr.reducedCovarianceMatrix(paramList));
 
-         for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
+         for (Int_t ivar = 0; ivar < paramList.getSize(); ivar++) {
 
-            auto& rrv = static_cast<RooRealVar&>(paramList[ivar]);
+            auto &rrv = static_cast<RooRealVar &>(paramList[ivar]);
 
-            double cenVal = rrv.getVal() ;
-            double errVal = sqrt(V(ivar,ivar)) ;
+            double cenVal = rrv.getVal();
+            double errVal = sqrt(V(ivar, ivar));
 
             // this next thing happens if the par has errors but the covariance matrix is empty
             // this only happens if the fit was dodgy, so perhaps best to not even try to recover from this
             // screwup ... hence I've commented out this fixup here and will let the errors be nan
-//            if(errVal==0) {
-//               Warning("getPropagatedError","Missing variance for %s",rrv.GetName());
-//               errVal = rrv.getError();
-//               V(ivar,ivar) = errVal*errVal;
-//            }
+            //            if(errVal==0) {
+            //               Warning("getPropagatedError","Missing variance for %s",rrv.GetName());
+            //               errVal = rrv.getError();
+            //               V(ivar,ivar) = errVal*errVal;
+            //            }
 
             // Make Plus variation
-            rrv.setVal(cenVal+errVal) ;
-            plusVar.push_back(getVal(nset_in)) ;
+            rrv.setVal(cenVal + errVal);
+            plusVar.push_back(getVal(nset_in));
 
             // Make Minus variation
-            rrv.setVal(cenVal-errVal) ;
-            minusVar.push_back(getVal(nset_in)) ;
+            rrv.setVal(cenVal - errVal);
+            minusVar.push_back(getVal(nset_in));
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
             // can try to recover nans ... this stopped being possible in 6.27 onwards because NaNPacker made private
-             if(std::isnan(plusVar.back()) && RooNaNPacker::isNaNWithPayload(plusVar.back())) { plusVar.back() = -RooNaNPacker::unpackNaN(plusVar.back()); }
-             if(std::isnan(minusVar.back()) && RooNaNPacker::isNaNWithPayload(minusVar.back())) { minusVar.back() = -RooNaNPacker::unpackNaN(minusVar.back()); }
+            if (std::isnan(plusVar.back()) && RooNaNPacker::isNaNWithPayload(plusVar.back())) {
+               plusVar.back() = -RooNaNPacker::unpackNaN(plusVar.back());
+            }
+            if (std::isnan(minusVar.back()) && RooNaNPacker::isNaNWithPayload(minusVar.back())) {
+               minusVar.back() = -RooNaNPacker::unpackNaN(minusVar.back());
+            }
 #endif
-             //std::cout << plusVar.back() << " and " << minusVar.back() << std::endl;
+            // std::cout << plusVar.back() << " and " << minusVar.back() << std::endl;
 
-            rrv.setVal(cenVal) ;
+            rrv.setVal(cenVal);
          }
 
          // Re-evaluate this RooAbsReal with the central parameters just to be
@@ -6832,29 +6940,29 @@ public:
          // propagation.
          getVal(nset_in);
 
-         TMatrixDSym C(paramList.getSize()) ;
-         std::vector<double> errVec(paramList.size()) ;
-         for (int i=0 ; i<paramList.getSize() ; i++) {
-            errVec[i] = std::sqrt(V(i,i)) ;
-            for (int j=i ; j<paramList.getSize() ; j++) {
-               C(i,j) = V(i,j) / std::sqrt(V(i,i)*V(j,j));
-               C(j,i) = C(i,j) ;
+         TMatrixDSym C(paramList.getSize());
+         std::vector<double> errVec(paramList.size());
+         for (int i = 0; i < paramList.getSize(); i++) {
+            errVec[i] = std::sqrt(V(i, i));
+            for (int j = i; j < paramList.getSize(); j++) {
+               C(i, j) = V(i, j) / std::sqrt(V(i, i) * V(j, j));
+               C(j, i) = C(i, j);
             }
          }
 
          // Make std::vector of variations
-         TVectorD F(plusVar.size()) ;
-         for (unsigned int j=0 ; j<plusVar.size() ; j++) {
-            F[j] = (plusVar[j]-minusVar[j])/2 ;
+         TVectorD F(plusVar.size());
+         for (unsigned int j = 0; j < plusVar.size(); j++) {
+            F[j] = (plusVar[j] - minusVar[j]) / 2;
          }
 
          // Calculate error in linear approximation from variations and correlation coefficient
-         double sum = F*(C*F) ;
+         double sum = F * (C * F);
 
-         return sqrt(sum) ;
+         return sqrt(sum);
       }
       return oo;
-#endif
+#else
 
       // Strip out parameters with zero error
       RooArgList fpf_stripped;
@@ -6867,8 +6975,8 @@ public:
       }
 
       // Clone self for internal use
-      RooAbsReal *cloneFunc = const_cast<PdfWrapper*>(this);// (RooAbsReal *)fFunc.absArg()->cloneTree();
-      //RooAbsPdf *clonePdf = dynamic_cast<RooAbsPdf *>(cloneFunc);
+      RooAbsReal *cloneFunc = const_cast<PdfWrapper *>(this); // (RooAbsReal *)fFunc.absArg()->cloneTree();
+      // RooAbsPdf *clonePdf = dynamic_cast<RooAbsPdf *>(cloneFunc);
       RooArgSet *errorParams = cloneFunc->getObservables(fpf_stripped);
 
       RooArgSet *nset =
@@ -6886,7 +6994,7 @@ public:
          }
       }
 
-      std::vector<Double_t> plusVar, minusVar;
+      std::vector<double> plusVar, minusVar;
 
       // Create vector of plus,minus variations for each parameter
       TMatrixDSym V(paramList.getSize() == fr.floatParsFinal().getSize() ? fr.covarianceMatrix()
@@ -6896,19 +7004,19 @@ public:
 
          RooRealVar &rrv = (RooRealVar &)fpf[fpf_idx[ivar]];
 
-         Double_t cenVal = rrv.getVal();
-         Double_t errVal = sqrt(V(ivar, ivar));
+         double cenVal = rrv.getVal();
+         double errVal = sqrt(V(ivar, ivar));
 
          // Make Plus variation
          ((RooRealVar *)paramList.at(ivar))->setVal(cenVal + errVal);
-         //plusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(nset)) *
-         //                  (clonePdf ? clonePdf->expectedEvents(nset) : 1.));
+         // plusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(nset)) *
+         //                   (clonePdf ? clonePdf->expectedEvents(nset) : 1.));
          plusVar.push_back(cloneFunc->getVal(nset));
 
          // Make Minus variation
          ((RooRealVar *)paramList.at(ivar))->setVal(cenVal - errVal);
-         //minusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(nset)) *
-         //                   (clonePdf ? clonePdf->expectedEvents(nset) : 1.));
+         // minusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(nset)) *
+         //                    (clonePdf ? clonePdf->expectedEvents(nset) : 1.));
          minusVar.push_back(cloneFunc->getVal(nset));
 
          ((RooRealVar *)paramList.at(ivar))->setVal(cenVal);
@@ -6933,13 +7041,14 @@ public:
       }
 
       // Calculate error in linear approximation from variations and correlation coefficient
-      Double_t sum = F * (C * F);
+      double sum = F * (C * F);
 
-      //delete cloneFunc;
+      // delete cloneFunc;
       delete errorParams;
       delete nset;
 
       return sqrt(sum);
+#endif
    }
 
 private:
@@ -6967,9 +7076,10 @@ void buildHistogramInterrupt(int signum)
 void xRooNode::sterilize() const
 {
    auto _doSterilize = [](RooAbsArg *obj) {
-      if (!obj) return;
-      for(int i=0;i<obj->numCaches();i++) {
-         if(auto cache = dynamic_cast<RooObjCacheManager*>(obj->getCache(i))) {
+      if (!obj)
+         return;
+      for (int i = 0; i < obj->numCaches(); i++) {
+         if (auto cache = dynamic_cast<RooObjCacheManager *>(obj->getCache(i))) {
             cache->reset();
          }
       }
@@ -6977,11 +7087,11 @@ void xRooNode::sterilize() const
          p->setNormRange(p->normRange());
       }
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-      if(RooAbsReal* p = dynamic_cast<RooAbsReal*>(obj); p) {
+      if (RooAbsReal *p = dynamic_cast<RooAbsReal *>(obj); p) {
          // need to forget about any normSet that was passed to getVal(...)
          // doesn't seem necessary in 6.28
 
-         p->setProxyNormSet(nullptr) ;
+         p->setProxyNormSet(nullptr);
          p->_lastNSet = nullptr;
       }
 #endif
@@ -6997,7 +7107,9 @@ void xRooNode::sterilize() const
    // recursive through all clients and sterlize their normalization caches
    std::function<void(RooAbsArg *)> func;
    func = [&](RooAbsArg *a) {
-      if (!a){ return; }
+      if (!a) {
+         return;
+      }
       _doSterilize(a); // sterilize first so that cache elements don't appear in the client list
       // safety net in case sterilizing one client deletes another one of our clients
       // monitor for change in clients list size
@@ -7010,29 +7122,31 @@ void xRooNode::sterilize() const
          for (auto obj : a->clients()) {
             func(dynamic_cast<RooAbsArg *>(obj));
             if (a->clients().size() != nClients) {
-               break; // means sterilizing a client changed our clients, so don't trust the client iterator at this point
+               break; // means sterilizing a client changed our clients, so don't trust the client iterator at this
+                      // point
             }
          }
-      } while(a->clients().size() != nClients);
+      } while (a->clients().size() != nClients);
    };
    func(get<RooAbsArg>());
 }
 
 // observables not in the axisVars are automatically projected over
-xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content, bool errors) const {
+xRooNode xRooNode::histo(const xRooNode &vars, const xRooNode &fr, bool content, bool errors) const
+{
 
    if (!vars.fComp && strlen(vars.GetName())) {
-      return histo(xRooNode::vars().reduced(vars.GetName()),fr,content,errors);
+      return histo(xRooNode::vars().reduced(vars.GetName()), fr, content, errors);
    }
 
-   xRooNode out(TString::Format("%s.histo",GetName()),nullptr,*this);
+   xRooNode out(TString::Format("%s.histo", GetName()), nullptr, *this);
 
-   RooAbsLValue* v = nullptr;
+   RooAbsLValue *v = nullptr;
    if (vars.empty()) {
-      out.fComp = std::shared_ptr<TH1>(BuildHistogram(nullptr,!content,errors,-1,-1,fr));
-   } else if(vars.size()==1) {
+      out.fComp = std::shared_ptr<TH1>(BuildHistogram(nullptr, !content, errors, -1, -1, fr));
+   } else if (vars.size() == 1) {
       v = vars.at(0)->get<RooAbsLValue>();
-      out.fComp = std::shared_ptr<TH1>(BuildHistogram(v,!content,errors,1,0,fr));
+      out.fComp = std::shared_ptr<TH1>(BuildHistogram(v, !content, errors, 1, 0, fr));
    } else {
       throw std::runtime_error("multi-dim histo not yet supported");
    }
@@ -7044,12 +7158,12 @@ xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content,
       }
       h->SetStats(false);
       h->SetName(GetName());
-      auto hCopy = static_cast<TH1*>(h->Clone("nominal"));
+      auto hCopy = static_cast<TH1 *>(h->Clone("nominal"));
 
-      if(content && !components().empty()) {
-         RooAbsReal* sf = nullptr; // TODO - support case of RooExtendPdf drawing (see ::Draw)
+      if (content && !components().empty()) {
+         RooAbsReal *sf = nullptr; // TODO - support case of RooExtendPdf drawing (see ::Draw)
          // build a stack
-         THStack *stack = new THStack("stack","");
+         THStack *stack = new THStack("stack", "");
          int count = 2;
          std::map<std::string, int> colorByTitle; // TODO: should fill from any existing legend
          std::set<std::string> allTitles;
@@ -7070,32 +7184,34 @@ xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content,
          }
 
          if (!cms_coefs.empty()) {
-               RooRealVar zero("zero", "", 0);
-               std::shared_ptr<TH1> prevHist((TH1 *)h->Clone());
-               for (auto c : cms_coefs) {
-                  // seems I have to remake the function each time, as haven't figured out what cache needs clearing?
-                  std::unique_ptr<RooAbsReal> f(dynamic_cast<RooAbsReal *>(components()[0]->get()->Clone("tmpCopy")));
-                  zero.setAttribute(
-                     Form("ORIGNAME:%s", c->GetName()));            // used in redirectServers to say what this replaces
-                  f->redirectServers(RooArgSet(zero), false, true); // each time will replace one additional coef
-                  // zero.setAttribute(Form("ORIGNAME:%s",c->GetName()),false); (commented out so that on next iteration
-                  // will still replace all prev)
-                  auto hh = xRooNode(*f, *this).BuildHistogram(v,false,false,!v ? -1 : 1, !v ? -1 : 0,fr);
-                  if (sf) hh->Scale(sf->getVal());
-                  if (strlen(hh->GetTitle()) == 0)
-                     hh->SetTitle(c->GetName()); // ensure all hists has titles
-                  titleMatchName &= (TString(c->GetName()) == hh->GetTitle() ||
-                                     TString(hh->GetTitle()).BeginsWith(TString(c->GetName()) + "_"));
-                  std::shared_ptr<TH1> nextHist((TH1 *)hh->Clone());
-                  hh->Add(prevHist.get(), -1.);
-                  hh->Scale(-1.);
-                  hhs.push_back(hh);
-                  prevHist = nextHist;
-               }
+            RooRealVar zero("zero", "", 0);
+            std::shared_ptr<TH1> prevHist((TH1 *)h->Clone());
+            for (auto c : cms_coefs) {
+               // seems I have to remake the function each time, as haven't figured out what cache needs clearing?
+               std::unique_ptr<RooAbsReal> f(dynamic_cast<RooAbsReal *>(components()[0]->get()->Clone("tmpCopy")));
+               zero.setAttribute(
+                  Form("ORIGNAME:%s", c->GetName()));            // used in redirectServers to say what this replaces
+               f->redirectServers(RooArgSet(zero), false, true); // each time will replace one additional coef
+               // zero.setAttribute(Form("ORIGNAME:%s",c->GetName()),false); (commented out so that on next iteration
+               // will still replace all prev)
+               auto hh = xRooNode(*f, *this).BuildHistogram(v, false, false, !v ? -1 : 1, !v ? -1 : 0, fr);
+               if (sf)
+                  hh->Scale(sf->getVal());
+               if (strlen(hh->GetTitle()) == 0)
+                  hh->SetTitle(c->GetName()); // ensure all hists has titles
+               titleMatchName &= (TString(c->GetName()) == hh->GetTitle() ||
+                                  TString(hh->GetTitle()).BeginsWith(TString(c->GetName()) + "_"));
+               std::shared_ptr<TH1> nextHist((TH1 *)hh->Clone());
+               hh->Add(prevHist.get(), -1.);
+               hh->Scale(-1.);
+               hhs.push_back(hh);
+               prevHist = nextHist;
+            }
          } else {
             for (auto &samp : components()) {
-               auto hh = samp->BuildHistogram(v,false,false,!v ? -1 : 1, !v ? -1 : 0,fr);
-               if (sf) hh->Scale(sf->getVal());
+               auto hh = samp->BuildHistogram(v, false, false, !v ? -1 : 1, !v ? -1 : 0, fr);
+               if (sf)
+                  hh->Scale(sf->getVal());
                hhs.push_back(hh);
                if (strlen(hh->GetTitle()) == 0)
                   hh->SetTitle(samp->GetName()); // ensure all hists has titles
@@ -7107,7 +7223,8 @@ xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content,
             if (h->GetXaxis()->IsAlphanumeric()) {
                // must ensure bin labels match for stack
                hh->GetXaxis()->SetName("xaxis");
-               for(int i=1;i<=hh->GetNbinsX();i++) hh->GetXaxis()->SetBinLabel(i,h->GetXaxis()->GetBinLabel(i));
+               for (int i = 1; i <= hh->GetNbinsX(); i++)
+                  hh->GetXaxis()->SetBinLabel(i, h->GetXaxis()->GetBinLabel(i));
             }
             // automatically group hists that all have the same title
             if (histGroups.find(hh->GetTitle()) == histGroups.end()) {
@@ -7123,18 +7240,23 @@ xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content,
                auto newMin = hhMin - (h->GetMaximum() - hhMin) * gStyle->GetHistTopMargin();
                if (hhMin >= 0 && newMin < 0)
                   newMin = hhMin * 0.99;
-               h->SetMinimum( newMin ); ///adjustYRange(newMin, h->GetMaximum());
+               h->SetMinimum(newMin); /// adjustYRange(newMin, h->GetMaximum());
             }
             if (auto it = colorByTitle.find(hh->GetTitle()); it != colorByTitle.end()) {
                hh->SetFillColor(it->second);
             } else {
-               bool used=false;
+               bool used = false;
                do {
                   hh->SetFillColor((count++) % 100);
                   // check not already used this color
-                  used=false;
-                  for(auto hh2 : hhs) { if(hh != hh2 && hh2->GetFillColor()==hh->GetFillColor()) { used=true; break; } }
-               } while(used);
+                  used = false;
+                  for (auto hh2 : hhs) {
+                     if (hh != hh2 && hh2->GetFillColor() == hh->GetFillColor()) {
+                        used = true;
+                        break;
+                     }
+                  }
+               } while (used);
                colorByTitle[hh->GetTitle()] = hh->GetFillColor();
             }
             /*if(stack->GetHists() && stack->GetHists()->GetEntries()>0) {
@@ -7142,11 +7264,11 @@ xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content,
                 auto _h1 = dynamic_cast<TH1*>(stack->GetHists()->At(0));
                 if(_h1->GetNbinsX()==hh->GetNbinsX()) TODO ... finish dealing with silly rounding effects
             }*/
-            TString thisOpt = ""; ///dOpt;
+            TString thisOpt = ""; /// dOpt;
             // uncomment next line to blend continuous with discrete components .. get some unpleasant "poke through"
             // effects though
-            // if(auto s = samp->get<RooAbsReal>(); s) thisOpt = s->isBinnedDistribution(*dynamic_cast<RooAbsArg*>(v)) ? ""
-            // : "LF2";
+            // if(auto s = samp->get<RooAbsReal>(); s) thisOpt = s->isBinnedDistribution(*dynamic_cast<RooAbsArg*>(v)) ?
+            // "" : "LF2";
             stack->Add(hh, thisOpt);
             allTitles.insert(hh->GetTitle());
          }
@@ -7215,28 +7337,27 @@ xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content,
 
                dynamic_cast<TNamed *>(ll->At(i))->SetTitle(_title.c_str());
 
-               // style hists according to availble styles ... creating if necessary
-               auto _style = xRooNode(*ll->At(i),*this).style(ll->At(i));
-               if(_style) {
+               // style hists according to available styles ... creating if necessary
+               auto _style = xRooNode(*ll->At(i), *this).style(ll->At(i));
+               if (_style) {
                   *dynamic_cast<TAttLine *>(ll->At(i)) = *_style;
                   *dynamic_cast<TAttFill *>(ll->At(i)) = *_style;
                   *dynamic_cast<TAttMarker *>(ll->At(i)) = *_style;
                }
             }
          }
-         h->GetListOfFunctions()->Add( stack, "noclearsame" );
-         if(h->GetSumw2() && h->GetSumw2()->GetSum()) {
+         h->GetListOfFunctions()->Add(stack, "noclearsame");
+         if (h->GetSumw2() && h->GetSumw2()->GetSum()) {
             hCopy->SetFillStyle(3005);
             hCopy->SetFillColor(h->GetLineColor());
             hCopy->SetMarkerStyle(0);
-            h->GetListOfFunctions()->Add( hCopy->Clone(".copy"), "e2same" );
-            *static_cast<TAttFill*>(hCopy) = *h;
+            h->GetListOfFunctions()->Add(hCopy->Clone(".copy"), "e2same");
+            *static_cast<TAttFill *>(hCopy) = *h;
          }
-
       }
 
-      h->GetListOfFunctions()->Add( hCopy, "histsame" );
-      if(h->GetSumw2() && h->GetSumw2()->GetSum()) {
+      h->GetListOfFunctions()->Add(hCopy, "histsame");
+      if (h->GetSumw2() && h->GetSumw2()->GetSum()) {
          h->SetFillStyle(3005);
          h->SetFillColor(h->GetLineColor());
          h->SetMarkerStyle(0);
@@ -7244,14 +7365,15 @@ xRooNode xRooNode::histo(const xRooNode& vars, const xRooNode& fr, bool content,
    }
 
    return out;
-
 }
 
-xRooNode xRooNode::filter(const xRooNode& range) const {
-   return xRooNode(fComp,xRooNode(range.GetName(),nullptr,*this));
+xRooNode xRooNode::filter(const xRooNode &range) const
+{
+   return xRooNode(fComp, xRooNode(range.GetName(), nullptr, *this));
 }
 
-TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binStart, int binEnd, const xRooNode& _fr) const
+TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binStart, int binEnd,
+                              const xRooNode &_fr) const
 {
    auto rar = get<RooAbsReal>();
    if (!rar)
@@ -7263,12 +7385,12 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
    TH1::AddDirectory(false);
    TH1 *h = nullptr;
    if (!v) {
-      if(binStart != -1 || binEnd != -1) { // allow v to stay nullptr if doing integral (binStart=binEnd=-1)
+      if (binStart != -1 || binEnd != -1) { // allow v to stay nullptr if doing integral (binStart=binEnd=-1)
          if (auto _ax = GetXaxis())
             v = dynamic_cast<RooAbsLValue *>(_ax->GetParent());
       } else {
-          // don't need to integrate if doing a self-histogram
-          v = dynamic_cast<RooRealVar *>(rar);
+         // don't need to integrate if doing a self-histogram
+         v = dynamic_cast<RooRealVar *>(rar);
       }
       if (v)
          vv = dynamic_cast<TObject *>(v);
@@ -7310,7 +7432,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
             h = new TH1D(rar->GetName(), rar->GetTitle(), x->numBins(binningName), x->getBinning(binningName).array());
          }
          h->GetXaxis()->SetTitle(x->getBinning(binningName).GetTitle());
-         setTitle=true;
+         setTitle = true;
       } else if (auto _boundaries =
                     _or_func(/*rar->plotSamplingHint(*x,x->getMin(),x->getMax())*/ (std::list<double> *)(nullptr),
                              rar->binBoundaries(*x, -std::numeric_limits<double>::infinity(),
@@ -7339,14 +7461,14 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          }
       }
    }
-   if(auto o = dynamic_cast<TObject*>(v); o && !setTitle) {
+   if (auto o = dynamic_cast<TObject *>(v); o && !setTitle) {
       h->GetXaxis()->SetTitle(o->GetTitle());
    }
    TH1::AddDirectory(t);
    h->Sumw2();
    if (v)
       h->GetXaxis()->SetName(dynamic_cast<TObject *>(v)->GetName()); // WARNING: messes up display of bin labels
-   if (auto s = style(nullptr,false); s) {
+   if (auto s = style(nullptr, false); s) {
       static_cast<TAttLine &>(*h) = *s;
       static_cast<TAttFill &>(*h) = *s;
       static_cast<TAttMarker &>(*h) = *s;
@@ -7355,298 +7477,319 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
       h->GetXaxis()->SetTitle(vv->GetTitle());
    auto p = dynamic_cast<RooAbsPdf *>(rar);
 
-
-
-
    // possible speed improvement:
-//   if(auto spdf = dynamic_cast<RooRealSumPdf*>(p); spdf && spdf->canBeExtended()) {
-//      p = nullptr; // faster to evaluate sumpdf as a function not a pdf
-//   }
+   //   if(auto spdf = dynamic_cast<RooRealSumPdf*>(p); spdf && spdf->canBeExtended()) {
+   //      p = nullptr; // faster to evaluate sumpdf as a function not a pdf
+   //   }
 
-    if (empty && !errors) { return h; }
+   if (empty && !errors) {
+      return h;
+   }
 
-   //if (!empty) {
+   // if (!empty) {
 
-      auto _coefs = coefs();
+   auto _coefs = coefs();
 
-      RooFitResult *fr = nullptr;
-      if (errors) {
-         // must ensure the fit result we obtain includes pars from coefficients if present
-         if (_fr.get<RooFitResult>()) {
-            fr = static_cast<RooFitResult*>(_fr.get<RooFitResult>()->Clone());
-         } else {
-            auto frn = (!_coefs.get() ? *this: xRooNode(RooProduct("tmp", "tmp", RooArgList(*rar, *_coefs.get<RooAbsReal>())))).fitResult();
-            if (strlen(_fr.GetName())) frn = frn.reduced(_fr.GetName());
-            fr = dynamic_cast<RooFitResult *>(frn->Clone());
-         }
-         if (!GETDMP(fr, _finalPars)) {
-            fr->setFinalParList(RooArgList());
-         }
+   RooFitResult *fr = nullptr;
+   if (errors) {
+      // must ensure the fit result we obtain includes pars from coefficients if present
+      if (_fr.get<RooFitResult>()) {
+         fr = static_cast<RooFitResult *>(_fr.get<RooFitResult>()->Clone());
+      } else {
+         auto frn =
+            (!_coefs.get() ? *this : xRooNode(RooProduct("tmp", "tmp", RooArgList(*rar, *_coefs.get<RooAbsReal>()))))
+               .fitResult();
+         if (strlen(_fr.GetName()))
+            frn = frn.reduced(_fr.GetName());
+         fr = dynamic_cast<RooFitResult *>(frn->Clone());
+      }
+      if (!GETDMP(fr, _finalPars)) {
+         fr->setFinalParList(RooArgList());
+      }
 
-         /// Oct2022: No longer doing this because want to allow fitResult to be used to get partial error
-         //        // need to add any floating parameters not included somewhere already in the fit result ...
-         //        RooArgList l;
-         //        for(auto& p : pars()) {
-         //            auto vv = p->get<RooRealVar>();
-         //            if (!vv) continue;
-         //            if (vv == dynamic_cast<RooRealVar*>(v)) continue;
-         //            if (vv->isConstant()) continue;
-         //            if (fr->floatParsFinal().find(vv->GetName())) continue;
-         //            if (fr->_constPars && fr->_constPars->find(vv->GetName())) continue;
-         //            l.add(*vv);
-         //        }
-         //
-         //        if (!l.empty()) {
-         //            RooArgList l2; l2.addClone(fr->floatParsFinal());
-         //            l2.addClone(l);
-         //            fr->setFinalParList(l2);
-         //        }
+      /// Oct2022: No longer doing this because want to allow fitResult to be used to get partial error
+      //        // need to add any floating parameters not included somewhere already in the fit result ...
+      //        RooArgList l;
+      //        for(auto& p : pars()) {
+      //            auto vv = p->get<RooRealVar>();
+      //            if (!vv) continue;
+      //            if (vv == dynamic_cast<RooRealVar*>(v)) continue;
+      //            if (vv->isConstant()) continue;
+      //            if (fr->floatParsFinal().find(vv->GetName())) continue;
+      //            if (fr->_constPars && fr->_constPars->find(vv->GetName())) continue;
+      //            l.add(*vv);
+      //        }
+      //
+      //        if (!l.empty()) {
+      //            RooArgList l2; l2.addClone(fr->floatParsFinal());
+      //            l2.addClone(l);
+      //            fr->setFinalParList(l2);
+      //        }
 
-         TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t> *>(GETDMP(fr, _VM));
+      TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(fr, _VM));
 
-         if (!prevCov || size_t(fr->covarianceMatrix().GetNcols()) < fr->floatParsFinal().size()) {
-            TMatrixDSym cov(fr->floatParsFinal().getSize());
-            if (prevCov) {
-               for (int i = 0; i < prevCov->GetNcols(); i++) {
-                  for (int j = 0; j < prevCov->GetNrows(); j++) {
-                     cov(i, j) = (*prevCov)(i, j);
-                  }
+      if (!prevCov || size_t(fr->covarianceMatrix().GetNcols()) < fr->floatParsFinal().size()) {
+         TMatrixDSym cov(fr->floatParsFinal().getSize());
+         if (prevCov) {
+            for (int i = 0; i < prevCov->GetNcols(); i++) {
+               for (int j = 0; j < prevCov->GetNrows(); j++) {
+                  cov(i, j) = (*prevCov)(i, j);
                }
             }
-            int i = 0;
-            for (auto &p2 : fr->floatParsFinal()) {
-               if (!prevCov || i >= prevCov->GetNcols()) {
-                  cov(i, i) = pow(dynamic_cast<RooRealVar *>(p2)->getError(), 2);
-               }
-               i++;
+         }
+         int i = 0;
+         for (auto &p2 : fr->floatParsFinal()) {
+            if (!prevCov || i >= prevCov->GetNcols()) {
+               cov(i, i) = pow(dynamic_cast<RooRealVar *>(p2)->getError(), 2);
             }
+            i++;
+         }
+         int covQualBackup = fr->covQual();
+         fr->setCovarianceMatrix(cov);
+         fr->setCovQual(covQualBackup);
+      }
+
+      if (v) {
+         // need to remove v from result as we are plotting as function of v
+         if (auto _p = fr->floatParsFinal().find(dynamic_cast<TObject *>(v)->GetName()); _p) {
+            RooArgList _pars = fr->floatParsFinal();
+            _pars.remove(*_p, true);
+            auto _tmp = fr->reducedCovarianceMatrix(_pars);
             int covQualBackup = fr->covQual();
-            fr->setCovarianceMatrix(cov);
+            fr->setCovarianceMatrix(_tmp);
             fr->setCovQual(covQualBackup);
-         }
-
-         if (v) {
-            // need to remove v from result as we are plotting as function of v
-            if (auto _p = fr->floatParsFinal().find(dynamic_cast<TObject *>(v)->GetName()); _p) {
-               RooArgList _pars = fr->floatParsFinal();
-               _pars.remove(*_p, true);
-               auto _tmp = fr->reducedCovarianceMatrix(_pars);
-               int covQualBackup = fr->covQual();
-               fr->setCovarianceMatrix(_tmp);
-               fr->setCovQual(covQualBackup);
-               const_cast<RooArgList &>(fr->floatParsFinal()).remove(*_p, true); // NOTE: I think this might be a memory leak, should delete _p after removal
-            }
-         }
-         // finally check at least one float has errors defined (might not be cause if in prefit state)
-         bool hasErrors = false;
-         for(auto pp : fr->floatParsFinal()) {
-             if(dynamic_cast<RooRealVar*>(pp)->hasError()) { hasErrors=true; break; }
-         }
-         if(!hasErrors) {
-             errors = false;
-             delete fr;
+            const_cast<RooArgList &>(fr->floatParsFinal())
+               .remove(*_p, true); // NOTE: I think this might be a memory leak, should delete _p after removal
          }
       }
-
-      RooArgSet normSet;
-      if (v)
-         normSet.add(*dynamic_cast<RooAbsArg *>(v));
-
-      if (binEnd == 0)
-         binEnd = h->GetNbinsX();
-
-
-       bool needBinWidth = false;
-       // may have MULTIPLE coefficients for the same pdf!
-
-       if (x && (p || _coefs.get() || rar->getAttribute("density"))) {
-           // pdfs of samples embedded in a sumpdf (aka have a coef) will convert their density value to a content
-           needBinWidth = true;
-       }
-
-       if(auto spdf = dynamic_cast<RooRealSumPdf*>(p); spdf && spdf->canBeExtended() && !spdf->getFloor() && !_coefs.get()) {
-           p = nullptr; // if pdf has no floor, will evaluate it as a function to allow it to be negative - evaluation should also be faster (no integral)
-           // exception is if RooRealSumPdf is embedded in a RooAddPdf (detected by presence of coefs) ... then it must be evaluated as a pdf
-           // technically should check parent is a RooAddPdf, because if was inside a RooRealSumPdf then would be evaluated as a function!
-       }
-
-      // check if we need to do any projecting of other observables
-      RooAbsReal *oldrar = nullptr;
-      auto _obs = obs();
-
-      for (auto o : _obs) {
-         if (auto rr = o->get<RooRealVar>(); rr && rr->hasRange("coordRange")) {
-            rr->removeRange("coordRange");
+      // finally check at least one float has errors defined (might not be cause if in prefit state)
+      bool hasErrors = false;
+      for (auto pp : fr->floatParsFinal()) {
+         if (dynamic_cast<RooRealVar *>(pp)->hasError()) {
+            hasErrors = true;
+            break;
          }
       }
-      coords(); // loads current coordinates and populates coordRange, if any
-
-      if (auto a = dynamic_cast<RooAbsArg *>(v))
-         _obs.get<RooArgList>()->remove(*a);
-      if (!_obs.get<RooArgList>()->empty()) {
-         oldrar = rar;
-         normSet.add(*_obs.get<RooArgList>());
-         // check if any obs are restricted range
-         bool hasRange = false;
-         for (auto o : normSet) {
-            if (auto rr = dynamic_cast<RooRealVar *>(o); rr && rr->hasRange("coordRange")) {
-               hasRange = true;
-               break;
-            }
-         }
-         if (p) {
-            // need to handle special case of RooSimultaneous ... each pdf needs individually projecting over just its dependent obs
-            if(auto s = dynamic_cast<RooSimultaneous*>(p)) {
-               auto newrar = new RooSimultaneous("projSim","projSim",const_cast<RooAbsCategoryLValue&>(s->indexCat()));
-               for(auto pdf : bins()) {
-                  //auto _pdf = pdf->get<RooAbsPdf>()->createProjection(*pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
-                  auto _pdf = new xRooProjectedPdf(TString::Format("%s_projection",pdf->GetName()),"",*pdf->get<RooAbsPdf>(),*pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
-                  if (hasRange) {
-                     dynamic_cast<RooAbsPdf *>(_pdf)->setNormRange("coordRange");
-                  }
-                  newrar->addPdf(*_pdf,pdf->coords()["channelCat"]->get<RooCategory>()->getLabel());
-               }
-               rar = newrar;
-            } else {
-               rar = p->createProjection(*_obs.get<RooArgList>()); // TODO should use xRooProjectedPdf here too, because not fixed range and extend behaviour of RooProjectedPdf in ROOT yet
-               if (hasRange) {
-                  dynamic_cast<RooAbsPdf *>(rar)->setNormRange("coordRange");
-               }
-            }
-            if(hasRange) p->setNormRange("coordRange"); // should get cleared when we sterilize
-         } else {
-            if (hasRange) {
-                // commented out passing of normset so that getVal of non-pdf is always a 'raw' value (needed for raw eval of RooRealSumPdf)
-               rar =
-                  rar->createIntegral(*_obs.get<RooArgList>(), /*RooFit::NormSet(normSet),*/ RooFit::Range("coordRange"));
-            } else {
-               rar = rar->createIntegral(*_obs.get<RooArgList>()/*, RooFit::NormSet(normSet)*/);
-            }
-         }
-      }
-
-
-
-
-
-      bool scaleExpected = (p && p->canBeExtended() && !_coefs.get());
-      // Note about above: if pdf has coeficients then its embedded in a RooAddPdf that has coefs defined ...
-      // in this case we should *not* scale by expected, since the coefs become the scaling instead
-
-      std::unique_ptr<RooArgSet> snap(normSet.snapshot());
-      TStopwatch timeIt;
-      std::vector<double> lapTimes;
-      bool warned = false;
-      if (binStart == -1 && binEnd == -1) {
-         binEnd = 1;
-      }
-      for (int i = std::max(1, binStart); i <= std::min(h->GetNbinsX(), binEnd); i++) {
-         timeIt.Start(true);
-         if (x)
-            x->setVal(h->GetBinCenter(i));
-         else if (v)
-            v->setBin(i - 1);
-         if (x && !x->inRange("coordRange"))
-            continue;
-
-         double r = 0;
-         if(!empty) {
-             r = /*(p && p->selfNormalized())*/ rar->getVal(p ? &normSet : nullptr);
-#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-             if (std::isnan(r) && RooNaNPacker::isNaNWithPayload(r)) { r = -RooNaNPacker::unpackNaN(r); }
-#endif
-             if (r && _coefs.get()) {
-                 r *= _coefs.get<RooAbsReal>()->getVal(normSet);
-             }
-             if (needBinWidth) {
-                 r *= h->GetBinWidth(i);
-             }
-             if (scaleExpected) {
-                 // std::cout << r << " exp = " << p->expectedEvents(normSet) << " for normRange " << (p->normRange() ? p->normRange() : "null") << std::endl;
-                 // p->Print();rar->Print();
-                 r *= (p->expectedEvents(normSet));
-             } // do in here in case dependency on var
-         }
-         h->SetBinContent(i, r);
-
-         if (errors) {
-            double res;
-            if (p) {
-               // std::cout << "computing error of :" << h->GetBinCenter(i) << std::endl;
-               // //fr->floatParsFinal().Print(); fr->covarianceMatrix().Print();
-               res = PdfWrapper((oldrar) ? *rar : *p, _coefs.get<RooAbsReal>(), !v, oldrar ? p : nullptr)
-                        .getSimplePropagatedError(*fr, normSet);
-#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
-               // improved normSet invalidity checking, so assuming no longer need this in 6.28 onwards
-               p->_normSet = nullptr;
-#endif
-            } else {
-               res = RooProduct("errorEval", "errorEval",
-                                RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()))
-                        .getPropagatedError(*fr, normSet);
-            }
-            if (needBinWidth) {
-               res *= h->GetBinWidth(i);
-            }
-            h->SetBinError(i, res);
-         }
-         timeIt.Stop();
-         lapTimes.push_back(timeIt.RealTime());
-         double time_estimate =
-            (lapTimes.size() > 1)
-               ? (h->GetNbinsX() * (std::accumulate(lapTimes.begin() + 1, lapTimes.end(), 0.) / (lapTimes.size() - 1)))
-               : 0.;
-         if (!warned && (lapTimes.at(0) > 10 || (lapTimes.size() > 2 && time_estimate > 60.))) {
-            TTimeStamp t2;
-            t2.Add(time_estimate);
-            Warning("BuildHistogram", "Building this histogram will take until %s", t2.AsString());
-            if (errors) {
-               // install interrupt handler
-               runningNode = this;
-               gOldHandlerr = signal(SIGINT, buildHistogramInterrupt);
-            }
-            warned = true;
-         }
-         if (fInterrupted) {
-            if (errors) {
-               Warning("BuildHistogram", "Skipping errors for remaining bins");
-               errors = false;
-            }
-            fInterrupted = false;
-         }
-      }
-      if (gOldHandlerr) {
-         signal(SIGINT, gOldHandlerr);
-         gOldHandlerr = 0;
-      }
-      normSet = *snap;
-
-      if (oldrar) {
-         std::vector<RooAbsArg*> extra;
-         if(auto s = dynamic_cast<RooSimultaneous*>(rar)) {
-            // need to delete all the subpdfs we created too
-            for(auto _pdf : s->servers()) if(dynamic_cast<RooAbsPdf*>(_pdf)) extra.push_back(_pdf);
-         }
-         extra.push_back(rar);
-         rar = oldrar;
-         xRooNode(*rar).sterilize(); // need to clear the cache of the created integral - do this before deleting things!
-         for(auto a : extra) delete a;
-      } else {
-         sterilize(); // needed to forget about the normSet that was passed to getVal()
-      }
-
-      if (!p && !rar->getAttribute("density") && !needBinWidth) {
-         h->GetYaxis()->SetTitle(rar->getStringAttribute("units"));
-      } else if ((p && p->canBeExtended()) || (!p && needBinWidth)) {
-         h->GetYaxis()->SetTitle("Events");
-      } else {
-         h->GetYaxis()->SetTitle("Probability Mass");
-      }
-      h->GetYaxis()->SetMaxDigits(3);
-
-      if (errors) {
+      if (!hasErrors) {
+         errors = false;
          delete fr;
       }
+   }
+
+   RooArgSet normSet;
+   if (v)
+      normSet.add(*dynamic_cast<RooAbsArg *>(v));
+
+   if (binEnd == 0)
+      binEnd = h->GetNbinsX();
+
+   bool needBinWidth = false;
+   // may have MULTIPLE coefficients for the same pdf!
+
+   if (x && (p || _coefs.get() || rar->getAttribute("density"))) {
+      // pdfs of samples embedded in a sumpdf (aka have a coef) will convert their density value to a content
+      needBinWidth = true;
+   }
+
+   if (auto spdf = dynamic_cast<RooRealSumPdf *>(p);
+       spdf && spdf->canBeExtended() && !spdf->getFloor() && !_coefs.get()) {
+      p = nullptr; // if pdf has no floor, will evaluate it as a function to allow it to be negative - evaluation should
+                   // also be faster (no integral)
+      // exception is if RooRealSumPdf is embedded in a RooAddPdf (detected by presence of coefs) ... then it must be
+      // evaluated as a pdf technically should check parent is a RooAddPdf, because if was inside a RooRealSumPdf then
+      // would be evaluated as a function!
+   }
+
+   // check if we need to do any projecting of other observables
+   RooAbsReal *oldrar = nullptr;
+   auto _obs = obs();
+
+   for (auto o : _obs) {
+      if (auto rr = o->get<RooRealVar>(); rr && rr->hasRange("coordRange")) {
+         rr->removeRange("coordRange");
+      }
+   }
+   coords(); // loads current coordinates and populates coordRange, if any
+
+   if (auto a = dynamic_cast<RooAbsArg *>(v))
+      _obs.get<RooArgList>()->remove(*a);
+   if (!_obs.get<RooArgList>()->empty()) {
+      oldrar = rar;
+      normSet.add(*_obs.get<RooArgList>());
+      // check if any obs are restricted range
+      bool hasRange = false;
+      for (auto o : normSet) {
+         if (auto rr = dynamic_cast<RooRealVar *>(o); rr && rr->hasRange("coordRange")) {
+            hasRange = true;
+            break;
+         }
+      }
+      if (p) {
+         // need to handle special case of RooSimultaneous ... each pdf needs individually projecting over just its
+         // dependent obs
+         if (auto s = dynamic_cast<RooSimultaneous *>(p)) {
+            auto newrar = new RooSimultaneous("projSim", "projSim", const_cast<RooAbsCategoryLValue &>(s->indexCat()));
+            for (auto pdf : bins()) {
+               // auto _pdf =
+               // pdf->get<RooAbsPdf>()->createProjection(*pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
+               auto _pdf =
+                  new xRooProjectedPdf(TString::Format("%s_projection", pdf->GetName()), "", *pdf->get<RooAbsPdf>(),
+                                       *pdf->get<RooAbsPdf>()->getObservables(*_obs.get<RooArgList>()));
+               if (hasRange) {
+                  dynamic_cast<RooAbsPdf *>(_pdf)->setNormRange("coordRange");
+               }
+               newrar->addPdf(*_pdf, pdf->coords()["channelCat"]->get<RooCategory>()->getLabel());
+            }
+            rar = newrar;
+         } else {
+            rar = p->createProjection(
+               *_obs.get<RooArgList>()); // TODO should use xRooProjectedPdf here too, because not fixed range and
+                                         // extend behaviour of RooProjectedPdf in ROOT yet
+            if (hasRange) {
+               dynamic_cast<RooAbsPdf *>(rar)->setNormRange("coordRange");
+            }
+         }
+         if (hasRange)
+            p->setNormRange("coordRange"); // should get cleared when we sterilize
+      } else {
+         if (hasRange) {
+            // commented out passing of normset so that getVal of non-pdf is always a 'raw' value (needed for raw eval
+            // of RooRealSumPdf)
+            rar = std::unique_ptr<RooAbsReal>{rar->createIntegral(
+                                                 *_obs.get<RooArgList>(),
+                                                 /*RooFit::NormSet(normSet),*/ RooFit::Range("coordRange"))}
+                     .release();
+         } else {
+            rar =
+               std::unique_ptr<RooAbsReal>{rar->createIntegral(*_obs.get<RooArgList>() /*, RooFit::NormSet(normSet)*/)}
+                  .release();
+         }
+      }
+   }
+
+   bool scaleExpected = (p && p->canBeExtended() && !_coefs.get());
+   // Note about above: if pdf has coeficients then its embedded in a RooAddPdf that has coefs defined ...
+   // in this case we should *not* scale by expected, since the coefs become the scaling instead
+
+   std::unique_ptr<RooArgSet> snap(normSet.snapshot());
+   TStopwatch timeIt;
+   std::vector<double> lapTimes;
+   bool warned = false;
+   if (binStart == -1 && binEnd == -1) {
+      binEnd = 1;
+   }
+   for (int i = std::max(1, binStart); i <= std::min(h->GetNbinsX(), binEnd); i++) {
+      timeIt.Start(true);
+      if (x)
+         x->setVal(h->GetBinCenter(i));
+      else if (v)
+         v->setBin(i - 1);
+      if (x && !x->inRange("coordRange"))
+         continue;
+
+      double r = 0;
+      if (!empty) {
+         r = /*(p && p->selfNormalized())*/ rar->getVal(p ? &normSet : nullptr);
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
+         if (std::isnan(r) && RooNaNPacker::isNaNWithPayload(r)) {
+            r = -RooNaNPacker::unpackNaN(r);
+         }
+#endif
+         if (r && _coefs.get()) {
+            r *= _coefs.get<RooAbsReal>()->getVal(normSet);
+         }
+         if (needBinWidth) {
+            r *= h->GetBinWidth(i);
+         }
+         if (scaleExpected) {
+            // std::cout << r << " exp = " << p->expectedEvents(normSet) << " for normRange " << (p->normRange() ?
+            // p->normRange() : "null") << std::endl; p->Print();rar->Print();
+            r *= (p->expectedEvents(normSet));
+         } // do in here in case dependency on var
+      }
+      h->SetBinContent(i, r);
+
+      if (errors) {
+         double res;
+         if (p) {
+            // std::cout << "computing error of :" << h->GetBinCenter(i) << std::endl;
+            // //fr->floatParsFinal().Print(); fr->covarianceMatrix().Print();
+            res = PdfWrapper((oldrar) ? *rar : *p, _coefs.get<RooAbsReal>(), !v, oldrar ? p : nullptr)
+                     .getSimplePropagatedError(*fr, normSet);
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
+            // improved normSet invalidity checking, so assuming no longer need this in 6.28 onwards
+            p->_normSet = nullptr;
+#endif
+         } else {
+            res = RooProduct("errorEval", "errorEval",
+                             RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()))
+                     .getPropagatedError(*fr, normSet);
+         }
+         if (needBinWidth) {
+            res *= h->GetBinWidth(i);
+         }
+         h->SetBinError(i, res);
+      }
+      timeIt.Stop();
+      lapTimes.push_back(timeIt.RealTime());
+      double time_estimate =
+         (lapTimes.size() > 1)
+            ? (h->GetNbinsX() * (std::accumulate(lapTimes.begin() + 1, lapTimes.end(), 0.) / (lapTimes.size() - 1)))
+            : 0.;
+      if (!warned && (lapTimes.at(0) > 10 || (lapTimes.size() > 2 && time_estimate > 60.))) {
+         TTimeStamp t2;
+         t2.Add(time_estimate);
+         Warning("BuildHistogram", "Building this histogram will take until %s", t2.AsString());
+         if (errors) {
+            // install interrupt handler
+            runningNode = this;
+            gOldHandlerr = signal(SIGINT, buildHistogramInterrupt);
+         }
+         warned = true;
+      }
+      if (fInterrupted) {
+         if (errors) {
+            Warning("BuildHistogram", "Skipping errors for remaining bins");
+            errors = false;
+         }
+         fInterrupted = false;
+      }
+   }
+   if (gOldHandlerr) {
+      signal(SIGINT, gOldHandlerr);
+      gOldHandlerr = 0;
+   }
+   normSet = *snap;
+
+   if (oldrar) {
+      std::vector<RooAbsArg *> extra;
+      if (auto s = dynamic_cast<RooSimultaneous *>(rar)) {
+         // need to delete all the subpdfs we created too
+         for (auto _pdf : s->servers())
+            if (dynamic_cast<RooAbsPdf *>(_pdf))
+               extra.push_back(_pdf);
+      }
+      extra.push_back(rar);
+      rar = oldrar;
+      xRooNode(*rar).sterilize(); // need to clear the cache of the created integral - do this before deleting things!
+      for (auto a : extra)
+         delete a;
+   } else {
+      sterilize(); // needed to forget about the normSet that was passed to getVal()
+   }
+
+   if (!p && !rar->getAttribute("density") && !needBinWidth) {
+      h->GetYaxis()->SetTitle(rar->getStringAttribute("units"));
+   } else if ((p && p->canBeExtended()) || (!p && needBinWidth)) {
+      h->GetYaxis()->SetTitle("Events");
+   } else {
+      h->GetYaxis()->SetTitle("Probability Mass");
+   }
+   h->GetYaxis()->SetMaxDigits(3);
+
+   if (errors) {
+      delete fr;
+   }
    //}
    return h;
 }
@@ -7669,16 +7812,21 @@ std::vector<double> xRooNode::GetBinContents(int binStart, int binEnd) const
    }
    std::vector<double> out;
    if (get<RooAbsData>()) {
-      auto g = BuildGraph(nullptr, (binStart!=-1||binEnd!=-1) /*include points for zeros unless we are asking for a single point with start=end=-1*/);
+      auto g = BuildGraph(
+         nullptr,
+         (binStart != -1 ||
+          binEnd != -1) /*include points for zeros unless we are asking for a single point with start=end=-1*/);
       if (!g) {
          return out;
       }
-      if (binStart==binEnd && binStart==-1) {
+      if (binStart == binEnd && binStart == -1) {
          // integral over all bins if getting bin content -1
          double integral(0);
-         for(int i=0;i<g->GetN();i++) integral += g->GetPointY(i);
+         for (int i = 0; i < g->GetN(); i++)
+            integral += g->GetPointY(i);
          out.push_back(integral);
-         delete g; return out;
+         delete g;
+         return out;
       }
       for (int i = binStart - 1; i < g->GetN() && (binEnd == 0 || i < binEnd); i++) {
          out.push_back(g->GetPointY(i));
@@ -7688,7 +7836,11 @@ std::vector<double> xRooNode::GetBinContents(int binStart, int binEnd) const
    }
 
    bool doIntegral = false;
-   if (binStart==binEnd && binStart==-1) { binStart=-1;binEnd=-1; doIntegral=true; } // return integral if request bin -1
+   if (binStart == binEnd && binStart == -1) {
+      binStart = -1;
+      binEnd = -1;
+      doIntegral = true;
+   } // return integral if request bin -1
    auto h = BuildHistogram(nullptr, false, false, binStart, binEnd);
    if (!h) {
       throw std::runtime_error(TString::Format("%s has no content", GetName()));
@@ -7741,14 +7893,15 @@ void xRooNode::Inspect() const
       TNamed::Inspect();
 }
 
-Bool_t TopRightPlaceBox(TPad *p, TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb)
+bool TopRightPlaceBox(TPad *p, TObject *o, double w, double h, double &xl, double &yb)
 {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
    // reinitialize collide grid because the filling depends on fUxmin and fUxmax (and ymin ymax too)
-   // and these aren't filled on the first time we do the placement (they init to 0 and 1), but will be filled subsequently
+   // and these aren't filled on the first time we do the placement (they init to 0 and 1), but will be filled
+   // subsequently
    for (int i = 0; i < p->fCGnx; i++) {
       for (int j = 0; j < p->fCGny; j++) {
-         p->fCollideGrid[i + j * p->fCGnx] = kTRUE;
+         p->fCollideGrid[i + j * p->fCGnx] = true;
       }
    }
    p->FillCollideGrid(o);
@@ -7763,29 +7916,33 @@ Bool_t TopRightPlaceBox(TPad *p, TObject *o, Double_t w, Double_t h, Double_t &x
          if (p->Collide(i, j, iw, ih)) {
             continue;
          } else {
-            xl = (Double_t)(i) / (Double_t)(p->fCGnx);
-            yb = (Double_t)(j) / (Double_t)(p->fCGny);
-            return kTRUE;
+            xl = (double)(i) / (double)(p->fCGnx);
+            yb = (double)(j) / (double)(p->fCGny);
+            return true;
          }
       }
    }
-   return kFALSE;
+   return false;
 #else
    return p->PlaceBox(o, w, h, xl, yb, "trw");
 #endif
 }
 
-TPaveText* getPave(const char* name = "labels",bool create=true, bool doPaint=false) {
+TPaveText *getPave(const char *name = "labels", bool create = true, bool doPaint = false)
+{
    if (auto p = dynamic_cast<TPaveText *>(gPad->GetPrimitive(name)); p) {
       if (doPaint)
          gPad->PaintModified(); //-- slows down x11 so trying to avoid
       return p;
    }
-   if (!create) { return nullptr; }
-   auto l = new TPaveText(gPad->GetLeftMargin()+0.02, 1. - gPad->GetTopMargin() - 0.08, 0.6,
-                   1. - gPad->GetTopMargin() - 0.08);
+   if (!create) {
+      return nullptr;
+   }
+   auto l = new TPaveText(gPad->GetLeftMargin() + 0.02, 1. - gPad->GetTopMargin() - 0.08, 0.6,
+                          1. - gPad->GetTopMargin() - 0.08);
    l->SetBorderSize(0);
-   if (l->GetTextSize()==0) l->SetTextSize(gStyle->GetTitleYSize());
+   if (l->GetTextSize() == 0)
+      l->SetTextSize(gStyle->GetTitleYSize());
 
    l->SetBit(kCanDelete);
    // l->SetMargin(0);
@@ -7805,7 +7962,7 @@ TLegend *getLegend(bool create = true, bool doPaint = false)
          gPad->PaintModified(); //-- slows down x11 so trying to avoid
       if (TopRightPlaceBox(dynamic_cast<TPad *>(gPad), p, w, h, x, y)) {
          // squash inside the frame ..
-         //std::cout << gPad->GetName() << ":" << x << " , " << y << " , " << w << " , " << h << std::endl;
+         // std::cout << gPad->GetName() << ":" << x << " , " << y << " , " << w << " , " << h << std::endl;
          x = std::max(x, (gPad->GetLeftMargin() + 0.02));
          y = std::max(y, (gPad->GetBottomMargin() + 0.02));
          x = std::min(x, (1. - gPad->GetRightMargin() - 0.02) - w);
@@ -7841,10 +7998,10 @@ TLegend *getLegend(bool create = true, bool doPaint = false)
    } else {
       if (!create)
          return nullptr;
-      l = new TLegend(0.6, 1. - gPad->GetTopMargin() - 0.08, 0.75,
-                      1. - gPad->GetTopMargin() - 0.08);
+      l = new TLegend(0.6, 1. - gPad->GetTopMargin() - 0.08, 0.75, 1. - gPad->GetTopMargin() - 0.08);
       l->SetBorderSize(0);
-      if (l->GetTextSize()==0) l->SetTextSize(gStyle->GetTitleYSize());
+      if (l->GetTextSize() == 0)
+         l->SetTextSize(gStyle->GetTitleYSize());
    }
    l->SetBit(kCanDelete);
    // l->SetMargin(0);
@@ -7876,9 +8033,9 @@ void addLegendEntry(TObject *o, const char *title, const char *opt)
       nn *= (nn + 4);
       if (nObj > 1 && (nObj % nn) == 1) {
          l->SetNColumns(l->GetNColumns() + 1);
-         l->SetX1NDC(l->GetX2NDC() - 0.15*l->GetNColumns());
+         l->SetX1NDC(l->GetX2NDC() - 0.15 * l->GetNColumns());
       }
-      l->SetY1NDC(l->GetY2NDC() - 0.05 * gPad->GetHNDC() * std::ceil((double(nObj)/l->GetNColumns())));
+      l->SetY1NDC(l->GetY2NDC() - 0.05 * gPad->GetHNDC() * std::ceil((double(nObj) / l->GetNColumns())));
    }
 
    getLegend(); // to mark modified
@@ -7893,7 +8050,8 @@ public:
    {
       if (fPad) {
          getLegend(false, true);
-         fPad->GetCanvas()->Paint();fPad->GetCanvas()->Update();
+         fPad->GetCanvas()->Paint();
+         fPad->GetCanvas()->Update();
          fPad->cd();
       }
       nExisting--;
@@ -7907,14 +8065,18 @@ int PadRefresher::nExisting = 0;
 void xRooNode::Draw(Option_t *opt)
 {
    // in order to catch exceptions to prevent crash of GUI, do this:
-   if(gROOT->FromPopUp()) {
+   if (gROOT->FromPopUp()) {
       gROOT->SetFromPopUp(false);
       try {
          Draw(opt);
       } catch (const std::exception &e) {
-         new TGMsgBox(gClient->GetRoot(), (gROOT->GetListOfBrowsers()->At(0)) ? dynamic_cast<TGWindow*>(static_cast<TBrowser*>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp()) : gClient->GetRoot()
-                 , "Exception", e.what(),
-                      kMBIconExclamation); // deletes self on dismiss?
+         new TGMsgBox(
+            gClient->GetRoot(),
+            (gROOT->GetListOfBrowsers()->At(0))
+               ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
+               : gClient->GetRoot(),
+            "Exception", e.what(),
+            kMBIconExclamation); // deletes self on dismiss?
       }
       gROOT->SetFromPopUp(true);
       return;
@@ -7925,21 +8087,23 @@ void xRooNode::Draw(Option_t *opt)
    if (!get() && !IsFolder() && !sOpt2.Contains("x="))
       return;
 
-   if( auto ir = get<RooStats::HypoTestInverterResult>() ) {
+   if (auto ir = get<RooStats::HypoTestInverterResult>()) {
       xRooHypoSpace(ir).Draw(opt);
       gSystem->ProcessEvents();
       return;
-   } else if(get<RooStats::HypoTestResult>()) {
-      if(gPad) gPad->Clear();
+   } else if (get<RooStats::HypoTestResult>()) {
+      if (gPad)
+         gPad->Clear();
       xRooNLLVar::xRooHypoPoint(std::dynamic_pointer_cast<RooStats::HypoTestResult>(fComp)).Draw(opt);
-      if(gPad) {
-         gPad->GetCanvas()->Paint();gPad->GetCanvas()->Update();
+      if (gPad) {
+         gPad->GetCanvas()->Paint();
+         gPad->GetCanvas()->Update();
       }
       gSystem->ProcessEvents();
       return;
    }
 
-   if (sOpt2=="pcls" && get<RooRealVar>() && fParent && fParent->get<RooAbsPdf>()) {
+   if (sOpt2 == "pcls" && get<RooRealVar>() && fParent && fParent->get<RooAbsPdf>()) {
       // use the first selected dataset
       auto _dsets = fParent->datasets();
       // bool _drawn=false;
@@ -7953,8 +8117,8 @@ void xRooNode::Draw(Option_t *opt)
       auto hs = fParent->nll(dsetName.Data()).hypoSpace(get<RooRealVar>()->GetName());
       hs.limits("cls visualize");
       hs.SetName(TUUID().AsString());
-      if(ws()) {
-         ws()->import( *hs.result() );
+      if (ws()) {
+         ws()->import(*hs.result());
       }
       return;
    }
@@ -7996,46 +8160,53 @@ void xRooNode::Draw(Option_t *opt)
 
    RooAbsLValue *v = nullptr;
    std::vector<double> xPoints;
-   if(sOpt2.Contains("x=")) {
+   if (sOpt2.Contains("x=")) {
       // specifying a particular var to scan over ...
       int _idx = sOpt2.Index("x=");
-      int _eidx = sOpt2.Index(';',_idx);
-      TString varPart = sOpt(_idx+2,(_eidx<0 ? sOpt2.Length() : _eidx) -(_idx+2));
+      int _eidx = sOpt2.Index(';', _idx);
+      TString varPart = sOpt(_idx + 2, (_eidx < 0 ? sOpt2.Length() : _eidx) - (_idx + 2));
       TString varName = varPart;
       // if varName is of form str(num,num,num) then can infer scan points
       if (auto _idx2 = varPart.Index("("); _idx2 > 0) {
-         varName = varPart(0,_idx2);
-         TStringToken pattern(TString(varPart(_idx2+1,varPart.Length()-_idx2-2)), ",");
-         double min(0),max(0); int nBins = 0; int ii=0;
+         varName = varPart(0, _idx2);
+         TStringToken pattern(TString(varPart(_idx2 + 1, varPart.Length() - _idx2 - 2)), ",");
+         double min(0), max(0);
+         int nBins = 0;
+         int ii = 0;
          while (pattern.NextToken()) {
             TString s = pattern;
-            if (ii==0) nBins = s.Atoi();
-            else if(ii==1) min = s.Atof();
-            else if(ii==2) max = s.Atof();
+            if (ii == 0)
+               nBins = s.Atoi();
+            else if (ii == 1)
+               min = s.Atof();
+            else if (ii == 2)
+               max = s.Atof();
             ii++;
          }
-         if (nBins>100) nBins=100; // limit scanning to 100 points
-         if (nBins>1) {
-            for(double x = min; x<= max; x += (max-min)/(nBins-1)) {
+         if (nBins > 100)
+            nBins = 100; // limit scanning to 100 points
+         if (nBins > 1) {
+            for (double x = min; x <= max; x += (max - min) / (nBins - 1)) {
                xPoints.push_back(x);
             }
-         } else if(nBins==1) xPoints.push_back((min+max)/2.);
+         } else if (nBins == 1)
+            xPoints.push_back((min + max) / 2.);
       }
       v = getObject<RooAbsRealLValue>(varName.Data()).get();
       if (!v) {
-         Error("Draw","Could not find variable %s",varName.Data());
+         Error("Draw", "Could not find variable %s", varName.Data());
          return; // don't throw because if happens in browser will cause ROOT to exit
       }
       if (xPoints.empty() && !obs().find(varName.Data())) { // will draw obs as regular (e.g. hist)
-         double tmp = static_cast<RooAbsRealLValue*>(v)->getVal();
-         for(int i=0;i<v->numBins(GetName());i++) {
-            v->setBin(i,GetName());
-            xPoints.push_back(static_cast<RooAbsRealLValue*>(v)->getVal());
+         double tmp = static_cast<RooAbsRealLValue *>(v)->getVal();
+         for (int i = 0; i < v->numBins(GetName()); i++) {
+            v->setBin(i, GetName());
+            xPoints.push_back(static_cast<RooAbsRealLValue *>(v)->getVal());
          }
-         static_cast<RooAbsRealLValue*>(v)->setVal(tmp);
+         static_cast<RooAbsRealLValue *>(v)->setVal(tmp);
       }
-      sOpt2 = TString(sOpt2(0,_idx)) + sOpt2(_idx+2+varPart.Length()+1,sOpt2.Length());
-      sOpt = TString(sOpt(0,_idx)) + sOpt(_idx+2+varPart.Length()+1,sOpt.Length());
+      sOpt2 = TString(sOpt2(0, _idx)) + sOpt2(_idx + 2 + varPart.Length() + 1, sOpt2.Length());
+      sOpt = TString(sOpt(0, _idx)) + sOpt(_idx + 2 + varPart.Length() + 1, sOpt.Length());
    }
    TString forceNames = "";
    if (sOpt2.Contains("force")) {
@@ -8052,7 +8223,7 @@ void xRooNode::Draw(Option_t *opt)
          sOpt = sOpt(0, sOpt2.Index("force"));
          sOpt2 = sOpt2(0, sOpt2.Index("force"));
       } else {
-         Error("Draw","Can only compute forces with PDFs");
+         Error("Draw", "Can only compute forces with PDFs");
          return; // don't throw because will cause browser to exit if done from there
       }
    }
@@ -8081,7 +8252,7 @@ void xRooNode::Draw(Option_t *opt)
    sOpt.ReplaceAll("ratio", "");
    sOpt.ReplaceAll("significance", ""); // remove old option if still given
    bool nostack = sOpt.Contains("nostack");
-   sOpt.ReplaceAll("nostack","");
+   sOpt.ReplaceAll("nostack", "");
    bool hasSame = sOpt.Contains("same");
    sOpt.ReplaceAll("same", "");
    bool hasGoff = sOpt.Contains("goff");
@@ -8201,7 +8372,8 @@ void xRooNode::Draw(Option_t *opt)
             if (hh == hAxis && pad && ymin == 0 && pad->GetLogy()) {
                ymin = 1e-2;
             }
-            if(ymin==0 && ymax > 10) ymin = 0.1; // adjust min so if user activates log scale it isn't bad
+            if (ymin == 0 && ymax > 10)
+               ymin = 0.1; // adjust min so if user activates log scale it isn't bad
             hh->SetMinimum(ymin);
             hh->SetMaximum(ymax);
             hh->GetYaxis()->Set(1, ymin, ymax);
@@ -8222,25 +8394,25 @@ void xRooNode::Draw(Option_t *opt)
 
    if (!xPoints.empty()) {
       // create a graph using GetContent
-      TGraphAsymmErrors* out = new TGraphAsymmErrors;
+      TGraphAsymmErrors *out = new TGraphAsymmErrors;
       out->SetName(GetName());
       out->SetTitle(GetTitle());
       out->SetFillColor(out->GetLineColor());
       out->SetMarkerStyle(0);
       out->SetFillStyle(hasErrorOpt ? 3005 : 0);
-      double tmp = static_cast<RooAbsRealLValue*>(v)->getVal();
-      for(auto& x : xPoints) {
-         static_cast<RooAbsRealLValue*>(v)->setVal(x);
-         out->AddPoint(x,GetContent());
+      double tmp = static_cast<RooAbsRealLValue *>(v)->getVal();
+      for (auto &x : xPoints) {
+         static_cast<RooAbsRealLValue *>(v)->setVal(x);
+         out->AddPoint(x, GetContent());
          if (hasErrorOpt) {
-            out->SetPointEYlow(out->GetN()-1,GetError());
-            out->SetPointEYhigh(out->GetN()-1,out->GetErrorYlow(out->GetN()-1)); // symmetric error for now
+            out->SetPointEYlow(out->GetN() - 1, GetError());
+            out->SetPointEYhigh(out->GetN() - 1, out->GetErrorYlow(out->GetN() - 1)); // symmetric error for now
          }
       }
-      static_cast<RooAbsRealLValue*>(v)->setVal(tmp);
-      out->GetHistogram()->GetXaxis()->SetTitle(static_cast<RooAbsRealLValue*>(v)->GetTitle());
+      static_cast<RooAbsRealLValue *>(v)->setVal(tmp);
+      out->GetHistogram()->GetXaxis()->SetTitle(static_cast<RooAbsRealLValue *>(v)->GetTitle());
       out->SetBit(kCanDelete);
-      out->Draw( TString(hasSame ? "L" : "AL") + (hasErrorOpt ? "3" : ""));
+      out->Draw(TString(hasSame ? "L" : "AL") + (hasErrorOpt ? "3" : ""));
       return;
    }
 
@@ -8266,18 +8438,18 @@ void xRooNode::Draw(Option_t *opt)
       gPad->SetBottomMargin(0);
       gPad->SetName("pull");
       // split the pull graph into individual points -- for benefit of GUI status bar
-      auto pullGraph =
-         dynamic_cast<TGraphAsymmErrors *>(gPad->GetPrimitive("pulls"));
+      auto pullGraph = dynamic_cast<TGraphAsymmErrors *>(gPad->GetPrimitive("pulls"));
       if (!pullGraph) {
-         Error("Draw","Couldn't find pull graph");
+         Error("Draw", "Couldn't find pull graph");
          return;
       }
       pullGraph->SetName("nominal");
       TMultiGraph *mg = new TMultiGraph;
       mg->SetName("editables");
 
-      auto scaleHist = static_cast<TH1*>(pullGraph->FindObject("scales"));
-      if(!scaleHist) throw std::runtime_error("Could not find scales in fit result");
+      auto scaleHist = static_cast<TH1 *>(pullGraph->FindObject("scales"));
+      if (!scaleHist)
+         throw std::runtime_error("Could not find scales in fit result");
 
       for (auto i = 0; i < pullGraph->GetN(); i++) {
          auto g = new TGraphAsymmErrors;
@@ -8310,9 +8482,9 @@ void xRooNode::Draw(Option_t *opt)
 
       // ensure statusbar visible for interactive plot
       // turned this off for now ... as not needed if doing through browser, status bar already there
-//      if (gPad->GetCanvas() && !gPad->GetCanvas()->TestBit(TCanvas::kShowEventStatus)) {
-//         gPad->GetCanvas()->ToggleEventStatus();
-//      }
+      //      if (gPad->GetCanvas() && !gPad->GetCanvas()->TestBit(TCanvas::kShowEventStatus)) {
+      //         gPad->GetCanvas()->ToggleEventStatus();
+      //      }
       gPad->AddExec("interactivePull", TString::Format("%s::Interactive_Pull()", ClassName()));
 
       pad->cd();
@@ -8473,8 +8645,9 @@ void xRooNode::Draw(Option_t *opt)
          hist->SetMinimum(-100);
          hist->Draw(sOpt);
          gStyle->SetPaintTextFormat(b);
-         gPad->SetGrid(1,1);
-         gPad->SetLogy(0);gPad->SetLogx(0);
+         gPad->SetGrid(1, 1);
+         gPad->SetLogy(0);
+         gPad->SetLogx(0);
          return;
       }
 
@@ -8484,31 +8657,36 @@ void xRooNode::Draw(Option_t *opt)
          // group by 'group' attribute
 
          std::string poiName;
-         if(sOpt.Contains("brakdown:")) {
-            poiName = sOpt(sOpt.Index("brakdown:")+9,sOpt.Length());
+         if (sOpt.Contains("brakdown:")) {
+            poiName = sOpt(sOpt.Index("brakdown:") + 9, sOpt.Length());
          } else {
-            std::unique_ptr<RooAbsCollection> _poi( fr->floatParsFinal().selectByAttrib("poi",true) );
-            if(_poi->empty()) {
+            std::unique_ptr<RooAbsCollection> _poi(fr->floatParsFinal().selectByAttrib("poi", true));
+            if (_poi->empty()) {
                throw std::runtime_error("No floating poi in the fit");
-            } else if(_poi->size()!=1) {
+            } else if (_poi->size() != 1) {
                throw std::runtime_error("Multiple poi in the fit");
             }
             poiName = _poi->first()->GetName();
          }
-         RooRealVar* poi = dynamic_cast<RooRealVar*>(fr->floatParsFinal().find(poiName.c_str()));
-         if(!poi) {
-            throw std::runtime_error(TString::Format("Cannot find parameter %s",poiName.c_str()));
+         RooRealVar *poi = dynamic_cast<RooRealVar *>(fr->floatParsFinal().find(poiName.c_str()));
+         if (!poi) {
+            throw std::runtime_error(TString::Format("Cannot find parameter %s", poiName.c_str()));
          }
          std::set<std::string> groups;
-         for(auto p : fr->floatParsFinal()) {
-            if( p == poi ) continue;
-            else if (p->getStringAttribute("group")) groups.insert(p->getStringAttribute("group"));
-            else groups.insert(p->GetTitle());
+         for (auto p : fr->floatParsFinal()) {
+            if (p == poi)
+               continue;
+            else if (p->getStringAttribute("group"))
+               groups.insert(p->getStringAttribute("group"));
+            else
+               groups.insert(p->GetTitle());
          }
 
-         auto roundedVal = xRooFit::matchPrecision(std::pair(poi->getVal(),poi->getError()));
+         auto roundedVal = xRooFit::matchPrecision(std::pair(poi->getVal(), poi->getError()));
 
-         TPie* pie = new TPie(TString::Format("breakdown:%s",poi->GetName()),TString::Format("%s: %g #pm %g",poi->GetTitle(),roundedVal.first,roundedVal.second),groups.size()+1);
+         TPie *pie = new TPie(TString::Format("breakdown:%s", poi->GetName()),
+                              TString::Format("%s: %g #pm %g", poi->GetTitle(), roundedVal.first, roundedVal.second),
+                              groups.size() + 1);
 
          // for display of errors will go to one extra dp ...
          roundedVal.second *= .1;
@@ -8516,45 +8694,51 @@ void xRooNode::Draw(Option_t *opt)
          // do breakdown by removing parameters in blocks according to groups and seeing impact on variance
          // this will give the correct sum but will be order-dependent if there are correlations between
          // groups. therefore we will stick with group-by-group
-         //RooArgList pars(fr->floatParsFinal()); // pars to not condition on
-         //double variance = pow(dynamic_cast<RooRealVar*>(poi)->getError(),2);
-         int i=0;
-         for(auto group : groups) {
-             RooArgList pars(fr->floatParsFinal()); // pars to not condition on
-             double variance = pow(dynamic_cast<RooRealVar*>(poi)->getError(),2);
-            for(auto p : fr->floatParsFinal()) {
-               if (p==poi) continue;
-               else if( (p->getStringAttribute("group") && group==p->getStringAttribute("group")) ||
-                  (!p->getStringAttribute("group") && group==p->GetTitle()) ) {
+         // RooArgList pars(fr->floatParsFinal()); // pars to not condition on
+         // double variance = pow(dynamic_cast<RooRealVar*>(poi)->getError(),2);
+         int i = 0;
+         for (auto group : groups) {
+            RooArgList pars(fr->floatParsFinal()); // pars to not condition on
+            double variance = pow(dynamic_cast<RooRealVar *>(poi)->getError(), 2);
+            for (auto p : fr->floatParsFinal()) {
+               if (p == poi)
+                  continue;
+               else if ((p->getStringAttribute("group") && group == p->getStringAttribute("group")) ||
+                        (!p->getStringAttribute("group") && group == p->GetTitle())) {
                   // conditioning on this parameter ... remove from pars list
                   pars.remove(*p);
                }
             }
             int idx = pars.index(poiName.c_str());
-            double reducedVar = fr->conditionalCovarianceMatrix(pars)(idx,idx);
-            if(reducedVar > variance) {
-               Warning("Draw","breakdown group %s variance bigger than preceeding?",group.c_str());
-               pie->SetEntryVal(i,0);
-               pie->SetEntryLabel(i,TString::Format("%s: NaN",group.c_str()));
+            double reducedVar = fr->conditionalCovarianceMatrix(pars)(idx, idx);
+            if (reducedVar > variance) {
+               Warning("Draw", "breakdown group %s variance bigger than preceeding?", group.c_str());
+               pie->SetEntryVal(i, 0);
+               pie->SetEntryLabel(i, TString::Format("%s: NaN", group.c_str()));
             } else {
-               pie->SetEntryVal(i,variance-reducedVar);
-               auto r = xRooFit::matchPrecision(std::pair(sqrt(variance-reducedVar),roundedVal.second)); // r.first will be the rounded error
-               if(r.first>0) {
-                   pie->SetEntryLabel(i, TString::Format("%s: %g", group.c_str(), r.first));
+               pie->SetEntryVal(i, variance - reducedVar);
+               auto r = xRooFit::matchPrecision(
+                  std::pair(sqrt(variance - reducedVar), roundedVal.second)); // r.first will be the rounded error
+               if (r.first > 0) {
+                  pie->SetEntryLabel(i, TString::Format("%s: %g", group.c_str(), r.first));
                } else {
-                   pie->SetEntryLabel(i,group.c_str()); // suppress labels for negligible errors.
+                  pie->SetEntryLabel(i, group.c_str()); // suppress labels for negligible errors.
                }
             }
-            pie->SetEntryFillColor(i,TColor::GetColorPalette(TColor::GetNumberOfColors()*i/pie->GetEntries()));
-            //variance = reducedVar;
+            pie->SetEntryFillColor(i, TColor::GetColorPalette(TColor::GetNumberOfColors() * i / pie->GetEntries()));
+            // variance = reducedVar;
             i++;
          }
          // remaining variance is statistical=
-         double variance = fr->conditionalCovarianceMatrix(*poi)(0,0);
-          auto r = xRooFit::matchPrecision(std::pair(sqrt(variance),roundedVal.second)); // r.first will be the rounded error
-          pie->SetEntryVal(i,variance); pie->SetEntryLabel(i,TString::Format("stat: %g",r.first));
-         pie->SetEntryFillColor(i,TColor::GetColorPalette(TColor::GetNumberOfColors()*i/pie->GetEntries()));
-         pie->SetBit(kCanDelete);pie->SetRadius(0.17);pie->SetTextSize(gStyle->GetTitleYSize());
+         double variance = fr->conditionalCovarianceMatrix(*poi)(0, 0);
+         auto r =
+            xRooFit::matchPrecision(std::pair(sqrt(variance), roundedVal.second)); // r.first will be the rounded error
+         pie->SetEntryVal(i, variance);
+         pie->SetEntryLabel(i, TString::Format("stat: %g", r.first));
+         pie->SetEntryFillColor(i, TColor::GetColorPalette(TColor::GetNumberOfColors() * i / pie->GetEntries()));
+         pie->SetBit(kCanDelete);
+         pie->SetRadius(0.17);
+         pie->SetTextSize(gStyle->GetTitleYSize());
          pie->Draw("NOL");
          return;
       }
@@ -8576,7 +8760,7 @@ void xRooNode::Draw(Option_t *opt)
             continue;
 
          if (std::isnan(_v->getErrorHi()) || std::isnan(_v->getErrorLo())) {
-            Warning("Draw","%s error is invalid",_v->GetName());
+            Warning("Draw", "%s error is invalid", _v->GetName());
          }
 
          // need to get constraint mean and error parameters ....
@@ -8584,35 +8768,36 @@ void xRooNode::Draw(Option_t *opt)
          double prefitError = 0;
          double prefitVal = 0;
          double customScale = 0;
-         if (auto ip = dynamic_cast<RooRealVar *>(fr->floatParsInit().find(p->GetName()))) { // handles if no prefit available
-            prefitError=ip->getError();
+         if (auto ip =
+                dynamic_cast<RooRealVar *>(fr->floatParsInit().find(p->GetName()))) { // handles if no prefit available
+            prefitError = ip->getError();
             prefitVal = ip->getVal();
          };
 
          std::shared_ptr<xRooNode> pConstr;
-         if (fParent && fParent->getObject<RooRealVar>(p->GetName()))  {
+         if (fParent && fParent->getObject<RooRealVar>(p->GetName())) {
             auto _vv = fParent->getObject<RooRealVar>(p->GetName());
             if (_vv->hasRange("pullScale")) {
-               customScale = (_vv->getMax("pullScale") - _vv->getMin("pullScale"))/2.;
+               customScale = (_vv->getMax("pullScale") - _vv->getMin("pullScale")) / 2.;
             }
             auto _constr = xRooNode(_vv, *this).constraints();
             for (auto &c : _constr) {
                if (c->get<RooPoisson>() || c->get<RooGaussian>()) {
-                   // require parameter to be a direct server of the constraint pdf to count if its a gaussian
-                   bool isServer = true;
-                   if(c->get<RooGaussian>()) {
-                       isServer=false;
-                       for (auto s: c->get<RooAbsArg>()->servers()) {
-                           if (strcmp(s->GetName(), p->GetName()) == 0) {
-                               isServer = true;
-                               break;
-                           }
-                       }
-                   }
-                   if(isServer) {
-                       pConstr = c;
-                       break;
-                   }
+                  // require parameter to be a direct server of the constraint pdf to count if its a gaussian
+                  bool isServer = true;
+                  if (c->get<RooGaussian>()) {
+                     isServer = false;
+                     for (auto s : c->get<RooAbsArg>()->servers()) {
+                        if (strcmp(s->GetName(), p->GetName()) == 0) {
+                           isServer = true;
+                           break;
+                        }
+                     }
+                  }
+                  if (isServer) {
+                     pConstr = c;
+                     break;
+                  }
                }
             }
          }
@@ -8632,14 +8817,16 @@ void xRooNode::Draw(Option_t *opt)
                      continue;
                   if (xName == _d->get()->GetName())
                      continue;
-                  if(_d->get<RooAbsReal>()->getVal()) prefitError = _d->get<RooAbsReal>()->getVal();
+                  if (_d->get<RooAbsReal>()->getVal())
+                     prefitError = _d->get<RooAbsReal>()->getVal();
                }
                // prefitVal will be the global observable value, need to divide that by tau
                prefitVal /= prefitError;
                // prefiterror will be tau ... need 1/sqrt(tau) for error
                prefitError = 1. / sqrt(prefitError);
             } else if (auto _g = pConstr->get<RooGaussian>(); _g) {
-               prefitError = (pConstr->find(".sigma")) ? pConstr->find(".sigma")->get<RooAbsReal>()->getVal() : prefitError;
+               prefitError =
+                  (pConstr->find(".sigma")) ? pConstr->find(".sigma")->get<RooAbsReal>()->getVal() : prefitError;
                prefitVal =
                   (pConstr->find(".x")) ? pConstr->find(".x")->get<RooAbsReal>()->getVal() : 0; // usually the globs
                if (pConstr->find(".x") &&
@@ -8649,7 +8836,8 @@ void xRooNode::Draw(Option_t *opt)
                }
             }
 
-            if(customScale) prefitError = customScale;
+            if (customScale)
+               prefitError = customScale;
             if (prefitError == 0) {
                Warning("Draw", "failed to determine prefit error of %s, using post-fit error", p->GetName());
                prefitError = _v->getError();
@@ -8662,7 +8850,8 @@ void xRooNode::Draw(Option_t *opt)
             offset[p->GetName()] = prefitVal;
          } else if (!fParent) {
             // no parent to determine constraints from ... prefitError=0 will be the unconstrained ones
-            if(customScale) prefitError = customScale;
+            if (customScale)
+               prefitError = customScale;
             if (prefitError == 0) {
                // uses range of var
                prefitError = (std::max({_v->getMax() - _v->getVal(), _v->getVal() - _v->getMin(), 4.}) / 4);
@@ -8681,7 +8870,8 @@ void xRooNode::Draw(Option_t *opt)
 
          } else {
             // unconstrained (or at least couldn't determine constraint) ... use par range if no prefit error
-            if(customScale) prefitError = customScale;
+            if (customScale)
+               prefitError = customScale;
             if (prefitError == 0) {
                prefitError = (std::max({_v->getMax() - _v->getVal(), _v->getVal() - _v->getMin(), 4.}) / 4);
             }
@@ -8716,58 +8906,68 @@ void xRooNode::Draw(Option_t *opt)
       graph->SetMaximum(4);
       graph->SetMinimum(-4);
 
-      bool doHorizontal = (!sOpt.Contains("impact") && sOpt.Contains("v")) || (sOpt.Contains("impact") && !sOpt.Contains("h"));
+      bool doHorizontal =
+         (!sOpt.Contains("impact") && sOpt.Contains("v")) || (sOpt.Contains("impact") && !sOpt.Contains("h"));
 
-
-      std::vector<std::pair<double,std::string>> covariances;
-      /*double poiError = 0;*/ std::string poiName; double maxImpact = 0;
-      if(sOpt.Contains("impact")) {
-         if(sOpt.Contains("impact:")) {
-            poiName = sOpt(sOpt.Index("impact:")+7,sOpt.Length());
+      std::vector<std::pair<double, std::string>> covariances;
+      /*double poiError = 0;*/ std::string poiName;
+      double maxImpact = 0;
+      if (sOpt.Contains("impact")) {
+         if (sOpt.Contains("impact:")) {
+            poiName = sOpt(sOpt.Index("impact:") + 7, sOpt.Length());
          } else {
-            std::unique_ptr<RooAbsCollection> _poi( fr->floatParsFinal().selectByAttrib("poi",true) );
-            if(_poi->empty()) {
+            std::unique_ptr<RooAbsCollection> _poi(fr->floatParsFinal().selectByAttrib("poi", true));
+            if (_poi->empty()) {
                throw std::runtime_error("No floating poi in the fit");
-            } else if(_poi->size()!=1) {
+            } else if (_poi->size() != 1) {
                throw std::runtime_error("Multiple poi in the fit");
             }
             poiName = _poi->first()->GetName();
          }
-         RooAbsArg* poi = fr->floatParsFinal().find(poiName.c_str());
-         if(!poi) {
-            throw std::runtime_error(TString::Format("Cannot find parameter %s",poiName.c_str()));
+         RooAbsArg *poi = fr->floatParsFinal().find(poiName.c_str());
+         if (!poi) {
+            throw std::runtime_error(TString::Format("Cannot find parameter %s", poiName.c_str()));
          }
-        size_t poiIdx = fr->floatParsFinal().index(*poi);
-        // put parameters in order of impact on the poi
+         size_t poiIdx = fr->floatParsFinal().index(*poi);
+         // put parameters in order of impact on the poi
 
-          // impact is regression coefficient * npError
-          // relevant regression coefficient is cov / (npVariance)
-          // i.e. DeltaX/sigmaX = [cov(X,Y)/(sigmaXsigmaY)]DeltaY/sigmaY
-          // ... DeltaX = [cov(X,Y)/(sigmaY^2)]DeltaY
-          // if DeltaY is just sigmaY then DeltaX = cov(X,Y)/sigmaY
+         // impact is regression coefficient * npError
+         // relevant regression coefficient is cov / (npVariance)
+         // i.e. DeltaX/sigmaX = [cov(X,Y)/(sigmaXsigmaY)]DeltaY/sigmaY
+         // ... DeltaX = [cov(X,Y)/(sigmaY^2)]DeltaY
+         // if DeltaY is just sigmaY then DeltaX = cov(X,Y)/sigmaY
 
-        for(auto& label : graphLabels) {
-            covariances.emplace_back( fr->covarianceMatrix()(poiIdx,fr->floatParsFinal().index(label)) / dynamic_cast<RooRealVar*>(fr->floatParsFinal().find(label))->getError(), label );
-        }
-        std::sort(covariances.begin(),covariances.end(),[&](std::pair<double,std::string> i, std::pair<double,std::string> j) { return doHorizontal ? (std::abs(i.first) < std::abs(j.first)) : (std::abs(i.first) > std::abs(j.first)); });
+         for (auto &label : graphLabels) {
+            covariances.emplace_back(fr->covarianceMatrix()(poiIdx, fr->floatParsFinal().index(label)) /
+                                        dynamic_cast<RooRealVar *>(fr->floatParsFinal().find(label))->getError(),
+                                     label);
+         }
+         std::sort(covariances.begin(), covariances.end(),
+                   [&](std::pair<double, std::string> i, std::pair<double, std::string> j) {
+                      return doHorizontal ? (std::abs(i.first) < std::abs(j.first))
+                                          : (std::abs(i.first) > std::abs(j.first));
+                   });
 
-        TGraphAsymmErrors sortedGraph;
-        std::vector<TString> sortedLabels;
-        maxImpact = (doHorizontal) ? covariances.back().first : covariances.front().first; // note: max impact is likely to be self variance
-        for(auto& c : covariances) {
-           if(c.second == poi->GetName()) {
-              //poiError = sqrt(c.first);
-              continue; // skip self
-           }
-           c.first *= 4./(maxImpact*1.2);
-            sortedLabels.push_back(c.second);
-            size_t i=0;
-            for(;i<graphLabels.size();i++) {
-               if(graphLabels[i]==c.second) { break; }
+         TGraphAsymmErrors sortedGraph;
+         std::vector<TString> sortedLabels;
+         maxImpact = (doHorizontal) ? covariances.back().first
+                                    : covariances.front().first; // note: max impact is likely to be self variance
+         for (auto &c : covariances) {
+            if (c.second == poi->GetName()) {
+               // poiError = sqrt(c.first);
+               continue; // skip self
             }
-            sortedGraph.AddPoint( sortedGraph.GetN(), graph->GetPointY(i)  );
-            sortedGraph.SetPointError(sortedGraph.GetN()-1, 0, 0, graph->GetErrorYlow(i), graph->GetErrorYhigh(i));
-        }
+            c.first *= 4. / (maxImpact * 1.2);
+            sortedLabels.push_back(c.second);
+            size_t i = 0;
+            for (; i < graphLabels.size(); i++) {
+               if (graphLabels[i] == c.second) {
+                  break;
+               }
+            }
+            sortedGraph.AddPoint(sortedGraph.GetN(), graph->GetPointY(i));
+            sortedGraph.SetPointError(sortedGraph.GetN() - 1, 0, 0, graph->GetErrorYlow(i), graph->GetErrorYhigh(i));
+         }
          graph->Set(0);
          TList tmpList2;
          tmpList2.SetName("tmpList");
@@ -8779,68 +8979,66 @@ void xRooNode::Draw(Option_t *opt)
       }
 
       // create a framing histogram
-      TH2D* hist;
-      if(doHorizontal) {
-         hist = new TH2D(GetName(),fr->GetTitle(),100,-4,4, std::max(graph->GetN(),1),-0.5, std::max(graph->GetN(),1)-0.5);
-         int i=1;
+      TH2D *hist;
+      if (doHorizontal) {
+         hist = new TH2D(GetName(), fr->GetTitle(), 100, -4, 4, std::max(graph->GetN(), 1), -0.5,
+                         std::max(graph->GetN(), 1) - 0.5);
+         int i = 1;
          for (auto &l : graphLabels) {
             hist->GetYaxis()->SetBinLabel(i++, l);
          }
-         if(!graphLabels.empty()) hist->GetYaxis()->LabelsOption("v");
+         if (!graphLabels.empty())
+            hist->GetYaxis()->LabelsOption("v");
          hist->GetXaxis()->SetTitle("(#hat{#theta}-#theta_{i})/#sigma_{i}");
       } else {
-         hist = new TH2D(GetName(), fr->GetTitle(), std::max(graph->GetN(), 1), -0.5,
-                               std::max(graph->GetN(), 1) - 0.5,
-                               100, -4, 4);
-         int i=1;
+         hist = new TH2D(GetName(), fr->GetTitle(), std::max(graph->GetN(), 1), -0.5, std::max(graph->GetN(), 1) - 0.5,
+                         100, -4, 4);
+         int i = 1;
          for (auto &l : graphLabels) {
             hist->GetXaxis()->SetBinLabel(i++, l);
          }
-         if(!graphLabels.empty()) hist->GetXaxis()->LabelsOption("v");
+         if (!graphLabels.empty())
+            hist->GetXaxis()->LabelsOption("v");
          hist->GetYaxis()->SetNdivisions(8, 0, 0);
          hist->GetYaxis()->SetTitle("(#hat{#theta}-#theta_{i})/#sigma_{i}");
       }
       hist->SetStats(false);
       hist->SetDirectory(nullptr);
       hist->SetBit(kCanDelete);
-      auto histCopy = dynamic_cast<TH1*>(hist->Clone(".axis"));
+      auto histCopy = dynamic_cast<TH1 *>(hist->Clone(".axis"));
       histCopy->SetDirectory(0);
       histCopy->SetBit(kCanDelete);
       auto _axis = (doHorizontal ? histCopy->GetYaxis() : histCopy->GetXaxis());
 
-
-/*
-      auto t = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(false);
-      auto hist = new TH1F(TString::Format(".%s_pullFrame", GetName()), fr->GetTitle(), std::max(graph->GetN(), 1),
-                           -0.5, std::max(graph->GetN(), 1) - 0.5);
-      hist->SetStats(false);
-      TH1::AddDirectory(t);
-      hist->SetBit(kCanDelete);
-      */
-//      auto hist = graph->GetHistogram();
-      graph->GetHistogram()->GetXaxis()->Set(std::max(graph->GetN(), 1),-0.5, std::max(graph->GetN(), 1) - 0.5);
-      for(int ii=1;ii<=_axis->GetNbins();ii++) {
-          graph->GetHistogram()->GetXaxis()->SetBinLabel(ii,_axis->GetBinLabel(ii));
+      /*
+            auto t = TH1::AddDirectoryStatus();
+            TH1::AddDirectory(false);
+            auto hist = new TH1F(TString::Format(".%s_pullFrame", GetName()), fr->GetTitle(), std::max(graph->GetN(),
+         1), -0.5, std::max(graph->GetN(), 1) - 0.5); hist->SetStats(false); TH1::AddDirectory(t);
+            hist->SetBit(kCanDelete);
+            */
+      //      auto hist = graph->GetHistogram();
+      graph->GetHistogram()->GetXaxis()->Set(std::max(graph->GetN(), 1), -0.5, std::max(graph->GetN(), 1) - 0.5);
+      for (int ii = 1; ii <= _axis->GetNbins(); ii++) {
+         graph->GetHistogram()->GetXaxis()->SetBinLabel(ii, _axis->GetBinLabel(ii));
       }
-//      int i = 1;
-//      for (auto &l : graphLabels) {
-//         hist->GetXaxis()->SetBinLabel(i++, l);
-//      }
-//      hist->SetMaximum(4);
-//      hist->SetMinimum(-4);
-//      if (graph->GetN())
-//         hist->GetXaxis()->LabelsOption("v");
-//      hist->GetYaxis()->SetNdivisions(8, 0, 0);
-//      hist->GetYaxis()->SetTitle("(#hat{#theta}-#theta_{i})/#sigma_{i}");
+      //      int i = 1;
+      //      for (auto &l : graphLabels) {
+      //         hist->GetXaxis()->SetBinLabel(i++, l);
+      //      }
+      //      hist->SetMaximum(4);
+      //      hist->SetMinimum(-4);
+      //      if (graph->GetN())
+      //         hist->GetXaxis()->LabelsOption("v");
+      //      hist->GetYaxis()->SetNdivisions(8, 0, 0);
+      //      hist->GetYaxis()->SetTitle("(#hat{#theta}-#theta_{i})/#sigma_{i}");
       clearPad();
       // create a new pad because adjust the margins ...
       auto oldPad = gPad;
       gPad->Divide(1, 1, 1e-9, 1e-9);
       gPad->cd(1);
 
-
-      if(doHorizontal) {
+      if (doHorizontal) {
          gPad->SetLeftMargin(0.4);
       } else {
          gPad->SetBottomMargin(0.4);
@@ -8857,20 +9055,20 @@ void xRooNode::Draw(Option_t *opt)
          _axis->SetBinLabel(ii, strlen(_p->GetTitle()) ? _p->GetTitle() : _p->GetName());
       }
 
+      // hist->Draw(); -- now just draw the graph
 
-      //hist->Draw(); -- now just draw the graph
-
-      if(!sOpt.Contains("impact")) {
+      if (!sOpt.Contains("impact")) {
          for (int ii = 2; ii >= 1; ii--) {
             auto pullBox = new TGraphErrors;
             pullBox->SetName(TString::Format("%dsigmaBand", ii));
             pullBox->SetBit(kCanDelete);
             pullBox->SetPoint(0, (doHorizontal) ? -ii : -0.5, (doHorizontal) ? -0.5 : 0);
-            pullBox->SetPoint(1, (doHorizontal) ? ii : (_axis->GetNbins() - 0.5 - nUnconstrained), (doHorizontal) ? -0.5 : 0);
-            pullBox->SetPointError(0, 0, (doHorizontal)? (_axis->GetNbins() - nUnconstrained) : ii);
-            pullBox->SetPointError(1, 0, (doHorizontal)? (_axis->GetNbins() - nUnconstrained) : ii);
+            pullBox->SetPoint(1, (doHorizontal) ? ii : (_axis->GetNbins() - 0.5 - nUnconstrained),
+                              (doHorizontal) ? -0.5 : 0);
+            pullBox->SetPointError(0, 0, (doHorizontal) ? (_axis->GetNbins() - nUnconstrained) : ii);
+            pullBox->SetPointError(1, 0, (doHorizontal) ? (_axis->GetNbins() - nUnconstrained) : ii);
             pullBox->SetFillColor((ii == 2) ? kYellow : kGreen);
-            hist->GetListOfFunctions()->Add(pullBox, "3");//pullBox->Draw("3");
+            hist->GetListOfFunctions()->Add(pullBox, "3"); // pullBox->Draw("3");
          }
          auto pullLine = new TGraph;
          pullLine->SetName("0sigmaLine");
@@ -8879,7 +9077,7 @@ void xRooNode::Draw(Option_t *opt)
          pullLine->SetPoint(1, _axis->GetNbins() - 0.5, 0);
          pullLine->SetLineStyle(2);
          pullLine->SetEditable(false);
-         hist->GetListOfFunctions()->Add(pullLine, "l"); //pullLine->Draw("l");
+         hist->GetListOfFunctions()->Add(pullLine, "l"); // pullLine->Draw("l");
 
          // also draw vertical line separating constrained from unconstrained, if necessary
          if (nUnconstrained > 0) {
@@ -8890,107 +9088,127 @@ void xRooNode::Draw(Option_t *opt)
             pullLine->SetPoint(1, graph->GetN() - 0.5 - nUnconstrained, 100);
             pullLine->SetLineStyle(2);
             pullLine->SetEditable(false);
-            hist->GetListOfFunctions()->Add(pullLine, "l");//pullLine->Draw("l");
+            hist->GetListOfFunctions()->Add(pullLine, "l"); // pullLine->Draw("l");
          }
 
          // and draw a pave with fr status info
-         TPaveText* pave = new TPaveText(gPad->GetLeftMargin(), 1. - gPad->GetTopMargin(), 1. - gPad->GetRightMargin(), 0.98, "NDCNB");
-         pave->SetFillStyle(0);pave->SetBorderSize(0);pave->SetMargin(0.);
-         pave->SetName("status");pave->SetTextAlign(31);
-         pave->AddText(TString::Format("minNLL: %g  edm: %g",fr->minNll(),fr->edm()));
+         TPaveText *pave =
+            new TPaveText(gPad->GetLeftMargin(), 1. - gPad->GetTopMargin(), 1. - gPad->GetRightMargin(), 0.98, "NDCNB");
+         pave->SetFillStyle(0);
+         pave->SetBorderSize(0);
+         pave->SetMargin(0.);
+         pave->SetName("status");
+         pave->SetTextAlign(31);
+         pave->AddText(TString::Format("minNLL: %g  edm: %g", fr->minNll(), fr->edm()));
          std::string covQualTxt;
-         switch(fr->covQual()) {
-             case -1: covQualTxt = "Unknown"; break;
-             case 0: covQualTxt = "Not calculated"; break;
-             case 1: covQualTxt = "Approximate"; break;
-             case 2: covQualTxt = "Forced Positive-Definite"; break;
-             case 3: covQualTxt = "Accurate"; break;
+         switch (fr->covQual()) {
+         case -1: covQualTxt = "Unknown"; break;
+         case 0: covQualTxt = "Not calculated"; break;
+         case 1: covQualTxt = "Approximate"; break;
+         case 2: covQualTxt = "Forced Positive-Definite"; break;
+         case 3: covQualTxt = "Accurate"; break;
          }
-         pave->AddText(TString::Format("Cov. Quality: %d (%s)",fr->covQual(),covQualTxt.c_str()))->SetTextColor((fr->covQual()==3) ? kBlack : kRed);
+         pave->AddText(TString::Format("Cov. Quality: %d (%s)", fr->covQual(), covQualTxt.c_str()))
+            ->SetTextColor((fr->covQual() == 3) ? kBlack : kRed);
 
-          std::string statusCodes;
-          for(unsigned int i=0;i<fr->numStatusHistory();i++) {
-              statusCodes += TString::Format(" %s = %d",fr->statusLabelHistory(i),fr->statusCodeHistory(i));
-          }
-         pave->AddText(statusCodes.c_str())->SetTextColor(fr->status()==0 ? kBlack : kRed);
+         std::string statusCodes;
+         for (unsigned int i = 0; i < fr->numStatusHistory(); i++) {
+            statusCodes += TString::Format(" %s = %d", fr->statusLabelHistory(i), fr->statusCodeHistory(i));
+         }
+         pave->AddText(statusCodes.c_str())->SetTextColor(fr->status() == 0 ? kBlack : kRed);
 
          hist->GetListOfFunctions()->Add(pave);
 
       } else {
-         gPad->SetTicks(0,0); // ensure mirrored ticks aren't drawn in this pad
+         gPad->SetTicks(0, 0); // ensure mirrored ticks aren't drawn in this pad
 
-
-
-         if(doHorizontal) {
+         if (doHorizontal) {
             // ensure canvas height big enough
-            if(int(gPad->GetCanvas()->GetWh()) <  pNamesHist->GetNbinsX()*15) {
-               gPad->GetCanvas()->SetCanvasSize(gPad->GetCanvas()->GetWw(),pNamesHist->GetNbinsX()*15);
+            if (int(gPad->GetCanvas()->GetWh()) < pNamesHist->GetNbinsX() * 15) {
+               gPad->GetCanvas()->SetCanvasSize(gPad->GetCanvas()->GetWw(), pNamesHist->GetNbinsX() * 15);
             }
          }
 
-          double factor = 475./gPad->GetCanvas()->GetWh(); // Wh is the full canvas height, not window height
-         gPad->SetTopMargin(gStyle->GetPadTopMargin()*factor); // fixed margin height
-         gPad->SetBottomMargin(gStyle->GetPadBottomMargin()*factor); // fixed margin height
+         double factor = 475. / gPad->GetCanvas()->GetWh();      // Wh is the full canvas height, not window height
+         gPad->SetTopMargin(gStyle->GetPadTopMargin() * factor); // fixed margin height
+         gPad->SetBottomMargin(gStyle->GetPadBottomMargin() * factor); // fixed margin height
 
-
-         TGaxis *axis = new TGaxis(_axis->GetXmin(),-4,
-                                   _axis->GetXmin(), 4,-1.2*maxImpact,1.2*maxImpact,510,"-S");
+         TGaxis *axis =
+            new TGaxis(_axis->GetXmin(), -4, _axis->GetXmin(), 4, -1.2 * maxImpact, 1.2 * maxImpact, 510, "-S");
          axis->SetTextFont(_axis->GetTitleFont());
          axis->SetLabelFont(_axis->GetLabelFont());
-         axis->SetTextSize((axis->GetTextFont()%10>2) ? (10/factor) : ( (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10/factor))/(gPad->GetY2()-gPad->GetY1())));
-         axis->SetTitle(TString::Format("#Delta %s",fr->floatParsFinal().find(poiName.c_str())->GetTitle()));
-         axis->SetTickSize(axis->GetTickSize()*factor);
+         axis->SetTextSize((axis->GetTextFont() % 10 > 2) ? (10 / factor)
+                                                          : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) /
+                                                             (gPad->GetY2() - gPad->GetY1())));
+         axis->SetTitle(TString::Format("#Delta %s", fr->floatParsFinal().find(poiName.c_str())->GetTitle()));
+         axis->SetTickSize(axis->GetTickSize() * factor);
 
-
-
-         if(doHorizontal) {
-            axis->SetLabelSize((axis->GetLabelFont()%10>2) ? (10/factor) : ( (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10/factor))/(gPad->GetY2()-gPad->GetY1())) );
-            //axis->SetTextSize(axis->GetTextSize()*factor);
-            axis->SetTitleSize((axis->GetTextFont()%10>2) ? (10/factor) : ( (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10/factor))/(gPad->GetY2()-gPad->GetY1())));
-            axis->SetTitleOffset(axis->GetTitleOffset()*factor);
-            //axis->SetLabelOffset(axis->GetLabelOffset()*factor);
-            _axis->SetLabelSize((_axis->GetLabelFont()%10>2) ? (10/factor) : ( (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10/factor))/(gPad->GetY2()-gPad->GetY1())));
-            histCopy->GetXaxis()->SetTickLength(histCopy->GetXaxis()->GetTickLength()*factor);
-            hist->GetXaxis()->SetTickLength(hist->GetXaxis()->GetTickLength()*factor);
-             histCopy->GetYaxis()->SetTickLength(histCopy->GetYaxis()->GetTickLength()*factor);
-             hist->GetYaxis()->SetTickLength(hist->GetYaxis()->GetTickLength()*factor);
-             histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset()*factor);
-             histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset()*factor);
-             hist->GetXaxis()->SetTitleOffset(hist->GetXaxis()->GetTitleOffset()*factor);
-             hist->GetXaxis()->SetLabelOffset(hist->GetXaxis()->GetLabelOffset()*factor);
-            histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset()*factor);
-            histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset()*factor);
+         if (doHorizontal) {
+            axis->SetLabelSize(
+               (axis->GetLabelFont() % 10 > 2)
+                  ? (10 / factor)
+                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) / (gPad->GetY2() - gPad->GetY1())));
+            // axis->SetTextSize(axis->GetTextSize()*factor);
+            axis->SetTitleSize(
+               (axis->GetTextFont() % 10 > 2)
+                  ? (10 / factor)
+                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) / (gPad->GetY2() - gPad->GetY1())));
+            axis->SetTitleOffset(axis->GetTitleOffset() * factor);
+            // axis->SetLabelOffset(axis->GetLabelOffset()*factor);
+            _axis->SetLabelSize(
+               (_axis->GetLabelFont() % 10 > 2)
+                  ? (10 / factor)
+                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) / (gPad->GetY2() - gPad->GetY1())));
+            histCopy->GetXaxis()->SetTickLength(histCopy->GetXaxis()->GetTickLength() * factor);
+            hist->GetXaxis()->SetTickLength(hist->GetXaxis()->GetTickLength() * factor);
+            histCopy->GetYaxis()->SetTickLength(histCopy->GetYaxis()->GetTickLength() * factor);
+            hist->GetYaxis()->SetTickLength(hist->GetYaxis()->GetTickLength() * factor);
+            histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset() * factor);
+            histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset() * factor);
+            hist->GetXaxis()->SetTitleOffset(hist->GetXaxis()->GetTitleOffset() * factor);
+            hist->GetXaxis()->SetLabelOffset(hist->GetXaxis()->GetLabelOffset() * factor);
+            histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset() * factor);
+            histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset() * factor);
          }
 
          // create impact bar charts
-         for(int tt = 0; tt < 2; tt++) {
-            auto impact = static_cast<TH1 *>(graph->GetHistogram()->Clone(TString::Format("%s_impact+",tt==0?"prefit":"postfit")));
+         for (int tt = 0; tt < 2; tt++) {
+            auto impact = static_cast<TH1 *>(
+               graph->GetHistogram()->Clone(TString::Format("%s_impact+", tt == 0 ? "prefit" : "postfit")));
             impact->SetDirectory(0);
             impact->GetYaxis()->SetTitle(TString::Format("#Delta%s/#sigma", poiName.c_str()));
             impact->SetBarWidth(0.9);
             impact->SetBarOffset(0.05);
             impact->SetLineColor(kBlack);
             impact->SetFillColor(kAzure - 4);
-            impact->SetFillStyle(tt==0 ? 3013 : 1001);
-            auto impact2 = static_cast<TH1 *>(impact->Clone(TString::Format("%s_impact-",tt==0?"prefit":"postfit")));
+            impact->SetFillStyle(tt == 0 ? 3013 : 1001);
+            auto impact2 =
+               static_cast<TH1 *>(impact->Clone(TString::Format("%s_impact-", tt == 0 ? "prefit" : "postfit")));
             impact2->SetDirectory(0);
             impact2->SetFillColor(kCyan);
             for (int ii = 1; ii <= pNamesHist->GetNbinsX(); ii++) {
-               for (auto &c: covariances) {
-                  if (c.second != pNamesHist->GetXaxis()->GetBinLabel(ii)) continue;
+               for (auto &c : covariances) {
+                  if (c.second != pNamesHist->GetXaxis()->GetBinLabel(ii))
+                     continue;
                   auto vv = dynamic_cast<RooRealVar *>(fr->floatParsFinal().find(c.second.c_str()));
                   auto vv_init = dynamic_cast<RooRealVar *>(fr->floatParsInit().find(c.second.c_str()));
-                  impact->SetBinContent(ii, ((tt==0&&!vv_init->hasError())||!vv->hasError()) ? 0. : c.first * vv->getError() / vv->getErrorHi() * (tt==0 ? (vv_init->getErrorHi()/vv->getErrorHi()) : 1.));
-                  impact2->SetBinContent(ii, ((tt==0&&!vv_init->hasError())||!vv->hasError()) ? 0. : c.first * vv->getError() / vv->getErrorLo() * (tt==0 ? (vv_init->getErrorLo()/vv->getErrorLo()) : 1.));
+                  impact->SetBinContent(ii, ((tt == 0 && !vv_init->hasError()) || !vv->hasError())
+                                               ? 0.
+                                               : c.first * vv->getError() / vv->getErrorHi() *
+                                                    (tt == 0 ? (vv_init->getErrorHi() / vv->getErrorHi()) : 1.));
+                  impact2->SetBinContent(ii, ((tt == 0 && !vv_init->hasError()) || !vv->hasError())
+                                                ? 0.
+                                                : c.first * vv->getError() / vv->getErrorLo() *
+                                                     (tt == 0 ? (vv_init->getErrorLo() / vv->getErrorLo()) : 1.));
                }
             }
             hist->GetListOfFunctions()->Add(impact, (doHorizontal) ? "hbarsamemin0" : "bsamey+");
             hist->GetListOfFunctions()->Add(impact2, (doHorizontal) ? "hbarsamemin0" : "bsamey+");
          }
          // add three lines
-         for(int ii=-1;ii<=1;ii++) {
+         for (int ii = -1; ii <= 1; ii++) {
             auto pullLine = new TGraph;
-            pullLine->SetName(TString::Format("%dsigmaLine",ii));
+            pullLine->SetName(TString::Format("%dsigmaLine", ii));
             pullLine->SetBit(kCanDelete);
             pullLine->SetPoint(0, -0.5, ii);
             pullLine->SetPoint(1, hist->GetNbinsY() - 0.5, ii);
@@ -8998,39 +9216,52 @@ void xRooNode::Draw(Option_t *opt)
             pullLine->SetEditable(false);
             hist->GetListOfFunctions()->Add(pullLine, "l");
          }
-          hist->GetListOfFunctions()->Add(axis); // draw axis last
-          TLegend* leg1 = new TLegend(0.02,doHorizontal ? (1.-0.22*factor) : 0.02,0.27,(doHorizontal ? 1. : 0.24));
-          leg1->SetFillStyle(0);leg1->SetBorderSize(0);leg1->SetMargin(0.25);leg1->SetNColumns(2);
+         hist->GetListOfFunctions()->Add(axis); // draw axis last
+         TLegend *leg1 =
+            new TLegend(0.02, doHorizontal ? (1. - 0.22 * factor) : 0.02, 0.27, (doHorizontal ? 1. : 0.24));
+         leg1->SetFillStyle(0);
+         leg1->SetBorderSize(0);
+         leg1->SetMargin(0.25);
+         leg1->SetNColumns(2);
 
-          leg1->SetTextSize((leg1->GetTextFont()%10>2) ? (10/factor) : ( (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10/factor))/(gPad->GetY2()-gPad->GetY1())));
-          //leg1.SetTextFont(gStyle->GetTextFont());
-          //leg1.SetTextSize(gStyle->GetTextSize());
-         leg1->AddEntry((TObject*)nullptr,"Hessian Pre-fit","");leg1->AddEntry((TObject*)nullptr,"Impact:","");
-          leg1->AddEntry(hist->FindObject("prefit_impact+"),"#theta = #hat{#theta}+#Delta#theta","f");
-          leg1->AddEntry(hist->FindObject("prefit_impact-"),"#theta = #hat{#theta}-#Delta#theta","f");
-          leg1->AddEntry((TObject*)nullptr,"Hessian Post-fit","");
-          leg1->AddEntry((TObject*)nullptr,"Impact:","");
-          leg1->AddEntry(hist->FindObject("postfit_impact+"),"#theta = #hat{#theta}+#Delta#theta","f");
-          leg1->AddEntry(hist->FindObject("postfit_impact-"),"#theta = #hat{#theta}-#Delta#theta","f");
+         leg1->SetTextSize((leg1->GetTextFont() % 10 > 2) ? (10 / factor)
+                                                          : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) /
+                                                             (gPad->GetY2() - gPad->GetY1())));
+         // leg1.SetTextFont(gStyle->GetTextFont());
+         // leg1.SetTextSize(gStyle->GetTextSize());
+         leg1->AddEntry((TObject *)nullptr, "Hessian Pre-fit", "");
+         leg1->AddEntry((TObject *)nullptr, "Impact:", "");
+         leg1->AddEntry(hist->FindObject("prefit_impact+"), "#theta = #hat{#theta}+#Delta#theta", "f");
+         leg1->AddEntry(hist->FindObject("prefit_impact-"), "#theta = #hat{#theta}-#Delta#theta", "f");
+         leg1->AddEntry((TObject *)nullptr, "Hessian Post-fit", "");
+         leg1->AddEntry((TObject *)nullptr, "Impact:", "");
+         leg1->AddEntry(hist->FindObject("postfit_impact+"), "#theta = #hat{#theta}+#Delta#theta", "f");
+         leg1->AddEntry(hist->FindObject("postfit_impact-"), "#theta = #hat{#theta}-#Delta#theta", "f");
 
-          hist->GetListOfFunctions()->Add(leg1);
-          if(gStyle->GetOptTitle()) {
-             histCopy->SetBit(TH1::kNoTitle);
-             TPaveText* title = new TPaveText(gPad->GetLeftMargin(), 1.-gPad->AbsPixeltoY(14), 1.-gPad->GetRightMargin(), 1., "NDC" );
-             title->ConvertNDCtoPad();
-             title->SetY1NDC(1. - gPad->GetTopMargin()*0.6);title->SetY2NDC(1);
-             title->SetTextSize((title->GetTextFont()%10>2) ? (14/factor) : ( (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10/factor))/(gPad->GetY2()-gPad->GetY1())));
-             title->SetFillStyle(0);title->SetBorderSize(0);
-             title->AddText(histCopy->GetTitle());
-             hist->GetListOfFunctions()->Add(title);
-          }
+         hist->GetListOfFunctions()->Add(leg1);
+         if (gStyle->GetOptTitle()) {
+            histCopy->SetBit(TH1::kNoTitle);
+            TPaveText *title =
+               new TPaveText(gPad->GetLeftMargin(), 1. - gPad->AbsPixeltoY(14), 1. - gPad->GetRightMargin(), 1., "NDC");
+            title->ConvertNDCtoPad();
+            title->SetY1NDC(1. - gPad->GetTopMargin() * 0.6);
+            title->SetY2NDC(1);
+            title->SetTextSize(
+               (title->GetTextFont() % 10 > 2)
+                  ? (14 / factor)
+                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) / (gPad->GetY2() - gPad->GetY1())));
+            title->SetFillStyle(0);
+            title->SetBorderSize(0);
+            title->AddText(histCopy->GetTitle());
+            hist->GetListOfFunctions()->Add(title);
+         }
       }
 
-
       graph->SetEditable(false);
-      pNamesHist->SetLineWidth(0);pNamesHist->SetMarkerSize(0);
-      graph->GetListOfFunctions()->Add(pNamesHist,"same"); //graph->SetHistogram(pNamesHist);
-      if(doHorizontal) {
+      pNamesHist->SetLineWidth(0);
+      pNamesHist->SetMarkerSize(0);
+      graph->GetListOfFunctions()->Add(pNamesHist, "same"); // graph->SetHistogram(pNamesHist);
+      if (doHorizontal) {
 
          // flip the graph and contained graphs
          for (int p = 0; p < graph->GetN(); p++) {
@@ -9038,49 +9269,58 @@ void xRooNode::Draw(Option_t *opt)
             graph->SetPointError(p, graph->GetErrorYlow(p), graph->GetErrorYhigh(p), graph->GetErrorXlow(p),
                                  graph->GetErrorXhigh(p));
          }
-         for (auto f: *hist->GetListOfFunctions()) {
+         for (auto f : *hist->GetListOfFunctions()) {
             if (f->InheritsFrom("TH1")) {
-               //f->Draw("hbarsamemin0");
+               // f->Draw("hbarsamemin0");
             } /*else if (auto g2 = dynamic_cast<TGraphErrors *>(f)) {
                for (int p = 0; p < g2->GetN(); p++) {
                   g2->SetPoint(p, g2->GetPointY(p), g2->GetPointX(p));
                   g2->SetPointError(p, g2->GetErrorY(p), _axis->GetNbins());
                }
                //g2->Draw("3");
-            } */else if (auto g = dynamic_cast<TGraph *>(f)) {
+            } */
+            else if (auto g = dynamic_cast<TGraph *>(f)) {
                for (int p = 0; p < g->GetN(); p++) {
                   g->SetPoint(p, g->GetPointY(p), g->GetPointX(p));
                }
-               //g->Draw("l");
+               // g->Draw("l");
             } else if (auto l = dynamic_cast<TLine *>(f)) {
                l->SetX1(l->GetY1());
                l->SetX2(l->GetY2());
                l->SetY1(_axis->GetXmax());
                l->SetY2(_axis->GetXmax());
-               //l->Draw();
+               // l->Draw();
             }
          }
       }
 
       graph->SetName("pulls");
-      hist->GetListOfFunctions()->Add(graph,"z0p");
-      //hist->GetListOfFunctions()->Add(histCopy->Clone(".axis"),(sOpt.Contains("impact") && !doHorizontal)?"axissamey+":"axissame"); // doesn't display right when zoom the axis
-      if(!hasSame) histCopy->Draw((sOpt.Contains("impact") && !doHorizontal)?"axisy+":"axis"); // draws the axis, called ".axis" for easy access
+      hist->GetListOfFunctions()->Add(graph, "z0p");
+      // hist->GetListOfFunctions()->Add(histCopy->Clone(".axis"),(sOpt.Contains("impact") &&
+      // !doHorizontal)?"axissamey+":"axissame"); // doesn't display right when zoom the axis
+      if (!hasSame)
+         histCopy->Draw((sOpt.Contains("impact") && !doHorizontal)
+                           ? "axisy+"
+                           : "axis"); // draws the axis, called ".axis" for easy access
       hist->Draw("same");
-//
-//      if(sOpt.Contains("impact")) {
-//         // make main object the histogram
-//         auto h = (TH1*)graph->GetHistogram()->Clone("impact");
-//         graph->GetListOfFunctions()->RemoveAll();
-//         for(int ii=1;ii<=h->GetNbinsX();ii++) h->SetBinContent(ii,-4);
-//         h->GetListOfFunctions()->Add(graph,"z0p");
-//         h->Draw("hbar");
-//      } else {
-//         graph->Draw(sOpt.Contains("impact") ? "az0py+" : "az0p");
-//      }
-      auto hh = dynamic_cast<TH1*>(histCopy->Clone(".axiscopy"));
+      //
+      //      if(sOpt.Contains("impact")) {
+      //         // make main object the histogram
+      //         auto h = (TH1*)graph->GetHistogram()->Clone("impact");
+      //         graph->GetListOfFunctions()->RemoveAll();
+      //         for(int ii=1;ii<=h->GetNbinsX();ii++) h->SetBinContent(ii,-4);
+      //         h->GetListOfFunctions()->Add(graph,"z0p");
+      //         h->Draw("hbar");
+      //      } else {
+      //         graph->Draw(sOpt.Contains("impact") ? "az0py+" : "az0p");
+      //      }
+      auto hh = dynamic_cast<TH1 *>(histCopy->Clone(".axiscopy"));
       hh->SetDirectory(0);
-      hh->SetBit(kCanDelete); hh->Draw((sOpt.Contains("impact") && !doHorizontal)?"axissamey+":"axissame"); // overlay axis again -- important is last so can remove if don't pad->Update before reclear
+      hh->SetBit(kCanDelete);
+      hh->Draw(
+         (sOpt.Contains("impact") && !doHorizontal)
+            ? "axissamey+"
+            : "axissame"); // overlay axis again -- important is last so can remove if don't pad->Update before reclear
       gPad->Modified();
       oldPad->cd();
       // gPad->Update();
@@ -9132,13 +9372,15 @@ void xRooNode::Draw(Option_t *opt)
       if (!dataGraph)
          return;
 
-      dataGraph->SetBit(kCanDelete); // will be be deleted when pad is cleared
-      dataGraph->SetMarkerSize(dataGraph->GetMarkerSize()*gPad->GetWNDC()); // scale marker sizes to pad size
+      dataGraph->SetBit(kCanDelete);                                          // will be be deleted when pad is cleared
+      dataGraph->SetMarkerSize(dataGraph->GetMarkerSize() * gPad->GetWNDC()); // scale marker sizes to pad size
 
       if (s && !s->get<RooAbsPdf>()->canBeExtended()) {
-          // normalize dataGraph to 1
-          double tot = 0; for(int i=0;i<dataGraph->GetN();i++) tot += dataGraph->GetPointY(i);
-          dataGraph->Scale(1./tot);
+         // normalize dataGraph to 1
+         double tot = 0;
+         for (int i = 0; i < dataGraph->GetN(); i++)
+            tot += dataGraph->GetPointY(i);
+         dataGraph->Scale(1. / tot);
       }
 
       if (!hasSame) {
@@ -9243,11 +9485,11 @@ void xRooNode::Draw(Option_t *opt)
          return;
       std::vector<double> valuesToDo = {initPar->getVal()};
       if (initPar->hasError() || initPar->hasAsymError()) {
-         valuesToDo.push_back(initPar->getVal()+initPar->getErrorLo());
-         valuesToDo.push_back(initPar->getVal()+initPar->getErrorHi());
+         valuesToDo.push_back(initPar->getVal() + initPar->getErrorLo());
+         valuesToDo.push_back(initPar->getVal() + initPar->getErrorHi());
       }
-      int ii=0;
-      for(auto valueToDo : valuesToDo) {
+      int ii = 0;
+      for (auto valueToDo : valuesToDo) {
          ii++;
          for (auto &d : _dsets) {
             if (!d->get()->TestBit(1 << 20))
@@ -9275,7 +9517,8 @@ void xRooNode::Draw(Option_t *opt)
 
                if (x) {
                   auto val = _nll.pars()->getRealValue(initPar->GetName());
-                  if (ii>1) _nll.pars()->setRealValue(initPar->GetName(), valueToDo);
+                  if (ii > 1)
+                     _nll.pars()->setRealValue(initPar->GetName(), valueToDo);
                   auto nllVal = _nll.getEntryVal(i);
                   _nll.pars()->setRealValue(initPar->GetName(), initPar->getVal());
                   auto nllVal2 = _nll.getEntryVal(i);
@@ -9286,7 +9529,8 @@ void xRooNode::Draw(Option_t *opt)
             // include the extendedTerm, distributed evenly over the bins
             // probably should be somehow dependent on data density though (i.e. bins with more data get more of it?)
             auto val = _nll.pars()->getRealValue(initPar->GetName());
-            if (ii>1) _nll.pars()->setRealValue(initPar->GetName(), valueToDo);
+            if (ii > 1)
+               _nll.pars()->setRealValue(initPar->GetName(), valueToDo);
             auto _extTerm = _nll.extendedTerm();
             _nll.pars()->setRealValue(initPar->GetName(), initPar->getVal());
             auto _extTerm2 = _nll.extendedTerm();
@@ -9297,10 +9541,13 @@ void xRooNode::Draw(Option_t *opt)
                emptyHist->SetBinError(i, 0);
             }
             emptyHist->GetYaxis()->SetTitle("log (L(#theta)/L(#theta_{0}))");
-            emptyHist->SetTitle(TString::Format("#theta = %g",(ii>1) ? valueToDo : val));
-            if (ii==1) emptyHist->SetLineColor(kBlack);
-            if (ii==2) emptyHist->SetLineColor(kRed);
-            else if(ii==3) emptyHist->SetLineColor(kBlue);
+            emptyHist->SetTitle(TString::Format("#theta = %g", (ii > 1) ? valueToDo : val));
+            if (ii == 1)
+               emptyHist->SetLineColor(kBlack);
+            if (ii == 2)
+               emptyHist->SetLineColor(kRed);
+            else if (ii == 3)
+               emptyHist->SetLineColor(kBlue);
             emptyHist->Draw(_drawn ? "same" : "");
             _drawn = true;
          }
@@ -9309,16 +9556,16 @@ void xRooNode::Draw(Option_t *opt)
    }
 
    auto rar = get<RooAbsReal>();
-   const xRooNode* rarNode = this;
+   const xRooNode *rarNode = this;
    if (!rar) {
       get()->Draw();
       return;
    }
-   RooAbsReal* sf = nullptr;
+   RooAbsReal *sf = nullptr;
    if (get()->InheritsFrom("RooExtendPdf")) {
       browse();
       rarNode = find(".pdf").get();
-      //rar = rarNode->get<RooAbsReal>();
+      // rar = rarNode->get<RooAbsReal>();
       sf = find(".n")->get<RooAbsReal>();
    }
 
@@ -9335,33 +9582,32 @@ void xRooNode::Draw(Option_t *opt)
       h->GetXaxis()->SetName("xaxis"); // WARNING -- this messes up anywhere we GetXaxis()->GetName()
    }
 
-    if (rar->InheritsFrom("RooAbsPdf") && !(rar->InheritsFrom("RooRealSumPdf") || rar->InheritsFrom("RooAddPdf"))) {
-        // append parameter values to title if has such
-        RooArgSet s;
-        rar->leafNodeServerList(&s);
-        if (v)
-            s.remove(*dynamic_cast<RooAbsArg *>(v));
-        if (!s.empty()) {
-            TString ss = h->GetTitle();
-            ss += " [";
-            bool first = true;
-            for (auto _p : s) {
-                auto _v = dynamic_cast<RooRealVar *>(_p);
-                if (!_v)
-                    continue;
-                if (!first)
-                    ss += ",";
-                first = false;
-                ss += TString::Format("%s=%g", strlen(_p->GetTitle()) ? _p->GetTitle() : _p->GetName(), _v->getVal());
-                if (_v->hasError()) {
-                    ss += TString::Format("#pm %g",_v->getError());
-                }
+   if (rar->InheritsFrom("RooAbsPdf") && !(rar->InheritsFrom("RooRealSumPdf") || rar->InheritsFrom("RooAddPdf"))) {
+      // append parameter values to title if has such
+      RooArgSet s;
+      rar->leafNodeServerList(&s);
+      if (v)
+         s.remove(*dynamic_cast<RooAbsArg *>(v));
+      if (!s.empty()) {
+         TString ss = h->GetTitle();
+         ss += " [";
+         bool first = true;
+         for (auto _p : s) {
+            auto _v = dynamic_cast<RooRealVar *>(_p);
+            if (!_v)
+               continue;
+            if (!first)
+               ss += ",";
+            first = false;
+            ss += TString::Format("%s=%g", strlen(_p->GetTitle()) ? _p->GetTitle() : _p->GetName(), _v->getVal());
+            if (_v->hasError()) {
+               ss += TString::Format("#pm %g", _v->getError());
             }
-            ss += "]";
-            h->SetTitle(ss);
-        }
-    }
-
+         }
+         ss += "]";
+         h->SetTitle(ss);
+      }
+   }
 
    if (!hasSame) {
       if (obs().find(vv->GetName())) {
@@ -9370,15 +9616,15 @@ void xRooNode::Draw(Option_t *opt)
          gPad->SetGrid(1, 1);
       }
    }
-   TString dOpt = (TString(rar->ClassName()).Contains("Hist") || rar->isBinnedDistribution(*vv) || h->GetNbinsX()==1 ||
-                   rar->getAttribute("BinnedLikelihood") ||
+   TString dOpt = (TString(rar->ClassName()).Contains("Hist") || rar->isBinnedDistribution(*vv) ||
+                   h->GetNbinsX() == 1 || rar->getAttribute("BinnedLikelihood") ||
                    (dynamic_cast<RooAbsRealLValue *>(vv) &&
                     std::unique_ptr<std::list<double>>(rar->binBoundaries(*dynamic_cast<RooAbsRealLValue *>(vv),
                                                                           -std::numeric_limits<double>::infinity(),
                                                                           std::numeric_limits<double>::infinity()))))
                      ? ""
                      : "LF2";
-   if (auto d = dynamic_cast<RooHistFunc*>(rar); d && !d->isBinnedDistribution(*vv) && h->GetNbinsX()!=1) {
+   if (auto d = dynamic_cast<RooHistFunc *>(rar); d && !d->isBinnedDistribution(*vv) && h->GetNbinsX() != 1) {
       dOpt = "LF2"; // hist func is interpolated, so draw it as such
    }
    if (dOpt == "LF2" && !components().empty()) {
@@ -9394,7 +9640,6 @@ void xRooNode::Draw(Option_t *opt)
       if (allHist)
          dOpt = "";
    }
-
 
    if (rar == vv && rar->IsA() == RooRealVar::Class()) {
       dOpt += "TEXT";
@@ -9454,19 +9699,22 @@ void xRooNode::Draw(Option_t *opt)
       dOpt = "TEXT";
       auto node = new xRooNode(*this);
       auto _hist = (errHist) ? errHist : h;
-      auto hCopy = (errHist) ? nullptr : dynamic_cast<TH1*>(h->Clone());
-      if(hCopy) hCopy->SetDirectory(0);
+      auto hCopy = (errHist) ? nullptr : dynamic_cast<TH1 *>(h->Clone());
+      if (hCopy)
+         hCopy->SetDirectory(0);
       _hist->GetListOfFunctions()->Add(node);
       _hist->GetListOfFunctions()->Add(new TExec(
          ".update",
          TString::Format(
-            "gROOT->SetEditHistograms(true);auto h = dynamic_cast<TH1*>(gPad->GetPrimitive(\"%s\")); if(h) { double range= h->GetMaximum()-h->GetMinimum(); if(auto n "
+            "gROOT->SetEditHistograms(true);auto h = dynamic_cast<TH1*>(gPad->GetPrimitive(\"%s\")); if(h) { double "
+            "range= h->GetMaximum()-h->GetMinimum(); if(auto n "
             "= dynamic_cast<xRooNode*>(h->GetListOfFunctions()->FindObject(\"%s\")); n && "
             "n->TestBit(TObject::kNotDeleted) && n->get<RooRealVar>()->getVal() != h->GetBinContent(1)) {"
             "h->SetBinContent(1, "
             "TString::Format(\"%%.2g\",int(h->GetBinContent(1)/(range*0.01))*range*0.01).Atof());n->SetContent( "
             "h->GetBinContent(1) ); for(auto pp : *h->GetListOfFunctions()) if(auto hh = "
-            "dynamic_cast<TH1*>(pp))hh->SetBinContent(1,h->GetBinContent(1));} if(h->GetBinContent(1)==0.) h->SetBinContent(1,range*0.005); gPad->Modified();gPad->Update(); }",
+            "dynamic_cast<TH1*>(pp))hh->SetBinContent(1,h->GetBinContent(1));} if(h->GetBinContent(1)==0.) "
+            "h->SetBinContent(1,range*0.005); gPad->Modified();gPad->Update(); }",
             _hist->GetName(), node->GetName())));
       if (errHist) {
          errHist->GetListOfFunctions()->Add(h, "TEXT HIST same");
@@ -9477,7 +9725,7 @@ void xRooNode::Draw(Option_t *opt)
          _hist->SetBinError(1, 0);
       }
       _hist->SetStats(false);
-      //if (_hist->GetBinContent(1)==0.) _hist->SetBinContent(1,(_hist->GetMaximum()-_hist->GetMinimum())*0.005);
+      // if (_hist->GetBinContent(1)==0.) _hist->SetBinContent(1,(_hist->GetMaximum()-_hist->GetMinimum())*0.005);
       _hist->Draw(((errHist) ? "e2" : ""));
       gPad->Modified();
       return;
@@ -9520,11 +9768,11 @@ void xRooNode::Draw(Option_t *opt)
          //            (TAttFill&)(*h) = *(gROOT->GetStyle(h->GetTitle()) ? gROOT->GetStyle(h->GetTitle()) : gStyle);
          //            (TAttMarker&)(*h) = *(gROOT->GetStyle(h->GetTitle()) ? gROOT->GetStyle(h->GetTitle()) : gStyle);
          auto _style = style(h);
-         rar->setStringAttribute("style",oldStyle=="" ? nullptr : oldStyle.Data()); // restores old style
-         if(_style) {
-            (TAttLine &) (*h) = *_style;
-            (TAttFill &) (*h) = *_style;
-            (TAttMarker &) (*h) = *_style;
+         rar->setStringAttribute("style", oldStyle == "" ? nullptr : oldStyle.Data()); // restores old style
+         if (_style) {
+            (TAttLine &)(*h) = *_style;
+            (TAttFill &)(*h) = *_style;
+            (TAttMarker &)(*h) = *_style;
          }
          h->Draw(dOpt);
          if (errHist) {
@@ -9535,7 +9783,7 @@ void xRooNode::Draw(Option_t *opt)
       }
    } else {
       auto _style = style(h);
-      if(_style) {
+      if (_style) {
          (TAttLine &)(*h) = *_style;
          (TAttFill &)(*h) = *_style;
          (TAttMarker &)(*h) = *_style;
@@ -9549,192 +9797,203 @@ void xRooNode::Draw(Option_t *opt)
 
    if (!hasOverlay && (rarNode->get()->InheritsFrom("RooRealSumPdf") || rarNode->get()->InheritsFrom("RooAddPdf"))) {
       // build a stack unless not requested
-      if(!nostack) {
-          THStack *stack = new THStack(TString::Format("%s_stack", rar->GetName()),
-                                       TString::Format("%s;%s", rar->GetTitle(), h->GetXaxis()->GetTitle()));
-          int count = 2;
-          std::map<std::string, int> colorByTitle; // TODO: should fill from any existing legend
-          std::set<std::string> allTitles;
-          bool titleMatchName = true;
-          std::map<std::string, TH1 *> histGroups;
-          std::vector<TH1 *> hhs;
+      if (!nostack) {
+         THStack *stack = new THStack(TString::Format("%s_stack", rar->GetName()),
+                                      TString::Format("%s;%s", rar->GetTitle(), h->GetXaxis()->GetTitle()));
+         int count = 2;
+         std::map<std::string, int> colorByTitle; // TODO: should fill from any existing legend
+         std::set<std::string> allTitles;
+         bool titleMatchName = true;
+         std::map<std::string, TH1 *> histGroups;
+         std::vector<TH1 *> hhs;
 
-          // support for CMS model case where has single component containing many coeffs
-          // will build stack by setting each coeff equal to 0 in turn, rebuilding the histogram
-          // the difference from the "full" histogram will be the component
-          RooArgList cms_coefs;
-          if(!rarNode->components().empty()) {
-             auto comps = rarNode->components()[0];
-             for (auto &c: *comps) {
-                if (c->fFolder == "!.coeffs")
-                   cms_coefs.add(*c->get<RooAbsArg>());
-             }
-          }
-          if (!cms_coefs.empty()) {
-                RooRealVar zero("zero", "", 0);
-                std::shared_ptr<TH1> prevHist((TH1 *)h->Clone());
-                for (auto c : cms_coefs) {
-                   // seems I have to remake the function each time, as haven't figured out what cache needs clearing?
-                   std::unique_ptr<RooAbsReal> f(dynamic_cast<RooAbsReal *>(rarNode->components()[0]->get()->Clone("tmpCopy")));
-                   zero.setAttribute(
-                      Form("ORIGNAME:%s", c->GetName()));            // used in redirectServers to say what this replaces
-                   f->redirectServers(RooArgSet(zero), false, true); // each time will replace one additional coef
-                   // zero.setAttribute(Form("ORIGNAME:%s",c->GetName()),false); (commented out so that on next iteration
-                   // will still replace all prev)
-                   auto hh = xRooNode(*f, *this).BuildHistogram(v);
-                   if (sf) hh->Scale(sf->getVal());
-                   if (strlen(hh->GetTitle()) == 0)
-                      hh->SetTitle(c->GetName()); // ensure all hists has titles
-                   titleMatchName &= (TString(c->GetName()) == hh->GetTitle() ||
-                                      TString(hh->GetTitle()).BeginsWith(TString(c->GetName()) + "_"));
-                   std::shared_ptr<TH1> nextHist((TH1 *)hh->Clone());
-                   hh->Add(prevHist.get(), -1.);
-                   hh->Scale(-1.);
-                   hhs.push_back(hh);
-                   prevHist = nextHist;
-                }
-          } else {
-             for (auto &samp : rarNode->components()) {
-                auto hh = samp->BuildHistogram(v);
-                if (sf) hh->Scale(sf->getVal());
-                hhs.push_back(hh);
-                if (strlen(hh->GetTitle()) == 0)
-                   hh->SetTitle(samp->GetName()); // ensure all hists has titles
-                titleMatchName &= (TString(samp->GetName()) == hh->GetTitle() ||
-                                   TString(hh->GetTitle()).BeginsWith(TString(samp->GetName()) + "_"));
-             }
-          }
-          for (auto &hh : hhs) {
-             // automatically group hists that all have the same title
-             if (histGroups.find(hh->GetTitle()) == histGroups.end()) {
-                histGroups[hh->GetTitle()] = hh;
-             } else {
-                // add it into this group
-                histGroups[hh->GetTitle()]->Add(hh);
-                delete hh;
-                continue;
-             }
-             auto hhMin = (hh->GetMinimum() == 0) ? hh->GetMinimum(1e-9) : hh->GetMinimum();
-             if (!stack->GetHists() && h->GetMinimum() > hhMin) {
-                auto newMin = hhMin - (h->GetMaximum() - hhMin) * gStyle->GetHistTopMargin();
-                if (hhMin >= 0 && newMin < 0)
-                   newMin = hhMin * 0.99;
-                adjustYRange(newMin, h->GetMaximum());
-             }
+         // support for CMS model case where has single component containing many coeffs
+         // will build stack by setting each coeff equal to 0 in turn, rebuilding the histogram
+         // the difference from the "full" histogram will be the component
+         RooArgList cms_coefs;
+         if (!rarNode->components().empty()) {
+            auto comps = rarNode->components()[0];
+            for (auto &c : *comps) {
+               if (c->fFolder == "!.coeffs")
+                  cms_coefs.add(*c->get<RooAbsArg>());
+            }
+         }
+         if (!cms_coefs.empty()) {
+            RooRealVar zero("zero", "", 0);
+            std::shared_ptr<TH1> prevHist((TH1 *)h->Clone());
+            for (auto c : cms_coefs) {
+               // seems I have to remake the function each time, as haven't figured out what cache needs clearing?
+               std::unique_ptr<RooAbsReal> f(
+                  dynamic_cast<RooAbsReal *>(rarNode->components()[0]->get()->Clone("tmpCopy")));
+               zero.setAttribute(
+                  Form("ORIGNAME:%s", c->GetName()));            // used in redirectServers to say what this replaces
+               f->redirectServers(RooArgSet(zero), false, true); // each time will replace one additional coef
+               // zero.setAttribute(Form("ORIGNAME:%s",c->GetName()),false); (commented out so that on next iteration
+               // will still replace all prev)
+               auto hh = xRooNode(*f, *this).BuildHistogram(v);
+               if (sf)
+                  hh->Scale(sf->getVal());
+               if (strlen(hh->GetTitle()) == 0)
+                  hh->SetTitle(c->GetName()); // ensure all hists has titles
+               titleMatchName &= (TString(c->GetName()) == hh->GetTitle() ||
+                                  TString(hh->GetTitle()).BeginsWith(TString(c->GetName()) + "_"));
+               std::shared_ptr<TH1> nextHist((TH1 *)hh->Clone());
+               hh->Add(prevHist.get(), -1.);
+               hh->Scale(-1.);
+               hhs.push_back(hh);
+               prevHist = nextHist;
+            }
+         } else {
+            for (auto &samp : rarNode->components()) {
+               auto hh = samp->BuildHistogram(v);
+               if (sf)
+                  hh->Scale(sf->getVal());
+               hhs.push_back(hh);
+               if (strlen(hh->GetTitle()) == 0)
+                  hh->SetTitle(samp->GetName()); // ensure all hists has titles
+               titleMatchName &= (TString(samp->GetName()) == hh->GetTitle() ||
+                                  TString(hh->GetTitle()).BeginsWith(TString(samp->GetName()) + "_"));
+            }
+         }
+         for (auto &hh : hhs) {
+            // automatically group hists that all have the same title
+            if (histGroups.find(hh->GetTitle()) == histGroups.end()) {
+               histGroups[hh->GetTitle()] = hh;
+            } else {
+               // add it into this group
+               histGroups[hh->GetTitle()]->Add(hh);
+               delete hh;
+               continue;
+            }
+            auto hhMin = (hh->GetMinimum() == 0) ? hh->GetMinimum(1e-9) : hh->GetMinimum();
+            if (!stack->GetHists() && h->GetMinimum() > hhMin) {
+               auto newMin = hhMin - (h->GetMaximum() - hhMin) * gStyle->GetHistTopMargin();
+               if (hhMin >= 0 && newMin < 0)
+                  newMin = hhMin * 0.99;
+               adjustYRange(newMin, h->GetMaximum());
+            }
 
-             /*if(stack->GetHists() && stack->GetHists()->GetEntries()>0) {
-                 // to remove rounding effects on bin boundaries, see if binnings compatible
-                 auto _h1 = dynamic_cast<TH1*>(stack->GetHists()->At(0));
-                 if(_h1->GetNbinsX()==hh->GetNbinsX()) TODO ... finish dealing with silly rounding effects
-             }*/
-             TString thisOpt = dOpt;
-             // uncomment next line to blend continuous with discrete components .. get some unpleasant "poke through"
-             // effects though
-             // if(auto s = samp->get<RooAbsReal>(); s) thisOpt = s->isBinnedDistribution(*dynamic_cast<RooAbsArg*>(v)) ? ""
-             // : "LF2";
-             stack->Add(hh, thisOpt);
-             allTitles.insert(hh->GetTitle());
-          }
-          stack->SetBit(kCanDelete); // should delete its sub histograms
-          stack->Draw("noclear same");
-          h->Draw(dOpt+sOpt+"same"); // overlay again ..  if stack would cover original hist (negative components) we still see integral
-          h->Draw("axissame"); //redraws axis
+            /*if(stack->GetHists() && stack->GetHists()->GetEntries()>0) {
+                // to remove rounding effects on bin boundaries, see if binnings compatible
+                auto _h1 = dynamic_cast<TH1*>(stack->GetHists()->At(0));
+                if(_h1->GetNbinsX()==hh->GetNbinsX()) TODO ... finish dealing with silly rounding effects
+            }*/
+            TString thisOpt = dOpt;
+            // uncomment next line to blend continuous with discrete components .. get some unpleasant "poke through"
+            // effects though
+            // if(auto s = samp->get<RooAbsReal>(); s) thisOpt = s->isBinnedDistribution(*dynamic_cast<RooAbsArg*>(v)) ?
+            // "" : "LF2";
+            stack->Add(hh, thisOpt);
+            allTitles.insert(hh->GetTitle());
+         }
+         stack->SetBit(kCanDelete); // should delete its sub histograms
+         stack->Draw("noclear same");
+         h->Draw(
+            dOpt + sOpt +
+            "same"); // overlay again ..  if stack would cover original hist (negative components) we still see integral
+         h->Draw("axissame"); // redraws axis
 
-          TList *ll = stack->GetHists();
-          if (ll && ll->GetEntries()) {
+         TList *ll = stack->GetHists();
+         if (ll && ll->GetEntries()) {
 
-             // get common prefix to strip off only if all titles match names and
-             // any title is longer than 10 chars
-             size_t e = std::min(allTitles.begin()->size(), allTitles.rbegin()->size());
-             size_t ii = 0;
-             bool goodPrefix = false;
-             std::string commonSuffix;
-             if (titleMatchName && ll->GetEntries() > 1) {
-                while (ii < e - 1 && allTitles.begin()->at(ii) == allTitles.rbegin()->at(ii)) {
-                   ii++;
-                   if (allTitles.begin()->at(ii) == '_' || allTitles.begin()->at(ii) == ' ')
-                      goodPrefix = true;
-                }
+            // get common prefix to strip off only if all titles match names and
+            // any title is longer than 10 chars
+            size_t e = std::min(allTitles.begin()->size(), allTitles.rbegin()->size());
+            size_t ii = 0;
+            bool goodPrefix = false;
+            std::string commonSuffix;
+            if (titleMatchName && ll->GetEntries() > 1) {
+               while (ii < e - 1 && allTitles.begin()->at(ii) == allTitles.rbegin()->at(ii)) {
+                  ii++;
+                  if (allTitles.begin()->at(ii) == '_' || allTitles.begin()->at(ii) == ' ')
+                     goodPrefix = true;
+               }
 
-                // find common suffix if there is one .. must start with a "_"
-                bool stop = false;
-                while (!stop && commonSuffix.size() < size_t(e - 1)) {
-                   commonSuffix = allTitles.begin()->substr(allTitles.begin()->length() - commonSuffix.length() - 1);
-                   for (auto &t : allTitles) {
-                      if (!TString(t).EndsWith(commonSuffix.c_str())) {
-                         commonSuffix = commonSuffix.substr(1);
-                         stop = true;
-                         break;
-                      }
-                   }
-                }
-                if (commonSuffix.find('_') == std::string::npos)
-                   commonSuffix = "";
-                else
-                   commonSuffix = commonSuffix.substr(commonSuffix.find('_'));
-             }
-             if (!goodPrefix)
-                ii = 0;
+               // find common suffix if there is one .. must start with a "_"
+               bool stop = false;
+               while (!stop && commonSuffix.size() < size_t(e - 1)) {
+                  commonSuffix = allTitles.begin()->substr(allTitles.begin()->length() - commonSuffix.length() - 1);
+                  for (auto &t : allTitles) {
+                     if (!TString(t).EndsWith(commonSuffix.c_str())) {
+                        commonSuffix = commonSuffix.substr(1);
+                        stop = true;
+                        break;
+                     }
+                  }
+               }
+               if (commonSuffix.find('_') == std::string::npos)
+                  commonSuffix = "";
+               else
+                  commonSuffix = commonSuffix.substr(commonSuffix.find('_'));
+            }
+            if (!goodPrefix)
+               ii = 0;
 
-             // also find how many characters are needed to distinguish all entries (that dont have the same name)
-             // then carry on up to first space or underscore
-             size_t jj = 0;
-             std::map<std::string, std::string> reducedTitles;
-             while (reducedTitles.size() != allTitles.size()) {
-                jj++;
-                std::map<std::string, int> titlesMap;
-                for (auto &s : allTitles) {
-                   if (reducedTitles.count(s))
-                      continue;
-                   titlesMap[s.substr(0, jj)]++;
-                }
-                for (auto &s : allTitles) {
-                   if (titlesMap[s.substr(0, jj)] == 1 && (jj >= s.length() || s.at(jj) == ' ' || s.at(jj) == '_')) {
-                      reducedTitles[s] = s.substr(0, jj);
-                   }
-                }
-             }
+            // also find how many characters are needed to distinguish all entries (that dont have the same name)
+            // then carry on up to first space or underscore
+            size_t jj = 0;
+            std::map<std::string, std::string> reducedTitles;
+            while (reducedTitles.size() != allTitles.size()) {
+               jj++;
+               std::map<std::string, int> titlesMap;
+               for (auto &s : allTitles) {
+                  if (reducedTitles.count(s))
+                     continue;
+                  titlesMap[s.substr(0, jj)]++;
+               }
+               for (auto &s : allTitles) {
+                  if (titlesMap[s.substr(0, jj)] == 1 && (jj >= s.length() || s.at(jj) == ' ' || s.at(jj) == '_')) {
+                     reducedTitles[s] = s.substr(0, jj);
+                  }
+               }
+            }
 
-             // strip common prefix and suffix before adding
-             for (int i = ll->GetEntries() - 1; i >= 0; i--) { // go in reverse order
-                auto _title = (ll->GetEntries() > 5) ? reducedTitles[ll->At(i)->GetTitle()] : ll->At(i)->GetTitle();
-                _title = _title.substr(ii < _title.size() ? ii : 0);
-                if (!commonSuffix.empty() && TString(_title).EndsWith(commonSuffix.c_str()))
-                   _title = _title.substr(0, _title.length() - commonSuffix.length());
+            // strip common prefix and suffix before adding
+            for (int i = ll->GetEntries() - 1; i >= 0; i--) { // go in reverse order
+               auto _title = (ll->GetEntries() > 5) ? reducedTitles[ll->At(i)->GetTitle()] : ll->At(i)->GetTitle();
+               _title = _title.substr(ii < _title.size() ? ii : 0);
+               if (!commonSuffix.empty() && TString(_title).EndsWith(commonSuffix.c_str()))
+                  _title = _title.substr(0, _title.length() - commonSuffix.length());
 
-                // style hists according to availble styles ... creating if necessary
-                dynamic_cast<TNamed *>(ll->At(i))->SetTitle(_title.c_str());
-                addLegendEntry(ll->At(i), _title.c_str(), "f");
-             }
-             // finally, ensure all hists are styled
-             for(auto ho : *ll) {
-                TH1* hh = dynamic_cast<TH1*>(ho);
-                if(!hh) continue;
-                bool createdStyle = (xRooNode(*hh,*this).style(nullptr,false)==nullptr);
+               // style hists according to available styles ... creating if necessary
+               dynamic_cast<TNamed *>(ll->At(i))->SetTitle(_title.c_str());
+               addLegendEntry(ll->At(i), _title.c_str(), "f");
+            }
+            // finally, ensure all hists are styled
+            for (auto ho : *ll) {
+               TH1 *hh = dynamic_cast<TH1 *>(ho);
+               if (!hh)
+                  continue;
+               bool createdStyle = (xRooNode(*hh, *this).style(nullptr, false) == nullptr);
 
-                if(createdStyle) {
-                   // give hist a color, that isn't the same as any other hists color
-                   bool used=false;
-                   do {
-                      hh->SetFillColor((count++) % 100);
-                      // check not already used this color
-                      used=false;
-                      for(auto ho2 : *ll) {
-                         TH1* hh2 = dynamic_cast<TH1*>(ho2);
-                         if(!hh2) continue;
-                         auto _style = xRooNode(*hh2,*this).style(hh2,false);
-                         if(hh != hh2 && _style && _style->GetFillColor()==hh->GetFillColor()) { used=true; break; } }
-                   } while(used);
-                }
+               if (createdStyle) {
+                  // give hist a color, that isn't the same as any other hists color
+                  bool used = false;
+                  do {
+                     hh->SetFillColor((count++) % 100);
+                     // check not already used this color
+                     used = false;
+                     for (auto ho2 : *ll) {
+                        TH1 *hh2 = dynamic_cast<TH1 *>(ho2);
+                        if (!hh2)
+                           continue;
+                        auto _style = xRooNode(*hh2, *this).style(hh2, false);
+                        if (hh != hh2 && _style && _style->GetFillColor() == hh->GetFillColor()) {
+                           used = true;
+                           break;
+                        }
+                     }
+                  } while (used);
+               }
 
-                auto _style = xRooNode(*hh,*this).style(hh);
-                if(_style) {
-                   *dynamic_cast<TAttLine *>(hh) = *_style;
-                   *dynamic_cast<TAttFill *>(hh) = *_style;
-                   *dynamic_cast<TAttMarker *>(hh) = *_style;
-                }
-             }
-          }
+               auto _style = xRooNode(*hh, *this).style(hh);
+               if (_style) {
+                  *dynamic_cast<TAttLine *>(hh) = *_style;
+                  *dynamic_cast<TAttFill *>(hh) = *_style;
+                  *dynamic_cast<TAttMarker *>(hh) = *_style;
+               }
+            }
+         }
       }
    } else if (!overlayExisted) {
 
@@ -9814,11 +10073,16 @@ void xRooNode::Draw(Option_t *opt)
          auto _h = dynamic_cast<TH1 *>(ratioHist->Clone("auxHist_clone"));
          _h->SetDirectory(0);
          _h->SetFillColor(0);
-         ratioHist->GetListOfFunctions()->Add(_h,"histsame");
+         ratioHist->GetListOfFunctions()->Add(_h, "histsame");
          //_h->Draw("histsame");
       }
       ratioHist->GetListOfFunctions()->Add(new TExec(
-              ".updateAxis",TString::Format("auto h1 = (TH1*)%p; auto h2 = (TH1*)%p; if(h2->GetXaxis()->GetFirst() != h1->GetXaxis()->GetFirst() || h1->GetXaxis()->GetLast()!=h2->GetXaxis()->GetLast()) {h2->GetXaxis()->SetRange(h1->GetXaxis()->GetFirst(),h1->GetXaxis()->GetLast());if(gPad) {gPad->GetCanvas()->Paint();gPad->GetCanvas()->Update();}}",(void*)ratioHist,(void*)(h))));
+         ".updateAxis",
+         TString::Format("auto h1 = (TH1*)%p; auto h2 = (TH1*)%p; if(h2->GetXaxis()->GetFirst() != "
+                         "h1->GetXaxis()->GetFirst() || h1->GetXaxis()->GetLast()!=h2->GetXaxis()->GetLast()) "
+                         "{h2->GetXaxis()->SetRange(h1->GetXaxis()->GetFirst(),h1->GetXaxis()->GetLast());if(gPad) "
+                         "{gPad->GetCanvas()->Paint();gPad->GetCanvas()->Update();}}",
+                         (void *)ratioHist, (void *)(h))));
       ratioHist->Draw((errHist ? "e2" : ""));
 
       _tmpPad->cd();
@@ -9894,7 +10158,8 @@ void xRooNode::Draw(Option_t *opt)
    }*/
 
    // now draw selected datasets on top if this was a pdf
-   if (auto _pdf = get<RooAbsPdf>(); !hasSame && _pdf /*&& (_pdf->canBeExtended() || robs().empty())*/ && coefs().empty()) {
+   if (auto _pdf = get<RooAbsPdf>();
+       !hasSame && _pdf /*&& (_pdf->canBeExtended() || robs().empty())*/ && coefs().empty()) {
       auto _dsets = datasets();
       // bool _drawn=false;
       for (auto &d : _dsets) {
@@ -9947,35 +10212,36 @@ void xRooNode::SaveAs(const char *filename, Option_t *option) const
          Info("SaveAs", "%s saved to %s", w->GetName(), filename);
          // save any fitDatabase that is loaded in memory too
          // TODO: We should do this as well for SaveAs on a scan object
-         if(auto fitDb = dynamic_cast<TFile*>(gROOT->GetListOfFiles()->FindObject("fitDatabase"))) {
+         if (auto fitDb = dynamic_cast<TFile *>(gROOT->GetListOfFiles()->FindObject("fitDatabase"))) {
 
-            std::function<void(TDirectory*,TDirectory*)> CopyDir;
+            std::function<void(TDirectory *, TDirectory *)> CopyDir;
 
-            CopyDir = [&](TDirectory* source,TDirectory* dest) {
+            CopyDir = [&](TDirectory *source, TDirectory *dest) {
                auto dir = dest->GetDirectory(source->GetName());
-               if(!dir) {
+               if (!dir) {
                   dir = dest->mkdir(source->GetName());
                }
-               for(auto k : *source->GetListOfKeys()) {
-                  auto key = dynamic_cast<TKey*>(k);
+               for (auto k : *source->GetListOfKeys()) {
+                  auto key = dynamic_cast<TKey *>(k);
                   const char *classname = key->GetClassName();
                   TClass *cl = gROOT->GetClass(classname);
-                  //std::cout << "processing " << key->GetName() << " " << classname << std::endl;
+                  // std::cout << "processing " << key->GetName() << " " << classname << std::endl;
                   if (!cl) {
                      continue;
                   } else if (cl->InheritsFrom(TDirectory::Class())) {
-                     CopyDir(source->GetDirectory(key->GetName()),dir);
+                     CopyDir(source->GetDirectory(key->GetName()), dir);
                   } else {
                      // don't write object if it already exists
-                     if(dir->FindKey(key->GetName())) continue;
+                     if (dir->FindKey(key->GetName()))
+                        continue;
                      // support FitConfigs ....
-                     if (strcmp(classname,"ROOT::Fit::FitConfig")==0) {
+                     if (strcmp(classname, "ROOT::Fit::FitConfig") == 0) {
                         auto fc = key->ReadObject<ROOT::Fit::FitConfig>();
-                        dir->WriteObject(fc,key->GetName());
+                        dir->WriteObject(fc, key->GetName());
                         delete fc;
                      } else {
                         TObject *obj = key->ReadObj();
-                        if(obj) {
+                        if (obj) {
                            dir->WriteTObject(obj, key->GetName());
                            delete obj;
                         }
@@ -9983,8 +10249,8 @@ void xRooNode::SaveAs(const char *filename, Option_t *option) const
                   }
                }
             };
-            CopyDir(fitDb,std::make_unique<TFile>(filename,"UPDATE").get());
-            Info("SaveAs","Saved fitDatabase to %s",filename);
+            CopyDir(fitDb, std::make_unique<TFile>(filename, "UPDATE").get());
+            Info("SaveAs", "Saved fitDatabase to %s", filename);
          }
 
       } else {
@@ -10031,7 +10297,7 @@ std::pair<double, double> xRooNode::IntegralAndError(const xRooNode &fr, const c
       // prefer to use expectedEvents for integrals of RooAbsPdf e.g. for RooProdPdf wont include constraint terms
       if (rangeName)
          p->setNormRange(rangeName);
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,27,00)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 27, 00)
       RooAbsReal::EvalErrorContext _tmp(RooAbsReal::Ignore);
 #endif
       out *= p->expectedEvents(*_obs.get<RooArgList>());
@@ -10044,9 +10310,11 @@ std::pair<double, double> xRooNode::IntegralAndError(const xRooNode &fr, const c
          p->setNormRange(nullptr);
    } else if (auto p2 = dynamic_cast<RooAbsReal *>(get()); p2) {
       // only integrate over observables we actually depend on
-      auto f = std::shared_ptr<RooAbsReal>(p2->createIntegral(*std::unique_ptr<RooArgSet>(p2->getObservables(*_obs.get<RooArgList>())),
-                                                              rangeName)); // did use x here before using obs
-      RooProduct pr("int_x_coef","int_x_coef",RooArgList(*f,!_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()));
+      auto f = std::shared_ptr<RooAbsReal>(
+         p2->createIntegral(*std::unique_ptr<RooArgSet>(p2->getObservables(*_obs.get<RooArgList>())),
+                            rangeName)); // did use x here before using obs
+      RooProduct pr("int_x_coef", "int_x_coef",
+                    RooArgList(*f, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()));
       out *= f->getVal();
       err = xRooNode(pr, *this).GetBinError(-1, fr);
       sterilize(); // needed so that we can forget properly about the integral we just created (and are deleting)
@@ -10079,11 +10347,11 @@ std::pair<double, double> xRooNode::IntegralAndError(const xRooNode &fr, const c
 
 std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooNode &_fr) const
 {
-    // note: so far this method is inconsistent with the BuildHistogram in ways:
-    // no projection over other variables
-    // July2023: made RooRealSumPdf evaluate as a function if doesn't have a floor
-    // but this method will still evaluate it as a pdf (uses PdfWrapper)
-    // but can get away with it while added NaN recovery to getSimplePropagatedError to pickup raw values
+   // note: so far this method is inconsistent with the BuildHistogram in ways:
+   // no projection over other variables
+   // July2023: made RooRealSumPdf evaluate as a function if doesn't have a floor
+   // but this method will still evaluate it as a pdf (uses PdfWrapper)
+   // but can get away with it while added NaN recovery to getSimplePropagatedError to pickup raw values
 
    if (fBinNumber != -1) {
       if (binStart != binEnd || !fParent) {
@@ -10101,20 +10369,20 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
    std::shared_ptr<RooFitResult> fr = std::dynamic_pointer_cast<RooFitResult>(_fr.fComp);
    //= dynamic_cast<RooFitResult*>( _fr.get<RooFitResult>() ? _fr->Clone() : fitResult()->Clone());
 
-
-
    auto _coefs = coefs();
 
    if (!fr) {
       // need to ensure coefs, if any, are included in fit result retrieval so all pars are loaded
-      auto frn = (!_coefs.get() ? *this : xRooNode(RooProduct("tmp","tmp",RooArgList(*o,*_coefs.get<RooAbsReal>())))).fitResult();
-      if (strlen(_fr.GetName())) frn = frn.reduced(_fr.GetName());
+      auto frn = (!_coefs.get() ? *this : xRooNode(RooProduct("tmp", "tmp", RooArgList(*o, *_coefs.get<RooAbsReal>()))))
+                    .fitResult();
+      if (strlen(_fr.GetName()))
+         frn = frn.reduced(_fr.GetName());
 
       // use name to reduce the fit result, if one given
       fr = std::dynamic_pointer_cast<RooFitResult>(frn.fComp);
    }
 
-   if (!GETDMP(fr.get(),_finalPars)) {
+   if (!GETDMP(fr.get(), _finalPars)) {
       fr->setFinalParList(RooArgList());
    }
 
@@ -10136,8 +10404,7 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
    //        fr->setFinalParList(l2);
    //    }
 
-   TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t>*>(GETDMP(fr.get(),_VM));
-
+   TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(fr.get(), _VM));
 
    if (!prevCov || size_t(prevCov->GetNcols()) < fr->floatParsFinal().size()) {
       TMatrixDSym cov(fr->floatParsFinal().getSize());
@@ -10159,7 +10426,6 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
       fr->setCovarianceMatrix(cov);
       fr->setCovQual(covQualBackup);
    }
-
 
    bool doBinWidth = false;
    auto ax = (binStart == -1 && binEnd == -1) ? nullptr : GetXaxis();
@@ -10196,12 +10462,14 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
          p->_normSet = nullptr;
 #endif
       } else {
-//         res = o->getPropagatedError(*fr, normSet);
-//         // TODO: What if coef has error? - probably need a FuncWrapper class
-//         if (auto c = _coefs.get<RooAbsReal>(); c) {
-//            res *= c->getVal(normSet);
-//         }
-         res = RooProduct("errorEval","errorEval",RooArgList(*o,!_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>())).getPropagatedError(*fr,normSet);
+         //         res = o->getPropagatedError(*fr, normSet);
+         //         // TODO: What if coef has error? - probably need a FuncWrapper class
+         //         if (auto c = _coefs.get<RooAbsReal>(); c) {
+         //            res *= c->getVal(normSet);
+         //         }
+         res = RooProduct("errorEval", "errorEval",
+                          RooArgList(*o, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()))
+                  .getPropagatedError(*fr, normSet);
       }
       if (doBinWidth) {
          res *= ax->GetBinWidth(bin);

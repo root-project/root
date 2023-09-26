@@ -34,7 +34,7 @@ public:
 
    xRooNode *GetSelected();
 
-   xRooNode *Open(const char* filename);
+   xRooNode *Open(const char *filename);
 
    void ls(const char *path = nullptr) const override;
    void cd(const char *path);

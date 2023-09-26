@@ -24,7 +24,7 @@
 #include "TGFileDialog.h"
 #include "TObjString.h"
 
-#define GETPOPUPMENU(b,m) ((TGPopupMenu*)(*(void**)(((unsigned char*)b) + b->Class()->GetDataMemberOffset(#m))))
+#define GETPOPUPMENU(b, m) ((TGPopupMenu *)(*(void **)(((unsigned char *)b) + b->Class()->GetDataMemberOffset(#m))))
 
 BEGIN_XROOFIT_NAMESPACE
 
@@ -61,8 +61,8 @@ xRooBrowser::xRooBrowser(xRooNode *o) : TBrowser("RooBrowser", o, "RooFit Browse
 
    // override file menu event handling so that can intercept "Open"
    if (auto rb = dynamic_cast<TRootBrowser *>(GetBrowserImp())) {
-      rb->Disconnect(GETPOPUPMENU(rb,fMenuFile), "Activated(Int_t)", rb, "HandleMenu(Int_t)");
-      GETPOPUPMENU(rb,fMenuFile)->Connect("Activated(Int_t)", ClassName(), this, "HandleMenu(Int_t)");
+      rb->Disconnect(GETPOPUPMENU(rb, fMenuFile), "Activated(Int_t)", rb, "HandleMenu(Int_t)");
+      GETPOPUPMENU(rb, fMenuFile)->Connect("Activated(Int_t)", ClassName(), this, "HandleMenu(Int_t)");
    }
 }
 
@@ -112,8 +112,9 @@ xRooBrowser::xRooBrowser()
 {
 }
 
-xRooNode* xRooBrowser::Open(const char* filename) {
-   if(TString(filename).EndsWith(".root")) {
+xRooNode *xRooBrowser::Open(const char *filename)
+{
+   if (TString(filename).EndsWith(".root")) {
       return fTopNode->emplace_back(std::make_shared<xRooNode>(std::make_shared<TFile>(filename))).get();
    } else {
       return fTopNode->emplace_back(std::make_shared<xRooNode>(filename)).get();
