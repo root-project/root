@@ -1490,7 +1490,7 @@ class TGraphPainter extends ObjectPainter {
          return this;
 
       const func = graph.fFunctions.arr[indx],
-          opt = graph.fFunctions.opt[indx];
+            opt = graph.fFunctions.opt[indx];
 
       //  required for stats filling
       // TODO: use weak reference (via pad list of painters and any kind of string)

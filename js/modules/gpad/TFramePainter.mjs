@@ -689,9 +689,14 @@ const TooltipHandler = {
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
       }
 
-      const main_svg = this.draw_g.selectChild('.main_layer');
+      const top_rect = this.draw_g.selectChild('path'),
+            main_svg = this.draw_g.selectChild('.main_layer');
+
+      top_rect.style('pointer-events', 'visibleFill')  // let process mouse events inside frame
+              .style('cursor', 'default');             // show normal cursor
 
       main_svg.style('pointer-events', 'visibleFill')
+              .style('cursor', 'default')
               .property('handlers_set', 0);
 
       const pp = this.getPadPainter(),
@@ -2493,14 +2498,6 @@ class TFramePainter extends ObjectPainter {
               .attr('height', h)
               .attr('viewBox', `0 0 ${w} ${h}`);
 
-      if (!this.isBatchMode()) {
-         top_rect.style('pointer-events', 'visibleFill')  // let process mouse events inside frame
-                 .style('cursor', 'default');             // show normal cursor
-         main_svg.style('cursor', 'default');             // show normal cursor
-         FrameInteractive.assign(this);
-         this.addBasicInteractivity();
-      }
-
       return this;
    }
 
@@ -2552,7 +2549,7 @@ class TFramePainter extends ObjectPainter {
       if ((kind === 'x') || (kind === 'y') || (kind === 'z') || (kind === 'x2') || (kind === 'y2')) {
          const faxis = obj || this[kind+'axis'],
                handle = this[`${kind}_handle`];
-        if (typeof faxis?.TestBit !== 'function')
+        if (!isFunc(faxis?.TestBit))
            return false;
 
          menu.add(`header: ${kind.toUpperCase()} axis`);
@@ -2954,6 +2951,9 @@ class TFramePainter extends ObjectPainter {
          return false;
 
       FrameInteractive.assign(this);
+      if (!for_second_axes)
+         this.addBasicInteractivity();
+
       return this.addFrameInteractivity(for_second_axes);
    }
 
