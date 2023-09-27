@@ -327,8 +327,18 @@ class ROOTFacade(types.ModuleType):
         try:
             # Inject FromNumpy function
             from libROOTPythonizations import MakeNumpyDataFrame
-            ns.FromNumpy = MakeNumpyDataFrame
 
+            # Make a copy of the arrays that have strides to make sure we read the correct values
+            # TODO a cleaner fix 
+            def MakeNumpyDataFrameCopy(np_dict):  
+                import numpy  
+                for key in np_dict.keys():
+                    if (np_dict[key].__array_interface__['strides']) is not None:
+                        np_dict[key] = numpy.copy(np_dict[key])
+                return MakeNumpyDataFrame(np_dict) 
+
+            ns.FromNumpy = MakeNumpyDataFrameCopy
+            
             if sys.version_info >= (3, 8):
                 try:
                     # Inject Experimental.Distributed package into namespace RDF if available
