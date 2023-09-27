@@ -727,16 +727,7 @@ class RFramePainter extends RObjectPainter {
          pr = this.drawAxes().then(() => this.addInteractivity());
       }
 
-      return pr.then(() => {
-         if (!this.isBatchMode()) {
-            top_rect.style('pointer-events', 'visibleFill');  // let process mouse events inside frame
-
-            FrameInteractive.assign(this);
-            this.addBasicInteractivity();
-         }
-
-         return this;
-      });
+      return pr.then(() => { return this; });
    }
 
    /** @summary Returns frame X position */
@@ -1141,7 +1132,10 @@ class RFramePainter extends RObjectPainter {
    addInteractivity(for_second_axes) {
       if (this.isBatchMode() || (!settings.Zooming && !settings.ContextMenu))
          return true;
+
       FrameInteractive.assign(this);
+      if (!for_second_axes)
+         this.addBasicInteractivity();
       return this.addFrameInteractivity(for_second_axes);
    }
 

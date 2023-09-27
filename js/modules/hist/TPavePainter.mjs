@@ -802,12 +802,25 @@ class TPavePainter extends ObjectPainter {
             framep = this.getFramePainter(),
             contour = main.fContour,
             levels = contour?.getLevels(),
-            draw_palette = main._color_palette;
+            draw_palette = main._color_palette,
+            zaxis = main?.getObject()?.fZaxis;
+
       let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '';
 
       this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
 
       axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
+      if (typeof zaxis?.fLabelOffset !== 'undefined') {
+         axis.fTitle = zaxis.fTitle;
+         axis.fTitleSize = zaxis.fTitleSize;
+         axis.fTitleOffset =  zaxis.fTitleOffset;
+         axis.fTitleColor = zaxis.fTitleColor;
+         axis.fLineColor = zaxis.fAxisColor;
+         axis.fTextSize = zaxis.fLabelSize;
+         axis.fTextColor = zaxis.fLabelColor;
+         axis.fTextFont = zaxis.fLabelFont;
+         axis.fLabelOffset = zaxis.fLabelOffset;
+      }
 
       if (contour && framep) {
          if ((framep.zmin !== undefined) && (framep.zmax !== undefined) && (framep.zmin !== framep.zmax)) {

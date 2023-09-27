@@ -139,8 +139,12 @@ const AxisPainterMethods = {
       const base = this.logbase;
       if (base !== 10) vlog = vlog / Math.log10(base);
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
-         if (!this.noexp && (asticks !== 2))
-            return this.formatExp(base, Math.floor(vlog+0.01), val);
+         if (!this.noexp && (asticks !== 2)) {
+            const pow = Math.floor(vlog+0.01);
+            if ((pow === 0) && settings.StripAxisLabels)
+               return '1';
+            return this.formatExp(base, pow, val);
+         }
          if (Math.abs(base - Math.E) < 0.001)
             return floatToString(val, fmt || gStyle.fStatFormat);
          return (vlog < 0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
@@ -157,8 +161,17 @@ const AxisPainterMethods = {
       if (gStyle.fStripDecimals && (val === Math.round(val)))
          return Math.abs(val) < 1e9 ? val.toFixed(0) : val.toExponential(4);
 
-      if (asticks)
-         return this.ndig > 10 ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
+      if (asticks) {
+         if (this.ndig > 10)
+            return val.toExponential(this.ndig - 11);
+         let res = val.toFixed(this.ndig);
+         const p = res.indexOf('.');
+         if ((p > 0) && settings.StripAxisLabels) {
+            while ((res.length >= p) && ((res[res.length-1] === '0') || (res[res.length-1] === '.')))
+               res = res.slice(0, res.length - 1);
+         }
+         return res;
+      }
 
       return floatToString(val, fmt || gStyle.fStatFormat);
    },
@@ -1091,7 +1104,7 @@ class TAxisPainter extends ObjectPainter {
             pp = this.getPadPainter(),
             pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
             pad_h = pp?.getPadHeight() || scalingSize || h/0.8;
-      let tickSize = 0, tickScalingSize = 0, titleColor;
+      let tickSize = 0, tickScalingSize = 0, titleColor, offset;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
 
@@ -1107,6 +1120,9 @@ class TAxisPainter extends ObjectPainter {
          tickScalingSize = scalingSize || (this.vertical ? 1.7*h : 0.6*w);
          tickSize = optionSize ? axis.fTickSize : 0.03;
          titleColor = this.getColor(axis.fTextColor);
+         offset = axis.fLabelOffset;
+         if ((this.vertical && axis.fY1 > axis.fY2 && !this.optionMinus) || (!this.vertical && axis.fX1 > axis.fX2))
+            offset = -offset;
       } else {
          this.optionUnlab = false;
          this.optionMinus = this.vertical ^ this.invert_side;
@@ -1118,7 +1134,10 @@ class TAxisPainter extends ObjectPainter {
          tickScalingSize = scalingSize || (this.vertical ? pad_w : pad_h);
          tickSize = axis.fTickLength;
          titleColor = this.getColor(axis.fTitleColor);
+         offset = axis.fLabelOffset;
       }
+
+      offset += (this.vertical ? 0.002 : 0.005);
 
       if (this.kind === 'labels')
          this.optionText = true;
@@ -1137,7 +1156,7 @@ class TAxisPainter extends ObjectPainter {
 
       const k = this.optionText ? 0.66666 : 1; // set TGaxis.cxx, line 1504
       this.labelSize = Math.round((axis.fLabelSize < 1) ? k * axis.fLabelSize * this.scalingSize : k * axis.fLabelSize);
-      this.labelsOffset = Math.round(Math.abs(axis.fLabelOffset) * this.scalingSize);
+      this.labelsOffset = Math.round(offset * this.scalingSize);
       this.labelsFont = new FontHandler(axis.fLabelFont, this.labelSize, scalingSize);
       if ((this.labelSize <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) this.optionUnlab = true; // disable labels when size not specified
       this.labelsFont.setColor(this.getColor(axis.fLabelColor));

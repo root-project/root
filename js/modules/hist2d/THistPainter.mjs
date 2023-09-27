@@ -1994,10 +1994,13 @@ class THistPainter extends ObjectPainter {
 
          const zaxis = this.getHisto().fZaxis;
 
-         Object.assign(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize, fChopt: '+',
+         Object.assign(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize,
+                                    fTitleOffset: zaxis.fTitleOffset, fTitleColor: zaxis.fTitleColor,
+                                    fChopt: '+',
                                     fLineColor: zaxis.fAxisColor, fLineSyle: 1, fLineWidth: 1,
                                     fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11,
-                                    fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont });
+                                    fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont,
+                                    fLabelOffset: zaxis.fLabelOffset });
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.addFunction(pal, true);
@@ -2005,7 +2008,6 @@ class THistPainter extends ObjectPainter {
          can_move = true;
       } else if (pp?._palette_vertical !== undefined)
          this.options.Zvert = pp._palette_vertical;
-
 
       const fp = this.getFramePainter();
 

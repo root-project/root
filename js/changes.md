@@ -32,6 +32,8 @@
 29. Fix - properly handle "NB" (no border) draw option for `TPave` classes
 30. Fix - do not draw histogram title with AXIS draw option
 31. Fix - correct scaling of custom axis labels
+32. Fix - shrink axis labels like 0.20 -> 0.2 or 10^0 -> 1
+33. Fix - copy axis attributes from histogram z scale to palette
 
 
 ## Changes in 7.4.3

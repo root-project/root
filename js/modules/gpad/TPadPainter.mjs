@@ -571,10 +571,8 @@ class TPadPainter extends ObjectPainter {
 
       if (this._fixed_size)
          svg.attr('width', rect.width).attr('height', rect.height);
-      else {
-         svg.style('width', '100%').style('height', '100%')
-            .style('left', 0).style('top', 0).style('right', 0).style('bottom', 0);
-      }
+      else
+         svg.style('width', '100%').style('height', '100%').style('inset', '0px');
 
       svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 
@@ -905,7 +903,7 @@ class TPadPainter extends ObjectPainter {
    checkSpecialsInPrimitives(can) {
       const lst = can?.fPrimitives;
       if (!lst) return;
-      for (let i = 0; i < lst.arr.length; ++i) {
+      for (let i = 0; i < lst.arr?.length; ++i) {
          if (this.checkSpecial(lst.arr[i])) {
             lst.arr.splice(i, 1);
             lst.opt.splice(i, 1);
@@ -1022,8 +1020,13 @@ class TPadPainter extends ObjectPainter {
          return;
       }
 
+      const obj = this.pad.fPrimitives.arr[indx];
+
+      if (!obj || ((indx > 0) && (obj._typename === 'TFrame') && this.getFramePainter()))
+         return this.drawPrimitives(indx+1);
+
       // use of Promise should avoid large call-stack depth when many primitives are drawn
-      return this.drawObject(this.getDom(), this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx]).then(op => {
+      return this.drawObject(this.getDom(), obj, this.pad.fPrimitives.opt[indx]).then(op => {
          if (isObject(op))
             op._primitive = true; // mark painter as belonging to primitives
 
@@ -1363,7 +1366,7 @@ class TPadPainter extends ObjectPainter {
       if (!obj.fPrimitives) return false;
 
       let isany = false, p = 0;
-      for (let n = 0; n < obj.fPrimitives.arr.length; ++n) {
+      for (let n = 0; n < obj.fPrimitives.arr?.length; ++n) {
          while (p < this.painters.length) {
             const pp = this.painters[p++];
             if (!pp._primitive) continue;
