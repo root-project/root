@@ -142,7 +142,19 @@ class DataFrameFromNumpy(unittest.TestCase):
         gc.collect()
         ref4 = sys.getrefcount(x)
         self.assertEqual(ref1, ref4)
-
+    
+    def test_sliced_array(self):
+        """
+        Test correct reading of a sliced numpy array (#13690)
+        """
+        table = np.array([[1,2], [3,4]])
+        columns = {'x': table[:,0], 'y': table[:,1]}
+        df = ROOT.RDF.FromNumpy(columns)
+        x_col = df.Take['Long64_t']("x")
+        y_col = df.Take['Long64_t']("y")
+        self.assertEqual(list(x_col.GetValue()), [1,3]) 
+        self.assertEqual(list(y_col.GetValue()), [2,4])
+        
 
 if __name__ == '__main__':
     unittest.main()
