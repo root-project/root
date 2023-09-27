@@ -22,13 +22,6 @@
 		asimage.h \
 		asvisual.h
 
-./asimagexml.o : \
-		win32/config.h \
-		config.h \
-		afterimage.h \
-		imencdec.h \
-		pixmap.h
-
 ./asstorage.o : \
 		win32/config.h \
 		config.h \
@@ -97,19 +90,8 @@
 		xpm.h \
 		ungif.h \
 		import.h \
-		asimagexml.h \
 		transform.h
 
-./pixmap.o : \
-		win32/config.h \
-		config.h \
-		asvisual.h \
-		blender.h \
-		asimage.h \
-		imencdec.h \
-		ximage.h \
-		transform.h \
-		pixmap.h
 
 ./transform.o : \
 		win32/config.h \

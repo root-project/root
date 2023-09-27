@@ -2,7 +2,6 @@ LIBAFTERIMAGE_OBJS = \
 		$(LIBAFTERIMAGE_PATH)/asimage.c \
 		$(LIBAFTERIMAGE_PATH)/ascmap.c \
 		$(LIBAFTERIMAGE_PATH)/asfont.c \
-		$(LIBAFTERIMAGE_PATH)/asimagexml.c \
 		$(LIBAFTERIMAGE_PATH)/asstorage.c \
 		$(LIBAFTERIMAGE_PATH)/asvisual.c \
 		$(LIBAFTERIMAGE_PATH)/blender.c \
@@ -12,7 +11,6 @@ LIBAFTERIMAGE_OBJS = \
 		$(LIBAFTERIMAGE_PATH)/export.c \
 		$(LIBAFTERIMAGE_PATH)/imencdec.c \
 		$(LIBAFTERIMAGE_PATH)/import.c \
-		$(LIBAFTERIMAGE_PATH)/pixmap.c \
 		$(LIBAFTERIMAGE_PATH)/transform.c \
 		$(LIBAFTERIMAGE_PATH)/ungif.c \
 		$(LIBAFTERIMAGE_PATH)/xcf.c \
@@ -27,7 +25,6 @@ LIBAFTERIMAGE_INCS = \
 		$(LIBAFTERIMAGE_PATH)/asfont.h \
 		$(LIBAFTERIMAGE_PATH)/asim_afterbase.h \
 		$(LIBAFTERIMAGE_PATH)/asimage.h \
-		$(LIBAFTERIMAGE_PATH)/asimagexml.h \
 		$(LIBAFTERIMAGE_PATH)/asstorage.h \
 		$(LIBAFTERIMAGE_PATH)/asvisual.h \
 		$(LIBAFTERIMAGE_PATH)/blender.h \
@@ -37,7 +34,6 @@ LIBAFTERIMAGE_INCS = \
 		$(LIBAFTERIMAGE_PATH)/export.h \
 		$(LIBAFTERIMAGE_PATH)/imencdec.h \
 		$(LIBAFTERIMAGE_PATH)/import.h \
-		$(LIBAFTERIMAGE_PATH)/pixmap.h \
 		$(LIBAFTERIMAGE_PATH)/transform.h \
 		$(LIBAFTERIMAGE_PATH)/ungif.h \
 		$(LIBAFTERIMAGE_PATH)/xcf.h \
