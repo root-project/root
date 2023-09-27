@@ -332,10 +332,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     # Remove all source dirs also while they preserved in root dictionaries and
     # ends in the gInterpreter->GetIncludePath()
 
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}")
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/ginclude")
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/builtins")
+    # Trick based on https://gitlab.kitware.com/cmake/cmake/-/issues/18580
+    string(REGEX REPLACE "(.)" "\\\\\\1" raw_cmake_binary_dir "${CMAKE_BINARY_DIR}")
+    string(REGEX REPLACE "(.)" "\\\\\\1" raw_cmake_source_dir "${CMAKE_SOURCE_DIR}")
+
+    list(FILTER incdirs EXCLUDE REGEX "^${raw_cmake_source_dir}")
+    list(FILTER incdirs EXCLUDE REGEX "^${raw_cmake_binary_dir}/ginclude")
+    list(FILTER incdirs EXCLUDE REGEX "^${raw_cmake_binary_dir}/externals")
+    list(FILTER incdirs EXCLUDE REGEX "^${raw_cmake_binary_dir}/builtins")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
     # endif()
 
