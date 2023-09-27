@@ -4,7 +4,7 @@ const version_id = '7.5.pre',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '26/09/2023',
+version_date = '27/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -267,7 +267,9 @@ settings = {
    /** @summary Prefer to use saved points in TF1/TF2, avoids eval() and Function() when possible */
    PreferSavedPoints: false,
    /** @summary Angle in degree for axis labels tilt when available space is not enough */
-   AxisTiltAngle: 25
+   AxisTiltAngle: 25,
+   /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
+   StripAxisLabels: true
 },
 
 /** @namespace
