@@ -46,6 +46,10 @@ if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosx64" ] || \
       # If install_name is specified, remove it.
       SOFLAGS="$OPT -dynamiclib -single_module -Wl,-dead_strip_dylibs"
    fi
+   # Add rpath to the compiler options on MacOS, reproducing the same
+   # behaviour of manually creating the shared library by using the flags
+   # output by `root-config --libs`
+   SOFLAGS="$SOFLAGS -Wl,-rpath,$LIBDIR"
 elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.
     SOFLAGS=$SOFLAGS\$LibName.$SOEXT
