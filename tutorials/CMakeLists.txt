@@ -169,7 +169,7 @@ if(NOT ROOT_xml_FOUND)
 endif()
 
 if(NOT ROOT_unfold_FOUND)
-  set(xml_veto  unfold/*.C)
+  list(APPEND xml_veto unfold/*.C)
 endif()
 
 if(NOT ROOT_mpi_FOUND)
