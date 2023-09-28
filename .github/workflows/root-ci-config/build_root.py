@@ -367,7 +367,7 @@ def build(options, buildtype):
 @github_log_group("Create binary packages")
 def create_binaries(buildtype):
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build' && cpack --verbose -C ${buildtype}
+        cd '{WORKDIR}/build' && cpack --verbose -C {buildtype}
     """)
 
     if result != 0:
