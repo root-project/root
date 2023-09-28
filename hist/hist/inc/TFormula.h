@@ -15,15 +15,15 @@
 #include "TNamed.h"
 #include "TBits.h"
 #include "TInterpreter.h"
-#include "ROOT/TypeTraits.hxx"
+#include "TMath.h"
+#include <Math/Types.h>
+
+#include <atomic>
 #include <cassert>
-#include <vector>
 #include <list>
 #include <map>
 #include <string>
-#include <type_traits>
-#include <atomic>
-#include <Math/Types.h>
+#include <vector>
 
 class TMethodCall;
 
@@ -277,10 +277,10 @@ public:
    void           SetParameters(const Double_t *params);
    //void           SetParameters(const pair<TString,Double_t> *params, const Int_t size);
    template <typename... Args>
-   typename std::enable_if<ROOT::TypeTraits::AllArithmetic<Args...>::value, void>::type SetParameters(Args... args);
+   void           SetParameters(Double_t arg1, Args &&... args);
    void           SetParName(Int_t ipar, const char *name);
    template <typename... Args>
-   void           SetParNames(Args... args);
+   void           SetParNames(Args &&... args);
    void           SetVariable(const TString &name, Double_t value);
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
    void SetVectorized(Bool_t vectorized);
@@ -290,49 +290,28 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a list of parameters.
-/// The order is by default the alphabetic order given to the parameters
-/// apart if the users has defined explicitly the parameter names
+/// The order is by default the alphabetic order given to the parameters,
+/// apart if the users has defined explicitly the parameter names.
+/// NaN values will be skipped, meaning that the corresponding parameters will not be changed.
 
 template <typename... Args>
-typename std::enable_if<ROOT::TypeTraits::AllArithmetic<Args...>::value, void>::type
-TFormula::SetParameters(Args... args)
+void TFormula::SetParameters(Double_t arg1, Args &&...args)
 {
-   Int_t sz = sizeof...(args);
-   if (fNpar < sz) {
-      Warning("SetParameters",
-              "More values are passed than actual number of parameters (%d)"
-              ", extra values will be ignored",
-              fNpar);
-   }
-   Double_t values[] = {static_cast<Double_t>(args)...};
-   for (Int_t i = 0; i < fNpar; ++i) {
-      if (i < sz)
-         SetParameter(i, values[i]);
-      else
-         SetParameter(i, 0.0);
+   int i = 0;
+   for (double val : {arg1, static_cast<Double_t>(args)...}) {
+      if(!TMath::IsNaN(val)) SetParameter(i++, val);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set parameter names.
+/// Empty strings will be skipped, meaning that the corresponding name will not be changed.
 template <typename... Args>
-void TFormula::SetParNames(Args... args)
+void TFormula::SetParNames(Args &&...args)
 {
-   Int_t sz = sizeof...(args);
-   if (fNpar < sz) {
-      Warning("SetParNames",
-              "More names are passed than actual number of parameters (%d)"
-              ", extra names will be ignored",
-              fNpar);
-   }
-   const char *names[] = {args...};
-   for (Int_t i = 0; i < fNpar; ++i) {
-      if (i < sz)
-         SetParName(i, names[i]);
-      else {
-         const char *num = std::to_string(i).c_str();
-         std::string name = std::string(1, 'p') + num;
-         SetParName(i, name.c_str());
-      }
+   int i = 0;
+   for (auto name : {static_cast<std::string const&>(args)...}) {
+      if(!name.empty()) SetParName(i++, name.c_str());
    }
 }
 #endif

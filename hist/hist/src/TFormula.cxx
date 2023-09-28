@@ -12,7 +12,6 @@
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TMethod.h"
-#include "TMath.h"
 #include "TF1.h"
 #include "TMethodCall.h"
 #include <TBenchmark.h>
@@ -25,7 +24,6 @@
 #include "ROOT/StringUtils.hxx"
 
 #include <array>
-#include <cassert>
 #include <iostream>
 #include <unordered_map>
 #include <functional>
@@ -2974,9 +2972,9 @@ void TFormula::SetParameters(const Double_t *params)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a parameter given a parameter index
-/// The parameter index is by default the alphabetic order given to the parameters
-/// apart if the users has defined explicitly the parameter names
+/// Set a parameter given a parameter index.
+/// The parameter index is by default the alphabetic order given to the parameters,
+/// apart if the users has defined explicitly the parameter names.
 
 void TFormula::SetParameter(Int_t param, Double_t value)
 {
