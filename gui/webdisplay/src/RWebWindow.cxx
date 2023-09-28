@@ -443,7 +443,10 @@ void RWebWindow::ProvideQueueEntry(unsigned connid, EQueueEntryKind kind, std::s
       fInputQueue.emplace(connid, kind, std::move(arg));
    }
 
-   InvokeCallbacks();
+   // if special python mode is used, process events called from special thread
+   // there is no other way to get regular calls in main python thread,
+   // therefore invoke widgets callbacks directly - which potentially can be dangerous
+   InvokeCallbacks(fUseProcessEvents);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
