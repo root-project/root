@@ -7,10 +7,10 @@
 
 #include "RooStats/RooStatsUtils.h"
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
-Double_t xRooFit::Asymptotics::k(const IncompatFunc &compatRegions, double pValue, double poiVal, double poiPrimeVal,
-                                 double sigma, double low, double high)
+double xRooFit::Asymptotics::k(const IncompatFunc &compatRegions, double pValue, double poiVal, double poiPrimeVal,
+                               double sigma, double low, double high)
 {
 
    // determine the pll value corresponding to nSigma expected - i.e. where the altPValue equals e.g. 50% for nSigma=0,
@@ -36,7 +36,12 @@ Double_t xRooFit::Asymptotics::k(const IncompatFunc &compatRegions, double pValu
    struct TailIntegralFunction {
       TailIntegralFunction(double _poiVal, double _alt_val, double _sigma_mu, double _low, double _high,
                            IncompatFunc _compatibilityFunction, double _target)
-         : poiVal(_poiVal), alt_val(_alt_val), sigma_mu(_sigma_mu), low(_low), high(_high), target(_target),
+         : poiVal(_poiVal),
+           alt_val(_alt_val),
+           sigma_mu(_sigma_mu),
+           low(_low),
+           high(_high),
+           target(_target),
            cFunc(_compatibilityFunction)
       {
       }
@@ -93,8 +98,8 @@ Double_t xRooFit::Asymptotics::k(const IncompatFunc &compatRegions, double pValu
    return _pll;
 }
 
-Double_t xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double k, double poiVal, double poi_primeVal,
-                                      double sigma, double lowBound, double upBound)
+double xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double k, double poiVal, double poi_primeVal,
+                                    double sigma, double lowBound, double upBound)
 {
    // uncapped test statistic is equal to onesidednegative when k is positive, and equal to 1.0 - difference between
    // twosided and onesidednegative when k is negative ...
@@ -124,17 +129,17 @@ Double_t xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double 
    // get the poi value that defines the test statistic, and the poi_prime hypothesis we are testing
    // when setting limits, these are often the same value
 
-   Double_t Lambda_y = 0;
+   double Lambda_y = 0;
    if (std::abs(poiVal - poi_primeVal) > 1e-12)
       Lambda_y = (poiVal - poi_primeVal) / sigma;
 
    if (std::isnan(Lambda_y))
       return -1;
 
-   Double_t k_low = (lowBound == -std::numeric_limits<double>::infinity()) ? std::numeric_limits<double>::infinity()
-                                                                           : pow((poiVal - lowBound) / sigma, 2);
-   Double_t k_high = (upBound == std::numeric_limits<double>::infinity()) ? std::numeric_limits<double>::infinity()
-                                                                          : pow((upBound - poiVal) / sigma, 2);
+   double k_low = (lowBound == -std::numeric_limits<double>::infinity()) ? std::numeric_limits<double>::infinity()
+                                                                         : pow((poiVal - lowBound) / sigma, 2);
+   double k_high = (upBound == std::numeric_limits<double>::infinity()) ? std::numeric_limits<double>::infinity()
+                                                                        : pow((upBound - poiVal) / sigma, 2);
 
    double out = Phi_m(poiVal, poi_primeVal, std::numeric_limits<double>::infinity(), sigma, compatRegions) - 1;
 
@@ -181,7 +186,7 @@ Double_t xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double 
    return 1. - out;
 }
 
-Double_t
+double
 xRooFit::Asymptotics::Phi_m(double /*mu*/, double mu_prime, double a, double sigma, const IncompatFunc &compatRegions)
 {
 
@@ -244,4 +249,4 @@ int xRooFit::Asymptotics::CompatFactor(const IncompatFunc &func, double mu_hat)
 //     return RooRealVar("limit","limit",std::numeric_limits<double>::quiet_NaN());
 // }
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;

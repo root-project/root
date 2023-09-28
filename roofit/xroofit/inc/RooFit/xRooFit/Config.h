@@ -14,7 +14,7 @@
 #define xRooFit_Config_h
 
 // ROOT configuration: all of xRooFit is placed into a detail namespace
-#define XROOFIT_NAMESPACE RooFit::Detail::XRooFit
+#define XROOFIT_NAMESPACE ROOT::Experimental::XRooFit
 
 // Define XROOFIT_USE_PRAGMA_ONCE if you want to use "pragma once" instead of
 // header guards

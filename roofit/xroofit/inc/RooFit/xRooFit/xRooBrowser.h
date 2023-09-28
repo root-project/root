@@ -23,7 +23,7 @@
 #include "TBrowser.h"
 #include "TQObject.h"
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 class xRooNode;
 
@@ -33,6 +33,8 @@ public:
    xRooBrowser(xRooNode *o);
 
    xRooNode *GetSelected();
+
+   xRooNode *Open(const char *filename);
 
    void ls(const char *path = nullptr) const override;
    void cd(const char *path);
@@ -47,6 +49,6 @@ public:
    ClassDefOverride(xRooBrowser, 0)
 };
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;
 
 #endif // include guard
