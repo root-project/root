@@ -101,14 +101,10 @@ class JSRootMenu {
          return;
       }
 
-      if (!without_sub) {
-         this.add('sub:' + top_name, () => {
-            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
-            this.input('Provide draw option', opt, 'text').then(call_back);
-         }, title);
-      }
+      if (!without_sub)
+         this.add('sub:' + top_name, opts[0], call_back, title);
 
-      for (let i = 0; i < opts.length; ++i) {
+      for (let i = 1; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
              group = i+1;
          if ((opts.length > 5) && name) {
@@ -133,8 +129,13 @@ class JSRootMenu {
          } else
             this.add(name, opts[i], call_back);
       }
-      if (!without_sub)
+      if (!without_sub) {
+         this.add('<input>', () => {
+            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+            this.input('Provide draw option', opt, 'text').then(call_back);
+         }, 'Enter draw option in dialog');
          this.add('endsub:');
+      }
    }
 
    /** @summary Add color selection menu entries

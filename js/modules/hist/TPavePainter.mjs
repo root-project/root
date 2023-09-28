@@ -820,6 +820,8 @@ class TPavePainter extends ObjectPainter {
          axis.fTextColor = zaxis.fLabelColor;
          axis.fTextFont = zaxis.fLabelFont;
          axis.fLabelOffset = zaxis.fLabelOffset;
+         this.z_handle.setHistPainter(main, 'z');
+         this.z_handle.source_axis = zaxis;
       }
 
       if (contour && framep) {
@@ -1016,8 +1018,8 @@ class TPavePainter extends ObjectPainter {
       if (settings.ZoomWheel) {
          this.draw_g.on('wheel', evnt => {
             const pos = d3_pointer(evnt, this.draw_g.node()),
-                coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
-                item = this.z_handle.analyzeWheelEvent(evnt, coord);
+                  coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
+                  item = this.z_handle.analyzeWheelEvent(evnt, coord);
             if (item?.changed)
                this.getFramePainter().zoom('z', item.min, item.max);
          });

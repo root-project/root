@@ -836,10 +836,15 @@ class TAxisPainter extends ObjectPainter {
                 .property('shift_y', new_y);
 
          const axis = this.getObject(), abits = EAxisBits,
-               set_bit = (bit, on) => { if (axis.TestBit(bit) !== on) axis.InvertBit(bit); };
+               axis2 = this.source_axis,
+               set_bit = (bit, on) => {
+                  if (axis.TestBit(bit) !== on) axis.InvertBit(bit);
+                  if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
+               };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
          axis.fTitleOffset = this.titleOffset / this.offsetScaling / this.titleSize;
+         if (axis2) axis2.fTitleOffset = axis.fTitleOffset;
 
          if (curr_indx === 1) {
             set_bit(abits.kCenterTitle, true); this.titleCenter = true;
@@ -870,14 +875,12 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Submit exec for the axis - if possible
      * @private */
-   submitAxisExec(exec) {
-      if (this.is_gaxis)
+   submitAxisExec(exec, only_gaxis) {
+      const snapid = this.hist_painter?.snapid;
+      if (snapid && this.hist_axis && !only_gaxis)
+         this.submitCanvExec(exec, `${snapid}#${this.hist_axis}`);
+      else if (this.is_gaxis)
          this.submitCanvExec(exec);
-       else {
-         const snapid = this.hist_painter?.snapid;
-         if (snapid && this.hist_axis)
-            this.submitCanvExec(exec, `${snapid}#${this.hist_axis}`);
-      }
    }
 
    /** @summary Produce svg path for axis ticks */

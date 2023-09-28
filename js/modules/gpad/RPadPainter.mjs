@@ -381,7 +381,6 @@ class RPadPainter extends RObjectPainter {
       } else
          svg.style('display', null);
 
-
       if (this._fixed_size) {
          svg.attr('x', 0)
             .attr('y', 0)
@@ -394,10 +393,7 @@ class RPadPainter extends RObjectPainter {
            .style('width', '100%')
            .style('height', '100%')
            .style('position', 'absolute')
-           .style('left', 0)
-           .style('top', 0)
-           .style('right', 0)
-           .style('bottom', 0);
+           .style('inset', '0px');
       }
 
       svg.style('filter', settings.DarkMode ? 'invert(100%)' : null);

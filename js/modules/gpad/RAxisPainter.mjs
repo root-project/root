@@ -505,7 +505,6 @@ class RAxisPainter extends RObjectPainter {
                 else
                   this.titlePos = 'right';
 
-
                this.changeAxisAttr(0, 'title_position', this.titlePos, 'title_offset', this.titleOffset / this.scalingSize);
 
                drag_rect.remove();

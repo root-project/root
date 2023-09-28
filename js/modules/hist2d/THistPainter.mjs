@@ -1,4 +1,4 @@
-import { gStyle, BIT, settings, constants, internals, create, isObject, isFunc, isStr, getPromise,
+import { gStyle, BIT, settings, constants, create, isObject, isFunc, isStr, getPromise,
          clTList, clTPaveText, clTPaveStats, clTPaletteAxis, clTProfile2D, clTProfile3D,
          clTAxis, clTF1, clTF2, clTProfile, kNoZoom, clTCutG, kNoStats } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
@@ -652,7 +652,6 @@ class THistPainter extends ObjectPainter {
       this.nbinsx = this.nbinsy = 0;
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw('same')
       this.mode3d = false;
-      this.hist_painter_id = internals.id_counter++; // assign unique identifier for hist painter
    }
 
    /** @summary Returns histogram object */
@@ -832,7 +831,7 @@ class THistPainter extends ObjectPainter {
       this.snapid = snapid;
 
       this.getPadPainter().forEachPainterInPad(objp => {
-         if (objp.child_painter_id === this.hist_painter_id) {
+         if (objp.isSecondaryPainter(this)) {
             const obj = objp.getObject();
             if (obj?.fName)
                objp.snapid = `${snapid}#func_${obj.fName}`;
@@ -951,12 +950,12 @@ class THistPainter extends ObjectPainter {
 
 
          if (this.options.Func) {
-            const painters = [], newfuncs = [], update_painters = [], pid = this.hist_painter_id;
+            const painters = [], newfuncs = [], update_painters = [];
 
             // find painters associated with histogram
             if (pp) {
                pp.forEachPainterInPad(objp => {
-                  if (objp.child_painter_id === pid)
+                  if (objp.isSecondaryPainter(this))
                      painters.push(objp);
                }, 'objects');
             }
@@ -964,7 +963,7 @@ class THistPainter extends ObjectPainter {
             if (obj.fFunctions) {
                for (let n = 0; n < obj.fFunctions.arr.length; ++n) {
                   const func = obj.fFunctions.arr[n],
-                      fopt = obj.fFunctions.opt[n];
+                        fopt = obj.fFunctions.opt[n];
                   if (!func?._typename || !this.needDrawFunc(histo, func)) continue;
 
                   let funcpainter = null, func_indx = -1;
@@ -1473,8 +1472,8 @@ class THistPainter extends ObjectPainter {
             : pp.drawObject(this.getDom(), func, opt);
 
       return promise.then(painter => {
-         if (isObject(painter)) {
-            painter.child_painter_id = this.hist_painter_id;
+         if (isFunc(painter?.setSecondaryId)) {
+            painter.setSecondaryId(this);
             if (!only_extra) painter.child_painter_indx = indx;
          }
 
@@ -2062,8 +2061,10 @@ class THistPainter extends ObjectPainter {
          pr = TPavePainter.draw(this.getDom(), pal, arg).then(_palp => {
             pal_painter = _palp;
             this.selectCurrentPad(prev);
-            if (found_in_func)
+            if (found_in_func) {
                pal_painter._hist_painter = this;
+               pal_painter.setSecondaryId(this);
+            }
          });
       } else {
          pal_painter.Enabled = true;
