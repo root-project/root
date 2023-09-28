@@ -11,7 +11,7 @@ const version_id = '7.5.pre',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '27/09/2023',
+version_date = '28/09/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -11860,6 +11860,26 @@ class ObjectPainter extends BasePainter {
          cp.pads_cache[pad_name] = c.node();
       }
       return c;
+   }
+
+   /** @summary Assign unique identifier for the painter
+     * @private */
+   getUniqueId() {
+      if (this._unique_painter_id === undefined)
+         this._unique_painter_id = internals.id_counter++; // assign unique identifier
+      return this._unique_painter_id;
+   }
+
+   /** @summary Assign secondary id
+     * @private */
+   setSecondaryId(main) {
+      this._main_painter_id = main.getUniqueId();
+   }
+
+   /** @summary Check if this is secondary painter
+     * @private */
+   isSecondaryPainter(main) {
+      return this._main_painter_id === main.getUniqueId();
    }
 
    /** @summary Provides identifier on server for requested sublement */
@@ -58356,14 +58376,10 @@ class JSRootMenu {
          return;
       }
 
-      if (!without_sub) {
-         this.add('sub:' + top_name, () => {
-            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
-            this.input('Provide draw option', opt, 'text').then(call_back);
-         }, title);
-      }
+      if (!without_sub)
+         this.add('sub:' + top_name, opts[0], call_back, title);
 
-      for (let i = 0; i < opts.length; ++i) {
+      for (let i = 1; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
              group = i+1;
          if ((opts.length > 5) && name) {
@@ -58388,8 +58404,13 @@ class JSRootMenu {
          } else
             this.add(name, opts[i], call_back);
       }
-      if (!without_sub)
+      if (!without_sub) {
+         this.add('<input>', () => {
+            const opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+            this.input('Provide draw option', opt, 'text').then(call_back);
+         }, 'Enter draw option in dialog');
          this.add('endsub:');
+      }
    }
 
    /** @summary Add color selection menu entries
@@ -60506,10 +60527,15 @@ class TAxisPainter extends ObjectPainter {
                 .property('shift_y', new_y);
 
          const axis = this.getObject(), abits = EAxisBits,
-               set_bit = (bit, on) => { if (axis.TestBit(bit) !== on) axis.InvertBit(bit); };
+               axis2 = this.source_axis,
+               set_bit = (bit, on) => {
+                  if (axis.TestBit(bit) !== on) axis.InvertBit(bit);
+                  if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
+               };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
          axis.fTitleOffset = this.titleOffset / this.offsetScaling / this.titleSize;
+         if (axis2) axis2.fTitleOffset = axis.fTitleOffset;
 
          if (curr_indx === 1) {
             set_bit(abits.kCenterTitle, true); this.titleCenter = true;
@@ -60540,14 +60566,12 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Submit exec for the axis - if possible
      * @private */
-   submitAxisExec(exec) {
-      if (this.is_gaxis)
+   submitAxisExec(exec, only_gaxis) {
+      const snapid = this.hist_painter?.snapid;
+      if (snapid && this.hist_axis && !only_gaxis)
+         this.submitCanvExec(exec, `${snapid}#${this.hist_axis}`);
+      else if (this.is_gaxis)
          this.submitCanvExec(exec);
-       else {
-         const snapid = this.hist_painter?.snapid;
-         if (snapid && this.hist_axis)
-            this.submitCanvExec(exec, `${snapid}#${this.hist_axis}`);
-      }
    }
 
    /** @summary Produce svg path for axis ticks */
@@ -65249,7 +65273,8 @@ class BrowserLayout {
 
       main.append('div').attr('id', this.drawing_divid())
                         .classed('jsroot_draw_area', true)
-                        .style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
+                        .style('position', 'absolute')
+                        .style('inset', '0px');
 
       if (with_browser)
          main.append('div').classed('jsroot_browser', true);
@@ -65265,7 +65290,7 @@ class BrowserLayout {
       if (btns.empty()) {
          btns = br.append('div')
                   .attr('class', 'jsroot jsroot_browser_btns')
-                  .attr('style', 'position:absolute; left:7px; top: 7px');
+                  .attr('style', 'position: absolute; left: 7px; top: 7px');
       } else
          btns.html('');
       return btns;
@@ -65282,11 +65307,11 @@ class BrowserLayout {
       if (main.empty()) return;
 
       main.insert('div', '.jsroot_browser_btns').classed('jsroot_browser_area', true)
-          .style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('width', '250px')
-          .style('overflow', 'hidden')
-          .style('padding-left', '5px')
-          .style('display', 'flex').style('flex-direction', 'column')   /* use the flex model */
-          .html(`<p class='jsroot_browser_title'>title</p><div class='jsroot_browser_resize' style='display:none'>&#9727</div>${guiCode}`);
+           .style('position', 'absolute').style('left', '0px').style('top', '0px').style('bottom', '0px').style('width', '250px')
+           .style('overflow', 'hidden')
+           .style('padding-left', '5px')
+           .style('display', 'flex').style('flex-direction', 'column')   /* use the flex model */
+           .html(`<p class='jsroot_browser_title'>title</p><div class='jsroot_browser_resize' style='display:none'>&#9727</div>${guiCode}`);
    }
 
    /** @summary Check if there is browser content */
@@ -65390,7 +65415,7 @@ class BrowserLayout {
       main.insert('div', '.jsroot_browser_area')
           .attr('id', id)
           .classed('jsroot_status_area', true)
-          .style('position', 'absolute').style('left', left_pos).style('height', '20px').style('bottom', 0).style('right', 0)
+          .style('position', 'absolute').style('left', left_pos).style('height', '20px').style('bottom', '0px').style('right', '0px')
           .style('margin', 0).style('border', 0);
 
       const separ_color = settings.DarkMode ? 'grey' : 'azure',
@@ -65469,12 +65494,12 @@ class BrowserLayout {
             this.last_hsepar_height = hsepar;
             elem.style('bottom', hsepar+'px').style('height', w+'px');
             this.status().style('height', hsepar+'px');
-            hlimit = (hsepar+w) + 'px';
+            hlimit = hsepar + w;
          }
 
          this._hsepar_position = hsepar;
 
-         this.drawing().style('bottom', hlimit);
+         this.drawing().style('bottom', `${hlimit}px`);
       }
 
       if (vsepar !== null) {
@@ -65575,8 +65600,8 @@ class BrowserLayout {
       if (main.empty()) return;
 
       const area = main.select('.jsroot_browser_area'),
-          cont = main.select('.jsroot_browser_hierarchy'),
-          chld = select(cont.node().firstChild);
+            cont = main.select('.jsroot_browser_hierarchy'),
+            chld = select(cont.node().firstChild);
 
       if (onlycheckmax) {
          if (area.node().parentNode.clientHeight - 10 < area.node().clientHeight)
@@ -65586,7 +65611,7 @@ class BrowserLayout {
 
       if (chld.empty()) return;
       const h1 = cont.node().clientHeight,
-          h2 = chld.node().clientHeight;
+            h2 = chld.node().clientHeight;
 
       if ((h2 !== undefined) && (h2 < h1*0.7)) area.style('bottom', '');
    }
@@ -65597,19 +65622,16 @@ class BrowserLayout {
 
       const main = this.browser(),
             btns = main.select('.jsroot_browser_btns');
-      let top = 7, left = 7;
-
       if (btns.empty()) return;
 
+      let top = 7, left = 7;
       if (this.browser_visible) {
          const area = main.select('.jsroot_browser_area');
-
          top = area.node().offsetTop + 7;
-
          left = area.node().offsetLeft - main.node().offsetLeft + area.node().clientWidth - 27;
       }
 
-      btns.style('left', left+'px').style('top', top+'px');
+      btns.style('left', `${left}px`).style('top', `${top}px`);
    }
 
    /** @summary Toggle browser kind */
@@ -65624,12 +65646,13 @@ class BrowserLayout {
       }
 
       const main = this.browser(),
-          area = main.select('.jsroot_browser_area');
+            area = main.select('.jsroot_browser_area');
 
       if (this.browser_kind === 'float') {
           area.style('bottom', '0px')
               .style('top', '0px')
-              .style('width', '').style('height', '')
+              .style('width', '')
+              .style('height', '')
               .classed('jsroot_float_browser', false)
               .style('border', null);
       } else if (this.browser_kind === 'fix') {
@@ -65689,12 +65712,11 @@ class BrowserLayout {
 
         this.adjustBrowserSize();
      } else {
-        area.style('left', 0).style('top', 0).style('bottom', 0).style('height', null);
+        area.style('left', '0px').style('top', '0px').style('bottom', '0px').style('height', null);
 
         const separ_color = settings.DarkMode ? 'grey' : 'azure',
-           vsepar = main.append('div')
-               .classed('jsroot_v_separator', true)
-               .attr('style', `pointer-events: all; border: 0; margin: 0; padding: 0; background-color: ${separ_color}; position: absolute; top: 0; bottom: 0; cursor: ew-resize;`),
+              vsepar = main.append('div').classed('jsroot_v_separator', true)
+                           .attr('style', `pointer-events: all; border: 0; margin: 0; padding: 0; background-color: ${separ_color}; position: absolute; top: 0; bottom: 0; cursor: ew-resize;`),
 
          drag_move = drag().on('start', () => {
             this._vsepar_move = this._vsepar_position;
@@ -68329,7 +68351,7 @@ class TCanvasPainter extends TPadPainter {
       if (this._readonly || !painter) return;
 
       if (!snapid) snapid = painter.snapid;
-      if (snapid && isStr(snapid))
+      if (snapid && isStr(snapid) && exec)
          return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
@@ -69756,6 +69778,8 @@ class TPavePainter extends ObjectPainter {
          axis.fTextColor = zaxis.fLabelColor;
          axis.fTextFont = zaxis.fLabelFont;
          axis.fLabelOffset = zaxis.fLabelOffset;
+         this.z_handle.setHistPainter(main, 'z');
+         this.z_handle.source_axis = zaxis;
       }
 
       if (contour && framep) {
@@ -69952,8 +69976,8 @@ class TPavePainter extends ObjectPainter {
       if (settings.ZoomWheel) {
          this.draw_g.on('wheel', evnt => {
             const pos = pointer(evnt, this.draw_g.node()),
-                coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
-                item = this.z_handle.analyzeWheelEvent(evnt, coord);
+                  coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
+                  item = this.z_handle.analyzeWheelEvent(evnt, coord);
             if (item?.changed)
                this.getFramePainter().zoom('z', item.min, item.max);
          });
@@ -70968,7 +70992,6 @@ class THistPainter extends ObjectPainter {
       this.nbinsx = this.nbinsy = 0;
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw('same')
       this.mode3d = false;
-      this.hist_painter_id = internals.id_counter++; // assign unique identifier for hist painter
    }
 
    /** @summary Returns histogram object */
@@ -71148,7 +71171,7 @@ class THistPainter extends ObjectPainter {
       this.snapid = snapid;
 
       this.getPadPainter().forEachPainterInPad(objp => {
-         if (objp.child_painter_id === this.hist_painter_id) {
+         if (objp.isSecondaryPainter(this)) {
             const obj = objp.getObject();
             if (obj?.fName)
                objp.snapid = `${snapid}#func_${obj.fName}`;
@@ -71267,12 +71290,12 @@ class THistPainter extends ObjectPainter {
 
 
          if (this.options.Func) {
-            const painters = [], newfuncs = [], update_painters = [], pid = this.hist_painter_id;
+            const painters = [], newfuncs = [], update_painters = [];
 
             // find painters associated with histogram
             if (pp) {
                pp.forEachPainterInPad(objp => {
-                  if (objp.child_painter_id === pid)
+                  if (objp.isSecondaryPainter(this))
                      painters.push(objp);
                }, 'objects');
             }
@@ -71280,7 +71303,7 @@ class THistPainter extends ObjectPainter {
             if (obj.fFunctions) {
                for (let n = 0; n < obj.fFunctions.arr.length; ++n) {
                   const func = obj.fFunctions.arr[n],
-                      fopt = obj.fFunctions.opt[n];
+                        fopt = obj.fFunctions.opt[n];
                   if (!func?._typename || !this.needDrawFunc(histo, func)) continue;
 
                   let funcpainter = null, func_indx = -1;
@@ -71789,8 +71812,8 @@ class THistPainter extends ObjectPainter {
             : pp.drawObject(this.getDom(), func, opt);
 
       return promise.then(painter => {
-         if (isObject(painter)) {
-            painter.child_painter_id = this.hist_painter_id;
+         if (isFunc(painter?.setSecondaryId)) {
+            painter.setSecondaryId(this);
             if (!only_extra) painter.child_painter_indx = indx;
          }
 
@@ -72378,8 +72401,10 @@ class THistPainter extends ObjectPainter {
          pr = TPavePainter.draw(this.getDom(), pal, arg).then(_palp => {
             pal_painter = _palp;
             this.selectCurrentPad(prev);
-            if (found_in_func)
+            if (found_in_func) {
                pal_painter._hist_painter = this;
+               pal_painter.setSecondaryId(this);
+            }
          });
       } else {
          pal_painter.Enabled = true;
@@ -99942,12 +99967,13 @@ async function import_geo() {
 
 const clTGraph2D = 'TGraph2D', clTH2Poly = 'TH2Poly', clTEllipse = 'TEllipse',
       clTSpline3 = 'TSpline3', clTTree = 'TTree', clTCanvasWebSnapshot = 'TCanvasWebSnapshot',
+      fPrimitives = 'fPrimitives', fFunctions = 'fFunctions',
 
 /** @summary list of registered draw functions
   * @private */
 drawFuncs = { lst: [
-   { name: clTCanvas, icon: 'img_canvas', class: () => import_canvas().then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives', noappend: true },
-   { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives', noappend: true },
+   { name: clTCanvas, icon: 'img_canvas', class: () => import_canvas().then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
+   { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
    { name: 'TSlider', icon: 'img_canvas', func: TPadPainter.draw },
    { name: clTButton, icon: 'img_canvas', func: TPadPainter.draw },
    { name: 'TFrame', icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
@@ -99964,14 +99990,14 @@ drawFuncs = { lst: [
    { name: clTMathText, sameas: clTLatex },
    { name: clTText, sameas: clTLatex },
    { name: clTAnnotation, sameas: clTLatex },
-   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l' },
-   { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist' },
+   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions },
+   { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist', expand_item: fFunctions },
    { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
    { name: 'TProfile2Poly', sameas: clTH2Poly },
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
-   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego' },
+   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions },
    { name: clTProfile2D, sameas: clTH2 },
-   { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL' },
+   { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions },
    { name: clTProfile3D, sameas: clTH3 },
    { name: clTHStack, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return THStackPainter$1; }).then(h => h.THStackPainter), expand_item: 'fHists', opt: 'NOSTACK;HIST;E;PFC;PLC' },
    { name: clTPolyMarker3D, icon: 'img_histo3d', draw: () => Promise.resolve().then(function () { return draw3d; }).then(h => h.drawPolyMarker3D), direct: true, frame: '3d' },
@@ -100054,8 +100080,8 @@ drawFuncs = { lst: [
    { name: 'Session', icon: 'img_globe' },
    { name: 'kind:TopFolder', icon: 'img_base' },
    { name: 'kind:Folder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true },
-   { name: nsREX+'RCanvas', icon: 'img_canvas', class: () => init_v7().then(h => h.RCanvasPainter), opt: '', expand_item: 'fPrimitives' },
-   { name: nsREX+'RCanvasDisplayItem', icon: 'img_canvas', draw: () => init_v7().then(h => h.drawRPadSnapshot), opt: '', expand_item: 'fPrimitives' },
+   { name: nsREX+'RCanvas', icon: 'img_canvas', class: () => init_v7().then(h => h.RCanvasPainter), opt: '', expand_item: fPrimitives },
+   { name: nsREX+'RCanvasDisplayItem', icon: 'img_canvas', draw: () => init_v7().then(h => h.drawRPadSnapshot), opt: '', expand_item: fPrimitives },
    { name: nsREX+'RHist1Drawable', icon: 'img_histo1d', class: () => init_v7('rh1').then(h => h.RH1Painter), opt: '' },
    { name: nsREX+'RHist2Drawable', icon: 'img_histo2d', class: () => init_v7('rh2').then(h => h.RH2Painter), opt: '' },
    { name: nsREX+'RHist3Drawable', icon: 'img_histo3d', class: () => init_v7('rh3').then(h => h.RH3Painter), opt: '' },
@@ -101814,7 +101840,7 @@ class HierarchyPainter extends BasePainter {
 
       if (this.with_icons && !break_list) {
          const icon_name = hitem._isopen ? img2 : img1,
-              d3img = (icon_name.indexOf('img_') === 0)
+               d3img = (icon_name.indexOf('img_') === 0)
                  ? d3line.append('div')
                           .attr('class', icon_name)
                           .attr('title', hitem._kind)
@@ -101822,7 +101848,9 @@ class HierarchyPainter extends BasePainter {
                           .attr('src', icon_name)
                           .attr('alt', '')
                           .attr('title', hitem._kind)
-                          .style('vertical-align', 'top').style('width', '18px').style('height', '18px');
+                          .style('vertical-align', 'top')
+                          .style('width', '18px')
+                          .style('height', '18px');
 
          if (('_icon_click' in hitem) || (handle && ('icon_click' in handle)))
             d3img.on('click', function(evnt) { h.tree_click(evnt, this, 'icon'); });
@@ -102444,8 +102472,19 @@ class HierarchyPainter extends BasePainter {
                                 'Draw item in the new browser tab or window');
             }
 
-            if ((sett.expand || sett.get_expand) && !('_childs' in hitem) && (hitem._more || !('_more' in hitem)))
-               menu.add('Expand', () => this.expandItem(itemname));
+            if ((sett.expand || sett.get_expand) && (hitem._more || hitem._more === undefined)) {
+               if (hitem._childs === undefined)
+                  menu.add('Expand', () => this.expandItem(itemname), 'Exapnd content of object');
+               else {
+                  menu.add('Unexpand', () => {
+                     delete hitem._childs;
+                     delete hitem._isopen;
+                     if (hitem.expand_item)
+                        delete hitem._expand;
+                     this.updateTreeNode(hitem);
+                  }, 'Remove all childs from hierarchy');
+               }
+            }
 
             if (hitem._kind === prROOT + clTStyle)
                menu.add('Apply', () => this.applyStyle(itemname));
@@ -102912,9 +102951,9 @@ class HierarchyPainter extends BasePainter {
             }
          }
 
-         function DropNextItem(indx, painter) {
+         function dropNextItem(indx, painter) {
             if (painter && dropitems[indx] && (dropitems[indx].length > 0))
-               return h.dropItem(dropitems[indx].shift(), painter.getDom(), dropopts[indx].shift()).then(() => DropNextItem(indx, painter));
+               return h.dropItem(dropitems[indx].shift(), painter.getDom(), dropopts[indx].shift()).then(() => dropNextItem(indx, painter));
 
             dropitems[indx] = null; // mark that all drop items are processed
             items[indx] = null; // mark item as ready
@@ -102923,17 +102962,30 @@ class HierarchyPainter extends BasePainter {
                if (items[cnt] === null) continue; // ignore completed item
                if (items_wait[cnt] && items.indexOf(items[cnt]) === cnt) {
                   items_wait[cnt] = false;
-                  return h.display(items[cnt], options[cnt]).then(painter => DropNextItem(cnt, painter));
+                  return h.display(items[cnt], options[cnt]).then(painter => dropNextItem(cnt, painter));
                }
             }
          }
 
          const promises = [];
 
-         // We start display of all items parallel, but only if they are not the same
-         for (let i = 0; i < items.length; ++i) {
-            if (!items_wait[i])
-               promises.push(h.display(items[i], options[i]).then(painter => DropNextItem(i, painter)));
+         if (this._one_by_one) {
+            function processNext(indx) {
+               if (indx >= items.length)
+                  return true;
+               if (items_wait[indx])
+                  return processNext(indx + 1);
+                return h.display(items[indx], options[indx])
+                        .then(painter => dropNextItem(indx, painter))
+                        .then(() => processNext(indx + 1));
+            }
+            promises.push(processNext(0));
+         } else {
+            // We start display of all items parallel, but only if they are not the same
+            for (let i = 0; i < items.length; ++i) {
+               if (!items_wait[i])
+                  promises.push(h.display(items[i], options[i]).then(painter => dropNextItem(i, painter)));
+            }
          }
 
          return Promise.all(promises);
@@ -103056,7 +103108,8 @@ class HierarchyPainter extends BasePainter {
 
             if (handle?.expand_item) {
                _obj = _obj[handle.expand_item];
-              handle = _obj?._typename ? getDrawHandle(prROOT + _obj._typename, '::expand') : null;
+               hitem.expand_item = handle.expand_item; // remember that was exapnd item
+               handle = _obj?._typename ? getDrawHandle(prROOT + _obj._typename, '::expand') : null;
             }
 
             if (handle?.expand || handle?.get_expand) {
@@ -103803,14 +103856,14 @@ class HierarchyPainter extends BasePainter {
    async startGUI(gui_div, url) {
       const d = decodeUrl(url),
 
-       GetOption = opt => {
+      getOption = opt => {
          let res = d.get(opt, null);
          if ((res === null) && gui_div && !gui_div.empty() && gui_div.node().hasAttribute(opt))
             res = gui_div.attr(opt);
          return res;
       },
 
-       GetUrlOptionAsArray = opt => {
+      getUrlOptionAsArray = opt => {
          let res = [];
 
          while (opt) {
@@ -103832,8 +103885,8 @@ class HierarchyPainter extends BasePainter {
          return res;
       },
 
-       GetOptionAsArray = opt => {
-         let res = GetUrlOptionAsArray(opt);
+      getOptionAsArray = opt => {
+         let res = getUrlOptionAsArray(opt);
          if (res.length > 0 || !gui_div || gui_div.empty()) return res;
          while (opt) {
             const separ = opt.indexOf(';');
@@ -103857,22 +103910,24 @@ class HierarchyPainter extends BasePainter {
       },
 
       filesdir = d.get('path') || '', // path used in normal gui
-      jsonarr = GetOptionAsArray('#json;jsons'),
-      expanditems = GetOptionAsArray('expand'),
-      focusitem = GetOption('focus'),
-      layout = GetOption('layout'),
-      style = GetOptionAsArray('#style'),
-      title = GetOption('title');
+      jsonarr = getOptionAsArray('#json;jsons'),
+      expanditems = getOptionAsArray('expand'),
+      focusitem = getOption('focus'),
+      layout = getOption('layout'),
+      style = getOptionAsArray('#style'),
+      title = getOption('title');
 
-      let prereq = GetOption('prereq') || '',
-          load = GetOption('load'),
-          inject = GetOption('inject'),
-          filesarr = GetOptionAsArray('#file;files'),
-          itemsarr = GetOptionAsArray('#item;items'),
-          optionsarr = GetOptionAsArray('#opt;opts'),
-          monitor = GetOption('monitoring'),
-          statush = 0, status = GetOption('status'),
-          browser_kind = GetOption('browser'),
+      this._one_by_one = settings.drop_items_one_by_one ?? (getOption('one_by_one') !== null);
+
+      let prereq = getOption('prereq') || '',
+          load = getOption('load'),
+          inject = getOption('inject'),
+          filesarr = getOptionAsArray('#file;files'),
+          itemsarr = getOptionAsArray('#item;items'),
+          optionsarr = getOptionAsArray('#opt;opts'),
+          monitor = getOption('monitoring'),
+          statush = 0, status = getOption('status'),
+          browser_kind = getOption('browser'),
           browser_configured = !!browser_kind;
 
 
@@ -103883,10 +103938,10 @@ class HierarchyPainter extends BasePainter {
       else
          monitor = parseInt(monitor);
 
-      if (GetOption('float') !== null) {
+      if (getOption('float') !== null) {
          browser_kind = 'float';
          browser_configured = true;
-      } else if (GetOption('fix') !== null) {
+      } else if (getOption('fix') !== null) {
          browser_kind = 'fix';
          browser_configured = true;
       }
@@ -103894,22 +103949,22 @@ class HierarchyPainter extends BasePainter {
       if (!browser_configured && (browser.screenWidth <= 640))
          browser_kind = 'float';
 
-      this.no_select = GetOption('noselect');
+      this.no_select = getOption('noselect');
 
-      if (GetOption('files_monitoring') !== null)
+      if (getOption('files_monitoring') !== null)
          this.files_monitoring = true;
 
       if (title && (typeof document !== 'undefined'))
          document.title = title;
 
-      if (expanditems.length === 0 && (GetOption('expand') === '')) expanditems.push('');
+      if (expanditems.length === 0 && (getOption('expand') === '')) expanditems.push('');
 
       if (filesdir) {
          for (let i = 0; i < filesarr.length; ++i) filesarr[i] = filesdir + filesarr[i];
          for (let i = 0; i < jsonarr.length; ++i) jsonarr[i] = filesdir + jsonarr[i];
       }
 
-      if ((itemsarr.length === 0) && GetOption('item') === '') itemsarr.push('');
+      if ((itemsarr.length === 0) && getOption('item') === '') itemsarr.push('');
 
       if ((jsonarr.length === 1) && (itemsarr.length === 0) && (expanditems.length === 0)) itemsarr.push('');
 
@@ -103956,12 +104011,12 @@ class HierarchyPainter extends BasePainter {
          status = null;
          this.exclude_browser = true;
       }
-      if (GetOption('nofloat') !== null)
+      if (getOption('nofloat') !== null)
          this.float_browser_disabled = true;
 
       if (this.start_without_browser) browser_kind = '';
 
-      this._topname = GetOption('topname');
+      this._topname = getOption('topname');
 
       const openAllFiles = () => {
          let promise;
@@ -104298,10 +104353,10 @@ ObjectPainter.prototype.showInspector = function(opt, obj) {
       return true;
 
    const main = this.selectDom(),
-        rect = getElementRect(main),
-        w = Math.round(rect.width * 0.05) + 'px',
-        h = Math.round(rect.height * 0.05) + 'px',
-        id = 'root_inspector_' + internals.id_counter++;
+         rect = getElementRect(main),
+         w = Math.round(rect.width * 0.05) + 'px',
+         h = Math.round(rect.height * 0.05) + 'px',
+         id = 'root_inspector_' + internals.id_counter++;
 
    main.append('div')
        .attr('id', id)
@@ -112089,7 +112144,7 @@ class TGaxisPainter extends TAxisPainter {
          gaxis.fY1 = gaxis.fY2 = fy;
       }
 
-      this.submitAxisExec(`SetX1(${gaxis.fX1});;SetX2(${gaxis.fX2});;SetY1(${gaxis.fY1});;SetY2(${gaxis.fY2})`);
+      this.submitAxisExec(`SetX1(${gaxis.fX1});;SetX2(${gaxis.fX2});;SetY1(${gaxis.fY1});;SetY2(${gaxis.fY2})`, true);
    }
 
    /** @summary Redraw axis, used in standalone mode for TGaxis */
@@ -113482,7 +113537,6 @@ class RAxisPainter extends RObjectPainter {
                   this.titlePos = 'left';
                 else
                   this.titlePos = 'right';
-
 
                this.changeAxisAttr(0, 'title_position', this.titlePos, 'title_offset', this.titleOffset / this.scalingSize);
 
@@ -115594,7 +115648,6 @@ class RPadPainter extends RObjectPainter {
       } else
          svg.style('display', null);
 
-
       if (this._fixed_size) {
          svg.attr('x', 0)
             .attr('y', 0)
@@ -115607,10 +115660,7 @@ class RPadPainter extends RObjectPainter {
            .style('width', '100%')
            .style('height', '100%')
            .style('position', 'absolute')
-           .style('left', 0)
-           .style('top', 0)
-           .style('right', 0)
-           .style('bottom', 0);
+           .style('inset', '0px');
       }
 
       svg.style('filter', settings.DarkMode ? 'invert(100%)' : null);

@@ -82,7 +82,7 @@ class TGaxisPainter extends TAxisPainter {
          gaxis.fY1 = gaxis.fY2 = fy;
       }
 
-      this.submitAxisExec(`SetX1(${gaxis.fX1});;SetX2(${gaxis.fX2});;SetY1(${gaxis.fY1});;SetY2(${gaxis.fY2})`);
+      this.submitAxisExec(`SetX1(${gaxis.fX1});;SetX2(${gaxis.fX2});;SetY1(${gaxis.fY1});;SetY2(${gaxis.fY2})`, true);
    }
 
    /** @summary Redraw axis, used in standalone mode for TGaxis */
