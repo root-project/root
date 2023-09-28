@@ -43,7 +43,7 @@ class TStyle;
 #include "RooCmdArg.h"
 #include "TQObject.h"
 
-BEGIN_XROOFIT_NAMESPACE
+BEGIN_XROOFIT_NAMESPACE;
 
 class xRooNode;
 class xRooNLLVar;
@@ -116,13 +116,8 @@ public:
 
    virtual ~xRooNode();
 
-   void SetName(const char *name) override; // *MENU*
-   void SetTitle(const char *title) override
-   {
-      if (auto o = (get<TNamed>()); o)
-         o->SetTitle(title);
-      TNamed::SetTitle(title);
-   } // *MENU*
+   void SetName(const char *name) override;   // *MENU*
+   void SetTitle(const char *title) override; // *MENU*
 
    const char *GetNodeType() const;
 
@@ -141,22 +136,58 @@ public:
 
    RooArgList argList() const;
 
-   std::shared_ptr<xRooNode> find(const std::string &name) const;
+   std::shared_ptr<xRooNode>
+   find(const std::string &name, bool browseResult = true) const; // same as at but return nullptr if not found
    bool contains(const std::string &name) const; // doesn't trigger a browse of the found object, unlike find
 
    // most users should use these methods: will do an initial browse and will browse the returned object too
    std::shared_ptr<xRooNode> operator[](size_t idx) { return at(idx); }
-   std::shared_ptr<xRooNode> operator[](const std::string &name); // will create a child node if not existing
+   std::shared_ptr<xRooNode> operator[](const std::string &name); // will create a new node if not existing, unlike 'at'
+
+   // custom iterator to ensure children are auto-browsed as we iterate through
+   class xRooNodeIterator : public std::vector<std::shared_ptr<xRooNode>>::const_iterator {
+   public:
+      xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::const_iterator itr)
+         : std::vector<std::shared_ptr<xRooNode>>::const_iterator(itr)
+      {
+      }
+      std::shared_ptr<xRooNode> const &operator*() const
+      {
+         auto &&out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
+         if (out->get() && out->empty())
+            out->browse();
+         return std::move(out);
+      }
+      bool operator!=(xRooNodeIterator const &b) const
+      {
+         const std::vector<std::shared_ptr<xRooNode>>::const_iterator &aa = (*this);
+         const std::vector<std::shared_ptr<xRooNode>>::const_iterator &bb = b;
+         return aa != bb;
+      };
+      xRooNodeIterator const &operator++()
+      {
+         std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator++();
+         return *this;
+      }
+      bool operator==(xRooNodeIterator const &b) const
+      {
+         const std::vector<std::shared_ptr<xRooNode>>::const_iterator &aa = (*this);
+         const std::vector<std::shared_ptr<xRooNode>>::const_iterator &bb = b;
+         return aa == bb;
+      };
+   };
+   auto begin() const -> xRooNodeIterator { return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::begin()); }
+   auto end() const -> xRooNodeIterator { return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::end()); }
 
    // needed in pyROOT to avoid it creating iterators that follow the 'get' to death
-   auto begin() const -> decltype(std::vector<std::shared_ptr<xRooNode>>::begin())
-   {
-      return std::vector<std::shared_ptr<xRooNode>>::begin();
-   }
-   auto end() const -> decltype(std::vector<std::shared_ptr<xRooNode>>::end())
-   {
-      return std::vector<std::shared_ptr<xRooNode>>::end();
-   }
+   //   auto begin() const -> decltype(std::vector<std::shared_ptr<xRooNode>>::begin())
+   //   {
+   //      return std::vector<std::shared_ptr<xRooNode>>::begin();
+   //   }
+   //   auto end() const -> decltype(std::vector<std::shared_ptr<xRooNode>>::end())
+   //   {
+   //      return std::vector<std::shared_ptr<xRooNode>>::end();
+   //   }
 
    void Browse(TBrowser *b = nullptr) override; // will browse the children that aren't "null" nodes
    bool IsFolder() const override;
@@ -178,6 +209,17 @@ public:
    {
       return dynamic_cast<T *>(get());
    }
+   TObject *xget() const { return xget<TObject>(); }
+   template <typename T>
+   T *xget() const
+   {
+      for (auto &c : fBrowsables) {
+         if (strcmp(c->GetName(), ".memory") == 0) {
+            return c->get<T>();
+         }
+      }
+      return nullptr;
+   }
 
    TObject *operator->() const { return get(); }
 
@@ -189,6 +231,13 @@ public:
    std::shared_ptr<T> acquire(Args &&...args)
    {
       return std::dynamic_pointer_cast<T>(acquire(std::make_shared<T>(std::forward<Args>(args)...)));
+   }
+   template <typename T, typename T2, typename... Args>
+   // looser version of above ... first template type says what type to return
+   // allows returning different type to the one requested in T2 (e.g. ok to get RooConstVar when acquire a RooRealVar)
+   std::shared_ptr<T> acquire2(Args &&...args)
+   {
+      return std::dynamic_pointer_cast<T>(acquire(std::make_shared<T2>(std::forward<Args>(args)...)));
    }
    template <typename T, typename... Args>
    std::shared_ptr<T> acquireNew(Args &&...args)
@@ -206,17 +255,17 @@ public:
 
    std::shared_ptr<TObject> convertForAcquisition(xRooNode &acquirer, const char *opt = "") const;
 
-   xRooNode vars() const;   // obs,globs,floats,args
+   xRooNode vars() const;   // obs,pars
    xRooNode obs() const;    // robs and globs
    xRooNode robs() const;   // just the regular obs
    xRooNode globs() const;  // just the global obs
-   xRooNode pars() const;   // floats and args/consts
-   xRooNode floats() const; // just floating pars
-   xRooNode args() const;   // just const pars
-   xRooNode consts() const { return args(); }
+   xRooNode pars() const;   // poi, np, and pp (prespecified pars)
+   xRooNode floats() const; // float poi or np
+   xRooNode consts() const; // just const poi or np
 
    xRooNode poi() const; // parameters of interest
-   xRooNode np() const;  // nuisance parameters
+   xRooNode np() const;  // nuisance parameters (non-poi floatables)
+   xRooNode pp() const;  // preset/prespecified parameters
 
    xRooNode components() const; // additive children
    xRooNode factors() const;    // multiplicative children
@@ -229,6 +278,7 @@ public:
    xRooNode datasets()
       const; // datasets corresponding to this pdf (parent nodes that do observable selections automatically applied)
 
+   xRooNode Replace(const xRooNode &node); // use to replace a node in the tree at the location of this node
    xRooNode Remove(const xRooNode &child);
    xRooNode
    Add(const xRooNode &child,
@@ -240,7 +290,7 @@ public:
 
    xRooNode Combine(const xRooNode &rhs); // combine rhs with this node
 
-   xRooNode reduced(const std::string &range = "")
+   xRooNode reduced(const std::string &range = "", bool invert = false)
       const; // return a node representing reduced version of this node, will use the SetRange to reduce if blank
 
    // following versions are for the menu in the GUI
@@ -249,19 +299,21 @@ public:
    void _Vary_(const char *what);                                     // *MENU*
    xRooNode _Constrain_(const char *what) { return Constrain(what); } // *MENU*
 
-   void _ShowVars_(Bool_t set = kTRUE); // *TOGGLE* *GETTER=_IsShowVars_
+   void _ShowVars_(bool set = true); // *TOGGLE* *GETTER=_IsShowVars_
    bool _IsShowVars_() const;
 
-   void SetHidden(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHidden
+   void SetHidden(bool set = true); // *TOGGLE* *GETTER=IsHidden
    bool IsHidden() const;
 
    bool SetContents(const TObject &obj)
    {
       operator=(obj);
       return true;
-   }                               // populates the node's comp (creating if necessary)  from given object
-   bool SetContents(double value); // uses a RooConst
-   bool SetContents(double value, const char *par, double parVal = 1); // shortcut to setting a variation content
+   } // populates the node's comp (creating if necessary)  from given object
+   bool SetData(const TObject &obj, const char *dataName = "obsData");
+
+   bool SetContent(double value);                                     // uses a RooConst
+   bool SetContent(double value, const char *par, double parVal = 1); // shortcut to setting a variation content
    bool SetContents(const TObject &obj, const char *par, double parVal)
    {
       variations()[TString::Format("%s=%g", par, parVal).Data()]->operator=(obj);
@@ -271,21 +323,22 @@ public:
    bool SetBinContent(int bin, double value, const char *par = nullptr, double parVal = 1);
    bool SetBinData(int bin, double value, const char *dataName = "obsData"); // only valid for pdf nodes
 
-   void _SetContents_(double value);                                                     // *MENU*
+   void _SetContent_(double value);                                                      // *MENU*
    void _SetBinContent_(int bin, double value, const char *par = "", double parVal = 1); // *MENU*
 
    bool SetXaxis(const RooAbsBinning &binning);
+   bool SetXaxis(TAxis *ax);
    bool SetXaxis(const char *name, const char *title, int nbins, double low, double high);
-   bool SetXaxis(const char *name, const char *title, int nbins, double *bins);
+   bool SetXaxis(const char *name, const char *title, int nbins, const double *bins);
    bool SetXaxis(const char *title, int nbins, double low, double high)
    {
       return SetXaxis("xaxis", title, nbins, low, high);
    }
-   bool SetXaxis(const char *title, int nbins, double *bins) { return SetXaxis("xaxis", title, nbins, bins); }
+   bool SetXaxis(const char *title, int nbins, const double *bins) { return SetXaxis("xaxis", title, nbins, bins); }
    bool SetXaxis(int nbins, double low, double high) { return SetXaxis("xaxis", "", nbins, low, high); }
-   bool SetXaxis(int nbins, double *bins) { return SetXaxis("xaxis", "", nbins, bins); }
+   bool SetXaxis(int nbins, const double *bins) { return SetXaxis("xaxis", "", nbins, bins); }
 
-   std::shared_ptr<TStyle> style(TObject *initObject = nullptr) const;
+   std::shared_ptr<TStyle> style(TObject *initObject = nullptr, bool autoCreate = true) const;
 
    TAxis *GetXaxis() const;
 
@@ -297,8 +350,12 @@ public:
    std::pair<double, double> IntegralAndError(const xRooNode &fr = "", const char *rangeName = nullptr) const;
 
    // methods to access default content and error
-   double GetContent() const { return GetBinContent(0); }
-   double GetError() const { return GetBinError(0); }
+   double GetContent() const { return GetBinContent(fBinNumber); }
+   double GetError(const xRooNode &fr = "") const
+   {
+      return (fBinNumber == -1) ? IntegralAndError(fr).second : GetBinError(fBinNumber, fr);
+   }
+   double GetData(const char *dataName = "obsData") { return GetBinData(fBinNumber, dataName); }
 
    xRooNLLVar nll(const xRooNode &_data, std::initializer_list<RooCmdArg> nllOpts) const;
    xRooNLLVar nll(const xRooNode &_data, const RooLinkedList &nllOpts) const;
@@ -309,8 +366,15 @@ public:
    void SetFitResult(const std::shared_ptr<const RooFitResult> &fr) { SetFitResult(fr.get()); }
    void SetFitResult(const xRooNode &fr);
 
-   void _fitTo_(const char *datasetName = "", const char *constParValues = ""); // *MENU*
-   void _generate_(const char *name = "", bool expected = false);               // *MENU*
+   xRooNode
+   generate(const xRooNode &fr = "", bool expected = false,
+            int seed = 0); // generate a dataset from a pdf node using given fr - if none given will use current fit
+
+   void _fit_(const char *constParValues = "");                   // *MENU*
+   void _generate_(const char *name = "", bool expected = false); // *MENU*
+   void _scan_(const char *what = "plr", double nToys = 0, const char *xvar = "", int nPointsX = 0, double lowX = 0,
+               double highX = 0 /*, const char* yvar="", int nBinsY=0, double lowY=0, double highY=0*/,
+               const char *constParValues = ""); // *MENU*
    //    xRooNode fitTo(const char* datasetName) const;
    //    xRooNode fitTo(const xRooNode& _data) const;
    //    xRooNode generate(bool expected=false) const;
@@ -330,9 +394,12 @@ public:
    void Checked(TObject *obj, bool val);
    void SetChecked(bool val = true) { Checked(this, val); }
 
+   xRooNode histo(const xRooNode &vars = "x", const xRooNode &fr = "", bool content = true, bool errors = true) const;
+   xRooNode filter(const xRooNode &range) const;
+
    TGraph *BuildGraph(RooAbsLValue *v = nullptr, bool includeZeros = false, TVirtualPad *fromPad = nullptr) const;
    TH1 *BuildHistogram(RooAbsLValue *v = nullptr, bool empty = false, bool errors = false, int binStart = 1,
-                       int binEnd = 0) const;
+                       int binEnd = 0, const xRooNode &fr = "") const;
    xRooNode mainChild() const;
    void Draw(Option_t *opt = "") override; // *MENU*
 
@@ -372,14 +439,16 @@ public:
 
    std::shared_ptr<xRooNode> parentPdf() const; // find first parent that is a pdf
 
-   void sterilize();
+   void sterilize() const;
 
    std::vector<std::shared_ptr<xRooNode>> fBrowsables;   // will appear in the browser tree but are not actual children
    std::function<xRooNode(xRooNode *)> fBrowseOperation; // a way to specify a custom browsing operation
 
+   std::shared_ptr<xRooNode> getBrowsable(const char *name) const;
+
    ClassDefOverride(xRooNode, 0)
 };
 
-END_XROOFIT_NAMESPACE
+END_XROOFIT_NAMESPACE;
 
 #endif // include guard
