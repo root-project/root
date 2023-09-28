@@ -704,8 +704,8 @@ Int_t THttpServer::ProcessRequests()
    auto id = TThread::SelfId();
 
    if (fMainThrdId != id) {
-      if (fMainThrdId)
-         Error("ProcessRequests", "Changing main thread to %ld", (long)id);
+      if (gDebug > 0 && fMainThrdId)
+         Warning("ProcessRequests", "Changing main thread to %ld", (long)id);
       fMainThrdId = id;
    }
 
