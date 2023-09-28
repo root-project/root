@@ -1295,7 +1295,8 @@ class BrowserLayout {
 
       main.append('div').attr('id', this.drawing_divid())
                         .classed('jsroot_draw_area', true)
-                        .style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
+                        .style('position', 'absolute')
+                        .style('inset', '0px');
 
       if (with_browser)
          main.append('div').classed('jsroot_browser', true);
@@ -1311,7 +1312,7 @@ class BrowserLayout {
       if (btns.empty()) {
          btns = br.append('div')
                   .attr('class', 'jsroot jsroot_browser_btns')
-                  .attr('style', 'position:absolute; left:7px; top: 7px');
+                  .attr('style', 'position: absolute; left: 7px; top: 7px');
       } else
          btns.html('');
       return btns;
@@ -1328,11 +1329,11 @@ class BrowserLayout {
       if (main.empty()) return;
 
       main.insert('div', '.jsroot_browser_btns').classed('jsroot_browser_area', true)
-          .style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('width', '250px')
-          .style('overflow', 'hidden')
-          .style('padding-left', '5px')
-          .style('display', 'flex').style('flex-direction', 'column')   /* use the flex model */
-          .html(`<p class='jsroot_browser_title'>title</p><div class='jsroot_browser_resize' style='display:none'>&#9727</div>${guiCode}`);
+           .style('position', 'absolute').style('left', '0px').style('top', '0px').style('bottom', '0px').style('width', '250px')
+           .style('overflow', 'hidden')
+           .style('padding-left', '5px')
+           .style('display', 'flex').style('flex-direction', 'column')   /* use the flex model */
+           .html(`<p class='jsroot_browser_title'>title</p><div class='jsroot_browser_resize' style='display:none'>&#9727</div>${guiCode}`);
    }
 
    /** @summary Check if there is browser content */
@@ -1436,7 +1437,7 @@ class BrowserLayout {
       main.insert('div', '.jsroot_browser_area')
           .attr('id', id)
           .classed('jsroot_status_area', true)
-          .style('position', 'absolute').style('left', left_pos).style('height', '20px').style('bottom', 0).style('right', 0)
+          .style('position', 'absolute').style('left', left_pos).style('height', '20px').style('bottom', '0px').style('right', '0px')
           .style('margin', 0).style('border', 0);
 
       const separ_color = settings.DarkMode ? 'grey' : 'azure',
@@ -1515,12 +1516,12 @@ class BrowserLayout {
             this.last_hsepar_height = hsepar;
             elem.style('bottom', hsepar+'px').style('height', w+'px');
             this.status().style('height', hsepar+'px');
-            hlimit = (hsepar+w) + 'px';
+            hlimit = hsepar + w;
          }
 
          this._hsepar_position = hsepar;
 
-         this.drawing().style('bottom', hlimit);
+         this.drawing().style('bottom', `${hlimit}px`);
       }
 
       if (vsepar !== null) {
@@ -1621,8 +1622,8 @@ class BrowserLayout {
       if (main.empty()) return;
 
       const area = main.select('.jsroot_browser_area'),
-          cont = main.select('.jsroot_browser_hierarchy'),
-          chld = d3_select(cont.node().firstChild);
+            cont = main.select('.jsroot_browser_hierarchy'),
+            chld = d3_select(cont.node().firstChild);
 
       if (onlycheckmax) {
          if (area.node().parentNode.clientHeight - 10 < area.node().clientHeight)
@@ -1632,7 +1633,7 @@ class BrowserLayout {
 
       if (chld.empty()) return;
       const h1 = cont.node().clientHeight,
-          h2 = chld.node().clientHeight;
+            h2 = chld.node().clientHeight;
 
       if ((h2 !== undefined) && (h2 < h1*0.7)) area.style('bottom', '');
    }
@@ -1643,19 +1644,16 @@ class BrowserLayout {
 
       const main = this.browser(),
             btns = main.select('.jsroot_browser_btns');
-      let top = 7, left = 7;
-
       if (btns.empty()) return;
 
+      let top = 7, left = 7;
       if (this.browser_visible) {
          const area = main.select('.jsroot_browser_area');
-
          top = area.node().offsetTop + 7;
-
          left = area.node().offsetLeft - main.node().offsetLeft + area.node().clientWidth - 27;
       }
 
-      btns.style('left', left+'px').style('top', top+'px');
+      btns.style('left', `${left}px`).style('top', `${top}px`);
    }
 
    /** @summary Toggle browser kind */
@@ -1670,12 +1668,13 @@ class BrowserLayout {
       }
 
       const main = this.browser(),
-          area = main.select('.jsroot_browser_area');
+            area = main.select('.jsroot_browser_area');
 
       if (this.browser_kind === 'float') {
           area.style('bottom', '0px')
               .style('top', '0px')
-              .style('width', '').style('height', '')
+              .style('width', '')
+              .style('height', '')
               .classed('jsroot_float_browser', false)
               .style('border', null);
       } else if (this.browser_kind === 'fix') {
@@ -1735,12 +1734,11 @@ class BrowserLayout {
 
         this.adjustBrowserSize();
      } else {
-        area.style('left', 0).style('top', 0).style('bottom', 0).style('height', null);
+        area.style('left', '0px').style('top', '0px').style('bottom', '0px').style('height', null);
 
         const separ_color = settings.DarkMode ? 'grey' : 'azure',
-           vsepar = main.append('div')
-               .classed('jsroot_v_separator', true)
-               .attr('style', `pointer-events: all; border: 0; margin: 0; padding: 0; background-color: ${separ_color}; position: absolute; top: 0; bottom: 0; cursor: ew-resize;`),
+              vsepar = main.append('div').classed('jsroot_v_separator', true)
+                           .attr('style', `pointer-events: all; border: 0; margin: 0; padding: 0; background-color: ${separ_color}; position: absolute; top: 0; bottom: 0; cursor: ew-resize;`),
 
          drag_move = d3_drag().on('start', () => {
             this._vsepar_move = this._vsepar_position;
