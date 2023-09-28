@@ -2343,7 +2343,8 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 static ASImage *
 load_xml2ASImage( ASImageManager *imman, const char *path, unsigned int compression, int width, int height )
 {
-   printf("WARNING: Because of some licensing issues load_xml2ASImage is now dummy\n");
+   // Incompatible license
+   fprintf(stderr, "ERROR in load_xml2ASImage: XML import is disabled.\n");
    ASImage *im = NULL ;
    return im;
 }
