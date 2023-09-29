@@ -658,7 +658,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelope
 }
 
 RResult<std::uint32_t>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer, std::uint32_t bufSize,
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer, std::uint64_t bufSize,
                                                                      std::uint16_t expectedType, std::uint64_t &xxhash3)
 {
    const std::uint64_t minEnvelopeSize = sizeof(std::uint64_t) + sizeof(std::uint64_t);
@@ -691,7 +691,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void 
 }
 
 RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer,
-                                                                                            std::uint32_t bufSize,
+                                                                                            std::uint64_t bufSize,
                                                                                             std::uint16_t expectedType)
 {
    std::uint64_t xxhash3;
@@ -1369,7 +1369,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint32_t bufSize,
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint64_t bufSize,
                                                                    RNTupleDescriptorBuilder &descBuilder)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
@@ -1426,7 +1426,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *b
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *buffer, std::uint32_t bufSize,
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *buffer, std::uint64_t bufSize,
                                                                    RNTupleDescriptorBuilder &descBuilder)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
@@ -1524,7 +1524,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer, std::uint32_t bufSize,
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer, std::uint64_t bufSize,
                                                                      DescriptorId_t firstClusterId,
                                                                      RNTupleDescriptorBuilder &descBuilder)
 {

@@ -206,9 +206,9 @@ public:
    SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size, std::uint64_t &xxhash3);
    // The bufSize must include the 8 bytes for the final xxhash3 checksum.
    static RResult<std::uint32_t>
-   DeserializeEnvelope(const void *buffer, std::uint32_t bufSize, std::uint16_t expectedType);
+   DeserializeEnvelope(const void *buffer, std::uint64_t bufSize, std::uint16_t expectedType);
    static RResult<std::uint32_t>
-   DeserializeEnvelope(const void *buffer, std::uint32_t bufSize, std::uint16_t expectedType, std::uint64_t &xxhash3);
+   DeserializeEnvelope(const void *buffer, std::uint64_t bufSize, std::uint16_t expectedType, std::uint64_t &xxhash3);
 
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
@@ -250,11 +250,11 @@ public:
    static std::uint32_t SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
    static RResult<void>
-   DeserializeHeader(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   DeserializeHeader(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
    static RResult<void>
-   DeserializeFooter(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   DeserializeFooter(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
-   static RResult<void> DeserializePageList(const void *buffer, std::uint32_t bufSize, DescriptorId_t firstClusterId,
+   static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t firstClusterId,
                                             RNTupleDescriptorBuilder &descBuilder);
 }; // class RNTupleSerializer
 
