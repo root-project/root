@@ -1012,9 +1012,6 @@ public:
       return *this;
    }
    void AddClusters(std::vector<DescriptorId_t> &clusterIds) { fClusterGroup.fClusterIds = clusterIds; }
-   void DropClusters() { fClusterGroup.fClusterIds.clear(); }
-
-   DescriptorId_t GetId() const { return fClusterGroup.GetId(); }
 
    RResult<RClusterGroupDescriptor> MoveDescriptor();
 };
@@ -1082,7 +1079,7 @@ public:
                   const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
-   void AddClusterGroup(RClusterGroupDescriptorBuilder &&clusterGroup);
+   RResult<void> AddClusterGroup(RClusterGroupDescriptor &&clusterGroup);
    RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
