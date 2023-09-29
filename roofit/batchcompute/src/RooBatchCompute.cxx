@@ -218,6 +218,8 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
 
    double badness = 0.0;
 
+   ROOT::Math::KahanSum<double> nllSum;
+
    for (std::size_t i = 0; i < probas.size(); ++i) {
 
       const double eventWeight = weights.size() > 1 ? weights[i] : weights[0];
@@ -235,12 +237,16 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
 
       term *= -eventWeight;
 
-      out.nllSum.Add(term);
+      nllSum.Add(term);
    }
+
+   out.nllSum = nllSum.Sum();
+   out.nllSumCarry = nllSum.Carry();
 
    if (badness != 0.) {
       // Some events with evaluation errors. Return "badness" of errors.
-      out.nllSum = ROOT::Math::KahanSum<double>(RooNaNPacker::packFloatIntoNaN(badness));
+      out.nllSum = RooNaNPacker::packFloatIntoNaN(badness);
+      out.nllSumCarry = 0.0;
    }
 
    return out;

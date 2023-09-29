@@ -289,7 +289,7 @@ void RooNLLVarNew::computeBatch(double *output, size_t /*nOut*/, RooFit::Detail:
       nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected[0], _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
    }
 
-   output[0] = finalizeResult(nllOut.nllSum, _sumWeight);
+   output[0] = finalizeResult({nllOut.nllSum, nllOut.nllSumCarry}, _sumWeight);
 }
 
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
