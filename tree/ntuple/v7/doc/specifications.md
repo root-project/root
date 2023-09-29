@@ -489,7 +489,6 @@ The footer envelope has the following structure:
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
 - List frame of column group record frames
-- List frame of cluster summary record frames
 - List frame of cluster group record frames
 - List frame of meta-data block envelope links
 
@@ -535,6 +534,43 @@ The frame hierarchy is as follows
     |---- Column group 2 record frame
     | ...
 
+
+#### Cluster Group Record Frame
+
+The cluster group record frame references the page list envelopes for groups of clusters.
+A cluster group record frame starts with
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                      Minimum Entry Number                     +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                          Entry Span                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                       Number of clusters                      |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+Followed by the page list envelope link.
+
+The minimum entry number is the minimum first entry of the clusters in the cluster group.
+The entry span is the number of entries that are (partially for sharded clusters) covered by this cluster group.
+The entry range allows for finding the right page list for random access requests to entries.
+The number of clusters information allows for using consistent cluster IDs even if cluster groups are accessed non-sequentially.
+
+### Page List Envelope
+
+The page list envelope contains cluster summaries and page locations.
+It has the following structure
+
+  - Header checksum (XxHash-3 64bit)
+  - List frame of cluster summary record frames
+  - Nested list frames of page locations
+
 #### Cluster Summary Record Frame
 The cluster summary record frame contains the entry range of a cluster:
 
@@ -559,23 +595,10 @@ _including_ the columns from extension headers.
 
 The order of the cluster summaries defines the cluster IDs, starting from zero.
 
-#### Cluster Group Record Frame
-The cluster group record frame references the page list envelopes for groups of clusters.
-The order and cardinality of the cluster groups corresponds to the cluster IDs as defined by the cluster summaries.
-A cluster group record frame starts with
+#### Page Locations
 
-```
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|            Number of Clusters in the Cluster Group            |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-Followed by the page list envelope link.
-
-### Page List Envelope
-
-The page list envelope contains a top-most list frame where every item corresponds to a cluster.
+The page locations are stored in a nested list frame as follows.
+A top-most list frame where every item corresponds to a cluster.
 The order of items corresponds to the cluster IDs as defined by the cluster groups and cluster summaries.
 
 Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
