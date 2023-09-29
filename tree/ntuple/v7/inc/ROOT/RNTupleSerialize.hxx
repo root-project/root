@@ -244,22 +244,18 @@ public:
    static RResult<std::uint32_t>
    DeserializeSchemaDescription(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
 
-   static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
-   static std::uint32_t SerializePageListV1(void *buffer,
-                                            const RNTupleDescriptor &desc,
-                                            std::span<DescriptorId_t> physClusterIDs,
-                                            const RContext &context);
-   static std::uint32_t SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
+   static RContext SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
+   static std::uint32_t SerializePageList(void *buffer, const RNTupleDescriptor &desc,
+                                          std::span<DescriptorId_t> physClusterIDs, const RContext &context);
+   static std::uint32_t SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
-   static RResult<void> DeserializeHeaderV1(const void *buffer,
-                                            std::uint32_t bufSize,
-                                            RNTupleDescriptorBuilder &descBuilder);
-   static RResult<void> DeserializeFooterV1(const void *buffer,
-                                            std::uint32_t bufSize,
-                                            RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void>
+   DeserializeHeader(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void>
+   DeserializeFooter(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
-   static RResult<void> DeserializePageListV1(const void *buffer, std::uint32_t bufSize, DescriptorId_t firstClusterId,
-                                              RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void> DeserializePageList(const void *buffer, std::uint32_t bufSize, DescriptorId_t firstClusterId,
+                                            RNTupleDescriptorBuilder &descBuilder);
 }; // class RNTupleSerializer
 
 } // namespace Internal

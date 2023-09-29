@@ -223,14 +223,14 @@ void ROOT::Experimental::Detail::RPageSourceFile::InitDescriptor(const RNTuple &
    auto zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesHeader);
    fReader.ReadBuffer(zipBuffer.get(), anchor.fNBytesHeader, anchor.fSeekHeader);
    fDecompressor->Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader, buffer.get());
-   Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), anchor.fLenHeader, fDescriptorBuilder);
+   Internal::RNTupleSerializer::DeserializeHeader(buffer.get(), anchor.fLenHeader, fDescriptorBuilder);
 
    fDescriptorBuilder.AddToOnDiskFooterSize(anchor.fNBytesFooter);
    buffer = std::make_unique<unsigned char[]>(anchor.fLenFooter);
    zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesFooter);
    fReader.ReadBuffer(zipBuffer.get(), anchor.fNBytesFooter, anchor.fSeekFooter);
    fDecompressor->Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter, buffer.get());
-   Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), anchor.fLenFooter, fDescriptorBuilder);
+   Internal::RNTupleSerializer::DeserializeFooter(buffer.get(), anchor.fLenFooter, fDescriptorBuilder);
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RPageSourceFile>
@@ -264,8 +264,8 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
                            buffer.get());
 
-      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusterIdOffset,
-                                                         fDescriptorBuilder);
+      Internal::RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), clusterIdOffset,
+                                                       fDescriptorBuilder);
 
       clusterIdOffset += cgDesc.GetNClusters();
    }

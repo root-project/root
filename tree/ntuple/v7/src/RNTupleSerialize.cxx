@@ -35,8 +35,8 @@ using RResult = ROOT::Experimental::RResult<T>;
 namespace {
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
-std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &fieldDesc,
-                               ROOT::Experimental::DescriptorId_t onDiskParentId, void *buffer)
+std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDesc,
+                             ROOT::Experimental::DescriptorId_t onDiskParentId, void *buffer)
 {
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -88,17 +88,15 @@ std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &de
       const auto &f = desc.GetFieldDescriptor(fieldId);
       auto onDiskParentId =
          (f.GetParentId() == fieldZeroId) ? onDiskFieldId : context.GetOnDiskFieldId(f.GetParentId());
-      pos += SerializeFieldV1(f, onDiskParentId, *where);
+      pos += SerializeField(f, onDiskParentId, *where);
       ++onDiskFieldId;
    }
 
    return pos - base;
 }
 
-RResult<std::uint32_t> DeserializeFieldV1(
-   const void *buffer,
-   std::uint32_t bufSize,
-   ROOT::Experimental::RFieldDescriptorBuilder &fieldDesc)
+RResult<std::uint32_t>
+DeserializeField(const void *buffer, std::uint32_t bufSize, ROOT::Experimental::RFieldDescriptorBuilder &fieldDesc)
 {
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 
@@ -166,10 +164,10 @@ RResult<std::uint32_t> DeserializeFieldV1(
    return frameSize;
 }
 
-std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                    std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
-                                    const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
-                                    void *buffer)
+std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &desc,
+                                  std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                  const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
+                                  void *buffer)
 {
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
 
@@ -210,10 +208,8 @@ std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor 
    return pos - base;
 }
 
-RResult<std::uint32_t> DeserializeColumnV1(
-   const void *buffer,
-   std::uint32_t bufSize,
-   ROOT::Experimental::RColumnDescriptorBuilder &columnDesc)
+RResult<std::uint32_t>
+DeserializeColumn(const void *buffer, std::uint32_t bufSize, ROOT::Experimental::RColumnDescriptorBuilder &columnDesc)
 {
    using EColumnType = ROOT::Experimental::EColumnType;
 
@@ -1097,7 +1093,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
 
    frame = pos;
    pos += SerializeListFramePreamble(nColumns, *where);
-   pos += SerializeColumnListV1(desc, fieldList, context, *where);
+   pos += SerializeColumnList(desc, fieldList, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
@@ -1135,7 +1131,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    for (unsigned i = 0; i < nFields; ++i) {
       std::uint32_t fieldId = fieldIdRangeBegin + i;
       RFieldDescriptorBuilder fieldBuilder;
-      result = DeserializeFieldV1(bytes, fnFrameSizeLeft(), fieldBuilder);
+      result = DeserializeField(bytes, fnFrameSizeLeft(), fieldBuilder);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
@@ -1163,7 +1159,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    for (unsigned i = 0; i < nColumns; ++i) {
       std::uint32_t columnId = columnIdRangeBegin + i;
       RColumnDescriptorBuilder columnBuilder;
-      result = DeserializeColumnV1(bytes, fnFrameSizeLeft(), columnBuilder);
+      result = DeserializeColumn(bytes, fnFrameSizeLeft(), columnBuilder);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
@@ -1231,8 +1227,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
 }
 
 ROOT::Experimental::Internal::RNTupleSerializer::RContext
-ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
-                                                                   const ROOT::Experimental::RNTupleDescriptor &desc)
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeader(void *buffer,
+                                                                 const ROOT::Experimental::RNTupleDescriptor &desc)
 {
    RContext context;
 
@@ -1259,8 +1255,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
    return context;
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageListV1(
-   void *buffer, const RNTupleDescriptor &desc, std::span<DescriptorId_t> physClusterIDs, const RContext &context)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer, const RNTupleDescriptor &desc,
+                                                                   std::span<DescriptorId_t> physClusterIDs,
+                                                                   const RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1321,9 +1319,9 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
 }
 
 std::uint32_t
-ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
-                                                                   const ROOT::Experimental::RNTupleDescriptor &desc,
-                                                                   const RContext &context)
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
+                                                                 const ROOT::Experimental::RNTupleDescriptor &desc,
+                                                                 const RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1370,8 +1368,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
    return size;
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeaderV1(
-  const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder)
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint32_t bufSize,
+                                                                   RNTupleDescriptorBuilder &descBuilder)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -1426,9 +1425,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    return RResult<void>::Success();
 }
 
-
-ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooterV1(
-  const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder)
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *buffer, std::uint32_t bufSize,
+                                                                   RNTupleDescriptorBuilder &descBuilder)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -1525,9 +1524,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListV1(const void *buffer, std::uint32_t bufSize,
-                                                                       DescriptorId_t firstClusterId,
-                                                                       RNTupleDescriptorBuilder &descBuilder)
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer, std::uint32_t bufSize,
+                                                                     DescriptorId_t firstClusterId,
+                                                                     RNTupleDescriptorBuilder &descBuilder)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
