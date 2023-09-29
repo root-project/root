@@ -1609,13 +1609,17 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
          for (std::uint32_t k = 0; k < nPages; ++k) {
             if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
                return R__FAIL("inner frame too short");
-            std::uint32_t nElements;
+            std::int32_t nElements;
             RNTupleLocator locator;
-            bytes += DeserializeUInt32(bytes, nElements);
+            bytes += DeserializeInt32(bytes, nElements);
+            if (nElements < 0) {
+               // TODO(jblomer): page with checksum
+               nElements = -nElements;
+            }
             result = DeserializeLocator(bytes, fnInnerFrameSizeLeft(), locator);
             if (!result)
                return R__FORWARD_ERROR(result);
-            pageRange.fPageInfos.push_back({nElements, locator});
+            pageRange.fPageInfos.push_back({static_cast<std::uint32_t>(nElements), locator});
             bytes += result.Unwrap();
          }
 

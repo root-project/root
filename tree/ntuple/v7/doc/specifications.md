@@ -617,13 +617,13 @@ Every inner item (that describes a page) has the following structure:
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                     Number of Elements                      |F|
+|                     Number of Elements                      |C|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
 Followed by a locator for the page.
-If flag 0x01 is set, a XxHash-3 64bit checksum of the uncompressed page data is stored just after the page.
-Note that columns might be empty, i.e. the number of pages can be zero.
+_C(hecksum)_: If set, an XxHash-3 64bit checksum of the uncompressed page data is stored just after the page.
+This bit should be interpreted as the sign bit of the size, i.e. negative values indicate pages with checksums.
 
 Depending on the number of pages per column per cluster, every page induces
 a total of 28-36 Bytes of data to be stored in the page list envelope.
