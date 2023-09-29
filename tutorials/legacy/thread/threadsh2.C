@@ -24,8 +24,8 @@ Bool_t   finished;
 
 void *handle1(void *)
 {
-   int nfills = 10000;
-   int upd = 500;
+   int nfills = 200;
+   int upd = 50;
 
    TThread::Lock();
    hpx = new TH1F("hpx", "This is the px distribution", 100, -4, 4);
@@ -192,7 +192,7 @@ void threadsh2()
    TThread::Ps();
 
    while (!finished) {
-      gSystem->Sleep(100);
+      gSystem->Sleep(10);
       gSystem->ProcessEvents();
    }
 
