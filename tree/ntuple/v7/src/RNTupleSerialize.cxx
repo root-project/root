@@ -1633,7 +1633,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListV1(const voi
 
       bytes = outerFrame + outerFrameSize;
 
-      descBuilder.AddClusterWithDetails(
+      descBuilder.AddCluster(
          clusters[i].AddDeferredColumnRanges(descBuilder.GetDescriptor()).MoveDescriptor().Unwrap());
    } // loop over clusters
 

@@ -1083,10 +1083,7 @@ public:
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    void AddClusterGroup(RClusterGroupDescriptorBuilder &&clusterGroup);
-
-   /// Used during writing. For reading, cluster summaries are added in the builder and cluster details are added
-   /// on demand through the RNTupleDescriptor.
-   RResult<void> AddClusterWithDetails(RClusterDescriptor &&clusterDesc);
+   RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
