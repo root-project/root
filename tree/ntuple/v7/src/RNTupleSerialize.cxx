@@ -980,6 +980,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterG
 
    auto frame = pos;
    pos += SerializeRecordFramePreamble(*where);
+   pos += SerializeUInt64(clusterGroup.fMinEntry, *where);
+   pos += SerializeUInt64(clusterGroup.fEntrySpan, *where);
    pos += SerializeUInt32(clusterGroup.fNClusters, *where);
    pos += SerializeEnvelopeLink(clusterGroup.fPageListEnvelopeLink, *where);
    auto size = pos - frame;
@@ -1001,9 +1003,11 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    bytes += result.Unwrap();
 
    auto fnFrameSizeLeft = [&]() { return frameSize - static_cast<std::uint32_t>(bytes - base); };
-   if (fnFrameSizeLeft() < sizeof(std::uint32_t))
+   if (fnFrameSizeLeft() < sizeof(std::uint32_t) + 2 * sizeof(std::uint64_t))
       return R__FAIL("too short cluster group");
 
+   bytes += DeserializeUInt64(bytes, clusterGroup.fMinEntry);
+   bytes += DeserializeUInt64(bytes, clusterGroup.fEntrySpan);
    bytes += DeserializeUInt32(bytes, clusterGroup.fNClusters);
    result = DeserializeEnvelopeLink(bytes, fnFrameSizeLeft(), clusterGroup.fPageListEnvelopeLink);
    if (!result)
@@ -1312,7 +1316,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
 
    pos += SerializeEnvelopePreamble(kEnvelopeTypeFooter, *where);
 
-   // So far we don't make use of feature flags
+   // So far we don't make use of footer feature flags
    pos += SerializeFeatureFlags(std::vector<std::uint64_t>(), *where);
    pos += SerializeUInt64(context.GetHeaderXxHash3(), *where);
 
@@ -1505,7 +1509,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   std::uint64_t clusterId = 0;
+   std::uint64_t clusterIdOffset = 0;
    for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
       RClusterGroup clusterGroup;
       result = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup);
@@ -1517,10 +1521,14 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       RClusterGroupDescriptorBuilder clusterGroupBuilder;
       clusterGroupBuilder.ClusterGroupId(groupId)
          .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
-         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize);
+         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize)
+         .MinEntry(clusterGroup.fMinEntry)
+         .EntrySpan(clusterGroup.fEntrySpan);
+      std::vector<DescriptorId_t> clusterIds;
       for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
-         clusterGroupBuilder.AddCluster(clusterId + i);
-      clusterId += clusterGroup.fNClusters;
+         clusterIds.emplace_back(clusterIdOffset + i);
+      clusterGroupBuilder.AddClusters(clusterIds);
+      clusterIdOffset += clusterGroup.fNClusters;
       descBuilder.AddClusterGroup(std::move(clusterGroupBuilder));
    }
    bytes = frame + frameSize;

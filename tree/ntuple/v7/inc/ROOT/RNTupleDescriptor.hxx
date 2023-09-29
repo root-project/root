@@ -202,8 +202,8 @@ public:
 \ingroup NTuple
 \brief Meta-data for a set of ntuple clusters
 
-The cluster descriptor is built in two phases.  In a first phase, the descriptor has only summary data,
-i.e. the ID and the event range.  In a second phase, page locations and column ranges are added.
+The cluster descriptor is built in two phases.  In a first phase, the descriptor has only an ID.
+In a second phase, the event range, column group, page locations and column ranges are added.
 Both phases are populated by the RClusterDescriptorBuilder.
 Clusters usually span across all available columns but in some cases they can describe only a subset of the columns,
 for instance when describing friend ntuples.
@@ -346,11 +346,10 @@ public:
 /**
 \class ROOT::Experimental::RClusterGroupDescriptor
 \ingroup NTuple
-\brief Clusters are stored in cluster groups. Cluster groups span all the columns of a certain event range.
+\brief Clusters are bundled in cluster groups.
 
 Very large ntuples or combined ntuples (chains, friends) contain multiple cluster groups. The cluster groups
-may contain sharded clusters. However, a cluster group must contain the clusters spanning all the columns for the
-given event range. Cluster groups must partition the entry range of an ntuple.
+may contain sharded clusters.
 Every ntuple has at least one cluster group.  The clusters in a cluster group are ordered corresponding to
 the order of page locations in the page list envelope that belongs to the cluster group (see format specification)
 */
@@ -360,11 +359,16 @@ class RClusterGroupDescriptor {
 
 private:
    DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
+   /// The cluster IDs can be empty if the corresponding page list is not loaded.
    std::vector<DescriptorId_t> fClusterIds;
    /// The page list that corresponds to the cluster group
    RNTupleLocator fPageListLocator;
    /// Uncompressed size of the page list
-   std::uint32_t fPageListLength = 0;
+   std::uint64_t fPageListLength = 0;
+   /// The minimum first entry number of the clusters in the cluster group
+   std::uint64_t fMinEntry = 0;
+   /// Number of entries that are (partially for sharded clusters) covered by this cluster group.
+   std::uint64_t fEntrySpan = 0;
 
 public:
    RClusterGroupDescriptor() = default;
@@ -380,12 +384,13 @@ public:
    DescriptorId_t GetId() const { return fClusterGroupId; }
    std::uint64_t GetNClusters() const { return fClusterIds.size(); }
    RNTupleLocator GetPageListLocator() const { return fPageListLocator; }
-   std::uint32_t GetPageListLength() const { return fPageListLength; }
-   bool Contains(DescriptorId_t clusterId) const
-   {
-      return std::find(fClusterIds.begin(), fClusterIds.end(), clusterId) != fClusterIds.end();
-   }
+   std::uint64_t GetPageListLength() const { return fPageListLength; }
    const std::vector<DescriptorId_t> &GetClusterIds() const { return fClusterIds; }
+   std::uint64_t GetMinEntry() const { return fMinEntry; }
+   std::uint64_t GetEntrySpan() const { return fEntrySpan; }
+   /// A cluster group is loaded in two stages. Stage one loads only the summary information.
+   /// Stage two loads the list of cluster IDs.
+   bool HasClusterDetails() const { return !fClusterIds.empty(); }
 };
 
 // clang-format off
@@ -991,12 +996,23 @@ public:
       fClusterGroup.fPageListLocator = pageListLocator;
       return *this;
    }
-   RClusterGroupDescriptorBuilder &PageListLength(std::uint32_t pageListLength)
+   RClusterGroupDescriptorBuilder &PageListLength(std::uint64_t pageListLength)
    {
       fClusterGroup.fPageListLength = pageListLength;
       return *this;
    }
-   void AddCluster(DescriptorId_t clusterId) { fClusterGroup.fClusterIds.emplace_back(clusterId); }
+   RClusterGroupDescriptorBuilder &MinEntry(std::uint64_t minEntry)
+   {
+      fClusterGroup.fMinEntry = minEntry;
+      return *this;
+   }
+   RClusterGroupDescriptorBuilder &EntrySpan(std::uint64_t entrySpan)
+   {
+      fClusterGroup.fEntrySpan = entrySpan;
+      return *this;
+   }
+   void AddClusters(std::vector<DescriptorId_t> &clusterIds) { fClusterGroup.fClusterIds = clusterIds; }
+   void DropClusters() { fClusterGroup.fClusterIds.clear(); }
 
    DescriptorId_t GetId() const { return fClusterGroup.GetId(); }
 
