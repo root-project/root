@@ -565,7 +565,7 @@ TEST(RNTuple, SerializeFooter)
    pageInfo.fLocator.fPosition = 7000U;
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(17, 0, 100, pageRange);
-   builder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+   builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
    RClusterGroupDescriptorBuilder cgBuilder;
    RNTupleLocator cgLocator;
    cgLocator.fPosition = 1337U;

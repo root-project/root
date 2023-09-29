@@ -556,7 +556,7 @@ std::uint64_t ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROO
       fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
       fOpenColumnRanges[i].fNElements = 0;
    }
-   fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+   fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
    fPrevClusterNEntries = nEntries;
    return nbytes;
 }
