@@ -118,7 +118,7 @@ function buildCompositeVolume(comp, maxlvl, side) {
   * @return {Object} with scene, renderer and other attributes
   * @private */
 function getHistPainter3DCfg(painter) {
-   const main =  painter?.getFramePainter();
+   const main = painter?.getFramePainter();
    if (painter?.mode3d && isFunc(main?.create3DScene) && main?.renderer) {
       let scale_x = 1, scale_y = 1, scale_z = 1,
           offset_x = 0, offset_y = 0, offset_z = 0;
@@ -756,12 +756,12 @@ class TGeoPainter extends ObjectPainter {
    updateVRControllersList() {
       const gamepads = navigator.getGamepads && navigator.getGamepads();
       // Has controller list changed?
-      if (this.vrControllers && (gamepads.length === this.vrControllers.length))  return;
+      if (this.vrControllers && (gamepads.length === this.vrControllers.length)) return;
       // Hide meshes.
       this._controllersMeshes.forEach(mesh => { mesh.visible = false; });
       this._vrControllers = [];
       for (let i = 0; i < gamepads.length; ++i) {
-         if (!gamepads[i] || !gamepads[i].pose)  continue;
+         if (!gamepads[i] || !gamepads[i].pose) continue;
          this._vrControllers.push({
             gamepad: gamepads[i],
             mesh: this._controllersMeshes[i]
@@ -773,7 +773,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Process VR controller intersection
      * @private */
    processVRControllerIntersections() {
-      let intersects = []
+      let intersects = [];
       for (let i = 0; i < this._vrControllers.length; ++i) {
          const controller = this._vrControllers[i].mesh,
                end = controller.localToWorld(this._raycasterEnd.set(0, 0, -1)),
@@ -782,7 +782,7 @@ class TGeoPainter extends ObjectPainter {
          intersects = intersects.concat(this._controls.getOriginDirectionIntersects(origin, end));
       }
       // Remove duplicates.
-      intersects = intersects.filter(function (item, pos) { return intersects.indexOf(item) === pos; });
+      intersects = intersects.filter((item, pos) => { return intersects.indexOf(item) === pos; });
       this._controls.processMouseMove(intersects);
    }
 
@@ -1339,7 +1339,7 @@ class TGeoPainter extends ObjectPainter {
                   const item = {
                      matrix0: new Matrix4(),
                      minvert: new Matrix4()
-                  }
+                  };
 
                   mesh.trans[i] = item;
 
@@ -2180,11 +2180,11 @@ class TGeoPainter extends ObjectPainter {
          lines.unshift(tooltip);
 
          return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines };
-      }
+      };
 
       this._controls.processMouseLeave = function() {
          this.processMouseMove([]); // to disable highlight and reset browser
-      }
+      };
 
       this._controls.processDblClick = () => {
          // painter already cleaned up, ignore any incoming events
@@ -2200,7 +2200,7 @@ class TGeoPainter extends ObjectPainter {
             this.adjustCameraPosition(true);
 
          this.render3D();
-      }
+      };
    }
 
    /** @summary Main function in geometry creation loop
@@ -2883,7 +2883,7 @@ class TGeoPainter extends ObjectPainter {
          return '';
 
       if (this._camera.isOrthographicCamera) {
-         const zoom = Math.round(this._camera.zoom * 100)
+         const zoom = Math.round(this._camera.zoom * 100);
          return this.ctrl.camera_kind + (zoom === 100 ? '' : `,zoom=${zoom}`);
       }
 
@@ -2899,7 +2899,7 @@ class TGeoPainter extends ObjectPainter {
             let s = '';
             if (v < 0) { s = 'n'; v = -v; }
             return s + v.toFixed(0);
-         }
+         };
 
          let res = `${kind}camx${conv(p.x)},camy${conv(p.y)},camz${conv(p.z)}`;
          if (t.x || t.y || t.z) res += `,camlx${conv(t.x)},camly${conv(t.y)},camlz${conv(t.z)}`;
@@ -2967,7 +2967,7 @@ class TGeoPainter extends ObjectPainter {
             midx = (box.max.x + box.min.x)/2,
             midy = (box.max.y + box.min.y)/2,
             midz = (box.max.z + box.min.z)/2,
-            more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar')  ? 0.2 : 0.1;
+            more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar') ? 0.2 : 0.1;
 
       if (this._scene_size && !force) {
          const d = this._scene_size, test = (v1, v2, scale) => {
@@ -3133,7 +3133,7 @@ class TGeoPainter extends ObjectPainter {
          } else {
             // screen heigher than actual geometry
             const m = (this._camera.top + this._camera.bottom) / 2;
-            this._camera.top  = m + szx / screen_ratio / 2;
+            this._camera.top = m + szx / screen_ratio / 2;
             this._camera.bottom = m - szx / screen_ratio / 2;
          }
       }
@@ -3614,7 +3614,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < npoints-1; ++k, pos+=6) {
-         buf[pos]   = projx ? projv : track.fPoints[k*4];
+         buf[pos] = projx ? projv : track.fPoints[k*4];
          buf[pos+1] = projy ? projv : track.fPoints[k*4+1];
          buf[pos+2] = projz ? projv : track.fPoints[k*4+2];
          buf[pos+3] = projx ? projv : track.fPoints[k*4+4];
@@ -3653,7 +3653,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < npoints-1; ++k, pos += 6) {
-         buf[pos]   = projx ? projv : fP[k*3];
+         buf[pos] = projx ? projv : fP[k*3];
          buf[pos+1] = projy ? projv : fP[k*3+1];
          buf[pos+2] = projz ? projv : fP[k*3+2];
          buf[pos+3] = projx ? projv : fP[k*3+3];
@@ -3687,7 +3687,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < track.fN-1; ++k, pos+=6) {
-         buf[pos]   = projx ? projv : track.fP[k*3];
+         buf[pos] = projx ? projv : track.fP[k*3];
          buf[pos+1] = projy ? projv : track.fP[k*3+1];
          buf[pos+2] = projz ? projv : track.fP[k*3+2];
          buf[pos+3] = projx ? projv : track.fP[k*3+3];
@@ -4684,7 +4684,7 @@ class TGeoPainter extends ObjectPainter {
                   this._other_side = other_side;
                   this.rotateY(Math.PI);
                }
-            }
+            };
          }
 
          function setTopRotation(mesh, first_angle = -1) {
@@ -4701,7 +4701,7 @@ class TGeoPainter extends ObjectPainter {
                   this.rotateX((angle - this._last_angle) * Math.PI/2);
                   this._last_angle = angle;
                }
-            }
+            };
          }
 
          let textbox = new Box3().setFromObject(mesh);
@@ -5679,7 +5679,7 @@ function createItem(node, obj, name) {
    else if (obj._typename === 'TGeoMixture')
       sub._icon = 'img_geomixture';
    else if ((obj._typename.indexOf(clTGeoNode) === 0) && obj.fVolume) {
-      sub._title = 'node:'  + obj._typename;
+      sub._title = 'node:' + obj._typename;
       if (obj.fTitle) sub._title += ' ' + obj.fTitle;
       volume = obj.fVolume;
    } else if (obj._typename.indexOf(clTGeoVolume) === 0)
@@ -5729,7 +5729,7 @@ function createItem(node, obj, name) {
          sub._icon += provideVisStyle(obj);
 
       sub._menu = provideMenu;
-      sub._icon_click  = browserIconClick;
+      sub._icon_click = browserIconClick;
    }
 
    if (!node._childs) node._childs = [];
@@ -5766,7 +5766,7 @@ async function drawDummy3DGeom(painter) {
                   fTrans: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false }),
          pp = painter.getPadPainter(),
-         opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' +  pp.pad.fFillColor : '';
+         opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' + pp.pad.fFillColor : '';
 
    return TGeoPainter.draw(painter.getDom(), obj, opt)
                      .then(geop => { geop._dummy = true; return geop; });
@@ -5824,7 +5824,7 @@ function build(obj, opt) {
 
       obj.nodes.forEach(node => {
          nodes[node.id] = ClonedNodes.formatServerElement(node);
-      })
+      });
 
       clones = new ClonedNodes(null, nodes);
       clones.name_prefix = clones.getNodeName(0);

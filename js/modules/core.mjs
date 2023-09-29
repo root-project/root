@@ -459,7 +459,7 @@ async function loadScript(url) {
       const scripts = url, loadNext = () => {
          if (!scripts.length) return true;
          return loadScript(scripts.shift()).then(loadNext, loadNext);
-      }
+      };
       return loadNext();
    }
 
@@ -876,7 +876,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
       switch (kind) {
          case 'head': method = 'HEAD'; break;
          case 'posttext': method = 'POST'; kind = 'text'; break;
-         case 'postbuf':  method = 'POST'; kind = 'buf'; break;
+         case 'postbuf': method = 'POST'; kind = 'buf'; break;
          case 'post':
          case 'multi': method = 'POST'; break;
       }
@@ -1153,7 +1153,7 @@ function create(typename, target) {
          break;
       case clTH2:
          create(clTH1, obj);
-         extend(obj, { fScalefactor: 1, fTsumwy: 0,  fTsumwy2: 0, fTsumwxy: 0 });
+         extend(obj, { fScalefactor: 1, fTsumwy: 0, fTsumwy2: 0, fTsumwxy: 0 });
          break;
       case clTH2I:
       case 'TH2L64':
@@ -1166,7 +1166,7 @@ function create(typename, target) {
          break;
       case clTH3:
          create(clTH1, obj);
-         extend(obj, { fTsumwy: 0,  fTsumwy2: 0, fTsumwz: 0,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
+         extend(obj, { fTsumwy: 0, fTsumwy2: 0, fTsumwz: 0, fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
          break;
       case 'TH3I':
       case 'TH3L64':
@@ -1467,19 +1467,19 @@ function getMethods(typename, obj) {
       m.Clear = function() {
          this.arr = [];
          this.opt = [];
-      }
+      };
       m.Add = function(obj, opt) {
          this.arr.push(obj);
          this.opt.push(isStr(opt) ? opt : '');
-      }
+      };
       m.AddFirst = function(obj, opt) {
          this.arr.unshift(obj);
          this.opt.unshift(isStr(opt) ? opt : '');
-      }
+      };
       m.RemoveAt = function(indx) {
          this.arr.splice(indx, 1);
          this.opt.splice(indx, 1);
-      }
+      };
    }
 
    if ((typename === clTPaveText) || (typename === clTPaveStats)) {
@@ -1488,10 +1488,10 @@ function getMethods(typename, obj) {
          line.fTitle = txt;
          line.fTextAlign = this.fTextAlign;
          this.fLines.Add(line);
-      }
+      };
       m.Clear = function() {
          this.fLines.Clear();
-      }
+      };
    }
 
    if ((typename.indexOf(clTF1) === 0) || (typename === clTF2)) {
@@ -1499,8 +1499,7 @@ function getMethods(typename, obj) {
          if (!obj) return;
          if (this.formulas === undefined) this.formulas = [];
          this.formulas.push(obj);
-      }
-
+      };
       m.GetParName = function(n) {
          if (this.fParams?.fParNames)
             return this.fParams.fParNames[n];
@@ -1511,19 +1510,19 @@ function getMethods(typename, obj) {
             }
          }
          return (this.fNames && this.fNames[n]) ? this.fNames[n] : `p${n}`;
-      }
+      };
       m.GetParValue = function(n) {
          if (this.fParams?.fParameters) return this.fParams.fParameters[n];
          if (this.fFormula?.fClingParameters) return this.fFormula.fClingParameters[n];
          if (this.fParams) return this.fParams[n];
          return undefined;
-      }
+      };
       m.GetParError = function(n) {
          return this.fParErrors ? this.fParErrors[n] : undefined;
-      }
+      };
       m.GetNumPars = function() {
          return this.fNpar;
-      }
+      };
    }
 
    if (((typename.indexOf(clTGraph) === 0) || (typename === clTCutG)) && (typename !== clTGraphPolargram) && (typename !== clTGraphTime)) {
@@ -1541,7 +1540,7 @@ function getMethods(typename, obj) {
          }
 
          return oddNodes;
-      }
+      };
    }
 
    if (typename.indexOf(clTH1) === 0 || typename.indexOf(clTH2) === 0 || typename.indexOf(clTH3) === 0) {
@@ -1555,42 +1554,42 @@ function getMethods(typename, obj) {
          if (bin < this.fSumw2.length)
             return Math.sqrt(this.fSumw2[bin]);
          return Math.sqrt(Math.abs(this.fArray[bin]));
-      }
+      };
       m.setBinContent = function(bin, content) {
          // Set bin content - only trivial case, without expansion
          this.fEntries++;
          this.fTsumw = 0;
          if ((bin >= 0) && (bin < this.fArray.length))
             this.fArray[bin] = content;
-      }
+      };
    }
 
    if (typename.indexOf(clTH1) === 0) {
-      m.getBin = function(x) { return x; }
-      m.getBinContent = function(bin) { return this.fArray[bin]; }
+      m.getBin = function(x) { return x; };
+      m.getBinContent = function(bin) { return this.fArray[bin]; };
       m.Fill = function(x, weight) {
          const a = this.fXaxis,
                bin = Math.max(0, 1 + Math.min(a.fNbins, Math.floor((x - a.fXmin) / (a.fXmax - a.fXmin) * a.fNbins)));
          this.fArray[bin] += weight ?? 1;
          this.fEntries++;
-      }
+      };
    }
 
    if (typename.indexOf(clTH2) === 0) {
-      m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
-      m.getBinContent = function(x, y) { return this.fArray[this.getBin(x, y)]; }
+      m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
+      m.getBinContent = function(x, y) { return this.fArray[this.getBin(x, y)]; };
       m.Fill = function(x, y, weight) {
          const a1 = this.fXaxis, a2 = this.fYaxis,
                bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
                bin2 = Math.max(0, 1 + Math.min(a2.fNbins, Math.floor((y - a2.fXmin) / (a2.fXmax - a2.fXmin) * a2.fNbins)));
          this.fArray[bin1 + (a1.fNbins + 2)*bin2] += weight ?? 1;
          this.fEntries++;
-      }
+      };
    }
 
    if (typename.indexOf(clTH3) === 0) {
-      m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); }
-      m.getBinContent = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; }
+      m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); };
+      m.getBinContent = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; };
       m.Fill = function(x, y, z, weight) {
          const a1 = this.fXaxis, a2 = this.fYaxis, a3 = this.fZaxis,
                bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
@@ -1598,43 +1597,43 @@ function getMethods(typename, obj) {
                bin3 = Math.max(0, 1 + Math.min(a3.fNbins, Math.floor((z - a3.fXmin) / (a3.fXmax - a3.fXmin) * a3.fNbins)));
          this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2)*bin3)] += weight ?? 1;
          this.fEntries++;
-      }
+      };
    }
 
    if (typename.indexOf(clTProfile) === 0) {
       if (typename === clTProfile3D) {
-         m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); }
+         m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); };
          m.getBinContent = function(x, y, z) {
             const bin = this.getBin(x, y, z);
             if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
             return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
-         }
+         };
          m.getBinEntries = function(x, y, z) {
             const bin = this.getBin(x, y, z);
             return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
-         }
+         };
       } else if (typename === clTProfile2D) {
-         m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); }
+         m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
          m.getBinContent = function(x, y) {
             const bin = this.getBin(x, y);
             if (bin < 0 || bin >= this.fNcells) return 0;
             if (this.fBinEntries[bin] < 1e-300) return 0;
             if (!this.fArray) return 0;
             return this.fArray[bin]/this.fBinEntries[bin];
-         }
+         };
          m.getBinEntries = function(x, y) {
             const bin = this.getBin(x, y);
             if (bin < 0 || bin >= this.fNcells) return 0;
             return this.fBinEntries[bin];
-         }
+         };
       } else {
-         m.getBin = function(x) { return x; }
+         m.getBin = function(x) { return x; };
          m.getBinContent = function(bin) {
             if (bin < 0 || bin >= this.fNcells) return 0;
             if (this.fBinEntries[bin] < 1e-300) return 0;
             if (!this.fArray) return 0;
             return this.fArray[bin]/this.fBinEntries[bin];
-         }
+         };
       }
       m.getBinEffectiveEntries = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
@@ -1644,11 +1643,11 @@ function getMethods(typename, obj) {
             return sumOfWeights;
          const sumOfWeightsSquare = this.fBinSumw2[bin];
          return (sumOfWeightsSquare > 0) ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0;
-      }
+      };
       m.getBinError = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
          const cont = this.fArray[bin],               // sum of bin w *y
-               sum  = this.fBinEntries[bin],          // sum of bin weights
+               sum = this.fBinEntries[bin],          // sum of bin weights
                err2 = this.fSumw2[bin],               // sum of bin w * y^2
                neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
          if (sum < 1e-300) return 0;                  // for empty bins
@@ -1671,7 +1670,7 @@ function getMethods(typename, obj) {
          // default case : fErrorMode = kERRORMEAN
          // return standard error on the mean of y
          return eprim/Math.sqrt(neff);
-      }
+      };
    }
 
    if (typename === clTAxis) {
@@ -1679,41 +1678,41 @@ function getMethods(typename, obj) {
          if (this.fNbins <= 0) return 0;
          if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
          return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
-      }
+      };
       m.GetBinCenter = function(bin) {
          if (this.fNbins <= 0) return 0;
          if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
          return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
-      }
+      };
    }
 
    if (typename.indexOf('ROOT::Math::LorentzVector') === 0) {
-      m.Px = m.X = function() { return this.fCoordinates.Px(); }
-      m.Py = m.Y = function() { return this.fCoordinates.Py(); }
-      m.Pz = m.Z = function() { return this.fCoordinates.Pz(); }
-      m.E = m.T = function() { return this.fCoordinates.E(); }
-      m.M2 = function() { return this.fCoordinates.M2(); }
-      m.M = function() { return this.fCoordinates.M(); }
-      m.R = m.P = function() { return this.fCoordinates.R(); }
-      m.P2 = function() { return this.P() * this.P(); }
-      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); }
-      m.Phi = m.phi = function() { return Math.atan2(this.fCoordinates.Py(), this.fCoordinates.Px()); }
-      m.Eta = m.eta = function() { return Math.atanh(this.Pz()/this.P()); }
+      m.Px = m.X = function() { return this.fCoordinates.Px(); };
+      m.Py = m.Y = function() { return this.fCoordinates.Py(); };
+      m.Pz = m.Z = function() { return this.fCoordinates.Pz(); };
+      m.E = m.T = function() { return this.fCoordinates.E(); };
+      m.M2 = function() { return this.fCoordinates.M2(); };
+      m.M = function() { return this.fCoordinates.M(); };
+      m.R = m.P = function() { return this.fCoordinates.R(); };
+      m.P2 = function() { return this.P() * this.P(); };
+      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); };
+      m.Phi = m.phi = function() { return Math.atan2(this.fCoordinates.Py(), this.fCoordinates.Px()); };
+      m.Eta = m.eta = function() { return Math.atanh(this.Pz()/this.P()); };
    }
 
    if (typename.indexOf('ROOT::Math::PxPyPzE4D') === 0) {
-      m.Px = m.X = function() { return this.fX; }
-      m.Py = m.Y = function() { return this.fY; }
-      m.Pz = m.Z = function() { return this.fZ; }
-      m.E = m.T = function() { return this.fT; }
-      m.P2 = function() { return this.fX**2 + this.fY**2 + this.fZ**2; }
-      m.R = m.P = function() { return Math.sqrt(this.P2()); }
-      m.Mag2 = m.M2 = function() { return this.fT**2 - this.fX**2 - this.fY**2 - this.fZ**2; }
-      m.Mag = m.M = function() { return (this.M2() >= 0) ? Math.sqrt(this.M2()) : -Math.sqrt(-this.M2()); }
-      m.Perp2 = m.Pt2 = function() { return this.fX**2 + this.fY**2; }
-      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); }
-      m.Phi = m.phi = function() { return Math.atan2(this.fY, this.fX); }
-      m.Eta = m.eta = function() { return Math.atanh(this.Pz/this.P()); }
+      m.Px = m.X = function() { return this.fX; };
+      m.Py = m.Y = function() { return this.fY; };
+      m.Pz = m.Z = function() { return this.fZ; };
+      m.E = m.T = function() { return this.fT; };
+      m.P2 = function() { return this.fX**2 + this.fY**2 + this.fZ**2; };
+      m.R = m.P = function() { return Math.sqrt(this.P2()); };
+      m.Mag2 = m.M2 = function() { return this.fT**2 - this.fX**2 - this.fY**2 - this.fZ**2; };
+      m.Mag = m.M = function() { return (this.M2() >= 0) ? Math.sqrt(this.M2()) : -Math.sqrt(-this.M2()); };
+      m.Perp2 = m.Pt2 = function() { return this.fX**2 + this.fY**2; };
+      m.Pt = m.pt = function() { return Math.sqrt(this.P2()); };
+      m.Phi = m.phi = function() { return Math.atan2(this.fY, this.fX); };
+      m.Eta = m.eta = function() { return Math.atanh(this.Pz/this.P()); };
    }
 
    methodsCache[typename] = m;

@@ -314,7 +314,7 @@ class RH1Painter extends RHistPainter {
           rect = pmain.getFrameRect();
 
       if (!this.draw_content || (rect.width <= 0) || (rect.height <= 0)) {
-         this.removeG()
+         this.removeG();
          return false;
       }
 
@@ -487,7 +487,7 @@ class RH1Painter extends RHistPainter {
                curry = gry;
             } else {
                if (draw_markers || show_text || show_line) {
-                  if (bestimin === bestimax)  draw_bin(bestimin);  else
+                  if (bestimin === bestimax) draw_bin(bestimin); else
                      if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
                         draw_bin(bestimax); draw_bin(bestimin);
                      }
@@ -784,7 +784,7 @@ class RH1Painter extends RHistPainter {
 
       if (findbin !== null) {
          // if bin on boundary found, check that x position is ok
-         if ((findbin === left) && (grx1 > pnt_x + gapx))  findbin = null; else
+         if ((findbin === left) && (grx1 > pnt_x + gapx)) findbin = null; else
          if ((findbin === right-1) && (grx2 < pnt_x - gapx)) findbin = null; else
          // if bars option used check that bar is not match
          if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx)) findbin = null; else
@@ -859,7 +859,7 @@ class RH1Painter extends RHistPainter {
       }
 
       if (res.changed) {
-         res.user_info = { obj: histo,  name: 'histo',
+         res.user_info = { obj: histo, name: 'histo',
                            bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
       }

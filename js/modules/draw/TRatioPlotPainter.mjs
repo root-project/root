@@ -69,7 +69,7 @@ class TRatioPlotPainter extends ObjectPainter {
                   this._ratio_low_fp.o_zoom(up_fp.scale_xmin, up_fp.scale_xmax);
                   return res;
                });
-            }
+            };
 
             up_fp.o_sizeChanged = up_fp.sizeChanged;
             up_fp.sizeChanged = function() {
@@ -77,7 +77,7 @@ class TRatioPlotPainter extends ObjectPainter {
                this._ratio_low_fp.fX1NDC = this.fX1NDC;
                this._ratio_low_fp.fX2NDC = this.fX2NDC;
                this._ratio_low_fp.o_sizeChanged();
-            }
+            };
             return true;
          });
       }
@@ -124,7 +124,7 @@ class TRatioPlotPainter extends ObjectPainter {
             });
          }
 
-         return Promise.all(arr).then(() => low_fp.zoom(up_fp.scale_xmin,  up_fp.scale_xmax)).then(() => {
+         return Promise.all(arr).then(() => low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax)).then(() => {
             low_fp.o_zoom = low_fp.zoom;
             low_fp._ratio_up_fp = up_fp;
             low_fp._ratio_painter = this;
@@ -133,7 +133,7 @@ class TRatioPlotPainter extends ObjectPainter {
                this._ratio_painter.setGridsRange(xmin, xmax);
                this._ratio_up_fp.o_zoom(xmin, xmax);
                return this.o_zoom(xmin, xmax, ymin, ymax, zmin, zmax);
-            }
+            };
 
             low_fp.o_sizeChanged = low_fp.sizeChanged;
             low_fp.sizeChanged = function() {
@@ -141,7 +141,7 @@ class TRatioPlotPainter extends ObjectPainter {
                this._ratio_up_fp.fX1NDC = this.fX1NDC;
                this._ratio_up_fp.fX2NDC = this.fX2NDC;
                this._ratio_up_fp.o_sizeChanged();
-            }
+            };
             return this;
          });
       });

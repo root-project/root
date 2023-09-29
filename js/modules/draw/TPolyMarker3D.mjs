@@ -11,7 +11,7 @@ async function drawPolyMarker3D() {
    if (!isObject(fp) || !fp.grx || !fp.gry || !fp.grz)
       return this;
 
-   const poly = this.getObject(),  sizelimit = 50000, fP = poly.fP;
+   const poly = this.getObject(), sizelimit = 50000, fP = poly.fP;
    let step = 1, numselect = 0;
 
    for (let i = 0; i < fP.length; i += 3) {
@@ -67,7 +67,7 @@ async function drawPolyMarker3D() {
              gry = p.gry(this.poly.fP[indx+1]),
              grz = p.grz(this.poly.fP[indx+2]);
 
-         return  {
+         return {
             x1: grx - this.scale0,
             x2: grx + this.scale0,
             y1: gry - this.scale0,

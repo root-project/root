@@ -60,7 +60,7 @@ function createSVGRenderer(as_is, precision, doc) {
                  }
                  this._wrapper.path_attr[name] = value;
               }
-           }
+           };
         }
 
         if (kind !== 'svg') {
@@ -75,11 +75,11 @@ function createSVGRenderer(as_is, precision, doc) {
            setAttribute(name, value) {
               this._wrapper.svg_attr[name] = value;
            },
-           appendChild(node) {
+           appendChild(_node) {
               this._wrapper.accPath += `<path style="${this._wrapper.path_attr.style}" d="${this._wrapper.path_attr.d}"/>`;
               this._wrapper.path_attr = {};
            },
-           removeChild(node) {
+           removeChild(_node) {
               this.childNodes = [];
            }
         };
@@ -111,11 +111,11 @@ function createSVGRenderer(as_is, precision, doc) {
 
       if (isNodeJs())
          globalThis.document = originalDocument;
-   }
+   };
 
    rndr.clearHTML = function() {
       this.doc_wrapper.accPath = '';
-   }
+   };
 
    rndr.makeOuterHTML = function() {
       const wrap = this.doc_wrapper,
@@ -123,7 +123,7 @@ function createSVGRenderer(as_is, precision, doc) {
            _textClearAttr = wrap.svg_style.backgroundColor ? ` style="background:${wrap.svg_style.backgroundColor}"` : '';
 
       return `<svg xmlns="http://www.w3.org/2000/svg" ${_textSizeAttr}${_textClearAttr}>${wrap.accPath}</svg>`;
-   }
+   };
 
    rndr.fillTargetSVG = function(svg) {
       if (isNodeJs()) {
@@ -149,7 +149,7 @@ function createSVGRenderer(as_is, precision, doc) {
             svg.appendChild(elem);
          }
       }
-   }
+   };
 
    rndr.setPrecision(precision);
 
@@ -555,7 +555,7 @@ function afterRender3D(renderer) {
       // small code to flip Y scale
       let indx1 = 0, indx2 = (canvas.height - 1) * 4 * canvas.width, k, d;
       while (indx1 < indx2) {
-         for  (k = 0; k < 4 * canvas.width; ++k) {
+         for (k = 0; k < 4 * canvas.width; ++k) {
             d = pixels[indx1 + k]; pixels[indx1 + k] = pixels[indx2 + k]; pixels[indx2 + k] = d;
          }
          indx1 += 4 * canvas.width;
@@ -893,11 +893,11 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       delete this.renderer;
       delete this.raycaster;
       delete this.mouse_zoom_mesh;
-   }
+   };
 
    control.HideTooltip = function() {
       this.tooltip.hide();
-   }
+   };
 
    control.getMousePos = function(evnt, mouse) {
       mouse.x = ('offsetX' in evnt) ? evnt.offsetX : evnt.layerX;
@@ -905,7 +905,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       mouse.clientX = evnt.clientX;
       mouse.clientY = evnt.clientY;
       return mouse;
-   }
+   };
 
    control.getOriginDirectionIntersects = function(origin, direction) {
       this.raycaster.set(origin, direction);
@@ -914,7 +914,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       if (isFunc(this.painter.filterIntersects))
          intersects = this.painter.filterIntersects(intersects);
       return intersects;
-   }
+   };
 
    control.getMouseIntersects = function(mouse) {
       // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
@@ -933,7 +933,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          intersects = this.painter.filterIntersects(intersects);
 
       return intersects;
-   }
+   };
 
    control.detectZoomMesh = function(evnt) {
       const mouse = this.getMousePos(evnt, {}),
@@ -946,7 +946,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       return null;
-   }
+   };
 
    control.getInfoAtMousePosition = function(mouse_pos) {
       const intersects = this.getMouseIntersects(mouse_pos);
@@ -961,12 +961,12 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       if (tip && painter) {
-         return { obj: painter.getObject(),  name: painter.getObject().fName,
+         return { obj: painter.getObject(), name: painter.getObject().fName,
                   bin: tip.bin, cont: tip.value,
                   binx: tip.ix, biny: tip.iy, binz: tip.iz,
                   grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 };
       }
-   }
+   };
 
    control.processDblClick = function(evnt) {
       // first check if zoom mesh clicked
@@ -987,13 +987,13 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
        }
 
        this.reset();
-   }
+   };
 
    control.changeEvent = function() {
       this.mouse_ctxt.on = false; // disable context menu if any changes where done by orbit control
       this.painter.render3D(0);
       this.control_changed = true;
-   }
+   };
 
    control.startEvent = function() {
       this.control_active = true;
@@ -1005,7 +1005,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       // do not reset here, problem of events sequence in orbitcontrol
       // it issue change/start/stop event when do zooming
       // control.control_changed = false;
-   }
+   };
 
    control.endEvent = function() {
       this.control_active = false;
@@ -1016,7 +1016,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          // react on camera change when required
       } */
       this.control_changed = false;
-   }
+   };
 
    control.mainProcessContextMenu = function(evnt) {
       evnt.preventDefault();
@@ -1027,11 +1027,11 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          this.block_ctxt = false;
       else
          this.contextMenu(this.mouse_ctxt, this.getMouseIntersects(this.mouse_ctxt));
-   }
+   };
 
    control.contextMenu = function(/* pos, intersects */) {
       // do nothing, function called when context menu want to be activated
-   }
+   };
 
    control.setTooltipEnabled = function(on) {
       this.block_mousemove = !on;
@@ -1039,13 +1039,13 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          this.tooltip.hide();
          this.removeZoomMesh();
       }
-   }
+   };
 
    control.removeZoomMesh = function() {
       if (this.mouse_zoom_mesh?.object.showSelection())
          this.painter.render3D();
       this.mouse_zoom_mesh = null; // in any case clear mesh, enable orbit control again
-   }
+   };
 
    control.mainProcessMouseMove = function(evnt) {
       if (!this.painter) return; // protect when cleanup
@@ -1087,7 +1087,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          this.delayedProcessMouseMove();
       else
          this.tmout_handle = setTimeout(() => this.delayedProcessMouseMove(), this.mouse_tmout);
-   }
+   };
 
    control.delayedProcessMouseMove = function() {
       // remove handle - allow to trigger new timeout
@@ -1128,7 +1128,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       getDocument().body.style.cursor = this.cursor_changed ? 'pointer' : 'auto';
-   }
+   };
 
    control.mainProcessMouseLeave = function() {
       if (!this.painter) return; // protect when cleanup
@@ -1145,7 +1145,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          getDocument().body.style.cursor = 'auto';
          this.cursor_changed = false;
       }
-   }
+   };
 
    control.mainProcessDblClick = function(evnt) {
       // suppress simple click handler if double click detected
@@ -1154,7 +1154,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          delete this.single_click_tm;
       }
       this.processDblClick(evnt);
-   }
+   };
 
    control.processClick = function(mouse_pos, kind) {
       delete this.single_click_tm;
@@ -1304,9 +1304,9 @@ const Box3D = {
                new Vector3(1, 0, 1), new Vector3(1, 0, 0),
                new Vector3(0, 1, 0), new Vector3(0, 1, 1),
                new Vector3(0, 0, 0), new Vector3(0, 0, 1)],
-    Indexes: [0, 2, 1,  2, 3, 1,  4, 6, 5,  6, 7, 5,  4, 5, 1,  5, 0, 1,
-              7, 6, 2,  6, 3, 2,  5, 7, 0,  7, 2, 0,  1, 3, 4,  3, 6, 4],
-    Normals: [1, 0, 0,  -1, 0, 0,  0, 1, 0,  0, -1, 0,  0, 0, 1,  0, 0, -1],
+    Indexes: [0, 2, 1, 2, 3, 1, 4, 6, 5, 6, 7, 5, 4, 5, 1, 5, 0, 1,
+              7, 6, 2, 6, 3, 2, 5, 7, 0, 7, 2, 0, 1, 3, 4, 3, 6, 4],
+    Normals: [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1],
     Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
     MeshSegments: undefined
 };
@@ -1450,7 +1450,7 @@ class PointsCreator {
 
    /** @summary Add point */
    addPoint(x, y, z) {
-      this.pos[this.indx]   = x;
+      this.pos[this.indx] = x;
       this.pos[this.indx+1] = y;
       this.pos[this.indx+2] = z;
       this.indx += 3;

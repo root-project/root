@@ -15,13 +15,13 @@ function assignRAxisMethods(axis) {
 
       axis.min = axis.fLow;
       axis.max = axis.fLow + axis.fNBinsNoOver/axis.fInvBinWidth;
-      axis.GetNumBins = function() { return this.fNBinsNoOver; }
-      axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; }
-      axis.FindBin = function(x, add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); }
+      axis.GetNumBins = function() { return this.fNBinsNoOver; };
+      axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; };
+      axis.FindBin = function(x, add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); };
    } else if (axis._typename === `${nsREX}RAxisIrregular`) {
       axis.min = axis.fBinBorders[0];
       axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
-      axis.GetNumBins = function() { return this.fBinBorders.length; }
+      axis.GetNumBins = function() { return this.fBinBorders.length; };
       axis.GetBinCoord = function(bin) {
          const indx = Math.round(bin);
          if (indx <= 0) return this.fBinBorders[0];
@@ -29,18 +29,18 @@ function assignRAxisMethods(axis) {
          if (indx === bin) return this.fBinBorders[indx];
          const indx2 = (bin < indx) ? indx - 1 : indx + 1;
          return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);
-      }
+      };
       axis.FindBin = function(x, add) {
          for (let k = 1; k < this.fBinBorders.length; ++k)
             if (x < this.fBinBorders[k]) return Math.floor(k-1+add);
          return this.fBinBorders.length - 1;
-      }
+      };
    }
 
    // to support some code from ROOT6 drawing
 
-   axis.GetBinCenter = function(bin) { return this.GetBinCoord(bin-0.5); }
-   axis.GetBinLowEdge = function(bin) { return this.GetBinCoord(bin-1); }
+   axis.GetBinCenter = function(bin) { return this.GetBinCoord(bin-0.5); };
+   axis.GetBinLowEdge = function(bin) { return this.GetBinCoord(bin-1); };
 }
 
 /** @summary Returns real histogram impl
@@ -88,37 +88,37 @@ class RHistPainter extends RObjectPainter {
             assignRAxisMethods(histo.fAxes._0);
             assignRAxisMethods(histo.fAxes._1);
             assignRAxisMethods(histo.fAxes._2);
-            histo.getBin = function(x, y, z) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1) + this.fAxes._0.GetNumBins()*this.fAxes._1.GetNumBins()*(z-1); }
+            histo.getBin = function(x, y, z) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1) + this.fAxes._0.GetNumBins()*this.fAxes._1.GetNumBins()*(z-1); };
             // all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
-            histo.getBinContent = function(x, y, z) { return this.fStatistics.fBinContent[this.getBin(x, y, z)]; }
+            histo.getBinContent = function(x, y, z) { return this.fStatistics.fBinContent[this.getBin(x, y, z)]; };
             histo.getBinError = function(x, y, z) {
                const bin = this.getBin(x, y, z);
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
-            }
+            };
          } else if (histo.fAxes._1) {
             assignRAxisMethods(histo.fAxes._0);
             assignRAxisMethods(histo.fAxes._1);
-            histo.getBin = function(x, y) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1); }
+            histo.getBin = function(x, y) { return (x-1) + this.fAxes._0.GetNumBins()*(y-1); };
             // all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
-            histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
+            histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; };
             histo.getBinError = function(x, y) {
                const bin = this.getBin(x, y);
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
-            }
+            };
          } else {
             assignRAxisMethods(histo.fAxes._0);
-            histo.getBin = function(x) { return x-1; }
+            histo.getBin = function(x) { return x-1; };
             // all normal ROOT methods uses indx+1 logic, but RHist has no underflow/overflow bins now
-            histo.getBinContent = function(x) { return this.fStatistics.fBinContent[x-1]; }
+            histo.getBinContent = function(x) { return this.fStatistics.fBinContent[x-1]; };
             histo.getBinError = function(x) {
                if (this.fStatistics.fSumWeightsSquared)
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[x-1]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[x-1]));
-            }
+            };
          }
       } else if (!histo && obj?.fAxes) {
          // case of RHistDisplayItem
@@ -144,16 +144,16 @@ class RHistPainter extends RObjectPainter {
                histo.stepz = histo.fIndicies[8];
 
                // this is index in original histogram
-               histo.getBin = function(x, y, z) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1) + this.fAxes[0].GetNumBins()*this.fAxes[1].GetNumBins()*(z-1); }
+               histo.getBin = function(x, y, z) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1) + this.fAxes[0].GetNumBins()*this.fAxes[1].GetNumBins()*(z-1); };
 
                // this is index in current available data
                if ((histo.stepx > 1) || (histo.stepy > 1) || (histo.stepz > 1))
-                  histo.getBin0 = function(x, y, z) { return Math.floor((x-this.dx)/this.stepx) + this.nx/this.stepx*Math.floor((y-this.dy)/this.stepy) + this.nx/this.stepx*this.ny/this.stepy*Math.floor((z-this.dz)/this.stepz); }
+                  histo.getBin0 = function(x, y, z) { return Math.floor((x-this.dx)/this.stepx) + this.nx/this.stepx*Math.floor((y-this.dy)/this.stepy) + this.nx/this.stepx*this.ny/this.stepy*Math.floor((z-this.dz)/this.stepz); };
                else
-                  histo.getBin0 = function(x, y, z) { return (x-this.dx) + this.nx*(y-this.dy) + this.nx*this.ny*(z-this.dz); }
+                  histo.getBin0 = function(x, y, z) { return (x-this.dx) + this.nx*(y-this.dy) + this.nx*this.ny*(z-this.dz); };
 
-               histo.getBinContent = function(x, y, z) { return this.fBinContent[this.getBin0(x, y, z)]; }
-               histo.getBinError = function(x, y, z) { return Math.sqrt(Math.abs(this.getBinContent(x, y, z))); }
+               histo.getBinContent = function(x, y, z) { return this.fBinContent[this.getBin0(x, y, z)]; };
+               histo.getBinError = function(x, y, z) { return Math.sqrt(Math.abs(this.getBinContent(x, y, z))); };
             } else if (histo.fAxes.length === 2) {
                assignRAxisMethods(histo.fAxes[0]);
                assignRAxisMethods(histo.fAxes[1]);
@@ -167,29 +167,29 @@ class RHistPainter extends RObjectPainter {
                histo.stepy = histo.fIndicies[5];
 
                // this is index in original histogram
-               histo.getBin = function(x, y) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1); }
+               histo.getBin = function(x, y) { return (x-1) + this.fAxes[0].GetNumBins()*(y-1); };
 
                // this is index in current available data
                if ((histo.stepx > 1) || (histo.stepy > 1))
-                  histo.getBin0 = function(x, y) { return Math.floor((x-this.dx)/this.stepx) + this.nx/this.stepx*Math.floor((y-this.dy)/this.stepy); }
+                  histo.getBin0 = function(x, y) { return Math.floor((x-this.dx)/this.stepx) + this.nx/this.stepx*Math.floor((y-this.dy)/this.stepy); };
                else
-                  histo.getBin0 = function(x, y) { return (x-this.dx) + this.nx*(y-this.dy); }
+                  histo.getBin0 = function(x, y) { return (x-this.dx) + this.nx*(y-this.dy); };
 
-               histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin0(x, y)]; }
-               histo.getBinError = function(x, y) { return Math.sqrt(Math.abs(this.getBinContent(x, y))); }
+               histo.getBinContent = function(x, y) { return this.fBinContent[this.getBin0(x, y)]; };
+               histo.getBinError = function(x, y) { return Math.sqrt(Math.abs(this.getBinContent(x, y))); };
             } else {
                assignRAxisMethods(histo.fAxes[0]);
                histo.nx = histo.fIndicies[1] - histo.fIndicies[0];
                histo.dx = histo.fIndicies[0] + 1;
                histo.stepx = histo.fIndicies[2];
 
-               histo.getBin = function(x) { return x-1; }
+               histo.getBin = function(x) { return x-1; };
                if (histo.stepx > 1)
-                  histo.getBin0 = function(x) { return Math.floor((x-this.dx)/this.stepx); }
+                  histo.getBin0 = function(x) { return Math.floor((x-this.dx)/this.stepx); };
                else
-                  histo.getBin0 = function(x) { return x-this.dx; }
-               histo.getBinContent = function(x) { return this.fBinContent[this.getBin0(x)]; }
-               histo.getBinError = function(x) { return Math.sqrt(Math.abs(this.getBinContent(x))); }
+                  histo.getBin0 = function(x) { return x-this.dx; };
+               histo.getBinContent = function(x) { return this.fBinContent[this.getBin0(x)]; };
+               histo.getBinError = function(x) { return Math.sqrt(Math.abs(this.getBinContent(x))); };
             }
          }
       }

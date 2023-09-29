@@ -24,7 +24,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          arrx = handle.grx,
          arry = handle.gry;
 
-   let lj = 0, ipoly, poly,  np, npmax = 0,
+   let lj = 0, ipoly, poly, np, npmax = 0,
        i, j, k, n, m, ljfill, count,
        xsave, ysave, itars, ix, jx;
 
@@ -37,7 +37,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             return kk-1;
        }
       return nlevels-1;
-   },  BinarySearch = zc => {
+   }, BinarySearch = zc => {
       if (zc < first_level)
          return -1;
       if (zc >= last_level)
@@ -54,7 +54,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
       return l;
    },
    LevelSearch = nlevels < 10 ? LinearSearch : BinarySearch,
-   PaintContourLine = (elev1, icont1, x1, y1,  elev2, icont2, x2, y2) => {
+   PaintContourLine = (elev1, icont1, x1, y1, elev2, icont2, x2, y2) => {
       /* Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels */
       const vert = (x1 === x2),
             tlen = vert ? (y2 - y1) : (x2 - x1),
@@ -119,8 +119,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             n++;
             lj=2;
             for (ix=1; ix<=4; ix++) {
-               if (n === 1) m = 4;
-               else        m = n-1;
+               m = (n === 1) ? 4 : n-1;
                ljfill = PaintContourLine(zc[n-1], ir[n-1], x[n-1], y[n-1], zc[m-1], ir[m-1], x[m-1], y[m-1]);
                lj += 2*ljfill;
                n = m;
@@ -135,12 +134,12 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
                   ysave = yarr[ix];
                   itars = itarr[ix];
                   for (jx=ix; jx<=lj-5; jx +=2) {
-                     xarr[jx]  = xarr[jx+2];
-                     yarr[jx]  = yarr[jx+2];
+                     xarr[jx] = xarr[jx+2];
+                     yarr[jx] = yarr[jx+2];
                      itarr[jx] = itarr[jx+2];
                   }
-                  xarr[lj-3]  = xsave;
-                  yarr[lj-3]  = ysave;
+                  xarr[lj-3] = xsave;
+                  yarr[lj-3] = ysave;
                   itarr[lj-3] = itars;
                   if (count > kMAXCOUNT) break;
                   count++;
@@ -201,9 +200,9 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
 
       while (true) {
          iminus = npmax;
-         iplus  = iminus+1;
-         xp[iminus]= xx[istart];   yp[iminus] = yy[istart];
-         xp[iplus] = xx[istart+1]; yp[iplus]  = yy[istart+1];
+         iplus = iminus+1;
+         xp[iminus]= xx[istart]; yp[iminus] = yy[istart];
+         xp[iplus] = xx[istart+1]; yp[iplus] = yy[istart+1];
          xx[istart] = xx[istart+1] = xmin;
          yy[istart] = yy[istart+1] = ymin;
          while (true) {
@@ -268,7 +267,7 @@ class Triangles3DHandler {
       let nsegments = 0, lpos = null, lindx = 0,  // buffer for lines
           ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
           normindx = [],                             // buffer to remember place of vertex for each bin
-          pntindx = 0, lastpart = 0,  gridcnt = 0;
+          pntindx = 0, lastpart = 0, gridcnt = 0;
 
       function checkSide(z, level1, level2, eps) {
          return (z < level1 - eps) ? -1 : (z > level2 + eps ? 1 : 0);
@@ -319,7 +318,7 @@ class Triangles3DHandler {
 
          lpos[lindx] = x1; lpos[lindx+1] = y1; lpos[lindx+2] = z1; lindx+=3;
          lpos[lindx] = x2; lpos[lindx+1] = y2; lpos[lindx+2] = z2; lindx+=3;
-      }
+      };
 
       function addCrossingPoint(xx1, yy1, zz1, xx2, yy2, zz2, crossz, with_grid) {
          if (pntindx >= pntbuf.length)
@@ -370,7 +369,7 @@ class Triangles3DHandler {
 
             // always show top segments
             if ((lvl > 1) && (lvl === levels.length - 1) && (side_sum === 3) && (z1 <= this.grz_max))
-               side1 = side2 =  side3 = side_sum = 0;
+               side1 = side2 = side3 = side_sum = 0;
 
 
             if (side_sum === 3) continue;
@@ -911,7 +910,7 @@ class TH2Painter extends THistPainter {
          this.draw_content = false;
       } else {
          this.draw_content = this.gmaxbin > 0;
-         if (!this.draw_content  && this.options.Zero && this.isTH2Poly()) {
+         if (!this.draw_content && this.options.Zero && this.isTH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
          }
@@ -1669,10 +1668,10 @@ class TH2Painter extends THistPainter {
                   yc = (handle.gry[j] + handle.gry[j+1])/2;
                   dxn = scale_x*dx/dn;
                   dyn = scale_y*dy/dn;
-                  x1  = xc - dxn;
-                  x2  = xc + dxn;
-                  y1  = yc - dyn;
-                  y2  = yc + dyn;
+                  x1 = xc - dxn;
+                  x2 = xc + dxn;
+                  y1 = yc - dyn;
+                  y2 = yc + dyn;
                   dx = Math.round(x2-x1);
                   dy = Math.round(y2-y1);
 
@@ -1681,8 +1680,8 @@ class TH2Painter extends THistPainter {
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(9/(dx**2 + dy**2));
-                        si  = Math.round(anr*(dx + dy));
-                        co  = Math.round(anr*(dx - dy));
+                        si = Math.round(anr*(dx + dy));
+                        co = Math.round(anr*(dx - dy));
                         if (si || co)
                            cmd += `m${-si},${co}${makeLine(si, -co)}${makeLine(-co, -si)}`;
                      }
@@ -1821,26 +1820,26 @@ class TH2Painter extends THistPainter {
 
    /** @summary Draw histogram bins as candle plot */
    drawBinsCandle() {
-      const kNoOption           = 0,
-            kBox                = 1,
-            kMedianLine         = 10,
-            kMedianNotched      = 20,
-            kMedianCircle       = 30,
-            kMeanLine           = 100,
-            kMeanCircle         = 300,
-            kWhiskerAll         = 1000,
-            kWhisker15          = 2000,
-            kAnchor             = 10000,
-            kPointsOutliers     = 100000,
-            kPointsAll          = 200000,
-            kPointsAllScat      = 300000,
-            kHistoLeft          = 1000000,
-            kHistoRight         = 2000000,
-            kHistoViolin        = 3000000,
+      const kNoOption = 0,
+            kBox = 1,
+            kMedianLine = 10,
+            kMedianNotched = 20,
+            kMedianCircle = 30,
+            kMeanLine = 100,
+            kMeanCircle = 300,
+            kWhiskerAll = 1000,
+            kWhisker15 = 2000,
+            kAnchor = 10000,
+            kPointsOutliers = 100000,
+            kPointsAll = 200000,
+            kPointsAllScat = 300000,
+            kHistoLeft = 1000000,
+            kHistoRight = 2000000,
+            kHistoViolin = 3000000,
             kHistoZeroIndicator = 10000000,
-            kHorizontal         = 100000000,
-            fallbackCandle      = kBox + kMedianLine + kMeanCircle + kWhiskerAll + kAnchor,
-            fallbackViolin      = kMeanCircle + kWhiskerAll + kHistoViolin + kHistoZeroIndicator;
+            kHorizontal = 100000000,
+            fallbackCandle = kBox + kMedianLine + kMeanCircle + kWhiskerAll + kAnchor,
+            fallbackViolin = kMeanCircle + kWhiskerAll + kHistoViolin + kHistoZeroIndicator;
 
       let fOption = kNoOption;
 
@@ -2916,7 +2915,7 @@ class TH2Painter extends THistPainter {
          }
 
          if (res.changed) {
-            res.user_info = { obj: histo,  name: histo.fName,
+            res.user_info = { obj: histo, name: histo.fName,
                               bin: i+1, cont: p.fMedian, binx: i+1, biny: 1,
                               grx: pnt.x, gry: pnt.y };
          }
@@ -3105,7 +3104,7 @@ class TH2Painter extends THistPainter {
           else if (this.options.Chord && this.isMainPainter())
             pr = this.drawBinsChord();
           else
-            pr = this.drawAxes().then(() => this.draw2DBins())
+            pr = this.drawAxes().then(() => this.draw2DBins());
 
          return pr.then(() => this.completePalette(pp));
       }).then(() => this.drawHistTitle())

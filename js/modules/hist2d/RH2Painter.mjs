@@ -361,9 +361,9 @@ class RH2Painter extends RHistPainter {
       if ((print_under > 0) || (print_over > 0)) {
          const m = data.matrix;
 
-         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | '  + m[7].toFixed(0));
-         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | '  + m[5].toFixed(0));
-         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | '  + m[2].toFixed(0));
+         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | ' + m[7].toFixed(0));
+         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | ' + m[5].toFixed(0));
+         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | ' + m[2].toFixed(0));
       }
 
       return true;
@@ -528,7 +528,7 @@ class RH2Painter extends RHistPainter {
       if (handle === null) handle = this.prepareDraw({ rounding: false });
 
       const histo = this.getHisto(),
-            textFont  = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
+            textFont = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
             text_offset = this.options.BarOffset || 0,
             text_g = this.draw_g.append('svg:g').attr('class', 'th2_text'),
             di = handle.stepi, dj = handle.stepj,
@@ -607,10 +607,10 @@ class RH2Painter extends RHistPainter {
                   yc = (handle.gry[j] + handle.gry[j+dj])/2;
                   dxn = scale_x*dx/dn;
                   dyn = scale_y*dy/dn;
-                  x1  = xc - dxn;
-                  x2  = xc + dxn;
-                  y1  = yc - dyn;
-                  y2  = yc + dyn;
+                  x1 = xc - dxn;
+                  x2 = xc + dxn;
+                  y1 = yc - dyn;
+                  y2 = yc + dyn;
                   dx = Math.round(x2-x1);
                   dy = Math.round(y2-y1);
 
@@ -619,8 +619,8 @@ class RH2Painter extends RHistPainter {
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(2/(dx**2 + dy**2));
-                        si  = Math.round(anr*(dx + dy));
-                        co  = Math.round(anr*(dx - dy));
+                        si = Math.round(anr*(dx + dy));
+                        co = Math.round(anr*(dx - dy));
                         if (si || co)
                            cmd += `m${-si},${co}` + makeLine(si, -co) + makeLine(-co, -si);
                      }

@@ -87,7 +87,9 @@ async function drawList(dom, lst, opt) {
    if (!lst || !lst.arr)
       return null;
 
-   const handle = { dom, lst, opt, indx: -1, painter: null,
+   const handle = {
+     dom, lst, opt,
+     indx: -1, painter: null,
      draw_next() {
         while (++this.indx < this.lst.arr.length) {
            const item = this.lst.arr[this.indx],
@@ -100,7 +102,7 @@ async function drawList(dom, lst, opt) {
         }
         return this.painter;
      }
-   }
+   };
 
    return handle.draw_next();
 }
@@ -205,7 +207,7 @@ function listHierarchy(folder, lst) {
             _obj: null
           };
       } else {
-         item =  {
+         item = {
             _name: obj.fName || obj.name,
             _kind: prROOT + obj._typename,
             _title: `${obj.fTitle || ''} type:${obj._typename}`,
@@ -275,7 +277,7 @@ function keysHierarchy(folder, keys, file, dirname) {
             // remove cycle number - we have already directory
             item._name = key.fName;
             keysHierarchy(item, dir.fKeys, file, dirname + key.fName + '/');
-         } else  {
+         } else {
             item._more = true;
             item._expand = function(node, obj) {
                // one can get expand call from child objects - ignore them
@@ -428,7 +430,7 @@ function objectHierarchy(top, obj, args = undefined) {
 
       const item = { _parent: top, _name: key };
 
-      if (compress) { lastitem = item;  lastkey = key; lastfield = fld; cnt = 0; }
+      if (compress) { lastitem = item; lastkey = key; lastfield = fld; cnt = 0; }
 
       if (fld === null) {
          item._value = item._title = 'null';
@@ -497,7 +499,7 @@ function objectHierarchy(top, obj, args = undefined) {
                   default:
                      if (isRootCollection(fld) && isObject(fld.arr)) {
                         item._value = fld.arr.length ? '[...]' : '[]';
-                        item._title += ', size:'  + fld.arr.length;
+                        item._title += ', size:' + fld.arr.length;
                         if (fld.arr.length > 0) item._more = true;
                      } else {
                         item._more = true;
@@ -770,7 +772,7 @@ class HierarchyPainter extends BasePainter {
 
        folder = {
          _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path ' : '')  + file.fFullURL,
+         _title: (file.fTitle ? file.fTitle + ', path ' : '') + file.fFullURL,
          _kind: kindTFile,
          _file: file,
          _fullurl: file.fFullURL,
@@ -1772,7 +1774,7 @@ class HierarchyPainter extends BasePainter {
                    item = top ? top.getItemName() : null, opt;
 
                if (item)
-                  opt  = top.getDrawOpt() || top.getItemDrawOpt();
+                  opt = top.getDrawOpt() || top.getItemDrawOpt();
                 else {
                   top = null;
                   dummy.forEachPainter(p => {
@@ -2102,7 +2104,7 @@ class HierarchyPainter extends BasePainter {
          if (!is_main_painter && isFunc(drop_painter?.setItemName))
             drop_painter.setItemName(itemname, null, this);
          return drop_painter;
-      }
+      };
 
       if (itemname === '$legend') {
          const cp = getElementCanvPainter(divid);
@@ -2447,7 +2449,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          find_next();
-      }
+      };
 
       if (force && this.brlayout) {
          if (!this.brlayout.browser_kind)
@@ -2613,9 +2615,12 @@ class HierarchyPainter extends BasePainter {
                              item._jsontmp = res;
                              return res;
                           });
-         }
-         if (!this.h) this.h = h1; else
-         if (this.h._kind === 'TopFolder') this.h._childs.push(h1); else {
+         };
+         if (!this.h)
+            this.h = h1;
+         else if (this.h._kind === 'TopFolder')
+            this.h._childs.push(h1);
+         else {
             const h0 = this.h, topname = ('_jsonfile' in h0) ? 'Files' : 'Items';
             this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1] };
          }
@@ -2827,7 +2832,7 @@ class HierarchyPainter extends BasePainter {
                else
                   handleAfterRequest(findFunction(item._after_request)); // v6 support
             } else
-               handleAfterRequest(draw_handle?.after_request)
+               handleAfterRequest(draw_handle?.after_request);
          }, undefined, true).then(xhr => { itemreq = xhr; xhr.send(null); });
       });
    }
@@ -2890,7 +2895,7 @@ class HierarchyPainter extends BasePainter {
 
                   return this;
                });
-      }
+      };
 
       if (!server_address) server_address = '';
 
@@ -3538,7 +3543,7 @@ class HierarchyPainter extends BasePainter {
    redrawObject(obj) {
       if (!this._inspector && !this._streamer_info) return false;
       if (this._streamer_info)
-         this.h = createStreamerInfoContent(obj)
+         this.h = createStreamerInfoContent(obj);
       else
          this.h = createInspectorContent(obj);
       return this.refreshHtml().then(() => { this.setTopPainter(); });
@@ -3750,7 +3755,7 @@ ObjectPainter.prototype.showInspector = function(opt, obj) {
       obj = this.getObject();
 
    return drawInspector(id, obj, opt);
-}
+};
 
 
 /** @summary Display streamer info
@@ -3803,7 +3808,7 @@ async function drawInspector(dom, obj, opt) {
    if (painter.selectDom().classed('jsroot_inspector')) {
       painter.removeInspector = function() {
          this.selectDom().remove();
-      }
+      };
    }
 
    painter.fill_context = function(menu, hitem) {
@@ -3823,7 +3828,7 @@ async function drawInspector(dom, obj, opt) {
             draw(ddom, obj, arg);
          });
       }
-   }
+   };
 
    painter.h = createInspectorContent(obj);
 

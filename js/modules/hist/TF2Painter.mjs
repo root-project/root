@@ -250,7 +250,7 @@ class TF2Painter extends TH2Painter {
 
       ttrect.attr('cx', pnt.x)
             .attr('cy', pnt.y)
-            .call(this.lineatt?.func)
+            .call(this.lineatt?.func);
 
       return res;
    }

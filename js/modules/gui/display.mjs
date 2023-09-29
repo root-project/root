@@ -582,7 +582,7 @@ class TabsDisplay extends MDIDisplay {
    }
 
    /** @summary call function for each frame */
-   forEachFrame(userfunc,  only_visible) {
+   forEachFrame(userfunc, only_visible) {
       if (!isFunc(userfunc)) return;
 
       if (only_visible) {
@@ -671,7 +671,7 @@ class TabsDisplay extends MDIDisplay {
       }
 
       const frame_id = this.cnt++, mdi = this;
-      let  lbl = title;
+      let lbl = title;
 
       if (!lbl || !isStr(lbl)) lbl = `frame_${frame_id}`;
 
@@ -748,7 +748,7 @@ class FlexibleDisplay extends MDIDisplay {
    }
 
    /** @summary call function for each frame */
-   forEachFrame(userfunc,  only_visible) {
+   forEachFrame(userfunc, only_visible) {
       if (!isFunc(userfunc)) return;
 
       const mdi = this, top = this.selectDom().select('.jsroot_flex_top');
@@ -1159,7 +1159,7 @@ class BatchDisplay extends MDIDisplay {
 
    /** @summary Call function for each frame */
    forEachFrame(userfunc) {
-      this.frames.forEach(userfunc)
+      this.frames.forEach(userfunc);
    }
 
    /** @summary Create batch frame */
@@ -1590,7 +1590,7 @@ class BrowserLayout {
          tgt_drawing = '0px';
       }
 
-      const visible_at_the_end  = !this.browser_visible, _duration = fast_close ? 0 : 700;
+      const visible_at_the_end = !this.browser_visible, _duration = fast_close ? 0 : 700;
 
       this.browser_visible = 'changing';
 

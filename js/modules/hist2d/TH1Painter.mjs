@@ -1046,7 +1046,7 @@ class TH1Painter extends THistPainter {
       }
 
       if (res.changed) {
-         res.user_info = { obj: histo,  name: histo.fName,
+         res.user_info = { obj: histo, name: histo.fName,
                            bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
       }
@@ -1209,4 +1209,4 @@ class TH1Painter extends THistPainter {
 
 } // class TH1Painter
 
-export { TH1Painter,  PadDrawOptions };
+export { TH1Painter, PadDrawOptions };
