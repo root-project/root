@@ -82,7 +82,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: mac13
+          - platform: mac14
             arch: ARM64
             config: Release
 
