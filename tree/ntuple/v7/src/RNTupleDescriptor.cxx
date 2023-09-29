@@ -812,17 +812,6 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry,
-                                                                std::uint64_t nEntries)
-{
-   if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
-      return R__FAIL("cluster id clash while adding cluster summary");
-   fDescriptor.fNEntries = std::max(fDescriptor.fNEntries, firstEntry + nEntries);
-   fDescriptor.fClusterDescriptors.emplace(clusterId, RClusterDescriptor(clusterId, firstEntry, nEntries));
-   return RResult<void>::Success();
-}
-
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptorBuilder &&clusterGroup)
 {
    auto id = clusterGroup.GetId();

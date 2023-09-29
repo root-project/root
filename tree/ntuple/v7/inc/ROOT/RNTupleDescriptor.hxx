@@ -1082,7 +1082,6 @@ public:
                   const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
-   RResult<void> AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);
    void AddClusterGroup(RClusterGroupDescriptorBuilder &&clusterGroup);
 
    /// Used during writing. For reading, cluster summaries are added in the builder and cluster details are added
