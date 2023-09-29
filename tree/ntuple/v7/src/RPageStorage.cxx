@@ -480,9 +480,9 @@ void ROOT::Experimental::Detail::RPagePersistentSink::Create(RNTupleModel &model
       initialChangeset.fAddedProjectedFields.emplace_back(f);
    UpdateSchema(initialChangeset, 0U);
 
-   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeader(nullptr, descriptor);
    auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
-   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(buffer.get(), descriptor);
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeader(buffer.get(), descriptor);
    CreateImpl(model, buffer.get(), fSerializationContext.GetHeaderSize());
 
    fDescriptorBuilder.BeginHeaderExtension();
@@ -572,10 +572,9 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitClusterGroup()
    }
 
    auto szPageList =
-      Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
+      Internal::RNTupleSerializer::SerializePageList(nullptr, descriptor, physClusterIDs, fSerializationContext);
    auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
-   Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
-                                                    fSerializationContext);
+   Internal::RNTupleSerializer::SerializePageList(bufPageList.get(), descriptor, physClusterIDs, fSerializationContext);
 
    const auto clusterGroupId = descriptor.GetNClusterGroups();
    const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
@@ -604,9 +603,9 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitDataset()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
+   auto szFooter = Internal::RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext);
    auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
-   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
+   Internal::RNTupleSerializer::SerializeFooter(bufFooter.get(), descriptor, fSerializationContext);
 
    CommitDatasetImpl(bufFooter.get(), szFooter);
 }
