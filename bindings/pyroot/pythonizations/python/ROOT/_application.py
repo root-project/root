@@ -78,7 +78,7 @@ class PyROOTApplication(object):
         if self._is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
             # ipython and notebooks, register our event processing with their hooks
             self._ipython_config()
-        elif sys.flags.interactive == 1 or not hasattr(__main__, '__file__'):
+        elif sys.flags.interactive == 1 or not hasattr(__main__, '__file__') or gSystem.InheritsFrom('TMacOSXSystem'):
             # Python in interactive mode, use the PyOS_InputHook to call our event processing
             # - sys.flags.interactive checks for the -i flags passed to python
             # - __main__ does not have the attribute __file__ if the Python prompt is started directly
