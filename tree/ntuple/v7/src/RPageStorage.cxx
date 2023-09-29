@@ -581,9 +581,19 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitClusterGroup()
    const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
-   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
-      cgBuilder.AddCluster(i);
+   if (nClusters == 0) {
+      cgBuilder.MinEntry(0).EntrySpan(0);
+   } else {
+      const auto &firstClusterDesc = descriptor.GetClusterDescriptor(fNextClusterInGroup);
+      const auto &lastClusterDesc = descriptor.GetClusterDescriptor(nClusters - 1);
+      cgBuilder.MinEntry(firstClusterDesc.GetFirstEntryIndex())
+         .EntrySpan(lastClusterDesc.GetFirstEntryIndex() + lastClusterDesc.GetNEntries());
    }
+   std::vector<DescriptorId_t> clusterIds;
+   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+      clusterIds.emplace_back(i);
+   }
+   cgBuilder.AddClusters(clusterIds);
    fDescriptorBuilder.AddClusterGroup(std::move(cgBuilder));
    fSerializationContext.MapClusterGroupId(clusterGroupId);
 

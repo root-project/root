@@ -495,7 +495,8 @@ bool ROOT::Experimental::RColumnGroupDescriptor::operator==(const RColumnGroupDe
 
 bool ROOT::Experimental::RClusterGroupDescriptor::operator==(const RClusterGroupDescriptor &other) const
 {
-   return fClusterGroupId == other.fClusterGroupId && fClusterIds == other.fClusterIds;
+   return fClusterGroupId == other.fClusterGroupId && fClusterIds == other.fClusterIds &&
+          fMinEntry == other.fMinEntry && fEntrySpan == other.fEntrySpan;
 }
 
 ROOT::Experimental::RClusterGroupDescriptor ROOT::Experimental::RClusterGroupDescriptor::Clone() const
@@ -505,6 +506,8 @@ ROOT::Experimental::RClusterGroupDescriptor ROOT::Experimental::RClusterGroupDes
    clone.fClusterIds = fClusterIds;
    clone.fPageListLocator = fPageListLocator;
    clone.fPageListLength = fPageListLength;
+   clone.fMinEntry = fMinEntry;
+   clone.fEntrySpan = fEntrySpan;
    return clone;
 }
 

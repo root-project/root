@@ -80,6 +80,8 @@ public:
    };
 
    struct RClusterGroup {
+      std::uint64_t fMinEntry = 0;
+      std::uint64_t fEntrySpan = 0;
       std::uint32_t fNClusters = 0;
       REnvelopeLink fPageListEnvelopeLink;
    };

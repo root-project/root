@@ -292,12 +292,12 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
-   try {
-      CommitCluster(true /* commitClusterGroup */);
-      fSink->CommitDataset();
-   } catch (const RException &err) {
-      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
-   }
+   // try {
+   CommitCluster(true /* commitClusterGroup */);
+   fSink->CommitDataset();
+   //} catch (const RException &err) {
+   //   R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+   //}
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
