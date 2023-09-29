@@ -37,29 +37,29 @@ function TMath_Sort(np, values, indicies, down) {
 class TGraphDelaunay {
 
    constructor(g) {
-      this.fGraph2D      = g;
-      this.fX            = g.fX;
-      this.fY            = g.fY;
-      this.fZ            = g.fZ;
-      this.fNpoints      = g.fNpoints;
-      this.fZout         = 0.0;
-      this.fNdt          = 0;
-      this.fNhull        = 0;
-      this.fHullPoints   = null;
-      this.fXN           = null;
-      this.fYN           = null;
-      this.fOrder        = null;
-      this.fDist         = null;
-      this.fPTried       = null;
-      this.fNTried       = null;
-      this.fMTried       = null;
-      this.fInit         = false;
-      this.fXNmin        = 0.0;
-      this.fXNmax        = 0.0;
-      this.fYNmin        = 0.0;
-      this.fYNmax        = 0.0;
-      this.fXoffset      = 0.0;
-      this.fYoffset      = 0.0;
+      this.fGraph2D = g;
+      this.fX = g.fX;
+      this.fY = g.fY;
+      this.fZ = g.fZ;
+      this.fNpoints = g.fNpoints;
+      this.fZout = 0.0;
+      this.fNdt = 0;
+      this.fNhull = 0;
+      this.fHullPoints = null;
+      this.fXN = null;
+      this.fYN = null;
+      this.fOrder = null;
+      this.fDist = null;
+      this.fPTried = null;
+      this.fNTried = null;
+      this.fMTried = null;
+      this.fInit = false;
+      this.fXNmin = 0.0;
+      this.fXNmax = 0.0;
+      this.fYNmin = 0.0;
+      this.fYNmax = 0.0;
+      this.fXoffset = 0.0;
+      this.fYoffset = 0.0;
       this.fXScaleFactor = 0.0;
       this.fYScaleFactor = 0.0;
 
@@ -103,16 +103,16 @@ class TGraphDelaunay {
             ymax = getMax(this.fGraph2D.fY),
             xmin = getMin(this.fGraph2D.fX),
             ymin = getMin(this.fGraph2D.fY);
-      this.fXoffset      = -(xmax+xmin)/2;
-      this.fYoffset      = -(ymax+ymin)/2;
-      this.fXScaleFactor  = 1/(xmax-xmin);
-      this.fYScaleFactor  = 1/(ymax-ymin);
-      this.fXNmax        = (xmax+this.fXoffset)*this.fXScaleFactor;
-      this.fXNmin        = (xmin+this.fXoffset)*this.fXScaleFactor;
-      this.fYNmax        = (ymax+this.fYoffset)*this.fYScaleFactor;
-      this.fYNmin        = (ymin+this.fYoffset)*this.fYScaleFactor;
-      this.fXN           = new Array(this.fNpoints+1);
-      this.fYN           = new Array(this.fNpoints+1);
+      this.fXoffset = -(xmax+xmin)/2;
+      this.fYoffset = -(ymax+ymin)/2;
+      this.fXScaleFactor = 1/(xmax-xmin);
+      this.fYScaleFactor = 1/(ymax-ymin);
+      this.fXNmax = (xmax+this.fXoffset)*this.fXScaleFactor;
+      this.fXNmin = (xmin+this.fXoffset)*this.fXScaleFactor;
+      this.fYNmax = (ymax+this.fYoffset)*this.fYScaleFactor;
+      this.fYNmin = (ymin+this.fYoffset)*this.fYScaleFactor;
+      this.fXN = new Array(this.fNpoints+1);
+      this.fYN = new Array(this.fNpoints+1);
       for (let n = 0; n < this.fNpoints; n++) {
          this.fXN[n+1] = (this.fX[n]+this.fXoffset)*this.fXScaleFactor;
          this.fYN[n+1] = (this.fY[n]+this.fYoffset)*this.fYScaleFactor;
@@ -121,9 +121,9 @@ class TGraphDelaunay {
       // If needed, creates the arrays to hold the Delaunay triangles.
       // A maximum number of 2*fNpoints is guessed. If more triangles will be
       // find, FillIt will automatically enlarge these arrays.
-      this.fPTried    = [];
-      this.fNTried    = [];
-      this.fMTried    = [];
+      this.fPTried = [];
+      this.fNTried = [];
+      this.fMTried = [];
    }
 
 
@@ -221,9 +221,9 @@ class TGraphDelaunay {
          ma = this.fMTried[t1-1];
 
          // produce three integers which will represent the three sides
-         s[0]  = false;
-         s[1]  = false;
-         s[2]  = false;
+         s[0] = false;
+         s[1] = false;
+         s[2] = false;
          // loop over all other Delaunay triangles
          for (t2=1; t2<=this.fNdt; t2++) {
             if (t2 !== t1) {
@@ -277,13 +277,13 @@ class TGraphDelaunay {
                sy = this.fYN[p1]-this.fYN[p2];
                // (nx,ny) will be the normal to the side, but don't know if it's
                // pointing in or out yet
-               nx    = sy;
-               ny    = -sx;
-               nn    = Math.sqrt(nx*nx+ny*ny);
-               nx    = nx/nn;
-               ny    = ny/nn;
-               mx    = this.fXN[p3]-xm;
-               my    = this.fYN[p3]-ym;
+               nx = sy;
+               ny = -sx;
+               nn = Math.sqrt(nx*nx+ny*ny);
+               nx = nx/nn;
+               ny = ny/nn;
+               mx = this.fXN[p3]-xm;
+               my = this.fYN[p3]-ym;
                mdotn = mx*nx+my*ny;
                if (mdotn > 0) {
                   // (nx,ny) is pointing in, we want it pointing out
@@ -293,7 +293,7 @@ class TGraphDelaunay {
                // increase/decrease xm and ym a little to produce a point
                // just outside the triangle (ensuring that the amount added will
                // be large enough such that it won't be lost in rounding errors)
-               a  = Math.abs(Math.max(alittlebit*xm, alittlebit*ym));
+               a = Math.abs(Math.max(alittlebit*xm, alittlebit*ym));
                xx = xm+nx*a;
                yy = ym+ny*a;
                // try and find a new Delaunay triangle for this point
@@ -369,10 +369,10 @@ class TGraphDelaunay {
 
 
       //  Get the angle n1-e-n2 and set it to lastdphi
-      dx1  = xx-this.fXN[n1];
-      dy1  = yy-this.fYN[n1];
-      dx2  = xx-this.fXN[n2];
-      dy2  = yy-this.fYN[n2];
+      dx1 = xx-this.fXN[n1];
+      dy1 = yy-this.fYN[n1];
+      dx2 = xx-this.fXN[n2];
+      dy2 = yy-this.fYN[n2];
       phi1 = Math.atan2(dy1, dx1);
       phi2 = Math.atan2(dy2, dx2);
       dphi = (phi1-phi2)-(Math.floor((phi1-phi2)/(Math.PI*2))*Math.PI*2);
@@ -409,11 +409,11 @@ class TGraphDelaunay {
                   vNv1 = (dx1*dx3+dy1*dy3)/Math.sqrt(dx1*dx1+dy1*dy1);
                   vNv2 = (dx2*dx3+dy2*dy3)/Math.sqrt(dx2*dx2+dy2*dy2);
                   if (vNv1 > vNv2) {
-                     n1   = m;
+                     n1 = m;
                      phi1 = Math.atan2(dy3, dx3);
                      phi2 = Math.atan2(dy2, dx2);
                   } else {
-                     n2   = m;
+                     n2 = m;
                      phi1 = Math.atan2(dy1, dx1);
                      phi2 = Math.atan2(dy3, dx3);
                   }
@@ -457,9 +457,9 @@ class TGraphDelaunay {
             f1 = this.fZ[t1-1],
             f2 = this.fZ[t2-1],
             f3 = this.fZ[t3-1],
-            u  = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2)),
-            v  = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2)),
-            w  = f1-u*x1-v*y1;
+            u = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2)),
+            v = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2)),
+            w = f1-u*x1-v*y1;
 
       return u*this.fXN[e] + v*this.fYN[e] + w;
    }
@@ -485,7 +485,7 @@ class TGraphDelaunay {
       // create vectors needed for sorting
       if (!this.fOrder) {
          this.fOrder = new Array(this.fNpoints);
-         this.fDist  = new Array(this.fNpoints);
+         this.fDist = new Array(this.fNpoints);
       }
 
       // the input point will be point zero.
@@ -649,7 +649,7 @@ class TGraphDelaunay {
    ///            Error("Interpolate", "Should not get to here");
                   // may as well soldier on
                   // SL: initialize before try to find better values
-                  f  = m;
+                  f = m;
                   o1 = p;
                   o2 = n;
 
@@ -682,15 +682,15 @@ class TGraphDelaunay {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f  = m;
+                           f = m;
                            o1 = p;
                            o2 = n;
                         } else if (l === 2) {
-                           f  = p;
+                           f = p;
                            o1 = n;
                            o2 = m;
                         } else {
-                           f  = n;
+                           f = n;
                            o1 = m;
                            o2 = p;
                         }
@@ -701,12 +701,12 @@ class TGraphDelaunay {
                   // this is not a valid quadrilateral if the diagonals don't cross,
                   // check that points f and z lie on opposite side of the line o1-o2,
                   // this is true if the angle f-o1-z is greater than o2-o1-z and o2-o1-f
-                  cfo1k  = ((this.fXN[f]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
+                  cfo1k = ((this.fXN[f]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
                            Math.sqrt(((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))*
                            ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
                   co2o1k = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
                            Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
-                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])  + (this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
+                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1]) + (this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
                   co2o1f = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))/
                            Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
                            ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1]) + (this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1])));
@@ -717,12 +717,12 @@ class TGraphDelaunay {
                   // calculate the 2 internal angles of the quadrangle formed by joining
                   // points z and f to points o1 and o2, at z and f. If they sum to less
                   // than 180 degrees then z lies outside the circle
-                  dko1    = Math.sqrt((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]));
-                  dko2    = Math.sqrt((this.fXN[z]-this.fXN[o2])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o2])*(this.fYN[z]-this.fYN[o2]));
-                  dfo1    = Math.sqrt((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]));
-                  dfo2    = Math.sqrt((this.fXN[f]-this.fXN[o2])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o2])*(this.fYN[f]-this.fYN[o2]));
-                  c1      = ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o2]))/dko1/dko2;
-                  c2      = ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o2]))/dfo1/dfo2;
+                  dko1 = Math.sqrt((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]));
+                  dko2 = Math.sqrt((this.fXN[z]-this.fXN[o2])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o2])*(this.fYN[z]-this.fYN[o2]));
+                  dfo1 = Math.sqrt((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]));
+                  dfo2 = Math.sqrt((this.fXN[f]-this.fXN[o2])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o2])*(this.fYN[f]-this.fYN[o2]));
+                  c1 = ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o2]))/dko1/dko2;
+                  c2 = ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o2]))/dfo1/dfo2;
                   sin_sum = c1*Math.sqrt(1-c2*c2)+c2*Math.sqrt(1-c1*c1);
 
                   // sin_sum doesn't always come out as zero when it should do.
@@ -738,8 +738,8 @@ class TGraphDelaunay {
                      // a polygon whose points lie on a circle into constituent triangles). Make
                      // a note of the additional point number.
                      ndegen++;
-                     degen   = z;
-                     fdegen  = f;
+                     degen = z;
+                     fdegen = f;
                      o1degen = o1;
                      o2degen = o2;
                   }
@@ -764,8 +764,8 @@ class TGraphDelaunay {
                   // (d<->f or o1<->o2) to form valid Delaunay triangles. Choose diagonal
                   // with highest average z-value. Whichever we choose we will have
                   // verified two triangles as good and two as bad, only note the good ones
-                  d  = degen;
-                  f  = fdegen;
+                  d = degen;
+                  f = fdegen;
                   o1 = o1degen;
                   o2 = o2degen;
                   if ((this.fZ[o1-1] + this.fZ[o2-1]) > (this.fZ[d-1] + this.fZ[f-1])) {
@@ -816,7 +816,7 @@ class TGraphDelaunay {
    /// (number of iterations) before abandoning the search
 
    SetMaxIter(n = 100000) {
-      this.fAllTri  = false;
+      this.fAllTri = false;
       this.fMaxIter = n;
    }
 
@@ -1003,7 +1003,7 @@ class TGraph2DPainter extends ObjectPainter {
             let use_triangle = true;
             for (let i = 0; i < 3; ++i) {
                const pnt = points[i] - 1;
-               coord.push(fp.grx(graph.fX[pnt]),  fp.gry(graph.fY[pnt]), main_grz(graph.fZ[pnt]));
+               coord.push(fp.grx(graph.fX[pnt]), fp.gry(graph.fY[pnt]), main_grz(graph.fZ[pnt]));
 
                 if ((graph.fX[pnt] < fp.scale_xmin) || (graph.fX[pnt] > fp.scale_xmax) ||
                     (graph.fY[pnt] < fp.scale_ymin) || (graph.fY[pnt] > fp.scale_ymax))
@@ -1135,21 +1135,21 @@ class TGraph2DPainter extends ObjectPainter {
             if (pnts) pnts.addPoint(x, y, z);
 
             if (err) {
-               err[ierr]   = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
+               err[ierr] = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
                err[ierr+1] = y;
                err[ierr+2] = z;
                err[ierr+3] = fp.grx(graph.fX[i] + (asymm ? graph.fEXhigh[i] : graph.fEX[i]));
                err[ierr+4] = y;
                err[ierr+5] = z;
                ierr+=6;
-               err[ierr]   = x;
+               err[ierr] = x;
                err[ierr+1] = fp.gry(graph.fY[i] - (asymm ? graph.fEYlow[i] : graph.fEY[i]));
                err[ierr+2] = z;
                err[ierr+3] = x;
                err[ierr+4] = fp.gry(graph.fY[i] + (asymm ? graph.fEYhigh[i] : graph.fEY[i]));
                err[ierr+5] = z;
                ierr+=6;
-               err[ierr]   = x;
+               err[ierr] = x;
                err[ierr+1] = y;
                err[ierr+2] = fp.grz(graph.fZ[i] - (asymm ? graph.fEZlow[i] : graph.fEZ[i]));
                err[ierr+3] = x;

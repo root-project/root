@@ -40,11 +40,11 @@ function getEarthProjectionFunc(id) {
       case 1: return (l, b) => {
          const DegToRad = Math.PI/180,
                alpha2 = (l/2)*DegToRad,
-               delta  = b*DegToRad,
-               r2     = Math.sqrt(2),
-               f      = 2*r2/Math.PI,
-               cdec   = Math.cos(delta),
-               denom  = Math.sqrt(1.0 + cdec*Math.cos(alpha2));
+               delta = b*DegToRad,
+               r2 = Math.sqrt(2),
+               f = 2*r2/Math.PI,
+               cdec = Math.cos(delta),
+               denom = Math.sqrt(1.0 + cdec*Math.cos(alpha2));
          return {
             x: cdec*Math.sin(alpha2)*2.0*r2/denom/f/DegToRad,
             y: Math.sin(delta)*r2/denom/f/DegToRad
@@ -53,7 +53,7 @@ function getEarthProjectionFunc(id) {
       // mercator
       case 2: return (l, b) => { return { x: l, y: Math.log(Math.tan((Math.PI/2 + b/180*Math.PI)/2)) }; };
       // sinusoidal
-      case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
+      case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b }; };
       // parabolic
       case 4: return (l, b) => { return { x: l*(2.0*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
       // Mollweide projection
@@ -885,7 +885,7 @@ const TooltipHandler = {
 
       if (!dblckick) {
          pp.selectObjectPainter(exact ? exact.painter : this,
-               { x: pnt.x + (this._frame_x || 0),  y: pnt.y + (this._frame_y || 0) });
+               { x: pnt.x + (this._frame_x || 0), y: pnt.y + (this._frame_y || 0) });
       }
 
       return res;
@@ -1391,7 +1391,7 @@ const TooltipHandler = {
             w = this.getFrameWidth(), h = this.getFrameHeight();
 
       if (this.can_zoom_x)
-         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1]  >= 0) && (cur[1] <= h), cur[1] < 0);
+         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1] >= 0) && (cur[1] <= h), cur[1] < 0);
 
       if (this.can_zoom_y)
          this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
@@ -1438,7 +1438,7 @@ const TooltipHandler = {
        } else if ((evnt?.x !== undefined) && (evnt?.y !== undefined) && (evnt?.clientX === undefined)) {
           pnt = evnt;
           const rect = svg_node.getBoundingClientRect();
-          evnt  = { clientX: rect.left + pnt.x, clientY: rect.top + pnt.y };
+          evnt = { clientX: rect.left + pnt.x, clientY: rect.top + pnt.y };
        }
 
        if ((kind === 'painter') && obj) {
@@ -1587,7 +1587,7 @@ const TooltipHandler = {
       Object.assign(painter, this);
    }
 
-} // FrameInterative
+}; // FrameInterative
 
 
 /**
@@ -2558,7 +2558,7 @@ class TFramePainter extends ObjectPainter {
             const member = 'fLog'+kind[0];
             menu.add('sub:SetLog '+kind[0], () => {
                menu.input('Enter log kind: 0 - off, 1 - log10, 2 - log2, 3 - ln, ...', pad[member], 'int', 0, 10000).then(v => {
-                  this.changeAxisLog(kind[0], v)
+                  this.changeAxisLog(kind[0], v);
                });
             });
             menu.addchk(pad[member] === 0, 'linear', () => this.changeAxisLog(kind[0], 0));
@@ -2686,7 +2686,7 @@ class TFramePainter extends ObjectPainter {
          transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
-      }
+      };
    }
 
    /** @summary Configure user-defined click handler
@@ -2872,7 +2872,7 @@ class TFramePainter extends ObjectPainter {
          });
       }
 
-      if (typeof dox === 'undefined')  dox = doy = doz = true;  else
+      if (typeof dox === 'undefined') dox = doy = doz = true; else
       if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
@@ -2894,7 +2894,7 @@ class TFramePainter extends ObjectPainter {
          return;
       }
       if (!axis || axis === 'any')
-         return this.zoom_changed_x || this.zoom_changed_y  || this.zoom_changed_z;
+         return this.zoom_changed_x || this.zoom_changed_y || this.zoom_changed_z;
 
       if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
 

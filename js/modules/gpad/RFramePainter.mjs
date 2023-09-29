@@ -752,7 +752,7 @@ class RFramePainter extends RObjectPainter {
          transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
-      }
+      };
    }
 
    /** @summary Returns palette associated with frame */
@@ -973,7 +973,7 @@ class RFramePainter extends RObjectPainter {
          });
       }
 
-      if (typeof dox === 'undefined')  dox = doy = doz = true;  else
+      if (typeof dox === 'undefined') dox = doy = doz = true; else
       if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
@@ -995,7 +995,7 @@ class RFramePainter extends RObjectPainter {
          return;
       }
       if (!axis || axis === 'any')
-         return this.zoom_changed_x || this.zoom_changed_y  || this.zoom_changed_z;
+         return this.zoom_changed_x || this.zoom_changed_y || this.zoom_changed_z;
 
       if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
 

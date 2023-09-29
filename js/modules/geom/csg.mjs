@@ -129,14 +129,14 @@ class Vertex {
       let x = this.x, y = this.y, z = this.z;
       const e = m.elements;
 
-      this.x = e[0] * x + e[4] * y + e[8]  * z + e[12];
-      this.y = e[1] * x + e[5] * y + e[9]  * z + e[13];
+      this.x = e[0] * x + e[4] * y + e[8] * z + e[12];
+      this.y = e[1] * x + e[5] * y + e[9] * z + e[13];
       this.z = e[2] * x + e[6] * y + e[10] * z + e[14];
 
       x = this.nx; y = this.ny; z = this.nz;
 
-      this.nx = e[0] * x + e[4] * y + e[8]  * z;
-      this.ny = e[1] * x + e[5] * y + e[9]  * z;
+      this.nx = e[0] * x + e[4] * y + e[8] * z;
+      this.ny = e[1] * x + e[5] * y + e[9] * z;
       this.nz = e[2] * x + e[6] * y + e[10] * z;
 
       return this;
@@ -786,20 +786,20 @@ function createNormal(axis_name, pos, size) {
 
    switch (axis_name) {
       case 'x':
-         vertices = [new Vertex(pos, -3*size,    size, 1, 0, 0),
-                     new Vertex(pos,    size, -3*size, 1, 0, 0),
-                     new Vertex(pos,    size,    size, 1, 0, 0)];
+         vertices = [new Vertex(pos, -3*size, size, 1, 0, 0),
+                     new Vertex(pos, size, -3*size, 1, 0, 0),
+                     new Vertex(pos, size, size, 1, 0, 0)];
          break;
       case 'y':
-         vertices = [new Vertex(-3*size,  pos,    size, 0, 1, 0),
-                     new Vertex(size,  pos,    size, 0, 1, 0),
-                     new Vertex(size,  pos, -3*size, 0, 1, 0)];
+         vertices = [new Vertex(-3*size, pos, size, 0, 1, 0),
+                     new Vertex(size, pos, size, 0, 1, 0),
+                     new Vertex(size, pos, -3*size, 0, 1, 0)];
          break;
       // case 'z':
       default:
-         vertices = [new Vertex(-3*size,    size, pos, 0, 0, 1),
+         vertices = [new Vertex(-3*size, size, pos, 0, 0, 1),
                      new Vertex(size, -3*size, pos, 0, 0, 1),
-                     new Vertex(size,    size, pos, 0, 0, 1)];
+                     new Vertex(size, size, pos, 0, 0, 1)];
    }
 
    const node = new Node([new Polygon(vertices)]);

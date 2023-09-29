@@ -372,7 +372,7 @@ function setCameraPosition(fp, first_time) {
       } else {
          // screen heigher than actual geometry
          const m = (fp.camera.top + fp.camera.bottom) / 2;
-         fp.camera.top  = m + szx / screen_ratio / 2;
+         fp.camera.top = m + szx / screen_ratio / 2;
          fp.camera.bottom = m - szx / screen_ratio / 2;
       }
     }
@@ -422,11 +422,11 @@ function create3DControl(fp) {
       }
 
       return tip?.lines ? tip : '';
-   }
+   };
 
    fp.control.processMouseLeave = function() {
       frame_painter.highlightBin3D(null);
-   }
+   };
 
    fp.control.contextMenu = function(pos, intersects) {
       let kind = 'painter', p = obj_painter;
@@ -443,7 +443,7 @@ function create3DControl(fp) {
       const fp = obj_painter.getFramePainter();
       if (isFunc(fp?.showContextMenu))
          fp.showContextMenu(kind, pos, p);
-   }
+   };
 }
 
 /** @summary Create all necessary components for 3D drawings in frame painter
@@ -724,11 +724,11 @@ function highlightBin3D(tip, selfmesh) {
 
       if (tip.x1 === tip.x2) console.warn(`same tip X ${tip.x1} ${tip.x2}`);
       if (tip.y1 === tip.y2) console.warn(`same tip Y ${tip.y1} ${tip.y2}`);
-      if (tip.z1 === tip.z2)  tip.z2 = tip.z1 + 0.0001;  // avoid zero faces
+      if (tip.z1 === tip.z2) tip.z2 = tip.z1 + 0.0001;  // avoid zero faces
 
       for (let k = 0, nn = -3; k < indicies.length; ++k) {
          const vert = vertices[indicies[k]];
-         pos[k*3]   = tip.x1 + vert.x * (tip.x2 - tip.x1);
+         pos[k*3] = tip.x1 + vert.x * (tip.x2 - tip.x1);
          pos[k*3+1] = tip.y1 + vert.y * (tip.y2 - tip.y1);
          pos[k*3+2] = tip.z1 + vert.z * (tip.z2 - tip.z1);
 
@@ -754,7 +754,7 @@ function highlightBin3D(tip, selfmesh) {
       tip.$painter.redrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
    if (changed && mainp?.getObject()) {
-      mainp.provideUserTooltip({ obj: mainp.getObject(),  name: mainp.getObject().fName,
+      mainp.provideUserTooltip({ obj: mainp.getObject(), name: mainp.getObject().fName,
                                  bin: tip.bin, cont: tip.value,
                                  binx: tip.ix, biny: tip.iy, binz: tip.iz,
                                  grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 });
@@ -997,7 +997,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             pnt[this.zoom] = max;
 
          return pnt;
-      }
+      };
 
       mesh.showSelection = function(pnt1, pnt2) {
          // used to show selection
@@ -1040,7 +1040,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          gg.getAttribute('position').needsUpdate = true;
 
          return true;
-      }
+      };
 
       return mesh;
    };
@@ -1061,10 +1061,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
           m = new Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
-      m.set(text_scale, 0,           0,  posx,
-            0,          text_scale,  0,  -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
-            0,          0,           1,  0,
-            0,          0,           0,  1);
+      m.set(text_scale, 0, 0, posx,
+            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, 0, 1, 0,
+            0, 0, 0, 1);
 
       const mesh = new Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
       mesh.applyMatrix4(m);
@@ -1088,10 +1088,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             m = new Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
-      m.set(-text_scale, 0,          0, posx,
-            0,           text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
-            0,           0,         -1, 0,
-            0,           0,          0, 1);
+      m.set(-text_scale, 0, 0, posx,
+            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, 0, -1, 0,
+            0, 0, 0, 1);
       const mesh = new Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
       mesh.applyMatrix4(m);
       xcont.add(mesh);
@@ -1111,7 +1111,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (yticks.last_major()) {
          if (!this.y_handle.fTitle) lbl = 'y';
-      }  else if (lbl === null) {
+      } else if (lbl === null) {
          is_major = false; lbl = '';
       }
 
@@ -1171,10 +1171,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
              posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
              m = new Matrix4();
          // matrix to swap y and z scales and shift along z to its position
-         m.set(0, text_scale,  0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
-               -text_scale,  0, 0, posy,
-               0, 0,  1, 0,
-               0, 0,  0, 1);
+         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+               -text_scale, 0, 0, posy,
+               0, 0, 1, 0,
+               0, 0, 0, 1);
 
          const mesh = new Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
          mesh.applyMatrix4(m);
@@ -1196,9 +1196,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
              posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
              m = new Matrix4();
-         m.set(0, text_scale, 0,  -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
-               text_scale, 0, 0,  posy,
-               0,         0, -1,  0,
+         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+               text_scale, 0, 0, posy,
+               0, 0, -1, 0,
                0, 0, 0, 1);
 
          const mesh = new Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
@@ -1306,9 +1306,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          }
 
          // matrix to swap y and z scales and shift along z to its position
-         m.set(-text_scale,          0,  0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + this.z_handle.labelsOffset,
-                         0,          0,  1, 0,
-                         0, text_scale,  0, grz);
+         m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + this.z_handle.labelsOffset,
+                         0, 0, 1, 0,
+                         0, text_scale, 0, grz);
          const mesh = new Mesh(lbl, getTextMaterial(this.z_handle));
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
@@ -1323,9 +1323,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          text3d.rotateZ(Math.PI/2);
 
          const m = new Matrix4();
-         m.set(-text_scale,          0,  0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + maxzlblwidth + this.z_handle.titleOffset,
-                         0,          0,  1, 0,
-                         0, text_scale,  0, posz);
+         m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + maxzlblwidth + this.z_handle.titleOffset,
+                         0, 0, 1, 0,
+                         0, text_scale, 0, posz);
          const mesh = new Mesh(text3d, getTextMaterial(this.z_handle, 'title'));
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
@@ -1582,7 +1582,7 @@ function drawBinsLego(painter, is_v7 = false) {
                vert = vertices[indicies[k]];
 
                if (split_faces && (k < 12)) {
-                  pos2[v2]   = x1 + vert.x * (x2 - x1);
+                  pos2[v2] = x1 + vert.x * (x2 - x1);
                   pos2[v2+1] = y1 + vert.y * (y2 - y1);
                   pos2[v2+2] = z1 + vert.z * (z2 - z1);
 
@@ -1592,7 +1592,7 @@ function drawBinsLego(painter, is_v7 = false) {
                   if (v2 % 9 === 0) face_to_bins_indx2[v2/9] = bin_index; // remember which bin corresponds to the face
                   v2 += 3;
                } else {
-                  positions[v]   = x1 + vert.x * (x2 - x1);
+                  positions[v] = x1 + vert.x * (x2 - x1);
                   positions[v+1] = y1 + vert.y * (y2 - y1);
                   positions[v+2] = z1 + vert.z * (z2 - z1);
 
@@ -1745,7 +1745,7 @@ function drawBinsLego(painter, is_v7 = false) {
 
             for (k = 0; k < vvv.length; ++k) {
                vert = vvv[k];
-               lpositions[ll]   = x1 + vert.x * (x2 - x1);
+               lpositions[ll] = x1 + vert.x * (x2 - x1);
                lpositions[ll+1] = y1 + vert.y * (y2 - y1);
                lpositions[ll+2] = z1 + vert.z * (z2 - z1);
                ll += 3;
@@ -1754,7 +1754,7 @@ function drawBinsLego(painter, is_v7 = false) {
             // copy only vertex positions
             for (k = 0; k < seg.length; ++k) {
                vert = vvv[seg[k]];
-               lpositions[ll]   = x1 + vert.x * (x2 - x1);
+               lpositions[ll] = x1 + vert.x * (x2 - x1);
                lpositions[ll+1] = y1 + vert.y * (y2 - y1);
                lpositions[ll+2] = z1 + vert.z * (z2 - z1);
                // intersect_index[ll/3] = bin_index;
@@ -1995,7 +1995,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
                if (normindx[bin] === -1) continue; // nothing there
 
-               const beg = (normindx[bin]  >= 0) ? bin : bin + 9 + normindx[bin],
+               const beg = (normindx[bin] >= 0) ? bin : bin + 9 + normindx[bin],
                      end = bin + 8;
                let sumx = 0, sumy = 0, sumz = 0;
 

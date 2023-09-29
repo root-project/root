@@ -232,7 +232,7 @@ class JSRootMenu {
       add(55, 'Rainbow');
       add(51, 'Deep Sea');
       add(52, 'Grayscale', 'New gray scale');
-      add(1,  '', 'Old gray scale', (curr > 0) && (curr < 10));
+      add(1, '', 'Old gray scale', (curr > 0) && (curr < 10));
       add(50, 'ROOT 5', 'Default color palette in ROOT 5', (curr >= 10) && (curr < 51));
       add(53, '', 'Dark body radiator');
       add(54, '', 'Two-color hue');
@@ -580,7 +580,7 @@ class JSRootMenu {
          });
 
          this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle,
-            arg => { painter.textatt.change(undefined,  undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
+            arg => { painter.textatt.change(undefined, undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
 
          this.add('endsub:');
       }
@@ -592,7 +592,7 @@ class JSRootMenu {
       const is_gaxis = faxis._typename === clTGaxis;
 
       this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val;  painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+         faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
       this.add('sub:Labels');
@@ -698,10 +698,10 @@ class JSRootMenu {
       this.addchk(settings.Tooltip, 'Tooltip', flag => { settings.Tooltip = flag; });
       this.addchk(settings.ContextMenu, 'Context menus', flag => { settings.ContextMenu = flag; });
       this.add('sub:Zooming');
-      this.addchk(settings.Zooming,   'Global', flag => { settings.Zooming = flag; });
-      this.addchk(settings.ZoomMouse, 'Mouse',  flag => { settings.ZoomMouse = flag; });
-      this.addchk(settings.ZoomWheel, 'Wheel',  flag => { settings.ZoomWheel = flag; });
-      this.addchk(settings.ZoomTouch, 'Touch',  flag => { settings.ZoomTouch = flag; });
+      this.addchk(settings.Zooming, 'Global', flag => { settings.Zooming = flag; });
+      this.addchk(settings.ZoomMouse, 'Mouse', flag => { settings.ZoomMouse = flag; });
+      this.addchk(settings.ZoomWheel, 'Wheel', flag => { settings.ZoomWheel = flag; });
+      this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
       this.add('endsub:');
       this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
@@ -1187,7 +1187,7 @@ class StandaloneMenu extends JSRootMenu {
             } else if (item.classList.contains('jsroot_ctxt_focus')) {
                item.style['background-color'] = null;
                item.classList.remove('jsroot_ctxt_focus');
-               item.querySelector('.jsroot_ctxt_container')?.remove()
+               item.querySelector('.jsroot_ctxt_container')?.remove();
             }
          }
 

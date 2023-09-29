@@ -111,7 +111,7 @@ class TGraphPainter extends ObjectPainter {
          if (d.check('|>')) { res.Errors = 1; res.Ends = 3; }
          if (d.check('>')) { res.Errors = 1; res.Ends = 4; }
          if (d.check('0')) { res.Mark = 1; res.Errors = 1; res.OutRange = 1; }
-         if (d.check('1'))  if (res.Bar === 1) res.Bar = 2;
+         if (d.check('1')) if (res.Bar === 1) res.Bar = 2;
          if (d.check('2')) { res.Rect = 1; res.Errors = 0; }
          if (d.check('3')) { res.EF = 1; res.Errors = 0; }
          if (d.check('4')) { res.EF = 2; res.Errors = 0; }
@@ -226,7 +226,7 @@ class TGraphPainter extends ObjectPainter {
       if (!this.bins) return;
       const gr = this.getGraph();
       this.bins.forEach(bin => {
-         bin.eylow  = gr.fEyL[nblock][bin.indx];
+         bin.eylow = gr.fEyL[nblock][bin.indx];
          bin.eyhigh = gr.fEyH[nblock][bin.indx];
       });
    }
@@ -257,15 +257,15 @@ class TGraphPainter extends ObjectPainter {
                bin.eylow = bin.eyhigh = gr.fEY[p];
                break;
             case 2:
-               bin.exlow  = gr.fExL[p];
+               bin.exlow = gr.fExL[p];
                bin.exhigh = gr.fExH[p];
-               bin.eylow  = gr.fEyL[0][p];
+               bin.eylow = gr.fEyL[0][p];
                bin.eyhigh = gr.fEyH[0][p];
                break;
             case 3:
-               bin.exlow  = gr.fEXlow[p];
+               bin.exlow = gr.fEXlow[p];
                bin.exhigh = gr.fEXhigh[p];
-               bin.eylow  = gr.fEYlow[p];
+               bin.eylow = gr.fEYlow[p];
                bin.eyhigh = gr.fEYhigh[p];
                break;
          }
@@ -471,7 +471,7 @@ class TGraphPainter extends ObjectPainter {
             return v;
           },
           getGrFuncs() { return this; }
-      }
+      };
 
       return pmain.pad ? pmain : null;
    }
@@ -759,9 +759,9 @@ class TGraphPainter extends ObjectPainter {
              .style('fill', 'none')
              .attr('d', d => {
                 d.error = true;
-                return ((d.exlow > 0)  ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
+                return ((d.exlow > 0) ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
                        ((d.exhigh > 0) ? mainLine(d.grx2-lw, d.grdx2) + vright : '') +
-                       ((d.eylow > 0)  ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
+                       ((d.eylow > 0) ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
                        ((d.eyhigh > 0) ? mainLine(d.grdy2, d.gry2+lw) + htop : '');
               });
       }

@@ -130,7 +130,7 @@ class RPadPainter extends RObjectPainter {
          y: this._pad_y || 0,
          width: this.getPadWidth(),
          height: this.getPadHeight()
-      }
+      };
    }
 
    /** @summary Returns frame coordiantes - also when frame is not drawn */
@@ -207,15 +207,15 @@ class RPadPainter extends RObjectPainter {
       if (!this.fDfltPalette) {
          this.fDfltPalette = {
             _typename: `${nsREX}RPalette`,
-            fColors: [{ fOrdinal: 0,     fColor: { fColor: 'rgb(53, 42, 135)' } },
+            fColors: [{ fOrdinal: 0, fColor: { fColor: 'rgb(53, 42, 135)' } },
                       { fOrdinal: 0.125, fColor: { fColor: 'rgb(15, 92, 221)' } },
-                      { fOrdinal: 0.25,  fColor: { fColor: 'rgb(20, 129, 214)' } },
+                      { fOrdinal: 0.25, fColor: { fColor: 'rgb(20, 129, 214)' } },
                       { fOrdinal: 0.375, fColor: { fColor: 'rgb(6, 164, 202)' } },
-                      { fOrdinal: 0.5,   fColor: { fColor: 'rgb(46, 183, 164)' } },
+                      { fOrdinal: 0.5, fColor: { fColor: 'rgb(46, 183, 164)' } },
                       { fOrdinal: 0.625, fColor: { fColor: 'rgb(135, 191, 119)' } },
-                      { fOrdinal: 0.75,  fColor: { fColor: 'rgb(209, 187, 89)' } },
+                      { fOrdinal: 0.75, fColor: { fColor: 'rgb(209, 187, 89)' } },
                       { fOrdinal: 0.875, fColor: { fColor: 'rgb(254, 200, 50)' } },
-                      { fOrdinal: 1,     fColor: { fColor: 'rgb(249, 251, 14)' } }],
+                      { fOrdinal: 1, fColor: { fColor: 'rgb(249, 251, 14)' } }],
              fInterpolate: true,
              fNormalized: true
          };
@@ -281,7 +281,7 @@ class RPadPainter extends RObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this._fast_drawing;
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h  < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
    }
@@ -670,7 +670,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Changes canvas dark mode
      * @private */
    changeDarkMode(mode) {
-      this.getCanvSvg().style('filter', (mode ?? settings.DarkMode)  ? 'invert(100%)' : null);
+      this.getCanvSvg().style('filter', (mode ?? settings.DarkMode) ? 'invert(100%)' : null);
    }
 
    /** @summary Fill pad context menu
@@ -1010,7 +1010,7 @@ class RPadPainter extends RObjectPainter {
 
       if (snap._typename === `${nsREX}TObjectDisplayItem`) {
          // identifier used in RObjectDrawable
-         const webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
+         const webSnapIds = { kNone: 0, kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
 
          if (snap.fKind === webSnapIds.kStyle) {
             Object.assign(gStyle, snap.fObject);
@@ -1475,7 +1475,7 @@ class RPadPainter extends RObjectPainter {
       if (settings.ContextMenu)
          this.addPadButton('question', 'Access context menus', 'PadContextMenus');
 
-      const add_enlarge = !this.iscan && this.has_canvas && this.hasObjectsToDraw()
+      const add_enlarge = !this.iscan && this.has_canvas && this.hasObjectsToDraw();
 
       if (add_enlarge || this.enlargeMain('verify'))
          this.addPadButton('circle', 'Enlarge canvas', 'enlargePad');
@@ -1533,7 +1533,7 @@ class RPadPainter extends RObjectPainter {
       return {
          x: this.getPadLength(false, pos.fHoriz, frame_painter),
          y: this.getPadLength(true, pos.fVert, frame_painter)
-      }
+      };
    }
 
    /** @summary Decode pad draw options */

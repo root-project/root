@@ -705,7 +705,7 @@ class TAxisPainter extends ObjectPainter {
                if (lbls.indexOf(lbl) < 0) {
                   lbls.push(lbl);
                   const p = lbl.indexOf('.');
-                  if (!order  && !optionNoexp && ((p > gStyle.fAxisMaxDigits) || ((p < 0) && (lbl.length > gStyle.fAxisMaxDigits)))) {
+                  if (!order && !optionNoexp && ((p > gStyle.fAxisMaxDigits) || ((p < 0) && (lbl.length > gStyle.fAxisMaxDigits)))) {
                      totallen += 1e10; // do not use order = 0 when too many digits are there
                      exclorder3 = false;
                   }
@@ -913,7 +913,7 @@ class TAxisPainter extends ObjectPainter {
             path2 += this.vertical ? `M${secondShift-h1},${handle.grpos}H${secondShift-h2}` : `M${handle.grpos},${secondShift+h1}V${secondShift+h2}`;
       }
 
-      return real_draw ? path1 + path2  : '';
+      return real_draw ? path1 + path2 : '';
    }
 
    /** @summary Returns modifier for axis label */
@@ -1075,8 +1075,7 @@ class TAxisPainter extends ObjectPainter {
                             align: this.vertical ? ((side < 0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
                             latex: 1,
                             text: '#times' + this.formatExp(10, this.order),
-                            draw_g: label_g[lcnt]
-            });
+                            draw_g: label_g[lcnt] });
          }
       }
 

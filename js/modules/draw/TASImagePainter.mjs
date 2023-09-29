@@ -45,7 +45,7 @@ class TASImagePainter extends ObjectPainter {
          const r1 = (pal.fPoints[indx] - l) / (pal.fPoints[indx] - pal.fPoints[indx-1]),
                r2 = (l - pal.fPoints[indx-1]) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
 
-         rgba[lvl*4]   = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
+         rgba[lvl*4] = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
          rgba[lvl*4+1] = Math.min(255, Math.round((pal.fColorGreen[indx-1] * r1 + pal.fColorGreen[indx] * r2) / 256));
          rgba[lvl*4+2] = Math.min(255, Math.round((pal.fColorBlue[indx-1] * r1 + pal.fColorBlue[indx] * r2) / 256));
          rgba[lvl*4+3] = Math.min(255, Math.round((pal.fColorAlpha[indx-1] * r1 + pal.fColorAlpha[indx] * r2) / 256));
@@ -209,7 +209,7 @@ class TASImagePainter extends ObjectPainter {
             res.url = canvas2.toDataURL();
 
             resolveFunc(res);
-         }
+         };
 
          image.onerror = () => resolveFunc(res);
 
@@ -302,7 +302,7 @@ class TASImagePainter extends ObjectPainter {
             fp.setAxesRanges(create(clTAxis), 0, 1, create(clTAxis), 0, 1, null, 0, 0);
             fp.createXY({ ndim: 2, check_pad_range: false });
             return fp.addInteractivity();
-         })
+         });
       });
    }
 

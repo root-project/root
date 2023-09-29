@@ -172,7 +172,7 @@ const PadButtonsHandler = {
 
 
 // identifier used in TWebCanvas painter
- webSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5 };
+ webSnapIds = { kNone: 0, kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5 };
 
 /**
   * @summary Painter for TPad object
@@ -300,7 +300,7 @@ class TPadPainter extends ObjectPainter {
          y: this._pad_y || 0,
          width: this.getPadWidth(),
          height: this.getPadHeight()
-      }
+      };
    }
 
    /** @summary Returns frame coordiantes - also when frame is not drawn */
@@ -432,7 +432,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this._fast_drawing;
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h  < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
    }
@@ -1330,9 +1330,9 @@ class TPadPainter extends ObjectPainter {
       this.pad.fGridy = obj.fGridy;
       this.pad.fTickx = obj.fTickx;
       this.pad.fTicky = obj.fTicky;
-      this.pad.fLogx  = obj.fLogx;
-      this.pad.fLogy  = obj.fLogy;
-      this.pad.fLogz  = obj.fLogz;
+      this.pad.fLogx = obj.fLogx;
+      this.pad.fLogy = obj.fLogy;
+      this.pad.fLogz = obj.fLogz;
 
       this.pad.fUxmin = obj.fUxmin;
       this.pad.fUxmax = obj.fUxmax;
@@ -1344,10 +1344,10 @@ class TPadPainter extends ObjectPainter {
       this.pad.fY1 = obj.fY1;
       this.pad.fY2 = obj.fY2;
 
-      this.pad.fLeftMargin   = obj.fLeftMargin;
-      this.pad.fRightMargin  = obj.fRightMargin;
+      this.pad.fLeftMargin = obj.fLeftMargin;
+      this.pad.fRightMargin = obj.fRightMargin;
       this.pad.fBottomMargin = obj.fBottomMargin;
-      this.pad.fTopMargin    = obj.fTopMargin;
+      this.pad.fTopMargin = obj.fTopMargin;
 
       this.pad.fFillColor = obj.fFillColor;
       this.pad.fFillStyle = obj.fFillStyle;
@@ -1534,7 +1534,7 @@ class TPadPainter extends ObjectPainter {
 
       // first appropriate painter for the object
       // if same object drawn twice, two painters will exists
-      for (let k = 0;  k < this.painters.length; ++k) {
+      for (let k = 0; k < this.painters.length; ++k) {
          if (this.painters[k].snapid === snapid)
             if (--cnt === 0) { objpainter = this.painters[k]; break; }
       }
@@ -2244,7 +2244,7 @@ class TPadPainter extends ObjectPainter {
       if (settings.ContextMenu)
          this.addPadButton('question', 'Access context menus', 'PadContextMenus');
 
-      const add_enlarge = !this.iscan && this.has_canvas && this.hasObjectsToDraw()
+      const add_enlarge = !this.iscan && this.has_canvas && this.hasObjectsToDraw();
 
       if (add_enlarge || this.enlargeMain('verify'))
          this.addPadButton('circle', 'Enlarge canvas', 'enlargePad');

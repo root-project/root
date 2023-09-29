@@ -661,7 +661,7 @@ async function makeSVG(args) {
 internals.addDrawFunc = addDrawFunc;
 
 function assignPadPainterDraw(PadPainterClass) {
-   PadPainterClass.prototype.drawObject = async (...args) =>
+   PadPainterClass.prototype.drawObject = (...args) =>
       draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err.stack ?? 'uncknown place'}`); return null; });
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }

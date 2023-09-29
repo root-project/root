@@ -644,7 +644,7 @@ class WebWindowHandle {
          // only in interactive mode try to reconnect
          if (!isBatchMode())
             setTimeout(retry_open, 3000); // after 3 seconds try again
-      } // retry_open
+      }; // retry_open
 
       retry_open(true); // call for the first time
    }

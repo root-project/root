@@ -882,7 +882,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
       switch (kind) {
          case 'head': method = 'HEAD'; break;
          case 'posttext': method = 'POST'; kind = 'text'; break;
-         case 'postbuf':  method = 'POST'; kind = 'buf'; break;
+         case 'postbuf': method = 'POST'; kind = 'buf'; break;
          case 'post':
          case 'multi': method = 'POST'; break;
       }
@@ -1159,7 +1159,7 @@ function create$1(typename, target) {
          break;
       case clTH2:
          create$1(clTH1, obj);
-         extend$1(obj, { fScalefactor: 1, fTsumwy: 0,  fTsumwy2: 0, fTsumwxy: 0 });
+         extend$1(obj, { fScalefactor: 1, fTsumwy: 0, fTsumwy2: 0, fTsumwxy: 0 });
          break;
       case clTH2I:
       case 'TH2L64':
@@ -1172,7 +1172,7 @@ function create$1(typename, target) {
          break;
       case clTH3:
          create$1(clTH1, obj);
-         extend$1(obj, { fTsumwy: 0,  fTsumwy2: 0, fTsumwz: 0,  fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
+         extend$1(obj, { fTsumwy: 0, fTsumwy2: 0, fTsumwz: 0, fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
          break;
       case 'TH3I':
       case 'TH3L64':
@@ -1506,7 +1506,6 @@ function getMethods(typename, obj) {
          if (this.formulas === undefined) this.formulas = [];
          this.formulas.push(obj);
       };
-
       m.GetParName = function(n) {
          if (this.fParams?.fParNames)
             return this.fParams.fParNames[n];
@@ -1654,7 +1653,7 @@ function getMethods(typename, obj) {
       m.getBinError = function(bin) {
          if (bin < 0 || bin >= this.fNcells) return 0;
          const cont = this.fArray[bin],               // sum of bin w *y
-               sum  = this.fBinEntries[bin],          // sum of bin weights
+               sum = this.fBinEntries[bin],          // sum of bin weights
                err2 = this.fSumw2[bin],               // sum of bin w * y^2
                neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
          if (sum < 1e-300) return 0;                  // for empty bins
@@ -9691,7 +9690,7 @@ async function loadMathjax() {
 
       let mj_dir = '../mathjax/3.2.0';
       if (browser.webwindow && exports.source_dir.indexOf('https://root.cern/js') < 0 && exports.source_dir.indexOf('https://jsroot.gsi.de') < 0)
-         mj_dir =  'mathjax';
+         mj_dir = 'mathjax';
 
       return loadScript(exports.source_dir + mj_dir + '/es5/tex-svg.js')
                .catch(() => loadScript('https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg.js'))
@@ -11138,7 +11137,7 @@ class TAttFillHandler {
 
             switch (j) {
                case 0: horiz = true; break;
-               case 1: func(1, false, 10);  break;
+               case 1: func(1, false, 10); break;
                case 2: func(2, false, 20); break;
                case 3: func(3, false, 30); break;
                case 4: func(6, false, 45); break;
@@ -11649,7 +11648,7 @@ class ObjectPainter extends BasePainter {
          let changed = false;
          const pp = this.getPadPainter();
          if (!this.options_store || pp?._interactively_changed)
-            changed  = true;
+            changed = true;
          else {
             for (const k in this.options) {
                if (this.options[k] !== this.options_store[k])
@@ -54174,7 +54173,7 @@ function createSVGRenderer(as_is, precision, doc) {
                  }
                  this._wrapper.path_attr[name] = value;
               }
-           }
+           };
         }
 
         if (kind !== 'svg') {
@@ -54189,11 +54188,11 @@ function createSVGRenderer(as_is, precision, doc) {
            setAttribute(name, value) {
               this._wrapper.svg_attr[name] = value;
            },
-           appendChild(node) {
+           appendChild(_node) {
               this._wrapper.accPath += `<path style="${this._wrapper.path_attr.style}" d="${this._wrapper.path_attr.d}"/>`;
               this._wrapper.path_attr = {};
            },
-           removeChild(node) {
+           removeChild(_node) {
               this.childNodes = [];
            }
         };
@@ -54669,7 +54668,7 @@ function afterRender3D(renderer) {
       // small code to flip Y scale
       let indx1 = 0, indx2 = (canvas.height - 1) * 4 * canvas.width, k, d;
       while (indx1 < indx2) {
-         for  (k = 0; k < 4 * canvas.width; ++k) {
+         for (k = 0; k < 4 * canvas.width; ++k) {
             d = pixels[indx1 + k]; pixels[indx1 + k] = pixels[indx2 + k]; pixels[indx2 + k] = d;
          }
          indx1 += 4 * canvas.width;
@@ -55075,7 +55074,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       if (tip && painter) {
-         return { obj: painter.getObject(),  name: painter.getObject().fName,
+         return { obj: painter.getObject(), name: painter.getObject().fName,
                   bin: tip.bin, cont: tip.value,
                   binx: tip.ix, biny: tip.iy, binz: tip.iz,
                   grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 };
@@ -55418,9 +55417,9 @@ const Box3D = {
                new Vector3(1, 0, 1), new Vector3(1, 0, 0),
                new Vector3(0, 1, 0), new Vector3(0, 1, 1),
                new Vector3(0, 0, 0), new Vector3(0, 0, 1)],
-    Indexes: [0, 2, 1,  2, 3, 1,  4, 6, 5,  6, 7, 5,  4, 5, 1,  5, 0, 1,
-              7, 6, 2,  6, 3, 2,  5, 7, 0,  7, 2, 0,  1, 3, 4,  3, 6, 4],
-    Normals: [1, 0, 0,  -1, 0, 0,  0, 1, 0,  0, -1, 0,  0, 0, 1,  0, 0, -1],
+    Indexes: [0, 2, 1, 2, 3, 1, 4, 6, 5, 6, 7, 5, 4, 5, 1, 5, 0, 1,
+              7, 6, 2, 6, 3, 2, 5, 7, 0, 7, 2, 0, 1, 3, 4, 3, 6, 4],
+    Normals: [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1],
     Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
     MeshSegments: undefined
 };
@@ -55483,7 +55482,7 @@ class PointsCreator {
 
    /** @summary Add point */
    addPoint(x, y, z) {
-      this.pos[this.indx]   = x;
+      this.pos[this.indx] = x;
       this.pos[this.indx+1] = y;
       this.pos[this.indx+2] = z;
       this.indx += 3;
@@ -55603,14 +55602,14 @@ function create3DLineMaterial(painter, arg, is_v7 = false) {
 /* eslint-disable no-unreachable-loop */
 /* eslint-disable eqeqeq */
 
-const kMACHEP  = 1.11022302462515654042363166809e-16,
-      kMINLOG  = -708.396418532264078748994506896,
-      kMAXLOG  = 709.782712893383973096206318587,
+const kMACHEP = 1.11022302462515654042363166809e-16,
+      kMINLOG = -708.396418532264078748994506896,
+      kMAXLOG = 709.782712893383973096206318587,
       kMAXSTIR = 108.116855767857671821730036754,
-      kBig     = 4.503599627370496e15,
-      kBiginv  =  2.22044604925031308085e-16,
-      kSqrt2   = 1.41421356237309515,
-      M_PI    =  3.14159265358979323846264338328;
+      kBig = 4.503599627370496e15,
+      kBiginv = 2.22044604925031308085e-16,
+      kSqrt2 = 1.41421356237309515,
+      M_PI = 3.14159265358979323846264338328;
 
 /** @summary Polynomialeval function
   * @desc calculates a value of a polynomial of the form:
@@ -55865,8 +55864,8 @@ function erf(x) {
 function lognormal_cdf_c(x, m, s, x0) {
    if (x0 === undefined) x0 = 0;
    const z = (Math.log((x-x0))-m)/(s*kSqrt2);
-   if (z > 1.)  return 0.5*erfc(z);
-   else         return 0.5*(1.0 - erf(z));
+   if (z > 1.) return 0.5*erfc(z);
+   else return 0.5*(1.0 - erf(z));
 }
 
 /** @summary lognormal_cdf_c function
@@ -55874,15 +55873,15 @@ function lognormal_cdf_c(x, m, s, x0) {
 function lognormal_cdf(x, m, s, x0 = 0) {
    const z = (Math.log((x-x0))-m)/(s*kSqrt2);
    if (z < -1.) return 0.5*erfc(-z);
-   else         return 0.5*(1.0 + erf(z));
+   else return 0.5*(1.0 + erf(z));
 }
 
 /** @summary normal_cdf_c function
   * @memberof Math */
 function normal_cdf_c(x, sigma, x0 = 0) {
    const z = (x-x0)/(sigma*kSqrt2);
-   if (z > 1.)  return 0.5*erfc(z);
-   else         return 0.5*(1.-erf(z));
+   if (z > 1.) return 0.5*erfc(z);
+   else return 0.5*(1.-erf(z));
 }
 
 /** @summary normal_cdf function
@@ -55890,7 +55889,7 @@ function normal_cdf_c(x, sigma, x0 = 0) {
 function normal_cdf(x, sigma, x0 = 0) {
    const z = (x-x0)/(sigma*kSqrt2);
    if (z < -1.) return 0.5*erfc(-z);
-   else         return 0.5*(1.0 + erf(z));
+   else return 0.5*(1.0 + erf(z));
 }
 
 /** @summary log normal pdf
@@ -56102,7 +56101,7 @@ function ndtri(y0) {
 /** @summary normal_quantile function
   * @memberof Math */
 function normal_quantile(z, sigma) {
-   return  sigma * ndtri(z);
+   return sigma * ndtri(z);
 }
 
 /** @summary normal_quantile_c function
@@ -56116,7 +56115,7 @@ function normal_quantile_c(z, sigma) {
 function igamc(a,x) {
    // LM: for negative values returns 0.0
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
-   if (a <= 0)  return 0.0;
+   if (a <= 0) return 0.0;
 
    if (x <= 0) return 1.0;
 
@@ -56138,15 +56137,15 @@ function igamc(a,x) {
        pkm1 = x + 1.0,
        qkm1 = z * x,
        ans = pkm1/qkm1,
-       yc, r, t, pk,  qk;
+       yc, r, t, pk, qk;
 
    do {
       c += 1.0;
       y += 1.0;
       z += 2.0;
       yc = y * c;
-      pk = pkm1 * z  -  pkm2 * yc;
-      qk = qkm1 * z  -  qkm2 * yc;
+      pk = pkm1 * z - pkm2 * yc;
+      qk = qkm1 * z - qkm2 * yc;
       if (qk)
       {
          r = pk/qk;
@@ -56272,7 +56271,7 @@ function igami(a, y0) {
    dir = 0;
 
    for ( i=0; i<400; ++i ) {
-      x = x1  +  d * (x0 - x1);
+      x = x1 + d * (x0 - x1);
       y = igamc( a, x );
       lgm = (x0 - x1)/(x1 + x0);
       if ( Math.abs(lgm) < dithresh )
@@ -56320,29 +56319,29 @@ function landau_pdf(x, xi, x0 = 0) {
    if (xi <= 0) return 0;
    const v = (x - x0)/xi;
    let u, ue, us, denlan;
-   const p1 = [0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635,   0.001511162253],
-         q1 = [1.0         ,-0.3388260629, 0.09594393323, -0.01608042283,    0.003778942063],
-         p2 = [0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411,   0.0001283617211],
-         q2 = [1.0         , 0.7428795082, 0.3153932961,   0.06694219548,    0.008790609714],
+   const p1 = [0.4259894875,-0.1249762550, 0.03984243700, -0.006298287635, 0.001511162253],
+         q1 = [1.0 ,-0.3388260629, 0.09594393323, -0.01608042283, 0.003778942063],
+         p2 = [0.1788541609, 0.1173957403, 0.01488850518, -0.001394989411, 0.0001283617211],
+         q2 = [1.0 , 0.7428795082, 0.3153932961, 0.06694219548, 0.008790609714],
          p3 = [0.1788544503, 0.09359161662,0.006325387654, 0.00006611667319,-0.000002031049101],
-         q3 = [1.0         , 0.6097809921, 0.2560616665,   0.04746722384,    0.006957301675],
-         p4 = [0.9874054407, 118.6723273,  849.2794360,   -743.7792444,      427.0262186],
-         q4 = [1.0         , 106.8615961,  337.6496214,    2016.712389,      1597.063511],
-         p5 = [1.003675074,  167.5702434,  4789.711289,    21217.86767,     -22324.94910],
-         q5 = [1.0         , 156.9424537,  3745.310488,    9834.698876,      66924.28357],
-         p6 = [1.000827619,  664.9143136,  62972.92665,    475554.6998,     -5743609.109],
-         q6 = [1.0         , 651.4101098,  56974.73333,    165917.4725,     -2815759.939],
+         q3 = [1.0 , 0.6097809921, 0.2560616665, 0.04746722384, 0.006957301675],
+         p4 = [0.9874054407, 118.6723273, 849.2794360, -743.7792444, 427.0262186],
+         q4 = [1.0 , 106.8615961, 337.6496214, 2016.712389, 1597.063511],
+         p5 = [1.003675074, 167.5702434, 4789.711289, 21217.86767, -22324.94910],
+         q5 = [1.0 , 156.9424537, 3745.310488, 9834.698876, 66924.28357],
+         p6 = [1.000827619, 664.9143136, 62972.92665, 475554.6998, -5743609.109],
+         q6 = [1.0 , 651.4101098, 56974.73333, 165917.4725, -2815759.939],
          a1 = [0.04166666667,-0.01996527778, 0.02709538966],
          a2 = [-1.845568670,-4.284640743];
 
    if (v < -5.5) {
-      u   = Math.exp(v+1.0);
+      u = Math.exp(v+1.0);
       if (u < 1e-10) return 0.0;
-      ue  = Math.exp(-1/u);
-      us  = Math.sqrt(u);
+      ue = Math.exp(-1/u);
+      us = Math.sqrt(u);
       denlan = 0.3989422803*(ue/us)*(1+(a1[0]+(a1[1]+a1[2]*u)*u)*u);
    } else if (v < -1) {
-      u   = Math.exp(-v-1);
+      u = Math.exp(-v-1);
       denlan = Math.exp(-u)*Math.sqrt(u)*
          (p1[0]+(p1[1]+(p1[2]+(p1[3]+p1[4]*v)*v)*v)*v)/
          (q1[0]+(q1[1]+(q1[2]+(q1[3]+q1[4]*v)*v)*v)*v);
@@ -56353,19 +56352,19 @@ function landau_pdf(x, xi, x0 = 0) {
       denlan = (p3[0]+(p3[1]+(p3[2]+(p3[3]+p3[4]*v)*v)*v)*v)/
          (q3[0]+(q3[1]+(q3[2]+(q3[3]+q3[4]*v)*v)*v)*v);
    } else if (v < 12) {
-      u   = 1/v;
+      u = 1/v;
       denlan = u*u*(p4[0]+(p4[1]+(p4[2]+(p4[3]+p4[4]*u)*u)*u)*u)/
          (q4[0]+(q4[1]+(q4[2]+(q4[3]+q4[4]*u)*u)*u)*u);
    } else if (v < 50) {
-      u   = 1/v;
+      u = 1/v;
       denlan = u*u*(p5[0]+(p5[1]+(p5[2]+(p5[3]+p5[4]*u)*u)*u)*u)/
          (q5[0]+(q5[1]+(q5[2]+(q5[3]+q5[4]*u)*u)*u)*u);
    } else if (v < 300) {
-      u   = 1/v;
+      u = 1/v;
       denlan = u*u*(p6[0]+(p6[1]+(p6[2]+(p6[3]+p6[4]*u)*u)*u)*u)/
          (q6[0]+(q6[1]+(q6[2]+(q6[3]+q6[4]*u)*u)*u)*u);
    } else {
-      u   = 1/(v-v*Math.log(v)/(v+1));
+      u = 1/(v-v*Math.log(v)/(v+1));
       denlan = u*u*(1+(a2[0]+a2[1]*u)*u);
    }
    return denlan/xi;
@@ -56404,12 +56403,12 @@ function beta_pdf(x, a, b) {
   if (x < 0 || x > 1.0) return 0;
   if (x == 0 ) {
      if (a < 1) return Number.POSITIVE_INFINITY;
-     else if (a > 1) return  0;
+     else if (a > 1) return 0;
      else if ( a == 1) return b; // to avoid a nan from log(0)*0
    }
    if (x == 1 ) {
       if (b < 1) return Number.POSITIVE_INFINITY;
-      else if (b > 1) return  0;
+      else if (b > 1) return 0;
       else if ( b == 1) return a; // to avoid a nan from log(0)*0
    }
    return Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) +
@@ -56455,16 +56454,16 @@ function incbcf(a,b,x) {
 
    do {
       xk = -( x * k1 * k2 )/( k3 * k4 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
       qkm1 = qk;
 
       xk = ( x * k5 * k6 )/( k7 * k8 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
@@ -56539,16 +56538,16 @@ function incbd(a,b,x) {
    n = 0;
    do {
       xk = -( z * k1 * k2 )/( k3 * k4 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
       qkm1 = qk;
 
       xk = ( z * k5 * k6 )/( k7 * k8 );
-      pk = pkm1 +  pkm2 * xk;
-      qk = qkm1 +  qkm2 * xk;
+      pk = pkm1 + pkm2 * xk;
+      qk = qkm1 + qkm2 * xk;
       pkm2 = pkm1;
       pkm1 = pk;
       qkm2 = qkm1;
@@ -56643,8 +56642,8 @@ function incbet(aa,bb,xx) {
       return 0.0;
 
    // LM: changed: for X > 1 return 1.
-   if  (xx <= 0.0)  return 0.0;
-   if ( xx >= 1.0)  return 1.0;
+   if (xx <= 0.0) return 0.0;
+   if ( xx >= 1.0) return 1.0;
 
    flag = 0;
 
@@ -56720,7 +56719,7 @@ function incbet(aa,bb,xx) {
       else
          t = 1.0 - t;
    }
-   return  t;
+   return t;
 }
 
 /** @summary copy of ROOT::Math::Cephes::incbi
@@ -56826,13 +56825,13 @@ function incbi(aa,bb,yy0) {
          {
             if ( i != 0 )
             {
-               x = x0  +  di * (x1 - x0);
+               x = x0 + di * (x1 - x0);
                if ( x == 1.0 )
                   x = 1.0 - kMACHEP;
                if ( x == 0.0 )
                {
                   di = 0.5;
-                  x = x0  +  di * (x1 - x0);
+                  x = x0 + di * (x1 - x0);
                   if ( x == 0.0 )
                      return process_done(); // goto under;
                }
@@ -57085,7 +57084,7 @@ function gamma_pdf(x, alpha, theta, x0 = 0) {
 /** @summary tdistribution_cdf_c function
   * @memberof Math */
 function tdistribution_cdf_c(x, r, x0 = 0) {
-   const p    = x - x0,
+   const p = x - x0,
          sign = (p > 0) ? 1. : -1;
    return .5 - .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
 }
@@ -57093,9 +57092,9 @@ function tdistribution_cdf_c(x, r, x0 = 0) {
 /** @summary tdistribution_cdf function
   * @memberof Math */
 function tdistribution_cdf(x, r, x0 = 0) {
-   const p    = x - x0,
+   const p = x - x0,
          sign = (p > 0) ? 1. : -1;
-   return  .5 + .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
+   return .5 + .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
 }
 
 /** @summary tdistribution_pdf function
@@ -57137,7 +57136,7 @@ function fdistribution_pdf(x, n, m, x0 = 0) {
       return 0.0;
 
    return Math.exp((n/2) * Math.log(n) + (m/2) * Math.log(m) + lgamma((n+m)/2) - lgamma(n/2) - lgamma(m/2)
-                 + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m +  n*(x-x0)));
+                 + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m + n*(x-x0)));
 }
 
 /** @summary fdistribution_cdf_c function
@@ -57173,7 +57172,7 @@ function Prob(chi2, ndf) {
 
    if (chi2 <= 0) {
       if (chi2 < 0) return 0;
-      else          return 1;
+      else return 1;
    }
 
    return chisquared_cdf_c(chi2,ndf,0);
@@ -57225,8 +57224,8 @@ function LaplaceDistI(x, alpha = 0, beta = 1) {
 function Student(T, ndf) {
    if (ndf < 1) return 0;
 
-   const r   = ndf,
-         rh  = 0.5*r,
+   const r = ndf,
+         rh = 0.5*r,
          rh1 = rh + 0.5,
          denom = Math.sqrt(r*Math.PI)*gamma(rh)*Math.pow(1+T*T/r, rh1);
    return gamma(rh1)/denom;
@@ -57239,7 +57238,7 @@ function StudentI(T, ndf) {
 
    return (T > 0)
      ? (1 - 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5))
-     :  0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
+     : 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
 }
 
 /** @summary LogNormal function
@@ -57305,14 +57304,14 @@ function landaun(f, x, i) {
 /** @summary Crystal ball function
   * @memberof Math */
 function crystalball_function(x, alpha, n, sigma, mean = 0) {
-   if (sigma < 0.)     return 0.;
+   if (sigma < 0.) return 0.;
    let z = (x - mean)/sigma;
    if (alpha < 0) z = -z;
    const abs_alpha = Math.abs(alpha);
-   if (z  > -abs_alpha)
+   if (z > -abs_alpha)
       return Math.exp(-0.5 * z * z);
    const nDivAlpha = n/abs_alpha,
-         AA =  Math.exp(-0.5*abs_alpha*abs_alpha),
+         AA = Math.exp(-0.5*abs_alpha*abs_alpha),
          B = nDivAlpha - abs_alpha,
          arg = nDivAlpha/(B-z);
   return AA * Math.pow(arg,n);
@@ -57338,7 +57337,7 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    const useLog = (n == 1.0),
          abs_alpha = Math.abs(alpha);
 
-   let z = (x-mean)/sigma, intgaus = 0., intpow  = 0.;
+   let z = (x-mean)/sigma, intgaus = 0., intpow = 0.;
    if (alpha < 0 ) z = -z;
 
    const sqrtpiover2 = Math.sqrt(M_PI/2.),
@@ -57350,7 +57349,7 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
 
       if (!useLog) {
          const C = (n/abs_alpha) * (1./(n-1)) * Math.exp(-alpha*alpha/2.);
-         intpow  = C - A /(n-1.) * Math.pow(B-z,-n+1);
+         intpow = C - A /(n-1.) * Math.pow(B-z,-n+1);
       }
       else {
          // for n=1 the primitive of 1/x is log(x)
@@ -57360,7 +57359,7 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
    } else {
       intgaus = normal_cdf_c(z, 1);
       intgaus *= sqrt2pi;
-      intpow  = 0;
+      intpow = 0;
    }
    return sigma * (intgaus + intpow);
 }
@@ -57571,7 +57570,7 @@ function eff_MidPInterval(total,passed,level,bUpper) {
 /** @summary for a central confidence interval for a Beta distribution
   * @memberof Math */
 function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
-   const  a = passed + alpha,
+   const a = passed + alpha,
           b = total - passed + beta;
    if (bUpper) {
       if ((a > 0) && (b > 0))
@@ -57589,7 +57588,7 @@ function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
 /** @summary Return function to calculate boundary of TEfficiency
   * @memberof Math */
 function getTEfficiencyBoundaryFunc(option, isbayessian) {
-   const  kFCP = 0,       // Clopper-Pearson interval (recommended by PDG)
+   const kFCP = 0,       // Clopper-Pearson interval (recommended by PDG)
           kFNormal = 1,   // Normal approximation
           kFWilson = 2,   // Wilson interval
           kFAC = 3,       // Agresti-Coull interval
@@ -58104,20 +58103,17 @@ function injectStyle(code, node, tag) {
 function selectgStyle(name) {
    gStyle.fName = name;
    switch (name) {
-      case 'Modern': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
-         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
+      case 'Modern': Object.assign(gStyle, { fFrameBorderMode: 0, fFrameFillColor: 0,
+         fCanvasBorderMode: 0, fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
          fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
          fOptStat: 1111, fStatY: 0.935,
          fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 });
          break;
-      case 'Plain': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
-         fPadColor: 0, fCanvasColor: 0,
+      case 'Plain': Object.assign(gStyle, { fFrameBorderMode: 0,
+         fCanvasBorderMode: 0, fPadBorderMode: 0, fPadColor: 0, fCanvasColor: 0,
          fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 });
          break;
-      case 'Bold': Object.assign(gStyle, {
-         fCanvasColor: 10, fCanvasBorderMode: 0,
+      case 'Bold': Object.assign(gStyle, { fCanvasColor: 10, fCanvasBorderMode: 0,
          fFrameLineWidth: 3, fFrameFillColor: 10,
          fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
          fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 });
@@ -58507,7 +58503,7 @@ class JSRootMenu {
       add(55, 'Rainbow');
       add(51, 'Deep Sea');
       add(52, 'Grayscale', 'New gray scale');
-      add(1,  '', 'Old gray scale', (curr > 0) && (curr < 10));
+      add(1, '', 'Old gray scale', (curr > 0) && (curr < 10));
       add(50, 'ROOT 5', 'Default color palette in ROOT 5', (curr >= 10) && (curr < 51));
       add(53, '', 'Dark body radiator');
       add(54, '', 'Two-color hue');
@@ -58855,7 +58851,7 @@ class JSRootMenu {
          });
 
          this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle,
-            arg => { painter.textatt.change(undefined,  undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
+            arg => { painter.textatt.change(undefined, undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
 
          this.add('endsub:');
       }
@@ -58867,7 +58863,7 @@ class JSRootMenu {
       const is_gaxis = faxis._typename === clTGaxis;
 
       this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val;  painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+         faxis.fNdivisions = val; painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
       this.add('sub:Labels');
@@ -58973,10 +58969,10 @@ class JSRootMenu {
       this.addchk(settings.Tooltip, 'Tooltip', flag => { settings.Tooltip = flag; });
       this.addchk(settings.ContextMenu, 'Context menus', flag => { settings.ContextMenu = flag; });
       this.add('sub:Zooming');
-      this.addchk(settings.Zooming,   'Global', flag => { settings.Zooming = flag; });
-      this.addchk(settings.ZoomMouse, 'Mouse',  flag => { settings.ZoomMouse = flag; });
-      this.addchk(settings.ZoomWheel, 'Wheel',  flag => { settings.ZoomWheel = flag; });
-      this.addchk(settings.ZoomTouch, 'Touch',  flag => { settings.ZoomTouch = flag; });
+      this.addchk(settings.Zooming, 'Global', flag => { settings.Zooming = flag; });
+      this.addchk(settings.ZoomMouse, 'Mouse', flag => { settings.ZoomMouse = flag; });
+      this.addchk(settings.ZoomWheel, 'Wheel', flag => { settings.ZoomWheel = flag; });
+      this.addchk(settings.ZoomTouch, 'Touch', flag => { settings.ZoomTouch = flag; });
       this.add('endsub:');
       this.addchk(settings.HandleKeys, 'Keypress handling', flag => { settings.HandleKeys = flag; });
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
@@ -60396,7 +60392,7 @@ class TAxisPainter extends ObjectPainter {
                if (lbls.indexOf(lbl) < 0) {
                   lbls.push(lbl);
                   const p = lbl.indexOf('.');
-                  if (!order  && !optionNoexp && ((p > gStyle.fAxisMaxDigits) || ((p < 0) && (lbl.length > gStyle.fAxisMaxDigits)))) {
+                  if (!order && !optionNoexp && ((p > gStyle.fAxisMaxDigits) || ((p < 0) && (lbl.length > gStyle.fAxisMaxDigits)))) {
                      totallen += 1e10; // do not use order = 0 when too many digits are there
                      exclorder3 = false;
                   }
@@ -60604,7 +60600,7 @@ class TAxisPainter extends ObjectPainter {
             path2 += this.vertical ? `M${secondShift-h1},${handle.grpos}H${secondShift-h2}` : `M${handle.grpos},${secondShift+h1}V${secondShift+h2}`;
       }
 
-      return real_draw ? path1 + path2  : '';
+      return real_draw ? path1 + path2 : '';
    }
 
    /** @summary Returns modifier for axis label */
@@ -60766,8 +60762,7 @@ class TAxisPainter extends ObjectPainter {
                             align: this.vertical ? ((side < 0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
                             latex: 1,
                             text: '#times' + this.formatExp(10, this.order),
-                            draw_g: label_g[lcnt]
-            });
+                            draw_g: label_g[lcnt] });
          }
       }
 
@@ -61065,11 +61060,11 @@ function getEarthProjectionFunc(id) {
       case 1: return (l, b) => {
          const DegToRad = Math.PI/180,
                alpha2 = (l/2)*DegToRad,
-               delta  = b*DegToRad,
-               r2     = Math.sqrt(2),
-               f      = 2*r2/Math.PI,
-               cdec   = Math.cos(delta),
-               denom  = Math.sqrt(1.0 + cdec*Math.cos(alpha2));
+               delta = b*DegToRad,
+               r2 = Math.sqrt(2),
+               f = 2*r2/Math.PI,
+               cdec = Math.cos(delta),
+               denom = Math.sqrt(1.0 + cdec*Math.cos(alpha2));
          return {
             x: cdec*Math.sin(alpha2)*2.0*r2/denom/f/DegToRad,
             y: Math.sin(delta)*r2/denom/f/DegToRad
@@ -61078,7 +61073,7 @@ function getEarthProjectionFunc(id) {
       // mercator
       case 2: return (l, b) => { return { x: l, y: Math.log(Math.tan((Math.PI/2 + b/180*Math.PI)/2)) }; };
       // sinusoidal
-      case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
+      case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b }; };
       // parabolic
       case 4: return (l, b) => { return { x: l*(2.0*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
       // Mollweide projection
@@ -61910,7 +61905,7 @@ const TooltipHandler = {
 
       if (!dblckick) {
          pp.selectObjectPainter(exact ? exact.painter : this,
-               { x: pnt.x + (this._frame_x || 0),  y: pnt.y + (this._frame_y || 0) });
+               { x: pnt.x + (this._frame_x || 0), y: pnt.y + (this._frame_y || 0) });
       }
 
       return res;
@@ -62416,7 +62411,7 @@ const TooltipHandler = {
             w = this.getFrameWidth(), h = this.getFrameHeight();
 
       if (this.can_zoom_x)
-         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1]  >= 0) && (cur[1] <= h), cur[1] < 0);
+         this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemy : itemx, cur[0] / w, (cur[1] >= 0) && (cur[1] <= h), cur[1] < 0);
 
       if (this.can_zoom_y)
          this.analyzeMouseWheelEvent(evnt, this.swap_xy ? itemx : itemy, 1 - cur[1] / h, (cur[0] >= 0) && (cur[0] <= w), cur[0] > w);
@@ -62463,7 +62458,7 @@ const TooltipHandler = {
        } else if ((evnt?.x !== undefined) && (evnt?.y !== undefined) && (evnt?.clientX === undefined)) {
           pnt = evnt;
           const rect = svg_node.getBoundingClientRect();
-          evnt  = { clientX: rect.left + pnt.x, clientY: rect.top + pnt.y };
+          evnt = { clientX: rect.left + pnt.x, clientY: rect.top + pnt.y };
        }
 
        if ((kind === 'painter') && obj) {
@@ -63711,7 +63706,7 @@ class TFramePainter extends ObjectPainter {
          transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
-      }
+      };
    }
 
    /** @summary Configure user-defined click handler
@@ -63897,7 +63892,7 @@ class TFramePainter extends ObjectPainter {
          });
       }
 
-      if (typeof dox === 'undefined')  dox = doy = doz = true;  else
+      if (typeof dox === 'undefined') dox = doy = doz = true; else
       if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
@@ -63919,7 +63914,7 @@ class TFramePainter extends ObjectPainter {
          return;
       }
       if (!axis || axis === 'any')
-         return this.zoom_changed_x || this.zoom_changed_y  || this.zoom_changed_z;
+         return this.zoom_changed_x || this.zoom_changed_y || this.zoom_changed_z;
 
       if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
 
@@ -64560,7 +64555,7 @@ class TabsDisplay extends MDIDisplay {
    }
 
    /** @summary call function for each frame */
-   forEachFrame(userfunc,  only_visible) {
+   forEachFrame(userfunc, only_visible) {
       if (!isFunc(userfunc)) return;
 
       if (only_visible) {
@@ -64649,7 +64644,7 @@ class TabsDisplay extends MDIDisplay {
       }
 
       const frame_id = this.cnt++, mdi = this;
-      let  lbl = title;
+      let lbl = title;
 
       if (!lbl || !isStr(lbl)) lbl = `frame_${frame_id}`;
 
@@ -64726,7 +64721,7 @@ class FlexibleDisplay extends MDIDisplay {
    }
 
    /** @summary call function for each frame */
-   forEachFrame(userfunc,  only_visible) {
+   forEachFrame(userfunc, only_visible) {
       if (!isFunc(userfunc)) return;
 
       const mdi = this, top = this.selectDom().select('.jsroot_flex_top');
@@ -65568,7 +65563,7 @@ class BrowserLayout {
          tgt_drawing = '0px';
       }
 
-      const visible_at_the_end  = !this.browser_visible, _duration = fast_close ? 0 : 700;
+      const visible_at_the_end = !this.browser_visible, _duration = fast_close ? 0 : 700;
 
       this.browser_visible = 'changing';
 
@@ -65906,7 +65901,7 @@ const PadButtonsHandler = {
 
 
 // identifier used in TWebCanvas painter
- webSnapIds = { kNone: 0,  kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5 };
+ webSnapIds = { kNone: 0, kObject: 1, kSVG: 2, kSubPad: 3, kColors: 4, kStyle: 5 };
 
 /**
   * @summary Painter for TPad object
@@ -66034,7 +66029,7 @@ class TPadPainter extends ObjectPainter {
          y: this._pad_y || 0,
          width: this.getPadWidth(),
          height: this.getPadHeight()
-      }
+      };
    }
 
    /** @summary Returns frame coordiantes - also when frame is not drawn */
@@ -66166,7 +66161,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this._fast_drawing;
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h  < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
    }
@@ -67064,9 +67059,9 @@ class TPadPainter extends ObjectPainter {
       this.pad.fGridy = obj.fGridy;
       this.pad.fTickx = obj.fTickx;
       this.pad.fTicky = obj.fTicky;
-      this.pad.fLogx  = obj.fLogx;
-      this.pad.fLogy  = obj.fLogy;
-      this.pad.fLogz  = obj.fLogz;
+      this.pad.fLogx = obj.fLogx;
+      this.pad.fLogy = obj.fLogy;
+      this.pad.fLogz = obj.fLogz;
 
       this.pad.fUxmin = obj.fUxmin;
       this.pad.fUxmax = obj.fUxmax;
@@ -67078,10 +67073,10 @@ class TPadPainter extends ObjectPainter {
       this.pad.fY1 = obj.fY1;
       this.pad.fY2 = obj.fY2;
 
-      this.pad.fLeftMargin   = obj.fLeftMargin;
-      this.pad.fRightMargin  = obj.fRightMargin;
+      this.pad.fLeftMargin = obj.fLeftMargin;
+      this.pad.fRightMargin = obj.fRightMargin;
       this.pad.fBottomMargin = obj.fBottomMargin;
-      this.pad.fTopMargin    = obj.fTopMargin;
+      this.pad.fTopMargin = obj.fTopMargin;
 
       this.pad.fFillColor = obj.fFillColor;
       this.pad.fFillStyle = obj.fFillStyle;
@@ -67268,7 +67263,7 @@ class TPadPainter extends ObjectPainter {
 
       // first appropriate painter for the object
       // if same object drawn twice, two painters will exists
-      for (let k = 0;  k < this.painters.length; ++k) {
+      for (let k = 0; k < this.painters.length; ++k) {
          if (this.painters[k].snapid === snapid)
             if (--cnt === 0) { objpainter = this.painters[k]; break; }
       }
@@ -68165,7 +68160,7 @@ class TCanvasPainter extends TPadPainter {
             sidebar2 = origin.select('.side_panel2'),
             lst = [];
       let sidebar = origin.select('.side_panel'),
-          main = this.selectDom(),  force;
+          main = this.selectDom(), force;
 
       while (main.node().firstChild)
          lst.push(main.node().removeChild(main.node().firstChild));
@@ -68725,7 +68720,7 @@ class TCanvasPainter extends TPadPainter {
       if ((hint.user_info.binx !== undefined) && (hint.user_info.biny !== undefined)) {
          arr[2] = hint.user_info.binx.toString();
          arr[3] = hint.user_info.biny.toString();
-      }  else if (hint.user_info.bin !== undefined)
+      } else if (hint.user_info.bin !== undefined)
          arr[2] = hint.user_info.bin.toString();
 
 
@@ -68928,7 +68923,7 @@ async function ensureTCanvas(painter, frame_kind) {
                  : Promise.resolve(true);
 
    return promise.then(() => {
-      if ((frame_kind !== false) &&  painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
+      if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
          directDrawTFrame(painter.getDom(), null, frame_kind);
 
       painter.addToPadPrimitives();
@@ -69453,7 +69448,7 @@ class TPavePainter extends ObjectPainter {
                   this.startTextDrawing(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pad_height), sub_g);
 
                   this.drawText({ align: entry.fTextAlign || this.textatt.align, x, y, text: entry.fTitle, color,
-                                  latex: (entry._typename === clTText) ? 0 : 1,  draw_g: sub_g, fast });
+                                  latex: (entry._typename === clTText) ? 0 : 1, draw_g: sub_g, fast });
 
                   promises.push(this.finishTextDrawing(sub_g));
                } else {
@@ -69771,7 +69766,7 @@ class TPavePainter extends ObjectPainter {
       if (typeof zaxis?.fLabelOffset !== 'undefined') {
          axis.fTitle = zaxis.fTitle;
          axis.fTitleSize = zaxis.fTitleSize;
-         axis.fTitleOffset =  zaxis.fTitleOffset;
+         axis.fTitleOffset = zaxis.fTitleOffset;
          axis.fTitleColor = zaxis.fTitleColor;
          axis.fLineColor = zaxis.fAxisColor;
          axis.fTextSize = zaxis.fLabelSize;
@@ -70134,15 +70129,15 @@ class TPavePainter extends ObjectPainter {
    fillFunctionStat(f1, dofit) {
       if (!dofit || !f1) return false;
 
-      const print_fval    = dofit % 10,
+      const print_fval = dofit % 10,
           print_ferrors = Math.floor(dofit/10) % 10,
-          print_fchi2   = Math.floor(dofit/100) % 10,
-          print_fprob   = Math.floor(dofit/1000) % 10;
+          print_fchi2 = Math.floor(dofit/100) % 10,
+          print_fprob = Math.floor(dofit/1000) % 10;
 
       if (print_fchi2 > 0)
          this.addText('#chi^2 / ndf = ' + this.format(f1.fChisquare, 'fit') + ' / ' + f1.fNDF);
       if (print_fprob > 0)
-         this.addText('Prob = '  + this.format(Prob(f1.fChisquare, f1.fNDF)));
+         this.addText('Prob = ' + this.format(Prob(f1.fChisquare, f1.fNDF)));
       if (print_fval > 0) {
          for (let n = 0; n < f1.GetNumPars(); ++n) {
             const parname = f1.GetParName(n);
@@ -70973,7 +70968,7 @@ const kUserContour = BIT(10), // user specified contour levels
 //      kCanRebin    = BIT(11), // can rebin axis
 //      kLogX        = BIT(15), // X-axis in log scale
 //      kIsZoomed    = BIT(16), // bit set when zooming on Y axis
-      kNoTitle     = BIT(17); // don't draw the histogram title
+      kNoTitle = BIT(17); // don't draw the histogram title
 //      kIsAverage   = BIT(18);  // Bin contents are average (used by Add)
 
 /**
@@ -72707,7 +72702,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          arrx = handle.grx,
          arry = handle.gry;
 
-   let lj = 0, ipoly, poly,  np, npmax = 0,
+   let lj = 0, ipoly, poly, np, npmax = 0,
        i, j, k, n, m, ljfill, count,
        xsave, ysave, itars, ix, jx;
 
@@ -72720,7 +72715,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             return kk-1;
        }
       return nlevels-1;
-   },  BinarySearch = zc => {
+   }, BinarySearch = zc => {
       if (zc < first_level)
          return -1;
       if (zc >= last_level)
@@ -72737,7 +72732,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
       return l;
    },
    LevelSearch = nlevels < 10 ? LinearSearch : BinarySearch,
-   PaintContourLine = (elev1, icont1, x1, y1,  elev2, icont2, x2, y2) => {
+   PaintContourLine = (elev1, icont1, x1, y1, elev2, icont2, x2, y2) => {
       /* Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels */
       const vert = (x1 === x2),
             tlen = vert ? (y2 - y1) : (x2 - x1),
@@ -72802,8 +72797,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             n++;
             lj=2;
             for (ix=1; ix<=4; ix++) {
-               if (n === 1) m = 4;
-               else        m = n-1;
+               m = (n === 1) ? 4 : n-1;
                ljfill = PaintContourLine(zc[n-1], ir[n-1], x[n-1], y[n-1], zc[m-1], ir[m-1], x[m-1], y[m-1]);
                lj += 2*ljfill;
                n = m;
@@ -72818,12 +72812,12 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
                   ysave = yarr[ix];
                   itars = itarr[ix];
                   for (jx=ix; jx<=lj-5; jx +=2) {
-                     xarr[jx]  = xarr[jx+2];
-                     yarr[jx]  = yarr[jx+2];
+                     xarr[jx] = xarr[jx+2];
+                     yarr[jx] = yarr[jx+2];
                      itarr[jx] = itarr[jx+2];
                   }
-                  xarr[lj-3]  = xsave;
-                  yarr[lj-3]  = ysave;
+                  xarr[lj-3] = xsave;
+                  yarr[lj-3] = ysave;
                   itarr[lj-3] = itars;
                   if (count > kMAXCOUNT) break;
                   count++;
@@ -72882,9 +72876,9 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
 
       while (true) {
          iminus = npmax;
-         iplus  = iminus+1;
-         xp[iminus]= xx[istart];   yp[iminus] = yy[istart];
-         xp[iplus] = xx[istart+1]; yp[iplus]  = yy[istart+1];
+         iplus = iminus+1;
+         xp[iminus]= xx[istart]; yp[iminus] = yy[istart];
+         xp[iplus] = xx[istart+1]; yp[iplus] = yy[istart+1];
          xx[istart] = xx[istart+1] = xmin;
          yy[istart] = yy[istart+1] = ymin;
          while (true) {
@@ -72949,7 +72943,7 @@ class Triangles3DHandler {
       let nsegments = 0, lpos = null, lindx = 0,  // buffer for lines
           ngridsegments = 0, grid = null, gindx = 0, // buffer for grid lines segments
           normindx = [],                             // buffer to remember place of vertex for each bin
-          pntindx = 0, lastpart = 0,  gridcnt = 0;
+          pntindx = 0, lastpart = 0, gridcnt = 0;
 
       function checkSide(z, level1, level2, eps) {
          return (z < level1 - eps) ? -1 : (z > level2 + eps ? 1 : 0);
@@ -73051,7 +73045,7 @@ class Triangles3DHandler {
 
             // always show top segments
             if ((lvl > 1) && (lvl === levels.length - 1) && (side_sum === 3) && (z1 <= this.grz_max))
-               side1 = side2 =  side3 = side_sum = 0;
+               side1 = side2 = side3 = side_sum = 0;
 
 
             if (side_sum === 3) continue;
@@ -73592,7 +73586,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          this.draw_content = false;
       } else {
          this.draw_content = this.gmaxbin > 0;
-         if (!this.draw_content  && this.options.Zero && this.isTH2Poly()) {
+         if (!this.draw_content && this.options.Zero && this.isTH2Poly()) {
             this.draw_content = true;
             this.options.Line = 1;
          }
@@ -74349,10 +74343,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                   yc = (handle.gry[j] + handle.gry[j+1])/2;
                   dxn = scale_x*dx/dn;
                   dyn = scale_y*dy/dn;
-                  x1  = xc - dxn;
-                  x2  = xc + dxn;
-                  y1  = yc - dyn;
-                  y2  = yc + dyn;
+                  x1 = xc - dxn;
+                  x2 = xc + dxn;
+                  y1 = yc - dyn;
+                  y2 = yc + dyn;
                   dx = Math.round(x2-x1);
                   dy = Math.round(y2-y1);
 
@@ -74361,8 +74355,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(9/(dx**2 + dy**2));
-                        si  = Math.round(anr*(dx + dy));
-                        co  = Math.round(anr*(dx - dy));
+                        si = Math.round(anr*(dx + dy));
+                        co = Math.round(anr*(dx - dy));
                         if (si || co)
                            cmd += `m${-si},${co}${makeLine(si, -co)}${makeLine(-co, -si)}`;
                      }
@@ -74501,26 +74495,26 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
    /** @summary Draw histogram bins as candle plot */
    drawBinsCandle() {
-      const kNoOption           = 0,
-            kBox                = 1,
-            kMedianLine         = 10,
-            kMedianNotched      = 20,
-            kMedianCircle       = 30,
-            kMeanLine           = 100,
-            kMeanCircle         = 300,
-            kWhiskerAll         = 1000,
-            kWhisker15          = 2000,
-            kAnchor             = 10000,
-            kPointsOutliers     = 100000,
-            kPointsAll          = 200000,
-            kPointsAllScat      = 300000,
-            kHistoLeft          = 1000000,
-            kHistoRight         = 2000000,
-            kHistoViolin        = 3000000,
+      const kNoOption = 0,
+            kBox = 1,
+            kMedianLine = 10,
+            kMedianNotched = 20,
+            kMedianCircle = 30,
+            kMeanLine = 100,
+            kMeanCircle = 300,
+            kWhiskerAll = 1000,
+            kWhisker15 = 2000,
+            kAnchor = 10000,
+            kPointsOutliers = 100000,
+            kPointsAll = 200000,
+            kPointsAllScat = 300000,
+            kHistoLeft = 1000000,
+            kHistoRight = 2000000,
+            kHistoViolin = 3000000,
             kHistoZeroIndicator = 10000000,
-            kHorizontal         = 100000000,
-            fallbackCandle      = kBox + kMedianLine + kMeanCircle + kWhiskerAll + kAnchor,
-            fallbackViolin      = kMeanCircle + kWhiskerAll + kHistoViolin + kHistoZeroIndicator;
+            kHorizontal = 100000000,
+            fallbackCandle = kBox + kMedianLine + kMeanCircle + kWhiskerAll + kAnchor,
+            fallbackViolin = kMeanCircle + kWhiskerAll + kHistoViolin + kHistoZeroIndicator;
 
       let fOption = kNoOption;
 
@@ -75594,7 +75588,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          }
 
          if (res.changed) {
-            res.user_info = { obj: histo,  name: histo.fName,
+            res.user_info = { obj: histo, name: histo.fName,
                               bin: i+1, cont: p.fMedian, binx: i+1, biny: 1,
                               grx: pnt.x, gry: pnt.y };
          }
@@ -76184,7 +76178,7 @@ function setCameraPosition(fp, first_time) {
       } else {
          // screen heigher than actual geometry
          const m = (fp.camera.top + fp.camera.bottom) / 2;
-         fp.camera.top  = m + szx / screen_ratio / 2;
+         fp.camera.top = m + szx / screen_ratio / 2;
          fp.camera.bottom = m - szx / screen_ratio / 2;
       }
     }
@@ -76536,11 +76530,11 @@ function highlightBin3D(tip, selfmesh) {
 
       if (tip.x1 === tip.x2) console.warn(`same tip X ${tip.x1} ${tip.x2}`);
       if (tip.y1 === tip.y2) console.warn(`same tip Y ${tip.y1} ${tip.y2}`);
-      if (tip.z1 === tip.z2)  tip.z2 = tip.z1 + 0.0001;  // avoid zero faces
+      if (tip.z1 === tip.z2) tip.z2 = tip.z1 + 0.0001;  // avoid zero faces
 
       for (let k = 0, nn = -3; k < indicies.length; ++k) {
          const vert = vertices[indicies[k]];
-         pos[k*3]   = tip.x1 + vert.x * (tip.x2 - tip.x1);
+         pos[k*3] = tip.x1 + vert.x * (tip.x2 - tip.x1);
          pos[k*3+1] = tip.y1 + vert.y * (tip.y2 - tip.y1);
          pos[k*3+2] = tip.z1 + vert.z * (tip.z2 - tip.z1);
 
@@ -76566,7 +76560,7 @@ function highlightBin3D(tip, selfmesh) {
       tip.$painter.redrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
    if (changed && mainp?.getObject()) {
-      mainp.provideUserTooltip({ obj: mainp.getObject(),  name: mainp.getObject().fName,
+      mainp.provideUserTooltip({ obj: mainp.getObject(), name: mainp.getObject().fName,
                                  bin: tip.bin, cont: tip.value,
                                  binx: tip.ix, biny: tip.iy, binz: tip.iz,
                                  grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 });
@@ -76873,10 +76867,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
           m = new Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
-      m.set(text_scale, 0,           0,  posx,
-            0,          text_scale,  0,  -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
-            0,          0,           1,  0,
-            0,          0,           0,  1);
+      m.set(text_scale, 0, 0, posx,
+            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, 0, 1, 0,
+            0, 0, 0, 1);
 
       const mesh = new Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
       mesh.applyMatrix4(m);
@@ -76900,10 +76894,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             m = new Matrix4();
 
       // matrix to swap y and z scales and shift along z to its position
-      m.set(-text_scale, 0,          0, posx,
-            0,           text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
-            0,           0,         -1, 0,
-            0,           0,          0, 1);
+      m.set(-text_scale, 0, 0, posx,
+            0, text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
+            0, 0, -1, 0,
+            0, 0, 0, 1);
       const mesh = new Mesh(lbl, getTextMaterial(this.x_handle, lbl.kind, lbl.color));
       mesh.applyMatrix4(m);
       xcont.add(mesh);
@@ -76923,7 +76917,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (yticks.last_major()) {
          if (!this.y_handle.fTitle) lbl = 'y';
-      }  else if (lbl === null) {
+      } else if (lbl === null) {
          is_major = false; lbl = '';
       }
 
@@ -76983,10 +76977,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
              posy = lbl.center ? lbl.gry + w/2 : (lbl.opposite ? grminy + w : grmaxy),
              m = new Matrix4();
          // matrix to swap y and z scales and shift along z to its position
-         m.set(0, text_scale,  0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
-               -text_scale,  0, 0, posy,
-               0, 0,  1, 0,
-               0, 0,  0, 1);
+         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+               -text_scale, 0, 0, posy,
+               0, 0, 1, 0,
+               0, 0, 0, 1);
 
          const mesh = new Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
          mesh.applyMatrix4(m);
@@ -77008,9 +77002,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          const w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
              posy = lbl.center ? lbl.gry - w/2 : (lbl.opposite ? grminy : grmaxy - w),
              m = new Matrix4();
-         m.set(0, text_scale, 0,  -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
-               text_scale, 0, 0,  posy,
-               0,         0, -1,  0,
+         m.set(0, text_scale, 0, -maxtextheight*text_scale - this.y_handle.ticksSize - lbl.offsetx,
+               text_scale, 0, 0, posy,
+               0, 0, -1, 0,
                0, 0, 0, 1);
 
          const mesh = new Mesh(lbl, getTextMaterial(this.y_handle, lbl.kind, lbl.color));
@@ -77118,9 +77112,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          }
 
          // matrix to swap y and z scales and shift along z to its position
-         m.set(-text_scale,          0,  0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + this.z_handle.labelsOffset,
-                         0,          0,  1, 0,
-                         0, text_scale,  0, grz);
+         m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + this.z_handle.labelsOffset,
+                         0, 0, 1, 0,
+                         0, text_scale, 0, grz);
          const mesh = new Mesh(lbl, getTextMaterial(this.z_handle));
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
@@ -77135,9 +77129,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          text3d.rotateZ(Math.PI/2);
 
          const m = new Matrix4();
-         m.set(-text_scale,          0,  0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + maxzlblwidth + this.z_handle.titleOffset,
-                         0,          0,  1, 0,
-                         0, text_scale,  0, posz);
+         m.set(-text_scale, 0, 0, this.z_handle.ticksSize + (grmaxx - grminx) * 0.005 + maxzlblwidth + this.z_handle.titleOffset,
+                         0, 0, 1, 0,
+                         0, text_scale, 0, posz);
          const mesh = new Mesh(text3d, getTextMaterial(this.z_handle, 'title'));
          mesh.applyMatrix4(m);
          zcont[n].add(mesh);
@@ -77394,7 +77388,7 @@ function drawBinsLego(painter, is_v7 = false) {
                vert = vertices[indicies[k]];
 
                if (split_faces && (k < 12)) {
-                  pos2[v2]   = x1 + vert.x * (x2 - x1);
+                  pos2[v2] = x1 + vert.x * (x2 - x1);
                   pos2[v2+1] = y1 + vert.y * (y2 - y1);
                   pos2[v2+2] = z1 + vert.z * (z2 - z1);
 
@@ -77404,7 +77398,7 @@ function drawBinsLego(painter, is_v7 = false) {
                   if (v2 % 9 === 0) face_to_bins_indx2[v2/9] = bin_index; // remember which bin corresponds to the face
                   v2 += 3;
                } else {
-                  positions[v]   = x1 + vert.x * (x2 - x1);
+                  positions[v] = x1 + vert.x * (x2 - x1);
                   positions[v+1] = y1 + vert.y * (y2 - y1);
                   positions[v+2] = z1 + vert.z * (z2 - z1);
 
@@ -77557,7 +77551,7 @@ function drawBinsLego(painter, is_v7 = false) {
 
             for (k = 0; k < vvv.length; ++k) {
                vert = vvv[k];
-               lpositions[ll]   = x1 + vert.x * (x2 - x1);
+               lpositions[ll] = x1 + vert.x * (x2 - x1);
                lpositions[ll+1] = y1 + vert.y * (y2 - y1);
                lpositions[ll+2] = z1 + vert.z * (z2 - z1);
                ll += 3;
@@ -77566,7 +77560,7 @@ function drawBinsLego(painter, is_v7 = false) {
             // copy only vertex positions
             for (k = 0; k < seg.length; ++k) {
                vert = vvv[seg[k]];
-               lpositions[ll]   = x1 + vert.x * (x2 - x1);
+               lpositions[ll] = x1 + vert.x * (x2 - x1);
                lpositions[ll+1] = y1 + vert.y * (y2 - y1);
                lpositions[ll+2] = z1 + vert.z * (z2 - z1);
                // intersect_index[ll/3] = bin_index;
@@ -77807,7 +77801,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
                if (normindx[bin] === -1) continue; // nothing there
 
-               const beg = (normindx[bin]  >= 0) ? bin : bin + 9 + normindx[bin],
+               const beg = (normindx[bin] >= 0) ? bin : bin + 9 + normindx[bin],
                      end = bin + 8;
                let sumx = 0, sumy = 0, sumz = 0;
 
@@ -78977,7 +78971,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
 
       if (res.changed) {
-         res.user_info = { obj: histo,  name: histo.fName,
+         res.user_info = { obj: histo, name: histo.fName,
                            bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
       }
@@ -79567,7 +79561,7 @@ class TH3Painter extends THistPainter {
       }
 
       if (has_counted_stat) {
-         stat_sum0  = histo.fTsumw;
+         stat_sum0 = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
@@ -79820,12 +79814,12 @@ class TH3Painter extends THistPainter {
 
          for (let k = 0, nn = -3; k < indicies.length; ++k) {
             const vert = vertices[indicies[k]];
-            single_bin_verts[k*3]   = vert.x-0.5;
+            single_bin_verts[k*3] = vert.x-0.5;
             single_bin_verts[k*3+1] = vert.y-0.5;
             single_bin_verts[k*3+2] = vert.z-0.5;
 
             if (k%6 === 0) nn+=3;
-            single_bin_norms[k*3]   = normals[nn];
+            single_bin_norms[k*3] = normals[nn];
             single_bin_norms[k*3+1] = normals[nn+1];
             single_bin_norms[k*3+2] = normals[nn+2];
          }
@@ -79836,7 +79830,7 @@ class TH3Painter extends THistPainter {
           else if (box_option === 13) {
             use_colors = true;
             use_helper = false;
-         }  else if (this.options.GLColor) {
+         } else if (this.options.GLColor) {
             use_colors = true;
             use_opacity = 0.5;
             use_scale = false;
@@ -79961,11 +79955,11 @@ class TH3Painter extends THistPainter {
 
                // Grab the coordinates and scale that are being assigned to each bin
                for (let vi = 0; vi < buffer_size; vi+=3, vvv+=3) {
-                  bin_v[vvv]   = grx + single_bin_verts[vi]*scalex*wei;
+                  bin_v[vvv] = grx + single_bin_verts[vi]*scalex*wei;
                   bin_v[vvv+1] = gry + single_bin_verts[vi+1]*scaley*wei;
                   bin_v[vvv+2] = grz + single_bin_verts[vi+2]*scalez*wei;
 
-                  bin_n[vvv]   = single_bin_norms[vi];
+                  bin_n[vvv] = single_bin_norms[vi];
                   bin_n[vvv+1] = single_bin_norms[vi+1];
                   bin_n[vvv+2] = single_bin_norms[vi+2];
                }
@@ -79986,7 +79980,7 @@ class TH3Painter extends THistPainter {
                   vvv = nbins * helper_segments.length * 3;
                   for (let n=0; n<helper_segments.length; ++n, vvv+=3) {
                      const vert = Box3D.Vertices[helper_segments[n]];
-                     helper_p[vvv]   = grx + (vert.x-0.5)*scalex*wei;
+                     helper_p[vvv] = grx + (vert.x-0.5)*scalex*wei;
                      helper_p[vvv+1] = gry + (vert.y-0.5)*scaley*wei;
                      helper_p[vvv+2] = grz + (vert.z-0.5)*scalez*wei;
                   }
@@ -80346,14 +80340,14 @@ class Vertex {
       let x = this.x, y = this.y, z = this.z;
       const e = m.elements;
 
-      this.x = e[0] * x + e[4] * y + e[8]  * z + e[12];
-      this.y = e[1] * x + e[5] * y + e[9]  * z + e[13];
+      this.x = e[0] * x + e[4] * y + e[8] * z + e[12];
+      this.y = e[1] * x + e[5] * y + e[9] * z + e[13];
       this.z = e[2] * x + e[6] * y + e[10] * z + e[14];
 
       x = this.nx; y = this.ny; z = this.nz;
 
-      this.nx = e[0] * x + e[4] * y + e[8]  * z;
-      this.ny = e[1] * x + e[5] * y + e[9]  * z;
+      this.nx = e[0] * x + e[4] * y + e[8] * z;
+      this.ny = e[1] * x + e[5] * y + e[9] * z;
       this.nz = e[2] * x + e[6] * y + e[10] * z;
 
       return this;
@@ -81003,20 +80997,20 @@ function createNormal(axis_name, pos, size) {
 
    switch (axis_name) {
       case 'x':
-         vertices = [new Vertex(pos, -3*size,    size, 1, 0, 0),
-                     new Vertex(pos,    size, -3*size, 1, 0, 0),
-                     new Vertex(pos,    size,    size, 1, 0, 0)];
+         vertices = [new Vertex(pos, -3*size, size, 1, 0, 0),
+                     new Vertex(pos, size, -3*size, 1, 0, 0),
+                     new Vertex(pos, size, size, 1, 0, 0)];
          break;
       case 'y':
-         vertices = [new Vertex(-3*size,  pos,    size, 0, 1, 0),
-                     new Vertex(size,  pos,    size, 0, 1, 0),
-                     new Vertex(size,  pos, -3*size, 0, 1, 0)];
+         vertices = [new Vertex(-3*size, pos, size, 0, 1, 0),
+                     new Vertex(size, pos, size, 0, 1, 0),
+                     new Vertex(size, pos, -3*size, 0, 1, 0)];
          break;
       // case 'z':
       default:
-         vertices = [new Vertex(-3*size,    size, pos, 0, 0, 1),
+         vertices = [new Vertex(-3*size, size, pos, 0, 0, 1),
                      new Vertex(size, -3*size, pos, 0, 0, 1),
-                     new Vertex(size,    size, pos, 0, 0, 1)];
+                     new Vertex(size, size, pos, 0, 0, 1)];
    }
 
    const node = new Node([new Polygon(vertices)]);
@@ -81354,13 +81348,13 @@ class GeometryCreator {
       let indx = this.indx - 9;
       const norm = this.norm;
 
-      norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
+      norm[indx] = norm[indx+3] = norm[indx+6] = nx;
       norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
       norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
 
       if (this.last4) {
          indx -= 9;
-         norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
+         norm[indx] = norm[indx+3] = norm[indx+6] = nx;
          norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
          norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
       }
@@ -81375,7 +81369,7 @@ class GeometryCreator {
       const norm = this.norm;
 
       if (reduce!==1) {
-         norm[indx]   = nx12;
+         norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
          norm[indx+3] = nx12;
@@ -81388,7 +81382,7 @@ class GeometryCreator {
       }
 
       if (reduce!==2) {
-         norm[indx]   = nx12;
+         norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
          norm[indx+3] = nx34;
@@ -81633,13 +81627,13 @@ function createParaBuffer(shape, faces_limit) {
 
    const txy = shape.fTxy, txz = shape.fTxz, tyz = shape.fTyz, v = [
        -shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY-shape.fZ*tyz, -shape.fZ,
-       -shape.fZ*txz+txy*shape.fY-shape.fX,  shape.fY-shape.fZ*tyz, -shape.fZ,
-       -shape.fZ*txz+txy*shape.fY+shape.fX,  shape.fY-shape.fZ*tyz, -shape.fZ,
+       -shape.fZ*txz+txy*shape.fY-shape.fX, shape.fY-shape.fZ*tyz, -shape.fZ,
+       -shape.fZ*txz+txy*shape.fY+shape.fX, shape.fY-shape.fZ*tyz, -shape.fZ,
        -shape.fZ*txz-txy*shape.fY+shape.fX, -shape.fY-shape.fZ*tyz, -shape.fZ,
-        shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY+shape.fZ*tyz,  shape.fZ,
-        shape.fZ*txz+txy*shape.fY-shape.fX,  shape.fY+shape.fZ*tyz,  shape.fZ,
-        shape.fZ*txz+txy*shape.fY+shape.fX,  shape.fY+shape.fZ*tyz,  shape.fZ,
-        shape.fZ*txz-txy*shape.fY+shape.fX, -shape.fY+shape.fZ*tyz,  shape.fZ];
+        shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY+shape.fZ*tyz, shape.fZ,
+        shape.fZ*txz+txy*shape.fY-shape.fX, shape.fY+shape.fZ*tyz, shape.fZ,
+        shape.fZ*txz+txy*shape.fY+shape.fX, shape.fY+shape.fZ*tyz, shape.fZ,
+        shape.fZ*txz-txy*shape.fY+shape.fX, -shape.fY+shape.fZ*tyz, shape.fZ];
 
    return create8edgesBuffer(v, faces_limit);
 }
@@ -81657,14 +81651,14 @@ function createTrapezoidBuffer(shape, faces_limit) {
    }
 
    const v = [
-      -shape.fDx1,  y1, -shape.fDZ,
-       shape.fDx1,  y1, -shape.fDZ,
+      -shape.fDx1, y1, -shape.fDZ,
+       shape.fDx1, y1, -shape.fDZ,
        shape.fDx1, -y1, -shape.fDZ,
       -shape.fDx1, -y1, -shape.fDZ,
-      -shape.fDx2,  y2,  shape.fDZ,
-       shape.fDx2,  y2,  shape.fDZ,
-       shape.fDx2, -y2,  shape.fDZ,
-      -shape.fDx2, -y2,  shape.fDZ
+      -shape.fDx2, y2, shape.fDZ,
+       shape.fDx2, y2, shape.fDZ,
+       shape.fDx2, -y2, shape.fDZ,
+      -shape.fDx2, -y2, shape.fDZ
    ];
 
    return create8edgesBuffer(v, faces_limit);
@@ -81681,15 +81675,15 @@ function createArb8Buffer(shape, faces_limit) {
       shape.fXY[1][0], shape.fXY[1][1], -shape.fDZ,
       shape.fXY[2][0], shape.fXY[2][1], -shape.fDZ,
       shape.fXY[3][0], shape.fXY[3][1], -shape.fDZ,
-      shape.fXY[4][0], shape.fXY[4][1],  shape.fDZ,
-      shape.fXY[5][0], shape.fXY[5][1],  shape.fDZ,
-      shape.fXY[6][0], shape.fXY[6][1],  shape.fDZ,
-      shape.fXY[7][0], shape.fXY[7][1],  shape.fDZ
+      shape.fXY[4][0], shape.fXY[4][1], shape.fDZ,
+      shape.fXY[5][0], shape.fXY[5][1], shape.fDZ,
+      shape.fXY[6][0], shape.fXY[6][1], shape.fDZ,
+      shape.fXY[7][0], shape.fXY[7][1], shape.fDZ
    ],
     indicies = [
-         4, 7, 6,  6, 5, 4,  3, 7, 4,  4, 0, 3,
-         5, 1, 0,  0, 4, 5,  6, 2, 1,  1, 5, 6,
-         7, 3, 2,  2, 6, 7,  1, 2, 3,  3, 0, 1];
+         4, 7, 6, 6, 5, 4, 3, 7, 4, 4, 0, 3,
+         5, 1, 0, 0, 4, 5, 6, 2, 1, 1, 5, 6,
+         7, 3, 2, 2, 6, 7, 1, 2, 3, 3, 0, 1];
 
    // detect same vertices on both Z-layers
    for (let side = 0; side < vertices.length; side += vertices.length/2) {
@@ -81709,9 +81703,9 @@ function createArb8Buffer(shape, faces_limit) {
    let numfaces = 0;
 
    for (let k = 0; k < indicies.length; k += 3) {
-      const id1 = indicies[k]*100   + indicies[k+1]*10 + indicies[k+2],
+      const id1 = indicies[k]*100 + indicies[k+1]*10 + indicies[k+2],
             id2 = indicies[k+1]*100 + indicies[k+2]*10 + indicies[k],
-            id3 = indicies[k+2]*100 + indicies[k]*10   + indicies[k+1];
+            id3 = indicies[k+2]*100 + indicies[k]*10 + indicies[k+1];
 
       if ((indicies[k] === indicies[k+1]) || (indicies[k] === indicies[k+2]) || (indicies[k+1] === indicies[k+2]) ||
           (map.indexOf(id1) >= 0) || (map.indexOf(id2) >= 0) || (map.indexOf(id3) >= 0))
@@ -81725,7 +81719,7 @@ function createArb8Buffer(shape, faces_limit) {
    const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
 
    for (let n = 0; n < indicies.length; n += 6) {
-      const i1 = indicies[n]   * 3,
+      const i1 = indicies[n] * 3,
             i2 = indicies[n+1] * 3,
             i3 = indicies[n+2] * 3,
             i4 = indicies[n+3] * 3,
@@ -81762,7 +81756,7 @@ function createArb8Buffer(shape, faces_limit) {
                           vertices[i3], vertices[i3+1], vertices[i3+2],
                           vertices[i5], vertices[i5+1], vertices[i5+2]);
          creator.setNormal(norm.x, norm.y, norm.z);
-      }  else {
+      } else {
          if (i1 >= 0) {
             creator.addFace3(vertices[i1], vertices[i1+1], vertices[i1+2],
                              vertices[i2], vertices[i2+1], vertices[i2+2],
@@ -81849,16 +81843,16 @@ function createSphereBuffer(shape, faces_limit) {
 
          for (let n = 0; n < widthSegments; ++n) {
             creator.addFace4(
-                  r*_sint[k1]*_cosp[n],   r*_sint[k1] *_sinp[n],   r*_cost[k1],
+                  r*_sint[k1]*_cosp[n], r*_sint[k1] *_sinp[n], r*_cost[k1],
                   r*_sint[k1]*_cosp[n+1], r*_sint[k1] *_sinp[n+1], r*_cost[k1],
                   r*_sint[k2]*_cosp[n+1], r*_sint[k2] *_sinp[n+1], r*_cost[k2],
-                  r*_sint[k2]*_cosp[n],   r*_sint[k2] *_sinp[n],   r*_cost[k2],
+                  r*_sint[k2]*_cosp[n], r*_sint[k2] *_sinp[n], r*_cost[k2],
                   skip);
             creator.setNormal4(
-                  s*_sint[k1]*_cosp[n],   s*_sint[k1] *_sinp[n],   s*_cost[k1],
+                  s*_sint[k1]*_cosp[n], s*_sint[k1] *_sinp[n], s*_cost[k1],
                   s*_sint[k1]*_cosp[n+1], s*_sint[k1] *_sinp[n+1], s*_cost[k1],
                   s*_sint[k2]*_cosp[n+1], s*_sint[k2] *_sinp[n+1], s*_cost[k2],
-                  s*_sint[k2]*_cosp[n],   s*_sint[k2] *_sinp[n],   s*_cost[k2],
+                  s*_sint[k2]*_cosp[n], s*_sint[k2] *_sinp[n], s*_cost[k2],
                   skip);
          }
       }
@@ -81978,10 +81972,10 @@ function createTubeBuffer(shape, faces_limit) {
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(
-               R[0] * _cos[seg+d1], R[0] * _sin[seg+d1],  shape.fDZ,
+               R[0] * _cos[seg+d1], R[0] * _sin[seg+d1], shape.fDZ,
                R[1] * _cos[seg+d1], R[1] * _sin[seg+d1], -shape.fDZ,
                R[1] * _cos[seg+d2], R[1] * _sin[seg+d2], -shape.fDZ,
-               R[0] * _cos[seg+d2], R[0] * _sin[seg+d2],  shape.fDZ,
+               R[0] * _cos[seg+d2], R[0] * _sin[seg+d2], shape.fDZ,
                reduce);
 
          if (calcZ) creator.recalcZ(calcZ);
@@ -82022,14 +82016,14 @@ function createTubeBuffer(shape, faces_limit) {
    if (thetaLength < 360) {
       creator.addFace4(innerR[1] * _cos[0], innerR[1] * _sin[0], -shape.fDZ,
                        outerR[1] * _cos[0], outerR[1] * _sin[0], -shape.fDZ,
-                       outerR[0] * _cos[0], outerR[0] * _sin[0],  shape.fDZ,
-                       innerR[0] * _cos[0], innerR[0] * _sin[0],  shape.fDZ,
+                       outerR[0] * _cos[0], outerR[0] * _sin[0], shape.fDZ,
+                       innerR[0] * _cos[0], innerR[0] * _sin[0], shape.fDZ,
                        (outerR[0] === innerR[0]) ? 2 : ((innerR[1]===outerR[1]) ? 1 : 0));
       if (calcZ) creator.recalcZ(calcZ);
       creator.calcNormal();
 
-      creator.addFace4(innerR[0] * _cos[radiusSegments], innerR[0] * _sin[radiusSegments],  shape.fDZ,
-                       outerR[0] * _cos[radiusSegments], outerR[0] * _sin[radiusSegments],  shape.fDZ,
+      creator.addFace4(innerR[0] * _cos[radiusSegments], innerR[0] * _sin[radiusSegments], shape.fDZ,
+                       outerR[0] * _cos[radiusSegments], outerR[0] * _sin[radiusSegments], shape.fDZ,
                        outerR[1] * _cos[radiusSegments], outerR[1] * _sin[radiusSegments], -shape.fDZ,
                        innerR[1] * _cos[radiusSegments], innerR[1] * _sin[radiusSegments], -shape.fDZ,
                        (outerR[0] === innerR[0]) ? 1 : ((innerR[1]===outerR[1]) ? 2 : 0));
@@ -82062,10 +82056,10 @@ function createEltuBuffer(shape, faces_limit) {
 
    // create tube faces
    for (let seg = 0; seg < radiusSegments; ++seg) {
-      creator.addFace4(x[seg],   y[seg],   +shape.fDZ,
-                       x[seg],   y[seg],   -shape.fDZ,
+      creator.addFace4(x[seg], y[seg], +shape.fDZ,
+                       x[seg], y[seg], -shape.fDZ,
                        x[seg+1], y[seg+1], -shape.fDZ,
-                       x[seg+1], y[seg+1],  shape.fDZ);
+                       x[seg+1], y[seg+1], shape.fDZ);
 
       // calculate normals ourself
       nx1 = nx2; ny1 = ny2;
@@ -82081,9 +82075,9 @@ function createEltuBuffer(shape, faces_limit) {
    for (let side = 0; side < 2; ++side) {
       const sign = (side === 0) ? 1 : -1, d1 = side, d2 = 1 - side;
       for (let seg=0; seg<radiusSegments; ++seg) {
-         creator.addFace3(0,          0,          sign*shape.fDZ,
-                          x[seg+d1],  y[seg+d1],  sign*shape.fDZ,
-                          x[seg+d2],  y[seg+d2],  sign*shape.fDZ);
+         creator.addFace3(0, 0, sign*shape.fDZ,
+                          x[seg+d1], y[seg+d1], sign*shape.fDZ,
+                          x[seg+d2], y[seg+d2], sign*shape.fDZ);
          creator.setNormal(0, 0, sign);
       }
    }
@@ -82140,10 +82134,10 @@ function createTorusBuffer(shape, faces_limit) {
          center2.x = radius * _cost[t2]; center2.y = radius * _sint[t2];
 
          for (let n = 0; n < radialSegments; ++n) {
-            p1.x = (radius + tube * _cosr[n])   * _cost[t1]; p1.y = (radius + tube * _cosr[n])   * _sint[t1]; p1.z = tube*_sinr[n];
+            p1.x = (radius + tube * _cosr[n]) * _cost[t1]; p1.y = (radius + tube * _cosr[n]) * _sint[t1]; p1.z = tube*_sinr[n];
             p2.x = (radius + tube * _cosr[n+1]) * _cost[t1]; p2.y = (radius + tube * _cosr[n+1]) * _sint[t1]; p2.z = tube*_sinr[n+1];
             p3.x = (radius + tube * _cosr[n+1]) * _cost[t2]; p3.y = (radius + tube * _cosr[n+1]) * _sint[t2]; p3.z = tube*_sinr[n+1];
-            p4.x = (radius + tube * _cosr[n])   * _cost[t2]; p4.y = (radius + tube * _cosr[n])   * _sint[t2]; p4.z = tube*_sinr[n];
+            p4.x = (radius + tube * _cosr[n]) * _cost[t2]; p4.y = (radius + tube * _cosr[n]) * _sint[t2]; p4.z = tube*_sinr[n];
 
             creator.addFace4(p1.x, p1.y, p1.z,
                              p2.x, p2.y, p2.z,
@@ -82483,18 +82477,18 @@ function createParaboloidBuffer(shape, faces_limit) {
       const skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
-         creator.addFace4(radius*_cos[seg],   radius*_sin[seg], layerz,
-                          lastr*_cos[seg],    lastr*_sin[seg], lastz,
-                          lastr*_cos[seg+1],  lastr*_sin[seg+1], lastz,
+         creator.addFace4(radius*_cos[seg], radius*_sin[seg], layerz,
+                          lastr*_cos[seg], lastr*_sin[seg], lastz,
+                          lastr*_cos[seg+1], lastr*_sin[seg+1], lastz,
                           radius*_cos[seg+1], radius*_sin[seg+1], layerz, skip);
 
          // use analytic normal values when open/closing paraboloid around 0
          // cut faces (top or bottom) set with simple normal
          if ((skip === 0) || ((layer === 1) && (rmin === 0)) || ((layer === heightSegments+1) && (rmax === 0))) {
-            creator.setNormal4(nxy*_cos[seg],       nxy*_sin[seg],       nz,
-                               lastnxy*_cos[seg],   lastnxy*_sin[seg],   lastnz,
+            creator.setNormal4(nxy*_cos[seg], nxy*_sin[seg], nz,
+                               lastnxy*_cos[seg], lastnxy*_sin[seg], lastnz,
                                lastnxy*_cos[seg+1], lastnxy*_sin[seg+1], lastnz,
-                               nxy*_cos[seg+1],     nxy*_sin[seg+1],     nz, skip);
+                               nxy*_cos[seg+1], nxy*_sin[seg+1], nz, skip);
          } else
             creator.setNormal(0, 0, (layer < heightSegments) ? -1 : 1);
       }
@@ -82641,10 +82635,10 @@ function createMatrix(matrix) {
    const res = new Matrix4();
 
    if (rotation) {
-      res.set(rotation[0], rotation[1], rotation[2],  0,
-              rotation[3], rotation[4], rotation[5],  0,
-              rotation[6], rotation[7], rotation[8],  0,
-                        0,           0,           0,  1);
+      res.set(rotation[0], rotation[1], rotation[2], 0,
+              rotation[3], rotation[4], rotation[5], 0,
+              rotation[6], rotation[7], rotation[8], 0,
+                        0, 0, 0, 1);
    }
 
    if (translation)
@@ -82668,10 +82662,10 @@ function getNodeMatrix(kind, node) {
       matrix = new Matrix4();
 
       if (node.fTrans) {
-         matrix.set(node.fTrans[0],  node.fTrans[4],  node.fTrans[8],  0,
-                    node.fTrans[1],  node.fTrans[5],  node.fTrans[9],  0,
-                    node.fTrans[2],  node.fTrans[6],  node.fTrans[10], 0,
-                                 0,               0,               0,  1);
+         matrix.set(node.fTrans[0], node.fTrans[4], node.fTrans[8], 0,
+                    node.fTrans[1], node.fTrans[5], node.fTrans[9], 0,
+                    node.fTrans[2], node.fTrans[6], node.fTrans[10], 0,
+                                 0, 0, 0, 1);
          // second - set position with proper sign
          matrix.setPosition(node.fTrans[12], node.fTrans[13], node.fTrans[14]);
       }
@@ -82712,10 +82706,10 @@ function getNodeMatrix(kind, node) {
 
            matrix = new Matrix4();
 
-           matrix.set(_cos, -_sin,  0,  0,
-                      _sin,  _cos,  0,  0,
-                         0,     0,  1,  0,
-                         0,     0,  0,  1);
+           matrix.set(_cos, -_sin, 0, 0,
+                      _sin, _cos, 0, 0,
+                         0, 0, 1, 0,
+                         0, 0, 0, 1);
            break;
         }
 
@@ -82901,7 +82895,7 @@ function createComposite(shape, faces_limit) {
    bsp1.maxid = bsp2.maxid;
 
    switch (shape.fNode._typename) {
-      case 'TGeoIntersection': bsp1.direct_intersect(bsp2);  break; // '*'
+      case 'TGeoIntersection': bsp1.direct_intersect(bsp2); break; // '*'
       case 'TGeoUnion': bsp1.direct_union(bsp2); break;   // '+'
       case 'TGeoSubtraction': bsp1.direct_subtract(bsp2); break; // '/'
       default:
@@ -83103,7 +83097,7 @@ function createServerGeometry(rd, nsegm) {
       ready: true,
       geom: g,
       nfaces: numGeometryFaces(g)
-   }
+   };
 }
 
 /** @summary Provides info about geo object, used for tooltip info
@@ -83219,15 +83213,15 @@ function createFrustum(source) {
    frustum.setFromProjectionMatrix(source);
 
    frustum.corners = new Float32Array([
-       1,  1,  1,
-       1,  1, -1,
-       1, -1,  1,
+       1, 1, 1,
+       1, 1, -1,
+       1, -1, 1,
        1, -1, -1,
-      -1,  1,  1,
-      -1,  1, -1,
-      -1, -1,  1,
+      -1, 1, 1,
+      -1, 1, -1,
+      -1, -1, 1,
       -1, -1, -1,
-       0,  0,  0 // also check center of the shape
+       0, 0, 0 // also check center of the shape
    ]);
 
    frustum.test = new Vector3(0, 0, 0);
@@ -84026,7 +84020,7 @@ class ClonedNodes {
    setDefaultColors(on) {
       this.use_dflt_colors = on;
       if (this.use_dflt_colors && !this.dflt_table) {
-         const dflt = { kWhite: 0,  kBlack: 1, kGray: 920,
+         const dflt = { kWhite: 0, kBlack: 1, kGray: 920,
                       kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kCyan: 432,
                       kOrange: 800, kSpring: 820, kTeal: 840, kAzure: 860, kViolet: 880, kPink: 900 },
 
@@ -84762,11 +84756,11 @@ function createFlippedGeom(geom) {
 
    // we should swap second and third point in each face
    for (let n = 0, shift = 0; n < len; n += 3) {
-      newpos[n]   = pos[n+shift];
+      newpos[n] = pos[n+shift];
       newpos[n+1] = pos[n+1+shift];
       newpos[n+2] = -pos[n+2+shift];
 
-      newnorm[n]   = norm[n+shift];
+      newnorm[n] = norm[n+shift];
       newnorm[n+1] = norm[n+1+shift];
       newnorm[n+2] = -norm[n+2+shift];
 
@@ -87542,7 +87536,7 @@ function buildCompositeVolume(comp, maxlvl, side) {
   * @return {Object} with scene, renderer and other attributes
   * @private */
 function getHistPainter3DCfg(painter) {
-   const main =  painter?.getFramePainter();
+   const main = painter?.getFramePainter();
    if (painter?.mode3d && isFunc(main?.create3DScene) && main?.renderer) {
       let scale_x = 1, scale_y = 1, scale_z = 1,
           offset_x = 0, offset_y = 0, offset_z = 0;
@@ -88180,12 +88174,12 @@ class TGeoPainter extends ObjectPainter {
    updateVRControllersList() {
       const gamepads = navigator.getGamepads && navigator.getGamepads();
       // Has controller list changed?
-      if (this.vrControllers && (gamepads.length === this.vrControllers.length))  return;
+      if (this.vrControllers && (gamepads.length === this.vrControllers.length)) return;
       // Hide meshes.
       this._controllersMeshes.forEach(mesh => { mesh.visible = false; });
       this._vrControllers = [];
       for (let i = 0; i < gamepads.length; ++i) {
-         if (!gamepads[i] || !gamepads[i].pose)  continue;
+         if (!gamepads[i] || !gamepads[i].pose) continue;
          this._vrControllers.push({
             gamepad: gamepads[i],
             mesh: this._controllersMeshes[i]
@@ -88206,7 +88200,7 @@ class TGeoPainter extends ObjectPainter {
          intersects = intersects.concat(this._controls.getOriginDirectionIntersects(origin, end));
       }
       // Remove duplicates.
-      intersects = intersects.filter(function (item, pos) { return intersects.indexOf(item) === pos; });
+      intersects = intersects.filter((item, pos) => { return intersects.indexOf(item) === pos; });
       this._controls.processMouseMove(intersects);
    }
 
@@ -90391,7 +90385,7 @@ class TGeoPainter extends ObjectPainter {
             midx = (box.max.x + box.min.x)/2,
             midy = (box.max.y + box.min.y)/2,
             midz = (box.max.z + box.min.z)/2,
-            more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar')  ? 0.2 : 0.1;
+            more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar') ? 0.2 : 0.1;
 
       if (this._scene_size && !force) {
          const d = this._scene_size, test = (v1, v2, scale) => {
@@ -90557,7 +90551,7 @@ class TGeoPainter extends ObjectPainter {
          } else {
             // screen heigher than actual geometry
             const m = (this._camera.top + this._camera.bottom) / 2;
-            this._camera.top  = m + szx / screen_ratio / 2;
+            this._camera.top = m + szx / screen_ratio / 2;
             this._camera.bottom = m - szx / screen_ratio / 2;
          }
       }
@@ -91038,7 +91032,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < npoints-1; ++k, pos+=6) {
-         buf[pos]   = projx ? projv : track.fPoints[k*4];
+         buf[pos] = projx ? projv : track.fPoints[k*4];
          buf[pos+1] = projy ? projv : track.fPoints[k*4+1];
          buf[pos+2] = projz ? projv : track.fPoints[k*4+2];
          buf[pos+3] = projx ? projv : track.fPoints[k*4+4];
@@ -91077,7 +91071,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < npoints-1; ++k, pos += 6) {
-         buf[pos]   = projx ? projv : fP[k*3];
+         buf[pos] = projx ? projv : fP[k*3];
          buf[pos+1] = projy ? projv : fP[k*3+1];
          buf[pos+2] = projz ? projv : fP[k*3+2];
          buf[pos+3] = projx ? projv : fP[k*3+3];
@@ -91111,7 +91105,7 @@ class TGeoPainter extends ObjectPainter {
             projz = (this.ctrl.project === 'z');
 
       for (let k = 0, pos = 0; k < track.fN-1; ++k, pos+=6) {
-         buf[pos]   = projx ? projv : track.fP[k*3];
+         buf[pos] = projx ? projv : track.fP[k*3];
          buf[pos+1] = projy ? projv : track.fP[k*3+1];
          buf[pos+2] = projz ? projv : track.fP[k*3+2];
          buf[pos+3] = projx ? projv : track.fP[k*3+3];
@@ -93103,7 +93097,7 @@ function createItem(node, obj, name) {
    else if (obj._typename === 'TGeoMixture')
       sub._icon = 'img_geomixture';
    else if ((obj._typename.indexOf(clTGeoNode) === 0) && obj.fVolume) {
-      sub._title = 'node:'  + obj._typename;
+      sub._title = 'node:' + obj._typename;
       if (obj.fTitle) sub._title += ' ' + obj.fTitle;
       volume = obj.fVolume;
    } else if (obj._typename.indexOf(clTGeoVolume) === 0)
@@ -93153,7 +93147,7 @@ function createItem(node, obj, name) {
          sub._icon += provideVisStyle(obj);
 
       sub._menu = provideMenu;
-      sub._icon_click  = browserIconClick;
+      sub._icon_click = browserIconClick;
    }
 
    if (!node._childs) node._childs = [];
@@ -93190,7 +93184,7 @@ async function drawDummy3DGeom(painter) {
                   fTrans: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false }),
          pp = painter.getPadPainter(),
-         opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' +  pp.pad.fFillColor : '';
+         opt = (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' + pp.pad.fFillColor : '';
 
    return TGeoPainter.draw(painter.getDom(), obj, opt)
                      .then(geop => { geop._dummy = true; return geop; });
@@ -94663,7 +94657,7 @@ function addClassMethods(clname, streamer) {
    if (methods) {
       for (const key in methods) {
          if (isFunc(methods[key]) || (key.indexOf('_') === 0))
-            streamer.push({ name: key, method: methods[key], func(buf, obj) { obj[this.name] = this.method; } });
+            streamer.push({ name: key, method: methods[key], func(_buf, obj) { obj[this.name] = this.method; } });
       }
    }
 
@@ -97044,7 +97038,7 @@ class TNodejsFile extends TFile {
          let cnt = 0;
 
          // eslint-disable-next-line n/handle-callback-err
-         const readfunc = (err, bytesRead, buf) => {
+         const readfunc = (_err, _bytesRead, buf) => {
             const res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
             if (place.length === 2) return resolve(res);
             blobs.push(res);
@@ -97563,7 +97557,7 @@ function getNumBranches(tree) {
 class TDrawVariable {
 
    /** @summary constructor */
-   constructor (globals) {
+   constructor(globals) {
       this.globals = globals;
 
       this.code = '';
@@ -100596,7 +100590,7 @@ async function makeSVG(args) {
 internals.addDrawFunc = addDrawFunc;
 
 function assignPadPainterDraw(PadPainterClass) {
-   PadPainterClass.prototype.drawObject = async (...args) =>
+   PadPainterClass.prototype.drawObject = (...args) =>
       draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err.stack ?? 'uncknown place'}`); return null; });
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }
@@ -100710,7 +100704,9 @@ async function drawList(dom, lst, opt) {
    if (!lst || !lst.arr)
       return null;
 
-   const handle = { dom, lst, opt, indx: -1, painter: null,
+   const handle = {
+     dom, lst, opt,
+     indx: -1, painter: null,
      draw_next() {
         while (++this.indx < this.lst.arr.length) {
            const item = this.lst.arr[this.indx],
@@ -100828,7 +100824,7 @@ function listHierarchy(folder, lst) {
             _obj: null
           };
       } else {
-         item =  {
+         item = {
             _name: obj.fName || obj.name,
             _kind: prROOT + obj._typename,
             _title: `${obj.fTitle || ''} type:${obj._typename}`,
@@ -100898,7 +100894,7 @@ function keysHierarchy(folder, keys, file, dirname) {
             // remove cycle number - we have already directory
             item._name = key.fName;
             keysHierarchy(item, dir.fKeys, file, dirname + key.fName + '/');
-         } else  {
+         } else {
             item._more = true;
             item._expand = function(node, obj) {
                // one can get expand call from child objects - ignore them
@@ -101051,7 +101047,7 @@ function objectHierarchy(top, obj, args = undefined) {
 
       const item = { _parent: top, _name: key };
 
-      if (compress) { lastitem = item;  lastkey = key; lastfield = fld; cnt = 0; }
+      if (compress) { lastitem = item; lastkey = key; lastfield = fld; cnt = 0; }
 
       if (fld === null) {
          item._value = item._title = 'null';
@@ -101120,7 +101116,7 @@ function objectHierarchy(top, obj, args = undefined) {
                   default:
                      if (isRootCollection(fld) && isObject(fld.arr)) {
                         item._value = fld.arr.length ? '[...]' : '[]';
-                        item._title += ', size:'  + fld.arr.length;
+                        item._title += ', size:' + fld.arr.length;
                         if (fld.arr.length > 0) item._more = true;
                      } else {
                         item._more = true;
@@ -101393,7 +101389,7 @@ class HierarchyPainter extends BasePainter {
 
        folder = {
          _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path ' : '')  + file.fFullURL,
+         _title: (file.fTitle ? file.fTitle + ', path ' : '') + file.fFullURL,
          _kind: kindTFile,
          _file: file,
          _fullurl: file.fFullURL,
@@ -102393,7 +102389,7 @@ class HierarchyPainter extends BasePainter {
                    item = top ? top.getItemName() : null, opt;
 
                if (item)
-                  opt  = top.getDrawOpt() || top.getItemDrawOpt();
+                  opt = top.getDrawOpt() || top.getItemDrawOpt();
                 else {
                   top = null;
                   dummy.forEachPainter(p => {
@@ -103235,8 +103231,11 @@ class HierarchyPainter extends BasePainter {
                              return res;
                           });
          };
-         if (!this.h) this.h = h1; else
-         if (this.h._kind === 'TopFolder') this.h._childs.push(h1); else {
+         if (!this.h)
+            this.h = h1;
+         else if (this.h._kind === 'TopFolder')
+            this.h._childs.push(h1);
+         else {
             const h0 = this.h, topname = ('_jsonfile' in h0) ? 'Files' : 'Items';
             this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1] };
          }
@@ -105302,7 +105301,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          if (d.check('|>')) { res.Errors = 1; res.Ends = 3; }
          if (d.check('>')) { res.Errors = 1; res.Ends = 4; }
          if (d.check('0')) { res.Mark = 1; res.Errors = 1; res.OutRange = 1; }
-         if (d.check('1'))  if (res.Bar === 1) res.Bar = 2;
+         if (d.check('1')) if (res.Bar === 1) res.Bar = 2;
          if (d.check('2')) { res.Rect = 1; res.Errors = 0; }
          if (d.check('3')) { res.EF = 1; res.Errors = 0; }
          if (d.check('4')) { res.EF = 2; res.Errors = 0; }
@@ -105417,7 +105416,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (!this.bins) return;
       const gr = this.getGraph();
       this.bins.forEach(bin => {
-         bin.eylow  = gr.fEyL[nblock][bin.indx];
+         bin.eylow = gr.fEyL[nblock][bin.indx];
          bin.eyhigh = gr.fEyH[nblock][bin.indx];
       });
    }
@@ -105448,15 +105447,15 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                bin.eylow = bin.eyhigh = gr.fEY[p];
                break;
             case 2:
-               bin.exlow  = gr.fExL[p];
+               bin.exlow = gr.fExL[p];
                bin.exhigh = gr.fExH[p];
-               bin.eylow  = gr.fEyL[0][p];
+               bin.eylow = gr.fEyL[0][p];
                bin.eyhigh = gr.fEyH[0][p];
                break;
             case 3:
-               bin.exlow  = gr.fEXlow[p];
+               bin.exlow = gr.fEXlow[p];
                bin.exhigh = gr.fEXhigh[p];
-               bin.eylow  = gr.fEYlow[p];
+               bin.eylow = gr.fEYlow[p];
                bin.eyhigh = gr.fEYhigh[p];
                break;
          }
@@ -105950,9 +105949,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
              .style('fill', 'none')
              .attr('d', d => {
                 d.error = true;
-                return ((d.exlow > 0)  ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
+                return ((d.exlow > 0) ? mainLine(d.grx0+lw, d.grdx0) + vleft : '') +
                        ((d.exhigh > 0) ? mainLine(d.grx2-lw, d.grdx2) + vright : '') +
-                       ((d.eylow > 0)  ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
+                       ((d.eylow > 0) ? mainLine(d.grdy0, d.gry0-lw) + hbottom : '') +
                        ((d.eyhigh > 0) ? mainLine(d.grdy2, d.gry2+lw) + htop : '');
               });
       }
@@ -106806,7 +106805,7 @@ async function drawPolyMarker3D$1() {
    if (!isObject(fp) || !fp.grx || !fp.gry || !fp.grz)
       return this;
 
-   const poly = this.getObject(),  sizelimit = 50000, fP = poly.fP;
+   const poly = this.getObject(), sizelimit = 50000, fP = poly.fP;
    let step = 1, numselect = 0;
 
    for (let i = 0; i < fP.length; i += 3) {
@@ -106862,7 +106861,7 @@ async function drawPolyMarker3D$1() {
              gry = p.gry(this.poly.fP[indx+1]),
              grz = p.grz(this.poly.fP[indx+2]);
 
-         return  {
+         return {
             x1: grx - this.scale0,
             x2: grx + this.scale0,
             y1: gry - this.scale0,
@@ -108082,29 +108081,29 @@ function TMath_Sort(np, values, indicies, down) {
 class TGraphDelaunay {
 
    constructor(g) {
-      this.fGraph2D      = g;
-      this.fX            = g.fX;
-      this.fY            = g.fY;
-      this.fZ            = g.fZ;
-      this.fNpoints      = g.fNpoints;
-      this.fZout         = 0.0;
-      this.fNdt          = 0;
-      this.fNhull        = 0;
-      this.fHullPoints   = null;
-      this.fXN           = null;
-      this.fYN           = null;
-      this.fOrder        = null;
-      this.fDist         = null;
-      this.fPTried       = null;
-      this.fNTried       = null;
-      this.fMTried       = null;
-      this.fInit         = false;
-      this.fXNmin        = 0.0;
-      this.fXNmax        = 0.0;
-      this.fYNmin        = 0.0;
-      this.fYNmax        = 0.0;
-      this.fXoffset      = 0.0;
-      this.fYoffset      = 0.0;
+      this.fGraph2D = g;
+      this.fX = g.fX;
+      this.fY = g.fY;
+      this.fZ = g.fZ;
+      this.fNpoints = g.fNpoints;
+      this.fZout = 0.0;
+      this.fNdt = 0;
+      this.fNhull = 0;
+      this.fHullPoints = null;
+      this.fXN = null;
+      this.fYN = null;
+      this.fOrder = null;
+      this.fDist = null;
+      this.fPTried = null;
+      this.fNTried = null;
+      this.fMTried = null;
+      this.fInit = false;
+      this.fXNmin = 0.0;
+      this.fXNmax = 0.0;
+      this.fYNmin = 0.0;
+      this.fYNmax = 0.0;
+      this.fXoffset = 0.0;
+      this.fYoffset = 0.0;
       this.fXScaleFactor = 0.0;
       this.fYScaleFactor = 0.0;
 
@@ -108148,16 +108147,16 @@ class TGraphDelaunay {
             ymax = getMax(this.fGraph2D.fY),
             xmin = getMin(this.fGraph2D.fX),
             ymin = getMin(this.fGraph2D.fY);
-      this.fXoffset      = -(xmax+xmin)/2;
-      this.fYoffset      = -(ymax+ymin)/2;
-      this.fXScaleFactor  = 1/(xmax-xmin);
-      this.fYScaleFactor  = 1/(ymax-ymin);
-      this.fXNmax        = (xmax+this.fXoffset)*this.fXScaleFactor;
-      this.fXNmin        = (xmin+this.fXoffset)*this.fXScaleFactor;
-      this.fYNmax        = (ymax+this.fYoffset)*this.fYScaleFactor;
-      this.fYNmin        = (ymin+this.fYoffset)*this.fYScaleFactor;
-      this.fXN           = new Array(this.fNpoints+1);
-      this.fYN           = new Array(this.fNpoints+1);
+      this.fXoffset = -(xmax+xmin)/2;
+      this.fYoffset = -(ymax+ymin)/2;
+      this.fXScaleFactor = 1/(xmax-xmin);
+      this.fYScaleFactor = 1/(ymax-ymin);
+      this.fXNmax = (xmax+this.fXoffset)*this.fXScaleFactor;
+      this.fXNmin = (xmin+this.fXoffset)*this.fXScaleFactor;
+      this.fYNmax = (ymax+this.fYoffset)*this.fYScaleFactor;
+      this.fYNmin = (ymin+this.fYoffset)*this.fYScaleFactor;
+      this.fXN = new Array(this.fNpoints+1);
+      this.fYN = new Array(this.fNpoints+1);
       for (let n = 0; n < this.fNpoints; n++) {
          this.fXN[n+1] = (this.fX[n]+this.fXoffset)*this.fXScaleFactor;
          this.fYN[n+1] = (this.fY[n]+this.fYoffset)*this.fYScaleFactor;
@@ -108166,9 +108165,9 @@ class TGraphDelaunay {
       // If needed, creates the arrays to hold the Delaunay triangles.
       // A maximum number of 2*fNpoints is guessed. If more triangles will be
       // find, FillIt will automatically enlarge these arrays.
-      this.fPTried    = [];
-      this.fNTried    = [];
-      this.fMTried    = [];
+      this.fPTried = [];
+      this.fNTried = [];
+      this.fMTried = [];
    }
 
 
@@ -108266,9 +108265,9 @@ class TGraphDelaunay {
          ma = this.fMTried[t1-1];
 
          // produce three integers which will represent the three sides
-         s[0]  = false;
-         s[1]  = false;
-         s[2]  = false;
+         s[0] = false;
+         s[1] = false;
+         s[2] = false;
          // loop over all other Delaunay triangles
          for (t2=1; t2<=this.fNdt; t2++) {
             if (t2 !== t1) {
@@ -108322,13 +108321,13 @@ class TGraphDelaunay {
                sy = this.fYN[p1]-this.fYN[p2];
                // (nx,ny) will be the normal to the side, but don't know if it's
                // pointing in or out yet
-               nx    = sy;
-               ny    = -sx;
-               nn    = Math.sqrt(nx*nx+ny*ny);
-               nx    = nx/nn;
-               ny    = ny/nn;
-               mx    = this.fXN[p3]-xm;
-               my    = this.fYN[p3]-ym;
+               nx = sy;
+               ny = -sx;
+               nn = Math.sqrt(nx*nx+ny*ny);
+               nx = nx/nn;
+               ny = ny/nn;
+               mx = this.fXN[p3]-xm;
+               my = this.fYN[p3]-ym;
                mdotn = mx*nx+my*ny;
                if (mdotn > 0) {
                   // (nx,ny) is pointing in, we want it pointing out
@@ -108338,7 +108337,7 @@ class TGraphDelaunay {
                // increase/decrease xm and ym a little to produce a point
                // just outside the triangle (ensuring that the amount added will
                // be large enough such that it won't be lost in rounding errors)
-               a  = Math.abs(Math.max(alittlebit*xm, alittlebit*ym));
+               a = Math.abs(Math.max(alittlebit*xm, alittlebit*ym));
                xx = xm+nx*a;
                yy = ym+ny*a;
                // try and find a new Delaunay triangle for this point
@@ -108414,10 +108413,10 @@ class TGraphDelaunay {
 
 
       //  Get the angle n1-e-n2 and set it to lastdphi
-      dx1  = xx-this.fXN[n1];
-      dy1  = yy-this.fYN[n1];
-      dx2  = xx-this.fXN[n2];
-      dy2  = yy-this.fYN[n2];
+      dx1 = xx-this.fXN[n1];
+      dy1 = yy-this.fYN[n1];
+      dx2 = xx-this.fXN[n2];
+      dy2 = yy-this.fYN[n2];
       phi1 = Math.atan2(dy1, dx1);
       phi2 = Math.atan2(dy2, dx2);
       dphi = (phi1-phi2)-(Math.floor((phi1-phi2)/(Math.PI*2))*Math.PI*2);
@@ -108454,11 +108453,11 @@ class TGraphDelaunay {
                   vNv1 = (dx1*dx3+dy1*dy3)/Math.sqrt(dx1*dx1+dy1*dy1);
                   vNv2 = (dx2*dx3+dy2*dy3)/Math.sqrt(dx2*dx2+dy2*dy2);
                   if (vNv1 > vNv2) {
-                     n1   = m;
+                     n1 = m;
                      phi1 = Math.atan2(dy3, dx3);
                      phi2 = Math.atan2(dy2, dx2);
                   } else {
-                     n2   = m;
+                     n2 = m;
                      phi1 = Math.atan2(dy1, dx1);
                      phi2 = Math.atan2(dy3, dx3);
                   }
@@ -108502,9 +108501,9 @@ class TGraphDelaunay {
             f1 = this.fZ[t1-1],
             f2 = this.fZ[t2-1],
             f3 = this.fZ[t3-1],
-            u  = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2)),
-            v  = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2)),
-            w  = f1-u*x1-v*y1;
+            u = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2)),
+            v = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2)),
+            w = f1-u*x1-v*y1;
 
       return u*this.fXN[e] + v*this.fYN[e] + w;
    }
@@ -108530,7 +108529,7 @@ class TGraphDelaunay {
       // create vectors needed for sorting
       if (!this.fOrder) {
          this.fOrder = new Array(this.fNpoints);
-         this.fDist  = new Array(this.fNpoints);
+         this.fDist = new Array(this.fNpoints);
       }
 
       // the input point will be point zero.
@@ -108694,7 +108693,7 @@ class TGraphDelaunay {
    ///            Error("Interpolate", "Should not get to here");
                   // may as well soldier on
                   // SL: initialize before try to find better values
-                  f  = m;
+                  f = m;
                   o1 = p;
                   o2 = n;
 
@@ -108727,15 +108726,15 @@ class TGraphDelaunay {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f  = m;
+                           f = m;
                            o1 = p;
                            o2 = n;
                         } else if (l === 2) {
-                           f  = p;
+                           f = p;
                            o1 = n;
                            o2 = m;
                         } else {
-                           f  = n;
+                           f = n;
                            o1 = m;
                            o2 = p;
                         }
@@ -108746,12 +108745,12 @@ class TGraphDelaunay {
                   // this is not a valid quadrilateral if the diagonals don't cross,
                   // check that points f and z lie on opposite side of the line o1-o2,
                   // this is true if the angle f-o1-z is greater than o2-o1-z and o2-o1-f
-                  cfo1k  = ((this.fXN[f]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
+                  cfo1k = ((this.fXN[f]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
                            Math.sqrt(((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))*
                            ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
                   co2o1k = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
                            Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
-                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])  + (this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
+                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1]) + (this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
                   co2o1f = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))/
                            Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
                            ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1]) + (this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1])));
@@ -108762,12 +108761,12 @@ class TGraphDelaunay {
                   // calculate the 2 internal angles of the quadrangle formed by joining
                   // points z and f to points o1 and o2, at z and f. If they sum to less
                   // than 180 degrees then z lies outside the circle
-                  dko1    = Math.sqrt((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]));
-                  dko2    = Math.sqrt((this.fXN[z]-this.fXN[o2])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o2])*(this.fYN[z]-this.fYN[o2]));
-                  dfo1    = Math.sqrt((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]));
-                  dfo2    = Math.sqrt((this.fXN[f]-this.fXN[o2])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o2])*(this.fYN[f]-this.fYN[o2]));
-                  c1      = ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o2]))/dko1/dko2;
-                  c2      = ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o2]))/dfo1/dfo2;
+                  dko1 = Math.sqrt((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]));
+                  dko2 = Math.sqrt((this.fXN[z]-this.fXN[o2])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o2])*(this.fYN[z]-this.fYN[o2]));
+                  dfo1 = Math.sqrt((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]));
+                  dfo2 = Math.sqrt((this.fXN[f]-this.fXN[o2])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o2])*(this.fYN[f]-this.fYN[o2]));
+                  c1 = ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o2]))/dko1/dko2;
+                  c2 = ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o2]))/dfo1/dfo2;
                   sin_sum = c1*Math.sqrt(1-c2*c2)+c2*Math.sqrt(1-c1*c1);
 
                   // sin_sum doesn't always come out as zero when it should do.
@@ -108783,8 +108782,8 @@ class TGraphDelaunay {
                      // a polygon whose points lie on a circle into constituent triangles). Make
                      // a note of the additional point number.
                      ndegen++;
-                     degen   = z;
-                     fdegen  = f;
+                     degen = z;
+                     fdegen = f;
                      o1degen = o1;
                      o2degen = o2;
                   }
@@ -108809,8 +108808,8 @@ class TGraphDelaunay {
                   // (d<->f or o1<->o2) to form valid Delaunay triangles. Choose diagonal
                   // with highest average z-value. Whichever we choose we will have
                   // verified two triangles as good and two as bad, only note the good ones
-                  d  = degen;
-                  f  = fdegen;
+                  d = degen;
+                  f = fdegen;
                   o1 = o1degen;
                   o2 = o2degen;
                   if ((this.fZ[o1-1] + this.fZ[o2-1]) > (this.fZ[d-1] + this.fZ[f-1])) {
@@ -108861,7 +108860,7 @@ class TGraphDelaunay {
    /// (number of iterations) before abandoning the search
 
    SetMaxIter(n = 100000) {
-      this.fAllTri  = false;
+      this.fAllTri = false;
       this.fMaxIter = n;
    }
 
@@ -109048,7 +109047,7 @@ class TGraph2DPainter extends ObjectPainter {
             let use_triangle = true;
             for (let i = 0; i < 3; ++i) {
                const pnt = points[i] - 1;
-               coord.push(fp.grx(graph.fX[pnt]),  fp.gry(graph.fY[pnt]), main_grz(graph.fZ[pnt]));
+               coord.push(fp.grx(graph.fX[pnt]), fp.gry(graph.fY[pnt]), main_grz(graph.fZ[pnt]));
 
                 if ((graph.fX[pnt] < fp.scale_xmin) || (graph.fX[pnt] > fp.scale_xmax) ||
                     (graph.fY[pnt] < fp.scale_ymin) || (graph.fY[pnt] > fp.scale_ymax))
@@ -109180,21 +109179,21 @@ class TGraph2DPainter extends ObjectPainter {
             if (pnts) pnts.addPoint(x, y, z);
 
             if (err) {
-               err[ierr]   = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
+               err[ierr] = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
                err[ierr+1] = y;
                err[ierr+2] = z;
                err[ierr+3] = fp.grx(graph.fX[i] + (asymm ? graph.fEXhigh[i] : graph.fEX[i]));
                err[ierr+4] = y;
                err[ierr+5] = z;
                ierr+=6;
-               err[ierr]   = x;
+               err[ierr] = x;
                err[ierr+1] = fp.gry(graph.fY[i] - (asymm ? graph.fEYlow[i] : graph.fEY[i]));
                err[ierr+2] = z;
                err[ierr+3] = x;
                err[ierr+4] = fp.gry(graph.fY[i] + (asymm ? graph.fEYhigh[i] : graph.fEY[i]));
                err[ierr+5] = z;
                ierr+=6;
-               err[ierr]   = x;
+               err[ierr] = x;
                err[ierr+1] = y;
                err[ierr+2] = fp.grz(graph.fZ[i] - (asymm ? graph.fEZlow[i] : graph.fEZ[i]));
                err[ierr+3] = x;
@@ -110247,13 +110246,13 @@ produceTAxisLogScale: produceTAxisLogScale,
 proivdeEvalPar: proivdeEvalPar
 });
 
-const kIsBayesian       = BIT(14),  // Bayesian statistics are used
-      kPosteriorMode    = BIT(15),  // Use posterior mean for best estimate (Bayesian statistics)
+const kIsBayesian = BIT(14),  // Bayesian statistics are used
+      kPosteriorMode = BIT(15),  // Use posterior mean for best estimate (Bayesian statistics)
  //   kShortestInterval = BIT(16),  // Use shortest interval, not implemented - too complicated
-      kUseBinPrior      = BIT(17),  // Use a different prior for each bin
-      kUseWeights       = BIT(18),  // Use weights
-      getBetaAlpha      = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].first : obj.fBeta_alpha,
-      getBetaBeta       = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].second : obj.fBeta_beta;
+      kUseBinPrior = BIT(17),  // Use a different prior for each bin
+      kUseWeights = BIT(18),  // Use weights
+      getBetaAlpha = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].first : obj.fBeta_alpha,
+      getBetaBeta = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].second : obj.fBeta_beta;
 
 /**
  * @summary Painter for TEfficiency object
@@ -110281,7 +110280,7 @@ class TEfficiencyPainter extends ObjectPainter {
       if (obj.TestBit(kIsBayesian)) {
          // parameters for the beta prior distribution
          const alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha,
-               beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
+               beta = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin) : obj.fBeta_beta;
 
          let aa, bb;
          if (obj.TestBit(kUseWeights)) {
@@ -110316,7 +110315,7 @@ class TEfficiencyPainter extends ObjectPainter {
       let alpha = 0, beta = 0;
       if (obj.TestBit(kIsBayesian)) {
          alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha;
-         beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
+         beta = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin) : obj.fBeta_beta;
       }
 
       return value - this.fBoundary(total, passed, obj.fConfLevel, false, alpha, beta);
@@ -110329,7 +110328,7 @@ class TEfficiencyPainter extends ObjectPainter {
       let alpha = 0, beta = 0;
       if (obj.TestBit(kIsBayesian)) {
          alpha = obj.TestBit(kUseBinPrior) ? getBetaAlpha(obj, bin) : obj.fBeta_alpha;
-         beta  = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin)  : obj.fBeta_beta;
+         beta = obj.TestBit(kUseBinPrior) ? getBetaBeta(obj, bin) : obj.fBeta_beta;
       }
 
       return this.fBoundary(total, passed, obj.fConfLevel, true, alpha, beta) - value;
@@ -110811,7 +110810,7 @@ class TRatioPlotPainter extends ObjectPainter {
             });
          }
 
-         return Promise.all(arr).then(() => low_fp.zoom(up_fp.scale_xmin,  up_fp.scale_xmax)).then(() => {
+         return Promise.all(arr).then(() => low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax)).then(() => {
             low_fp.o_zoom = low_fp.zoom;
             low_fp._ratio_up_fp = up_fp;
             low_fp._ratio_painter = this;
@@ -112322,7 +112321,7 @@ class TASImagePainter extends ObjectPainter {
          const r1 = (pal.fPoints[indx] - l) / (pal.fPoints[indx] - pal.fPoints[indx-1]),
                r2 = (l - pal.fPoints[indx-1]) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
 
-         rgba[lvl*4]   = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
+         rgba[lvl*4] = Math.min(255, Math.round((pal.fColorRed[indx-1] * r1 + pal.fColorRed[indx] * r2) / 256));
          rgba[lvl*4+1] = Math.min(255, Math.round((pal.fColorGreen[indx-1] * r1 + pal.fColorGreen[indx] * r2) / 256));
          rgba[lvl*4+2] = Math.min(255, Math.round((pal.fColorBlue[indx-1] * r1 + pal.fColorBlue[indx] * r2) / 256));
          rgba[lvl*4+3] = Math.min(255, Math.round((pal.fColorAlpha[indx-1] * r1 + pal.fColorAlpha[indx] * r2) / 256));
@@ -112579,7 +112578,7 @@ class TASImagePainter extends ObjectPainter {
             fp.setAxesRanges(create$1(clTAxis), 0, 1, create$1(clTAxis), 0, 1, null, 0, 0);
             fp.createXY({ ndim: 2, check_pad_range: false });
             return fp.addInteractivity();
-         })
+         });
       });
    }
 
@@ -112883,13 +112882,13 @@ class RObjectPainter extends ObjectPainter {
 
       const pp = this.getPadPainter(),
             rfont = pp?._dfltRFont || { fFamily: 'Arial', fStyle: '', fWeight: '' },
-            text_angle  = this.v7EvalAttr(name + '_angle', 0),
-            text_align  = this.v7EvalAttr(name + '_align', dflts.align || 'none'),
-            text_color  = this.v7EvalColor(name + '_color', dflts.color || 'none'),
+            text_angle = this.v7EvalAttr(name + '_angle', 0),
+            text_align = this.v7EvalAttr(name + '_align', dflts.align || 'none'),
+            text_color = this.v7EvalColor(name + '_color', dflts.color || 'none'),
             font_family = this.v7EvalAttr(name + '_font_family', rfont.fFamily || 'Arial'),
-            font_style  = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
+            font_style = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
             font_weight = this.v7EvalAttr(name + '_font_weight', rfont.fWeight || '');
-       let text_size   = this.v7EvalAttr(name + '_size', dflts.size || 12);
+       let text_size = this.v7EvalAttr(name + '_size', dflts.size || 12);
 
        if (isStr(text_size)) text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
@@ -112911,7 +112910,7 @@ class RObjectPainter extends ObjectPainter {
       const color = this.v7EvalColor(prefix + 'color', ''),
             pattern = this.v7EvalAttr(prefix + 'style', 0);
 
-      this.createAttFill({ pattern, color,  color_as_svg: true });
+      this.createAttFill({ pattern, color, color_as_svg: true });
    }
 
    /** @summary Create this.lineatt object based on v7 line attributes */
@@ -113736,8 +113735,7 @@ class RAxisPainter extends RObjectPainter {
                          align: this.vertical ? ((side < 0) ? 30 : 10) : ((this.has_obstacle ^ (side < 0)) ? 13 : 10),
                          latex: 1,
                          text: '#times' + this.formatExp(10, this.order),
-                         draw_g: label_g
-         });
+                         draw_g: label_g });
       }
 
       return this.finishTextDrawing(label_g).then(() => {
@@ -113978,13 +113976,13 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Redraw axis, used in standalone mode for RAxisDrawable */
    redraw() {
       const drawable = this.getObject(),
-            pp   = this.getPadPainter(),
-            pos  = pp.getCoordinate(drawable.fPos),
+            pp = this.getPadPainter(),
+            pos = pp.getCoordinate(drawable.fPos),
             reverse = this.v7EvalAttr('reverse', false),
             labels_len = drawable.fLabels.length,
             min = (labels_len > 0) ? 0 : this.v7EvalAttr('min', 0),
             max = (labels_len > 0) ? labels_len : this.v7EvalAttr('max', 100);
-      let len  = pp.getPadLength(drawable.fVertical, drawable.fLength);
+      let len = pp.getPadLength(drawable.fVertical, drawable.fLength);
 
       // in vertical direction axis drawn in negative direction
       if (drawable.fVertical) len -= pp.getPadHeight();
@@ -114876,7 +114874,7 @@ class RFramePainter extends RObjectPainter {
          transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
-      }
+      };
    }
 
    /** @summary Returns palette associated with frame */
@@ -115097,7 +115095,7 @@ class RFramePainter extends RObjectPainter {
          });
       }
 
-      if (typeof dox === 'undefined')  dox = doy = doz = true;  else
+      if (typeof dox === 'undefined') dox = doy = doz = true; else
       if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
@@ -115119,7 +115117,7 @@ class RFramePainter extends RObjectPainter {
          return;
       }
       if (!axis || axis === 'any')
-         return this.zoom_changed_x || this.zoom_changed_y  || this.zoom_changed_z;
+         return this.zoom_changed_x || this.zoom_changed_y || this.zoom_changed_z;
 
       if ((axis !== 'x') && (axis !== 'y') && (axis !== 'z')) return;
 
@@ -115397,7 +115395,7 @@ class RPadPainter extends RObjectPainter {
          y: this._pad_y || 0,
          width: this.getPadWidth(),
          height: this.getPadHeight()
-      }
+      };
    }
 
    /** @summary Returns frame coordiantes - also when frame is not drawn */
@@ -115474,15 +115472,15 @@ class RPadPainter extends RObjectPainter {
       if (!this.fDfltPalette) {
          this.fDfltPalette = {
             _typename: `${nsREX}RPalette`,
-            fColors: [{ fOrdinal: 0,     fColor: { fColor: 'rgb(53, 42, 135)' } },
+            fColors: [{ fOrdinal: 0, fColor: { fColor: 'rgb(53, 42, 135)' } },
                       { fOrdinal: 0.125, fColor: { fColor: 'rgb(15, 92, 221)' } },
-                      { fOrdinal: 0.25,  fColor: { fColor: 'rgb(20, 129, 214)' } },
+                      { fOrdinal: 0.25, fColor: { fColor: 'rgb(20, 129, 214)' } },
                       { fOrdinal: 0.375, fColor: { fColor: 'rgb(6, 164, 202)' } },
-                      { fOrdinal: 0.5,   fColor: { fColor: 'rgb(46, 183, 164)' } },
+                      { fOrdinal: 0.5, fColor: { fColor: 'rgb(46, 183, 164)' } },
                       { fOrdinal: 0.625, fColor: { fColor: 'rgb(135, 191, 119)' } },
-                      { fOrdinal: 0.75,  fColor: { fColor: 'rgb(209, 187, 89)' } },
+                      { fOrdinal: 0.75, fColor: { fColor: 'rgb(209, 187, 89)' } },
                       { fOrdinal: 0.875, fColor: { fColor: 'rgb(254, 200, 50)' } },
-                      { fOrdinal: 1,     fColor: { fColor: 'rgb(249, 251, 14)' } }],
+                      { fOrdinal: 1, fColor: { fColor: 'rgb(249, 251, 14)' } }],
              fInterpolate: true,
              fNormalized: true
          };
@@ -115548,7 +115546,7 @@ class RPadPainter extends RObjectPainter {
      * @private */
    setFastDrawing(w, h) {
       const was_fast = this._fast_drawing;
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h  < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
       if (was_fast !== this._fast_drawing)
          this.showPadButtons();
    }
@@ -115937,7 +115935,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Changes canvas dark mode
      * @private */
    changeDarkMode(mode) {
-      this.getCanvSvg().style('filter', (mode ?? settings.DarkMode)  ? 'invert(100%)' : null);
+      this.getCanvSvg().style('filter', (mode ?? settings.DarkMode) ? 'invert(100%)' : null);
    }
 
    /** @summary Fill pad context menu
@@ -116277,7 +116275,7 @@ class RPadPainter extends RObjectPainter {
 
       if (snap._typename === `${nsREX}TObjectDisplayItem`) {
          // identifier used in RObjectDrawable
-         const webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
+         const webSnapIds = { kNone: 0, kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
 
          if (snap.fKind === webSnapIds.kStyle) {
             Object.assign(gStyle, snap.fObject);
@@ -116800,7 +116798,7 @@ class RPadPainter extends RObjectPainter {
       return {
          x: this.getPadLength(false, pos.fHoriz, frame_painter),
          y: this.getPadLength(true, pos.fVert, frame_painter)
-      }
+      };
    }
 
    /** @summary Decode pad draw options */
@@ -118247,15 +118245,15 @@ function drawRFrameTitle(reason, drag) {
    if (!fp)
       return console.log('no frame painter - no title');
 
-   const rect         = fp.getFrameRect(),
-         fx           = rect.x,
-         fy           = rect.y,
-         fw           = rect.width,
+   const rect = fp.getFrameRect(),
+         fx = rect.x,
+         fy = rect.y,
+         fw = rect.width,
          // fh           = rect.height,
-         ph           = this.getPadPainter().getPadHeight(),
-         title        = this.getObject(),
-         title_width  = fw,
-         textFont     = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
+         ph = this.getPadPainter().getPadHeight(),
+         title = this.getObject(),
+         title_width = fw,
+         textFont = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
    let title_margin = this.v7EvalLength('margin', ph, 0.02),
        title_height = this.v7EvalLength('height', ph, 0.05);
 
@@ -118446,8 +118444,8 @@ registerMethods(`${nsREX}RPalette`, {
 /** @summary draw RFont object
   * @private */
 function drawRFont() {
-   const font   = this.getObject(),
-         svg    = this.getCanvSvg(),
+   const font = this.getObject(),
+         svg = this.getCanvSvg(),
          clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
    let defs = svg.selectChild('.canvas_defs');
 
@@ -118500,12 +118498,12 @@ ensureRCanvas: ensureRCanvas
 /** @summary draw RText object
   * @private */
 function drawText() {
-   const text      = this.getObject(),
-       pp        = this.getPadPainter(),
-       onframe   = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
-       clipping  = onframe ? this.v7EvalAttr('clipping', false) : false,
-       p         = pp.getCoordinate(text.fPos, onframe),
-       textFont  = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 });
+   const text = this.getObject(),
+       pp = this.getPadPainter(),
+       onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+       clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
+       p = pp.getCoordinate(text.fPos, onframe),
+       textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 });
 
    this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -118519,12 +118517,12 @@ function drawText() {
 /** @summary draw RLine object
   * @private */
 function drawLine() {
-    const line     = this.getObject(),
-        pp       = this.getPadPainter(),
-        onframe  = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+    const line = this.getObject(),
+        pp = this.getPadPainter(),
+        onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
         clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
-        p1       = pp.getCoordinate(line.fP1, onframe),
-        p2       = pp.getCoordinate(line.fP2, onframe);
+        p1 = pp.getCoordinate(line.fP1, onframe),
+        p2 = pp.getCoordinate(line.fP2, onframe);
 
     this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -118539,12 +118537,12 @@ function drawLine() {
 /** @summary draw RBox object
   * @private */
 function drawBox() {
-   const box      = this.getObject(),
-       pp       = this.getPadPainter(),
-       onframe  = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+   const box = this.getObject(),
+       pp = this.getPadPainter(),
+       onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
        clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
-       p1       = pp.getCoordinate(box.fP1, onframe),
-       p2       = pp.getCoordinate(box.fP2, onframe);
+       p1 = pp.getCoordinate(box.fP1, onframe),
+       p2 = pp.getCoordinate(box.fP2, onframe);
 
    this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -118562,11 +118560,11 @@ function drawBox() {
 /** @summary draw RMarker object
   * @private */
 function drawMarker() {
-    const marker   = this.getObject(),
-        pp       = this.getPadPainter(),
-        onframe  = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
+    const marker = this.getObject(),
+        pp = this.getPadPainter(),
+        onframe = this.v7EvalAttr('onFrame', false) ? pp.getFramePainter() : null,
         clipping = onframe ? this.v7EvalAttr('clipping', false) : false,
-        p        = pp.getCoordinate(marker.fP, onframe);
+        p = pp.getCoordinate(marker.fP, onframe);
 
     this.createG(clipping ? 'main_layer' : (onframe ? 'upper_layer' : false));
 
@@ -118611,15 +118609,15 @@ class RPalettePainter extends RObjectPainter {
       if (!framep)
          return console.log('no frame painter - no palette');
 
-      const zmin         = contour[0],
-            zmax         = contour[contour.length-1],
-            rect         = framep.getFrameRect(),
-            pad_width    = this.getPadPainter().getPadWidth(),
-            pad_height   = this.getPadPainter().getPadHeight(),
-            visible      = this.v7EvalAttr('visible', true),
-            vertical     = this.v7EvalAttr('vertical', true);
-      let gmin         = palette.full_min,
-          gmax         = palette.full_max,
+      const zmin = contour[0],
+            zmax = contour[contour.length-1],
+            rect = framep.getFrameRect(),
+            pad_width = this.getPadPainter().getPadWidth(),
+            pad_height = this.getPadPainter().getPadHeight(),
+            visible = this.v7EvalAttr('visible', true),
+            vertical = this.v7EvalAttr('vertical', true);
+      let gmin = palette.full_min,
+          gmax = palette.full_max,
           palette_x, palette_y, palette_width, palette_height;
 
       if (drag) {
@@ -118796,7 +118794,7 @@ class RPalettePainter extends RObjectPainter {
                if (!zoom_rect_visible && doing_zoom)
                   moving_labels = framep.z_handle.processLabelsMove('start', last_pos);
             }, 500);
-         },  assignHandlers = () => {
+         }, assignHandlers = () => {
             this.draw_g.selectAll('.axis_zoom, .axis_labels')
                        .on('mousedown', startRectSel)
                        .on('dblclick', () => framep.unzoom('z'));
@@ -118864,11 +118862,11 @@ class RPavePainter extends RObjectPainter {
       this.onFrame = fp && this.v7EvalAttr('onFrame', true);
       this.corner = this.v7EvalAttr('corner', ECorner.kTopRight);
 
-      const visible      = this.v7EvalAttr('visible', true),
-            offsetx      = this.v7EvalLength('offsetX', rect.width, 0.02),
-            offsety      = this.v7EvalLength('offsetY', rect.height, 0.02),
-            pave_width   = this.v7EvalLength('width', rect.width, 0.3),
-            pave_height  = this.v7EvalLength('height', rect.height, 0.3);
+      const visible = this.v7EvalAttr('visible', true),
+            offsetx = this.v7EvalLength('offsetX', rect.width, 0.02),
+            offsety = this.v7EvalLength('offsetY', rect.height, 0.02),
+            pave_width = this.v7EvalLength('width', rect.width, 0.3),
+            pave_height = this.v7EvalLength('height', rect.height, 0.3);
 
       this.createG();
 
@@ -118999,13 +118997,13 @@ class RLegendPainter extends RPavePainter {
 
    /** @summary draw RLegend content */
    async drawContent() {
-      const legend     = this.getObject(),
-            textFont   = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
-            width      = this.pave_width,
-            height     = this.pave_height,
-            pp         = this.getPadPainter();
+      const legend = this.getObject(),
+            textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
+            width = this.pave_width,
+            height = this.pave_height,
+            pp = this.getPadPainter();
 
-      let nlines     = legend.fEntries.length;
+      let nlines = legend.fEntries.length;
       if (legend.fTitle) nlines++;
 
       if (!nlines || !pp) return this;
@@ -119088,11 +119086,11 @@ class RPaveTextPainter extends RPavePainter {
 
    /** @summary draw RPaveText content */
    drawContent() {
-      const pavetext  = this.getObject(),
-            textFont  = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
-            width     = this.pave_width,
-            height    = this.pave_height,
-            nlines    = pavetext.fText.length;
+      const pavetext = this.getObject(),
+            textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
+            width = this.pave_width,
+            height = this.pave_height,
+            nlines = pavetext.fText.length;
 
       if (!nlines) return;
 
@@ -120676,7 +120674,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
                curry = gry;
             } else {
                if (draw_markers || show_text || show_line) {
-                  if (bestimin === bestimax)  draw_bin(bestimin);  else
+                  if (bestimin === bestimax) draw_bin(bestimin); else
                      if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
                         draw_bin(bestimax); draw_bin(bestimin);
                      }
@@ -120973,7 +120971,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
 
       if (findbin !== null) {
          // if bin on boundary found, check that x position is ok
-         if ((findbin === left) && (grx1 > pnt_x + gapx))  findbin = null; else
+         if ((findbin === left) && (grx1 > pnt_x + gapx)) findbin = null; else
          if ((findbin === right-1) && (grx2 < pnt_x - gapx)) findbin = null; else
          // if bars option used check that bar is not match
          if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx)) findbin = null; else
@@ -121048,7 +121046,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
       }
 
       if (res.changed) {
-         res.user_info = { obj: histo,  name: 'histo',
+         res.user_info = { obj: histo, name: 'histo',
                            bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
       }
@@ -121606,9 +121604,9 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
       if ((print_under > 0) || (print_over > 0)) {
          const m = data.matrix;
 
-         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | '  + m[7].toFixed(0));
-         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | '  + m[5].toFixed(0));
-         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | '  + m[2].toFixed(0));
+         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | ' + m[7].toFixed(0));
+         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | ' + m[5].toFixed(0));
+         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | ' + m[2].toFixed(0));
       }
 
       return true;
@@ -121770,7 +121768,7 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
       if (handle === null) handle = this.prepareDraw({ rounding: false });
 
       const histo = this.getHisto(),
-            textFont  = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
+            textFont = this.v7EvalFont('text', { size: 20, color: 'black', align: 22 }),
             text_offset = this.options.BarOffset || 0,
             text_g = this.draw_g.append('svg:g').attr('class', 'th2_text'),
             di = handle.stepi, dj = handle.stepj;
@@ -121845,10 +121843,10 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
                   yc = (handle.gry[j] + handle.gry[j+dj])/2;
                   dxn = scale_x*dx/dn;
                   dyn = scale_y*dy/dn;
-                  x1  = xc - dxn;
-                  x2  = xc + dxn;
-                  y1  = yc - dyn;
-                  y2  = yc + dyn;
+                  x1 = xc - dxn;
+                  x2 = xc + dxn;
+                  y1 = yc - dyn;
+                  y2 = yc + dyn;
                   dx = Math.round(x2-x1);
                   dy = Math.round(y2-y1);
 
@@ -121857,8 +121855,8 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(2/(dx**2 + dy**2));
-                        si  = Math.round(anr*(dx + dy));
-                        co  = Math.round(anr*(dx - dy));
+                        si = Math.round(anr*(dx + dy));
+                        co = Math.round(anr*(dx - dy));
                         if (si || co)
                            cmd += `m${-si},${co}` + makeLine(si, -co) + makeLine(-co, -si);
                      }
@@ -122811,19 +122809,19 @@ class RH3Painter extends RHistPainter {
 
          for (let k = 0, nn = -3; k < indicies.length; ++k) {
             const vert = vertices[indicies[k]];
-            single_bin_verts[k*3]   = vert.x-0.5;
+            single_bin_verts[k*3] = vert.x-0.5;
             single_bin_verts[k*3+1] = vert.y-0.5;
             single_bin_verts[k*3+2] = vert.z-0.5;
 
             if (k%6 === 0) nn+=3;
-            single_bin_norms[k*3]   = normals[nn];
+            single_bin_norms[k*3] = normals[nn];
             single_bin_norms[k*3+1] = normals[nn+1];
             single_bin_norms[k*3+2] = normals[nn+2];
          }
          use_helper = true;
 
-         if (this.options.Box === 11)  use_colors = true;  else
-         if (this.options.Box === 12) { use_colors = true; use_helper = false; }  else
+         if (this.options.Box === 11) use_colors = true; else
+         if (this.options.Box === 12) { use_colors = true; use_helper = false; } else
          if (this.options.Color) { use_colors = true; use_opacity = 0.5; use_scale = false; use_helper = false; use_lambert = true; }
       }
 
@@ -122849,7 +122847,7 @@ class RH3Painter extends RHistPainter {
             scaley = (main.gry(yaxis.GetBinCoord(j2)) - main.gry(yaxis.GetBinCoord(j1))) / (j2 - j1) * dj,
             scalez = (main.grz(zaxis.GetBinCoord(k2)) - main.grz(zaxis.GetBinCoord(k1))) / (k2 - k1) * dk,
             cols_size = [];
-      let nbins = 0, i, j, k, wei, bin_content,  num_colors = 0, cols_sequence = [];
+      let nbins = 0, i, j, k, wei, bin_content, num_colors = 0, cols_sequence = [];
 
       for (i = i1; i < i2; i += di) {
          for (j = j1; j < j2; j += dj) {
@@ -122951,11 +122949,11 @@ class RH3Painter extends RHistPainter {
 
                // Grab the coordinates and scale that are being assigned to each bin
                for (let vi = 0; vi < buffer_size; vi+=3, vvv+=3) {
-                  bin_v[vvv]   = grx + single_bin_verts[vi]*scalex*wei;
+                  bin_v[vvv] = grx + single_bin_verts[vi]*scalex*wei;
                   bin_v[vvv+1] = gry + single_bin_verts[vi+1]*scaley*wei;
                   bin_v[vvv+2] = grz + single_bin_verts[vi+2]*scalez*wei;
 
-                  bin_n[vvv]   = single_bin_norms[vi];
+                  bin_n[vvv] = single_bin_norms[vi];
                   bin_n[vvv+1] = single_bin_norms[vi+1];
                   bin_n[vvv+2] = single_bin_norms[vi+2];
                }
@@ -122976,7 +122974,7 @@ class RH3Painter extends RHistPainter {
                   vvv = nbins * helper_segments.length * 3;
                   for (let n = 0; n < helper_segments.length; ++n, vvv += 3) {
                      const vert = Box3D.Vertices[helper_segments[n]];
-                     helper_p[vvv]   = grx + (vert.x-0.5)*scalex*wei;
+                     helper_p[vvv] = grx + (vert.x-0.5)*scalex*wei;
                      helper_p[vvv+1] = gry + (vert.y-0.5)*scaley*wei;
                      helper_p[vvv+2] = grz + (vert.z-0.5)*scalez*wei;
                   }
@@ -123210,7 +123208,7 @@ class RH3Painter extends RHistPainter {
             case 'box': o.Box = 10 + sub; break;
             case 'sphere': o.Sphere = 10 + sub; break;
             case 'col': o.Color = true; break;
-            case 'scat': o.Scatter = true;  break;
+            case 'scat': o.Scatter = true; break;
             default: o.Box = 10;
          }
 

@@ -394,7 +394,7 @@ function getNumBranches(tree) {
 class TDrawVariable {
 
    /** @summary constructor */
-   constructor (globals) {
+   constructor(globals) {
       this.globals = globals;
 
       this.code = '';
@@ -1519,7 +1519,7 @@ function makeMethodsList(typename) {
             obj[this.names[n]] = this.values[n];
          return obj;
       }
-   }
+   };
 
    res.names.push('_typename');
    res.values.push(typename);
@@ -2610,14 +2610,14 @@ function treeIOTest(tree, args) {
       selector.Process = function() {
          if (this.tgtobj.br0 === undefined)
             this.fail = true;
-      }
+      };
 
       selector.Terminate = function(res) {
          if (!isStr(res))
             res = (!res || this.fails) ? 'FAIL' : 'ok';
 
          names[nbr] = res + ' ' + names[nbr];
-      }
+      };
 
       const br = branches[nbr],
             object_class = getBranchObjectClass(br, tree),
@@ -2732,7 +2732,7 @@ function treeHierarchy(node, obj) {
             }
 
             return true;
-         }
+         };
          return true;
       } else if (nb_leaves === 1) {
          subitem._icon = 'img_leaf';
@@ -2745,7 +2745,7 @@ function treeHierarchy(node, obj) {
                _name: ClearName(branch.fLeaves.arr[j].fName),
                _kind: prROOT + branch.fLeaves.arr[j]._typename,
                _obj: branch.fLeaves.arr[j]
-            }
+            };
             subitem._childs.push(leafitem);
          }
       }

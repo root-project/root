@@ -79,7 +79,7 @@ class TCanvasPainter extends TPadPainter {
             sidebar2 = origin.select('.side_panel2'),
             lst = [];
       let sidebar = origin.select('.side_panel'),
-          main = this.selectDom(),  force;
+          main = this.selectDom(), force;
 
       while (main.node().firstChild)
          lst.push(main.node().removeChild(main.node().firstChild));
@@ -639,7 +639,7 @@ class TCanvasPainter extends TPadPainter {
       if ((hint.user_info.binx !== undefined) && (hint.user_info.biny !== undefined)) {
          arr[2] = hint.user_info.binx.toString();
          arr[3] = hint.user_info.biny.toString();
-      }  else if (hint.user_info.bin !== undefined)
+      } else if (hint.user_info.bin !== undefined)
          arr[2] = hint.user_info.bin.toString();
 
 
@@ -842,7 +842,7 @@ async function ensureTCanvas(painter, frame_kind) {
                  : Promise.resolve(true);
 
    return promise.then(() => {
-      if ((frame_kind !== false) &&  painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
+      if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
          directDrawTFrame(painter.getDom(), null, frame_kind);
 
       painter.addToPadPrimitives();

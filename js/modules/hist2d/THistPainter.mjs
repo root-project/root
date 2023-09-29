@@ -633,7 +633,7 @@ const kUserContour = BIT(10), // user specified contour levels
 //      kCanRebin    = BIT(11), // can rebin axis
 //      kLogX        = BIT(15), // X-axis in log scale
 //      kIsZoomed    = BIT(16), // bit set when zooming on Y axis
-      kNoTitle     = BIT(17); // don't draw the histogram title
+      kNoTitle = BIT(17); // don't draw the histogram title
 //      kIsAverage   = BIT(18);  // Bin contents are average (used by Add)
 
 /**
@@ -1633,7 +1633,7 @@ class THistPainter extends ObjectPainter {
                fp?.zoom(kind, axis.GetBinLowEdge(bins[0]), axis.GetBinLowEdge(bins[1]+1));
             // let execute command on server
          } else if (method.fName === 'SetRangeUser') {
-            const values = JSON.parse(`[${args}]`)
+            const values = JSON.parse(`[${args}]`);
             if (values?.length === 2)
                fp?.zoom(kind, values[0], values[1]);
             // let execute command on server

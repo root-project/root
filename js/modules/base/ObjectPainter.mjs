@@ -151,7 +151,7 @@ class ObjectPainter extends BasePainter {
          let changed = false;
          const pp = this.getPadPainter();
          if (!this.options_store || pp?._interactively_changed)
-            changed  = true;
+            changed = true;
          else {
             for (const k in this.options) {
                if (this.options[k] !== this.options_store[k])
@@ -447,11 +447,11 @@ class ObjectPainter extends BasePainter {
       if (use_frame) func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
          if (nornd) {
-            func.x = function(x) { return this.main.grx(x); }
-            func.y = function(y) { return this.main.gry(y); }
+            func.x = function(x) { return this.main.grx(x); };
+            func.y = function(y) { return this.main.gry(y); };
          } else {
-            func.x = function(x) { return Math.round(this.main.grx(x)); }
-            func.y = function(y) { return Math.round(this.main.gry(y)); }
+            func.x = function(x) { return Math.round(this.main.grx(x)); };
+            func.y = function(y) { return Math.round(this.main.gry(y)); };
          }
       } else if (!use_frame) {
          const pp = this.getPadPainter();
@@ -465,7 +465,7 @@ class ObjectPainter extends BasePainter {
             }
             value *= this.padw;
             return this.nornd ? value : Math.round(value);
-         }
+         };
          func.padh = pp?.getPadHeight() ?? 10;
          func.y = function(value) {
             if (this.pad) {
@@ -475,7 +475,7 @@ class ObjectPainter extends BasePainter {
             }
             value = (1 - value) * this.padh;
             return this.nornd ? value : Math.round(value);
-         }
+         };
       } else {
          console.error(`Problem to create functor for ${this.getClassName()}`);
          func.x = () => 0;
@@ -1525,7 +1525,7 @@ function drawRawText(dom, txt /* , opt */) {
       this.txt = obj;
       this.drawText();
       return true;
-   }
+   };
 
    painter.drawText = async function() {
       let txt = (this.txt._typename === clTObjString) ? this.txt.fString : this.txt.value;
@@ -1552,7 +1552,7 @@ function drawRawText(dom, txt /* , opt */) {
          typesetMathjax(frame.node());
 
       return this;
-   }
+   };
 
    return painter.drawText();
 }
