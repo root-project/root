@@ -573,7 +573,7 @@ TEST(RNTuple, SerializeFooter)
    cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator);
    std::vector<DescriptorId_t> clusterIds{84};
    cgBuilder.AddClusters(clusterIds);
-   builder.AddClusterGroup(std::move(cgBuilder));
+   builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
