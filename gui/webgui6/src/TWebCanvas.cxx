@@ -280,9 +280,10 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    auto *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
 
    TView *view = nullptr;
-   auto savepad = gPad;
 
-   pad->cd();
+   TVirtualPad::TContext ctxt;
+
+   gPad = pad;
 
    if (obj->InheritsFrom(TAtt3D::Class()) && !pad->GetView()) {
       pad->GetViewer3D("pad");
@@ -314,8 +315,8 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
       painter->SetPainting(nullptr);
 
    gVirtualPS = saveps;
-   if (savepad)
-      savepad->cd();
+
+   fPadsStatus[pad]._has_specials = true;
 
    // if there are master PS, do not create separate entries
    if (!masterps && !ps.IsEmptyPainting())
@@ -757,7 +758,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
          CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
-         pad_status._has_specials = true;
       }
    }
 
