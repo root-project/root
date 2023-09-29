@@ -33,14 +33,14 @@ TEST(RNTupleCompat, FeatureFlag)
    auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile);
    RNTupleSerializer serializer;
 
-   auto ctx = serializer.SerializeHeaderV1(nullptr, descBuilder.GetDescriptor());
+   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor());
    auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
-   ctx = serializer.SerializeHeaderV1(buffer.get(), descBuilder.GetDescriptor());
+   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor());
    writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
 
-   auto szFooter = serializer.SerializeFooterV1(nullptr, descBuilder.GetDescriptor(), ctx);
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx);
    buffer = std::make_unique<unsigned char[]>(szFooter);
-   serializer.SerializeFooterV1(buffer.get(), descBuilder.GetDescriptor(), ctx);
+   serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
    writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
 
    writer->Commit();
