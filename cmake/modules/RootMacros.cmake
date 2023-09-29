@@ -1233,9 +1233,6 @@ function(ROOT_INSTALL_HEADERS)
     set (options ${options} REGEX "${f}" EXCLUDE)
   endforeach()
   set (filter "(${filter})")
-  string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
-  string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-  set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
                            COMPONENT headers
@@ -1257,7 +1254,12 @@ function(ROOT_INSTALL_HEADERS)
       list(APPEND dst_list ${dst})
     endforeach()
   endforeach()
-  add_custom_target(${tgt} DEPENDS ${dst_list})
+  if (dst_list)
+    string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
+    string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
+    add_custom_target(${tgt} DEPENDS ${dst_list})
+  endif()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
