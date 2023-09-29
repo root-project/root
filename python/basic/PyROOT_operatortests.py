@@ -63,20 +63,20 @@ class Cpp1OperatorsTestCase( MyTestCase ):
       n -= Number(10)
       n *= Number(10)
       n /= Number(2)
-      self.failUnlessEqual( n, Number(100) )
+      self.assertEqual( n, Number(100) )
 
       nn = -n;
-      self.failUnlessEqual( nn, Number( -100 ) )
+      self.assertEqual( nn, Number( -100 ) )
 
    def test3ComparisonOperators( self ):
       """Test overloading of comparison operators"""
 
-      self.failUnlessEqual( Number(20) >  Number(10), 1 )
-      self.failUnlessEqual( Number(20) <  Number(10), 0 )
-      self.failUnlessEqual( Number(20) >= Number(20), 1 )
-      self.failUnlessEqual( Number(20) <= Number(10), 0 )
-      self.failUnlessEqual( Number(20) != Number(10), 1 )
-      self.failUnlessEqual( Number(20) == Number(10), 0 )
+      self.assertEqual( Number(20) >  Number(10), 1 )
+      self.assertEqual( Number(20) <  Number(10), 0 )
+      self.assertEqual( Number(20) >= Number(20), 1 )
+      self.assertEqual( Number(20) <= Number(10), 0 )
+      self.assertEqual( Number(20) != Number(10), 1 )
+      self.assertEqual( Number(20) == Number(10), 0 )
 
    def test4BooleanOperator( self ):
       """Test implementation of operator bool"""
