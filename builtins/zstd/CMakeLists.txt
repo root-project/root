@@ -88,8 +88,11 @@ set(ZSTD_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "" FORCE)
 add_library(zstd STATIC ${ZSTDHEADERS} ${ZSTD_SOURCES})
 target_compile_definitions(zstd PRIVATE "XXH_NAMESPACE=ZSTD_")
 set_target_properties(zstd PROPERTIES COMPILE_DEFINITIONS "ZSTD_HEAPMODE=0;_CRT_SECURE_NO_WARNINGS" C_VISIBILITY_PRESET hidden)
-target_include_directories(zstd PRIVATE ${ZSTD_INCLUDE_DIR} INTERFACE $<BUILD_INTERFACE:${ZSTD_INCLUDE_DIR}>)
-target_link_libraries(zstd PRIVATE xxHash::xxHash)
+target_include_directories(zstd
+  PRIVATE ${xxHash_INCLUDE_DIR} ${ZSTD_INCLUDE_DIR}
+  INTERFACE $<BUILD_INTERFACE:${ZSTD_INCLUDE_DIR}>
+)
+
 if(NOT MSVC)
   target_compile_options(zstd PRIVATE -fPIC -w -O3)
 endif()
