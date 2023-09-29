@@ -343,7 +343,7 @@ class TF1Painter extends TH1Painter {
 
       ttrect.attr('cx', pnt.x)
             .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
-            .call(this.lineatt?.func)
+            .call(this.lineatt?.func);
 
       return res;
    }
@@ -390,7 +390,7 @@ class TF1Painter extends TH1Painter {
       painter.webcanv_hist = webcanv_hist;
       painter.force_saved = force_saved;
 
-      painter.createTF1Histogram(tf1, hist)
+      painter.createTF1Histogram(tf1, hist);
 
       return THistPainter._drawHist(painter, opt);
    }

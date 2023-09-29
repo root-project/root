@@ -169,7 +169,7 @@ class TGaxisPainter extends TAxisPainter {
             v = 0;
          }
          return Number.isFinite(v) ? v : 0;
-      }
+      };
 
       const vmin = res.eval(smin), vmax = res.eval(smax);
       if ((vmin < vmax) === (smin < smax)) {

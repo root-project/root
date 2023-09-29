@@ -763,11 +763,11 @@ async function svgToImage(svg, image_format, as_buffer) {
             canvas.toBlob(blob => blob.arrayBuffer().then(resolveFunc), 'image/' + image_format);
          else
             resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
-      }
+      };
       image.onerror = function(arg) {
          console.log(`IMAGE ERROR ${arg}`);
          resolveFunc(null);
-      }
+      };
 
       image.src = img_src;
    });

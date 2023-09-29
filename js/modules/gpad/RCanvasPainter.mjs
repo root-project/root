@@ -723,15 +723,15 @@ function drawRFrameTitle(reason, drag) {
    if (!fp)
       return console.log('no frame painter - no title');
 
-   const rect         = fp.getFrameRect(),
-         fx           = rect.x,
-         fy           = rect.y,
-         fw           = rect.width,
+   const rect = fp.getFrameRect(),
+         fx = rect.x,
+         fy = rect.y,
+         fw = rect.width,
          // fh           = rect.height,
-         ph           = this.getPadPainter().getPadHeight(),
-         title        = this.getObject(),
-         title_width  = fw,
-         textFont     = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
+         ph = this.getPadPainter().getPadHeight(),
+         title = this.getObject(),
+         title_width = fw,
+         textFont = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
    let title_margin = this.v7EvalLength('margin', ph, 0.02),
        title_height = this.v7EvalLength('height', ph, 0.05);
 
@@ -922,8 +922,8 @@ registerMethods(`${nsREX}RPalette`, {
 /** @summary draw RFont object
   * @private */
 function drawRFont() {
-   const font   = this.getObject(),
-         svg    = this.getCanvSvg(),
+   const font = this.getObject(),
+         svg = this.getCanvSvg(),
          clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
    let defs = svg.selectChild('.canvas_defs');
 

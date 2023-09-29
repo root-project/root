@@ -731,7 +731,7 @@ function getPairStreamer(si, typname, file) {
 
       if (!si) {
          let p1 = typname.indexOf('<');
-         const p2 = typname.lastIndexOf('>')
+         const p2 = typname.lastIndexOf('>');
          function GetNextName() {
             let res = '', p = p1 + 1, cnt = 0;
             while ((p < p2) && (cnt >= 0)) {
@@ -925,7 +925,7 @@ function createMemberStreamer(element, file) {
             const arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
             for (let n = 0; n < len; ++n) arr[n] = this.read(buf);
             return arr;
-         }
+         };
 
          if (member.type < kOffsetL)
             member.func = function(buf, obj) { obj[this.name] = this.read(buf); };
@@ -1001,7 +1001,7 @@ function createMemberStreamer(element, file) {
                if (handle.arrkind === 0) return buf.readTString();
                return buf.classStreamer({}, handle.classname);
             });
-         }
+         };
          break;
       }
       case kChar:
@@ -1052,11 +1052,11 @@ function createMemberStreamer(element, file) {
          else {
             member.arrkind = getArrayKind(member.typename);
             if (member.arrkind > 0)
-               member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); }
+               member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); };
             else if (member.arrkind === 0)
-               member.readitem = function(buf) { return buf.readTString(); }
+               member.readitem = function(buf) { return buf.readTString(); };
             else
-               member.readitem = function(buf) { return buf.classStreamer({}, this.typename); }
+               member.readitem = function(buf) { return buf.classStreamer({}, this.typename); };
          }
 
          if (member.readitem !== undefined) {
@@ -1067,13 +1067,13 @@ function createMemberStreamer(element, file) {
                      itemarr[i] = member2.readitem(buf2);
                   return itemarr;
                });
-            }
+            };
 
             member.func = function(buf, obj) {
                const ver = buf.readVersion(),
                      res = this.read_loop(buf, obj[this.cntname]);
                obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
-            }
+            };
             member.branch_func = function(buf, obj) {
                // this is special functions, used by branch in the STL container
                const ver = buf.readVersion(), sz0 = obj[this.stl_size], res = new Array(sz0);
@@ -1083,7 +1083,7 @@ function createMemberStreamer(element, file) {
                   res[loop0] = this.read_loop(buf, cnt);
                }
                obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
-            }
+            };
 
             member.objs_branch_func = function(buf, obj) {
                // special function when branch read as part of complete object
@@ -1099,7 +1099,7 @@ function createMemberStreamer(element, file) {
                }
 
                buf.checkByteCount(ver, this.typename);
-            }
+            };
          } else {
             console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
             member.func = function(buf, obj) {
@@ -1189,7 +1189,7 @@ function createMemberStreamer(element, file) {
                const ver = buf.readVersion();
                buf.checkByteCount(ver);
                obj[this.name] = null;
-            }
+            };
          } else
             if (!element.$fictional) {
                member.read_version = function(buf, cnt) {
@@ -1204,7 +1204,7 @@ function createMemberStreamer(element, file) {
                      if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
                   }
                   return ver;
-               }
+               };
 
                member.func = function(buf, obj) {
                   const ver = this.read_version(buf);
@@ -1213,7 +1213,7 @@ function createMemberStreamer(element, file) {
 
                   if (!buf.checkByteCount(ver, this.typename)) res = null;
                   obj[this.name] = res;
-               }
+               };
 
                member.branch_func = function(buf, obj) {
                   // special function to read data from STL branch
@@ -1227,14 +1227,14 @@ function createMemberStreamer(element, file) {
                   if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
 
                   obj[this.name] = arr;
-               }
+               };
                member.split_func = function(buf, arr, n) {
                   // function to read array from member-wise streaming
                   const ver = this.read_version(buf);
                   for (let i = 0; i < n; ++i)
                      arr[i][this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
                   buf.checkByteCount(ver, this.typename);
-               }
+               };
                member.objs_branch_func = function(buf, obj) {
                   // special function when branch read as part of complete object
                   // objects already preallocated and only appropriate member must be set
@@ -1249,7 +1249,7 @@ function createMemberStreamer(element, file) {
                   }
 
                   if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
-               }
+               };
             }
          break;
       }
@@ -1296,7 +1296,7 @@ function addClassMethods(clname, streamer) {
    if (methods) {
       for (const key in methods) {
          if (isFunc(methods[key]) || (key.indexOf('_') === 0))
-            streamer.push({ name: key, method: methods[key], func(buf, obj) { obj[this.name] = this.method; } });
+            streamer.push({ name: key, method: methods[key], func(_buf, obj) { obj[this.name] = this.method; } });
       }
    }
 
@@ -2012,8 +2012,8 @@ function LZ4_uncompress(input, output, sIdx, eIdx) {
 
       // Copy the match
       let pos = j - offset; // position of the match copy in the current output
-      const end = j + match_length + 4 // minmatch = 4;
-      while (j < end) output[j++] = output[pos++]
+      const end = j + match_length + 4; // minmatch = 4;
+      while (j < end) output[j++] = output[pos++];
    }
 
    return j;
@@ -2991,7 +2991,7 @@ class TFile {
          }
 
          send_new_request(true);
-      }
+      };
 
       return send_new_request(true).then(() => promise);
    }
@@ -3655,7 +3655,7 @@ class TLocalFile extends TFile {
             cnt += 2;
             if (cnt >= place.length) return resolve(blobs);
             reader.readAsArrayBuffer(file.slice(place[cnt], place[cnt] + place[cnt + 1]));
-         }
+         };
 
          reader.readAsArrayBuffer(file.slice(place[0], place[0] + place[1]));
       });
@@ -3718,14 +3718,14 @@ class TNodejsFile extends TFile {
          let cnt = 0;
 
          // eslint-disable-next-line n/handle-callback-err
-         const readfunc = (err, bytesRead, buf) => {
+         const readfunc = (_err, _bytesRead, buf) => {
             const res = new DataView(buf.buffer, buf.byteOffset, place[cnt + 1]);
             if (place.length === 2) return resolve(res);
             blobs.push(res);
             cnt += 2;
             if (cnt >= place.length) return resolve(blobs);
             this.fs.read(this.fd, Buffer.alloc(place[cnt + 1]), 0, place[cnt + 1], place[cnt], readfunc);
-         }
+         };
 
          this.fs.read(this.fd, Buffer.alloc(place[1]), 0, place[1], place[0], readfunc);
       });
@@ -3853,8 +3853,7 @@ function openFile(arg) {
 addClassMethods(clTNamed, CustomStreamers[clTNamed]);
 addClassMethods(clTObjString, CustomStreamers[clTObjString]);
 
-export {
-   kChar, kShort, kInt, kLong, kFloat, kCounter,
+export { kChar, kShort, kInt, kLong, kFloat, kCounter,
    kCharStar, kDouble, kDouble32, kLegacyChar,
    kUChar, kUShort, kUInt, kULong, kBits,
    kLong64, kULong64, kBool, kFloat16,
@@ -3862,6 +3861,4 @@ export {
    kAnyP, kStreamer, kStreamLoop, kSTLp, kSTL,
    clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, clTBasket,
    R__unzip, addUserStreamer, createStreamerElement, createMemberStreamer,
-   openFile, reconstructObject, FileProxy,
-   TBuffer /*, TDirectory, TFile, TLocalFile, TNodejsFile */
-};
+   openFile, reconstructObject, FileProxy, TBuffer }; /*, TDirectory, TFile, TLocalFile, TNodejsFile */

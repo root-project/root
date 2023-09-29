@@ -99,11 +99,11 @@ function tryOpenOpenUI(sources, args) {
       element.parentNode.removeChild(element);
       // and try next
       tryOpenOpenUI(sources, args);
-   }
+   };
 
    element.onload = function() {
       console.log(`Load openui5 from ${src}`);
-   }
+   };
 
    document.head.appendChild(element);
 }
@@ -252,7 +252,7 @@ const ToolbarIcons = {
       return svg;
    }
 
-} // ToolbarIcons
+}; // ToolbarIcons
 
 
 /** @summary Register handle to react on window resize
@@ -393,20 +393,17 @@ function injectStyle(code, node, tag) {
 function selectgStyle(name) {
    gStyle.fName = name;
    switch (name) {
-      case 'Modern': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
-         fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
+      case 'Modern': Object.assign(gStyle, { fFrameBorderMode: 0, fFrameFillColor: 0,
+         fCanvasBorderMode: 0, fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
          fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
          fOptStat: 1111, fStatY: 0.935,
          fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 });
          break;
-      case 'Plain': Object.assign(gStyle, {
-         fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
-         fPadColor: 0, fCanvasColor: 0,
+      case 'Plain': Object.assign(gStyle, { fFrameBorderMode: 0,
+         fCanvasBorderMode: 0, fPadBorderMode: 0, fPadColor: 0, fCanvasColor: 0,
          fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 });
          break;
-      case 'Bold': Object.assign(gStyle, {
-         fCanvasColor: 10, fCanvasBorderMode: 0,
+      case 'Bold': Object.assign(gStyle, { fCanvasColor: 10, fCanvasBorderMode: 0,
          fFrameLineWidth: 3, fFrameFillColor: 10,
          fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
          fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 });

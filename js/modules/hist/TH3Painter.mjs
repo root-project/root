@@ -92,7 +92,7 @@ class TH3Painter extends THistPainter {
       }
 
       if (has_counted_stat) {
-         stat_sum0  = histo.fTsumw;
+         stat_sum0 = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
@@ -345,12 +345,12 @@ class TH3Painter extends THistPainter {
 
          for (let k = 0, nn = -3; k < indicies.length; ++k) {
             const vert = vertices[indicies[k]];
-            single_bin_verts[k*3]   = vert.x-0.5;
+            single_bin_verts[k*3] = vert.x-0.5;
             single_bin_verts[k*3+1] = vert.y-0.5;
             single_bin_verts[k*3+2] = vert.z-0.5;
 
             if (k%6 === 0) nn+=3;
-            single_bin_norms[k*3]   = normals[nn];
+            single_bin_norms[k*3] = normals[nn];
             single_bin_norms[k*3+1] = normals[nn+1];
             single_bin_norms[k*3+2] = normals[nn+2];
          }
@@ -361,7 +361,7 @@ class TH3Painter extends THistPainter {
           else if (box_option === 13) {
             use_colors = true;
             use_helper = false;
-         }  else if (this.options.GLColor) {
+         } else if (this.options.GLColor) {
             use_colors = true;
             use_opacity = 0.5;
             use_scale = false;
@@ -486,11 +486,11 @@ class TH3Painter extends THistPainter {
 
                // Grab the coordinates and scale that are being assigned to each bin
                for (let vi = 0; vi < buffer_size; vi+=3, vvv+=3) {
-                  bin_v[vvv]   = grx + single_bin_verts[vi]*scalex*wei;
+                  bin_v[vvv] = grx + single_bin_verts[vi]*scalex*wei;
                   bin_v[vvv+1] = gry + single_bin_verts[vi+1]*scaley*wei;
                   bin_v[vvv+2] = grz + single_bin_verts[vi+2]*scalez*wei;
 
-                  bin_n[vvv]   = single_bin_norms[vi];
+                  bin_n[vvv] = single_bin_norms[vi];
                   bin_n[vvv+1] = single_bin_norms[vi+1];
                   bin_n[vvv+2] = single_bin_norms[vi+2];
                }
@@ -511,7 +511,7 @@ class TH3Painter extends THistPainter {
                   vvv = nbins * helper_segments.length * 3;
                   for (let n=0; n<helper_segments.length; ++n, vvv+=3) {
                      const vert = Box3D.Vertices[helper_segments[n]];
-                     helper_p[vvv]   = grx + (vert.x-0.5)*scalex*wei;
+                     helper_p[vvv] = grx + (vert.x-0.5)*scalex*wei;
                      helper_p[vvv+1] = gry + (vert.y-0.5)*scaley*wei;
                      helper_p[vvv+2] = grz + (vert.z-0.5)*scalez*wei;
                   }

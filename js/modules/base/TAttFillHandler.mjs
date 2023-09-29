@@ -342,7 +342,7 @@ class TAttFillHandler {
 
             switch (j) {
                case 0: horiz = true; break;
-               case 1: func(1, false, 10);  break;
+               case 1: func(1, false, 10); break;
                case 2: func(2, false, 20); break;
                case 3: func(3, false, 30); break;
                case 4: func(6, false, 45); break;

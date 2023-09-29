@@ -151,7 +151,7 @@ class TWebPaintingPainter extends ObjectPainter {
          }
 
          return Promise.resolve(true);
-      }
+      };
 
       this.createG();
 
