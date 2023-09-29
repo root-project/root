@@ -836,7 +836,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::BeginHeaderExtension()
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterWithDetails(RClusterDescriptor &&clusterDesc)
+ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
 {
    auto clusterId = clusterDesc.GetId();
    if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
