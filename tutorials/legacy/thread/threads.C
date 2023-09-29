@@ -23,12 +23,8 @@ void *handle(void *ptr)
    long nr = (long) ptr;
 
    for (int i = 0; i < 10; i++) {
-      //TThread::Lock();
-      //printf("Here I am loop index: %3d , thread: %d\n",i,nr);
-      //TThread::UnLock();
-
       TThread::Printf("Here I am loop index: %d , thread: %ld", i, nr);
-      gSystem->Sleep(1000);
+      gSystem->Sleep(10);
    }
    return 0;
 }

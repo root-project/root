@@ -30,9 +30,8 @@
 //=============================================================================
 using namespace std;
 //=============================================================================
-// Don't set it less than 1, otherwise autotest won't be able to detect whether tests were successful or not
-const size_t g_sleeptime = 2; // in secs.
-const size_t g_multTasks = 10;
+const size_t g_sleeptime = 10000000; // in nanosecs.
+const size_t g_multTasks = 8;
 //=============================================================================
 
 enum EProc {start, clean};
@@ -41,7 +40,7 @@ class TTestTask: public TThreadPoolTaskImp<TTestTask, EProc> {
 public:
    bool runTask(EProc /*_param*/) {
       m_tid = TThread::SelfId();
-      TThread::Sleep(g_sleeptime, 0L);
+      TThread::Sleep(0L, g_sleeptime);
       return true;
    }
    unsigned long threadID() const {
@@ -58,7 +57,7 @@ ostream &operator<< (ostream &_stream, const TTestTask &_task)
 }
 
 //=============================================================================
-void stressThreadPool(size_t _numThreads = 5, bool _needDbg = false)
+void stressThreadPool(size_t _numThreads = 4, bool _needDbg = false)
 {
    size_t numTasks(_numThreads * g_multTasks);
    TThreadPool<TTestTask, EProc> threadPool(_numThreads, _needDbg);
