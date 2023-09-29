@@ -86,6 +86,10 @@ add_dependencies(xrootd XROOTD)
 
 add_library(Xrootd::Xrootd ALIAS xrootd)
 
+# So that we can use ${XROOTD_CLIENT_LIBRARIES} in target_link_libraries, just
+# like you would do when finding and external xrootd with find_package(XRootD).
+set(XROOTD_CLIENT_LIBRARIES Xrootd::Xrootd CACHE INTERNAL "" FORCE)
+
 set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS XROOTD)
 
 install(DIRECTORY ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
