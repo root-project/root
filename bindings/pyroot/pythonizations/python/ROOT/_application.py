@@ -13,7 +13,7 @@ import time
 
 from cppyy.gbl import gSystem, gInterpreter, gEnv
 
-from libROOTPythonizations import InitApplication, InstallGUIEventInputHook
+from libROOTPythonizations import InitApplication, InstallGUIEventInputHook, InstallScriptEventLoop
 
 
 class PyROOTApplication(object):
@@ -78,11 +78,10 @@ class PyROOTApplication(object):
         if self._is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
             # ipython and notebooks, register our event processing with their hooks
             self._ipython_config()
-        elif sys.flags.interactive == 1 or not hasattr(__main__, '__file__') or gSystem.InheritsFrom('TMacOSXSystem'):
+        elif sys.flags.interactive == 1 or not hasattr(__main__, '__file__'):
             # Python in interactive mode, use the PyOS_InputHook to call our event processing
             # - sys.flags.interactive checks for the -i flags passed to python
             # - __main__ does not have the attribute __file__ if the Python prompt is started directly
-            # - MacOS does not allow to run a second thread to process events, fall back to the input hook
             self._inputhook_config()
         else:
             # Python in script mode, start a separate thread for the event processing
@@ -90,16 +89,9 @@ class PyROOTApplication(object):
             # indicate that ProcessEvents called in different thread, let ignore thread id checks in RWebWindow
             gEnv.SetValue("WebGui.ExternalProcessEvents", "yes")
 
-            def _process_root_events(self):
-                while self.keep_polling:
-                    gSystem.ProcessEvents()
-                    time.sleep(0.01)
-            import threading
-            self.keep_polling = True # Used to shut down the thread safely at teardown time
-            update_thread = threading.Thread(None, _process_root_events, None, (self,))
-            self.process_root_events = update_thread # The thread is joined at teardown time
-            update_thread.daemon = True
-            update_thread.start()
+            InstallScriptEventLoop()
+
+            self.process_root_events = InstallScriptEventLoop # Call at the end to stop it
 
         self._set_display_hook()
 

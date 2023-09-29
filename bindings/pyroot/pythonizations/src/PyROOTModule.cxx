@@ -81,6 +81,8 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Initialize interactive ROOT use from Python"},
    {(char *)"InstallGUIEventInputHook", (PyCFunction)PyROOT::RPyROOTApplication::InstallGUIEventInputHook, METH_NOARGS,
     (char *)"Install an input hook to process GUI events"},
+   {(char *)"InstallScriptEventLoop", (PyCFunction)PyROOT::RPyROOTApplication::InstallScriptEventLoop, METH_NOARGS,
+    (char *)"Install an script event loop in extra thread"},
    {(char *)"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     (char *)"Deserialize a pickled object"},
    {(char *)"ClearProxiedObjects", (PyCFunction)PyROOT::ClearProxiedObjects, METH_NOARGS,

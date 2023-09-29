@@ -25,6 +25,9 @@
 #include "TVirtualPad.h"
 #include "TROOT.h"
 
+#include <thread>
+
+
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Create an RPyROOTApplication.
 /// \param[in] ignoreCmdLineOpts True if Python command line options should
@@ -192,6 +195,8 @@ PyROOT::RPyROOTApplication::RPyROOTApplication(const char *acn, int *argc, char 
 
 namespace {
 static int (*sOldInputHook)() = nullptr;
+
+
 static PyThreadState *sInputHookEventThreadState = nullptr;
 
 static int EventInputHook()
@@ -227,3 +232,33 @@ PyObject *PyROOT::RPyROOTApplication::InstallGUIEventInputHook(PyObject * /* sel
 
    Py_RETURN_NONE;
 }
+
+void run_event_loop(bool *run_flag)
+{
+   while (*run_flag) {
+      if (gSystem->ProcessEvents()) break;
+      gSystem->Sleep(0.01);
+   }
+}
+
+
+PyObject *PyROOT::RPyROOTApplication::InstallScriptEventLoop(PyObject * /* self */, PyObject * /* args */)
+{
+   static bool _run = false;
+   static std::thread *thrd = nullptr;
+
+   if (!_run) {
+      printf("Start gui even loop\n");
+      _run = true;
+      thrd = new std::thread(run_event_loop, &_run);
+   } else {
+      _run = false;
+      thrd->join();
+      delete thrd;
+      thrd = nullptr;
+      printf("Join gui even loop\n");
+   }
+
+   Py_RETURN_NONE;
+}
+

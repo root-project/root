@@ -51,7 +51,7 @@ _register_pythonizations()
 if major == 3:
     import builtins
 else:
-    import __builtin__ as builtins  
+    import __builtin__ as builtins
 
 _is_ipython = hasattr(builtins, '__IPYTHON__')
 
@@ -74,8 +74,7 @@ def cleanup():
     # If spawned, stop thread which processes ROOT events
     facade = sys.modules[__name__]
     if 'app' in facade.__dict__ and hasattr(facade.__dict__['app'], 'process_root_events'):
-        facade.__dict__['app'].keep_polling = False
-        facade.__dict__['app'].process_root_events.join()
+        facade.__dict__['app'].process_root_events()
 
     if 'libROOTPythonizations' in sys.modules:
         backend = sys.modules['libROOTPythonizations']
