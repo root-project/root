@@ -1415,6 +1415,8 @@ void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
 {
    std::string buf = lines;
 
+   Int_t indx = 0;
+
    while (obj && !buf.empty()) {
       std::string sub = buf;
       auto pos = buf.find(";;");
@@ -1429,8 +1431,10 @@ void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
 
       std::stringstream exec;
       exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
-      Info("ProcessLinesForObject", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+      if (indx < 3 || gDebug > 0)
+         Info("ProcessLinesForObject", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
       gROOT->ProcessLine(exec.str().c_str());
+      indx++;
    }
 }
 
