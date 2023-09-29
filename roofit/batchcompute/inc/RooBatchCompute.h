@@ -23,8 +23,6 @@
 
 #include <DllImport.h> //for R__EXTERN, needed for windows
 
-#include <Math/Util.h>
-
 #include <cassert>
 #include <functional>
 #include <string>
@@ -114,7 +112,8 @@ enum Computer {
 };
 
 struct ReduceNLLOutput {
-   ROOT::Math::KahanSum<double> nllSum;
+   double nllSum = 0.0;
+   double nllSumCarry = 0.0;
    std::size_t nLargeValues = 0;
    std::size_t nNonPositiveValues = 0;
    std::size_t nNaNValues = 0;

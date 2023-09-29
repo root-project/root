@@ -291,7 +291,8 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
       tmpCarry *= weights[0];
    }
 
-   out.nllSum = ROOT::Math::KahanSum<double>{tmpSum, tmpCarry};
+   out.nllSum = tmpSum;
+   out.nllSumCarry = tmpCarry;
    return out;
 }
 
