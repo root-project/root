@@ -286,6 +286,9 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
+          - image: fedora39
+            config: Release
+
           - image: fedora38
             config: Debug
 
