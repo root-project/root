@@ -812,10 +812,15 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptorBuilder &&clusterGroup)
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptor &&clusterGroup)
 {
-   auto id = clusterGroup.GetId();
-   fDescriptor.fClusterGroupDescriptors.emplace(id, clusterGroup.MoveDescriptor().Unwrap());
+   const auto id = clusterGroup.GetId();
+   if (fDescriptor.fClusterGroupDescriptors.count(id) > 0)
+      return R__FAIL("cluster group id clash");
+   fDescriptor.fNEntries = std::max(fDescriptor.fNEntries, clusterGroup.GetMinEntry() + clusterGroup.GetEntrySpan());
+   fDescriptor.fClusterGroupDescriptors.emplace(id, std::move(clusterGroup));
+   return RResult<void>::Success();
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
@@ -841,8 +846,6 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&cl
    auto clusterId = clusterDesc.GetId();
    if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
       return R__FAIL("cluster id clash");
-   fDescriptor.fNEntries =
-      std::max(fDescriptor.fNEntries, clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries());
    fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(clusterDesc));
    return RResult<void>::Success();
 }

@@ -1351,6 +1351,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
    for (unsigned int i = 0; i < nClusterGroups; ++i) {
       const auto &cgDesc = desc.GetClusterGroupDescriptor(context.GetMemClusterGroupId(i));
       RClusterGroup clusterGroup;
+      clusterGroup.fMinEntry = cgDesc.GetMinEntry();
+      clusterGroup.fEntrySpan = cgDesc.GetEntrySpan();
       clusterGroup.fNClusters = cgDesc.GetNClusters();
       clusterGroup.fPageListEnvelopeLink.fUnzippedSize = cgDesc.GetPageListLength();
       clusterGroup.fPageListEnvelopeLink.fLocator = cgDesc.GetPageListLocator();
@@ -1507,7 +1509,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
          clusterIds.emplace_back(clusterIdOffset + i);
       clusterGroupBuilder.AddClusters(clusterIds);
       clusterIdOffset += clusterGroup.fNClusters;
-      descBuilder.AddClusterGroup(std::move(clusterGroupBuilder));
+      descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
    }
    bytes = frame + frameSize;
 
