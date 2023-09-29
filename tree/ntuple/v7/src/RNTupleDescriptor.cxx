@@ -604,19 +604,6 @@ ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
    return result;
 }
 
-std::vector<ROOT::Experimental::RClusterDescriptorBuilder>
-ROOT::Experimental::RClusterGroupDescriptorBuilder::GetClusterSummaries(const RNTupleDescriptor &ntplDesc,
-                                                                        DescriptorId_t clusterGroupId)
-{
-   const auto &clusterGroupDesc = ntplDesc.GetClusterGroupDescriptor(clusterGroupId);
-   std::vector<RClusterDescriptorBuilder> result;
-   for (auto clusterId : clusterGroupDesc.fClusterIds) {
-      const auto &cluster = ntplDesc.GetClusterDescriptor(clusterId);
-      result.emplace_back(RClusterDescriptorBuilder(clusterId, cluster.GetFirstEntryIndex(), cluster.GetNEntries()));
-   }
-   return result;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RResult<ROOT::Experimental::RClusterGroupDescriptor>
