@@ -600,7 +600,7 @@ TEST(RNTuple, SerializeFooter)
 
    RNTupleSerializer::DeserializeHeaderV1(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooterV1(bufFooter.get(), sizeFooter, builder);
-
+   RNTupleSerializer::DeserializePageListV1(bufPageList.get(), sizePageList, 0, builder);
    desc = builder.MoveDescriptor();
 
    EXPECT_EQ(1u, desc.GetNClusterGroups());
@@ -609,13 +609,6 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(137u, clusterGroupDesc.GetPageListLength());
    EXPECT_EQ(1337u, clusterGroupDesc.GetPageListLocator().GetPosition<std::uint64_t>());
    EXPECT_EQ(42u, clusterGroupDesc.GetPageListLocator().fBytesOnStorage);
-
-   std::vector<RClusterDescriptorBuilder> clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(desc, 0);
-   RNTupleSerializer::DeserializePageListV1(bufPageList.get(), sizePageList, clusters);
-   EXPECT_EQ(physClusterIDs.size(), clusters.size());
-   for (std::size_t i = 0; i < clusters.size(); ++i) {
-      desc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
-   }
 
    EXPECT_EQ(1u, desc.GetNClusters());
    const auto &clusterDesc = desc.GetClusterDescriptor(0);

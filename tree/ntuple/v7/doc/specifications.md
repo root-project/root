@@ -514,7 +514,7 @@ This is necessary when fields have been added during writing.
 #### Column Group Record Frame
 The column group record frame is used to set IDs for certain subsets of column IDs.
 Column groups are only used when there are sharded clusters.
-Otherwise the enclosing list frame in the footer envelope is empty and all clusters span all columns.
+Otherwise, the enclosing list frame in the footer envelope is empty and all clusters span all columns.
 The purpose of column groups is to prevent repetition of column ID ranges in cluster summaries.
 
 The column group record frame consists of a list frame of 32bit integer items.
@@ -569,7 +569,7 @@ It has the following structure
 
   - Header checksum (XxHash-3 64bit)
   - List frame of cluster summary record frames
-  - Nested list frames of page locations
+  - Nested list frame of page locations
 
 #### Cluster Summary Record Frame
 The cluster summary record frame contains the entry range of a cluster:
@@ -593,7 +593,8 @@ an additional 32bit integer containing the column group ID follows the flags fie
 If flags is zero, the cluster stores the event range of _all_ the original columns
 _including_ the columns from extension headers.
 
-The order of the cluster summaries defines the cluster IDs, starting from zero.
+The order of the cluster summaries defines the cluster IDs,
+starting from the first cluster ID of the cluster group that corresponds to the page list.
 
 #### Page Locations
 
@@ -616,13 +617,13 @@ Every inner item (that describes a page) has the following structure:
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                     Number of Elements                    |Fl.|
+|                     Number of Elements                      |F|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
 Followed by a locator for the page.
 If flag 0x01 is set, a XxHash-3 64bit checksum of the uncompressed page data is stored just after the page.
-Note that columns might be empty, i.e. the number of pages is zero.
+Note that columns might be empty, i.e. the number of pages can be zero.
 
 Depending on the number of pages per column per cluster, every page induces
 a total of 28-36 Bytes of data to be stored in the page list envelope.
