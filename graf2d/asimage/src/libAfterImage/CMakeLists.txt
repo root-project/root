@@ -47,8 +47,8 @@ SET(SRC_FILES
     libjpeg/jdtrans.c libjpeg/jerror.c libjpeg/jfdctflt.c libjpeg/jfdctfst.c libjpeg/jfdctint.c libjpeg/jidctflt.c libjpeg/jidctfst.c
     libjpeg/jidctint.c libjpeg/jmemmgr.c libjpeg/jmemnobs.c libjpeg/jquant1.c libjpeg/jquant2.c libjpeg/jutils.c
     libungif/dgif_lib.c libungif/egif_lib.c libungif/gif_err.c libungif/gifalloc.c libungif/gif_hash.c afterbase.c ascmap.c asfont.c
-    asimage.c asstorage.c asimagexml.c asvisual.c blender.c bmp.c char2uni.c
-    export.c import.c pixmap.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
+    asimage.c asstorage.c asvisual.c blender.c bmp.c char2uni.c
+    export.c import.c transform.c ungif.c xcf.c ximage.c xpm.c draw.c
     imencdec.c scanline.c
 )
 

@@ -37,16 +37,16 @@ ZLIB_OBJS = 	zlib/adler32.o 	zlib/compress.o zlib/crc32.o \
 LIBUNGIF_OBJS = libungif/dgif_lib.o libungif/egif_lib.o libungif/gifalloc.o \
 		libungif/gif_err.o libungif/gif_hash.o
 
-AFTERIMAGE_OBJS= @AFTERBASE_C@ asimage.o ascmap.o asfont.o asimagexml.o asstorage.o \
+AFTERIMAGE_OBJS= @AFTERBASE_C@ asimage.o ascmap.o asfont.o asstorage.o \
 		asvisual.o blender.o bmp.o char2uni.o draw.o export.o imencdec.o import.o \
-		pixmap.o scanline.o transform.o ungif.o xcf.o ximage.o xpm.o
+		scanline.o transform.o ungif.o xcf.o ximage.o xpm.o
 
 ################################################################
 # library specifics :
 
 LIB_INCS= afterimage.h afterbase.h ascmap.h asfont.h asim_afterbase.h \
-		asimage.h asimagexml.h asstorage.h asvisual.h blender.h bmp.h char2uni.h \
-		draw.h export.h imencdec.h import.h pixmap.h scanline.h transform.h ungif.h \
+		asimage.h asstorage.h asvisual.h blender.h bmp.h char2uni.h \
+		draw.h export.h imencdec.h import.h scanline.h transform.h ungif.h \
 		xcf.h ximage.h xpm.h xwrap.h
 
 LIB_OBJS=       @JPEG_OBJS@ @ZLIB_OBJS@ @PNG_OBJS@ @UNGIF_OBJS@ $(AFTERIMAGE_OBJS)
@@ -104,7 +104,7 @@ INSTALL_SCRIPT	= @INSTALL@ -m 755
 
 INCS_EXTRA	= @XPM_CFLAGS@ @JPEG_CFLAGS@ @PNG_CFLAGS@ @GIF_CFLAGS@ @TIFF_CFLAGS@ @SVG_CFLAGS@ @TTF_INCLUDES@
 INCS_X		= @X_CFLAGS@
-INCS_PRIVATE    = 
+INCS_PRIVATE    =
 INCLUDES	= $(INCS_EXTRA) $(INCS_PRIVATE) $(INCS_X)
 
 USER_LD_FLAGS	= @user_ldflags@
@@ -126,7 +126,7 @@ AFTER_APP_MAN_DIR	= $(DESTDIR)@mandir@/man1
 AFTER_SHAREDIR	= $(DESTDIR)@datadir@/$(LIB_DIR_NAME)
 AFTER_DOC_DIR	= $(AFTER_SHAREDIR)/doc
 
-# We want to build both static and dynamic libs, as some service apps may need 
+# We want to build both static and dynamic libs, as some service apps may need
 # static library as they gets run at compile time (ASDocGen for example)
 # but we only install whats selected
 all:            $(LIB_STATIC) @LIBPROG@ $(INSTALLONBUILD) apps
@@ -210,7 +210,7 @@ install.inc:
 install.apps: install.lib
 		@(if test -d apps; then cd apps; $(MAKE) install || exit 1; fi)
 
-# uninstallation targets : 
+# uninstallation targets :
 #
 STATIC_LIB_FILES=$(LIBDIR)/$(LIB_STATIC)
 DYN_LIB_FILES=$(LIBDIR)/$(LIB_SHARED).$(LIBVERMAJOR) $(LIBDIR)/$(LIB_SHARED) $(LIBDIR)/$(LIB_SHARED).$(LIBVER)
@@ -225,7 +225,7 @@ uninstall.dyn:
 		@for i in $(DYN_LIB_FILES); do \
 			if [ -f $$i ] ; then echo $(RMF) $$i; $(RMF) $$i; fi; \
 		done
-		
+
 uninstall.cyg:
 		@for i in $(CYGWIN_LIB_FILES); do \
 			if [ -f $$i ] ; then echo $(RMF) $$i; $(RMF) $$i; fi; \
@@ -266,7 +266,7 @@ clean:
 		@(if test -d apps; then cd apps; $(MAKE) clean || exit 1; fi)
 
 distclean: clean
-		$(RMF) $(LIB_SHARED) $(LIB_SHARED_CYG) $(LIB_SHARED_CYG_AR) $(LIB_STATIC)  *.o *.so.* *~ *% *.bak \#* *.orig core Makefile 
+		$(RMF) $(LIB_SHARED) $(LIB_SHARED_CYG) $(LIB_SHARED_CYG_AR) $(LIB_STATIC)  *.o *.so.* *~ *% *.bak \#* *.orig core Makefile
 		@(if test -d apps; then cd apps; $(MAKE) distclean || exit 1; fi)
 
 indent:
@@ -384,7 +384,7 @@ install.man:
 	  			$(INSTALL_DATA) $$page_name.man $(AFTER_MAN_DIR)/$$page_name.3x; \
 			done; cd ../..; \
 		fi
-			
+
 
 install.doc:
 		@if [ -d doc/html ] ; then \
