@@ -558,7 +558,8 @@ TEST(RNTuple, SerializeFooter)
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   RClusterDescriptorBuilder clusterBuilder(84, 0, 100);
+   RClusterDescriptorBuilder clusterBuilder;
+   clusterBuilder.ClusterId(84).FirstEntryIndex(0).NEntries(100);
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
    pageRange.fPhysicalColumnId = 17;
    pageInfo.fNElements = 100;
@@ -570,7 +571,7 @@ TEST(RNTuple, SerializeFooter)
    RNTupleLocator cgLocator;
    cgLocator.fPosition = 1337U;
    cgLocator.fBytesOnStorage = 42;
-   cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator);
+   cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator).NClusters(1);
    std::vector<DescriptorId_t> clusterIds{84};
    cgBuilder.AddClusters(clusterIds);
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());

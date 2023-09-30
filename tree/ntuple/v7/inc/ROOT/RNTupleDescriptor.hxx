@@ -300,20 +300,12 @@ private:
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    // TODO(jblomer): change to std::uint64_t
    ClusterSize_t fNEntries = kInvalidClusterIndex;
-   bool fHasPageLocations = false;
 
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
 
-   void EnsureHasPageLocations() const;
-
 public:
    RClusterDescriptor() = default;
-   // Constructor for a summary-only cluster descriptor without page locations
-   RClusterDescriptor(DescriptorId_t clusterId, std::uint64_t firstEntryIndex, std::uint64_t nEntries)
-      : fClusterId(clusterId), fFirstEntryIndex(firstEntryIndex), fNEntries(ClusterSize_t(nEntries))
-   {
-   }
    RClusterDescriptor(const RClusterDescriptor &other) = delete;
    RClusterDescriptor &operator =(const RClusterDescriptor &other) = delete;
    RClusterDescriptor(RClusterDescriptor &&other) = default;
@@ -326,20 +318,14 @@ public:
    DescriptorId_t GetId() const { return fClusterId; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
-   const RColumnRange &GetColumnRange(DescriptorId_t physicalId) const
+   const RColumnRange &GetColumnRange(DescriptorId_t physicalId) const { return fColumnRanges.at(physicalId); }
+   const RPageRange &GetPageRange(DescriptorId_t physicalId) const { return fPageRanges.at(physicalId); }
+   bool ContainsColumn(DescriptorId_t physicalId) const
    {
-      EnsureHasPageLocations();
-      return fColumnRanges.at(physicalId);
+      return fColumnRanges.find(physicalId) != fColumnRanges.end();
    }
-   const RPageRange &GetPageRange(DescriptorId_t physicalId) const
-   {
-      EnsureHasPageLocations();
-      return fPageRanges.at(physicalId);
-   }
-   bool ContainsColumn(DescriptorId_t physicalId) const;
    std::unordered_set<DescriptorId_t> GetColumnIds() const;
    std::uint64_t GetBytesOnStorage() const;
-   bool HasPageLocations() const { return fHasPageLocations; }
 };
 
 // clang-format off
@@ -369,6 +355,8 @@ private:
    std::uint64_t fMinEntry = 0;
    /// Number of entries that are (partially for sharded clusters) covered by this cluster group.
    std::uint64_t fEntrySpan = 0;
+   /// Number of clusters is always known even if the cluster IDs are not (yet) populated
+   std::uint32_t fNClusters = 0;
 
 public:
    RClusterGroupDescriptor() = default;
@@ -378,11 +366,13 @@ public:
    RClusterGroupDescriptor &operator=(RClusterGroupDescriptor &&other) = default;
 
    RClusterGroupDescriptor Clone() const;
+   // Creates a clone without the cluster IDs
+   RClusterGroupDescriptor CloneSummary() const;
 
    bool operator==(const RClusterGroupDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterGroupId; }
-   std::uint64_t GetNClusters() const { return fClusterIds.size(); }
+   std::uint32_t GetNClusters() const { return fNClusters; }
    RNTupleLocator GetPageListLocator() const { return fPageListLocator; }
    std::uint64_t GetPageListLength() const { return fPageListLength; }
    const std::vector<DescriptorId_t> &GetClusterIds() const { return fClusterIds; }
@@ -428,7 +418,8 @@ private:
    std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
 
-   std::uint64_t fNEntries = 0; ///< Updated by the descriptor builder when the cluster summaries are added
+   std::uint64_t fNEntries = 0;         ///< Updated by the descriptor builder when the cluster groups are added
+   std::uint64_t fNClusters = 0;        ///< Updated by the descriptor builder when the cluster groups are added
    std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
 
    /**
@@ -683,7 +674,7 @@ public:
 
       RClusterDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) { }
       RIterator begin() { return RIterator(fNTuple, 0); }
-      RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusters()); }
+      RIterator end() { return RIterator(fNTuple, fNTuple.GetNActiveClusters()); }
    };
 
    RNTupleDescriptor() = default;
@@ -765,7 +756,8 @@ public:
    std::size_t GetNLogicalColumns() const { return fColumnDescriptors.size(); }
    std::size_t GetNPhysicalColumns() const { return fNPhysicalColumns; }
    std::size_t GetNClusterGroups() const { return fClusterGroupDescriptors.size(); }
-   std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
+   std::size_t GetNClusters() const { return fNClusters; }
+   std::size_t GetNActiveClusters() const { return fClusterDescriptors.size(); }
 
    /// We know the number of entries from adding the cluster summaries
    NTupleSize_t GetNEntries() const { return fNEntries; }
@@ -793,9 +785,9 @@ public:
    /// Return header extension information; if the descriptor does not have a header extension, return `nullptr`
    const RHeaderExtension *GetHeaderExtension() const { return fHeaderExtension.get(); }
 
-   /// Methods to load and drop cluster details
-   RResult<void> AddClusterDetails(RClusterDescriptor &&clusterDesc);
-   RResult<void> DropClusterDetails(DescriptorId_t clusterId);
+   /// Methods to load and drop cluster group details (cluster IDs and page locations)
+   RResult<void> AddClusterGroupDetails(DescriptorId_t clusterGroupId, std::vector<RClusterDescriptor> &clusterDescs);
+   RResult<void> DropClusterGroupDetails(DescriptorId_t clusterGroupId);
 
    std::uint64_t GetGeneration() const { return fGeneration; }
    void IncGeneration() { fGeneration++; }
@@ -954,10 +946,22 @@ private:
    RClusterDescriptor fCluster;
 
 public:
-   /// Make an empty cluster descriptor builder.
-   RClusterDescriptorBuilder(DescriptorId_t clusterId, std::uint64_t firstEntryIndex, std::uint64_t nEntries)
-      : fCluster(clusterId, firstEntryIndex, nEntries)
+   RClusterDescriptorBuilder &ClusterId(DescriptorId_t clusterId)
    {
+      fCluster.fClusterId = clusterId;
+      return *this;
+   }
+
+   RClusterDescriptorBuilder &FirstEntryIndex(std::uint64_t firstEntryIndex)
+   {
+      fCluster.fFirstEntryIndex = firstEntryIndex;
+      return *this;
+   }
+
+   RClusterDescriptorBuilder &NEntries(std::uint64_t nEntries)
+   {
+      fCluster.fNEntries = nEntries;
+      return *this;
    }
 
    RResult<void> CommitColumnRange(DescriptorId_t physicalId, std::uint64_t firstElementIndex,
@@ -1011,7 +1015,17 @@ public:
       fClusterGroup.fEntrySpan = entrySpan;
       return *this;
    }
-   void AddClusters(std::vector<DescriptorId_t> &clusterIds) { fClusterGroup.fClusterIds = clusterIds; }
+   RClusterGroupDescriptorBuilder &NClusters(std::uint32_t nClusters)
+   {
+      fClusterGroup.fNClusters = nClusters;
+      return *this;
+   }
+   void AddClusters(std::vector<DescriptorId_t> &clusterIds)
+   {
+      if (clusterIds.size() != fClusterGroup.GetNClusters())
+         throw RException(R__FAIL("mismatch of number of clusters"));
+      fClusterGroup.fClusterIds = clusterIds;
+   }
 
    RResult<RClusterGroupDescriptor> MoveDescriptor();
 };

@@ -1503,7 +1503,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
          .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
          .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize)
          .MinEntry(clusterGroup.fMinEntry)
-         .EntrySpan(clusterGroup.fEntrySpan);
+         .EntrySpan(clusterGroup.fEntrySpan)
+         .NClusters(clusterGroup.fNClusters);
       std::vector<DescriptorId_t> clusterIds;
       for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
          clusterIds.emplace_back(clusterIdOffset + i);
@@ -1567,7 +1568,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
       if (clusterSummary.fColumnGroupID >= 0)
          return R__FAIL("sharded clusters are still unsupported");
 
-      clusters.emplace_back(RClusterDescriptorBuilder(clusterId, clusterSummary.fFirstEntry, clusterSummary.fNEntries));
+      RClusterDescriptorBuilder clusterBuilder;
+      clusterBuilder.ClusterId(clusterId)
+         .FirstEntryIndex(clusterSummary.fFirstEntry)
+         .NEntries(clusterSummary.fNEntries);
+      clusters.emplace_back(std::move(clusterBuilder));
    }
    bytes = clusterSummaryFrame + clusterSummaryFrameSize;
 

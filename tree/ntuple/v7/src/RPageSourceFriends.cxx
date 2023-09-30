@@ -93,14 +93,18 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
 
       for (const auto &cg : descriptorGuard->GetClusterGroupIterable()) {
          RClusterGroupDescriptorBuilder clusterGroupBuilder;
-         clusterGroupBuilder.ClusterGroupId(fNextId).MinEntry(cg.GetMinEntry()).EntrySpan(cg.GetEntrySpan());
+         clusterGroupBuilder.ClusterGroupId(fNextId)
+            .MinEntry(cg.GetMinEntry())
+            .EntrySpan(cg.GetEntrySpan())
+            .NClusters(cg.GetNClusters());
          fBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
          fIdBiMap.Insert({i, cg.GetId()}, fNextId);
          fNextId++;
       }
 
       for (const auto &c : descriptorGuard->GetClusterIterable()) {
-         RClusterDescriptorBuilder clusterBuilder(fNextId, c.GetFirstEntryIndex(), c.GetNEntries());
+         RClusterDescriptorBuilder clusterBuilder;
+         clusterBuilder.ClusterId(fNextId).FirstEntryIndex(c.GetFirstEntryIndex()).NEntries(c.GetNEntries());
          for (auto originColumnId : c.GetColumnIds()) {
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
 
