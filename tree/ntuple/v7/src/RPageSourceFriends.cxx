@@ -91,14 +91,12 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       }
       AddVirtualField(descriptorGuard.GetRef(), i, descriptorGuard->GetFieldZero(), 0, descriptorGuard->GetName());
 
-      // TODO(jblomer): add cluster groups properly
-      if (i == 0) {
-         fBuilder.AddClusterGroup(RClusterGroupDescriptorBuilder()
-                                     .ClusterGroupId(0)
-                                     .MinEntry(0)
-                                     .EntrySpan(fSources[0]->GetNEntries())
-                                     .MoveDescriptor()
-                                     .Unwrap());
+      for (const auto &cg : descriptorGuard->GetClusterGroupIterable()) {
+         RClusterGroupDescriptorBuilder clusterGroupBuilder;
+         clusterGroupBuilder.ClusterGroupId(fNextId).MinEntry(cg.GetMinEntry()).EntrySpan(cg.GetEntrySpan());
+         fBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
+         fIdBiMap.Insert({i, cg.GetId()}, fNextId);
+         fNextId++;
       }
 
       for (const auto &c : descriptorGuard->GetClusterIterable()) {
