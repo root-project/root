@@ -545,8 +545,10 @@ std::uint64_t ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROO
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
    auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
-   RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
-                                            nEntriesInCluster);
+   RClusterDescriptorBuilder clusterBuilder;
+   clusterBuilder.ClusterId(fDescriptorBuilder.GetDescriptor().GetNActiveClusters())
+      .FirstEntryIndex(fPrevClusterNEntries)
+      .NEntries(nEntriesInCluster);
    for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
       RClusterDescriptor::RPageRange fullRange;
       fullRange.fPhysicalColumnId = i;
@@ -565,7 +567,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitClusterGroup()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   const auto nClusters = descriptor.GetNClusters();
+   const auto nClusters = descriptor.GetNActiveClusters();
    std::vector<DescriptorId_t> physClusterIDs;
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
       physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
@@ -581,13 +583,14 @@ void ROOT::Experimental::Detail::RPagePersistentSink::CommitClusterGroup()
    RClusterGroupDescriptorBuilder cgBuilder;
    cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
    if (fNextClusterInGroup == nClusters) {
-      cgBuilder.MinEntry(0).EntrySpan(0);
+      cgBuilder.MinEntry(0).EntrySpan(0).NClusters(0);
    } else {
       const auto &firstClusterDesc = descriptor.GetClusterDescriptor(fNextClusterInGroup);
       const auto &lastClusterDesc = descriptor.GetClusterDescriptor(nClusters - 1);
       cgBuilder.MinEntry(firstClusterDesc.GetFirstEntryIndex())
          .EntrySpan(lastClusterDesc.GetFirstEntryIndex() + lastClusterDesc.GetNEntries() -
-                    firstClusterDesc.GetFirstEntryIndex());
+                    firstClusterDesc.GetFirstEntryIndex())
+         .NClusters(nClusters - fNextClusterInGroup);
    }
    std::vector<DescriptorId_t> clusterIds;
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {

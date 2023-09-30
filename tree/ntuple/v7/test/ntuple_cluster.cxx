@@ -59,7 +59,12 @@ public:
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
       ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
       for (unsigned i = 0; i <= 5; ++i) {
-         descBuilder.AddCluster(ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
+         descBuilder.AddCluster(ROOT::Experimental::RClusterDescriptorBuilder()
+                                   .ClusterId(i)
+                                   .FirstEntryIndex(i)
+                                   .NEntries(1)
+                                   .MoveDescriptor()
+                                   .Unwrap());
       }
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
