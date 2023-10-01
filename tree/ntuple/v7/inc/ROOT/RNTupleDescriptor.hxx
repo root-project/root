@@ -415,6 +415,7 @@ private:
    /// Free text from the user
    std::string fDescription;
 
+   std::uint64_t fOnDiskHeaderXxHash3 = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
 
@@ -687,6 +688,7 @@ public:
 
    bool operator ==(const RNTupleDescriptor &other) const;
 
+   std::uint64_t GetOnDiskHeaderXxHash3() const { return fOnDiskHeaderXxHash3; }
    std::uint64_t GetOnDiskHeaderSize() const { return fOnDiskHeaderSize; }
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
 
@@ -989,6 +991,7 @@ private:
 
 public:
    RClusterGroupDescriptorBuilder() = default;
+   static RClusterGroupDescriptorBuilder FromSummary(const RClusterGroupDescriptor &clusterGroupDesc);
 
    RClusterGroupDescriptorBuilder &ClusterGroupId(DescriptorId_t clusterGroupId)
    {
@@ -1066,8 +1069,6 @@ Used by RPageStorage implementations in order to construct the RNTupleDescriptor
 class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
-   std::uint64_t fHeaderXxHash3 = 0;
-
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
 public:
    /// Checks whether invariants hold:
@@ -1079,9 +1080,8 @@ public:
 
    void SetNTuple(const std::string_view name, const std::string_view description);
    void SetFeature(unsigned int flag);
-   void SetHeaderXxHash3(std::uint64_t xxhash3) { fHeaderXxHash3 = xxhash3; }
-   std::uint64_t GetHeaderXxHash3() const { return fHeaderXxHash3; }
 
+   void SetOnDiskHeaderXxHash3(std::uint64_t xxhash3) { fDescriptor.fOnDiskHeaderXxHash3 = xxhash3; }
    void SetOnDiskHeaderSize(std::uint64_t size) { fDescriptor.fOnDiskHeaderSize = size; }
    /// The real footer size also include the page list envelopes
    void AddToOnDiskFooterSize(std::uint64_t size) { fDescriptor.fOnDiskFooterSize += size; }

@@ -255,8 +255,9 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
       InitDescriptor(anchor);
    }
 
-   DescriptorId_t clusterIdOffset = 0;
-   for (const auto &cgDesc : fDescriptorBuilder.GetDescriptor().GetClusterGroupIterable()) {
+   auto desc = fDescriptorBuilder.MoveDescriptor();
+
+   for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
       auto buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
       auto zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
       fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
@@ -264,13 +265,10 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
                            buffer.get());
 
-      Internal::RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), clusterIdOffset,
-                                                       fDescriptorBuilder);
-
-      clusterIdOffset += cgDesc.GetNClusters();
+      Internal::RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
 
-   return fDescriptorBuilder.MoveDescriptor();
+   return desc;
 }
 
 void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(DescriptorId_t physicalColumnId,

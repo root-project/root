@@ -571,7 +571,7 @@ TEST(RNTuple, SerializeFooter)
    RNTupleLocator cgLocator;
    cgLocator.fPosition = 1337U;
    cgLocator.fBytesOnStorage = 42;
-   cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator).NClusters(1);
+   cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator).NClusters(1).EntrySpan(100);
    std::vector<DescriptorId_t> clusterIds{84};
    cgBuilder.AddClusters(clusterIds);
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
@@ -601,17 +601,29 @@ TEST(RNTuple, SerializeFooter)
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
-   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, builder);
    desc = builder.MoveDescriptor();
 
    EXPECT_EQ(1u, desc.GetNClusterGroups());
    const auto &clusterGroupDesc = desc.GetClusterGroupDescriptor(0);
+   EXPECT_EQ(0u, clusterGroupDesc.GetMinEntry());
+   EXPECT_EQ(100u, clusterGroupDesc.GetEntrySpan());
    EXPECT_EQ(1u, clusterGroupDesc.GetNClusters());
    EXPECT_EQ(137u, clusterGroupDesc.GetPageListLength());
    EXPECT_EQ(1337u, clusterGroupDesc.GetPageListLocator().GetPosition<std::uint64_t>());
    EXPECT_EQ(42u, clusterGroupDesc.GetPageListLocator().fBytesOnStorage);
-
    EXPECT_EQ(1u, desc.GetNClusters());
+   EXPECT_EQ(0u, desc.GetNActiveClusters());
+
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc);
+   const auto &verify = desc.GetClusterGroupDescriptor(0);
+   EXPECT_EQ(0u, verify.GetMinEntry());
+   EXPECT_EQ(100u, verify.GetEntrySpan());
+   EXPECT_EQ(1u, verify.GetNClusters());
+   EXPECT_EQ(137u, verify.GetPageListLength());
+   EXPECT_EQ(1337u, verify.GetPageListLocator().GetPosition<std::uint64_t>());
+   EXPECT_EQ(42u, verify.GetPageListLocator().fBytesOnStorage);
+
+   EXPECT_EQ(1u, desc.GetNActiveClusters());
    const auto &clusterDesc = desc.GetClusterDescriptor(0);
    EXPECT_EQ(0, clusterDesc.GetFirstEntryIndex());
    EXPECT_EQ(100, clusterDesc.GetNEntries());
