@@ -508,8 +508,9 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    fNTupleIndex = locator.GetIndex();
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
 
-   DescriptorId_t clusterIdOffset = 0;
-   for (const auto &cgDesc : descBuilder.GetDescriptor().GetClusterGroupIterable()) {
+   auto desc = descBuilder.MoveDescriptor();
+
+   for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
       buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
       zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
       fDaosContainer->ReadSingleAkey(
@@ -518,12 +519,10 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
                            buffer.get());
 
-      Internal::RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), clusterIdOffset,
-                                                       descBuilder);
-      clusterIdOffset += cgDesc.GetNClusters();
+      Internal::RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
 
-   return descBuilder.MoveDescriptor();
+   return desc;
 }
 
 std::string ROOT::Experimental::Detail::RPageSourceDaos::GetObjectClass() const

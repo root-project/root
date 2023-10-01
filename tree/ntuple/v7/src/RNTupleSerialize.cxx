@@ -1384,7 +1384,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *b
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   descBuilder.SetHeaderXxHash3(xxhash3);
+   descBuilder.SetOnDiskHeaderXxHash3(xxhash3);
 
    std::vector<std::uint64_t> featureFlags;
    result = DeserializeFeatureFlags(bytes, fnBufSizeLeft(), featureFlags);
@@ -1455,7 +1455,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
    if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint64_t)))
       return R__FAIL("footer too short");
    bytes += DeserializeUInt64(bytes, xxhash3);
-   if (xxhash3 != descBuilder.GetHeaderXxHash3())
+   if (xxhash3 != descBuilder.GetDescriptor().GetOnDiskHeaderXxHash3())
       return R__FAIL("XxHash-3 mismatch between header and footer");
 
    std::uint32_t frameSize;
@@ -1489,7 +1489,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   std::uint64_t clusterIdOffset = 0;
    for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
       RClusterGroup clusterGroup;
       result = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup);
@@ -1505,11 +1504,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
          .MinEntry(clusterGroup.fMinEntry)
          .EntrySpan(clusterGroup.fEntrySpan)
          .NClusters(clusterGroup.fNClusters);
-      std::vector<DescriptorId_t> clusterIds;
-      for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
-         clusterIds.emplace_back(clusterIdOffset + i);
-      clusterGroupBuilder.AddClusters(clusterIds);
-      clusterIdOffset += clusterGroup.fNClusters;
       descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
    }
    bytes = frame + frameSize;
@@ -1528,8 +1522,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer, std::uint64_t bufSize,
-                                                                     DescriptorId_t firstClusterId,
-                                                                     RNTupleDescriptorBuilder &descBuilder)
+                                                                     DescriptorId_t clusterGroupId,
+                                                                     RNTupleDescriptor &desc)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -1545,10 +1539,14 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
    if (fnBufSizeLeft() < static_cast<int>(sizeof(std::uint64_t)))
       return R__FAIL("page list too short");
    bytes += DeserializeUInt64(bytes, xxhash3);
-   if (xxhash3 != descBuilder.GetHeaderXxHash3())
+   if (xxhash3 != desc.GetOnDiskHeaderXxHash3())
       return R__FAIL("XxHash-3 mismatch between header and page list");
 
-   std::vector<RClusterDescriptorBuilder> clusters;
+   std::vector<RClusterDescriptorBuilder> clusterBuilders;
+   DescriptorId_t firstClusterId{0};
+   for (DescriptorId_t i = 0; i < clusterGroupId; ++i) {
+      firstClusterId = firstClusterId + desc.GetClusterGroupDescriptor(i).GetNClusters();
+   }
 
    std::uint32_t clusterSummaryFrameSize;
    auto clusterSummaryFrame = bytes;
@@ -1568,11 +1566,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
       if (clusterSummary.fColumnGroupID >= 0)
          return R__FAIL("sharded clusters are still unsupported");
 
-      RClusterDescriptorBuilder clusterBuilder;
-      clusterBuilder.ClusterId(clusterId)
-         .FirstEntryIndex(clusterSummary.fFirstEntry)
-         .NEntries(clusterSummary.fNEntries);
-      clusters.emplace_back(std::move(clusterBuilder));
+      RClusterDescriptorBuilder builder;
+      builder.ClusterId(clusterId).FirstEntryIndex(clusterSummary.fFirstEntry).NEntries(clusterSummary.fNEntries);
+      clusterBuilders.emplace_back(std::move(builder));
    }
    bytes = clusterSummaryFrame + clusterSummaryFrameSize;
 
@@ -1589,6 +1585,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
    if (nClusters != nClusterSummaries)
       return R__FAIL("mismatch between number of clusters and number of cluster summaries");
 
+   std::vector<RClusterDescriptor> clusters;
    for (std::uint32_t i = 0; i < nClusters; ++i) {
       std::uint32_t outerFrameSize;
       auto outerFrame = bytes;
@@ -1637,15 +1634,16 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
          std::uint32_t compressionSettings;
          bytes += DeserializeUInt32(bytes, compressionSettings);
 
-         clusters[i].CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
+         clusterBuilders[i].CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
          bytes = innerFrame + innerFrameSize;
       } // loop over columns
 
       bytes = outerFrame + outerFrameSize;
 
-      descBuilder.AddCluster(
-         clusters[i].AddDeferredColumnRanges(descBuilder.GetDescriptor()).MoveDescriptor().Unwrap());
+      clusterBuilders[i].AddDeferredColumnRanges(desc);
+      clusters.emplace_back(clusterBuilders[i].MoveDescriptor().Unwrap());
    } // loop over clusters
+   desc.AddClusterGroupDetails(clusterGroupId, clusters);
 
    return RResult<void>::Success();
 }

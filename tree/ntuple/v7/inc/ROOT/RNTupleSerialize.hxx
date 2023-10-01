@@ -254,8 +254,8 @@ public:
    static RResult<void>
    DeserializeFooter(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
-   static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t firstClusterId,
-                                            RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t clusterGroupId,
+                                            RNTupleDescriptor &desc);
 }; // class RNTupleSerializer
 
 } // namespace Internal
