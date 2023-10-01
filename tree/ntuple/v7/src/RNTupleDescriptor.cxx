@@ -429,11 +429,7 @@ ROOT::Experimental::RNTupleDescriptor::AddClusterGroupDetails(DescriptorId_t clu
          return R__FAIL("invalid attempt to re-populate existing cluster");
       }
    }
-   RClusterGroupDescriptorBuilder cgBuilder;
-   cgBuilder.ClusterGroupId(iter->second.GetId())
-      .MinEntry(iter->second.GetMinEntry())
-      .EntrySpan(iter->second.GetEntrySpan())
-      .NClusters(iter->second.GetNClusters());
+   auto cgBuilder = RClusterGroupDescriptorBuilder::FromSummary(iter->second);
    cgBuilder.AddClusters(clusterIds);
    iter->second = std::move(cgBuilder.MoveDescriptor().Unwrap());
    return RResult<void>::Success();
@@ -469,6 +465,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
    auto clone = std::make_unique<RNTupleDescriptor>();
    clone->fName = fName;
    clone->fDescription = fDescription;
+   clone->fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
    clone->fOnDiskHeaderSize = fOnDiskHeaderSize;
    clone->fOnDiskFooterSize = fOnDiskFooterSize;
    clone->fNEntries = fNEntries;
@@ -615,6 +612,19 @@ ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+ROOT::Experimental::RClusterGroupDescriptorBuilder
+ROOT::Experimental::RClusterGroupDescriptorBuilder::FromSummary(const RClusterGroupDescriptor &clusterGroupDesc)
+{
+   RClusterGroupDescriptorBuilder builder;
+   builder.ClusterGroupId(clusterGroupDesc.GetId())
+      .PageListLocator(clusterGroupDesc.GetPageListLocator())
+      .PageListLength(clusterGroupDesc.GetPageListLength())
+      .MinEntry(clusterGroupDesc.GetMinEntry())
+      .EntrySpan(clusterGroupDesc.GetEntrySpan())
+      .NClusters(clusterGroupDesc.GetNClusters());
+   return builder;
+}
 
 ROOT::Experimental::RResult<ROOT::Experimental::RClusterGroupDescriptor>
 ROOT::Experimental::RClusterGroupDescriptorBuilder::MoveDescriptor()

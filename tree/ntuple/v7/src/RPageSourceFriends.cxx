@@ -92,11 +92,8 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       AddVirtualField(descriptorGuard.GetRef(), i, descriptorGuard->GetFieldZero(), 0, descriptorGuard->GetName());
 
       for (const auto &cg : descriptorGuard->GetClusterGroupIterable()) {
-         RClusterGroupDescriptorBuilder clusterGroupBuilder;
-         clusterGroupBuilder.ClusterGroupId(fNextId)
-            .MinEntry(cg.GetMinEntry())
-            .EntrySpan(cg.GetEntrySpan())
-            .NClusters(cg.GetNClusters());
+         auto clusterGroupBuilder = RClusterGroupDescriptorBuilder::FromSummary(cg);
+         clusterGroupBuilder.ClusterGroupId(fNextId);
          fBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
          fIdBiMap.Insert({i, cg.GetId()}, fNextId);
          fNextId++;
