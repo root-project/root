@@ -450,7 +450,6 @@ void ROOT::Experimental::Detail::RPagePersistentSink::UpdateSchema(const RNTuple
       // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` on read back.
       columnRange.fFirstElementIndex = descriptor.GetColumnDescriptor(i).GetFirstElementIndex();
       columnRange.fNElements = 0;
-      columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
       pageRange.fPhysicalColumnId = i;
@@ -466,6 +465,7 @@ void ROOT::Experimental::Detail::RPagePersistentSink::UpdateSchema(const RNTuple
 void ROOT::Experimental::Detail::RPagePersistentSink::Create(RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
+   fDescriptorBuilder.SetDefaultCompression(GetWriteOptions().GetCompression());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto &fieldZero = *model.GetFieldZero();
@@ -553,8 +553,7 @@ std::uint64_t ROOT::Experimental::Detail::RPagePersistentSink::CommitCluster(ROO
       RClusterDescriptor::RPageRange fullRange;
       fullRange.fPhysicalColumnId = i;
       std::swap(fullRange, fOpenPageRanges[i]);
-      clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
-                                       fOpenColumnRanges[i].fCompressionSettings, fullRange);
+      clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex, fullRange);
       fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
       fOpenColumnRanges[i].fNElements = 0;
    }
