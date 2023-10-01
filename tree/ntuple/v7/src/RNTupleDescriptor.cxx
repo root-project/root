@@ -465,6 +465,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
    auto clone = std::make_unique<RNTupleDescriptor>();
    clone->fName = fName;
    clone->fDescription = fDescription;
+   clone->fDefaultCompression = fDefaultCompression;
    clone->fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
    clone->fOnDiskHeaderSize = fOnDiskHeaderSize;
    clone->fOnDiskFooterSize = fOnDiskFooterSize;
@@ -524,7 +525,6 @@ ROOT::Experimental::RClusterGroupDescriptor ROOT::Experimental::RClusterGroupDes
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t physicalId,
                                                                  std::uint64_t firstElementIndex,
-                                                                 std::uint32_t compressionSettings,
                                                                  const RClusterDescriptor::RPageRange &pageRange)
 {
    if (physicalId != pageRange.fPhysicalColumnId)
@@ -532,7 +532,6 @@ ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t 
    if (fCluster.fPageRanges.count(physicalId) > 0)
       return R__FAIL("column ID conflict");
    RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, RClusterSize(0)};
-   columnRange.fCompressionSettings = compressionSettings;
    for (const auto &pi : pageRange.fPageInfos) {
       columnRange.fNElements += pi.fNElements;
    }
@@ -688,6 +687,11 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(const std::string_v
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetDefaultCompression(std::uint64_t defaultCompression)
+{
+   fDescriptor.fDefaultCompression = defaultCompression;
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)

@@ -220,16 +220,13 @@ public:
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// The number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
-      /// The usual format for ROOT compression settings (see Compression.h).
-      /// The pages of a particular column in a particular cluster are all compressed with the same settings.
-      std::int64_t fCompressionSettings = 0;
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
 
       bool operator==(const RColumnRange &other) const {
          return fPhysicalColumnId == other.fPhysicalColumnId && fFirstElementIndex == other.fFirstElementIndex &&
-                fNElements == other.fNElements && fCompressionSettings == other.fCompressionSettings;
+                fNElements == other.fNElements;
       }
 
       bool Contains(NTupleSize_t index) const {
@@ -414,6 +411,7 @@ private:
    std::string fName;
    /// Free text from the user
    std::string fDescription;
+   std::uint64_t fDefaultCompression = 0; ///< The compression algorithm that should be reported for this ntuple
 
    std::uint64_t fOnDiskHeaderXxHash3 = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
@@ -753,6 +751,7 @@ public:
 
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
+   std::uint64_t GetDefaultCompression() const { return fDefaultCompression; }
 
    std::size_t GetNFields() const { return fFieldDescriptors.size(); }
    std::size_t GetNLogicalColumns() const { return fColumnDescriptors.size(); }
@@ -967,7 +966,7 @@ public:
    }
 
    RResult<void> CommitColumnRange(DescriptorId_t physicalId, std::uint64_t firstElementIndex,
-                                   std::uint32_t compressionSettings, const RClusterDescriptor::RPageRange &pageRange);
+                                   const RClusterDescriptor::RPageRange &pageRange);
 
    /// Add column and page ranges for deferred columns missing in this cluster.  The locator type for the synthesized
    /// page ranges is `kTypePageZero`.  All the page sources must be able to populate the 'zero' page from such locator.
@@ -1079,6 +1078,7 @@ public:
    RNTupleDescriptor MoveDescriptor();
 
    void SetNTuple(const std::string_view name, const std::string_view description);
+   void SetDefaultCompression(std::uint64_t defaultCompression);
    void SetFeature(unsigned int flag);
 
    void SetOnDiskHeaderXxHash3(std::uint64_t xxhash3) { fDescriptor.fOnDiskHeaderXxHash3 = xxhash3; }

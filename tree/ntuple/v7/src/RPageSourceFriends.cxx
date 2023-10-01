@@ -107,11 +107,9 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
 
             auto pageRange = c.GetPageRange(originColumnId).Clone();
             pageRange.fPhysicalColumnId = virtualColumnId;
-
             auto firstElementIndex = c.GetColumnRange(originColumnId).fFirstElementIndex;
-            auto compressionSettings = c.GetColumnRange(originColumnId).fCompressionSettings;
 
-            clusterBuilder.CommitColumnRange(virtualColumnId, firstElementIndex, compressionSettings, pageRange);
+            clusterBuilder.CommitColumnRange(virtualColumnId, firstElementIndex, pageRange);
          }
          fBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
          fIdBiMap.Insert({i, c.GetId()}, fNextId);
