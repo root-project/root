@@ -679,8 +679,8 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 #endif
 
    Int_t bufpos = 0;
-   Int_t isachar = 0;
-   Int_t isabool = 0;
+   //Int_t isachar = 0;
+   //Int_t isabool = 0;
    char fullname[64];
    char name[32];
    char block[32];
@@ -772,9 +772,17 @@ TObject *THbookFile::ConvertCWN(Int_t id)
       // to be done
       boolflag[i] = -10;
       charflag[i] = 0;
-      if (itype == 4) {isabool++; boolflag[i] = bufpos; lenbool[i] = ielem;}
+      if (itype == 4) {
+         //isabool++;
+         boolflag[i] = bufpos;
+         lenbool[i] = ielem;
+      }
       bufpos += isize*ielem;
-      if (ischar) {isachar++; charflag[i] = bufpos-1; lenchar[i] = isize*ielem;}
+      if (ischar) {
+         //isachar++;
+         charflag[i] = bufpos - 1;
+         lenchar[i] = isize * ielem;
+      }
       TObjArray *ll= branch->GetListOfLeaves();
       TLeaf *leaf = (TLeaf*)ll->UncheckedAt(0);
       if (!leaf) continue;
