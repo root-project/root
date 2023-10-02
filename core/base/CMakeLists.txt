@@ -216,7 +216,14 @@ target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
 
-target_link_libraries(Core PRIVATE PCRE::PCRE)
+if(PCRE2_FOUND)
+  target_link_libraries(Core PRIVATE PCRE2::PCRE2)
+  set_source_files_properties(src/TPRegexp.cxx
+    TARGET_DIRECTORY Core
+    PROPERTIES COMPILE_DEFINITIONS USE_PCRE2)
+else()
+  target_link_libraries(Core PRIVATE PCRE::PCRE)
+endif()
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
