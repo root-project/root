@@ -160,7 +160,7 @@ TEST(RNTuple, SerializeEnvelope)
 
 TEST(RNTuple, SerializeFrame)
 {
-   std::uint32_t frameSize;
+   std::uint64_t frameSize;
    std::uint32_t nitems;
 
    try {
@@ -190,14 +190,6 @@ TEST(RNTuple, SerializeFrame)
    EXPECT_EQ(6u, frameSize);
    EXPECT_EQ(1u, nitems);
 
-   EXPECT_EQ(4u, RNTupleSerializer::SerializeRecordFramePreamble(buffer));
-   try {
-      RNTupleSerializer::SerializeFramePostscript(buffer, -2);
-      FAIL() << "too big frame should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("too large"));
-   }
-
    EXPECT_EQ(8u, RNTupleSerializer::SerializeListFramePreamble(2, buffer));
    try {
       RNTupleSerializer::SerializeFramePostscript(buffer, 7);
@@ -216,6 +208,34 @@ TEST(RNTuple, SerializeFrame)
    EXPECT_EQ(8u, RNTupleSerializer::DeserializeFrameHeader(buffer, 12, frameSize, nitems).Unwrap());
    EXPECT_EQ(12u, frameSize);
    EXPECT_EQ(2u, nitems);
+}
+
+TEST(RNTuple, SerializeLongFrame)
+{
+   std::uint64_t frameSize;
+   std::uint32_t nitems;
+
+   const std::size_t payloadSize = 1024 * 1024 * 1024;
+   const std::size_t bufSize = payloadSize + 12;
+
+   EXPECT_EQ(4u, RNTupleSerializer::SerializeRecordFramePreamble(nullptr));
+   EXPECT_EQ(4u, RNTupleSerializer::SerializeFramePostscript(nullptr, payloadSize));
+
+   auto buffer = std::make_unique<char[]>(bufSize);
+   buffer[8] = 'x';
+   EXPECT_EQ(8u, RNTupleSerializer::SerializeListFramePreamble(2, buffer.get()));
+   EXPECT_EQ(4u, RNTupleSerializer::SerializeFramePostscript(buffer.get(), payloadSize + 8));
+
+   try {
+      RNTupleSerializer::DeserializeFrameHeader(buffer.get(), payloadSize, frameSize).Unwrap();
+      FAIL() << "too small frame should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
+   }
+   EXPECT_EQ(12u, RNTupleSerializer::DeserializeFrameHeader(buffer.get(), bufSize, frameSize, nitems).Unwrap());
+   EXPECT_EQ(bufSize, frameSize);
+   EXPECT_EQ(2u, nitems);
+   EXPECT_EQ('x', buffer[12]);
 }
 
 TEST(RNTuple, SerializeFeatureFlags)
