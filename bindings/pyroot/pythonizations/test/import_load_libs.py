@@ -23,6 +23,7 @@ class ImportLoadLibs(unittest.TestCase):
             'libc',
             'libdl',
             'libpcre',
+            'libpcre2-8',
             # libCling and dependencies
             'libCling.*',
             'librt',
