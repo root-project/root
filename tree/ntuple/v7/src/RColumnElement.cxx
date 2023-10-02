@@ -68,7 +68,7 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
    switch (type) {
    case EColumnType::kIndex64: return 64;
    case EColumnType::kIndex32: return 32;
-   case EColumnType::kSwitch: return 64;
+   case EColumnType::kSwitch: return 96;
    case EColumnType::kByte: return 8;
    case EColumnType::kChar: return 8;
    case EColumnType::kBit: return 1;

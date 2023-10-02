@@ -32,6 +32,7 @@
 #include <string>
 #include <type_traits>
 #include <typeinfo>
+#include <utility>
 
 #ifndef R__LITTLE_ENDIAN
 #ifdef R__BYTESWAP
@@ -541,10 +542,16 @@ public:
 
 template <>
 class RColumnElement<RColumnSwitch, EColumnType::kSwitch> : public RColumnElementBase {
+private:
+   struct RSwitchElement {
+      std::uint64_t fIndex;
+      std::uint32_t fTag;
+   };
+
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
-   static constexpr std::size_t kBitsOnStorage = 64;
+   static constexpr std::size_t kBitsOnStorage = 96;
    RColumnElement() : RColumnElementBase(kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
@@ -552,28 +559,29 @@ public:
    void Pack(void *dst, void *src, std::size_t count) const final
    {
       auto srcArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(src);
-      auto uint64Array = reinterpret_cast<std::uint64_t *>(dst);
+      auto dstArray = reinterpret_cast<unsigned char *>(dst);
       for (std::size_t i = 0; i < count; ++i) {
-         uint64Array[i] =
-            (static_cast<std::uint64_t>(srcArray[i].GetTag()) << 44) | (srcArray[i].GetIndex() & 0x0fffffffffff);
+         RSwitchElement element{srcArray[i].GetIndex(), srcArray[i].GetTag()};
 #if R__LITTLE_ENDIAN == 0
-         uint64Array[i] = RByteSwap<8>::bswap(uint64Array[i]);
+         element.fIndex = RByteSwap<8>::bswap(element.fIndex);
+         element.fTag = RByteSwap<8>::bswap(element.fTag);
 #endif
+         memcpy(dstArray + i * 12, &element, 12);
       }
    }
 
    void Unpack(void *dst, void *src, std::size_t count) const final
    {
-      auto uint64Array = reinterpret_cast<std::uint64_t *>(src);
+      auto srcArray = reinterpret_cast<unsigned char *>(src);
       auto dstArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(dst);
       for (std::size_t i = 0; i < count; ++i) {
-#if R__LITTLE_ENDIAN == 1
-         const auto value = uint64Array[i];
-#else
-         const auto value = RByteSwap<8>::bswap(uint64Array[i]);
+         RSwitchElement element;
+         memcpy(&element, srcArray + i * 12, 12);
+#if R__LITTLE_ENDIAN == 0
+         element.fIndex = RByteSwap<8>::bswap(element.fIndex);
+         element.fTag = RByteSwap<8>::bswap(element.fTag);
 #endif
-         dstArray[i] = ROOT::Experimental::RColumnSwitch(
-            ClusterSize_t{static_cast<RClusterSize::ValueType>(value & 0x0fffffffffff)}, (value >> 44));
+         dstArray[i] = ROOT::Experimental::RColumnSwitch(ClusterSize_t{element.fIndex}, element.fTag);
       }
    }
 };
