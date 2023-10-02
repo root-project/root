@@ -120,13 +120,14 @@ The following feature bits are defined:
 ## Frames
 
 RNTuple envelopes can store records and lists of basic types and other records or lists by means of **frames**.
-The frame has the following format
+Frames can be short (<1GB) or long (>=1GB).
+A Short frame has the following format
 
 ```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                             Size                            |T|
+|0|                           Size                            |T|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |              Number of Items (for list frames)                |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -134,7 +135,26 @@ The frame has the following format
 |                              ...                              |
 ```
 
-_Size_: The size in bytes of the frame and the payload
+A long frame have the following format
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|1|                                                             |
++-+                           Size                            +-+
+|                                                             |T|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|              Number of Items (for list frames)                |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         FRAME PAYLOAD                         |
+|                              ...                              |
+```
+
+_Size_: The size in bytes of the frame and the payload.
+To get the size, read first a 32bit signed integer.
+An even integer indicates a short frame.
+An odd integer indicates a long frame; in this case, read a 64bit signed integer.
+Take the absolute value of the size divided by two.
 
 _T(ype)_: Can be either 0 for a **record frame** or 1 for a **list frame**.
 The type should be interpreted as the sign bit of the size, i.e. negative sizes indicate list frames.

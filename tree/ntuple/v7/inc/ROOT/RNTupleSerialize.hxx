@@ -191,7 +191,7 @@ public:
    static std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t &val);
 
    static std::uint32_t SerializeString(const std::string &val, void *buffer);
-   static RResult<std::uint32_t> DeserializeString(const void *buffer, std::uint32_t bufSize, std::string &val);
+   static RResult<std::uint32_t> DeserializeString(const void *buffer, std::uint64_t bufSize, std::string &val);
 
    /// While we could just interpret the enums as ints, we make the translation explicit
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
@@ -212,37 +212,37 @@ public:
 
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
-   static std::uint32_t SerializeFramePostscript(void *frame, std::int32_t size);
-   static RResult<std::uint32_t> DeserializeFrameHeader(const void *buffer, std::uint32_t bufSize,
-                                                        std::uint32_t &frameSize, std::uint32_t &nitems);
-   static RResult<std::uint32_t> DeserializeFrameHeader(const void *buffer, std::uint32_t bufSize,
-                                                        std::uint32_t &frameSize);
+   static std::uint32_t SerializeFramePostscript(void *frame, std::uint64_t size);
+   static RResult<std::uint32_t>
+   DeserializeFrameHeader(const void *buffer, std::uint64_t bufSize, std::uint64_t &frameSize, std::uint32_t &nitems);
+   static RResult<std::uint32_t>
+   DeserializeFrameHeader(const void *buffer, std::uint64_t bufSize, std::uint64_t &frameSize);
 
    // An empty flags vector will be serialized as a single, zero feature flag
    // The most significant bit in every flag is reserved and must _not_ be set
    static std::uint32_t SerializeFeatureFlags(const std::vector<std::uint64_t> &flags, void *buffer);
    static RResult<std::uint32_t>
-   DeserializeFeatureFlags(const void *buffer, std::uint32_t bufSize, std::vector<std::uint64_t> &flags);
+   DeserializeFeatureFlags(const void *buffer, std::uint64_t bufSize, std::vector<std::uint64_t> &flags);
 
    static std::uint32_t SerializeLocator(const RNTupleLocator &locator, void *buffer);
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
-   static RResult<std::uint32_t> DeserializeLocator(const void *buffer, std::uint32_t bufSize, RNTupleLocator &locator);
-   static RResult<std::uint32_t> DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize,
-                                                         REnvelopeLink &envelopeLink);
+   static RResult<std::uint32_t> DeserializeLocator(const void *buffer, std::uint64_t bufSize, RNTupleLocator &locator);
+   static RResult<std::uint32_t>
+   DeserializeEnvelopeLink(const void *buffer, std::uint64_t bufSize, REnvelopeLink &envelopeLink);
 
    static std::uint32_t SerializeClusterSummary(const RClusterSummary &clusterSummary, void *buffer);
    static std::uint32_t SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer);
-   static RResult<std::uint32_t> DeserializeClusterSummary(const void *buffer, std::uint32_t bufSize,
-                                                           RClusterSummary &clusterSummary);
-   static RResult<std::uint32_t> DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
-                                                         RClusterGroup &clusterGroup);
+   static RResult<std::uint32_t>
+   DeserializeClusterSummary(const void *buffer, std::uint64_t bufSize, RClusterSummary &clusterSummary);
+   static RResult<std::uint32_t>
+   DeserializeClusterGroup(const void *buffer, std::uint64_t bufSize, RClusterGroup &clusterGroup);
 
    /// Serialize the schema description in `desc` into `buffer`. If `forHeaderExtension` is true, serialize only the
    /// fields and columns tagged as part of the header extension (see `RNTupleDescriptorBuilder::BeginHeaderExtension`).
    static std::uint32_t SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc, const RContext &context,
                                                    bool forHeaderExtension = false);
    static RResult<std::uint32_t>
-   DeserializeSchemaDescription(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
 
    static RContext SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
    static std::uint32_t SerializePageList(void *buffer, const RNTupleDescriptor &desc,
