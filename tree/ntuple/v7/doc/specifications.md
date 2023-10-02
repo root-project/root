@@ -389,7 +389,7 @@ The column type and bits on storage integers can have one of the following value
 |------|------|--------------|-------------------------------------------------------------------------------|
 | 0x01 |   64 | Index64      | Mother columns of (nested) collections, counting is relative to the cluster   |
 | 0x02 |   32 | Index32      | Mother columns of (nested) collections, counting is relative to the cluster   |
-| 0x03 |   64 | Switch       | Lower 44 bits like kIndex64, higher 20 bits are a dispatch tag to a column ID |
+| 0x03 |   96 | Switch       | Tuple of a kIndex64 value followed by a 32 bits dispatch tag to a column ID   |
 | 0x04 |    8 | Byte         | An uninterpreted byte, e.g. part of a blob                                    |
 | 0x05 |    8 | Char         | ASCII character                                                               |
 | 0x06 |    1 | Bit          | Boolean value                                                                 |

@@ -124,9 +124,8 @@ TEST(Packing, RColumnSwitch)
    element.Unpack(nullptr, nullptr, 0);
 
    ROOT::Experimental::RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
-   std::uint64_t out = 0;
+   std::pair<std::uint64_t, std::uint32_t> out;
    element.Pack(&out, &s1, 1);
-   EXPECT_NE(0, out);
    ROOT::Experimental::RColumnSwitch s2;
    element.Unpack(&s2, &out, 1);
    EXPECT_EQ(0xaa, s2.GetIndex());
