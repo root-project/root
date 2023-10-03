@@ -248,7 +248,7 @@ jobs:
                     --base_ref     ${{ github.base_ref }}
                     --head_ref     refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
-                    --architecture ${{ matrix.target_arch }}  "
+                    --architecture ${{ matrix.target_arch }}"
 
       - name: Workflow dispatch/call
         if:   github.event_name == 'workflow_dispatch'
@@ -261,7 +261,7 @@ jobs:
                     --base_ref     ${{ inputs.base_ref }}
                     --head_ref     ${{ inputs.head_ref }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
-                    --architecture ${{ matrix.target_arch }}  "
+                    --architecture ${{ matrix.target_arch }}"
 
       - name: Nightly build
         if:   github.event_name == 'schedule'
@@ -274,19 +274,19 @@ jobs:
                     --binaries     true
                     --base_ref     ${{ github.ref_name }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
-                    --architecture ${{ matrix.target_arch }}  "
+                    --architecture ${{ matrix.target_arch }}"
 
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
-                    --platform       windows10
-                    --incremental    false
-                    --base_ref       ${{ github.ref_name }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}
-                    --architecture   ${{ matrix.target_arch }}  "
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  false
+                    --base_ref     ${{ github.ref_name }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.target_arch }}"
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
