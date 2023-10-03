@@ -44,10 +44,6 @@ if sys.version_info >= (3, 8):
 
     from ._gnn import RModel_GNN, RModel_GraphIndependent
 
-hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
-if hasRDF:
-    from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor
-
 #this should be available only when xgboost is there ?
 # We probably don't need a protection here since the code is run only when there is xgboost
 from ._tree_inference import SaveXGBoost, pythonize_tree_inference
