@@ -53,6 +53,7 @@ void TrainClassificationModel()
    factory->BookMethod(dataloader, TMVA::Types::kBDT, "BDT", "!V:!H:NTrees=100:MaxDepth=2");
    factory->TrainAllMethods();
    output->Close();
+   delete data;
 }
 
 // Regression
@@ -92,6 +93,7 @@ void TrainRegressionModel()
    factory->BookMethod(dataloader, TMVA::Types::kBDT, "BDTG", "!V:!H:NTrees=100:MaxDepth=2");
    factory->TrainAllMethods();
    output->Close();
+   delete data;
 }
 
 // Multiclass
@@ -138,6 +140,7 @@ void TrainMulticlassModel()
    factory->BookMethod(dataloader, TMVA::Types::kBDT, "BDT", "!V:!H:NTrees=100:MaxDepth=2:BoostType=Grad");
    factory->TrainAllMethods();
    output->Close();
+   delete data;
 }
 
 TEST(RReader, ClassificationGetVariables)
