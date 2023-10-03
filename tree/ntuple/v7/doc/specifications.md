@@ -889,15 +889,25 @@ The valid types are `std::uint32_t` and `std::uint64_t`.
 
 ## Limits
 
-TODO(jblomer)
+This section summarizes key design limits of RNTuple data sets.
 
-- Max page size: 100M / 1B elements
-- maximum size of frame, envelope: 2GB
-- max number of fields, columns, clusters: 200M (due to frame limits)
--   Due to switch column: 1M fields, columns
-- max cluster size: 16TB (switch column)
-- max file size / data set size
-- Maximum element size: 8k (better 4?)
+| Limit                                          | Value                        | Reason / Comment                                     |
+|------------------------------------------------|------------------------------|------------------------------------------------------|
+| Maximum volume                                 | 10 EB (theoretically more)   | Assuming 10k cluster groups of 10k clusters of 100MB |
+| Maximum number of elements, entries            | 2^64                         | Using default (Split)Index64, otherwise 2^32         |
+| Maximum cluster & entry size                   | 8TB (depends on pagination)  | Assuming limit of 4B pages of 4kB each               |
+| Maximum page size                              | 2B elements, 256MB-2GB       | #elements * element size, 2GB limit from locator     |
+| Maximum element size                           | 8kB                          | 16bit for number of bits per element                 |
+| Maximum number of column types                 | 64k                          | 16bit for column type                                |
+| Maximum envelope size                          | 2^48B (~280TB)               | Envelope header encoding                             |
+| Maximum frame size                             | 2^62B, 4B items (list frame) | Frame preamble encoding                              |
+| Maximum field / type version                   | 4B                           | Field meta-data encoding                             |
+| Maximum number of fields, columns              | 4B (foreseen: <10M)          | 32bit column / field IDs, list frame limit           |
+| Maximum number of column groups                | 4B (foreseen: <10k)          | List frame limits                                    |
+| Maximum number of clusters per group           | 4B (foreseen: <10k)          | List frame limits, cluster group summary encoding    |
+| Maximum number of pages per cluster per column | 4B                           | List frame limits                                    |
+| Maximum number of entries per cluster          | 2^60                         | Cluster summary encoding                             |
+| Maximum string length (meta-data)              | 4GB                          | String encoding                                      |
 
 ## Notes on Backward and Forward Compatibility
 
