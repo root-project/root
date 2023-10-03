@@ -18,7 +18,8 @@ on:
       - 'master'
       - 'v*-*-*-patches'
 
-  # Allows nightly builds to trigger one run for each branch easily
+  # Allows nightly builds to trigger one run for each branch easily, by
+  # providing the relevant branch as "default" value here:
   workflow_call:
     inputs:
       head_ref:
@@ -29,14 +30,6 @@ on:
         type: string
         required: true
         default: master
-      incremental:
-        type: boolean
-        required: true
-        default: false
-      binaries:
-        type: boolean
-        required: true
-        default: true
 
   # Enables manual start of workflow
   workflow_dispatch:
