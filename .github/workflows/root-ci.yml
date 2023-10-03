@@ -106,8 +106,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Apply option overrides from matrix for this job
-        if: ${{ matrix.overrides != NaN }}
+      - name: Apply option overrides from matrix for this job for non-release builds
+        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
@@ -369,8 +369,8 @@ jobs:
                ls -la
               '
 
-      - name: Apply option overrides from matrix for this job
-        if: ${{ matrix.overrides != NaN }}
+      - name: Apply option overrides from matrix for this job for non-release builds
+        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
