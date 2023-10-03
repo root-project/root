@@ -60,6 +60,15 @@ on:
         type: boolean
         required: true
         default: false
+      buildtype:
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
 
 env:
   PYTHONUNBUFFERED: true
@@ -84,9 +93,8 @@ jobs:
         include:
           - platform: mac14
             arch: ARM64
-            config: Release
 
-    name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
+    name: ${{ matrix.platform }} ${{ matrix.arch }}
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -104,7 +112,7 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    $INCREMENTAL
                     --base_ref       ${{ github.base_ref }}
@@ -114,7 +122,7 @@ jobs:
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
                     --base_ref       ${{ inputs.base_ref }}
@@ -125,7 +133,7 @@ jobs:
       - name: Nightly build
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --binaries       true
@@ -135,7 +143,7 @@ jobs:
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
@@ -146,21 +154,21 @@ jobs:
         if:   ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
-          name: Test Results ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
+          name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
       - name: Upload build artifacts
         if:   ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
-          name: Test Results ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
+          name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v3
         with:
-          name: Binaries ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
+          name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
           path: /Users/sftnight/ROOT-CI/packages/root_v*
           if-no-files-found: error
 
@@ -280,35 +288,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Specify image + config + (optional) build option overrides
+        # Specify image + (optional) build option overrides
         #
         # Available images: https://github.com/root-project/root-ci-images
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
           - image: fedora39
-            config: Release
-
           - image: fedora38
-            config: Debug
-
           - image: fedora37
-            config: Debug
-
           - image: alma8
-            config: Release
-
           - image: alma9
-            config: Release
-
           - image: ubuntu20
-            config: Release
-
           - image: ubuntu2304
-            config: Release
-
           - image: ubuntu22
-            config: Debug
             overrides: ["imt=Off"]
 
     runs-on:
@@ -316,7 +309,7 @@ jobs:
       - linux
       - x64
 
-    name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
+    name: ${{ matrix.image }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
@@ -386,7 +379,7 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
                     --image          registry.cern.ch/root-ci/${{ matrix.image }}:buildready
                     --dockeropts     '--shm-size=1g -m 16g --security-opt label=disable --rm'
@@ -399,7 +392,7 @@ jobs:
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.image }}
                     --incremental    ${{ inputs.incremental }}
                     --base_ref       ${{ inputs.base_ref }}
@@ -410,7 +403,7 @@ jobs:
       - name: Nightly build
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      Release
                     --platform       ${{ matrix.image }}
                     --incremental    false
                     --binaries       true
@@ -421,7 +414,7 @@ jobs:
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      ${{ matrix.config }}
+                    --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
@@ -432,14 +425,14 @@ jobs:
         if:   ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
-          name: Test Results ${{ matrix.image }} ${{ matrix.config }}
+          name: Test Results ${{ matrix.image }}
           path: /github/home/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v3
         with:
-          name: Binaries ${{ matrix.image }} ${{ matrix.config }}
+          name: Binaries ${{ matrix.image }}
           path: /github/home/ROOT-CI/packages/root_v*
           if-no-files-found: error
 
