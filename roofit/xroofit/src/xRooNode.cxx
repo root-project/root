@@ -7732,7 +7732,8 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          } else {
             res = RooProduct("errorEval", "errorEval",
                              RooArgList(*rar, !_coefs.get() ? RooFit::RooConst(1) : *_coefs.get<RooAbsReal>()))
-                     .getPropagatedError(*fr, normSet);
+                     .getPropagatedError(*fr/*, normSet*/); // should be no need to pass a normSet to a non-pdf (but not verified this)
+                     // especially important not to pass in the case we are evaluated RooRealSumPdf as a function! otherwise error will be wrong
          }
          if (needBinWidth) {
             res *= h->GetBinWidth(i);
@@ -8667,7 +8668,8 @@ void xRooNode::Draw(Option_t *opt)
 
          std::string poiName;
          if (sOpt.Contains("brakdown:")) {
-            poiName = sOpt(sOpt.Index("brakdown:") + 9, sOpt.Length());
+            TString sOpt3(opt);
+            poiName = sOpt3(sOpt3.Index("breakdown:") + 10, sOpt3.Length());
          } else {
             std::unique_ptr<RooAbsCollection> _poi(fr->floatParsFinal().selectByAttrib("poi", true));
             if (_poi->empty()) {
@@ -8923,7 +8925,8 @@ void xRooNode::Draw(Option_t *opt)
       double maxImpact = 0;
       if (sOpt.Contains("impact")) {
          if (sOpt.Contains("impact:")) {
-            poiName = sOpt(sOpt.Index("impact:") + 7, sOpt.Length());
+            TString sOpt3(opt);
+            poiName = sOpt3(sOpt3.Index("impact:") + 7, sOpt3.Length());
          } else {
             std::unique_ptr<RooAbsCollection> _poi(fr->floatParsFinal().selectByAttrib("poi", true));
             if (_poi->empty()) {
