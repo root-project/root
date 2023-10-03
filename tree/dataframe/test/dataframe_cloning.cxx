@@ -376,27 +376,27 @@ TEST(RDataFrameCloning, ChangeEmptyEntryRange)
 TEST(RDataFrameCloning, ChangeSpec)
 {
    std::string treeName{"events"};
-   std::vector<std::string> fileNames{"dataframe_cloning_changespec_0.root", "dataframe_cloning_changespec_1.root",
-                                      "dataframe_cloning_changespec_2.root"};
+   std::size_t nFiles{3};
+   // Each file has 30 entries, starting from a different value
+   std::uint64_t entriesPerFile{30};
+   std::vector<std::uint64_t> beginEntryPerFile{0, 30, 60};
+   std::vector<std::string> fileNames(nFiles);
+   std::string prefix{"dataframe_cloning_changespec_"};
+   std::generate(fileNames.begin(), fileNames.end(), [n = 0, &prefix]() mutable {
+      auto name = prefix + std::to_string(n) + ".root";
+      n++;
+      return name;
+   });
+   InputFilesRAII files{treeName, fileNames, entriesPerFile, beginEntryPerFile};
+
    // The dataset will have a total of 90 entries. We partition it in 6 different global ranges.
    // Schema: one range per complete file, one range with a portion of a single file,
    // two ranges that span more than one file.
    std::vector<std::pair<Long64_t, Long64_t>> globalRanges{{0, 30}, {30, 60}, {60, 90}, {0, 20}, {20, 50}, {50, 90}};
-   {
-      ROOT::RDF::RSnapshotOptions opts;
-      opts.fAutoFlush = 10;
 
-      auto df = ROOT::RDataFrame(90).Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"});
-      for (unsigned i = 0; i < 3; i++) {
-         // This makes sure that each output file has a different range of values for column x,
-         // according to the current global entry of the dataset.
-         ChangeEmptyEntryRange(df, std::pair<Long64_t, Long64_t>(globalRanges[i]));
-         df.Snapshot<ULong64_t>(treeName, fileNames[i], {"x"}, opts);
-      }
-   }
    std::vector<ROOT::RDF::Experimental::RDatasetSpec> specs;
-   specs.reserve(6);
-   for (unsigned i = 0; i < 6; i++) {
+   specs.reserve(globalRanges.size());
+   for (unsigned i = 0; i < globalRanges.size(); i++) {
       ROOT::RDF::Experimental::RDatasetSpec spec;
       // Every spec represents a different portion of the global dataset
       spec.AddSample({"", treeName, fileNames});
@@ -409,19 +409,19 @@ TEST(RDataFrameCloning, ChangeSpec)
    // ChangeSpec. Do this by `Take`ing the values of column x for
    // every partition and checking that they correspond to the values
    // in the ranges defined by globalRanges.
-   std::vector<std::vector<ULong64_t>> expectedOutputs;
-   expectedOutputs.reserve(6);
-   for (unsigned i = 0; i < 6; i++) {
+   std::vector<std::vector<std::uint64_t>> expectedOutputs;
+   expectedOutputs.reserve(globalRanges.size());
+   for (unsigned i = 0; i < globalRanges.size(); i++) {
       const auto &currentRange = globalRanges[i];
       auto nValues{currentRange.second - currentRange.first};
-      std::vector<ULong64_t> takeValues(nValues);
+      std::vector<std::uint64_t> takeValues(nValues);
       std::iota(takeValues.begin(), takeValues.end(), currentRange.first);
       expectedOutputs.push_back(takeValues);
    }
 
    // Launch first execution with dataset spec
    ROOT::RDataFrame df{specs[0]};
-   auto take = df.Take<ULong64_t>("x");
+   auto take = df.Take<std::uint64_t>("x");
    EXPECT_VEC_EQ(*take, expectedOutputs[0]);
 
    // Other executions modify the internal spec
@@ -429,10 +429,6 @@ TEST(RDataFrameCloning, ChangeSpec)
       ChangeSpec(df, std::move(specs[i]));
       auto clone = CloneResultAndAction(take);
       EXPECT_VEC_EQ(*clone, expectedOutputs[i]);
-   }
-
-   for (const auto &name : fileNames) {
-      gSystem->Unlink(name.c_str());
    }
 }
 
