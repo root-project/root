@@ -761,7 +761,6 @@ void RLoopManager::CleanUpNodes()
 
    fCallbacks.clear();
    fCallbacksOnce.clear();
-   fSampleCallbacks.clear();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
