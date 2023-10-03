@@ -368,7 +368,8 @@ def build(options, buildtype):
 def create_binaries(buildtype):
     os.makedirs(f"{WORKDIR}/packages/", exist_ok=True)
     result = subprocess_with_log(f"""
-        cd '{WORKDIR}/build' && cpack -B {WORKDIR}/packages/ --verbose -C {buildtype}
+        cd '{WORKDIR}/build'
+        cpack -B {WORKDIR}/packages/ --verbose -C {buildtype}
     """)
 
     if result != 0:
