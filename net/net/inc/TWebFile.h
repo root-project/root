@@ -77,6 +77,7 @@ public:
    TWebFile(TUrl url, Option_t *opt="");
    virtual ~TWebFile();
 
+   void        Close(Option_t *option="") override;
    Long64_t    GetSize() const override;
    Bool_t      IsOpen() const override;
    Int_t       ReOpen(Option_t *mode) override;
