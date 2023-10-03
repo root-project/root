@@ -50,10 +50,12 @@ on:
         required: true
         default: true
       binaries:
+        description: Create binary packages and upload them as artifacts
         type: boolean
         required: true
         default: false
       buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
         type: choice
         options:
         - Debug
