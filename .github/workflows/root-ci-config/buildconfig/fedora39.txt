@@ -1,3 +1,2 @@
 tmva-pymva=Off
 pythia8=Off
-CMAKE_CXX_STANDARD=20

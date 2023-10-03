@@ -17,7 +17,6 @@ builtin_zlib=ON
 builtin_zstd=ON
 cudnn=OFF
 davix=OFF
-exceptions=ON
 gfal=OFF
 llvm13_broken_tests=OFF
 minuit2_mpi=OFF
