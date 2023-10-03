@@ -139,8 +139,11 @@ class RLoopManager : public RNodeBase {
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
-   std::vector<RDFInternal::RCallback> fCallbacks;         ///< Registered callbacks
-   /// Registered callbacks to invoke just once before running the loop
+   /// Registered callbacks to be executed every N events.
+   /// The registration happens via the RegisterCallback method.
+   std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
+   /// Registered callbacks to invoke just once before running the loop.
+   /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
    /// Registered callbacks to call at the beginning of each "data block".
    /// The key is the pointer of the corresponding node in the computation graph (a RDefinePerSample or a RAction).

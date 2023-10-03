@@ -665,7 +665,7 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
       actionPtr->Run(slot, entry);
    for (auto *namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->CheckFilters(slot, entry);
-   for (auto &callback : fCallbacks)
+   for (auto &callback : fCallbacksEveryNEvents)
       callback(slot);
 }
 
@@ -759,7 +759,7 @@ void RLoopManager::CleanUpNodes()
    for (auto *ptr : fBookedRanges)
       ptr->ResetChildrenCount();
 
-   fCallbacks.clear();
+   fCallbacksEveryNEvents.clear();
    fCallbacksOnce.clear();
    fSampleCallbacks.clear();
 }
@@ -972,7 +972,7 @@ void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(u
    if (everyNEvents == 0ull)
       fCallbacksOnce.emplace_back(std::move(f), fNSlots);
    else
-      fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
+      fCallbacksEveryNEvents.emplace_back(everyNEvents, std::move(f), fNSlots);
 }
 
 std::vector<std::string> RLoopManager::GetFiltersNames()
