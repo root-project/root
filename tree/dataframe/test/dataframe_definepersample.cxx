@@ -14,6 +14,16 @@
 #include <atomic>
 #include <memory>
 #include <thread> // std::thread::hardware_concurrency
+#include <vector>
+
+template <typename T>
+void EXPECT_VEC_EQ(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+   ASSERT_EQ(v1.size(), v2.size()) << "Vectors 'v1' and 'v2' are of unequal length";
+   for (std::size_t i = 0ull; i < v1.size(); ++i) {
+      EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+   }
+}
 
 // fixture for all tests in this file
 struct DefinePerSample : ::testing::TestWithParam<bool> {
@@ -155,6 +165,47 @@ TEST(DefinePerSampleMore, GetDefinedColumnNames)
 {
    auto df = ROOT::RDataFrame(1).DefinePerSample("x", [](unsigned, const ROOT::RDF::RSampleInfo &) { return 42; });
    EXPECT_EQ(df.GetDefinedColumnNames(), std::vector<std::string>{"x"});
+}
+
+// Regression test for https://github.com/root-project/root/issues/12043
+TEST(DefinePerSample, TwoExecutions)
+{
+   unsigned int nFiles{5};
+   std::string prefix{"definepersample_twoexecutions"};
+   std::vector<std::string> fileNames(nFiles);
+   std::generate(fileNames.begin(), fileNames.end(), [n = 0, &prefix]() mutable {
+      auto name = prefix + std::to_string(n) + ".root";
+      n++;
+      return name;
+   });
+   InputFilesRAII files{nFiles, prefix};
+   std::vector<double> weights(nFiles);
+   std::iota(weights.begin(), weights.end(), 1.);
+
+   ROOT::RDataFrame df{"t", fileNames};
+
+   auto weightsCol =
+      df.DefinePerSample("weightbyfile", [&fileNames, &weights](unsigned int, const ROOT::RDF::RSampleInfo &id) {
+         auto thisFileName = id.AsString();
+         // The ID of the sample is "filename/treename". Erase "/t" from the
+         // string to get only the file name
+         thisFileName.erase(thisFileName.find('/'), 2);
+         std::size_t thisFileIdx =
+            std::distance(fileNames.begin(), std::find(fileNames.begin(), fileNames.end(), thisFileName));
+         return thisFileIdx == fileNames.size() ? -1. : weights[thisFileIdx];
+      });
+
+   // Trigger two executions in a row of the same action.
+   auto t0 = weightsCol.Take<double>("weightbyfile");
+   auto &t0Vals = *t0;
+   // Sort values for the MT test
+   std::sort(t0Vals.begin(), t0Vals.end());
+   EXPECT_VEC_EQ(*t0, {1, 2, 3, 4, 5});
+   auto t1 = weightsCol.Take<double>("weightbyfile");
+   auto &t1Vals = *t0;
+   // Sort values for the MT test
+   std::sort(t1Vals.begin(), t1Vals.end());
+   EXPECT_VEC_EQ(*t1, {1, 2, 3, 4, 5});
 }
 
 /* TODO
