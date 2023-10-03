@@ -132,6 +132,10 @@ jobs:
 
           cat "$CONFIGFILE" || true
 
+      - uses: root-project/gcc-problem-matcher-improved@main
+        with:
+          build-directory: /Users/sftnight/ROOT-CI/src/
+
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
