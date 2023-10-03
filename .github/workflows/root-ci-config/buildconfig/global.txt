@@ -1,4 +1,3 @@
-LLVM_ENABLE_ASSERTIONS=On
 alien=OFF
 all=OFF
 arrow=OFF
@@ -50,6 +49,7 @@ dcache=OFF
 dev=OFF
 distcc=OFF
 exceptions=ON
+fail-on-missing=On
 fcgi=OFF
 fftw3=ON
 fitsio=ON
