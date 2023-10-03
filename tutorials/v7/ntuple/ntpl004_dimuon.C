@@ -44,7 +44,7 @@ R__LOAD_LIBRARY(ROOTNTuple)
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
-constexpr char const* kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1rc1.root";
+constexpr char const* kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1rc2.root";
 
 using namespace ROOT::VecOps;
 
@@ -57,11 +57,11 @@ void ntpl004_dimuon() {
    // The tutorial is identical to df102_NanoAODDimuonAnalysis except the use of RNTuple.
 
    // For simplicity, select only events with exactly two muons and require opposite charge
-   auto df_2mu = df.Filter("#Muon == 2", "Events with exactly two muons");
-   auto df_os = df_2mu.Filter("Muon.charge[0] != Muon.charge[1]", "Muons with opposite charge");
+   auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
+   auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");
 
    // Compute invariant mass of the dimuon system
-   auto df_mass = df_os.Define("Dimuon_mass", InvariantMass<float>, {"Muon.pt", "Muon.eta", "Muon.phi", "Muon.mass"});
+   auto df_mass = df_os.Define("Dimuon_mass", InvariantMass<float>, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
 
    // Make histogram of dimuon mass spectrum
    auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300}, "Dimuon_mass");
