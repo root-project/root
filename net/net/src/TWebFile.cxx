@@ -406,6 +406,23 @@ Int_t TWebFile::ReOpen(Option_t *mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Close a Web file. Close the socket connection and delete the cache
+/// See also the TFile::Close() function
+
+void TWebFile::Close(Option_t *option)
+{
+   if (fSocket)
+      delete fSocket;
+   fSocket = nullptr;
+   if (fFullCache) {
+      free(fFullCache);
+      fFullCache = 0;
+      fFullCacheSize = 0;
+   }
+   return TFile::Close(option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read specified byte range from remote file via HTTP daemon. This
 /// routine connects to the remote host, sends the request and returns
 /// the buffer. Returns kTRUE in case of error.
