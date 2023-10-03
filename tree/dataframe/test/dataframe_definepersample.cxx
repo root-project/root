@@ -157,6 +157,24 @@ TEST(DefinePerSampleMore, GetDefinedColumnNames)
    EXPECT_EQ(df.GetDefinedColumnNames(), std::vector<std::string>{"x"});
 }
 
+// Regression test for https://github.com/root-project/root/issues/12043
+TEST(DefinePerSample, TwoExecutions)
+{
+   bool flag = false;
+   auto df = ROOT::RDataFrame(1).DefinePerSample("x", [&flag](unsigned int, const ROOT::RDF::RSampleInfo &) {
+      flag = true;
+      return 0;
+   });
+   // Trigger the first execution of the event loop, the flag should be true.
+   df.Count().GetValue();
+   EXPECT_TRUE(flag);
+   // Reset the flag and trigger again, flag should be again set to true after
+   // the end of the second event loop.
+   flag = false;
+   df.Count().GetValue();
+   EXPECT_TRUE(flag);
+}
+
 /* TODO
 // Not supported yet
 TEST(DefinePerSample, DataSource)
