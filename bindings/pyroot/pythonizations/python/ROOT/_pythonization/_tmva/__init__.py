@@ -12,7 +12,7 @@
 
 import sys
 import cppyy
-from cppyy.gbl import gSystem
+from cppyy.gbl import gSystem, gROOT
 
 from .. import pythonization
 
@@ -22,7 +22,7 @@ from ._crossvalidation import CrossValidation
 
 from ._rbdt import Compute, pythonize_rbdt
 
-hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
+hasRDF = "dataframe" in gROOT.GetConfigFeatures()
 if hasRDF:
     from ._rtensor import get_array_interface, add_array_interface_property, RTensorGetitem, pythonize_rtensor
 
