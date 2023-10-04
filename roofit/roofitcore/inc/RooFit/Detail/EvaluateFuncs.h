@@ -156,7 +156,7 @@ inline double flexibleInterp(unsigned int code, double low, double high, double 
          return total * std::pow(low / nominal, -paramVal);
       }
 
-      return total * std::exp(interpolate6thDegree(x, std::log(low), std::log(high), std::log(nominal), boundary));
+      return total * (1 + interpolate6thDegree(x, low, high, nominal, boundary));
    }
 
    return total;
