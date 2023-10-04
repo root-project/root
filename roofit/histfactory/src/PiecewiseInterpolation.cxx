@@ -43,7 +43,7 @@ using namespace std;
 ClassImp(PiecewiseInterpolation);
 ;
 
-using RooFit::Detail::EvaluateFuncs::piecewiseInterpolation;
+using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -192,7 +192,7 @@ double PiecewiseInterpolation::evaluate() const
       coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName()
                  << " with unknown interpolation code" << icode << endl ;
     }
-    sum = piecewiseInterpolation(icode, low->getVal(), high->getVal(), nominal, param->getVal(), sum);
+    sum += flexibleInterp(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
   }
 
   if(_positiveDefinite && (sum<0)){
@@ -221,14 +221,10 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
                                << " with unknown interpolation code" << _interpCode[i] << endl;
       }
       std::string funcCall;
-      if (_interpCode[i] < 4)
-         funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i], 0,
-                                  _lowSet[i], _highSet[i], 1, _nominal, _paramSet[i], resName);
-      else
-         funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::piecewiseInterpolation", _interpCode[i],
-                                  _lowSet[i], _highSet[i], _nominal, _paramSet[i], resName);
+       funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i], _lowSet[i],
+                                _highSet[i], 1.0, _nominal, _paramSet[i], resName);
 
-      code += resName + " = " + funcCall + ";\n";
+      code += resName + " += " + funcCall + ";\n";
    }
    if (_positiveDefinite)
       code += resName + " = " + resName + " < 0 ? 0 : " + resName + ";\n";
@@ -260,7 +256,7 @@ void PiecewiseInterpolation::computeBatch(double* sum, size_t /*size*/, RooFit::
     }
 
     for (unsigned int j=0; j < nominal.size(); ++j) {
-       sum[j] = piecewiseInterpolation(icode, low[j], high[j], nominal[j], param, sum[j]);
+       sum[j] += flexibleInterp(icode, low[j], high[j], 1.0, nominal[j], param, sum[j]);
     }
   }
 
