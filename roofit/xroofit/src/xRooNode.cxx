@@ -8918,7 +8918,7 @@ void xRooNode::Draw(Option_t *opt)
       graph->SetMinimum(-4);
 
       bool doHorizontal =
-         (!sOpt.Contains("impact") && sOpt.Contains("v")) || (sOpt.Contains("impact") && !sOpt.Contains("h"));
+         (!sOpt.Contains("impact") && sOpt.Contains("v")) || (sOpt.Contains("impact") && !sOpt.Contains("himpact"));
 
       std::vector<std::pair<double, std::string>> covariances;
       /*double poiError = 0;*/ std::string poiName;
