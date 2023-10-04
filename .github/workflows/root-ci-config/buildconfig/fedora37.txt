@@ -1,2 +1,3 @@
+builtin_nlohmannjson=ON
 tmva-pymva=Off
 test_distrdf_pyspark=OFF

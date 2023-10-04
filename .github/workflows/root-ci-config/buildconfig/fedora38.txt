@@ -1,3 +1,4 @@
+builtin_nlohmannjson=ON
+pythia8=Off
 tmva-pymva=Off
 test_distrdf_pyspark=OFF
-pythia8=Off
