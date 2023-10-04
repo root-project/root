@@ -109,32 +109,67 @@ inline double interpolate6thDegree(double x, double low, double high, double nom
    return x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
 }
 
-inline double flexibleInterp(unsigned int code, double low, double high, double boundary, double nominal,
-                             double paramVal, double total)
+inline double interpolate6thDegreeExp(double x, double low, double high, double nominal, double boundary)
+{
+   double x0 = boundary;
+
+   // GHL: Swagato's suggestions
+   double powUp = std::pow(high / nominal, x0);
+   double powDown = std::pow(low / nominal, x0);
+   double logHi = std::log(high);
+   double logLo = std::log(low);
+   double powUpLog = high <= 0.0 ? 0.0 : powUp * logHi;
+   double powDownLog = low <= 0.0 ? 0.0 : -powDown * logLo;
+   double powUpLog2 = high <= 0.0 ? 0.0 : powUpLog * logHi;
+   double powDownLog2 = low <= 0.0 ? 0.0 : -powDownLog * logLo;
+
+   double S0 = 0.5 * (powUp + powDown);
+   double A0 = 0.5 * (powUp - powDown);
+   double S1 = 0.5 * (powUpLog + powDownLog);
+   double A1 = 0.5 * (powUpLog - powDownLog);
+   double S2 = 0.5 * (powUpLog2 + powDownLog2);
+   double A2 = 0.5 * (powUpLog2 - powDownLog2);
+
+   // fcns+der+2nd_der are eq at bd
+
+   double a = 1. / (8 * x0) * (15 * A0 - 7 * x0 * S1 + x0 * x0 * A2);
+   double b = 1. / (8 * x0 * x0) * (-24 + 24 * S0 - 9 * x0 * A1 + x0 * x0 * S2);
+   double c = 1. / (4 * std::pow(x0, 3)) * (-5 * A0 + 5 * x0 * S1 - x0 * x0 * A2);
+   double d = 1. / (4 * std::pow(x0, 4)) * (12 - 12 * S0 + 7 * x0 * A1 - x0 * x0 * S2);
+   double e = 1. / (8 * std::pow(x0, 5)) * (+3 * A0 - 3 * x0 * S1 + x0 * x0 * A2);
+   double f = 1. / (8 * std::pow(x0, 6)) * (-8 + 8 * S0 - 5 * x0 * A1 + x0 * x0 * S2);
+
+   // evaluate the 6-th degree polynomial using Horner's method
+   double value = 1. + x * (a + x * (b + x * (c + x * (d + x * (e + x * f)))));
+   return value;
+}
+
+inline double
+flexibleInterp(unsigned int code, double low, double high, double boundary, double nominal, double paramVal, double res)
 {
    if (code == 0) {
       // piece-wise linear
       if (paramVal > 0)
-         return total + paramVal * (high - nominal);
+         return paramVal * (high - nominal);
       else
-         return total + paramVal * (nominal - low);
+         return paramVal * (nominal - low);
    } else if (code == 1) {
       // piece-wise log
       if (paramVal >= 0)
-         return total * std::pow(high / nominal, +paramVal);
+         return res * (std::pow(high / nominal, +paramVal) - 1);
       else
-         return total * std::pow(low / nominal, -paramVal);
+         return res * (std::pow(low / nominal, -paramVal) - 1);
    } else if (code == 2) {
       // parabolic with linear
       double a = 0.5 * (high + low) - nominal;
       double b = 0.5 * (high - low);
       double c = 0;
       if (paramVal > 1) {
-         return total + (2 * a + b) * (paramVal - 1) + high - nominal;
+         return (2 * a + b) * (paramVal - 1) + high - nominal;
       } else if (paramVal < -1) {
-         return total + -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
+         return -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
       } else {
-         return total + a * std::pow(paramVal, 2) + b * paramVal + c;
+         return a * std::pow(paramVal, 2) + b * paramVal + c;
       }
    } else if (code == 3) {
       // parabolic version of log-normal
@@ -142,81 +177,35 @@ inline double flexibleInterp(unsigned int code, double low, double high, double 
       double b = 0.5 * (high - low);
       double c = 0;
       if (paramVal > 1) {
-         return total + (2 * a + b) * (paramVal - 1) + high - nominal;
+         return (2 * a + b) * (paramVal - 1) + high - nominal;
       } else if (paramVal < -1) {
-         return total + -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
+         return -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
       } else {
-         return total + a * std::pow(paramVal, 2) + b * paramVal + c;
+         return a * std::pow(paramVal, 2) + b * paramVal + c;
       }
    } else if (code == 4) {
       double x = paramVal;
       if (x >= boundary) {
-         return total * std::pow(high / nominal, +paramVal);
+         return x * (high - nominal);
       } else if (x <= -boundary) {
-         return total * std::pow(low / nominal, -paramVal);
+         return x * (nominal - low);
       }
 
-      return total * std::exp(interpolate6thDegree(x, std::log(low), std::log(high), std::log(nominal), boundary));
-   }
-
-   return total;
-}
-
-inline double
-piecewiseInterpolation(unsigned int code, double low, double high, double nominal, double param, double sum)
-{
-   if (code == 4) {
-
-      // WVE ****************************************************************
-      // WVE *** THIS CODE IS CRITICAL TO HISTFACTORY FIT CPU PERFORMANCE ***
-      // WVE *** Do not modify unless you know what you are doing...      ***
-      // WVE ****************************************************************
-
-      double x = param;
-      if (x > 1.0) {
-         return sum + x * (high - nominal);
-      } else if (x < -1.0) {
-         return sum + x * (nominal - low);
+      return interpolate6thDegree(x, low, high, nominal, boundary);
+   } else if (code == 5) {
+      double x = paramVal;
+      double mod = 1.0;
+      if (x >= boundary) {
+         mod = std::pow(high / nominal, +paramVal);
+      } else if (x <= -boundary) {
+         mod = std::pow(low / nominal, -paramVal);
       } else {
-         // fcns+der+2nd_der are eq at bd
-         double val = nominal + interpolate6thDegree(x, low, high, nominal, 1.0);
-
-         if (val < 0)
-            val = 0;
-         return sum + val - nominal;
+         mod = interpolate6thDegreeExp(x, low, high, nominal, boundary);
       }
-      // WVE ****************************************************************
-   } else {
-
-      double x0 = 1.0; // boundary;
-      double x = param;
-
-      if (x > x0 || x < -x0) {
-         if (x > 0)
-            return sum + x * (high - nominal);
-         else
-            return sum + x * (nominal - low);
-      } else if (nominal != 0) {
-         double eps_plus = high - nominal;
-         double eps_minus = nominal - low;
-         double S = (eps_plus + eps_minus) / 2;
-         double A = (eps_plus - eps_minus) / 2;
-
-         // fcns+der are eq at bd
-         double a = S;
-         double b = 3 * A / (2 * x0);
-         // double c = 0;
-         double d = -A / (2 * x0 * x0 * x0);
-
-         double val = nominal + a * x + b * std::pow(x, 2) + 0 /*c*pow(x, 3)*/ + d * std::pow(x, 4);
-         if (val < 0)
-            val = 0;
-
-         return sum + val - nominal;
-      }
+      return res * (mod - 1.0);
    }
 
-   return sum;
+   return 0.0;
 }
 
 inline double logNormalEvaluate(double x, double k, double m0)
