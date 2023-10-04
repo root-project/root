@@ -522,14 +522,20 @@ class NotebookDrawer(object):
         return  'root_plot_' + str(int(round(time.time() * 1000)))
 
     def _canJsDisplay(self):
+        # returns true if js-based drawing should be used
         if not TBufferJSONAvailable():
            return False
-        if self.isRCanvas: return True
-        if not self.isCanvas: return True
-        if TWebCanvasAvailable(): return True
+        # RCanvas clways displayed with jsroot
+        if self.isRCanvas:
+            return True
+        # check if jsroot was disabled
+        if not _enableJSVis:
+            return False
+        # geometry can be drawn, TWebCanvas also can be used
+        if not self.isCanvas or TWebCanvasAvailable():
+            return True
 
         # to be optimised
-        if not _enableJSVis: return False
         primitivesTypesNames = self._getListOfPrimitivesNamesAndTypes()
         for unsupportedPattern in _jsNotDrawableClassesPatterns:
             for primitiveTypeName in primitivesTypesNames:
@@ -631,9 +637,6 @@ class NotebookDrawer(object):
             self._pngDisplay()
 
     def GetDrawableObjects(self):
-        if not self.isCanvas:
-           return [self._getJsDiv()]
-
         if _enableJSVisDebug:
            return [self._getJsDiv(),self._getPngImage()]
 
