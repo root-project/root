@@ -1089,7 +1089,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    offset = key.GetSeekKey() + key.fKeyLen;
 
    if (key.fObjLen < sizeof(RTFNTuple)) {
-      return R__FAIL("invalid anchor size: " + std::to_string(key.fObjLen) + " > " + std::to_string(sizeof(RTFNTuple)));
+      return R__FAIL("invalid anchor size: " + std::to_string(key.fObjLen) + " < " + std::to_string(sizeof(RTFNTuple)));
    }
    // The object length can be larger than the size of RTFNTuple if it comes from a future RNTuple class version.
    auto bufAnchor = std::make_unique<unsigned char[]>(key.fObjLen);
