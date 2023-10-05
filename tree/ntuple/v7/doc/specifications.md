@@ -514,7 +514,7 @@ The footer envelope has the following structure:
 - List frame of meta-data block envelope links
 
 The header checksum can be used to cross-check that header and footer belong together.
-The meaning of the feature flags is the same than for the header.
+The meaning of the feature flags is the same as for the header.
 The header flags do not need to be repeated.
 Readers should combine the feature flags from header and footer for the complete set of flags.
 
