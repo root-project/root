@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.5.pre',
+const version_id = '7.5.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '28/09/2023',
+version_date = '5/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -74,12 +74,27 @@ btoa_func = isNodeJs() ? str => Buffer.from(str, 'latin1').toString('base64') : 
 browser = { isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false, screenWidth: 1200 };
 
 if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typeof navigator !== 'undefined')) {
-   browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
-   browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-   browser.isChrome = !!window.chrome;
-   browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
-   browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
-   browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
+   navigator.userAgentData?.brands?.forEach(item => {
+      if (item.brand === 'HeadlessChrome') {
+         browser.isChromeHeadless = true;
+         browser.chromeVersion = parseInt(item.version);
+      } else if (item.brand === 'Chromium') {
+         browser.isChrome = true;
+         browser.chromeVersion = parseInt(item.version);
+      }
+   });
+
+   if (browser.chromeVersion) {
+      browser.isFirefox = false;
+      browser.isWin = navigator.userAgentData.platform === 'Windows';
+   } else {
+      browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
+      browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+      browser.isChrome = !!window.chrome;
+      browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
+      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
+      browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
+   }
    browser.touches = ('ontouchend' in document); // identify if touch events are supported
    browser.screenWidth = window.screen?.width ?? 1200;
 }
@@ -99984,12 +99999,12 @@ drawFuncs = { lst: [
    { name: clTMathText, sameas: clTLatex },
    { name: clTText, sameas: clTLatex },
    { name: clTAnnotation, sameas: clTLatex },
-   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions },
+   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions, for_derived: true },
    { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist', expand_item: fFunctions },
    { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
    { name: 'TProfile2Poly', sameas: clTH2Poly },
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
-   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions },
+   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
    { name: clTProfile2D, sameas: clTH2 },
    { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions },
    { name: clTProfile3D, sameas: clTH3 },
@@ -100428,33 +100443,31 @@ async function redraw(dom, obj, opt) {
 function addStreamerInfosForPainter(lst) {
    if (!lst) return;
 
+   const basics = [clTObject, clTNamed, clTString, 'TCollection', clTAttLine, clTAttFill, clTAttMarker, clTAttText];
+
    function checkBaseClasses(si, lvl) {
-      if (!si.fElements || (lvl > 10))
+      const element = si.fElements?.arr[0];
+      if ((element?.fTypeName !== 'BASE') || (lvl > 4))
+         return null;
+      // exclude very basic classes
+      if (basics.indexOf(element.fName) >= 0)
          return null;
 
-      for (let j = 0; j < si.fElements.arr.length; ++j) {
-         // extract streamer info for each class member
-         const element = si.fElements.arr[j];
-         if (element.fTypeName !== 'BASE') continue;
-
-         let handle = getDrawHandle(prROOT + element.fName);
-         if (handle && !handle.for_derived)
+      let handle = getDrawHandle(prROOT + element.fName);
+      if (handle && !handle.for_derived)
             handle = null;
 
-         // now try find that base class of base in the list
-         if (handle === null) {
-            for (let k = 0; k < lst.arr.length; ++k) {
-               if (lst.arr[k].fName === element.fName) {
-                  handle = checkBaseClasses(lst.arr[k], lvl + 1);
-                  break;
-               }
+      // now try find that base class of base in the list
+      if (handle === null) {
+         for (let k = 0; k < lst.arr.length; ++k) {
+            if (lst.arr[k].fName === element.fName) {
+               handle = checkBaseClasses(lst.arr[k], lvl + 1);
+               break;
             }
          }
-
-         if (handle?.for_derived)
-            return handle;
       }
-      return null;
+
+      return handle?.for_derived ? handle : null;
    }
 
    lst.arr.forEach(si => {
@@ -100463,7 +100476,7 @@ function addStreamerInfosForPainter(lst) {
       const handle = checkBaseClasses(si, 0);
       if (handle) {
          const newhandle = Object.assign({}, handle);
-         // delete newhandle.for_derived; // should we disable?
+         delete newhandle.for_derived; // should we disable?
          newhandle.name = si.fName;
          addDrawFunc(newhandle);
       }

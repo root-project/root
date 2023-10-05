@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in 7.5
+## Changes in 7.5.0
 1. Correctly implement `TH2` projections like MERCATOR or PARABOLIC, add MOLLWEIDE
 2. Support "pol", "cyl", "sph" and "psr" coordinates systems for lego and surf plots
 3. Support orthographic camera for lego and surface plots
@@ -24,7 +24,7 @@
 21. Use `eslint` for static code checking, add testing of interactive features
 22. Upgrade three.js r151 -> r155
 23. Use https://github.com/georgealways/lil-gui/ instead of dat.GUI in geom painter
-24. Put `gl` in "devDependencies" of package.json. One can skip it installation with `npm i --production`.
+24. Put `gl` in "devDependencies" of package.json; one can skip it installation with `npm i --production`
 25. Fix - correct scaling of axis labels when tilt them by 25 degree, make this angle configurable
 26. Fix - legend multi-columns drawing and labels scaling
 27. Fix - graph "B" bar widths as in native ROOT
@@ -34,6 +34,7 @@
 31. Fix - correct scaling of custom axis labels
 32. Fix - shrink axis labels like 0.20 -> 0.2 or 10^0 -> 1
 33. Fix - copy axis attributes from histogram z scale to palette
+34. Fix - let handle derived from TH1/TH2 classes as histograms #269
 
 
 ## Changes in 7.4.3

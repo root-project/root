@@ -1,6 +1,8 @@
 import { select as d3_select } from './d3.mjs';
 import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
-         prROOT, clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
+         prROOT,
+         clTObject, clTNamed, clTString, clTAttLine, clTAttFill, clTAttMarker, clTAttText,
+         clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
          clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTH3,
          clTProfile, clTProfile2D, clTProfile3D,
@@ -55,12 +57,12 @@ drawFuncs = { lst: [
    { name: clTMathText, sameas: clTLatex },
    { name: clTText, sameas: clTLatex },
    { name: clTAnnotation, sameas: clTLatex },
-   { name: /^TH1/, icon: 'img_histo1d', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions },
+   { name: /^TH1/, icon: 'img_histo1d', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions, for_derived: true },
    { name: clTProfile, icon: 'img_profile', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist', expand_item: fFunctions },
    { name: clTH2Poly, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
    { name: 'TProfile2Poly', sameas: clTH2Poly },
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
-   { name: /^TH2/, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions },
+   { name: /^TH2/, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
    { name: clTProfile2D, sameas: clTH2 },
    { name: /^TH3/, icon: 'img_histo3d', class: () => import('./hist/TH3Painter.mjs').then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions },
    { name: clTProfile3D, sameas: clTH3 },
@@ -499,33 +501,31 @@ async function redraw(dom, obj, opt) {
 function addStreamerInfosForPainter(lst) {
    if (!lst) return;
 
+   const basics = [clTObject, clTNamed, clTString, 'TCollection', clTAttLine, clTAttFill, clTAttMarker, clTAttText];
+
    function checkBaseClasses(si, lvl) {
-      if (!si.fElements || (lvl > 10))
+      const element = si.fElements?.arr[0];
+      if ((element?.fTypeName !== 'BASE') || (lvl > 4))
+         return null;
+      // exclude very basic classes
+      if (basics.indexOf(element.fName) >= 0)
          return null;
 
-      for (let j = 0; j < si.fElements.arr.length; ++j) {
-         // extract streamer info for each class member
-         const element = si.fElements.arr[j];
-         if (element.fTypeName !== 'BASE') continue;
-
-         let handle = getDrawHandle(prROOT + element.fName);
-         if (handle && !handle.for_derived)
+      let handle = getDrawHandle(prROOT + element.fName);
+      if (handle && !handle.for_derived)
             handle = null;
 
-         // now try find that base class of base in the list
-         if (handle === null) {
-            for (let k = 0; k < lst.arr.length; ++k) {
-               if (lst.arr[k].fName === element.fName) {
-                  handle = checkBaseClasses(lst.arr[k], lvl + 1);
-                  break;
-               }
+      // now try find that base class of base in the list
+      if (handle === null) {
+         for (let k = 0; k < lst.arr.length; ++k) {
+            if (lst.arr[k].fName === element.fName) {
+               handle = checkBaseClasses(lst.arr[k], lvl + 1);
+               break;
             }
          }
-
-         if (handle?.for_derived)
-            return handle;
       }
-      return null;
+
+      return handle?.for_derived ? handle : null;
    }
 
    lst.arr.forEach(si => {
@@ -534,7 +534,7 @@ function addStreamerInfosForPainter(lst) {
       const handle = checkBaseClasses(si, 0);
       if (handle) {
          const newhandle = Object.assign({}, handle);
-         // delete newhandle.for_derived; // should we disable?
+         delete newhandle.for_derived; // should we disable?
          newhandle.name = si.fName;
          addDrawFunc(newhandle);
       }
