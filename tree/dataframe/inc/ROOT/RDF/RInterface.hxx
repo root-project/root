@@ -724,10 +724,11 @@ public:
    /// Example usage:
    /// ~~~{.cpp}
    /// // produce variations "ptAndEta:down" and "ptAndEta:up"
-   /// df.Vary({"pt", "eta"},
+   /// df.Vary({"pt", "eta"}, // the columns that will vary simultaneously
    ///         [](double pt, double eta) { return RVec<RVecF>{{pt*0.9, pt*1.1}, {eta*0.9, eta*1.1}}; },
-   ///         {"down", "up"},
-   ///         "ptAndEta");
+   ///         {"pt", "eta"},  // inputs to the Vary expression, independent of what columns are varied
+   ///         {"down", "up"}, // variation tags
+   ///         "ptAndEta");    // variation name
    /// ~~~
    template <typename F>
    RInterface<Proxied, DS_t>
