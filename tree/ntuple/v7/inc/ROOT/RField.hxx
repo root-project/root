@@ -175,7 +175,9 @@ public:
       void *Release()
       {
          fIsOwning = false;
-         return static_cast<T *>(fObjPtr);
+         void *result = nullptr;
+         std::swap(result, fObjPtr);
+         return static_cast<T *>(result);
       }
 
       std::size_t Append() { return fField->Append(fObjPtr); }
