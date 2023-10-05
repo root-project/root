@@ -61,7 +61,7 @@ public:
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
   bool positiveDefinite() const {return _positiveDefinite;}
 
-  void setInterpCode(RooAbsReal& param, int code, bool silent=false);
+  void setInterpCode(RooAbsReal& param, int code, bool silent=true);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
@@ -101,6 +101,10 @@ protected:
 
   double evaluate() const override;
   void doEval(RooFit::EvalContext &) const override;
+
+private:
+
+  void setInterpCodeForParam(int iParam, int code);
 
   ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };
