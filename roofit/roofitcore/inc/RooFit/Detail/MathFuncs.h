@@ -239,18 +239,10 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
       } else {
          return a * std::pow(paramVal, 2) + b * paramVal + c;
       }
-   } else if (code == 3) {
-      // parabolic version of log-normal
-      double a = 0.5 * (high + low) - nominal;
-      double b = 0.5 * (high - low);
-      double c = 0;
-      if (paramVal > 1) {
-         return (2 * a + b) * (paramVal - 1) + high - nominal;
-      } else if (paramVal < -1) {
-         return -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
-      } else {
-         return a * std::pow(paramVal, 2) + b * paramVal + c;
-      }
+   // According to an old comment in the source code, code 3 was apparently
+   // meant to be a "parabolic version of log-normal", but it never got
+   // implemented. If someone would need it, it could be implemented as doing
+   // code 2 in log space.
    } else if (code == 4) {
       double x = paramVal;
       if (x >= boundary) {

@@ -71,6 +71,10 @@ namespace HistFactory{
 
     double evaluate() const override;
 
+  private:
+
+    void setInterpCodeForParam(int iParam, int code);
+
     ClassDefOverride(RooStats::HistFactory::FlexibleInterpVar,2); // flexible interpolation
   };
 }

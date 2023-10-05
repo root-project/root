@@ -54,10 +54,10 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
                  const RooArgList& paramList,
                  double argNominal, std::vector<double> const& lowVec, std::vector<double> const& highVec,
-                 std::vector<int> const& code) :
+                 std::vector<int> const& codes) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
-  _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code)
+  _nominal(argNominal), _low(lowVec), _high(highVec)
 {
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
@@ -67,6 +67,11 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
       R__ASSERT(0) ;
     }
     _paramList.add(*param) ;
+  }
+
+  _interpCode.resize(_paramList.size());
+  for (std::size_t i = 0; i < codes.size(); ++i) {
+    setInterpCodeForParam(i, codes[i]);
   }
 
   if (_low.size() != _paramList.size() || _low.size() != _high.size() || _low.size() != _interpCode.size()) {
@@ -109,31 +114,43 @@ FlexibleInterpVar::~FlexibleInterpVar()
   TRACE_DESTROY;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
-  int index = _paramList.index(&param);
-  if(index<0){
-      coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR:  " << param.GetName()
-                            << " is not in list" << std::endl;
-  } else if(_interpCode.at(index) != code){
-      coutI(InputArguments) << "FlexibleInterpVar::setInterpCode :  " << param.GetName()
-                            << " is now " << code << std::endl;
-      _interpCode.at(index) = code;
-      // GHL: Adding suggestion by Swagato:
-      setValueDirty();
-  }
+void FlexibleInterpVar::setInterpCode(RooAbsReal &param, int code)
+{
+   int index = _paramList.index(&param);
+   if (index < 0) {
+      coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR:  " << param.GetName() << " is not in list"
+                            << std::endl;
+      return;
+   }
+   setInterpCodeForParam(index, code);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+void FlexibleInterpVar::setAllInterpCodes(int code)
+{
+   for (std::size_t i = 0; i < _interpCode.size(); ++i) {
+      setInterpCodeForParam(i, code);
+   }
+}
 
-void FlexibleInterpVar::setAllInterpCodes(int code){
-  for(unsigned int i=0; i<_interpCode.size(); ++i){
-    _interpCode.at(i) = code;
-  }
-  // GHL: Adding suggestion by Swagato:
-  setValueDirty();
+void FlexibleInterpVar::setInterpCodeForParam(int iParam, int code)
+{
+   RooAbsArg const &param = _paramList[iParam];
+   if (code < 0 || code > 5) {
+      coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR: " << param.GetName()
+                            << " with unknown interpolation code " << code << ", keeping current code "
+                            << _interpCode[iParam] << std::endl;
+      return;
+   }
+   if (code == 3) {
+      // In the past, code 3 was equivalent to code 2, which confused users.
+      // Now, we just say that code 3 doesn't exist and default to code 2 in
+      // that case for backwards compatible behavior.
+      coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR: " << param.GetName()
+                            << " with unknown interpolation code " << code << ", defaulting to code 2" << std::endl;
+      code = 2;
+   }
+   _interpCode.at(iParam) = code;
+   setValueDirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,10 +215,6 @@ double FlexibleInterpVar::evaluate() const
    double total(_nominal);
    for (std::size_t i = 0; i < _paramList.size(); ++i) {
       int code = _interpCode[i];
-      if (code < 0 || code > 4) {
-         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
-                               << " with unknown interpolation code" << std::endl;
-      }
       // To get consistent codes with the PiecewiseInterpolation
       if (code == 4) {
          code = 5;
@@ -223,10 +236,6 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
    unsigned int n = _interpCode.size();
 
    int interpCode = _interpCode[0];
-   if (interpCode < 0 || interpCode > 4) {
-      coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << 0
-                            << " with unknown interpolation code" << std::endl;
-   }
    // To get consistent codes with the PiecewiseInterpolation
    if (interpCode == 4) {
       interpCode = 5;
@@ -251,10 +260,6 @@ void FlexibleInterpVar::doEval(RooFit::EvalContext &ctx) const
 
    for (std::size_t i = 0; i < _paramList.size(); ++i) {
       int code = _interpCode[i];
-      if (code < 0 || code > 4) {
-         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
-                               << " with unknown interpolation code" << std::endl;
-      }
       // To get consistent codes with the PiecewiseInterpolation
       if (code == 4) {
          code = 5;

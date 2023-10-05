@@ -161,14 +161,8 @@ double PiecewiseInterpolation::evaluate() const
     auto param = static_cast<RooAbsReal*>(_paramSet.at(i));
     auto low   = static_cast<RooAbsReal*>(_lowSet.at(i));
     auto high  = static_cast<RooAbsReal*>(_highSet.at(i));
-    Int_t icode = _interpCode[i] ;
-
-    if(icode < 0 || icode > 5) {
-      coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName()
-                 << " with unknown interpolation code" << icode << endl ;
-    }
     using RooFit::Detail::MathFuncs::flexibleInterpSingle;
-    sum += flexibleInterpSingle(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
+    sum += flexibleInterpSingle(_interpCode[i], low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
   }
 
   if(_positiveDefinite && (sum<0)){
@@ -190,10 +184,6 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
 
    std::string resName = "total_" + ctx.getTmpVarName();
    for (std::size_t i = 0; i < n; ++i) {
-      if (_interpCode[i] < 0 || _interpCode[i] > 5) {
-         coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << _paramSet[i].GetName()
-                               << " with unknown interpolation code" << _interpCode[i] << endl;
-      }
       if (_interpCode[i] != _interpCode[0]) {
          coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  Code Squashing AD does not yet support having "
                                   "different interpolation codes for the same class object "
@@ -277,18 +267,10 @@ void PiecewiseInterpolation::doEval(RooFit::EvalContext &ctx) const
       auto param = ctx.at(_paramSet.at(i));
       auto low = ctx.at(_lowSet.at(i));
       auto high = ctx.at(_highSet.at(i));
-      const int icode = _interpCode[i];
-
-      if (icode < 0 || icode > 5) {
-         coutE(InputArguments) << "PiecewiseInterpolation::doEval(): " << _paramSet[i].GetName()
-                               << " with unknown interpolation code" << icode << std::endl;
-         throw std::invalid_argument("PiecewiseInterpolation::doEval() got invalid interpolation code " +
-                                     std::to_string(icode));
-      }
 
       for (std::size_t j = 0; j < sum.size(); ++j) {
          using RooFit::Detail::MathFuncs::flexibleInterpSingle;
-         sum[j] += flexibleInterpSingle(icode, broadcast(low, j), broadcast(high, j), 1.0, broadcast(nominal, j),
+         sum[j] += flexibleInterpSingle(_interpCode[i], broadcast(low, j), broadcast(high, j), 1.0, broadcast(nominal, j),
                                         broadcast(param, j), sum[j]);
       }
    }
@@ -347,7 +329,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
 
   // KC: check if interCode=0 for all
-  for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it) { 
+  for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it) {
     if (!_interpCode.empty() && _interpCode[it - _paramSet.begin()] != 0) {
         // can't factorize integral
         cout << "can't factorize integral" << endl;
@@ -371,7 +353,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   // Make list of function projection and normalization integrals
   RooAbsReal *func ;
 
-  // do variations 
+  // do variations
   for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it)
   {
     auto i = it - _paramSet.begin();
@@ -491,12 +473,12 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
 
   // now get low/high variations
   // KC: old interp code with new iterator
- 
+
   i = 0;
   for (auto const *param : static_range_cast<RooAbsReal *>(_paramSet)) {
     low = static_cast<RooAbsReal *>(cache->_lowIntList.at(i));
     high = static_cast<RooAbsReal *>(cache->_highIntList.at(i));
-  
+
     if(param->getVal() > 0) {
       value += param->getVal()*(high->getVal() - nominal);
     } else {
@@ -573,32 +555,44 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
   return value;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PiecewiseInterpolation::setInterpCode(RooAbsReal& param, int code, bool silent){
-  int index = _paramSet.index(&param);
-  if(index<0){
-      coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR:  " << param.GetName()
-             << " is not in list" << endl ;
-  } else {
-     if(!silent){
-       coutW(InputArguments) << "PiecewiseInterpolation::setInterpCode :  " << param.GetName()
-                             << " is now " << code << endl ;
-     }
-    _interpCode.at(index) = code;
-  }
+void PiecewiseInterpolation::setInterpCode(RooAbsReal &param, int code, bool /*silent*/)
+{
+   int index = _paramSet.index(&param);
+   if (index < 0) {
+      coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR:  " << param.GetName() << " is not in list"
+                            << std::endl;
+      return;
+   }
+   setInterpCodeForParam(index, code);
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-void PiecewiseInterpolation::setAllInterpCodes(int code){
-  for(unsigned int i=0; i<_interpCode.size(); ++i){
-    _interpCode.at(i) = code;
-  }
+void PiecewiseInterpolation::setAllInterpCodes(int code)
+{
+   for (std::size_t i = 0; i < _interpCode.size(); ++i) {
+      setInterpCodeForParam(i, code);
+   }
 }
 
+void PiecewiseInterpolation::setInterpCodeForParam(int iParam, int code)
+{
+   RooAbsArg const &param = _paramSet[iParam];
+   if (code < 0 || code > 5) {
+      coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR: " << param.GetName()
+                            << " with unknown interpolation code " << code << ", keeping current code "
+                            << _interpCode[iParam] << std::endl;
+      return;
+   }
+   if (code == 3) {
+      // In the past, code 3 was equivalent to code 2, which confused users.
+      // Now, we just say that code 3 doesn't exist and default to code 2 in
+      // that case for backwards compatible behavior.
+      coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR: " << param.GetName()
+                            << " with unknown interpolation code " << code << ", defaulting to code 2" << std::endl;
+      code = 2;
+   }
+   _interpCode.at(iParam) = code;
+   setValueDirty();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
