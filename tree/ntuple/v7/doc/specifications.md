@@ -121,7 +121,7 @@ The following feature bits are defined:
 
 RNTuple envelopes can store records and lists of basic types and other records or lists by means of **frames**.
 Frames can be short (<1GB) or long (>=1GB).
-A Short frame has the following format
+A short frame has the following format
 
 ```
  0                   1                   2                   3
