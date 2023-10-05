@@ -460,6 +460,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    } else if (canonicalType == ":Collection:") {
       // TODO: create an RCollectionField?
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
+   } else if (canonicalType == "ROOT::Experimental::RNTupleBLOB") {
+      result = std::make_unique<RField<ROOT::Experimental::RNTupleBLOB>>(fieldName);
    } else if (canonicalType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(39, canonicalType.length() - 40));
       if (innerTypes.size() != 1)
@@ -2954,6 +2956,69 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 void ROOT::Experimental::RCollectionField::CommitClusterImpl()
 {
    *fCollectionNTuple->GetOffsetPtr() = 0;
+}
+
+//------------------------------------------------------------------------------
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<ROOT::Experimental::RNTupleBLOB>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex64, EColumnType::kByte},
+                                                  {EColumnType::kIndex64, EColumnType::kByte},
+                                                  {EColumnType::kSplitIndex32, EColumnType::kByte},
+                                                  {EColumnType::kIndex32, EColumnType::kByte}},
+                                                 {});
+   return representations;
+}
+
+void ROOT::Experimental::RField<ROOT::Experimental::RNTupleBLOB>::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<unsigned char>(RColumnModel(GetColumnRepresentative()[1]), 1));
+}
+
+void ROOT::Experimental::RField<ROOT::Experimental::RNTupleBLOB>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<unsigned char>(RColumnModel(onDiskTypes[1]), 1));
+}
+
+void ROOT::Experimental::RField<ROOT::Experimental::RNTupleBLOB>::DestroyValue(void *objPtr, bool dtorOnly) const
+{
+   std::destroy_at(static_cast<ROOT::Experimental::RNTupleBLOB *>(objPtr));
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+}
+
+std::size_t ROOT::Experimental::RField<ROOT::Experimental::RNTupleBLOB>::AppendImpl(const void *from)
+{
+   auto typedValue = static_cast<const ROOT::Experimental::RNTupleBLOB *>(from);
+   auto size = typedValue->GetSize();
+   fColumns[1]->AppendV(typedValue->GetData().get(), size);
+   fIndex += size;
+   fColumns[0]->Append(&fIndex);
+   return size + fColumns[0]->GetElement()->GetPackedSize();
+}
+
+void ROOT::Experimental::RField<ROOT::Experimental::RNTupleBLOB>::ReadGlobalImpl(
+   ROOT::Experimental::NTupleSize_t globalIndex, void *to)
+{
+   auto typedValue = static_cast<ROOT::Experimental::RNTupleBLOB *>(to);
+   RClusterIndex collectionStart;
+   ClusterSize_t size;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+   if (size == 0) {
+      typedValue->Set(nullptr, 0);
+   } else {
+      auto data = std::shared_ptr<unsigned char[]>(new unsigned char[size]);
+      fColumns[1]->ReadV(collectionStart, size, data.get());
+      typedValue->Set(data, size);
+   }
+}
+
+void ROOT::Experimental::RField<ROOT::Experimental::RNTupleBLOB>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitBLOBField(*this);
 }
 
 //------------------------------------------------------------------------------
