@@ -151,7 +151,7 @@ A long frame has the following format
 ```
 
 _Size_: The size in bytes of the frame and the payload.
-To get the size, read first a 32bit signed integer.
+To get the size, first read a 32bit signed integer.
 An even integer indicates a short frame.
 An odd integer indicates a long frame; in this case, read a 64bit signed integer.
 Take the absolute value of the size divided by two.
