@@ -1,1 +1,2 @@
 builtin_nlohmannjson=ON
+builtin_xrootd=ON
