@@ -1122,7 +1122,6 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          fillSeq(elem[k->second], *l);
       }
       if (auto r = dynamic_cast<RooArgProxy *>(p)) {
-         std::cout << "writing single proxy " << r->GetName() << std::endl;
          if (isLiteralConstVar(*r->absArg()))
             elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
          else
@@ -1791,8 +1790,21 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       // the ones that the pdfs encoded implicitly (like in the case of
       // HistFactory).
       for (RooAbsArg *arg : *snsh) {
-         if (exportedObjectNames.find(arg->GetName()) != exportedObjectNames.end())
-            snapshotSorted.add(*arg);
+         if (exportedObjectNames.find(arg->GetName()) != exportedObjectNames.end()) {
+            bool do_export = false;
+            for (const auto &pdf : allpdfs) {
+               if (pdf->dependsOn(*arg)) {
+                  do_export = true;
+               }
+            }
+            if (do_export && !::isValidName(arg->GetName())) {
+               std::stringstream ss;
+               ss << "RooJSONFactoryWSTool() variable '" << arg->GetName() << "' has an invalid name!" << std::endl;
+               RooJSONFactoryWSTool::error(ss.str());
+            }
+            if (do_export)
+               snapshotSorted.add(*arg);
+         }
       }
       snapshotSorted.sort();
       std::string name(snsh->GetName());
