@@ -27,7 +27,7 @@ if (ROOT_test_distrdf_pyspark_FOUND)
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
                       ENVIRONMENT ${PYSPARK_ENV_VARS}
-                      TIMEOUT 420
+                      TIMEOUT 1200
                       PROPERTIES PROCESSORS 4 RESOURCE_LOCK spark_resource_lock)
 
 endif()

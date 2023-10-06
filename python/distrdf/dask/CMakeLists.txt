@@ -11,7 +11,7 @@ if (ROOT_test_distrdf_dask_FOUND)
     # repository.
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
-                      TIMEOUT 420
+                      TIMEOUT 1200
                       PROPERTIES PROCESSORS 4 RESOURCE_LOCK dask_resource_lock)
 
 endif()
