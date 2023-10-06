@@ -49,7 +49,7 @@ __all__ = [
    'Regression15ConsRef',
    'Regression16NestedNamespace',
    'Regression17MatrixD',
-   'Regression18FailingDowncast'
+   'Regression18FailingDowncast',
 ]
 
 
@@ -902,6 +902,26 @@ class Regression25MapGetItemToCall(MyTestCase):
 
        b = cppyy.gbl.Bar7179()
        self.assertEqual(b[42], 42)
+
+class Regression26OverloadedOperator( MyTestCase ):
+   def test1CheckOverloadedOperator( self ):
+      """Test accessibility of derived class in presence of an overloaded operator()"""
+
+      code = """
+      namespace Regression26 {
+         struct DCBase
+         {
+            double& operator()();
+         };
+         struct DenseBase : public DCBase
+         {
+         using DCBase::operator();
+         template <typename T> int operator()() const;
+         };
+      }
+      """
+      gInterpreter.LoadText(code)
+      foo = ROOT.Regression26.DenseBase
 
 
 ## actual test run
