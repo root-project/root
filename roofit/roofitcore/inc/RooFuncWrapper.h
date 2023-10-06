@@ -28,9 +28,6 @@ class RooSimultaneous;
 /// represents the data entry.
 class RooFuncWrapper final : public RooAbsReal {
 public:
-   RooFuncWrapper(const char *name, const char *title, std::string const &funcBody, RooArgSet const &paramSet,
-                  const RooAbsData *data, RooSimultaneous const *simPdf, bool createGradient);
-
    RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
                   const RooAbsData *data, RooSimultaneous const *simPdf, bool createGradient);
 
@@ -54,6 +51,8 @@ public:
    /// No constant term optimization is possible in code-generation mode.
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
+   std::string const &funcName() const { return _funcName; }
+
 protected:
    double evaluate() const override;
 
@@ -62,10 +61,10 @@ private:
 
    void updateGradientVarBuffer() const;
 
-   void loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet,
-                          const RooAbsData *data, RooSimultaneous const *simPdf);
+   void loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,
+                          RooSimultaneous const *simPdf);
 
-   void declareAndDiffFunction(std::string funcName, std::string const &funcBody, bool createGradient);
+   void declareAndDiffFunction(std::string const &funcBody, bool createGradient);
 
    void buildFuncAndGradFunctors();
 
@@ -79,6 +78,7 @@ private:
    };
 
    RooListProxy _params;
+   std::string _funcName;
    Func _func;
    Grad _grad;
    bool _hasGradient = false;
