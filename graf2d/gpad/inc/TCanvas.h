@@ -174,7 +174,7 @@ public:
    Bool_t            IsFolder() const override;
    Bool_t            IsGrayscale();
    Bool_t            IsRetained() const override { return fRetained; }
-   Bool_t            IsWeb() const;
+   Bool_t            IsWeb() const override;
    void              ls(Option_t *option="") const override;
    void              MoveOpaque(Int_t set=1);
    Bool_t            OpaqueMoving() const override { return TestBit(kMoveOpaque); }
