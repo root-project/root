@@ -412,6 +412,35 @@ void replaceAll(std::string &inOut, std::string_view what, std::string_view with
    }
 }
 
+bool isSpecial(char c)
+{
+   static const int nSpecialChars = 27;
+   static const char *specialChars[nSpecialChars] = {"+", "-", "*", "/", "&", "%", "|", "^",  ">",
+                                                     "<", "=", "~", ".", "(", ")", "[", "]",  "!",
+                                                     ",", "$", " ", ":", "'", "#", "@", "\\", "\""};
+
+   for (int i = 0; i < nSpecialChars; ++i) {
+      if (c == specialChars[i][0]) {
+         return true;
+        }
+   }
+   return false;
+}
+
+
+bool isComplex(std::string const &expression)
+{
+   // Let's figure out if the expression contains the imaginary unit
+
+   for (std::size_t i = 0; i < expression.size(); ++i) {
+      bool leftOkay = (i == 0) || isSpecial(expression[i - 1]);
+      bool rightOkay = (i == expression.size() - 1) || isSpecial(expression[i + 1]);
+      if (expression[i] == 'I' && leftOkay && rightOkay)
+         return true;
+   }
+   return false;
+}
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -476,6 +505,8 @@ bool RooClassFactory::makeClass(std::string const& baseName, std::string const& 
 #include <RooAbsReal.h>
 #include <RooAbsCategory.h>
 
+#include <complex>
+
 class CLASS_NAME : public BASE_NAME {
 public:
    CLASS_NAME() {}
@@ -531,13 +562,38 @@ public:
   hf << R"(
   double evaluate() const override;
   void computeBatch(double* output, std::size_t size, RooFit::Detail::DataMap const&) const override;
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 private:
 
   ClassDefOverride(CLASS_NAME, 1) // Your description goes here...
-};
+};)";
 
-#endif // CLASS_NAME_h)";
+
+  hf << endl
+     << "inline double CLASS_NAME_evaluate(" << listVars(alist, isCat) << ") ";
+  hf << R"(
+{)";
+
+  // When Clad is supporting std::complex, we might drop this check and always write the definition of I.
+  if (isComplex(expression)) {
+    hf << R"(
+   // Support also using the imaginary unit
+   using namespace std::complex_literals;
+   // To be able to also comile C code, we define a variable that behaves like the "I" macro from C.
+   constexpr auto I = 1i;
+)";
+  }
+
+  hf << R"(
+   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE
+
+)"
+     << "   return " << expression << "; " << endl
+     << "}\n"
+     << endl;
+
+  hf << "\n#endif // CLASS_NAME_h";
 
   std::stringstream cf;
 
@@ -558,7 +614,6 @@ private:
 #include <TMath.h>
 
 #include <cmath>
-#include <complex>
 
 ClassImp(CLASS_NAME);
 
@@ -610,27 +665,10 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
   cf << "{\n"
      << "}\n"
      << endl
-     << "namespace {\n"
-     << endl
-     << "inline double evaluateImpl(" << listVars(alist, isCat) << ") ";
-  cf << R"(
-{
-   // Support also using the imaginary unit
-   using namespace std::complex_literals;
-   // To be able to also comile C code, we define a variable that behaves like the "I" macro from C.
-   constexpr auto I = 1i;
-
-   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE"
-
-)"
-     << "   return " << expression << "; " << endl
-     << "}\n"
-     << endl
-     << "} // namespace\n"
      << "\n"
      << "double CLASS_NAME::evaluate() const " << endl
      << "{\n"
-     << "   return evaluateImpl(" << listVars(alist) << "); " << endl
+     << "   return CLASS_NAME_evaluate(" << listVars(alist) << "); " << endl
      << "}\n"
      << "\n"
      << "void CLASS_NAME::computeBatch(double *output, std::size_t size, RooFit::Detail::DataMap const &dataMap) const " << endl
@@ -638,9 +676,14 @@ CLASS_NAME::CLASS_NAME(const char *name, const char *title,
      << declareVarSpans(alist)
      << "\n"
      << "   for (std::size_t i = 0; i < size; ++i) {\n"
-     << "      output[i] = evaluateImpl(" << getFromVarSpans(alist) << ");\n"
+     << "      output[i] = CLASS_NAME_evaluate(" << getFromVarSpans(alist) << ");\n"
      << "   }\n"
      << "} \n";
+
+cf << "void CLASS_NAME::translate(RooFit::Detail::CodeSquashContext &ctx) const\n"
+<< "{\n"
+<< "   ctx.addResult(this, ctx.buildCall(\"CLASS_NAME_evaluate\", " << listVars(alist) << "));\n"
+<<"}\n";
 
   if (hasAnaInt) {
 
