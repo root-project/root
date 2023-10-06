@@ -117,6 +117,18 @@ void AddScopeToParent(PyObject* parent, const std::string& name, PyObject* newsc
     Py_DECREF(pyname);
 }
 
+static inline
+PyObject* GetAttrDirect(PyObject* pyclass, PyObject* pyname) {
+// get an attribute without causing getattr lookups
+    PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
+    if (dct) {
+        PyObject* attr = PyObject_GetItem(dct, pyname);
+        Py_DECREF(dct);
+        return attr;
+    }
+    return nullptr;
+}
+
 } // namespace CPyCppyy
 
 
@@ -245,9 +257,13 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
 
         // for operator[]/() that returns by ref, also add __setitem__
             if (setupSetItem) {
-                TemplateProxy* pysi = (TemplateProxy*)PyObject_GetAttrString(pyclass, const_cast<char*>("__setitem__"));
-                if (!pysi) {
+                TemplateProxy* pysi = (TemplateProxy*)GetAttrDirect(pyclass, PyStrings::gSetItem);
+                if (!TemplateProxy_Check(pysi)) {
+                     CPPOverload* precursor = (CPPOverload_Check(pysi)) ? (CPPOverload*)pysi : nullptr;
+                     if (pysi && !precursor) Py_DECREF(pysi);        // something unknown, just drop it
                      pysi = TemplateProxy_New(mtCppName, "__setitem__", pyclass);
+                     if (precursor) pysi->MergeOverload(precursor);
+                     Py_XDECREF(precursor);
                      PyObject_SetAttrString(pyclass, const_cast<char*>("__setitem__"), (PyObject*)pysi);
                 }
                 if (isTemplate) pysi->AdoptTemplate(new CPPSetItem(scope, method));
