@@ -799,6 +799,9 @@ if(ROOT_pyroot_FOUND)
   # Avoid a race condition: make sure Python tutorial is ran after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
   set(roofit-rf512_wsfactory_oper-depends tutorial-roofit-rf512_wsfactory_oper)
+  set (tmva-Higgs_CNN_Classification-depends tutorial-tmva-TMVA_Higgs_Classification)
+  set (tmva-TMVA_CNN_Classification-depends tutorial-tmva-TMVA_CNN_Classification)
+  set (tmva-TMVA_RNN_Classification-depends tutorial-tmva-TMVA_RNN_Classification)
 
   #----------------------------------------------------------------------
   # List requirements for python tutorials.
