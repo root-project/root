@@ -52,8 +52,9 @@ namespace {
 
 class ClassFacIFace : public RooFactoryWSTool::IFace {
 public:
-  std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
-} ;
+   std::string
+   create(RooFactoryWSTool &ft, const char *typeName, const char *instanceName, std::vector<std::string> args) override;
+};
 
 static int init();
 
@@ -61,13 +62,12 @@ int dummy = init();
 
 static int init()
 {
-  RooFactoryWSTool::IFace* iface = new ClassFacIFace ;
-  RooFactoryWSTool::registerSpecial("CEXPR",iface) ;
-  RooFactoryWSTool::registerSpecial("cexpr",iface) ;
-  (void)dummy;
-  return 0 ;
+   RooFactoryWSTool::IFace *iface = new ClassFacIFace;
+   RooFactoryWSTool::registerSpecial("CEXPR", iface);
+   RooFactoryWSTool::registerSpecial("cexpr", iface);
+   (void)dummy;
+   return 0;
 }
-
 
 bool makeAndCompileClass(std::string const &baseClassName, std::string const &name, std::string const &expression,
                          const RooArgList &vars, std::string const &intExpression)
@@ -192,7 +192,6 @@ RooAbsReal *makeClassInstance(std::string const &baseClassName, std::string cons
 
 } // namespace
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool RooClassFactory::makeAndCompilePdf(std::string const &name, std::string const &expression, const RooArgList &vars,
@@ -200,8 +199,6 @@ bool RooClassFactory::makeAndCompilePdf(std::string const &name, std::string con
 {
    return makeAndCompileClass("RooAbsPdf", name, expression, vars, intExpression);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write, compile and load code for a RooAbsReal implementation with
@@ -216,13 +213,12 @@ bool RooClassFactory::makeAndCompilePdf(std::string const &name, std::string con
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-bool RooClassFactory::makeAndCompileFunction(std::string const &name, std::string const &expression, const RooArgList &vars,
-                                             std::string const &intExpression)
+bool RooClassFactory::makeAndCompileFunction(std::string const &name, std::string const &expression,
+                                             const RooArgList &vars, std::string const &intExpression)
 {
    return makeAndCompileClass("RooAbsReal", name, expression, vars, intExpression);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write, compile and load code and instantiate object for a
 /// RooAbsReal implementation with class name 'name', taking all
@@ -243,17 +239,17 @@ bool RooClassFactory::makeAndCompileFunction(std::string const &name, std::strin
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsReal* RooClassFactory::makeFunctionInstance(std::string const &name, std::string const &expression, const RooArgList& vars, std::string const &intExpression)
+RooAbsReal *RooClassFactory::makeFunctionInstance(std::string const &name, std::string const &expression,
+                                                  const RooArgList &vars, std::string const &intExpression)
 {
-  // Construct unique class name for this function expression
-  std::string tmpName(name) ;
-  tmpName[0] = toupper(tmpName[0]) ;
-  string className = "Roo" + tmpName + "Func";
+   // Construct unique class name for this function expression
+   std::string tmpName(name);
+   tmpName[0] = toupper(tmpName[0]);
+   string className = "Roo" + tmpName + "Func";
 
-  return makeFunctionInstance(className.c_str(),name,expression,vars,intExpression) ;
+   return makeFunctionInstance(className.c_str(), name, expression, vars, intExpression);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Write, compile and load code and instantiate object for a
 /// RooAbsReal implementation with class name 'name', taking all
@@ -274,12 +270,12 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(std::string const &name, std::
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsReal *RooClassFactory::makeFunctionInstance(std::string const &className, std::string const &name, std::string const &expression,
-                                                  const RooArgList &vars, std::string const &intExpression)
+RooAbsReal *RooClassFactory::makeFunctionInstance(std::string const &className, std::string const &name,
+                                                  std::string const &expression, const RooArgList &vars,
+                                                  std::string const &intExpression)
 {
    return static_cast<RooAbsReal *>(makeClassInstance("RooAbsRal", className, name, expression, vars, intExpression));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write, compile and load code and instantiate object for a RooAbsPdf
@@ -288,15 +284,15 @@ RooAbsReal *RooClassFactory::makeFunctionInstance(std::string const &className, 
 ///
 /// \see RooClassFactory::makeFunctionInstance(const char*, const char*, RooArgList const&, const char*)
 
-RooAbsPdf* RooClassFactory::makePdfInstance(std::string const &name, std::string const &expression,
-                   const RooArgList& vars, std::string const &intExpression)
+RooAbsPdf *RooClassFactory::makePdfInstance(std::string const &name, std::string const &expression,
+                                            const RooArgList &vars, std::string const &intExpression)
 {
-  // Construct unique class name for this function expression
-  std::string tmpName(name) ;
-  tmpName[0] = toupper(tmpName[0]) ;
-  string className = "Roo" + tmpName + "Pdf";
+   // Construct unique class name for this function expression
+   std::string tmpName(name);
+   tmpName[0] = toupper(tmpName[0]);
+   string className = "Roo" + tmpName + "Pdf";
 
-  return makePdfInstance(className.c_str(),name,expression,vars,intExpression) ;
+   return makePdfInstance(className.c_str(), name, expression, vars, intExpression);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,27 +315,27 @@ RooAbsPdf* RooClassFactory::makePdfInstance(std::string const &name, std::string
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-RooAbsPdf *RooClassFactory::makePdfInstance(std::string const &className, std::string const &name, std::string const &expression,
-                                            const RooArgList &vars, std::string const &intExpression)
+RooAbsPdf *RooClassFactory::makePdfInstance(std::string const &className, std::string const &name,
+                                            std::string const &expression, const RooArgList &vars,
+                                            std::string const &intExpression)
 {
    return static_cast<RooAbsPdf *>(makeClassInstance("RooAbsPdf", className, name, expression, vars, intExpression));
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write code for a RooAbsPdf implementation with class name 'name'.
 /// The difference to makePdf() is the base
 /// class of the written class (RooAbsPdf instead of RooAbsReal).
 ///
-/// \see RooClassFactory::makePdf(const char*, const char*, std::string const &, const char*, RooArgList const&, bool, bool, const char*)
+/// \see RooClassFactory::makePdf(const char*, const char*, std::string const &, const char*, RooArgList const&, bool,
+/// bool, const char*)
 
-bool RooClassFactory::makePdf(std::string const &name, std::string const &argNames, std::string const &catArgNames, std::string const &expression,
-            bool hasAnaInt, bool hasIntGen, std::string const &intExpression)
+bool RooClassFactory::makePdf(std::string const &name, std::string const &argNames, std::string const &catArgNames,
+                              std::string const &expression, bool hasAnaInt, bool hasIntGen,
+                              std::string const &intExpression)
 {
-  return makeClass("RooAbsPdf",name,argNames,catArgNames,expression,hasAnaInt,hasIntGen,intExpression) ;
+   return makeClass("RooAbsPdf", name, argNames, catArgNames, expression, hasAnaInt, hasIntGen, intExpression);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write code for a RooAbsReal implementation with class name 'name',
@@ -357,11 +353,11 @@ bool RooClassFactory::makePdf(std::string const &name, std::string const &argNam
 /// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
-bool RooClassFactory::makeFunction(std::string const &name, std::string const &argNames, std::string const &catArgNames, std::string const &expression, bool hasAnaInt, std::string const &intExpression)
+bool RooClassFactory::makeFunction(std::string const &name, std::string const &argNames, std::string const &catArgNames,
+                                   std::string const &expression, bool hasAnaInt, std::string const &intExpression)
 {
-  return makeClass("RooAbsReal",name,argNames,catArgNames,expression,hasAnaInt,false,intExpression) ;
+   return makeClass("RooAbsReal", name, argNames, catArgNames, expression, hasAnaInt, false, intExpression);
 }
-
 
 namespace {
 
@@ -422,11 +418,10 @@ bool isSpecial(char c)
    for (int i = 0; i < nSpecialChars; ++i) {
       if (c == specialChars[i][0]) {
          return true;
-        }
+      }
    }
    return false;
 }
-
 
 bool isComplex(std::string const &expression)
 {
@@ -461,34 +456,40 @@ bool isComplex(std::string const &expression)
 /// if hasIntGen is true
 ///
 
-bool RooClassFactory::makeClass(std::string const& baseName, std::string const& className, std::string const &realArgNames, std::string const &catArgNames,
-              std::string const &expression,  bool hasAnaInt, bool hasIntGen, std::string const &intExpression)
+bool RooClassFactory::makeClass(std::string const &baseName, std::string const &className,
+                                std::string const &realArgNames, std::string const &catArgNames,
+                                std::string const &expression, bool hasAnaInt, bool hasIntGen,
+                                std::string const &intExpression)
 {
-  // Check that arguments were given
+   // Check that arguments were given
 
-  if (realArgNames.empty() && catArgNames.empty()) {
-    oocoutE(nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl ;
-    return true ;
-  }
+   if (realArgNames.empty() && catArgNames.empty()) {
+      oocoutE(nullptr, InputArguments)
+         << "RooClassFactory::makeClass: ERROR: A list of input argument names must be given" << endl;
+      return true;
+   }
 
-  if (!intExpression.empty() && !hasAnaInt) {
-    oocoutE(nullptr,InputArguments) << "RooClassFactory::makeClass: ERROR no analytical integration code requestion, but expression for analytical integral provided" << endl ;
-    return true ;
-  }
+   if (!intExpression.empty() && !hasAnaInt) {
+      oocoutE(nullptr, InputArguments) << "RooClassFactory::makeClass: ERROR no analytical integration code "
+                                          "requestion, but expression for analytical integral provided"
+                                       << endl;
+      return true;
+   }
 
-  // Parse comma separated list of argument names into list of strings
-  vector<string> alist ;
-  vector<bool> isCat ;
+   // Parse comma separated list of argument names into list of strings
+   vector<string> alist;
+   vector<bool> isCat;
 
-  for(auto const& token : ROOT::Split(realArgNames, ",", /*skipEmpyt=*/true)) {
-    alist.push_back(token) ;
-    isCat.push_back(false) ;
-  }
-  for(auto const& token : ROOT::Split(catArgNames, ",", /*skipEmpyt=*/true)) {
-    alist.push_back(token) ;
-    isCat.push_back(true) ;
-  }
+   for (auto const &token : ROOT::Split(realArgNames, ",", /*skipEmpyt=*/true)) {
+      alist.push_back(token);
+      isCat.push_back(false);
+   }
+   for (auto const &token : ROOT::Split(catArgNames, ",", /*skipEmpyt=*/true)) {
+      alist.push_back(token);
+      isCat.push_back(true);
+   }
 
+   // clang-format off
   std::stringstream hf;
   hf << R"(/*****************************************************************************
  * Project: RooFit                                                           *
@@ -782,80 +783,84 @@ void CLASS_NAME::generateEvent(int code)
 )";
 
   }
+   // clang-format on
 
-  std::ofstream ohf(className + ".h");
-  std::ofstream ocf(className + ".cxx");
-  std::string headerCode = hf.str();
-  std::string sourceCode = cf.str();
-  replaceAll(headerCode, "CLASS_NAME", className);
-  replaceAll(sourceCode, "CLASS_NAME", className);
-  replaceAll(headerCode, "BASE_NAME", baseName);
-  replaceAll(sourceCode, "BASE_NAME", baseName);
-  ohf << headerCode;
-  ocf << sourceCode;
+   std::ofstream ohf(className + ".h");
+   std::ofstream ocf(className + ".cxx");
+   std::string headerCode = hf.str();
+   std::string sourceCode = cf.str();
+   replaceAll(headerCode, "CLASS_NAME", className);
+   replaceAll(sourceCode, "CLASS_NAME", className);
+   replaceAll(headerCode, "BASE_NAME", baseName);
+   replaceAll(sourceCode, "BASE_NAME", baseName);
+   ohf << headerCode;
+   ocf << sourceCode;
 
-  return false ;
+   return false;
 }
 
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string ClassFacIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args)
+std::string ClassFacIFace::create(RooFactoryWSTool &ft, const char *typeName, const char *instanceName,
+                                  std::vector<std::string> args)
 {
-  static int classCounter = 0 ;
+   static int classCounter = 0;
 
-  string tn(typeName) ;
+   string tn(typeName);
 
-    if (args.size()<2) {
-      throw std::runtime_error(Form("RooClassFactory::ClassFacIFace::create() ERROR: CEXPR requires at least 2 arguments (expr,var,...), but only %u args found",
-         (UInt_t)args.size())) ;
-    }
-
-    RooAbsArg* ret ;
-    // Strip quotation marks from expression string
-    char expr[1024] ;
-    strncpy(expr,args[0].c_str()+1,args[0].size()-2) ;
-    expr[args[0].size()-2]=0 ;
-
-
-    RooArgList varList ;
-
-      if (args.size()==2) {
-   // Interpret 2nd arg as list
-   varList.add(ft.asLIST(args[1].c_str())) ;
-      } else {
-   for (unsigned int i=1 ; i<args.size() ; i++) {
-     varList.add(ft.asARG(args[i].c_str())) ;
+   if (args.size() < 2) {
+      throw std::runtime_error(Form("RooClassFactory::ClassFacIFace::create() ERROR: CEXPR requires at least 2 "
+                                    "arguments (expr,var,...), but only %u args found",
+                                    (UInt_t)args.size()));
    }
-      }
 
-    string className ;
-    while(true) {
-      className = Form("RooCFAuto%03d%s%s",classCounter,(tn=="CEXPR")?"Pdf":"Func",ft.autoClassNamePostFix()) ;
-      TClass* tc =  TClass::GetClass(className.c_str(),true,true) ;
-      classCounter++ ;
+   RooAbsArg *ret;
+   // Strip quotation marks from expression string
+   char expr[1024];
+   strncpy(expr, args[0].c_str() + 1, args[0].size() - 2);
+   expr[args[0].size() - 2] = 0;
+
+   RooArgList varList;
+
+   if (args.size() == 2) {
+      // Interpret 2nd arg as list
+      varList.add(ft.asLIST(args[1].c_str()));
+   } else {
+      for (unsigned int i = 1; i < args.size(); i++) {
+         varList.add(ft.asARG(args[i].c_str()));
+      }
+   }
+
+   string className;
+   while (true) {
+      className = Form("RooCFAuto%03d%s%s", classCounter, (tn == "CEXPR") ? "Pdf" : "Func", ft.autoClassNamePostFix());
+      TClass *tc = TClass::GetClass(className.c_str(), true, true);
+      classCounter++;
       if (!tc) {
-   break ;
+         break;
       }
-    }
+   }
 
-    if (tn=="CEXPR") {
-      ret = RooClassFactory::makePdfInstance(className.c_str(),instanceName,expr,varList) ;
-    } else {
-      ret = RooClassFactory::makeFunctionInstance(className.c_str(),instanceName,expr,varList) ;
-    }
-    if (!ret) {
-      throw std::runtime_error(Form("RooClassFactory::ClassFacIFace::create() ERROR creating %s %s with RooClassFactory",((tn=="CEXPR")?"pdf":"function"),instanceName)) ;
-    }
+   if (tn == "CEXPR") {
+      ret = RooClassFactory::makePdfInstance(className.c_str(), instanceName, expr, varList);
+   } else {
+      ret = RooClassFactory::makeFunctionInstance(className.c_str(), instanceName, expr, varList);
+   }
+   if (!ret) {
+      throw std::runtime_error(
+         Form("RooClassFactory::ClassFacIFace::create() ERROR creating %s %s with RooClassFactory",
+              ((tn == "CEXPR") ? "pdf" : "function"), instanceName));
+   }
 
-    // Import object
-    ft.ws().import(*ret,RooFit::Silence()) ;
+   // Import object
+   ft.ws().import(*ret, RooFit::Silence());
 
-    // Import class code as well
-    ft.ws().importClassCode(ret->IsA()) ;
+   // Import class code as well
+   ft.ws().importClassCode(ret->IsA());
 
-  return string(instanceName) ;
+   return string(instanceName);
 }
 
 } // namespace
