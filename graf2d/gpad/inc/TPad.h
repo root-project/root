@@ -267,11 +267,12 @@ public:
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE) override;
    Bool_t            HasFixedAspectRatio() const override { return fFixedAspectRatio; }
    Bool_t            IsBatch() const override;
-   Bool_t    IsEditable() const override { return fEditable; }
+   Bool_t            IsEditable() const override { return fEditable; }
    Bool_t            IsFolder() const override { return kTRUE; }
    Bool_t            IsModified() const override { return fModified; }
    Bool_t            IsRetained() const override;
    Bool_t            IsVertical() const override { return !TestBit(kHori); }
+   Bool_t            IsWeb() const override;
    void              ls(Option_t *option="") const override;
    void              Modified(Bool_t flag=1) override;  // *SIGNAL*
    Bool_t            OpaqueMoving() const override;
