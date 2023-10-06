@@ -8036,7 +8036,9 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 ///       compare the KS distance of the pseudoexperiment to the parent
 ///       distribution, and count all the KS values above the value
 ///       obtained from the original data to Monte Carlo distribution.
-///       The number of pseudo-experiments nEXPT is currently fixed at 1000.
+///       The number of pseudo-experiments nEXPT is by default 1000, and
+///       it can be changed by specifying the option as "X=number",
+///       for example "X=10000" for 10000 toys.
 ///       The function returns the probability.
 ///       (thanks to Ben Kilminster to submit this procedure). Note that
 ///       this option "X" is much slower.
@@ -8210,8 +8212,23 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       else                      prob = 0;
    }
    // X option. Pseudo-experiments post-processor to determine KS probability
-   const Int_t nEXPT = 1000;
-   if (opt.Contains("X") && !(afunc1 || afunc2 ) ) {
+   // if one histogram has zero errors is used as a function
+   Int_t nEXPT = 1000;
+   if (opt.Contains("X")) {
+      // get number of pseudo-experiment of specified
+      if (opt.Contains("X=")) {
+         int numpos = opt.Index("X=") + 2;   // 2 is length of X=
+         int numlen = 0;
+         int len = opt.Length();
+         while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) )
+            numlen++;
+         TString snum = opt(numpos,numlen);
+         int num = atoi(snum.Data());
+         if (num <= 0)
+            Warning("KolmogorovTest","invalid number of toys given: %d - use 1000",num);
+         else
+            nEXPT = num;
+      }
       Double_t dSEXPT;
       TH1 *h1_cpy =  (TH1 *)(gDirectory ? gDirectory->CloneObject(this, kFALSE) : gROOT->CloneObject(this, kFALSE));
       TH1 *h1Expt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
@@ -8230,11 +8247,17 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
       // make nEXPT experiments (this should be a parameter)
       prb3 = 0;
+      if (afunc1) Copy(*h1Expt);
+      if (afunc2) h2->Copy(*h2Expt);
       for (Int_t i=0; i < nEXPT; i++) {
-         h1Expt->Reset();
-         h2Expt->Reset();
-         h1Expt->FillRandom(h1_cpy, (Int_t)esum1);
-         h2Expt->FillRandom(h1_cpy, (Int_t)esum2);
+         if (!afunc1) {
+            h1Expt->Reset();
+            h1Expt->FillRandom(h1_cpy, (Int_t)esum1);
+         }
+         if (!afunc2) {
+            h2Expt->Reset();
+            h2Expt->FillRandom(h1_cpy, (Int_t)esum2);
+         }
          dSEXPT = h1Expt->KolmogorovTest(h2Expt,"M");
          if (dSEXPT>dfmax) prb3 += 1.0;
       }
@@ -8243,6 +8266,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       delete h1Expt;
       delete h2Expt;
    }
+
 
    // debug printout
    if (opt.Contains("D")) {
