@@ -18,6 +18,7 @@
 #include <RooFit/Detail/DataMap.h>
 #include <RooNumber.h>
 
+#include <cstddef>
 #include <map>
 #include <sstream>
 #include <string>
@@ -129,6 +130,8 @@ private:
    }
 
    std::string buildArg(std::string const &x) { return x; }
+
+   std::string buildArg(std::nullptr_t) { return "nullptr"; }
 
    std::string buildArg(RooAbsArg const &arg) { return getResult(arg); }
 
