@@ -1,0 +1,32 @@
+index bda60720cf..897d7b4967 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/ProxyWrappers.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/ProxyWrappers.cxx
+@@ -245,14 +245,21 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
+ 
+         // for operator[]/() that returns by ref, also add __setitem__
+             if (setupSetItem) {
+-                TemplateProxy* pysi = (TemplateProxy*)PyObject_GetAttrString(pyclass, const_cast<char*>("__setitem__"));
+-                if (!pysi) {
+-                     pysi = TemplateProxy_New(mtCppName, "__setitem__", pyclass);
+-                     PyObject_SetAttrString(pyclass, const_cast<char*>("__setitem__"), (PyObject*)pysi);
++                auto setitemMeth = new CPPSetItem(scope, method);
++                PyObject* pysi_o = PyObject_GetAttrString(pyclass, const_cast<char*>("__setitem__"));
++                if (pysi_o && CPPOverload_Check(pysi_o)) {
++                    ((CPPOverload*)pysi_o)->AdoptMethod(setitemMeth);
+                 }
+-                if (isTemplate) pysi->AdoptTemplate(new CPPSetItem(scope, method));
+-                else pysi->AdoptMethod(new CPPSetItem(scope, method));
+-                Py_XDECREF(pysi);
++                else {
++                    TemplateProxy* pysi = (TemplateProxy*)pysi_o;
++                    if (!pysi) {
++                        pysi = TemplateProxy_New(mtCppName, "__setitem__", pyclass);
++                        PyObject_SetAttrString(pyclass, const_cast<char*>("__setitem__"), (PyObject*)pysi);
++                    }
++                    if (isTemplate) pysi->AdoptTemplate(setitemMeth);
++                    else pysi->AdoptMethod(setitemMeth);
++                }
++                Py_XDECREF(pysi_o);
+             }
+ 
+         } else {
