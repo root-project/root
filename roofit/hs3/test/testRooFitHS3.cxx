@@ -211,6 +211,12 @@ TEST(RooFitHS3, RooGaussian)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, RooBernstein)
+{
+   int status = validate({"RooBernstein::bernstein(x[0, 10], { a[1], 3, b[5, 0, 20] })"});
+   EXPECT_EQ(status, 0);
+}
+
 TEST(RooFitHS3, RooGenericPdf)
 {
    // To silence the numeric integration
