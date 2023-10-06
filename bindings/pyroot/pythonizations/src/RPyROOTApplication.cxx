@@ -199,7 +199,7 @@ static int EventInputHook()
    // This method is supposed to be called from CPython's command line and
    // drives the GUI
    PyEval_RestoreThread(sInputHookEventThreadState);
-   if (gROOT->IsWebDisplay() && gPad)
+   if (gPad && gPad->IsWeb())
       gPad->UpdateAsync();
    gSystem->ProcessEvents();
    PyEval_SaveThread();
