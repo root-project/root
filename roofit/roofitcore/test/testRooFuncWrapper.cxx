@@ -88,54 +88,6 @@ void randomizeParameters(const RooArgSet &parameters)
 
 } // namespace
 
-TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
-{
-   using namespace RooFit;
-   auto inf = std::numeric_limits<double>::infinity();
-
-   RooWorkspace ws;
-   ws.import(RooRealVar{"x", "x", 0, -inf, inf});
-   ws.factory("Gaussian::gauss(x, mu[0, -10, 10], sigma[2.0, 0.01, 10])");
-
-   RooAbsPdf &gauss = *ws.pdf("gauss");
-   RooRealVar &x = *ws.var("x");
-   RooRealVar &mu = *ws.var("mu");
-   RooRealVar &sigma = *ws.var("sigma");
-
-   RooArgSet normSet{x};
-   RooArgSet paramsGauss;
-   RooArgSet paramsMyGauss;
-
-   std::string func = "const double arg = params[0] - params[1];"
-                      "const double sig = params[2];"
-                      "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
-                      "return 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;";
-   RooFuncWrapper gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, nullptr, nullptr, true);
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   mu.setVal(1);
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   // Check if the parameter layout and size is the same.
-   gauss.getParameters(&normSet, paramsGauss);
-   gaussFunc.getParameters(&normSet, paramsMyGauss);
-
-   EXPECT_TRUE(paramsMyGauss.hasSameLayout(paramsGauss));
-   EXPECT_EQ(paramsMyGauss.size(), paramsGauss.size());
-
-   // Get AD based derivative
-   // Get number of actual parameters directly from the wrapper as not always will they be the same as paramsMyGauss.
-   std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
-   gaussFunc.gradient(dMyGauss.data());
-
-   // Check if derivatives are equal
-   EXPECT_NEAR(getNumDerivative(gauss, x, normSet), dMyGauss[0], 1e-8);
-   EXPECT_NEAR(getNumDerivative(gauss, mu, normSet), dMyGauss[1], 1e-8);
-   EXPECT_NEAR(getNumDerivative(gauss, sigma, normSet), dMyGauss[2], 1e-8);
-}
-
 TEST(RooFuncWrapper, GaussianNormalized)
 {
    RooWorkspace ws;

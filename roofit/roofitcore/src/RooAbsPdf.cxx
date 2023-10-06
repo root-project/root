@@ -1222,11 +1222,9 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
     std::unique_ptr<RooAbsReal> nllWrapper;
 
     if(evalBackend == RooFit::EvalBackend::Value::Codegen || evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
-       static int iFuncWrapper = 0;
-       std::string wrapperName = "nll_func_wrapper_" + std::to_string(iFuncWrapper++);
        bool createGradient = evalBackend == RooFit::EvalBackend::Value::Codegen;
        auto simPdf = dynamic_cast<RooSimultaneous const *>(pdfClone.get());
-       nllWrapper = std::make_unique<RooFuncWrapper>(wrapperName.c_str(), wrapperName.c_str(), *nll, normSet, &data,
+       nllWrapper = std::make_unique<RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper", *nll, normSet, &data,
                                                      simPdf, createGradient);
     } else {
       auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, evalBackend == RooFit::EvalBackend::Value::Cuda);
