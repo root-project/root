@@ -36,6 +36,7 @@
 
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/FileEntry.h"
+#include "clang/Basic/PagedVector.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/BitVector.h"
@@ -687,7 +688,7 @@ class SourceManager : public RefCountedBase<SourceManager> {
   ///
   /// Negative FileIDs are indexes into this table. To get from ID to an index,
   /// use (-ID - 2).
-  SmallVector<SrcMgr::SLocEntry, 0> LoadedSLocEntryTable;
+  llvm::PagedVector<SrcMgr::SLocEntry> LoadedSLocEntryTable;
 
   /// The starting offset of the next local SLocEntry.
   ///
