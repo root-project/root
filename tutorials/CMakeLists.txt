@@ -264,7 +264,7 @@ if(NOT TBB_FOUND AND NOT builtin_tbb)
 endif()
 
 if(NOT ROOT_imt_FOUND)
-  set(imt_veto multicore/imt*.C multicore/mt*.C tmva/TMVA_CNN_Classification.C)
+  set(imt_veto multicore/imt*.C multicore/mt*.C)
 endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
