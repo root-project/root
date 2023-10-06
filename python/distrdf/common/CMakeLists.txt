@@ -28,6 +28,7 @@ if (ROOT_test_distrdf_pyspark_FOUND AND ROOT_test_distrdf_dask_FOUND)
     # tutorials of the root repository.
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
+                      TIMEOUT 1200
                       ENVIRONMENT ${PYSPARK_ENV_VARS})
 
     # This test has to take multiple resource locks. This means that they should
