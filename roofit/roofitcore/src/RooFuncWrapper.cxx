@@ -23,18 +23,6 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
-RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string const &funcBody,
-                               RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf,
-                               bool createGradient)
-   : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}, _hasGradient{createGradient}
-{
-   // Declare the function and create its derivative.
-   declareAndDiffFunction(name, funcBody, createGradient);
-
-   // Load the parameters and observables.
-   loadParamsAndData(name, nullptr, paramSet, data, simPdf);
-}
-
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
                                const RooAbsData *data, RooSimultaneous const *simPdf, bool createGradient)
    : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}, _hasGradient{createGradient}
@@ -55,12 +43,12 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    }
 
    // Load the parameters and observables.
-   loadParamsAndData(name, pdf.get(), floatingParamSet, data, simPdf);
+   loadParamsAndData(pdf.get(), floatingParamSet, data, simPdf);
 
    func = buildCode(*pdf);
 
    // Declare the function and create its derivative.
-   declareAndDiffFunction(name, func, createGradient);
+   declareAndDiffFunction(func, createGradient);
 }
 
 RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
@@ -74,8 +62,8 @@ RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
 {
 }
 
-void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet,
-                                       const RooAbsData *data, RooSimultaneous const *simPdf)
+void RooFuncWrapper::loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,
+                                       RooSimultaneous const *simPdf)
 {
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
@@ -100,7 +88,7 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
    for (auto *param : paramSet) {
       if (!dynamic_cast<RooAbsReal *>(param)) {
          std::stringstream errorMsg;
-         errorMsg << "In creation of function " << funcName
+         errorMsg << "In creation of function " << GetName()
                   << " wrapper: input param expected to be of type RooAbsReal.";
          coutE(InputArguments) << errorMsg.str() << std::endl;
          throw std::runtime_error(errorMsg.str().c_str());
@@ -120,25 +108,28 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
    }
 }
 
-void RooFuncWrapper::declareAndDiffFunction(std::string funcName, std::string const &funcBody, bool createGradient)
+void RooFuncWrapper::declareAndDiffFunction(std::string const &funcBody, bool createGradient)
 {
-   std::string gradName = funcName + "_grad_0";
-   std::string requestName = funcName + "_req";
-   std::string wrapperName = funcName + "_derivativeWrapper";
+   static int iFuncWrapper = 0;
+   _funcName = "roo_func_wrapper_" + std::to_string(iFuncWrapper++);
+
+   std::string gradName = _funcName + "_grad_0";
+   std::string requestName = _funcName + "_req";
+   std::string wrapperName = _funcName + "_derivativeWrapper";
 
    gInterpreter->Declare("#pragma cling optimize(2)");
 
    // Declare the function
    std::stringstream bodyWithSigStrm;
-   bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs) {\n" << funcBody << "\n}";
+   bodyWithSigStrm << "double " << _funcName << "(double* params, double const* obs) {\n" << funcBody << "\n}";
    bool comp = gInterpreter->Declare(bodyWithSigStrm.str().c_str());
    if (!comp) {
       std::stringstream errorMsg;
-      errorMsg << "Function " << funcName << " could not be compiled. See above for details.";
+      errorMsg << "Function " << _funcName << " could not be compiled. See above for details.";
       coutE(InputArguments) << errorMsg.str() << std::endl;
       throw std::runtime_error(errorMsg.str().c_str());
    }
-   _func = reinterpret_cast<Func>(gInterpreter->ProcessLine((funcName + ";").c_str()));
+   _func = reinterpret_cast<Func>(gInterpreter->ProcessLine((_funcName + ";").c_str()));
 
    if (!createGradient)
       return;
@@ -150,14 +141,14 @@ void RooFuncWrapper::declareAndDiffFunction(std::string funcName, std::string co
    std::stringstream requestFuncStrm;
    requestFuncStrm << "#pragma clad ON\n"
                       "void " << requestName << "() {\n"
-                      "  clad::gradient(" << funcName << ", \"params\");\n"
+                      "  clad::gradient(" << _funcName << ", \"params\");\n"
                       "}\n"
                       "#pragma clad OFF";
    // clang-format on
    comp = gInterpreter->Declare(requestFuncStrm.str().c_str());
    if (!comp) {
       std::stringstream errorMsg;
-      errorMsg << "Function " << funcName << " could not be differentiated. See above for details.";
+      errorMsg << "Function " << GetName() << " could not be differentiated. See above for details.";
       coutE(InputArguments) << errorMsg.str() << std::endl;
       throw std::runtime_error(errorMsg.str().c_str());
    }
@@ -233,11 +224,11 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
 /// @brief Prints the squashed code body to console.
 void RooFuncWrapper::dumpCode()
 {
-   gInterpreter->ProcessLine(fName);
+   gInterpreter->ProcessLine(_funcName.c_str());
 }
 
 /// @brief Prints the derivative code body to console.
 void RooFuncWrapper::dumpGradient()
 {
-   gInterpreter->ProcessLine(fName + "_grad_0");
+   gInterpreter->ProcessLine((_funcName + "_grad_0").c_str());
 }
