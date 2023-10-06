@@ -191,12 +191,14 @@ void TMVA_RNN_Classification(int nevts = 2000, int use_type = 1)
    useKeras = false;
 #endif
 
+#ifdef R__USE_IMT
    int num_threads = 4;   // use by default all threads
    gSystem->Setenv("OMP_NUM_THREADS", "1"); // switch off MT in OpenBLAS
    // do enable MT running
    if (num_threads >= 0) {
       ROOT::EnableImplicitMT(num_threads);
    }
+#endif
 
    TMVA::Config::Instance();
 
