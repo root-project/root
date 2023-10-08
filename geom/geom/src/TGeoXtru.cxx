@@ -105,7 +105,7 @@ ClassImp(TGeoXtru);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGeoXtru::ThreadData_t::ThreadData_t() : fSeg(0), fIz(0), fXc(0), fYc(0), fPoly(0) {}
+TGeoXtru::ThreadData_t::ThreadData_t() : fSeg(0), fIz(0), fXc(nullptr), fYc(nullptr), fPoly(nullptr) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -150,7 +150,7 @@ void TGeoXtru::CreateThreadData(Int_t nthreads)
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == 0) {
+      if (fThreadData[tid] == nullptr) {
          fThreadData[tid] = new ThreadData_t;
          ThreadData_t &td = *fThreadData[tid];
          td.fXc = new Double_t[fNvert];
@@ -190,12 +190,12 @@ TGeoXtru::TGeoXtru()
      fNvert(0),
      fNz(0),
      fZcurrent(0.),
-     fX(0),
-     fY(0),
-     fZ(0),
-     fScale(0),
-     fX0(0),
-     fY0(0),
+     fX(nullptr),
+     fY(nullptr),
+     fZ(nullptr),
+     fScale(nullptr),
+     fX0(nullptr),
+     fY0(nullptr),
      fThreadData(0),
      fThreadSize(0)
 {
@@ -210,8 +210,8 @@ TGeoXtru::TGeoXtru(Int_t nz)
      fNvert(0),
      fNz(nz),
      fZcurrent(0.),
-     fX(0),
-     fY(0),
+     fX(nullptr),
+     fY(nullptr),
      fZ(new Double_t[nz]),
      fScale(new Double_t[nz]),
      fX0(new Double_t[nz]),
@@ -246,12 +246,12 @@ TGeoXtru::TGeoXtru(Double_t *param)
      fNvert(0),
      fNz(0),
      fZcurrent(0.),
-     fX(0),
-     fY(0),
-     fZ(0),
-     fScale(0),
-     fX0(0),
-     fY0(0),
+     fX(nullptr),
+     fY(nullptr),
+     fZ(nullptr),
+     fScale(nullptr),
+     fX0(nullptr),
+     fY0(nullptr),
      fThreadData(0),
      fThreadSize(0)
 {
@@ -266,27 +266,27 @@ TGeoXtru::~TGeoXtru()
 {
    if (fX) {
       delete[] fX;
-      fX = 0;
+      fX = nullptr;
    }
    if (fY) {
       delete[] fY;
-      fY = 0;
+      fY = nullptr;
    }
    if (fZ) {
       delete[] fZ;
-      fZ = 0;
+      fZ = nullptr;
    }
    if (fScale) {
       delete[] fScale;
-      fScale = 0;
+      fScale = nullptr;
    }
    if (fX0) {
       delete[] fX0;
-      fX0 = 0;
+      fX0 = nullptr;
    }
    if (fY0) {
       delete[] fY0;
-      fY0 = 0;
+      fY0 = nullptr;
    }
    ClearThreadData();
 }

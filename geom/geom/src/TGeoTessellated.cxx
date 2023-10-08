@@ -250,7 +250,7 @@ bool TGeoTessellated::AddFacet(int i0, int i1, int i2)
       Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
       return false;
    }
-   if (fVertices.size() == 0) {
+   if (fVertices.empty()) {
       Error("AddFacet", "Shape %s Cannot add facets by indices without vertices. Not adding", GetName());
       return false;
    }
@@ -301,7 +301,7 @@ bool TGeoTessellated::AddFacet(int i0, int i1, int i2, int i3)
       Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
       return false;
    }
-   if (fVertices.size() == 0) {
+   if (fVertices.empty()) {
       Error("AddFacet", "Shape %s Cannot add facets by indices without vertices. Not adding", GetName());
       return false;
    }
@@ -330,7 +330,7 @@ void TGeoTessellated::CloseShape(bool check, bool fixFlipped, bool verbose)
    invExtent[1] = 0.5 / (fDY + tolerance);
    invExtent[2] = 0.5 / (fDZ + tolerance);
 
-   if (fVertices.size() > 0) {
+   if (!fVertices.empty()) {
       fDefined = true;
       if (!check)
          return;
@@ -722,14 +722,14 @@ TGeoTessellated *TGeoTessellated::ImportFromObjFormat(const char *objfile, bool 
       string tag;
 
       // We ignore everything which is not a vertex or a face
-      if (line.rfind("v", 0) == 0 && line.rfind("vt", 0) != 0 && line.rfind("vn", 0) != 0 && line.rfind("vn", 0) != 0) {
+      if (line.rfind('v', 0) == 0 && line.rfind("vt", 0) != 0 && line.rfind("vn", 0) != 0 && line.rfind("vn", 0) != 0) {
          // Decode the vertex
          double pos[4] = {0, 0, 0, 1};
          ss >> tag >> pos[0] >> pos[1] >> pos[2] >> pos[3];
          vertices.emplace_back(pos[0] * pos[3], pos[1] * pos[3], pos[2] * pos[3]);
       }
 
-      else if (line.rfind("f", 0) == 0) {
+      else if (line.rfind('f', 0) == 0) {
          // Decode the face
          ss >> tag;
          string word;

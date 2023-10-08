@@ -95,16 +95,16 @@ ClassImp(TGeoChecker);
 
 TGeoChecker::TGeoChecker()
    : TObject(),
-     fGeoManager(NULL),
-     fVsafe(NULL),
-     fBuff1(NULL),
-     fBuff2(NULL),
+     fGeoManager(nullptr),
+     fVsafe(nullptr),
+     fBuff1(nullptr),
+     fBuff2(nullptr),
      fFullCheck(kFALSE),
-     fVal1(NULL),
-     fVal2(NULL),
-     fFlags(NULL),
-     fTimer(NULL),
-     fSelectedNode(NULL),
+     fVal1(nullptr),
+     fVal2(nullptr),
+     fFlags(nullptr),
+     fTimer(nullptr),
+     fSelectedNode(nullptr),
      fNchecks(0),
      fNmeshPoints(1000)
 {
@@ -116,15 +116,15 @@ TGeoChecker::TGeoChecker()
 TGeoChecker::TGeoChecker(TGeoManager *geom)
    : TObject(),
      fGeoManager(geom),
-     fVsafe(NULL),
-     fBuff1(NULL),
-     fBuff2(NULL),
+     fVsafe(nullptr),
+     fBuff1(nullptr),
+     fBuff2(nullptr),
      fFullCheck(kFALSE),
-     fVal1(NULL),
-     fVal2(NULL),
-     fFlags(NULL),
-     fTimer(NULL),
-     fSelectedNode(NULL),
+     fVal1(nullptr),
+     fVal2(nullptr),
+     fFlags(nullptr),
+     fTimer(nullptr),
+     fSelectedNode(nullptr),
      fNchecks(0),
      fNmeshPoints(1000)
 {
@@ -157,7 +157,7 @@ void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size
    static Long64_t ocurrent = 0;
    static Long64_t osize = 0;
    static Int_t oseconds = 0;
-   static TStopwatch *owatch = 0;
+   static TStopwatch *owatch = nullptr;
    static Bool_t oneoftwo = kFALSE;
    static Int_t nrefresh = 0;
    const char symbol[4] = {'=', '\\', '|', '/'};
@@ -239,7 +239,7 @@ void TGeoChecker::OpProgress(const char *opname, Long64_t current, Long64_t size
       owatch->Continue();
    if (last) {
       icount = 0;
-      owatch = 0;
+      owatch = nullptr;
       ocurrent = 0;
       osize = 0;
       oseconds = 0;
@@ -293,7 +293,7 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
    TH2F *hplotS = new TH2F("hplotS", "Problematic points", 100, -dl[0], dl[0], 100, -dl[1], dl[1]);
    gStyle->SetOptStat(111111);
 
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    Long_t igen = 0;
    Long_t itry = 0;
    Long_t n100 = ntracks / 100;
@@ -379,7 +379,7 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
              1000000. * fTimer->RealTime() / itry);
    bug->Write();
    delete bug;
-   bug = 0;
+   bug = nullptr;
    delete f;
 
    CheckBoundaryReference();
@@ -528,7 +528,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
 
    if (!checkcrossings) {
       delete[] fFlags;
-      fFlags = 0;
+      fFlags = nullptr;
       delete c;
       return;
    }
@@ -617,7 +617,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    c1->SetTopMargin(0.15);
    TFile *f = new TFile("statistics.root", "RECREATE");
    TH1F *h = new TH1F("h", "number of boundary crossings per volume", 3, 0, 3);
-   h->SetStats(0);
+   h->SetStats(false);
    h->SetFillColor(38);
    h->SetCanExtend(TH1::kAllAxes);
 
@@ -638,10 +638,10 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    c2->SetGrid();
    c2->SetTopMargin(0.15);
    TH2F *h2 = new TH2F("h2", "time per FNB call vs. ndaughters", 100, 0, 100, 100, 0, 15);
-   h2->SetStats(0);
+   h2->SetStats(false);
    h2->SetMarkerStyle(2);
    TH1F *h1 = new TH1F("h1", "percent of time spent per volume", 3, 0, 3);
-   h1->SetStats(0);
+   h1->SetStats(false);
    h1->SetFillColor(38);
    h1->SetCanExtend(TH1::kAllAxes);
    for (i = 0; i < nuid; i++) {
@@ -661,13 +661,13 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    h2->Draw();
    f->Write();
    delete[] fFlags;
-   fFlags = 0;
+   fFlags = nullptr;
    delete[] fVal1;
-   fVal1 = 0;
+   fVal1 = nullptr;
    delete[] fVal2;
-   fVal2 = 0;
+   fVal2 = nullptr;
    delete fTimer;
-   fTimer = 0;
+   fTimer = nullptr;
    delete c;
 }
 
@@ -678,7 +678,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
 Int_t TGeoChecker::PropagateInGeom(Double_t *start, Double_t *dir)
 {
    fGeoManager->InitTrack(start, dir);
-   TGeoNode *current = 0;
+   TGeoNode *current = nullptr;
    Int_t nzero = 0;
    Int_t nhits = 0;
    while (!fGeoManager->IsOutside()) {
@@ -1035,7 +1035,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    Double_t tolerance = TGeoShape::Tolerance();
    TGeoShape *shape1 = vol1->GetShape();
    TGeoShape *shape2 = vol2->GetShape();
-   OpProgress("refresh", 0, 0, NULL, kFALSE, kTRUE);
+   OpProgress("refresh", 0, 0, nullptr, kFALSE, kTRUE);
    shape1->GetMeshNumbers(numPoints1, numSegs1, numPols1);
    if (fBuff1->fID != (TObject *)shape1) {
       // Fill first buffer.
@@ -1416,7 +1416,7 @@ Int_t TGeoChecker::NChecksPerVolume(TGeoVolume *vol)
             }
          }
       }
-      node01->SetOverlaps(0, 0);
+      node01->SetOverlaps(nullptr, 0);
    }
    return nchecks;
 }
@@ -1668,7 +1668,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
             }
          }
       }
-      node01->SetOverlaps(0, 0);
+      node01->SetOverlaps(nullptr, 0);
    }
 }
 
@@ -1783,8 +1783,8 @@ void TGeoChecker::ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *)
    Double_t point[3], pnew[3];
    Double_t dir[3], dnew[3];
    Double_t theta, phi, delta;
-   TPolyMarker3D *pmfrominside = 0;
-   TPolyMarker3D *pmfromoutside = 0;
+   TPolyMarker3D *pmfrominside = nullptr;
+   TPolyMarker3D *pmfromoutside = nullptr;
    TH1D *hist = new TH1D("hTest1", "Residual distance from inside/outside", 200, -20, 0);
    hist->GetXaxis()->SetTitle("delta[cm] - first bin=overflow");
    hist->GetYaxis()->SetTitle("count");
@@ -1950,8 +1950,8 @@ void TGeoChecker::ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *)
    Double_t point[3];
    Double_t dir[3];
    Double_t theta, phi;
-   TPolyMarker3D *pm1 = 0;
-   TPolyMarker3D *pm2 = 0;
+   TPolyMarker3D *pm1 = nullptr;
+   TPolyMarker3D *pm2 = nullptr;
    if (!fTimer)
       fTimer = new TStopwatch();
    fTimer->Reset();
@@ -2044,9 +2044,9 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
    Double_t point[3], newpoint[3], oldpoint[3];
    Double_t dir[3], olddir[3];
    Double_t norm[3], newnorm[3], oldnorm[3];
-   TCanvas *errcanvas = 0;
-   TPolyMarker3D *pm1 = 0;
-   TPolyMarker3D *pm2 = 0;
+   TCanvas *errcanvas = nullptr;
+   TPolyMarker3D *pm1 = nullptr;
+   TPolyMarker3D *pm2 = nullptr;
    pm2 = new TPolyMarker3D();
    //   pm2->SetMarkerStyle(24);
    pm2->SetMarkerSize(0.2);
@@ -2146,7 +2146,7 @@ void TGeoChecker::ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *)
          shape->ComputeNormal(point, dir, norm);
          memcpy(oldnorm, norm, 3 * sizeof(Double_t));
          memcpy(olddir, dir, 3 * sizeof(Double_t));
-         while (1) {
+         while (true) {
             phi = 2 * TMath::Pi() * gRandom->Rndm();
             theta = TMath::ACos(1. - 2. * gRandom->Rndm());
             dir[0] = TMath::Sin(theta) * TMath::Cos(phi);
@@ -2209,7 +2209,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax, Int_
          fGeoManager->InitTrack(&start[0], &dir[0]);
          startnode = fGeoManager->GetCurrentNode();
          if (fGeoManager->IsOutside())
-            startnode = 0;
+            startnode = nullptr;
          if (startnode) {
             matprop = startnode->GetVolume()->GetMaterial()->GetRadLen();
          } else {
@@ -2234,7 +2234,7 @@ TH2F *TGeoChecker::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax, Int_
             if (matprop > 0) {
                x += step / matprop;
             }
-            if (endnode == 0 && step > 1E10)
+            if (endnode == nullptr && step > 1E10)
                break;
             // generate an extra step to cross boundary
             startnode = endnode;
@@ -2266,7 +2266,7 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
    TString opt = option;
    opt.ToLower();
    TObjArray *pm = new TObjArray(128);
-   TPolyMarker3D *marker = 0;
+   TPolyMarker3D *marker = nullptr;
    const TGeoShape *shape = vol->GetShape();
    TGeoBBox *box = (TGeoBBox *)shape;
    Double_t dx = box->GetDX();
@@ -2277,7 +2277,7 @@ void TGeoChecker::RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option)
    Double_t oz = (box->GetOrigin())[2];
    Double_t *xyz = new Double_t[3];
    printf("Random box : %f, %f, %f\n", dx, dy, dz);
-   TGeoNode *node = 0;
+   TGeoNode *node = nullptr;
    printf("Start... %i points\n", npoints);
    Int_t i = 0;
    Int_t igen = 0;
@@ -2343,8 +2343,8 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 {
    TObjArray *pm = new TObjArray(128);
    TString starget = target_vol;
-   TPolyLine3D *line = 0;
-   TPolyLine3D *normline = 0;
+   TPolyLine3D *line = nullptr;
+   TPolyLine3D *normline = nullptr;
    TGeoVolume *vol = fGeoManager->GetTopVolume();
    //   vol->VisibleDaughters(kTRUE);
 
@@ -2397,9 +2397,9 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       dir[1] = TMath::Sin(theta) * TMath::Sin(phi);
       dir[2] = TMath::Cos(theta);
       startnode = fGeoManager->InitTrack(start[0], start[1], start[2], dir[0], dir[1], dir[2]);
-      line = 0;
+      line = nullptr;
       if (fGeoManager->IsOutside())
-         startnode = 0;
+         startnode = nullptr;
       vis1 = kFALSE;
       if (target_vol) {
          if (startnode && starget == startnode->GetVolume()->GetName())
@@ -2423,7 +2423,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
             inull = 0;
          if (inull > 5)
             break;
-         const Double_t *normal = 0;
+         const Double_t *normal = nullptr;
          if (check_norm) {
             normal = fGeoManager->FindNormalFast();
             if (!normal)
@@ -2448,7 +2448,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
                pm->Add(normline);
             }
             ipoint = 0;
-            line = 0;
+            line = nullptr;
          }
          if (vis2) {
             // create new segment
@@ -2492,12 +2492,12 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path)
 {
    TGeoNode *node = fGeoManager->FindNode();
-   TGeoNode *nodegeo = 0;
-   TGeoNode *nodeg3 = 0;
-   TGeoNode *solg3 = 0;
+   TGeoNode *nodegeo = nullptr;
+   TGeoNode *nodeg3 = nullptr;
+   TGeoNode *solg3 = nullptr;
    if (!node) {
       dist = -1;
-      return 0;
+      return nullptr;
    }
    Bool_t hasg3 = kFALSE;
    if (strlen(g3path))
@@ -2508,8 +2508,8 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
    // cd to common path
    Double_t point[3];
    Double_t closest[3];
-   TGeoNode *node1 = 0;
-   TGeoNode *node_close = 0;
+   TGeoNode *node1 = nullptr;
+   TGeoNode *node_close = nullptr;
    dist = 1E10;
    Double_t dist1 = 0;
    // initialize size of random box to epsil
@@ -2546,9 +2546,9 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
             fGeoManager->CdUp();
          }
          if (!nodegeo)
-            return 0;
+            return nullptr;
          if (!nodeg3)
-            return 0;
+            return nullptr;
          fGeoManager->cd(common.Data());
          fGeoManager->MasterToLocal(fGeoManager->GetCurrentPoint(), &point[0]);
          Double_t xyz[3], local[3];
@@ -2660,7 +2660,7 @@ Double_t *TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, D
          //         printf("%i (%f, %f, %f) step=%f\n", nelem, point[0], point[1], point[2], step);
          nelem++;
       } else {
-         if (endnode == 0 && step > 1E10) {
+         if (endnode == nullptr && step > 1E10) {
             //            printf("exit : NULL endnode. nelem=%i\n", nelem);
             return array;
          }
@@ -2777,7 +2777,7 @@ void TGeoChecker::TestOverlaps(const char *path)
    Double_t zmin = big;
    Double_t zmax = -big;
    TObjArray *pm = new TObjArray(128);
-   TPolyMarker3D *marker = 0;
+   TPolyMarker3D *marker = nullptr;
    TPolyMarker3D *markthis = new TPolyMarker3D();
    markthis->SetMarkerColor(5);
    TNtuple *ntpl = new TNtuple("ntpl", "random points", "x:y:z");

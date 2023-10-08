@@ -49,7 +49,7 @@ geometries.
 
 ClassImp(TGeoBuilder);
 
-TGeoBuilder *TGeoBuilder::fgInstance = NULL;
+TGeoBuilder *TGeoBuilder::fgInstance = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -74,7 +74,7 @@ TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom)
 {
    if (!geom) {
       printf("ERROR: Cannot create geometry builder with NULL geometry\n");
-      return NULL;
+      return nullptr;
    }
    if (!fgInstance)
       fgInstance = new TGeoBuilder();
@@ -155,7 +155,7 @@ TGeoVolume *TGeoBuilder::MakeArb8(const char *name, TGeoMedium *medium, Double_t
 TGeoVolume *TGeoBuilder::MakeBox(const char *name, TGeoMedium *medium, Double_t dx, Double_t dy, Double_t dz)
 {
    TGeoBBox *box = new TGeoBBox(name, dx, dy, dz);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (box->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(box);
@@ -175,9 +175,9 @@ TGeoVolume *TGeoBuilder::MakePara(const char *name, TGeoMedium *medium, Double_t
       Warning("MakePara", "parallelepiped %s having alpha=0, theta=0 -> making box instead", name);
       return MakeBox(name, medium, dx, dy, dz);
    }
-   TGeoPara *para = 0;
+   TGeoPara *para = nullptr;
    para = new TGeoPara(name, dx, dy, dz, alpha, theta, phi);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (para->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(para);
@@ -218,7 +218,7 @@ TGeoVolume *TGeoBuilder::MakeTube(const char *name, TGeoMedium *medium, Double_t
       Error("MakeTube", "tube %s, Rmin=%g greater than Rmax=%g", name, rmin, rmax);
    }
    TGeoTube *tube = new TGeoTube(name, rmin, rmax, dz);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (tube->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(tube);
@@ -235,7 +235,7 @@ TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium, Double_t
                                   Double_t phi1, Double_t phi2)
 {
    TGeoTubeSeg *tubs = new TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (tubs->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(tubs);
@@ -251,7 +251,7 @@ TGeoVolume *TGeoBuilder::MakeTubs(const char *name, TGeoMedium *medium, Double_t
 TGeoVolume *TGeoBuilder::MakeEltu(const char *name, TGeoMedium *medium, Double_t a, Double_t b, Double_t dz)
 {
    TGeoEltu *eltu = new TGeoEltu(name, a, b, dz);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (eltu->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(eltu);
@@ -268,7 +268,7 @@ TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium, Double_t
                                   Double_t stout, Double_t dz)
 {
    TGeoHype *hype = new TGeoHype(name, rin, stin, rout, stout, dz);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (hype->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(hype);
@@ -284,7 +284,7 @@ TGeoVolume *TGeoBuilder::MakeHype(const char *name, TGeoMedium *medium, Double_t
 TGeoVolume *TGeoBuilder::MakeParaboloid(const char *name, TGeoMedium *medium, Double_t rlo, Double_t rhi, Double_t dz)
 {
    TGeoParaboloid *parab = new TGeoParaboloid(name, rlo, rhi, dz);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (parab->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(parab);
@@ -313,7 +313,7 @@ TGeoVolume *TGeoBuilder::MakeCone(const char *name, TGeoMedium *medium, Double_t
                                   Double_t rmin2, Double_t rmax2)
 {
    TGeoCone *cone = new TGeoCone(name, dz, rmin1, rmax1, rmin2, rmax2);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (cone->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(cone);
@@ -330,7 +330,7 @@ TGeoVolume *TGeoBuilder::MakeCons(const char *name, TGeoMedium *medium, Double_t
                                   Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
 {
    TGeoConeSeg *cons = new TGeoConeSeg(name, dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (cons->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(cons);
@@ -368,7 +368,7 @@ TGeoVolume *
 TGeoBuilder::MakeTrd1(const char *name, TGeoMedium *medium, Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
    TGeoTrd1 *trd1 = new TGeoTrd1(name, dx1, dx2, dy, dz);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (trd1->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(trd1);
@@ -385,7 +385,7 @@ TGeoVolume *TGeoBuilder::MakeTrd2(const char *name, TGeoMedium *medium, Double_t
                                   Double_t dy2, Double_t dz)
 {
    TGeoTrd2 *trd2 = new TGeoTrd2(name, dx1, dx2, dy1, dy2, dz);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    if (trd2->IsRunTimeShape()) {
       vol = fGeometry->MakeVolumeMulti(name, medium);
       vol->SetShape(trd2);
@@ -479,7 +479,7 @@ TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t ia
 
    Error("Division", "VOLUME: \"%s\" not defined", mname);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,8 +589,8 @@ TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Float_t *upar, Int_t npar)
 {
-   TGeoVolume *amother = 0;
-   TGeoVolume *volume = 0;
+   TGeoVolume *amother = nullptr;
+   TGeoVolume *volume = nullptr;
 
    // look into special volume list first
    amother = fGeometry->FindVolumeFast(mother, kTRUE);
@@ -690,7 +690,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t 
       vmulti->AddVolume(volume);
    }
    if (irot) {
-      TGeoRotation *matrix = 0;
+      TGeoRotation *matrix = nullptr;
       TGeoMatrix *mat;
       TIter next(fGeometry->GetListOfMatrices());
       while ((mat = (TGeoMatrix *)next())) {
@@ -741,8 +741,8 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t 
 void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Double_t *upar, Int_t npar)
 {
-   TGeoVolume *amother = 0;
-   TGeoVolume *volume = 0;
+   TGeoVolume *amother = nullptr;
+   TGeoVolume *volume = nullptr;
 
    // look into special volume list first
    amother = fGeometry->FindVolumeFast(mother, kTRUE);
@@ -842,7 +842,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t 
       vmulti->AddVolume(volume);
    }
    if (irot) {
-      TGeoRotation *matrix = 0;
+      TGeoRotation *matrix = nullptr;
       TGeoMatrix *mat;
       TIter next(fGeometry->GetListOfMatrices());
       while ((mat = (TGeoMatrix *)next())) {
@@ -886,11 +886,11 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother, Double_t 
 TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed, Float_t *upar, Int_t npar)
 {
    Int_t i;
-   TGeoVolume *volume = 0;
+   TGeoVolume *volume = nullptr;
    TGeoMedium *medium = fGeometry->GetMedium(nmed);
    if (!medium) {
       Error("Volume", "cannot create volume: %s, medium: %d is unknown", name, nmed);
-      return 0;
+      return nullptr;
    }
    TString sh = shape;
    TString sname = name;
@@ -903,7 +903,7 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
       TGeoVolumeMulti *vmulti = (TGeoVolumeMulti *)fGeometry->GetListOfGVolumes()->FindObject(vname);
       if (!vmulti) {
          Error("Volume", "volume multi: %s not created", vname);
-         return 0;
+         return nullptr;
       }
       return vmulti;
    }
@@ -956,7 +956,7 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
 
    if (!volume) {
       Error("Volume", "volume: %s not created", vname);
-      return 0;
+      return nullptr;
    }
    return volume;
 }
@@ -972,11 +972,11 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
 TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed, Double_t *upar, Int_t npar)
 {
    Int_t i;
-   TGeoVolume *volume = 0;
+   TGeoVolume *volume = nullptr;
    TGeoMedium *medium = fGeometry->GetMedium(nmed);
    if (!medium) {
       Error("Volume", "cannot create volume: %s, medium: %d is unknown", name, nmed);
-      return 0;
+      return nullptr;
    }
    TString sh = shape;
    TString sname = name;
@@ -989,7 +989,7 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
       TGeoVolumeMulti *vmulti = (TGeoVolumeMulti *)fGeometry->GetListOfGVolumes()->FindObject(vname);
       if (!vmulti) {
          Error("Volume", "volume multi: %s not created", vname);
-         return 0;
+         return nullptr;
       }
       return vmulti;
    }
@@ -1042,7 +1042,7 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
 
    if (!volume) {
       Error("Volume", "volume: %s not created", vname);
-      return 0;
+      return nullptr;
    }
    return volume;
 }

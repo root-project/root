@@ -33,7 +33,7 @@ ClassImp(TGeoShapeAssembly);
 
 TGeoShapeAssembly::TGeoShapeAssembly()
 {
-   fVolume = 0;
+   fVolume = nullptr;
    fBBoxOK = kFALSE;
 }
 
@@ -197,7 +197,7 @@ Bool_t TGeoShapeAssembly::Contains(const Double_t *point) const
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    TGeoNode *node;
    TGeoShape *shape;
-   Int_t *check_list = 0;
+   Int_t *check_list = nullptr;
    Int_t ncheck, id;
    Double_t local[3];
    if (voxels) {
@@ -378,7 +378,7 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
    }
    // current volume is voxelized, first get current voxel
    Int_t ncheck = 0;
-   Int_t *vlist = 0;
+   Int_t *vlist = nullptr;
    TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
    TGeoStateInfo &td = *nav->GetCache()->GetInfo();
 
@@ -435,7 +435,7 @@ TGeoVolume *TGeoShapeAssembly::Divide(TGeoVolume * /*voldiv*/, const char *divna
                                       Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Assemblies cannot be divided. Division volume %s not created", divname);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -445,7 +445,7 @@ TGeoVolume *TGeoShapeAssembly::Divide(TGeoVolume * /*voldiv*/, const char *divna
 TGeoShape *TGeoShapeAssembly::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
 {
    Error("GetMakeRuntimeShape", "Assemblies cannot be parametrized.");
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,7 +500,7 @@ Double_t TGeoShapeAssembly::Safety(const Double_t *point, Bool_t in) const
    Double_t safe;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    Int_t nd = fVolume->GetNdaughters();
-   Double_t *boxes = 0;
+   Double_t *boxes = nullptr;
    if (voxels)
       boxes = voxels->GetBoxes();
    TGeoNode *node;

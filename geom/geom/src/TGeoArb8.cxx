@@ -1400,7 +1400,7 @@ TGeoTrap::TGeoTrap()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor providing just a range in Z, theta and phi.
 
-TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi) : TGeoArb8("", 0, 0)
+TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi) : TGeoArb8("", 0, nullptr)
 {
    fDz = dz;
    fTheta = theta;
@@ -1413,7 +1413,7 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi) : TGeoArb8("", 0, 
 
 TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1, Double_t bl1, Double_t tl1, Double_t alpha1,
                    Double_t h2, Double_t bl2, Double_t tl2, Double_t alpha2)
-   : TGeoArb8("", 0, 0)
+   : TGeoArb8("", 0, nullptr)
 {
    fDz = dz;
    fTheta = theta;
@@ -1458,7 +1458,7 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1, Doubl
 
 TGeoTrap::TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, Double_t h1, Double_t bl1, Double_t tl1,
                    Double_t alpha1, Double_t h2, Double_t bl2, Double_t tl2, Double_t alpha2)
-   : TGeoArb8(name, 0, 0)
+   : TGeoArb8(name, 0, nullptr)
 {
    SetName(name);
    fDz = dz;
@@ -1713,7 +1713,7 @@ TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndi
    TString opt = "";          //--- option to be attached
    if (iaxis != 3) {
       Error("Divide", "cannot divide trapezoids on other axis than Z");
-      return 0;
+      return nullptr;
    }
    Double_t end = start + ndiv * step;
    Double_t points_lo[8];
@@ -1754,10 +1754,10 @@ TGeoTrap::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndi
 TGeoShape *TGeoTrap::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
    if (!TestShapeBit(kGeoRunTimeShape))
-      return 0;
+      return nullptr;
    if (mother->IsRunTimeShape()) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t dz, h1, bl1, tl1, h2, bl2, tl2;
    if (fDz < 0)
@@ -2117,10 +2117,10 @@ TGeoGtra::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact
 TGeoShape *TGeoGtra::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
    if (!TestShapeBit(kGeoRunTimeShape))
-      return 0;
+      return nullptr;
    if (mother->IsRunTimeShape()) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t dz, h1, bl1, tl1, h2, bl2, tl2;
    if (fDz < 0)

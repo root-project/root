@@ -336,7 +336,7 @@ TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, 
                              Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Elliptical tubes divisions not implemented");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,10 +359,10 @@ void TGeoEltu::GetBoundingCylinder(Double_t *param) const
 TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
    if (!TestShapeBit(kGeoRunTimeShape))
-      return 0;
+      return nullptr;
    if (!mother->TestShapeBit(kGeoEltu)) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t a, b, dz;
    a = fRmin;

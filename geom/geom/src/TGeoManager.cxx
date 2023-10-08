@@ -300,7 +300,7 @@ Int_t TGeoManager::fgMaxXtruVert = 1;
 Int_t TGeoManager::fgNumThreads = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
-TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
+TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = nullptr;
 static Bool_t gGeometryLocked = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -323,39 +323,39 @@ TGeoManager::TGeoManager()
       fIsGeomCleaning = kFALSE;
       fClosed = kFALSE;
       fLoopVolumes = kFALSE;
-      fBits = 0;
-      fCurrentNavigator = 0;
-      fMaterials = 0;
-      fHashPNE = 0;
-      fArrayPNE = 0;
-      fMatrices = 0;
-      fNodes = 0;
-      fOverlaps = 0;
-      fRegions = 0;
+      fBits = nullptr;
+      fCurrentNavigator = nullptr;
+      fMaterials = nullptr;
+      fHashPNE = nullptr;
+      fArrayPNE = nullptr;
+      fMatrices = nullptr;
+      fNodes = nullptr;
+      fOverlaps = nullptr;
+      fRegions = nullptr;
       fNNodes = 0;
       fMaxVisNodes = 10000;
-      fVolumes = 0;
-      fPhysicalNodes = 0;
-      fShapes = 0;
-      fGVolumes = 0;
-      fGShapes = 0;
-      fTracks = 0;
-      fMedia = 0;
+      fVolumes = nullptr;
+      fPhysicalNodes = nullptr;
+      fShapes = nullptr;
+      fGVolumes = nullptr;
+      fGShapes = nullptr;
+      fTracks = nullptr;
+      fMedia = nullptr;
       fNtracks = 0;
       fNpdg = 0;
-      fPdgNames = 0;
-      fGDMLMatrices = 0;
-      fOpticalSurfaces = 0;
-      fSkinSurfaces = 0;
-      fBorderSurfaces = 0;
+      fPdgNames = nullptr;
+      fGDMLMatrices = nullptr;
+      fOpticalSurfaces = nullptr;
+      fSkinSurfaces = nullptr;
+      fBorderSurfaces = nullptr;
       memset(fPdgId, 0, 1024 * sizeof(Int_t));
       //   TObjArray            *fNavigators;       //! list of navigators
-      fCurrentTrack = 0;
-      fCurrentVolume = 0;
-      fTopVolume = 0;
-      fTopNode = 0;
-      fMasterVolume = 0;
-      fPainter = 0;
+      fCurrentTrack = nullptr;
+      fCurrentVolume = nullptr;
+      fTopVolume = nullptr;
+      fTopNode = nullptr;
+      fMasterVolume = nullptr;
+      fPainter = nullptr;
       fActivity = kFALSE;
       fIsNodeSelectable = kFALSE;
       fVisDensity = 0.;
@@ -364,25 +364,25 @@ TGeoManager::TGeoManager()
       fExplodedView = 0;
       fNsegments = 20;
       fNLevel = 0;
-      fUniqueVolumes = 0;
-      fClippingShape = 0;
+      fUniqueVolumes = nullptr;
+      fClippingShape = nullptr;
       fMatrixTransform = kFALSE;
       fMatrixReflection = kFALSE;
-      fGLMatrix = 0;
-      fPaintVolume = 0;
-      fUserPaintVolume = 0;
-      fElementTable = 0;
-      fHashVolumes = 0;
-      fHashGVolumes = 0;
+      fGLMatrix = nullptr;
+      fPaintVolume = nullptr;
+      fUserPaintVolume = nullptr;
+      fElementTable = nullptr;
+      fHashVolumes = nullptr;
+      fHashGVolumes = nullptr;
       fSizePNEId = 0;
       fNPNEId = 0;
-      fKeyPNEId = 0;
-      fValuePNEId = 0;
+      fKeyPNEId = nullptr;
+      fValuePNEId = nullptr;
       fMultiThread = kFALSE;
       fRaytraceMode = 0;
       fMaxThreads = 0;
       fUsePWNav = kFALSE;
-      fParallelWorld = 0;
+      fParallelWorld = nullptr;
       ClearThreadsMap();
    } else {
       Init();
@@ -436,9 +436,9 @@ void TGeoManager::Init()
    fClosed = kFALSE;
    fLoopVolumes = kFALSE;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
-   fCurrentNavigator = 0;
+   fCurrentNavigator = nullptr;
    fHashPNE = new THashList(256, 3);
-   fArrayPNE = 0;
+   fArrayPNE = nullptr;
    fMaterials = new THashList(200, 3);
    fMatrices = new TObjArray(256);
    fNodes = new TObjArray(30);
@@ -455,18 +455,18 @@ void TGeoManager::Init()
    fMedia = new THashList(200, 3);
    fNtracks = 0;
    fNpdg = 0;
-   fPdgNames = 0;
+   fPdgNames = nullptr;
    fGDMLMatrices = new TObjArray();
    fOpticalSurfaces = new TObjArray();
    fSkinSurfaces = new TObjArray();
    fBorderSurfaces = new TObjArray();
    memset(fPdgId, 0, 1024 * sizeof(Int_t));
-   fCurrentTrack = 0;
-   fCurrentVolume = 0;
-   fTopVolume = 0;
-   fTopNode = 0;
-   fMasterVolume = 0;
-   fPainter = 0;
+   fCurrentTrack = nullptr;
+   fCurrentVolume = nullptr;
+   fTopVolume = nullptr;
+   fTopNode = nullptr;
+   fMasterVolume = nullptr;
+   fPainter = nullptr;
    fActivity = kFALSE;
    fIsNodeSelectable = kFALSE;
    fVisDensity = 0.;
@@ -476,24 +476,24 @@ void TGeoManager::Init()
    fNsegments = 20;
    fNLevel = 0;
    fUniqueVolumes = new TObjArray(256);
-   fClippingShape = 0;
+   fClippingShape = nullptr;
    fMatrixTransform = kFALSE;
    fMatrixReflection = kFALSE;
    fGLMatrix = new TGeoHMatrix();
-   fPaintVolume = 0;
-   fUserPaintVolume = 0;
-   fElementTable = 0;
-   fHashVolumes = 0;
-   fHashGVolumes = 0;
+   fPaintVolume = nullptr;
+   fUserPaintVolume = nullptr;
+   fElementTable = nullptr;
+   fHashVolumes = nullptr;
+   fHashGVolumes = nullptr;
    fSizePNEId = 0;
    fNPNEId = 0;
-   fKeyPNEId = 0;
-   fValuePNEId = 0;
+   fKeyPNEId = nullptr;
+   fValuePNEId = nullptr;
    fMultiThread = kFALSE;
    fRaytraceMode = 0;
    fMaxThreads = 0;
    fUsePWNav = kFALSE;
-   fParallelWorld = 0;
+   fParallelWorld = nullptr;
    ClearThreadsMap();
 }
 
@@ -604,8 +604,8 @@ TGeoManager::~TGeoManager()
    }
    delete fParallelWorld;
    fIsGeomCleaning = kFALSE;
-   gGeoIdentity = 0;
-   gGeoManager = 0;
+   gGeoIdentity = nullptr;
+   gGeoManager = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -792,7 +792,7 @@ TGeoNavigator *TGeoManager::AddNavigator()
    }
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
-   TGeoNavigatorArray *array = 0;
+   TGeoNavigatorArray *array = nullptr;
    if (it != fNavigators.end())
       array = it->second;
    else {
@@ -812,7 +812,7 @@ TGeoNavigator *TGeoManager::AddNavigator()
 
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
-   TTHREAD_TLS(TGeoNavigator *) tnav = 0;
+   TTHREAD_TLS(TGeoNavigator *) tnav = nullptr;
    if (!fMultiThread)
       return fCurrentNavigator;
    TGeoNavigator *nav = tnav; // TTHREAD_TLS_GET(TGeoNavigator*,tnav);
@@ -821,7 +821,7 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end())
-      return 0;
+      return nullptr;
    TGeoNavigatorArray *array = it->second;
    nav = array->GetCurrentNavigator();
    tnav = nav; // TTHREAD_TLS_SET(TGeoNavigator*,tnav,nav);
@@ -836,7 +836,7 @@ TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end())
-      return 0;
+      return nullptr;
    TGeoNavigatorArray *array = it->second;
    return array;
 }
@@ -880,7 +880,7 @@ void TGeoManager::ClearNavigators()
 {
    if (fMultiThread)
       fgMutex.lock();
-   TGeoNavigatorArray *arr = 0;
+   TGeoNavigatorArray *arr = nullptr;
    for (NavigatorsMap_t::iterator it = fNavigators.begin(); it != fNavigators.end(); ++it) {
       arr = (*it).second;
       if (arr)
@@ -1454,7 +1454,7 @@ void TGeoManager::ClearAttributes()
 {
    if (gPad)
       delete gPad;
-   gPad = 0;
+   gPad = nullptr;
    SetVisOption(0);
    SetVisLevel(3);
    SetExplodedView(0);
@@ -1462,7 +1462,7 @@ void TGeoManager::ClearAttributes()
    if (!gStyle)
       return;
    TIter next(fVolumes);
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    while ((vol = (TGeoVolume *)next())) {
       if (!vol->IsVisTouched())
          continue;
@@ -1498,7 +1498,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    //   Bool_t dummy = opt.Contains("d");
    Bool_t nodeid = opt.Contains("i");
    // Create a geometry navigator if not present
-   TGeoNavigator *nav = 0;
+   TGeoNavigator *nav = nullptr;
    Int_t nnavigators = 0;
    // Check if the geometry is streamed from file
    if (fIsGeomReading) {
@@ -1629,20 +1629,20 @@ void TGeoManager::CleanGarbage()
    Int_t i, nentries;
    if (fGVolumes) {
       nentries = fGVolumes->GetEntries();
-      TGeoVolume *vol = 0;
+      TGeoVolume *vol = nullptr;
       for (i = 0; i < nentries; i++) {
          vol = (TGeoVolume *)fGVolumes->At(i);
          if (vol)
-            vol->SetFinder(0);
+            vol->SetFinder(nullptr);
       }
       fGVolumes->Delete();
       delete fGVolumes;
-      fGVolumes = 0;
+      fGVolumes = nullptr;
    }
    if (fGShapes) {
       fGShapes->Delete();
       delete fGShapes;
-      fGShapes = 0;
+      fGShapes = nullptr;
    }
 }
 
@@ -2137,7 +2137,7 @@ Int_t TGeoManager::GetNumThreads()
 TGeoHMatrix *TGeoManager::GetHMatrix()
 {
    if (!GetCurrentNavigator())
-      return NULL;
+      return nullptr;
    return GetCurrentNavigator()->GetHMatrix();
 }
 
@@ -2177,7 +2177,7 @@ Int_t TGeoManager::GetVirtualLevel()
 
 TVirtualGeoTrack *TGeoManager::FindTrackWithId(Int_t id) const
 {
-   TVirtualGeoTrack *trk = 0;
+   TVirtualGeoTrack *trk = nullptr;
    trk = GetTrackOfId(id);
    if (trk)
       return trk;
@@ -2189,7 +2189,7 @@ TVirtualGeoTrack *TGeoManager::FindTrackWithId(Int_t id) const
       if (trk)
          return trk;
    }
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2204,7 +2204,7 @@ TVirtualGeoTrack *TGeoManager::GetTrackOfId(Int_t id) const
             return track;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2217,7 +2217,7 @@ TVirtualGeoTrack *TGeoManager::GetParentTrackOfId(Int_t id) const
       if (track->GetId() == id)
          return track;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2505,7 +2505,7 @@ void TGeoManager::OptimizeVoxels(const char *filename)
    out << "//===== <run this macro JUST BEFORE closing the geometry>" << std::endl;
    out << "   TGeoVolume *vol = 0;" << std::endl;
    out << "   // parse all voxelized volumes" << std::endl;
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    Bool_t cyltype;
    TIter next(fVolumes);
    while ((vol = (TGeoVolume *)next())) {
@@ -2694,7 +2694,7 @@ void TGeoManager::SaveAttributes(const char *filename)
        << std::endl;
    out << "   // iterate volumes container and set new attributes" << std::endl;
    //   out << "   TIter next(gGeoManager->GetListOfVolumes());"<<std::endl;
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    fTopNode->SaveAttributes(out);
 
    TIter next(fVolumes);
@@ -2991,7 +2991,7 @@ TGeoMaterial *TGeoManager::FindDuplicateMaterial(const TGeoMaterial *mat) const
 {
    Int_t index = fMaterials->IndexOf(mat);
    if (index <= 0)
-      return 0;
+      return nullptr;
    TGeoMaterial *other;
    for (Int_t i = 0; i < index; i++) {
       other = (TGeoMaterial *)fMaterials->At(i);
@@ -3000,7 +3000,7 @@ TGeoMaterial *TGeoManager::FindDuplicateMaterial(const TGeoMaterial *mat) const
       if (other->IsEq(mat))
          return other;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3036,7 +3036,7 @@ TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
       if (med->GetId() == numed)
          return med;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3045,7 +3045,7 @@ TGeoMedium *TGeoManager::GetMedium(Int_t numed) const
 TGeoMaterial *TGeoManager::GetMaterial(Int_t id) const
 {
    if (id < 0 || id >= fMaterials->GetSize())
-      return 0;
+      return nullptr;
    TGeoMaterial *mat = (TGeoMaterial *)fMaterials->At(id);
    return mat;
 }
@@ -3097,7 +3097,7 @@ void TGeoManager::ResetUserData()
    TIter next(fVolumes);
    TGeoVolume *vol;
    while ((vol = (TGeoVolume *)next()))
-      vol->SetField(0);
+      vol->SetField(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3340,7 +3340,7 @@ TGeoVolume *TGeoManager::MakeXtru(const char *name, TGeoMedium *medium, Int_t nz
 TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char *path, Int_t uid)
 {
    if (!CheckPath(path))
-      return NULL;
+      return nullptr;
    if (!fHashPNE)
       fHashPNE = new THashList(256, 3);
    if (!fArrayPNE)
@@ -3348,7 +3348,7 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
    TGeoPNEntry *entry = GetAlignableEntry(unique_name);
    if (entry) {
       Error("SetAlignableEntry", "An alignable object with name %s already existing. NOT ADDED !", unique_name);
-      return 0;
+      return nullptr;
    }
    entry = new TGeoPNEntry(unique_name, path);
    Int_t ientry = fHashPNE->GetSize();
@@ -3368,7 +3368,7 @@ TGeoPNEntry *TGeoManager::SetAlignableEntry(const char *unique_name, const char 
 TGeoPNEntry *TGeoManager::GetAlignableEntry(const char *name) const
 {
    if (!fHashPNE)
-      return 0;
+      return nullptr;
    return (TGeoPNEntry *)fHashPNE->FindObject(name);
 }
 
@@ -3378,7 +3378,7 @@ TGeoPNEntry *TGeoManager::GetAlignableEntry(const char *name) const
 TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
 {
    if (!fArrayPNE && !InitArrayPNE())
-      return 0;
+      return nullptr;
    return (TGeoPNEntry *)fArrayPNE->At(index);
 }
 
@@ -3388,10 +3388,10 @@ TGeoPNEntry *TGeoManager::GetAlignableEntry(Int_t index) const
 TGeoPNEntry *TGeoManager::GetAlignableEntryByUID(Int_t uid) const
 {
    if (!fNPNEId || (!fArrayPNE && !InitArrayPNE()))
-      return NULL;
+      return nullptr;
    Int_t index = TMath::BinarySearch(fNPNEId, fKeyPNEId, uid);
    if (index < 0 || fKeyPNEId[index] != uid)
-      return NULL;
+      return nullptr;
    return (TGeoPNEntry *)fArrayPNE->At(fValuePNEId[index]);
 }
 
@@ -3473,7 +3473,7 @@ TGeoPhysicalNode *TGeoManager::MakeAlignablePN(const char *name)
    TGeoPNEntry *entry = GetAlignableEntry(name);
    if (!entry) {
       Error("MakeAlignablePN", "No alignable object named %s found !", name);
-      return 0;
+      return nullptr;
    }
    return MakeAlignablePN(entry);
 }
@@ -3485,12 +3485,12 @@ TGeoPhysicalNode *TGeoManager::MakeAlignablePN(TGeoPNEntry *entry)
 {
    if (!entry) {
       Error("MakeAlignablePN", "No alignable object specified !");
-      return 0;
+      return nullptr;
    }
    const char *path = entry->GetTitle();
    if (!cd(path)) {
       Error("MakeAlignablePN", "Alignable object %s poins to invalid path: %s", entry->GetName(), path);
-      return 0;
+      return nullptr;
    }
    TGeoPhysicalNode *node = MakePhysicalNode(path);
    entry->SetPhysicalNode(node);
@@ -3507,7 +3507,7 @@ TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)
    if (path) {
       if (!CheckPath(path)) {
          Error("MakePhysicalNode", "path: %s not valid", path);
-         return NULL;
+         return nullptr;
       }
       node = new TGeoPhysicalNode(path);
    } else {
@@ -3657,7 +3657,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
 
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
-   TBrowser *browser = 0;
+   TBrowser *browser = nullptr;
 
    if (fTopVolume)
       fTopVolume->SetTitle("");
@@ -3665,7 +3665,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    vol->SetTitle("Top volume");
    if (fTopNode) {
       TGeoNode *topn = fTopNode;
-      fTopNode = 0;
+      fTopNode = nullptr;
       while ((browser = (TBrowser *)next()))
          browser->RecursiveRemove(topn);
       delete topn;
@@ -4098,7 +4098,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       return nullptr;
    }
    if (!filename)
-      return 0;
+      return nullptr;
    if (fgVerboseLevel > 0)
       ::Info("TGeoManager::Import", "Reading geometry from file: %s", filename);
 
@@ -4150,7 +4150,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       delete f;
    }
    if (!gGeoManager)
-      return 0;
+      return nullptr;
    if (!gROOT->GetListOfGeometries()->FindObject(gGeoManager))
       gROOT->GetListOfGeometries()->Add(gGeoManager);
    if (!gROOT->GetListOfBrowsables()->FindObject(gGeoManager))

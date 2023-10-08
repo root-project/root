@@ -38,7 +38,7 @@ ClassImp(TGeoVoxelFinder);
 
 TGeoVoxelFinder::TGeoVoxelFinder()
 {
-   fVolume = 0;
+   fVolume = nullptr;
    fNboxes = 0;
    fIbx = 0;
    fIby = 0;
@@ -52,25 +52,25 @@ TGeoVoxelFinder::TGeoVoxelFinder()
    fNx = 0;
    fNy = 0;
    fNz = 0;
-   fBoxes = 0;
-   fXb = 0;
-   fYb = 0;
-   fZb = 0;
-   fOBx = 0;
-   fOBy = 0;
-   fOBz = 0;
-   fOEx = 0;
-   fOEy = 0;
-   fOEz = 0;
-   fIndcX = 0;
-   fIndcY = 0;
-   fIndcZ = 0;
-   fExtraX = 0;
-   fExtraY = 0;
-   fExtraZ = 0;
-   fNsliceX = 0;
-   fNsliceY = 0;
-   fNsliceZ = 0;
+   fBoxes = nullptr;
+   fXb = nullptr;
+   fYb = nullptr;
+   fZb = nullptr;
+   fOBx = nullptr;
+   fOBy = nullptr;
+   fOBz = nullptr;
+   fOEx = nullptr;
+   fOEy = nullptr;
+   fOEz = nullptr;
+   fIndcX = nullptr;
+   fIndcY = nullptr;
+   fIndcZ = nullptr;
+   fExtraX = nullptr;
+   fExtraY = nullptr;
+   fExtraZ = nullptr;
+   fNsliceX = nullptr;
+   fNsliceY = nullptr;
+   fNsliceZ = nullptr;
    memset(fPriority, 0, 3 * sizeof(Int_t));
    SetInvalid(kFALSE);
 }
@@ -98,25 +98,25 @@ TGeoVoxelFinder::TGeoVoxelFinder(TGeoVolume *vol)
    fNx = 0;
    fNy = 0;
    fNz = 0;
-   fBoxes = 0;
-   fXb = 0;
-   fYb = 0;
-   fZb = 0;
-   fOBx = 0;
-   fOBy = 0;
-   fOBz = 0;
-   fOEx = 0;
-   fOEy = 0;
-   fOEz = 0;
-   fIndcX = 0;
-   fIndcY = 0;
-   fIndcZ = 0;
-   fExtraX = 0;
-   fExtraY = 0;
-   fExtraZ = 0;
-   fNsliceX = 0;
-   fNsliceY = 0;
-   fNsliceZ = 0;
+   fBoxes = nullptr;
+   fXb = nullptr;
+   fYb = nullptr;
+   fZb = nullptr;
+   fOBx = nullptr;
+   fOBy = nullptr;
+   fOBz = nullptr;
+   fOEx = nullptr;
+   fOEy = nullptr;
+   fOEz = nullptr;
+   fIndcX = nullptr;
+   fIndcY = nullptr;
+   fIndcZ = nullptr;
+   fExtraX = nullptr;
+   fExtraY = nullptr;
+   fExtraZ = nullptr;
+   fNsliceX = nullptr;
+   fNsliceY = nullptr;
+   fNsliceZ = nullptr;
    memset(fPriority, 0, 3 * sizeof(Int_t));
    SetNeedRebuild();
 }
@@ -203,7 +203,7 @@ void TGeoVoxelFinder::BuildVoxelLimits()
    Double_t pt[3] = {0};
    Double_t xyz[6] = {0};
    //   printf("boundaries for %s :\n", GetName());
-   TGeoBBox *box = 0;
+   TGeoBBox *box = nullptr;
    for (id = 0; id < nd; id++) {
       node = fVolume->GetNode(id);
       //      if (!strcmp(node->ClassName(), "TGeoNodeOffset") continue;
@@ -334,7 +334,7 @@ void TGeoVoxelFinder::FindOverlaps(Int_t inode) const
    Double_t xmin1, xmax1, ymin1, ymax1, zmin1, zmax1;
    Double_t ddx1, ddx2;
    Int_t nd = fVolume->GetNdaughters();
-   Int_t *ovlps = 0;
+   Int_t *ovlps = nullptr;
    Int_t *otmp = new Int_t[nd - 1];
    Int_t novlp = 0;
    TGeoNode *node = fVolume->GetNode(inode);
@@ -434,7 +434,7 @@ Bool_t TGeoVoxelFinder::GetIndices(const Double_t *point, TGeoStateInfo &td)
 
 Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const
 {
-   Int_t *list = 0;
+   Int_t *list = nullptr;
    nextra = 0;
    if (fPriority[0] != 2)
       return list;
@@ -454,7 +454,7 @@ Int_t *TGeoVoxelFinder::GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) cons
 
 Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) const
 {
-   Int_t *list = 0;
+   Int_t *list = nullptr;
    nextra = 0;
    if (fPriority[1] != 2)
       return list;
@@ -474,7 +474,7 @@ Int_t *TGeoVoxelFinder::GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) cons
 
 Int_t *TGeoVoxelFinder::GetExtraZ(Int_t islice, Bool_t left, Int_t &nextra) const
 {
-   Int_t *list = 0;
+   Int_t *list = nullptr;
    nextra = 0;
    if (fPriority[2] != 2)
       return list;
@@ -564,11 +564,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
    }
    ncheck = 0;
    if (td.fVoxLimits[0] < 0)
-      return 0;
+      return nullptr;
    if (td.fVoxLimits[1] < 0)
-      return 0;
+      return nullptr;
    if (td.fVoxLimits[2] < 0)
-      return 0;
+      return nullptr;
    Int_t dind[3]; // new slices
    //---> start from old slices
    memcpy(&dind[0], &td.fVoxSlices[0], 3 * sizeof(Int_t));
@@ -589,11 +589,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
       dind[0] += td.fVoxInc[0];
       if (td.fVoxInc[0] == 1) {
          if (dind[0] < 0 || dind[0] > fIbx - 1)
-            return 0; // outside range
+            return nullptr; // outside range
          dmin[0] = (fXb[dind[0]] - point[0]) * td.fVoxInvdir[0];
       } else {
          if (td.fVoxSlices[0] < 0 || td.fVoxSlices[0] > fIbx - 1)
-            return 0; // outside range
+            return nullptr; // outside range
          dmin[0] = (fXb[td.fVoxSlices[0]] - point[0]) * td.fVoxInvdir[0];
       }
       isXlimit = (dmin[0] > maxstep) ? kTRUE : kFALSE;
@@ -607,7 +607,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          iforced++;
          //         printf("   FORCED 1\n");
          if (isXlimit)
-            return 0;
+            return nullptr;
       } else {
          if (fPriority[0] == 2) {
             // if no candidates in current slice, force next slice
@@ -617,7 +617,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
                iforced++;
                //               printf("   FORCED 2\n");
                if (isXlimit)
-                  return 0;
+                  return nullptr;
             }
          }
       }
@@ -633,11 +633,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
       dind[1] += td.fVoxInc[1];
       if (td.fVoxInc[1] == 1) {
          if (dind[1] < 0 || dind[1] > fIby - 1)
-            return 0; // outside range
+            return nullptr; // outside range
          dmin[1] = (fYb[dind[1]] - point[1]) * td.fVoxInvdir[1];
       } else {
          if (td.fVoxSlices[1] < 0 || td.fVoxSlices[1] > fIby - 1)
-            return 0; // outside range
+            return nullptr; // outside range
          dmin[1] = (fYb[td.fVoxSlices[1]] - point[1]) * td.fVoxInvdir[1];
       }
       isYlimit = (dmin[1] > maxstep) ? kTRUE : kFALSE;
@@ -652,7 +652,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          iforced++;
          //         printf("   FORCED 1\n");
          if (isYlimit)
-            return 0;
+            return nullptr;
       } else {
          if (fPriority[1] == 2) {
             // if no candidates in current slice, force next slice
@@ -662,7 +662,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
                iforced++;
                //               printf("   FORCED 2\n");
                if (isYlimit)
-                  return 0;
+                  return nullptr;
             }
          }
       }
@@ -678,11 +678,11 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
       dind[2] += td.fVoxInc[2];
       if (td.fVoxInc[2] == 1) {
          if (dind[2] < 0 || dind[2] > fIbz - 1)
-            return 0; // outside range
+            return nullptr; // outside range
          dmin[2] = (fZb[dind[2]] - point[2]) * td.fVoxInvdir[2];
       } else {
          if (td.fVoxSlices[2] < 0 || td.fVoxSlices[2] > fIbz - 1)
-            return 0; // outside range
+            return nullptr; // outside range
          dmin[2] = (fZb[td.fVoxSlices[2]] - point[2]) * td.fVoxInvdir[2];
       }
       isZlimit = (dmin[2] > maxstep) ? kTRUE : kFALSE;
@@ -697,7 +697,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          iforced++;
          //         printf("   FORCED 1\n");
          if (isZlimit)
-            return 0;
+            return nullptr;
       } else {
          if (fPriority[2] == 2) {
             // if no candidates in current slice, force next slice
@@ -707,7 +707,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
                iforced++;
                //               printf("   FORCED 2\n");
                if (isZlimit)
-                  return 0;
+                  return nullptr;
             }
          }
       }
@@ -775,33 +775,33 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
       dslice = dmin[islice];
       if (dslice >= maxstep) {
          //         printf("DSLICE > MAXSTEP -> EXIT\n");
-         return 0;
+         return nullptr;
       }
    }
    //   printf("5- islicenext=%i  DSLICE=%g\n", islice, dslice);
    Double_t xptnew;
    Int_t *new_list; // list of new candidates
-   UChar_t *slice1 = 0;
-   UChar_t *slice2 = 0;
+   UChar_t *slice1 = nullptr;
+   UChar_t *slice2 = nullptr;
    Int_t ndd[2] = {0, 0};
    Int_t islices = 0;
    Bool_t left;
    switch (islice) {
    case 0:
       if (isXlimit)
-         return 0;
+         return nullptr;
       // increment/decrement X slice
       td.fVoxSlices[0] = dind[0];
       if (iforced) {
          // we have to recompute Y and Z slices
          if (dslice > td.fVoxLimits[1])
-            return 0;
+            return nullptr;
          if (dslice > td.fVoxLimits[2])
-            return 0;
+            return nullptr;
          if ((dslice > dmin[1]) && td.fVoxInc[1]) {
             xptnew = point[1] + dslice / td.fVoxInvdir[1];
             //               printf("   recomputing Y slice, pos=%g\n", xptnew);
-            while (1) {
+            while (true) {
                td.fVoxSlices[1] += td.fVoxInc[1];
                if (td.fVoxInc[1] == 1) {
                   if (td.fVoxSlices[1] < -1 || td.fVoxSlices[1] > fIby - 2)
@@ -820,7 +820,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          if ((dslice > dmin[2]) && td.fVoxInc[2]) {
             xptnew = point[2] + dslice / td.fVoxInvdir[2];
             //               printf("   recomputing Z slice, pos=%g\n", xptnew);
-            while (1) {
+            while (true) {
                td.fVoxSlices[2] += td.fVoxInc[2];
                if (td.fVoxInc[2] == 1) {
                   if (td.fVoxSlices[2] < -1 || td.fVoxSlices[2] > fIbz - 2)
@@ -918,19 +918,19 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
       }
    case 1:
       if (isYlimit)
-         return 0;
+         return nullptr;
       // increment/decrement Y slice
       td.fVoxSlices[1] = dind[1];
       if (iforced) {
          // we have to recompute X and Z slices
          if (dslice > td.fVoxLimits[0])
-            return 0;
+            return nullptr;
          if (dslice > td.fVoxLimits[2])
-            return 0;
+            return nullptr;
          if ((dslice > dmin[0]) && td.fVoxInc[0]) {
             xptnew = point[0] + dslice / td.fVoxInvdir[0];
             //               printf("   recomputing X slice, pos=%g\n", xptnew);
-            while (1) {
+            while (true) {
                td.fVoxSlices[0] += td.fVoxInc[0];
                if (td.fVoxInc[0] == 1) {
                   if (td.fVoxSlices[0] < -1 || td.fVoxSlices[0] > fIbx - 2)
@@ -949,7 +949,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          if ((dslice > dmin[2]) && td.fVoxInc[2]) {
             xptnew = point[2] + dslice / td.fVoxInvdir[2];
             //               printf("   recomputing Z slice, pos=%g\n", xptnew);
-            while (1) {
+            while (true) {
                td.fVoxSlices[2] += td.fVoxInc[2];
                if (td.fVoxInc[2] == 1) {
                   if (td.fVoxSlices[2] < -1 || td.fVoxSlices[2] > fIbz - 2)
@@ -1047,19 +1047,19 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
       }
    case 2:
       if (isZlimit)
-         return 0;
+         return nullptr;
       // increment/decrement Z slice
       td.fVoxSlices[2] = dind[2];
       if (iforced) {
          // we have to recompute Y and X slices
          if (dslice > td.fVoxLimits[1])
-            return 0;
+            return nullptr;
          if (dslice > td.fVoxLimits[0])
-            return 0;
+            return nullptr;
          if ((dslice > dmin[1]) && td.fVoxInc[1]) {
             xptnew = point[1] + dslice / td.fVoxInvdir[1];
             //               printf("   recomputing Y slice, pos=%g\n", xptnew);
-            while (1) {
+            while (true) {
                td.fVoxSlices[1] += td.fVoxInc[1];
                if (td.fVoxInc[1] == 1) {
                   if (td.fVoxSlices[1] < -1 || td.fVoxSlices[1] > fIby - 2)
@@ -1078,7 +1078,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          if ((dslice > dmin[0]) && td.fVoxInc[0]) {
             xptnew = point[0] + dslice / td.fVoxInvdir[0];
             //               printf("   recomputing X slice, pos=%g\n", xptnew);
-            while (1) {
+            while (true) {
                td.fVoxSlices[0] += td.fVoxInc[0];
                if (td.fVoxInc[0] == 1) {
                   if (td.fVoxSlices[0] < -1 || td.fVoxSlices[0] > fIbx - 2)
@@ -1176,7 +1176,7 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
       }
    default: Error("GetNextCandidates", "Invalid islice=%i inside %s", islice, fVolume->GetName());
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1259,13 +1259,13 @@ void TGeoVoxelFinder::SortCrossedVoxels(const Double_t *point, const Double_t *d
    Int_t nd[3];
    Int_t islices = 0;
    memset(&nd[0], 0, 3 * sizeof(Int_t));
-   UChar_t *slicex = 0;
+   UChar_t *slicex = nullptr;
    if (fPriority[0] == 2) {
       nd[0] = fNsliceX[td.fVoxSlices[0]];
       slicex = &fIndcX[fOBx[td.fVoxSlices[0]]];
       islices++;
    }
-   UChar_t *slicey = 0;
+   UChar_t *slicey = nullptr;
    if (fPriority[1] == 2) {
       nd[1] = fNsliceY[td.fVoxSlices[1]];
       islices++;
@@ -1276,7 +1276,7 @@ void TGeoVoxelFinder::SortCrossedVoxels(const Double_t *point, const Double_t *d
          nd[0] = nd[1];
       }
    }
-   UChar_t *slicez = 0;
+   UChar_t *slicez = nullptr;
    if (fPriority[2] == 2) {
       nd[2] = fNsliceZ[td.fVoxSlices[2]];
       islices++;
@@ -1322,35 +1322,35 @@ Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoSt
    if (fVolume->GetNdaughters() == 1) {
       if (fXb) {
          if (point[0] < fXb[0] || point[0] > fXb[1])
-            return 0;
+            return nullptr;
       }
       if (fYb) {
          if (point[1] < fYb[0] || point[1] > fYb[1])
-            return 0;
+            return nullptr;
       }
 
       if (fZb) {
          if (point[2] < fZb[0] || point[2] > fZb[1])
-            return 0;
+            return nullptr;
       }
       td.fVoxCheckList[0] = 0;
       nelem = 1;
       return td.fVoxCheckList;
    }
    Int_t nslices = 0;
-   UChar_t *slice1 = 0;
-   UChar_t *slice2 = 0;
-   UChar_t *slice3 = 0;
+   UChar_t *slice1 = nullptr;
+   UChar_t *slice2 = nullptr;
+   UChar_t *slice3 = nullptr;
    Int_t nd[3] = {0, 0, 0};
    Int_t im;
    if (fPriority[0]) {
       im = TMath::BinarySearch(fIbx, fXb, point[0]);
       if ((im == -1) || (im == fIbx - 1))
-         return 0;
+         return nullptr;
       if (fPriority[0] == 2) {
          nd[0] = fNsliceX[im];
          if (!nd[0])
-            return 0;
+            return nullptr;
          nslices++;
          slice1 = &fIndcX[fOBx[im]];
       }
@@ -1359,11 +1359,11 @@ Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoSt
    if (fPriority[1]) {
       im = TMath::BinarySearch(fIby, fYb, point[1]);
       if ((im == -1) || (im == fIby - 1))
-         return 0;
+         return nullptr;
       if (fPriority[1] == 2) {
          nd[1] = fNsliceY[im];
          if (!nd[1])
-            return 0;
+            return nullptr;
          nslices++;
          if (slice1) {
             slice2 = &fIndcY[fOBy[im]];
@@ -1377,11 +1377,11 @@ Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoSt
    if (fPriority[2]) {
       im = TMath::BinarySearch(fIbz, fZb, point[2]);
       if ((im == -1) || (im == fIbz - 1))
-         return 0;
+         return nullptr;
       if (fPriority[2] == 2) {
          nd[2] = fNsliceZ[im];
          if (!nd[2])
-            return 0;
+            return nullptr;
          nslices++;
          if (slice1 && slice2) {
             slice3 = &fIndcZ[fOBz[im]];
@@ -1400,14 +1400,14 @@ Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoSt
    //   Int_t i = 0;
    Bool_t intersect = kFALSE;
    switch (nslices) {
-   case 0: Error("GetCheckList", "No slices for %s", fVolume->GetName()); return 0;
+   case 0: Error("GetCheckList", "No slices for %s", fVolume->GetName()); return nullptr;
    case 1: intersect = Intersect(nd[0], slice1, nelem, td.fVoxCheckList); break;
    case 2: intersect = Intersect(nd[0], slice1, nd[1], slice2, nelem, td.fVoxCheckList); break;
    default: intersect = Intersect(nd[0], slice1, nd[1], slice2, nd[2], slice3, nelem, td.fVoxCheckList);
    }
    if (intersect)
       return td.fVoxCheckList;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1415,15 +1415,15 @@ Int_t *TGeoVoxelFinder::GetCheckList(const Double_t *point, Int_t &nelem, TGeoSt
 
 Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck, TGeoStateInfo &td)
 {
-   UChar_t *slice1 = 0;
-   UChar_t *slice2 = 0;
-   UChar_t *slice3 = 0;
+   UChar_t *slice1 = nullptr;
+   UChar_t *slice2 = nullptr;
+   UChar_t *slice3 = nullptr;
    Int_t nd[3] = {0, 0, 0};
    Int_t nslices = 0;
    if (fPriority[0] == 2) {
       nd[0] = fNsliceX[i];
       if (!nd[0])
-         return 0;
+         return nullptr;
       nslices++;
       slice1 = &fIndcX[fOBx[i]];
    }
@@ -1431,7 +1431,7 @@ Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nch
    if (fPriority[1] == 2) {
       nd[1] = fNsliceY[j];
       if (!nd[1])
-         return 0;
+         return nullptr;
       nslices++;
       if (slice1) {
          slice2 = &fIndcY[fOBy[j]];
@@ -1444,7 +1444,7 @@ Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nch
    if (fPriority[2] == 2) {
       nd[2] = fNsliceZ[k];
       if (!nd[2])
-         return 0;
+         return nullptr;
       nslices++;
       if (slice1 && slice2) {
          slice3 = &fIndcZ[fOBz[k]];
@@ -1460,14 +1460,14 @@ Int_t *TGeoVoxelFinder::GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &nch
    }
    Bool_t intersect = kFALSE;
    switch (nslices) {
-   case 0: Error("GetCheckList", "No slices for %s", fVolume->GetName()); return 0;
+   case 0: Error("GetCheckList", "No slices for %s", fVolume->GetName()); return nullptr;
    case 1: intersect = Intersect(nd[0], slice1, ncheck, td.fVoxCheckList); break;
    case 2: intersect = Intersect(nd[0], slice1, nd[1], slice2, ncheck, td.fVoxCheckList); break;
    default: intersect = Intersect(nd[0], slice1, nd[1], slice2, nd[2], slice3, ncheck, td.fVoxCheckList);
    }
    if (intersect)
       return td.fVoxCheckList;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1872,15 +1872,15 @@ void TGeoVoxelFinder::SortAll(Option_t *)
          fPriority[0] = 0; // always skip this axis
          if (fIndcX)
             delete[] fIndcX;
-         fIndcX = 0;
+         fIndcX = nullptr;
          fNx = 0;
          if (fXb)
             delete[] fXb;
-         fXb = 0;
+         fXb = nullptr;
          fIbx = 0;
          if (fOBx)
             delete[] fOBx;
-         fOBx = 0;
+         fOBx = nullptr;
          fNox = 0;
       } else {
          fPriority[0] = 1; // all in one slice
@@ -2008,15 +2008,15 @@ void TGeoVoxelFinder::SortAll(Option_t *)
          fPriority[1] = 0; // always skip this axis
          if (fIndcY)
             delete[] fIndcY;
-         fIndcY = 0;
+         fIndcY = nullptr;
          fNy = 0;
          if (fYb)
             delete[] fYb;
-         fYb = 0;
+         fYb = nullptr;
          fIby = 0;
          if (fOBy)
             delete[] fOBy;
-         fOBy = 0;
+         fOBy = nullptr;
          fNoy = 0;
       } else {
          fPriority[1] = 1; // all in one slice
@@ -2145,15 +2145,15 @@ void TGeoVoxelFinder::SortAll(Option_t *)
          fPriority[2] = 0;
          if (fIndcZ)
             delete[] fIndcZ;
-         fIndcZ = 0;
+         fIndcZ = nullptr;
          fNz = 0;
          if (fZb)
             delete[] fZb;
-         fZb = 0;
+         fZb = nullptr;
          fIbz = 0;
          if (fOBz)
             delete[] fOBz;
-         fOBz = 0;
+         fOBz = nullptr;
          fNoz = 0;
       } else {
          fPriority[2] = 1; // all in one slice

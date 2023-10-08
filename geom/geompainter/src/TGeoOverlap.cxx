@@ -39,11 +39,11 @@ each other nor extrude the shape of their mother volume.
 TGeoOverlap::TGeoOverlap()
 {
    fOverlap = 0;
-   fVolume1 = 0;
-   fVolume2 = 0;
-   fMatrix1 = 0;
-   fMatrix2 = 0;
-   fMarker = 0;
+   fVolume1 = nullptr;
+   fVolume2 = nullptr;
+   fMatrix1 = nullptr;
+   fMatrix2 = nullptr;
+   fMarker = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ void TGeoOverlap::Browse(TBrowser *b)
 
 Int_t TGeoOverlap::Compare(const TObject *obj) const
 {
-   TGeoOverlap *other = 0;
+   TGeoOverlap *other = nullptr;
    other = (TGeoOverlap *)obj;
    if (!other) {
       Error("Compare", "other object is not TGeoOverlap");
@@ -186,7 +186,7 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
 {
    Draw();
    // Select bounding box of the second volume (may extrude first)
-   TPolyMarker3D *marker = 0;
+   TPolyMarker3D *marker = nullptr;
    TGeoBBox *box = (TGeoBBox *)fVolume2->GetShape();
    Double_t dx = box->GetDX();
    Double_t dy = box->GetDY();

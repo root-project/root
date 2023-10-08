@@ -510,7 +510,7 @@ TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iac
 TGeoVolume *TGeoTorus::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
                               Double_t /*start*/, Double_t /*step*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -568,9 +568,9 @@ void TGeoTorus::GetBoundingCylinder(Double_t *param) const
 TGeoShape *TGeoTorus::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
 {
    if (!TestShapeBit(kGeoRunTimeShape))
-      return 0;
+      return nullptr;
    Error("GetMakeRuntimeShape", "parametrized toruses not supported");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -52,7 +52,7 @@ enum ETGeoParaWid {
 TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape = 0;
+   fShape = nullptr;
    fXi = fYi = fZi = fAlphai = fThetai = fPhii = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -199,7 +199,7 @@ void TGeoParaEditor::ConnectSignals2Slots()
 
 void TGeoParaEditor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA() != TGeoPara::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoPara::Class())) {
       SetActive(kFALSE);
       return;
    }

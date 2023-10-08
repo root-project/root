@@ -37,7 +37,7 @@ TGeoMedium::TGeoMedium()
    fId = 0;
    for (Int_t i = 0; i < 20; i++)
       fParams[i] = 0.;
-   fMaterial = 0;
+   fMaterial = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
          break;
    }
    if (!mat || (mat->GetUniqueID() != (UInt_t)imat)) {
-      fMaterial = 0;
+      fMaterial = nullptr;
       Error("TGeoMedium", "%s, material number %d does not exist", name, imat);
       return;
    }
