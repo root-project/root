@@ -392,7 +392,7 @@ void RGeomViewer::SaveAsMacro(const std::string &fname)
       return;
    std::string prefix = "   ";
 
-   auto p = fname.find(".");
+   auto p = fname.find('.');
    if (p > 0) {
       fs << "void " << fname.substr(0, p) << "() { " << std::endl;
    } else {

@@ -202,7 +202,7 @@ void TGeoPolygon::FinishPolygon()
    // ... algorithm here
    if (!fDaughters)
       fDaughters = new TObjArray();
-   TGeoPolygon *poly = 0;
+   TGeoPolygon *poly = nullptr;
    Int_t indconv = 0;
    Int_t indnext, indback;
    Int_t nskip;

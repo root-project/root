@@ -103,7 +103,7 @@ void TGeoBoolNode::CreateThreadData(Int_t nthreads)
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == 0) {
+      if (fThreadData[tid] == nullptr) {
          fThreadData[tid] = new ThreadData_t;
       }
    }
@@ -1091,7 +1091,7 @@ Double_t TGeoSubtraction::DistFromOutside(const Double_t *point, const Double_t 
    // check if inside '-'
    Bool_t inside = fRight->Contains(&local[0]);
    Double_t epsil = 0.;
-   while (1) {
+   while (true) {
       if (inside) {
          // propagate to outside of '-'
          node->SetSelected(2);
@@ -1541,7 +1541,7 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
          return snext;
    }
 
-   while (1) {
+   while (true) {
       d1 = d2 = 0;
       if (!inleft) {
          d1 = fLeft->DistFromOutside(lpt, ldir, 3);
