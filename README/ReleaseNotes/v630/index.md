@@ -52,6 +52,8 @@ The following people have contributed to this new version:
 
 ## I/O Libraries
 
+## RDataFrame
+- instead of returning nothing, `ROOT::RDF::RunGraphs` now returns the number of separate computation graphs that have been run.
 
 ## TTree Libraries
 
