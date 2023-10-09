@@ -587,7 +587,7 @@ Int_t TLegend::GetNRows() const
    if ( nEntries == 0 ) return 0;
 
    Int_t nRows;
-   if(GetHeader() != NULL) nRows = 1 + (Int_t) TMath::Ceil((Double_t) (nEntries-1)/fNColumns);
+   if(GetHeader() != nullptr) nRows = 1 + (Int_t) TMath::Ceil((Double_t) (nEntries-1)/fNColumns);
    else  nRows = (Int_t) TMath::Ceil((Double_t) nEntries/fNColumns);
 
    return nRows;

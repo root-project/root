@@ -27,9 +27,9 @@ typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
 #else
-#include <stdint.h>
+#include <cstdint>
 #endif
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 #include <string>
 #include <map>

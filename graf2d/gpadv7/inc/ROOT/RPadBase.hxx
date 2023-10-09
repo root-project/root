@@ -70,7 +70,7 @@ public:
 
    using Primitives_t = std::vector<std::shared_ptr<RDrawable>>;
 
-   virtual ~RPadBase();
+   ~RPadBase() override;
 
    void UseStyle(const std::shared_ptr<RStyle> &style) override;
 

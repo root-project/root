@@ -15,8 +15,8 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include "TList.h"
 #include "TROOT.h"
@@ -24,13 +24,13 @@
 
 namespace {
 
-static std::mutex &GetHeldCanvasesMutex()
+std::mutex &GetHeldCanvasesMutex()
 {
    static std::mutex sMutex;
    return sMutex;
 }
 
-static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
+std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
 {
    static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> sCanvases;
    return sCanvases;
@@ -159,7 +159,7 @@ std::string ROOT::Experimental::RCanvas::GetWindowAddr() const
 void ROOT::Experimental::RCanvas::Hide()
 {
    if (fPainter)
-      delete fPainter.release();
+      fPainter = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////

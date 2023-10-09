@@ -58,7 +58,7 @@ public:
    RPad(TRootIOCtor*) : RPad() {}
 
    /// Destructor to have a vtable.
-   virtual ~RPad();
+   ~RPad() override;
 
    /// Access to the parent pad (const version).
    const RPadBase *GetParent() const { return fParent; }

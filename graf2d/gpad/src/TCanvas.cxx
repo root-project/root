@@ -292,10 +292,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    }
 
    Init();
-   SetBit(kMenuBar,1);
+   SetBit(kMenuBar,true);
    if (form < 0) {
       form     = -form;
-      SetBit(kMenuBar,0);
+      SetBit(kMenuBar,false);
    }
 
    fCanvas = this;
@@ -392,10 +392,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    }
 
    Init();
-   SetBit(kMenuBar,1);
+   SetBit(kMenuBar,true);
    if (ww < 0) {
       ww       = -ww;
-      SetBit(kMenuBar,0);
+      SetBit(kMenuBar,false);
    }
    if (wh <= 0) {
       Error("Constructor", "Invalid canvas height: %d",wh);
@@ -483,10 +483,10 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    }
 
    Init();
-   SetBit(kMenuBar,1);
+   SetBit(kMenuBar,true);
    if (wtopx < 0) {
       wtopx    = -wtopx;
-      SetBit(kMenuBar,0);
+      SetBit(kMenuBar,false);
    }
    fCw       = ww;
    fCh       = wh;
@@ -993,14 +993,14 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    fCanvasImp->SetStatusText(atext,2);
 
    // Show date/time if TimeDisplay is selected
-   TAxis *xaxis = NULL;
+   TAxis *xaxis = nullptr;
    if ( selected->InheritsFrom("TH1") )
       xaxis = ((TH1*)selected)->GetXaxis();
    else if ( selected->InheritsFrom("TGraph") )
       xaxis = ((TGraph*)selected)->GetXaxis();
    else if ( selected->InheritsFrom("TAxis") )
       xaxis = (TAxis*)selected;
-   if ( xaxis != NULL && xaxis->GetTimeDisplay()) {
+   if ( xaxis != nullptr && xaxis->GetTimeDisplay()) {
       TString objinfo = selected->GetObjectInfo(px,py);
       // check if user has overwritten GetObjectInfo and altered
       // the default text from TObject::GetObjectInfo "x=.. y=.."
@@ -2649,13 +2649,13 @@ void TCanvas::DeleteCanvasPainter()
 
 Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, Option_t *option)
 {
-   if (pads.size() == 0) {
+   if (pads.empty()) {
       std::vector<TPad *> canvases;
       TIter iter(gROOT->GetListOfCanvases());
       while (auto c = dynamic_cast<TCanvas *>(iter()))
          canvases.emplace_back(c);
 
-      if (canvases.size() == 0) {
+      if (canvases.empty()) {
          ::Warning("TCanvas::SaveAll", "No pads are provided");
          return kFALSE;
       }
