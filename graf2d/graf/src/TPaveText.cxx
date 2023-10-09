@@ -628,7 +628,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
    char *ss, *sclose, *s = nullptr;
 
    Int_t kline = 0;
-   while (1) {
+   while (true) {
       file.getline(currentline,linesize);
       if (file.eof())break;
       if (kline >= fromline && kline < fromline+nlines) {

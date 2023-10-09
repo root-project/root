@@ -1063,7 +1063,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t ndyn;
    Int_t nhilab = 0;
    Int_t idn;
-   Bool_t flexe = 0;
+   Bool_t flexe = false;
    Bool_t flexpo,flexne;
    char *label;
    char *chtemp;
@@ -1876,7 +1876,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
                if (flexpo) {
                   flexe = kTRUE;
-                  while (1) {
+                  while (true) {
                      nexe++;
                      ww      /= 10;
                      wlabel  /= 10;
@@ -1888,7 +1888,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (flexne) {
                   flexe = kTRUE;
                   rne   = 1/TMath::Power(10,maxDigits-2);
-                  while (1) {
+                  while (true) {
                      nexe--;
                      ww      *= 10;
                      wlabel  *= 10;

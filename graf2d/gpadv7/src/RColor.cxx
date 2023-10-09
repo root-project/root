@@ -206,7 +206,7 @@ std::vector<uint8_t> RColor::AsRGBA() const
    else if (IsRGBA())
       rgba.resize(4);
 
-   if (rgba.size() > 0) {
+   if (!rgba.empty()) {
       try {
         rgba[0] = std::stoi(fColor.substr(1,2), nullptr, 16);
         rgba[1] = std::stoi(fColor.substr(3,2), nullptr, 16);

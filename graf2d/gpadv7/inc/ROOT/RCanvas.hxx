@@ -31,7 +31,7 @@ class RChangeAttrRequest : public RDrawableRequest {
    RChangeAttrRequest& operator=(const RChangeAttrRequest &) = delete;
 public:
    RChangeAttrRequest() = default; // for I/O
-   virtual ~RChangeAttrRequest() = default;
+   ~RChangeAttrRequest() override = default;
    std::unique_ptr<RDrawableReply> Process() override;
    bool NeedCanvasUpdate() const override { return fNeedUpdate; }
 };
@@ -87,7 +87,7 @@ public:
    /// Create a temporary RCanvas; for long-lived ones please use Create().
    RCanvas() : RPadBase("canvas") {}
 
-   ~RCanvas() = default;
+   ~RCanvas() override = default;
 
    const RCanvas *GetCanvas() const override { return this; }
 
