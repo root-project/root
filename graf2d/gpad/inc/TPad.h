@@ -274,7 +274,7 @@ public:
    Bool_t            IsVertical() const override { return !TestBit(kHori); }
    Bool_t            IsWeb() const override;
    void              ls(Option_t *option="") const override;
-   void              Modified(Bool_t flag=1) override;  // *SIGNAL*
+   void              Modified(Bool_t flag=true) override;  // *SIGNAL*
    Bool_t            OpaqueMoving() const override;
    Bool_t            OpaqueResizing() const override;
    Double_t          PadtoX(Double_t x) const override;

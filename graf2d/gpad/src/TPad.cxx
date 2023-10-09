@@ -190,8 +190,8 @@ TPad::TPad()
    fLogx  = 0;
    fLogy  = 0;
    fLogz  = 0;
-   fGridx = 0;
-   fGridy = 0;
+   fGridx = false;
+   fGridy = false;
    fTickx = 0;
    fTicky = 0;
    fFrame = nullptr;
@@ -2228,7 +2228,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       ExecuteEvent(kButton1Down, px, py);
 
-      while (1) {
+      while (true) {
          px = py = 0;
          event = gVirtualX->RequestLocator(1, 1, px, py);
 

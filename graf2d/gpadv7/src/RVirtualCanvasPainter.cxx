@@ -15,13 +15,13 @@
 #include <exception>
 
 namespace {
-static int LoadCanvasPainterLibraryOnce() {
+int LoadCanvasPainterLibraryOnce() {
   static int loadResult = gSystem->Load("libROOTCanvasPainter");
   if (loadResult != 0)
      R__LOG_ERROR(ROOT::Experimental::GPadLog()) << "Loading of libROOTCanvasPainter failed!";
   return loadResult;
 }
-static void LoadCanvasPainterLibrary() {
+void LoadCanvasPainterLibrary() {
   static int loadResult = LoadCanvasPainterLibraryOnce();
   (void) loadResult;
 }
