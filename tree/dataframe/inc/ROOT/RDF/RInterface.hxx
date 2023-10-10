@@ -2543,7 +2543,7 @@ public:
    /// double initValue = 1.;
    ///
    /// // Multiplies all elements of the column "x"
-   /// auto result = d.Aggregate(aggregator, merger, columnName, initValue);
+   /// auto result = d.Aggregate(aggregator, merger, "x", initValue);
    /// ~~~
    // clang-format on
    template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
