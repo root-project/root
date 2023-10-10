@@ -205,6 +205,7 @@ public:
          }
       }
       assert(ndims <= 2 && shape.size() > 1);  // to support shape cases {n,1}
+      (void) ndims; // avoid warning about unused variable
       return TCpuMatrix<AFloat>(*(this->GetContainer()), GetHSize(), GetWSize());
    }
 
