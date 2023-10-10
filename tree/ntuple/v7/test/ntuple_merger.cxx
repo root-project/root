@@ -79,3 +79,95 @@ TEST(RFieldMerger, Merge)
    auto mergeResult = RFieldMerger::Merge(RFieldDescriptor(), RFieldDescriptor());
    EXPECT_FALSE(mergeResult);
 }
+
+TEST(RNTupleMerger, Merge)
+{
+   // Write two test ntuples to be merged
+   // These files are practically identical except that filed indices are interchanged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i*123;
+         *fieldBar = i*321;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i*567;
+         *fieldBar = i*765;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+
+      // Create the output
+      RNTupleWriteOptions writeOpts;
+      writeOpts.SetUseBufferedWrite(false);
+      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+
+      // Now Merge the inputs
+      RNTupleMerger merger;
+      merger.Merge(sources, destination);
+   }
+
+   // Now check some information
+   // ntuple1 has 10 entries
+   // ntuple2 has 10 entries
+   // ntuple3 has 20 entries, first 10 identical w/ ntuple1, second 10 identical w/ ntuple2
+   {
+      auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
+      auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard2.GetPath());
+      auto ntuple3 = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
+      ASSERT_EQ(ntuple1->GetNEntries() + ntuple2->GetNEntries(), ntuple3->GetNEntries());
+
+      auto foo1 = ntuple1->GetModel()->GetDefaultEntry()->Get<int>("foo");
+      auto foo2 = ntuple2->GetModel()->GetDefaultEntry()->Get<int>("foo");
+      auto foo3 = ntuple3->GetModel()->GetDefaultEntry()->Get<int>("foo");
+
+      auto bar1 = ntuple1->GetModel()->GetDefaultEntry()->Get<int>("bar");
+      auto bar2 = ntuple2->GetModel()->GetDefaultEntry()->Get<int>("bar");
+      auto bar3 = ntuple3->GetModel()->GetDefaultEntry()->Get<int>("bar");
+
+      ntuple1->LoadEntry(1);
+      ntuple2->LoadEntry(1);
+      ntuple3->LoadEntry(1);
+      ASSERT_NE(*foo1, *foo2);
+      ASSERT_EQ(*foo1, *foo3);
+      ASSERT_NE(*bar1, *bar2);
+      ASSERT_EQ(*bar1, *bar3);
+
+      ntuple3->LoadEntry(11);
+      ASSERT_EQ(*foo2, *foo3);
+      ASSERT_EQ(*bar2, *bar3);
+
+      ntuple1->LoadEntry(9);
+      ntuple2->LoadEntry(9);
+      ntuple3->LoadEntry(9);
+      ASSERT_NE(*foo1, *foo2);
+      ASSERT_EQ(*foo1, *foo3);
+      ASSERT_NE(*bar1, *bar2);
+      ASSERT_EQ(*bar1, *bar3);
+
+      ntuple3->LoadEntry(19);
+      ASSERT_EQ(*foo2, *foo3);
+      ASSERT_EQ(*bar2, *bar3);
+   }
+}
