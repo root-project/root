@@ -71,6 +71,8 @@ The following people have contributed to this new version:
 ## RDataFrame
 - instead of returning nothing, `ROOT::RDF::RunGraphs` now returns the number of separate computation graphs that have been run.
 
+- Introduce [`ProgressBar`](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#progressbar) feature that can be added to any RDataFrame program.
+
 ## TTree Libraries
 
 ## RNTuple
