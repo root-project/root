@@ -113,16 +113,6 @@ public:
       return *static_cast<T*>(Get());
    }
 
-   /// Get an RResultPtr to the encapsulated object.
-   /// \tparam T Type of the action result
-   template <class T>
-   R__DEPRECATED(6, 32, "Please use RResultPtr directly and only cast to RResultHandle in order to call RunGraphs.")
-   RResultPtr<T> GetResultPtr()
-   {
-      CheckType(typeid(T));
-      return RResultPtr<T>(std::static_pointer_cast<T>(fObjPtr), fLoopManager, fActionPtr);
-   }
-
    /// Check whether the result has already been computed
    ///
    /// ~~~{.cpp}
