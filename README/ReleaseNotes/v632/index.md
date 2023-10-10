@@ -1,10 +1,10 @@
-% ROOT Version ?.?? Release Notes
-% 20??-??-??
+% ROOT Version 6.32 Release Notes
+% 2023-10-10
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.??/00 is scheduled for release in ???.
+ROOT version 6.32/00 is scheduled for release around May 2024.
 
 For more information, see:
 
