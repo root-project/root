@@ -204,7 +204,7 @@ public:
             ndims++;
          }
       }
-      R__ASSERT(ndims <= 2 && shape.size() > 1);  // to support shape cases {n,1}
+      assert(ndims <= 2 && shape.size() > 1);  // to support shape cases {n,1}
       return TCpuMatrix<AFloat>(*(this->GetContainer()), GetHSize(), GetWSize());
    }
 
@@ -235,7 +235,7 @@ public:
 
       // for compatibility with old tensor (std::vector<matrix>)
       TCpuMatrix<AFloat> operator[](size_t i) const {
-         R__ASSERT(this->GetMemoryLayout() == MemoryLayout::ColumnMajor );
+         assert(this->GetMemoryLayout() == MemoryLayout::ColumnMajor );
          return At(i).GetMatrix();
       }
 
@@ -251,7 +251,7 @@ public:
       AFloat &operator()(size_t i, size_t j)
       {
          auto &shape = this->GetShape();
-         R__ASSERT(shape.size() == 2);
+         assert(shape.size() == 2);
          return (this->GetMemoryLayout() == MemoryLayout::RowMajor) ? (*(this->GetContainer()))[i * shape[1] + j]
                                                                     : (*(this->GetContainer()))[j * shape[0] + i];
       }
@@ -261,7 +261,7 @@ public:
       AFloat &operator()(size_t i, size_t j, size_t k)
       {
          auto &shape = this->GetShape();
-         R__ASSERT(shape.size() == 3);
+         assert(shape.size() == 3);
 
          return (this->GetMemoryLayout() == MemoryLayout::RowMajor)
                    ? (*(this->GetContainer()))[i * shape[1] * shape[2] + j * shape[2] + k]
@@ -272,7 +272,7 @@ public:
       AFloat operator()(size_t i, size_t j) const
       {
          auto &shape = this->GetShape();
-         R__ASSERT(shape.size() == 2);
+         assert(shape.size() == 2);
          return (this->GetMemoryLayout() == MemoryLayout::RowMajor) ? (this->GetData())[i * shape[1] + j]
                                                                     : (this->GetData())[j * shape[0] + i];
       }
@@ -280,7 +280,7 @@ public:
       AFloat operator()(size_t i, size_t j, size_t k) const
       {
          auto &shape = this->GetShape();
-         R__ASSERT(shape.size() == 3);
+         assert(shape.size() == 3);
 
          return (this->GetMemoryLayout() == MemoryLayout::RowMajor)
                    ? (this->GetData())[i * shape[1] * shape[2] + j * shape[2] + k]
