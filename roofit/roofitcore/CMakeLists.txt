@@ -106,7 +106,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooDataHistSliceIter.h
     RooDataProjBinding.h
     RooDataSet.h
-    RooDataWeightedAverage.h
     RooDerivative.h
     RooDirItem.h
     RooDLLSignificanceMCSModule.h
@@ -321,7 +320,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooDataHistSliceIter.cxx
     src/RooDataProjBinding.cxx
     src/RooDataSet.cxx
-    src/RooDataWeightedAverage.cxx
     src/RooDerivative.cxx
     src/RooDirItem.cxx
     src/RooDLLSignificanceMCSModule.cxx
