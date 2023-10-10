@@ -4,7 +4,7 @@
 
 ## Introduction
 
-ROOT version 6.30/00 is scheduled for release in May, 2023.
+ROOT version 6.30/00 is scheduled for release in October, 2023.
 
 For more information, see:
 
@@ -12,23 +12,39 @@ For more information, see:
 
 The following people have contributed to this new version:
 
- Bertrand Bellenot, CERN/SFT,\
- Jakob Blomer, CERN/SFT,\
- Rene Brun, CERN/SFT,\
+ Guilherme Amadio, CERN/IT,\
+ Bertrand Bellenot, CERN/EP-SFT,\
+ Jakob Blomer, CERN/EP-SFT,\
+ Rene Brun,\
+ Carsten Burgard, TU Dortmund,\
+ Will Buttinger, Rutherford Appleton Lab,\
  Philippe Canal, FNAL,\
- Olivier Couet, CERN/SFT,\
- Gerri Ganis, CERN/SFT,\
- Andrei Gheata, CERN/SFT,\
- Enrico Guiraud, CERN/SFT,\
+ Olivier Couet, CERN/EP-SFT,\
+ Mattias Ellert, Uppsala Uni,\
+ Edward Finkelstein, JGU Mainz,\
+ Gerri Ganis, CERN/EP-SFT,\
+ Florine de Geus, CERN/ATLAS,\
+ Andrei Gheata, CERN/EP-SFT,\
+ Enrico Guiraud, CERN/EP-SFT and Princeton,\
+ Jonas Hahnfeld, CERN/EP-SFT,\
+ Fernando Hueso González, CSIC/UV,\
+ Baidyanath Kundu, CERN/EP-SFT and Princeton,\
+ Giovanna Lazzari Miotto, CERN/EP-SFT,\
  Sergey Linev, GSI,\
- Javier Lopez-Gomez, CERN/SFT,\
- Pere Mato, CERN/SFT,\
- Lorenzo Moneta, CERN/SFT,\
- Axel Naumann, CERN/SFT,\
- Danilo Piparo, CERN/SFT,\
- Fons Rademakers, CERN/SFT,\
- Jonas Rembser, CERN/SFT,\
- Enric Tejedor Saavedra, CERN/SFT,\
+ Jerry Ling, Harvard Uni,\
+ Javier Lopez-Gomez, CERN/EP-SFT,\
+ Pere Mato, CERN/EP-SFT,\
+ Lorenzo Moneta, CERN/EP-SFT,\
+ Ole Morud, CERN/EP-SFT,\
+ Alja Mrak Tadel, UCSD/CMS,\
+ Axel Naumann, CERN/EP-SFT,\
+ Vincenzo Padulano, CERN/EP-SFT,\
+ Danilo Piparo, CERN/EP-SFT,\
+ Fons Rademakers, CERN/IT,\
+ Jonas Rembser, CERN/EP-SFT,\
+ Sanjiban Sengupta, CERN/EP-SFT,\
+ Garima Singh, CERN/EP-SFT and Princeton,\
+ Enric Tejedor Saavedra, CERN/EP-SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,
