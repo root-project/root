@@ -966,7 +966,8 @@ void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<float>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitReal32}, {EColumnType::kReal32}, {EColumnType::kReal16}}, {});
    return representations;
 }
 
@@ -986,6 +987,10 @@ void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &vis
    visitor.VisitFloatField(*this);
 }
 
+void ROOT::Experimental::RField<float>::SetHalfPrecision()
+{
+   SetColumnRepresentative({EColumnType::kReal16});
+}
 
 //------------------------------------------------------------------------------
 
