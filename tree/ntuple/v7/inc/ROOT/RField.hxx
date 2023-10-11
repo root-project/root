@@ -1678,8 +1678,9 @@ public:
    size_t GetValueSize() const final { return sizeof(float); }
    size_t GetAlignment() const final { return alignof(float); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-};
 
+   void SetHalfPrecision();
+};
 
 template <>
 class RField<double> : public Detail::RFieldBase {
