@@ -942,6 +942,58 @@ TEST(RNTuple, Casting)
    EXPECT_EQ(137, *fieldCast2);
 }
 
+TEST(RNTuple, HalfPrecisionFloat)
+{
+   FileRaii fileGuard("test_ntuple_half_precision_float.root");
+
+   // TODO: Add std::float16 tests once available (from C++23)
+   auto f1Fld = RFieldBase::Create("f1", "float").Unwrap();
+   dynamic_cast<RField<float> *>(f1Fld.get())->SetHalfPrecision();
+   EXPECT_EQ(EColumnType::kReal16, f1Fld->GetColumnRepresentative()[0]);
+   EXPECT_EQ("float", f1Fld->GetType());
+
+   auto fVecFld = RFieldBase::Create("fVec", "std::vector<float>").Unwrap();
+   dynamic_cast<RField<float> *>(fVecFld->GetSubFields()[0])->SetHalfPrecision();
+   EXPECT_EQ(EColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentative()[0]);
+
+   auto model = RNTupleModel::Create();
+   model->AddField(std::move(f1Fld));
+   model->AddField(std::move(fVecFld));
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto f1 = writer->GetModel()->GetDefaultEntry()->Get<float>("f1");
+      auto fVec = writer->GetModel()->GetDefaultEntry()->Get<std::vector<float>>("fVec");
+      *f1 = 0.1f;
+      *fVec = {0.1f, 0.2f};
+      writer->Fill();
+      *f1 = 4245.5f;
+      *fVec = {std::numeric_limits<float>::max(), std::numeric_limits<float>::min(),
+               std::numeric_limits<float>::lowest(), std::numeric_limits<float>::denorm_min()};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+
+   EXPECT_EQ(4, ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType::kReal16)->GetSize());
+
+   const auto *desc = reader->GetDescriptor();
+   EXPECT_EQ(EColumnType::kReal16, (*desc->GetColumnIterable(desc->FindFieldId("f1")).begin()).GetModel().GetType());
+
+   auto f1 = reader->GetModel()->GetDefaultEntry()->Get<float>("f1");
+   auto fVec = reader->GetModel()->GetDefaultEntry()->Get<std::vector<float>>("fVec");
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(0.0999755859375f, *f1);
+   EXPECT_FLOAT_EQ(0.0999755859375f, (*fVec)[0]);
+   EXPECT_FLOAT_EQ(0.199951171875f, (*fVec)[1]);
+   reader->LoadEntry(1);
+   EXPECT_FLOAT_EQ(4244.f, *f1);
+   EXPECT_FLOAT_EQ(INFINITY, (*fVec)[0]);
+   EXPECT_FLOAT_EQ(0.0f, (*fVec)[1]);
+   EXPECT_FLOAT_EQ(-INFINITY, (*fVec)[2]);
+   EXPECT_FLOAT_EQ(0.0f, (*fVec)[3]);
+}
+
 TEST(RNTuple, Double32)
 {
    FileRaii fileGuard("test_ntuple_double32.root");
