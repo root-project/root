@@ -7224,6 +7224,7 @@ static bool hasPrecomputedLibraryDeps(llvm::StringRef lib)
 
 const char* TCling::GetSharedLibDeps(const char* lib, bool useDyld/* = false*/)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    if (llvm::sys::path::is_absolute(lib) && !llvm::sys::fs::exists(lib))
       return nullptr;
 
