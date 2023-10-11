@@ -1,0 +1,2368 @@
+/*
+ * Copyright (c) 2019 Anton Stiopin astiopin@gmail.com
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cwctype>
+#include <fstream>
+#include <functional>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+namespace root_sdf_fonts
+{
+
+struct Float2 {
+
+    float x, y;
+
+    Float2() {}
+
+    Float2( float a ) :
+        x(a), y(a) {}
+
+    explicit Float2( float* a ) :
+        x(a[0]), y(a[1]) {}
+
+    Float2( float ix, float iy ) :
+        x(ix), y(iy) {}
+
+    Float2( const Float2& other ) :
+        x( other.x ), y( other.y ) {}
+
+    float* ptr() {
+        return &x;
+    }
+
+    const float* ptr() const {
+        return &x;
+    }
+
+    float& operator[] ( size_t index ) {
+        return (&x)[index];
+    }
+
+    const float& operator[] ( size_t index ) const {
+        return (&x)[index];
+    }
+
+    Float2& operator- () {
+        x = -x;
+        y = -y;
+        return *this;
+    }
+
+    Float2& operator= ( const Float2& other ) {
+        x = other.x;
+        y = other.y;
+        return *this;
+    }
+
+    Float2& operator+= ( const Float2& other ) {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
+
+    Float2& operator-= ( const Float2& other ) {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
+
+    Float2& operator*= ( const Float2& other ) {
+        x *= other.x;
+        y *= other.y;
+        return *this;
+    }
+
+    Float2& operator/= ( const Float2& other ) {
+        x /= other.x;
+        y /= other.y;
+        return *this;
+    }
+};
+
+using F2 = Float2;
+
+inline Float2 operator* ( const Float2& lv, const Float2& rv ) {
+    return Float2( lv.x * rv.x, lv.y * rv.y );
+}
+
+inline Float2 operator* ( const Float2& lv, float rv ) {
+    return lv * Float2( rv );
+}
+
+inline Float2 operator* ( float lv, const Float2& rv ) {
+    return Float2( lv ) * rv;
+}
+
+inline Float2 operator/ ( const Float2& lv, const Float2& rv ) {
+    return Float2( lv.x / rv.x, lv.y / rv.y );
+}
+
+inline Float2 operator/ ( const Float2& lv, float rv ) {
+    return lv / Float2( rv );
+}
+
+inline Float2 operator/ (  float lv, const Float2& rv ) {
+    return Float2( lv ) / rv;
+}
+
+inline Float2 operator+ ( const Float2& lv, const Float2& rv ) {
+    return Float2( lv.x + rv.x, lv.y + rv.y );
+}
+
+inline Float2 operator+ ( const Float2& lv, float rv ) {
+    return lv + Float2( rv );
+}
+
+inline Float2 operator+ (  float lv, const Float2& rv ) {
+    return Float2( lv ) + rv;
+}
+
+inline Float2 operator- ( const Float2& lv, const Float2& rv ) {
+    return Float2( lv.x - rv.x, lv.y - rv.y );
+}
+
+inline Float2 operator- ( const Float2& lv, float rv ) {
+    return lv - Float2( rv );
+}
+
+inline Float2 operator- ( float lv, const Float2& rv ) {
+    return Float2( lv ) - rv;
+}
+
+inline Float2 min( const Float2& v1, const Float2& v2 ) {
+    Float2 res;
+    res.x = v1.x < v2.x ? v1.x : v2.x;
+    res.y = v1.y < v2.y ? v1.y : v2.y;
+    return res;
+}
+
+inline Float2 max( const Float2& v1, const Float2& v2 ) {
+    Float2 res;
+    res.x = v1.x > v2.x ? v1.x : v2.x;
+    res.y = v1.y > v2.y ? v1.y : v2.y;
+    return res;
+}
+
+inline float sqr_length( const Float2& v ) {
+    return v.x * v.x + v.y * v.y;
+}
+
+inline float length( const Float2& v ) {
+    return sqrtf( sqr_length( v ) );
+}
+
+inline float dot( const Float2& v1, const Float2& v2 ) {
+    return v1.x * v2.x + v1.y * v2.y;
+}
+
+inline float cross( const Float2& v1, const Float2& v2 ) {
+    return v1.x * v2.y - v1.y * v2.x;
+}
+
+inline Float2 normalize( const Float2& v ) {
+    return v / length( v );
+}
+
+inline Float2 mix( const Float2& p0, const Float2& p1, float t ) {
+    return p0 * ( 1.0f - t ) + p1 * t;
+}
+
+inline Float2 perp_right( const Float2& v ) {
+    return Float2( v.y, -v.x );
+}
+
+inline Float2 perp_left( const Float2& v ) {
+    return Float2( -v.y, v.x );
+}
+
+inline Float2 clamp( const Float2& v, const Float2& vmin, const Float2& vmax ) {
+    return max( min( v, vmax ), vmin );
+}
+
+inline Float2 vpow( const Float2& v, float p ) {
+    return F2( powf( v.x, p ), powf( v.y, p ) );
+}
+
+
+
+enum ShaderType {
+	VertexShader = GL_VERTEX_SHADER, FragmentShader = GL_FRAGMENT_SHADER
+};
+
+struct VertexAttribType {
+    GLuint gl_type;
+    GLuint size;
+};
+
+namespace vatypes {
+    const VertexAttribType gl_byte   = { GL_BYTE, 1 };
+    const VertexAttribType gl_ubyte  = { GL_UNSIGNED_BYTE, 1 };
+    const VertexAttribType gl_short  = { GL_SHORT, 2 };
+    const VertexAttribType gl_ushort = { GL_UNSIGNED_SHORT, 2 };
+    const VertexAttribType gl_int    = { GL_INT, 4 };
+    const VertexAttribType gl_uint   = { GL_UNSIGNED_INT, 4};
+    const VertexAttribType gl_float  = { GL_FLOAT, 4 };
+    const VertexAttribType gl_fixed  = { GL_FIXED, 4 };
+}
+
+struct VertexAttrib {
+    GLuint location;
+    const char* name;
+    GLuint size;
+    VertexAttribType type;
+    bool normalize;
+    GLuint stride;
+    GLvoid *offset;
+
+    VertexAttrib(GLuint ilocation,
+                 const char *iname,
+                 GLuint isize = 4,
+                 VertexAttribType itype = vatypes::gl_float,
+                 bool inormalize = false,
+                 GLvoid *ioffset = nullptr) :
+        location(ilocation), name(iname), size(isize), type(itype),
+        normalize(inormalize), offset(ioffset) {}
+};
+
+struct Uniform {
+    char* name;
+    GLuint program_id;
+    GLint location;
+
+    Uniform(const char *iname) : name((char*)iname), program_id(0), location(-1) {}
+    Uniform( GLuint iprogram_id, GLint ilocation ) :
+        name(nullptr), program_id( iprogram_id ), location( ilocation )
+    {}
+};
+
+#define UNIFORM( type, name ) Uniform##type name { #name };
+
+#define UNIFORM_MATRIX( size, name ) UniformMatrix##size name { #name };
+
+using ProgramAction = void(*)( GLuint );
+
+GLuint createVertexBuffer( GLenum usage, size_t size, const void *data = nullptr );
+
+GLuint compileShader( const char *name, const char *source, ShaderType type = VertexShader );
+
+bool linkProgram( GLuint program_id );
+
+GLuint createProgram( const char* name, const char* vertex_shader, const char* fragment_shader, VertexAttrib *attribs = nullptr, size_t attrib_count = 0, ProgramAction before_link = 0 );
+
+void deleteProgram( GLuint program );
+
+void initUniforms( GLuint program_id, Uniform *uniform, size_t count = 1 );
+
+template <class T>
+void initUniformStruct( GLuint program_id, T& unf_struct ) {
+    initUniforms( program_id, (Uniform*) &unf_struct, sizeof(T) / sizeof( Uniform ) );
+}
+
+GLuint vertexAttribsStride( VertexAttrib *attribs, size_t attrib_count );
+
+void initVertexAttribs( VertexAttrib *attribs, size_t attrib_count, GLvoid *offset = nullptr, GLuint stride = 0 );
+
+void bindAttribs( VertexAttrib *attribs, size_t attrib_count, size_t offset = 0 );
+
+struct Uniform1i : Uniform {
+    Uniform1i(const char* iname) : Uniform(iname) {};
+
+    void set(int v0) const {
+        glUniform1i(location, v0);
+    }
+};
+
+struct Uniform1f : Uniform {
+    using Uniform::Uniform;
+
+    void set(float v0) const {
+        glUniform1f(location, v0);
+    }
+
+    void setv(const float *v, GLsizei count = 1) const {
+        glUniform1fv(location, count, v);
+    }
+};
+
+struct Uniform2f : Uniform {
+    using Uniform::Uniform;
+
+    void set(float v0, float v1) const {
+        glUniform2f(location, v0, v1);
+    }
+
+    void setv(const float *v, GLsizei count = 1) const {
+        glUniform2fv(location, count, v);
+    }
+};
+
+struct Uniform3f : Uniform {
+    using Uniform::Uniform;
+
+    void set(float v0, float v1, float v2) const {
+        glUniform3f(location, v0, v1, v2);
+    }
+
+    void setv(const float *v, GLsizei count = 1) const {
+        glUniform3fv(location, count, v);
+    }
+};
+
+struct Uniform4f : Uniform {
+    using Uniform::Uniform;
+
+    void set(float v0, float v1, float v2, float v3) const {
+        glUniform4f(location, v0, v1, v2, v3);
+    }
+
+    void setv(float *v, GLsizei count = 1) const {
+        glUniform4fv(location, count, v);
+    }
+};
+
+struct UniformMatrix2 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix2fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix3 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix3fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix4 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix4fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix2x3 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix2x3fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix3x2 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix3x2fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix2x4 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix2x4fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix4x2 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix4x2fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix3x4 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix3x4fv(location, count, transpose, v);
+    }
+};
+
+struct UniformMatrix4x3 : Uniform {
+    using Uniform::Uniform;
+
+    void setv(const float *v, GLsizei count = 1, GLboolean transpose = false) const {
+        glUniformMatrix4x3fv(location, count, transpose, v);
+    }
+};
+
+
+
+struct SdfVertex {
+    F2    pos;        // Vertex position
+    F2    par;        // Vertex position in parabola space
+    F2    limits;     // Parabolic segment xstart, xend
+    float scale;      // Parabola scale relative to world
+    float line_width; // Line width in world space
+};
+
+struct GlyphUnf {
+    UNIFORM_MATRIX( 3, transform_matrix );
+};
+
+struct SdfGl {
+
+    GLuint fill_prog = 0, line_prog = 0;
+
+    GlyphUnf ufill, uline;
+
+    void init();
+
+    void render_sdf( F2 tex_size, const std::vector<SdfVertex> &fill_vertices, const std::vector<SdfVertex> &line_vertices );
+};
+
+
+
+struct Mat2d {
+    Float2 mat[3];
+
+    Mat2d( float a = 0.0f ) {
+        mat[0][0] = a;    mat[0][1] = 0.0f;
+        mat[1][0] = 0.0f; mat[1][1] = a;
+        mat[2][0] = 0.0f; mat[2][1] = 0.0f;
+    }
+
+    Mat2d( float m00, float m01,
+          float m10, float m11,
+          float m20, float m21  ) {
+        mat[0][0] = m00; mat[0][1] = m01;
+        mat[1][0] = m10; mat[1][1] = m11;
+        mat[2][0] = m20; mat[2][1] = m21;
+    }
+
+    Mat2d( Float2 v0, Float2 v1, Float2 v2 ) {
+        mat[0] = v0;
+        mat[1] = v1;
+        mat[2] = v2;
+    }
+
+    Float2& operator[]( size_t index ) {
+        return mat[index];
+    }
+
+    const Float2& operator[]( size_t index ) const {
+        return mat[index];
+    }
+
+    float* ptr() {
+        return mat[0].ptr();
+    }
+};
+
+inline Mat2d operator*( const Mat2d& a, const Mat2d& b ) {
+    Mat2d res;
+    res[0] = a[0] * F2 { b[0][0] } + a[1] * F2 { b[0][1] };
+    res[1] = a[0] * F2 { b[1][0] } + a[1] * F2 { b[1][1] };
+    res[2] = a[0] * F2 { b[2][0] } + a[1] * F2 { b[2][1] } + a[2];
+
+    return res;
+}
+
+inline Float2 operator*( const Mat2d& m, const Float2& v ) {
+    Float2 res;
+    res = m[0] * F2{ v[0] } + m[1] * F2{ v[1] } + m[2];
+    return res;
+}
+
+inline Mat2d operator*( const Mat2d& m, float a ) {
+    Mat2d res;
+    F2 a2 { a };
+    res[0] = m[0] * a2;
+    res[1] = m[1] * a2;
+    res[2] = m[2] * a2;
+    return res;
+}
+
+inline float det( const Mat2d& m ) {
+    return m[0][0] * m[1][1] - m[1][0] * m[0][1];
+}
+
+inline Mat2d invert( const Mat2d& m ) {
+    Mat2d res;
+
+    const float invdet = 1.0f / det( m );
+
+    res[0][0] = invdet *  m[1][1];  res[0][1] = invdet * -m[0][1];
+    res[1][0] = invdet * -m[1][0];  res[1][1] = invdet *  m[0][0];
+
+    res[2][0] = invdet * ( m[1][0] * m[2][1] - m[2][0] * m[1][1] );
+    res[2][1] = invdet * ( m[0][1] * m[2][0] - m[0][0] * m[2][1] );
+
+    return res;
+}
+
+inline Mat2d screen_matrix( Float2 screen_size ) {
+    float sw = screen_size.x;
+    float sh = screen_size.y;
+    Mat2d scr_matrix( 2.0 / sw, 0,   0, 2.0 / sh,   -1.0, -1.0 );
+    return scr_matrix;
+}
+
+
+
+struct Glyph {
+    enum CharType {
+        Lower = 1, Upper = 2, Punct = 4, Space = 8, Other = 0
+    } char_type = Other;
+
+    float advance_width     = 0.0f;
+    float left_side_bearing = 0.0f;
+
+    F2 min = F2{ 0.0f };
+    F2 max = F2{ 0.0f };
+
+    int command_start = 0;
+    int command_count = 0;
+
+    bool is_composite = false;
+
+    int components_start = 0;
+    int components_count = 0;
+};
+
+struct GlyphCommand {
+    enum Type {
+        MoveTo, LineTo, BezTo, ClosePath
+    } type = MoveTo;
+
+    F2 p0 = F2{ 0.0f };
+    F2 p1 = F2{ 0.0f };
+};
+
+struct GlyphComponent {
+    int   glyph_idx;
+    Mat2d transform;
+};
+
+struct Font {
+    // Kerning map: ( left_codepoint << 16 & right_codepoint ) -> kerning advance distance
+    std::unordered_map<uint32_t, float>  kern_map;
+
+    // Glyph map: codepoint -> glyph index
+    std::unordered_map<uint32_t, int>    glyph_map;
+
+    // Codepoint map: glyph index -> codepoint
+    std::unordered_map<int, std::vector<uint32_t>> cp_map;
+
+    // Glyph array
+    std::vector<Glyph>                   glyphs;
+
+    // Array of glyph display commands
+    std::vector<GlyphCommand>            glyph_commands;
+
+    // Array of composite glyph indices
+    std::vector<GlyphComponent>          glyph_components;
+
+    // Font metrics in em
+    float em_ascent, em_descent, em_line_gap;
+
+    // Font metrics relative to ascent (ascent == 1.0)
+    float ascent, descent, line_gap;
+
+    // Glyph maximum bounding box
+    F2    glyph_min, glyph_max;
+
+    bool load_ttf_file( const char *filename );
+
+    bool load_ttf_mem( const uint8_t *ttf );
+
+    // Find glyph index by codepoint
+    int glyph_idx( uint32_t codepoint ) const {
+        auto iter = glyph_map.find( codepoint );
+        return iter == glyph_map.end() ? -1 : iter->second;
+    }
+
+    int kern_advance( uint32_t cp1, uint32_t cp2 );
+};
+
+
+
+struct FillPainter {
+    std::vector<SdfVertex> vertices;
+
+    F2 fan_pos = F2( 0.0f );
+    F2 prev_pos = F2( 0.0f );
+
+    void move_to( F2 p0 );
+
+    void line_to( F2 p1 );
+
+    void qbez_to( F2 p1, F2 p2 );
+
+    void close();
+};
+
+struct LinePainter {
+    std::vector<SdfVertex> vertices;
+
+    F2 start_pos = F2( 0.0f );
+    F2 prev_pos;
+
+    void move_to( F2 p0 );
+
+    void line_to( F2 p1, float line_width );
+
+    void qbez_to( F2 p1, F2 p2, float line_width );
+
+    void close( float line_width );
+};
+
+struct GlyphPainter {
+
+    FillPainter fp;
+
+    LinePainter lp;
+
+    void draw_glyph( const Font *font, int glyph_index, F2 pos, float scale, float sdf_size );
+
+    void clear() {
+        fp.vertices.clear();
+        lp.vertices.clear();
+    }
+};
+
+
+
+struct GlyphRect {
+    uint32_t codepoint = 0;
+    int      glyph_idx = 0;
+    float x0 = 0.0f, y0 = 0.0f, x1 = 0.0f, y1 = 0.0f;
+};
+
+struct SdfAtlas {
+    Font *font        = nullptr;
+    float tex_width   = 2048.0f;
+    float row_height  = 96.0f;
+    float sdf_size    = 16.0f;
+    int   glyph_count = 0;
+
+    float posx = 0;
+    float posy = 0;
+    int   max_height = 0;
+
+    std::vector<GlyphRect> glyph_rects;
+
+    void init( Font *font, float tex_width, float row_height, float sdf_size );
+
+    void allocate_codepoint( uint32_t codepoint );
+
+    void allocate_all_glyphs();
+
+    void allocate_unicode_range( uint32_t start, uint32_t end ); // end is inclusive
+
+    void draw_glyphs( GlyphPainter& gp ) const;
+
+    std::string json( float tex_height, bool flip_texcoord_y = true ) const;
+};
+
+
+
+struct SdfCreator {
+
+    SdfGl        sdf_gl;
+    SdfAtlas     sdf_atlas;
+    Font         font;
+    GlyphPainter gp;
+
+    int          max_tex_size = 4096;
+    int          width = 1024;
+    int          height = 0;
+    int          row_height = 96;
+    int          border_size = 16;
+
+    struct UnicodeRange {
+        uint32_t start;
+        uint32_t end;
+    };
+
+    std::vector<UnicodeRange> unicode_ranges;
+
+    void parse_unicode_ranges( const std::string &nword ) {
+        errno = 0;
+        int range_start = 0;
+        int range_end   = 0;
+
+        char *pos = const_cast<char*>( nword.c_str() );
+
+        for(;;) {
+            errno = 0;
+            char *new_pos = pos;
+            range_start = strtol( pos, &new_pos, 0 );
+            if ( errno != 0 || range_start < 0 ) {
+                std::cerr << "Error reading unicode ranges - begin range" << std::endl;
+                exit( 1 );
+            }
+            range_end = range_start;
+
+            pos = new_pos;
+            char lim = *pos++;
+
+            if ( lim == ':' ) {
+                errno = 0;
+                range_end = strtol( pos, &new_pos, 0 );
+                if ( errno != 0 || range_end < 0 ) {
+                    std::cerr << "Error reading unicode ranges - end range" << std::endl;
+                    exit( 1 );
+                }
+                pos = new_pos;
+                lim = *pos++;
+            }
+
+            if ( lim == ',' ) {
+                unicode_ranges.push_back( UnicodeRange { (uint32_t) range_start, (uint32_t) range_end } );
+                continue;
+            } else if ( lim == 0 ) {
+                unicode_ranges.push_back( UnicodeRange { (uint32_t) range_start, (uint32_t) range_end } );
+                return;
+            } else {
+                std::cerr << "Error reading unicode ranges - after-range-separator" << std::endl;
+                exit( 1 );
+            }
+        }
+    }
+
+    void apply_unicode_ranges() {
+        if ( unicode_ranges.empty() ) {
+            sdf_atlas.allocate_unicode_range( 0x21, 0x7e );
+            sdf_atlas.allocate_unicode_range( 0xffff, 0xffff );
+        } else {
+            for ( const UnicodeRange& ur : unicode_ranges ) {
+                sdf_atlas.allocate_unicode_range( ur.start, ur.end );
+            }
+        }
+    }
+};
+
+const char * const shape_vsh = R"(  // "
+
+
+uniform mat3 transform_matrix;
+
+attribute vec2 pos;
+attribute vec2 par;
+
+varying vec2 vpar;
+
+void main() {
+    vpar = par;
+    vec2 tpos = ( transform_matrix * vec3( pos, 1.0 ) ).xy;
+    gl_Position = vec4( tpos, 0.0, 1.0 );
+}
+
+)"; // "
+
+const char * const shape_fsh = R"( //"
+
+
+varying vec2 vpar;
+
+void main() {
+    float val = float( vpar.x * vpar.x < vpar.y );
+    if ( val == 0.0 ) discard;
+    gl_FragColor = vec4( 1.0 );
+}
+
+)"; // "
+
+const char * const line_vsh = R"(  // "
+
+
+uniform mat3 transform_matrix;
+
+attribute vec2 pos;
+attribute vec2 par;
+attribute vec2 limits;
+attribute float scale;
+attribute float line_width;
+
+varying vec2  vpar;
+varying vec2  vlimits;
+varying float dist_scale;
+
+void main() {
+    vpar = par;
+    vlimits = limits;
+    dist_scale = scale / line_width;
+
+    vec2 tpos = ( transform_matrix * vec3( pos, 1.0 ) ).xy;
+    gl_Position = vec4( tpos, 0.0, 1.0 );
+}
+
+)"; // "
+
+const char * const line_fsh =  R"(  // "
+
+uniform float line_width;
+
+varying vec2 vpar;
+varying vec2 vlimits;
+varying float dist_scale;
+
+// Old cubic root finding algorithm. Not used anymore.
+
+float solve_par_dist_old( vec2 pcoord ) {
+    float p = 0.5 - pcoord.y;
+    float q = -0.5 * pcoord.x;
+
+    // Solving  x^3 + p*x + q = 0
+
+    float sigx = pcoord.x > 0.0 ? 1.0 : -1.0;
+    float sq = 27.0*q*q;
+    float cp = 4.0*p*p*p;
+    float tp = -p * 0.33333333;
+    float dist;
+
+    if ( sq >= -cp ) {
+        // Point below evolute - single root
+        float rcb = 0.096225; // 1 / ( 2*3^(3/2) )
+        float mc = sigx * pow( sqrt( abs( sq + cp ) ) * rcb + 0.5 * abs( q ), 0.33333333 );
+        float x0 = tp / mc + mc;
+        x0 = clamp( x0, vlimits.x, vlimits.y );
+        dist = length( vec2( x0, x0*x0 ) - pcoord );
+    } else {
+        // Point above evolute - three roots
+
+        float a2   = abs( sq / cp );
+        float a    = sqrt( a2 );
+
+        // Exact solution
+        //float dacs = 2.0 * cos( acos( a ) / 3.0 );
+        // Approximation with cubic
+        float dacs = a2 * ( 0.01875324 * a - 0.08179158 ) + ( 0.33098754 * a + 1.7320508 );
+
+        float rsp = sqrt( abs( tp ) );
+        float x0 = sigx * rsp * dacs;
+
+        float dx = sigx * sqrt( -0.75 * x0*x0 - p );
+        float x1 = -0.5 * x0 - dx;
+
+        //Third root is never the closest
+        //float x2 = -0.5 * x0 + dx;
+
+        x0 = clamp( x0, vlimits.x, vlimits.y );
+        x1 = clamp( x1, vlimits.x, vlimits.y );
+
+        float d0 = length( vec2( x0, x0*x0 ) - pcoord );
+        float d1 = length( vec2( x1, x1*x1 ) - pcoord );
+
+        dist = min( d0, d1 );
+    }
+
+    return dist;
+}
+
+// Updated root finding algorithm that copes better with degenerate cases (straight lines)
+// From "The Low-Rank LDL^T Quartic Solver" by Peter Strobach, 2015
+
+float solve_par_dist( vec2 pcoord, int iter ) {
+    float sigx = pcoord.x > 0.0 ? 1.0 : -1.0;
+    float px = abs( pcoord.x );
+    float py = pcoord.y;
+    float h = 0.5 * px;
+    float g = 0.5 - py;
+    float xr = sqrt( 0.5 * px );
+    float x0 = g < -h ? sqrt( abs( g ) ) :
+               g > xr ? h / abs( g ) :
+               xr;
+
+    for ( int i = 0; i < iter; ++i ) {
+        float rcx0 = 1.0 / x0;
+        float pb = h * rcx0 * rcx0;
+        float pc = -px * rcx0 + g;
+        x0 = 2.0 * pc / ( -pb - sqrt( abs( pb*pb - 4.0*pc ) ) );
+    }
+
+    x0 = sigx * x0;
+    float dx = sigx * sqrt( -0.75 * x0*x0 - g );
+    float x1 = -0.5 * x0 - dx;
+
+    x0 = clamp( x0, vlimits.x, vlimits.y );
+    x1 = clamp( x1, vlimits.x, vlimits.y );
+
+    float d0 = length( vec2( x0, x0*x0 ) - pcoord );
+    float d1 = length( vec2( x1, x1*x1 ) - pcoord );
+
+    float dist = min( d0, d1 );
+    return dist;
+}
+
+void main() {
+    //float dist = solve_par_dist_old( vpar );
+    float dist = solve_par_dist( vpar, 3 );
+    float pdist = min( dist * dist_scale, 1.0 );
+
+    float color = 0.5 - 0.5 * pdist;
+
+    if ( color == 0.0 ) discard;
+
+    gl_FragColor = vec4( color );
+    gl_FragDepth = pdist;
+}
+
+)"; // "
+
+
+
+VertexAttrib vattribs[] = {
+    VertexAttrib( 0, "pos", 2 ),
+    VertexAttrib( 1, "par", 2 ),
+    VertexAttrib( 2, "limits", 2 ),
+    VertexAttrib( 3, "scale", 1 ),
+    VertexAttrib( 4, "line_width", 1 )
+};
+
+constexpr size_t vattribs_count = sizeof( vattribs ) / sizeof( vattribs[0] );
+
+void SdfGl::init() {
+    initVertexAttribs( vattribs, vattribs_count );
+    fill_prog = createProgram( "fill", shape_vsh, shape_fsh, vattribs, vattribs_count );
+    initUniformStruct( fill_prog, ufill );
+
+    line_prog = createProgram( "line", line_vsh, line_fsh, vattribs, vattribs_count );
+    initUniformStruct( line_prog, uline );
+}
+
+void SdfGl::render_sdf( F2 tex_size, const std::vector<SdfVertex> &fill_vertices, const std::vector<SdfVertex> &line_vertices ) {
+
+    // full screen quad vertices
+    SdfVertex fs_quad[6] = {
+        { F2( -1.0, -1.0 ), F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f },
+        { F2(  1.0, -1.0 ), F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f },
+        { F2(  1.0,  1.0 ), F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f },
+
+        { F2( -1.0, -1.0 ), F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f },
+        { F2(  1.0,  1.0 ), F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f },
+        { F2( -1.0,  1.0 ), F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f }
+    };
+
+    size_t lcount = line_vertices.size();
+    size_t fcount = fill_vertices.size();
+
+    // screen matrix
+    float mscreen3[] = {
+          2.0f / tex_size.x, 0, 0,
+          0, 2.0f / tex_size.y, 0,
+          -1, -1, 1 };
+
+    // identity matrix
+    float mid[] = {
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+    };
+
+    glViewport( 0, 0, tex_size.x, tex_size.y );
+
+    glBindBuffer( GL_ARRAY_BUFFER, 0 );
+
+    // Drawing lines with depth test
+
+    if ( line_vertices.size() ) {
+
+        bindAttribs( vattribs, vattribs_count, (size_t) line_vertices.data() );
+
+        glUseProgram( line_prog );
+        uline.transform_matrix.setv( mscreen3 );
+        glEnable( GL_DEPTH_TEST );
+        glDepthFunc( GL_LEQUAL );
+        glDrawArrays( GL_TRIANGLES, 0, lcount );
+        glDisable( GL_DEPTH_TEST );
+
+    }
+
+    // Drawing fills
+
+    if ( fill_vertices.size() ) {
+
+        bindAttribs( vattribs, vattribs_count, (size_t) fill_vertices.data() );
+
+        glUseProgram( fill_prog );
+        ufill.transform_matrix.setv( mscreen3 );
+
+        glEnable( GL_STENCIL_TEST );
+        glColorMask( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
+
+        glStencilFunc( GL_ALWAYS, 0, 0xff );
+        glStencilOpSeparate( GL_FRONT, GL_KEEP, GL_INCR_WRAP, GL_INCR_WRAP );
+        glStencilOpSeparate( GL_BACK, GL_KEEP, GL_DECR_WRAP, GL_DECR_WRAP );
+        glDrawArrays( GL_TRIANGLES, 0, fcount );
+
+        // Drawing full screen quad, inverting colors where stencil == 1
+
+        bindAttribs( vattribs, vattribs_count, (size_t) fs_quad );
+
+        glEnable( GL_BLEND );
+        glBlendEquation( GL_FUNC_ADD );
+        glBlendFunc( GL_ONE_MINUS_DST_COLOR, GL_ZERO );
+        glStencilFunc( GL_NOTEQUAL, 0, 0xff );
+        glStencilOp( GL_ZERO, GL_ZERO, GL_ZERO );
+        glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
+        ufill.transform_matrix.setv( mid );
+        glDrawArrays( GL_TRIANGLES, 0, 6 );
+
+    }
+
+    glDisable( GL_BLEND );
+    glDisable( GL_STENCIL_TEST );
+
+    glUseProgram( 0 );
+}
+
+
+
+GLuint createVertexBuffer( GLenum usage, size_t size, const void *data ) {
+    GLuint id;
+    glGenBuffers( 1, &id );
+    glBindBuffer( GL_ARRAY_BUFFER, id );
+    glBufferData( GL_ARRAY_BUFFER, size, data, usage );
+    glBindBuffer( GL_ARRAY_BUFFER, 0 );
+    return id;
+}
+
+GLuint compileShader(const char *name, const char *source, ShaderType type) {
+	GLuint sid = glCreateShader(type);
+	if(sid == 0) return 0;
+
+	glShaderSource(sid, 1, &source, NULL);
+	glCompileShader(sid);
+
+	GLint scompiled;
+	glGetShaderiv(sid, GL_COMPILE_STATUS, &scompiled);
+
+	if(!scompiled) {
+		GLint infoLen = 0;
+		glGetShaderiv(sid, GL_INFO_LOG_LENGTH, &infoLen);
+		if(infoLen > 1) {
+			char* infoLog = (char*)malloc(sizeof(char) * infoLen);
+			glGetShaderInfoLog(sid, infoLen, NULL, infoLog);
+
+            switch (type) {
+                case VertexShader :
+                    fprintf(stderr, "Error compiling vertex shader '%s':\n%s\n", name, infoLog);
+                    assert( false );
+                    break;
+                case FragmentShader :
+                    fprintf(stderr, "Error compiling fragment shader '%s':\n%s\n", name, infoLog);
+                    assert( false );
+                    break;
+                default:
+                    fprintf(stderr, "Error compiling shader '%s':\n%s\n", name, infoLog);
+                    assert( false );
+                    break;
+            }
+
+			free(infoLog);
+		}
+
+		glDeleteShader(sid);
+		return false;
+    }
+
+	return sid;
+}
+
+bool linkProgram(GLuint program_id)  {
+	GLint linked;
+	glLinkProgram(program_id);
+	glGetProgramiv(program_id, GL_LINK_STATUS, &linked);
+
+	if(!linked)	{
+		GLint infoLen = 0;
+		glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &infoLen);
+		if(infoLen > 1) {
+			char* infoLog = (char*)malloc(sizeof(char) * infoLen);
+			glGetProgramInfoLog(program_id, infoLen, NULL, infoLog);
+            fprintf(stderr, "Error linking program:\n%s\n",  infoLog);
+			free(infoLog);
+		}
+		glDeleteProgram(program_id);
+		return false;
+	}
+	return true;
+}
+
+GLuint createProgram(const char* name, const char* vertex_shader, const char* fragment_shader, VertexAttrib *attribs, size_t attrib_count, ProgramAction before_link) {
+    GLuint vs_id = compileShader(name, vertex_shader, VertexShader);
+    if (!vs_id) return 0;
+
+    GLuint fs_id = compileShader(name, fragment_shader, FragmentShader);
+    if (!fs_id) return 0;
+
+    GLuint id =  glCreateProgram();
+    if (!id) return 0;
+
+    glAttachShader(id, vs_id);
+    glAttachShader(id, fs_id);
+
+    for (size_t i = 0; i < attrib_count; i++ ) {
+        glBindAttribLocation(id, attribs[i].location, attribs[i].name);
+    }
+
+    if ( before_link ) before_link( id );
+
+    bool linked = linkProgram(id);
+    if (!linked) return 0;
+
+    return id;
+}
+
+void deleteProgram( GLuint program ) {
+    GLuint shaders[16];
+    GLsizei count = 0;
+    glGetAttachedShaders( program, 16, &count, shaders );
+    glDeleteProgram( program );
+
+    for ( GLsizei i = 0; i < count; ++i ) {
+        glDeleteShader( shaders[i] );
+    }
+}
+
+void initUniforms(GLuint program_id, Uniform *uniforms, size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+        Uniform* u = uniforms + i;
+        GLint location = glGetUniformLocation(program_id, u->name);
+        u->program_id = program_id;
+        u->location = location;
+    }
+}
+
+GLuint vertexAttribsStride(VertexAttrib *attribs, size_t attrib_count) {
+    GLuint size = 0;
+    for (size_t i = 0; i < attrib_count; ++i) {
+        size += attribs[i].type.size * attribs[i].size;
+    }
+
+    return size;
+}
+
+void initVertexAttribs(VertexAttrib *attribs, size_t attrib_count, GLvoid *offset, GLuint stride) {
+    GLuint new_stride = stride ? stride : vertexAttribsStride(attribs, attrib_count);
+    char *voffset = (char*)offset;
+
+    for (size_t i = 0; i < attrib_count; ++i) {
+        VertexAttrib *va = attribs + i;
+        va->stride = new_stride;
+        va->offset = voffset;
+        voffset += va->size * va->type.size;
+    }
+}
+
+void bindAttribs( VertexAttrib *attribs, size_t attrib_count, size_t offset ) {
+    for (size_t i = 0; i < attrib_count; ++i) {
+        VertexAttrib *va = attribs + i;
+        glVertexAttribPointer(va->location, va->size, va->type.gl_type, va->normalize, va->stride, (void*)((size_t)va->offset + offset));
+        glEnableVertexAttribArray(va->location);
+    }
+}
+
+
+void SdfAtlas::init( Font *i_font, float i_tex_width, float i_row_height, float i_sdf_size ) {
+    font = i_font;
+
+    glyph_rects.clear();
+
+    tex_width  = i_tex_width;
+    row_height = i_row_height;
+    sdf_size   = i_sdf_size;
+    glyph_count = 0;
+    posx = 0.0f;
+    posy = 0.0f;
+    max_height = row_height + sdf_size * 2.0f;
+}
+
+void SdfAtlas::allocate_codepoint( uint32_t codepoint ) {
+    int glyph_idx = font->glyph_idx( codepoint );
+    if ( glyph_idx == -1 ) return;
+    if ( glyph_idx == 0 ) return;
+    const Glyph& g = font->glyphs[ glyph_idx ];
+    if ( g.command_count <= 2 ) return;
+
+    float fheight = font->ascent - font->descent;
+    float scale = row_height / fheight;
+    float rect_width = ( g.max.x - g.min.x ) * scale + sdf_size * 2.0f;
+    float row_and_border = row_height + sdf_size * 2.0f;
+
+    if ( ( posx + rect_width ) > tex_width ) {
+        posx = 0.0f;
+
+        posy = ceil( posy + row_and_border );
+        max_height = ceil( posy + row_and_border );
+    }
+
+    GlyphRect gr;
+    gr.codepoint = codepoint;
+    gr.glyph_idx = glyph_idx;
+    gr.x0 = posx;
+    gr.x1 = posx + rect_width;
+    gr.y0 = posy;
+    gr.y1 = posy + row_and_border;
+
+    glyph_rects.push_back( gr );
+
+    posx = ceil( posx + rect_width );
+    glyph_count++;
+}
+
+void SdfAtlas::allocate_all_glyphs() {
+    for ( auto kv : font->glyph_map ) {
+        allocate_codepoint( kv.first );
+    }
+}
+
+void SdfAtlas::allocate_unicode_range( uint32_t start, uint32_t end ) {
+    for ( uint32_t ucp = start; ucp <= end; ++ucp ) {
+        allocate_codepoint( ucp );
+    }
+}
+
+void SdfAtlas::draw_glyphs( GlyphPainter& gp ) const {
+    float fheight = font->ascent - font->descent;
+    float scale = row_height / fheight;
+    float baseline = -font->descent * scale;
+
+    for ( size_t iglyph = 0; iglyph < glyph_rects.size(); ++iglyph ) {
+        const GlyphRect& gr = glyph_rects[ iglyph ];
+        float left = font->glyphs[ gr.glyph_idx ].left_side_bearing * scale;
+        F2 glyph_pos = F2 { gr.x0, gr.y0 + baseline } + F2 { sdf_size - left, sdf_size };
+        gp.draw_glyph( font, gr.glyph_idx, glyph_pos, scale, sdf_size );
+    }
+}
+
+std::string SdfAtlas::json( float tex_height, bool flip_texcoord_y ) const {
+    float fheight = font->ascent - font->descent;
+    float scaley = row_height / tex_height / fheight;
+    float scalex = row_height / tex_width / fheight;
+
+    const Glyph& gspace = font->glyphs[ font->glyph_idx( ' ' ) ];
+    const Glyph& gx     = font->glyphs[ font->glyph_idx( 'x' ) ];
+    const Glyph& gxcap  = font->glyphs[ font->glyph_idx( 'X' ) ];
+
+    std::unordered_set<uint32_t> codepoints;
+    for ( size_t igr = 0; igr < glyph_rects.size(); ++igr ) {
+        codepoints.insert( glyph_rects[igr].codepoint );
+    }
+
+    std::stringstream ss;
+    ss << "{" << std::endl;
+    ss << "  \"ix\": " << sdf_size / tex_width << ", " << std::endl;
+    ss << "  \"iy\": " << sdf_size / tex_height << ", " << std::endl;
+    ss << "  \"row_height\": " << ( row_height + 2.0f * sdf_size ) / tex_height << ", " << std::endl;
+    ss << "  \"aspect\": " <<  tex_width / tex_height << ", " << std::endl;
+    ss << "  \"ascent\": " << font->ascent * scaley << ", " << std::endl;
+    ss << "  \"descent\": " << fabsf( font->descent * scaley ) << ", " << std::endl;
+    ss << "  \"line_gap\": " << font->line_gap * scaley << ", " << std::endl;
+    ss << "  \"cap_height\": " << gxcap.max.y * scaley  << ", " << std::endl;
+    ss << "  \"x_height\": " << gx.max.y * scaley  << ", " << std::endl;
+    ss << "  \"space_advance\": " << gspace.advance_width * scalex << ", " << std::endl << std::endl;
+
+    ss << "  \"chars\": { " << std::endl;
+
+    for ( size_t igr = 0; igr < glyph_rects.size(); ++igr ) {
+        const GlyphRect& gr = glyph_rects[ igr ];
+        const Glyph& g = font->glyphs[ gr.glyph_idx ];
+        float tcy0 = gr.y0 / tex_height;
+        float tcy1 = gr.y1 / tex_height;
+
+        if ( flip_texcoord_y ) {
+            tcy0 = 1.0 - gr.y1 / tex_height;
+            tcy1 = 1.0 - gr.y0 / tex_height;
+        }
+
+        char ucp[32];
+        snprintf( ucp, 32, "  \"\\u%04x\": {", gr.codepoint );
+        ss << ucp << std::endl;
+        ss << "    \"codepoint\": " << gr.codepoint << "," << std::endl;
+        ss << "    \"rect\": [";
+        ss << gr.x0 / tex_width << ", " << tcy0 << ", ";
+        ss << gr.x1 / tex_width << ", " << tcy1 << "]," << std::endl;
+        ss << "    \"bearing_x\": " << g.left_side_bearing * scalex << "," << std::endl;
+        ss << "    \"advance_x\": " << g.advance_width * scalex << "," << std::endl;
+        ss << "    \"flags\": " << (int)g.char_type << std::endl;
+        ss << "  }";
+        if ( igr != glyph_rects.size() - 1 ) ss << ",";
+        ss << std::endl;
+    }
+
+    ss << "  }," << std::endl;
+
+    ss << "  \"kern\": {" << std::endl;
+
+    bool first_p = true;
+    for ( auto kv : font->kern_map ) {
+        uint32_t kern_pair = kv.first;
+        float kern_value = kv.second * scalex;
+
+        int kern_first_idx = ( kern_pair >> 16 ) & 0xffff;
+        int kern_second_idx = kern_pair & 0xffff;
+
+        auto it1 = font->cp_map.find( kern_first_idx );
+        auto it2 = font->cp_map.find( kern_second_idx );
+
+        if ( it1 == font->cp_map.end() || it2 == font->cp_map.end() ) {
+            continue;
+        }
+
+        const std::vector<uint32_t>& v1 = it1->second;
+        const std::vector<uint32_t>& v2 = it2->second;
+
+        for ( uint32_t kern_first : v1 ) {
+            for ( uint32_t kern_second : v2 ) {
+                bool first_found = codepoints.find( kern_first ) != codepoints.end();
+                bool second_found = codepoints.find( kern_second ) != codepoints.end();
+                if ( first_found && second_found ) {
+                    if (first_p) first_p = false;
+                    else         ss << "," << std::endl;
+                    char uckern[ 64 ];
+                    snprintf( uckern, 64, "    \"\\u%04x\\u%04x\": ", kern_first, kern_second );
+                    ss << uckern << kern_value;
+                }
+            }
+        }
+    }
+
+    ss << "  }" << std::endl;
+
+    ss << "}" << std::endl;
+
+    return ss.str();
+}
+
+
+
+enum class QbezType {
+    Parabola, Line, TwoLines
+};
+
+// np10 = normalize( p0 - p1 );
+// np12 = normalize( p2 - p1 );
+QbezType qbez_type( F2 np10, F2 np12 );
+
+// Calculates parabola parameters of a quadratic Bezier
+
+struct Parabola {
+    Mat2d   mat;     // Scale of the parabola transform is stored separately
+    float   scale;
+    float   xstart;  // Sorted parabola segment endpoints: xstart < xend;
+    float   xend;
+
+    static Parabola from_qbez( const Float2& p0, const Float2& p1, const Float2& p2 );
+
+    static Parabola from_line( const Float2& p0, const Float2& p2 );
+
+    Float2 pos( float x ) const;
+
+    Float2 normal( float x ) const;
+
+    Float2 dir( float x ) const;
+
+    Float2 world_to_par( Float2 pos ) const;
+
+    Float2 par_to_world( Float2 pos ) const;
+};
+
+
+
+static void fill_triangle( F2 p0, F2 p1, F2 p2, std::vector<SdfVertex>* vertices ) {
+    SdfVertex v0, v1, v2;
+    v0 = { p0, F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f };
+    v1 = { p1, F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f };
+    v2 = { p2, F2( 0.0f, 1.0f ), F2( 0.0f ), 0.0f, 0.0f };
+
+    vertices->push_back( v0 );
+    vertices->push_back( v1 );
+    vertices->push_back( v2 );
+}
+
+void FillPainter::move_to( F2 p0 ) {
+    fan_pos = p0;
+    prev_pos = p0;
+}
+
+void FillPainter::line_to( F2 p1 ) {
+    fill_triangle( fan_pos, prev_pos, p1, &vertices );
+
+    prev_pos = p1;
+}
+
+void FillPainter::qbez_to( F2 p1, F2 p2 ) {
+    SdfVertex v0, v1, v2, v3, v4, v5;
+
+    fill_triangle( fan_pos, prev_pos, p2, &vertices );
+
+    v0 = { prev_pos,  F2( -1.0f,  1.0f ), F2( 0.0f ), 0.0f, 0.0f };
+    v1 = { p1,        F2(  0.0f, -1.0f ), F2( 0.0f ), 0.0f, 0.0f };
+    v2 = { p2,        F2(  1.0f,  1.0f ), F2( 0.0f ), 0.0f, 0.0f };
+
+    vertices.push_back( v0 );
+    vertices.push_back( v1 );
+    vertices.push_back( v2 );
+
+    prev_pos = p2;
+}
+
+void FillPainter::close() {
+    if ( sqr_length( fan_pos - prev_pos ) < 1e-7 ) return;
+    line_to( fan_pos );
+}
+
+void LinePainter::move_to( F2 p0 ) {
+    prev_pos = p0;
+    start_pos = p0;
+}
+
+static void set_par_vertex( SdfVertex *v, const Parabola &par ) {
+    F2 par_pos = par.world_to_par( v->pos );
+    v->par = par_pos;
+    v->limits = F2( par.xstart, par.xend );
+    v->scale = par.scale;
+}
+
+static void line_rect( const Parabola &par, F2 vmin, F2 vmax, float line_width, std::vector<SdfVertex> *vertices ) {
+    SdfVertex v0, v1, v2, v3;
+    v0.pos = F2( vmin.x, vmin.y );
+    v1.pos = F2( vmax.x, vmin.y );
+    v2.pos = F2( vmax.x, vmax.y );
+    v3.pos = F2( vmin.x, vmax.y );
+
+    v0.line_width = line_width;
+    v1.line_width = line_width;
+    v2.line_width = line_width;
+    v3.line_width = line_width;
+
+    set_par_vertex( &v0, par );
+    set_par_vertex( &v1, par );
+    set_par_vertex( &v2, par );
+    set_par_vertex( &v3, par );
+
+    vertices->push_back( v0 );
+    vertices->push_back( v1 );
+    vertices->push_back( v2 );
+
+    vertices->push_back( v0 );
+    vertices->push_back( v2 );
+    vertices->push_back( v3 );
+}
+
+void LinePainter::line_to( F2 p1, float line_width ) {
+    F2 vmin = min( prev_pos, p1 );
+    F2 vmax = max( prev_pos, p1 );
+
+    vmin -= F2( line_width );
+    vmax += F2( line_width );
+
+    Parabola par = Parabola::from_line( prev_pos, p1 );
+    line_rect( par, vmin, vmax, line_width, &vertices );
+
+    prev_pos = p1;
+}
+
+void LinePainter::qbez_to( F2 p1, F2 p2, float line_width ) {
+    F2 p0 = prev_pos;
+
+    F2 mid01 = F2( 0.5 ) * ( p0 + p1 );
+    F2 mid12 = F2( 0.5 ) * ( p1 + p2 );
+
+    F2 vmin = min( p0, mid01 );
+    vmin = min( vmin, mid12 );
+    vmin = min( vmin, p2 );
+
+    F2 vmax = max( p0, mid01 );
+    vmax = max( vmax, mid12 );
+    vmax = max( vmax, p2 );
+
+    vmin -= F2( line_width );
+    vmax += F2( line_width );
+
+    F2 v10 = p0 - p1;
+    F2 v12 = p2 - p1;
+    F2 np10 = normalize( v10 );
+    F2 np12 = normalize( v12 );
+
+    QbezType qtype = qbez_type( np10, np12 );
+    Parabola par;
+
+    switch ( qtype ) {
+    case QbezType::Parabola:
+        par = Parabola::from_qbez( p0, p1, p2 );
+        line_rect( par, vmin, vmax, line_width, &vertices );
+        break;
+    case QbezType::Line:
+        par = Parabola::from_line( p0, p2 );
+        line_rect( par, vmin, vmax, line_width, &vertices );
+        break;
+    case QbezType::TwoLines: {
+        float l10 = length( v10 );
+        float l12 = length( v12 );
+        float qt = l10 / ( l10 + l12 );
+        float nqt = 1.0f - qt;
+        F2 qtop = p0 * ( nqt * nqt ) + p1 * ( 2.0f * nqt * qt ) + p2 * ( qt * qt );
+        Parabola par0 = Parabola::from_line( p0, qtop );
+        line_rect( par0, vmin, vmax, line_width, &vertices );
+        Parabola par1 = Parabola::from_line( qtop, p1 );
+        line_rect( par1, vmin, vmax, line_width, &vertices );
+        break;
+    }
+    }
+
+    prev_pos = p2;
+}
+
+void LinePainter::close( float line_width ) {
+    if ( sqr_length( start_pos - prev_pos ) < 1e-7 ) return;
+    line_to( start_pos, line_width );
+}
+
+void GlyphPainter::draw_glyph( const Font *font, int glyph_index, F2 pos, float scale, float sdf_size ) {
+    const Glyph& g = font->glyphs[ glyph_index ];
+    if ( g.command_count == 0 ) return;
+
+    for ( int ic = g.command_start; ic < g.command_start + g.command_count; ++ic ) {
+        const GlyphCommand& gc = font->glyph_commands[ ic ];
+        F2 p0, p1;
+
+        switch ( gc.type ) {
+        case GlyphCommand::MoveTo:
+            p0 = gc.p0 * scale + pos;
+            fp.move_to( p0 );
+            lp.move_to( p0 );
+            break;
+        case GlyphCommand::LineTo:
+            p0 = gc.p0 * scale + pos;
+            fp.line_to( p0 );
+            lp.line_to( p0, sdf_size );
+            break;
+        case GlyphCommand::BezTo:
+            p0 = gc.p0 * scale + pos;
+            p1 = gc.p1 * scale + pos;
+            fp.qbez_to( p0, p1 );
+            lp.qbez_to( p0, p1, sdf_size );
+            break;
+        case GlyphCommand::ClosePath:
+            fp.close();
+            lp.close( sdf_size );
+            break;
+        }
+    }
+}
+
+
+
+// Convert high-endian TTF values to low-endian
+// TODO support for high-endian architectures
+
+inline uint16_t ttf_u16( const uint8_t *p ) { return p[0] * 256 + p[1]; }
+inline uint32_t ttf_u32( const uint8_t *p ) { return ( p[0] << 24 ) + ( p[1] << 16 ) + ( p[2] << 8 ) + p[3]; }
+
+inline int16_t ttf_i16( const uint8_t *p ) { return p[0] * 256 + p[1]; }
+inline int32_t ttf_i32( const uint8_t *p ) { return ( p[0] << 24 ) + ( p[1] << 16 ) + ( p[2] << 8 ) + p[3]; }
+
+inline bool check_tag( const uint8_t *d, const char *tag ) {
+    bool match = d[0] == tag[0] &&
+                 d[1] == tag[1] &&
+                 d[2] == tag[2] &&
+                 d[3] == tag[3];
+    return match;
+}
+
+inline bool is_font( const uint8_t *ttf ) {
+    bool res = check_tag( ttf, "1\0\0\0" )
+        || check_tag( ttf, "\0\1\0\0" )
+        || check_tag( ttf, "typ1" )
+        || check_tag( ttf, "OTTO" );
+    return res;
+}
+
+static const uint8_t* find_table( const uint8_t *ttf, const char *tag ) {
+    uint32_t num_tables = ttf_u16( ttf + 4 );
+    const uint8_t *table = ttf + 12;
+
+    for ( uint32_t itbl = 0; itbl < num_tables; ++itbl ) {
+        if ( check_tag( table, tag ) ) {
+            uint32_t offset = ttf_u32( table + 8 );
+            return ttf + offset;
+        }
+        table += 16;
+    }
+
+    return nullptr;
+}
+
+// Reading mappings from codepoint to glyph index
+
+static bool fill_cmap( Font& font, const uint8_t *ttf ) {
+    const uint8_t *cmap = find_table( ttf, "cmap" );
+    if ( !cmap ) return false;
+
+    uint32_t num_tables = ttf_u16( cmap + 2 );
+    const uint8_t *imap = nullptr;
+
+    for ( size_t itbl = 0; itbl < num_tables; ++itbl ) {
+        const uint8_t *enc_table = cmap + 4 + 8 * itbl;
+        uint16_t platform = ttf_u16( enc_table );
+        uint16_t encoding = ttf_u16( enc_table + 2 );
+        uint32_t offset   = ttf_u32( enc_table + 4 );
+
+        if ( platform == 0 ) {     // Unicode
+            imap = cmap + offset;
+            break;
+        }
+        if ( platform == 3 ) {     // MS
+            if ( encoding == 1 || encoding == 10 ) {
+                imap = cmap + offset;
+                break;
+            }
+        }
+    }
+    if ( !imap ) return false;
+
+    uint16_t format = ttf_u16( imap );
+
+    if ( format == 0 ) {
+        const uint8_t *idx_data = imap + 6;
+        for ( uint32_t i = 1; i < 256; ++i ) {
+            int idx = (int) ( idx_data[i] );
+            font.glyph_map.insert( { i, idx } );
+        }
+        return true;
+
+    } else if ( format == 4 ) {
+        uint32_t  seg_count = ttf_u16( imap + 6 ) >> 1;
+        const uint8_t  *end_code = imap + 7 * 2;
+        const uint8_t  *start_code = end_code + 2 + seg_count * 2;
+        const uint8_t  *offset = imap + 8 * 2 + seg_count * 2 * 3;
+        const uint8_t  *delta = imap + 8 * 2 + seg_count * 2 * 2;
+
+        for ( uint32_t iseg = 0; iseg < seg_count; iseg++ ) {
+            uint32_t seg_start = ttf_u16( start_code + iseg * 2 );
+            uint32_t seg_end = ttf_u16( end_code + iseg * 2 );
+            uint32_t seg_offset = ttf_u16( offset + iseg * 2 );
+            int32_t  seg_delta = ttf_i16( delta + iseg * 2 );
+
+            if ( seg_offset == 0 ) {
+                for ( uint32_t cp = seg_start; cp <= seg_end; ++cp ) {
+                    int32_t idx   = (uint16_t) ( cp + seg_delta );
+                    font.glyph_map.insert( { cp, idx } );
+                }
+            } else {
+                for ( uint32_t cp = seg_start; cp <= seg_end; ++cp ) {
+                    uint32_t item = cp - seg_start;
+                    int32_t idx = ttf_i16( offset + iseg * 2 + seg_offset + item * 2 );
+                    font.glyph_map.insert( { cp, idx } );
+                }
+            }
+        }
+        return true;
+
+    } else if ( format == 6 ) {
+        uint32_t       first    = ttf_u16( imap + 6 );
+        uint32_t       count    = ttf_u16( imap + 8 );
+        const uint8_t *idx_data = imap + 10;
+
+        for ( uint32_t i = 0; i < count; ++i ) {
+            uint32_t idx = ttf_u16( idx_data + i * 2 );
+            font.glyph_map.insert( { i + first, idx } );
+        }
+        return true;
+
+    } else if ( format == 10 ) {
+        uint32_t        first_char = ttf_u32( imap + 12 );
+        uint32_t        num_chars  = ttf_u32( imap + 16 );
+        const uint8_t  *idx_data = imap + 20;
+
+        for ( uint32_t i = 0; i < num_chars; ++i ) {
+            uint32_t idx = ttf_u16( idx_data + i * 2 );
+            font.glyph_map.insert( { i + first_char, idx } );
+        }
+        return true;
+
+    } else if ( format == 12 ) {
+        uint32_t       ngroups = ttf_u32( imap + 12 );
+        const uint8_t *sm_group = imap + 16;
+
+        for ( uint32_t i = 0; i < ngroups; ++i ) {
+            uint32_t start_code = ttf_u32( sm_group );
+            uint32_t end_code = ttf_u32( sm_group + 4 );
+            uint32_t start_idx = ttf_u32( sm_group + 8 );
+
+            for ( uint32_t icode = start_code; icode <= end_code; ++icode ) {
+                uint32_t idx = start_idx + icode - start_code;
+                font.glyph_map.insert( { icode, idx } );
+            }
+
+            sm_group += 12;
+        }
+        return true;
+
+    } else if ( format == 13 ) {
+        uint32_t       ngroups = ttf_u32( imap + 12 );
+        const uint8_t *sm_group = imap + 16;
+
+        for ( uint32_t i = 0; i < ngroups; ++i ) {
+            uint32_t start_code = ttf_u32( sm_group );
+            uint32_t end_code = ttf_u32( sm_group + 4 );
+            uint32_t glyph_idx = ttf_u32( sm_group + 8 );
+
+            for ( uint32_t icode = start_code; icode <= end_code; ++icode ) {
+                font.glyph_map.insert( { icode, glyph_idx } );
+            }
+
+            sm_group += 12;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+// Glyph offset in 'glyf' table
+
+inline int glyph_loc_offset( int glyph_idx, bool is_loc32, const uint8_t *loca ) {
+    uint32_t off0, off1;
+    if ( is_loc32 ) {
+        off0 = ttf_u32( loca + glyph_idx * 4 );
+        off1 = ttf_u32( loca + glyph_idx * 4 + 4 );
+    } else {
+        off0 = ttf_u16( loca + glyph_idx * 2 ) * 2;
+        off1 = ttf_u16( loca + glyph_idx * 2 + 2 ) * 2;
+    }
+    if ( off0 == off1 ) return -1;
+    else return off0;
+}
+
+// Display list for simple (non composite) glyph
+
+static void glyph_shape_simple( Glyph& glyph, std::vector<GlyphCommand>& commands, const uint8_t *glyph_loc, float scale ) {
+    int num_contours = ttf_i16( glyph_loc );
+
+    if ( num_contours < 0 ) return;
+
+    // Indices for the last point of each countour
+    const uint8_t *end_pts = glyph_loc + 10;
+    // Size of the byte code instructions, skipping this
+    size_t   icount = ttf_u16( end_pts + num_contours * 2 );
+    // Number of control points
+    size_t   num_pts = ttf_u16( end_pts + num_contours * 2 - 2 ) + 1;
+
+    const uint8_t *flag_array = end_pts + num_contours * 2 + 2 + icount;
+
+    glyph.command_start = commands.size();
+
+    const uint8_t *fpos   = flag_array;
+    int            fcount = num_pts;
+    size_t         xbytes = 0;
+
+    // Calculating offsets of point coordinate tables
+    while ( fcount > 0 ) {
+        uint8_t flag    = fpos[0];
+        uint8_t frepeat = fpos[1];
+        size_t  xsize = ( flag & 0x02 ) ?  1  :  ( flag & 0x10 ) ? 0 : 2;
+
+        if ( flag & 0x08 ) {
+            fcount -= frepeat + 1;
+            fpos += 2;
+            xbytes += xsize * ( frepeat + 1 );
+        } else {
+            fcount--;
+            fpos++;
+            xbytes += xsize;
+        }
+    }
+
+    const uint8_t *xcoord = fpos;
+    const uint8_t *ycoord = xcoord + xbytes;
+
+    // Flag bits:
+    // 0x01 - on-curve, ~0x01 - off-curve
+    // Two consecutive off-curve points assume on-curve point between them
+    //
+    // 0x02 - x-coord is 8-bit unsigned integer
+    //       0x10 - positive, ~0x10 - negative
+    // ~0x02 - x-coord is 16-bit signed integer
+    // ~0x02 & 0x10 - x-coord equals x-coord of the previous point
+    //
+    // 0x04 - y-coord is 8-bit unsigned integer
+    //       0x20 - positive, ~0x20 - negative
+    // ~0x04 - y-coord is 16-bit signed integer
+    // ~0x04 & 0x20 - y-coord equals y-coord of the previous point
+    //
+    // 0x08 - repeat flag N times, read next byte for N
+
+    // Current contour point coordinates
+    F2 cur_pos { 0.0f };
+    // Previous contour point coordinates
+    F2 prev_pos { 0.0f };
+
+    bool prev_on_curve = true;  // previous point was on-curve
+    bool on_curve = true;       // current point is on-curve
+
+    size_t  iflag = 0; // next flag index
+    uint8_t flag  = 0; // current flag value
+
+    size_t gc_contour_start_idx = 0;          // Index of the first control point of the contour
+    bool   contour_starts_off_curve = false;
+    bool   new_contour   = true;              // Current command starts new contour
+
+    size_t  icontour = 0; // Next contour starting index
+
+    GlyphCommand command;
+    command.type = GlyphCommand::MoveTo;
+    command.p0 = F2{ 0.0f };
+    command.p1 = F2{ 0.0f };
+
+    // Filling glyph display list
+
+    for ( size_t ipoint = 0; ipoint < num_pts; ++ipoint ) {
+        if ( ipoint == iflag ) {
+            flag = flag_array[0];
+            size_t frepeat = flag_array[1];
+
+            if ( flag & 0x08 ) {
+                // Repeat flag
+                iflag = ipoint + frepeat + 1;
+                flag_array += 2;
+            } else {
+                // Do not repeat flag
+                iflag = ipoint + 1;
+                flag_array++;
+            }
+        }
+
+        prev_on_curve = on_curve;
+        on_curve = flag & 0x01;
+
+        prev_pos = cur_pos;
+
+        if ( flag & 0x02 ) {
+            // X-coord is 8 bit value
+            float dx = xcoord[0];
+            cur_pos.x += ( flag & 0x10 ) ? dx : -dx; // X-coord sign
+            xcoord++;
+        } else {
+            if ( !( flag & 0x10 ) ) {
+                // X-coord is 16 bit value
+                cur_pos.x += ttf_i16( xcoord );
+                xcoord += 2;
+            }
+        }
+
+        if ( flag & 0x04 ) {
+            // Y-coord is 8-bit value
+            float dy = ycoord[0];
+            cur_pos.y += ( flag & 0x20 ) ? dy : -dy; // Y-coord sign
+            ycoord++;
+        } else {
+            if ( !( flag & 0x20 ) ) {
+                // Y-coord is 16-bit value
+                cur_pos.y += ttf_i16( ycoord );
+                ycoord += 2;
+            }
+        }
+
+        if ( new_contour ) {
+            // Push MoveTo command if starting new contour
+            contour_starts_off_curve = !on_curve;
+            gc_contour_start_idx = commands.size();
+            command.type = GlyphCommand::MoveTo;
+            command.p0 = scale * cur_pos;
+            command.p1 = F2{ 0.0f };
+
+            commands.push_back( command );
+
+            icontour = ttf_u16( end_pts );
+            end_pts += 2;
+            new_contour = false;
+        } else {
+            if ( on_curve ) {
+                if ( prev_on_curve ) {
+                    // Normal (non smooth) control point, pushing LineTo
+                    command.p0 = scale * cur_pos;
+                    command.p1 = F2{ 0.0f };
+                    command.type = GlyphCommand::LineTo;
+                    commands.push_back( command );
+                } else {
+                    // Normal control point, pushing BezTo
+                    command.p0 = scale * prev_pos;
+                    command.p1 = scale * cur_pos;
+                    command.type = GlyphCommand::BezTo;
+                    commands.push_back( command );
+                }
+            } else {
+                if ( !prev_on_curve ) {
+                    // Smooth curve, inserting control point in the middle
+                    F2 mid_cp = 0.5f * ( prev_pos + cur_pos );
+                    command.p0 = scale * prev_pos;
+                    command.p1 = scale * mid_cp;
+                    command.type = GlyphCommand::BezTo;
+                    commands.push_back( command );
+                }
+            }
+        }
+
+        // Closing contour
+        if ( icontour == ipoint && ipoint > 0 ) {
+            if ( contour_starts_off_curve ) {
+                if ( on_curve ) {
+                    // Contour starts off-curve, contour start to current point
+                    commands[ gc_contour_start_idx ].p0 = scale * cur_pos;
+                } else {
+                    // Contour starts and ends off-curve,
+                    // calculating contour starting point, setting first MoveTo P0,
+                    // and closing contour with BezTo
+
+                    F2 cpos = scale * cur_pos;
+                    F2 next_cp = commands[ gc_contour_start_idx + 1 ].p0; // First BezTo off-curve CP
+                    F2 pos = 0.5f * ( cpos + next_cp );                   // Contour start point
+                    commands[ gc_contour_start_idx ].p0 = pos;
+
+                    command.p0 = cpos;
+                    command.p1 = pos;
+                    command.type = GlyphCommand::BezTo;
+                    commands.push_back( command );
+                }
+            } else {
+                if ( !on_curve ) {
+                    // Contour ends off-curve, closing contour with BezTo to contour starting point
+
+                    F2 start_pos = commands[ gc_contour_start_idx ].p0;
+
+                    command.p0 = scale * cur_pos;
+                    command.p1 = start_pos;
+                    command.type = GlyphCommand::BezTo;
+                    commands.push_back( command );
+                }
+            }
+            // Pushing ClosePath command
+            command.type = GlyphCommand::ClosePath;
+            command.p0 = F2{ 0.0f };
+            command.p1 = F2{ 0.0f };
+            commands.push_back( command );
+            new_contour = true;
+        }
+    }
+
+    glyph.command_count = commands.size() - glyph.command_start;
+}
+
+// Composite glyphs will have a display list of all their subglyphs combined with transformation applied
+
+static void glyph_commands_composite( Font& font, int glyph_idx ) {
+    Glyph &glyph = font.glyphs[ glyph_idx ];
+    if ( !glyph.is_composite ) return;
+    glyph.command_start = font.glyph_commands.size();
+    glyph.command_count = 0;
+
+    for ( int icomp = glyph.components_start; icomp < glyph.components_start + glyph.components_count; ++icomp ) {
+        GlyphComponent& gcomp = font.glyph_components[ icomp ];
+        const Glyph& cglyph = font.glyphs[ gcomp.glyph_idx ];
+        const Mat2d& tr = gcomp.transform;
+
+        for ( int icommand = cglyph.command_start; icommand < cglyph.command_start + cglyph.command_count; ++icommand ) {
+            const GlyphCommand& gcommand = font.glyph_commands[ icommand ];
+            GlyphCommand new_command;
+            new_command.type = gcommand.type;
+
+            switch ( gcommand.type ) {
+            case GlyphCommand::MoveTo:
+            case GlyphCommand::LineTo:
+                new_command.p0 = tr * gcommand.p0;
+                break;
+            case GlyphCommand::BezTo:
+                new_command.p0 = tr * gcommand.p0;
+                new_command.p1 = tr * gcommand.p1;
+                break;
+            case GlyphCommand::ClosePath:
+                break;
+            }
+            font.glyph_commands.push_back( new_command );
+        }
+    }
+
+    glyph.command_count = font.glyph_commands.size() - glyph.command_start;
+}
+
+// Reading glyph display list or subglyphs of a composite glyph.
+
+static void glyph_shape( Font& font, int glyph_idx, bool is_loc32, const uint8_t *loca, const uint8_t *glyf, float scale ) {
+    Glyph &glyph = font.glyphs[ glyph_idx ];
+
+    int glyph_offset = glyph_loc_offset( glyph_idx, is_loc32, loca );
+    if ( glyph_offset < 0 ) return;
+
+    const uint8_t *glyph_loc = glyf + glyph_offset;
+    int num_contours = ttf_i16( glyph_loc );
+
+    float minx = ttf_i16( glyph_loc + 2 );
+    float miny = ttf_i16( glyph_loc + 4 );
+    float maxx = ttf_i16( glyph_loc + 6 );
+    float maxy = ttf_i16( glyph_loc + 8 );
+
+    glyph.min = scale * F2{ minx, miny };
+    glyph.max = scale * F2{ maxx, maxy };
+
+    // Simple glyph
+    if ( num_contours > 0 ) {
+        glyph_shape_simple( glyph, font.glyph_commands, glyph_loc, scale );
+
+    // Composite glyph
+    } else if ( num_contours < 0 ) {
+        glyph.is_composite = true;
+        glyph.components_start = font.glyph_components.size();
+
+        bool next_comp = true;
+        const uint8_t *pos = glyph_loc + 10;
+
+        while( next_comp ) {
+            uint16_t flags = ttf_u16( pos );
+            uint32_t comp_glyph_idx = ttf_u16( pos + 2 );
+            pos += 4;
+
+            Mat2d gtr { 1.0f };
+
+            // Component position
+            if ( flags & 2 ) {
+                if ( flags & 1 ) {
+                    gtr[2][0] = ttf_i16( pos ) * scale; pos += 2;
+                    gtr[2][1] = ttf_i16( pos ) * scale; pos += 2;
+                } else {
+                    gtr[2][0] = ( (int8_t) *pos ) * scale; pos++;
+                    gtr[2][1] = ( (int8_t) *pos ) * scale; pos++;
+                }
+            } else {
+                assert( false );
+            }
+
+            // Component rotation and scale
+            if ( flags & ( 1 << 3 ) ) {
+                // Uniform scale
+                gtr[0][0] = gtr[1][1] = ttf_i16( pos ) / 16384.0f; pos += 2;
+            } else if ( flags & ( 1 << 6 ) ) {
+                // XY-scale
+                gtr[0][0] = ttf_i16( pos ) / 16384.0f; pos += 2;
+                gtr[1][1] = ttf_i16( pos ) / 16384.0f; pos += 2;
+            } else if ( flags & ( 1 << 7 ) ) {
+                // Rotion matrix
+                gtr[0][0] = ttf_i16( pos ) / 16384.0f; pos += 2;
+                gtr[0][1] = ttf_i16( pos ) / 16384.0f; pos += 2;
+                gtr[1][0] = ttf_i16( pos ) / 16384.0f; pos += 2;
+                gtr[1][1] = ttf_i16( pos ) / 16384.0f; pos += 2;
+            }
+
+            GlyphComponent gc;
+            gc.glyph_idx = comp_glyph_idx;
+            gc.transform = gtr;
+            font.glyph_components.push_back( gc );
+
+            // More components?
+            next_comp = flags & ( 1 << 5 );
+        }
+        glyph.components_count = font.glyph_components.size() - glyph.components_start;
+    }
+}
+
+// Reading kerning table
+
+static bool fill_kern( Font& font, const uint8_t *ttf, float scale ) {
+    const uint8_t *kern = find_table( ttf, "kern" );
+    if ( !kern ) return false;
+
+    uint16_t  num_tables = ttf_u16( kern + 2 );
+    const uint8_t  *table = nullptr;
+    const uint8_t  *pos = kern + 4;
+
+    for ( size_t itbl = 0; itbl < num_tables; ++itbl ) {
+        uint16_t length = ttf_u16( pos + 2 );
+        uint16_t coverage = ttf_u16( pos + 4 );
+
+        if ( coverage == 1 ) {
+            table = pos;
+            break;
+        }
+        pos += length;
+    }
+
+    if ( !table ) return false;
+
+    uint32_t num_pairs = ttf_u16( table + 6 );
+    pos = table + 14;
+
+    for ( uint32_t ipair = 0; ipair < num_pairs; ++ipair ) {
+        uint32_t left  = ttf_u16( pos );
+        uint32_t right = ttf_u16( pos + 2 );
+        int32_t  hkern  = ttf_i16( pos + 4 );
+        uint32_t pair = ( left << 16 ) | right;
+        font.kern_map.insert( { pair, hkern * scale } );
+        pos += 6;
+    }
+
+    return true;
+}
+
+bool Font::load_ttf_file( const char *filename ) {
+    FILE *f = fopen( filename, "rb" );
+    if ( !f ) return false;
+
+    fseek( f, 0, SEEK_END );
+    size_t fsize = ftell( f );
+    fseek( f, 0, SEEK_SET );
+
+    uint8_t *ttf = (unsigned char*) malloc( fsize );
+    fread( ttf, 1, fsize, f );
+    fclose( f );
+
+    bool res = load_ttf_mem( ttf );
+    free( ttf );
+    return res;
+}
+
+bool Font::load_ttf_mem( const uint8_t *ttf ) {
+    if ( ttf == nullptr ) return false;
+    if ( !is_font( ttf ) ) return false;
+
+    uint32_t num_glyphs = 0xffff;
+
+    const uint8_t *head = find_table( ttf, "head" );
+    if ( !head ) return false;
+
+    uint16_t loc_format = ttf_u16( head + 50 );
+    // 0 - 16 bit offset
+    // 1 - 32 bit offset
+    // >1 - unsupported
+    if ( loc_format > 1 ) return false;
+    bool is_loc32 = loc_format;
+
+    const uint8_t *loca = find_table( ttf, "loca" );
+    if ( !loca ) return false;
+
+    const uint8_t *hmtx = find_table( ttf, "hmtx" );
+    if ( !hmtx ) return false;
+
+    const uint8_t *glyf = find_table( ttf, "glyf" );
+    if ( !glyf ) return false;
+
+    const uint8_t *maxp = find_table( ttf, "maxp" );
+    if ( maxp ) num_glyphs = ttf_u16( maxp + 4 );
+
+    const uint8_t *hhea = find_table( ttf, "hhea" );
+    if ( !hhea ) return false;
+    em_ascent  = ttf_i16( hhea + 4 );
+    em_descent = ttf_i16( hhea + 6 );
+    em_line_gap = ttf_i16( hhea + 8 );
+
+    uint32_t num_hmtx = ttf_u16( hhea + 34 );
+
+    float scale = 1.0f / em_ascent;
+    ascent   = 1.0;
+    descent  = em_descent * scale;
+    line_gap = em_line_gap * scale;
+
+    // Filling glyph idx mappings
+    if ( !fill_cmap( *this, ttf ) ) return false;
+
+    glyphs = std::vector<Glyph>( num_glyphs, Glyph{} );
+
+    // These glyphs have both advance with and left side bearing in "hmtx" table
+    for ( size_t iglyph = 0; iglyph < num_hmtx; ++iglyph ) {
+        glyphs[ iglyph ].advance_width     = ttf_u16( hmtx + iglyph * 4 ) * scale;
+        glyphs[ iglyph ].left_side_bearing = ttf_i16( hmtx + iglyph * 4 + 2 ) * scale;
+    }
+    // Rest of glyphs have left side bearing only
+    for ( size_t iglyph = 0; iglyph < ( num_glyphs - num_hmtx ); ++iglyph ) {
+        const uint8_t *pos = hmtx + num_hmtx * 4 + iglyph * 2;
+        glyphs[ iglyph + num_hmtx ].advance_width = 0.0f;
+        glyphs[ iglyph + num_hmtx ].left_side_bearing = ttf_i16( pos );
+    }
+
+    // Reading glyph display lists while calculating glyph max bounding box
+
+    glyph_min = F2 { 2e38f };
+    glyph_max = F2 { -2e38f };
+
+    // Reading simple glyph display listd and components for composite glyphs
+    for ( size_t iglyph = 0; iglyph < num_glyphs; ++iglyph ) {
+        glyph_shape( *this, iglyph, is_loc32, loca, glyf, scale );
+        glyph_min = min( glyph_min, glyphs[iglyph].min );
+        glyph_max = max( glyph_max, glyphs[iglyph].max );
+    }
+
+    // Calculating composite glyph commands
+    for ( size_t iglyph = 0; iglyph < num_glyphs; ++iglyph ) {
+        glyph_commands_composite( *this, iglyph );
+    }
+
+    // Reading glyph types
+    for ( std::pair<uint32_t, int> cgpair : glyph_map ) {
+        uint32_t codepoint = cgpair.first;
+        int iglyph = cgpair.second;
+        if ( iglyph < 0 ) continue;
+        if ( iglyph >= (int)glyphs.size()) {
+            fprintf(stderr, "Gylph out of range: %d, glyphs.size %d\n"
+                    "  This seems to happen with some old ttf files of semi-unknown origin.\n",
+                    iglyph, (int)glyphs.size());
+            exit(1);
+        }
+        Glyph& g = glyphs[ iglyph ];
+        if ( iswlower( codepoint ) ) g.char_type = Glyph::Lower;
+        if ( iswupper( codepoint ) | iswdigit( codepoint ) ) g.char_type = Glyph::Upper;
+        if ( iswpunct( codepoint ) ) g.char_type = Glyph::Punct;
+        if ( iswspace( codepoint ) ) g.char_type = Glyph::Space;
+    }
+
+    // Filling codepoint map
+    for ( std::pair<uint32_t, int> cgpair : glyph_map ) {
+        auto it = cp_map.find( cgpair.second );
+        if ( it == cp_map.end() ) {
+            std::vector<uint32_t> v { cgpair.first };
+            cp_map.insert( { cgpair.second, std::move( v ) } );
+        } else {
+            it->second.push_back( cgpair.second );
+        }
+    }
+
+    // Some fonts store kerning information in "kern" table, reading it
+    fill_kern( *this, ttf, scale );
+
+    // TODO Other fonts store kerning information in "gpos" table
+
+    return true;
+}
+
+
+
+QbezType qbez_type( F2 np10, F2 np12 ) {
+    float d = dot( np10, np12 );
+    float dmax = 1.0 - 1e-6f;
+    if ( d >= dmax ) return QbezType::TwoLines;
+    if ( d <= -dmax ) return QbezType::Line;
+    return QbezType::Parabola;
+}
+
+
+
+Parabola Parabola::from_line( const Float2& p0, const Float2& p1 ) {
+    float px0 = 100.0f;
+    float px1 = 100.0f + 1e-3f;
+
+    float py0 = px0 * px0;
+    float py1 = px1 * px1;
+    float plen = length( F2{ px0, py0 } - F2{ px1, py1 } );
+    float pslope = 2.0f * px0 / sqrtf( 1.0f * 4.0f*px0*px0 );
+    float len = length( p1 - p0 );
+    F2    ldir = ( p1 - p0 ) / len;
+    F2    lndir = perp_right( ldir );
+    float scale = len / plen;
+    F2    rc = p0 + ( ldir * ( px1 - px0 ) + lndir * ( py1 - py0 ) ) * pslope * scale;
+    F2    px = normalize( rc - p0 );
+    F2    py = perp_left( px );
+    F2    pvertex = p0 - px * scale * px0 - py * scale * py0;
+
+    Parabola res;
+
+    res.mat = Mat2d{ px, py, pvertex };
+    res.scale = scale;
+    res.xstart = px0;
+    res.xend = px1;
+    return res;
+}
+
+Parabola Parabola::from_qbez( const Float2& p0, const Float2& p1, const Float2& p2 ) {
+    Parabola res;
+
+    Float2 pc = mix( p0, p2, 0.5f );
+    Float2 yaxis = normalize( pc - p1 );
+    Float2 xaxis = perp_right( yaxis );
+
+    Float2 p01 = normalize( p1 - p0 );
+    Float2 p12 = normalize( p2 - p1 );
+    float cx0 = dot( xaxis, p01 );
+    float sx0 = dot( yaxis, p01 );
+    float cx2 = dot( xaxis, p12 );
+    float sx2 = dot( yaxis, p12 );
+
+    float x0 = sx0 / cx0 * 0.5;
+    float x2 = sx2 / cx2 * 0.5;
+    float y0 = x0*x0;
+
+    float p02x = dot( p2 - p0, xaxis );
+    float scale = p02x / ( x2 - x0 );
+
+    Float2 vertex = p0 - F2( y0 * scale ) * yaxis - F2( x0 * scale ) * xaxis;
+
+    res.scale  = scale;
+    res.mat    = Mat2d( xaxis, yaxis, vertex );
+
+    if ( x0 < x2 ) {
+        res.xstart = x0;
+        res.xend   = x2;
+    } else {
+        res.xstart = x2;
+        res.xend   = x0;
+    }
+
+    return res;
+}
+
+Float2 Parabola::pos( float x ) const {
+    return mat[2] + F2( scale * x ) * mat[0] + F2( scale * x * x ) * mat[1];
+}
+
+Float2 Parabola::normal( float x ) const {
+    return perp_left( dir( x ) );
+}
+
+Float2 Parabola::dir( float x ) const {
+    return normalize( mat[0] + mat[1] * F2( 2.0f * x ) );
+}
+
+F2 Parabola::world_to_par( F2 pos ) const {
+    float is = 1.0 / scale;
+    F2 dpos = pos - mat[2];
+    F2 r0 = dpos * mat[0];
+    F2 r1 = dpos * mat[1];
+    float v0 = is * ( r0.x + r0.y );
+    float v1 = is * ( r1.x + r1.y );
+    return F2 { v0, v1 };
+}
+
+F2 Parabola::par_to_world( F2 pos ) const {
+    return mat[2] + scale * pos.x * mat[0] + scale * pos.y * mat[1];
+}
+
+} // end namespace _root_sdf_fonts
