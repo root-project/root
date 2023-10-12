@@ -810,7 +810,7 @@ The valid types are `std::uint32_t` and `std::uint64_t`.
 A field that stores uninterpreted byte arrays.
 Similar to a string field, the `RNTupleBLOB` field has two columns.
 It represents the data as a collection of bytes.
-The first (principle) column is of type [Split]Index[64,32].
+The first (principal) column is of type [Split]Index[64,32].
 The second column is of type `Byte`.
 
 ## Limits
