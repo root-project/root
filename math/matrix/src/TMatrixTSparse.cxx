@@ -1185,7 +1185,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    R__ASSERT(row[irowmin] >= this->fRowLwb && row[irowmax] <= this->fRowLwb+this->fNrows-1);
    R__ASSERT(col[icolmin] >= this->fColLwb && col[icolmax] <= this->fColLwb+this->fNcols-1);
 
-   if (row[irowmin] < this->fRowLwb || row[irowmax] > this->fRowLwb+this->fNrows-1) {
+   if (row[irowmin] <  this->fRowLwb|| row[irowmax] > this->fRowLwb+this->fNrows-1) {
       Error("SetMatrixArray","Inconsistency between row index and its range");
       if (row[irowmin] < this->fRowLwb) {
          Info("SetMatrixArray","row index lower bound adjusted to %d",row[irowmin]);
@@ -1237,7 +1237,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    Int_t ielem = 0;
    nr_nonzeros = 0;
    for (Int_t irow = 1; irow < this->fNrows+1; irow++) {
-      if (ielem < nr && row[ielem] < irow) {
+      if (ielem < nr && row[ielem] - this->fRowLwb < irow) {
          while (ielem < nr) {
             if (data[ielem] != 0.0) {
                fColIndex[nr_nonzeros] = col[ielem]-this->fColLwb;
