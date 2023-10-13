@@ -859,7 +859,7 @@ struct behavior {
 /*  org:  Origin          dest:  Destination          apex:  Apex            */
 /*  org(abc) -> a         dest(abc) -> b              apex(abc) -> c         */
 /*                                                                           */
-/*  bond:  Bond two triangles together at the resepective handles.           */
+/*  bond:  Bond two triangles together at the respective handles.            */
 /*  bond(abc, bad)                                                           */
 /*                                                                           */
 /*                                                                           */
@@ -4773,19 +4773,19 @@ struct osub *newsubseg;
   x = (REAL) (a - b); \
   Two_Diff_Tail(a, b, x, y)
 
-#define Split(a, ahi, alo) \
+#define Split(a, ahi, aLo) \
   c = (REAL) (splitter * a); \
   abig = (REAL) (c - a); \
   ahi = c - abig; \
-  alo = a - ahi
+  aLo = a - ahi
 
 #define Two_Product_Tail(a, b, x, y) \
-  Split(a, ahi, alo); \
+  Split(a, ahi, aLo); \
   Split(b, bhi, blo); \
   err1 = x - (ahi * bhi); \
-  err2 = err1 - (alo * bhi); \
+  err2 = err1 - (aLo * bhi); \
   err3 = err2 - (ahi * blo); \
-  y = (alo * blo) - err3
+  y = (aLo * blo) - err3
 
 #define Two_Product(a, b, x, y) \
   x = (REAL) (a * b); \
@@ -4796,19 +4796,19 @@ struct osub *newsubseg;
 
 #define Two_Product_Presplit(a, b, bhi, blo, x, y) \
   x = (REAL) (a * b); \
-  Split(a, ahi, alo); \
+  Split(a, ahi, aLo); \
   err1 = x - (ahi * bhi); \
-  err2 = err1 - (alo * bhi); \
+  err2 = err1 - (aLo * bhi); \
   err3 = err2 - (ahi * blo); \
-  y = (alo * blo) - err3
+  y = (aLo * blo) - err3
 
 /* Square() can be done more quickly than Two_Product().                     */
 
 #define Square_Tail(a, x, y) \
-  Split(a, ahi, alo); \
+  Split(a, ahi, aLo); \
   err1 = x - (ahi * ahi); \
-  err3 = err1 - ((ahi + ahi) * alo); \
-  y = (alo * alo) - err3
+  err3 = err1 - ((ahi + ahi) * aLo); \
+  y = (aLo * aLo) - err3
 
 #define Square(a, x, y) \
   x = (REAL) (a * a); \
@@ -5049,7 +5049,7 @@ REAL *h;
   REAL avirt, bround, around;
   INEXACT REAL c;
   INEXACT REAL abig;
-  REAL ahi, alo, bhi, blo;
+  REAL ahi, aLo, bhi, blo;
   REAL err1, err2, err3;
 
   Split(b, bhi, blo);
@@ -5151,7 +5151,7 @@ REAL detsum;
   REAL avirt, bround, around;
   INEXACT REAL c;
   INEXACT REAL abig;
-  REAL ahi, alo, bhi, blo;
+  REAL ahi, aLo, bhi, blo;
   REAL err1, err2, err3;
   INEXACT REAL _i, _j;
   REAL _0;
@@ -5301,11 +5301,11 @@ REAL permanent;
   REAL bc[4], ca[4], ab[4];
   INEXACT REAL bc3, ca3, ab3;
   REAL axbc[8], axxbc[16], aybc[8], ayybc[16], adet[32];
-  int axbclen, axxbclen, aybclen, ayybclen, alen;
+  int axbcLen, axxbcLen, aybcLen, ayybcLen, alen;
   REAL bxca[8], bxxca[16], byca[8], byyca[16], bdet[32];
   int bxcalen, bxxcalen, bycalen, byycalen, blen;
   REAL cxab[8], cxxab[16], cyab[8], cyyab[16], cdet[32];
-  int cxablen, cxxablen, cyablen, cyyablen, clen;
+  int cxablen, cxxablen, cyablen, cyyablen, cLen;
   REAL abdet[64];
   int ablen;
   REAL fin1[1152], fin2[1152];
@@ -5323,16 +5323,16 @@ REAL permanent;
   INEXACT REAL u3, v3;
   REAL temp8[8], temp16a[16], temp16b[16], temp16c[16];
   REAL temp32a[32], temp32b[32], temp48[48], temp64[64];
-  int temp8len, temp16alen, temp16blen, temp16clen;
+  int temp8len, temp16alen, temp16blen, temp16cLen;
   int temp32alen, temp32blen, temp48len, temp64len;
   REAL axtbb[8], axtcc[8], aytbb[8], aytcc[8];
-  int axtbblen, axtcclen, aytbblen, aytcclen;
+  int axtbblen, axtccLen, aytbblen, aytccLen;
   REAL bxtaa[8], bxtcc[8], bytaa[8], bytcc[8];
-  int bxtaalen, bxtcclen, bytaalen, bytcclen;
+  int bxtaalen, bxtccLen, bytaalen, bytccLen;
   REAL cxtaa[8], cxtbb[8], cytaa[8], cytbb[8];
   int cxtaalen, cxtbblen, cytaalen, cytbblen;
   REAL axtbc[8], aytbc[8], bxtca[8], bytca[8], cxtab[8], cytab[8];
-  int axtbclen, aytbclen, bxtcalen, bytcalen, cxtablen, cytablen;
+  int axtbcLen, aytbcLen, bxtcalen, bytcalen, cxtablen, cytablen;
   REAL axtbct[16], aytbct[16], bxtcat[16], bytcat[16], cxtabt[16], cytabt[16];
   int axtbctlen, aytbctlen, bxtcatlen, bytcatlen, cxtabtlen, cytabtlen;
   REAL axtbctt[8], aytbctt[8], bxtcatt[8];
@@ -5349,7 +5349,7 @@ REAL permanent;
   REAL avirt, bround, around;
   INEXACT REAL c;
   INEXACT REAL abig;
-  REAL ahi, alo, bhi, blo;
+  REAL ahi, aLo, bhi, blo;
   REAL err1, err2, err3;
   INEXACT REAL _i, _j;
   REAL _0;
@@ -5365,11 +5365,11 @@ REAL permanent;
   Two_Product(cdx, bdy, cdxbdy1, cdxbdy0);
   Two_Two_Diff(bdxcdy1, bdxcdy0, cdxbdy1, cdxbdy0, bc3, bc[2], bc[1], bc[0]);
   bc[3] = bc3;
-  axbclen = scale_expansion_zeroelim(4, bc, adx, axbc);
-  axxbclen = scale_expansion_zeroelim(axbclen, axbc, adx, axxbc);
-  aybclen = scale_expansion_zeroelim(4, bc, ady, aybc);
-  ayybclen = scale_expansion_zeroelim(aybclen, aybc, ady, ayybc);
-  alen = fast_expansion_sum_zeroelim(axxbclen, axxbc, ayybclen, ayybc, adet);
+  axbcLen = scale_expansion_zeroelim(4, bc, adx, axbc);
+  axxbcLen = scale_expansion_zeroelim(axbcLen, axbc, adx, axxbc);
+  aybcLen = scale_expansion_zeroelim(4, bc, ady, aybc);
+  ayybcLen = scale_expansion_zeroelim(aybcLen, aybc, ady, ayybc);
+  alen = fast_expansion_sum_zeroelim(axxbcLen, axxbc, ayybcLen, ayybc, adet);
 
   Two_Product(cdx, ady, cdxady1, cdxady0);
   Two_Product(adx, cdy, adxcdy1, adxcdy0);
@@ -5389,10 +5389,10 @@ REAL permanent;
   cxxablen = scale_expansion_zeroelim(cxablen, cxab, cdx, cxxab);
   cyablen = scale_expansion_zeroelim(4, ab, cdy, cyab);
   cyyablen = scale_expansion_zeroelim(cyablen, cyab, cdy, cyyab);
-  clen = fast_expansion_sum_zeroelim(cxxablen, cxxab, cyyablen, cyyab, cdet);
+  cLen = fast_expansion_sum_zeroelim(cxxablen, cxxab, cyyablen, cyyab, cdet);
 
   ablen = fast_expansion_sum_zeroelim(alen, adet, blen, bdet, abdet);
-  finlength = fast_expansion_sum_zeroelim(ablen, abdet, clen, cdet, fin1);
+  finlength = fast_expansion_sum_zeroelim(ablen, abdet, cLen, cdet, fin1);
 
   det = estimate(finlength, fin1);
   errbound = iccerrboundB * permanent;
@@ -5451,38 +5451,38 @@ REAL permanent;
   }
 
   if (adxtail != 0.0) {
-    axtbclen = scale_expansion_zeroelim(4, bc, adxtail, axtbc);
-    temp16alen = scale_expansion_zeroelim(axtbclen, axtbc, 2.0 * adx,
+    axtbcLen = scale_expansion_zeroelim(4, bc, adxtail, axtbc);
+    temp16alen = scale_expansion_zeroelim(axtbcLen, axtbc, 2.0 * adx,
                                           temp16a);
 
-    axtcclen = scale_expansion_zeroelim(4, cc, adxtail, axtcc);
-    temp16blen = scale_expansion_zeroelim(axtcclen, axtcc, bdy, temp16b);
+    axtccLen = scale_expansion_zeroelim(4, cc, adxtail, axtcc);
+    temp16blen = scale_expansion_zeroelim(axtccLen, axtcc, bdy, temp16b);
 
     axtbblen = scale_expansion_zeroelim(4, bb, adxtail, axtbb);
-    temp16clen = scale_expansion_zeroelim(axtbblen, axtbb, -cdy, temp16c);
+    temp16cLen = scale_expansion_zeroelim(axtbblen, axtbb, -cdy, temp16c);
 
     temp32alen = fast_expansion_sum_zeroelim(temp16alen, temp16a,
                                             temp16blen, temp16b, temp32a);
-    temp48len = fast_expansion_sum_zeroelim(temp16clen, temp16c,
+    temp48len = fast_expansion_sum_zeroelim(temp16cLen, temp16c,
                                             temp32alen, temp32a, temp48);
     finlength = fast_expansion_sum_zeroelim(finlength, finnow, temp48len,
                                             temp48, finother);
     finswap = finnow; finnow = finother; finother = finswap;
   }
   if (adytail != 0.0) {
-    aytbclen = scale_expansion_zeroelim(4, bc, adytail, aytbc);
-    temp16alen = scale_expansion_zeroelim(aytbclen, aytbc, 2.0 * ady,
+    aytbcLen = scale_expansion_zeroelim(4, bc, adytail, aytbc);
+    temp16alen = scale_expansion_zeroelim(aytbcLen, aytbc, 2.0 * ady,
                                           temp16a);
 
     aytbblen = scale_expansion_zeroelim(4, bb, adytail, aytbb);
     temp16blen = scale_expansion_zeroelim(aytbblen, aytbb, cdx, temp16b);
 
-    aytcclen = scale_expansion_zeroelim(4, cc, adytail, aytcc);
-    temp16clen = scale_expansion_zeroelim(aytcclen, aytcc, -bdx, temp16c);
+    aytccLen = scale_expansion_zeroelim(4, cc, adytail, aytcc);
+    temp16cLen = scale_expansion_zeroelim(aytccLen, aytcc, -bdx, temp16c);
 
     temp32alen = fast_expansion_sum_zeroelim(temp16alen, temp16a,
                                             temp16blen, temp16b, temp32a);
-    temp48len = fast_expansion_sum_zeroelim(temp16clen, temp16c,
+    temp48len = fast_expansion_sum_zeroelim(temp16cLen, temp16c,
                                             temp32alen, temp32a, temp48);
     finlength = fast_expansion_sum_zeroelim(finlength, finnow, temp48len,
                                             temp48, finother);
@@ -5496,12 +5496,12 @@ REAL permanent;
     bxtaalen = scale_expansion_zeroelim(4, aa, bdxtail, bxtaa);
     temp16blen = scale_expansion_zeroelim(bxtaalen, bxtaa, cdy, temp16b);
 
-    bxtcclen = scale_expansion_zeroelim(4, cc, bdxtail, bxtcc);
-    temp16clen = scale_expansion_zeroelim(bxtcclen, bxtcc, -ady, temp16c);
+    bxtccLen = scale_expansion_zeroelim(4, cc, bdxtail, bxtcc);
+    temp16cLen = scale_expansion_zeroelim(bxtccLen, bxtcc, -ady, temp16c);
 
     temp32alen = fast_expansion_sum_zeroelim(temp16alen, temp16a,
                                             temp16blen, temp16b, temp32a);
-    temp48len = fast_expansion_sum_zeroelim(temp16clen, temp16c,
+    temp48len = fast_expansion_sum_zeroelim(temp16cLen, temp16c,
                                             temp32alen, temp32a, temp48);
     finlength = fast_expansion_sum_zeroelim(finlength, finnow, temp48len,
                                             temp48, finother);
@@ -5512,15 +5512,15 @@ REAL permanent;
     temp16alen = scale_expansion_zeroelim(bytcalen, bytca, 2.0 * bdy,
                                           temp16a);
 
-    bytcclen = scale_expansion_zeroelim(4, cc, bdytail, bytcc);
-    temp16blen = scale_expansion_zeroelim(bytcclen, bytcc, adx, temp16b);
+    bytccLen = scale_expansion_zeroelim(4, cc, bdytail, bytcc);
+    temp16blen = scale_expansion_zeroelim(bytccLen, bytcc, adx, temp16b);
 
     bytaalen = scale_expansion_zeroelim(4, aa, bdytail, bytaa);
-    temp16clen = scale_expansion_zeroelim(bytaalen, bytaa, -cdx, temp16c);
+    temp16cLen = scale_expansion_zeroelim(bytaalen, bytaa, -cdx, temp16c);
 
     temp32alen = fast_expansion_sum_zeroelim(temp16alen, temp16a,
                                             temp16blen, temp16b, temp32a);
-    temp48len = fast_expansion_sum_zeroelim(temp16clen, temp16c,
+    temp48len = fast_expansion_sum_zeroelim(temp16cLen, temp16c,
                                             temp32alen, temp32a, temp48);
     finlength = fast_expansion_sum_zeroelim(finlength, finnow, temp48len,
                                             temp48, finother);
@@ -5535,11 +5535,11 @@ REAL permanent;
     temp16blen = scale_expansion_zeroelim(cxtbblen, cxtbb, ady, temp16b);
 
     cxtaalen = scale_expansion_zeroelim(4, aa, cdxtail, cxtaa);
-    temp16clen = scale_expansion_zeroelim(cxtaalen, cxtaa, -bdy, temp16c);
+    temp16cLen = scale_expansion_zeroelim(cxtaalen, cxtaa, -bdy, temp16c);
 
     temp32alen = fast_expansion_sum_zeroelim(temp16alen, temp16a,
                                             temp16blen, temp16b, temp32a);
-    temp48len = fast_expansion_sum_zeroelim(temp16clen, temp16c,
+    temp48len = fast_expansion_sum_zeroelim(temp16cLen, temp16c,
                                             temp32alen, temp32a, temp48);
     finlength = fast_expansion_sum_zeroelim(finlength, finnow, temp48len,
                                             temp48, finother);
@@ -5554,11 +5554,11 @@ REAL permanent;
     temp16blen = scale_expansion_zeroelim(cytaalen, cytaa, bdx, temp16b);
 
     cytbblen = scale_expansion_zeroelim(4, bb, cdytail, cytbb);
-    temp16clen = scale_expansion_zeroelim(cytbblen, cytbb, -adx, temp16c);
+    temp16cLen = scale_expansion_zeroelim(cytbblen, cytbb, -adx, temp16c);
 
     temp32alen = fast_expansion_sum_zeroelim(temp16alen, temp16a,
                                             temp16blen, temp16b, temp32a);
-    temp48len = fast_expansion_sum_zeroelim(temp16clen, temp16c,
+    temp48len = fast_expansion_sum_zeroelim(temp16cLen, temp16c,
                                             temp32alen, temp32a, temp48);
     finlength = fast_expansion_sum_zeroelim(finlength, finnow, temp48len,
                                             temp48, finother);
@@ -5593,7 +5593,7 @@ REAL permanent;
     }
 
     if (adxtail != 0.0) {
-      temp16alen = scale_expansion_zeroelim(axtbclen, axtbc, adxtail, temp16a);
+      temp16alen = scale_expansion_zeroelim(axtbcLen, axtbc, adxtail, temp16a);
       axtbctlen = scale_expansion_zeroelim(bctlen, bct, adxtail, axtbct);
       temp32alen = scale_expansion_zeroelim(axtbctlen, axtbct, 2.0 * adx,
                                             temp32a);
@@ -5635,7 +5635,7 @@ REAL permanent;
       finswap = finnow; finnow = finother; finother = finswap;
     }
     if (adytail != 0.0) {
-      temp16alen = scale_expansion_zeroelim(aytbclen, aytbc, adytail, temp16a);
+      temp16alen = scale_expansion_zeroelim(aytbcLen, aytbc, adytail, temp16a);
       aytbctlen = scale_expansion_zeroelim(bctlen, bct, adytail, aytbct);
       temp32alen = scale_expansion_zeroelim(aytbctlen, aytbct, 2.0 * ady,
                                             temp32a);
@@ -5969,7 +5969,7 @@ REAL permanent;
   REAL bc[4], ca[4], ab[4];
   INEXACT REAL bc3, ca3, ab3;
   REAL adet[8], bdet[8], cdet[8];
-  int alen, blen, clen;
+  int alen, blen, cLen;
   REAL abdet[16];
   int ablen;
   REAL *finnow, *finother, *finswap;
@@ -5983,7 +5983,7 @@ REAL permanent;
   INEXACT REAL bt_clarge, bt_alarge;
   INEXACT REAL ct_alarge, ct_blarge;
   REAL at_b[4], at_c[4], bt_c[4], bt_a[4], ct_a[4], ct_b[4];
-  int at_blen, at_clen, bt_clen, bt_alen, ct_alen, ct_blen;
+  int at_blen, at_cLen, bt_cLen, bt_alen, ct_alen, ct_blen;
   INEXACT REAL bdxt_cdy1, cdxt_bdy1, cdxt_ady1;
   INEXACT REAL adxt_cdy1, adxt_bdy1, bdxt_ady1;
   REAL bdxt_cdy0, cdxt_bdy0, cdxt_ady0;
@@ -6007,7 +6007,7 @@ REAL permanent;
   REAL avirt, bround, around;
   INEXACT REAL c;
   INEXACT REAL abig;
-  REAL ahi, alo, bhi, blo;
+  REAL ahi, aLo, bhi, blo;
   REAL err1, err2, err3;
   INEXACT REAL _i, _j, _k;
   REAL _0;
@@ -6038,10 +6038,10 @@ REAL permanent;
   Two_Product(bdx, ady, bdxady1, bdxady0);
   Two_Two_Diff(adxbdy1, adxbdy0, bdxady1, bdxady0, ab3, ab[2], ab[1], ab[0]);
   ab[3] = ab3;
-  clen = scale_expansion_zeroelim(4, ab, cdheight, cdet);
+  cLen = scale_expansion_zeroelim(4, ab, cdheight, cdet);
 
   ablen = fast_expansion_sum_zeroelim(alen, adet, blen, bdet, abdet);
-  finlength = fast_expansion_sum_zeroelim(ablen, abdet, clen, cdet, fin1);
+  finlength = fast_expansion_sum_zeroelim(ablen, abdet, cLen, cdet, fin1);
 
   det = estimate(finlength, fin1);
   errbound = o3derrboundB * permanent;
@@ -6089,7 +6089,7 @@ REAL permanent;
       at_b[0] = 0.0;
       at_blen = 1;
       at_c[0] = 0.0;
-      at_clen = 1;
+      at_cLen = 1;
     } else {
       negate = -adytail;
       Two_Product(negate, bdx, at_blarge, at_b[0]);
@@ -6097,7 +6097,7 @@ REAL permanent;
       at_blen = 2;
       Two_Product(adytail, cdx, at_clarge, at_c[0]);
       at_c[1] = at_clarge;
-      at_clen = 2;
+      at_cLen = 2;
     }
   } else {
     if (adytail == 0.0) {
@@ -6107,7 +6107,7 @@ REAL permanent;
       negate = -adxtail;
       Two_Product(negate, cdy, at_clarge, at_c[0]);
       at_c[1] = at_clarge;
-      at_clen = 2;
+      at_cLen = 2;
     } else {
       Two_Product(adxtail, bdy, adxt_bdy1, adxt_bdy0);
       Two_Product(adytail, bdx, adyt_bdx1, adyt_bdx0);
@@ -6120,20 +6120,20 @@ REAL permanent;
       Two_Two_Diff(adyt_cdx1, adyt_cdx0, adxt_cdy1, adxt_cdy0,
                    at_clarge, at_c[2], at_c[1], at_c[0]);
       at_c[3] = at_clarge;
-      at_clen = 4;
+      at_cLen = 4;
     }
   }
   if (bdxtail == 0.0) {
     if (bdytail == 0.0) {
       bt_c[0] = 0.0;
-      bt_clen = 1;
+      bt_cLen = 1;
       bt_a[0] = 0.0;
       bt_alen = 1;
     } else {
       negate = -bdytail;
       Two_Product(negate, cdx, bt_clarge, bt_c[0]);
       bt_c[1] = bt_clarge;
-      bt_clen = 2;
+      bt_cLen = 2;
       Two_Product(bdytail, adx, bt_alarge, bt_a[0]);
       bt_a[1] = bt_alarge;
       bt_alen = 2;
@@ -6142,7 +6142,7 @@ REAL permanent;
     if (bdytail == 0.0) {
       Two_Product(bdxtail, cdy, bt_clarge, bt_c[0]);
       bt_c[1] = bt_clarge;
-      bt_clen = 2;
+      bt_cLen = 2;
       negate = -bdxtail;
       Two_Product(negate, ady, bt_alarge, bt_a[0]);
       bt_a[1] = bt_alarge;
@@ -6153,7 +6153,7 @@ REAL permanent;
       Two_Two_Diff(bdxt_cdy1, bdxt_cdy0, bdyt_cdx1, bdyt_cdx0,
                    bt_clarge, bt_c[2], bt_c[1], bt_c[0]);
       bt_c[3] = bt_clarge;
-      bt_clen = 4;
+      bt_cLen = 4;
       Two_Product(bdytail, adx, bdyt_adx1, bdyt_adx0);
       Two_Product(bdxtail, ady, bdxt_ady1, bdxt_ady0);
       Two_Two_Diff(bdyt_adx1, bdyt_adx0, bdxt_ady1, bdxt_ady0,
@@ -6202,13 +6202,13 @@ REAL permanent;
     }
   }
 
-  bctlen = fast_expansion_sum_zeroelim(bt_clen, bt_c, ct_blen, ct_b, bct);
+  bctlen = fast_expansion_sum_zeroelim(bt_cLen, bt_c, ct_blen, ct_b, bct);
   wlength = scale_expansion_zeroelim(bctlen, bct, adheight, w);
   finlength = fast_expansion_sum_zeroelim(finlength, finnow, wlength, w,
                                           finother);
   finswap = finnow; finnow = finother; finother = finswap;
 
-  catlen = fast_expansion_sum_zeroelim(ct_alen, ct_a, at_clen, at_c, cat);
+  catlen = fast_expansion_sum_zeroelim(ct_alen, ct_a, at_cLen, at_c, cat);
   wlength = scale_expansion_zeroelim(catlen, cat, bdheight, w);
   finlength = fast_expansion_sum_zeroelim(finlength, finnow, wlength, w,
                                           finother);
@@ -10482,7 +10482,7 @@ REAL ccwabc;
 
 {
   REAL xac, yac, xbc, ybc, xab, yab;
-  REAL aclen2, bclen2, ablen2;
+  REAL acLen2, bcLen2, ablen2;
 
   m->circletopcount++;
 
@@ -10492,10 +10492,10 @@ REAL ccwabc;
   ybc = pb[1] - pc[1];
   xab = pa[0] - pb[0];
   yab = pa[1] - pb[1];
-  aclen2 = xac * xac + yac * yac;
-  bclen2 = xbc * xbc + ybc * ybc;
+  acLen2 = xac * xac + yac * yac;
+  bcLen2 = xbc * xbc + ybc * ybc;
   ablen2 = xab * xab + yab * yab;
-  return pc[1] + (xac * bclen2 - xbc * aclen2 + sqrt(aclen2 * bclen2 * ablen2))
+  return pc[1] + (xac * bcLen2 - xbc * acLen2 + sqrt(acLen2 * bcLen2 * ablen2))
                / (2.0 * ccwabc);
 }
 
@@ -10710,7 +10710,7 @@ REAL topy;
 {
   REAL ccwabc;
   REAL xac, yac, xbc, ybc;
-  REAL aclen2, bclen2;
+  REAL acLen2, bcLen2;
   REAL searchpoint[2];
   struct otri dummytri;
 
@@ -10719,9 +10719,9 @@ REAL topy;
   yac = pa[1] - pc[1];
   xbc = pb[0] - pc[0];
   ybc = pb[1] - pc[1];
-  aclen2 = xac * xac + yac * yac;
-  bclen2 = xbc * xbc + ybc * ybc;
-  searchpoint[0] = pc[0] - (yac * bclen2 - ybc * aclen2) / (2.0 * ccwabc);
+  acLen2 = xac * xac + yac * yac;
+  bcLen2 = xbc * xbc + ybc * ybc;
+  searchpoint[0] = pc[0] - (yac * bcLen2 - ybc * acLen2) / (2.0 * ccwabc);
   searchpoint[1] = topy;
   return splayinsert(m, splay(m, splayroot, (vertex) searchpoint, &dummytri),
                      newkey, (vertex) searchpoint);
@@ -11686,7 +11686,7 @@ vertex endpoint2;
   vertex leftvertex, rightvertex;
   vertex newvertex;
   enum insertvertexresult success;
-  /* enum finddirectionresult collinear;    LM: remove unsed variable warning */
+  /* enum finddirectionresult collinear;    LM: remove unused variable warning */
   REAL ex, ey;
   REAL tx, ty;
   REAL etx, ety;
@@ -11755,7 +11755,7 @@ vertex endpoint2;
 
   /* Inserting the vertex may have caused edge flips.  We wish to rediscover */
   /*   the edge connecting endpoint1 to the new intersection vertex.         */
-  /* collinear =   LN: remove unsed variable warning */
+  /* collinear =   LN: remove unused variable warning */
   finddirection(m, b, splittri, endpoint1);
   dest(*splittri, rightvertex);
   apex(*splittri, leftvertex);

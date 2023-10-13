@@ -134,7 +134,7 @@ public:
 };
 
       
-   } // end namesapce Math
+   } // end namespace Math
 } // end namespace ROOT
 
 #endif

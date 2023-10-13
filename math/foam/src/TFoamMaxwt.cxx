@@ -65,7 +65,7 @@ TFoamMaxwt::~TFoamMaxwt()
    fWtHst2=nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Reseting weight analysis
+/// Resetting weight analysis
 
 void TFoamMaxwt::Reset()
 {

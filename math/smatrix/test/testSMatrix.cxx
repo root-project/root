@@ -460,7 +460,7 @@ int test11()
    // now thanks to the IsInUse() function this should work
    m5 = m1 - m5 * m1;
 
-   // this works probably becuse here multiplication is done first
+   // this works probably because here multiplication is done first
 
    SMatrix<double, 5, 5> m6 = m3 * m2;
    // m6 =  - m6 * m1 + m1;

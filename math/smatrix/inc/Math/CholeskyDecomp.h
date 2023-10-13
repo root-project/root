@@ -84,7 +84,7 @@ private:
    bool fOk;
 public:
    /// perform a Cholesky decomposition
-   /** perfrom a Cholesky decomposition of a symmetric positive
+   /** perform a Cholesky decomposition of a symmetric positive
     * definite matrix m
     *
     * this is the constructor to uses with an SMatrix (and objects
@@ -99,7 +99,7 @@ public:
    }
 
    /// perform a Cholesky decomposition
-   /** perfrom a Cholesky decomposition of a symmetric positive
+   /** perform a Cholesky decomposition of a symmetric positive
     * definite matrix m
     *
     * this is the constructor to use in special applications where
@@ -321,7 +321,7 @@ private:
    bool fOk;
 public:
    /// perform a Cholesky decomposition
-   /** perfrom a Cholesky decomposition of a symmetric positive
+   /** perform a Cholesky decomposition of a symmetric positive
     * definite matrix m
     *
     * this is the constructor to uses with an SMatrix (and objects
@@ -336,7 +336,7 @@ public:
    }
 
    /// perform a Cholesky decomposition
-   /** perfrom a Cholesky decomposition of a symmetric positive
+   /** perform a Cholesky decomposition of a symmetric positive
     * definite matrix m
     *
     * this is the constructor to use in special applications where
@@ -547,13 +547,13 @@ namespace CholeskyDecompHelpers {
          // element L(i,j) is at array position (i * (i+1)) / 2 + j
 
          // quirk: we may need to invert L later anyway, so we can
-         // invert elements on diagonale straight away (we only
+         // invert elements on diagonal straight away (we only
          // ever need their reciprocals!)
 
          // cache starting address of rows of L for speed reasons
          F *base1 = &dst[0];
          for (unsigned i = 0; i < N; base1 += ++i) {
-            F tmpdiag = F(0.0); // for element on diagonale
+            F tmpdiag = F(0.0); // for element on diagonal
             // calculate off-diagonal elements
             F *base2 = &dst[0];
             for (unsigned j = 0; j < i; base2 += ++j) {
@@ -561,7 +561,7 @@ namespace CholeskyDecompHelpers {
                for (unsigned k = j; k--; )
                   tmp -= base1[k] * base2[k];
                base1[j] = tmp *= base2[j];
-               // keep track of contribution to element on diagonale
+               // keep track of contribution to element on diagonal
                tmpdiag += tmp * tmp;
             }
             // keep truncation error small
@@ -638,7 +638,7 @@ namespace CholeskyDecompHelpers {
             F sum = F(0.0);
             for (unsigned i = k; i--; )
                sum += rhs[i] * l[base + i];
-            // elements on diagonale are pre-inverted!
+            // elements on diagonal are pre-inverted!
             rhs[k] = (rhs[k] - sum) * l[base + k];
          }
          // solve L^Tx = y
@@ -646,7 +646,7 @@ namespace CholeskyDecompHelpers {
             F sum = F(0.0);
             for (unsigned i = N; --i > k; )
                sum += rhs[i] * l[(i * (i + 1)) / 2 + k];
-            // elements on diagonale are pre-inverted!
+            // elements on diagonal are pre-inverted!
             rhs[k] = (rhs[k] - sum) * l[(k * (k + 1)) / 2 + k];
          }
       }

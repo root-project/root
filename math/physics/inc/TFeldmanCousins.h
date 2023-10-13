@@ -29,7 +29,7 @@
 //
 //    VARIABLES THAT CAN BE ALTERED
 //    -----------------------------
-// => depending on your desired precision: The intial values of fMuMin,
+// => depending on your desired precision: The initial values of fMuMin,
 // fMuMax, fMuStep and fNMax are those used in the PRD:
 //   fMuMin = 0.0
 //   fMuMax = 50.0

@@ -2,12 +2,18 @@
 BaBar = "BaBar"
 exportJSONtoString = "exportJSONtoString" # Maybe it's worth to rename this function to consistent camelCase
 fChannelObservMap = "fChannelObservMap"
+fG2ndDerivative = "fG2ndDerivative"
 
 [default.extend-words]
 Gaus = "Gaus"
-gaus = "gaus"
+Maline = "Maline"
 ND = "ND"
+NED = "NED"
 SEH = "SEH"
 SLAC = "SLAC"
 Strat = "Strat"
 UE = "UE"
+ba = "ba"
+gaus = "gaus"
+inout = "inout"
+ist = "ist"

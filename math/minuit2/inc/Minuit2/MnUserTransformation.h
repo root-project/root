@@ -166,7 +166,7 @@ public:
 
    // convert external number into Name of Parameter (will assert if index is out of range)
    const std::string &GetName(unsigned int) const;
-   // mantain interface with const char * for backward compatibility
+   // maintain interface with const char * for backward compatibility
    const char *Name(unsigned int) const;
 
 private:

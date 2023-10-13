@@ -215,7 +215,7 @@ public:
    */
    explicit Transform3D(const Translation3D<T> &t) { AssignFrom(t.Vect()); }
 
-   //#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambigous with double * , double *
+   //#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambiguous with double * , double *
 
 
 #ifdef OLD_VERSION
@@ -426,7 +426,7 @@ public:
       }
    }
 
-   // use compiler generated copy ctor, copy assignmet and dtor
+   // use compiler generated copy ctor, copy assignment and destructor
 
    /**
       Construct from a linear algebra matrix of size at least 3x4,

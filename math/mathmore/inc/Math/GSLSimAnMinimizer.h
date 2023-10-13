@@ -110,7 +110,7 @@ namespace ROOT {
       /// number of calls
       unsigned int NCalls() const override;
 
-      /// Get current minimizer option parameteres
+      /// Get current minimizer option parameters
       const GSLSimAnParams &MinimizerParameters() const { return fSolver.Params(); }
 
       /// set new minimizer option parameters using directly the GSLSimAnParams structure

@@ -2471,7 +2471,7 @@ RVec<T> Sort(const RVec<T> &v)
 
 /// Return copy of RVec with elements sorted based on a comparison operator
 ///
-/// The comparison operator has to fullfill the same requirements of the
+/// The comparison operator has to fulfill the same requirements of the
 /// predicate of by std::sort.
 ///
 ///
@@ -2522,7 +2522,7 @@ RVec<T> StableSort(const RVec<T> &v)
 /// Return copy of RVec with elements sorted based on a comparison operator
 /// while keeping the order of equal elements.
 ///
-/// The comparison operator has to fullfill the same requirements of the
+/// The comparison operator has to fulfill the same requirements of the
 /// predicate of std::stable_sort.
 ///
 /// This helper is different from StableArgsort since it does not return an RVec of indices,

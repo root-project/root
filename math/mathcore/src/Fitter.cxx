@@ -869,7 +869,7 @@ void Fitter::DoUpdateFitConfig() {
 
 int Fitter::GetNCallsFromFCN() {
    // retrieve ncalls from the fit method functions
-   // this function is called when minimizer does not provide a way of returning the nnumber of function calls
+   // this function is called when minimizer does not provide a way of returning the number of function calls
    int ncalls = 0;
    if (!fUseGradient) {
       const ROOT::Math::FitMethodFunction * fcn = dynamic_cast<const ROOT::Math::FitMethodFunction *>(fObjFunction.get());
