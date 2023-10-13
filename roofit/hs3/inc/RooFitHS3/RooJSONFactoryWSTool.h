@@ -177,7 +177,7 @@ public:
 
    static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
-   static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
+   void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
 
