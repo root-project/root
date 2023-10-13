@@ -950,9 +950,27 @@ Published on August 28, 2023
 * [[#13453](https://github.com/root-project/root/issues/13453)] - Unable to compile ROOT 6.28/04 with c++14
 * [[#13551](https://github.com/root-project/root/issues/13551)] - [df] Creation of `Snapshot` actions writes to uninitialized memory 
 
+## Release 6.28/08
+
+Published on October 13, 2023
+
+### Bugs and Issues fixed in this release
+* [[#7063](https://github.com/root-project/root/issues/7063)] - TBB moved to CMake-only in version 2021 and builtin TBB needs to be adapted for the future
+* [[#11179](https://github.com/root-project/root/issues/11179)] - TBB will be broken with newer versions of Clang
+* [[#11797](https://github.com/root-project/root/issues/11797)] - Incorrect Dependency on VDT
+* [[#12043](https://github.com/root-project/root/issues/12043)] - Wrong interaction of DefinePerSample with multiple executions
+* [[#12783](https://github.com/root-project/root/issues/12783)] - [IO] Writing HistFactory model file twice gives strange results since ROOT 6.26.02
+* [[#13079](https://github.com/root-project/root/issues/13079)] - Builtin TBB library sometimes not found (or more exactly the one install in /usr/lib sometimes take priority)
+* [[#13429](https://github.com/root-project/root/issues/13429)] - TROOT::EndOfProcessCleanups fails when using TCMalloc on different destructors
+* [[#13529](https://github.com/root-project/root/issues/13529)] - Compilation error on arch using gcc 13.2.1: strlcopy has a different exception specifier
+* [[#13597](https://github.com/root-project/root/issues/13597)] - CMake fails with LLVM_ENABLE_SPHINX=ON
+* [[#13691](https://github.com/root-project/root/issues/13691)] - TDirectoryFile destructor segfault in compiled C++ program
+* [[#13734](https://github.com/root-project/root/issues/13734)] - [PyROOT] Can't trivially gSystem.Load() libraries compiled with ACLiC on macOS 14
+* [[#13410](https://github.com/root-project/root/issues/13410)] - cppyy crash involving template overload of operator()
+
 
 ## HEAD of the v6-28-00-patches branch
 
-These changes will be part of a future 6.28/08.
+These changes will be part of a future 6.28/10.
 
 - None so far.
