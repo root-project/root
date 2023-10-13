@@ -742,7 +742,10 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
       for (auto &n : info["labels"].children()) {
          labels.push_back(n.val());
       }
-
+      if(indices.size() != labels.size()){
+	RooJSONFactoryWSTool::error("mismatch in number of indices and labels!");
+      }
+      
       // Create the combined dataset for RooFit
       std::map<std::string, std::unique_ptr<RooAbsData>> dsMap;
       RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
@@ -753,6 +756,7 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
          // the data components don't get imported anymore.
          std::unique_ptr<RooAbsData> &component = *std::find_if(
             datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == componentName; });
+	 if(!component) RooJSONFactoryWSTool::error("unable to obtain component matching component name '" + componentName + "'");
          allVars.add(*component->get());
          dsMap.insert({labels[iChannel], std::move(component)});
          indexCat.defineType(labels[iChannel], indices[iChannel]);
@@ -1339,7 +1343,11 @@ void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &n
    auto &indices = node["indices"].set_seq();
 
    for (auto const &item : cat) {
-      labels.append_child() << item.first;
+      std::string label(item.first);
+      std::replace( label.begin(), label.end(), '.', '_');
+      std::replace( label.begin(), label.end(), '/', '_');
+      std::replace( label.begin(), label.end(), ':', '_');      
+      labels.append_child() << label;
       indices.append_child() << item.second;
    }
 }
@@ -1401,7 +1409,11 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 
    for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
       std::string catName(absData->GetName());
-      absData->SetName((std::string(data.GetName()) + "_" + catName).c_str());
+      std::string dataName(catName);
+      std::replace( dataName.begin(), dataName.end(), '.', '_');
+      std::replace( dataName.begin(), dataName.end(), '/', '_');
+      std::replace( dataName.begin(), dataName.end(), ':', '_');
+      absData->SetName((std::string(data.GetName()) + "_" + dataName).c_str());
       datamap.components[catName] = absData->GetName();
       this->exportData(*absData);
    }
