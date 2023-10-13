@@ -1397,7 +1397,7 @@ RooRealVar &xRooNLLVar::xRooHypoPoint::mu_hat()
       if (var)
          return *var;
       else
-         throw std::runtime_error("Cannot find POI");
+         throw std::runtime_error(TString::Format("Cannot find POI: %s",fPOIName()));
    }
    throw std::runtime_error("Unconditional fit unavailable");
 }
@@ -1463,8 +1463,13 @@ std::shared_ptr<xRooNLLVar::xRooHypoPoint> xRooNLLVar::xRooHypoPoint::asimov(boo
       fAsimov->coords.reset(fAsimov->coords->snapshot()); // create a copy so can remove the physical range below
       fAsimov->hypoTestResult.reset();
       fAsimov->fPllType = xRooFit::Asymptotics::TwoSided;
-      for (auto p : fAsimov->poi())
-         dynamic_cast<RooRealVar *>(p)->removeRange("physical");
+      for (auto p : fAsimov->poi()) {
+         // dynamic_cast<RooRealVar *>(p)->removeRange("physical"); -- can't use this as will modify shared property
+         if(auto v = dynamic_cast<RooRealVar *>(p)) {
+            v->deleteSharedProperties(); // effectively removes all custom ranges
+         }
+      }
+
       fAsimov->nullToys.clear();
       fAsimov->altToys.clear();
       fAsimov->fUfit = retrieveFit(3);
@@ -1604,7 +1609,7 @@ std::pair<double, double> xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
       return std::make_pair(std::numeric_limits<double>::quiet_NaN(), 0);
    }
    if (auto _first_poi = dynamic_cast<RooRealVar *>(poi().first());
-       _first_poi && _first_poi->hasMin("physical") && mu_hat().getVal() < _first_poi->getMin("physical")) {
+       _first_poi && _first_poi->getMin("physical")>_first_poi->getMin() && mu_hat().getVal() < _first_poi->getMin("physical")) {
       // replace _ufit with fit "boundary" conditional fit
       _ufit = cfit_lbound(readOnly);
       if (!_ufit) {
@@ -1802,7 +1807,7 @@ std::shared_ptr<const RooFitResult> xRooNLLVar::xRooHypoPoint::cfit_lbound(bool 
    auto _first_poi = dynamic_cast<RooRealVar *>(poi().first());
    if (!_first_poi)
       return nullptr;
-   if (!_first_poi->hasMin("physical"))
+   if (_first_poi->getMin("physical") <= _first_poi->getMin())
       return nullptr;
    if (fLbound_cfit)
       return fLbound_cfit;
