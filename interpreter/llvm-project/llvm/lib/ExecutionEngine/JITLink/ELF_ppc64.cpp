@@ -422,8 +422,9 @@ private:
 
     if (Section *TOCSection = G.findSectionByName(
             ppc64::TOCTableManager<Endianness>::getSectionName())) {
-      assert(!TOCSection->empty() && "TOC section should have reserved an "
-                                     "entry for containing the TOC base");
+      assert(!TOCSection->blocks().empty() &&
+             "TOC section should have reserved an "
+             "entry for containing the TOC base");
 
       SectionRange SR(*TOCSection);
       orc::ExecutorAddr TOCBaseAddr(SR.getFirstBlock()->getAddress() +
