@@ -193,17 +193,6 @@ void RooBinning::binNumbers(double const * x, int * bins, std::size_t n, int coe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return sequential bin number that contains value x where bin
-/// zero is the first bin that is defined, regardless if that bin
-/// is outside the current defined range
-
-Int_t RooBinning::rawBinNumber(double x) const
-{
-  return rawBinNumberImpl(x, _boundaries);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return the value of the nearest boundary to x
 
 double RooBinning::nearestBoundary(double x) const
