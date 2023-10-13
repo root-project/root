@@ -46,10 +46,10 @@ class RFieldMerger {
 private:
    /// The merged field descriptor
    RFieldDescriptor fMergedField = RFieldDescriptor();
+
 public:
    static RResult<RFieldMerger> Merge(const RFieldDescriptor &lhs, const RFieldDescriptor &rhs);
 };
-
 
 // clang-format off
 /**
@@ -61,13 +61,10 @@ public:
 class RNTupleMerger {
 
 public:
-
    /// Merge a given set of sources into the destination
-   void Merge(std::vector<std::unique_ptr<RPageSource>> &sources,
-              std::unique_ptr<RPageSink> &destination);
+   void Merge(std::vector<std::unique_ptr<RPageSource>> &sources, std::unique_ptr<RPageSink> &destination);
 
 private:
-
    // Struct to hold column and field descriptors
    struct RColumnInfo {
       const RColumnDescriptor &fColumnDesc;
@@ -75,32 +72,33 @@ private:
       const std::uint64_t fIndex;
 
       RColumnInfo(const RColumnDescriptor &columnDesc, const RFieldDescriptor &fieldDesc, const std::uint64_t &index)
-        : fColumnDesc(columnDesc), fFieldDesc(fieldDesc), fIndex(index) {}
+         : fColumnDesc(columnDesc), fFieldDesc(fieldDesc), fIndex(index)
+      {
+      }
    };
 
    /// Recursively add columns from a given filed
-   void AddColumnsFromField(std::vector<RColumnInfo> &vec,
-                            const RNTupleDescriptor &desc,
-                            const RFieldDescriptor &fieldDesc) {
-     for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
-       for (const auto &column : desc.GetColumnIterable(field)) {
-         const std::string name = field.GetFieldName() + "." + std::to_string(column.GetIndex());
-         if (!m_indexMap.count(name)) { // contains as of C++20
-           m_indexMap[name] = m_indexMap.size();
+   void
+   AddColumnsFromField(std::vector<RColumnInfo> &vec, const RNTupleDescriptor &desc, const RFieldDescriptor &fieldDesc)
+   {
+      for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
+         for (const auto &column : desc.GetColumnIterable(field)) {
+            const std::string name = field.GetFieldName() + "." + std::to_string(column.GetIndex());
+            if (!m_indexMap.count(name)) { // contains as of C++20
+               m_indexMap[name] = m_indexMap.size();
+            }
+            vec.emplace_back(column, field, m_indexMap.at(name));
          }
-         vec.emplace_back(column, field, m_indexMap.at(name));
-
-       }
-       AddColumnsFromField(vec, desc, field);
-     }
+         AddColumnsFromField(vec, desc, field);
+      }
    }
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const std::unique_ptr<RPageSource> &source) {
+   std::vector<RColumnInfo> CollectColumns(const std::unique_ptr<RPageSource> &source)
+   {
       auto desc = source->GetSharedDescriptorGuard();
       std::vector<RColumnInfo> columns;
-      AddColumnsFromField(columns, desc.GetRef(),
-                          desc->GetFieldDescriptor(desc->GetFieldZeroId()));
+      AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldDescriptor(desc->GetFieldZeroId()));
       return columns;
    }
 
