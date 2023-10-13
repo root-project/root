@@ -34,7 +34,7 @@
   fW  : (0)
 ~~~
 
-   In order to get thw QR dcomposition of A (i.e. A = QR )
+   In order to get the QR dcomposition of A (i.e. A = QR )
    The orthoginal matrix Q needs to be computed from the internal Q' and
    the up's and beta's vector defining the Householder transformation
 

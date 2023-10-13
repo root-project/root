@@ -440,7 +440,7 @@ public:
    /**
       Multiplication with arbitrary rotations
     */
-    // note: cannot have a  template method since it is ambigous with the operator * on vectors
+    // note: cannot have a  template method since it is ambiguous with the operator * on vectors
 
    Rotation3D operator * (const AxisAngle   & a) const;
    Rotation3D operator * (const EulerAngles & e) const;

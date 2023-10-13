@@ -342,6 +342,6 @@ int main() {
    t.Divide2();
 #endif
 
-   // summurize test
+   // summarize test
    t.PrintSummary();
 }

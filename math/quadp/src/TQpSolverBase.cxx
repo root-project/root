@@ -149,7 +149,7 @@ void TQpSolverBase::DefStart(TQpProbBase * /* formulation */,TQpVar *iterate,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Starting point algoritm according to Stephen Wright
+/// Starting point algorithm according to Stephen Wright
 
 void TQpSolverBase::SteveStart(TQpProbBase * /* formulation */,
                                TQpVar *iterate,TQpDataBase *prob,

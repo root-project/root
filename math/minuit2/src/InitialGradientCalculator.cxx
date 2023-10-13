@@ -42,20 +42,20 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &
 
       double var = par.Vec()(i);
       double werr = Trafo().Parameter(exOfIn).Error();
-      double sav = Trafo().Int2ext(i, var);
-      double sav2 = sav + werr;
+      double save1 = Trafo().Int2ext(i, var);
+      double save2 = save1 + werr;
       if (Trafo().Parameter(exOfIn).HasLimits()) {
-         if (Trafo().Parameter(exOfIn).HasUpperLimit() && sav2 > Trafo().Parameter(exOfIn).UpperLimit())
-            sav2 = Trafo().Parameter(exOfIn).UpperLimit();
+         if (Trafo().Parameter(exOfIn).HasUpperLimit() && save2 > Trafo().Parameter(exOfIn).UpperLimit())
+            save2 = Trafo().Parameter(exOfIn).UpperLimit();
       }
-      double var2 = Trafo().Ext2int(exOfIn, sav2);
+      double var2 = Trafo().Ext2int(exOfIn, save2);
       double vplu = var2 - var;
-      sav2 = sav - werr;
+      save2 = save1 - werr;
       if (Trafo().Parameter(exOfIn).HasLimits()) {
-         if (Trafo().Parameter(exOfIn).HasLowerLimit() && sav2 < Trafo().Parameter(exOfIn).LowerLimit())
-            sav2 = Trafo().Parameter(exOfIn).LowerLimit();
+         if (Trafo().Parameter(exOfIn).HasLowerLimit() && save2 < Trafo().Parameter(exOfIn).LowerLimit())
+            save2 = Trafo().Parameter(exOfIn).LowerLimit();
       }
-      var2 = Trafo().Ext2int(exOfIn, sav2);
+      var2 = Trafo().Ext2int(exOfIn, save2);
       double vmin = var2 - var;
       double gsmin = 8. * Precision().Eps2() * (std::fabs(var) + Precision().Eps2());
       // protect against very small step sizes which can cause dirin to zero and then nan values in grd
@@ -86,7 +86,7 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &
 
 const MnMachinePrecision &InitialGradientCalculator::Precision() const
 {
-   // return precision (is set in trasformation class)
+   // return precision (is set in transformation class)
    return fTransformation.Precision();
 }
 

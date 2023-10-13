@@ -78,7 +78,7 @@
 
  <h4>Minuit</h4>
  <ul>
-    <li>Apply varius improvements in the <tt>TMInuitMInimizer</tt> class thanks to the feedback of Alfio Lazzaro:
+    <li>Apply various improvements in the <tt>TMInuitMInimizer</tt> class thanks to the feedback of Alfio Lazzaro:
    <ul>
      <li>implement  Hess()  and CovMatrixStatus();
      <li>add new method based on SEEK. The Tolerance() value can be used to specify the volume (in unit of sigma) for  searching for the global minimum
@@ -103,7 +103,7 @@
     <li>Use a tolerance of 0.01 instead of 0.05 in MnContours. The value of 0.01 is the same used in Minos. This is sufficient to get good quality contours.
     <li>Improve also the debug in MnContour. Add printing of points as info messages
     <li>Remove some un-necessary assert() when defining the minimization parameters.
-    <li>Fix a bug in MnHesse to return the information if the matrix was made pos def. In addition change in MinimumError the codition that when the matrix was made pos def the status of the error is still considered valid and not invalid as before. This makes also the function minimum valid when a matrix was decleared pos def.
+    <li>Fix a bug in MnHesse to return the information if the matrix was made pos def. In addition change in MinimumError the condition that when the matrix was made pos def the status of the error is still considered valid and not invalid as before. This makes also the function minimum valid when a matrix was decleared pos def.
     <li>Improvements in the  Minuit2Minimizer class:
     <ul>
       <li>

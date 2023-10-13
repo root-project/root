@@ -153,7 +153,7 @@ class WrappedMultiFunction : public IMultiGenFunction {
       fDim( dim)
    { /* no op */ }
 
-   // use default  copy contructor and assignment operator
+   // use default copy constructor and assignment operator
 
    /// clone (required by the interface)
    WrappedMultiFunction * Clone() const override {

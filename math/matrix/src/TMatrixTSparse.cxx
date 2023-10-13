@@ -17,7 +17,7 @@
  Template class of a general sparse matrix in the Harwell-Boeing
  format
 
- Besides the usual shape/size decsriptors of a matrix like fNrows,
+ Besides the usual shape/size descriptors of a matrix like fNrows,
  fRowLwb,fNcols and fColLwb, we also store a row index, fRowIndex and
  column index, fColIndex only for those elements unequal zero:
 
@@ -44,7 +44,7 @@
 ~~~
 
  When checking whether sparse matrices are compatible (like in an
- assigment !), not only the shape parameters are compared but also
+ assignment !), not only the shape parameters are compared but also
  the sparse structure through fRowIndex and fColIndex .
 
  Several methods exist to fill a sparse matrix with data entries.

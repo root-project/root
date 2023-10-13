@@ -823,7 +823,7 @@ namespace Math {
 //   math/math_private.h
 //   sysdeps/ieee754/ldbl-96/math_ldbl.h
 
-// part of ths file:
+// part of this file:
    /*
     * ====================================================
     * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.

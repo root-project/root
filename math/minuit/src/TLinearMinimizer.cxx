@@ -147,7 +147,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfun
    flist.SetOwner(kFALSE);  // we do not want to own the list - it will be owned by the TLinearFitter class
    for (unsigned int i = 0; i < fDim; ++i) {
       // t.b.f: should not create TF1 classes
-      // when creating TF1 (if onother function with same name exists it is
+      // when creating TF1 (if another function with same name exists it is
       // deleted since it is added in function list in gROOT
       // fix the problem using meaniful names (difficult to re-produce)
       BasisFunction<ModelFunc > bf(*modfunc,i);
@@ -158,7 +158,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfun
       flist.Add(f);
    }
 
-   // create TLinearFitter (do it now because olny now now the coordinate dimensions)
+   // create TLinearFitter (do it now because only now now the coordinate dimensions)
    if (fFitter) delete fFitter; // reset by deleting previous copy
    fFitter = new TLinearFitter( static_cast<const ModelFunc::BaseFunc&>(*modfunc).NDim() );
 
@@ -185,7 +185,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfun
          const double * x2 = data.BinUpEdge(i);
          for (unsigned int j  = 0; j < data.NDim(); ++j) {
             binVolume *= (x2[j]-x1[j]);
-            // we are alwyas using bin centers
+            // we are always using bin centers
             xc[j] = 0.5 * (x2[j]+ x1[j]);
          }
          if (data.Opt().fNormBinVolume) binVolume /= data.RefVolume();

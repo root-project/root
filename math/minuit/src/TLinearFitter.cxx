@@ -93,7 +93,7 @@ fitters and doesn't require to set the initial values of parameters.
 ### 2.Setting the formula
 
 #### 2.1 The linear formula syntax:
-     -Additive parts are separated by 2 plus signes "++"
+     -Additive parts are separated by 2 plus signs "++"
       --for example "1 ++ x" - for fitting a straight line
      -All standard functions, undrestood by TFormula, can be used
       as additive parts
@@ -504,7 +504,7 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Add another linear fitter to this linear fitter. Points and Design matrices
-///are added, but the previos fitting results (if any) are deleted.
+///are added, but the previous fitting results (if any) are deleted.
 ///Fitters must have same formulas (this is not checked). Fixed parameters are not changed
 
 void TLinearFitter::Add(TLinearFitter *tlf)

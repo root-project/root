@@ -275,7 +275,7 @@ TFoam::TFoam(const TFoam &From): TObject(From)
 /// This method starts the process of the cell build-up.
 /// User must invoke Initialize with two arguments or Initialize without arguments.
 /// This is done BEFORE generating first MC event and AFTER allocating FOAM object
-/// and reseting (optionally) its internal parameters/switches.
+/// and resetting (optionally) its internal parameters/switches.
 /// The overall operational scheme of the FOAM is the following:
 ///
 /// \image html foam_schema2.png width=600
@@ -285,7 +285,7 @@ TFoam::TFoam(const TFoam &From): TObject(From)
 /// InitCells initializes memory storage for cells and begins exploration process
 /// from the root cell. The empty cells are allocated/filled using  CellFill.
 /// The procedure Grow which loops over cells, picks up the cell with the biggest
-/// ``driver integral'', see Comp. Phys. Commun. 152 152 (2003) 55 for explanations,
+/// ``driver integral'', see Computer Physics Communications 152 152 (2003) 55 for explanations,
 /// with the help of PeekMax procedure. The chosen cell is split using Divide.
 /// Subsequently, the procedure Explore called by the Divide
 /// (and by InitCells for the root cell) does the most important

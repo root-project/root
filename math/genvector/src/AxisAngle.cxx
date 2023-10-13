@@ -90,7 +90,7 @@ operator() (const XYZVector & v) const
 
 std::ostream & operator<< (std::ostream & os, const AxisAngle & a) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form may need formatiing improvements
+   //        and even the human readable form may need formatting improvements
    os << "\n" << a.Axis() << "  " << a.Angle() << "\n";
    return os;
 }
