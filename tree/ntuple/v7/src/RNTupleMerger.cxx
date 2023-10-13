@@ -19,7 +19,8 @@
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
-Long64_t ROOT::Experimental::RNTuple::Merge(TCollection* inputs, TFileMergeInfo* mergeInfo) {
+Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
+{
    if (inputs == nullptr || mergeInfo == nullptr) {
       return -1;
    }
@@ -28,18 +29,17 @@ Long64_t ROOT::Experimental::RNTuple::Merge(TCollection* inputs, TFileMergeInfo*
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 ROOT::Experimental::RResult<ROOT::Experimental::RFieldMerger>
 ROOT::Experimental::RFieldMerger::Merge(const ROOT::Experimental::RFieldDescriptor &lhs,
-   const ROOT::Experimental::RFieldDescriptor &rhs)
+                                        const ROOT::Experimental::RFieldDescriptor &rhs)
 {
-   return R__FAIL("couldn't merge field " + lhs.GetFieldName() + " with field "
-      + rhs.GetFieldName() + " (unimplemented!)");
+   return R__FAIL("couldn't merge field " + lhs.GetFieldName() + " with field " + rhs.GetFieldName() +
+                  " (unimplemented!)");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::Merge (std::vector<std::unique_ptr<RPageSource>> &sources,
-                                               std::unique_ptr<RPageSink> &destination)
+void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<RPageSource>> &sources,
+                                              std::unique_ptr<RPageSink> &destination)
 {
 
    // Flag for creating the destination sink only once
@@ -49,83 +49,86 @@ void ROOT::Experimental::RNTupleMerger::Merge (std::vector<std::unique_ptr<RPage
    std::uint64_t nEntries{0};
 
    // Loop over all input sources
-   for (const auto& source : sources) {
+   for (const auto &source : sources) {
 
-     // Attach the current source
-     source->Attach();
+      // Attach the current source
+      source->Attach();
 
-     // Collect all the columns
-     auto columns = CollectColumns(source);
+      // Collect all the columns
+      auto columns = CollectColumns(source);
 
-     // Get a handle on the descriptor (metadata)
-     auto descriptor = source->GetSharedDescriptorGuard();
+      // Get a handle on the descriptor (metadata)
+      auto descriptor = source->GetSharedDescriptorGuard();
 
-     // Create sink from the input model of the very first input file
-     std::call_once(onceFlag, [&]() { auto model = descriptor->GenerateModel(); destination->Create(*model.get()); });
+      // Create sink from the input model of the very first input file
+      std::call_once(onceFlag, [&]() {
+         auto model = descriptor->GenerateModel();
+         destination->Create(*model.get());
+      });
 
-     // Now loop over all clusters in this file
-     // descriptor->GetClusterIterable() doesn't guarantee any specific order...
-     // Find the first cluster id and iterate from there...
-     // Here we assume there is at least one entry in the ntuple, beware...
-     auto clusterId = descriptor->FindClusterId(0, 0);
+      // Now loop over all clusters in this file
+      // descriptor->GetClusterIterable() doesn't guarantee any specific order...
+      // Find the first cluster id and iterate from there...
+      // Here we assume there is at least one entry in the ntuple, beware...
+      auto clusterId = descriptor->FindClusterId(0, 0);
 
-     while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
+      while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
 
-       // Get a hold on the current cluster descriptor
-       auto& cluster = descriptor->GetClusterDescriptor(clusterId);
+         // Get a hold on the current cluster descriptor
+         auto &cluster = descriptor->GetClusterDescriptor(clusterId);
 
-       // Now loop over all columns
-       for (const auto &column : columns) {
+         // Now loop over all columns
+         for (const auto &column : columns) {
 
-         // See if this cluster contains this column
-         // if not, there is nothing to read/do...
-         auto columnId = column.fColumnDesc.GetPhysicalId();
-         if (!cluster.ContainsColumn(columnId)) {
-           continue;
-         }
+            // See if this cluster contains this column
+            // if not, there is nothing to read/do...
+            auto columnId = column.fColumnDesc.GetPhysicalId();
+            if (!cluster.ContainsColumn(columnId)) {
+               continue;
+            }
 
-         // Now get the pages for this column in this cluster
-         const auto &pages = cluster.GetPageRange(columnId);
-         size_t idx{0};
+            // Now get the pages for this column in this cluster
+            const auto &pages = cluster.GetPageRange(columnId);
+            size_t idx{0};
 
-         // Loop over the pages
-         for (const auto &pageInfo : pages.fPageInfos) {
+            // Loop over the pages
+            for (const auto &pageInfo : pages.fPageInfos) {
 
-           // Each page contains N elements that we are going to read together
-           // LoadSealedPage reads packed/compressed bytes of a page into
-           // a memory buffer provided by a sealed page
-           RClusterIndex clusterIndex(clusterId, idx);
-           RPageStorage::RSealedPage sealedPage;
-           source->LoadSealedPage(columnId, clusterIndex, sealedPage);
+               // Each page contains N elements that we are going to read together
+               // LoadSealedPage reads packed/compressed bytes of a page into
+               // a memory buffer provided by a sealed page
+               RClusterIndex clusterIndex(clusterId, idx);
+               RPageStorage::RSealedPage sealedPage;
+               source->LoadSealedPage(columnId, clusterIndex, sealedPage);
 
-           // The way LoadSealedPage works might require a double call
-           // See the implementation. Here we do this in any case...
-           auto buffer = std::make_unique<unsigned char[]>(sealedPage.fSize);
-           sealedPage.fBuffer = buffer.get();
-           source->LoadSealedPage(columnId, clusterIndex, sealedPage);
+               // The way LoadSealedPage works might require a double call
+               // See the implementation. Here we do this in any case...
+               auto buffer = std::make_unique<unsigned char[]>(sealedPage.fSize);
+               sealedPage.fBuffer = buffer.get();
+               source->LoadSealedPage(columnId, clusterIndex, sealedPage);
 
-           // Now commit this page to the output
-           // Can we do this w/ a CommitSealedPageV
-           destination->CommitSealedPage(column.fIndex, sealedPage);
+               // Now commit this page to the output
+               // Can we do this w/ a CommitSealedPageV
+               destination->CommitSealedPage(column.fIndex, sealedPage);
 
-           // Move on to the next index
-           idx += pageInfo.fNElements;
+               // Move on to the next index
+               idx += pageInfo.fNElements;
 
-         } // end of loop over pages
+            } // end of loop over pages
 
-       } // end of loop over columns
+         } // end of loop over columns
 
-       // Commit the clusters
-       nEntries += cluster.GetNEntries();
-       destination->CommitCluster(nEntries);
+         // Commit the clusters
+         nEntries += cluster.GetNEntries();
+         destination->CommitCluster(nEntries);
 
-       // Go to the next cluster
-       clusterId = descriptor->FindNextClusterId(clusterId);
+         // Go to the next cluster
+         clusterId = descriptor->FindNextClusterId(clusterId);
 
-     } // end of loop over clusters
+      } // end of loop over clusters
 
-     // Commit all clusters for this input
-     destination->CommitClusterGroup();
+      // Commit all clusters for this input
+      destination->CommitClusterGroup();
 
    } // end of loop over sources
 
