@@ -72,7 +72,7 @@ public:
       return true;
    }
 
-   /// method wich need to be re-implemented by the derived classes
+   /// Method that needs to be re-implemented by the derived classes.
    void SetRealValue(const char * name, double val) override  {
       InsertValue(name, fRealOpts, val);
    }

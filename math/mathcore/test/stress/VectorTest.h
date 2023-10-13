@@ -148,7 +148,7 @@ public:
       return tot;
    }
 
-   // mantain loop in gen otherwise is proportional to N**@
+   // maintain loop in gen otherwise is proportional to N**@
    template <class V>
    double TestDelta(const std::vector<V> &dataV)
    {

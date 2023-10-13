@@ -240,7 +240,7 @@ inline T Mag2(const VecExpr<A,T,D>& rhs) {
 }
 
 /**
-    Vector magnitude (Euclidian norm)
+    Vector magnitude (Euclidean norm)
     Compute : \f$ |\vec{v}| = \sqrt{\sum_iv_i^2} \f$.
 
     @ingroup VectFunction

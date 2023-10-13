@@ -14,7 +14,7 @@ namespace Math {
 
 
    double beta_quantile_c(double z, double a, double b) {
-      // use Cephes and proprety of icomplete beta function
+      // use Cephes and property of icomplete beta function
       if ( z < 0.5)
          return 1. - ROOT::Math::Cephes::incbi(b,a,z);
       else
@@ -87,7 +87,7 @@ namespace Math {
 
 
    double fdistribution_quantile_c(double z, double n, double m) {
-      // use cephes incbi function and use propreties of incomplete beta for case <> 0.5
+      // use cephes incbi function and use properties of incomplete beta for case <> 0.5
       if (n == 0) return 0;  // is value of cdf for n = 0
       if (z < 0.5) {
          double y =  ROOT::Math::Cephes::incbi( .5*m, .5*n, z);

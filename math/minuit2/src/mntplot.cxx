@@ -38,10 +38,10 @@ void mnplot(double *xpt, double *ypt, char *chpt, int nxypt, int npagwd, int npa
    //      char cslash[] = "/";
 
    /* Local variables */
-   double xmin, ymin, xmax, ymax, savx, savy, yprt;
+   double xmin, ymin, xmax, ymax, saveX, saveY, yprt;
    double bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
    double xvalus[12], any, dxx, dyy;
-   int iten, i, j, k, maxnx, maxny, iquit, ni, linodd;
+   int iTen, i, j, k, maxnx, maxny, iquit, ni, linodd;
    int nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
    char ctemp[120];
    bool overpr;
@@ -69,12 +69,12 @@ void mnplot(double *xpt, double *ypt, char *chpt, int nxypt, int npagwd, int npa
       for (j = 1; j <= ni; ++j) {
          if (ypt[j - 1] > ypt[j])
             continue;
-         savx = xpt[j - 1];
+         saveX = xpt[j - 1];
          xpt[j - 1] = xpt[j];
-         xpt[j] = savx;
-         savy = ypt[j - 1];
+         xpt[j] = saveX;
+         saveY = ypt[j - 1];
          ypt[j - 1] = ypt[j];
-         ypt[j] = savy;
+         ypt[j] = saveY;
          chsav = chpt[j - 1];
          chpt[j - 1] = chpt[j];
          chpt[j] = chsav;
@@ -201,8 +201,8 @@ L50:
       xvalus[ibk - 1] = xmin + double(ibk - 1) * 10 * bwidx;
    }
    printf("           ");
-   iten = (nx + 9) / 10;
-   for (ibk = 1; ibk <= iten; ++ibk) {
+   iTen = (nx + 9) / 10;
+   for (ibk = 1; ibk <= iTen; ++ibk) {
       printf(" %9.4g", xvalus[ibk - 1]);
    }
    printf("\n");

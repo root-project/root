@@ -51,7 +51,7 @@ public:
 
    }
 
-   // transfrom from internal parameters (not fixed to external vector which include the fixed ones)
+   // transform from internal parameters (not fixed to external vector which include the fixed ones)
    const std::vector<double> & Transform( const std::vector<double> & factors) const {
       unsigned int n = fValues.size();
       if (n == 0 || fNFree == n )

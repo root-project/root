@@ -22,7 +22,7 @@ class LegacyKahanSum {
       fSum = t;
     }
 
-    /// Iterate over a datastructure referenced by a pointer and accumulate on the exising result
+    /// Iterate over a datastructure referenced by a pointer and accumulate on the existing result
     template <class Iterator>
     void Add(const Iterator begin, const Iterator end)
     {

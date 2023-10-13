@@ -26,7 +26,7 @@ namespace ROOT {
       /**
          MultiDimParamFunctionAdapter class to wrap a one-dimensional parametric function in
          a multi dimensional parametric function interface
-         This is used typically in fitting where internally the function is stored as multidimension
+         This is used typically in fitting where internally the function is stored as multidimensional
 
          To wrap a non-parametric one-dim function in a multi-dim interface one can use simply a
          ROOT::Math::WrappedFunction<ROOT::Math::IGenFunction> or ROOT::Math::Functor
@@ -155,7 +155,7 @@ namespace ROOT {
       /**
          MultiDimParamGradFunctionAdapter class to wrap a one-dimensional parametric gradient function in
          a multi dimensional parametric gradient function interface
-         This is used typically in fitting where internally the function is stored as multidimension
+         This is used typically in fitting where internally the function is stored as multidimensional
 
          To wrap a non-parametric one-dim gradient function in a multi-dim interface one can use simply a
            a ROOT::Math::GradFunctor

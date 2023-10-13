@@ -53,7 +53,7 @@ GSLInterpolator::GSLInterpolator (unsigned int size, Interpolation::Type type) :
       case ROOT::Math::Interpolation::kPOLYNOMIAL       :
          fInterpType = gsl_interp_polynomial;
          break ;
-         // depened on GSL linear algebra
+         // depend on GSL linear algebra
       case ROOT::Math::Interpolation::kCSPLINE         :
          fInterpType = gsl_interp_cspline ;
          break ;

@@ -116,7 +116,7 @@ void TRandom2::RndmArray(Int_t n, Double_t *array)
 /// a linear congruential generator
 /// The only condition, stated at the end of the 1999 L'Ecuyer paper is that the seeds
 /// must be greater than 1,7 and 15.
-/// Note that after seeting the seed the generator is warmed up by calling it internally few
+/// Note that after setting the seed the generator is warmed up by calling it internally few
 /// times therefore the returned seed in TRandom2::GetSeed will be a different value.
 /// For this generator the user will have to store the provided seed externally
 /// if he wants to reproduce the random sequence
