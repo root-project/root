@@ -175,8 +175,7 @@ ParamHistFunc &createPHF(const std::string &phfname, const std::vector<std::stri
 
    RooArgList gammas;
    for (auto &p : parnames) {
-      RooRealVar g(p.c_str(), p.c_str(), 1., gammaMin, gammaMax);
-      gammas.add(g);
+      gammas.add(getOrCreate<RooRealVar>(ws, p, 1., gammaMin, gammaMax));
    }
 
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
@@ -206,6 +205,18 @@ bool hasStaterror(const JSONNode &comp)
          return true;
    }
    return false;
+}
+
+const JSONNode &findStaterror(const JSONNode &comp)
+{
+   if (comp.has_child("modifiers")) {
+      for (const auto &mod : comp["modifiers"].children()) {
+         if (mod["type"].val() == ::Literals::staterror)
+            return mod;
+      }
+   }
+   RooJSONFactoryWSTool::error("sample '" + RooJSONFactoryWSTool::name(comp) + "' does not have a " +
+                               ::Literals::staterror + " modifier!");
 }
 
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
@@ -381,20 +392,16 @@ public:
             if (sumW.empty()) {
                sumW.resize(nbins);
                sumW2.resize(nbins);
-
-               for (const auto &mod : comp["modifiers"].children()) {
-                  if (mod["type"].val() == ::Literals::staterror) {
-                     for (const auto &v : p["gamma_parameters"].children()) {
-                        gamma_parnames.push_back(v.val());
-                     }
-                     break;
-                  }
-               }
             }
-
             for (size_t i = 0; i < nbins; ++i) {
                sumW[i] += dh->weight(i);
                sumW2[i] += dh->weightSquared(i);
+            }
+            if (gamma_parnames.size() == 0) {
+               auto &staterror = findStaterror(comp);
+               for (const auto &v : staterror["parameters"].children()) {
+                  gamma_parnames.push_back(v.val());
+               }
             }
          }
          data.emplace_back(std::move(dh));
@@ -411,6 +418,10 @@ public:
             errs[i] = std::sqrt(sumW2[i]) / sumW[i];
             // avoid negative sigma. This NP will be set constant anyway later
             errs[i] = std::max(errs[i], 0.);
+         }
+
+         if (gamma_parnames.size() == 0) {
+            RooJSONFactoryWSTool::error("failed to extract names of gamma parameters for '" + name + "'");
          }
 
          mcStatObject = &createPHF("mc_stat_" + phfName, gamma_parnames, errs, *tool, constraints, observables,

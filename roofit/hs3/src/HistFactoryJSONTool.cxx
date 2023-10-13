@@ -23,9 +23,20 @@
 #include <TH1.h>
 
 using RooFit::Detail::JSONNode;
-using RooFit::Detail::JSONTree;
 
 namespace {
+
+JSONNode &appendNamedChild(JSONNode &node, std::string const &name)
+{
+   static constexpr bool useListsInsteadOfDicts = true;
+
+   if (!useListsInsteadOfDicts) {
+      return node.set_map()[name].set_map();
+   }
+   JSONNode &child = node.set_seq().append_child().set_map();
+   child["name"] << name;
+   return child;
+}
 
 bool checkRegularBins(const TAxis &ax)
 {
@@ -117,7 +128,7 @@ void exportHistogram(const TH1 &histo, JSONNode &node, const std::vector<std::st
 void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channelNode,
                   std::vector<std::string> const &obsnames)
 {
-   auto &s = RooJSONFactoryWSTool::appendNamedChild(channelNode["samples"], sample.GetName());
+   auto &s = appendNamedChild(channelNode["samples"], sample.GetName());
 
    if (!sample.GetOverallSysList().empty()) {
       auto &modifiers = s["modifiers"].set_seq();
@@ -228,7 +239,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    if (!measurement.GetFunctionObjects().empty()) {
       auto &funclist = rootnode["functions"];
       for (const auto &func : measurement.GetFunctionObjects()) {
-         auto &f = RooJSONFactoryWSTool::appendNamedChild(funclist, func.GetName());
+         auto &f = appendNamedChild(funclist, func.GetName());
          f["name"] << func.GetName();
          f["expression"] << func.GetExpression();
          f["dependents"] << func.GetDependents();
@@ -238,7 +249,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
    auto &pdflist = rootnode["distributions"];
 
-   auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(rootnode["analyses"], "simPdf");
+   auto &analysisNode = appendNamedChild(rootnode["analyses"], "simPdf");
    analysisNode["domains"].set_seq().append_child() << "default_domain";
 
    auto &analysisPois = analysisNode["parameters_of_interest"].set_seq();
@@ -249,7 +260,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
    analysisNode["likelihood"] << measurement.GetName();
 
-   auto &likelihoodNode = RooJSONFactoryWSTool::appendNamedChild(rootnode["likelihoods"], measurement.GetName());
+   auto &likelihoodNode = appendNamedChild(rootnode["likelihoods"], measurement.GetName());
    likelihoodNode["distributions"].set_seq();
    likelihoodNode["data"].set_seq();
 
@@ -261,7 +272,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
       likelihoodNode["distributions"].append_child() << pdfName;
       likelihoodNode["data"].append_child() << std::string("obsData_") + c.GetName();
-      exportChannel(c, RooJSONFactoryWSTool::appendNamedChild(pdflist, pdfName));
+      exportChannel(c, appendNamedChild(pdflist, pdfName));
       setAttribute(rootnode, realSumPdfName, "BinnedLikelihood");
    }
 
@@ -321,7 +332,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       std::string const &parname = item.first;
       VariableInfo const &info = item.second;
 
-      auto &v = RooJSONFactoryWSTool::appendNamedChild(varlist, parname);
+      auto &v = appendNamedChild(varlist, parname);
       v["value"] << info.val;
       if (info.isConstant)
          v["const"] << true;
@@ -352,7 +363,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       pdfs2.append_child() << (std::string("model_") + c.GetName());
 
       JSONNode &dataOutput =
-         RooJSONFactoryWSTool::appendNamedChild(rootnode["data"], std::string("obsData_") + c.GetName());
+         appendNamedChild(rootnode["data"], std::string("obsData_") + c.GetName());
       dataOutput["type"] << "binned";
 
       exportHistogram(*c.GetData().GetHisto(), dataOutput, getObsnames(c));
@@ -365,7 +376,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    modelConfigAux["mcName"] << "ModelConfig";
 
    // Finally write lumi constraint
-   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
+   auto &lumiConstraint = appendNamedChild(pdflist, "lumiConstraint");
    lumiConstraint["mean"] << "nominalLumi";
    lumiConstraint["sigma"] << (measurement.GetLumi() * measurement.GetLumiRelErr());
    lumiConstraint["type"] << "gaussian_dist";
