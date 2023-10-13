@@ -1,5 +1,5 @@
 // test of multidimentional Integration
-// Calculates an intergal of a function
+// Calculates an integral of a function
 // in 2,3,..., 8 dimensions
 // by using adaptive Genz Malik cubature
 // and MonteCarlo methods:

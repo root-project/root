@@ -76,7 +76,7 @@ public:
    void Rectify();
 
 
-   // ======== Construction and assignement from any other rotation ==================
+   // ======== Construction and assignment from any other rotation ==================
 
    /**
       Create from any other supported rotation (see gv_detail::convert )

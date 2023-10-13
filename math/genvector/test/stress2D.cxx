@@ -19,7 +19,7 @@
 //           vector pair
 //      - conversion between XYZTVectors to PtRhoEtaPhi based vectors
 //
-//   The two analysis demostrates, especially in the second case, the advantage of using
+//   The two analysis demonstrates, especially in the second case, the advantage of using
 //   vector based on cylindrical coordinate, given the fact that the time spent in the conversion is
 //   much less than the time spent in the analysis routine.
 //

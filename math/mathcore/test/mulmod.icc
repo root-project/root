@@ -233,21 +233,21 @@ TEST(mod_m, r_max)
 TEST(mulmod, simple)
 {
    uint64_t in1[9] = {0};
-   uint64_t inout[9] = {0};
+   uint64_t inOut[9] = {0};
    in1[4] = (uint64_t(1) << 32);
-   inout[4] = (uint64_t(1) << 32);
+   inOut[4] = (uint64_t(1) << 32);
    // After multiplying the two values, (2 ** 288) * (2 ** 288) = 2 ** 576.
 
-   mulmod(in1, inout);
+   mulmod(in1, inOut);
 
    // The same result as mod_m::simple above:
-   // inout = 2 ** 576 - m = 2 ** 240 - 1, all first 240 bits set.
+   // inOut = 2 ** 576 - m = 2 ** 240 - 1, all first 240 bits set.
    for (int i = 0; i < 3; i++) {
-      EXPECT_EQ(inout[i], 0xffffffffffffffff);
+      EXPECT_EQ(inOut[i], 0xffffffffffffffff);
    }
-   EXPECT_EQ(inout[3], 0x0000ffffffffffff);
+   EXPECT_EQ(inOut[3], 0x0000ffffffffffff);
    for (int i = 4; i < 9; i++) {
-      EXPECT_EQ(inout[i], 0);
+      EXPECT_EQ(inOut[i], 0);
    }
 }
 
@@ -260,15 +260,15 @@ TEST(mulmod, modulus)
    for (int i = 4; i < 9; i++) {
       in1[i] = 0xffffffffffffffff;
    }
-   uint64_t inout[9] = {0};
-   inout[0] = 1;
+   uint64_t inOut[9] = {0};
+   inOut[0] = 1;
    // After multiplying the two values, the result will be the modulus m.
 
-   mulmod(in1, inout);
+   mulmod(in1, inOut);
 
    // mulmod should provide the smallest value congruent to m; in this case 0.
    for (int i = 0; i < 9; i++) {
-      EXPECT_EQ(inout[i], 0);
+      EXPECT_EQ(inOut[i], 0);
    }
 }
 
@@ -281,18 +281,18 @@ TEST(mulmod, multiple_modulus)
    for (int i = 4; i < 9; i++) {
       in1[i] = 0xffffffffffffffff;
    }
-   uint64_t inout[9];
+   uint64_t inOut[9];
    for (int i = 0; i < 9; i++) {
-      inout[i] = 1;
+      inOut[i] = 1;
    }
    // After multiplying the two values, the result will be a multiple of the
    // modulus m.
 
-   mulmod(in1, inout);
+   mulmod(in1, inOut);
 
    // mulmod should provide the smallest value congruent to m; in this case 0.
    for (int i = 0; i < 9; i++) {
-      EXPECT_EQ(inout[i], 0);
+      EXPECT_EQ(inOut[i], 0);
    }
 }
 

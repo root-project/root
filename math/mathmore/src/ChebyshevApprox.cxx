@@ -67,7 +67,7 @@ fOrder(n) , fSeries(nullptr), fFunction(nullptr)
 
 ChebyshevApprox::~ChebyshevApprox()
 {
-   // desctructor (clean up resources)
+   // destructor (clean up resources)
    if (fFunction) delete fFunction;
    if (fSeries) delete fSeries;
 }
@@ -124,7 +124,7 @@ double ChebyshevApprox::operator() ( double x, size_t n) const {
 }
 
 std::pair<double, double>  ChebyshevApprox::EvalErr( double x, size_t n) const {
-   // evaluate at most order n ( truncate the series) returning resutl + error
+   // evaluate at most order n ( truncate the series) returning result + error
    double result, error;
    gsl_cheb_eval_n_err(fSeries->get(), n, x, &result, &error);
    return std::make_pair( result, error);

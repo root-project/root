@@ -30,7 +30,7 @@ private:
    const TLorentzRotation * fRR;
    int fII;
 };
-   // Helper class for implemention of C-style subscripting r[i][j]
+   // Helper class for implementation of C-style subscripting r[i][j]
 
    TLorentzRotation();
    // Default constructor. Gives a unit matrix.

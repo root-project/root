@@ -130,7 +130,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
       if (edm > edmval) {
          print.Debug("Tolerance not sufficient, continue minimization; Edm", edm, "Requested", edmval);
       } else {
-         // Case when edm < edmval after Heasse but min is flagged eith a  bad edm:
+         // Case when edm < edmval after Heasse but min is flagged with a bad edm:
          // make then a new Function minimum since now edm is ok
          if (min.IsAboveMaxEdm()) {
             min = FunctionMinimum(min.Seed(), min.States(), min.Up());

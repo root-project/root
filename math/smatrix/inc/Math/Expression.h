@@ -99,7 +99,7 @@ public:
 
   /**
       function to  determine if any use operand
-      is being used (has same memory adress)
+      is being used (has same memory address)
    */
   inline bool IsInUse (const T * p) const {
     return rhs_.IsInUse(p);
@@ -156,7 +156,7 @@ public:
 
   /**
       function to  determine if any use operand
-      is being used (has same memory adress)
+      is being used (has same memory address)
    */
   inline bool IsInUse (const T * p) const {
     return rhs_.IsInUse(p);
@@ -260,7 +260,7 @@ protected:
 };
 
 //LM :: add specialization of BinaryOP when first or second argument needs to be copied
-// (maybe it can be doen with a template specialization, but it is not worth, easier to have a separate class
+// (maybe it can be done with a template specialization, but it is not worth, easier to have a separate class
 
 //==============================================================================
 /**

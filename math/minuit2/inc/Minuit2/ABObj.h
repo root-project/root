@@ -78,7 +78,7 @@ public:
 
    ~ABObj() {}
 
-   // remove copy constructure to Fix a problem in AIX
+   // remove copy constructor to Fix a problem in AIX
    // should be able to use the compiler generated one
    //   ABObj(const ABObj& obj) :
    //     fObject(obj.fObject), fFactor(obj.fFactor) {}

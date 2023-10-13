@@ -8,7 +8,7 @@
   *                                                                    *
   **********************************************************************/
 
-// Header file for class implementatoins of DIstance() functions among
+// Header file for class implementations of Distance() functions among
 // Rotations in 3 dimensions
 //
 // Created by: Mark Fischler and Walter Brown Thurs July 7, 2005

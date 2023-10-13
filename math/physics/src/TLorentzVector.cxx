@@ -2,7 +2,7 @@
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
-//    Oct 20 1999: dito in Double_t operator()
+//    Oct 20 1999: ditto in Double_t operator()
 //    Jan 25 2000: implemented as (fP,fE) instead of (fX,fY,fZ,fE)
 
 /** \class TLorentzVector

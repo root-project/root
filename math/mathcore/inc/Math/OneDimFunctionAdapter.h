@@ -64,7 +64,7 @@ public:
    */
    OneDimMultiFunctionAdapter (MultiFuncType f, const double * x, unsigned int icoord = 0, const double * p = nullptr ) :
       fFunc(f),
-      fX( const_cast<double *>(x) ), // wee need to modify x but then we restore it as before
+      fX( const_cast<double *>(x) ), // we need to modify x but then we restore it as before
       fParams(p),
       fCoord(icoord),
       fDim(0),
@@ -132,7 +132,7 @@ public:
    void SetX(const double * x) {
       if (fOwn) std::copy(x, x+fDim, fX);
       else
-         SetX( const_cast<double *>(x) ); // wee need to modify x but then we restore it as before
+         SetX( const_cast<double *>(x) ); // we need to modify x but then we restore it as before
    }
 
 

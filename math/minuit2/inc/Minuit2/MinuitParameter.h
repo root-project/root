@@ -96,7 +96,7 @@ public:
    unsigned int Number() const { return fNum; }
    // new API returning a string
    const std::string &GetName() const { return fName; }
-   // return const char * for mantaining backward compatibility
+   // return const char * for maintaining backward compatibility
    const char *Name() const { return fName.c_str(); }
 
    double Value() const { return fValue; }

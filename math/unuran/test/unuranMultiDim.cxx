@@ -360,9 +360,9 @@ int  unuranMultiDim() {
 
 
    if (iret != 0)
-      std::cerr <<"\n\nUnuRan MultiDim Continous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
+      std::cerr <<"\n\nUnuRan MultiDim Continuous Distribution Test:\t  Failed !!!!!!!\n" << std::endl;
    else
-      std::cerr << "\n\nUnuRan MultiDim Continous Distribution Test:\t OK\n" << std::endl;
+      std::cerr << "\n\nUnuRan MultiDim Continuous Distribution Test:\t OK\n" << std::endl;
    return iret;
 
 }

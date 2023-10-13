@@ -521,17 +521,17 @@ int DoOldMinimization(FCN func, TVirtualFitter *min, double &minval, double &edm
    if (minos)
       min->ExecuteCommand("MINOS", arglist, 0);
 
-   Double_t parx, pary;
+   Double_t parX, parY;
    Double_t we, al, bl;
    Char_t parName[32];
-   min->GetParameter(0, parName, parx, we, al, bl);
-   min->GetParameter(1, parName, pary, we, al, bl);
+   min->GetParameter(0, parName, parX, we, al, bl);
+   min->GetParameter(1, parName, parY, we, al, bl);
 
-   bool ok = (TMath::Abs(parx - 1.) < gAbsTolerance && TMath::Abs(pary - 1.) < gAbsTolerance);
+   bool ok = (TMath::Abs(parX - 1.) < gAbsTolerance && TMath::Abs(parY - 1.) < gAbsTolerance);
 
    double errdef = 0;
-   int nvpar, nparx;
-   min->GetStats(minval, edm, errdef, nvpar, nparx);
+   int nvpar, nparX;
+   min->GetStats(minval, edm, errdef, nvpar, nparX);
    if (!ok)
       iret = -2;
 

@@ -172,7 +172,7 @@ Boost Boost::Inverse() const {
 
 std::ostream & operator<< (std::ostream & os, const Boost & b) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form needs formatiing improvements
+   //        and even the human readable form needs formatting improvements
    double m[16];
    b.GetLorentzRotation(m);
    os << "\n" << m[0]  << "  " << m[1]  << "  " << m[2]  << "  " << m[3];

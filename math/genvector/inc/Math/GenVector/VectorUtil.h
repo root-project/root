@@ -71,7 +71,7 @@ namespace ROOT {
 
 
          /**
-          Find square of the difference in pseudorapidity (Eta) and Phi betwen two generic vectors
+          Find square of the difference in pseudorapidity (Eta) and Phi between two generic vectors
           The only requirements on the Vector classes is that they implement the Phi() and Eta() method
           \param v1  Vector 1
           \param v2  Vector 2
@@ -86,7 +86,7 @@ namespace ROOT {
          }
 
 	 /**
-	  Find square of the difference in true rapidity (y) and Phi betwen two generic vectors
+	  Find square of the difference in true rapidity (y) and Phi between two generic vectors
 	  The only requirements on the Vector classes is that they implement the Phi() and Rapidity() method
 	  \param v1  Vector 1
 	  \param v2  Vector 2
@@ -101,7 +101,7 @@ namespace ROOT {
 	 }
 
          /**
-          Find difference in pseudorapidity (Eta) and Phi betwen two generic vectors
+          Find difference in pseudorapidity (Eta) and Phi between two generic vectors
           The only requirements on the Vector classes is that they implement the Phi() and Eta() method
           \param v1  Vector 1
           \param v2  Vector 2
@@ -115,7 +115,7 @@ namespace ROOT {
          }
 
 	/**
-          Find difference in Rapidity (y) and Phi betwen two generic vectors
+          Find difference in Rapidity (y) and Phi between two generic vectors
           The only requirements on the Vector classes is that they implement the Phi() and Rapidity() method
           \param v1  Vector 1
           \param v2  Vector 2
@@ -495,7 +495,7 @@ namespace ROOT {
           in any coordinate system.
           Assume that the matrix implements the operator( i,j) and that it has at least         4 columns and 4 rows. There is no check on the matrix size !!
           */
-         // this will not be ambigous with operator*(Scalar, LorentzVector) since that one     // Scalar is passed by value
+         // this will not be ambiguous with operator*(Scalar, LorentzVector) since that one     // Scalar is passed by value
          template<class CoordSystem, class Matrix>
          inline
          LorentzVector<CoordSystem> Mult (const Matrix & m, const LorentzVector<CoordSystem> & v) {

@@ -53,7 +53,7 @@ namespace Math {
    double gDefaultAbsTolerance = 1.E-6;
    double gDefaultRelTolerance = 1.E-10;
 
-// impelmentation of static methods
+// implementation of static methods
 void GSLMultiRootFinder::SetDefaultTolerance(double abstol, double reltol ) {
    // set default tolerance
       gDefaultAbsTolerance = abstol;
@@ -286,7 +286,7 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
       }
       // act in case of error
       if (status == GSL_EBADFUNC) {
-         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","The iteration encountered a singolar point due to a bad function value");
+         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","The iteration encountered a singular point due to a bad function value");
          fStatus = status;
          break;
       }
@@ -296,7 +296,7 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
          break;
       }
       if (status != GSL_SUCCESS) {
-         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","Uknown iteration error - exit");
+         MATH_ERROR_MSG("GSLMultiRootFinder::Solve","Unknown iteration error - exit");
          fStatus = status;
          break;
       }

@@ -340,7 +340,7 @@ public :
 private:
 
    /**
-      (contigous) data containing the coordinate values x,y,z,t
+      (contiguous) data containing the coordinate values x,y,z,t
    */
 
    ScalarType fX;

@@ -6,7 +6,7 @@
 
 The references below are for legacy use cases.
 
-Please use the currenty physics classes as described in [the Manual](https://root.cern/manual/physics_vectors/) instead of these legacy classes:
+Please use the current physics classes as described in [the Manual](https://root.cern/manual/physics_vectors/) instead of these legacy classes:
 
   - TVector2
   - TVector3

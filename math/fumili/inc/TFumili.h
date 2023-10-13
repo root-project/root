@@ -34,7 +34,7 @@ private:
    Double_t *fZ0;         ///< [fMaxParam2] Matrix of approximate second derivatives of objective function
                           ///< This matrix is diagonal and always contain only variable parameter's
                           ///< derivatives
-   Double_t *fZ;          ///< [fMaxParam2] Invers fZ0 matrix - covariance matrix
+   Double_t *fZ;          ///< [fMaxParam2] Inverse fZ0 matrix - covariance matrix
    Double_t *fGr;         ///< [fMaxParam] Gradients of objective function
    Double_t *fParamError; ///< [fMaxParam] Parameter errors
    Double_t *fSumLog;     ///< [fNlog]

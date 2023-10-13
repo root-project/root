@@ -120,7 +120,7 @@ typedef TRandomGen<ROOT::Math::MixMaxEngine<17,0>> TRandomMixMax17;
   MIXMAX generator based on a state of N=256, based on the generator described in this
   paper:
 
-   K. Savvidy, *The MIXMAX random number generator*, Comp. Phys. Commun. 196 (2015), pp 161–165
+   K. Savvidy, *The MIXMAX random number generator*, Computer Physics Communications 196 (2015), pp 161–165
   http://dx.doi.org/10.1016/j.cpc.2015.06.003
 
    This generator has been implemented with a skipping value of 2 iterations (so retaining one

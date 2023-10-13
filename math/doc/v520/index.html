@@ -27,7 +27,7 @@ Some of the basic special mathematical functions of TMath, like the error functi
  The STL algorithms have been found for these cases to be perform better in term of CPU time. For some other algorithms like  <tt>TMath::LocMin</tt>, <tt>TMath::LocMax</tt> or <tt>TMath::Permute</tt> the original implementation is faster than STL and has been maintained.
   </li>
   <li>Add a generic iterator interface, similar to the STL algorithm interface, to the following TMath functions:
-     <tt>MinElement, MaxElemen, LocMin, LocMax, Mean, GeomMean, RMS,
+     <tt>MinElement, MaxElement, LocMin, LocMax, Mean, GeomMean, RMS,
         BinarySearch</tt>. The iterator interface for sort is called
      <tt>TMath::SortItr</tt> to avoid a compilation ambiguity. For example,
      for finding the mean of a <tt>std::vector&lt;double&gt; v</tt>, one simply needs to call <tt>TMath::Mean(v.begin(), v.end() ) </tt>.
@@ -110,7 +110,7 @@ In addition, these classes do not inherit anymore from the function gradient int
 <p>This new release contains:
 <ul>
   <li>Modify and rename the class <tt>ROOT::Math::RootFinder</tt> to <tt>ROOT::Math::GSLRootFinder</tt> to distinguish from the main interface class which has been put in the Mathcore library and it can create the GSLRootFinder using the plug-in manager. Furthermore, the class <tt>ROOT::Math::GSLRootFinder</tt> is not anymore a template class on the algorithm. They type of root-finder algorithm can now be selected via an enumeration</li>
-  <li>Fixed a bug in the <tt>ROOT::Math::GSLNLSMutiFi</tt> class.
+  <li>Fixed a bug in the <tt>ROOT::Math::GSLNLSMultiFi</tt> class.
     <li>Changes also in the class for the new enumeration names (all names start with k, like kADAPTIVE for the integration types).
   </li>
 </ul>

@@ -16,7 +16,7 @@
 //                                                                      //
 // TMatrixFSparse                                                       //
 //                                                                      //
-//  Instantation of TMatrixTSparse<Float_t>                             //
+//  Instantiation of TMatrixTSparse<Float_t>                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

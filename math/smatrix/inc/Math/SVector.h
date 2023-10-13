@@ -90,10 +90,10 @@ public:
       Default constructor: vector filled with zero values
     */
    SVector();
-   /// contruct from a vector expression
+   /// construct from a vector expression
    template <class A>
    SVector(const VecExpr<A,T,D>& rhs);
-   /// copy contructor
+   /// copy constructor
    SVector(const SVector<T,D>& rhs);
 
    // new constructs using STL iterator interface

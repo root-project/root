@@ -39,7 +39,7 @@ void Rotation3D::Rectify()
 {
    // rectify rotation matrix (make orthogonal)
    // The "nearest" orthogonal matrix X to a nearly-orthogonal matrix A
-   // (in the sense that X is exaclty orthogonal and the sum of the squares
+   // (in the sense that X is exactly orthogonal and the sum of the squares
    // of the element differences X-A is as small as possible) is given by
    // X = A * inverse(sqrt(A.transpose()*A.inverse())).
 

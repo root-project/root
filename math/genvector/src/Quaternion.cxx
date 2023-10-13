@@ -99,7 +99,7 @@ Quaternion::Scalar Quaternion::Distance(const Quaternion & q) const {
 
 std::ostream & operator<< (std::ostream & os, const Quaternion & q) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form may need formatiing improvements
+   //        and even the human readable form may need formatting improvements
    os << "\n{" << q.U() << "   " << q.I()
    << "   " << q.J() << "   " << q.K() << "}\n";
    return os;

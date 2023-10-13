@@ -111,7 +111,7 @@ void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
 
 unsigned int GSLMinimizer::NCalls() const {
    // return number of function calls
-   // if original function does not support gradient it is wrapped in MultiNumGradFuction
+   // if original function does not support gradient it is wrapped in MultiNumGradFunction
    // and we have NCalls available
    const ROOT::Math::MultiNumGradFunction * fnumgrad = dynamic_cast<const ROOT::Math::MultiNumGradFunction *>(ObjFunction());
    if (fnumgrad) return fnumgrad->NCalls();

@@ -461,7 +461,7 @@ bool  TUnuran::SetLogLevel(unsigned int debugLevel)
 }
 
 bool TUnuran::InitPoisson(double mu, const std::string & method) {
-   // initializaton for a Poisson
+   // initialization for a Poisson
    double p[1];
    p[0] = mu;
 
@@ -475,7 +475,7 @@ bool TUnuran::InitPoisson(double mu, const std::string & method) {
 }
 
 bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & method ) {
-   // initializaton for a Binomial
+   // initialization for a Binomial
    double par[2];
    par[0] = ntot;
    par[1] = prob;

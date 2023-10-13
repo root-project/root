@@ -207,7 +207,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
             for (unsigned int j = 0; j <= i; ++j)
                fCovMatrix.push_back(min->CovMatrix(i,j) );
       }
-      // minos errors are set separetly when calling Fitter::CalculateMinosErrors()
+      // minos errors are set separately when calling Fitter::CalculateMinosErrors()
 
       // globalCC
       fGlobalCC.reserve(npar);
@@ -592,7 +592,7 @@ void FitResult::GetConfidenceIntervals(const BinData & data, double * ci, double
       std::vector<double>::iterator itr = xdata.begin()+ ndim * i;
       std::copy(x,x+ndim,itr);
    }
-   // points are arraned as x0,y0,z0, ....xN,yN,zN  (stride1=ndim, stride2=1)
+   // points are arranged as x0,y0,z0, ....xN,yN,zN  (stride1=ndim, stride2=1)
    GetConfidenceIntervals(np,ndim,1,&xdata.front(),ci,cl,norm);
 }
 
@@ -624,7 +624,7 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
 //    if (chi2gradfunc) return &(chi2gradfunc->Data());
 //    PoissonLLGradFunction * pllgradfunc = dynamic_cast<PoissonLLFunction*>(f);
 //    if (pllgradfunc) return &(pllgradfunc->Data());
-//    MATH_WARN_MSG("FitResult::GetFitBinData","Cannot retrun fit bin data set if objective function is not of a known type");
+//    MATH_WARN_MSG("FitResult::GetFitBinData","Cannot return fit bin data set if objective function is not of a known type");
 //    return nullptr;
 // }
 

@@ -69,7 +69,7 @@ struct MultiDist {
       return 0;
    }
 
-   // provides the gradient components separatly (partial derivatives)
+   // provides the gradient components separately (partial derivatives)
    static double Pdpdf(const double * x, int coord, UNUR_DISTR * dist) {
       const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) );
       return func->Derivative(x,coord);

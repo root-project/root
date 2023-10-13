@@ -91,7 +91,7 @@ struct TestFunc1 {
       GSLIntegrator ig(1.E-12,1.E-12,100000);
       ig.SetFunction(wf);
       if (!c) {
-         // lower intergal (cdf)
+         // lower integral (cdf)
          double q2 = ig.IntegralLow(val);
          // use a larger scale (integral error is 10-9)
          iret |= compare("test _cdf", q1, q2, 1.0E6);
@@ -164,7 +164,7 @@ struct TestFunc2 {
       GSLIntegrator ig(1.E-12,1.E-12,100000);
       ig.SetFunction(wf);
       if (!c) {
-         // lower intergal (cdf)
+         // lower integral (cdf)
          double q2 = ig.IntegralLow(val);
          // use a larger scale (integral error is 10-9)
          iret |= compare("test _cdf", q1, q2, 1.0E6);

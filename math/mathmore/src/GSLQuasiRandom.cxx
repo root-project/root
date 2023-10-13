@@ -122,7 +122,7 @@ namespace Math {
    }
 
    bool GSLQuasiRandomEngine::GenerateArray(double * begin, double * end )  const {
-      // generate array of randoms betweeen 0 and 1. 0 is excluded
+      // generate array of randoms between 0 and 1. 0 is excluded
       // specialization for double * (to be faster)
       int status = 0;
       for ( double * itr = begin; itr != end; itr+=fQRng->Dimension() ) {

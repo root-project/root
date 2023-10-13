@@ -101,7 +101,7 @@ TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x, double * y, double *
 TUnuranEmpDist::TUnuranEmpDist(const TUnuranEmpDist & rhs) :
    TUnuranBaseDist()
 {
-   // Implementation of copy ctor using aassignment operator
+   // Implementation of copy ctor using assignment operator
    operator=(rhs);
 }
 

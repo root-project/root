@@ -3837,7 +3837,7 @@ void TMinuit::mnhelp(TString comd)
 
       Printf(" ");
       Printf("   SET NOWarnings");
-      Printf("    Supresses Minuit warning messages.");
+      Printf("    Suppresses Minuit warning messages.");
 
       Printf(" ");
       Printf("   SET OUTputfile  <unitno>");
@@ -5261,7 +5261,7 @@ L81:
       mnwarn("D", "MIGRAD", "FIRST DERIVATIVES INCREASING ALONG SEARCH LINE");
    }
 //                                          update covariance matrix
-   fCstatu = "IMPROVEMNT";
+   fCstatu = "IMPROVEMENT";
    if (ldebug) {
       Printf(" VHMAT 1 =");
       for (kk = 1; kk <= 10; ++kk) {
@@ -6495,7 +6495,7 @@ L55:
 void TMinuit::mnpsdf()
 {
    /* Local variables */
-   Double_t dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
+   Double_t dgmin, pAdd, pmin, pmax, dg, epspdf, epsmin;
    Int_t ndex, i, j, ndexd, ip, ifault;
    TString chbuff, ctemp;
 
@@ -6550,13 +6550,13 @@ void TMinuit::mnpsdf()
    }
    if (pmin > epspdf*pmax) return;
    if (fISW[1] == 3) fISW[1] = 2;
-   padd = pmax*.001 - pmin;
+   pAdd = pmax*.001 - pmin;
    for (ip = 1; ip <= fNpar; ++ip) {
       ndex = ip*(ip + 1) / 2;
-      fVhmat[ndex-1] *= padd + 1;
+      fVhmat[ndex-1] *= pAdd + 1;
    }
    fCstatu = "NOT POSDEF";
-   mnwarn("W", fCfrom, Form("MATRIX FORCED POS-DEF BY ADDING %f TO DIAGONAL.",padd));
+   mnwarn("W", fCfrom, Form("MATRIX FORCED POS-DEF BY ADDING %f TO DIAGONAL.",pAdd));
 
 }
 
@@ -6869,7 +6869,7 @@ void TMinuit::mnseek()
       Eval(nparx, fGin, ftry, fU, 4);        ++fNfcn;
       if (ftry < flast) {
          if (ftry < fAmin) {
-            fCstatu = "IMPROVEMNT";
+            fCstatu = "IMPROVEMENT";
             fAmin = ftry;
             for (ib = 1; ib <= fNpar; ++ib) { fSEEKxbest[ib-1] = fX[ib-1]; }
             ifail = 0;

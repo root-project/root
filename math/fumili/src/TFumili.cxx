@@ -1635,7 +1635,7 @@ void TFumili::SetFitMethod(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets for parameter number ipar initial parameter value,
 /// name parname, initial error verr and limits vlow and vhigh
-/// - If vlow = vhigh but not equil to zero, parameter will be fixed.
+/// - If vlow = vhigh but not equal to zero, parameter will be fixed.
 /// - If vlow = vhigh = 0, parameter is released and its limits are discarded
 
 Int_t TFumili::SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) {

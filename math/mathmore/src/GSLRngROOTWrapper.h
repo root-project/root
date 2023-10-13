@@ -26,11 +26,11 @@ namespace ROOT {
    /**
     * class for wrapping ROOT Engines in gsl_rng types which can be used as extra
     * GSL random number generators
-    * For this we need to implment functions which will be called by gsl_rng.
+    * For this we need to implement functions which will be called by gsl_rng.
     * The functions (Seed, Rndm, IntRndm) are passed in the gsl_rng_type and used to build a gsl_rng object.
     * When gsl_rng is alloacated, only the memory state is allocated using calloc(1,size), which gives a memory 
     * block of the given bytes and it initializes to zero. Therefore no constructor of GSLRngROOTWrapper can be called 
-    * and also we cannot call non-static member funciton of the class. 
+    * and also we cannot call non-static member function of the class. 
     * The underlined ROOT engine is then built and deleted using the functions CreateEngine() and FreeEngine(), 
     * called by the specific GSLRandomEngine class that instantiates for the  the generator (e.g. GSLRngMixMax)
     *
@@ -59,7 +59,7 @@ namespace ROOT {
       static void Seed(void *p, unsigned long seed)
       {
          auto wrng = ((GSLRngROOTWrapper *)p);
-         // (GSL calls at the beginning with the defaul seed (typically zero))
+         // (GSL calls at the beginning with the default seed (typically zero))
          //printf("calling the seed function with %d on %p and engine %p\n", seed, p, wrng->fEngine);
          if (seed == gsl_rng_default_seed) {
             seed = 111; // avoid using 0 that for ROOT means a specific seed

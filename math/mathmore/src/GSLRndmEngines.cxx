@@ -160,7 +160,7 @@ namespace Math {
    }
 
    void GSLRandomEngine::RandomArray(double * begin, double * end )  const {
-      // generate array of randoms betweeen 0 and 1. 0 is excluded
+      // generate array of randoms between 0 and 1. 0 is excluded
       // specialization for double * (to be faster)
       for ( double * itr = begin; itr != end; ++itr ) {
          *itr = gsl_rng_uniform_pos(fRng->Rng() );

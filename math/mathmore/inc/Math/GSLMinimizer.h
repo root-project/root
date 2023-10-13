@@ -70,7 +70,7 @@ namespace Math {
    from more info on the GSL minimization algorithms.
 
    The class implements the ROOT::Math::Minimizer interface and can be instantiated using the
-   ROOT plugin manager (plugin name is "GSLMultiMin"). The varius minimization algorithms
+   ROOT plugin manager (plugin name is "GSLMultiMin"). The various minimization algorithms
    (conjugatefr, conjugatepr, bfgs, etc..) can be passed as enumerations and also as a string.
    The default algorithm is conjugatefr (Fletcher-Reeves conjugate gradient algorithm).
 

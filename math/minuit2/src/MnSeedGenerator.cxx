@@ -229,7 +229,7 @@ bool CheckGradient(MinimumState & st, MnUserTransformation & trafo, MnStrategy &
    const MinimumParameters & pa = st.Parameters();
    const FunctionGradient & grd = st.FunctionGradient();
 
-   // I think one should use Numerical2PGradientCaluclator
+   // I think one should use Numerical2PGradientCalculator
    // since step sizes and G2 of initial gradient are wrong
    InitialGradientCalculator igc(fcn, trafo, stra);
    FunctionGradient tmp = igc(pa);

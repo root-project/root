@@ -235,34 +235,34 @@ void NumericalDerivator::SetInitialGradient(const ROOT::Math::IBaseFunctionMulti
       // What Minuit2 calls "Error" is stepsize on the ROOT side.
       double werr = parameter->StepSize();
 
-      // Actually, sav in Minuit2 is the external parameter value, so that is
+      // Actually, extParVal in Minuit2 is the external parameter value, so that is
       // what we called var before and var is unnecessary here.
-      double sav = parameter->Value();
+      double extParVal = parameter->Value();
 
       // However, we do need var below, so let's calculate it using Ext2int:
-      double var = Ext2int(*parameter, sav);
+      double var = Ext2int(*parameter, extParVal);
 
       if (fAlwaysExactlyMimicMinuit2) {
          // this transformation can lose a few bits, but Minuit2 does it too
-         sav = Int2ext(*parameter, var);
+         extParVal = Int2ext(*parameter, var);
       }
 
-      double sav2 = sav + werr;
+      double extParVal2 = extParVal + werr;
 
-      if (parameter->HasUpperLimit() && sav2 > parameter->UpperLimit()) {
-         sav2 = parameter->UpperLimit();
+      if (parameter->HasUpperLimit() && extParVal2 > parameter->UpperLimit()) {
+         extParVal2 = parameter->UpperLimit();
       }
 
-      double var2 = Ext2int(*parameter, sav2);
+      double var2 = Ext2int(*parameter, extParVal2);
       double vplu = var2 - var;
 
-      sav2 = sav - werr;
+      extParVal2 = extParVal - werr;
 
-      if (parameter->HasLowerLimit() && sav2 < parameter->LowerLimit()) {
-         sav2 = parameter->LowerLimit();
+      if (parameter->HasLowerLimit() && extParVal2 < parameter->LowerLimit()) {
+         extParVal2 = parameter->LowerLimit();
       }
 
-      var2 = Ext2int(*parameter, sav2);
+      var2 = Ext2int(*parameter, extParVal2);
       double vmin = var2 - var;
       double gsmin = 8. * eps2 * (std::abs(var) + eps2);
       // protect against very small step sizes which can cause dirin to zero and then nan values in grd

@@ -64,7 +64,7 @@ void GSLSimAnFunc::Step(const GSLRandomEngine & random, double maxstep) {
 
 
 double GSLSimAnFunc::Distance(const GSLSimAnFunc & f) const {
-   // calculate the distance with respect onother configuration
+   // calculate the distance with respect to another configuration
    const std::vector<double> & x = fX;
    const std::vector<double> & y = f.X();
    unsigned int n = x.size();

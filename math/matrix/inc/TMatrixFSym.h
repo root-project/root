@@ -16,7 +16,7 @@
 //                                                                      //
 // TMatrixFSym                                                          //
 //                                                                      //
-//  Instantation of TMatrixTSym<Float_t>                                //
+//  Instantiation of TMatrixTSym<Float_t>                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

@@ -268,7 +268,7 @@ private:
    // internal method to construct class from 3 points
    void BuildFrom3Points(const Point &p1, const Point &p2, const Point &p3)
    {
-      // plane from thre points
+      // plane from three points
       // normal is (x3-x1) cross (x2 -x1)
       const Vector n = (p2 - p1).Cross(p3 - p1);
       fA             = n.X();

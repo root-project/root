@@ -64,7 +64,7 @@ FunctionGradient Numerical2PGradientCalculator::
 operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 {
    // calculate numerical gradient from MinimumParameters object
-   // the algorithm takes correctly care when the gradient is approximatly zero
+   // the algorithm takes correctly care when the gradient is approximately zero
 
    //    std::cout<<"########### Numerical2PDerivative"<<std::endl;
    //    std::cout<<"initial grd: "<<Gradient.Grad()<<std::endl;

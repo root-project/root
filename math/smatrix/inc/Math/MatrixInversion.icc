@@ -24,7 +24,7 @@ namespace ROOT {
 
   /** General Inversion for a symmetric matrix
       Bunch-Kaufman diagonal pivoting method
-      It is decribed in J.R. Bunch, L. Kaufman (1977).
+      It is described in J.R. Bunch, L. Kaufman (1977).
       "Some Stable Methods for Calculating Inertia and Solving Symmetric
       Linear Systems", Math. Comp. 31, p. 162-179. or in Gene H. Golub,
       /Charles F. van Loan, "Matrix Computations" (the second edition
@@ -62,7 +62,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    typedef T* mIter;
 
 
-   // Note - resize shuld do  nothing if the size is already larger than nrow,
+   // Note - resize should do nothing if the size is already larger than nrow,
    //        but on VC++ there are indications that it does so we check.
    // Note - the data elements in a vector are guaranteed to be contiguous,
    //        so x[i] and piv[i] are optimally fast.
@@ -82,7 +82,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    // whenever a sum of two doubles is below or equal to epsilon
    // it is set to zero.
    // this constant could be set to zero but then the algorithm
-   // doesn't neccessarily detect that a matrix is singular
+   // doesn't necessarily detect that a matrix is singular
 
    for (i = 0; i < nrow; i++)
       piv[i] = i+1;
@@ -145,7 +145,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
             else
                s=2;
          }
-         if (pivrow == j)  // no permutation neccessary
+         if (pivrow == j)  // no permutation necessary
          {
             piv[j-1] = pivrow;
             if (*mjj == 0)

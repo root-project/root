@@ -107,7 +107,7 @@ public:
    void SetErrorDef(double up)
    {
       fPtr->fErrorDef = up;
-      // update user state for new valeu of up (scaling of errors)
+      // update user state for new value of up (scaling of errors)
       fPtr->fUserState = MnUserParameterState(State(), up, Seed().Trafo());
    }
 

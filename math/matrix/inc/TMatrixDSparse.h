@@ -16,7 +16,7 @@
 //                                                                      //
 // TMatrixDSparse                                                       //
 //                                                                      //
-//  Instantation of TMatrixTSparse<Double_t>                            //
+//  Instantiation of TMatrixTSparse<Double_t>                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

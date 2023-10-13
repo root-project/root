@@ -58,7 +58,7 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int> &par, const 
    print.Debug([&](std::ostream &os) {
       for (unsigned int i = 0; i < par.size(); ++i)
          os << "Parameter " << par[i] << " value " << pmid[i] << " dir " << pdir[i] << " function min = " << aminsv
-            << " contur value aim = (fmin + up) = " << aim;
+            << " contour value aim = (fmin + up) = " << aim;
    });
 
    // find the largest allowed aulim

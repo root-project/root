@@ -291,7 +291,7 @@ int coordinates3D () {
   ret |= test3D (XYZVector ( -.01, 16.0, .01 )   ,2000 );
   ret |= test3D (XYZVector ( -.01, -16.0, .01 )  ,2000 );
   ret |= test3D (XYZVector ( 1.0, 2.0, 30.0 )    ,10 );
-   // NOTE -- these larger erros are likely the results of treating
+   // NOTE -- these larger errors are likely the results of treating
    //         the vector in a ctor or assignment as foreign...
    // NO -- I'm fouling up the value of x() !!!!!
 // As we push to higher z with zero rho, some accuracy loss is expected

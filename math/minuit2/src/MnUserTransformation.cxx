@@ -309,7 +309,7 @@ bool MnUserTransformation::Add(const std::string &name, double val)
    if (std::find_if(fParameters.begin(), fParameters.end(), MnParStr(name)) != fParameters.end())
       return false;
    fCache.push_back(val);
-   // costant parameter - do not add in list of internals (fExtOfInt)
+   // constant parameter - do not add in list of internals (fExtOfInt)
    fParameters.push_back(MinuitParameter(fParameters.size(), name, val));
    return true;
 }

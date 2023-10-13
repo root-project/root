@@ -362,7 +362,7 @@ TEST(to_ranlux, ascending)
 
 TEST(to_ranlux, descending)
 {
-   // See to_lcg::decending
+   // See to_lcg::descending
    uint64_t lcg[9] = {
       0x000e00000e00000e, 0x0e00000e00000e00, 0x00000e00000e0000,
       0x000e00000e00000e, 0x0b00000c00000d00, 0x00000900000a0000,

@@ -623,7 +623,7 @@ SubVector SVector<T,D>::Sub(unsigned int row) const {
    return tmp;
 }
 
-// check if the given passed pointer is teh same contained in the vector
+// check if the given passed pointer is the same contained in the vector
 template <class T, unsigned int D>
 bool SVector<T,D>::IsInUse( const T * p) const {
    return p == fArray;

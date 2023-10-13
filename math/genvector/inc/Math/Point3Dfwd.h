@@ -38,7 +38,7 @@ namespace ROOT {
     typedef PositionVector3D< Cartesian3D<double>, DefaultCoordinateSystemTag > XYZPoint;
 
     /**
-       3D Point based on the cartesian corrdinates x,y,z in single precision
+       3D Point based on the cartesian coordinates x,y,z in single precision
     */
     typedef PositionVector3D< Cartesian3D<float>, DefaultCoordinateSystemTag > XYZPointF;
     typedef XYZPoint XYZPointD;

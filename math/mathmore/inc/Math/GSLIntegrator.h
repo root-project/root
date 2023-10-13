@@ -76,7 +76,7 @@ namespace Math {
    ADAPTIVESINGULAR applying a transformation from the original interval into (0,1).
 
    The ADAPTIVESINGULAR type is the most sophicticated type. When performances are
-   important, it is then recommened to use the NONADAPTIVE type in case of smooth functions or
+   important, it is then recommended to use the NONADAPTIVE type in case of smooth functions or
    ADAPTIVE with a lower Gauss-Kronrod rule.
 
    For detailed description on GSL integration algorithms see the

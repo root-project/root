@@ -287,7 +287,7 @@ void TestSizeIF(Int_t nsec, Int_t nrows, Int_t npoints,  Int_t bsize, Int_t mode
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /// Test speed and functionality of 2D kdtree.
-/// Input parametrs:
+/// Input parameters:
 /// npoints - number of data points
 /// bsize   - bucket size
 /// nloop   - number of loops

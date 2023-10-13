@@ -538,7 +538,7 @@ Element TMatrixTBase<Element>::ColNorm() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Square of the Euclidian norm, SUM{ m(i,j)^2 }.
+/// Square of the Euclidean norm, SUM{ m(i,j)^2 }.
 
 template<class Element>
 Element TMatrixTBase<Element>::E2Norm() const
@@ -860,7 +860,7 @@ Bool_t TMatrixTAutoloadOps::operator==(const TMatrixTBase<Element> &m1,const TMa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Square of the Euclidian norm of the difference between two matrices.
+/// Square of the Euclidean norm of the difference between two matrices.
 
 template<class Element>
 Element TMatrixTAutoloadOps::E2Norm(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
@@ -946,7 +946,7 @@ void TMatrixTAutoloadOps::Compare(const TMatrixTBase<Element> &m1,const TMatrixT
    }
 
    printf("\nMaximal discrepancy    \t\t%g", difmax);
-   printf("\n   occured at the point\t\t(%d,%d)",imax,jmax);
+   printf("\n   occurred at the point\t\t(%d,%d)",imax,jmax);
    const Element mv1 = m1(imax,jmax);
    const Element mv2 = m2(imax,jmax);
    printf("\n Matrix 1 element is    \t\t%g", mv1);

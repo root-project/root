@@ -18,7 +18,7 @@ private:
    Double_t     fMass[18];       // masses of particles
    Double_t     fBeta[3];        // betas of decaying particle
    Double_t     fTeCmTm;         // total energy in the C.M. minus the total mass
-   Double_t     fWtMax;          // maximum weigth
+   Double_t     fWtMax;          // maximum weight
    TLorentzVector  fDecPro[18];  //kinematics of the generated particles
 
    Double_t PDK(Double_t a, Double_t b, Double_t c);

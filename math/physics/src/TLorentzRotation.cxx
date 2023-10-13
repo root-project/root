@@ -19,7 +19,7 @@ Lorentz boosts and rotations (see TRotation)
 
 ### Declaration
 By default it is initialized to the identity matrix, but it may also be
-intialized by an other TLorentzRotation,
+initialized by an other TLorentzRotation,
 by a pure TRotation or by a boost:
 
  TLorentzRotation l; // l is
@@ -175,7 +175,7 @@ TLorentzRotation::TLorentzRotation(const TVector3 & p) {
 }
 
 Double_t TLorentzRotation::operator () (int i, int j) const {
-   //derefencing operator
+   //dereferencing operator
    if (i == 0) {
       if (j == 0) { return fxx; }
       if (j == 1) { return fxy; }

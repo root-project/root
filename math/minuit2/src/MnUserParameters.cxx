@@ -212,7 +212,7 @@ const char *MnUserParameters::Name(unsigned int n) const
 
 const MnMachinePrecision &MnUserParameters::Precision() const
 {
-   // get global paramter precision
+   // get global parameter precision
    return fTransformation.Precision();
 }
 

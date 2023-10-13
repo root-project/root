@@ -74,7 +74,7 @@ namespace ROOT {
             return IntRndm_impl();
          }
 
-         /// minimum integer taht can be generated
+         /// minimum integer that can be generated
          static unsigned int MinInt() { return 0; }
          /// maximum integer that can be generated
          static unsigned int MaxInt() { return 0xffffffff; }  //  2^32 -1

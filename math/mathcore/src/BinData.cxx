@@ -67,7 +67,7 @@ namespace ROOT {
       InitDataVector( );
     }
 
-    /** constructurs using external data */
+    /** constructors using external data */
 
     /**
       constructor from external data for 1D with errors on  coordinate and value
@@ -275,7 +275,7 @@ namespace ROOT {
         if ( !fData.empty() )
           fDataPtr = &fData.front();
 
-         // copy coordinate erro and set correct pointers
+         // copy coordinate errors and set correct pointers
         fCoordErrors = rhs.fCoordErrors;
         if (!fCoordErrors.empty()) {
            assert(kCoordError == fErrorType || kAsymError == fErrorType);

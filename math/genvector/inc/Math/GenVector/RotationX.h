@@ -66,7 +66,7 @@ public:
       Rectify();
    }
 
-   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+   // The compiler-generated copy ctor, copy assignment, and destructor are OK.
 
    /**
       Rectify makes sure the angle is in (-pi,pi]
@@ -222,7 +222,7 @@ private:
 
    Scalar fAngle;   // rotation angle
    Scalar fSin;     // sine of the rotation angle
-   Scalar fCos;     // cosine of the rotaiton angle
+   Scalar fCos;     // cosine of the rotation angle
 
 };  // RotationX
 

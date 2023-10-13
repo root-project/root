@@ -75,7 +75,7 @@ public:
    /**
 
       Evaluate function Value, Gradient and Hessian using Fumili approximation, for values of parameters p
-      The resul is cached inside and is return from the FumiliFCNBase::Value ,  FumiliFCNBase::Gradient and
+      The result is cached inside and is return from the FumiliFCNBase::Value ,  FumiliFCNBase::Gradient and
       FumiliFCNBase::Hessian methods
 
       @param par vector of parameters

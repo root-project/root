@@ -255,7 +255,7 @@ private:
    gsl_multiroot_fsolver * fSolver;
    // cached vector to avoid re-allocating every time a new one
    mutable gsl_vector * fVec;
-   std::string fName;   // solver nane
+   std::string fName;   // solver name
 
 };
 
@@ -381,7 +381,7 @@ private:
    // cached vector to avoid re-allocating every time a new one
    mutable gsl_vector * fVec;
    std::vector<ROOT::Math::IMultiGradFunction*> fGradFuncVec;
-   std::string fName;   // solver nane
+   std::string fName;   // solver name
 
 };
 

@@ -9,7 +9,7 @@
  *                                                                    *
  **********************************************************************/
 //
-// Cramer optmized inversion for symmetric matrices up to size 5x5.
+// Cramer optimized inversion for symmetric matrices up to size 5x5.
 // Code from ROOT TMatrixDCramerInv which originates from CLHEP
 // (original author Mark Fischler)
 //

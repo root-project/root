@@ -40,7 +40,7 @@ namespace Minuit2 {
        fcn is Value of function at the starting position ,
        gdel (if non-zero) is df/dx along step at st.
        Return a parabola point containing Minimum x position and y (function Value)
-    - add a falg to control the debug
+    - add a flag to control the debug
 */
 
 MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParameters &st, const MnAlgebraicVector &step,
@@ -60,7 +60,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
 
    print.Debug("gdel", gdel, "step", step);
 
-   double overal = 1000.;
+   double overall = 1000.;
    double undral = -100.;
    double toler = 0.05;
    double slamin = 0.;
@@ -199,8 +199,8 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
          iterate = true;
          flast = f2;
          toler8 = toler * slam;
-         overal = slam - toler8;
-         slamax = overal;
+         overall = slam - toler8;
+         slamax = overall;
          p1 = MnParabolaPoint(slam, flast);
          // niter++;
       }
@@ -238,14 +238,14 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
             slam = xvmin - slamax;
       }
       if (slam > 0.) {
-         if (slam > overal)
-            slam = overal;
+         if (slam > overall)
+            slam = overall;
       } else {
          if (slam < undral)
             slam = undral;
       }
 
-      print.Debug("slam", slam, "undral", undral, "overal", overal);
+      print.Debug("slam", slam, "undral", undral, "overall", overall);
 
       double f3 = 0.;
       do {
@@ -272,7 +272,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
          if (f3 > p0.Y() && f3 > p1.Y() && f3 > p2.Y()) {
             print.Debug("f3 worse than all three previous");
             if (slam > xvmin)
-               overal = std::min(overal, slam - toler8);
+               overall = std::min(overall, slam - toler8);
             if (slam < xvmin)
                undral = std::max(undral, slam + toler8);
             slam = 0.5 * (slam + xvmin);
@@ -300,7 +300,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn &fcn, const MinimumParamete
          xvmin = slam;
       } else {
          if (slam > xvmin)
-            overal = std::min(overal, slam - toler8);
+            overall = std::min(overall, slam - toler8);
          if (slam < xvmin)
             undral = std::max(undral, slam + toler8);
       }
@@ -325,8 +325,8 @@ MnParabolaPoint MnLineSearch::CubicSearch(const MnFcn &fcn, const MinimumParamet
 
    print.Debug("gdel", gdel, "g2del", g2del, "step", step);
 
-   // change ot large values
-   double overal = 100.;
+   // change of large values
+   double overall = 100.;
    double undral = -100.;
    double toler = 0.05;
    double slamin = 0.;
@@ -419,8 +419,8 @@ MnParabolaPoint MnLineSearch::CubicSearch(const MnFcn &fcn, const MinimumParamet
 
    if (slam2 < undral)
       slam2 = undral;
-   if (slam2 > overal)
-      slam2 = overal;
+   if (slam2 > overall)
+      slam2 = overall;
 
    // I am stack somewhere - take a large step
    if (std::fabs(slam2) < toler)
@@ -443,8 +443,8 @@ MnParabolaPoint MnLineSearch::CubicSearch(const MnFcn &fcn, const MinimumParamet
 
       if (slam1 < undral)
          slam1 = undral;
-      if (slam1 > overal)
-         slam1 = overal;
+      if (slam1 > overall)
+         slam1 = overall;
 
       if (std::fabs(slam1) < toler)
          slam1 = (slam1 >= 0) ? -slamax : slamax;
@@ -575,7 +575,7 @@ MnParabolaPoint MnLineSearch::BrentSearch(const MnFcn &fcn, const MinimumParamet
    double slam = 1.;
 
    double undral = -1000;
-   double overal = 1000;
+   double overall = 1000;
 
    double x0 = 0;
 
@@ -633,13 +633,13 @@ MnParabolaPoint MnLineSearch::BrentSearch(const MnFcn &fcn, const MinimumParamet
 
    if (slam1 < undral)
       slam1 = undral;
-   if (slam1 > overal)
-      slam1 = overal;
+   if (slam1 > overall)
+      slam1 = overall;
 
    if (slam2 < undral)
       slam2 = undral;
-   if (slam2 > overal)
-      slam2 = overal;
+   if (slam2 > overall)
+      slam2 = overall;
 
    double fs1 = func(slam1);
    double fs2 = func(slam2);

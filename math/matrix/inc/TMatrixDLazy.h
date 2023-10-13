@@ -16,7 +16,7 @@
 //                                                                      //
 // Lazy Matrix classes.                                                 //
 //                                                                      //
-//  Instantation of                                                     //
+//  Instantiation of                                                     //
 //   TMatrixTLazy      <Double_t>                                       //
 //   TMatrixTSymLazy   <Double_t>                                       //
 //   THaarMatrixT      <Double_t>                                       //

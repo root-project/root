@@ -132,7 +132,7 @@ public:
    unsigned int Index(const std::string &) const;
    // convert external number into Name of Parameter
    const std::string &GetName(unsigned int) const;
-   // mantain interface with const char * for backward compatibility
+   // maintain interface with const char * for backward compatibility
    const char *Name(unsigned int) const;
 
    // transformation internal <-> external

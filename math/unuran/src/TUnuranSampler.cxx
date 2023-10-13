@@ -95,8 +95,8 @@ bool TUnuranSampler::Init(const char * algo) {
    // set print level in UNURAN (must be done after having initialized) -
    if (fLevel>0) {
       //fUnuran->SetLogLevel(fLevel); ( seems not to work  disable for the time being)
-      if (ret) Info("TUnuranSampler::Init","Successfully initailized Unuran with method %s",method.Data() );
-      else Error("TUnuranSampler::Init","Failed to  initailize Unuran with method %s",method.Data() );
+      if (ret) Info("TUnuranSampler::Init","Successfully initialize Unuran with method %s",method.Data() );
+      else Error("TUnuranSampler::Init","Failed to initialize Unuran with method %s",method.Data() );
       // seems not to work in UNURAN (call only when level > 0 )
    }
    return ret;

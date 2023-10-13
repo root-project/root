@@ -61,7 +61,7 @@ TUnuranDiscrDist::TUnuranDiscrDist(const TUnuranDiscrDist & rhs) :
    fPmf(nullptr),
    fCdf(nullptr)
 {
-   // Implementation of copy ctor using aassignment operator
+   // Implementation of copy ctor using assignment operator
    operator=(rhs);
 }
 

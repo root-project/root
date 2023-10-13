@@ -18,7 +18,7 @@ int mneigen(double *, unsigned int, unsigned int, unsigned int, double *, double
 
 LAVector eigenvalues(const LASymMatrix &mat)
 {
-   // calculate eigenvalues of symmetric matrices using mneigen function (transalte from fortran Minuit)
+   // calculate eigenvalues of symmetric matrices using mneigen function (translate from fortran Minuit)
    unsigned int nrow = mat.Nrow();
 
    LAVector tmp(nrow * nrow);

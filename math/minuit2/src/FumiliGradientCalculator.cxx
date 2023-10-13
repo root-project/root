@@ -36,7 +36,7 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &p
 
    // Calculate gradient and Hessian for Fumili using the gradient and Hessian provided
    // by the FCN Fumili function
-   // Need to apply internal to external for parameters and the external to int trasformation
+   // Need to apply internal to external for parameters and the external to int transformation
    // for the return gradient and Hessian
 
    int nvar = par.Vec().size();

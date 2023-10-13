@@ -307,7 +307,7 @@ void TQpLinSolverBase::SeparateVars(TVectorD &x_in,TVectorD &y_in,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment opeartor
+/// Assignment operator
 
 TQpLinSolverBase &TQpLinSolverBase::operator=(const TQpLinSolverBase &source)
 {

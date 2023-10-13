@@ -23,9 +23,9 @@ namespace Minuit2 {
 class ContoursError {
 
 public:
-   ContoursError(unsigned int parx, unsigned int pary, const std::vector<std::pair<double, double>> &points,
+   ContoursError(unsigned int parX, unsigned int parY, const std::vector<std::pair<double, double>> &points,
                  const MinosError &xmnos, const MinosError &ymnos, unsigned int nfcn)
-      : fParX(parx), fParY(pary), fPoints(points), fXMinos(xmnos), fYMinos(ymnos), fNFcn(nfcn)
+      : fParX(parX), fParY(parY), fPoints(points), fXMinos(xmnos), fYMinos(ymnos), fNFcn(nfcn)
    {
    }
 

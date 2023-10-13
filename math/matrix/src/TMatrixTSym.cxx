@@ -882,7 +882,7 @@ TMatrixTBase<Element> &TMatrixTSym<Element>::ResizeTo(Int_t row_lwb,Int_t row_up
       R__ASSERT(this->IsValid());
 
       Element *elements_new = GetMatrixArray();
-      // new memory should be initialized but be careful ot to wipe out the stack
+      // new memory should be initialized but be careful not to wipe out the stack
       // storage. Initialize all when old or new storage was on the heap
       if (this->fNelems > this->kSizeMax || nelems_old > this->kSizeMax)
          memset(elements_new,0,this->fNelems*sizeof(Element));

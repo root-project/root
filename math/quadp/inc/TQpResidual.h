@@ -62,7 +62,7 @@ class TQpResidual : public TObject
 {
 
 protected:
-   Double_t fResidualNorm;                     // The norm of the residuals, ommiting the complementariy conditions
+   Double_t fResidualNorm;                     // The norm of the residuals, omitting the complementariy conditions
    Double_t fDualityGap;                       // A quantity that measures progress toward feasibility. In terms
                                                //  of the abstract problem formulation, this quantity is defined as
                                                //   x' * Q * x - b' * y + c' * x - d' * z

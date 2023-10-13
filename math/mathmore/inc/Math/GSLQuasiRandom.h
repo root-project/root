@@ -62,7 +62,7 @@ namespace Math {
 
       /**
           create from an existing rng.
-          User manage the rng pointer which is then deleted olny by calling Terminate()
+          User manage the rng pointer which is then deleted only by calling Terminate()
       */
       GSLQuasiRandomEngine( GSLQRngWrapper * rng);
 

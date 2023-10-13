@@ -13,7 +13,7 @@
  *
  *  K.Savvidy
  *  The MIXMAX random number generator
- *  Comp. Phys. Commun. 196 (2015), pp 161–165
+ *  Computer Physics Communications 196 (2015), pp 161–165
  *  http://dx.doi.org/10.1016/j.cpc.2015.06.003
  *
  */
@@ -212,7 +212,7 @@ inline double get_next_float_BY_MACRO(rng_state_t* X){
     double F;
 #if defined(__GNUC__) && (__GNUC__ < 5) && (!defined(__ICC)) && defined(__x86_64__) && defined(__SSE2_MATH__) && defined(USE_INLINE_ASM)
 //#warning Using the inline assembler
-/* using SSE inline assemly to zero the xmm register, just before int64 -> double conversion,
+/* using SSE inline assembly to zero the xmm register, just before int64 -> double conversion,
    not really necessary in GCC-5 or better, but huge penalty on earlier compilers 
  */
    __asm__  __volatile__("pxor %0, %0; "

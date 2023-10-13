@@ -296,7 +296,7 @@ namespace ROOT
          //The points are NOT ordered according to their distance.
          //
          //Note - This method works only if the tree has not yet been frozen.
-         //     - Distance is defined as euclidian distance in a k-dimensional space.
+         //     - Distance is defined as euclidean distance in a k-dimensional space.
 
          // valid distance given and tree not frozen yet
          if((fDist > 0) && (!fIsFrozen))
@@ -455,7 +455,7 @@ namespace ROOT
       template<class _DataPoint>
       bool KDTree<_DataPoint>::Cut::operator<(const _DataPoint& rPoint) const
       {
-         //comapres a point with the given cut
+         //comapares a point with the given cut
          //
          // this cut value < rPoint.GetCoordinate(this cut axis)
          //
@@ -475,7 +475,7 @@ namespace ROOT
       template<class _DataPoint>
       bool KDTree<_DataPoint>::Cut::operator>(const _DataPoint& rPoint) const
       {
-         //comapres a point with the given cut
+         //compares a point with the given cut
          //
          // this cut value > rPoint.GetCoordinate(this cut axis)
          //
@@ -828,7 +828,7 @@ namespace ROOT
          //returns the bin center of the current node
          //
          //Note: - The bin center is defined as
-         //        coordinate i = 0.5 * (lower bound i + uper bound i)
+         //        coordinate i = 0.5 * (lower bound i + upper bound i)
 
          _DataPoint rPoint;
 
@@ -1366,7 +1366,7 @@ namespace ROOT
                if(this->fBoundaries.at(dim).first < 0.8*fMIN)
                {
                   this->fBoundaries.at(dim).first = fMAX;
-                  // look for smalles coordinate along axis 'dim'
+                  // look for smallest coordinate along axis 'dim'
                   for(typename std::vector<const _DataPoint*>::const_iterator it = fDataPoints.begin();
                       it != fDataPoints.end(); ++it)
                   {

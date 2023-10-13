@@ -43,7 +43,7 @@ namespace Math {
    class RandomFunctions<EngineType, ROOT::Math::GSLRandomEngine> : public RandomFunctions<EngineType, DefaultEngineType> {
       //class RandomFunctions<Engine, ROOT::Math::GSLRandomEngine>  {
 
-      //typdef TRandomEngine DefaulEngineType;
+      //typedef TRandomEngine DefaultEngineType;
 
    public:
 
@@ -99,7 +99,7 @@ namespace Math {
 
       /**
          Multi-variate Gaussian distribution with correlation. The covMatrix is a pointer to
-         teh covcariance matrix (NxN)
+         the covcariance matrix (NxN)
          Lmat is a pointer to store the factorized Cholesky decomposition C  = LL^T of the covariance matrix
          If the generator is to be called again with the same covariance one can provide a null CovMAtrix and only
          lmat
@@ -157,7 +157,7 @@ namespace Math {
       }
 
       /**
-         F distrbution
+         F distribution
       */
       double FDist(double nu1, double nu2) {
          return Engine().FDist(nu1,nu2);

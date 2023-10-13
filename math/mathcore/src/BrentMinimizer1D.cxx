@@ -27,7 +27,7 @@ namespace ROOT {
 namespace Math {
 
 static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the minimum
-static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
+static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeted
 
 
    BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(),
@@ -78,7 +78,7 @@ bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
 // Find minimum position iterating until convergence specified by the
 // absolute and relative tolerance or the maximum number of iteration
 // is reached.
-// repet search (Bracketing + Brent) until max number of search is reached (default is 10)
+// repeat search (Bracketing + Brent) until max number of search is reached (default is 10)
 // maxITer refers to the iterations inside the Brent algorithm
 
    if (!fFunction) {

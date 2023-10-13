@@ -106,7 +106,7 @@ public:
    MySimAnFunc( std::vector<double> & allDist)
    {
       calculate_distance_matrix();
-      // initial route is just the sequantial order
+      // initial route is just the sequential order
       for (unsigned int i = 0; i < N_CITIES; ++i)
          fRoute[i] = i;
 
@@ -410,7 +410,7 @@ void  FullSearch()
 
    MySimAnFunc f(dummy);
 
-   // intitial config
+   // initial config
 
    const unsigned int * r = f.Route();
    std::copy(r,r+N_CITIES,r1);

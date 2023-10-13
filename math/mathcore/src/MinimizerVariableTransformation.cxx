@@ -74,7 +74,7 @@ double SqrtLowVariableTransformation::Ext2int(double value, double lower, double
 }
 
 double SqrtLowVariableTransformation::DInt2Ext(double value, double, double) const {
-   // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int
+   // derivative of internal to external transformation   :  d (Int2Ext) / d Int
    double val = value/( std::sqrt( value*value + 1.) );
    return val;
 }
@@ -98,7 +98,7 @@ double SqrtUpVariableTransformation::Ext2int(double value, double upper, double 
 
 
 double SqrtUpVariableTransformation::DInt2Ext(double value, double, double) const {
-   // derivative of internal to external transofrmation :  d Ext / d Int
+   // derivative of internal to external transformation :  d Ext / d Int
    double val = - value/( std::sqrt( value*value + 1.) );
    return val;
 }

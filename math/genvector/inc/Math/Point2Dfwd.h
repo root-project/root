@@ -36,7 +36,7 @@ namespace ROOT {
       typedef XYPoint XYPointD;
 
       /**
-         2D Point based on the cartesian corrdinates x,y,z in single precision
+         2D Point based on the cartesian coordinates x,y,z in single precision
       */
       typedef PositionVector2D< Cartesian2D<float>, DefaultCoordinateSystemTag > XYPointF;
 

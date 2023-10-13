@@ -87,7 +87,7 @@ time \f$t\f$, which is normalised to 1. Clearly \f$\tau_0~ < t ~< \tau\f$.
    Preprint EPI-865-16-86, Yerevan, Jan. 1986
 
  - K.Savvidy, *The MIXMAX random number generator*,
-   Comp. Phys. Commun. 196 (2015), pp 161–165
+   Computer Physics Communications 196 (2015), pp 161–165
    http://dx.doi.org/10.1016/j.cpc.2015.06.003
 
  - K.Savvidy and G.Savvidy, *Spectrum and Entropy of C-systems MIXMAX Random Number Generator*,

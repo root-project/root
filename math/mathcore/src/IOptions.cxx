@@ -36,7 +36,7 @@ std::string IOptions::NamedValue(const char *name) const
    return val;
 }
 
-/// method wich need to be re-implemented by the derived classes
+/// method which need to be re-implemented by the derived classes
 void IOptions::SetRealValue(const char *, double)
 {
    MATH_ERROR_MSG("IOptions::SetRealValue", "Invalid setter method called");

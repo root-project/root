@@ -84,7 +84,7 @@ SMatrix33    m2 = s;
 ~~~
 
 
-Example to create a symmetric matrix from a ROOT::Math::SVector contining the lower/upper data block:
+Example to create a symmetric matrix from a ROOT::Math::SVector containing the lower/upper data block:
 
 ~~~ {.cpp}
 ROOT::Math::SVector<double, 6> v(1,2,3,4,5,6);

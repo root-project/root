@@ -22,7 +22,7 @@ A point of a parabola.
 
 ????!!!! in reality it is just a general point in two dimensional space,
 there is nothing that would indicate, that it belongs to a parabola.
-This class defines simpy an (x,y) pair!!!!
+This class defines simply an (x,y) pair!!!!
 
 @author Fred James and Matthias Winkler; comments added by Andras Zsenei
 and Lorenzo Moneta

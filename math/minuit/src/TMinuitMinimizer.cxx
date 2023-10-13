@@ -156,7 +156,7 @@ void TMinuitMinimizer::InitTMinuit(int dim) {
                }
             }
             else {
-               // case 3: avoid reusing existing one - mantain fgMinuit to zero
+               // case 3: avoid reusing existing one - maintain fgMinuit to zero
                // otherwise we will get a double delete if user deletes externally gMinuit
                // in this case we will loose gMinuit instance
 //                fgMinuit = gMinuit;
@@ -453,7 +453,7 @@ int TMinuitMinimizer::VariableIndex(const std::string & ) const {
 bool TMinuitMinimizer::Minimize() {
    // perform the minimization using the algorithm chosen previously by the user
    // By default Migrad is used.
-   // Return true if the found minimum is valid and update internal chached values of
+   // Return true if the found minimum is valid and update internal cached values of
    // minimum values, errors and covariance matrix.
    // Status of minimizer is set to:
    // migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult

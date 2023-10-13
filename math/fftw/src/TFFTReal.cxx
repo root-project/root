@@ -231,7 +231,7 @@ void TFFTReal::GetPoints(Double_t *data, Bool_t fromInput) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///For 1d tranforms. Returns point `#ipoint`
+///For 1d transformations. Returns point `#ipoint`
 
 Double_t TFFTReal::GetPointReal(Int_t ipoint, Bool_t fromInput) const
 {
