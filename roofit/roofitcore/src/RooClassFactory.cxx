@@ -43,6 +43,7 @@ instantiate objects.
 #include <ROOT/StringUtils.hxx>
 
 #include <strlcpy.h>
+#include <cctype>
 #include <fstream>
 #include <mutex>
 
@@ -408,19 +409,9 @@ void replaceAll(std::string &inOut, std::string_view what, std::string_view with
    }
 }
 
-bool isSpecial(char c)
+inline bool isSpecial(char c)
 {
-   static const int nSpecialChars = 27;
-   static const char *specialChars[nSpecialChars] = {"+", "-", "*", "/", "&", "%", "|", "^",  ">",
-                                                     "<", "=", "~", ".", "(", ")", "[", "]",  "!",
-                                                     ",", "$", " ", ":", "'", "#", "@", "\\", "\""};
-
-   for (int i = 0; i < nSpecialChars; ++i) {
-      if (c == specialChars[i][0]) {
-         return true;
-      }
-   }
-   return false;
+   return c != '_' && !std::isalnum(c);
 }
 
 bool isComplex(std::string const &expression)
