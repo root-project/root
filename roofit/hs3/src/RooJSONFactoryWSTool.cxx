@@ -195,6 +195,45 @@ bool isValidName(const std::string &str)
 }
 
 /**
+ * @brief Make a string a valid name by replacing invalid characters with underscores.
+ *
+ * A valid name should start with a letter or an underscore, followed by letters, digits, or underscores.
+ * Only characters from the ASCII character set are allowed. Invalid characters are replaced with underscores.
+ *
+ * @param str [in, out] The string to be modified into a valid name.
+ *
+ * @return bool Returns true if the string is either already a valid name or has been successfully modified; otherwise,
+ * returns false.
+ *
+ * @warning If the string is empty, it cannot be modified to a valid name.
+ */
+bool makeValidName(std::string &str)
+{
+   // Check if the string is empty
+   if (str.empty()) {
+      RooJSONFactoryWSTool::error("cannot turn an empty string into a valid name!");
+      return false;
+   }
+
+   // Check the first character
+   if (!std::isalpha(str[0])) {
+      RooJSONFactoryWSTool::error("refusing to change first character of string '" + str + "' to make a valid name!");
+      return false;
+   }
+
+   // Check the remaining characters
+   bool changed = false;
+   for (size_t i = 1; i < str.length(); ++i) {
+      if (!std::isalnum(str[i]) && str[i] != '_') {
+         str[i] = '_'; // Replace invalid characters with underscores
+         changed = true;
+      }
+   }
+
+   return changed;
+}
+
+/**
  * @brief Configure a RooRealVar based on information from a JSONNode.
  *
  * This function configures the provided RooRealVar 'v' based on the information provided in the JSONNode 'p'.
@@ -742,10 +781,10 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
       for (auto &n : info["labels"].children()) {
          labels.push_back(n.val());
       }
-      if(indices.size() != labels.size()){
-	RooJSONFactoryWSTool::error("mismatch in number of indices and labels!");
+      if (indices.size() != labels.size()) {
+         RooJSONFactoryWSTool::error("mismatch in number of indices and labels!");
       }
-      
+
       // Create the combined dataset for RooFit
       std::map<std::string, std::unique_ptr<RooAbsData>> dsMap;
       RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
@@ -756,7 +795,8 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
          // the data components don't get imported anymore.
          std::unique_ptr<RooAbsData> &component = *std::find_if(
             datasets.begin(), datasets.end(), [&](auto &d) { return d && d->GetName() == componentName; });
-	 if(!component) RooJSONFactoryWSTool::error("unable to obtain component matching component name '" + componentName + "'");
+         if (!component)
+            RooJSONFactoryWSTool::error("unable to obtain component matching component name '" + componentName + "'");
          allVars.add(*component->get());
          dsMap.insert({labels[iChannel], std::move(component)});
          indexCat.defineType(labels[iChannel], indices[iChannel]);
@@ -782,20 +822,21 @@ RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
 
 void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll, size_t nMax)
 {
-  const size_t old_children = node.num_children();
-  node.set_seq();
-  size_t n = 0;
-  for (RooAbsArg const *arg : coll) {
-    if(n>=nMax) break;
-    if (isLiteralConstVar(*arg))
-      node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
-    else
-      node.append_child() << arg->GetName();
-    ++n;
-  }
-  if(node.num_children() != old_children + coll.size()){
-    error("unable to stream collection " + std::string(coll.GetName()) + " to " + node.key());
-  }
+   const size_t old_children = node.num_children();
+   node.set_seq();
+   size_t n = 0;
+   for (RooAbsArg const *arg : coll) {
+      if (n >= nMax)
+         break;
+      if (isLiteralConstVar(*arg))
+         node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
+      else
+         node.append_child() << arg->GetName();
+      ++n;
+   }
+   if (node.num_children() != old_children + coll.size()) {
+      error("unable to stream collection " + std::string(coll.GetName()) + " to " + node.key());
+   }
 }
 
 JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string const &name)
@@ -1344,9 +1385,10 @@ void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &n
 
    for (auto const &item : cat) {
       std::string label(item.first);
-      std::replace( label.begin(), label.end(), '.', '_');
-      std::replace( label.begin(), label.end(), '/', '_');
-      std::replace( label.begin(), label.end(), ':', '_');      
+      if (makeValidName(label)) {
+         oocoutW(nullptr, IO) << "RooFitHS3: changed '" << item.first << "' to '" << label
+                              << "' to become a valid name";
+      }
       labels.append_child() << label;
       indices.append_child() << item.second;
    }
@@ -1410,9 +1452,10 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
    for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
       std::string catName(absData->GetName());
       std::string dataName(catName);
-      std::replace( dataName.begin(), dataName.end(), '.', '_');
-      std::replace( dataName.begin(), dataName.end(), '/', '_');
-      std::replace( dataName.begin(), dataName.end(), ':', '_');
+      if (makeValidName(dataName)) {
+         oocoutW(nullptr, IO) << "RooFitHS3: changed '" << catName << "' to '" << dataName
+                              << "' to become a valid name";
+      }
       absData->SetName((std::string(data.GetName()) + "_" + dataName).c_str());
       datamap.components[catName] = absData->GetName();
       this->exportData(*absData);
