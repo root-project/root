@@ -431,7 +431,7 @@ ROOT::Experimental::RNTupleDescriptor::AddClusterGroupDetails(DescriptorId_t clu
    }
    auto cgBuilder = RClusterGroupDescriptorBuilder::FromSummary(iter->second);
    cgBuilder.AddClusters(clusterIds);
-   iter->second = std::move(cgBuilder.MoveDescriptor().Unwrap());
+   iter->second = cgBuilder.MoveDescriptor().Unwrap();
    return RResult<void>::Success();
 }
 
