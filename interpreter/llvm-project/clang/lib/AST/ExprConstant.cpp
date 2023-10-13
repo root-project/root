@@ -14932,10 +14932,13 @@ bool Expr::EvaluateAsInitializer(APValue &Value, const ASTContext &Ctx,
     LValue LVal;
     LVal.set(VD);
 
-    if (!EvaluateInPlace(Value, Info, LVal, this,
-                         /*AllowNonLiteralTypes=*/true) ||
-        EStatus.HasSideEffects)
-      return false;
+    {
+      FullExpressionRAII Scope(Info);
+      if (!EvaluateInPlace(Value, Info, LVal, this,
+                           /*AllowNonLiteralTypes=*/true) ||
+          EStatus.HasSideEffects)
+        return false;
+    }
 
     // At this point, any lifetime-extended temporaries are completely
     // initialized.
