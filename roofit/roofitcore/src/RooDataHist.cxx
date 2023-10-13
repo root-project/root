@@ -670,56 +670,46 @@ void RooDataHist::_adjustBinning(RooRealVar &theirVar, const TAxis &axis,
   const double xlo = theirVar.getMin();
   const double xhi = theirVar.getMax();
 
-  if (axis.GetXbins()->GetArray()) {
-    RooBinning xbins(axis.GetNbins(), axis.GetXbins()->GetArray());
+   const bool isUniform = !axis.GetXbins()->GetArray();
+   std::unique_ptr<RooAbsBinning> xbins;
 
-    const double tolerance = 1e-6 * xbins.averageBinWidth();
+   if (!isUniform) {
+      xbins = std::make_unique<RooBinning>(axis.GetNbins(), axis.GetXbins()->GetArray());
+   } else {
+      xbins = std::make_unique<RooUniformBinning>(axis.GetXmin(), axis.GetXmax(), axis.GetNbins());
+   }
 
-    // Adjust xlo/xhi to nearest boundary
-    const double xloAdj = xbins.binLow(xbins.binNumber(xlo + tolerance));
-    const double xhiAdj = xbins.binHigh(xbins.binNumber(xhi - tolerance));
-    xbins.setRange(xloAdj, xhiAdj);
+   const double tolerance = 1e-6 * xbins->averageBinWidth();
 
-    theirVar.setBinning(xbins);
+   // Adjust xlo/xhi to nearest boundary
+   const int iBinLo = xbins->binNumber(xlo + tolerance);
+   const int iBinHi = xbins->binNumber(xhi - tolerance);
+   const int nBinsAdj = iBinHi - iBinLo + 1;
+   const double xloAdj = xbins->binLow(iBinLo);
+   const double xhiAdj = xbins->binHigh(iBinHi);
 
-    if (true || std::abs(xloAdj - xlo) > tolerance || std::abs(xhiAdj - xhi) > tolerance) {
-       coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
-                           << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj
-                           << "," << xhiAdj << "]"
-                           << "\n";
-    }
+   if (isUniform) {
+      xbins = std::make_unique<RooUniformBinning>(xloAdj, xhiAdj, nBinsAdj);
+      theirVar.setRange(xloAdj, xhiAdj);
+   } else {
+      xbins->setRange(xloAdj, xhiAdj);
+      theirVar.setBinning(*xbins);
+   }
 
-    ourVar->setBinning(xbins);
+   if (std::abs(xloAdj - xlo) > tolerance || std::abs(xhiAdj - xhi) > tolerance) {
+      coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
+                          << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj << ","
+                          << xhiAdj << "]"
+                          << "\n";
+   }
 
-    if (offset) {
-      *offset = xbins.rawBinNumber(xloAdj + tolerance);
-    }
-  } else {
-    RooBinning xbins(axis.GetXmin(), axis.GetXmax());
-    xbins.addUniform(axis.GetNbins(), axis.GetXmin(), axis.GetXmax());
+   ourVar->setBinning(*xbins);
 
-    const double tolerance = 1e-6 * xbins.averageBinWidth();
-
-    // Adjust xlo/xhi to nearest boundary
-    const double xloAdj = xbins.binLow(xbins.binNumber(xlo + tolerance));
-    const double xhiAdj = xbins.binHigh(xbins.binNumber(xhi - tolerance));
-    xbins.setRange(xloAdj, xhiAdj);
-    theirVar.setRange(xloAdj, xhiAdj);
-
-    if (std::abs(xloAdj - xlo) > tolerance || std::abs(xhiAdj - xhi) > tolerance) {
-       coutI(DataHandling) << "RooDataHist::adjustBinning(" << ownName << "): fit range of variable " << ourVarName
-                           << " expanded to nearest bin boundaries: [" << xlo << "," << xhi << "] --> [" << xloAdj
-                           << "," << xhiAdj << "]"
-                           << "\n";
-    }
-
-    RooUniformBinning xbins2(xloAdj, xhiAdj, xbins.numBins());
-    ourVar->setBinning(xbins2);
-
-    if (offset) {
-      *offset = xbins.rawBinNumber(xloAdj + tolerance);
-    }
-  }
+   // The offset is the bin number of the adjusted lower limit of the RooFit
+   // variable in the original TH1 histogram, starting from zero.
+   if (offset) {
+      *offset = axis.FindFixBin(xloAdj + tolerance) - 1;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
