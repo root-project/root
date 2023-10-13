@@ -183,6 +183,7 @@ int xRooNLLVar::xRooHypoSpace::AddPoints(const char *parName, size_t nPoints, do
    auto _par = dynamic_cast<RooAbsRealLValue *>(fPars->find(parName));
    if (!_par)
       throw std::runtime_error("Unknown parameter");
+   _par->setAttribute("axis");
 
    if (nPoints == 1) {
       _par->setVal((high + low) * 0.5);
@@ -249,7 +250,7 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
 
    auto p = dynamic_cast<RooRealVar *>(axes().first());
    if (!p) {
-      throw std::runtime_error(TString::Format("%s not scanable", axes().first()->GetName()));
+      throw std::runtime_error(TString::Format("%s not scannable", axes().first()->GetName()));
    }
 
    if (sType.Contains("cls")) {
@@ -546,7 +547,14 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
       }
    }
 
-   ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coords);
+   std::string coordString;
+   for(auto a : axes()) {
+      coordString += TString::Format("%s=%g",a->GetName(),out.coords->getRealValue(a->GetName()));
+      coordString += ",";
+   }
+   coordString.erase(coordString.end()-1);
+
+   ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
    return emplace_back(out);
 }
 
