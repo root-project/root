@@ -13,29 +13,26 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
-#include <TString.h>
+#include <algorithm>
+#include <cctype>
 
 namespace RooFit {
 
 namespace Detail {
 
-/// Transform a string into a valid C++ variable name by replacing forbidden.
-/// \note The implementation was copy-pasted from `TSystem.cxx`.
+/// Transform a string into a valid C++ variable name by replacing forbidden
 /// characters with underscores.
 /// @param in The input string.
 /// @return A new string valid variable name.
-std::string CodeSquashContext::makeValidVarName(TString in) const
+std::string CodeSquashContext::makeValidVarName(std::string const &in) const
 {
-
-   static const int nForbidden = 27;
-   static const char *forbiddenChars[nForbidden] = {"+", "-", "*", "/", "&", "%", "|", "^",  ">",
-                                                    "<", "=", "~", ".", "(", ")", "[", "]",  "!",
-                                                    ",", "$", " ", ":", "'", "#", "@", "\\", "\""};
-   for (int ic = 0; ic < nForbidden; ic++) {
-      in.ReplaceAll(forbiddenChars[ic], "_");
+   std::string out;
+   if (std::isdigit(in[0])) {
+      out += '_';
    }
-
-   return in.Data();
+   out += in;
+   std::transform(out.begin(), out.end(), out.begin(), [](char c) { return std::isalnum(c) ? c : '_'; });
+   return out;
 }
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
