@@ -1539,7 +1539,7 @@ TEST_P(VecOpsSwap, BothRegularVectors)
    vmocksmall.erase(vmocksmall.begin() + 2, vmocksmall.end());
    // vmocksmall is a regular vector of size 2
 
-   // verify that initally vectors are not small
+   // verify that initially vectors are not small
    EXPECT_FALSE(IsSmall(vreg1));
    EXPECT_FALSE(IsSmall(vreg2));
    EXPECT_FALSE(IsSmall(vreg3));
@@ -1685,7 +1685,7 @@ TEST_P(VecOpsSwap, SmallRegularVectors)
    RVec<int> vreg4{15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30};
    // vreg4 is a regular vector that cannot "fit" to small vector
 
-   // verify that initally vectors are not small
+   // verify that initially vectors are not small
    EXPECT_FALSE(IsSmall(vreg1));
    EXPECT_FALSE(IsSmall(vreg2));
    EXPECT_FALSE(IsSmall(vreg3));

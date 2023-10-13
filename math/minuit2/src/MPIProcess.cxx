@@ -29,7 +29,7 @@ bool MPIProcess::fgNewCart = true;
 MPI::Intracomm *MPIProcess::fgCommunicator = 0;
 int MPIProcess::fgIndexComm = -1; // -1 for no-initialization
 MPI::Intracomm *MPIProcess::fgCommunicators[2] = {0};
-unsigned int MPIProcess::fgIndecesComm[2] = {0};
+unsigned int MPIProcess::fgIndicesComm[2] = {0};
 #endif
 
 MPIProcess::MPIProcess(unsigned int nelements, unsigned int indexComm) : fNelements(nelements), fSize(1), fRank(0)
@@ -72,8 +72,8 @@ MPIProcess::MPIProcess(unsigned int nelements, unsigned int indexComm) : fNeleme
       if (((unsigned int)fgIndexComm) < indexComm)
          fgCommunicator = &(MPI::COMM_WORLD);
       else {
-         fgIndecesComm[fgIndexComm] = indexComm;
-         fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
+         fgIndicesComm[fgIndexComm] = indexComm;
+         fgCommunicator = fgCommunicators[fgIndicesComm[fgIndexComm]];
       }
 
    } else {
@@ -105,16 +105,16 @@ MPIProcess::MPIProcess(unsigned int nelements, unsigned int indexComm) : fNeleme
          MPI::COMM_WORLD.Abort(-1);
       }
 
-      fgIndecesComm[fgIndexComm] = indexComm;
+      fgIndicesComm[fgIndexComm] = indexComm;
 
       // require 2 nested communicators
       if (fgCommunicator != 0 && fgCommunicators[indexComm] != 0) {
          std::cout << "Warning --> MPIProcess::MPIProcess: Requiring 2 nested MPI calls!" << std::endl;
          std::cout << "Warning --> MPIProcess::MPIProcess: Ignoring second call." << std::endl;
-         fgIndecesComm[fgIndexComm] = (indexComm == 0) ? 1 : 0;
+         fgIndicesComm[fgIndexComm] = (indexComm == 0) ? 1 : 0;
       }
 
-      fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
+      fgCommunicator = fgCommunicators[fgIndicesComm[fgIndexComm]];
    }
 
    // set size and rank
@@ -145,7 +145,7 @@ MPIProcess::~MPIProcess()
    fgCommunicator = 0;
    fgIndexComm--;
    if (fgIndexComm == 0)
-      fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
+      fgCommunicator = fgCommunicators[fgIndicesComm[fgIndexComm]];
 
 #endif
 }
@@ -160,7 +160,7 @@ bool MPIProcess::SyncVector(ROOT::Minuit2::MnAlgebraicVector &mnvector)
    if (mnvector.size() != fNelements) {
       std::cerr << "Error --> MPIProcess::SyncVector: # defined elements different from # requested elements!"
                 << std::endl;
-      std::cerr << "Error --> MPIProcess::SyncVector: no MPI syncronization is possible!" << std::endl;
+      std::cerr << "Error --> MPIProcess::SyncVector: no MPI synchronization is possible!" << std::endl;
       exit(-1);
    }
 
@@ -184,7 +184,7 @@ bool MPIProcess::SyncVector(ROOT::Minuit2::MnAlgebraicVector &mnvector)
 
 #else
 
-   std::cerr << "Error --> MPIProcess::SyncVector: no MPI syncronization is possible!" << std::endl;
+   std::cerr << "Error --> MPIProcess::SyncVector: no MPI synchronization is possible!" << std::endl;
    exit(-1);
 
 #endif
@@ -201,7 +201,7 @@ bool MPIProcess::SyncSymMatrixOffDiagonal(ROOT::Minuit2::MnAlgebraicSymMatrix &m
       std::cerr
          << "Error --> MPIProcess::SyncSymMatrixOffDiagonal: # defined elements different from # requested elements!"
          << std::endl;
-      std::cerr << "Error --> MPIProcess::SyncSymMatrixOffDiagonal: no MPI syncronization is possible!" << std::endl;
+      std::cerr << "Error --> MPIProcess::SyncSymMatrixOffDiagonal: no MPI synchronization is possible!" << std::endl;
       exit(-1);
    }
 
@@ -245,7 +245,7 @@ bool MPIProcess::SyncSymMatrixOffDiagonal(ROOT::Minuit2::MnAlgebraicSymMatrix &m
 
 #else
 
-   std::cerr << "Error --> MPIProcess::SyncMatrix: no MPI syncronization is possible!" << std::endl;
+   std::cerr << "Error --> MPIProcess::SyncMatrix: no MPI synchronization is possible!" << std::endl;
    exit(-1);
 
 #endif
@@ -296,10 +296,10 @@ bool MPIProcess::SetCartDimension(unsigned int dimX, unsigned int dimY)
       if (fgCommunicators[0] != 0 && fgCommunicators[1] != 0) {
          delete fgCommunicators[0];
          fgCommunicators[0] = 0;
-         fgIndecesComm[0] = 0;
+         fgIndicesComm[0] = 0;
          delete fgCommunicators[1];
          fgCommunicators[1] = 0;
-         fgIndecesComm[1] = 0;
+         fgIndicesComm[1] = 0;
       }
    }
 

@@ -444,7 +444,7 @@ bool Minuit2Minimizer::Minimize()
 
    const int printLevel = PrintLevel();
    if (PrintLevel() >= 1) {
-      // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
+      // print the real number of maxfcn used (defined in ModularFunctionMinimizer)
       int maxfcn_used = maxfcn;
       if (maxfcn_used == 0) {
          int nvar = fState.VariableParameters();
@@ -1031,7 +1031,7 @@ int Minuit2Minimizer::RunMinosError(unsigned int i, double &errLow, double &errU
 
    int mstatus = 0;
    if (lowerInvalid || upperInvalid) {
-      // set status accroding to bit
+      // set status according to bit
       // bit 1:  lower invalid Minos errors
       // bit 2:  upper invalid Minos error
       // bit 3:   invalid because max FCN

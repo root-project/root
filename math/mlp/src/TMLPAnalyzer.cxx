@@ -11,7 +11,7 @@
 
 /** \class TMLPAnalyzer
 
-This utility class contains a set of tests usefull when developing
+This utility class contains a set of tests useful when developing
 a neural network.
 It allows you to check for unneeded variables, and to control
 the network structure.

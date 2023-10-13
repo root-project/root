@@ -115,7 +115,7 @@ a_6 & a_7  & a_8   \end{array} \right)
    };
 
 
-//     template<unigned int D>
+//     template<unsigned int D>
 //     struct Creator {
 //       static const RowOffsets<D> & Offsets() {
 //          static RowOffsets<D> off;

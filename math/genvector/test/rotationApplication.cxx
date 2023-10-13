@@ -10,7 +10,7 @@
 // Created by:  M. Fischler, Aug 10, 2005
 //
 // Tests that each Rotation produces correct results when applied to
-// each form of vector in each oordinate system, and incidently that products
+// each form of vector in each coordinate system, and incidentally that products
 // of rotations work properly.
 //
 // The strategy is to build up sequences of rotations about the X, Y, and Z

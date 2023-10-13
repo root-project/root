@@ -274,7 +274,7 @@ namespace Math {
 
  private:
 
-    int fIter;           // current numer of iterations
+    int fIter;           // current number of iterations
     int fStatus;         // current status
     int fPrintLevel;     // print level
 

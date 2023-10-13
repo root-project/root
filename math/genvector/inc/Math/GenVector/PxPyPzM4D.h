@@ -38,7 +38,7 @@ namespace Math {
     when E >>> m
     The metric used is (-,-,-,+)
     Spacelike particles (M2 < 0) are described with negative mass values,
-    but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
+    but in this case m2 must always be less than P2 to preserve a positive value of E2
 
     @ingroup GenVector
 
@@ -368,7 +368,7 @@ private:
 
 
    /**
-      (contigous) data containing the coordinate values x,y,z,t
+      (contiguous) data containing the coordinate values x,y,z,t
    */
 
    ScalarType fX;

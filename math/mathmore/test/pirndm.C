@@ -1,4 +1,4 @@
-//Test program for random number generators (spped and quality)
+//Test program for random number generators (speed and quality)
 //The program get n random number pairs x and y i [0,1]
 //It counts the ratio of pairs in the circle of diameter 1
 //compared to the total number of pairs.

@@ -118,7 +118,7 @@ namespace ROOT {
          virtual ~IBaseFunctionOneDim() = default;
 
          /// Clone a function.
-         /// Each derived class will implement their version of the provate DoClone method.
+         /// Each derived class will implement their version of the private DoClone method.
          virtual IBaseFunctionOneDim *Clone() const = 0;
 
          /// Evaluate the function at a point x.

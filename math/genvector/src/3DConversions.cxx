@@ -58,7 +58,7 @@ void convert( Rotation3D const & from, AxisAngle   & to)
    const double  uX = m[kZY] - m[kYZ];
 
 
-   // in case of rotaiton of an angle PI, the rotation matrix is symmetric and
+   // in case of rotation of an angle PI, the rotation matrix is symmetric and
    // uX = uY = uZ  = 0. Use then conversion through the quaternion
    if ( std::fabs( uX ) < 8.*std::numeric_limits<double>::epsilon() &&
         std::fabs( uY ) < 8.*std::numeric_limits<double>::epsilon() &&
@@ -252,13 +252,13 @@ void convert( Rotation3D const & from, Quaternion  & to)
 ////////////////////////////////////////////////////////////////////////////////
 /// conversion from Rotation3D to RotationZYX
 /// same Math used as for EulerAngles apart from some different meaning of angles and
-/// matrix elements. But the basic algoprithms principles are the same described in
+/// matrix elements. But the basic algorithms principles are the same described in
 /// http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
 
 void convert( Rotation3D const & from, RotationZYX  & to)
 {
    // theta is assumed to be in range [-PI/2,PI/2].
-   // this is guranteed by the Rectify function
+   // this is guaranteed by the Rectify function
 
    static const double pi_2 = M_PI_2;
 
@@ -352,7 +352,7 @@ void convert( Rotation3D const & from, RotationZYX  & to)
 
 void convert( AxisAngle const & from, Rotation3D  & to)
 {
-   // conversion from AxixAngle to Rotation3D
+   // conversion from AxisAngle to Rotation3D
 
    const double sinDelta = std::sin( from.Angle() );
    const double cosDelta = std::cos( from.Angle() );
@@ -382,7 +382,7 @@ void convert( AxisAngle const & from, Rotation3D  & to)
 
 void convert( AxisAngle const & from , EulerAngles & to  )
 {
-   // conversion from AxixAngle to EulerAngles
+   // conversion from AxisAngle to EulerAngles
    // TODO better : temporary make conversion using  Rotation3D
 
    Rotation3D tmp;
@@ -392,7 +392,7 @@ void convert( AxisAngle const & from , EulerAngles & to  )
 
 void convert( AxisAngle const & from, Quaternion  & to)
 {
-   // conversion from AxixAngle to Quaternion
+   // conversion from AxisAngle to Quaternion
 
    double s = std::sin (from.Angle()/2);
    DisplacementVector3D< Cartesian3D<double> > axis = from.Axis();

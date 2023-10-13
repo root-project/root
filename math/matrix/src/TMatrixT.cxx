@@ -1269,7 +1269,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb]
-/// New dynamic elemenst are created, the overlapping part of the old ones are
+/// New dynamic elements are created, the overlapping part of the old ones are
 /// copied to the new structures, then the old elements are deleted.
 
 template<class Element>

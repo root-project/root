@@ -16,7 +16,7 @@ namespace ROOT {
 namespace Math {
 
 
-//non central chisquare pdf (impelmentation from Kyle Cranmer)
+//non central chisquare pdf (implementation from Kyle Cranmer)
 // formula from Wikipedia http://en.wikipedia.org/wiki/Noncentral_chi-square_distribution
 // but use hybergeometric form for k < 2
 double noncentral_chisquared_pdf(double x, double k, double lambda) {
@@ -66,7 +66,7 @@ double noncentral_chisquared_pdf(double x, double k, double lambda) {
 
 // dummy method called to force auto-loading of MathMore Library
 //
-// note: a typdef MathMoreLIb to MathMoreLibrary has been introduced because for unknown reasons
+// note: a typedef MathMoreLIb to MathMoreLibrary has been introduced because for unknown reasons
 // loading on the MathMoreLibrary does not work while it works for the class name MathMoreLib
 // see ROOT-8455
 

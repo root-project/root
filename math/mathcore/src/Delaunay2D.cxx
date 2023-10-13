@@ -299,7 +299,7 @@ void Delaunay2D::DoFindTriangles() {
 /// make up that triangle.
 /// Relay that all the triangles have been found before
 /// see comment in class description (in Delaunay2D.h) for implementation details:
-/// finding barycentric cordinates and computing the interpolation
+/// finding barycentric coordinates and computing the interpolation
 double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 {
 
@@ -410,7 +410,7 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 
    //std::cout << std::this_thread::get_id() << ": Found " << coords.size() << " points" << std::endl;
 
-   if(!nn.third) //neighbor finding was NOT successfull, return standard value
+   if(!nn.third) //neighbor finding was NOT successful, return standard value
       return fZout;
 
    //printf("found neighbors %u\n", coords.size());

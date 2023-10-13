@@ -52,11 +52,11 @@ public:
 
    ~MnContours() {}
 
-   /// ask for one Contour (points only) from number of points (>=4) and parameter indeces
+   /// ask for one Contour (points only) from number of points (>=4) and parameter indices
    std::vector<std::pair<double, double>> operator()(unsigned int, unsigned int, unsigned int npoints = 20) const;
 
    /// ask for one Contour ContoursError (MinosErrors + points)
-   /// from number of points (>=4) and parameter indeces
+   /// from number of points (>=4) and parameter indices
    /// can be printed via std::cout
    ContoursError Contour(unsigned int, unsigned int, unsigned int npoints = 20) const;
 

@@ -101,7 +101,7 @@ namespace ROOT {
 
      P.z = la * A.z + lb * B.z + lc * C.z
 
-   To speed up localisation of points (to see to which triangle belong) a grid is layed over the internal coordinate space.
+   To speed up localisation of points (to see to which triangle belong) a grid is laid over the internal coordinate space.
    A reference to triangle ABC is added to _all_ grid cells that include ABC's bounding box.
    The size of the grid is defined to be 25x25
 

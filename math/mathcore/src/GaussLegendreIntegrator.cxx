@@ -23,7 +23,7 @@ namespace Math {
    GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) :
       GaussIntegrator(eps, eps)
 {
-   // Basic contructor
+   // Basic constructor
    fNum = num;
    fX = nullptr;
    fW = nullptr;
@@ -33,7 +33,7 @@ namespace Math {
 
 GaussLegendreIntegrator::~GaussLegendreIntegrator()
 {
-   // Default Destructor
+   // Default destructor
 
 
    delete [] fX;

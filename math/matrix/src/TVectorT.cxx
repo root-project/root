@@ -287,7 +287,7 @@ TVectorT<Element>::TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize the vector to [lwb:upb] .
-/// New dynamic elemenst are created, the overlapping part of the old ones are
+/// New dynamic elements are created, the overlapping part of the old ones are
 /// copied to the new structures, then the old elements are deleted.
 
 template<class Element>
@@ -2239,7 +2239,7 @@ void TMatrixTAutoloadOps::Compare(const TVectorT<Element> &v1,const TVectorT<Ele
 
    imax += v1.GetLwb();
    printf("\nMaximal discrepancy    \t\t%g",difmax);
-   printf("\n   occured at the point\t\t(%d)",imax);
+   printf("\n   occurred at the point\t\t(%d)",imax);
    const Element mv1 = v1(imax);
    const Element mv2 = v2(imax);
    printf("\n Vector 1 element is    \t\t%g",mv1);

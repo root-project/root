@@ -91,7 +91,7 @@ public:
    Accessor to the parameters of a given measurement. For example in the
    case of a chi-square fit with a one-dimensional Gaussian, the Parameter
    characterizing the measurement will be the position. It is the Parameter
-   that is feeded to the model function.
+   that is passed to the model function.
 
    @param Index Index of the measueremnt the parameters of which to return
    @return A vector containing the values characterizing a measurement
@@ -138,7 +138,7 @@ public:
          // for max likelihood probability have to be positive
          assert(tmp >= 0);
          sumoflogs -= ROOT::Math::Util::EvalLog(tmp);
-         // std::cout << " i " << tmp << " lik " << sumoflogs << std::endl;
+         // std::cout << " i " << tmp << " likelihood " << sumoflogs << std::endl;
       }
 
       return sumoflogs;

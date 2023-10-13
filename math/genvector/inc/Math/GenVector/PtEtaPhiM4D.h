@@ -42,7 +42,7 @@ namespace Math {
     using Pt , Phi, Eta and M (mass)
     The metric used is (-,-,-,+).
     Spacelike particles (M2 < 0) are described with negative mass values,
-    but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
+    but in this case m2 must always be less than P2 to preserve a positive value of E2
     Phi is restricted to be in the range [-PI,PI)
 
     @ingroup GenVector
