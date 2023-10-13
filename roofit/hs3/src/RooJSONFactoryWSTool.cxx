@@ -776,15 +776,22 @@ RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
 
-void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll)
+void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll, size_t nMax)
 {
-   node.set_seq();
-   for (RooAbsArg const *arg : coll) {
-      if (isLiteralConstVar(*arg))
-         node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
-      else
-         node.append_child() << arg->GetName();
-   }
+  const size_t old_children = node.num_children();
+  node.set_seq();
+  size_t n = 0;
+  for (RooAbsArg const *arg : coll) {
+    if(n>=nMax) break;
+    if (isLiteralConstVar(*arg))
+      node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
+    else
+      node.append_child() << arg->GetName();
+    ++n;
+  }
+  if(node.num_children() != old_children + coll.size()){
+    error("unable to stream collection " + std::string(coll.GetName()) + " to " + node.key());
+  }
 }
 
 JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string const &name)
