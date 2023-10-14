@@ -1725,9 +1725,6 @@ endif(cudnn)
 
 #
 #---TMVA and its dependencies------------------------------------------------------------
-if (tmva AND NOT mlp)
-  message(FATAL_ERROR "The 'tmva' option requires 'mlp', please enable mlp with -Dmlp=ON")
-endif()
 if(tmva)
   if(tmva-cpu AND imt)
     message(STATUS "Looking for BLAS for optional parts of TMVA")
