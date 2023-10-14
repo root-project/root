@@ -317,7 +317,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/PDEFoamVect.cxx
     src/PDF.cxx
     src/QuickMVAProbEstimator.cxx
-    src/RBDT.cxx
     src/Ranking.cxx
     src/Reader.cxx
     src/RegressionVariance.cxx
