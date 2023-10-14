@@ -69,7 +69,6 @@ mathmore=ON
 memory_termination=OFF
 minimal=OFF
 minuit2=ON
-mlp=ON
 monalisa=OFF
 mpi=OFF
 mysql=ON

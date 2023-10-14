@@ -137,10 +137,6 @@ if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
     list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
 endif()
 
-if(NOT ROOT_mlp_FOUND)
-   set(mlp_veto legacy/mlp/*.C)
-endif()
-
 if(NOT ROOT_spectrum_FOUND)
    set(spectrum_veto spectrum/*.C)
 endif()
@@ -478,7 +474,6 @@ set(all_veto hsimple.C
              ${vecgeom_veto}
              ${root7_veto}
              ${xrootd_veto}
-             ${mlp_veto}
              ${spectrum_veto}
              ${dataframe_veto}
              ${macm1_veto}
