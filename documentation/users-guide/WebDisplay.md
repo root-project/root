@@ -11,11 +11,11 @@ For the communication between application and browser websockets are used.
 
 ## Creating web-window
 
-**`ROOT::Experimental::TWebWindow`** class is represent window instance, which can be displayed in the browser
+**`ROOT::RWebWindow`** class is represent window instance, which can be displayed in the browser
 
 ```{.cpp}
 
-std::shared_ptr<ROOT::Experimental::TWebWindow> win = ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow();
+auto win = ROOT::RWebWindow::Create();
 
 // set HTML page which is showed when window displayed
 win->SetDefaultPage("file:page.html"); // set
@@ -70,7 +70,7 @@ configured for the window. As argument of `Show()` method one can specify browse
 With the method `win->GetUrl()` one obtains URL string, which can be typed in the browser address string directly.
 
 Same window can be displayed several times in different browsers or different browser tabs - one only
-must allow appropriate number of connections calling ``win->SetConnLimit(3)``
+must allow appropriate number of connections calling `win->SetConnLimit(3)`
 
 For the local displays **Chromium Embeded Framework (CEF)** is used. It provides functionality
 of Chrome web browser in ROOT application without need to create and start real http server.
@@ -87,21 +87,21 @@ The minimal HTML/JavaScript code, which establish connection with the server, lo
 <html>
     <head>
         <meta charset="utf-8">
-        <title>WebWindow Example</title>
+        <title>RWebWindow Example</title>
     </head>
    <body>
      <div id="main"></div>
      <script type="module">
-       import { connectWebWindow } from 'jsrootsys/modules/webwindow.mjs';
+       import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
        connectWebWindow({
           receiver: {
               onWebsocketOpened(handle) {
                   console.log('Connected');
-                  handle.send("Init msg from client");
+                  handle.send('Init msg from client');
               },
               onWebsocketMsg(handle, msg) {
                   console.log('Get message ' + msg);
-                  document.getElementById("main").innerHTML = msg;
+                  document.getElementById('main').innerHTML = msg;
               },
               onWebsocketClosed(handle) {
                  // when connection closed, close panel as well
