@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -10,17 +12,26 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFitHS3/HistFactoryJSONTool.h>
+/** \class RooStats::HistFactory::JSONTool
+ * \ingroup HistFactory
+The RooStats::HistFactory::JSONTool can be used to export a HistFactory
+measurement to HS3 JSON. It is not part of the public user interface, but a
+pretty useful tool for unit test, validating if a measurement object can be
+directly translated to HS3 without going over RooFit. If this translation turns
+out to be important for users, it can be considered in the future to make the
+class part of the public interface.
+*/
+
+#include "./JSONTool.h"
+
 #include <RooFit/Detail/JSONInterface.h>
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/Channel.h>
 #include <RooStats/HistFactory/Sample.h>
 
-#include "Domains.h"
-
 #include <TH1.h>
+#include <TROOT.h>
 
 using RooFit::Detail::JSONNode;
 
@@ -36,6 +47,64 @@ JSONNode &appendNamedChild(JSONNode &node, std::string const &name)
    JSONNode &child = node.set_seq().append_child().set_map();
    child["name"] << name;
    return child;
+}
+
+class Domains {
+public:
+   void readVariable(const char *name, double min, double max);
+
+   void writeJSON(RooFit::Detail::JSONNode &) const;
+
+private:
+   class ProductDomain {
+   public:
+      void readVariable(const char *name, double min, double max);
+
+      void writeJSON(RooFit::Detail::JSONNode &) const;
+
+   private:
+      struct ProductDomainElement {
+         double min = 0.0;
+         double max = 0.0;
+      };
+
+      std::map<std::string, ProductDomainElement> _map;
+   };
+
+   std::map<std::string, ProductDomain> _map;
+};
+
+void Domains::readVariable(const char *name, double min, double max)
+{
+   _map["default_domain"].readVariable(name, min, max);
+}
+
+void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
+{
+   for (auto const &domain : _map) {
+      domain.second.writeJSON(appendNamedChild(node, domain.first));
+   }
+}
+void Domains::ProductDomain::readVariable(const char *name, double min, double max)
+{
+   auto &elem = _map[name];
+
+   elem.min = min;
+   elem.max = max;
+}
+void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
+{
+   node.set_map();
+   node["type"] << "product_domain";
+
+   auto &variablesNode = node["axes"];
+
+   for (auto const &item : _map) {
+      auto const &elem = item.second;
+      RooFit::Detail::JSONNode &varnode = appendNamedChild(variablesNode, item.first);
+      varnode["min"] << elem.min;
+      varnode["max"] << elem.max;
+   }
 }
 
 bool checkRegularBins(const TAxis &ax)
@@ -219,14 +288,13 @@ void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
 
 void setAttribute(JSONNode &rootnode, const std::string &obj, const std::string &attrib)
 {
-   auto node = &RooJSONFactoryWSTool::getRooFitInternal(rootnode, "attributes").set_map()[obj].set_map();
+   auto node = &rootnode.get("misc", "ROOT_internal", "attributes").set_map()[obj].set_map();
    auto &tags = (*node)["tags"];
    tags.set_seq();
    tags.append_child() << attrib;
 }
 
-void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode &rootnode,
-                       RooFit::JSONIO::Detail::Domains &domains)
+void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode &rootnode, Domains &domains)
 {
    using namespace RooStats::HistFactory;
 
@@ -327,7 +395,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       info2.isConstant = true;
    }
 
-   JSONNode &varlist = RooJSONFactoryWSTool::makeVariablesNode(rootnode);
+   JSONNode &varlist = appendNamedChild(rootnode["parameter_points"], "default_values")["parameters"];
    for (auto const &item : variables) {
       std::string const &parname = item.first;
       VariableInfo const &info = item.second;
@@ -362,15 +430,14 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       indices2.append_child() << int(channelNames.size());
       pdfs2.append_child() << (std::string("model_") + c.GetName());
 
-      JSONNode &dataOutput =
-         appendNamedChild(rootnode["data"], std::string("obsData_") + c.GetName());
+      JSONNode &dataOutput = appendNamedChild(rootnode["data"], std::string("obsData_") + c.GetName());
       dataOutput["type"] << "binned";
 
       exportHistogram(*c.GetData().GetHisto(), dataOutput, getObsnames(c));
       channelNames.push_back(c.GetName());
    }
 
-   auto &modelConfigAux = RooJSONFactoryWSTool::getRooFitInternal(rootnode, "ModelConfigs", "simPdf").set_map();
+   auto &modelConfigAux = rootnode.get("misc", "ROOT_internal", "ModelConfigs", "simPdf").set_map();
    modelConfigAux["combined_data_name"] << "obsData";
    modelConfigAux["pdfName"] << "simPdf";
    modelConfigAux["mcName"] << "ModelConfig";
@@ -383,13 +450,34 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    lumiConstraint["x"] << "Lumi";
 }
 
+std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree()
+{
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create();
+   JSONNode &n = tree->rootnode();
+   n.set_map();
+   auto &metadata = n["metadata"].set_map();
+
+   // add the mandatory hs3 version number
+   metadata["hs3_version"] << "0.1.90";
+
+   // Add information about the ROOT version that was used to generate this file
+   auto &rootInfo = appendNamedChild(metadata["packages"], "ROOT");
+   std::string versionName = gROOT->GetVersion();
+   // We want to consistently use dots such that the version name can be easily
+   // digested automatically.
+   std::replace(versionName.begin(), versionName.end(), '/', '.');
+   rootInfo["version"] << versionName;
+
+   return tree;
+}
+
 } // namespace
 
 void RooStats::HistFactory::JSONTool::PrintJSON(std::ostream &os)
 {
-   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = createNewJSONTree();
    auto &rootnode = tree->rootnode();
-   RooFit::JSONIO::Detail::Domains domains;
+   Domains domains;
    exportMeasurement(_measurement, rootnode, domains);
    domains.writeJSON(rootnode["domains"]);
    rootnode.writeJSON(os);
@@ -402,9 +490,9 @@ void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
 
 void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)
 {
-   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = createNewJSONTree();
    auto &rootnode = tree->rootnode().set_map();
-   RooFit::JSONIO::Detail::Domains domains;
+   Domains domains;
    exportMeasurement(_measurement, rootnode, domains);
    domains.writeJSON(rootnode["domains"]);
    rootnode.writeYML(os);
@@ -422,3 +510,5 @@ void RooStats::HistFactory::JSONTool::activateStatError(JSONNode &sampleNode)
    node["name"] << "mcstat";
    node["type"] << "staterror";
 }
+
+/// \endcond
