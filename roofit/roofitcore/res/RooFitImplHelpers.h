@@ -95,4 +95,12 @@ void getSortedComputationGraph(RooAbsArg const &func, RooArgSet &out);
 
 } // namespace RooHelpers
 
+namespace RooFit {
+namespace Detail {
+
+std::string makeValidVarName(std::string const &in);
+
+} // namespace Detail
+} // namespace RooFit
+
 #endif

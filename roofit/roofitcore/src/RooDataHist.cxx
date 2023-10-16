@@ -64,6 +64,8 @@ See RooAbsData::plotOn().
 #include "RooFormula.h"
 #include "RooUniformBinning.h"
 
+#include "RooFitImplHelpers.h"
+
 #include <ROOT/RSpan.hxx>
 #include <ROOT/StringUtils.hxx>
 
@@ -979,7 +981,7 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, bool fast) const {
 std::string RooDataHist::declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
                                                       bool correctForBinSize) const
 {
-   std::string weightName = ctx.makeValidVarName(klass->GetName()) + "_HistWeights";
+   std::string weightName = RooFit::Detail::makeValidVarName(klass->GetName()) + "_HistWeights";
 
    std::string arrayDecl = "double " + weightName + "[" + std::to_string(_arrSize) + "] = {";
    for (Int_t i = 0; i < _arrSize; i++) {

@@ -102,7 +102,6 @@ public:
    std::unique_ptr<LoopScope> beginLoop(RooAbsArg const *in);
 
    std::string getTmpVarName();
-   std::string makeValidVarName(std::string const &in) const;
 
    std::string buildArg(RooAbsCollection const &x);
    std::string buildArg(std::span<const double> arr);

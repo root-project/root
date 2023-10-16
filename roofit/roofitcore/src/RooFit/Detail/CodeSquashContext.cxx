@@ -13,27 +13,14 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
+#include "RooFitImplHelpers.h"
+
 #include <algorithm>
 #include <cctype>
 
 namespace RooFit {
 
 namespace Detail {
-
-/// Transform a string into a valid C++ variable name by replacing forbidden
-/// characters with underscores.
-/// @param in The input string.
-/// @return A new string valid variable name.
-std::string CodeSquashContext::makeValidVarName(std::string const &in) const
-{
-   std::string out;
-   if (std::isdigit(in[0])) {
-      out += '_';
-   }
-   out += in;
-   std::transform(out.begin(), out.end(), out.begin(), [](char c) { return std::isalnum(c) ? c : '_'; });
-   return out;
-}
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
@@ -202,7 +189,7 @@ std::string CodeSquashContext::getTmpVarName()
 /// @param valueToSave The actual string value to save as a temporary.
 void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName = makeValidVarName(in->GetName());
+   std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
 
    // Only save values if they contain operations.
    bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;

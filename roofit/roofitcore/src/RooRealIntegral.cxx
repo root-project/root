@@ -47,6 +47,8 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooSuperCategory.h>
 #include <RooTrace.h>
 
+#include "RooFitImplHelpers.h"
+
 #include <TClass.h>
 
 #include <iostream>
@@ -1113,7 +1115,7 @@ void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
    std::stringstream ss;
 
-   std::string resName = ctx.makeValidVarName(GetName()) + "Result";
+   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
    ctx.addResult(this, resName);
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
 
