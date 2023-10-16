@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -45,3 +47,5 @@ determineOutputSizes(RooAbsArg const &topNode,
 } // namespace RooFit
 
 #endif
+
+/// \endcond

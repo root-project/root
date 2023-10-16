@@ -58,7 +58,7 @@
 #include "RooFormulaVar.h"
 #include "RooFunctor.h"
 #include "RooGlobalFunc.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 #include "RooHist.h"
 #include "RooMoment.h"
 #include "RooMsgService.h"

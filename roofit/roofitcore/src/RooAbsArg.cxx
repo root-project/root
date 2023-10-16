@@ -76,6 +76,7 @@ for single nodes.
 #include <RooConstVar.h>
 #include <RooExpensiveObjectCache.h>
 #include <RooHelpers.h>
+#include "RooFitImplHelpers.h"
 #include <RooListProxy.h>
 #include <RooMsgService.h>
 #include <RooRealIntegral.h>

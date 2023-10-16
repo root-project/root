@@ -40,7 +40,7 @@ which returns spans pointing directly to the data.
 #include "RooCategory.h"
 #include "RooHistError.h"
 #include "RooTrace.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include "Math/Util.h"
 #include "ROOT/StringUtils.hxx"

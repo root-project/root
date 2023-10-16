@@ -101,7 +101,7 @@ the new `RooAbsData::uniqueId()`.
 #include "RooCompositeDataStore.h"
 #include "RooSentinel.h"
 #include "RooTrace.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 

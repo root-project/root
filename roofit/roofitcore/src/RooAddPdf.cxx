@@ -71,7 +71,6 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <RooDataSet.h>
 #include <RooGenericPdf.h>
 #include <RooGlobalFunc.h>
-#include <RooHelpers.h>
 #include <RooProduct.h>
 #include <RooRatio.h>
 #include <RooRealConstant.h>
@@ -82,6 +81,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <RooRecursiveFraction.h>
 
 #include "RooAddHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include <ROOT/StringUtils.hxx>
 

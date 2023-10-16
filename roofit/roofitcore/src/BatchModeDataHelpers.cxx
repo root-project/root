@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -11,11 +13,13 @@
  */
 
 #include "RooFit/BatchModeDataHelpers.h"
+
 #include <RooAbsData.h>
-#include <RooHelpers.h>
-#include "RooNLLVarNew.h"
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
+
+#include "RooFitImplHelpers.h"
+#include "RooNLLVarNew.h"
 
 #include <ROOT/StringUtils.hxx>
 
@@ -300,3 +304,5 @@ std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::det
 
    return output;
 }
+
+/// \endcond

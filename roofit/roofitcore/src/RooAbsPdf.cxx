@@ -164,6 +164,7 @@ called for each data event.
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
 #include "RooNaNPacker.h"
+#include "RooFitImplHelpers.h"
 #include "RooHelpers.h"
 #include "RooFormulaVar.h"
 #include "RooDerivative.h"
