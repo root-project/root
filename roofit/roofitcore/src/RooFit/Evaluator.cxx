@@ -33,7 +33,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsReal.h>
 #include <RooRealVar.h>
 #include <RooBatchCompute.h>
-#include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
 #include <RooSimultaneous.h>
@@ -41,6 +40,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include "BatchModeDataHelpers.h"
 #include "BatchModeHelpers.h"
 #include "Detail/Buffers.h"
+#include "RooFitImplHelpers.h"
 
 #include <chrono>
 #include <iomanip>
@@ -164,7 +164,7 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    logArchitectureInfo(_useGPU);
 
    RooArgSet serverSet;
-   RooHelpers::getSortedComputationGraph(_topNode, serverSet);
+   ::RooHelpers::getSortedComputationGraph(_topNode, serverSet);
 
    _dataMapCPU.resize(serverSet.size());
 #ifdef R__HAS_CUDA
@@ -589,7 +589,7 @@ void Evaluator::markGPUNodes()
 void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 {
    if (opMode != arg->operMode()) {
-      _changeOperModeRAIIs.emplace(arg, opMode);
+      _changeOperModeRAIIs.emplace(std::make_unique<ChangeOperModeRAII>(arg, opMode));
    }
 }
 
