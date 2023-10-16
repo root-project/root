@@ -2489,7 +2489,7 @@ class HierarchyPainter extends BasePainter {
 
             if (handle?.expand_item) {
                _obj = _obj[handle.expand_item];
-               hitem.expand_item = handle.expand_item; // remember that was exapnd item
+               _item.expand_item = handle.expand_item; // remember that was exapnd item
                handle = _obj?._typename ? getDrawHandle(prROOT + _obj._typename, '::expand') : null;
             }
 
@@ -3220,7 +3220,8 @@ class HierarchyPainter extends BasePainter {
       if (use_inject && !globalThis.JSROOT) {
          globalThis.JSROOT = {
             version, gStyle, create, httpRequest, loadScript, decodeUrl,
-            source_dir, settings, addUserStreamer, addDrawFunc
+            source_dir, settings, addUserStreamer, addDrawFunc,
+            draw, redraw
          };
       }
 

@@ -214,22 +214,30 @@ class TF1Painter extends TH1Painter {
       // in the case there were points have saved and we cannot calculate function
       // if we don't have the user's function
       if (this._use_saved_points) {
-         let np = tf1.fSave.length - 2;
+         let np = tf1.fSave.length - 2, custom_xaxis = null;
          xmin = tf1.fSave[np];
          xmax = tf1.fSave[np + 1];
 
          if (xmin === xmax) {
             xmin = tf1.fSave[--np];
-            console.error('Very special stored values, see TF1.cxx', xmin, xmax);
+            const mp = this.getMainPainter();
+            if (isFunc(mp?.getHisto))
+               custom_xaxis = mp?.getHisto()?.fXaxis;
+            else
+               console.error('Very special stored values, see TF1::Save, in TF1.cxx:3183', xmin, xmax);
          }
 
          ensureBins(np);
 
          // TODO: try to detect such situation, should not happen with TWebCanvas
-         const dx = (xmax - xmin) / (np - 2); // np-2 due to arithmetic in the TF1 class
-         // extend range while saved values are for bin center
-         hist.fXaxis.fXmin = xmin - dx/2;
-         hist.fXaxis.fXmax = xmax + dx/2;
+         if (custom_xaxis)
+            Object.assign(hist.fXaxis, custom_xaxis);
+         else {
+            const dx = (xmax - xmin) / (np - 2); // np-2 due to arithmetic in the TF1 class
+            // extend range while saved values are for bin center
+            hist.fXaxis.fXmin = xmin - dx/2;
+            hist.fXaxis.fXmax = xmax + dx/2;
+         }
 
          for (let n = 0; n < np; ++n) {
             const y = tf1.fSave[n];

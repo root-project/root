@@ -1,5 +1,10 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Fix - expand item in hierarchy painter
+2. Fix - correctly use saved TF1 values for non-equidistant bins #270
+
+
 ## Changes in 7.5.0
 1. Correctly implement `TH2` projections like MERCATOR or PARABOLIC, add MOLLWEIDE
 2. Support "pol", "cyl", "sph" and "psr" coordinates systems for lego and surf plots
