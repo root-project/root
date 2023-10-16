@@ -45,7 +45,7 @@ combined in the main thread.
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 #include "RooAbsOptTestStatistic.h"
 #include "RooCategory.h"
 

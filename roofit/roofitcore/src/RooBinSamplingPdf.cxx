@@ -91,7 +91,7 @@
 
 #include "RooBinSamplingPdf.h"
 
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 #include "RooRealBinding.h"
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
@@ -146,7 +146,7 @@ double RooBinSamplingPdf::evaluate() const {
   double result;
   {
     // Important: When the integrator samples x, caching of sub-tree values needs to be off.
-    RooHelpers::DisableCachingRAII disableCaching(inhibitDirty());
+    DisableCachingRAII disableCaching(inhibitDirty());
     result = integrate(_normSet, low, high) / (high-low);
   }
 
@@ -167,7 +167,7 @@ void RooBinSamplingPdf::computeBatch(double* output, size_t /*size*/, RooFit::De
   auto xValues = dataMap.at(_observable);
 
   // Important: When the integrator samples x, caching of sub-tree values needs to be off.
-  RooHelpers::DisableCachingRAII disableCaching(inhibitDirty());
+  DisableCachingRAII disableCaching(inhibitDirty());
 
   // Now integrate PDF in each bin:
   for (unsigned int i=0; i < xValues.size(); ++i) {
