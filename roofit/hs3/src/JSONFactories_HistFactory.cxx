@@ -10,7 +10,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFitHS3/HistFactoryJSONTool.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFit/Detail/JSONInterface.h>
