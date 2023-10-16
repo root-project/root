@@ -145,6 +145,24 @@ std::string toString(TClass *c)
    return "unknown";
 }
 
+inline std::string defaultGammaName(std::string const &sysname, std::size_t i)
+{
+   return "gamma_" + sysname + "_bin_" + std::to_string(i);
+}
+
+/// Export the names of the gamma parameters to the modifier struct if the
+/// names don't match the default gamma parameter names, which is gamma_<sysname>_bin_<i>
+void optionallyExportGammaParameters(JSONNode &mod, std::string const &sysname,
+                                     std::vector<std::string> const &paramNames)
+{
+   for (std::size_t i = 0; i < paramNames.size(); ++i) {
+      if (paramNames[i] != defaultGammaName(sysname, i)) {
+         mod["parameters"].fill_seq(paramNames);
+         return;
+      }
+   }
+}
+
 RooRealVar &createNominal(RooWorkspace &ws, std::string const &parname, double val, double min, double max)
 {
    RooRealVar &nom = getOrCreate<RooRealVar>(ws, "nom_" + parname, val, min, max);
@@ -166,16 +184,17 @@ RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &pname)
    return getOrCreate<RooGaussian>(ws, constraintName(pname), *constrParam, *ws.var("nom_" + pname), 1.);
 }
 
-ParamHistFunc &createPHF(const std::string &phfname, const std::vector<std::string> &parnames,
-                         const std::vector<double> &vals, RooJSONFactoryWSTool &tool, RooArgList &constraints,
-                         const RooArgSet &observables, const std::string &constraintType, double gammaMin,
-                         double gammaMax, double minSigma)
+ParamHistFunc &createPHF(const std::string &phfname, std::string const &sysname,
+                         const std::vector<std::string> &parnames, const std::vector<double> &vals,
+                         RooJSONFactoryWSTool &tool, RooArgList &constraints, const RooArgSet &observables,
+                         const std::string &constraintType, double gammaMin, double gammaMax, double minSigma)
 {
    RooWorkspace &ws = *tool.workspace();
 
    RooArgList gammas;
-   for (auto &p : parnames) {
-      gammas.add(getOrCreate<RooRealVar>(ws, p, 1., gammaMin, gammaMax));
+   for (std::size_t i = 0; i < vals.size(); ++i) {
+      const std::string name = parnames.empty() ? defaultGammaName(sysname, i) : parnames[i];
+      gammas.add(getOrCreate<RooRealVar>(ws, name, 1., gammaMin, gammaMax));
    }
 
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
@@ -311,8 +330,8 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                parnames.push_back(v.val());
             }
             std::string constraint(mod["constraint"].val());
-            shapeElems.add(createPHF(funcName, parnames, vals, tool, constraints, varlist, constraint, defaultGammaMin,
-                                     defaultShapeSysGammaMax, minShapeUncertainty));
+            shapeElems.add(createPHF(funcName, sysname, parnames, vals, tool, constraints, varlist, constraint,
+                                     defaultGammaMin, defaultShapeSysGammaMax, minShapeUncertainty));
          } else if (modtype == "custom") {
             RooAbsReal *obj = ws.function(sysname);
             if (!obj) {
@@ -377,7 +396,7 @@ public:
       }
       std::vector<double> sumW;
       std::vector<double> sumW2;
-      std::vector<std::string> gamma_parnames;
+      std::vector<std::string> gammaParnames;
       RooArgSet observables = RooJSONFactoryWSTool::readAxes(p);
 
       std::string fprefix = name;
@@ -397,10 +416,11 @@ public:
                sumW[i] += dh->weight(i);
                sumW2[i] += dh->weightSquared(i);
             }
-            if (gamma_parnames.size() == 0) {
-               auto &staterror = findStaterror(comp);
-               for (const auto &v : staterror["parameters"].children()) {
-                  gamma_parnames.push_back(v.val());
+            if (gammaParnames.empty()) {
+               if (auto staterrorParams = findStaterror(comp).find("parameters")) {
+                  for (const auto &v : staterrorParams->children()) {
+                     gammaParnames.push_back(v.val());
+                  }
                }
             }
          }
@@ -410,8 +430,8 @@ public:
       RooAbsArg *mcStatObject = nullptr;
       RooArgList constraints;
       if (!sumW.empty()) {
-         std::string phfName = name;
-         erasePrefix(phfName, "model_");
+         std::string channelName = name;
+         erasePrefix(channelName, "model_");
 
          std::vector<double> errs(sumW.size());
          for (size_t i = 0; i < sumW.size(); ++i) {
@@ -420,12 +440,9 @@ public:
             errs[i] = std::max(errs[i], 0.);
          }
 
-         if (gamma_parnames.size() == 0) {
-            RooJSONFactoryWSTool::error("failed to extract names of gamma parameters for '" + name + "'");
-         }
-
-         mcStatObject = &createPHF("mc_stat_" + phfName, gamma_parnames, errs, *tool, constraints, observables,
-                                   statErrType, defaultGammaMin, defaultStatErrorGammaMax, statErrThresh);
+         mcStatObject =
+            &createPHF("mc_stat_" + channelName, "stat_" + channelName, gammaParnames, errs, *tool, constraints,
+                       observables, statErrType, defaultGammaMin, defaultStatErrorGammaMax, statErrThresh);
       }
 
       int idx = 0;
@@ -626,7 +643,7 @@ struct Sample {
    std::vector<ShapeSys> shapesys;
    std::vector<RooAbsReal *> otherElements;
    bool useBarlowBeestonLight = false;
-   std::vector<std::string> gamma_parameters;
+   std::vector<std::string> staterrorParameters;
    TClass *barlowBeestonLightConstraint = RooPoisson::Class();
    Sample(const std::string &n) : name{n} {}
 };
@@ -656,9 +673,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    if (!sumpdf)
       return false;
 
-   std::string chname = pdfname;
-   erasePrefix(chname, "model_");
-   eraseSuffix(chname, "_model");
+   std::string channelName = pdfname;
+   erasePrefix(channelName, "model_");
+   eraseSuffix(channelName, "_model");
 
    for (RooAbsArg *sample : sumpdf->funcList()) {
       if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
@@ -683,7 +700,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       Sample sample(func->GetName());
       erasePrefix(sample.name, "L_x_");
       eraseSuffix(sample.name, "_shapes");
-      eraseSuffix(sample.name, "_" + chname);
+      eraseSuffix(sample.name, "_" + channelName);
       erasePrefix(sample.name, pdfname + "_");
       RooArgSet elems;
       collectElements(elems, func);
@@ -766,7 +783,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          if (startsWith(std::string(phf->GetName()), "mc_stat_")) { // MC stat uncertainty
             int idx = 0;
             for (const auto &g : phf->paramList()) {
-               sample.gamma_parameters.push_back(g->GetName());
+               sample.staterrorParameters.push_back(g->GetName());
                ++idx;
                RooAbsPdf *constraint = findConstraint(g);
                if (tot_yield.find(idx) == tot_yield.end()) {
@@ -792,7 +809,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             sample.useBarlowBeestonLight = true;
          } else { // other ShapeSys
             ShapeSys sys(phf->GetName());
-            erasePrefix(sys.name, chname + "_");
+            erasePrefix(sys.name, channelName + "_");
             eraseSuffix(sys.name, "_ShapeSys");
 
             for (const auto &g : phf->paramList()) {
@@ -903,7 +920,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod.set_map();
          mod["name"] << sys.name;
          mod["type"] << "shapesys";
-         mod["parameters"].fill_seq(sys.parameters);
+         optionallyExportGammaParameters(mod, sys.name, sys.parameters);
          mod["constraint"] << toString(sys.constraint);
          if (sys.constraint) {
             auto &data = mod["data"].set_map();
@@ -925,7 +942,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod.set_map();
          mod["name"] << ::Literals::staterror;
          mod["type"] << ::Literals::staterror;
-         mod["parameters"].fill_seq(sample.gamma_parameters);
+         optionallyExportGammaParameters(mod, "stat_" + channelName, sample.staterrorParameters);
          mod["constraint"] << toString(sample.barlowBeestonLightConstraint);
       }
 
