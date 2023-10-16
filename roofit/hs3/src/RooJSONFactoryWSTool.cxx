@@ -51,18 +51,18 @@ exporting to and importing from JSON and YML.
 
 In order to import a workspace from a JSON file, you can do
 
-~~ {.py}
+~~~ {.py}
 ws = ROOT.RooWorkspace("ws")
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.importJSON("myjson.json")
-~~
+~~~
 
 Similarly, in order to export a workspace to a JSON file, you can do
 
-~~ {.py}
+~~~ {.py}
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.exportJSON("myjson.json")
-~~
+~~~
 
 For more details, consult the tutorial <a
 href="https://root.cern/doc/v626/rf515__hfJSON_8py.html">rf515_hfJSON</a>.
@@ -70,8 +70,7 @@ href="https://root.cern/doc/v626/rf515__hfJSON_8py.html">rf515_hfJSON</a>.
 In order to import and export YML files, `ROOT` needs to be compiled
 with the external dependency <a
 href="https://github.com/biojppm/rapidyaml">RapidYAML</a>, which needs
-to be installed on your system and enabled via the CMake option
-`roofit_hs3_ryml`.
+to be installed on your system when building `ROOT`.
 
 The RooJSONFactoryWSTool only knows about a limited set of classes for
 import and export. If import or export of a class you're interested in
@@ -81,18 +80,18 @@ href="https://github.com/root-project/root/blob/master/roofit/hs3/README.md">REA
 to learn how to do that.
 
 You can always get a list of all the available importers and exporters by calling the following functions:
-~~ {.py}
+~~~ {.py}
 ROOT.RooFit.JSONIO.printImporters()
 ROOT.RooFit.JSONIO.printExporters()
 ROOT.RooFit.JSONIO.printFactoryExpressions()
 ROOT.RooFit.JSONIO.printExportKeys()
-~~
+~~~
 
 Alternatively, you can generate a LaTeX version of the available importers and exporters by calling
-~~ {.py}
+~~~ {.py}
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.writedoc("hs3.tex")
-~~
+~~~
 
 */
 
