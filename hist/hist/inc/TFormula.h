@@ -321,7 +321,7 @@ template <typename... Args>
 Double_t TFormula::Eval(Args... args) const 
 {
    if (sizeof...(args) > 4) {
-      Error("Eval", "Eval() only support setting upto 4 variables");
+      Error("Eval", "Eval() only support setting up to 4 variables");
    }
    double xxx[] = {static_cast<Double_t>(args)...};
    return EvalPar(xxx, nullptr);
