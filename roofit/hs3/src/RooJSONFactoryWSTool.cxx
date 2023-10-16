@@ -30,6 +30,8 @@
 #include "JSONIOUtils.h"
 #include "Domains.h"
 
+#include "RooFitImplHelpers.h"
+
 #include <TROOT.h>
 
 #include <algorithm>
@@ -191,45 +193,6 @@ bool isValidName(const std::string &str)
 
    // If all characters are valid, the string is a valid name
    return true;
-}
-
-/**
- * @brief Make a string a valid name by replacing invalid characters with underscores.
- *
- * A valid name should start with a letter or an underscore, followed by letters, digits, or underscores.
- * Only characters from the ASCII character set are allowed. Invalid characters are replaced with underscores.
- *
- * @param str [in, out] The string to be modified into a valid name.
- *
- * @return bool Returns true if the string is either already a valid name or has been successfully modified; otherwise,
- * returns false.
- *
- * @warning If the string is empty, it cannot be modified to a valid name.
- */
-bool makeValidName(std::string &str)
-{
-   // Check if the string is empty
-   if (str.empty()) {
-      RooJSONFactoryWSTool::error("cannot turn an empty string into a valid name!");
-      return false;
-   }
-
-   // Check the first character
-   if (!std::isalpha(str[0])) {
-      RooJSONFactoryWSTool::error("refusing to change first character of string '" + str + "' to make a valid name!");
-      return false;
-   }
-
-   // Check the remaining characters
-   bool changed = false;
-   for (size_t i = 1; i < str.length(); ++i) {
-      if (!std::isalnum(str[i]) && str[i] != '_') {
-         str[i] = '_'; // Replace invalid characters with underscores
-         changed = true;
-      }
-   }
-
-   return changed;
 }
 
 /**
@@ -1383,10 +1346,17 @@ void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &n
    auto &indices = node["indices"].set_seq();
 
    for (auto const &item : cat) {
-      std::string label(item.first);
-      if (makeValidName(label)) {
-         oocoutW(nullptr, IO) << "RooFitHS3: changed '" << item.first << "' to '" << label
-                              << "' to become a valid name";
+      std::string label;
+      if (std::isalpha(item.first[0])) {
+         label = RooFit::Detail::makeValidVarName(item.first);
+         if (label != item.first) {
+            oocoutW(nullptr, IO) << "RooFitHS3: changed '" << item.first << "' to '" << label
+                                 << "' to become a valid name";
+         }
+      } else {
+         RooJSONFactoryWSTool::error("refusing to change first character of string '" + item.first +
+                                     "' to make a valid name!");
+         label = item.first;
       }
       labels.append_child() << label;
       indices.append_child() << item.second;
@@ -1450,10 +1420,17 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 
    for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
       std::string catName(absData->GetName());
-      std::string dataName(catName);
-      if (makeValidName(dataName)) {
-         oocoutW(nullptr, IO) << "RooFitHS3: changed '" << catName << "' to '" << dataName
-                              << "' to become a valid name";
+      std::string dataName;
+      if (std::isalpha(catName[0])) {
+         dataName = RooFit::Detail::makeValidVarName(catName);
+         if (dataName != catName) {
+            oocoutW(nullptr, IO) << "RooFitHS3: changed '" << catName << "' to '" << dataName
+                                 << "' to become a valid name";
+         }
+      } else {
+         RooJSONFactoryWSTool::error("refusing to change first character of string '" + catName +
+                                     "' to make a valid name!");
+         dataName = catName;
       }
       absData->SetName((std::string(data.GetName()) + "_" + dataName).c_str());
       datamap.components[catName] = absData->GetName();

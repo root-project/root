@@ -32,6 +32,8 @@ computation times.
 #include <RooSetProxy.h>
 #include "RooFit/Detail/Buffers.h"
 
+#include "RooFitImplHelpers.h"
+
 #include <ROOT/StringUtils.hxx>
 
 #include <TClass.h>
@@ -357,8 +359,8 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   std::string weightSumName = ctx.makeValidVarName(GetName()) + "WeightSum";
-   std::string resName = ctx.makeValidVarName(GetName()) + "Result";
+   std::string weightSumName = RooFit::Detail::makeValidVarName(GetName()) + "WeightSum";
+   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
    ctx.addResult(this, resName);
    ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
