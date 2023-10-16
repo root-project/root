@@ -35,31 +35,32 @@ Support for calculation in partitions is needed to allow multi-core
 parallelized calculation of test statistics.
 **/
 
+#include "RooAbsOptTestStatistic.h"
+
 #include "Riostream.h"
 #include "TClass.h"
 #include <cstring>
 
-
-#include "RooAbsOptTestStatistic.h"
-#include "RooMsgService.h"
-#include "RooAbsPdf.h"
 #include "RooAbsData.h"
-#include "RooDataHist.h"
-#include "RooArgSet.h"
-#include "RooRealVar.h"
-#include "RooErrorHandler.h"
-#include "RooGlobalFunc.h"
-#include "RooBinning.h"
 #include "RooAbsDataStore.h"
-#include "RooCategory.h"
-#include "RooDataSet.h"
-#include "RooProdPdf.h"
+#include "RooAbsPdf.h"
 #include "RooAddPdf.h"
+#include "RooArgSet.h"
+#include "RooBinSamplingPdf.h"
+#include "RooBinning.h"
+#include "RooCategory.h"
+#include "RooDataHist.h"
+#include "RooDataSet.h"
+#include "RooErrorHandler.h"
+#include "RooFitImplHelpers.h"
+#include "RooGlobalFunc.h"
+#include "RooMsgService.h"
+#include "RooProdPdf.h"
 #include "RooProduct.h"
 #include "RooRealSumPdf.h"
+#include "RooRealVar.h"
 #include "RooTrace.h"
 #include "RooVectorDataStore.h"
-#include "RooBinSamplingPdf.h"
 
 #include "ROOT/StringUtils.hxx"
 

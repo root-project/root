@@ -17,6 +17,8 @@
 #include <RooConstraintSum.h>
 #include <RooMsgService.h>
 
+#include "RooFitImplHelpers.h"
+
 namespace {
 
 std::unique_ptr<RooArgSet>

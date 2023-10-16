@@ -24,6 +24,7 @@
 #include <RooFit/TestStatistics/RooSumL.h>
 #include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooFit/TestStatistics/RooRealL.h>
+#include <RooHelpers.h>
 
 #include "Math/Util.h" // KahanSum
 

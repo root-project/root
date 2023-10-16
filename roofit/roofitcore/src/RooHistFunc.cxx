@@ -31,7 +31,7 @@ discrete dimensions and may have negative values.
 #include "RooCategory.h"
 #include "RooWorkspace.h"
 #include "RooHistPdf.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 
 #include "TError.h"
 #include "TBuffer.h"

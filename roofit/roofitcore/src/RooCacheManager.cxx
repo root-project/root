@@ -35,10 +35,11 @@ configurations can be cached.
 **/
 //
 
-#include <vector>
 #include "RooCacheManager.h"
 
-using namespace std ;
+#include "RooHelpers.h"
+
+#include <vector>
 
 #ifndef ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
 #define ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION

@@ -27,16 +27,16 @@ discrete dimensions.
 
 #include "Riostream.h"
 
-#include "RooHistPdf.h"
+#include "RooCategory.h"
 #include "RooCurve.h"
 #include "RooDataHist.h"
+#include "RooFitImplHelpers.h"
+#include "RooGlobalFunc.h"
+#include "RooHistPdf.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "RooCategory.h"
-#include "RooWorkspace.h"
-#include "RooGlobalFunc.h"
-#include "RooHelpers.h"
 #include "RooUniformBinning.h"
+#include "RooWorkspace.h"
 
 #include "TError.h"
 #include "TBuffer.h"

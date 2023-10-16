@@ -23,7 +23,7 @@
 #include "RooParamHistFunc.h"
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
-#include "RooHelpers.h"
+#include "RooFitImplHelpers.h"
 #include <cmath>
 #include "TMath.h"
 

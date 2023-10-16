@@ -47,27 +47,30 @@ in each category.
 **/
 
 #include "RooSimultaneous.h"
-#include "RooAbsCategoryLValue.h"
-#include "RooPlot.h"
-#include "RooRealVar.h"
-#include "RooAddPdf.h"
-#include "RooAbsData.h"
+
 #include "Roo1DTable.h"
-#include "RooSimGenContext.h"
-#include "RooSimSplitGenContext.h"
-#include "RooDataSet.h"
-#include "RooCmdConfig.h"
-#include "RooNameReg.h"
-#include "RooGlobalFunc.h"
-#include "RooMsgService.h"
-#include "RooCategory.h"
-#include "RooSuperCategory.h"
-#include "RooDataHist.h"
-#include "RooRandom.h"
+#include "RooAbsCategoryLValue.h"
+#include "RooAbsData.h"
+#include "RooAddPdf.h"
 #include "RooArgSet.h"
 #include "RooBinSamplingPdf.h"
+#include "RooCategory.h"
+#include "RooCmdConfig.h"
+#include "RooDataHist.h"
+#include "RooDataSet.h"
+#include "RooGlobalFunc.h"
+#include "RooMsgService.h"
+#include "RooNameReg.h"
+#include "RooPlot.h"
+#include "RooRandom.h"
+#include "RooRealVar.h"
+#include "RooSimGenContext.h"
+#include "RooSimSplitGenContext.h"
+#include "RooSuperCategory.h"
 
-#include "ROOT/StringUtils.hxx"
+#include "RooFitImplHelpers.h"
+
+#include <ROOT/StringUtils.hxx>
 
 #include <iostream>
 

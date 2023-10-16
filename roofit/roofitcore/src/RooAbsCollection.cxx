@@ -41,7 +41,7 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include <RooHelpers.h>
+#include "RooFitImplHelpers.h"
 
 #include <strlcpy.h>
 #include <algorithm>
