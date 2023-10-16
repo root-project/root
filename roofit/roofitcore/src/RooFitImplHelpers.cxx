@@ -12,7 +12,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-
 #include <RooFitImplHelpers.h>
 
 #include <RooAbsCategory.h>
@@ -288,5 +287,26 @@ RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const
 } // namespace Detail
 
 } // namespace RooHelpers
+
+namespace RooFit {
+namespace Detail {
+
+/// Transform a string into a valid C++ variable name by replacing forbidden
+/// characters with underscores.
+/// @param in The input string.
+/// @return A new string valid variable name.
+std::string makeValidVarName(std::string const &in)
+{
+   std::string out;
+   if (std::isdigit(in[0])) {
+      out += '_';
+   }
+   out += in;
+   std::transform(out.begin(), out.end(), out.begin(), [](char c) { return std::isalnum(c) ? c : '_'; });
+   return out;
+}
+
+} // namespace Detail
+} // namespace RooFit
 
 /// \endcond
