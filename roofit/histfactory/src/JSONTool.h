@@ -1,17 +1,19 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
  *   Carsten D. Burgard, DESY/ATLAS, Dec 2021
  *
- * Copyright (c) 2022, CERN
+ * Copyright (c) 2023, CERN
  *
  * Redistribution and use in source and binary forms,
  * with or without modification, are permitted according to the terms
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFitHS3_HistFactoryJSONTool_h
-#define RooFitHS3_HistFactoryJSONTool_h
+#ifndef RooStats_HistFactory_JSONTool_h
+#define RooStats_HistFactory_JSONTool_h
 
 #include <iostream>
 #include <string>
@@ -46,3 +48,5 @@ private:
 } // namespace RooStats
 
 #endif
+
+/// \endcond

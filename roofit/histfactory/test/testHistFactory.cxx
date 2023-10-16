@@ -9,7 +9,6 @@
 
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFitHS3/HistFactoryJSONTool.h>
 
 #include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooDataHist.h>
@@ -27,6 +26,8 @@
 #include <TFile.h>
 #include <TCanvas.h>
 #include <gtest/gtest.h>
+
+#include "../src/JSONTool.h"
 
 // Backward compatibility for gtest version < 1.10.0
 #ifndef INSTANTIATE_TEST_SUITE_P
