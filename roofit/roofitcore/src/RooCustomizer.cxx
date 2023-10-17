@@ -182,7 +182,6 @@ namespace {
 /// Factory interface
 class CustIFace : public RooFactoryWSTool::IFace {
 public:
-  ~CustIFace() override {} ;
   std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
 } ;
 

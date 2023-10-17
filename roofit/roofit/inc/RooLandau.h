@@ -30,7 +30,6 @@ public:
   RooLandau(const char *name, const char *title, RooAbsReal::Ref _x, RooAbsReal::Ref _mean, RooAbsReal::Ref _sigma);
   RooLandau(const RooLandau& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooLandau(*this,newname); }
-  inline ~RooLandau() override { }
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;

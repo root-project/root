@@ -34,7 +34,6 @@ namespace RooStats {
 
   public:
     SamplingSummaryLookup() {}
-    ~SamplingSummaryLookup() override {}
 
     void Add(double cl, double leftside){
       // add cl,leftside pair to lookup table
@@ -96,7 +95,6 @@ namespace RooStats {
   class AcceptanceRegion : public TObject{
   public:
      AcceptanceRegion() : fLookupIndex(0), fLowerLimit(0), fUpperLimit(0) {}
-    ~AcceptanceRegion() override {}
 
     AcceptanceRegion(Int_t lu, double ll, double ul){
       fLookupIndex = lu;
@@ -122,7 +120,6 @@ namespace RooStats {
   class SamplingSummary : public TObject {
   public:
      SamplingSummary() : fParameterPointIndex(0) {}
-    ~SamplingSummary() override {}
      SamplingSummary(AcceptanceRegion& ar) : fParameterPointIndex(0) {
       AddAcceptanceRegion(ar);
     }
