@@ -24,7 +24,6 @@ public :
    TBranch        *b_i;   ///<!
 
    RooProofDriverSelector(TTree * /*tree*/ =nullptr) { b_i = nullptr ; _pkg = nullptr ; fChain = nullptr ; }
-   ~RooProofDriverSelector() override { }
    Int_t   Version() const override { return 2; }
    void    SlaveBegin(TTree *tree) override;
    void    Init(TTree* tree) override;

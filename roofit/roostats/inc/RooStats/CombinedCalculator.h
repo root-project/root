@@ -92,9 +92,6 @@ in a common way for several concrete calculators.
          SetTestSize(size);
       }
 
-      /// destructor.
-      ~CombinedCalculator() override { }
-
       /// Main interface to get a ConfInterval, pure virtual
       ConfInterval* GetInterval() const override = 0;
       /// main interface to get a HypoTestResult, pure virtual
