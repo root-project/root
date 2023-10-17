@@ -143,6 +143,8 @@ ROOT::RDF::Experimental::SnapshotPtr_t ROOT::RDF::Experimental::VariationsFor(RO
 namespace ROOT {
 namespace RDF {
 
+namespace Experimental {
+
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,
                                unsigned int printInterval, bool useColors)
    : fPrintInterval(printInterval),
@@ -288,7 +290,6 @@ void ProgressHelper::PrintProgressbar(std::ostream &stream, std::size_t currentE
       stream << "\033[0m";
 }
 //*/
-namespace Experimental {
 
 class ProgressBarAction final : public ROOT::Detail::RDF::RActionImpl<ProgressBarAction> {
 public:
