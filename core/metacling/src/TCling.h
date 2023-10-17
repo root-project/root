@@ -270,7 +270,7 @@ public: // Public Interface
    void    UpdateListOfGlobals() final;
    void    UpdateListOfGlobalFunctions() final;
    void    UpdateListOfTypes() final;
-   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE) final;
+   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE, Bool_t silent = kFALSE) final;
 
    ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) final;
 

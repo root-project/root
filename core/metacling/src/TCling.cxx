@@ -4034,7 +4034,7 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
 /// If 'reload' is true, (attempt to) generate a new ClassInfo even if we
 /// already have one.
 
-void TCling::SetClassInfo(TClass* cl, Bool_t reload)
+void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
 {
    // We are shutting down, there is no point in reloading, it only triggers
    // redundant deserializations.
