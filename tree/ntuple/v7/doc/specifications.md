@@ -805,14 +805,6 @@ If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in th
 The `SizeT` template parameter defines the in-memory integer type of the collection size.
 The valid types are `std::uint32_t` and `std::uint64_t`.
 
-### ROOT::Experimental::RNTupleBLOB
-
-A field that stores uninterpreted byte arrays.
-Similar to a string field, the `RNTupleBLOB` field has two columns.
-It represents the data as a collection of bytes.
-The first (principal) column is of type [Split]Index[64,32].
-The second column is of type `Byte`.
-
 ## Limits
 
 TODO(jblomer)

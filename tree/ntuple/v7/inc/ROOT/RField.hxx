@@ -2545,63 +2545,6 @@ public:
    using Detail::RFieldBase::GenerateValue;
 };
 
-class RNTupleBLOB {
-private:
-   std::shared_ptr<void> fData;
-   std::size_t fSize = 0;
-
-public:
-   RNTupleBLOB() = default;
-   RNTupleBLOB(std::shared_ptr<void> data, std::size_t size) : fData(data), fSize(size) {}
-
-   void Set(std::shared_ptr<void> data, std::size_t size)
-   {
-      fData = data;
-      fSize = size;
-   }
-
-   std::shared_ptr<void> GetData() const { return fData; }
-   std::size_t GetSize() const { return fSize; }
-};
-
-template <>
-class RField<RNTupleBLOB> : public Detail::RFieldBase {
-private:
-   ClusterSize_t fIndex;
-
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RField>(newName);
-   }
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-
-   void GenerateValue(void *where) const final { new (where) RNTupleBLOB(); }
-   void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
-
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
-
-   void CommitClusterImpl() final { fIndex = 0; }
-
-public:
-   static std::string TypeName() { return "ROOT::Experimental::RNTupleBLOB"; }
-   explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0)
-   {
-   }
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() override = default;
-
-   using Detail::RFieldBase::GenerateValue;
-   size_t GetValueSize() const final { return sizeof(RNTupleBLOB); }
-   size_t GetAlignment() const final { return std::alignment_of<RNTupleBLOB>(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-};
-
 template <typename ItemT>
 class RField<std::atomic<ItemT>> : public RAtomicField {
 public:
