@@ -272,8 +272,6 @@ SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 void AddProgressbar(ROOT::RDF::RNode df);
 void AddProgressbar(ROOT::RDataFrame df);
 
-} // namespace Experimental
-
 /// RDF progress helper.
 /// This class provides callback functions to the RDataFrame. The event statistics
 /// (including elapsed time, currently processed file, currently processed events, the rate of event processing
@@ -431,7 +429,7 @@ public:
       return fSampleNameToEventEntries.size();
    }
 };
-
+} // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
 #endif
