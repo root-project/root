@@ -6,7 +6,7 @@ The ROOT system provides a set of modules with all the functionality
 needed to handle and analyze large amounts of data in a very efficient way.
 Having the data defined as a set of objects, specialized storage methods are
 used to get direct access to the separate attributes of the selected objects,
-without having to touch the bulk of the data. Included are histograming
+without having to touch the bulk of the data. Included are histogramming
 methods in an arbitrary number of dimensions, curve fitting, function
 evaluation, minimization, graphics and visualization classes to allow
 the easy setup of an analysis system that can query and process the data
