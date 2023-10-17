@@ -515,7 +515,7 @@ EvalBackend EvalBackend::Cpu()
 }
 EvalBackend EvalBackend::Cuda()
 {
-   return EvalBackend(Value::Cpu);
+   return EvalBackend(Value::Cuda);
 }
 EvalBackend EvalBackend::Codegen()
 {
