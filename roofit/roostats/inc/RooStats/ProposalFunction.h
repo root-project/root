@@ -44,8 +44,6 @@ the proposal density to maintain detailed balance.
       ///Default constructor
       ProposalFunction() {}
 
-      ~ProposalFunction() override {}
-
       /// Populate xPrime with the new proposed point,
       /// possibly based on the current point x
       virtual void Propose(RooArgSet& xPrime, RooArgSet& x) = 0;

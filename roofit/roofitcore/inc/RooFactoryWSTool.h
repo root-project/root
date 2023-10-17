@@ -144,7 +144,6 @@ public:
 
   class SpecialsIFace : public IFace {
   public:
-    ~SpecialsIFace() override {} ;
     std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
   } ;
 
