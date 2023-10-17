@@ -272,6 +272,8 @@ SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 void AddProgressbar(ROOT::RDF::RNode df);
 void AddProgressbar(ROOT::RDataFrame df);
 
+class ProgressBarAction;
+
 /// RDF progress helper.
 /// This class provides callback functions to the RDataFrame. The event statistics
 /// (including elapsed time, currently processed file, currently processed events, the rate of event processing
@@ -333,6 +335,8 @@ public:
                   unsigned int printInterval = 1, bool useColors = true);
 
    ~ProgressHelper() = default;
+
+   friend class ProgressBarAction;
 
    /// Register a new sample for completion statistics.
    /// \see ROOT::RDF::RInterface::DefinePerSample().
