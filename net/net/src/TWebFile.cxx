@@ -78,7 +78,7 @@ TWebSocket::~TWebSocket()
 {
    if (!fWebFile->fHTTP11) {
       delete fWebFile->fSocket;
-      fWebFile->fSocket = 0;
+      fWebFile->fSocket = nullptr;
    }
 }
 
@@ -89,7 +89,7 @@ void TWebSocket::ReOpen()
 {
    if (fWebFile->fSocket) {
       delete fWebFile->fSocket;
-      fWebFile->fSocket = 0;
+      fWebFile->fSocket = nullptr;
    }
 
    TUrl connurl;
@@ -111,7 +111,7 @@ void TWebSocket::ReOpen()
 
       if (!fWebFile->fSocket || !fWebFile->fSocket->IsValid()) {
          delete fWebFile->fSocket;
-         fWebFile->fSocket = 0;
+         fWebFile->fSocket = nullptr;
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
             gSystem->Sleep(i*10);
          } else {
@@ -201,7 +201,7 @@ TWebFile::~TWebFile()
    delete fSocket;
    if (fFullCache) {
       free(fFullCache);
-      fFullCache = 0;
+      fFullCache = nullptr;
       fFullCacheSize = 0;
    }
 }
@@ -214,11 +214,11 @@ void TWebFile::Init(Bool_t readHeadOnly)
    char buf[4];
    int  err;
 
-   fSocket     = 0;
+   fSocket     = nullptr;
    fSize       = -1;
    fHasModRoot = kFALSE;
    fHTTP11     = kFALSE;
-   fFullCache  = 0;
+   fFullCache  = nullptr;
    fFullCacheSize = 0;
    SetMsgReadBuffer10();
 
@@ -411,12 +411,11 @@ Int_t TWebFile::ReOpen(Option_t *mode)
 
 void TWebFile::Close(Option_t *option)
 {
-   if (fSocket)
-      delete fSocket;
+   delete fSocket;
    fSocket = nullptr;
    if (fFullCache) {
       free(fFullCache);
-      fFullCache = 0;
+      fFullCache = nullptr;
       fFullCacheSize = 0;
    }
    return TFile::Close(option);
@@ -781,7 +780,7 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                if (fFullCache != 0) {
                   if (fSocket->RecvRaw(fFullCache, fullsize) != fullsize) {
                      Error("GetFromWeb10", "error receiving data from host %s", fUrl.GetHost());
-                     free(fFullCache); fFullCache = 0;
+                     free(fFullCache); fFullCache = nullptr;
                      return -1;
                   }
                   fFullCacheSize = fullsize;
@@ -1071,7 +1070,7 @@ Int_t TWebFile::GetHead()
    else
       connurl = fUrl;
 
-   TSocket *s = 0;
+   TSocket *s = nullptr;
    for (Int_t i = 0; i < 5; i++) {
       if (strcmp(connurl.GetProtocol(), "https") == 0) {
 #ifdef R__SSL
@@ -1086,7 +1085,7 @@ Int_t TWebFile::GetHead()
       if (!s->IsValid()) {
          delete s;
          if (gSystem->GetErrno() == EADDRINUSE || gSystem->GetErrno() == EISCONN) {
-            s = 0;
+            s = nullptr;
             gSystem->Sleep(i*10);
          } else {
             Error("GetHead", "cannot connect to host %s (errno=%d)", fUrl.GetHost(),
@@ -1461,7 +1460,7 @@ TWebSystem::TWebSystem() : TSystem("-http", "HTTP Helper System")
 {
    SetName("http");
 
-   fDirp = 0;
+   fDirp = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1480,10 +1479,10 @@ void *TWebSystem::OpenDirectory(const char *)
 {
    if (fDirp) {
       Error("OpenDirectory", "invalid directory pointer (should never happen)");
-      fDirp = 0;
+      fDirp = nullptr;
    }
 
-   fDirp = 0;   // not implemented for the time being
+   fDirp = nullptr;   // not implemented for the time being
 
    return fDirp;
 }
@@ -1498,7 +1497,7 @@ void TWebSystem::FreeDirectory(void *dirp)
       return;
    }
 
-   fDirp = 0;
+   fDirp = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
