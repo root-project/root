@@ -30,7 +30,6 @@ public:
          RooAbsReal& sigma, RooAbsReal& mu, RooAbsReal& a, RooAbsReal& n, RooAbsReal& a2, RooAbsReal& n2);
   RooHypatia2(const RooHypatia2& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
-  inline ~RooHypatia2() override { }
 
   /* Analytical integrals need testing.
 

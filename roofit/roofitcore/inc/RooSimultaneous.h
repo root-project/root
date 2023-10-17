@@ -117,7 +117,6 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    ~CacheElem() override {} ;
     RooArgList containedArgs(Action) override { return RooArgList(_partIntList) ; }
     RooArgList _partIntList ;
   } ;

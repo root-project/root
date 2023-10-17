@@ -35,8 +35,6 @@ namespace RooStats {
       MetropolisHastings(RooAbsReal& function, const RooArgSet& paramsOfInterest,
             ProposalFunction& proposalFunction, Int_t numIters);
 
-      ~MetropolisHastings() override {}
-
       /// main purpose of MetropolisHastings - run Metropolis-Hastings
       /// algorithm to generate Markov Chain of points in the parameter space
       virtual MarkovChain* ConstructChain();

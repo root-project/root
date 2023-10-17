@@ -107,7 +107,6 @@ protected:
   void getCompIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& compIntList, Int_t& code, const char* isetRangeName) const ;
   class IntCacheElem : public RooAbsCacheElement {
   public:
-    ~IntCacheElem() override {} ;
     RooArgList _intList ; ///< List of component integrals
     RooArgList containedArgs(Action) override ;
   } ;

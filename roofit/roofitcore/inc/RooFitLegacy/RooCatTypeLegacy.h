@@ -37,9 +37,6 @@ public:
     strlcpy(_label,other._label,256) ;
   } ;
 
-  ~RooCatType() override {
-    // Destructor
-  } ;
   TObject* Clone(const char*) const override { return new RooCatType(*this); }
 
   const Text_t* GetName() const override {

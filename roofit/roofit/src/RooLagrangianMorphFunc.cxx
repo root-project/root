@@ -1345,11 +1345,6 @@ public:
    }
 
    //////////////////////////////////////////////////////////////////////////////
-   // default destructor
-
-   ~CacheElem() override {}
-
-   //////////////////////////////////////////////////////////////////////////////
    /// create the basic objects required for the morphing
 
    inline void createComponents(const RooLagrangianMorphFunc::ParamMap &inputParameters,
