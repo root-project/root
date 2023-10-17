@@ -208,7 +208,7 @@ public:
    virtual void     UpdateListOfGlobals() = 0;
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
-   virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE) = 0;
+   virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE, Bool_t silent = kFALSE) = 0;
 
    enum ECheckClassInfo {
       kUnknown = 0, // backward compatible with false
