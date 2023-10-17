@@ -35,6 +35,7 @@ TEST(RNTupleShow, BasicTypes)
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt");
       auto fielddb = model->MakeField<double>("db");
+      auto fieldbyte = model->MakeField<std::byte>("byte");
       auto fieldint = model->MakeField<int>("int");
       auto fielduint = model->MakeField<unsigned>("uint");
       auto field64uint = model->MakeField<std::uint64_t>("uint64");
@@ -48,6 +49,7 @@ TEST(RNTupleShow, BasicTypes)
 
       *fieldPt = 5.0f;
       *fielddb = 9.99;
+      *fieldbyte = std::byte{137};
       *fieldint = -4;
       *fielduint = 3;
       *field64uint = 44444444444ull;
@@ -61,6 +63,7 @@ TEST(RNTupleShow, BasicTypes)
 
       *fieldPt = 8.5f;
       *fielddb = 9.998;
+      *fieldbyte = std::byte{42};
       *fieldint = -94;
       *fielduint = -30;
       *field64uint = 2299994967294ull;
@@ -82,6 +85,7 @@ TEST(RNTupleShow, BasicTypes)
       + "{\n"
       + "  \"pt\": 5,\n"
       + "  \"db\": 9.99,\n"
+      + "  \"byte\": 0x89,\n"
       + "  \"int\": -4,\n"
       + "  \"uint\": 3,\n"
       + "  \"uint64\": 44444444444,\n"
@@ -102,6 +106,7 @@ TEST(RNTupleShow, BasicTypes)
       + "{\n"
       + "  \"pt\": 8.5,\n"
       + "  \"db\": 9.998,\n"
+      + "  \"byte\": 0x2a,\n"
       + "  \"int\": -94,\n"
       + "  \"uint\": 4294967266,\n"
       + "  \"uint64\": 2299994967294,\n"
@@ -295,22 +300,24 @@ TEST(RNTupleShow, Objects)
       + "    \"a\": 4.1,\n"
       + "    \"v1\": [0.1, 0.2, 0.3],\n"
       + "    \"v2\": [[1.1, 1.2, 1.3], [2.1, 2.2, 2.3]],\n"
-      + "    \"s\": \"Example1String\"\n"
+      + "    \"s\": \"Example1String\",\n"
+      + "    \"b\": 0x00\n"
       + "  },\n"
       + "  \"CustomStructVec\": [{\"a\": 4.2, \"v1\": [0.1, 0.2, 0.3], \"v2\": [[1.1, 1.3], [2.1, 2.2, 2.3]], "
-      +      "\"s\": \"Example2String\"}, {\"a\": 4.3, \"v1\": [0.1, 0.2, 0.3], "
-      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"Example3String\"}, "
+      +      "\"s\": \"Example2String\", \"b\": 0x00}, {\"a\": 4.3, \"v1\": [0.1, 0.2, 0.3], "
+      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"Example3String\", \"b\": 0x00}, "
       +      "{\"a\": 4.4, \"v1\": [0.1, 0.3], \"v2\": [[1.1, 1.2, 1.3], [2.1, 2.2, 2.3]], "
-      +      "\"s\": \"Example4String\"}],\n"
+      +      "\"s\": \"Example4String\", \"b\": 0x00}],\n"
       + "  \"CustomStructArray\": [{\"a\": 4.5, \"v1\": [0.1, 0.2, 0.3], \"v2\": [[1.1, 1.3], [2.1, 2.2, 2.3]], "
-      +      "\"s\": \"AnotherString1\"}, {\"a\": 4.6, \"v1\": [0.1, 0.2, 0.3], "
-      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\"}],\n"
+      +      "\"s\": \"AnotherString1\", \"b\": 0x00}, {\"a\": 4.6, \"v1\": [0.1, 0.2, 0.3], "
+      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\", \"b\": 0x00}],\n"
       + "  \"DerivedA\": {\n"
       + "    \":_0\": {\n"
       + "      \"a\": 0,\n"
       + "      \"v1\": [],\n"
       + "      \"v2\": [],\n"
-      + "      \"s\": \"\"\n"
+      + "      \"s\": \"\",\n"
+      + "      \"b\": 0x00\n"
       + "    },\n"
       + "    \"a_v\": [],\n"
       + "    \"a_s\": \"\"\n"
@@ -404,8 +411,8 @@ TEST(RNTupleShow, RVec)
       + "{\n"
       + "  \"intVec\": [1, 2, 3],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format on
    EXPECT_EQ(os.str(), expected1);
@@ -417,9 +424,9 @@ TEST(RNTupleShow, RVec)
       + "{\n"
       + "  \"intVec\": [1, 2, 3, 4],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"},"
-      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00},"
+      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format on
    EXPECT_EQ(os2.str(), expected2);
@@ -471,8 +478,8 @@ TEST(RNTupleShow, RVecTypeErased)
       + "{\n"
       + "  \"intVec\": [1, 2, 3],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format on
    EXPECT_EQ(fString, os.str());
@@ -484,9 +491,9 @@ TEST(RNTupleShow, RVecTypeErased)
       + "{\n"
       + "  \"intVec\": [1, 2, 3, 4],\n"
       + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.1, 2.2]],\n"
-      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\"},"
-      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\"},"
-      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n"
+      + "  \"customStructVec\": [{\"a\": 0, \"v1\": [], \"v2\": [], \"s\": \"\", \"b\": 0x00},"
+      + " {\"a\": 1, \"v1\": [2, 3], \"v2\": [[4], [5]], \"s\": \"foo\", \"b\": 0x00},"
+      + " {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\", \"b\": 0x00}]\n"
       + "}\n"};
    // clang-format off
    EXPECT_EQ(fString1, os1.str());
