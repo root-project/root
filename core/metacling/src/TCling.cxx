@@ -3944,7 +3944,7 @@ static ETupleOrdering IsTupleAscending()
    }
 }
 
-static std::string AlternateTuple(const char *classname, const cling::LookupHelper& lh)
+static std::string AlternateTuple(const char *classname, const cling::LookupHelper& lh, Bool_t silent)
 {
    TClassEdit::TSplitType tupleContent(classname);
    std::string alternateName = "TEmulatedTuple";
@@ -3966,8 +3966,9 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
       while (iter != theEnd) {
          gInterpreter->TypeInfo_Init(type.get(), iter->c_str());
          if (gInterpreter->TypeInfo_Property(type.get()) & (kIsProtected | kIsPrivate)) {
-            Error("Load","Could not declare alternate type for %s since %s is private or protected",
-                  classname, iter->c_str());
+            if (!silent)
+               Error("Load","Could not declare alternate type for %s since %s is private or protected",
+                     classname, iter->c_str());
             return "";
          }
          ++iter;
@@ -4021,7 +4022,10 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
    alternateTuple << "};\n";
    alternateTuple << "}}\n";
    alternateTuple << "#endif\n";
-   if (!gCling->Declare(alternateTuple.str().c_str())) {
+   if (!gCling->Declare(alternateTuple.str().c_str()))
+   {
+      // Declare is not silent (yet?), so add an explicit error message
+      // to indicate the consequence of the syntax errors.
       Error("Load","Could not declare %s",alternateName.c_str());
       return "";
    }
@@ -4081,7 +4085,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
    // for the I/O to understand and handle.
    if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
       if (!reload)
-         name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper());
+         name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper(), silent);
       if (reload || name.empty()) {
          // We could not generate the alternate
          SetWithoutClassInfoState(cl);
