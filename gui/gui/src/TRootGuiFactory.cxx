@@ -78,7 +78,7 @@ void TRootGuiFactory::ShowWebCanvasWarning()
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                              UInt_t width, UInt_t height)
 {
-   TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
+   TString canvName = gEnv->GetValue("Canvas.Name", "TRootCanvas");
    if (canvName == "TWebCanvas") {
       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
@@ -98,7 +98,7 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                   Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
+   TString canvName = gEnv->GetValue("Canvas.Name", "TRootCanvas");
    if (canvName == "TWebCanvas") {
       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
