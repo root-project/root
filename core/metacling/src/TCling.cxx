@@ -3955,6 +3955,25 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
                     /*resultType*/nullptr, /* intantiateTemplate= */ false))
       return fullname;
 
+   {
+      // Check if we can produce the tuple
+      auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple).
+      auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
+      auto deleter = [](TypeInfo_t *type) {
+         gInterpreter->TypeInfo_Delete(type);
+      };
+      std::unique_ptr<TypeInfo_t, decltype(deleter)> type{ gInterpreter->TypeInfo_Factory(), deleter };
+      while (iter != theEnd) {
+         gInterpreter->TypeInfo_Init(type.get(), iter->c_str());
+         if (gInterpreter->TypeInfo_Property(type.get()) & (kIsProtected | kIsPrivate)) {
+            Error("Load","Could not declare alternate type for %s since %s is private or protected",
+                  classname, iter->c_str());
+            return "";
+         }
+         ++iter;
+      }
+   }
+
    std::string guard_name;
    ROOT::TMetaUtils::GetCppName(guard_name,alternateName.c_str());
    std::ostringstream guard;
