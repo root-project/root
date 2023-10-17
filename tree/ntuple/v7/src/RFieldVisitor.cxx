@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleView.hxx>
 
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -178,6 +179,16 @@ void ROOT::Experimental::RPrintValueVisitor::VisitFloatField(const RField<float>
    PrintIndent();
    PrintName(field);
    fOutput << *fValue.Get<float>();
+}
+
+void ROOT::Experimental::RPrintValueVisitor::VisitByteField(const RField<std::byte> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   char prev = std::cout.fill();
+   fOutput << "0x" << std::setw(2) << std::setfill('0') << std::hex << (*fValue.Get<unsigned char>() & 0xff);
+   fOutput << std::resetiosflags(std::ios_base::basefield);
+   std::cout.fill(prev);
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitCharField(const RField<char> &field)

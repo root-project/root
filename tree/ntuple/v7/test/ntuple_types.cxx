@@ -550,6 +550,27 @@ TEST(RNTuple, Char)
    ASSERT_EQ("char", charTField.GetType());
 }
 
+TEST(RNTuple, Byte)
+{
+   FileRaii fileGuard("ntuple_test_byte.root");
+
+   auto byteField = RField<std::byte>("myByte");
+   auto otherField = RFieldBase::Create("test", "std::byte").Unwrap();
+   ASSERT_EQ("std::byte", otherField->GetType());
+
+   {
+      auto model = RNTupleModel::Create();
+      auto f = model->MakeField<std::byte>("b", std::byte{137});
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(std::byte{137}, *reader->GetModel()->GetDefaultEntry()->Get<std::byte>("b"));
+}
+
 TEST(RNTuple, Int8_t)
 {
    auto field = RField<std::int8_t>("myInt8");
