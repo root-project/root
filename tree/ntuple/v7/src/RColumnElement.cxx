@@ -31,7 +31,7 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
    case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>();
    case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>();
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>();
-   case EColumnType::kByte: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kByte>>();
+   case EColumnType::kByte: return std::make_unique<RColumnElement<std::byte, EColumnType::kByte>>();
    case EColumnType::kChar: return std::make_unique<RColumnElement<char, EColumnType::kChar>>();
    case EColumnType::kBit: return std::make_unique<RColumnElement<bool, EColumnType::kBit>>();
    case EColumnType::kReal64: return std::make_unique<RColumnElement<double, EColumnType::kReal64>>();

@@ -25,6 +25,7 @@
 #include <TError.h>
 
 #include <cstring> // for memcpy
+#include <cstddef> // for std::byte
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -435,6 +436,13 @@ public:
 };
 
 template <>
+class RColumnElement<std::byte, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::byte);
+   RColumnElement() : RColumnElementBase(kSize) {}
+};
+
+template <>
 class RColumnElement<char, EColumnType::kUnknown> : public RColumnElementBase {
 public:
    static constexpr std::size_t kSize = sizeof(char);
@@ -614,6 +622,8 @@ public:
       static constexpr bool kIsMappable = true;                           \
       __RCOLUMNELEMENT_SPEC_BODY(CppT, RColumnElementBase, BitsOnStorage) \
    }
+
+DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(std::byte, EColumnType::kByte, 8);
 
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(char, EColumnType::kByte, 8);
 DECLARE_RCOLUMNELEMENT_SPEC_SIMPLE(char, EColumnType::kChar, 8);

@@ -187,6 +187,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "atomic<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType == "byte")
+      normalizedType = "std::byte";
 
    return normalizedType;
 }
@@ -372,6 +374,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       result = std::make_unique<RField<bool>>(fieldName);
    } else if (canonicalType == "char") {
       result = std::make_unique<RField<char>>(fieldName);
+   } else if (canonicalType == "std::byte") {
+      result = std::make_unique<RField<std::byte>>(fieldName);
    } else if (canonicalType == "std::int8_t") {
       result = std::make_unique<RField<std::int8_t>>(fieldName);
    } else if (canonicalType == "std::uint8_t") {
@@ -894,6 +898,31 @@ void ROOT::Experimental::RField<char>::GenerateColumnsImpl(const RNTupleDescript
 void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitCharField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::byte>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kByte}}, {{}});
+   return representations;
+}
+
+void ROOT::Experimental::RField<std::byte>::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(GetColumnRepresentative()[0]), 0));
+}
+
+void ROOT::Experimental::RField<std::byte>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(onDiskTypes[0]), 0));
+}
+
+void ROOT::Experimental::RField<std::byte>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitByteField(*this);
 }
 
 //------------------------------------------------------------------------------

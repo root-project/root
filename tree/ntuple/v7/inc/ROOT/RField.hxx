@@ -1727,6 +1727,47 @@ public:
 };
 
 template <>
+class RField<std::byte> : public Detail::RFieldBase {
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField>(newName);
+   }
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateValue(void *where) const final { new (where) std::byte{0}; }
+
+public:
+   static std::string TypeName() { return "std::byte"; }
+   explicit RField(std::string_view name)
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   std::byte *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<std::byte>(globalIndex); }
+   std::byte *Map(const RClusterIndex &clusterIndex) { return fPrincipalColumn->Map<std::byte>(clusterIndex); }
+   std::byte *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<std::byte>(globalIndex, nItems);
+   }
+   std::byte *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<std::byte>(clusterIndex, nItems);
+   }
+
+   using Detail::RFieldBase::GenerateValue;
+   size_t GetValueSize() const final { return sizeof(std::byte); }
+   size_t GetAlignment() const final { return alignof(std::byte); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+template <>
 class RField<char> : public Detail::RFieldBase {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
