@@ -25,7 +25,6 @@ class HypoTestPlot: public SamplingDistPlot {
       HypoTestPlot() : SamplingDistPlot() , fHypoTestResult(nullptr) {}   // needed for IO
       HypoTestPlot(HypoTestResult& result, Int_t bins=100, Option_t* opt = "NORMALIZE HIST");
       HypoTestPlot(HypoTestResult& result, Int_t bins, double min, double max, Option_t* opt = "NORMALIZE HIST");
-      ~HypoTestPlot(void) override {}
 
       /// Applies a HypoTestResult.
       void ApplyResult(HypoTestResult& result, Option_t* opt = "NORMALIZE HIST");

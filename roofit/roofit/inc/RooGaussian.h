@@ -34,7 +34,6 @@ public:
   TObject* clone(const char* newname) const override {
     return new RooGaussian(*this,newname);
   }
-  inline ~RooGaussian() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;

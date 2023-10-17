@@ -35,8 +35,6 @@ class SequentialProposal : public ProposalFunction {
       /// point x2
       double GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
 
-      ~SequentialProposal() override {}
-
       ClassDefOverride(SequentialProposal,1) // A concrete implementation of ProposalFunction, that uniformly samples the parameter space.
 
     private:

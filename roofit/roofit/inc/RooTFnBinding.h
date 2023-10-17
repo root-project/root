@@ -20,7 +20,6 @@ public:
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list, const RooArgList& plist);
   RooTFnBinding(const RooTFnBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooTFnBinding(*this,newname); }
-  inline ~RooTFnBinding() override { }
 
   void printArgs(std::ostream& os) const override ;
 

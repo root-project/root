@@ -179,8 +179,6 @@ public:
           _ehmap(other._ehmap),
           _compiledOK(other._compiledOK) {} ;
 
-    ~CodeRepo() override {} ;
-
     bool autoImportClass(TClass* tc, bool doReplace=false) ;
     bool compileClasses() ;
 

@@ -24,7 +24,6 @@ public:
          RooAbsReal& _x, RooAbsReal& _gamma, RooAbsReal& _beta, RooAbsReal& _mu);
   RooGamma(const RooGamma& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooGamma(*this,newname); }
-  inline ~RooGamma() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

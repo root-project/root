@@ -28,7 +28,6 @@ public:
 
   RooLegendre(const RooLegendre& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooLegendre(*this, newname); }
-  inline ~RooLegendre() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

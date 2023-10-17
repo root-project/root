@@ -22,7 +22,6 @@ for true statistical tests, but it is useful for debugging.
 
 #include "Rtypes.h"
 
-//#include "RooStats/DistributionCreator.h"
 #include "RooStats/TestStatistic.h"
 #include "RooStats/ToyMCSampler.h"
 
@@ -41,10 +40,6 @@ namespace RooStats {
      DebuggingTestStat() {
        fTestStatistic = new RooRealVar("UniformTestStatistic","UniformTestStatistic",0,0,1);
        fRand = new TRandom();
-     }
-     ~DebuggingTestStat() override {
-       //       delete fRand;
-       //       delete fTestStatistic;
      }
 
      /// Main interface to evaluate the test statistic on a dataset

@@ -41,8 +41,6 @@ namespace RooStats {
       /// be overridden by calling one of the Set...() methods.
       MCMCCalculator(RooAbsData& data, const ModelConfig& model);
 
-      ~MCMCCalculator() override {}
-
       /// Main interface to get a ConfInterval
       MCMCInterval* GetInterval() const override;
 

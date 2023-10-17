@@ -21,7 +21,6 @@
 class RooInvTransform : public RooAbsFunc {
 public:
   RooInvTransform(const RooAbsFunc &func);
-  inline ~RooInvTransform() override { }
 
   inline double operator()(const double xvector[]) const override {
     double xinv= 1./xvector[0];

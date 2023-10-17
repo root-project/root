@@ -66,7 +66,6 @@ class RooRefArray : public TObjArray {
   RooRefArray(const RooRefArray& other) : TObjArray(other) {
   }
   RooRefArray& operator=(const RooRefArray& other) = default;
-  ~RooRefArray() override {} ;
  protected:
   ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;

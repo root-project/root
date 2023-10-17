@@ -31,7 +31,6 @@ public:
 
   RooChebychev(const RooChebychev& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooChebychev(*this, newname); }
-  inline ~RooChebychev() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;

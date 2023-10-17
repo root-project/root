@@ -40,9 +40,6 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
-  // An empty constructor is usually ok
-  inline ~RooNovosibirsk() override { }
-
 protected:
   double evaluate() const override;
   void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;

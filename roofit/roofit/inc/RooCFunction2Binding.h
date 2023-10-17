@@ -102,7 +102,6 @@ class RooCFunction2Ref : public TObject {
   RooCFunction2Ref(VO (*ptr)(VI1,VI2)=nullptr) : _ptr(ptr) {
     // Constructor of persistable function reference
   } ;
-  ~RooCFunction2Ref() override {} ;
 
   VO operator()(VI1 x,VI2 y) const {
     // Evaluate embedded function
@@ -235,7 +234,6 @@ public:
   RooCFunction2Binding(const char *name, const char *title, VO (*_func)(VI1,VI2), RooAbsReal& _x, RooAbsReal& _y);
   RooCFunction2Binding(const RooCFunction2Binding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction2Binding(*this,newname); }
-  inline ~RooCFunction2Binding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
@@ -303,7 +301,6 @@ public:
   RooCFunction2PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2), RooAbsReal& _x, RooAbsReal& _y);
   RooCFunction2PdfBinding(const RooCFunction2PdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction2PdfBinding(*this,newname); }
-  inline ~RooCFunction2PdfBinding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer

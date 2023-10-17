@@ -20,7 +20,6 @@ TEST(RooCacheManager, TestSelectFromArgSet)
    // the cached class doesn't matter for this test, it just has to be an object that the cache is going to own
    class CacheElem : public RooAbsCacheElement {
    public:
-      ~CacheElem() override {}
       RooArgList containedArgs(Action) override { return {}; }
    };
 

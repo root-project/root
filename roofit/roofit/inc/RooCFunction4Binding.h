@@ -100,7 +100,6 @@ class RooCFunction4Ref : public TObject {
   RooCFunction4Ref(VO (*ptr)(VI1,VI2,VI3,VI4)=nullptr) : _ptr(ptr) {
     // Constructor of persistable function reference
   } ;
-  ~RooCFunction4Ref() override {} ;
 
   VO operator()(VI1 x,VI2 y,VI3 z,VI4 w) const {
     // Evaluate embedded function
@@ -232,7 +231,6 @@ public:
   RooCFunction4Binding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w);
   RooCFunction4Binding(const RooCFunction4Binding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction4Binding(*this,newname); }
-  inline ~RooCFunction4Binding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
@@ -305,7 +303,6 @@ public:
   RooCFunction4PdfBinding(const char *name, const char *title, VO (*_func)(VI1,VI2,VI3,VI4), RooAbsReal& _x, RooAbsReal& _y, RooAbsReal& _z, RooAbsReal& _w);
   RooCFunction4PdfBinding(const RooCFunction4PdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooCFunction4PdfBinding(*this,newname); }
-  inline ~RooCFunction4PdfBinding() override { }
 
   void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer

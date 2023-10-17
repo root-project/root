@@ -39,9 +39,6 @@ Note, one could use the same class for a Bayesian "credible interval".
       /// constructor given name and title
       explicit ConfInterval(const char *name = nullptr) : TNamed(name,name) {}
 
-      /// destructor
-      ~ConfInterval() override {}
-
       /// operator=
       ConfInterval& operator=(const ConfInterval& other) {
          if (&other==this) { return *this; }

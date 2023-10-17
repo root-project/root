@@ -32,7 +32,6 @@ public:
 
   RooAbsMCStudyModule(const char* name, const char* title) ;
   RooAbsMCStudyModule(const RooAbsMCStudyModule& other) ;
-  ~RooAbsMCStudyModule() override {} ;
 
   /// Initializer method called upon attachment to given RooMCStudy object
   bool doInitializeInstance(RooMCStudy& /*study*/) ;
