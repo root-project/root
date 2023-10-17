@@ -82,7 +82,9 @@ static bool IsUnsupportedUniquePointer(const char *normName, TDataMember *dm)
          return true;
       }
 
-      clm->BuildRealData();
+      // TODO: Is it not clear what situation we are checking for by checking if
+      // the unique_ptr class has any data members.
+      clm->BuildRealData(nullptr, /* istransient = */ true);
       auto upDms = clm->GetListOfRealData();
       if (!upDms) {
          Error("CloseStreamerInfoROOTFile", "Cannot determine unique pointer %s data members.", dmTypeName);
