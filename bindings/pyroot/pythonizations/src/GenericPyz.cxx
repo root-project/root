@@ -15,8 +15,11 @@
 #include "PyROOTPythonize.h"
 #include "CPPInstance.h"
 #include "Utility.h"
+#include "TClass.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
+
+#include <map>
 
 using namespace CPyCppyy;
 
@@ -25,15 +28,69 @@ static std::string GetCppName(const CPPInstance *self)
    return Cppyy::GetScopedFinalName(self->ObjectIsA());
 }
 
+// We take as unique identifier the declId of the class to
+// treat the case where a class is loaded, an instance printed,
+// the class unloaded and reloaded with changes.
+static ULong64_t GetClassID(const char *clName)
+{
+   if (auto cl = TClass::GetClass(clName)) {
+      if (auto clInfo = cl->GetClassInfo()) {
+         return reinterpret_cast<ULong64_t>(gInterpreter->GetDeclId(clInfo));
+      }
+   }
+   return 0;
+}
+
 PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
 {
+   // Map holding the classID of the classes and the pointer
+   // to the printer function.
+   static std::map<ULong64_t, void *> declIDPrinterMap;
+
    auto cppObj = self->GetObject();
    if (!cppObj)
       // Proxied cpp object is null, use cppyy's generic __repr__
       return PyObject_Repr((PyObject*)self);
 
+   // We jit the helper only once, at the first invocation of any
+   // printer. The integer parameter is there to make sure we have
+   // different instances of the printing function in presence of
+   // unload-reload events.
+   if (0 == declIDPrinterMap.size()) {
+      std::string printerCode = "namespace ROOT::Internal::Pythonizations::ValuePrinters"
+                                "{"
+                                "   template<class T, ULong64_t> std::string ValuePrinter(void *obj)"
+                                "   {"
+                                "      return cling::printValue((T *)obj);"
+                                "   }"
+                                "}";
+      gInterpreter->Declare(printerCode.c_str());
+   }
+
    const std::string className = GetCppName(self);
-   auto printResult = gInterpreter->ToString(className.c_str(), cppObj);
+
+   std::string printResult;
+
+   if (const auto classID = GetClassID(className.c_str())) {
+      // If we never encountered this class, we jit the function which
+      // is necessary to print it and store it in the map instantiated
+      // above. Otherwise, we just use the pointer to the previously
+      // jitted function. This allows to jit the printer only once per
+      // type, at the modest price of a typename and pointer stored in
+      // memory.
+      auto &printerFuncrPtr = declIDPrinterMap[classID];
+
+      if (!printerFuncrPtr) {
+         std::string printFuncName = "ROOT::Internal::Pythonizations::ValuePrinters::ValuePrinter<" + className + ", " +
+                                     std::to_string(classID) + ">";
+         printerFuncrPtr = (void *)gInterpreter->Calc(printFuncName.c_str());
+      }
+      printResult = ((std::string(*)(void *))printerFuncrPtr)(cppObj);
+   } else {
+      // If something went wrong, we use the slow method
+      printResult = gInterpreter->ToString(className.c_str(), cppObj);
+   }
+
    if (printResult.find("@0x") == 0) {
       // Fall back to __repr__ if we just get an address from cling
       return PyObject_Repr((PyObject*)self);
