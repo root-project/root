@@ -132,6 +132,24 @@ long TClingTypeInfo::Property() const
       const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(tagQT->getDecl());
       if (!TD)
          return property;
+      switch (TD->getAccess()) {
+         case clang::AS_public:
+            property |= kIsPublic;
+            break;
+         case clang::AS_protected:
+            property |= kIsProtected;
+            break;
+         case clang::AS_private:
+            property |= kIsPrivate;
+            break;
+         case clang::AS_none:
+            if (TD->getDeclContext()->isNamespace())
+               property |= kIsPublic;
+            break;
+         default:
+            // IMPOSSIBLE
+            break;
+      }
       if (TD->isEnum()) {
          property |= kIsEnum;
       } else {
