@@ -54,6 +54,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/HistFactoryNavigation.cxx
     src/HistRef.cxx
     src/HistoToWorkspaceFactoryFast.cxx
+    src/JSONFactories_HistFactory.cxx
     src/JSONTool.cxx
     src/LinInterpVar.cxx
     src/MakeModelAndMeasurementsFast.cxx
@@ -73,6 +74,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
   DEPENDENCIES
     RooFit
     RooFitCore
+    RooFitHS3
     Tree
     RIO
     Hist

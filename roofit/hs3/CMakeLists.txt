@@ -18,7 +18,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
     src/JSONFactories_RooFitCore.cxx
-    src/JSONFactories_HistFactory.cxx
     src/JSONIOUtils.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
@@ -27,7 +26,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     RooFitJSONInterface
   LIBRARIES
     RooFit
-    HistFactory
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

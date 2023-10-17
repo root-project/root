@@ -31,8 +31,7 @@
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 
-#include "static_execute.h"
-#include "JSONIOUtils.h"
+#include "RooFitImplHelpers.h"
 
 using RooFit::Detail::JSONNode;
 
@@ -1030,6 +1029,22 @@ public:
       return tryExport(tool, static_cast<const RooRealSumPdf *>(p), elem);
    }
 };
+
+// Execute code on library loading by running code in the constructor of a
+// class that is a static class member of another class.
+#define STATIC_EXECUTE(MY_FUNC)   \
+   struct StaticExecutorWrapper { \
+      struct Executor {           \
+         template <class Func>    \
+         Executor(Func func)      \
+         {                        \
+            func();               \
+         }                        \
+      };                          \
+      static Executor executor;   \
+   };                             \
+                                  \
+   StaticExecutorWrapper::Executor StaticExecutorWrapper::executor{MY_FUNC};
 
 STATIC_EXECUTE([]() {
    using namespace RooFit::JSONIO;

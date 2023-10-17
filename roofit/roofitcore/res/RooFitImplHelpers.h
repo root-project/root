@@ -15,6 +15,8 @@
 #include <RooAbsArg.h>
 #include <RooAbsReal.h>
 
+#include <ROOT/RStringView.hxx>
+
 #include <sstream>
 #include <vector>
 #include <string>
@@ -22,6 +24,9 @@
 
 class RooAbsPdf;
 class RooAbsData;
+
+bool startsWith(std::string_view str, std::string_view prefix);
+bool endsWith(std::string_view str, std::string_view suffix);
 
 /// Disable all caches for sub-branches in an expression tree.
 /// This is helpful when an expression with cached sub-branches needs to be integrated numerically.
