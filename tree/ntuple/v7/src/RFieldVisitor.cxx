@@ -234,13 +234,6 @@ void ROOT::Experimental::RPrintValueVisitor::VisitStringField(const RField<std::
    fOutput << "\"" << *fValue.Get<std::string>() << "\"";
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitBLOBField(const RField<RNTupleBLOB> &field)
-{
-   PrintIndent();
-   PrintName(field);
-   fOutput << "\"BLOB\"";
-}
-
 void ROOT::Experimental::RPrintValueVisitor::VisitUInt8Field(const RField<std::uint8_t> &field)
 {
    PrintIndent();
