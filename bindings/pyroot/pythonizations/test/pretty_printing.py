@@ -8,6 +8,27 @@ class PrettyPrinting(unittest.TestCase):
         print("print({}) -> {}".format(repr(obj), obj))
 
     # Tests
+    def test_MemoryUsage(self):
+        # https://github.com/root-project/root/issues/12817
+        # The threshold for the memory used is generously chosen to avoid tests
+        # spuriously failing b/c of fluctuations and is also well below the
+        # memory needed before the fix to the issue mentioned above, i.e. about
+        # 4 GB and several minutes to complete (!)
+        ROOT.gInterpreter.Declare('''
+            float GetRSSMB() {
+               ProcInfo_t info;
+               gSystem->GetProcInfo(&info);
+               return info.fMemResident/1024.;}
+            ''')
+        v = ROOT.vector[float]()
+        rss1 = ROOT.GetRSSMB()
+        for i in range(10000):
+            repr(v)
+        rss2 = ROOT.GetRSSMB()
+        deltaRSS = rss2 - rss1
+        self._print("Delta RSS is {:.1f}".format(deltaRSS))
+        self.assertLess(deltaRSS, 64)
+
     def test_RVec(self):
         x = ROOT.ROOT.VecOps.RVec("float")(4)
         for i in range(x.size()):
