@@ -3972,7 +3972,7 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
    switch(IsTupleAscending()) {
       case ETupleOrdering::kAscending: {
          unsigned int nMember = 0;
-         auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple)
+         auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple).
          auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
          while (iter != theEnd) {
             alternateTuple << "   " << *iter << " _" << nMember << ";\n";
@@ -3983,8 +3983,8 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
       }
       case ETupleOrdering::kDescending: {
          unsigned int nMember = tupleContent.fElements.size() - 3;
-         auto iter = tupleContent.fElements.rbegin() + 1; // Skip the template name (tuple)
-         auto theEnd = tupleContent.fElements.rend() - 1; // skip the 'stars'.
+         auto iter = tupleContent.fElements.rbegin() + 1; // skip the 'stars'.
+         auto theEnd = tupleContent.fElements.rend() - 1; // Skip the template name (tuple).
          while (iter != theEnd) {
             alternateTuple << "   " << *iter << " _" << nMember << ";\n";
             ++iter;
