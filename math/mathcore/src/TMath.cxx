@@ -2773,7 +2773,7 @@ Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 
    Int_t itype;
    Int_t npt;
-   TMath::VavilovSet(kappa, beta2, 0, nullptr, ac, hc, itype, npt);
+   TMath::VavilovSet(kappa, beta2, false, nullptr, ac, hc, itype, npt);
    Double_t v =  TMath::VavilovDenEval(x, ac, hc, itype);
    delete [] ac;
    delete [] hc;
@@ -2808,7 +2808,7 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
    Int_t npt;
    Int_t k;
    Double_t xx, v;
-   TMath::VavilovSet(kappa, beta2, 1, wcm, ac, hc, itype, npt);
+   TMath::VavilovSet(kappa, beta2, true, wcm, ac, hc, itype, npt);
    if (x < ac[0]) v = 0;
    else if (x >=ac[8]) v = 1;
    else {

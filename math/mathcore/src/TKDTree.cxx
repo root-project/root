@@ -13,7 +13,7 @@
 #include "TRandom.h"
 
 #include "TString.h"
-#include <string.h>
+#include <cstring>
 #include <limits>
 
 templateClassImp(TKDTree);
@@ -525,7 +525,7 @@ void TKDTree<Index, Value>::Build()
       posStack[currentIndex]    = cpos+nleft;
       nodeStack[currentIndex]   = (cnode*2)+2;
       //
-      if (0){
+      if (false){
          // consistency check
          Info("Build()", "%s", Form("points %d left %d right %d", npoints, nleft, nright));
          if (nleft<nright) Warning("Build", "Problem Left-Right");

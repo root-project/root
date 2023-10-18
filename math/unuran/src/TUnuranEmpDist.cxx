@@ -64,7 +64,7 @@ TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x) :
    fData(std::vector<double>(x,x+n) ),
    fDim(1),
    fMin(0), fMax(0),
-   fBinned(0)
+   fBinned(false)
 {
    // constructor for 1D unbinned data
 }
@@ -73,7 +73,7 @@ TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x, double * y) :
    fData(std::vector<double>(2*n) ),
    fDim(2),
    fMin(0), fMax(0),
-   fBinned(0)
+   fBinned(false)
 {
    // constructor for 2D unbinned data
    for (unsigned int i = 0; i < n; ++i) {
@@ -86,7 +86,7 @@ TUnuranEmpDist::TUnuranEmpDist (unsigned int n, double * x, double * y, double *
    fData(std::vector<double>(3*n) ),
    fDim(3),
    fMin(0), fMax(0),
-   fBinned(0)
+   fBinned(false)
 {
    // constructor for 3D unbinned data
    for (unsigned int i = 0; i < n; ++i) {

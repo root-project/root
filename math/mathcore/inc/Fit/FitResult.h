@@ -105,7 +105,7 @@ public:
    bool IsValid() const { return fValid; }
 
    /// True if a fit result does not exist (even invalid) with parameter values
-   bool IsEmpty() const { return (fParams.size() == 0);  }
+   bool IsEmpty() const { return (fParams.empty());  }
 
    /// Return value of the objective function (chi2 or likelihood) used in the fit
    double MinFcnValue() const { return fVal; }
@@ -212,7 +212,7 @@ public:
    /// retrieve covariance matrix element
    double CovMatrix (unsigned int i, unsigned int j) const {
       if ( i >= fErrors.size() || j >= fErrors.size() ) return 0;
-      if (fCovMatrix.size() == 0) return 0; // no matrix is available in case of non-valid fits
+      if (fCovMatrix.empty()) return 0; // no matrix is available in case of non-valid fits
       if ( j < i )
          return fCovMatrix[j + i* (i+1) / 2];
       else
@@ -222,7 +222,7 @@ public:
    /// retrieve correlation elements
    double Correlation(unsigned int i, unsigned int j ) const {
       if ( i >= fErrors.size() || j >= fErrors.size() ) return 0;
-      if (fCovMatrix.size() == 0) return 0; // no matrix is available in case of non-valid fits
+      if (fCovMatrix.empty()) return 0; // no matrix is available in case of non-valid fits
       double tmp = CovMatrix(i,i)*CovMatrix(j,j);
       return ( tmp > 0) ? CovMatrix(i,j)/ std::sqrt(tmp) : 0;
    }
