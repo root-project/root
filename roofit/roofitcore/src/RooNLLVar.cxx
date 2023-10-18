@@ -43,10 +43,6 @@ In extended mode, a
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 
-#ifdef ROOFIT_CHECK_CACHED_VALUES
-#include <iomanip>
-#endif
-
 #include "TMath.h"
 #include "Math/Util.h"
 
@@ -358,18 +354,49 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone,
   return {kahanProb, kahanWeight.Sum()};
 }
 
-bool RooNLLVar::setData(RooAbsData &data, bool cloneData)
+bool RooNLLVar::setDataSlave(RooAbsData &indata, bool cloneData, bool ownNewData)
 {
-   bool ret = RooAbsOptTestStatistic::setData(data, cloneData);
+   bool ret = RooAbsOptTestStatistic::setDataSlave(indata, cloneData, ownNewData);
    // To re-create the data template pdf if necessary
    _offsetPdf.reset();
    enableBinOffsetting(_doBinOffset);
    return ret;
 }
 
-void RooNLLVar::enableBinOffsetting(bool on)
+void RooNLLVar::enableBinOffsetting(bool flag)
 {
-   if (on && !_offsetPdf) {
+   if (!_init) {
+      initialize();
+   }
+
+   _doBinOffset = flag;
+
+   // If this is a "master" that delegates the actual work to "slaves", the
+   // _offsetPdf will not be reset.
+   bool needsResetting = true;
+
+   switch (operMode()) {
+   case Slave: break;
+   case SimMaster: {
+      for (auto &gof : _gofArray) {
+         static_cast<RooNLLVar &>(*gof).enableBinOffsetting(flag);
+      }
+      needsResetting = false;
+      break;
+   }
+   case MPMaster: {
+      for (int i = 0; i < _nCPU; ++i) {
+         static_cast<RooNLLVar &>(_mpfeArray[i]->arg()).enableBinOffsetting(flag);
+      }
+      needsResetting = false;
+      break;
+   }
+   }
+
+   if (!needsResetting)
+      return;
+
+   if (flag && !_offsetPdf) {
       std::string name = std::string{GetName()} + "_offsetPdf";
       std::unique_ptr<RooDataHist> dataTemplate;
       if (auto dh = dynamic_cast<RooDataHist *>(_dataClone)) {
@@ -380,5 +407,5 @@ void RooNLLVar::enableBinOffsetting(bool on)
       _offsetPdf = std::make_unique<RooHistPdf>(name.c_str(), name.c_str(), *_funcObsSet, std::move(dataTemplate));
       _offsetPdf->setOperMode(ADirty);
    }
-   _doBinOffset = on;
+   setValueDirty();
 }

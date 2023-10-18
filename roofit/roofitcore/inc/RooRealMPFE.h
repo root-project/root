@@ -46,6 +46,8 @@ public:
 
   void followAsSlave(RooRealMPFE& master) { _updateMaster = &master ; }
 
+  RooAbsReal & arg() const { return *_arg; }
+
   protected:
 
   // Function evaluation

@@ -59,7 +59,7 @@ public:
                                                 bool weightSq, std::size_t stepSize, std::size_t firstEvent,
                                                 std::size_t lastEvent, RooAbsPdf const* offsetPdf = nullptr);
 
-  bool setData(RooAbsData& data, bool cloneData=true) override;
+  bool setDataSlave(RooAbsData& data, bool cloneData=true, bool ownNewDataAnyway=false) override;
 
 protected:
 
