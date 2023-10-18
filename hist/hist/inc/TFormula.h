@@ -325,6 +325,6 @@ Double_t TFormula::Eval(Args... args) const
    }
    double xxx[] = {static_cast<Double_t>(args)...};
    return EvalPar(xxx, nullptr);
-};
+}
 
 #endif
