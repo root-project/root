@@ -298,6 +298,8 @@ private:
    double EvtPerSec() const;
    std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
    void PrintStats(std::ostream &stream, std::size_t currentEventCount, std::chrono::seconds totalElapsedSeconds) const;
+   void
+   PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
    void PrintProgressbar(std::ostream &stream, std::size_t currentEventCount) const;
 
    std::chrono::time_point<std::chrono::system_clock> fBeginTime = std::chrono::system_clock::now();
@@ -378,21 +380,9 @@ public:
       // ***************************************************
       fProcessedEvents += fIncrement;
 
-      unsigned int currentFileIdx = ComputeCurrentFileIdx();
-      unsigned int GetNEventsOfCurrentFile = ComputeNEventsSoFar();
-
       // We only print every n seconds.
       if (duration_cast<seconds>(system_clock::now() - fLastPrintTime) < fPrintInterval) {
-
-         // Unless we are at the end of file processing, then we want to print the progress bar again (the final status)
-         // Otherwise, if the last processed files are too small and they are processed in less than the time interval,
-         // the final progress bar status would be incomplete. We want to prevent this from happening.
-
-         if (fTotalFiles != currentFileIdx) {
-            if (currentFileIdx <= GetNEventsOfCurrentFile - fIncrement) {
-               return;
-            }
-         }
+         return;
       }
 
       // ***************************************************
