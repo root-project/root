@@ -4410,6 +4410,43 @@ const clang::Type *ROOT::TMetaUtils::GetUnderlyingType(clang::QualType type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if the DeclContext is representing an entity reacheable from the
+/// global namespace
+
+bool ROOT::TMetaUtils::IsCtxtReacheable(const clang::DeclContext &ctxt)
+{
+   if (ctxt.isNamespace() || ctxt.isTranslationUnit())
+      return true;
+   else if(const auto parentdecl = llvm::dyn_cast<clang::CXXRecordDecl>(&ctxt))
+      return ROOT::TMetaUtils::IsDeclReacheable(*parentdecl);
+   else
+      // For example "extern C" context.
+      return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the decl is representing an entity reacheable from the
+/// global namespace
+
+bool ROOT::TMetaUtils::IsDeclReacheable(const clang::Decl &decl)
+{
+   const clang::DeclContext *ctxt = decl.getDeclContext();
+   switch (decl.getAccess()) {
+      case clang::AS_public:
+         return !ctxt || IsCtxtReacheable(*ctxt);
+      case clang::AS_protected:
+         return false;
+      case clang::AS_private:
+         return false;
+      case clang::AS_none:
+         return !ctxt || IsCtxtReacheable(*ctxt);
+      default:
+         // IMPOSSIBLE
+         return false;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return true, if the decl is part of the std namespace.
 
 bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
