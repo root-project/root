@@ -33,7 +33,6 @@
 #include "TF2.h"
 #include "TH1.h"
 #include "TH1K.h"
-#include "TH2.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
@@ -429,6 +428,15 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    bool need_frame = false, has_histo = false, need_palette = false;
    std::string need_title;
 
+   auto checkNeedPalette = [](TH1* hist, const TString &opt) {
+      auto check = [&opt](const TString &arg) {
+         return opt.Contains(arg + "Z") || opt.Contains(arg + "HZ");
+      };
+
+      return ((hist->GetDimension() == 2) && (check("COL") || check("LEGO") || check("LEGO4") || check("SURF2"))) ||
+             ((hist->GetDimension() == 3) && (check("BOX2") || check("BOX3")));
+   };
+
    while (process_primitives && ((obj = iter()) != nullptr)) {
       TString opt = iter.GetOption();
       opt.ToUpper();
@@ -455,7 +463,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          has_histo = true;
          if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && !opt.Contains("AXIS") && !opt.Contains("AXIG") && (strlen(obj->GetTitle()) > 0))
             need_title = obj->GetTitle();
-         if (obj->InheritsFrom(TH2::Class()) && (opt.Contains("COLZ") || opt.Contains("LEGO2Z") || opt.Contains("LEGO4Z") || opt.Contains("SURF2Z")))
+         if (checkNeedPalette(static_cast<TH1*>(obj), opt))
             need_palette = true;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          if (opt.Contains("A")) {
@@ -602,8 +610,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
              hist->GetListOfFunctions()->Add(stats);
          }
 
-         if (!palette && CanCreateObject("TPaletteAxis") && (hist->GetDimension() > 1) &&
-              (o.Contains("COLZ") || o.Contains("LEGO2Z") || o.Contains("LEGO4Z") || o.Contains("SURF2Z"))) {
+         if (!palette && CanCreateObject("TPaletteAxis") && checkNeedPalette(hist, o)) {
             std::stringstream exec;
             exec << "new TPaletteAxis(0,0,0,0, (TH1*)" << std::hex << std::showbase << (size_t)hist << ");";
             palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
