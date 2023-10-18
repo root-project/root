@@ -700,6 +700,16 @@ const clang::TypedefNameDecl* GetAnnotatedRedeclarable(const clang::TypedefNameD
 const clang::TagDecl* GetAnnotatedRedeclarable(const clang::TagDecl* TND);
 
 //______________________________________________________________________________
+// Return true if the DeclContext is representing an entity reacheable from the
+// global namespace
+bool IsCtxtReacheable(const clang::DeclContext &ctxt);
+
+//______________________________________________________________________________
+// Return true if the decl is representing an entity reacheable from the
+// global namespace
+bool IsDeclReacheable(const clang::Decl &decl);
+
+//______________________________________________________________________________
 // Return true if the decl is part of the std namespace.
 bool IsStdClass(const clang::RecordDecl &cl);
 
