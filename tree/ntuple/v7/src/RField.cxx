@@ -185,6 +185,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 4) == "set<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 4) == "atomic<")
+      normalizedType = "std::" + normalizedType;
 
    return normalizedType;
 }
@@ -449,6 +451,12 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto normalizedInnerTypeName = itemField->GetType();
       result =
          std::make_unique<RSetField>(fieldName, "std::set<" + normalizedInnerTypeName + ">", std::move(itemField));
+   } else if (canonicalType.substr(0, 12) == "std::atomic<") {
+      std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
+      auto itemField = Create("_0", itemTypeName).Unwrap();
+      auto normalizedInnerTypeName = itemField->GetType();
+      result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
+                                              std::move(itemField));
    } else if (canonicalType == ":Collection:") {
       // TODO: create an RCollectionField?
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
@@ -2946,4 +2954,37 @@ ROOT::Experimental::RCollectionField::CloneImpl(std::string_view newName) const
 void ROOT::Experimental::RCollectionField::CommitClusterImpl()
 {
    *fCollectionNTuple->GetOffsetPtr() = 0;
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view typeName,
+                                               std::unique_ptr<Detail::RFieldBase> itemField)
+   : RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
+{
+   if (itemField->GetTraits() & kTraitTriviallyConstructible)
+      fTraits |= kTraitTriviallyConstructible;
+   if (itemField->GetTraits() & kTraitTriviallyDestructible)
+      fTraits |= kTraitTriviallyDestructible;
+   Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RAtomicField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return std::make_unique<RAtomicField>(newName, GetType(), std::move(newItemField));
+}
+
+std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
+ROOT::Experimental::RAtomicField::SplitValue(const RValue &value) const
+{
+   std::vector<RValue> result;
+   result.emplace_back(fSubFields[0]->BindValue(value.GetRawPtr()));
+   return result;
+}
+
+void ROOT::Experimental::RAtomicField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitAtomicField(*this);
 }

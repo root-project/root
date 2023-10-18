@@ -380,6 +380,18 @@ void ROOT::Experimental::RPrintValueVisitor::VisitEnumField(const REnumField &fi
    intValue.GetField()->AcceptVisitor(visitor);
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitAtomicField(const RAtomicField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   auto itemValue = field.SplitValue(fValue)[0].GetNonOwningCopy();
+   RPrintOptions options;
+   options.fPrintSingleLine = true;
+   options.fPrintName = false;
+   RPrintValueVisitor visitor(itemValue.GetNonOwningCopy(), fOutput, fLevel, options);
+   itemValue.GetField()->AcceptVisitor(visitor);
+}
+
 void ROOT::Experimental::RPrintValueVisitor::VisitProxiedCollectionField(const RProxiedCollectionField &field)
 {
    PrintCollection(field);

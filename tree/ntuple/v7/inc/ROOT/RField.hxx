@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <bitset>
 #include <cstddef>
 #include <functional>
@@ -1217,6 +1218,40 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
    size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
+};
+
+class RAtomicField : public Detail::RFieldBase {
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+
+   void GenerateValue(void *where) const final { CallGenerateValueOn(*fSubFields[0], where); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
+   {
+      CallDestroyValueOn(*fSubFields[0], objPtr, dtorOnly);
+   }
+
+   std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final
+   {
+      CallReadOn(*fSubFields[0], clusterIndex, to);
+   }
+
+public:
+   RAtomicField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<Detail::RFieldBase> itemField);
+   RAtomicField(RAtomicField &&other) = default;
+   RAtomicField &operator=(RAtomicField &&other) = default;
+   ~RAtomicField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+
+   size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
+   size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 /// Classes with dictionaries that can be inspected by TClass
@@ -2462,6 +2497,18 @@ class RField<std::unique_ptr<ItemT>> : public RUniquePtrField {
 public:
    static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+};
+
+template <typename ItemT>
+class RField<std::atomic<ItemT>> : public RAtomicField {
+public:
+   static std::string TypeName() { return "std::atomic<" + RField<ItemT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : RAtomicField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
