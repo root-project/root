@@ -35,7 +35,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 #include <map>
 
 #include "TStopwatch.h"

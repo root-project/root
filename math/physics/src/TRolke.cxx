@@ -452,7 +452,7 @@ bool TRolke::GetSensitivity(Double_t& low, Double_t& high, Double_t pPrecision)
 
    int loop_x = 0;
 
-   while (1) {
+   while (true) {
       ComputeInterval(loop_x, f_y, f_z, f_bm, f_em, f_e, f_mid, f_sde, f_sdb, f_tau, f_b, f_m);
       weight = TMath::PoissonI(loop_x, background);
       low += fLowerLimit * weight;
@@ -485,7 +485,7 @@ bool TRolke::GetLimitsQuantile(Double_t& low, Double_t& high, Int_t& out_x, Doub
    Double_t weightSum = 0;
    Int_t loop_x = 0;
 
-   while (1) {
+   while (true) {
       weight = TMath::PoissonI(loop_x, background);
       weightSum += weight;
       if (weightSum >= integral) {

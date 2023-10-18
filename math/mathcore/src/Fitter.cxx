@@ -626,7 +626,7 @@ bool Fitter::CalculateMinosErrors() {
 
 
    const std::vector<unsigned int> & ipars = fConfig.MinosParams();
-   unsigned int n = (ipars.size() > 0) ? ipars.size() : fResult->Parameters().size();
+   unsigned int n = (!ipars.empty()) ? ipars.size() : fResult->Parameters().size();
    bool ok = false;
 
    int iparNewMin = 0;
@@ -639,7 +639,7 @@ bool Fitter::CalculateMinosErrors() {
       iparNewMin = 0;
       for (int i = 0; i < iparMax; ++i) {
          double elow, eup;
-         unsigned int index = (ipars.size() > 0) ? ipars[i] : i;
+         unsigned int index = (!ipars.empty()) ? ipars[i] : i;
          bool ret = fMinimizer->GetMinosError(index, elow, eup);
          // flags case when a new minimum has been found
          if ((fMinimizer->MinosStatus() & 8) != 0) {

@@ -180,8 +180,8 @@ public:
 
 private:
    // copy ctor
-   WrappedParamFunctionGen(const  WrappedParamFunctionGen &);   // not implemented
-   WrappedParamFunctionGen & operator=(const  WrappedParamFunctionGen &); // not implemented
+   WrappedParamFunctionGen(const  WrappedParamFunctionGen &) = delete;   // not implemented
+   WrappedParamFunctionGen & operator=(const  WrappedParamFunctionGen &) = delete; // not implemented
 
 public:
 

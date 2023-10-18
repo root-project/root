@@ -305,7 +305,7 @@ bool  TUnuran::SetDiscreteDistribution(const TUnuranDiscrDist & dist)
    if (fUdistr == nullptr) return false;
    unsigned int ret = 0;
    // if a probability mesh function is provided
-   if (dist.ProbVec().size() == 0) {
+   if (dist.ProbVec().empty()) {
       ret = unur_distr_set_extobj(fUdistr, &dist );
       ret |= unur_distr_discr_set_pmf(fUdistr, &DiscrDist::Pmf);
       if (dist.HasCdf() ) ret |= unur_distr_discr_set_cdf(fUdistr, &DiscrDist::Cdf);

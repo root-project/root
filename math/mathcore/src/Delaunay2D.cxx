@@ -22,7 +22,7 @@
 #endif
 
 #include <algorithm>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <iostream>
 #include <limits>
