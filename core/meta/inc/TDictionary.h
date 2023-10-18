@@ -84,7 +84,7 @@ enum EProperty {
    kIsCCompiled     = 0x00040000,
    kIsCPPCompiled   = kIsCCompiled,
    kIsCompiled      = kIsCCompiled,
-   // 0x00080000 is available
+   kIsNotReacheable = 0x00080000,   // Indicate that the entity can not be used from the Global Namespace
    kIsConstant      = 0x00100000,
    kIsVirtualBase   = 0x00200000,
    kIsConstPointer  = 0x00400000,
