@@ -257,7 +257,7 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
       std::chrono::seconds remainingSeconds(
          static_cast<long long>((ComputeNEventsSoFar() - currentEventCount) / evtpersec));
       stream << " " << remainingSeconds << " "
-             << " remaining time (per file)";
+             << " remaining time (per file being processed)";
       if (fUseShellColours)
          stream << "\033[0m";
    }
@@ -265,8 +265,7 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
    stream << "]   ";
 }
 
-void ProgressHelper::PrintStatsFinal(std::ostream &stream,
-                                     std::chrono::seconds elapsedSeconds) const
+void ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds elapsedSeconds) const
 {
    auto totalEvents = ComputeNEventsSoFar();
    auto totalFiles = fTotalFiles;
