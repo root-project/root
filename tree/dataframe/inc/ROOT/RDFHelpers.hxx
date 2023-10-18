@@ -298,8 +298,7 @@ private:
    double EvtPerSec() const;
    std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
    void PrintStats(std::ostream &stream, std::size_t currentEventCount, std::chrono::seconds totalElapsedSeconds) const;
-   void
-   PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
+   void PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
    void PrintProgressbar(std::ostream &stream, std::size_t currentEventCount) const;
 
    std::chrono::time_point<std::chrono::system_clock> fBeginTime = std::chrono::system_clock::now();
