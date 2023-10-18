@@ -3965,9 +3965,9 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
       std::unique_ptr<TypeInfo_t, decltype(deleter)> type{ gInterpreter->TypeInfo_Factory(), deleter };
       while (iter != theEnd) {
          gInterpreter->TypeInfo_Init(type.get(), iter->c_str());
-         if (gInterpreter->TypeInfo_Property(type.get()) & (kIsProtected | kIsPrivate)) {
+         if (gInterpreter->TypeInfo_Property(type.get()) & kIsNotReacheable) {
             if (!silent)
-               Error("Load","Could not declare alternate type for %s since %s is private or protected",
+               Error("Load","Could not declare alternate type for %s since %s (or one of its context) is private or protected",
                      classname, iter->c_str());
             return "";
          }
