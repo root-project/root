@@ -264,7 +264,7 @@ bool BasicMinimizer::CheckObjFunction() const {
 
 MinimTransformFunction * BasicMinimizer::CreateTransformation(std::vector<double> & startValues, const ROOT::Math::IMultiGradFunction * func) {
 
-   bool doTransform = (fBounds.size() > 0);
+   bool doTransform = (!fBounds.empty());
    unsigned int ivar = 0;
    while (!doTransform && ivar < fVarTypes.size() ) {
       doTransform = (fVarTypes[ivar++] != kDefault );

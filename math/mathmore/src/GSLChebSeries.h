@@ -55,8 +55,8 @@ public:
 
 private:
 // usually copying is non trivial, so we make this unaccessible
-  GSLChebSeries(const GSLChebSeries &);
-  GSLChebSeries & operator = (const GSLChebSeries &);
+  GSLChebSeries(const GSLChebSeries &) = delete;
+  GSLChebSeries & operator = (const GSLChebSeries &) = delete;
 
 public:
 

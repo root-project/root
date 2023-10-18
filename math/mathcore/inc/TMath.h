@@ -573,8 +573,8 @@ struct Limits {
 ////////////////////////////////////////////////////////////////////////////////
 // Trig and other functions
 
-#include <float.h>
-#include <math.h>
+#include <cfloat>
+#include <cmath>
 
 #if defined(R__WIN32) && !defined(__CINT__)
 #   ifndef finite

@@ -130,11 +130,11 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
       memset(fixed,0,npar_real*sizeof(Bool_t));
 
       for (Int_t ipar=0; ipar<npar_real; ipar++){
-         fixed[ipar]=0;
+         fixed[ipar]=false;
          f->GetParLimits(ipar,al,bl);
          if (al*bl != 0 && al >= bl) {
             //this parameter is fixed
-            fixed[ipar]=1;
+            fixed[ipar]=true;
          }
       }
    }

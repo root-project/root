@@ -1256,7 +1256,7 @@ public:
       if (n != this->size()) {
          std::string msg = "Cannot index RVecN of size " + std::to_string(this->size()) +
                            " with condition vector of different size (" + std::to_string(n) + ").";
-         throw std::runtime_error(std::move(msg));
+         throw std::runtime_error(msg);
       }
 
       size_type n_true = 0ull;
@@ -1287,7 +1287,7 @@ public:
       if (pos >= size_type(this->fSize)) {
          std::string msg = "RVecN::at: size is " + std::to_string(this->fSize) + " but out-of-bounds index " +
                            std::to_string(pos) + " was requested.";
-         throw std::out_of_range(std::move(msg));
+         throw std::out_of_range(msg);
       }
       return this->operator[](pos);
    }
@@ -1297,7 +1297,7 @@ public:
       if (pos >= size_type(this->fSize)) {
          std::string msg = "RVecN::at: size is " + std::to_string(this->fSize) + " but out-of-bounds index " +
                            std::to_string(pos) + " was requested.";
-         throw std::out_of_range(std::move(msg));
+         throw std::out_of_range(msg);
       }
       return this->operator[](pos);
    }

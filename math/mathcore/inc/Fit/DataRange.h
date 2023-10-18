@@ -79,7 +79,7 @@ public:
     */
    bool IsSet() const {
       for (unsigned int icoord = 0; icoord < fRanges.size(); ++icoord)
-         if (fRanges[icoord].size() > 0) return true;
+         if (!fRanges[icoord].empty()) return true;
       return false;
    }
 

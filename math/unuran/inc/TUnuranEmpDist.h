@@ -67,7 +67,7 @@ public:
       fData(std::vector<double>(begin,end) ),
       fDim(dim),
       fMin(0), fMax(0),
-      fBinned(0)  {}
+      fBinned(false)  {}
 
    /**
       Constructor from a set of 1D data

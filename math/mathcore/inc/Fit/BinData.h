@@ -543,7 +543,7 @@ public :
       query if the data store the bin edges instead of the center
    */
    bool HasBinEdges() const {
-      return fBinEdge.size() == fDim && fBinEdge[0].size() > 0;
+      return fBinEdge.size() == fDim && !fBinEdge[0].empty();
    }
 
    /**

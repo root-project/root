@@ -129,7 +129,7 @@ Double_t TGenPhaseSpace::Generate()
 
    Int_t i=1;
    Int_t j;
-   while (1) {
+   while (true) {
       fDecPro[i].SetPxPyPzE(0, -pd[i-1], 0 , TMath::Sqrt(pd[i-1]*pd[i-1]+fMass[i]*fMass[i]) );
 
       Double_t cZ   = 2*gRandom->Rndm() - 1;

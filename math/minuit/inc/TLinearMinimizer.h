@@ -113,7 +113,7 @@ public:
 
    /// return covariance matrix status
    int CovMatrixStatus() const override {
-      if (fCovar.size() == 0) return 0;
+      if (fCovar.empty()) return 0;
       return (fStatus ==0) ? 3 : 1;
    }
 

@@ -143,7 +143,7 @@ void pirndm(Long64_t n1=1, unsigned int seed = 0) {
    frame->GetYaxis()->SetTitle("Difference with #pi");
    frame->GetYaxis()->SetTitleOffset(1.3);
    frame->GetYaxis()->SetDecimals();
-   frame->SetStats(0);
+   frame->SetStats(false);
    frame->Draw();
    legend = new TLegend(0.6,0.7,0.88,0.88);
    legend->Draw();

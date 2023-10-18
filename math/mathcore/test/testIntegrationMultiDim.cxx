@@ -178,7 +178,7 @@ void performance()
       num_performance->SetBarWidth(0.45);
       num_performance->SetBarOffset(0.05);
       num_performance->SetFillColor(49);
-      num_performance->SetStats(0);
+      num_performance->SetStats(false);
       //num_performance->GetXaxis()->SetLimits(1.5, Nmax+0.5);
       num_performance->GetXaxis()->SetTitle("number of dimensions");
       num_performance->GetYaxis()->SetTitle("time [s]");

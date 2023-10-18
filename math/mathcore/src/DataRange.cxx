@@ -106,7 +106,7 @@ void DataRange::AddRange(unsigned  int  icoord , double xmin, double xmax  ) {
    }
    RangeSet & rs = fRanges[icoord];
    // case the vector  of the ranges is empty in the given coordinate
-   if ( rs.size() == 0) {
+   if ( rs.empty()) {
       rs.push_back(std::make_pair(xmin,xmax) );
       return;
    }

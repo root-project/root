@@ -32,7 +32,7 @@ public:
       Default constructor
    */
    GSLQRngWrapper () :
-      fOwn(0),
+      fOwn(false),
       fRng(nullptr),
       fRngType(nullptr)
     {
@@ -42,7 +42,7 @@ public:
       Constructor with type
    */
    GSLQRngWrapper(const gsl_qrng_type * type) :
-      fOwn(1),
+      fOwn(true),
       fRng(nullptr),
       fRngType(type)
     {
@@ -53,7 +53,7 @@ public:
        it is managed externally - so will not be deleted at the end
    */
    GSLQRngWrapper(const gsl_qrng * r ) :
-      fOwn(0),
+      fOwn(false),
       fRngType(nullptr)
     {
        fRng = const_cast<gsl_qrng *>(r);
@@ -63,7 +63,7 @@ public:
       Copy constructor - clone the GSL object and manage it
    */
    GSLQRngWrapper(GSLQRngWrapper & r) :
-      fOwn(1),
+      fOwn(true),
       fRngType(r.fRngType)
    {
       fRng = gsl_qrng_clone(r.fRng);

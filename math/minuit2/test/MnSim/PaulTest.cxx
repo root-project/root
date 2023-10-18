@@ -54,7 +54,7 @@ int main()
          nmeas += int(ni);
       }
       std::cout << "size= " << var.size() << std::endl;
-      assert(var.size() > 0);
+      assert(!var.empty());
       std::cout << "nmeas: " << nmeas << std::endl;
    }
 

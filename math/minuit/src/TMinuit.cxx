@@ -320,8 +320,8 @@ into account the non-linearities much more precisely.
 
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include "TROOT.h"
 #include "TList.h"

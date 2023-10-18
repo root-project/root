@@ -41,7 +41,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <ctype.h>   // need to use c version of tolower defined here
+#include <cctype>   // need to use c version of tolower defined here
 
 
 namespace ROOT {
@@ -240,7 +240,7 @@ bool GSLMultiRootFinder::Solve (const double * x, int maxIter, double absTol, do
    if (fSolver) delete fSolver;
    fSolver = nullptr;
 
-   if (fFunctions.size() == 0) {
+   if (fFunctions.empty()) {
       MATH_ERROR_MSG("GSLMultiRootFinder::Solve","Function list is empty");
       fStatus = -1;
       return false;

@@ -331,7 +331,7 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
          }
       }
 
-      while (1) {
+      while (true) {
          x = Rndm();
          y = kYm * Rndm();
          z = kX0 - kS*x - y;
@@ -348,7 +348,7 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
             if (rn*rn<4*(kB-log(x))) {
                result = rn; break; }
       }
-   } while(0);
+   } while(false);
 
    return mean + sigma * result;
 }
@@ -407,7 +407,7 @@ Int_t TRandom::Poisson(Double_t mean)
       Double_t expmean = TMath::Exp(-mean);
       Double_t pir = 1;
       n = -1;
-      while(1) {
+      while(true) {
          n++;
          pir *= Rndm();
          if (pir <= expmean) break;
@@ -459,7 +459,7 @@ Double_t TRandom::PoissonD(Double_t mean)
       Double_t expmean = TMath::Exp(-mean);
       Double_t pir = 1;
       n = -1;
-      while(1) {
+      while(true) {
          n++;
          pir *= Rndm();
          if (pir <= expmean) break;

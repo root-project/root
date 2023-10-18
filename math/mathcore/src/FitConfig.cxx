@@ -105,7 +105,7 @@ void FitConfig::SetFromFitResult(const FitResult &result) {
 
          // query if parameter needs to run Minos
          if (result.HasMinosError(i) ) {
-            if (fMinosParams.size() == 0) {
+            if (fMinosParams.empty()) {
                fMinosErrors = true;
                fMinosParams.reserve(npar-i);
             }
@@ -243,7 +243,7 @@ std::string FitConfig::MinimizerName() const
 
    // append algorithm name for minimizer that support it
    if ((name.find("Fumili") == std::string::npos) && (name.find("GSLMultiFit") == std::string::npos)) {
-      if (MinimizerAlgoType() != "")
+      if (!MinimizerAlgoType().empty())
          name += " / " + MinimizerAlgoType();
    }
    return name;

@@ -75,7 +75,7 @@ FitResult::FitResult(const FitConfig & fconfig) :
    if ( (fMinimType.find("Fumili") == std::string::npos) &&
         (fMinimType.find("GSLMultiFit") == std::string::npos)
       ) {
-      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType();
+      if (!fconfig.MinimizerAlgoType().empty()) fMinimType += " / " + fconfig.MinimizerAlgoType();
    }
 
    // get parameter values and errors (step sizes)
@@ -427,7 +427,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       if (IsParameterFixed(i) )
          os << std::setw(9) << " "  << std::setw(nn) << " " << " \t (fixed)";
       else {
-         if (fErrors.size() != 0)
+         if (!fErrors.empty())
             os << "   +/-   " << std::left << std::setw(nn) << fErrors[i] << std::right;
          if (HasMinosError(i))
             os << "  " << std::left  << std::setw(nn) << LowerError(i) << " +" << std::setw(nn) << UpperError(i)
@@ -447,7 +447,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
 void FitResult::PrintCovMatrix(std::ostream &os) const {
    // print the covariance and correlation matrix
    if (!fValid) return;
-   if (fCovMatrix.size() == 0) return;
+   if (fCovMatrix.empty()) return;
 //   os << "****************************************\n";
    os << "\nCovariance Matrix:\n\n";
    unsigned int npar = fParams.size();

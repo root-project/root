@@ -54,8 +54,8 @@ public:
 
 private:
 // usually copying is non trivial, so we make this unaccessible
-   GSL1DMinimizerWrapper(const GSL1DMinimizerWrapper &);
-   GSL1DMinimizerWrapper & operator = (const GSL1DMinimizerWrapper &);
+   GSL1DMinimizerWrapper(const GSL1DMinimizerWrapper &) = delete;
+   GSL1DMinimizerWrapper & operator = (const GSL1DMinimizerWrapper &) = delete;
 
 public:
 

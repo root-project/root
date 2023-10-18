@@ -14,7 +14,7 @@
 #include "Math/IFunctionfwd.h"
 #include "Math/IntegratorOptions.h"
 #include <cmath>
-#include <string.h>
+#include <cstring>
 #include <algorithm>
 
 namespace ROOT {

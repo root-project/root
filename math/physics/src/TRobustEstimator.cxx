@@ -1038,7 +1038,6 @@ Int_t TRobustEstimator::Exact(Double_t *ndist)
    Int_t i, j;
 
    TMatrixDSymEigen eigen(fCovariance);
-   TVectorD eigenValues=eigen.GetEigenValues();
    TMatrixD eigenMatrix=eigen.GetEigenVectors();
 
    for (j=0; j<fNvar; j++) {
