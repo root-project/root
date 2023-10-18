@@ -4,6 +4,7 @@
 
 #include <RooBinning.h>
 #include <RooCategory.h>
+#include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooExtendPdf.h>
@@ -18,12 +19,13 @@
 #include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
+#include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
 #include "gtest_wrapper.h"
 
-#include <memory>
 #include <cmath>
+#include <memory>
 
 namespace {
 
@@ -398,7 +400,7 @@ TEST(RooXYChi2Var, IntegrateLinearFunction)
    EXPECT_NEAR(getVal("b", fit2->floatParsFinal()), bTrue, getErr("b", fit2->floatParsFinal()));
 }
 
-class OffsetBinTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend, bool, bool, bool>> {
+class OffsetBinTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend, bool, bool, bool, bool>> {
 public:
    OffsetBinTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
 
@@ -410,6 +412,7 @@ private:
       _binned = std::get<1>(GetParam());
       _ext = std::get<2>(GetParam());
       _sumw2 = std::get<3>(GetParam());
+      _simPdf = std::get<4>(GetParam());
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
@@ -419,6 +422,7 @@ protected:
    bool _binned = false;
    bool _ext = false;
    bool _sumw2 = false;
+   bool _simPdf = false;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
@@ -466,10 +470,21 @@ TEST_P(OffsetBinTest, CrossCheck)
    RooHistPdf histPdf{"histPdf", "histPdf", x, *hist};
    RooExtendPdf extHistPdf("extHistPdf", "extHistPdf", histPdf, nEvents);
 
-   RooAbsData *fitData = _binned ? static_cast<RooAbsData *>(hist.get()) : static_cast<RooAbsData *>(data.get());
+   // Create a RooSimultaneous that wraps this pdf
+   RooCategory sample("sample", "sample");
+   sample.defineType("physics");
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"physics", &extHistPdf}}, sample};
 
-   RealPtr nll0{extHistPdf.createNLL(*fitData, _evalBackend, Extended(_ext))};
-   RealPtr nll1{extHistPdf.createNLL(*fitData, Offset("bin"), _evalBackend, Extended(_ext))};
+   RooAbsData *absData = _binned ? static_cast<RooAbsData *>(hist.get()) : static_cast<RooAbsData *>(data.get());
+
+   // The dataset used for simultaneous fits
+   RooDataSet combData("combData", "combined data", *absData->get(), Index(sample), Import("physics", *absData));
+
+   RooAbsData *fitData = _simPdf ? &combData : absData;
+   RooAbsPdf *fitPdf = _simPdf ? static_cast<RooAbsPdf *>(&simPdf) : static_cast<RooAbsPdf *>(&extHistPdf);
+
+   RealPtr nll0{fitPdf->createNLL(*fitData, _evalBackend, Extended(_ext))};
+   RealPtr nll1{fitPdf->createNLL(*fitData, Offset("bin"), _evalBackend, Extended(_ext))};
 
    if (_sumw2) {
       nll0->applyWeightSquared(true);
@@ -560,7 +575,8 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
                          testing::Combine(testing::Values(EVAL_BACKENDS), // EvalBackend
                                           testing::Values(false, true),   // unbinned or binned
                                           testing::Values(false, true),   // extended fit
-                                          testing::Values(false, true)    // use sumW2
+                                          testing::Values(false, true),   // use sumW2
+                                          testing::Values(false, true)    // wrap in a RooSimultaneous
                                           ),
                          [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
@@ -568,5 +584,6 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
                             ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
                             ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
                             ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
+                            ss << (std::get<4>(paramInfo.param) ? "SimPdf" : "");
                             return ss.str();
                          });
