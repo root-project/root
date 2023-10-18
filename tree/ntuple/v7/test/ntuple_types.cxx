@@ -622,6 +622,41 @@ TEST(RNTuple, Float)
    EXPECT_FLOAT_EQ(2.0, *reader->GetModel()->GetDefaultEntry()->Get<float>("f2"));
 }
 
+TEST(RNTuple, StdAtomic)
+{
+   auto field = RField<std::atomic<int64_t>>("atomicField");
+   EXPECT_STREQ("std::atomic<std::int64_t>", field.GetType().c_str());
+   auto otherField = RFieldBase::Create("test", "std::atomic<int64_t>").Unwrap();
+   EXPECT_STREQ(field.GetType().c_str(), otherField->GetType().c_str());
+   EXPECT_EQ((sizeof(std::atomic<int64_t>)), field.GetValueSize());
+   EXPECT_EQ((alignof(std::atomic<int64_t>)), field.GetAlignment());
+
+   FileRaii fileGuard("test_ntuple_rfield_stdatomic.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto f1 = model->MakeField<std::atomic<bool>>("f1");
+      model->AddField(RFieldBase::Create("f2", "std::atomic<float>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto f2 = writer->GetModel()->GetDefaultEntry()->Get<std::atomic<float>>("f2");
+      for (int i = 0; i < 2; i++) {
+         *f1 = i % 2 == 0;
+         *f2 = static_cast<float>(i);
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(2, reader->GetNEntries());
+
+   auto viewF1 = reader->GetView<std::atomic<bool>>("f1");
+   auto viewF2 = reader->GetView<std::atomic<float>>("f2");
+   for (auto i : reader->GetEntryRange()) {
+      EXPECT_EQ(i % 2 == 0, viewF1(i));
+      EXPECT_FLOAT_EQ(static_cast<float>(i), viewF2(i));
+   }
+}
+
 TEST(RNTuple, Bitset)
 {
    FileRaii fileGuard("test_ntuple_bitset.root");

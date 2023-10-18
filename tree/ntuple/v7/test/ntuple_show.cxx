@@ -43,6 +43,7 @@ TEST(RNTupleShow, BasicTypes)
       auto fieldchar = model->MakeField<uint8_t>("uint8");
       auto fieldbitset = model->MakeField<std::bitset<65>>("bitset");
       auto fielduniqueptr = model->MakeField<std::unique_ptr<std::string>>("pstring");
+      auto fieldatomic = model->MakeField<std::atomic<bool>>("atomic");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
 
       *fieldPt = 5.0f;
@@ -55,6 +56,7 @@ TEST(RNTupleShow, BasicTypes)
       *fieldchar = 97;
       *fieldbitset = std::bitset<65>("10000000000000000000000000000010000000000000000000000000000010010");
       *fielduniqueptr = std::make_unique<std::string>("abc");
+      *fieldatomic = false;
       ntuple->Fill();
 
       *fieldPt = 8.5f;
@@ -67,6 +69,7 @@ TEST(RNTupleShow, BasicTypes)
       *fieldchar = 98;
       fieldbitset->flip();
       fielduniqueptr->reset();
+      *fieldatomic = true;
       ntuple->Fill();
    }
 
@@ -86,7 +89,8 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"boolean\": true,\n"
       + "  \"uint8\": 97,\n"
       + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\",\n"
-      + "  \"pstring\": \"abc\"\n"
+      + "  \"pstring\": \"abc\",\n"
+      + "  \"atomic\": false\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString, os.str());
@@ -105,7 +109,8 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"boolean\": false,\n"
       + "  \"uint8\": 98,\n"
       + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\",\n"
-      + "  \"pstring\": null\n"
+      + "  \"pstring\": null,\n"
+      + "  \"atomic\": true\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString1, os1.str());
