@@ -481,10 +481,10 @@ long TClingMethodInfo::Property() const
          property |= kIsPublic;
          break;
       case clang::AS_protected:
-         property |= kIsProtected;
+         property |= kIsProtected | kIsNotReacheable;
          break;
       case clang::AS_private:
-         property |= kIsPrivate;
+         property |= kIsPrivate | kIsNotReacheable;
          break;
       case clang::AS_none:
          if (declAccess->getDeclContext()->isNamespace())
@@ -493,6 +493,11 @@ long TClingMethodInfo::Property() const
       default:
          // IMPOSSIBLE
          break;
+   }
+
+   if (!(property & kIsNotReacheable)) {
+      if (! ROOT::TMetaUtils::IsDeclReacheable(*fd))
+         property |= kIsNotReacheable;
    }
 
    if (fd->isConstexpr())
