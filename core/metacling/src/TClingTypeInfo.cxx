@@ -139,10 +139,10 @@ long TClingTypeInfo::Property() const
             property |= kIsPublic;
             break;
          case clang::AS_protected:
-            property |= kIsProtected;
+            property |= kIsProtected | kIsNotReacheable;
             break;
          case clang::AS_private:
-            property |= kIsPrivate;
+            property |= kIsPrivate | kIsNotReacheable;
             break;
          case clang::AS_none:
             if (TD->getDeclContext()->isNamespace())
@@ -151,6 +151,10 @@ long TClingTypeInfo::Property() const
          default:
             // IMPOSSIBLE
             break;
+      }
+      if (!(property & kIsNotReacheable)) {
+         if (! ROOT::TMetaUtils::IsDeclReacheable(*TD))
+            property |= kIsNotReacheable;
       }
       if (TD->isEnum()) {
          property |= kIsEnum;
