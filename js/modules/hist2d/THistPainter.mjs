@@ -1467,6 +1467,10 @@ class THistPainter extends ObjectPainter {
       if (!do_draw)
          return this.drawNextFunction(indx+1, only_extra);
 
+      // Required to correctly draw multiple stats boxes
+      // TODO: set reference via weak pointer
+      func.$main_painter = this;
+
       const promise = TPavePainter.canDraw(func)
             ? TPavePainter.draw(this.getDom(), func, opt)
             : pp.drawObject(this.getDom(), func, opt);

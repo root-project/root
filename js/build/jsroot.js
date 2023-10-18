@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.5.0
+// https://root.cern/js/ v7.5.1
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.5.x',
+const version_id = '7.5.1',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '16/10/2023',
+version_date = '18/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -8875,6 +8875,7 @@ const symbols_map = {
    '#downarrow': '\u2193',
    '#circ': '\u02C6', // ^
    '#pm': '\xB1',
+   '#mp': '\u2213',
    '#doublequote': '\u2033',
    '#geq': '\u2265',
    '#times': '\xD7',
@@ -59841,12 +59842,8 @@ const AxisPainterMethods = {
       const base = this.logbase;
       if (base !== 10) vlog = vlog / Math.log10(base);
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
-         if (!this.noexp && (asticks !== 2)) {
-            const pow = Math.floor(vlog+0.01);
-            if ((pow === 0) && settings.StripAxisLabels)
-               return '1';
-            return this.formatExp(base, pow, val);
-         }
+         if (!this.noexp && (asticks !== 2))
+            return this.formatExp(base, Math.floor(vlog+0.01), val);
          if (Math.abs(base - Math.E) < 0.001)
             return floatToString(val, fmt || gStyle.fStatFormat);
          return (vlog < 0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
@@ -59889,6 +59886,12 @@ const AxisPainterMethods = {
          res += 'e';
       else
          res += base.toString();
+      if (settings.StripAxisLabels) {
+         if (order === 0)
+            return '1';
+         else if (order === 1)
+            return res;
+      }
       if (settings.Latex > constants$1.Latex.Symbols)
          return res + `^{${order}}`;
       const superscript_symbols = {
@@ -60737,7 +60740,11 @@ class TAxisPainter extends ObjectPainter {
                arg.x = pos;
                arg.y = fix_coord;
                arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
-               if (arg.align % 10 === 3) arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
+               if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
+                  arg.align = 21;
+                  arg.y += labelsFont.size;
+               } else if (arg.align % 10 === 3)
+                  arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
             }
 
             if (rotate_lbls)
@@ -71816,6 +71823,10 @@ class THistPainter extends ObjectPainter {
 
       if (!do_draw)
          return this.drawNextFunction(indx+1, only_extra);
+
+      // Required to correctly draw multiple stats boxes
+      // TODO: set reference via weak pointer
+      func.$main_painter = this;
 
       const promise = TPavePainter.canDraw(func)
             ? TPavePainter.draw(this.getDom(), func, opt)
@@ -100063,7 +100074,7 @@ drawFuncs = { lst: [
    { name: 'TEveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: nsREX+'REveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: 'TGeoOverlap', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt', dflt: 'dflt', ctrl: 'expand' },
-   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true },
+   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true, exapnd_after_draw: true },
    { name: 'TGeoVolumeAssembly', sameas: clTGeoVolume, /* icon: 'img_geoassembly', */ opt: ';more;all;count' },
    { name: /^TGeo/, class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;axis;compa;count;projx;projz;wire;no_screen;dflt', dflt: 'dflt', ctrl: 'expand' },
    { name: 'TAxis3D', icon: 'img_graph', draw: () => import_geo().then(h => h.drawAxis3D), direct: true },
@@ -102252,7 +102263,7 @@ class HierarchyPainter extends BasePainter {
          if (can_draw && can_expand && !drawopt) {
             // if default action specified as expand, disable drawing
             // if already displayed, try to expand
-            if (dflt_expand || (handle?.dflt === 'expand') || this.isItemDisplayed(itemname)) can_draw = false;
+            if (dflt_expand || (handle?.dflt === 'expand') || (handle?.exapnd_after_draw && this.isItemDisplayed(itemname))) can_draw = false;
          }
 
          if (can_draw && !drawopt)
@@ -102486,6 +102497,7 @@ class HierarchyPainter extends BasePainter {
                   menu.add('Expand', () => this.expandItem(itemname), 'Exapnd content of object');
                else {
                   menu.add('Unexpand', () => {
+                     hitem._more = true;
                      delete hitem._childs;
                      delete hitem._isopen;
                      if (hitem.expand_item)
@@ -113737,6 +113749,10 @@ class RAxisPainter extends RObjectPainter {
             arg.x = pos;
             arg.y = fix_coord;
             arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
+            if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
+               arg.align = 21;
+               arg.y += this.labelsFont.size;
+            }
          }
 
          arg.post_process = process_drawtext_ready;
