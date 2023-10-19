@@ -462,10 +462,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   TMVA/RBatchGenerator.hxx
   TMVA/RBatchLoader.hxx
   TMVA/RChunkLoader.hxx
-  TMVA/TreeInference/PythonHelpers.hxx
-  TMVA/TreeInference/BranchlessTree.hxx
-  TMVA/TreeInference/Forest.hxx
-  TMVA/TreeInference/Objectives.hxx
 
   SOURCES
 
