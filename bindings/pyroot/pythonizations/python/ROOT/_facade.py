@@ -347,10 +347,11 @@ class ROOTFacade(types.ModuleType):
         hasRDF = "dataframe" in gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor
+                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
 
                 inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
+                ns.Experimental.SaveXGBoost = SaveXGBoost
             except:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA

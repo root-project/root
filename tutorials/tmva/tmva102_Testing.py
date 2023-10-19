@@ -26,7 +26,7 @@ if (ROOT.gSystem.AccessPathName(File)) :
     ROOT.Info("tmva102_Testing.py", File+"does not exist")
     exit()
 
-bdt = ROOT.TMVA.Experimental.RBDT[""]("myBDT", File)
+bdt = ROOT.TMVA.Experimental.RBDT("myBDT", File)
 
 # Make prediction
 y_pred = bdt.Compute(x)
