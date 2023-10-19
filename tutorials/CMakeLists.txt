@@ -176,6 +176,7 @@ if(NOT xrootd)
   set(xrootd_veto dataframe/df101_h1Analysis.C
                   dataframe/df102_NanoAODDimuonAnalysis.C
                   dataframe/df103_NanoAODHiggsAnalysis.C
+                  dataframe/df106_HiggsToFourLeptons.C
                   tmva/tmva103_Application.C
                   dataframe/df033_Describe.py
                   dataframe/df102_NanoAODDimuonAnalysis.py
