@@ -665,7 +665,7 @@ The hierarchical structure of the frames in the page list envelope is as follows
     |     |     |---- Page 2 description (inner item)
     |     |     | ...
     |     |---- Column 1 element offset (UInt64)
-    |     |---- Column 1 flags (UInt32)
+    |     |---- Column 1 compression settings (UInt32)
     |     |---- Column 2 page list frame
     |     | ...
     |
