@@ -271,10 +271,6 @@ set(gui_veto fit/fitpanel_playback.C
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
 else()
-  # RBDT with xgboost is currently broken, disable all tutorials that use it
-  # See https://github.com/root-project/root/issues/15197
-  # TODO: Re-enable once fixed
-  list(APPEND tmva_veto tmva/tmva10[0-2]_*.py)
   #---These do not need to run for TMVA
   list(APPEND tmva_veto tmva/createData.C)
   if(MSVC AND NOT win_broken_tests)

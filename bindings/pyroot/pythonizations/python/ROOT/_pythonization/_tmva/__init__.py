@@ -51,7 +51,7 @@ if hasRDF:
 
 #this should be available only when xgboost is there ?
 # We probably don't need a protection here since the code is run only when there is xgboost
-from ._tree_inference import SaveXGBoost, pythonize_tree_inference
+from ._tree_inference import SaveXGBoost
 
 
 # list of python classes that are used to pythonize TMVA classes
