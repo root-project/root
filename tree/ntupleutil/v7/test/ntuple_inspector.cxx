@@ -62,6 +62,7 @@ TEST(RNTupleInspector, CompressionSettings)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
+   EXPECT_EQ(207, inspector->GetCompressionSettings());
    EXPECT_EQ("LZMA (level 7)", inspector->GetCompressionSettingsAsString());
 }
 

@@ -96,6 +96,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::uint64_t bytesOnStorage = 0;
    std::uint64_t bytesInMemory = 0;
    std::uint64_t nPages = 0;
+   int compression = -1;
    for (const auto &column : fColumnDescriptors) {
       // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
       // but don't add the the page sizes to the overall volume.
@@ -117,6 +118,9 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       for (const auto &cluster : fClusterDescriptors) {
          auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
          info.fNElements += columnRange.fNElements;
+         if (compression == -1) {
+            compression = columnRange.fCompressionSettings;
+         }
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];
          for (const auto &page : pageRange.fPageInfos) {
@@ -136,7 +140,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    auto footerSize = GetOnDiskFooterSize();
    output << "============================================================" << std::endl;
    output << "NTUPLE:      " << GetName() << std::endl;
-   output << "Compression: " << GetDefaultCompression() << std::endl;
+   output << "Compression: " << compression << std::endl;
    output << "------------------------------------------------------------" << std::endl;
    output << "  # Entries:        " << GetNEntries() << std::endl;
    output << "  # Fields:         " << GetNFields() << std::endl;

@@ -302,7 +302,6 @@ The header consists of the following elements:
  - String: name of the ntuple
  - String: description of the ntuple
  - String: identifier of the library or program that writes the data
- - 64bit unsigned integer: default compression settings
  - List frame: list of field record frames
  - List frame: list of column record frames
  - List frame: list of alias column record frames
@@ -666,6 +665,7 @@ The hierarchical structure of the frames in the page list envelope is as follows
     |     |     |---- Page 2 description (inner item)
     |     |     | ...
     |     |---- Column 1 element offset (UInt64)
+    |     |---- Column 1 flags (UInt32)
     |     |---- Column 2 page list frame
     |     | ...
     |
@@ -674,7 +674,7 @@ The hierarchical structure of the frames in the page list envelope is as follows
 
 In order to save space, the page descriptions (inner items) are _not_ in a record frame.
 If at a later point more information per page is needed,
-the page list envelope can be extended by additional list and record frames.
+the page list envelope can be extended by addtional list and record frames.
 
 ### User Meta-data Envelope
 
