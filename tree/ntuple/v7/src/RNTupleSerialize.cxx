@@ -1262,7 +1262,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeader(void *buffer,
    pos += SerializeString(desc.GetName(), *where);
    pos += SerializeString(desc.GetDescription(), *where);
    pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
-   pos += SerializeUInt64(desc.GetDefaultCompression(), *where);
 
    context.MapSchema(desc, /*forHeaderExtension=*/false);
    pos += SerializeSchemaDescription(*where, desc, context);
@@ -1326,6 +1325,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
             pos += SerializeLocator(pi.fLocator, *where);
          }
          pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
+         pos += SerializeUInt32(columnRange.fCompressionSettings, *where);
 
          pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame);
       }
@@ -1436,12 +1436,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *b
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
    descBuilder.SetNTuple(name, description);
-
-   if (fnBufSizeLeft() < sizeof(std::uint64_t))
-      return R__FAIL("header too short");
-   std::uint64_t defaultCompression;
-   bytes += DeserializeUInt64(bytes, defaultCompression);
-   descBuilder.SetDefaultCompression(defaultCompression);
 
    // Zero field
    descBuilder.AddField(
@@ -1653,12 +1647,14 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
             bytes += result.Unwrap();
          }
 
-         if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint64_t)))
+         if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t) + sizeof(std::uint64_t)))
             return R__FAIL("page list frame too short");
          std::uint64_t columnOffset;
          bytes += DeserializeUInt64(bytes, columnOffset);
+         std::uint32_t compressionSettings;
+         bytes += DeserializeUInt32(bytes, compressionSettings);
 
-         clusterBuilders[i].CommitColumnRange(j, columnOffset, pageRange);
+         clusterBuilders[i].CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
          bytes = innerFrame + innerFrameSize;
       } // loop over columns
 

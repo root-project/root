@@ -126,6 +126,7 @@ public:
 private:
    std::unique_ptr<Detail::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
+   int fCompressionSettings = -1;
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
@@ -204,12 +205,23 @@ public:
    RNTupleDescriptor *GetDescriptor() const { return fDescriptor.get(); }
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the compression settings of the RNTuple being inspected.
+   ///
+   /// \return The integer representation (\f$algorithm * 10 + level\f$, where \f$algorithm\f$ follows
+   /// ROOT::RCompressionSetting::ELevel::EValues) of the compression settings used for the inspected RNTuple.
+   ///
+   /// \note Here, we assume that the compression settings are consistent across all clusters and columns. If this is
+   /// not the case, an exception will be thrown when RNTupleInspector::Create is called.
+   int GetCompressionSettings() const { return fCompressionSettings; }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a string describing compression settings of the RNTuple being inspected.
    ///
    /// \return A string describing the compression used for the inspected RNTuple. The format of the string is
    /// `"A (level L)"`, where `A` is the name of the compression algorithm and `L` the compression level.
    ///
-   /// \note Here, use the default compression information from the RNTuple header.
+   /// \note Here, we assume that the compression settings are consistent across all clusters and columns. If this is
+   /// not the case, an exception will be thrown when RNTupleInspector::Create is called.
    std::string GetCompressionSettingsAsString() const;
 
    /////////////////////////////////////////////////////////////////////////////
