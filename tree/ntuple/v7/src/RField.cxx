@@ -185,7 +185,7 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 4) == "set<")
       normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 4) == "atomic<")
+   if (normalizedType.substr(0, 7) == "atomic<")
       normalizedType = "std::" + normalizedType;
 
    return normalizedType;
