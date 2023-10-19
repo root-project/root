@@ -44,7 +44,7 @@ public:
   private:
   RooRealProxy _x;
   RooListProxy _coefList ;
-  mutable TNamed* _refRangeName ;
+  mutable TNamed* _refRangeName = nullptr;
 
   double evaluate() const override;
   void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
