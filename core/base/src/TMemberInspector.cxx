@@ -121,7 +121,7 @@ void TMemberInspector::GenericShowMembers(const char *topClassName, const void *
       }
    }
 
-   TClass *top = TClass::GetClass(topClassName);
+   TClass *top = TClass::GetClass(topClassName, true, isTransient);
    if (top) {
       top->CallShowMembers(obj, *this, isTransient);
    } else {
