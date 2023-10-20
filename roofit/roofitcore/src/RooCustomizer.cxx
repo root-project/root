@@ -190,7 +190,7 @@ static Int_t init();
 
 Int_t dummy = init() ;
 
-static Int_t init()
+Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new CustIFace ;
   RooFactoryWSTool::registerSpecial("EDIT",iface) ;

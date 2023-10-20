@@ -204,7 +204,7 @@ public:
       return new TH1D{name, title, 2, 1, 2};
    }
 
-   void SetUp()
+   void SetUp() override
    {
       using namespace RooStats::HistFactory;
 
@@ -352,7 +352,7 @@ public:
       EXPECT_TRUE(hijackW.str().empty()) << "Warnings logged for HistFactory:\n" << hijackW.str();
    }
 
-   void TearDown() {}
+   void TearDown() override {}
 };
 
 class HFFixtureEval : public HFFixture {};
