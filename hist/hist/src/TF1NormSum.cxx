@@ -208,12 +208,12 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
       indexsizetimes[i] = ( ( ( (TObjString*)(*arraytimes)[i] ) -> GetString() ).Tokenize("+") ) -> GetEntries();
       while (k < indexsizetimes[i])
       {
-         isacoeff[k+j-1] = 0;
+         isacoeff[k+j-1] = false;
          k++;
       }
       j = j+indexsizetimes[i];
-      if (j==nofobj)    isacoeff[j-1] = 0;    //the last one is never a coeff
-      else              isacoeff[j-1] = 1;
+      if (j==nofobj)    isacoeff[j-1] = false;    //the last one is never a coeff
+      else              isacoeff[j-1] = true;
       k = 1;
    }
 

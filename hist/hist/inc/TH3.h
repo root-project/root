@@ -74,7 +74,7 @@ private:
    using TH1::IntegralAndError;
 
 public:
-   virtual ~TH3();
+   ~TH3() override;
            Int_t    BufferEmpty(Int_t action = 0) override;
            void     Copy(TObject &hnew) const override;
    virtual Int_t    Fill(Double_t x, Double_t y, Double_t z);
@@ -163,7 +163,7 @@ public:
                                           ,Int_t nbinsy,const Double_t *ybins
                                           ,Int_t nbinsz,const Double_t *zbins);
    TH3C(const TH3C &h3c);
-   virtual ~TH3C();
+   ~TH3C() override;
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
@@ -201,7 +201,7 @@ public:
                                           ,Int_t nbinsy,const Double_t *ybins
                                           ,Int_t nbinsz,const Double_t *zbins);
    TH3S(const TH3S &h3s);
-   virtual ~TH3S();
+   ~TH3S() override;
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
@@ -239,7 +239,7 @@ public:
                                           ,Int_t nbinsy,const Double_t *ybins
                                           ,Int_t nbinsz,const Double_t *zbins);
    TH3I(const TH3I &h3i);
-   virtual ~TH3I();
+   ~TH3I() override;
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
@@ -278,7 +278,7 @@ public:
                                           ,Int_t nbinsy,const Double_t *ybins
                                           ,Int_t nbinsz,const Double_t *zbins);
    TH3F(const TH3F &h3f);
-   virtual ~TH3F();
+   ~TH3F() override;
 
            void      AddBinContent(Int_t bin) override {++fArray[bin];}
            void      AddBinContent(Int_t bin, Double_t w) override
@@ -317,7 +317,7 @@ public:
                                           ,Int_t nbinsy,const Double_t *ybins
                                           ,Int_t nbinsz,const Double_t *zbins);
    TH3D(const TH3D &h3d);
-   virtual ~TH3D();
+   ~TH3D() override;
 
            void      AddBinContent(Int_t bin) override {++fArray[bin];}
            void      AddBinContent(Int_t bin, Double_t w) override
