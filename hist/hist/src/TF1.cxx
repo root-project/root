@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <iostream>
+#include <memory>
 #include "strlcpy.h"
 #include "snprintf.h"
 #include "TROOT.h"
@@ -90,7 +91,7 @@ public:
             fFormula->SetParameters(from.GetParameters());
       } else {
          // case of a function pointers
-         fParams.reset(new TF1Parameters(fNpar));
+         fParams = std::make_unique<TF1Parameters>(fNpar);
          fName = from.GetName();
          fTitle = from.GetTitle();
          // need to set parameter values
@@ -723,7 +724,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
       return;
    }
 
-   fMethodCall = std::unique_ptr<TMethodCall>(new TMethodCall());
+   fMethodCall = std::make_unique<TMethodCall>();
    fMethodCall->InitWithPrototype(fName, "Double_t*,Double_t*");
 
    if (! fMethodCall->IsValid()) {
@@ -2191,7 +2192,7 @@ Bool_t TF1::ComputeCdfTable(Option_t * option) {
 Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be built
-   if (fIntegral.size() == 0) {
+   if (fIntegral.empty()) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();
    }
@@ -2244,7 +2245,7 @@ Double_t TF1::GetRandom(TRandom * rng, Option_t * option)
 Double_t TF1::GetRandom(Double_t xmin, Double_t xmax, TRandom * rng, Option_t * option)
 {
    //  Check if integral array must be built
-   if (fIntegral.size() == 0) {
+   if (fIntegral.empty()) {
       Bool_t ret = ComputeCdfTable(option);
       if (!ret) return TMath::QuietNaN();
    }
@@ -2342,7 +2343,7 @@ void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF1::GetSave(const Double_t *xx)
 {
-   if (fSave.size() == 0) return 0;
+   if (fSave.empty()) return 0;
    //if (fSave == 0) return 0;
    int fNsave = fSave.size();
    Double_t x    = Double_t(xx[0]);
@@ -3539,7 +3540,7 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
 
 void TF1::SetSavedPoint(Int_t point, Double_t value)
 {
-   if (fSave.size() == 0) {
+   if (fSave.empty()) {
       fSave.resize(fNpx + 3);
    }
    if (point < 0 || point >= int(fSave.size())) return;

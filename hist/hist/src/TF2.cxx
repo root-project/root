@@ -733,7 +733,7 @@ TH1* TF2::CreateHistogram()
    h->SetMarkerColor(GetMarkerColor());
    h->SetMarkerStyle(GetMarkerStyle());
    h->SetMarkerSize(GetMarkerSize());
-   h->SetStats(0);
+   h->SetStats(false);
 
    return h;
 }
@@ -783,7 +783,7 @@ void TF2::Paint(Option_t *option)
    fHistogram->SetMarkerColor(GetMarkerColor());
    fHistogram->SetMarkerStyle(GetMarkerStyle());
    fHistogram->SetMarkerSize(GetMarkerSize());
-   fHistogram->SetStats(0);
+   fHistogram->SetStats(false);
 
 //-  Draw the histogram
    if (!gPad) return;

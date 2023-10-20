@@ -37,8 +37,8 @@ namespace {
       Long64_t Next(Int_t* coord = nullptr) override;
 
    private:
-      THnSparseBinIter(const THnSparseBinIter&); // intentionally unimplemented
-      THnSparseBinIter& operator=(const THnSparseBinIter&); // intentionally unimplemented
+      THnSparseBinIter(const THnSparseBinIter&) = delete; // intentionally unimplemented
+      THnSparseBinIter& operator=(const THnSparseBinIter&) = delete; // intentionally unimplemented
 
       const THnSparse* fHist;
       Int_t* fCoord; // coord buffer for fIndex; fCoord[0] == -1 if not yet calculated
@@ -369,9 +369,9 @@ public:
 
 private:
    // intentionally not implemented
-   THnSparseCompactBinCoord(const THnSparseCompactBinCoord&);
+   THnSparseCompactBinCoord(const THnSparseCompactBinCoord&) = delete;
    // intentionally not implemented
-   THnSparseCompactBinCoord& operator=(const THnSparseCompactBinCoord&);
+   THnSparseCompactBinCoord& operator=(const THnSparseCompactBinCoord&) = delete;
 
 private:
    ULong64_t fHash;      // hash for current coordinates; 0 if not calculated
