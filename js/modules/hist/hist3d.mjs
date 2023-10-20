@@ -842,8 +842,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       this.z_handle.setPadName(this.getPadName());
       this.z_handle.snapid = this.snapid;
    }
+
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
-                               { log: pad?.fLogz ?? 0, reverse: opts.reverse_z });
+                               { log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
+                                  reverse: opts.reverse_z });
    this.z_handle.assignFrameMembers(this, 'z');
    this.z_handle.extractDrawAttributes(scalingSize);
 
@@ -896,7 +898,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          const text3d = createTextGeometry(this, lbl, this.x_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true; // place central
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
@@ -1932,8 +1934,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
          main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value),
          main_grz_min = 0, main_grz_max = 2*main.size_z3d;
 
-   let handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1, middle: 0.5 });
-
+   let handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1, middle: 0.5,
+                                      cutg: isFunc(painter.options?.cutg?.IsInside) ? painter.options?.cutg : null });
    if ((handle.i2 - handle.i1 < 2) || (handle.j2 - handle.j1 < 2)) return;
 
    let ilevels = null, levels = null, palette = null;

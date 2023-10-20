@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '16/10/2023',
+version_date = '20/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1618,6 +1618,54 @@ function getMethods(typename, obj) {
                bin3 = Math.max(0, 1 + Math.min(a3.fNbins, Math.floor((z - a3.fXmin) / (a3.fXmax - a3.fXmin) * a3.fNbins)));
          this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2)*bin3)] += weight ?? 1;
          this.fEntries++;
+      };
+   }
+
+   if (typename === clTPad || typename === clTCanvas) {
+      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01) {
+         if (!ny) {
+            const ndiv = nx;
+            if (ndiv < 2) return this;
+            nx = ny = Math.round(Math.sqrt(ndiv));
+            if (nx * ny < ndiv) nx += 1;
+         }
+         if (nx*ny < 2)
+            return 0;
+         this.fPrimitives.Clear();
+         const dy = 1/ny, dx = 1/nx;
+         let n = 0;
+         for (let iy = 0; iy < ny; iy++) {
+            const y2 = 1 - iy*dy - ymargin;
+            let y1 = y2 - dy + 2*ymargin;
+            if (y1 < 0) y1 = 0;
+            if (y1 > y2) continue;
+            for (let ix = 0; ix < nx; ix++) {
+               const x1 = ix*dx + xmargin,
+                     x2 = x1 + dx -2*xmargin;
+               if (x1 > x2) continue;
+               n++;
+               const pad = create$1(clTPad);
+               pad.fName = pad.fTitle = `${this.fName}_${n}`;
+               pad.fNumber = n;
+               if (this._typename !== clTCanvas) {
+                  pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
+                  pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
+                  pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+               } else {
+                  pad.fAbsWNDC = x2 - x1;
+                  pad.fAbsHNDC = y2 - y1;
+                  pad.fAbsXlowNDC = x1;
+                  pad.fAbsYlowNDC = y1;
+               }
+
+               this.fPrimitives.Add(pad);
+            }
+         }
+         return nx * ny;
+      };
+      m.GetPad = function(number) {
+         return this.fPrimitives.arr.find(elem => { return elem._typename === clTPad && elem.fNumber === number; });
       };
    }
 
@@ -8875,6 +8923,7 @@ const symbols_map = {
    '#downarrow': '\u2193',
    '#circ': '\u02C6', // ^
    '#pm': '\xB1',
+   '#mp': '\u2213',
    '#doublequote': '\u2033',
    '#geq': '\u2265',
    '#times': '\xD7',
@@ -59841,12 +59890,8 @@ const AxisPainterMethods = {
       const base = this.logbase;
       if (base !== 10) vlog = vlog / Math.log10(base);
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
-         if (!this.noexp && (asticks !== 2)) {
-            const pow = Math.floor(vlog+0.01);
-            if ((pow === 0) && settings.StripAxisLabels)
-               return '1';
-            return this.formatExp(base, pow, val);
-         }
+         if (!this.noexp && (asticks !== 2))
+            return this.formatExp(base, Math.floor(vlog+0.01), val);
          if (Math.abs(base - Math.E) < 0.001)
             return floatToString(val, fmt || gStyle.fStatFormat);
          return (vlog < 0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
@@ -59889,6 +59934,12 @@ const AxisPainterMethods = {
          res += 'e';
       else
          res += base.toString();
+      if (settings.StripAxisLabels) {
+         if (order === 0)
+            return '1';
+         else if (order === 1)
+            return res;
+      }
       if (settings.Latex > constants$1.Latex.Symbols)
          return res + `^{${order}}`;
       const superscript_symbols = {
@@ -60737,7 +60788,11 @@ class TAxisPainter extends ObjectPainter {
                arg.x = pos;
                arg.y = fix_coord;
                arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
-               if (arg.align % 10 === 3) arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
+               if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
+                  arg.align = 21;
+                  arg.y += labelsFont.size;
+               } else if (arg.align % 10 === 3)
+                  arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
             }
 
             if (rotate_lbls)
@@ -62884,8 +62939,9 @@ class TFramePainter extends ObjectPainter {
       this.logx = this.logy = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-            pp = this.getPadPainter(),
-            pad = pp.getRootPad();
+            pp = this.getPadPainter(), pad = pp.getRootPad(),
+            pad_logx = pad.fLogx,
+            pad_logy = (opts.ndim === 1 ? pad.fLogv : undefined) ?? pad.fLogy;
 
       this.scales_ndim = opts.ndim;
 
@@ -62896,7 +62952,7 @@ class TFramePainter extends ObjectPainter {
       this.scale_ymax = this.ymax;
 
       if (opts.extra_y_space) {
-         const log_scale = this.swap_xy ? pad.fLogx : pad.fLogy;
+         const log_scale = this.swap_xy ? pad_logx : pad_logy;
          if (log_scale && (this.scale_ymax > 0))
             this.scale_ymax = Math.exp(Math.log(this.scale_ymax)*1.1);
          else
@@ -62947,7 +63003,7 @@ class TFramePainter extends ObjectPainter {
 
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
-                                        log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                        log: this.swap_xy ? pad_logy : pad_logx,
                                         noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
                                         logcheckmin: this.swap_xy,
@@ -62961,7 +63017,7 @@ class TFramePainter extends ObjectPainter {
 
       this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                       { reverse: this.reverse_y,
-                                        log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                        log: this.swap_xy ? pad_logx : pad_logy,
                                         noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
@@ -66782,53 +66838,16 @@ class TPadPainter extends ObjectPainter {
      * @return {Promise} when finished
      * @private */
    async divide(nx, ny) {
-      if (!ny) {
-         const ndiv = nx;
-         if (ndiv < 2) return this;
-         nx = ny = Math.round(Math.sqrt(ndiv));
-         if (nx*ny < ndiv) nx += 1;
-      }
+      if (!this.pad.Divide(nx, ny))
+         return this;
 
-      if (nx*ny < 2) return this;
-
-      const xmargin = 0.01, ymargin = 0.01, dy = 1/ny, dx = 1/nx, subpads = [];
-      let n = 0;
-      for (let iy = 0; iy < ny; iy++) {
-         const y2 = 1 - iy*dy - ymargin;
-         let y1 = y2 - dy + 2*ymargin;
-         if (y1 < 0) y1 = 0;
-         if (y1 > y2) continue;
-         for (let ix = 0; ix < nx; ix++) {
-            const x1 = ix*dx + xmargin,
-                x2 = x1 +dx -2*xmargin;
-            if (x1 > x2) continue;
-            n++;
-            const pad = create$1(clTPad);
-            pad.fName = pad.fTitle = `${this.pad.fName}_${n}`;
-            pad.fNumber = n;
-            if (!this.iscan) {
-               pad.fAbsWNDC = (x2-x1) * this.pad.fAbsWNDC;
-               pad.fAbsHNDC = (y2-y1) * this.pad.fAbsHNDC;
-               pad.fAbsXlowNDC = this.pad.fAbsXlowNDC + x1 * this.pad.fAbsWNDC;
-               pad.fAbsYlowNDC = this.pad.fAbsYlowNDC + y1 * this.pad.fAbsWNDC;
-            } else {
-               pad.fAbsWNDC = x2 - x1;
-               pad.fAbsHNDC = y2 - y1;
-               pad.fAbsXlowNDC = x1;
-               pad.fAbsYlowNDC = y1;
-            }
-
-            subpads.push(pad);
-         }
-      }
-
-      const drawNext = () => {
-         if (subpads.length === 0)
+      const drawNext = indx => {
+         if (indx >= this.pad.fPrimitives.arr.length)
             return this;
-         return this.drawObject(this.getDom(), subpads.shift()).then(drawNext);
+         return this.drawObject(this.getDom(), this.pad.fPrimitives.arr[indx]).then(() => drawNext(indx + 1));
       };
 
-      return drawNext();
+      return drawNext(0);
    }
 
    /** @summary Return sub-pads painter, only direct childs are checked
@@ -68043,6 +68062,7 @@ class TPadPainter extends ObjectPainter {
       if (d.check('LOGY')) forEach(p => { p.fLogy = 1; p.fUymin = 0; p.fUymax = 1; p.fY1 = 0; p.fY2 = 1; });
       if (d.check('LOG2Z')) forEach(p => { p.fLogz = 2; });
       if (d.check('LOGZ')) forEach(p => { p.fLogz = 1; });
+      if (d.check('LOGV')) forEach(p => { p.fLogv = 1; });
       if (d.check('LOG2')) forEach(p => { p.fLogx = p.fLogy = p.fLogz = 2; });
       if (d.check('LOG')) forEach(p => { p.fLogx = p.fLogy = p.fLogz = 1; });
       if (d.check('LNX')) forEach(p => { p.fLogx = 3; p.fUxmin = 0; p.fUxmax = 1; p.fX1 = 0; p.fX2 = 1; });
@@ -68053,6 +68073,7 @@ class TPadPainter extends ObjectPainter {
       if (d.check('GRID')) forEach(p => { p.fGridx = p.fGridy = 1; });
       if (d.check('TICKX')) forEach(p => { p.fTickx = 1; });
       if (d.check('TICKY')) forEach(p => { p.fTicky = 1; });
+      if (d.check('TICKZ')) forEach(p => { p.fTickz = 1; });
       if (d.check('TICK')) forEach(p => { p.fTickx = p.fTicky = 1; });
       if (d.check('OTX')) forEach(p => { p.$OTX = true; });
       if (d.check('OTY')) forEach(p => { p.$OTY = true; });
@@ -68986,6 +69007,9 @@ ensureTCanvas: ensureTCanvas
  * @private
  */
 
+const kTakeStyle = BIT(17);
+
+
 class TPavePainter extends ObjectPainter {
 
    /** @summary constructor
@@ -69158,15 +69182,15 @@ class TPavePainter extends ObjectPainter {
 
             if (isFunc(main?.fillStatistic)) {
                let dostat = parseInt(pt.fOptStat), dofit = parseInt(pt.fOptFit);
-               if (!Number.isInteger(dostat)) dostat = gStyle.fOptStat;
-               if (!Number.isInteger(dofit)) dofit = gStyle.fOptFit;
+               if (!Number.isInteger(dostat) || pt.TestBit(kTakeStyle)) dostat = gStyle.fOptStat;
+               if (!Number.isInteger(dofit)|| pt.TestBit(kTakeStyle)) dofit = gStyle.fOptFit;
 
                // we take statistic from main painter
                if (main.fillStatistic(this, dostat, dofit)) {
                   // adjust the size of the stats box with the number of lines
                   const nlines = pt.fLines?.arr.length || 0;
                   if ((nlines > 0) && !this.moved_interactive && ((gStyle.fStatFontSize <= 0) || (gStyle.fStatFont % 10 === 3)))
-                     pt.fY1NDC = pt.fY2NDC - nlines * 0.25 * gStyle.fStatH;
+                     pt.fY1NDC = Math.max(0.02, pt.fY2NDC - ((nlines < 8) ? nlines * 0.25 * gStyle.fStatH : nlines * 0.025));
                }
             }
          }
@@ -69770,15 +69794,18 @@ class TPavePainter extends ObjectPainter {
             framep = this.getFramePainter(),
             contour = main.fContour,
             levels = contour?.getLevels(),
+            is_th3 = isFunc(main?.getDimension) && (main.getDimension() === 3),
+            log = (is_th3 ? pad?.fLogv : pad?.fLogz) ?? 0,
             draw_palette = main._color_palette,
-            zaxis = main?.getObject()?.fZaxis;
+            zaxis = main?.getObject()?.fZaxis,
+            sizek = pad?.fTickz ? 0.35 : 0.7;
 
-      let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '';
+      let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '', axis_second = 0;
 
       this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
 
       axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
-      if (typeof zaxis?.fLabelOffset !== 'undefined') {
+      if ((typeof zaxis?.fLabelOffset !== 'undefined') && !is_th3) {
          axis.fTitle = zaxis.fTitle;
          axis.fTitleSize = zaxis.fTitleSize;
          axis.fTitleOffset = zaxis.fTitleOffset;
@@ -69792,7 +69819,7 @@ class TPavePainter extends ObjectPainter {
          this.z_handle.source_axis = zaxis;
       }
 
-      if (contour && framep) {
+      if (contour && framep && !is_th3) {
          if ((framep.zmin !== undefined) && (framep.zmax !== undefined) && (framep.zmin !== framep.zmax)) {
             gzmin = framep.zmin;
             gzmax = framep.zmax;
@@ -69821,12 +69848,14 @@ class TPavePainter extends ObjectPainter {
 
       if (this._palette_vertical) {
          this._swap_side = palette.fX2NDC < 0.5;
-         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, true, [0, s_height], { log: pad?.fLogz ?? 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*0.7), swap_side: this._swap_side });
+         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, true, [0, s_height], { log, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*sizek), swap_side: this._swap_side });
          axis_transform = this._swap_side ? null : `translate(${s_width})`;
+         if (pad?.fTickz) axis_second = this._swap_side ? s_width : -s_width;
       } else {
          this._swap_side = palette.fY1NDC > 0.5;
-         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, false, [0, s_width], { log: pad?.fLogz ?? 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_height*0.7), swap_side: this._swap_side });
+         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, false, [0, s_width], { log, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_height*sizek), swap_side: this._swap_side });
          axis_transform = this._swap_side ? null : `translate(0,${s_height})`;
+         if (pad?.fTickz) axis_second = this._swap_side ? s_height : -s_height;
       }
 
       if (!contour || !draw_palette || postpone_draw) {
@@ -69888,7 +69917,7 @@ class TPavePainter extends ObjectPainter {
          }
       }
 
-      return this.z_handle.drawAxis(this.draw_g, s_width, s_height, axis_transform).then(() => {
+      return this.z_handle.drawAxis(this.draw_g, s_width, s_height, axis_transform, axis_second).then(() => {
          if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
             const rect = this.draw_g.node().getBoundingClientRect();
 
@@ -70141,19 +70170,19 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary Fill function parameters */
-   fillFunctionStat(f1, dofit) {
+   fillFunctionStat(f1, dofit, ndim = 1) {
       if (!dofit || !f1) return false;
 
-      const print_fval = dofit % 10,
-          print_ferrors = Math.floor(dofit/10) % 10,
-          print_fchi2 = Math.floor(dofit/100) % 10,
-          print_fprob = Math.floor(dofit/1000) % 10;
+      const print_fval = (ndim === 1) ? dofit % 10 : 1,
+            print_ferrors = (ndim === 1) ? Math.floor(dofit/10) % 10 : 1,
+            print_fchi2 = (ndim === 1) ? Math.floor(dofit/100) % 10 : 1,
+            print_fprob = (ndim === 1) ? Math.floor(dofit/1000) % 10 : 0;
 
-      if (print_fchi2 > 0)
-         this.addText('#chi^2 / ndf = ' + this.format(f1.fChisquare, 'fit') + ' / ' + f1.fNDF);
-      if (print_fprob > 0)
+      if (print_fchi2)
+         this.addText('#chi^{2} / ndf = ' + this.format(f1.fChisquare, 'fit') + ' / ' + f1.fNDF);
+      if (print_fprob)
          this.addText('Prob = ' + this.format(Prob(f1.fChisquare, f1.fNDF)));
-      if (print_fval > 0) {
+      if (print_fval) {
          for (let n = 0; n < f1.GetNumPars(); ++n) {
             const parname = f1.GetParName(n);
             let parvalue = f1.GetParValue(n), parerr = f1.GetParError(n);
@@ -70165,7 +70194,7 @@ class TPavePainter extends ObjectPainter {
                   parerr = this.format(f1.GetParError(n), '4.2g');
             }
 
-            if ((print_ferrors > 0) && parerr)
+            if (print_ferrors && parerr)
                this.addText(`${parname} = ${parvalue} #pm ${parerr}`);
             else
                this.addText(`${parname} = ${parvalue}`);
@@ -70500,6 +70529,9 @@ class THistDrawOptions {
       if (d.check('OPTSTAT', true)) this.optstat = d.partAsInt();
       if (d.check('OPTFIT', true)) this.optfit = d.partAsInt();
 
+      if ((this.optstat || this.optstat) && histo?.TestBit(kNoStats))
+         histo?.InvertBit(kNoStats);
+
       if (d.check('NOSTAT')) this.NoStat = true;
       if (d.check('STAT')) this.ForceStat = true;
 
@@ -70526,12 +70558,14 @@ class THistDrawOptions {
       if (ly && pad) { pad.fLogy = ly; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
       if (d.check('LOG2Z') && pad) pad.fLogz = 2;
       if (d.check('LOGZ') && pad) pad.fLogz = 1;
+      if (d.check('LOGV') && pad) pad.fLogv = 1; // ficitional member, can be introduced in ROOT
       if (d.check('GRIDXY') && pad) pad.fGridx = pad.fGridy = 1;
       if (d.check('GRIDX') && pad) pad.fGridx = 1;
       if (d.check('GRIDY') && pad) pad.fGridy = 1;
       if (d.check('TICKXY') && pad) pad.fTickx = pad.fTicky = 1;
       if (d.check('TICKX') && pad) pad.fTickx = 1;
       if (d.check('TICKY') && pad) pad.fTicky = 1;
+      if (d.check('TICKZ') && pad) pad.fTickz = 1;
       if (d.check('GRAYSCALE'))
          pp?.setGrayscale(true);
 
@@ -70648,8 +70682,14 @@ class THistDrawOptions {
       if (d.check('ARR'))
          this.Arrow = true;
 
-      if (d.check('BOX', true))
-         this.BoxStyle = 10 + d.partAsInt();
+      if (d.check('BOX', true)) {
+         this.BoxStyle = 10;
+         if (d.part.indexOf('1') >= 0) this.BoxStyle = 11; else
+         if (d.part.indexOf('2') >= 0) this.BoxStyle = 12; else
+         if (d.part.indexOf('3') >= 0) this.BoxStyle = 13;
+         if (d.part.indexOf('Z') >= 0) this.Zscale = true;
+         if (d.part.indexOf('H') >= 0) this.Zvert = false;
+      }
 
       this.Box = this.BoxStyle > 0;
 
@@ -70861,6 +70901,7 @@ class THistDrawOptions {
          if (pad.fGridy) res += '_GRIDY';
          if (pad.fTickx) res += '_TICKX';
          if (pad.fTicky) res += '_TICKY';
+         if (pad.fTickz) res += '_TICKZ';
       }
 
       if (this.cutg_name)
@@ -71817,6 +71858,10 @@ class THistPainter extends ObjectPainter {
       if (!do_draw)
          return this.drawNextFunction(indx+1, only_extra);
 
+      // Required to correctly draw multiple stats boxes
+      // TODO: set reference via weak pointer
+      func.$main_painter = this;
+
       const promise = TPavePainter.canDraw(func)
             ? TPavePainter.draw(this.getDom(), func, opt)
             : pp.drawObject(this.getDom(), func, opt);
@@ -72161,20 +72206,23 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Create contour object for histogram */
    createContour(nlevels, zmin, zmax, zminpositive, custom_levels) {
-      const cntr = new HistContour(zmin, zmax);
+      const cntr = new HistContour(zmin, zmax),
+            ndim = this.getDimension();
 
       if (custom_levels)
          cntr.createCustom(custom_levels);
       else {
          if (nlevels < 2) nlevels = gStyle.fNumberContours;
-         const pad = this.getPadPainter().getRootPad(true);
-         cntr.createNormal(nlevels, pad?.fLogz ?? 0, zminpositive);
+         const pad = this.getPadPainter().getRootPad(true),
+               logv = pad?.fLogv ?? ((ndim === 2) && pad?.fLogz);
+
+         cntr.createNormal(nlevels, logv ?? 0, zminpositive);
       }
 
       cntr.configIndicies(this.options.Zero ? -1 : 0, (cntr.colzmin !== 0) || !this.options.Zero || this.isTH2Poly() ? 0 : -1);
 
       const fp = this.getFramePainter();
-      if (fp && (this.getDimension() < 3) && !fp.mode3d) {
+      if (fp && (ndim < 3) && !fp.mode3d) {
          fp.zmin = cntr.colzmin;
          fp.zmax = cntr.colzmax;
       }
@@ -72341,15 +72389,16 @@ class THistPainter extends ObjectPainter {
          else
             Object.assign(pal, { fX1NDC: 1.005 - gStyle.fPadRightMargin, fX2NDC: 1.045 - gStyle.fPadRightMargin, fY1NDC: gStyle.fPadBottomMargin, fY2NDC: 1 - gStyle.fPadTopMargin });
 
-         const zaxis = this.getHisto().fZaxis;
+         Object.assign(pal.fAxis, { fChopt: '+', fLineSyle: 1, fLineWidth: 1, fTextAngle: 0, fTextAlign: 11 });
 
-         Object.assign(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize,
-                                    fTitleOffset: zaxis.fTitleOffset, fTitleColor: zaxis.fTitleColor,
-                                    fChopt: '+',
-                                    fLineColor: zaxis.fAxisColor, fLineSyle: 1, fLineWidth: 1,
-                                    fTextAngle: 0, fTextSize: zaxis.fLabelSize, fTextAlign: 11,
-                                    fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont,
-                                    fLabelOffset: zaxis.fLabelOffset });
+         if (this.getDimension() === 2) {
+            const zaxis = this.getHisto().fZaxis;
+            Object.assign(pal.fAxis, { fTitle: zaxis.fTitle, fTitleSize: zaxis.fTitleSize,
+                                       fTitleOffset: zaxis.fTitleOffset, fTitleColor: zaxis.fTitleColor,
+                                       fLineColor: zaxis.fAxisColor, fTextSize: zaxis.fLabelSize,
+                                       fTextColor: zaxis.fLabelColor, fTextFont: zaxis.fLabelFont,
+                                       fLabelOffset: zaxis.fLabelOffset });
+         }
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.addFunction(pal, true);
@@ -72530,6 +72579,24 @@ class THistPainter extends ObjectPainter {
                j2: (hdim === 1) ? 1 : (args.nozoom ? this.nbinsy : this.getSelectIndex('y', 'right', 1 + args.extra)),
                min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
             };
+
+      if (args.cutg) {
+         // if using cutg - define rectengular region
+         let i1 = res.i2, i2 = res.i1, j1 = res.j2, j2 = res.j1;
+         for (let ii = res.i1; ii < res.i2; ++ii) {
+            for (let jj = res.j1; jj < res.j2; ++jj) {
+               if (args.cutg.IsInside(xaxis.GetBinCoord(ii + args.middle), yaxis.GetBinCoord(jj + args.middle))) {
+                  i1 = Math.min(i1, ii);
+                  i2 = Math.max(i2, ii+1);
+                  j1 = Math.min(j1, jj);
+                  j2 = Math.max(j2, jj+1);
+               }
+            }
+         }
+
+         res.i1 = i1; res.i2 = i2; res.j1 = j1; res.j2 = j2;
+      }
+
       let i, j, x, y, binz, binarea;
 
       res.grx = new Float32Array(res.i2+1);
@@ -73567,11 +73634,13 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             const bin_content = histo.fBins.arr[n].fContent;
             if (n === 0) this.gminbin = this.gmaxbin = bin_content;
 
-            if (bin_content < this.gminbin) this.gminbin = bin_content; else
-               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+            if (bin_content < this.gminbin)
+               this.gminbin = bin_content;
+            else if (bin_content > this.gmaxbin)
+               this.gmaxbin = bin_content;
 
-            if (bin_content > 0)
-               if ((this.gminposbin === null) || (this.gminposbin > bin_content)) this.gminposbin = bin_content;
+            if ((bin_content > 0) && ((this.gminposbin === null) || (this.gminposbin > bin_content)))
+               this.gminposbin = bin_content;
          }
       } else {
          // global min/max, used at the moment in 3D drawing
@@ -73610,18 +73679,20 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
    /** @summary Count TH2 histogram statistic
      * @desc Optionally one could provide condition function to select special range */
-   countStat(cond) {
-      if (!cond && this.options.cutg)
-         cond = (x, y) => this.options.cutg.IsInside(x, y);
+   countStat(cond, count_skew) {
+      if (!isFunc(cond))
+         cond = this.options.cutg ? (x, y) => this.options.cutg.IsInside(x, y) : null;
 
       const histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis,
             fp = this.getFramePainter(),
             funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
-            res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0], xmax: 0, ymax: 0, wmax: null },
+            res = { name: histo.fName, entries: 0, eff_entries: 0, integral: 0,
+                    meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    xmax: 0, ymax: 0, wmax: null, skewx: 0, skewy: 0, skewd: 0, kurtx: 0, kurty: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && (Math.abs(histo.fTsumw) > 1e-300) && !cond;
-      let stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
+      let stat_sum0 = 0, stat_sumw2 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0,
-          xside, yside, xx, yy, zz;
+          xside, yside, xx, yy, zz, xleft, xright, yleft, yright;
 
       if (this.isTH2Poly()) {
          const len = histo.fBins.arr.length;
@@ -73668,6 +73739,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
             if (!has_counted_stat) {
                stat_sum0 += zz;
+               stat_sumw2 += zz * zz;
                stat_sumx1 += xx * zz;
                stat_sumy1 += yy * zz;
                stat_sumx2 += xx * xx * zz;
@@ -73675,10 +73747,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             }
          }
       } else {
-         const xleft = this.getSelectIndex('x', 'left'),
-               xright = this.getSelectIndex('x', 'right'),
-               yleft = this.getSelectIndex('y', 'left'),
-               yright = this.getSelectIndex('y', 'right');
+         xleft = this.getSelectIndex('x', 'left');
+         xright = this.getSelectIndex('x', 'right');
+         yleft = this.getSelectIndex('y', 'left');
+         yright = this.getSelectIndex('y', 'right');
 
          for (let xi = 0; xi <= this.nbinsx + 1; ++xi) {
             xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
@@ -73704,6 +73776,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
                if (!has_counted_stat) {
                   stat_sum0 += zz;
+                  stat_sumw2 += zz * zz;
                   stat_sumx1 += xx * zz;
                   stat_sumy1 += yy * zz;
                   stat_sumx2 += xx**2 * zz;
@@ -73716,6 +73789,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       if (has_counted_stat) {
          stat_sum0 = histo.fTsumw;
+         stat_sumw2 = histo.fTsumw2;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
@@ -73737,6 +73811,40 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if (histo.fEntries > 1)
          res.entries = histo.fEntries;
 
+      res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
+
+      if (count_skew && !this.isTH2Poly()) {
+         let sumx3 = 0, sumy3 = 0, sumx4 = 0, sumy4 = 0, np = 0, w = 0;
+         for (let xi = xleft; xi < xright; ++xi) {
+            xx = xaxis.GetBinCoord(xi + 0.5);
+            for (let yi = yleft; yi < yright; ++yi) {
+               yy = yaxis.GetBinCoord(yi + 0.5);
+               if (cond && !cond(xx, yy)) continue;
+               w = histo.getBinContent(xi + 1, yi + 1);
+               np += w;
+               sumx3 += w * Math.pow(xx - res.meanx, 3);
+               sumy3 += w * Math.pow(yy - res.meany, 3);
+               sumx4 += w * Math.pow(xx - res.meanx, 4);
+               sumy4 += w * Math.pow(yy - res.meany, 4);
+            }
+         }
+
+         const stddev3x = Math.pow(res.rmsx, 3),
+               stddev3y = Math.pow(res.rmsy, 3),
+               stddev4x = Math.pow(res.rmsx, 4),
+               stddev4y = Math.pow(res.rmsy, 4);
+         if (np * stddev3x !== 0)
+            res.skewx = sumx3 / (np * stddev3x);
+         if (np * stddev3y !== 0)
+            res.skewy = sumy3 / (np * stddev3y);
+         res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
+         if (np * stddev4x !== 0)
+            res.kurtx = sumx4 / (np * stddev4x) - 3;
+         if (np * stddev4y !== 0)
+            res.kurty = sumy4 / (np * stddev4y) - 3;
+         res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
+      }
+
       return res;
    }
 
@@ -73747,16 +73855,16 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       if (dostat === 1) dostat = 1111;
 
-      const data = this.countStat(),
-          print_name = Math.floor(dostat % 10),
-          print_entries = Math.floor(dostat / 10) % 10,
-          print_mean = Math.floor(dostat / 100) % 10,
-          print_rms = Math.floor(dostat / 1000) % 10,
-          print_under = Math.floor(dostat / 10000) % 10,
-          print_over = Math.floor(dostat / 100000) % 10,
-          print_integral = Math.floor(dostat / 1000000) % 10,
-          print_skew = Math.floor(dostat / 10000000) % 10,
-          print_kurt = Math.floor(dostat / 100000000) % 10;
+      const print_name = Math.floor(dostat % 10),
+            print_entries = Math.floor(dostat / 10) % 10,
+            print_mean = Math.floor(dostat / 100) % 10,
+            print_rms = Math.floor(dostat / 1000) % 10,
+            print_under = Math.floor(dostat / 10000) % 10,
+            print_over = Math.floor(dostat / 100000) % 10,
+            print_integral = Math.floor(dostat / 1000000) % 10,
+            print_skew = Math.floor(dostat / 10000000) % 10,
+            print_kurt = Math.floor(dostat / 100000000) % 10,
+            data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
 
       stat.clearPave();
 
@@ -73779,13 +73887,21 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if (print_integral > 0)
          stat.addText('Integral = ' + stat.format(data.matrix[4], 'entries'));
 
-      if (print_skew > 0) {
-         stat.addText('Skewness x = <undef>');
-         stat.addText('Skewness y = <undef>');
+      if (print_skew === 2) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)} #pm ${stat.format(data.skewd)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)} #pm ${stat.format(data.skewd)}`);
+      } else if (print_skew > 0) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)}`);
       }
 
-      if (print_kurt > 0)
-         stat.addText('Kurt = <undef>');
+      if (print_kurt === 2) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)} #pm ${stat.format(data.kurtd)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)} #pm ${stat.format(data.kurtd)}`);
+      } else if (print_kurt > 0) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)}`);
+      }
 
       if ((print_under > 0) || (print_over > 0)) {
          const get = i => data.matrix[i].toFixed(0);
@@ -73795,7 +73911,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit, 2);
 
       return true;
    }
@@ -74414,7 +74530,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
           zdiff, dgrx, dgry, xx, yy, ww, hh, xyfactor,
           uselogz = false, logmin = 0;
 
-      if (pad?.fLogz && (absmax > 0)) {
+      if ((pad?.fLogv ?? pad?.fLogz) && (absmax > 0)) {
          uselogz = true;
          const logmax = Math.log(absmax);
          if (absmin > 0)
@@ -76663,8 +76779,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       this.z_handle.setPadName(this.getPadName());
       this.z_handle.snapid = this.snapid;
    }
+
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
-                               { log: pad?.fLogz ?? 0, reverse: opts.reverse_z });
+                               { log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
+                                  reverse: opts.reverse_z });
    this.z_handle.assignFrameMembers(this, 'z');
    this.z_handle.extractDrawAttributes(scalingSize);
 
@@ -76717,7 +76835,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          const text3d = createTextGeometry(this, lbl, this.x_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true; // place central
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
@@ -77753,8 +77871,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
          main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value),
          main_grz_min = 0, main_grz_max = 2*main.size_z3d;
 
-   let handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1, middle: 0.5 });
-
+   let handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1, middle: 0.5,
+                                      cutg: isFunc(painter.options?.cutg?.IsInside) ? painter.options?.cutg : null });
    if ((handle.i2 - handle.i1 < 2) || (handle.j2 - handle.j1 < 2)) return;
 
    let ilevels = null, levels = null, palette = null;
@@ -77944,8 +78062,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    }
 }
 
-const PadDrawOptions = ['USE_PAD_TITLE', 'LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
-                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'FB', 'GRAYSCALE'];
+const PadDrawOptions = ['USE_PAD_TITLE', 'LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOGV', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
+                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'TICKZ', 'FB', 'GRAYSCALE'];
 
 /**
  * @summary Painter for TH1 classes
@@ -78102,16 +78220,19 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    }
 
    /** @summary Count histogram statistic */
-   countStat(cond) {
+   countStat(cond, count_skew) {
       const profile = this.isTProfile(),
             histo = this.getHisto(), xaxis = histo.fXaxis,
             left = this.getSelectIndex('x', 'left'),
             right = this.getSelectIndex('x', 'right'),
             fp = this.getFramePainter(),
-            res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 },
+            res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0,
+                    entries: this.stat_entries, eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
-      let stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
+      let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null;
+
+      if (!isFunc(cond)) cond = null;
 
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i + 0.5);
@@ -78133,6 +78254,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
          if (!has_counted_stat) {
             stat_sumw += w;
+            stat_sumw2 += w * w;
             stat_sumwx += w * xx;
             stat_sumwx2 += w * xx**2;
          }
@@ -78141,11 +78263,14 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       // when no range selection done, use original statistic from histogram
       if (has_counted_stat) {
          stat_sumw = histo.fTsumw;
+         stat_sumw2 = histo.fTsumw2;
          stat_sumwx = histo.fTsumwx;
          stat_sumwx2 = histo.fTsumwx2;
       }
 
       res.integral = stat_sumw;
+
+      res.eff_entries = stat_sumw2 ? stat_sumw*stat_sumw/stat_sumw2 : Math.abs(stat_sumw);
 
       if (Math.abs(stat_sumw) > 1e-300) {
          res.meanx = stat_sumwx / stat_sumw;
@@ -78159,6 +78284,26 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          res.wmax = wmax;
       }
 
+      if (count_skew) {
+         let sum3 = 0, sum4 = 0, np = 0;
+         for (i = left; i < right; ++i) {
+            xx = xaxis.GetBinCoord(i + 0.5);
+            if (cond && !cond(xx)) continue;
+            w = profile ? histo.fBinEntries[i + 1] : histo.getBinContent(i + 1);
+            np += w;
+            sum3 += w * Math.pow(xx - res.meanx, 3);
+            sum4 += w * Math.pow(xx - res.meanx, 4);
+         }
+
+         const stddev3 = Math.pow(res.rmsx, 3), stddev4 = Math.pow(res.rmsx, 4);
+         if (np * stddev3 !== 0)
+            res.skewx = sum3 / (np * stddev3);
+         res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
+         if (np * stddev4 !== 0)
+            res.kurtx = sum4 / (np * stddev4) - 3;
+         res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
+      }
+
       return res;
    }
 
@@ -78170,16 +78315,17 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       if (dostat === 1) dostat = 1111;
 
       const histo = this.getHisto(),
-          data = this.countStat(),
-          print_name = dostat % 10,
-          print_entries = Math.floor(dostat / 10) % 10,
-          print_mean = Math.floor(dostat / 100) % 10,
-          print_rms = Math.floor(dostat / 1000) % 10,
-          print_under = Math.floor(dostat / 10000) % 10,
-          print_over = Math.floor(dostat / 100000) % 10,
-          print_integral = Math.floor(dostat / 1000000) % 10,
-          print_skew = Math.floor(dostat / 10000000) % 10,
-          print_kurt = Math.floor(dostat / 100000000) % 10;
+            print_name = dostat % 10,
+            print_entries = Math.floor(dostat / 10) % 10,
+            print_mean = Math.floor(dostat / 100) % 10,
+            print_rms = Math.floor(dostat / 1000) % 10,
+            print_under = Math.floor(dostat / 10000) % 10,
+            print_over = Math.floor(dostat / 100000) % 10,
+            print_integral = Math.floor(dostat / 1000000) % 10,
+            print_skew = Math.floor(dostat / 10000000) % 10,
+            print_kurt = Math.floor(dostat / 100000000) % 10,
+            data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
+
 
       // make empty at the beginning
       stat.clearPave();
@@ -78219,14 +78365,18 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          if (print_integral > 0)
             stat.addText('Integral = ' + stat.format(data.integral, 'entries'));
 
-         if (print_skew > 0)
-            stat.addText('Skew = <not avail>');
+         if (print_skew === 2)
+            stat.addText(`Skewness = ${stat.format(data.skewx)} #pm ${stat.format(data.skewd)}`);
+         else if (print_skew > 0)
+            stat.addText(`Skewness = ${stat.format(data.skewx)}`);
 
-         if (print_kurt > 0)
-            stat.addText('Kurt = <not avail>');
+         if (print_kurt === 2)
+            stat.addText(`Kurtosis = ${stat.format(data.kurtx)} #pm ${stat.format(data.kurtd)}`);
+         else if (print_kurt > 0)
+            stat.addText(`Kurtosis = ${stat.format(data.kurtx)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction(clTF1), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF1), dofit, 1);
 
       return true;
    }
@@ -79421,19 +79571,20 @@ class TH2Painter extends TH2Painter$2 {
       if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
       } else {
-         const pad = this.getPadPainter().getRootPad(true);
+         const pad = this.getPadPainter().getRootPad(true),
+               logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;
 
          if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
             this.zmin = this.options.minimum;
             this.zmax = this.options.maximum;
          } else if (this.draw_content || (this.gmaxbin !== 0)) {
-            this.zmin = pad?.fLogz ? this.gminposbin * 0.3 : this.gminbin;
+            this.zmin = logz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
             zmult = 1 + 2*gStyle.fHistTopMargin;
          }
 
-         if (pad?.fLogz && (this.zmin <= 0))
+         if (logz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
          this.deleteAttr();
@@ -79515,6 +79666,7 @@ class TH3Painter extends THistPainter {
 
       // global min/max, used at the moment in 3D drawing
       this.gminbin = this.gmaxbin = histo.getBinContent(1, 1, 1);
+      this.gminposbin = null;
 
       for (let i = 0; i < this.nbinsx; ++i) {
          for (let j = 0; j < this.nbinsy; ++j) {
@@ -79524,15 +79676,21 @@ class TH3Painter extends THistPainter {
                   this.gminbin = bin_content;
                else if (bin_content > this.gmaxbin)
                   this.gmaxbin = bin_content;
+
+               if ((bin_content > 0) && ((this.gminposbin === null) || (this.gminposbin > bin_content)))
+                  this.gminposbin = bin_content;
             }
          }
       }
+
+      if (this.gminposbin === null)
+         this.gminposbin = this.gmaxbin*1e-4;
 
       this.draw_content = this.gmaxbin > 0;
    }
 
    /** @summary Count TH3 statistic */
-   countStat() {
+   countStat(cond, count_skew) {
       const histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis, zaxis = histo.fZaxis,
             i1 = this.getSelectIndex('x', 'left'),
             i2 = this.getSelectIndex('x', 'right'),
@@ -79541,11 +79699,15 @@ class TH3Painter extends THistPainter {
             k1 = this.getSelectIndex('z', 'left'),
             k2 = this.getSelectIndex('z', 'right'),
             fp = this.getFramePainter(),
-            res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
+            res = { name: histo.fName, entries: 0, eff_entries: 0, integral: 0,
+                    meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0,
+                    skewx: 0, skewy: 0, skewz: 0, skewd: 0, kurtx: 0, kurty: 0, kurtz: 0, kurtd: 0 },
             has_counted_stat = (Math.abs(histo.fTsumw) > 1e-300) && !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && !fp.isAxisZoomed('z');
       let xi, yi, zi, xx, xside, yy, yside, zz, zside, cont,
-          stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
+          stat_sum0 = 0, stat_sumw2 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumz1 = 0, stat_sumx2 = 0, stat_sumy2 = 0, stat_sumz2 = 0;
+
+      if (!isFunc(cond)) cond = null;
 
       for (xi = 0; xi < this.nbinsx+2; ++xi) {
          xx = xaxis.GetBinCoord(xi - 0.5);
@@ -79559,11 +79721,14 @@ class TH3Painter extends THistPainter {
                zz = zaxis.GetBinCoord(zi - 0.5);
                zside = (zi < k1) ? 0 : (zi > k2 ? 2 : 1);
 
+               if (cond && !cond(xx, yy, zz)) continue;
+
                cont = histo.getBinContent(xi, yi, zi);
                res.entries += cont;
 
                if (!has_counted_stat && (xside === 1) && (yside === 1) && (zside === 1)) {
                   stat_sum0 += cont;
+                  stat_sumw2 += cont * cont;
                   stat_sumx1 += xx * cont;
                   stat_sumy1 += yy * cont;
                   stat_sumz1 += zz * cont;
@@ -79577,6 +79742,7 @@ class TH3Painter extends THistPainter {
 
       if (has_counted_stat) {
          stat_sum0 = histo.fTsumw;
+         stat_sumw2 = histo.fTsumw2;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
@@ -79599,6 +79765,53 @@ class TH3Painter extends THistPainter {
       if (histo.fEntries > 1)
          res.entries = histo.fEntries;
 
+      res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
+
+      if (count_skew && !this.isTH2Poly()) {
+         let sumx3 = 0, sumy3 = 0, sumz3 = 0, sumx4 = 0, sumy4 = 0, sumz4 = 0, np = 0, w = 0;
+         for (let xi = i1; xi < i2; ++xi) {
+            xx = xaxis.GetBinCoord(xi + 0.5);
+            for (let yi = j1; yi < j2; ++yi) {
+               yy = yaxis.GetBinCoord(yi + 0.5);
+               for (let zi = k1; zi < k2; ++zi) {
+                  zz = zaxis.GetBinCoord(zi + 0.5);
+                  if (cond && !cond(xx, yy, zz)) continue;
+                  w = histo.getBinContent(xi + 1, yi + 1, zi + 1);
+                  np += w;
+                  sumx3 += w * Math.pow(xx - res.meanx, 3);
+                  sumy3 += w * Math.pow(yy - res.meany, 3);
+                  sumz3 += w * Math.pow(zz - res.meany, 3);
+                  sumx4 += w * Math.pow(xx - res.meanx, 4);
+                  sumy4 += w * Math.pow(yy - res.meany, 4);
+                  sumz4 += w * Math.pow(yy - res.meany, 4);
+               }
+            }
+         }
+
+         const stddev3x = Math.pow(res.rmsx, 3),
+               stddev3y = Math.pow(res.rmsy, 3),
+               stddev3z = Math.pow(res.rmsz, 3),
+               stddev4x = Math.pow(res.rmsx, 4),
+               stddev4y = Math.pow(res.rmsy, 4),
+               stddev4z = Math.pow(res.rmsz, 4);
+
+         if (np * stddev3x !== 0)
+            res.skewx = sumx3 / (np * stddev3x);
+         if (np * stddev3y !== 0)
+            res.skewy = sumy3 / (np * stddev3y);
+         if (np * stddev3z !== 0)
+            res.skewz = sumz3 / (np * stddev3z);
+         res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
+
+         if (np * stddev4x !== 0)
+            res.kurtx = sumx4 / (np * stddev4x) - 3;
+         if (np * stddev4y !== 0)
+            res.kurty = sumy4 / (np * stddev4y) - 3;
+         if (np * stddev4z !== 0)
+            res.kurtz = sumz4 / (np * stddev4z) - 3;
+         res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
+      }
+
       return res;
    }
 
@@ -79610,16 +79823,18 @@ class TH3Painter extends THistPainter {
 
       if (dostat === 1) dostat = 1111;
 
-      const data = this.countStat(),
-            print_name = dostat % 10,
+      const print_name = dostat % 10,
             print_entries = Math.floor(dostat / 10) % 10,
             print_mean = Math.floor(dostat / 100) % 10,
             print_rms = Math.floor(dostat / 1000) % 10,
-            print_integral = Math.floor(dostat / 1000000) % 10;
-          // print_under = Math.floor(dostat / 10000) % 10,
-          // print_over = Math.floor(dostat / 100000) % 10,
-          // print_skew = Math.floor(dostat / 10000000) % 10,
-          // print_kurt = Math.floor(dostat / 100000000) % 10;
+            print_integral = Math.floor(dostat / 1000000) % 10,
+            print_skew = Math.floor(dostat / 10000000) % 10,
+            print_kurt = Math.floor(dostat / 100000000) % 10,
+            data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
+
+            // print_under = Math.floor(dostat / 10000) % 10,
+            // print_over = Math.floor(dostat / 100000) % 10,
+            // ;
 
       stat.clearPave();
 
@@ -79644,8 +79859,28 @@ class TH3Painter extends THistPainter {
       if (print_integral > 0)
          stat.addText('Integral = ' + stat.format(data.integral, 'entries'));
 
+      if (print_skew === 2) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)} #pm ${stat.format(data.skewd)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)} #pm ${stat.format(data.skewd)}`);
+         stat.addText(`Skewness z = ${stat.format(data.skewz)} #pm ${stat.format(data.skewd)}`);
+      } else if (print_skew > 0) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)}`);
+         stat.addText(`Skewness z = ${stat.format(data.skewz)}`);
+      }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit);
+      if (print_kurt === 2) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)} #pm ${stat.format(data.kurtd)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)} #pm ${stat.format(data.kurtd)}`);
+         stat.addText(`Kurtosis z = ${stat.format(data.kurtz)} #pm ${stat.format(data.kurtd)}`);
+      } else if (print_kurt > 0) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)}`);
+         stat.addText(`Kurtosis z = ${stat.format(data.kurtz)}`);
+      }
+
+
+      if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit, 3);
 
       return true;
    }
@@ -79783,8 +80018,12 @@ class TH3Painter extends THistPainter {
 
       const histo = this.getHisto(),
             main = this.getFramePainter();
+
+
       let buffer_size = 0, use_lambert = false,
-          use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
+          use_helper = false, use_colors = false, use_opacity = 1,
+          logv = this.getPadPainter()?.getRootPad()?.fLogv,
+          use_scale = true, scale_offset = 0,
           single_bin_verts, single_bin_norms,
           fillcolor = this.getColor(histo.fFillColor),
           tipscale = 0.5;
@@ -79854,15 +80093,32 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      if (use_scale)
+      this._box_option = box_option;
+
+      if (use_scale && logv) {
+         if (this.gminposbin && this.gmaxbin > this.gminposbin) {
+            scale_offset = Math.log(this.gminposbin) - 0.1;
+            use_scale = 1/(Math.log(this.gmaxbin) - scale_offset);
+         } else {
+            logv = 0;
+            use_scale = 1;
+         }
+      } else if (use_scale)
          use_scale = (this.gminbin || this.gmaxbin) ? 1 / Math.max(Math.abs(this.gminbin), Math.abs(this.gmaxbin)) : 1;
 
-      const i1 = this.getSelectIndex('x', 'left', 0.5),
-            i2 = this.getSelectIndex('x', 'right', 0),
-            j1 = this.getSelectIndex('y', 'left', 0.5),
-            j2 = this.getSelectIndex('y', 'right', 0),
-            k1 = this.getSelectIndex('z', 'left', 0.5),
-            k2 = this.getSelectIndex('z', 'right', 0);
+      const get_bin_weight = content => {
+         if (!use_scale) return 1;
+         if (logv) {
+            if (content <= 0) return 0;
+            content = Math.log(content) - scale_offset;
+         }
+         return Math.pow(Math.abs(content*use_scale), 0.3333);
+      }, i1 = this.getSelectIndex('x', 'left', 0.5),
+         i2 = this.getSelectIndex('x', 'right', 0),
+         j1 = this.getSelectIndex('y', 'left', 0.5),
+         j2 = this.getSelectIndex('y', 'right', 0),
+         k1 = this.getSelectIndex('z', 'left', 0.5),
+         k2 = this.getSelectIndex('z', 'right', 0);
 
       if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
          return false;
@@ -79880,7 +80136,8 @@ class TH3Painter extends THistPainter {
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                if (!this.options.GLColor && ((bin_content === 0) || (bin_content < this.gminbin))) continue;
-               wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
+
+               wei = get_bin_weight(bin_content);
                if (wei < 1e-3) continue; // do not draw empty or very small bins
 
                nbins++;
@@ -79893,7 +80150,7 @@ class TH3Painter extends THistPainter {
                      cols_size[colindx] = 0;
                      cols_sequence[colindx] = num_colors++;
                   }
-                  cols_size[colindx]+=1;
+                  cols_size[colindx] += 1;
                } else
                   console.error(`not found color for value = ${bin_content}`);
             }
@@ -79948,7 +80205,7 @@ class TH3Painter extends THistPainter {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                if (!this.options.GLColor && ((bin_content === 0) || (bin_content < this.gminbin))) continue;
 
-               wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
+               wei = get_bin_weight(bin_content);
                if (wei < 1e-3) continue; // do not show very small bins
 
                let nseq = 0;
@@ -80031,20 +80288,20 @@ class TH3Painter extends THistPainter {
          combined_bins.scaley = tipscale*scaley;
          combined_bins.scalez = tipscale*scalez;
          combined_bins.tip_color = (histo.fFillColor === 3) ? 0xFF0000 : 0x00FF00;
-         combined_bins.use_scale = use_scale;
+         combined_bins.get_weight = get_bin_weight;
 
          combined_bins.tooltip = function(intersect) {
             const indx = Math.floor(intersect.faceIndex / this.bins_faces);
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
             const p = this.painter,
-                histo = p.getHisto(),
-                main = p.getFramePainter(),
-                tip = p.get3DToolTip(this.bins[indx]),
-                grx = main.grx(histo.fXaxis.GetBinCoord(tip.ix-0.5)),
-                gry = main.gry(histo.fYaxis.GetBinCoord(tip.iy-0.5)),
-                grz = main.grz(histo.fZaxis.GetBinCoord(tip.iz-0.5)),
-                wei = this.use_scale ? Math.pow(Math.abs(tip.value*this.use_scale), 0.3333) : 1;
+                  histo = p.getHisto(),
+                  main = p.getFramePainter(),
+                  tip = p.get3DToolTip(this.bins[indx]),
+                  grx = main.grx(histo.fXaxis.GetBinCoord(tip.ix-0.5)),
+                  gry = main.gry(histo.fYaxis.GetBinCoord(tip.iy-0.5)),
+                  grz = main.grz(histo.fZaxis.GetBinCoord(tip.iz-0.5)),
+                  wei = this.get_weight(tip.value);
 
             tip.x1 = grx - this.scalex*wei; tip.x2 = grx + this.scalex*wei;
             tip.y1 = gry - this.scaley*wei; tip.y2 = gry + this.scaley*wei;
@@ -80094,7 +80351,10 @@ class TH3Painter extends THistPainter {
          });
       }
 
-      return pr.then(() => this.drawHistTitle()).then(() => this);
+      if (this.isMainPainter())
+        pr = pr.then(() => this.drawColorPalette(this.options.Zscale && (this._box_option === 12 || this._box_option === 13))).then(() => this.drawHistTitle());
+
+      return pr.then(() => this);
    }
 
    /** @summary Fill pad toolbar with TH3-related functions */
@@ -80207,12 +80467,11 @@ class TH3Painter extends THistPainter {
          painter.decodeOptions(opt);
          painter.checkPadRange();
          painter.scanContent();
+         painter.createStat(); // only when required
          return painter.redraw();
-      }).then(() => {
-         const stats = painter.createStat(); // only when required
-         if (stats)
-            return TPavePainter.draw(dom, stats, '');
-      }).then(() => {
+      })
+      .then(() => painter.drawNextFunction(0))
+      .then(() => {
          painter.fillToolbar();
          return painter;
       });
@@ -100063,7 +100322,7 @@ drawFuncs = { lst: [
    { name: 'TEveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: nsREX+'REveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: 'TGeoOverlap', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt', dflt: 'dflt', ctrl: 'expand' },
-   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true },
+   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true, exapnd_after_draw: true },
    { name: 'TGeoVolumeAssembly', sameas: clTGeoVolume, /* icon: 'img_geoassembly', */ opt: ';more;all;count' },
    { name: /^TGeo/, class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;axis;compa;count;projx;projz;wire;no_screen;dflt', dflt: 'dflt', ctrl: 'expand' },
    { name: 'TAxis3D', icon: 'img_graph', draw: () => import_geo().then(h => h.drawAxis3D), direct: true },
@@ -102252,7 +102511,7 @@ class HierarchyPainter extends BasePainter {
          if (can_draw && can_expand && !drawopt) {
             // if default action specified as expand, disable drawing
             // if already displayed, try to expand
-            if (dflt_expand || (handle?.dflt === 'expand') || this.isItemDisplayed(itemname)) can_draw = false;
+            if (dflt_expand || (handle?.dflt === 'expand') || (handle?.exapnd_after_draw && this.isItemDisplayed(itemname))) can_draw = false;
          }
 
          if (can_draw && !drawopt)
@@ -102486,6 +102745,7 @@ class HierarchyPainter extends BasePainter {
                   menu.add('Expand', () => this.expandItem(itemname), 'Exapnd content of object');
                else {
                   menu.add('Unexpand', () => {
+                     hitem._more = true;
                      delete hitem._childs;
                      delete hitem._isopen;
                      if (hitem.expand_item)
@@ -105643,11 +105903,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       // FIXME: check if needed, can be removed easily
       const pp = this.getPadPainter(),
-          rect = pp?.getPadRect() || { width: 800, height: 600 };
+            rect = pp?.getPadRect() || { width: 800, height: 600 };
 
       pmain = {
           pad_layer: true,
-          pad: pp?.getRootPad(true),
+          pad: pp?.getRootPad(true) ?? create$1(clTPad),
           pw: rect.width,
           ph: rect.height,
           fX1NDC: 0.1, fX2NDC: 0.9, fY1NDC: 0.1, fY2NDC: 0.9,
@@ -105661,7 +105921,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
              return value * this.pw;
           },
           gry(value) {
-             if (this.pad.fLogy)
+             if (this.pad.fLogv ?? this.pad.fLogy)
                 value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
              else
                 value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
@@ -107494,11 +107754,11 @@ class THStackPainter extends ObjectPainter {
       }
 
       const adjustRange = () => {
-         if (pad && (this.options.ndim === 1 ? pad.fLogy : pad.fLogz)) {
+         if (pad && (pad.fLogv ?? (this.options.ndim === 1 ? pad.fLogy : pad.fLogz))) {
             if (max <= 0) max = 1;
             if (min <= 0) min = 1e-4*max;
             const kmin = 1/(1 + 0.5*Math.log10(max / min)),
-                kmax = 1 + 0.2*Math.log10(max / min);
+                  kmax = 1 + 0.2*Math.log10(max / min);
             min *= kmin;
             max *= kmax;
          } else if ((min > 0) && (min < 0.05*max))
@@ -110941,7 +111201,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
 
       if (pad) {
          logx = pad.fLogx;
-         logy = pad.fLogy;
+         logy = pad.fLogv ?? pad.fLogy;
          rw.xmin = pad.fUxmin;
          rw.xmax = pad.fUxmax;
          rw.ymin = pad.fUymin;
@@ -111635,14 +111895,13 @@ class TF2Painter extends TH2Painter {
          opt = 'cont3';
       else if (d.opt === 'SAME')
          opt = 'cont2 same';
-      else
-         opt = d.opt;
 
       // workaround for old waves.C
-      if (opt === 'SAMECOLORZ' || opt === 'SAMECOLOR' || opt === 'SAMECOLZ')
-         opt = 'SAMECOL';
+      const o2 = isStr(opt) ? opt.toUpperCase() : '';
+      if (o2 === 'SAMECOLORZ' || o2 === 'SAMECOLOR' || o2 === 'SAMECOLZ')
+         opt = 'samecol';
 
-      if (opt.indexOf('SAME') === 0) {
+      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
          if (!getElementMainPainter(dom))
             opt = 'A_ADJUST_FRAME_' + opt.slice(4);
       }
@@ -111651,7 +111910,6 @@ class TF2Painter extends TH2Painter {
 
       if (webcanv_hist) {
          const dummy = new ObjectPainter(dom);
-
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH2F);
       }
 
@@ -111666,7 +111924,6 @@ class TF2Painter extends TH2Painter {
       painter.webcanv_hist = webcanv_hist;
       painter.force_saved = force_saved;
       painter.createTF2Histogram(tf2, hist);
-
       return THistPainter._drawHist(painter, opt);
    }
 
@@ -113737,6 +113994,10 @@ class RAxisPainter extends RObjectPainter {
             arg.x = pos;
             arg.y = fix_coord;
             arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
+            if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
+               arg.align = 21;
+               arg.y += this.labelsFont.size;
+            }
          }
 
          arg.post_process = process_drawtext_ready;

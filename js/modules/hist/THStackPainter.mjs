@@ -126,11 +126,11 @@ class THStackPainter extends ObjectPainter {
       }
 
       const adjustRange = () => {
-         if (pad && (this.options.ndim === 1 ? pad.fLogy : pad.fLogz)) {
+         if (pad && (pad.fLogv ?? (this.options.ndim === 1 ? pad.fLogy : pad.fLogz))) {
             if (max <= 0) max = 1;
             if (min <= 0) min = 1e-4*max;
             const kmin = 1/(1 + 0.5*Math.log10(max / min)),
-                kmax = 1 + 0.2*Math.log10(max / min);
+                  kmax = 1 + 0.2*Math.log10(max / min);
             min *= kmin;
             max *= kmax;
          } else if ((min > 0) && (min < 0.05*max))

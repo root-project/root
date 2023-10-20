@@ -683,6 +683,10 @@ class RAxisPainter extends RObjectPainter {
             arg.x = pos;
             arg.y = fix_coord;
             arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
+            if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
+               arg.align = 21;
+               arg.y += this.labelsFont.size;
+            }
          }
 
          arg.post_process = process_drawtext_ready;

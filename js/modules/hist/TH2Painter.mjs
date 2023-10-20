@@ -217,19 +217,20 @@ class TH2Painter extends TH2Painter2D {
       if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
       } else {
-         const pad = this.getPadPainter().getRootPad(true);
+         const pad = this.getPadPainter().getRootPad(true),
+               logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;
 
          if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
             this.zmin = this.options.minimum;
             this.zmax = this.options.maximum;
          } else if (this.draw_content || (this.gmaxbin !== 0)) {
-            this.zmin = pad?.fLogz ? this.gminposbin * 0.3 : this.gminbin;
+            this.zmin = logz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
             zmult = 1 + 2*gStyle.fHistTopMargin;
          }
 
-         if (pad?.fLogz && (this.zmin <= 0))
+         if (logz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
          this.deleteAttr();

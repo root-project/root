@@ -1,4 +1,4 @@
-import { gStyle, browser, settings, clone, isObject, isFunc, isStr,
+import { gStyle, browser, settings, clone, isObject, isFunc, isStr, BIT,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
          clTText, clTLatex, clTLine, clTBox } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
@@ -17,6 +17,9 @@ import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
  *
  * @private
  */
+
+const kTakeStyle = BIT(17);
+
 
 class TPavePainter extends ObjectPainter {
 
@@ -190,15 +193,15 @@ class TPavePainter extends ObjectPainter {
 
             if (isFunc(main?.fillStatistic)) {
                let dostat = parseInt(pt.fOptStat), dofit = parseInt(pt.fOptFit);
-               if (!Number.isInteger(dostat)) dostat = gStyle.fOptStat;
-               if (!Number.isInteger(dofit)) dofit = gStyle.fOptFit;
+               if (!Number.isInteger(dostat) || pt.TestBit(kTakeStyle)) dostat = gStyle.fOptStat;
+               if (!Number.isInteger(dofit)|| pt.TestBit(kTakeStyle)) dofit = gStyle.fOptFit;
 
                // we take statistic from main painter
                if (main.fillStatistic(this, dostat, dofit)) {
                   // adjust the size of the stats box with the number of lines
                   const nlines = pt.fLines?.arr.length || 0;
                   if ((nlines > 0) && !this.moved_interactive && ((gStyle.fStatFontSize <= 0) || (gStyle.fStatFont % 10 === 3)))
-                     pt.fY1NDC = pt.fY2NDC - nlines * 0.25 * gStyle.fStatH;
+                     pt.fY1NDC = Math.max(0.02, pt.fY2NDC - ((nlines < 8) ? nlines * 0.25 * gStyle.fStatH : nlines * 0.025));
                }
             }
          }
@@ -802,15 +805,18 @@ class TPavePainter extends ObjectPainter {
             framep = this.getFramePainter(),
             contour = main.fContour,
             levels = contour?.getLevels(),
+            is_th3 = isFunc(main?.getDimension) && (main.getDimension() === 3),
+            log = (is_th3 ? pad?.fLogv : pad?.fLogz) ?? 0,
             draw_palette = main._color_palette,
-            zaxis = main?.getObject()?.fZaxis;
+            zaxis = main?.getObject()?.fZaxis,
+            sizek = pad?.fTickz ? 0.35 : 0.7;
 
-      let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '';
+      let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '', axis_second = 0;
 
       this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
 
       axis.fTickSize = 0.6 * s_width / width; // adjust axis ticks size
-      if (typeof zaxis?.fLabelOffset !== 'undefined') {
+      if ((typeof zaxis?.fLabelOffset !== 'undefined') && !is_th3) {
          axis.fTitle = zaxis.fTitle;
          axis.fTitleSize = zaxis.fTitleSize;
          axis.fTitleOffset = zaxis.fTitleOffset;
@@ -824,7 +830,7 @@ class TPavePainter extends ObjectPainter {
          this.z_handle.source_axis = zaxis;
       }
 
-      if (contour && framep) {
+      if (contour && framep && !is_th3) {
          if ((framep.zmin !== undefined) && (framep.zmax !== undefined) && (framep.zmin !== framep.zmax)) {
             gzmin = framep.zmin;
             gzmax = framep.zmax;
@@ -853,12 +859,14 @@ class TPavePainter extends ObjectPainter {
 
       if (this._palette_vertical) {
          this._swap_side = palette.fX2NDC < 0.5;
-         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, true, [0, s_height], { log: pad?.fLogz ?? 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*0.7), swap_side: this._swap_side });
+         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, true, [0, s_height], { log, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*sizek), swap_side: this._swap_side });
          axis_transform = this._swap_side ? null : `translate(${s_width})`;
+         if (pad?.fTickz) axis_second = this._swap_side ? s_width : -s_width;
       } else {
          this._swap_side = palette.fY1NDC > 0.5;
-         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, false, [0, s_width], { log: pad?.fLogz ?? 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_height*0.7), swap_side: this._swap_side });
+         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, false, [0, s_width], { log, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_height*sizek), swap_side: this._swap_side });
          axis_transform = this._swap_side ? null : `translate(0,${s_height})`;
+         if (pad?.fTickz) axis_second = this._swap_side ? s_height : -s_height;
       }
 
       if (!contour || !draw_palette || postpone_draw) {
@@ -920,7 +928,7 @@ class TPavePainter extends ObjectPainter {
          }
       }
 
-      return this.z_handle.drawAxis(this.draw_g, s_width, s_height, axis_transform).then(() => {
+      return this.z_handle.drawAxis(this.draw_g, s_width, s_height, axis_transform, axis_second).then(() => {
          if (can_move && ('getBoundingClientRect' in this.draw_g.node())) {
             const rect = this.draw_g.node().getBoundingClientRect();
 
@@ -1173,19 +1181,19 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary Fill function parameters */
-   fillFunctionStat(f1, dofit) {
+   fillFunctionStat(f1, dofit, ndim = 1) {
       if (!dofit || !f1) return false;
 
-      const print_fval = dofit % 10,
-          print_ferrors = Math.floor(dofit/10) % 10,
-          print_fchi2 = Math.floor(dofit/100) % 10,
-          print_fprob = Math.floor(dofit/1000) % 10;
+      const print_fval = (ndim === 1) ? dofit % 10 : 1,
+            print_ferrors = (ndim === 1) ? Math.floor(dofit/10) % 10 : 1,
+            print_fchi2 = (ndim === 1) ? Math.floor(dofit/100) % 10 : 1,
+            print_fprob = (ndim === 1) ? Math.floor(dofit/1000) % 10 : 0;
 
-      if (print_fchi2 > 0)
-         this.addText('#chi^2 / ndf = ' + this.format(f1.fChisquare, 'fit') + ' / ' + f1.fNDF);
-      if (print_fprob > 0)
+      if (print_fchi2)
+         this.addText('#chi^{2} / ndf = ' + this.format(f1.fChisquare, 'fit') + ' / ' + f1.fNDF);
+      if (print_fprob)
          this.addText('Prob = ' + this.format(Prob(f1.fChisquare, f1.fNDF)));
-      if (print_fval > 0) {
+      if (print_fval) {
          for (let n = 0; n < f1.GetNumPars(); ++n) {
             const parname = f1.GetParName(n);
             let parvalue = f1.GetParValue(n), parerr = f1.GetParError(n);
@@ -1197,7 +1205,7 @@ class TPavePainter extends ObjectPainter {
                   parerr = this.format(f1.GetParError(n), '4.2g');
             }
 
-            if ((print_ferrors > 0) && parerr)
+            if (print_ferrors && parerr)
                this.addText(`${parname} = ${parvalue} #pm ${parerr}`);
             else
                this.addText(`${parname} = ${parvalue}`);

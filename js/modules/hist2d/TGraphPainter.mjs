@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFunc, isStr,
-         clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, kNoZoom, kNoStats } from '../core.mjs';
+         clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, clTPad, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -439,11 +439,11 @@ class TGraphPainter extends ObjectPainter {
 
       // FIXME: check if needed, can be removed easily
       const pp = this.getPadPainter(),
-          rect = pp?.getPadRect() || { width: 800, height: 600 };
+            rect = pp?.getPadRect() || { width: 800, height: 600 };
 
       pmain = {
           pad_layer: true,
-          pad: pp?.getRootPad(true),
+          pad: pp?.getRootPad(true) ?? create(clTPad),
           pw: rect.width,
           ph: rect.height,
           fX1NDC: 0.1, fX2NDC: 0.9, fY1NDC: 0.1, fY2NDC: 0.9,
@@ -457,7 +457,7 @@ class TGraphPainter extends ObjectPainter {
              return value * this.pw;
           },
           gry(value) {
-             if (this.pad.fLogy)
+             if (this.pad.fLogv ?? this.pad.fLogy)
                 value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
              else
                 value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);

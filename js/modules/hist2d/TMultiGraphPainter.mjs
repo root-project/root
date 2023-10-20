@@ -77,7 +77,7 @@ class TMultiGraphPainter extends ObjectPainter {
 
       if (pad) {
          logx = pad.fLogx;
-         logy = pad.fLogy;
+         logy = pad.fLogv ?? pad.fLogy;
          rw.xmin = pad.fUxmin;
          rw.xmax = pad.fUxmax;
          rw.ymin = pad.fUymin;
