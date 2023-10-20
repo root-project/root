@@ -1,9 +1,9 @@
 // @(#)root/hist:$Id$
 // Author: Rene Brun   18/05/95
 
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
+#include <cstring>
+#include <cstdio>
+#include <cctype>
 
 #include "TH1.h"
 

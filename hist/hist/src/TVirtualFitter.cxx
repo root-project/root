@@ -33,17 +33,17 @@ namespace {
       Int_t           fMaxPar;
       TString         fDefault;
    };
-   static FitterGlobals &GetGlobals() {
+   FitterGlobals &GetGlobals() {
       TTHREAD_TLS_DECL(FitterGlobals,globals);
       return globals;
    }
-   static TVirtualFitter *&GetGlobalFitter() {
+   TVirtualFitter *&GetGlobalFitter() {
       return GetGlobals().fFitter;
    }
-   static Int_t &GetGlobalMaxPar() {
+   Int_t &GetGlobalMaxPar() {
       return GetGlobals().fMaxPar;
    }
-   static TString &GetGlobalDefault() {
+   TString &GetGlobalDefault() {
       return GetGlobals().fDefault;
    }
 }

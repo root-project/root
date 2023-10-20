@@ -62,7 +62,7 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
    fFrame     = new TH1D("frame","",100,fXmin,fXmax);
    fFrame->SetMinimum(ymin);
    fFrame->SetMaximum(ymax);
-   fFrame->SetStats(0);
+   fFrame->SetStats(false);
 }
 
 
@@ -92,7 +92,7 @@ TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
    fFrame     = new TH1D("frame","",100,fXmin,fXmax);
    fFrame->SetMinimum(fYmin);
    fFrame->SetMaximum(fYmax);
-   fFrame->SetStats(0);
+   fFrame->SetStats(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

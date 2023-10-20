@@ -35,7 +35,7 @@
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <cmath>
 #include <memory>
 #include <limits>

@@ -864,7 +864,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
             fHistogram = new TH1F(GetName(),GetTitle(),xaxis->GetNbins(),xmin, xmax);
          }
       }
-      fHistogram->SetStats(0);
+      fHistogram->SetStats(false);
       TH1::AddDirectory(add);
    } else {
       fHistogram->SetTitle(GetTitle());

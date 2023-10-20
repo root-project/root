@@ -437,7 +437,7 @@ void  TConfidenceLevel::Draw(const Option_t*)
 void  TConfidenceLevel::SetTSB(Double_t * in)
 {
    fTSB = in;
-   TMath::Sort(fNNMC, fTSB, fISB, 0);
+   TMath::Sort(fNNMC, fTSB, fISB, false);
 }
 
 
@@ -447,5 +447,5 @@ void  TConfidenceLevel::SetTSB(Double_t * in)
 void  TConfidenceLevel::SetTSS(Double_t * in)
 {
    fTSS = in;
-   TMath::Sort(fNNMC, fTSS, fISS, 0);
+   TMath::Sort(fNNMC, fTSS, fISS, false);
 }

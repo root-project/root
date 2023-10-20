@@ -484,7 +484,7 @@ void TKDE::ReInit() {
       return;
    }
 
-   if (fEvents.size() == 0) {
+   if (fEvents.empty()) {
       Error("ReInit","TKDE does not contain any data !");
       return;
    }

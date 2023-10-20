@@ -3686,7 +3686,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       ExecuteEvent(kButton1Down, px, py);
 
-      while (1) {
+      while (true) {
          px = py = 0;
          event = gVirtualX->RequestLocator(1, 1, px, py);
 
@@ -4434,7 +4434,7 @@ Int_t THistPainter::MakeCuts(char *choptin)
    *right = 0;
    char *comma, *minus;
    Int_t i;
-   while (1) {
+   while (true) {
       comma = strchr(cuts,',');
       if (comma) *comma = 0;
       minus = strchr(cuts,'-');
@@ -5655,7 +5655,7 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 
    auto xRegions = ComputeRenderingRegions(fXaxis, nXPixels, Hoption.Logx);
    auto yRegions = ComputeRenderingRegions(fYaxis, nYPixels, Hoption.Logy);
-   if (xRegions.size() == 0 || yRegions.size() == 0) {
+   if (xRegions.empty() || yRegions.empty()) {
       Error("THistPainter::PaintColorLevelFast(Option_t*)",
             "Encountered error while computing rendering regions.");
       return;
@@ -6194,14 +6194,14 @@ void THistPainter::PaintContour(Option_t *option)
       Double_t *xx = polys[ipoly]->GetX();
       Double_t *yy = polys[ipoly]->GetY();
       istart = 0;
-      while (1) {
+      while (true) {
          iminus = npmax;
          iplus  = iminus+1;
          xp[iminus]= xx[istart];   yp[iminus] = yy[istart];
          xp[iplus] = xx[istart+1]; yp[iplus]  = yy[istart+1];
          xx[istart]   = xmin; yy[istart]   = ymin;
          xx[istart+1] = xmin; yy[istart+1] = ymin;
-         while (1) {
+         while (true) {
             nadd = 0;
             for (i=2;i<np[ipoly];i+=2) {
                if ((iplus < 2*npmax-1) && (xx[i] == xp[iplus]) && (yy[i] == yp[iplus])) {

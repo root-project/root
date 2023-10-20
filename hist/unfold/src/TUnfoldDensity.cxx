@@ -1596,7 +1596,7 @@ Int_t TUnfoldDensity::ScanTau
    //       scanResult lCurve logTauX logTauY
 
    Int_t bestChoice=-1;
-   if(curve.size()>0) {
+   if(!curve.empty()) {
       Double_t *y=new Double_t[curve.size()];
       Double_t *logT=new Double_t[curve.size()];
       int n=0;
@@ -1620,7 +1620,7 @@ Int_t TUnfoldDensity::ScanTau
       delete[] y;
       delete[] logT;
    }
-   if(lcurve.size()) {
+   if(!lcurve.empty()) {
       Double_t *logT=new Double_t[lcurve.size()];
       Double_t *x=new Double_t[lcurve.size()];
       Double_t *y=new Double_t[lcurve.size()];

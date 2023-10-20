@@ -249,7 +249,7 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
    output = (TLimitDataSource*)(input->Clone());
    // if there are no systematics, just returns the input as "fluctuated" output
    if ((fgSystNames->GetSize() <= 0)&&(!stat)) {
-      return 0;
+      return false;
    }
    // if there are only stat, just fluctuate stats.
    if (fgSystNames->GetSize() <= 0) {
@@ -269,7 +269,7 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
                newbackground->SetBinContent(i,oldbackground->GetBinContent(i)+generator->Gaus(0,oldbackground->GetBinError(i)));
          newbackground->SetDirectory(nullptr);
       }
-      return 1;
+      return true;
    }
    // Find a choice for the random variation and
    // re-toss all random numbers if any background or signal
@@ -331,7 +331,7 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
    }
    delete[] serrf;
    delete[] berrf;
-   return 1;
+   return true;
 }
 
 TConfidenceLevel *TLimit::ComputeLimit(TH1* s, TH1* b, TH1* d,
