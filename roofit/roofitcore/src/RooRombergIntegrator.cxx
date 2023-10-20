@@ -47,7 +47,7 @@ desired precision is reached.
 
 namespace {
 
-constexpr static int nPoints = 5;
+constexpr int nPoints = 5;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the n-th stage of refinement of the Second Euler-Maclaurin

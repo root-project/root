@@ -459,8 +459,10 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // Hold the value of the fitted yields
   std::vector<double> yieldsHolder;
 
-  for(Int_t i = 0; i < yieldsTmp.getSize(); i++)
+  yieldsHolder.reserve(yieldsTmp.getSize());
+  for(Int_t i = 0; i < yieldsTmp.getSize(); i++) {
     yieldsHolder.push_back(static_cast<RooAbsReal*>(yieldsTmp.at(i))->getVal(&vars));
+  }
 
   const Int_t nspec = yieldsTmp.getSize();
   RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(false);
