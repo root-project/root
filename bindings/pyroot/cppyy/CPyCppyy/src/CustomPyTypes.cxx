@@ -212,6 +212,19 @@ static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
 {
 // from instancemethod: don't rebind an already bound method, or an unbound method
 // of a class that's not a base class of pyclass
+
+    // Make sure we pass nullptr if the object is None
+    if (obj == Py_None)
+        obj = nullptr;
+
+    // Run a check on the meth argument before calling PyMethod_GET_SELF
+    // Since Python 3.12 that function also forces the argument to be a pointer
+    // to a valid method object (through an assert). Catch that case early here
+    // and just create a new InstanceMethod (which does not distinguish between
+    // real methods and free functions).
+    if(!PyMethod_Check(meth))
+        return CustomInstanceMethod_New(meth, obj, pyclass);
+
     if (PyMethod_GET_SELF(meth)
 #if PY_VERSION_HEX < 0x03000000
          || (PyMethod_GET_CLASS(meth) &&
@@ -221,9 +234,6 @@ static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
         Py_INCREF(meth);
         return meth;
     }
-
-    if (obj == Py_None)
-        obj = nullptr;
 
     return CustomInstanceMethod_New(PyMethod_GET_FUNCTION(meth), obj, pyclass);
 }
