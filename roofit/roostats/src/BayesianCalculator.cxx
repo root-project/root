@@ -83,6 +83,7 @@ credible interval from the given function.
 
 #include <map>
 #include <cmath>
+#include <memory>
 
 #include "RConfigure.h"
 
@@ -375,7 +376,7 @@ public:
                                               << " in interval [" <<  fXmin[i] << " , " << fXmax[i] << " ] " << std::endl;
       }
       if (fXmin.size() == 1) { // 1D case
-         fIntegratorOneDim.reset( new ROOT::Math::Integrator(ROOT::Math::IntegratorOneDim::GetType(integType) ) );
+         fIntegratorOneDim = std::make_unique<ROOT::Math::Integrator>( ROOT::Math::IntegratorOneDim::GetType(integType) );
 
          fIntegratorOneDim->SetFunction(fLikelihood);
          // interested only in relative tolerance

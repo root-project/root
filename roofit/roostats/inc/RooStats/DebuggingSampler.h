@@ -49,7 +49,8 @@ namespace RooStats {
        (void)paramsOfInterest; // avoid warning
        // normally this method would be complex, but here it is simple for debugging
        std::vector<double> testStatVec;
-       for(Int_t i=0; i<1000; ++i){
+       testStatVec.reserve(1000);
+for(Int_t i=0; i<1000; ++i){
     testStatVec.push_back( fRand->Uniform() );
        }
        return new SamplingDistribution("UniformSamplingDist", "for debugging", testStatVec );

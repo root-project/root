@@ -128,7 +128,7 @@ static Int_t init();
 
 Int_t dummy = init() ;
 
-static Int_t init()
+Int_t init()
 {
   static SimWSIFace iface{};
   RooFactoryWSTool::registerSpecial("SIMCLONE",&iface);
