@@ -281,14 +281,13 @@ class TF2Painter extends TH2Painter {
          opt = 'cont3';
       else if (d.opt === 'SAME')
          opt = 'cont2 same';
-      else
-         opt = d.opt;
 
       // workaround for old waves.C
-      if (opt === 'SAMECOLORZ' || opt === 'SAMECOLOR' || opt === 'SAMECOLZ')
-         opt = 'SAMECOL';
+      const o2 = isStr(opt) ? opt.toUpperCase() : '';
+      if (o2 === 'SAMECOLORZ' || o2 === 'SAMECOLOR' || o2 === 'SAMECOLZ')
+         opt = 'samecol';
 
-      if (opt.indexOf('SAME') === 0) {
+      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
          if (!getElementMainPainter(dom))
             opt = 'A_ADJUST_FRAME_' + opt.slice(4);
       }
@@ -297,7 +296,6 @@ class TF2Painter extends TH2Painter {
 
       if (webcanv_hist) {
          const dummy = new ObjectPainter(dom);
-
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH2F);
       }
 
@@ -312,7 +310,6 @@ class TF2Painter extends TH2Painter {
       painter.webcanv_hist = webcanv_hist;
       painter.force_saved = force_saved;
       painter.createTF2Histogram(tf2, hist);
-
       return THistPainter._drawHist(painter, opt);
    }
 
