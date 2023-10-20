@@ -188,6 +188,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 14) == "unordered_set<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 4) == "map<")
+      normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "atomic<")
       normalizedType = "std::" + normalizedType;
    if (normalizedType == "byte")
@@ -464,6 +466,18 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto normalizedInnerTypeName = itemField->GetType();
       result = std::make_unique<RSetField>(fieldName, "std::unordered_set<" + normalizedInnerTypeName + ">",
                                            std::move(itemField));
+   } else if (canonicalType.substr(0, 9) == "std::map<") {
+      auto innerTypes = TokenizeTypeList(canonicalType.substr(9, canonicalType.length() - 10));
+      if (innerTypes.size() != 2)
+         return R__FAIL("the type list for std::map must have exactly two elements");
+
+      auto normalizedKeyTypeName = GetNormalizedTypeName(innerTypes[0]);
+      auto normalizedValueTypeName = GetNormalizedTypeName(innerTypes[1]);
+
+      auto itemField =
+         Create("_0", "std::pair<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">").Unwrap();
+      result = std::make_unique<RMapField>(
+         fieldName, "std::map<" + normalizedKeyTypeName + "," + normalizedValueTypeName + ">", std::move(itemField));
    } else if (canonicalType.substr(0, 12) == "std::atomic<") {
       std::string itemTypeName = canonicalType.substr(12, canonicalType.length() - 13);
       auto itemField = Create("_0", itemTypeName).Unwrap();
@@ -1591,8 +1605,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
                                                                      std::string_view typeName)
    : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
 {
-   // TODO(jalopezg, fdegeus) Full support for associative collections (both custom and STL) will be handled in a
-   // follow-up PR.
+   // NOTE (fdegeus): std::map is supported, custom associative might be supported in the future if the need arises.
    if (fProperties & TVirtualCollectionProxy::kIsAssociative)
       throw RException(R__FAIL("custom associative collection proxies not supported"));
 
@@ -2661,6 +2674,70 @@ ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
    return std::make_unique<RSetField>(newName, GetType(), std::move(newItemField));
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string_view typeName,
+                                         std::unique_ptr<Detail::RFieldBase> itemField)
+   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+{
+   fItemClass = fProxy->GetValueClass();
+   fItemSize = fItemClass->GetClassSize();
+
+   Attach(std::move(itemField));
+}
+
+std::size_t ROOT::Experimental::RMapField::AppendImpl(const void *from)
+{
+   std::size_t nbytes = 0;
+   unsigned count = 0;
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), const_cast<void *>(from));
+   for (auto ptr : RCollectionIterableOnce{const_cast<void *>(from), fIFuncsWrite, fProxy.get(), 0U}) {
+      nbytes += CallAppendOn(*fSubFields[0], ptr);
+      count++;
+   }
+   fNWritten += count;
+   fColumns[0]->Append(&fNWritten);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
+}
+
+void ROOT::Experimental::RMapField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+{
+   ClusterSize_t nItems;
+   RClusterIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
+   void *obj =
+      fProxy->Allocate(static_cast<std::uint32_t>(nItems), (fProperties & TVirtualCollectionProxy::kNeedDelete));
+
+   unsigned i = 0;
+   for (auto ptr : RCollectionIterableOnce{obj, fIFuncsRead, fProxy.get(), fItemSize}) {
+      CallReadOn(*fSubFields[0], collectionStart + i, ptr);
+      i++;
+   }
+
+   if (obj != to)
+      fProxy->Commit(obj);
+}
+
+std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
+ROOT::Experimental::RMapField::SplitValue(const RValue &value) const
+{
+   std::vector<RValue> result;
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
+   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get(), 0U}) {
+      result.emplace_back(fSubFields[0]->BindValue(ptr));
+   }
+   return result;
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RMapField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return std::unique_ptr<RMapField>(new RMapField(newName, GetType(), std::move(newItemField)));
 }
 
 //------------------------------------------------------------------------------

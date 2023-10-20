@@ -538,6 +538,32 @@ TEST(RNTupleShow, CollectionProxy)
    }
 }
 
+TEST(RNTupleShow, Map)
+{
+   FileRaii fileGuard("test_ntuple_show_map.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto mapF = model->MakeField<std::map<std::string, float>>("mapF");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+
+      *mapF = {{"foo", 3.14}, {"bar", 2.72}};
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(1U, ntuple->GetNEntries());
+
+   std::ostringstream os;
+   ntuple->Show(0, os);
+   // clang-format off
+   std::string expected{std::string("")
+      + "{\n"
+      + "  \"mapF\": [{\"_0\": \"bar\", \"_1\": 2.72}, {\"_0\": \"foo\", \"_1\": 3.14}]\n"
+      + "}\n"};
+   // clang-format on
+   EXPECT_EQ(os.str(), expected);
+}
+
 TEST(RNTupleShow, Enum)
 {
 
