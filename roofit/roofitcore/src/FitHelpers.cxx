@@ -306,7 +306,7 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    minimizerConfig.offsetting = cfg.doOffset;
    RooMinimizer m(nll, minimizerConfig);
 
-   m.setMinimizerType(cfg.minType.c_str());
+   m.setMinimizerType(cfg.minType);
    m.setEvalErrorWall(cfg.doEEWall);
    m.setRecoverFromNaNStrength(cfg.recoverFromNaN);
    m.setPrintEvalErrors(cfg.numee);
@@ -317,9 +317,9 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
    if (cfg.optConst)
       m.optimizeConst(cfg.optConst); // Activate constant term optimization
    if (cfg.verbose)
-      m.setVerbose(1); // Activate verbose options
+      m.setVerbose(true); // Activate verbose options
    if (cfg.doTimer)
-      m.setProfile(1); // Activate timer options
+      m.setProfile(true); // Activate timer options
    if (cfg.strategy != 1)
       m.setStrategy(cfg.strategy); // Modify fit strategy
    if (cfg.initHesse)

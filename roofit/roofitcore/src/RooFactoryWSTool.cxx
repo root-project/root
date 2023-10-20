@@ -82,7 +82,7 @@ static Int_t init();
 
 Int_t dummy = init() ;
 
-static Int_t init()
+Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new RooFactoryWSTool::SpecialsIFace ;
 
@@ -212,7 +212,7 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
 }
 
 namespace {
-  static bool isEnum(const char* classname) {
+  bool isEnum(const char* classname) {
     // Returns true if given type is an enum
     ClassInfo_t* cls = gInterpreter->ClassInfo_Factory(classname);
     long property = gInterpreter->ClassInfo_Property(cls);
@@ -221,7 +221,7 @@ namespace {
   }
 
 
-  static bool isValidEnumValue(const char* enumName, const char* enumConstantName) {
+  bool isValidEnumValue(const char* enumName, const char* enumConstantName) {
     // Returns true if given type is an enum
 
     if (!enumName) return false;
@@ -241,7 +241,7 @@ namespace {
     return false;
   }
 
-  static pair<list<string>,unsigned int> ctorArgs(const char* classname, std::size_t nPassedArgs) {
+  pair<list<string>,unsigned int> ctorArgs(const char* classname, std::size_t nPassedArgs) {
     // Utility function for RooFactoryWSTool. Return arguments of 'first' non-default, non-copy constructor of any RooAbsArg
     // derived class. Only constructors that start with two `const char*` arguments (for name and title) are considered
     // The returned object contains

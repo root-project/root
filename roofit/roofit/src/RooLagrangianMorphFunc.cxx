@@ -1832,7 +1832,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 
 void RooLagrangianMorphFunc::setup(bool own)
 {
-   if (_config.couplings.size() > 0) {
+   if (!_config.couplings.empty()) {
       RooArgList operators;
       std::vector<RooListProxy *> vertices;
       extractOperators(_config.couplings, operators);
@@ -1847,7 +1847,7 @@ void RooLagrangianMorphFunc::setup(bool own)
       _diagrams.push_back(vertices);
    }
 
-   else if (_config.prodCouplings.size() > 0 && _config.decCouplings.size() > 0) {
+   else if (!_config.prodCouplings.empty() && !_config.decCouplings.empty()) {
       std::vector<RooListProxy *> vertices;
       RooArgList operators;
       cxcoutP(InputArguments) << "prod/dec couplings provided" << std::endl;
@@ -3107,7 +3107,7 @@ static Int_t init();
 
 int dummy = init();
 
-static Int_t init()
+Int_t init()
 {
    RooFactoryWSTool::IFace *iface = new LMIFace;
    RooFactoryWSTool::registerSpecial("lagrangianmorph", iface);

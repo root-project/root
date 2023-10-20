@@ -108,9 +108,9 @@ namespace RooLinkedListImplDetails {
       RooLinkedListElem* _freelist; ///< list of free elements
 
       /// forbid copying
-      Chunk(const Chunk&);
+      Chunk(const Chunk&) = delete;
       // forbid assignment
-      Chunk& operator=(const Chunk&);
+      Chunk& operator=(const Chunk&) = delete;
   };
 
   class Pool {

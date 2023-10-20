@@ -61,7 +61,7 @@ static int init();
 
 int dummy = init();
 
-static int init()
+int init()
 {
    RooFactoryWSTool::IFace *iface = new ClassFacIFace;
    RooFactoryWSTool::registerSpecial("CEXPR", iface);
@@ -142,7 +142,7 @@ bool makeAndCompileClass(std::string const &baseClassName, std::string const &na
       }
    }
 
-   bool ret = RooClassFactory::makeClass(baseClassName, name, realArgNames.c_str(), catArgNames.c_str(), expression,
+   bool ret = RooClassFactory::makeClass(baseClassName, name, realArgNames, catArgNames, expression,
                                          !intExpression.empty(), false, intExpression);
    if (ret) {
       return ret;
@@ -248,7 +248,7 @@ RooAbsReal *RooClassFactory::makeFunctionInstance(std::string const &name, std::
    tmpName[0] = toupper(tmpName[0]);
    string className = "Roo" + tmpName + "Func";
 
-   return makeFunctionInstance(className.c_str(), name, expression, vars, intExpression);
+   return makeFunctionInstance(className, name, expression, vars, intExpression);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -293,7 +293,7 @@ RooAbsPdf *RooClassFactory::makePdfInstance(std::string const &name, std::string
    tmpName[0] = toupper(tmpName[0]);
    string className = "Roo" + tmpName + "Pdf";
 
-   return makePdfInstance(className.c_str(), name, expression, vars, intExpression);
+   return makePdfInstance(className, name, expression, vars, intExpression);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -835,9 +835,9 @@ std::string ClassFacIFace::create(RooFactoryWSTool &ft, const char *typeName, co
    }
 
    if (tn == "CEXPR") {
-      ret = RooClassFactory::makePdfInstance(className.c_str(), instanceName, expr, varList);
+      ret = RooClassFactory::makePdfInstance(className, instanceName, expr, varList);
    } else {
-      ret = RooClassFactory::makeFunctionInstance(className.c_str(), instanceName, expr, varList);
+      ret = RooClassFactory::makeFunctionInstance(className, instanceName, expr, varList);
    }
    if (!ret) {
       throw std::runtime_error(

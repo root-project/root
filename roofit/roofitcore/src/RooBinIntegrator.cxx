@@ -37,6 +37,7 @@ contents of all bins.
 #include "Math/Util.h"
 
 #include <cassert>
+#include <memory>
 
 
 
@@ -95,7 +96,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
     if (!tmp) {
       oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
-      tmp.reset( new list<double> );
+      tmp = std::make_unique<list<double>>( );
       for (Int_t j=0 ; j<=_numBins ; j++) {
         tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
       }

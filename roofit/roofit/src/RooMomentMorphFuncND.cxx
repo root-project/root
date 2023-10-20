@@ -258,6 +258,7 @@ void RooMomentMorphFuncND::initialize()
       vector<vector<int>> powers;
       for (int idim = 0; idim < nPar; idim++) {
          vector<int> xtmp;
+         xtmp.reserve(_referenceGrid._nnuis[idim]);
          for (int ix = 0; ix < _referenceGrid._nnuis[idim]; ix++) {
             xtmp.push_back(ix);
          }
@@ -354,6 +355,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf
 {
    vector<double> thisBoundaryCoordinates;
    int nBins = bins.size();
+   thisBoundaryCoordinates.reserve(nBins);
    for (int i = 0; i < nBins; i++) {
       thisBoundaryCoordinates.push_back(_grid[i]->array()[bins[i]]);
    }
@@ -585,6 +587,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
       vector<vector<int>> powers;
       for (int idim = 0; idim < nPar; idim++) {
          vector<int> xtmp;
+         xtmp.reserve(self._referenceGrid._nnuis[idim]);
          for (int ix = 0; ix < self._referenceGrid._nnuis[idim]; ix++) {
             xtmp.push_back(ix);
          }
@@ -671,6 +674,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
       int nperm = 0;
 
       vector<int> xtmp;
+      xtmp.reserve(nPar);
       for (int ix = 0; ix < nPar; ix++) {
          xtmp.push_back(ix);
       }
@@ -771,6 +775,7 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
    TMatrixD M(depth, depth);
 
    vector<int> xtmp;
+   xtmp.reserve(nPar);
    for (int ix = 0; ix < nPar; ix++) {
       xtmp.push_back(ix);
    }
