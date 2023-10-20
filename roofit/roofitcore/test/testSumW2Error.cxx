@@ -13,6 +13,9 @@
 
 #include <gtest/gtest.h>
 
+// These tests are disabled if the legacy backend is not available, because
+// then we don't have any reference to compare to.
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 // GitHub issue 9118: Problem running weighted binned fit in batch mode
 TEST(SumW2Error, BatchMode)
 {
@@ -170,3 +173,4 @@ TEST(SumW2Error, ExtendedFit)
          << "different results for extended fit in subrange without SumW2Error in BatchMode";
    }
 }
+#endif
