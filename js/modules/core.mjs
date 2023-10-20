@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '16/10/2023',
+version_date = '20/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1612,6 +1612,54 @@ function getMethods(typename, obj) {
                bin3 = Math.max(0, 1 + Math.min(a3.fNbins, Math.floor((z - a3.fXmin) / (a3.fXmax - a3.fXmin) * a3.fNbins)));
          this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2)*bin3)] += weight ?? 1;
          this.fEntries++;
+      };
+   }
+
+   if (typename === clTPad || typename === clTCanvas) {
+      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01) {
+         if (!ny) {
+            const ndiv = nx;
+            if (ndiv < 2) return this;
+            nx = ny = Math.round(Math.sqrt(ndiv));
+            if (nx * ny < ndiv) nx += 1;
+         }
+         if (nx*ny < 2)
+            return 0;
+         this.fPrimitives.Clear();
+         const dy = 1/ny, dx = 1/nx;
+         let n = 0;
+         for (let iy = 0; iy < ny; iy++) {
+            const y2 = 1 - iy*dy - ymargin;
+            let y1 = y2 - dy + 2*ymargin;
+            if (y1 < 0) y1 = 0;
+            if (y1 > y2) continue;
+            for (let ix = 0; ix < nx; ix++) {
+               const x1 = ix*dx + xmargin,
+                     x2 = x1 + dx -2*xmargin;
+               if (x1 > x2) continue;
+               n++;
+               const pad = create(clTPad);
+               pad.fName = pad.fTitle = `${this.fName}_${n}`;
+               pad.fNumber = n;
+               if (this._typename !== clTCanvas) {
+                  pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
+                  pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
+                  pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+               } else {
+                  pad.fAbsWNDC = x2 - x1;
+                  pad.fAbsHNDC = y2 - y1;
+                  pad.fAbsXlowNDC = x1;
+                  pad.fAbsYlowNDC = y1;
+               }
+
+               this.fPrimitives.Add(pad);
+            }
+         }
+         return nx * ny;
+      };
+      m.GetPad = function(number) {
+         return this.fPrimitives.arr.find(elem => { return elem._typename === clTPad && elem.fNumber === number; });
       };
    }
 

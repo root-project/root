@@ -98,6 +98,7 @@ const symbols_map = {
    '#downarrow': '\u2193',
    '#circ': '\u02C6', // ^
    '#pm': '\xB1',
+   '#mp': '\u2213',
    '#doublequote': '\u2033',
    '#geq': '\u2265',
    '#times': '\xD7',
