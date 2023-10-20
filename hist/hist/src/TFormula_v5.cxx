@@ -773,7 +773,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
       compt = compt2 = compt3 = compt4 = 0;puiss10=0;puiss10bis = 0;
       inString = false;
       j = lchain;
-      Bool_t isdecimal = 1; // indicates whether the left part is decimal.
+      Bool_t isdecimal = true; // indicates whether the left part is decimal.
 
       for (i=1;i<=lchain; i++) {
 
@@ -784,12 +784,12 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
             if (isdecimal) {
                if ( chaine[i-2] == 'e' || chaine[i-2] == 'E' ) puiss10 = 1;
             } else if ( strchr("+-/[]()&|><=!*/%^\\",t) ) {
-               isdecimal = 1; // reset after delimiter
+               isdecimal = true; // reset after delimiter
             }
          }
          if (j>2) {
             if (chaine[j-2] == 'e' || chaine[j-2] == 'E') {
-               Bool_t isrightdecimal = 1;
+               Bool_t isrightdecimal = true;
 
                for(k=j-3; k>=0 && isrightdecimal; --k) {
                   t = chaine[k];
@@ -3363,7 +3363,7 @@ void TFormula::ProcessLinear(TString &formula)
          R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfFunctions()->Remove(f);
       }
-      f->SetBit(kNotGlobal, 1);
+      f->SetBit(kNotGlobal, true);
       fLinearParts.Add(f);
    }
    oa->Delete();

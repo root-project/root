@@ -317,7 +317,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
       // Looping
       char *rest;
       while (std::getline(infile, line, '\n')) {
-         if (line != "") {
+         if (!line.empty()) {
             if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }

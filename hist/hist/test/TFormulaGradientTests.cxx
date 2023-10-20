@@ -47,7 +47,7 @@ TEST(TFormulaGradientPar, ResultUpsize)
    TFormula::CladStorage result;
    double x[] = {2, 1};
 
-   ASSERT_TRUE(0 == result.size());
+   ASSERT_TRUE(result.empty());
    ROOT_EXPECT_WARNING(f.GradientPar(x, result),
                        "TFormula::GradientPar",
                        "The size of gradient result is 0 but 2 is required. Resizing."
