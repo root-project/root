@@ -148,6 +148,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooGenericPdf.h
     RooGlobalFunc.h
     RooGrid.h
+    RooHelpers.h
     RooHist.h
     RooHistError.h
     RooHistFunc.h
