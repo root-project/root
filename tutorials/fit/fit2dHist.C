@@ -236,8 +236,8 @@ int fit2dHist(int option=1) {
    }
    else {
       // fit independently
-      h1->Fit(func);
-      h2->Fit(func);
+      h1->Fit(func, "0");
+      h2->Fit(func, "0");
    }
 
    // Create a new canvas.
