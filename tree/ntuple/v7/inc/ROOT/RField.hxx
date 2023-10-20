@@ -36,6 +36,7 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <new>
 #include <set>
@@ -859,8 +860,8 @@ protected:
    void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   std::size_t AppendImpl(const void *from) override;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -871,10 +872,10 @@ public:
    ~RProxiedCollectionField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   std::vector<RValue> SplitValue(const RValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const override;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
    size_t GetAlignment() const override { return alignof(std::max_align_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
@@ -1153,6 +1154,28 @@ public:
    ~RSetField() override = default;
 
    size_t GetAlignment() const override { return std::alignment_of<std::set<std::max_align_t>>(); }
+};
+
+/// The generic field for a std::map<KeyType, ValueType>
+class RMapField : public RProxiedCollectionField {
+private:
+   TClass *fItemClass;
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+public:
+   RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<Detail::RFieldBase> itemField);
+   RMapField(RMapField &&other) = default;
+   RMapField &operator=(RMapField &&other) = default;
+   ~RMapField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+
+   size_t GetAlignment() const override { return std::alignment_of<std::map<std::max_align_t, std::max_align_t>>(); }
 };
 
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
@@ -2254,6 +2277,37 @@ public:
    static std::string TypeName() { return "std::unordered_set<" + RField<ItemT>::TypeName() + ">"; }
 
    explicit RField(std::string_view name) : RSetField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
+};
+
+template <typename KeyT, typename ValueT>
+class RField<std::map<KeyT, ValueT>> : public RMapField {
+   using ContainerT = typename std::map<KeyT, ValueT>;
+
+protected:
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
+   }
+
+public:
+   static std::string TypeName()
+   {
+      return "std::map<" + RField<KeyT>::TypeName() + "," + RField<ValueT>::TypeName() + ">";
+   }
+
+   explicit RField(std::string_view name)
+      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+   {
+   }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
