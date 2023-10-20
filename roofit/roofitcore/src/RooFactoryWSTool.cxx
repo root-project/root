@@ -55,13 +55,16 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooResolutionModel.h"
 #include "RooProduct.h"
 #include "RooAddition.h"
-#include "RooChi2Var.h"
-#include "RooNLLVar.h"
 #include "RooRealSumPdf.h"
 #include "RooConstVar.h"
 #include "RooDerivative.h"
 #include "RooStringVar.h"
 #include "TROOT.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooChi2Var.h"
+#include "RooNLLVar.h"
+#endif
 
 using namespace RooFit ;
 using namespace std ;
@@ -69,7 +72,6 @@ using namespace std ;
 #define BUFFER_SIZE 64000
 
 ClassImp(RooFactoryWSTool);
-;
 
 RooFactoryWSTool* RooFactoryWSTool::_of = nullptr ;
 map<string,RooFactoryWSTool::IFace*>* RooFactoryWSTool::_hooks=nullptr ;
@@ -2070,6 +2072,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     // nconv::name[var,pdf1,pdf2]
     ft.createArg("RooNumConvolution",instName,pargs) ;
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
   } else if (cl=="nll") {
 
     // nll::name[pdf,data]
@@ -2082,6 +2085,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str())) ;
     if (ft.ws().import(nll,Silence())) ft.logError() ;
 
+#endif
   } else if (cl=="profile") {
 
     // profile::name[func,vars]

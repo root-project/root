@@ -33,11 +33,14 @@ in the two sets.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"
-#include "RooNLLVar.h"
 #include "RooNLLVarNew.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooNLLVar.h"
+#include "RooChi2Var.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -240,12 +243,17 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVar*>(arg) || dynamic_cast<RooNLLVarNew*>(arg)) {
+    if (dynamic_cast<RooNLLVarNew*>(arg)) {
+      nllArg = (RooAbsReal*)arg ;
+    }
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+    if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
       chi2Arg = (RooAbsReal*)arg ;
     }
+#endif
   }
 
   if (nllArg && !chi2Arg) {
