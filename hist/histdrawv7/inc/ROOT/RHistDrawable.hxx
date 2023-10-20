@@ -111,7 +111,7 @@ protected:
 
 public:
    RHistDrawable() = default;
-   virtual ~RHistDrawable() = default;
+   ~RHistDrawable() override = default;
 
    template <class HIST>
    RHistDrawable(const std::shared_ptr<HIST> &hist) : RHistDrawableBase()

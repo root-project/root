@@ -27,6 +27,7 @@
 #include <array>
 #include <cassert>
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 #include <functional>
 #include <set>
@@ -800,7 +801,7 @@ static std::unique_ptr<TMethodCall>
 prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
               bool IsVectorized, bool AddCladArrayRef = false) {
    std::unique_ptr<TMethodCall>
-       Method = std::unique_ptr<TMethodCall>(new TMethodCall());
+       Method = std::make_unique<TMethodCall>();
 
    TString prototypeArguments = "";
    if (HasVariables || HasParameters) {
@@ -1074,7 +1075,7 @@ void TFormula::HandlePolN(TString &formula)
       }
       if (formula == pattern) {
          // case of single polynomial
-         SetBit(kLinear, 1);
+         SetBit(kLinear, true);
          fNumber = 300 + degree;
       }
       formula.ReplaceAll(pattern, replacement);
@@ -1175,7 +1176,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          }
 
          if (isNormalized) {
-            SetBit(kNormalized, 1);
+            SetBit(kNormalized, true);
          }
          std::vector<TString> variables;
          Int_t dim = 0;
@@ -1751,7 +1752,7 @@ void TFormula::HandleLinear(TString &formula)
          expandedFormula += formula(delimeterPos, formula.Length() - (delimeterPos + 1));
          break;
       }
-      SetBit(kLinear, 1);
+      SetBit(kLinear, true);
       auto termName = std::string("__linear") + std::to_string(iTerm+1);
       fLinearParts.push_back(new TFormula(termName.c_str(), terms[iTerm].c_str(), false));
       std::stringstream ss;
@@ -3633,7 +3634,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
    if (opt.Contains("CLING") ) {
       std::string clingFunc = fClingInput.Data();
       std::size_t found = clingFunc.find("return");
-      std::size_t found2 = clingFunc.rfind(";");
+      std::size_t found2 = clingFunc.rfind(';');
       if (found == std::string::npos || found2 == std::string::npos) {
          Error("GetExpFormula","Invalid Cling expression - return default formula expression");
          return fFormula;
