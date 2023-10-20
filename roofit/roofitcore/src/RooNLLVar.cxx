@@ -261,7 +261,13 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
       } else {
 
-        result += -1*(-mu + N * std::log(mu) - TMath::LnGamma(N+1));
+        double term = 0.0;
+        if(_doBinOffset) {
+          term -= -mu + N + N * (std::log(mu) - std::log(N));
+        } else {
+          term -= -mu + N * std::log(mu) - TMath::LnGamma(N+1);
+        }
+        result += term;
         sumWeightKahanSum += eventWeight;
 
       }
