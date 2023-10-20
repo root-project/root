@@ -2853,7 +2853,9 @@ void print_mask_info(ULong_t mask)
             if (ViewIsTextView(self)) {
                //Send Expose event, using child view (this is how it's done in GUI :( ).
                [NSColor.whiteColor setFill];
-               NSRectFill(dirtyRect);
+               NSRect frame = self.frame;
+               frame.origin = {};
+               NSRectFill(frame);
                NSView<X11Window> * const viewFrame = FrameForTextView(self);
                if (viewFrame)//Now we set fExposedRegion for TGView.
                   vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, viewFrame.visibleRect);
