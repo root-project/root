@@ -17,4 +17,12 @@
 #pragma link C++ class std::unordered_set<CustomStruct>+;
 #pragma link C++ class std::unordered_set<std::vector<bool>>+;
 
+#pragma link C++ class std::map<char, long>+;
+#pragma link C++ class std::map<char, std::int64_t>+;
+#pragma link C++ class std::map<char, std::string>+;
+#pragma link C++ class std::map<int, std::vector<CustomStruct>>+;
+#pragma link C++ class std::map<std::string, float>+;
+#pragma link C++ class std::map<char, std::map<int, CustomStruct>>+;
+#pragma link C++ class std::map<float, std::map<char, std::int32_t>>+;
+
 #endif
