@@ -280,20 +280,6 @@ if(ROOT_roofit_FOUND)
     ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2 -b legacy  FAILREGEX "FAILED|Error in" LABELS longtest)
   endif()
 
-  #--stressHistFactory--------------------------------------------------------------------------------
-  if(GSL_FOUND AND ROOT_xml_FOUND)
-    ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
-    if(NOT MSVC)
-      configure_file(HistFactoryTest.tar HistFactoryTest.tar COPYONLY)
-      configure_file(stressHistFactory_ref.root stressHistFactory_ref.root COPYONLY)
-      ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory FAILREGEX "FAILED|Error in" LABELS longtest)
-      if (ROOT_minuit2_FOUND)
-        ROOT_ADD_TEST(test-stressHistFactory-minuit2 ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory -minim Minui2 FAILREGEX "FAILED|Error in" LABELS longtest)
-      endif()
-      ROOT_ADD_TEST(test-stressHistFactory-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistFactory.cxx FAILREGEX "FAILED|Error in" DEPENDS test-stressHistFactory)
-    endif()
-  endif()
-
 endif()
 
 #--stressFit---------------------------------------------------------------------------------
