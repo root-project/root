@@ -55,8 +55,16 @@ public:
    {
       if (AtLowerLimit())
          return LowerState().Parameter(Parameter()).LowerLimit() - fMinParValue;
-      if (LowerValid())
-         return -1. * LowerState().Error(Parameter()) * (1. + fLower.Value());
+      if (LowerValid()) {
+         // Minos error is   value - error - aopt * error  where aopt is MnCross.Value()
+         // If value - error is below the limit, error must be truncated at limit
+         double err = LowerState().Error(Parameter());
+         double lowLimit = LowerState().Parameter(Parameter()).LowerLimit();
+         // error is in this case truncated
+         if (fMinParValue - err < lowLimit)
+            err = fMinParValue - lowLimit;
+         return -1. * err * (1. + fLower.Value());
+      }
       // return Hessian Error in case is invalid
       return -LowerState().Error(Parameter());
    }
@@ -64,8 +72,16 @@ public:
    {
       if (AtUpperLimit())
          return UpperState().Parameter(Parameter()).UpperLimit() - fMinParValue;
-      if (UpperValid())
-         return UpperState().Error(Parameter()) * (1. + fUpper.Value());
+      if (UpperValid()) {
+         // Minos error is   value + error + aopt * error  where aopt is MnCross.Value()
+         // If value + error is over the limit,  err must be truncated at limit
+         double err = UpperState().Error(Parameter());
+         double upLimit = UpperState().Parameter(Parameter()).UpperLimit();
+         // error is in this case truncated
+         if (fMinParValue + err > upLimit)
+            err = upLimit - fMinParValue;
+         return err * (1. + fUpper.Value());
+      }
       // return Hessian Error in case is invalid
       return UpperState().Error(Parameter());
    }
