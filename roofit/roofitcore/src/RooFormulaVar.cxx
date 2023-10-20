@@ -49,12 +49,14 @@
 
 #include "RooFormulaVar.h"
 #include "RooStreamParser.h"
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
 #include "RooTrace.h"
 #include "RooFormula.h"
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooNLLVar.h"
+#include "RooChi2Var.h"
+#endif
 
 using namespace std;
 
@@ -282,12 +284,14 @@ double RooFormulaVar::defaultErrorLevel() const
   RooAbsReal* chi2Arg(nullptr) ;
 
   for (const auto arg : _actualVars) {
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
     if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
       chi2Arg = (RooAbsReal*)arg ;
     }
+#endif
   }
 
   if (nllArg && !chi2Arg) {
