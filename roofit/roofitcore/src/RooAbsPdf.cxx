@@ -147,7 +147,9 @@ called for each data event.
 #include "RooBinnedGenContext.h"
 #include "RooPlot.h"
 #include "RooCurve.h"
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
+#endif
 #include "RooCategory.h"
 #include "RooNameReg.h"
 #include "RooCmdConfig.h"
@@ -1097,18 +1099,8 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
   const char* rangeName = pc.getString("rangeName",0,true) ;
   const char* addCoefRangeName = pc.getString("addCoefRange",0,true) ;
   const bool ext = this->interpretExtendedCmdArg(pc.getInt("ext")) ;
-  Int_t numcpu   = pc.getInt("numcpu") ;
-  Int_t numcpu_strategy = pc.getInt("interleave");
-  // strategy 3 works only for RooSimultaneous.
-  if (numcpu_strategy==3 && !this->InheritsFrom("RooSimultaneous") ) {
-     coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
-                            "falling back to default strategy = 0"  << endl;
-     numcpu_strategy = 0;
-  }
-  RooFit::MPSplit interl = (RooFit::MPSplit) numcpu_strategy;
 
   Int_t splitRange   = pc.getInt("splitRange") ;
-  bool verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t cloneData = pc.getInt("cloneData") ;
   auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
@@ -1239,12 +1231,26 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
     return nllWrapper;
   }
 
+  std::unique_ptr<RooAbsReal> nll ;
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+  bool verbose = pc.getInt("verbose") ;
+
+  Int_t numcpu   = pc.getInt("numcpu") ;
+  Int_t numcpu_strategy = pc.getInt("interleave");
+  // strategy 3 works only for RooSimultaneous.
+  if (numcpu_strategy==3 && !this->InheritsFrom("RooSimultaneous") ) {
+     coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
+                            "falling back to default strategy = 0"  << endl;
+     numcpu_strategy = 0;
+  }
+  RooFit::MPSplit interl = (RooFit::MPSplit) numcpu_strategy;
+
   auto binnedLInfo = RooHelpers::getBinnedL(*this);
   RooAbsPdf &actualPdf = binnedLInfo.binnedPdf ? *binnedLInfo.binnedPdf : *this;
 
   // Construct NLL
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  std::unique_ptr<RooAbsReal> nll ;
   RooAbsTestStatistic::Configuration cfg;
   cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
   cfg.nCPU = numcpu;
@@ -1292,6 +1298,9 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData& data, const Roo
   if (offset == RooFit::OffsetMode::Initial) {
     nll->enableOffsetting(true) ;
   }
+#else
+  throw std::runtime_error("RooFit was not built with the legacy evaluation backend");
+#endif
 
   return nll;
 }

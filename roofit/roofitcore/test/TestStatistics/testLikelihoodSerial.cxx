@@ -16,7 +16,9 @@
 #include <RooWorkspace.h>
 #include <RooMinimizer.h>
 #include <RooFitResult.h>
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include <RooNLLVar.h>
+#endif
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
@@ -146,6 +148,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
    EXPECT_EQ(nll0, nll1.Sum());
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
 {
    pdf->setAttribute("BinnedLikelihood");
@@ -170,6 +173,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
 
    EXPECT_EQ(nll0, nll1.Sum());
 }
+#endif
 
 TEST_F(LikelihoodSerialTest, SimBinned)
 {

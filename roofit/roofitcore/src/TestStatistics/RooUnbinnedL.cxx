@@ -29,7 +29,6 @@ In extended mode, a
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
 #include <RooAbsDataStore.h>
-#include <RooNLLVar.h> // RooNLLVar::ComputeScalar
 #include <RooChangeTracker.h>
 #include <RooNaNPacker.h>
 #include <RooFit/Evaluator.h>
@@ -100,9 +99,51 @@ bool RooUnbinnedL::setApplyWeightSquared(bool flag)
 
 namespace {
 
-// For now, almost exact copy of RooNLLVar::computeScalarFunc.
-RooNLLVar::ComputeResult computeBatchFunc(std::span<const double> probas, RooAbsData *dataClone, bool weightSq,
-                                          std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent)
+using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
+
+// Copy of RooNLLVar::computeScalarFunc.
+ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet, bool weightSq,
+                                std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent,
+                                RooAbsPdf const *offsetPdf = nullptr)
+{
+   ROOT::Math::KahanSum<double> kahanWeight;
+   ROOT::Math::KahanSum<double> kahanProb;
+   RooNaNPacker packedNaN(0.f);
+
+   for (auto i = firstEvent; i < lastEvent; i += stepSize) {
+      dataClone->get(i);
+
+      double weight = dataClone->weight(); // FIXME
+
+      if (0. == weight * weight)
+         continue;
+      if (weightSq)
+         weight = dataClone->weightSquared();
+
+      double logProba = pdfClone->getLogVal(normSet);
+
+      if (offsetPdf) {
+         logProba -= offsetPdf->getLogVal(normSet);
+      }
+
+      const double term = -weight * logProba;
+
+      kahanWeight.Add(weight);
+      kahanProb.Add(term);
+      packedNaN.accumulate(term);
+   }
+
+   if (packedNaN.getPayload() != 0.) {
+      // Some events with evaluation errors. Return "badness" of errors.
+      return {ROOT::Math::KahanSum<double>{packedNaN.getNaNWithPayload()}, kahanWeight.Sum()};
+   }
+
+   return {kahanProb, kahanWeight.Sum()};
+}
+
+// For now, almost exact copy of computeScalarFunc.
+ComputeResult computeBatchFunc(std::span<const double> probas, RooAbsData *dataClone, bool weightSq,
+                               std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent)
 {
    ROOT::Math::KahanSum<double> kahanWeight;
    ROOT::Math::KahanSum<double> kahanProb;
@@ -165,9 +206,8 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
          computeBatchFunc(probas, data_.get(), apply_weight_squared, 1, events.begin(N_events_), events.end(N_events_));
    } else {
       data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
-      std::tie(result, sumWeight) =
-         RooNLLVar::computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared, 1,
-                                      events.begin(N_events_), events.end(N_events_));
+      std::tie(result, sumWeight) = computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared, 1,
+                                                      events.begin(N_events_), events.end(N_events_));
    }
 
    // include the extended maximum likelihood term, if requested

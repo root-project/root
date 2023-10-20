@@ -9,20 +9,36 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if (roofit_multiprocess)
-  set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
-endif()
-
 if(roofit_multiprocess)
+  set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
   list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
+  list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
 if(cuda)
   list(APPEND EXTRA_LIBRARIES RooFitCuda)
 endif()
 
-if(roofit_multiprocess)
-  list(APPEND EXTRA_DEPENDENCIES Minuit2)
+if(roofit_legacy_eval_backend)
+  set(LegacyEvalBackendHeaders
+    RooAbsOptTestStatistic.h
+    RooAbsTestStatistic.h
+    RooChi2Var.h
+    RooNLLVar.h
+    RooRealMPFE.h
+    RooXYChi2Var.h
+  )
+
+  set(LegacyEvalBackendSources
+    src/BidirMMapPipe.cxx
+    src/BidirMMapPipe.h
+    src/RooAbsOptTestStatistic.cxx
+    src/RooAbsTestStatistic.cxx
+    src/RooChi2Var.cxx
+    src/RooNLLVar.cxx
+    src/RooRealMPFE.cxx
+    src/RooXYChi2Var.cxx
+  )
 endif()
 
 set (EXTRA_DICT_OPTS)
@@ -53,7 +69,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsLValue.h
     RooAbsMCStudyModule.h
     RooAbsMoment.h
-    RooAbsOptTestStatistic.h
     RooAbsPdf.h
     RooAbsProxy.h
     RooAbsReal.h
@@ -61,7 +76,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsSelfCachedPdf.h
     RooAbsSelfCachedReal.h
     RooAbsStudy.h
-    RooAbsTestStatistic.h
     RooAdaptiveIntegratorND.h
     RooAddGenContext.h
     RooAddModel.h
@@ -83,7 +97,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooCategory.h
     RooCategoryProxy.h
     RooChangeTracker.h
-    RooChi2Var.h
     RooClassFactory.h
     RooCmdArg.h
     RooCmdConfig.h
@@ -171,7 +184,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMsgService.h
     RooMultiCategory.h
     RooMultiVarGaussian.h
-    RooNLLVar.h
     RooNameReg.h
     RooNormSetCache.h
     RooNumCdf.h
@@ -205,7 +217,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooRealBinding.h
     RooRealConstant.h
     RooRealIntegral.h
-    RooRealMPFE.h
     RooRealProxy.h
     RooRealSumFunc.h
     RooRealSumPdf.h
@@ -242,12 +253,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspace.h
     RooWorkspaceHandle.h
     RooWrapperPdf.h
-    RooXYChi2Var.h
+    ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
     src/BatchModeHelpers.cxx
-    src/BidirMMapPipe.cxx
-    src/BidirMMapPipe.h
     src/Buffers.cxx
     src/ConstraintHelpers.cxx
     src/FitHelpers.cxx
@@ -277,13 +286,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsMinimizerFcn.cxx
     src/RooAbsMoment.cxx
     src/RooAbsNumGenerator.cxx
-    src/RooAbsOptTestStatistic.cxx
     src/RooAbsPdf.cxx
     src/RooAbsProxy.cxx
     src/RooAbsReal.cxx
     src/RooAbsRealLValue.cxx
     src/RooAbsStudy.cxx
-    src/RooAbsTestStatistic.cxx
     src/RooAcceptReject.cxx
     src/RooAdaptiveIntegratorND.cxx
     src/RooAddGenContext.cxx
@@ -306,7 +313,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooCachedReal.cxx
     src/RooCategory.cxx
     src/RooChangeTracker.cxx
-    src/RooChi2Var.cxx
     src/RooClassFactory.cxx
     src/RooCmdArg.cxx
     src/RooCmdConfig.cxx
@@ -379,7 +385,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMsgService.cxx
     src/RooMultiCategory.cxx
     src/RooMultiVarGaussian.cxx
-    src/RooNLLVar.cxx
     src/RooNLLVarNew.cxx
     src/RooNameReg.cxx
     src/RooNormSetCache.cxx
@@ -416,7 +421,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooRealBinding.cxx
     src/RooRealConstant.cxx
     src/RooRealIntegral.cxx
-    src/RooRealMPFE.cxx
     src/RooRealSumFunc.cxx
     src/RooRealSumPdf.cxx
     src/RooRealVar.cxx
@@ -448,7 +452,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooVectorDataStore.cxx
     src/RooWorkspace.cxx
     src/RooWrapperPdf.cxx
-    src/RooXYChi2Var.cxx
     src/TestStatistics/ConstantTermsOptimizer.cxx
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodSerial.cxx
@@ -461,6 +464,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooSumL.cxx
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/buildLikelihood.cxx
+    ${LegacyEvalBackendSources}
     ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
@@ -483,6 +487,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     inc/LinkDef.h
   ${EXTRA_DICT_OPTS}
 )
+
+if(roofit_legacy_eval_backend)
+  target_compile_definitions(RooFitCore PRIVATE ROOFIT_LEGACY_EVAL_BACKEND)
+endif()
 
 target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 

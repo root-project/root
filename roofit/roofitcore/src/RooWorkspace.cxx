@@ -66,12 +66,15 @@ and try reading again.
 #include "RooFactoryWSTool.h"
 #include "RooAbsStudy.h"
 #include "RooTObjWrap.h"
-#include "RooAbsOptTestStatistic.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
 #include "TClass.h"
 #include "strlcpy.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooAbsOptTestStatistic.h"
+#endif
 
 #include "ROOT/StringUtils.hxx"
 
@@ -2465,6 +2468,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
       for(RooAbsArg* node : _allOwnedNodes) {
    node->setExpensiveObjectCache(_eocache) ;
    node->setWorkspace(*this);
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
    if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
       RooAbsOptTestStatistic *tmp = (RooAbsOptTestStatistic *)node;
       if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
@@ -2472,6 +2476,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
               << " : " << tmp->sealNotice() << endl;
       }
    }
+#endif
       }
 
    } else {

@@ -28,7 +28,9 @@
 #include <RooConstraintSum.h>
 #include <RooDataHist.h>
 #include <RooRealSumPdf.h>
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include <RooNLLVar.h>
+#endif
 #include <RooRealVar.h>
 
 #include <algorithm> // count_if
@@ -59,6 +61,7 @@ TEST_P(RooRealL, getVal)
    EXPECT_DOUBLE_EQ(nominal_result, mp_result);
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 void check_NLL_type(RooAbsReal *nll, bool verbose = false)
 {
    if (dynamic_cast<RooAddition *>(nll) != nullptr) {
@@ -193,6 +196,7 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    count_NLL_components(nll.get());
 }
 #endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST_P(RooRealL, setVal)
 {

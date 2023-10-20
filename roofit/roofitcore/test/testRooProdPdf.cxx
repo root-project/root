@@ -66,7 +66,7 @@ TEST_P(TestProdPdf, CachingOpt)
 
 INSTANTIATE_TEST_SUITE_P(RooProdPdf, TestProdPdf,
                          testing::Combine(testing::Values(0, 1, 2),
-                                          testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu())),
+                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
                          [](testing::TestParamInfo<TestProdPdf::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "opt" << std::get<0>(paramInfo.param) << std::get<1>(paramInfo.param).name();
@@ -142,17 +142,22 @@ TEST(RooProdPdf, TestDepsAreCond)
 
    using ResultPtr = std::unique_ptr<RooFitResult>;
 
-   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
    resetParameters();
    ResultPtr result2{pdf1.fitTo(*data, Save(), EvalBackend::Cpu(), PrintLevel(-1))};
    resetParameters();
-   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
-   resetParameters();
    ResultPtr result4{pdf2.fitTo(*data, Save(), EvalBackend::Cpu(), PrintLevel(-1))};
 
-   EXPECT_TRUE(result2->isIdentical(*result1)) << "batchmode fit is inconsistent!";
-   EXPECT_TRUE(result3->isIdentical(*result1)) << "alternative model fit is inconsistent!";
-   EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model batchmode fit is inconsistent!";
+   EXPECT_TRUE(result4->isIdentical(*result2)) << "alternative model fit is inconsistent!";
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   resetParameters();
+   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
+   resetParameters();
+   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
+
+   EXPECT_TRUE(result2->isIdentical(*result1)) << "legacy fit is inconsistent!";
+   EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model legacy fit is inconsistent!";
+#endif
 }
 
 /// This test covers a potential problem with the custom normalization ranges

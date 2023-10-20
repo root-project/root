@@ -211,13 +211,7 @@ TEST_P(TestForDifferentBackends, FitParabola)
    // meaningful and was commended out.
 }
 
-#ifdef R__HAS_CUDA
-#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu(), RooFit::EvalBackend::Cuda()
-#else
-#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()
-#endif
-
-INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(EVAL_BACKENDS),
+INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(ROOFIT_EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestForDifferentBackends::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
