@@ -13,7 +13,9 @@
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include <RooNLLVar.h>
+#endif
 #include <RooPlot.h>
 #include <RooPolyVar.h>
 #include <RooProdPdf.h>
@@ -312,6 +314,7 @@ TEST(RooChi2Var, IntegrateBins)
       << "Expect chi2/ndf at least 10% better.";
 }
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 /// Verifies that a ranged RooNLLVar has still the correct value when copied,
 /// as it happens when it is plotted Covers JIRA ticket ROOT-9752.
 TEST(RooNLLVar, CopyRangedNLL)
@@ -341,6 +344,7 @@ TEST(RooNLLVar, CopyRangedNLL)
    EXPECT_FLOAT_EQ(nll->getVal(), nllrange->getVal());
    EXPECT_FLOAT_EQ(nllrange->getVal(), nllrangeClone->getVal());
 }
+#endif
 
 /// When using the Integrate() command argument in chi2FitTo, the result should
 /// be identical to a fit without bin integration if the fit function is
@@ -574,13 +578,7 @@ TEST_P(TestStatisticTest, BinnedLikelihood)
    EXPECT_DOUBLE_EQ(prodNllVal, simNllVal);
 }
 
-#ifdef R__HAS_CUDA
-#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu(), RooFit::EvalBackend::Cuda()
-#else
-#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()
-#endif
-
-INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(EVAL_BACKENDS),
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
@@ -588,7 +586,7 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(EVAL_BACK
                          });
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
-                         testing::Combine(testing::Values(EVAL_BACKENDS), // EvalBackend
+                         testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
                                           testing::Values(false, true),   // unbinned or binned
                                           testing::Values(false, true),   // extended fit
                                           testing::Values(false, true),   // use sumW2
@@ -607,7 +605,7 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
                          });
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVarBinnedL, OffsetBinTest,
-                         testing::Combine(testing::Values(EVAL_BACKENDS), // EvalBackend
+                         testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
                                           testing::Values(true),          // unbinned or binned
                                           testing::Values(false),         // extended fit
                                           testing::Values(false),         // use sumW2

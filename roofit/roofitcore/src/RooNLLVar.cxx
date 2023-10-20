@@ -322,7 +322,6 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalar(std::size_t stepSize, std::siz
   return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent, _offsetPdf.get());
 }
 
-// static function, also used from TestStatistics::RooUnbinnedL
 RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
                                                       RooArgSet *normSet, bool weightSq, std::size_t stepSize,
                                                       std::size_t firstEvent, std::size_t lastEvent, RooAbsPdf const* offsetPdf)

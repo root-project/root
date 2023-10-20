@@ -29,10 +29,7 @@
 
 #include "../src/JSONTool.h"
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
+#include "../../roofitcore/test/gtest_wrapper.h"
 
 #include <set>
 
@@ -151,7 +148,7 @@ enum class MakeModelMode { OverallSyst, HistoSyst, StatSyst, ShapeSyst };
 
 using HFTestParam = std::tuple<MakeModelMode, bool, RooFit::EvalBackend>;
 
-std::string getName(HFTestParam const &param)
+std::string getName(HFTestParam const &param, bool ignoreBackend = false)
 {
    const MakeModelMode mode = std::get<0>(param);
    const bool customBins = std::get<1>(param);
@@ -170,7 +167,9 @@ std::string getName(HFTestParam const &param)
    if (mode == MakeModelMode::ShapeSyst)
       ss << "_ShapeSyst";
 
-   ss << "_Backend_" << evalBackend.name();
+   if (!ignoreBackend) {
+      ss << "_Backend_" << evalBackend.name();
+   }
 
    return ss.str();
 }
@@ -750,28 +749,29 @@ TEST_P(HFFixtureFit, Fit)
 
 std::string getNameFromInfo(testing::TestParamInfo<HFFixture::ParamType> const &paramInfo)
 {
-   return getName(paramInfo.param);
+   return getName(paramInfo.param, false);
 }
 
-INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixture,
-                         testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
-                                                          MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
-                                          testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values(RooFit::EvalBackend::Legacy())),
-                         getNameFromInfo);
+INSTANTIATE_TEST_SUITE_P(
+   HistFactory, HFFixture,
+   testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst, MakeModelMode::StatSyst,
+                                    MakeModelMode::ShapeSyst),
+                    testing::Values(false, true),                    // non-uniform bins or not
+                    testing::Values(RooFit::EvalBackend::Cpu())), // dummy because no NLL is created
+   [](testing::TestParamInfo<HFFixture::ParamType> const &paramInfo) { return getName(paramInfo.param, true); });
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureEval,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu())),
+                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
                          getNameFromInfo);
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu())),
+                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
                          getNameFromInfo);
 
 #ifdef TEST_CODEGEN_AD

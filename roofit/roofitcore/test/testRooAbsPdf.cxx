@@ -92,6 +92,10 @@ TEST_P(FitTest, AsymptoticallyCorrectErrors)
 // checked by hijacking the FastEvaluations log. If a RooRealIntegral is
 // evaluated in batch mode and data size is greater than one, the batch mode
 // will inform that a batched evaluation function is missing.
+//
+// This test is disabled if the legacy backend is not available, because then
+// we don't have any reference to compare to.
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST(RooAbsPdf, ConditionalFitBatchMode)
 {
    using namespace RooFit;
@@ -159,6 +163,7 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
       ++iMean;
    }
 }
+#endif
 
 // ROOT-9530: RooFit side-band fit inconsistent with fit to full range
 TEST_P(FitTest, MultiRangeFit)
@@ -392,7 +397,7 @@ TEST(RooAbsPdf, NormSetChange)
    EXPECT_NE(v1, v2);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()),
+INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values(ROOFIT_EVAL_BACKENDS),
                          [](testing::TestParamInfo<FitTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "EvalBackend" << std::get<0>(paramInfo.param).name();

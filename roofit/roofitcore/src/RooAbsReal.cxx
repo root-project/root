@@ -43,7 +43,6 @@
 #include "RooBrentRootFinder.h"
 #include "RooCachedReal.h"
 #include "RooCategory.h"
-#include "RooChi2Var.h"
 #include "RooCmdConfig.h"
 #include "RooConstVar.h"
 #include "RooCurve.h"
@@ -73,9 +72,13 @@
 #include "RooRealVar.h"
 #include "RooSecondMoment.h"
 #include "RooVectorDataStore.h"
-#include "RooXYChi2Var.h"
 #include "TreeReadBuffer.h"
 #include "ValueChecking.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooChi2Var.h"
+#include "RooXYChi2Var.h"
+#endif
 
 #include "ROOT/StringUtils.hxx"
 #include "Compression.h"
@@ -4243,6 +4246,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const Ro
                                                      const RooCmdArg &arg5, const RooCmdArg &arg6,
                                                      const RooCmdArg &arg7, const RooCmdArg &arg8)
 {
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
    // Construct Chi2
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    std::string baseName = "chi2_" + std::string(GetName()) + "_" + data.GetName();
@@ -4255,6 +4259,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const Ro
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
 
    return RooFit::Detail::owningPtr(std::move(chi2));
+#else
+   throw std::runtime_error("createChi2() is not supported without the legacy evaluation backend");
+   return nullptr;
+#endif
 }
 
 
@@ -4391,6 +4399,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const Roo
 
 RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const RooLinkedList &cmdList)
 {
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
    // Select the pdf-specific commands
    RooCmdConfig pc("RooAbsReal::createChi2(" + std::string(GetName()) + ")");
 
@@ -4434,6 +4443,9 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet &data, const Roo
 
    return RooFit::Detail::owningPtr(
       std::make_unique<RooXYChi2Var>(name.c_str(), name.c_str(), *this, data, yvar, integrate, cfg));
+#else
+   throw std::runtime_error("createChi2() is not supported without the legacy evaluation backend");
+#endif
 }
 
 
