@@ -521,6 +521,19 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       masterps.CreatePainting(); // create for next operations
    };
 
+   auto check_cutg_in_options = [&](const TString &opt) {
+      auto p1 = opt.Index("["), p2 = opt.Index("]");
+      if ((p1 != kNPOS) && (p2 != kNPOS) && p2 > p1 + 1) {
+         TString cutname = opt(p1 + 1, p2 - p1 - 1);
+         TObject *cutg = primitives->FindObject(cutname.Data());
+         if (!cutg || (cutg->IsA() != TCutG::Class())) {
+            cutg = gROOT->GetListOfSpecials()->FindObject(cutname.Data());
+            if (cutg && cutg->IsA() == TCutG::Class())
+               paddata.NewPrimitive(cutg, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, cutg);
+         }
+      }
+   };
+
    iter.Reset();
 
    bool first_obj = true;
@@ -626,19 +639,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
-         if (hist->GetDimension() == 2) {
-            TString opt = iter.GetOption();
-            auto p1 = opt.Index("["), p2 = opt.Index("]");
-            if ((p1 != kNPOS) && (p2 != kNPOS) && p2 > p1 + 1) {
-               TString cutname = opt(p1 + 1, p2 - p1 - 1);
-               TObject *cutg = primitives->FindObject(cutname.Data());
-               if (!cutg || (cutg->IsA() != TCutG::Class())) {
-                  cutg = gROOT->GetListOfSpecials()->FindObject(cutname.Data());
-                  if (cutg && cutg->IsA() == TCutG::Class())
-                     paddata.NewPrimitive(cutg, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, cutg);
-               }
-            }
-         }
+         if (hist->GetDimension() == 2)
+            check_cutg_in_options(iter.GetOption());
 
          // do not extract objects from list of functions - stats and func need to be handled together with hist
          //
@@ -741,6 +743,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             paddata.NewPrimitive(hist, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, hist);
             f1opt.Append(";webcanv_hist");
          }
+
+         if (f1->IsA() == TF2::Class())
+            check_cutg_in_options(iter.GetOption());
 
          paddata.NewPrimitive(f1, f1opt.Data()).SetSnapshot(TWebSnapshot::kObject, f1);
 
