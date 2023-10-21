@@ -23,11 +23,11 @@ class MyMainFrame : public TGMainFrame {
 
 public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~MyMainFrame();
+   ~MyMainFrame() override;
    void     DoSave();
-   void     CloseWindow();
+   void     CloseWindow() override;
 
-   ClassDef(MyMainFrame, 0)
+   ClassDefOverride(MyMainFrame, 0)
 };
 
 void MyMainFrame::DoSave()

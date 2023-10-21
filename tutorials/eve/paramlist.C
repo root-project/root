@@ -40,17 +40,17 @@ void paramlist()
 {
    TEveManager::Create();
 
-   TEveParamList* x = 0;
+   TEveParamList* x = nullptr;
 
    x = new TEveParamList("Top config");
-   gEve->AddToListTree(x, 0);
+   gEve->AddToListTree(x, false);
 
    x->AddParameter(TEveParamList::FloatConfig_t("Pepe", 20, 0, 110));
    x->AddParameter(TEveParamList::IntConfig_t("Dima", 100, 0, 110));
-   x->AddParameter(TEveParamList::BoolConfig_t("Chris", 1));
+   x->AddParameter(TEveParamList::BoolConfig_t("Chris", true));
 
    x = new TEveParamList("Another config");
-   gEve->AddToListTree(x, 0);
+   gEve->AddToListTree(x, false);
 
    x->AddParameter(TEveParamList::FloatConfig_t("MagneticField", 4, -4, 4));
    x->AddParameter(TEveParamList::FloatConfig_t("Temperature", 16, -20, 40));

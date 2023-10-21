@@ -233,15 +233,15 @@ void ProofNtuple::SlaveTerminate()
       TDirectory *savedir = gDirectory;
       if (fNtp->GetEntries() > 0) {
          fFile->cd();
-         fNtp->Write(0, TObject::kOverwrite);
-         if (fNtp2 && fNtp2->GetEntries() > 0) fNtp2->Write(0, TObject::kOverwrite);
+         fNtp->Write(nullptr, TObject::kOverwrite);
+         if (fNtp2 && fNtp2->GetEntries() > 0) fNtp2->Write(nullptr, TObject::kOverwrite);
          fProofFile->Print();
          fOutput->Add(fProofFile);
       } else {
          cleanup = kTRUE;
       }
-      fNtp->SetDirectory(0);
-      if (fNtp2) fNtp2->SetDirectory(0);
+      fNtp->SetDirectory(nullptr);
+      if (fNtp2) fNtp2->SetDirectory(nullptr);
       gDirectory = savedir;
       fFile->Close();
       // Cleanup, if needed

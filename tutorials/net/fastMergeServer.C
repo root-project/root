@@ -58,7 +58,7 @@ void fastMergeServer(bool cache = false) {
    mon->Add(ss);
 
    UInt_t clientCount = 0;
-   TMemFile *transient = 0;
+   TMemFile *transient = nullptr;
 
    TFileMerger merger(kFALSE,kFALSE);
    merger.SetPrintLevel(0);
@@ -70,7 +70,7 @@ void fastMergeServer(bool cache = false) {
       kProtocolVersion = 1
    };
    if (cache) new TFileCacheWrite(merger.GetOutputFile(),32*1024*1024);
-   while (1) {
+   while (true) {
       TMessage *mess;
       TSocket  *s;
 
@@ -94,7 +94,7 @@ void fastMergeServer(bool cache = false) {
 
       s->Recv(mess);
 
-      if (mess==0) {
+      if (mess==nullptr) {
          Error("fastMergeServer","The client did not send a message\n");
       } else if (mess->What() == kMESS_STRING) {
          char str[64];
@@ -127,7 +127,7 @@ void fastMergeServer(bool cache = false) {
          merger.AddAdoptFile(transient);
 
          merger.PartialMerge(TFileMerger::kAllIncremental);
-         transient = 0;
+         transient = nullptr;
       } else if (mess->What() == kMESS_OBJECT) {
          printf("got object of class: %s\n", mess->GetClass()->GetName());
       } else {

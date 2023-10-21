@@ -25,7 +25,7 @@ public:
    {
    }
 
-   virtual Bool_t Notify()
+   Bool_t Notify() override
    {
       // stop timer
       TurnOff();

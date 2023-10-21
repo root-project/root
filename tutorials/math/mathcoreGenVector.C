@@ -167,7 +167,7 @@ int testVector3D() {
    ok+= compare(v2.Theta(),vu.Theta(),"unit Theta");
    ok+= compare(1.0,vu.R(),"unit ");
 
-   XYZVector q1 = v1;
+   const XYZVector& q1 = v1;
    RhoEtaPhiVector q2(1.0,1.0,1.0);
 
    XYZVector q3 = q1 + q2;
@@ -178,10 +178,10 @@ int testVector3D() {
    ok+= compare( q4.Z(), q1.Z(), "op Z" );
 
    // test operator ==
-   XYZVector        w1 = v1;
-   Polar3DVector    w2 = v2;
-   RhoEtaPhiVector  w3 = v3;
-   RhoZPhiVector    w4 = v4;
+   const XYZVector&        w1 = v1;
+   const Polar3DVector&    w2 = v2;
+   const RhoEtaPhiVector&  w3 = v3;
+   const RhoZPhiVector&    w4 = v4;
    ok+= compare( w1 == v1, static_cast<double>(true), "== XYZ");
    ok+= compare( w2 == v2, static_cast<double>(true), "== Polar");
    ok+= compare( w3 == v3, static_cast<double>(true), "== RhoEtaPhi");
@@ -368,7 +368,7 @@ int testLorentzVector() {
    XYZTVector vscale2 = vscale1/10;
    ok+= compare( v1.M(), vscale2.M(), "scale");
 
-   XYZTVector q1 = v1;
+   const XYZTVector& q1 = v1;
    PtEtaPhiEVector  q2(1.0,1.0,1.0,5.0);
 
    XYZTVector q3 = q1 + q2;
@@ -380,10 +380,10 @@ int testLorentzVector() {
    ok+= compare( q4.t(), q1.E(), "op E" );
 
    // test operator ==
-   XYZTVector        w1 = v1;
-   PtEtaPhiEVector   w2 = v2;
-   PtEtaPhiMVector   w3 = v3;
-   PxPyPzMVector     w4 = v4;
+   const XYZTVector&        w1 = v1;
+   const PtEtaPhiEVector&   w2 = v2;
+   const PtEtaPhiMVector&   w3 = v3;
+   const PxPyPzMVector&     w4 = v4;
    ok+= compare( w1 == v1, static_cast<double>(true), "== PxPyPzE");
    ok+= compare( w2 == v2, static_cast<double>(true), "== PtEtaPhiE");
    ok+= compare( w3 == v3, static_cast<double>(true), "== PtEtaPhiM");
