@@ -9,7 +9,6 @@
 using namespace RooFit;
 using namespace RooStats;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Build model
 
@@ -40,7 +39,8 @@ void buildSimultaneousModel(RooWorkspace *w)
    w->import(bModel);
 
    // define data set
-   RooRandom::randomGenerator()->Rndm();  //wast a number to get a better dataset (not too high significance) and closer to expected
+   RooRandom::randomGenerator()
+      ->Rndm(); // wast a number to get a better dataset (not too high significance) and closer to expected
    std::unique_ptr<RooDataSet> data{w->pdf("sim_pdf")->generate(*sbModel.GetObservables(), Extended(), Name("data"))};
    w->import(*data);
 }
@@ -82,7 +82,6 @@ void buildPoissonProductModel(RooWorkspace *w)
    w->import(*data);
 }
 
-
 //__________________________________________________________________________________
 // Insightful comments on model courtesy of Kyle Cranmer, Wouter Verkerke, Sven Kreiss
 //    from $ROOTSYS/tutorials/roostats/HybridInstructional.C
@@ -97,7 +96,7 @@ void buildOnOffModel(RooWorkspace *w)
    // construct the Bayesian-averaged model (eg. a projection pdf)
    // p'(x|s) = \int db p(x|s+b) * [ p(y|b) * prior(b) ]
    w->factory("Uniform::prior(bkg)");
-   w->factory("PROJ::averagedModel(PROD::foo(on_pdf|bkg,off_pdf,prior),bkg)") ;
+   w->factory("PROJ::averagedModel(PROD::foo(on_pdf|bkg,off_pdf,prior),bkg)");
 
    // create signal + background model configuration
    ModelConfig *sbModel = new ModelConfig("S+B", w);
@@ -121,14 +120,13 @@ void buildOnOffModel(RooWorkspace *w)
    w->import(*data);
 }
 
-
 void buildPoissonEfficiencyModel(RooWorkspace *w)
 {
 
    // build models
    w->factory("Gaussian::constrb(b0[-5,5], b1[-5,5], 1)");
    w->factory("Gaussian::constre(e0[-5,5], e1[-5,5], 1)");
-   w->factory("expr::bkg('5 * pow(1.3, b1)', b1)"); // background
+   w->factory("expr::bkg('5 * pow(1.3, b1)', b1)");   // background
    w->factory("expr::eff('0.5 * pow(1.2, e1)', e1)"); // efficiency
    w->factory("expr::esb('eff * sig + bkg', eff, bkg, sig[0,50])");
    w->factory("Poisson::poiss(x[0,50], esb)");
@@ -150,5 +148,3 @@ void buildPoissonEfficiencyModel(RooWorkspace *w)
    // define data set and import it into workspace
    w->import(RooDataSet("data", "data", *sbModel.GetObservables()));
 }
-
-
