@@ -50,11 +50,9 @@ public:
 private:
    void processVariable(NodeInfo &nodeInfo);
    void setClientsDirty(NodeInfo &nodeInfo);
-#ifdef R__HAS_CUDA
    std::span<const double> getValHeterogeneous();
    void markGPUNodes();
    void assignToGPU(NodeInfo &info);
-#endif
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
    void syncDataTokens();
@@ -66,9 +64,7 @@ private:
    int _nEvaluations = 0;
    bool _needToUpdateOutputSizes = false;
    RooFit::Detail::DataMap _dataMapCPU;
-#ifdef R__HAS_CUDA
    RooFit::Detail::DataMap _dataMapCUDA;
-#endif
    std::vector<NodeInfo> _nodes; // the ordered computation graph
    std::stack<std::unique_ptr<ChangeOperModeRAII>> _changeOperModeRAIIs;
 };
