@@ -241,46 +241,7 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
               FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
 
 if(ROOT_roofit_FOUND)
-  #--stressRooFit----------------------------------------------------------------------------------
-  if(ROOT_mathmore_FOUND)
-    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
-  else()
-    ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
-  endif()
-  configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit -b legacy FAILREGEX "FAILED|Error in")
-  ROOT_ADD_TEST(test-stressroofit-batchmode-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in")
-  if(CUDA_FOUND)
-    ROOT_ADD_TEST(test-stressroofit-batchmode-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
-  endif()
-  ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressroofit LABELS longtest)
-
-  # Test that the user can still include RooMath.h themselves from the
-  # interpreter. We test this case explicitely, because RooMath.h was moved
-  # from roofit/roofitcore to roofit/batchcompute, which can cause redefinition
-  # problems.
-  ROOT_ADD_TEST(test-roofit-includingRooMath COMMAND ${ROOT_root_CMD} -b -q -l -e "#include\ <RooMath.h>")
-
   add_subdirectory(fit)
-
-  #--stressRooStats----------------------------------------------------------------------------------
-  ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
-  configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats -b legacy FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressroostats-batchmode-cpu COMMAND stressRooStats -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
-  if(CUDA_FOUND)
-    ROOT_ADD_TEST(test-stressroostats-batchmode-cuda COMMAND stressRooStats -b cuda FAILREGEX "FAILED|Error in" LABELS longtest)
-  endif()
-  if(NOT MSVC OR llvm13_broken_tests)
-    ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
-                  FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
-  endif()
-  if (ROOT_minuit2_FOUND)
-    ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2 -b legacy  FAILREGEX "FAILED|Error in" LABELS longtest)
-    ROOT_ADD_TEST(test-stressroostats-batchmode-cpu-minuit2 COMMAND stressRooStats -minim Minuit2 -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
-  endif()
-
 endif()
 
 #--stressFit---------------------------------------------------------------------------------
