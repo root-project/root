@@ -73,3 +73,22 @@ if (roofit_multiprocess)
   ROOT_ADD_GTEST(testLikelihoodJob TestStatistics/testLikelihoodJob.cxx LIBRARIES RooFitMultiProcess RooFitCore m)
   target_include_directories(testLikelihoodJob PRIVATE ${RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR})
 endif()
+
+if(mathmore)
+  list(APPEND ROOFITMORE_LIBRARIES RooFitMore)
+endif()
+
+#--stressRooFit----------------------------------------------------------------------------------
+ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit Gpad ${ROOFITMORE_LIBRARIES})
+if(mathmore)
+    target_compile_definitions(stressRooFit PRIVATE ROOFITMORE)
+endif()
+
+configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
+if(roofit_legacy_eval_backend)
+  ROOT_ADD_TEST(test-stressroofit-legacy COMMAND stressRooFit -b legacy FAILREGEX "FAILED|Error in")
+endif()
+ROOT_ADD_TEST(test-stressroofit-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in")
+if(cuda)
+  ROOT_ADD_TEST(test-stressroofit-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
+endif()
