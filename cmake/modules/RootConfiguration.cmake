@@ -499,11 +499,6 @@ if (uring)
 else()
   set(hasuring undef)
 endif()
-if (roofit_multiprocess)
-  set(hasroofit_multiprocess define)
-else()
-  set(hasroofit_multiprocess undef)
-endif()
 
 # clear cache to allow reconfiguring
 # with a different CMAKE_CXX_STANDARD

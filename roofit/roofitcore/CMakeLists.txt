@@ -494,6 +494,11 @@ if(roofit_legacy_eval_backend)
   target_compile_definitions(RooFitCore PRIVATE ROOFIT_LEGACY_EVAL_BACKEND)
 endif()
 
+if(roofit_multiprocess)
+  # PUBLIC to it can also be used in tests
+  target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
+endif()
+
 target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # For recent clang, this can facilitate auto-vectorisation.
