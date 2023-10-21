@@ -283,16 +283,16 @@ double RooFormulaVar::defaultErrorLevel() const
   RooAbsReal* nllArg(nullptr) ;
   RooAbsReal* chi2Arg(nullptr) ;
 
-  for (const auto arg : _actualVars) {
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
+  for (const auto arg : _actualVars) {
     if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
     if (dynamic_cast<RooChi2Var*>(arg)) {
       chi2Arg = (RooAbsReal*)arg ;
     }
-#endif
   }
+#endif
 
   if (nllArg && !chi2Arg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName()
