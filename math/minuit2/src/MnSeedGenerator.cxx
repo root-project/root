@@ -69,8 +69,8 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
       dcovar = 0.;
    } else {
       for (unsigned int i = 0; i < n; i++)
-         mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) :
-          (dgrad.G2()(i) >= 0) ? 1./prec.Eps2() : -1./prec.Eps2());
+        // if G2 is small better using an arbitrary value (e.g. 1)
+         mat(i, i) = std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) : 1.0;
    }
    MinimumError err(mat, dcovar);
 
@@ -177,6 +177,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    // do this only when we have not computed the Hessian or always ?
    if (!computedHessian) {
       // check if minimum state has covariance - if not use computed G2
+      // should maybe this an option, sometimes is not good to re-use existing covariance
       if (st.HasCovariance()) {
          print.Info("Using existing covariance matrix");
          for (unsigned int i = 0; i < n; i++)
@@ -185,10 +186,9 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
          dcovar = 0.;
       } else {
          for (unsigned int i = 0; i < n; i++) {
-            // should not use a cut-off here like 1./prec.Eps()
-            mat(i, i) = (std::fabs(grad.G2()(i)) > prec.Eps2() ? 1. / grad.G2()(i)
-                         : (grad.G2()(i) >= 0)                 ? 1. / prec.Eps2()
-                                                               : -1. / prec.Eps2());
+            // if G2 is very small, better using an arbitrary value (e.g. 1.)
+            mat(i, i) = std::fabs(grad.G2()(i)) > prec.Eps2() ? 1. / grad.G2()(i)
+                        : 1.0;
          }
          dcovar = 1.;
       }
