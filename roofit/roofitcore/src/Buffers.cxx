@@ -17,7 +17,7 @@
 #include <queue>
 #include <map>
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 namespace CudaInterface = RooFit::Detail::CudaInterface;
 using CudaInterface::CudaStream;
 #endif
@@ -68,7 +68,7 @@ private:
    std::vector<double> _vec;
 };
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 class GPUBufferContainer {
 public:
    GPUBufferContainer(std::size_t size) : _arr(size) {}
@@ -140,7 +140,7 @@ private:
    CudaStream *_cudaStream = nullptr;
    mutable LastAccessType _lastAccess = LastAccessType::CPU_READ;
 };
-#endif // R__HAS_CUDA
+#endif // ROOFIT_CUDA
 
 template <class Container>
 class BufferImpl : public AbsBuffer {
@@ -175,7 +175,7 @@ private:
 
 using ScalarBuffer = BufferImpl<ScalarBufferContainer>;
 using CPUBuffer = BufferImpl<CPUBufferContainer>;
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 using GPUBuffer = BufferImpl<GPUBufferContainer>;
 using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
 #endif
@@ -183,7 +183,7 @@ using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
 struct BufferQueuesMaps {
    ScalarBuffer::QueuesMap scalarBufferQueuesMap;
    CPUBuffer::QueuesMap cpuBufferQueuesMap;
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    GPUBuffer::QueuesMap gpuBufferQueuesMap;
    PinnedBuffer::QueuesMap pinnedBufferQueuesMap;
 #endif
@@ -204,7 +204,7 @@ std::unique_ptr<AbsBuffer> BufferManager::makeCpuBuffer(std::size_t size)
 {
    return std::make_unique<CPUBuffer>(size, _queuesMaps->cpuBufferQueuesMap);
 }
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 std::unique_ptr<AbsBuffer> BufferManager::makeGpuBuffer(std::size_t size)
 {
    return std::make_unique<GPUBuffer>(size, _queuesMaps->gpuBufferQueuesMap);
@@ -215,7 +215,7 @@ std::unique_ptr<AbsBuffer> BufferManager::makePinnedBuffer(std::size_t size, Cud
    out->vec().setCudaStream(stream);
    return out;
 }
-#endif // R__HAS_CUDA
+#endif // ROOFIT_CUDA
 
 } // end namespace Detail
 } // end namespace RooFit

@@ -13,6 +13,10 @@ ROOT_LINKER_LIBRARY(RooBatchCompute
     ${CudaDependencies}
 )
 
+if(cuda)
+  target_compile_definitions(RooBatchCompute PUBLIC ROOFIT_CUDA)
+endif()
+
 target_include_directories(RooBatchCompute INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 if(vdt OR builtin_vdt)
@@ -68,5 +72,3 @@ if (cuda)
   ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  src/RooBatchCompute.cu src/ComputeFunctions.cu TYPE SHARED DEPENDENCIES RooBatchCompute)
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -DRF_ARCH=CUDA -lineinfo --expt-relaxed-constexpr)
 endif()
-
-ROOT_INSTALL_HEADERS()

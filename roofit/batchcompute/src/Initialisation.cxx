@@ -51,11 +51,11 @@ void init()
 
    const std::string userChoice = gEnv->GetValue("RooFit.BatchCompute", "auto");
 #ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    if(gSystem->Load("libRooBatchCompute_CUDA") != 0) {
       RooBatchCompute::dispatchCUDA = nullptr;
    }
-#endif // R__HAS_CUDA
+#endif // ROOFIT_CUDA
 
    __builtin_cpu_init();
 #if __GNUC__ > 5 || defined(__clang__)

@@ -17,7 +17,7 @@
 
 #include <RConfig.h>
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 #include <RooFit/Detail/CudaInterface.h>
 #endif
 
@@ -53,17 +53,15 @@ void init();
 /// the RooBatchCompute library.
 class Config {
 public:
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    bool useCuda() const { return _cudaStream != nullptr; }
    void setCudaStream(RooFit::Detail::CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
    RooFit::Detail::CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
-#else
-   bool useCuda() const { return false; }
-#endif
 
 private:
-#ifdef R__HAS_CUDA
    RooFit::Detail::CudaInterface::CudaStream *_cudaStream = nullptr;
+#else
+   bool useCuda() const { return false; }
 #endif
 };
 
