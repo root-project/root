@@ -56,7 +56,7 @@ automatic PDF optimization.
 #include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
@@ -107,7 +107,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
    if (nll_real != nullptr) {
       if (_cfg.parallelize != 0) { // new test statistic with multiprocessing library with
                                    // parallel likelihood or parallel gradient
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
          if (!_cfg.enableParallelGradient) {
             // Note that this is necessary because there is currently no serial-mode LikelihoodGradientWrapper.
             // We intend to repurpose RooGradMinimizerFcn to build such a LikelihoodGradientSerial class.
@@ -312,7 +312,7 @@ bool RooMinimizer::fitFcn() const
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
    if (_cfg.timingAnalysis) {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else
       throw std::logic_error("ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
@@ -748,7 +748,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
 void RooMinimizer::addParamsToProcessTimer()
 {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
    // parameter indices for use in timing heat matrix
    std::vector<std::string> parameter_names;
    for (auto &&parameter : *_fcn->GetFloatParamList()) {
@@ -958,7 +958,7 @@ double &RooMinimizer::maxFCN()
 
 int RooMinimizer::Config::getDefaultWorkers()
 {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
    return RooFit::MultiProcess::Config::getDefaultNWorkers();
 #else
    return 0;

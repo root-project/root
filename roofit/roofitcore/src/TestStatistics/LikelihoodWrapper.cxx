@@ -22,9 +22,9 @@
 
 // including derived classes for factory method
 #include "LikelihoodSerial.h"
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
 #include "LikelihoodJob.h"
-#endif // R__HAS_ROOFIT_MULTIPROCESS
+#endif // ROOFIT_MULTIPROCESS
 
 namespace RooFit {
 namespace TestStatistics {
@@ -164,7 +164,7 @@ LikelihoodWrapper::create(LikelihoodMode likelihoodMode, std::shared_ptr<RooAbsL
       return std::make_unique<LikelihoodSerial>(std::move(likelihood), std::move(calculationIsClean));
    }
    case LikelihoodMode::multiprocess: {
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#ifdef ROOFIT_MULTIPROCESS
       return std::make_unique<LikelihoodJob>(std::move(likelihood), std::move(calculationIsClean));
 #else
       throw std::runtime_error("MinuitFcnGrad ctor with LikelihoodMode::multiprocess is not available in this build "
