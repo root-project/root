@@ -14,7 +14,7 @@
 #define ROOFIT_EVAL_BACKEND_LEGACY
 #endif
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 #define ROOFIT_EVAL_BACKEND_CUDA RooFit::EvalBackend::Cuda(),
 #else
 #define ROOFIT_EVAL_BACKEND_CUDA

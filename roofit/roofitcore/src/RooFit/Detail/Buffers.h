@@ -15,7 +15,7 @@
 
 #include <RConfig.h>
 
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
 #include <RooFit/Detail/CudaInterface.h>
 #endif
 
@@ -48,7 +48,7 @@ public:
 
    std::unique_ptr<AbsBuffer> makeScalarBuffer();
    std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size);
-#ifdef R__HAS_CUDA
+#ifdef ROOFIT_CUDA
    std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size);
    std::unique_ptr<AbsBuffer>
    makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream *stream = nullptr);
