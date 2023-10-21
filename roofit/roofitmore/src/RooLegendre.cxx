@@ -44,12 +44,6 @@ namespace {
         return p%2==0 ? r : -r ;
     }
 
-    void throwIfNoMathMore() {
-#ifndef R__HAS_MATHMORE
-      throw std::runtime_error("RooLegendre needs functions from MathMore. It is not available in this root build.");
-#endif
-    }
-
     void checkCoeffs(int m1, int l1, int m2, int l2) {
       if (m1 < 0 || m2 < 0) {
         throw std::invalid_argument("RooLegendre: m coefficients need to be >= 0.");
@@ -65,7 +59,6 @@ namespace {
 RooLegendre::RooLegendre() :
   _l1(1),_m1(1),_l2(0),_m2(0)
 {
-  throwIfNoMathMore();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,8 +71,6 @@ RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta
  , _l1(l),_m1(m),_l2(0),_m2(0)
 {
   checkCoeffs(_m1, _l1, _m2, _l2);
-
-  throwIfNoMathMore();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +81,6 @@ RooLegendre::RooLegendre(const char* name, const char* title, RooAbsReal& ctheta
  , _l1(l1),_m1(m1),_l2(l2),_m2(m2)
 {
   checkCoeffs(_m1, _l1, _m2, _l2);
-
-  throwIfNoMathMore();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,17 +98,12 @@ RooLegendre::RooLegendre(const RooLegendre& other, const char* name)
 
 double RooLegendre::evaluate() const
 {
-#ifdef R__HAS_MATHMORE
   double r = 1;
   double ctheta = std::max(-1., std::min((double)_ctheta, +1.));
   if (_l1!=0||_m1!=0) r *= ROOT::Math::assoc_legendre(_l1,_m1,ctheta);
   if (_l2!=0||_m2!=0) r *= ROOT::Math::assoc_legendre(_l2,_m2,ctheta);
   if ((_m1+_m2)%2==1) r = -r;
   return r;
-#else
-  throwIfNoMathMore();
-  return 0.;
-#endif
 }
 
 
@@ -132,7 +116,6 @@ void compute(  size_t batchSize, const int l1, const int m1, const int l2, const
               double * __restrict output,
               double const * __restrict TH)
 {
-#ifdef R__HAS_MATHMORE
   double legendre1=1.0, legendreMinus1=1.0;
   if (l1+m1 > 0) {
     legendre1      = ROOT::Math::internal::legendre(l1,m1,1.0);
@@ -159,11 +142,6 @@ void compute(  size_t batchSize, const int l1, const int m1, const int l2, const
       }
     }
   }
-
-#else
-  (void) batchSize, (void) l1, (void)m1, (void)l2, (void)m2, (void)output, (void)TH;
-  throwIfNoMathMore();
-#endif
 }
 };
 
