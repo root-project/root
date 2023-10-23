@@ -401,15 +401,6 @@ ROOT::Experimental::Detail::RFieldBase::RBulk ROOT::Experimental::RNTupleModel::
    return f->GenerateBulk();
 }
 
-void ROOT::Experimental::RNTupleModel::CommitCluster()
-{
-   if (!IsFrozen())
-      throw RException(R__FAIL("invalid attempt commit fields of unfrozen model"));
-
-   for (auto &f : *fFieldZero)
-      f.CommitCluster();
-}
-
 void ROOT::Experimental::RNTupleModel::Unfreeze()
 {
    if (!IsFrozen())
