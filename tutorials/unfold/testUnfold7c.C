@@ -1512,7 +1512,7 @@ TFitResultPtr DoFit(TH1 *h,TH2 *rho,TH1 *truth,const char *text,
             exit(0);
          }
       }
-      const TMatrixD& O(ev.GetEigenVectors());
+      TMatrixD O(ev.GetEigenVectors());
       TMatrixD DOT(d,TMatrixD::kMultTranspose,O);
       g_fcnMatrix=new TMatrixD(O,TMatrixD::kMult,DOT);
       TMatrixD test(*g_fcnMatrix,TMatrixD::kMult,v);
@@ -1552,7 +1552,7 @@ TFitResultPtr DoFit(TH1 *h,TH2 *rho,TH1 *truth,const char *text,
             exit(0);
          }
       }
-      const TMatrixD& O1(ev1.GetEigenVectors());
+      TMatrixD O1(ev1.GetEigenVectors());
       TMatrixD DOT1(d1,TMatrixD::kMultTranspose,O1);
       TMatrixD vinv1(O1,TMatrixD::kMult,DOT1);
       for(int i=0;i<=n;i++) {
