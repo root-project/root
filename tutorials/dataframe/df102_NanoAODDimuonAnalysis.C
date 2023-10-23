@@ -41,7 +41,7 @@ void df102_NanoAODDimuonAnalysis()
                                  "Run2012BC_DoubleMuParked_Muons.root");
 
    // Add ProgressBar
-   ROOT::RDF::Experimental::AddProgressbar(df);
+   ROOT::RDF::Experimental::AddProgressBar(df);
 
    // For simplicity, select only events with exactly two muons and require opposite charge
    auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
