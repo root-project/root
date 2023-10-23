@@ -161,7 +161,7 @@ namespace HistFactory{
       throw hf_exc();
     }
     if(!measurement.GetPOIList().empty()){
-      proto_config->GuessObsAndNuisance(*expData, RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO));
+      proto_config->GuessObsAndNuisance(*expData, RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO));
     }
 
     // Now, let's loop over any additional asimov datasets
@@ -534,7 +534,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
          // build the gamma parameter k = as y_s + 1
          RooAbsArg * kappa = factory(proto, "sum::k_%s(%s,1.)",name,yvar->GetName());
          RooAbsArg * gamma = factory(proto, "Gamma::%sConstraint(%s, %s, %s, 0.0)",beta->GetName(),beta->GetName(), kappa->GetName(), theta->GetName());
-         if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG)) {
+         if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG)) {
            alphaOfBeta->Print("t");
            gamma->Print("t");
          }
@@ -578,7 +578,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
                                                                      tauName.c_str(),kappaName.c_str(),alphaName);
 
             cxcoutI(HistFactory) << "Added a log-normal constraint for " << name << std::endl;
-            if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG))
+            if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG))
               alphaOfBeta->Print("t");
             params.add(*alphaOfBeta);
          }
@@ -1331,8 +1331,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // New Asimov Generation: Use the code in the Asymptotic calculator
     // Need to get the ModelConfig...
     int asymcalcPrintLevel = 0;
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO)) asymcalcPrintLevel = 1;
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG)) asymcalcPrintLevel = 2;
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO)) asymcalcPrintLevel = 1;
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::DEBUG)) asymcalcPrintLevel = 2;
     AsymptoticCalculator::SetPrintLevel(asymcalcPrintLevel);
     unique_ptr<RooAbsData> asimov_dataset(AsymptoticCalculator::GenerateAsimovData(*model, observables));
     proto.import(*asimov_dataset, RooFit::Rename("asimovData"));
@@ -1369,7 +1369,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     }
 
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO)) {
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO)) {
       proto.Print();
     }
 
@@ -1529,7 +1529,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     }
 
 
-    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO))
+    if (RooMsgService::instance().isActive(nullptr, RooFit::HistFactory, RooFit::INFO))
       combined->Print();
 
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"

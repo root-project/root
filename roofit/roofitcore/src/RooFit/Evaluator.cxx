@@ -64,7 +64,7 @@ void logArchitectureInfo(bool useGPU)
    // We have to exit early if the message stream is not active. Otherwise it's
    // possible that this function skips logging because it thinks it has
    // already logged, but actually it didn't.
-   if (!RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::Fitting, RooFit::INFO)) {
+   if (!RooMsgService::instance().isActive(nullptr, RooFit::Fitting, RooFit::INFO)) {
       return;
    }
 

@@ -270,7 +270,7 @@ void RooAbsData::copyGlobalObservables(const RooAbsData& other) {
     else _globalObservables->clear();
     other._globalObservables->snapshot(*_globalObservables);
   } else {
-    _globalObservables.reset(nullptr);
+    _globalObservables.reset();
   }
 }
 

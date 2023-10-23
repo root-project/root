@@ -25,13 +25,11 @@ class TTree ;
 class RooTreeData : public RooAbsData {
 public:
 
-  // Constructors, factory methods etc.
-  RooTreeData() : _tree(nullptr) {}
   const TTree *GetTree() const { return _tree; }
 
 private:
 
-  TTree *_tree ;           ///< TTree holding the data points
+  TTree *_tree = nullptr;  ///< TTree holding the data points
   RooArgSet _truth;        ///< Truth variables
   TString _blindString ;   ///< Blinding string (optionally read from ASCII files)
 

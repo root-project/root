@@ -27,7 +27,7 @@ class RooResolutionModel : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooResolutionModel() : _basis(nullptr) { }
+  inline RooResolutionModel() = default;
   RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& x) ;
   RooResolutionModel(const RooResolutionModel& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override = 0;
@@ -75,7 +75,7 @@ protected:
   friend class RooAbsAnaConvPdf ;
 
   Int_t _basisCode ;         ///< Identifier code for selected basis function
-  RooFormulaVar* _basis ;    ///< Basis function convolved with this resolution model
+  RooFormulaVar* _basis = nullptr;    ///< Basis function convolved with this resolution model
   bool _ownBasis ;         ///< Flag indicating ownership of _basis
 
   ClassDefOverride(RooResolutionModel, 2) // Abstract Resolution Model

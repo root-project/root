@@ -42,22 +42,12 @@ ClassImp(RooChi2MCSModule);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooChi2MCSModule::RooChi2MCSModule() :
-  RooAbsMCStudyModule("RooChi2MCSModule","RooChi2Module"),
-  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
-
-{
-  // Constructor of module
-}
+RooChi2MCSModule::RooChi2MCSModule() : RooAbsMCStudyModule("RooChi2MCSModule", "RooChi2Module") {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooChi2MCSModule::RooChi2MCSModule(const RooChi2MCSModule& other) :
-  RooAbsMCStudyModule(other),
-  _data(nullptr), _chi2(nullptr), _ndof(nullptr), _chi2red(nullptr), _prob(nullptr)
-{
-}
+RooChi2MCSModule::RooChi2MCSModule(const RooChi2MCSModule &other) : RooAbsMCStudyModule(other) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor

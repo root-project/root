@@ -46,7 +46,7 @@ ClassImp(RooArgProxy);
 
 RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
           bool valueServer, bool shapeServer, bool proxyOwnsArg) :
-  TNamed(inName,desc), _owner(owner), _arg(nullptr),
+  TNamed(inName,desc), _owner(owner),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
   _owner->registerProxy(*this) ;

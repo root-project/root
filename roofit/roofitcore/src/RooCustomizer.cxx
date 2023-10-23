@@ -251,12 +251,9 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   _owning(false),
   _name(name),
   _masterPdf((RooAbsArg*)&pdf),
-  _masterCat(nullptr),
   _masterBranchList("masterBranchList"),
   _masterLeafList("masterLeafList"),
-  _internalCloneBranchList("cloneBranchList"),
-  _cloneNodeListAll(nullptr),
-  _cloneNodeListOwned(nullptr)
+  _internalCloneBranchList("cloneBranchList")
 {
   _cloneBranchList = &_internalCloneBranchList ;
 
@@ -274,19 +271,6 @@ void RooCustomizer::initialize()
   _masterPdf->leafNodeServerList(&_masterLeafList) ;
   _masterPdf->branchNodeServerList(&_masterBranchList) ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooCustomizer::~RooCustomizer()
-{
-
-}
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Split all arguments in 'set' into individualized clones for each
