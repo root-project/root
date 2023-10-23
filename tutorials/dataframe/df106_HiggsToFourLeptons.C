@@ -86,7 +86,7 @@ void df106_HiggsToFourLeptons()
    ROOT::RDataFrame df = ROOT::RDF::Experimental::FromSpec(dataset_spec);
 
    // Add the ProgressBar feature
-   ROOT::RDF::Experimental::AddProgressbar(df);
+   ROOT::RDF::Experimental::AddProgressBar(df);
 
    // Perform the analysis
    // Access metadata information that is stored in the JSON config file of the RDataFrame
