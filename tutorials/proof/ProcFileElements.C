@@ -150,7 +150,7 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
 
    // Check if if it is adjacent or overlapping with an existing one
    TIter nxe(fElements);
-   ProcFileElements::ProcFileElement *e = 0;
+   ProcFileElements::ProcFileElement *e = nullptr;
    while ((e = (ProcFileElements::ProcFileElement *)nxe())) {
       if (e->MergeElement(ne) == 0) break;
    }
@@ -171,8 +171,8 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
    // which could be merged are not merged, making the determination of fFirst and fLast below
    // to give incorrect values)
 
-   ProcFileElements::ProcFileElement *ep = 0, *en = 0;
-   TObjLink *olp = fElements->FirstLink(), *oln = 0;
+   ProcFileElements::ProcFileElement *ep = nullptr, *en = nullptr;
+   TObjLink *olp = fElements->FirstLink(), *oln = nullptr;
    while (olp && (ep = (ProcFileElements::ProcFileElement *) olp->GetObject())) {
       oln = olp->Next();
       while (oln) {
@@ -204,7 +204,7 @@ void ProcFileElements::Print(Option_t *) const
    Printf(" File: %s", fName.Data());
    Printf(" # proc elements: %d", fElements ? fElements->GetSize() : 0);
    TIter nxe(fElements);
-   ProcFileElements::ProcFileElement *e = 0;
+   ProcFileElements::ProcFileElement *e = nullptr;
    while ((e = (ProcFileElements::ProcFileElement *)nxe())) { e->Print(); }
    Printf(" Raw overall range: [%lld, %lld]", fFirst, fLast);
    Printf("-------------------------------------------------------------");
@@ -222,13 +222,13 @@ Int_t ProcFileElements::Merge(TCollection *li)
 
    Int_t nadd = 0;
    TIter nxo(li);
-   ProcFileElements *pfe = 0;
+   ProcFileElements *pfe = nullptr;
    while ((pfe = (ProcFileElements *) nxo())) {
       if (strcmp(GetName(), pfe->GetName()))
          Warning("Merge", "merging objects of different name! ('%s' != '%s')",
                           GetName(),  pfe->GetName());
       TIter nxe(pfe->GetListOfElements());
-      ProcFileElements::ProcFileElement *e = 0;
+      ProcFileElements::ProcFileElement *e = nullptr;
       while ((e = (ProcFileElements::ProcFileElement *)nxe())) {
          Int_t rc = Add(e->fFirst, e->fLast);
          if (rc == 1) nadd++;

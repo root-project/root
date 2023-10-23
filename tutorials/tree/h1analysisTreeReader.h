@@ -37,7 +37,7 @@ public:
    TEntryList                   *elist;//!
    Long64_t                      fProcessed;//!
 
-   h1analysisTreeReader(TTree* /*tree*/=0) :
+   h1analysisTreeReader(TTree* /*tree*/=nullptr) :
       myTreeReader(),
       fPtds_d     (myTreeReader, "ptds_d"  ),
       fEtads_d    (myTreeReader, "etads_d" ),
@@ -58,23 +58,23 @@ public:
       Reset();
    };
 
-   virtual ~h1analysisTreeReader() { }
+   ~h1analysisTreeReader() override { }
    void    Reset();
 
-   int     Version() const {return 1;}
-   void    Begin(TTree *);
-   void    SlaveBegin(TTree *);
-   void    Init(TTree *myTree) { myTreeReader.SetTree(myTree); }
-   Bool_t  Notify();
-   Bool_t  Process(Long64_t entry);
-   void    SetOption(const char *option) { fOption = option; }
-   void    SetObject(TObject *obj) { fObject = obj; }
-   void    SetInputList(TList *input) {fInput = input;}
-   TList  *GetOutputList() const { return fOutput; }
-   void    SlaveTerminate();
-   void    Terminate();
+   int     Version() const override {return 1;}
+   void    Begin(TTree *) override;
+   void    SlaveBegin(TTree *) override;
+   void    Init(TTree *myTree) override { myTreeReader.SetTree(myTree); }
+   Bool_t  Notify() override;
+   Bool_t  Process(Long64_t entry) override;
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override {fInput = input;}
+   TList  *GetOutputList() const override { return fOutput; }
+   void    SlaveTerminate() override;
+   void    Terminate() override;
 
-   ClassDef(h1analysisTreeReader,0);
+   ClassDefOverride(h1analysisTreeReader,0);
 };
 
 //_____________________________________________________________________
@@ -82,9 +82,9 @@ void h1analysisTreeReader::Reset()
 {
    // Reset the data members to theit initial value
 
-   hdmd = 0;
-   h2 = 0;
-   elist = 0;
+   hdmd = nullptr;
+   h2 = nullptr;
+   elist = nullptr;
    fillList = kFALSE;
    useList  = kFALSE;
    fProcessed = 0;

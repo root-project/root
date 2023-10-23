@@ -38,7 +38,7 @@ private:
 
 public:
    MyButtonTest(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~MyButtonTest();
+   ~MyButtonTest() override;
 
    void DoExit(void);
    void SetGroupEnabled(Bool_t);

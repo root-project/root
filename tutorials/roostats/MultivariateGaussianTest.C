@@ -25,7 +25,7 @@
 /// \authors Kevin Belasco, Kyle Cranmer
 
 #include "RooGlobalFunc.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include "TMatrixDSym.h"
 #include "RooMultiVarGaussian.h"
 #include "RooArgList.h"

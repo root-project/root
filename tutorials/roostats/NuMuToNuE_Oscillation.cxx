@@ -11,7 +11,7 @@
 #include "NuMuToNuE_Oscillation.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include <math.h>
+#include <cmath>
 #include "TMath.h"
 
  NuMuToNuE_Oscillation::NuMuToNuE_Oscillation(const char *name, const char *title,

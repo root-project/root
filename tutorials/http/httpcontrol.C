@@ -30,9 +30,9 @@ void httpcontrol()
    // create histograms
    TH1D *hpx = new TH1D("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);
-   hpx->SetDirectory(0);
+   hpx->SetDirectory(nullptr);
    TH2D *hpxpy = new TH2D("hpxpy","py vs px",40,-4,4,40,-4,4);
-   hpxpy->SetDirectory(0);
+   hpxpy->SetDirectory(nullptr);
 
    // start http server
    THttpServer* serv = new THttpServer("http:8080");

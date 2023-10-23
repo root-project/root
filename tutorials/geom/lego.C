@@ -35,7 +35,7 @@ void lego()
    // create volume
    TGeoVolume *top=geom->MakeBox("top",Air,100,100,100);
    geom->SetTopVolume(top);
-   geom->SetTopVisible(0);
+   geom->SetTopVisible(false);
    // If you want to see the boundary, please input the number, 1 instead of 0.
    // Like this, geom->SetTopVisible(1);
 
@@ -427,7 +427,7 @@ void lego()
    top->AddNodeOverlap(bo2,1,new TGeoCombiTrans(-4.5,18,-48,new TGeoRotation("bo2",0,0,0)));
 
 
-   top->SetVisibility(0);
+   top->SetVisibility(false);
    geom->CloseGeometry();
 
    top->Draw("ogl");

@@ -33,11 +33,11 @@ protected:
 
 public:
    TextViewMainFrame();
-   virtual ~TextViewMainFrame() {}
+   ~TextViewMainFrame() override {}
    void Reset();
    void HandleReturn();
 
-   ClassDef(TextViewMainFrame, 0)
+   ClassDefOverride(TextViewMainFrame, 0)
 };
 
 

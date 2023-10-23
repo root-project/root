@@ -22,11 +22,11 @@
 
 class THtmlDemo: public TObject {
 public:
-   THtmlDemo(): fHtml(0)
+   THtmlDemo(): fHtml(nullptr)
    {
       printf("This class is for demonstration purposes only!\n");
    }
-   ~THtmlDemo() { if (fHtml) delete fHtml; }
+   ~THtmlDemo() override { if (fHtml) delete fHtml; }
 
    // inline methods can have their documentation in front
    // of the declaration. DontDoMuch is so short - where
@@ -88,7 +88,7 @@ protected:
 private:
    Int_t fVeryUselessMember; // This is a very useless member.
    THtml* fHtml; // our local THtml instance.
-   ClassDef(THtmlDemo, 0); // A demo of THtml.
+   ClassDefOverride(THtmlDemo, 0); // A demo of THtml.
 };
 
 void htmlex() {
