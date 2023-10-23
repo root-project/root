@@ -48,10 +48,9 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 
  RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() :
    RooAbsReal("RooBarlowBeestonLL","RooBarlowBeestonLL"),
-   _nll(),
+   _nll()
 //   _obs("paramOfInterest","Parameters of interest",this),
 //  _par("nuisanceParam","Nuisance parameters",this,false,false),
-  _pdf(nullptr), _data(nullptr)
 {
   // Default constructor
   // Should only be used by proof.
@@ -63,10 +62,9 @@ ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
 RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const char *name, const char *title,
                    RooAbsReal& nllIn /*, const RooArgSet& observables*/) :
   RooAbsReal(name,title),
-  _nll("input","-log(L) function",this,nllIn),
+  _nll("input","-log(L) function",this,nllIn)
   //  _obs("paramOfInterest","Parameters of interest",this),
   //  _par("nuisanceParam","Nuisance parameters",this,false,false),
-  _pdf(nullptr), _data(nullptr)
 {
   // Constructor of profile likelihood given input likelihood nll w.r.t
   // the given set of variables. The input log likelihood is minimized w.r.t
@@ -92,7 +90,6 @@ RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL(const RooBarlowBee
   _nll("nll",this,other._nll),
   //  _obs("obs",this,other._obs),
   //  _par("par",this,other._par),
-  _pdf(nullptr), _data(nullptr),
   _paramFixed(other._paramFixed)
 {
   // Copy constructor

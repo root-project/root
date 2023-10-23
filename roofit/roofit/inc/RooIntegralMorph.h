@@ -25,9 +25,7 @@ class TH1D;
 
 class RooIntegralMorph : public RooAbsCachedPdf {
 public:
-   RooIntegralMorph() :  _cache(nullptr)  {
-    // coverity[UNINIT_CTOR]
-  } ;
+  RooIntegralMorph() = default;
   RooIntegralMorph(const char *name, const char *title,
          RooAbsReal& _pdf1,
          RooAbsReal& _pdf2,
@@ -102,7 +100,7 @@ protected:
   RooRealProxy x ;    // Observable
   RooRealProxy alpha ; // Interpolation parameter
   bool _cacheAlpha ; // If true, both (x,alpha) are cached
-  mutable MorphCacheElem* _cache ; // Current morph cache element in use
+  mutable MorphCacheElem* _cache = nullptr; // Current morph cache element in use
 
 
   double evaluate() const override ;

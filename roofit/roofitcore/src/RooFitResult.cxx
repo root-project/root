@@ -63,11 +63,10 @@ ClassImp(RooFitResult);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
 
-RooFitResult::RooFitResult(const char* name, const char* title) :
-  TNamed(name,title), _constPars(nullptr), _initPars(nullptr), _finalPars(nullptr), _globalCorr(nullptr), _randomPars(nullptr), _Lt(nullptr),
-  _CM(nullptr), _VM(nullptr), _GC(nullptr)
+RooFitResult::RooFitResult(const char *name, const char *title) : TNamed(name, title)
 {
-  if (name) appendToDir(this,true) ;
+   if (name)
+      appendToDir(this, true);
 }
 
 
@@ -83,12 +82,6 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _numBadNLL(other._numBadNLL),
   _minNLL(other._minNLL),
   _edm(other._edm),
-  _globalCorr(nullptr),
-  _randomPars(nullptr),
-  _Lt(nullptr),
-  _CM(nullptr),
-  _VM(nullptr),
-  _GC(nullptr),
   _statusHistory(other._statusHistory)
 {
   _constPars = new RooArgList;

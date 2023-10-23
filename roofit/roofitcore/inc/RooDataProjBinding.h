@@ -36,8 +36,8 @@ protected:
   const RooAbsData* _data ;  ///< Dataset used for projection
   const RooArgSet*  _nset ;  ///< Normalization set for real function
 
-  RooSuperCategory* _superCat ;  ///< Supercategory constructed from _data's category variables
-  Roo1DTable* _catTable ;        ///< Supercategory table generated from _data
+  std::unique_ptr<RooSuperCategory> _superCat; ///< Supercategory constructed from _data's category variables
+  std::unique_ptr<Roo1DTable> _catTable;       ///< Supercategory table generated from _data
 
   ClassDefOverride(RooDataProjBinding,0) // RealFunc/Dataset binding for data projection of a real function
 };

@@ -33,7 +33,7 @@ class RooStudyPackage ;
 class RooAbsStudy : public TNamed {
 public:
 
-  RooAbsStudy() :  _storeDetails(false), _summaryData(nullptr), _detailData(nullptr), _ownDetailData(true) {} ;
+  RooAbsStudy() = default;
   RooAbsStudy(const char* name, const char* title) ;
   RooAbsStudy(const RooAbsStudy& other) ;
   virtual RooAbsStudy* clone(const char* newname="") const = 0 ;
@@ -64,10 +64,10 @@ public:
 
  private:
 
-  bool _storeDetails ;
-  RooDataSet* _summaryData ;     ///<!
-  RooLinkedList*  _detailData ;  ///<!
-  bool      _ownDetailData ;
+  bool _storeDetails = false;
+  RooDataSet* _summaryData = nullptr;     ///<!
+  RooLinkedList*  _detailData = nullptr;  ///<!
+  bool _ownDetailData = true;
 
   ClassDefOverride(RooAbsStudy,1) // Abstract base class for RooStudyManager modules
 } ;

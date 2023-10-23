@@ -44,8 +44,6 @@ constructed from all the categories in the dataset
 using namespace std;
 
 ClassImp(RooDataProjBinding);
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a data weighted average function binding with
@@ -54,8 +52,7 @@ ClassImp(RooDataProjBinding);
 
 RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data,
                    const RooArgSet &vars, const RooArgSet* nset) :
-  RooRealBinding(real,vars,nullptr), _first(true), _real(&real), _data(&data), _nset(nset),
-  _superCat(nullptr), _catTable(nullptr)
+  RooRealBinding(real,vars,nullptr), _first(true), _real(&real), _data(&data), _nset(nset)
 {
   // Determine if dataset contains only categories
   bool allCat(true) ;
@@ -65,23 +62,12 @@ RooDataProjBinding::RooDataProjBinding(const RooAbsReal &real, const RooAbsData&
 
   // Determine weights of various super categories fractions
   if (allCat) {
-     _superCat = new RooSuperCategory("superCat","superCat",*data.get()) ;
-     _catTable = data.table(*_superCat) ;
+     _superCat = std::make_unique<RooSuperCategory>("superCat","superCat",*data.get()) ;
+     _catTable = std::unique_ptr<Roo1DTable>{data.table(*_superCat)};
   }
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor, delete owned objects
-
-RooDataProjBinding::~RooDataProjBinding()
-{
-  if (_superCat) delete _superCat ;
-  if (_catTable) delete _catTable ;
-}
-
-
+RooDataProjBinding::~RooDataProjBinding() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate data-projected values of the bound real function.

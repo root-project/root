@@ -448,7 +448,7 @@ bool HypoTestInverter::SetTestStatistic(TestStatistic& stat)
 void  HypoTestInverter::Clear()  {
    if (fResults) delete fResults;
    fResults = nullptr;
-   fLimitPlot.reset(nullptr);
+   fLimitPlot.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -144,7 +144,7 @@ namespace BidirMMapPipe_impl {
             } impl;
         public:
             /// default constructor
-            Pages() : m_pimpl(nullptr) { }
+            Pages() = default;
 
             /// destructor
             ~Pages();
@@ -194,7 +194,7 @@ namespace BidirMMapPipe_impl {
             friend class BidirMMapPipe_impl::PageChunk;
 
             /// pointer to implementation
-            impl* m_pimpl;
+            impl* m_pimpl = nullptr;
 
             /// constructor
             Pages(PageChunk* parent, Page* pages, unsigned npg);
