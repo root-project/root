@@ -34,7 +34,7 @@ dataset_spec = os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe", "df106_Hi
 df = ROOT.RDF.Experimental.FromSpec(dataset_spec)  # Creates a single dataframe for all the samples
 
 # Add the ProgressBar feature
-ROOT.RDF.Experimental.AddProgressbar(df)
+ROOT.RDF.Experimental.AddProgressBar(df)
 
 # Access metadata information that is stored in the JSON config file of the RDataFrame.
 # The metadata contained in the JSON file is accessible within a `DefinePerSample` call, through the `RDFSampleInfo` class.
