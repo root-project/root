@@ -60,7 +60,7 @@ void transp_text()
    for (Int_t i = 0; i < 5000; ++i)
       h->Fill(gRandom->Gaus(0.5 * nx, 0.2 * nx));
 
-   h->SetStats(0);
+   h->SetStats(false);
    for (Int_t i = 1; i <= nx; ++i)
       h->GetXaxis()->SetBinLabel(i, people[i - 1]);
 

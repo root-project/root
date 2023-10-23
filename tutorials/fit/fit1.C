@@ -57,7 +57,7 @@ void fit1() {
    // for using gROOT->FindObject("xxx"), e.g.:
    // TF1 *sqroot = (TF1*) gROOT.FindObject("sqroot")
    //
-   TF1 * sqroot = 0;
+   TF1 * sqroot = nullptr;
    file->GetObject("sqroot",sqroot);
    if (!sqroot){
       Error("fit1.C","Cannot find object sqroot of type TF1\n");
@@ -68,7 +68,7 @@ void fit1() {
    //
    // Now get and fit histogram h1f with the function sqroot
    //
-   TH1F* h1f = 0;
+   TH1F* h1f = nullptr;
    file->GetObject("h1f",h1f);
    if (!h1f){
       Error("fit1.C","Cannot find object h1f of type TH1F\n");

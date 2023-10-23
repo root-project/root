@@ -53,8 +53,8 @@ int getDebugEnum(const char *what);
 Int_t getXrootdPid(Int_t port, const char *subdir = "xpdtut");
 Int_t checkXrootdAt(Int_t port, const char *host = "localhost");
 Int_t checkXproofdAt(Int_t port, const char *host = "localhost");
-Int_t startXrootdAt(Int_t port, const char *exportdirs = 0, Bool_t force = kFALSE);
-Int_t killXrootdAt(Int_t port, const char *id = 0);
+Int_t startXrootdAt(Int_t port, const char *exportdirs = nullptr, Bool_t force = kFALSE);
+Int_t killXrootdAt(Int_t port, const char *id = nullptr);
 
 // Auxilliary structures for Xrootd/Xproofd pinging ...
 // The client request
@@ -75,12 +75,12 @@ typedef struct {
 // By default we start a cluster on the local machine
 const char *refloc = "proof://localhost:40000";
 
-TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, const char *dir = 0,
+TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, const char *dir = nullptr,
                  const char *opt = "ask", Bool_t dyn = kFALSE, Bool_t tutords = kFALSE)
 {
 
 
-   TProof *p = 0;
+   TProof *p = nullptr;
 
    // Valgrind options, if any
    TString vopt, vopts;
@@ -142,7 +142,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
       } else {
          Printf("getProof: could not get/start a valid session at %s", url);
          if (p) delete p;
-         p = 0;
+         p = nullptr;
       }
       // Done
       return p;
@@ -372,7 +372,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
    if (!p || !(p->IsValid())) {
       Printf("getProof: starting local session failed");
       if (p) delete p;
-      p = 0;
+      p = nullptr;
       return p;
    }
 

@@ -10,15 +10,15 @@ class iterplugin : public TGeoIteratorPlugin
 {
 public:
    iterplugin() : TGeoIteratorPlugin(), fColor(kGreen), fReplica(1) {}
-   virtual ~iterplugin() {}
+   ~iterplugin() override {}
    // Process current node
-   virtual void ProcessNode();
+   void ProcessNode() override;
    void         Select(Int_t replica, Int_t color) {fReplica=replica; fColor=color;}
 
    Int_t fColor;             // Current color
    Int_t fReplica;           // replica number (1 to 4)
 
-   ClassDef(iterplugin, 0)   // A simple user iterator plugin that changes volume color
+   ClassDefOverride(iterplugin, 0)   // A simple user iterator plugin that changes volume color
 };
 
 void iterplugin::ProcessNode()

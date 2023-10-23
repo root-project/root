@@ -24,7 +24,7 @@ ProofTests::ProofTests()
    // Constructor
 
    fTestType = 0;
-   fStat = 0;
+   fStat = nullptr;
 }
 
 //_____________________________________________________________________________

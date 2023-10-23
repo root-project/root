@@ -13,7 +13,7 @@
 ///
 /// \authors Ilka Antcheva, Bertrand Bellenot, Fons Rademakers, Valeri Onuchin
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <TROOT.h>
 #include <TClass.h>
@@ -117,7 +117,7 @@ const char *filetypes[] = { "All files",     "*",
                             "ROOT files",    "*.root",
                             "ROOT macros",   "*.C",
                             "Text files",    "*.[tT][xX][tT]",
-                            0,               0 };
+                            nullptr,         nullptr };
 
 struct shutterData_t {
    const char *pixmap_name;
@@ -127,24 +127,24 @@ struct shutterData_t {
 };
 
 shutterData_t histo_data[] = {
-   { "h1_s.xpm",        "TH1",      1001,  0 },
-   { "h2_s.xpm",        "TH2",      1002,  0 },
-   { "h3_s.xpm",        "TH3",      1003,  0 },
-   { "profile_s.xpm",   "TProfile", 1004,  0 },
-   { 0,                 0,          0,     0 }
+   { "h1_s.xpm",        "TH1",      1001,  nullptr },
+   { "h2_s.xpm",        "TH2",      1002,  nullptr },
+   { "h3_s.xpm",        "TH3",      1003,  nullptr },
+   { "profile_s.xpm",   "TProfile", 1004,  nullptr },
+   { nullptr,            nullptr,      0,  nullptr }
 };
 
 shutterData_t function_data[] = {
-   { "f1_s.xpm",        "TF1",      2001,  0 },
-   { "f2_s.xpm",        "TF2",      2002,  0 },
-   { 0,                 0,          0,     0 }
+   { "f1_s.xpm",        "TF1",      2001,  nullptr },
+   { "f2_s.xpm",        "TF2",      2002,  nullptr },
+   { nullptr,           nullptr,       0,  nullptr }
 };
 
 shutterData_t tree_data[] = {
-   { "ntuple_s.xpm",    "TNtuple",  3001,  0 },
-   { "tree_s.xpm",      "TTree",    3002,  0 },
-   { "chain_s.xpm",     "TChain",   3003,  0 },
-   { 0,                 0,          0,     0 }
+   { "ntuple_s.xpm",    "TNtuple",  3001,  nullptr },
+   { "tree_s.xpm",      "TTree",    3002,  nullptr },
+   { "chain_s.xpm",     "TChain",   3003,  nullptr },
+   { nullptr,           nullptr,       0,  nullptr }
 };
 
 
@@ -548,7 +548,7 @@ TileFrame::TileFrame(const TGWindow *p)
                                  TGFrame::GetWhitePixel());
    fFrame->Connect("ProcessedEvent(Event_t*)", "TileFrame", this,
                    "HandleMouseWheel(Event_t*)");
-   fCanvas = 0;
+   fCanvas = nullptr;
    fFrame->SetLayoutManager(new TGTileLayout(fFrame, 8));
 
    gVirtualX->GrabButton(fFrame->GetId(), kAnyButton, kAnyModifier,
@@ -906,7 +906,7 @@ void TestMainFrame::HandleMenu(Int_t id)
             fMenuBar->Layout();
 
             TGMenuEntry *e = fMenuTest->GetEntry("Add New Menus");
-            fMenuTest->AddEntry("Remove New Menus", M_NEW_REMOVEMENU, 0, 0, e);
+            fMenuTest->AddEntry("Remove New Menus", M_NEW_REMOVEMENU, nullptr, nullptr, e);
          }
          break;
 
@@ -1039,8 +1039,8 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
 
    //-------------- embedded canvas demo
    fFillHistos = kFALSE;
-   fHpx   = 0;
-   fHpxpy = 0;
+   fHpx   = nullptr;
+   fHpxpy = nullptr;
 
    tf = fTab->AddTab("Tab 3");
    fF3 = new TGCompositeFrame(tf, 60, 20, kHorizontalFrame);
@@ -1221,7 +1221,7 @@ void TestDialog::DoClose()
       CloseWindow();
 
    // Close the Ged editor if it was activated.
-   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != nullptr)
       TVirtualPadEditor::Terminate();
 }
 
@@ -1252,7 +1252,7 @@ void TestDialog::DoOK()
    TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
 
    // Close the Ged editor if it was activated.
-   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != nullptr)
       TVirtualPadEditor::Terminate();
 }
 
@@ -1266,7 +1266,7 @@ void TestDialog::DoCancel()
    fCancelButton->SetState(kButtonDisabled);
    TTimer::SingleShot(150, "TestDialog", this, "CloseWindow()");
    // Close the Ged editor if it was activated.
-   if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
+   if (TVirtualPadEditor::GetPadEditor(kFALSE) != nullptr)
       TVirtualPadEditor::Terminate();
 }
 
@@ -1320,8 +1320,8 @@ void TestDialog::HandleButtons(Int_t id)
                // since RemoveTab() will Destroy the container
                // window, which in turn will destroy the embedded
                // canvas windows.
-               delete fEc1; fEc1 = 0;
-               delete fEc2; fEc2 = 0;
+               delete fEc1; fEc1 = nullptr;
+               delete fEc2; fEc2 = nullptr;
             }
             fTab->RemoveTab(0);
             fTab->Layout();
@@ -1852,7 +1852,7 @@ void TestShutter::AddShutterItem(const char *name, shutterData_t *data)
    item = new TGShutterItem(fShutter, new TGHotString(name), id++);
    container = (TGCompositeFrame *) item->GetContainer();
 
-   for (int i=0; data[i].pixmap_name != 0; i++) {
+   for (int i=0; data[i].pixmap_name != nullptr; i++) {
       buttonpic = gClient->GetPicture(data[i].pixmap_name);
       if (!buttonpic) {
          printf("<TestShutter::AddShutterItem>: missing pixmap \"%s\", using default",
@@ -1917,7 +1917,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
 #ifdef R__WIN32
    fContents->AddItem(0,"c:\\");  // browse the upper directory
 #else
-   fContents->AddItem(0,"/");  // browse the upper directory
+   fContents->AddItem(nullptr,"/");  // browse the upper directory
 #endif
 
    // position relative to the parent's window
@@ -2105,14 +2105,14 @@ void TestFileList::DisplayObject(const TString& fname,const TString& name)
 
    TDirectory *sav = gDirectory;
 
-   static TFile *file = 0;
+   static TFile *file = nullptr;
    if (file) delete file;     // close
    file = new TFile(fname);   // reopen
 
    TObject* obj = file->Get(name);
    if (obj) {
       if (!obj->IsFolder()) {
-         obj->Browse(0);
+         obj->Browse(nullptr);
       } else obj->Print();
    }
    gDirectory = sav;

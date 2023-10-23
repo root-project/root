@@ -59,7 +59,7 @@ void FittingDemo() {
       "Lorentzian Peak on Quadratic Background",60,0,3);
    histo->SetMarkerStyle(21);
    histo->SetMarkerSize(0.8);
-   histo->SetStats(0);
+   histo->SetStats(false);
 
    for(int i=0; i < nBins;  i++) histo->SetBinContent(i+1,data[i]);
 

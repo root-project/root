@@ -46,9 +46,9 @@ void fitMultiGraph()
    }
 
    //create the graphs and set their drawing options
-   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, 0, evalues1);
-   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, 0, evalues2);
-   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, 0, evalues3);
+   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, nullptr, evalues1);
+   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, nullptr, evalues2);
+   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, nullptr, evalues3);
    gr1->SetLineColor(kRed);
    gr2->SetLineColor(kBlue);
    gr2->SetMarkerStyle(24);
@@ -116,10 +116,10 @@ void fitminuit()
       {xtotal[i] = xvalues3[i-2*n]; ytotal[i]=yvalues3[i-2*n]; etotal[i]=0.00001;}
 
    //create the graphs and set their drawing options
-   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, 0, evalues1);
-   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, 0, evalues2);
-   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, 0, evalues3);
-   TGraphErrors *grtotal = new TGraphErrors(n*3, xtotal, ytotal, 0, etotal);
+   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, nullptr, evalues1);
+   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, nullptr, evalues2);
+   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, nullptr, evalues3);
+   TGraphErrors *grtotal = new TGraphErrors(n*3, xtotal, ytotal, nullptr, etotal);
    TMultiGraph *mg=new TMultiGraph("mg", "TMultiGraph of 3 TGraphErrors");
    mg->Add(gr1);
    mg->Add(gr2);

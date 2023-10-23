@@ -1,4 +1,4 @@
-#include <math.h>
+#include <cmath>
 #include "Riostream.h"
 #include "Quad.h"
 
