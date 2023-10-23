@@ -430,7 +430,7 @@ TEST(RNTuple, Int64)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt64,
              (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64,
@@ -486,7 +486,7 @@ TEST(RNTuple, Int32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt32,
              (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt32,
@@ -544,7 +544,7 @@ TEST(RNTuple, Int16)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kInt16,
              (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt16,
@@ -624,7 +624,7 @@ TEST(RNTuple, Double)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kReal64,
              (*desc->GetColumnIterable(desc->FindFieldId("d1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal64,
@@ -657,7 +657,7 @@ TEST(RNTuple, Float)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto *desc = reader->GetDescriptor();
+   const auto desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::Experimental::EColumnType::kReal32,
              (*desc->GetColumnIterable(desc->FindFieldId("f1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32,

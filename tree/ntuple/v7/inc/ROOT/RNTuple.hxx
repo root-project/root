@@ -119,7 +119,7 @@ private:
    /// descriptor.  Using the descriptor's generation number, we know if the cached descriptor is stale.
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
-   std::unique_ptr<RNTupleDescriptor> fCachedDescriptor;
+   std::shared_ptr<RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
 
    void ConnectModel(RNTupleModel &model);
@@ -217,7 +217,7 @@ public:
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call
    /// to LoadEntry or to any of the views returned from the reader.
-   const RNTupleDescriptor *GetDescriptor();
+   std::shared_ptr<const RNTupleDescriptor> GetDescriptor();
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
    ///

@@ -251,12 +251,12 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &o
    output << "}" << std::endl;
 }
 
-const ROOT::Experimental::RNTupleDescriptor *ROOT::Experimental::RNTupleReader::GetDescriptor()
+std::shared_ptr<const ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTupleReader::GetDescriptor()
 {
    auto descriptorGuard = fSource->GetSharedDescriptorGuard();
    if (!fCachedDescriptor || fCachedDescriptor->GetGeneration() != descriptorGuard->GetGeneration())
       fCachedDescriptor = descriptorGuard->Clone();
-   return fCachedDescriptor.get();
+   return fCachedDescriptor;
 }
 
 //------------------------------------------------------------------------------
