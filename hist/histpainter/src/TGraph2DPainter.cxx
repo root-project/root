@@ -90,22 +90,7 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
    fDelaunay = gd;
    fDelaunay2D = nullptr;
    fGraph2D  = fDelaunay->GetGraph2D();
-   fNpoints  = fGraph2D->GetN();
-   fX        = fGraph2D->GetX();
-   fY        = fGraph2D->GetY();
-   fZ        = fGraph2D->GetZ();
-   if (fGraph2D->GetEXlow())  fEXlow  = fGraph2D->GetEXlow();
-   else                       fEXlow  = fGraph2D->GetEX();
-   if (fGraph2D->GetEXhigh()) fEXhigh = fGraph2D->GetEXhigh();
-   else                       fEXhigh = fGraph2D->GetEX();
-   if (fGraph2D->GetEYlow())  fEYlow  = fGraph2D->GetEYlow();
-   else                       fEYlow  = fGraph2D->GetEY();
-   if (fGraph2D->GetEYhigh()) fEYhigh = fGraph2D->GetEYhigh();
-   else                       fEYhigh = fGraph2D->GetEY();
-   if (fGraph2D->GetEZlow())  fEZlow  = fGraph2D->GetEZlow();
-   else                       fEZlow  = fGraph2D->GetEZ();
-   if (fGraph2D->GetEZhigh()) fEZhigh = fGraph2D->GetEZhigh();
-   else                       fEZhigh = fGraph2D->GetEZ();
+   GetGraph2dProperties();
    fNdt      = 0;
    fXN       = nullptr;
    fYN       = nullptr;
@@ -132,22 +117,7 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
    fDelaunay = nullptr;
    fDelaunay2D = gd;
    fGraph2D  = fDelaunay2D->GetGraph2D();
-   fNpoints  = fGraph2D->GetN();
-   fX        = fGraph2D->GetX();
-   fY        = fGraph2D->GetY();
-   fZ        = fGraph2D->GetZ();
-   if (fGraph2D->GetEXlow())  fEXlow  = fGraph2D->GetEXlow();
-   else                       fEXlow  = fGraph2D->GetEX();
-   if (fGraph2D->GetEXhigh()) fEXhigh = fGraph2D->GetEXhigh();
-   else                       fEXhigh = fGraph2D->GetEX();
-   if (fGraph2D->GetEYlow())  fEYlow  = fGraph2D->GetEYlow();
-   else                       fEYlow  = fGraph2D->GetEY();
-   if (fGraph2D->GetEYhigh()) fEYhigh = fGraph2D->GetEYhigh();
-   else                       fEYhigh = fGraph2D->GetEY();
-   if (fGraph2D->GetEZlow())  fEZlow  = fGraph2D->GetEZlow();
-   else                       fEZlow  = fGraph2D->GetEZ();
-   if (fGraph2D->GetEZhigh()) fEZhigh = fGraph2D->GetEZhigh();
-   else                       fEZhigh = fGraph2D->GetEZ();
+   GetGraph2dProperties();
    fNdt      = 0;
    fXN       = nullptr;
    fYN       = nullptr;
@@ -174,6 +144,29 @@ TGraph2DPainter::~TGraph2DPainter()
 {
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Protected method to get all TGraph2D properties
+
+void TGraph2DPainter::GetGraph2dProperties()
+{
+   fNpoints  = fGraph2D->GetN();
+   fX        = fGraph2D->GetX();
+   fY        = fGraph2D->GetY();
+   fZ        = fGraph2D->GetZ();
+   if (fGraph2D->GetEXlow())  fEXlow  = fGraph2D->GetEXlow();
+   else                       fEXlow  = fGraph2D->GetEX();
+   if (fGraph2D->GetEXhigh()) fEXhigh = fGraph2D->GetEXhigh();
+   else                       fEXhigh = fGraph2D->GetEX();
+   if (fGraph2D->GetEYlow())  fEYlow  = fGraph2D->GetEYlow();
+   else                       fEYlow  = fGraph2D->GetEY();
+   if (fGraph2D->GetEYhigh()) fEYhigh = fGraph2D->GetEYhigh();
+   else                       fEYhigh = fGraph2D->GetEY();
+   if (fGraph2D->GetEZlow())  fEZlow  = fGraph2D->GetEZlow();
+   else                       fEZlow  = fGraph2D->GetEZ();
+   if (fGraph2D->GetEZhigh()) fEZhigh = fGraph2D->GetEZhigh();
+   else                       fEZhigh = fGraph2D->GetEZ();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find triangles in fDelaunay and initialise the TGraph2DPainter values
@@ -526,6 +519,8 @@ void TGraph2DPainter::Paint(Option_t *option)
    Bool_t contour   = opt.Contains("cont");
    Bool_t line      = opt.Contains("line");
    Bool_t err       = opt.Contains("err");
+
+   GetGraph2dProperties();
 
    fGraph2D->TAttLine::Modify();
    fGraph2D->TAttFill::Modify();
