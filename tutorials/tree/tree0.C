@@ -63,7 +63,7 @@ public:
 
   Det a; // say there are two detectors (a and b) in the experiment
   Det b;
-  ClassDef(Event,1)
+  ClassDefOverride(Event,1)
 };
 
 ClassImp(Event)

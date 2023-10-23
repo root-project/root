@@ -295,7 +295,7 @@ TGraph *TestGraphDLSF(bool randomize = false) {
 //
 // "ROOT Script" entry point (the same name as the "filename's base")
 //
-void fitEllipseTGraphDLSF(TGraph *g = ((TGraph *)0))
+void fitEllipseTGraphDLSF(TGraph *g = ((TGraph *)nullptr))
 {
   if (!g) g = TestGraphDLSF(true); // create a "random" ellipse
 

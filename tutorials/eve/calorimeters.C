@@ -64,7 +64,7 @@ void calorimeters()
 
 
    // first tab
-   auto lego = MakeCaloLego(data, 0);
+   auto lego = MakeCaloLego(data, nullptr);
 
    //
    // second tab

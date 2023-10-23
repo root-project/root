@@ -45,7 +45,7 @@ void fitLinearRobust()
       y[i] = 1 + 2*x[i] + 3*x[i]*x[i] + 4*x[i]*x[i]*x[i] + r.Landau(10, 5);
    }
 
-   TGraphErrors *grr = new TGraphErrors(npoints, x, y, 0, e);
+   TGraphErrors *grr = new TGraphErrors(npoints, x, y, nullptr, e);
    grr->SetMinimum(-30);
    grr->SetMaximum(80);
    TF1 *ffit1 = new TF1("ffit1", "pol3", -5, 5);

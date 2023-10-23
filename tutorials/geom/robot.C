@@ -33,7 +33,7 @@ void robot()
 
    TGeoVolume *top=Robot->MakeBox("top",Air,1000,1000,1000);
    Robot->SetTopVolume(top);
-   Robot->SetTopVisible(0);
+   Robot->SetTopVisible(false);
       // If you want to see the boundary, please input the number, 1 instead of 0.
       // Like this, geom->SetTopVisible(1);
 
@@ -461,7 +461,7 @@ for (int i=1; i<20; i+=1) {
 
 
    //close geometry
-   top->SetVisibility(0);
+   top->SetVisibility(false);
    Robot->CloseGeometry();
 
    // in GL viewer

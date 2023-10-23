@@ -98,7 +98,7 @@ void parallelcoordtrans()
    // ||-Coord plot without transparency
    nt->Draw("x:y:z:u:v:w:a:b:c", "", "para");
    TParallelCoord * const para1 = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
-   assert(para1 != 0 && "parallelcoordtrans, 'ParaCoord' is null");
+   assert(para1 != nullptr && "parallelcoordtrans, 'ParaCoord' is null");
 
    para1->SetLineColor(25);
    TParallelCoordVar *pcv = (TParallelCoordVar*)para1->GetVarList()->FindObject("x");
@@ -132,14 +132,14 @@ void parallelcoordtrans()
    // We modify a 'system' color! You'll probably
    // have to restart ROOT or reset this color later.
    TColor * const col26 = gROOT->GetColor(26);
-   assert(col26 != 0 && "parallelcoordtrans, color with index 26 not found");
+   assert(col26 != nullptr && "parallelcoordtrans, color with index 26 not found");
 
    col26->SetAlpha(0.01);
 
    c1->cd(2);
    nt->Draw("x:y:z:u:v:w:a:b:c","","para");
    TParallelCoord * const para2 = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
-   assert(para2 != 0 && "parallelcoordtrans, 'ParaCoord' is null");
+   assert(para2 != nullptr && "parallelcoordtrans, 'ParaCoord' is null");
 
    para2->SetLineColor(26);
 
