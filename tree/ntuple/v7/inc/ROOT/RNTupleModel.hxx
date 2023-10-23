@@ -169,6 +169,22 @@ public:
                                       std::function<std::string(const std::string &)> mapping);
    };
 
+   /// Provides mutable access to the field tree of the model. This is necessary to commit clusters during writing
+   /// and to set the on-disk field IDs when connecting a model to a page source or sink.
+   /// Attorney-Client limited friendship pattern.
+   class RFieldProxy {
+      friend class Detail::RPageSink;
+      friend class RNTupleReader;
+      friend class RNTupleWriter;
+
+      static RFieldZero &GetFieldZeroOf(RNTupleModel &model)
+      {
+         if (!model.IsFrozen())
+            throw RException(R__FAIL("invalid attempt use mutable fields of unfrozen model"));
+         return *model.fFieldZero;
+      }
+   };
+
 private:
    static constexpr std::size_t kInvalidDefaultEntryIdx = std::size_t(-1);
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
@@ -216,7 +232,7 @@ private:
 
    Detail::RFieldBase *FindField(std::string_view fieldName) const;
 
-   RNTupleModel();
+   RNTupleModel(std::unique_ptr<RFieldZero> fieldZero);
 
 public:
    using Iterator_t = Detail::RFieldBase::RSchemaIterator;
@@ -227,9 +243,10 @@ public:
    ~RNTupleModel();
 
    std::unique_ptr<RNTupleModel> Clone() const;
-   static std::unique_ptr<RNTupleModel> Create();
+   static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<RFieldZero> fieldZero = std::make_unique<RFieldZero>());
    /// A bare model has no default entry
-   static std::unique_ptr<RNTupleModel> CreateBare();
+   static std::unique_ptr<RNTupleModel>
+   CreateBare(std::unique_ptr<RFieldZero> fieldZero = std::make_unique<RFieldZero>());
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
    /// corresponding value that is managed by a shared pointer.
@@ -367,10 +384,6 @@ public:
    const Detail::RFieldBase &GetField(std::string_view fieldName) const;
    const Detail::RFieldBase &GetConstField(std::string_view fieldName) const { return GetField(fieldName); }
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
-
-   // Only used by the RNTuple reader and writer and by RNTupleDescriptor::GenerateModel in order to
-   // set the on-disk field IDs and to connect the sub fields.
-   RFieldZero &GetMutableFieldZero() { return *fFieldZero; }
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);

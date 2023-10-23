@@ -9,6 +9,7 @@ TEST(RNTuple, ReconstructModel)
    auto fieldKlass = model->MakeField<CustomStruct>("klass");
    auto fieldArray = model->MakeField<std::array<double, 2>>("array");
    auto fieldVariant = model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
+   model->Freeze();
    {
       RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
       sink.Create(*model.get());

@@ -66,9 +66,10 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
+   auto &fieldZero = RNTupleModel::RFieldProxy::GetFieldZeroOf(model);
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
-   model.GetMutableFieldZero().SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
-   for (auto &field : model.GetMutableFieldZero()) {
+   fieldZero.SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
+   for (auto &field : fieldZero) {
       // If the model has been created from the descritor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
@@ -338,7 +339,7 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
    {
       throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
-   for (auto &f : fModel->GetMutableFieldZero())
+   for (auto &f : RNTupleModel::RFieldProxy::GetFieldZeroOf(*fModel))
       f.CommitCluster();
    fNBytesCommitted += fSink->CommitCluster(fNEntries);
    fNBytesFilled += fUnzippedClusterSize;

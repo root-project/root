@@ -204,20 +204,21 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
 }
 
-ROOT::Experimental::RNTupleModel::RNTupleModel()
-  : fFieldZero(std::make_unique<RFieldZero>())
+ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero))
 {}
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::RNTupleModel::CreateBare(std::unique_ptr<RFieldZero> fieldZero)
 {
-   auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel());
+   auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel(std::move(fieldZero)));
    model->fProjectedFields = std::make_unique<RProjectedFields>(model.get());
    return model;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::RNTupleModel::Create(std::unique_ptr<RFieldZero> fieldZero)
 {
-   auto model = CreateBare();
+   auto model = CreateBare(std::move(fieldZero));
    model->fCreatedEntries.emplace_back(std::shared_ptr<REntry>(new REntry()));
    model->fDefaultEntryIdx = 0;
 
@@ -226,10 +227,9 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Clone() const
 {
-   auto cloneModel = std::unique_ptr<RNTupleModel>(new RNTupleModel());
-   auto cloneFieldZero = fFieldZero->Clone("");
+   auto cloneModel = std::unique_ptr<RNTupleModel>(
+      new RNTupleModel(std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()))));
    cloneModel->fModelId = (fModelId == 0) ? 0 : GetNewModelId();
-   cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());

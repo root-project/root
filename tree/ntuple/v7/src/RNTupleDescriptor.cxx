@@ -433,8 +433,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleDescriptor::DropClu
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
-   auto model = RNTupleModel::Create();
-   model->GetMutableFieldZero().SetOnDiskId(GetFieldZeroId());
+   auto fieldZero = std::make_unique<RFieldZero>();
+   fieldZero->SetOnDiskId(GetFieldZeroId());
+   auto model = RNTupleModel::Create(std::move(fieldZero));
    for (const auto &topDesc : GetTopLevelFields())
       model->AddField(topDesc.CreateField(*this));
    model->Freeze();
