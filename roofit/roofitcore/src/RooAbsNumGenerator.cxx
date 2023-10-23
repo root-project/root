@@ -50,7 +50,7 @@ RooAbsNumGenerator::RooAbsNumGenerator() = default;
 /// cloned and so will not be disturbed during the generation process.
 
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose, const RooAbsReal* maxFuncVal) :
-  _funcClone(nullptr), _funcMaxVal(maxFuncVal), _verbose(verbose)
+  _funcMaxVal(maxFuncVal), _verbose(verbose)
 {
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.

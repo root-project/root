@@ -72,7 +72,7 @@ void configureConstrainedGammas(RooArgList const &gammas, std::span<const double
       // If the sigma value is less than a supplied threshold, set the variable to
       // constant
       if (sigmaRel < minSigma) {
-         oocxcoutW(static_cast<TObject *>(nullptr), HistFactory)
+         oocxcoutW(nullptr, HistFactory)
             << "Warning: relative sigma " << sigmaRel << " for \"" << gamma.GetName() << "\" falls below threshold of "
             << minSigma << ". Setting: " << gamma.GetName() << " to constant" << std::endl;
          gamma.setConstant(true);
@@ -102,7 +102,7 @@ CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramSet,
 
       RooRealVar &gamma = static_cast<RooRealVar &>(paramSet[i]);
 
-      oocxcoutI(static_cast<TObject *>(nullptr), HistFactory)
+      oocxcoutI(nullptr, HistFactory)
          << "Creating constraint for: " << gamma.GetName() << ". Type of constraint: " << type << std::endl;
 
       const double sigmaRel = relSigmas[i];
@@ -110,7 +110,7 @@ CreateGammaConstraintsOutput createGammaConstraints(RooArgList const &paramSet,
       // If the sigma is <= 0,
       // do cont create the term
       if (sigmaRel <= 0) {
-         oocxcoutI(static_cast<TObject *>(nullptr), HistFactory)
+         oocxcoutI(nullptr, HistFactory)
             << "Not creating constraint term for " << gamma.GetName() << " because sigma = " << sigmaRel
             << " (sigma<=0)"
             << " (bin number = " << i << ")" << std::endl;

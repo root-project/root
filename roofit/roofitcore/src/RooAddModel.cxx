@@ -81,7 +81,6 @@ RooAddModel::RooAddModel() :
 RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, bool ownPdfList) :
   RooResolutionModel(name,title,(static_cast<RooResolutionModel*>(inPdfList.at(0)))->convVar()),
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
-  _refCoefRangeName(nullptr),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
   _codeReg(10),

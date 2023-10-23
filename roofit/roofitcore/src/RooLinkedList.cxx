@@ -341,8 +341,8 @@ void RooLinkedList::setHashTableSize(Int_t size)
       return ;
     } else {
       // Remove existing hash table
-      _htableName.reset(nullptr);
-      _htableLink.reset(nullptr);
+      _htableName.reset();
+      _htableLink.reset();
     }
   } else {
 
@@ -368,8 +368,8 @@ RooLinkedList::~RooLinkedList()
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
 
-  _htableName.reset(nullptr);
-  _htableLink.reset(nullptr);
+  _htableName.reset();
+  _htableLink.reset();
 
   Clear() ;
   if (_pool->release()) {

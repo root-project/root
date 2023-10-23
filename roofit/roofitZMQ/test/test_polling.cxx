@@ -84,8 +84,8 @@ TEST(Polling, doublePoll)
 
       kill(child_pid, SIGTERM);
 
-      pusher.reset(nullptr);
-      puller.reset(nullptr);
+      pusher.reset();
+      puller.reset();
       zmqSvc().close_context(); // if you don't close context in parent process as well, the next repeat will hang
 
       // wait for child
@@ -156,8 +156,8 @@ TEST(Polling, doublePoll)
       while (!terminated) {
       }
 
-      puller.reset(nullptr);
-      pusher.reset(nullptr);
+      puller.reset();
+      pusher.reset();
       zmqSvc().close_context();
       _Exit(0);
    }

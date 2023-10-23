@@ -109,8 +109,7 @@ RooIntegralMorph::RooIntegralMorph(const char *name, const char *title,
   pdf2("pdf2","pdf2",this,_pdf2),
   x("x","x",this,_x),
   alpha("alpha","alpha",this,_alpha),
-  _cacheAlpha(doCacheAlpha),
-  _cache(nullptr)
+  _cacheAlpha(doCacheAlpha)
 {
 }
 
@@ -123,8 +122,7 @@ RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph& other, const char* na
   pdf2("pdf2",this,other.pdf2),
   x("x",this,other.x),
   alpha("alpha",this,other.alpha),
-  _cacheAlpha(other._cacheAlpha),
-  _cache(nullptr)
+  _cacheAlpha(other._cacheAlpha)
 {
 }
 

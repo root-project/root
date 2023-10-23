@@ -31,19 +31,9 @@ of the owning class
 **/
 
 
-using namespace std;
-
 ClassImp(RooAbsProxy);
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooAbsProxy::RooAbsProxy() : _nset(nullptr)
-{
-}
-
-
+RooAbsProxy::RooAbsProxy() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -67,7 +57,7 @@ void RooAbsProxy::changeNormSet(const RooArgSet* newNormSet)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print proxy name
 
-void RooAbsProxy::print(ostream& os, bool /*addContents*/) const
+void RooAbsProxy::print(std::ostream& os, bool /*addContents*/) const
 {
-  os << name() << endl ;
+  os << name() << std::endl;
 }

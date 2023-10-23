@@ -929,7 +929,7 @@ std::span<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_
 
   // Treat the sumW2 case with a result buffer, first reset buffer if the
   // number of entries doesn't match with the dataset anymore
-  if(_sumW2Buffer && _sumW2Buffer->size() != nEntries) _sumW2Buffer.reset(nullptr);
+  if(_sumW2Buffer && _sumW2Buffer->size() != nEntries) _sumW2Buffer.reset();
 
   if (!_sumW2Buffer) {
     _sumW2Buffer = std::make_unique<std::vector<double>>();

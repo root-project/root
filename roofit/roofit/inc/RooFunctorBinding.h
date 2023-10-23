@@ -30,9 +30,7 @@ RooAbsPdf*  bindPdf(const char* name, const ROOT::Math::IBaseFunctionMultiDim& f
 
 class RooFunctorBinding : public RooAbsReal {
 public:
-  RooFunctorBinding() : func(nullptr), x(nullptr) {
-    // Default constructor
-  } ;
+  RooFunctorBinding() = default;
   RooFunctorBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorBinding(const RooFunctorBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooFunctorBinding(*this,newname); }
@@ -43,9 +41,9 @@ protected:
 
   double evaluate() const override ;
 
-  const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
-  RooListProxy                       vars ;    // Argument reference
-  double*                           x ; // Argument value array
+  const ROOT::Math::IBaseFunctionMultiDim* func = nullptr; // Functor
+  RooListProxy vars; // Argument reference
+  double *x = nullptr; // Argument value array
 
 
 private:
@@ -57,9 +55,7 @@ private:
 
 class RooFunctorPdfBinding : public RooAbsPdf {
 public:
-  RooFunctorPdfBinding() : func(nullptr), x(nullptr) {
-    // Default constructor
-  } ;
+  RooFunctorPdfBinding() = default;
   RooFunctorPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorPdfBinding(const RooFunctorPdfBinding& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooFunctorPdfBinding(*this,newname); }
@@ -70,9 +66,9 @@ protected:
 
   double evaluate() const override ;
 
-  const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
-  RooListProxy                       vars ;    // Argument reference
-  double*                             x ; // Argument value array
+  const ROOT::Math::IBaseFunctionMultiDim* func = nullptr;    // Functor
+  RooListProxy vars ;    // Argument reference
+  double *x = nullptr; // Argument value array
 
 
 private:

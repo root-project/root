@@ -46,13 +46,13 @@ public:
 
 protected:
 
-  Int_t _order ;                                 ///< Derivation order
-  double _eps ;                                ///< Precision
-  RooSetProxy  _nset ;                           ///< Normalization set (optional)
-  RooRealProxy _func ;                           ///< Input function
-  RooRealProxy _x     ;                          ///< Observable
-  mutable RooFunctor*  _ftor ;                   ///<! Functor binding of RooAbsReal
-  mutable ROOT::Math::RichardsonDerivator *_rd ; ///<! Derivator
+  Int_t _order = 1;                                       ///< Derivation order
+  double _eps = 1e-7;                                     ///< Precision
+  RooSetProxy  _nset ;                                    ///< Normalization set (optional)
+  RooRealProxy _func ;                                    ///< Input function
+  RooRealProxy _x     ;                                   ///< Observable
+  mutable RooFunctor*  _ftor = nullptr;                   ///<! Functor binding of RooAbsReal
+  mutable ROOT::Math::RichardsonDerivator *_rd = nullptr; ///<! Derivator
 
   double evaluate() const override;
 

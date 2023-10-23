@@ -4,8 +4,7 @@
  *    File: $Id: RooKeysPdf.h,v 1.10 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 * WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *                                                                           *
  * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
@@ -57,19 +56,21 @@ private:
   // machine precision
   static const double _nSigma; //!
 
-  Int_t _nEvents;
-  double *_dataPts;  //[_nEvents]
-  double *_dataWgts; //[_nEvents]
-  double *_weights;  //[_nEvents]
-  double _sumWgt ;
+  Int_t _nEvents = 0;
+  double *_dataPts = nullptr;  //[_nEvents]
+  double *_dataWgts = nullptr; //[_nEvents]
+  double *_weights = nullptr;  //[_nEvents]
+  double _sumWgt = 0.0;
 
   constexpr static int _nPoints{1000};
   double _lookupTable[_nPoints+1];
 
   double g(double x,double sigma) const;
 
-  bool _mirrorLeft, _mirrorRight;
-  bool _asymLeft, _asymRight;
+  bool _mirrorLeft = false;
+  bool _mirrorRight = false;
+  bool _asymLeft = false;
+  bool _asymRight = false;
 
   // cached info on variable
   Char_t _varName[128];

@@ -27,8 +27,7 @@ public:
   // Constructors, assignment etc.
 
   /// Default constructor
-  RooArgProxy() : _owner(nullptr), _arg(nullptr), _valueServer(false), _shapeServer(false), _isFund(true), _ownArg(false) {
-  }
+  RooArgProxy() = default;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner,
          bool valueServer, bool shapeServer, bool proxyOwnsArg=false) ;
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg,

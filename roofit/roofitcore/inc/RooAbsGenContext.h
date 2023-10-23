@@ -84,7 +84,7 @@ protected:
   std::vector<Int_t> _protoOrder ; ///< LUT with traversal order of prototype data
   TString _normRange ;          ///< Normalization range of pdf
 
-  RooDataSet* _genData ;        ///<! Data being generated
+  RooDataSet* _genData = nullptr;        ///<! Data being generated
 
   ClassDefOverride(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
 };

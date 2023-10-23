@@ -370,55 +370,6 @@ void RooMsgService::restoreState()
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
-
-bool RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  return (activeStream(self,topic,level)>=0) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
-
-bool RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  return (activeStream(self,topic,level)>=0) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find appropriate logging stream for message from given object with given topic and message level
-
-Int_t RooMsgService::activeStream(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  if (level<_globMinLevel) return -1 ;
-  for (UInt_t i=0 ; i<_streams.size() ; i++) {
-    if (_streams[i].match(level,topic,self)) {
-      return i ;
-    }
-  }
-  return -1 ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find appropriate logging stream for message from given object with given topic and message level
-
-Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
-{
-  if (level<_globMinLevel) return -1 ;
-  for (UInt_t i=0 ; i<_streams.size() ; i++) {
-    if (_streams[i].match(level,topic,self)) {
-      return i ;
-    }
-  }
-  return -1 ;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine if message from given object at given level on given topic is logged
 

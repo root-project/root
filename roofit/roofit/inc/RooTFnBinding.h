@@ -15,7 +15,7 @@ class TF3 ;
 
 class RooTFnBinding : public RooAbsReal {
 public:
-  RooTFnBinding() : _func(nullptr) {}
+  RooTFnBinding() = default;
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list, const RooArgList& plist);
   RooTFnBinding(const RooTFnBinding& other, const char* name=nullptr) ;
@@ -31,7 +31,7 @@ protected:
 
   RooListProxy _olist ;
   RooListProxy _plist ;
-  TF1* _func ;
+  TF1* _func = nullptr;
 
   double evaluate() const override ;
 

@@ -178,7 +178,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
     while(nullptr == event) {
       // Use any cached events first
       if (_maxFuncVal>oldMax2) {
-   oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor"
+   oocxcoutD(nullptr, Generation) << "RooAcceptReject::generateEvent maxFuncVal has changed, need to resample already accepted events by factor"
              << oldMax2 << "/" << _maxFuncVal << "=" << oldMax2/_maxFuncVal << endl ;
    resampleRatio=oldMax2/_maxFuncVal ;
       }
@@ -197,12 +197,12 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
 
       double eff= _funcSum/(_totalEvents*_maxFuncVal);
       Long64_t extra= 1 + (Long64_t)(1.05*remaining/eff);
-      oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
+      oocxcoutD(nullptr, Generation) << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache, eff = " << eff << endl;
       double oldMax(_maxFuncVal);
       while(extra--) {
    addEventToCache();
    if((_maxFuncVal > oldMax)) {
-     oocxcoutD(static_cast<TObject*>(nullptr), Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
+     oocxcoutD(nullptr, Generation) << "RooAcceptReject::generateEvent: estimated function maximum increased from "
                << oldMax << " to " << _maxFuncVal << endl;
      oldMax = _maxFuncVal ;
      // Trim cache here

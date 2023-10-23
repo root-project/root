@@ -102,9 +102,9 @@ JobManager::~JobManager()
    // and led to assertion failures, which left the Messenger and ProcessManager
    // objects intact, leading to the forked processes and their ZeroMQ resources
    // to remain after exiting the main/master/parent process.
-   messenger_ptr_.reset(nullptr);
-   process_manager_ptr_.reset(nullptr);
-   queue_ptr_.reset(nullptr);
+   messenger_ptr_.reset();
+   process_manager_ptr_.reset();
+   queue_ptr_.reset();
 }
 
 // static function
@@ -138,7 +138,7 @@ bool JobManager::remove_job_object(std::size_t job_object_id)
 {
    bool removed_successfully = job_objects_.erase(job_object_id) == 1;
    if (job_objects_.empty()) {
-      instance_.reset(nullptr);
+      instance_.reset();
    }
    return removed_successfully;
 }

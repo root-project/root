@@ -20,6 +20,7 @@
 #include "TLegend.h"
 #include "TList.h"
 
+#include <limits>
 #include <vector>
 
 #include "RooStats/SamplingDistribution.h"
@@ -103,29 +104,32 @@ namespace RooStats {
     std::vector<double> fSamplingDistr;
     std::vector<double> fSampleWeights;
 
-    bool fIsWeighted;
+    bool fIsWeighted = false;
 
     Int_t fBins;
-    Int_t fMarkerType;
-    Int_t fColor;
+    Int_t fMarkerType = 20;
+    Int_t fColor = 1;
 
     TString fVarName;
 
   protected:
 
-    TH1F* fHist;
-    TLegend *fLegend;
+    TH1F* fHist = nullptr;
+    TLegend *fLegend = nullptr;
 
     TList fItems;       ///< holds TH1Fs only
     TList fOtherItems;  ///< other objects to be drawn like TLine etc.
-    RooPlot* fRooPlot;
-    bool fLogXaxis;
-    bool fLogYaxis;
+    RooPlot* fRooPlot = nullptr;
+    bool fLogXaxis = false;
+    bool fLogYaxis = false;
 
-    double fXMin, fXMax, fYMin, fYMax;
+    double fXMin = std::numeric_limits<float>::quiet_NaN();
+    double fXMax = std::numeric_limits<float>::quiet_NaN();
+    double fYMin = std::numeric_limits<float>::quiet_NaN();
+    double fYMax = std::numeric_limits<float>::quiet_NaN();
 
-    bool fApplyStyle;
-    Style_t fFillStyle;
+    bool fApplyStyle = true;
+    Style_t fFillStyle = 3004;
 
     void SetSampleWeights(const SamplingDistribution *samplingDist);
 

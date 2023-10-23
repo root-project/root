@@ -29,7 +29,7 @@ public:
   static constexpr value_type NoCatIdx = std::numeric_limits<value_type>::min();
   // Constructors etc.
 
-  inline RooMappedCategory() : _defCat(0), _mapcache(nullptr) { }
+  inline RooMappedCategory() : _defCat(0) { }
   RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defCatName="NotMapped", Int_t defCatIdx=NoCatIdx);
   RooMappedCategory(const RooMappedCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooMappedCategory(*this,newname); }
@@ -49,7 +49,7 @@ public:
 
   class Entry {
   public:
-    inline Entry() : _regexp(nullptr), _catIdx() {}
+    inline Entry() : _catIdx() {}
     virtual ~Entry();
     Entry(const char* exp, RooAbsCategory::value_type cat);
     Entry(const Entry& other);
@@ -75,7 +75,7 @@ protected:
   value_type _defCat{NoCatIdx}; ///< Default (unmapped) output type
   RooCategoryProxy _inputCat ;  ///< Input category
   std::map<std::string,RooMappedCategory::Entry> _mapArray ;  ///< List of mapping rules
-  mutable RooMappedCategoryCache* _mapcache; ///<! transient member: cache the mapping
+  mutable RooMappedCategoryCache* _mapcache = nullptr; ///<! transient member: cache the mapping
 
   value_type evaluate() const override ;
   const RooMappedCategoryCache* getOrCreateCache() const;
