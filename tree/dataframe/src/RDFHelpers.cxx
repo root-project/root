@@ -294,7 +294,7 @@ void ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds 
 }
 
 /// Print a progress bar of width `ProgressHelper::fBarWidth` if `fGetNEventsOfCurrentFile` is known.
-void ProgressHelper::PrintProgressbar(std::ostream &stream, std::size_t currentEventCount) const
+void ProgressHelper::PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const
 {
    auto GetNEventsOfCurrentFile = ComputeNEventsSoFar();
    if (GetNEventsOfCurrentFile == 0)
@@ -364,7 +364,7 @@ public:
    }
 };
 
-void AddProgressbar(ROOT::RDF::RNode node)
+void AddProgressBar(ROOT::RDF::RNode node)
 {
    auto total_files = node.GetNFiles();
    auto progress = std::make_shared<ProgressHelper>(1000, total_files);
@@ -373,10 +373,10 @@ void AddProgressbar(ROOT::RDF::RNode node)
    r.OnPartialResultSlot(1000, [progress](unsigned int slot, auto &&arg) { (*progress)(slot, arg); });
 }
 
-void AddProgressbar(ROOT::RDataFrame dataframe)
+void AddProgressBar(ROOT::RDataFrame dataframe)
 {
    auto node = ROOT::RDF::AsRNode(dataframe);
-   ROOT::RDF::Experimental::AddProgressbar(node);
+   ROOT::RDF::Experimental::AddProgressBar(node);
 }
 } // namespace Experimental
 } // namespace RDF
