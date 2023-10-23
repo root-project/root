@@ -583,10 +583,12 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          hist->BufferEmpty();
 
          while ((fobj = fiter()) != nullptr) {
-           if (fobj->InheritsFrom(TPaveStats::Class()))
-              stats = dynamic_cast<TPaveStats *> (fobj);
-           else if (fobj->InheritsFrom("TPaletteAxis"))
-              palette = fobj;
+            if (fobj->InheritsFrom(TPaveStats::Class()))
+               stats = dynamic_cast<TPaveStats *> (fobj);
+            else if (fobj->InheritsFrom("TPaletteAxis"))
+               palette = fobj;
+            else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw) && (paddata.IsBatchMode() || fTF1UseSave))
+               (static_cast<TF1 *>(fobj))->Save(0, 0, 0, 0, 0, 0);
          }
 
          TString hopt = iter.GetOption();
