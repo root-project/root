@@ -195,7 +195,7 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
 /// the formula expression.
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& varList,
     bool checkVariables) :
-  TNamed(name, formula), _tFormula{nullptr}
+  TNamed(name, formula)
 {
   _origList.add(varList);
   _isCategory = findCategoryServers(_origList);

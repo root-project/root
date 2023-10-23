@@ -51,8 +51,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   TNamed(model),
   _prototype(prototype),
   _isValid(true),
-  _verbose(verbose),
-  _genData(nullptr)
+  _verbose(verbose)
 {
   // Check PDF dependents
   if (model.recursiveCheckObservables(&vars)) {

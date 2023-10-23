@@ -44,8 +44,6 @@ to test that assumption.
 using namespace std;
 
 ClassImp(RooDLLSignificanceMCSModule);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +53,7 @@ ClassImp(RooDLLSignificanceMCSModule);
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
   _parName(param.GetName()),
-  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(nullHypoValue)
+  _nullValue(nullHypoValue)
 {
 }
 
@@ -68,7 +66,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, double nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
   _parName(parName),
-  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(nullHypoValue)
+  _nullValue(nullHypoValue)
 {
 }
 
@@ -80,7 +78,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, do
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) :
   RooAbsMCStudyModule(other),
   _parName(other._parName),
-  _data(nullptr), _nll0h(nullptr), _dll0h(nullptr), _sig0h(nullptr), _nullValue(other._nullValue)
+  _nullValue(other._nullValue)
 {
 }
 

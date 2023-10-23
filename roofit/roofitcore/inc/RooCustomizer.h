@@ -39,7 +39,7 @@ public:
   // Constructors, assignment etc
   RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=nullptr) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
-  ~RooCustomizer() ;
+  ~RooCustomizer() = default;
 
   /// If flag is true, make customizer own all created components
   void setOwning(bool flag) {
@@ -89,17 +89,17 @@ protected:
 
   // Master nodes are not owned
   RooAbsArg* _masterPdf ;             ///< Pointer to input p.d.f
-  RooAbsCategoryLValue* _masterCat ;  ///< Pointer to input master category
+  RooAbsCategoryLValue* _masterCat = nullptr;  ///< Pointer to input master category
 
   RooArgSet  _masterBranchList ;      ///< List of branch nodes
   RooArgSet  _masterLeafList ;        ///< List of leaf nodes
 
-  RooArgSet  _internalCloneBranchList ; ///< List of branches of internal clone
-  RooArgSet* _cloneBranchList ;         ///< Pointer to list of cloned branches used
+  RooArgSet  _internalCloneBranchList;   ///< List of branches of internal clone
+  RooArgSet* _cloneBranchList = nullptr; ///< Pointer to list of cloned branches used
 
   // Cloned leafs are owned by the user supplied list in the ctor
-  RooArgSet* _cloneNodeListAll ;        ///< List of all cloned nodes
-  RooArgSet* _cloneNodeListOwned ;      ///< List of owned cloned nodes
+  RooArgSet* _cloneNodeListAll = nullptr;  ///< List of all cloned nodes
+  RooArgSet* _cloneNodeListOwned = nullptr;///< List of owned cloned nodes
 } ;
 
 #endif
