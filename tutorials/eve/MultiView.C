@@ -93,8 +93,8 @@ struct MultiView {
       // Viewers
       //=========
 
-      TEveWindowSlot *slot = 0;
-      TEveWindowPack *pack = 0;
+      TEveWindowSlot *slot = nullptr;
+      TEveWindowPack *pack = nullptr;
 
       slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
       pack = slot->MakePack();

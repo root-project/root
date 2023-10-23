@@ -110,9 +110,9 @@ private:
 
 public:
    ModelInspectorGUI(RooWorkspace *, ModelConfig *, RooAbsData *);
-   virtual ~ModelInspectorGUI();
+   ~ModelInspectorGUI() override;
 
-   void CloseWindow();
+   void CloseWindow() override;
    void DoText(const char *text);
    void DoSlider();
    void DoSlider(const char *);
@@ -131,7 +131,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    fWS = w;
    fMC = mc;
    fData = data;
-   RooSimultaneous *simPdf = NULL;
+   RooSimultaneous *simPdf = nullptr;
    Int_t numCats = 1;
    if (strcmp(fMC->GetPdf()->ClassName(), "RooSimultaneous") == 0) {
       cout << "Is a simultaneous PDF" << endl;
@@ -142,7 +142,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    } else {
       cout << "Is not a simultaneous PDF" << endl;
    }
-   fFitRes = 0;
+   fFitRes = nullptr;
 
    SetCleanup(kDeepCleanup);
 
@@ -203,7 +203,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    parameters.add(*fMC->GetParametersOfInterest());
    parameters.add(*fMC->GetNuisanceParameters());
    TIter it = parameters.createIterator();
-   RooRealVar *param = NULL;
+   RooRealVar *param = nullptr;
 
    // BB: This is the part needed in order to have scrollbars
    fCan = new TGCanvas(this, 100, 100, kFixedSize);
@@ -311,7 +311,7 @@ void ModelInspectorGUI::DoSlider()
 
    // char buf[32];
 
-   RooSimultaneous *simPdf = NULL;
+   RooSimultaneous *simPdf = nullptr;
    Int_t numCats = 0;
    if (strcmp(fMC->GetPdf()->ClassName(), "RooSimultaneous") == 0) {
       simPdf = (RooSimultaneous *)(fMC->GetPdf());

@@ -224,12 +224,12 @@ void df106_HiggsToFourLeptons()
       "HIST"); // DrawClone() method is necessary to draw a TObject in case the original object goes out of scope
 
    // Draw MC scale factor and variations
-   histos_mc["nominal"].SetStats(0);
+   histos_mc["nominal"].SetStats(false);
    histos_mc["nominal"].SetFillColor(kBlack);
    histos_mc["nominal"].SetFillStyle(3254);
    histos_mc["nominal"].DrawClone("E2 sames");
    histos_mc["weight:up"].SetLineColor(kGreen + 2);
-   histos_mc["weight:up"].SetStats(0);
+   histos_mc["weight:up"].SetStats(false);
    histos_mc["weight:up"].DrawClone("HIST sames");
    histos_mc["weight:down"].SetLineColor(kBlue + 2);
    histos_mc["weight:down"].SetStats();
@@ -241,7 +241,7 @@ void df106_HiggsToFourLeptons()
    h_data->SetMarkerSize(1.);
    h_data->SetLineWidth(2);
    h_data->SetLineColor(kBlack);
-   h_data->SetStats(0);
+   h_data->SetStats(false);
    h_data->DrawClone("E sames");
 
    // Add legend

@@ -72,7 +72,7 @@
 
 using namespace std;
 
-TRandom *g_rnd=0;
+TRandom *g_rnd=nullptr;
 
 class ToyEvent {
 public:
@@ -252,13 +252,13 @@ void ToyEvent::GenerateDataEvent(TRandom *rnd) {
 }
 
 void ToyEvent::GenerateSignalEvent(TRandom *rnd) {
-   fIsSignal=1;
+   fIsSignal=true;
    GenerateSignalKinematics(rnd,kFALSE);
    GenerateReco(rnd);
 }
 
 void ToyEvent::GenerateBgrEvent(TRandom *rnd) {
-   fIsSignal=0;
+   fIsSignal=false;
    GenerateBgrKinematics(rnd,kFALSE);
    GenerateReco(rnd);
 }

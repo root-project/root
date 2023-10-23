@@ -15,7 +15,7 @@
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TRandom.h"
-#include <stdio.h>
+#include <cstdio>
 
 void seism() {
 
@@ -32,7 +32,7 @@ void seism() {
    Float_t signalval = 1000;
    ht->SetMaximum( signalval);
    ht->SetMinimum(-signalval);
-   ht->SetStats(0);
+   ht->SetStats(false);
    ht->SetLineColor(2);
    ht->GetXaxis()->SetTimeDisplay(1);
    ht->GetYaxis()->SetNdivisions(520);

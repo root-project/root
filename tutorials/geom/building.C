@@ -32,7 +32,7 @@ void building()
 // Volume
    TGeoVolume *Phy_Building = geom->MakeBox("top",Air,150,150,150);
    geom->SetTopVolume(Phy_Building);
-   geom->SetTopVisible(0);
+   geom->SetTopVisible(false);
    // If you want to see the boundary, please input the number, 1 instead of 0.
    // Like this, geom->SetTopVisible(1);
 
@@ -1259,7 +1259,7 @@ void building()
 
 
 ////////////////////////// Draw
-   Phy_Building->SetVisibility(0);
+   Phy_Building->SetVisibility(false);
    Phy_Building->Draw("ogl");
 
 

@@ -115,8 +115,8 @@ void DrawPadEfficiency(TH1 *h);
 void DrawPadReco(TH1 *histMcRec,TH1 *histMcbgrRec,TH1 *histDataRec,
                  TH1 *histDataUnfold,TH2 *histProbability,TH2 *histRhoij);
 void DrawPadTruth(TH1 *histMcsigGen,TH1 *histDataGen,TH1 *histDataUnfold,
-                  char const *text=0,double tau=0.0,vector<double> const *r=0,
-                  TF1 *f=0);
+                  char const *text=nullptr,double tau=0.0,vector<double> const *r=nullptr,
+                  TF1 *f=nullptr);
 void DrawPadCorrelations(TH2 *h,
                          vector<pair<TF1*,vector<double> > > const *table);
 
@@ -223,7 +223,7 @@ void testUnfold7c()
   histOutputCtau0[0]=tunfoldC->GetOutput("histOutputCtau0");
   histRhoCtau0=tunfoldC->GetRhoIJtotal("histRhoCtau0");
   CreateHistogramCopies(histOutputCtau0,coarseBinning);
-  tunfoldC->ScanLcurve(50,tauMin,tauMax,0);
+  tunfoldC->ScanLcurve(50,tauMin,tauMax,nullptr);
   /* tauC= */tunfoldC->GetTau();
   //tunfoldC->ScanTau(50,1.E-7,1.E-1,0,TUnfoldDensity::kEScanTauRhoAvg);
   histOutputCLCurve[0]=tunfoldC->GetOutput("histOutputCLCurve");
@@ -256,7 +256,7 @@ void testUnfold7c()
   histOutputFtau0[0]=tunfoldF->GetOutput("histOutputFtau0");
   histRhoFtau0=tunfoldF->GetRhoIJtotal("histRhoFtau0");
   CreateHistogramCopies(histOutputFtau0,coarseBinning);
-  tunfoldF->ScanLcurve(50,tauMin,tauMax,0);
+  tunfoldF->ScanLcurve(50,tauMin,tauMax,nullptr);
   //tunfoldF->DoUnfold(tauC);
   /* tauF= */tunfoldF->GetTau();
   //tunfoldF->ScanTau(50,1.E-7,1.E-1,0,TUnfoldDensity::kEScanTauRhoAvg);
@@ -271,8 +271,8 @@ void testUnfold7c()
   TH2 *histRhoFALCurve;
   TH1 *histOutputFArho[3];
   TH2 *histRhoFArho;
-  TSpline *rhoScan=0;
-  TSpline *logTauCurvature=0;
+  TSpline *rhoScan=nullptr;
+  TSpline *logTauCurvature=nullptr;
 
   double tauFA,tauFArho;
   {
@@ -672,9 +672,9 @@ void testUnfold7c()
   //=========================== example ==================================
 
   c2w->cd(1);
-  DrawPadTruth(histMcsigGenO,histDataGenO,0);
+  DrawPadTruth(histMcsigGenO,histDataGenO,nullptr);
   c2w->cd(2);
-  DrawPadReco(histMcRecCO,histMcbgrRecCO,histDataRecCO,0,0,0);
+  DrawPadReco(histMcRecCO,histMcbgrRecCO,histDataRecCO,nullptr,nullptr,nullptr);
   c2w->SaveAs("exampleTR.eps");
 
   //=========================== example ==================================
@@ -779,7 +779,7 @@ void testUnfold7c()
      subc[0]->cd();
      DrawPadTruth(histMcsigGenO,histDataGenO,histOutputAgorep[i],
                   TString::Format("iterative N=%d",nIter[i]),0.,
-                  isFitted ? &table[table.size()-1].second : 0);
+                  isFitted ? &table[table.size()-1].second : nullptr);
      subc[1]->cd();
      DrawPadCorrelations(histRhoAgorep[i],&table);
      subc[2]->cd();
@@ -906,7 +906,7 @@ void testUnfold7c()
   histNiterInversion[2]->GetYaxis()->SetRangeUser(5.6,6.3);
   histNiterInversion[3]->GetYaxis()->SetRangeUser(1.6,2.4);
 
-  TLine *line=0;
+  TLine *line=nullptr;
   c1->cd();
   for(int i=0;i<2;i++) {
      gPad->Clear();
@@ -1108,8 +1108,8 @@ void CreateHistogramCopies(TH1 *h[3],TUnfoldBinning const *binning) {
 }
 
 void CreateHistogramCopies(TH2 *h[3],TUnfoldBinning const *binningX) {
-   h[1]=0;
-   h[2]=0;
+   h[1]=nullptr;
+   h[2]=nullptr;
 }
 
 TH2 *AddOverflowXY(TH2 *h,double widthX,double widthY) {
@@ -1214,7 +1214,7 @@ void DrawPadEfficiency(TH1 *h) {
   legEfficiency->SetFillStyle(0);
   legEfficiency->SetTextSize(kLegendFontSize);
   legEfficiency->AddEntry(h,"reconstruction","l");
-  legEfficiency->AddEntry((TObject*)0,"   efficiency","");
+  legEfficiency->AddEntry((TObject*)nullptr,"   efficiency","");
   legEfficiency->Draw();
 }
 
@@ -1238,7 +1238,7 @@ void DrawPadReco(TH1 *histMcRec,TH1 *histMcbgrRec,TH1 *histDataRec,
    histMcbgrRec->SetFillColor(kBlue-10);
    histMcbgrRec->Draw("SAME HIST");
 
-   TH1 * histFoldBack=0;
+   TH1 * histFoldBack=nullptr;
    if(histDataUnfold && histProbability && histRhoij) {
       histFoldBack=(TH1 *)
          histMcRec->Clone(histDataUnfold->GetName()+TString("_folded"));
@@ -1308,7 +1308,7 @@ void DrawPadReco(TH1 *histMcRec,TH1 *histMcbgrRec,TH1 *histDataRec,
       }
       legRec->AddEntry(histDataRec,TString::Format("data N_{evt}=%.0f",sumD),"lp");
       legRec->AddEntry(histFoldBack,TString::Format("folded N_{evt}=%.0f",sumF),"l");
-      legRec->AddEntry((TObject*)0,TString::Format("#chi^{2}=%.1f ndf=%d",chi2,ndf),"");
+      legRec->AddEntry((TObject*)nullptr,TString::Format("#chi^{2}=%.1f ndf=%d",chi2,ndf),"");
       //exit(0);
    } else {
       legRec->AddEntry(histDataRec,"data","lp");
@@ -1365,9 +1365,9 @@ void DrawPadTruth(TH1 *histMcsigGen,TH1 *histDataGen,TH1 *histDataUnfold,
    legTruth->SetFillStyle(0);
    legTruth->SetTextSize(kLegendFontSize);
    legTruth->AddEntry(histMcsigGen,"MC","l");
-   if(!histDataUnfold) legTruth->AddEntry((TObject *)0,"  Landau(5,2)","");
+   if(!histDataUnfold) legTruth->AddEntry((TObject *)nullptr,"  Landau(5,2)","");
    legTruth->AddEntry(histDataGen,"data","l");
-   if(!histDataUnfold) legTruth->AddEntry((TObject *)0,"  Landau(6,1.8)","");
+   if(!histDataUnfold) legTruth->AddEntry((TObject *)nullptr,"  Landau(6,1.8)","");
    if(histDataUnfold) {
       TString t;
       if(text) t=text;
@@ -1377,8 +1377,8 @@ void DrawPadTruth(TH1 *histMcsigGen,TH1 *histDataGen,TH1 *histDataUnfold,
       }
       legTruth->AddEntry(histDataUnfold,t,"lp");
       if(r) {
-         legTruth->AddEntry((TObject *)0,"test wrt data:","");
-         legTruth->AddEntry((TObject *)0,TString::Format
+         legTruth->AddEntry((TObject *)nullptr,"test wrt data:","");
+         legTruth->AddEntry((TObject *)nullptr,TString::Format
                             ("#chi^{2}/%d=%.1f prob=%.3f",
                              (int)(*r)[3],(*r)[2]/(*r)[3],
                              TMath::Prob((*r)[2],(*r)[3])),"");
@@ -1441,15 +1441,15 @@ void DrawPadCorrelations(TH2 *h,
       legGCor->SetFillStyle(0);
       legGCor->SetTextSize(kLegendFontSize);
       vector<double> const &r=(*table)[table->size()-1].second;
-      legGCor->AddEntry((TObject *)0,TString::Format("min(#rho_{ij})=%5.2f",r[6]),"");
-      legGCor->AddEntry((TObject *)0,TString::Format("max(#rho_{ij})=%5.2f",r[7]),"");
-      legGCor->AddEntry((TObject *)0,TString::Format("avg(#rho_i)=%5.2f",r[5]),"");
+      legGCor->AddEntry((TObject *)nullptr,TString::Format("min(#rho_{ij})=%5.2f",r[6]),"");
+      legGCor->AddEntry((TObject *)nullptr,TString::Format("max(#rho_{ij})=%5.2f",r[7]),"");
+      legGCor->AddEntry((TObject *)nullptr,TString::Format("avg(#rho_i)=%5.2f",r[5]),"");
       legGCor->Draw();
    }
 }
 
-TH1 *g_fcnHist=0;
-TMatrixD *g_fcnMatrix=0;
+TH1 *g_fcnHist=nullptr;
+TMatrixD *g_fcnMatrix=nullptr;
 
 void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag) {
   if(flag==0) {
@@ -1592,10 +1592,10 @@ TFitResultPtr DoFit(TH1 *h,TH2 *rho,TH1 *truth,const char *text,
    landau->SetParError(0,10.);
    landau->SetParError(1,0.5);
    landau->SetParError(2,0.1);
-   TFitResultPtr s=h->Fit(landau,option,0,0.,xmax);
+   TFitResultPtr s=h->Fit(landau,option,nullptr,0.,xmax);
    vector<double> r(8);
    int np=landau->GetNpar();
-   fcn(np,0,r[0],landau->GetParameters(),0);
+   fcn(np,nullptr,r[0],landau->GetParameters(),0);
    r[1]=h->GetNbinsX()-1-landau->GetNpar();
    for(int i=0;i<h->GetNbinsX()-1;i++) {
       double di=h->GetBinContent(i+1)-truth->GetBinContent(i+1);
@@ -1616,9 +1616,9 @@ TFitResultPtr DoFit(TH1 *h,TH2 *rho,TH1 *truth,const char *text,
    r[6]=rhoMin;
    r[7]=rhoMax;
    if(rho) {
-      g_fcnHist=0;
+      g_fcnHist=nullptr;
       delete g_fcnMatrix;
-      g_fcnMatrix=0;
+      g_fcnMatrix=nullptr;
    }
    table.push_back(make_pair(landau,r));
    return s;

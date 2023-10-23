@@ -38,14 +38,14 @@ ProofSimple::ProofSimple()
    // Constructor
 
    fNhist = -1;
-   fHist = 0;
+   fHist = nullptr;
    fNhist3 = -1;
-   fHist3 = 0;
-   fRandom = 0;
-   fHLab = 0;
-   fFile = 0;
-   fProofFile = 0;
-   fNtp = 0;
+   fHist3 = nullptr;
+   fRandom = nullptr;
+   fHLab = nullptr;
+   fFile = nullptr;
+   fProofFile = nullptr;
+   fNtp = nullptr;
    fHasNtuple = 0;
    fPlotNtuple = kFALSE;
 }
@@ -316,7 +316,7 @@ Bool_t ProofSimple::Process(Long64_t entry)
          sortl.Add(new TParameter<Int_t>(TString::Format("%f",rr[i]), i));
       }
       TIter nxe(&sortl);
-      TParameter<Int_t> *pi = 0;
+      TParameter<Int_t> *pi = nullptr;
       while ((pi = (TParameter<Int_t> *) nxe())) {
          fHLab->Fill(TString::Format("hl%d", pi->GetVal()), pi->GetVal());
       }
@@ -389,7 +389,7 @@ void ProofSimple::SlaveTerminate()
       } else {
          cleanup = kTRUE;
       }
-      fNtp->SetDirectory(0);
+      fNtp->SetDirectory(nullptr);
       gDirectory = savedir;
       fFile->Close();
       // Cleanup, if needed
@@ -423,7 +423,7 @@ void ProofSimple::Terminate()
    c1->Divide(nside,nside,0,0);
 
    Bool_t tryfc = kFALSE;
-   TH1F *h = 0;
+   TH1F *h = nullptr;
    for (Int_t i=0; i < fNhist; i++) {
       if (!(h = dynamic_cast<TH1F *>(TProof::GetOutput(Form("h%d",i), fOutput)))) {
          // Not found: try TFileCollection
@@ -548,20 +548,20 @@ Int_t ProofSimple::GetHistosFromFC(TCanvas *cv)
    // Check for the histograms in the files of a possible TFileCollection
 
    TIter nxo(fOutput);
-   TFileCollection *fc = 0;
+   TFileCollection *fc = nullptr;
    Bool_t fc_found = kFALSE, hs_found = kFALSE;
    while ((fc = (TFileCollection *) nxo())) {
       if (strcmp(fc->ClassName(), "TFileCollection")) continue;
       fc_found = kTRUE;
       if (!fHist) {
          fHist = new TH1F*[fNhist];
-         for (Int_t i = 0; i < fNhist; i++) { fHist[i] = 0; }
+         for (Int_t i = 0; i < fNhist; i++) { fHist[i] = nullptr; }
       } else {
          for (Int_t i = 0; i < fNhist; i++) { SafeDelete(fHist[i]); }
       }
       // Go through the list of files
       TIter nxf(fc->GetList());
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       while ((fi = (TFileInfo *) nxf())) {
          TFile *f = TFile::Open(fi->GetCurrentUrl()->GetUrl());
          if (f) {
@@ -572,7 +572,7 @@ Int_t ProofSimple::GetHistosFromFC(TCanvas *cv)
                   hs_found = kTRUE;
                   if (!fHist[i]) {
                      fHist[i] = (TH1F *) h->Clone();
-                     fHist[i]->SetDirectory(0);
+                     fHist[i]->SetDirectory(nullptr);
                   } else {
                      fHist[i]->Add(h);
                   }

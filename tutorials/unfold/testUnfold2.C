@@ -82,7 +82,7 @@
 using namespace std;
 
 
-TRandom *rnd=0;
+TRandom *rnd=nullptr;
 
 // generate an event
 // output:
@@ -302,7 +302,7 @@ int testUnfold2()
   unfold.GetRhoI(histRhoi,binMap);
 
   delete[] binMap;
-  binMap=0;
+  binMap=nullptr;
 
   //=====================================================================
   // plot some histograms

@@ -114,7 +114,7 @@ void multidimSampling() {
 
    double x0[] = {0,0,0,0};
    // for debugging
-   if (debug) f->EvalPar(x0,0);
+   if (debug) f->EvalPar(x0,nullptr);
    debug = false;
 
    TString name;
@@ -126,13 +126,13 @@ void multidimSampling() {
 
    /*ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");*/
    DistSampler * sampler = Factory::CreateDistSampler();
-   if (sampler == 0) {
+   if (sampler == nullptr) {
       Info("multidimSampling","Default sampler %s is not available try with Foam ",
            ROOT::Math::DistSamplerOptions::DefaultSampler().c_str() );
       ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");
    }
    sampler = Factory::CreateDistSampler();
-   if (sampler == 0) {
+   if (sampler == nullptr) {
       Error("multidimSampling","Foam sampler is not available - exit ");
       return;
    }

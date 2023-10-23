@@ -12,7 +12,7 @@
 ///
 /// \author Bartolomeu Rabacal
 
-#include <math.h>
+#include <cmath>
 
 #include "TKDTreeBinning.h"
 #include "TH2D.h"

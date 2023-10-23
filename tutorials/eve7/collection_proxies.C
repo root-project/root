@@ -413,7 +413,7 @@ private:
       boxset->SetMainColor(collection->GetMainColor());
       boxset->SetName(collection->GetCName());
       boxset->SetPickable(true);
-      boxset->SetAlwaysSecSelect(1);
+      boxset->SetAlwaysSecSelect(true);
       boxset->SetDetIdsAsSecondaryIndices(true);
       boxset->SetSelectionMaster(((REveDataCollection *)collection)->GetItemList());
       boxset->Reset(REveBoxSet::kBT_FreeBox, true, collection->GetNItems());
@@ -791,7 +791,7 @@ private:
 public:
    EventManager(Event* e, CollectionManager* m): fEvent(e), fCMng(m) {}
 
-   virtual ~EventManager() {}
+   ~EventManager() override {}
 
    virtual void NextEvent()
    {
@@ -808,7 +808,7 @@ public:
 
    using REveSelection::Deviator::DeviateSelection;
    bool DeviateSelection(REveSelection *selection, REveElement *el, bool multi, bool secondary,
-                         const std::set<int> &secondary_idcs)
+                         const std::set<int> &secondary_idcs) override
    {
       if (el) {
          auto *colItems = dynamic_cast<REveDataItemList *>(el);

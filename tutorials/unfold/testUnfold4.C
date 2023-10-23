@@ -58,7 +58,7 @@
 
 using namespace std;
 
-TRandom *rnd=0;
+TRandom *rnd=nullptr;
 
 Int_t GenerateGenEvent(Int_t nmax,const Double_t *probability) {
    // choose an integer random number in the range [0,nmax]
@@ -183,7 +183,7 @@ void testUnfold4(bool printInfo = false)
      unfold.SetInput(histDetDATA,0.0,1.0);
 
      // run the unfolding
-     unfold.ScanLcurve(50,0.,0.,0,0,0);
+     unfold.ScanLcurve(50,0.,0.,nullptr,nullptr,nullptr);
 
      // fill pull distributions without constraint
      unfold.GetOutput(histUnfold);
@@ -197,7 +197,7 @@ void testUnfold4(bool printInfo = false)
      unfold.SetConstraint(TUnfold::kEConstraintArea);
 
      // run the unfolding
-     unfold.ScanLcurve(50,0.,0.,0,0,0);
+     unfold.ScanLcurve(50,0.,0.,nullptr,nullptr,nullptr);
 
      // fill pull distributions with constraint
      unfold.GetOutput(histUnfold);

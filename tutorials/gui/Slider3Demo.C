@@ -40,9 +40,9 @@ private:
 
 public:
    TTripleSliderDemo();
-   virtual ~TTripleSliderDemo();
+   ~TTripleSliderDemo() override;
 
-   void CloseWindow();
+   void CloseWindow() override;
    void DoText(const char *text);
    void DoSlider();
    void HandleButtons();

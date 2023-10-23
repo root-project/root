@@ -91,7 +91,7 @@ int mp105_processEntryList()
    sel->SetOption("useList");
    gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
    auto hListSel = pool.Process(files, *sel, *sumElist, "h42");
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
 
    // Check the output
    if (checkH1(hListSel) < 0)

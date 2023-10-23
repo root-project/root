@@ -149,7 +149,7 @@ void testUnfold5d()
     TUnfoldDensity::kDensityModeBinWidth;
 
   // detailed steering for regularisation
-  const char *REGULARISATION_DISTRIBUTION=0;
+  const char *REGULARISATION_DISTRIBUTION=nullptr;
   const char *REGULARISATION_AXISSTEERING="*[B]";
 
   // set up matrix of migrations
@@ -192,8 +192,8 @@ void testUnfold5d()
   // here, tau is determined by scanning the global correlation coefficients
 
   Int_t nScan=30;
-  TSpline *rhoLogTau=0;
-  TGraph *lCurve=0;
+  TSpline *rhoLogTau=nullptr;
+  TGraph *lCurve=nullptr;
 
   // for determining tau, scan the correlation coefficients
   // correlation coefficients may be probed for all distributions
@@ -201,7 +201,7 @@ void testUnfold5d()
   // underflow/overflow bins may be included/excluded
   //
   const char *SCAN_DISTRIBUTION="signal";
-  const char *SCAN_AXISSTEERING=0;
+  const char *SCAN_AXISSTEERING=nullptr;
 
   Int_t iBest=unfold.ScanTau(nScan,0.,0.,&rhoLogTau,
                              TUnfoldDensity::kEScanTauRhoMax,
@@ -228,7 +228,7 @@ void testUnfold5d()
   // Step 4: retrieve and plot unfolding results
 
   // get unfolding output
-  TH1 *histDataUnfold=unfold.GetOutput("unfolded signal",0,0,0,kFALSE);
+  TH1 *histDataUnfold=unfold.GetOutput("unfolded signal",nullptr,nullptr,nullptr,kFALSE);
   // get Monte Carlo reconstructed data
   TH1 *histMCReco=histMCGenRec->ProjectionY("histMCReco",0,-1,"e");
   TH1 *histMCTruth=histMCGenRec->ProjectionX("histMCTruth",0,-1,"e");
@@ -239,10 +239,10 @@ void testUnfold5d()
   // get matrix of probabilities
   TH2 *histProbability=unfold.GetProbabilityMatrix("histProbability");
   // get global correlation coefficients
-  /* TH1 *histGlobalCorr=*/ unfold.GetRhoItotal("histGlobalCorr",0,0,0,kFALSE);
+  /* TH1 *histGlobalCorr=*/ unfold.GetRhoItotal("histGlobalCorr",nullptr,nullptr,nullptr,kFALSE);
   TH1 *histGlobalCorrScan=unfold.GetRhoItotal
-     ("histGlobalCorrScan",0,SCAN_DISTRIBUTION,SCAN_AXISSTEERING,kFALSE);
-  /* TH2 *histCorrCoeff=*/ unfold.GetRhoIJtotal("histCorrCoeff",0,0,0,kFALSE);
+     ("histGlobalCorrScan",nullptr,SCAN_DISTRIBUTION,SCAN_AXISSTEERING,kFALSE);
+  /* TH2 *histCorrCoeff=*/ unfold.GetRhoIJtotal("histCorrCoeff",nullptr,nullptr,nullptr,kFALSE);
 
   TCanvas canvas;
   canvas.Print("testUnfold5.ps[");

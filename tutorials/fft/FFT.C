@@ -101,8 +101,8 @@ void FFT()
 
    c1_2->cd();
    //Compute the transform and look at the magnitude of the output
-   TH1 *hm =0;
-   TVirtualFFT::SetTransform(0);
+   TH1 *hm =nullptr;
+   TVirtualFFT::SetTransform(nullptr);
    hm = hsin->FFT(hm, "MAG");
    hm->SetTitle("Magnitude of the 1st transform");
    hm->Draw();
@@ -114,7 +114,7 @@ void FFT()
    hm->GetYaxis()->SetLabelSize(0.05);
    c1_3->cd();
    //Look at the phase of the output
-   TH1 *hp = 0;
+   TH1 *hp = nullptr;
    hp = hsin->FFT(hp, "PH");
    hp->SetTitle("Phase of the 1st transform");
    hp->Draw();
@@ -142,7 +142,7 @@ void FFT()
    TVirtualFFT *fft_back = TVirtualFFT::FFT(1, &n, "C2R M K");
    fft_back->SetPointsComplex(re_full,im_full);
    fft_back->Transform();
-   TH1 *hb = 0;
+   TH1 *hb = nullptr;
    //Let's look at the output
    hb = TH1::TransformHisto(fft_back,hb,"Re");
    hb->SetTitle("The backward transform result");
@@ -154,7 +154,7 @@ void FFT()
    hb->GetXaxis()->SetLabelSize(0.05);
    hb->GetYaxis()->SetLabelSize(0.05);
    delete fft_back;
-   fft_back=0;
+   fft_back=nullptr;
 
 // Data array - same transform
 // ===========================
@@ -189,7 +189,7 @@ void FFT()
    fft_own->GetPoints(in);
    //Draw the real part of the output
    c1_5->cd();
-   TH1 *hr = 0;
+   TH1 *hr = nullptr;
    hr = TH1::TransformHisto(fft_own, hr, "RE");
    hr->SetTitle("Real part of the 3rd (array) transform");
    hr->Draw();
@@ -197,7 +197,7 @@ void FFT()
    hr->GetXaxis()->SetLabelSize(0.05);
    hr->GetYaxis()->SetLabelSize(0.05);
    c1_6->cd();
-   TH1 *him = 0;
+   TH1 *him = nullptr;
    him = TH1::TransformHisto(fft_own, him, "IM");
    him->SetTitle("Im. part of the 3rd (array) transform");
    him->Draw();

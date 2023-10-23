@@ -77,7 +77,7 @@ void tStudent()
    quant->Draw();
    quant->SetLineWidth(2);
    quant->SetLineColor(kBlue);
-   quant->SetStats(0);
+   quant->SetStats(false);
    Canvas->cd(4);
    pdfq[0]->SetTitle("Student t & its quantiles");
    pdf->SetTitle("");
@@ -85,7 +85,7 @@ void tStudent()
    //pdfq[0]->SetAxisRange(-1.5, 0, 1.5,1.0);
    pdfq[0]->SetTitle("Student t & its quantiles");
    for(int i=0; i < 9; i++) {
-      pdfq[i]->SetStats(0);
+      pdfq[i]->SetStats(false);
       pdfq[i]->SetFillColor(i+1);
       pdfq[i]->Draw("same");
    }

@@ -341,24 +341,24 @@ class h1analysis : public TSelector {
    TBranch        *b_plan;//!
    TBranch        *b_nnout;//!
 
-   h1analysis(TTree *tree=0);
-   virtual ~h1analysis() { }
+   h1analysis(TTree *tree=nullptr);
+   ~h1analysis() override { }
    void    Reset();
 
-   int     Version() const {return 1;}
-   void    Begin(TTree *tree);
-   void    SlaveBegin(TTree *tree);
-   void    Init(TTree *tree);
-   Bool_t  Notify();
-   Bool_t  Process(Long64_t entry);
-   void    SetOption(const char *option) { fOption = option; }
-   void    SetObject(TObject *obj) { fObject = obj; }
-   void    SetInputList(TList *input) {fInput = input;}
-   TList  *GetOutputList() const { return fOutput; }
-   void    SlaveTerminate();
-   void    Terminate();
+   int     Version() const override {return 1;}
+   void    Begin(TTree *tree) override;
+   void    SlaveBegin(TTree *tree) override;
+   void    Init(TTree *tree) override;
+   Bool_t  Notify() override;
+   Bool_t  Process(Long64_t entry) override;
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override {fInput = input;}
+   TList  *GetOutputList() const override { return fOutput; }
+   void    SlaveTerminate() override;
+   void    Terminate() override;
 
-   ClassDef(h1analysis,2);
+   ClassDefOverride(h1analysis,2);
 
 };
 
@@ -377,10 +377,10 @@ void h1analysis::Reset()
 {
    // Reset the data members to theit initial value
 
-   hdmd = 0;
-   h2 = 0;
-   fChain = 0;
-   elist = 0;
+   hdmd = nullptr;
+   h2 = nullptr;
+   fChain = nullptr;
+   elist = nullptr;
    fillList = kFALSE;
    useList  = kFALSE;
    fProcessed = 0;
@@ -393,7 +393,7 @@ void h1analysis::Init(TTree *tree)
 
    Info("Init","tree: %p", tree);
 
-   if (tree == 0) return;
+   if (tree == nullptr) return;
    fChain    = tree;
 
    fChain->SetBranchAddress("nrun",&nrun,&(b_nrun) );

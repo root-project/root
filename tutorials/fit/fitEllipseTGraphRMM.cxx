@@ -81,7 +81,7 @@ double ellipse_fcn(const double *x, const double *params)
 //
 // the TGraph to be fitted (used by the ellipse_TGraph_chi2 function below)
 //
-TGraph *ellipse_TGraph = ((TGraph *)0);
+TGraph *ellipse_TGraph = ((TGraph *)nullptr);
 //
 // x[0] = ellipse's "x" center ("x0")
 // x[1] = ellipse's "y" center ("y0")
@@ -111,8 +111,8 @@ double ellipse_TGraph_chi2(const double *x)
 //
 ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
 {
-  if (!g) return 0; // just a precaution
-  if (g->GetN() < 6) return 0; // just a precaution
+  if (!g) return nullptr; // just a precaution
+  if (g->GetN() < 6) return nullptr; // just a precaution
 
   // set the TGraph to be fitted (used by the ellipse_TGraph_chi2 function)
   ellipse_TGraph = g;
@@ -266,7 +266,7 @@ TGraph *TestGraphRMM(bool randomize = false) {
 //
 // "ROOT Script" entry point (the same name as the "filename's base")
 //
-void fitEllipseTGraphRMM(TGraph *g = ((TGraph *)0))
+void fitEllipseTGraphRMM(TGraph *g = ((TGraph *)nullptr))
 {
   if (!g) g = TestGraphRMM(true); // create a "random" ellipse
 

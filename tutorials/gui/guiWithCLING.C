@@ -47,12 +47,12 @@ private:
    TString              fName;       // name of temp created file
 public:
    MyApplication(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~MyApplication();
+   ~MyApplication() override;
 
    void DoExit();
    void DoEnteredCommand();
 
-   ClassDef(MyApplication, 0)
+   ClassDefOverride(MyApplication, 0)
 };
 
 MyApplication::MyApplication(const TGWindow *p, UInt_t w, UInt_t h)
@@ -141,7 +141,7 @@ void MyApplication::DoEnteredCommand()
       gROOT->ProcessLine(command);
       fComboCmd->InsertEntry(command, 0, fIDs.GetUnID());
       Gl_histadd((char *)command);
-      gSystem->RedirectOutput(0);
+      gSystem->RedirectOutput(nullptr);
       fTextView->LoadFile(fName.Data());
       if (fTextView->ReturnLineCount() > 10)
          fTextView->SetVsbPosition(fTextView->ReturnLineCount());

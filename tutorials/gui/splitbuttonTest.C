@@ -48,14 +48,14 @@ private:
 
 public:
    SplitButtonTest(const TGWindow *p, UInt_t w, UInt_t h) ;
-   virtual ~SplitButtonTest() ;
+   ~SplitButtonTest() override ;
 
    void DoExit() ;
    void DoSplit(Bool_t split) ;
    void DoEnable(Bool_t on) ;
    void HandleMenu(Int_t id) ;
 
-   ClassDef(SplitButtonTest, 0)
+   ClassDefOverride(SplitButtonTest, 0)
 };
 
 SplitButtonTest::SplitButtonTest(const TGWindow *p, UInt_t w, UInt_t h)

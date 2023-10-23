@@ -51,7 +51,7 @@ const int kReplaceWait = 2;
 static Bool_t R__NeedInitialMerge(TDirectory *dir)
 {
 
-   if (dir==0) return kFALSE;
+   if (dir==nullptr) return kFALSE;
 
    TIter nextkey(dir->GetListOfKeys());
    TKey *key;
@@ -66,7 +66,7 @@ static Bool_t R__NeedInitialMerge(TDirectory *dir)
             return kTRUE;
          }
       } else {
-         if (0 != cl->GetResetAfterMerge()) {
+         if (nullptr != cl->GetResetAfterMerge()) {
             return kTRUE;
          }
       }
@@ -76,7 +76,7 @@ static Bool_t R__NeedInitialMerge(TDirectory *dir)
 
 static void R__DeleteObject(TDirectory *dir, Bool_t withReset)
 {
-   if (dir==0) return;
+   if (dir==nullptr) return;
 
    TIter nextkey(dir->GetListOfKeys());
    TKey *key;
@@ -91,9 +91,9 @@ static void R__DeleteObject(TDirectory *dir, Bool_t withReset)
       } else {
          Bool_t todelete = kFALSE;
          if (withReset) {
-            todelete = (0 != cl->GetResetAfterMerge());
+            todelete = (nullptr != cl->GetResetAfterMerge());
          } else {
-            todelete = (0 ==  cl->GetResetAfterMerge());
+            todelete = (nullptr ==  cl->GetResetAfterMerge());
          }
          if (todelete) {
             key->Delete();
@@ -106,7 +106,7 @@ static void R__DeleteObject(TDirectory *dir, Bool_t withReset)
 
 static void R__MigrateKey(TDirectory *destination, TDirectory *source)
 {
-   if (destination==0 || source==0) return;
+   if (destination==nullptr || source==nullptr) return;
 
    TIter nextkey(source->GetListOfKeys());
    TKey *key;
@@ -147,8 +147,8 @@ struct ClientInfo
    TTimeStamp fLastContact;
    Double_t   fTimeSincePrevContact;
 
-   ClientInfo() : fFile(0), fLocalName(), fContactsCount(0), fTimeSincePrevContact(0) {}
-   ClientInfo(const char *filename, UInt_t clientId) : fFile(0), fContactsCount(0), fTimeSincePrevContact(0) {
+   ClientInfo() : fFile(nullptr), fLocalName(), fContactsCount(0), fTimeSincePrevContact(0) {}
+   ClientInfo(const char *filename, UInt_t clientId) : fFile(nullptr), fContactsCount(0), fTimeSincePrevContact(0) {
       fLocalName.Form("%s-%d-%d",filename,clientId,gSystem->GetPid());
    }
 
@@ -193,7 +193,7 @@ struct ParallelFileMerger : public TObject
       if (writeCache) new TFileCacheWrite(fMerger.GetOutputFile(),32*1024*1024);
    }
 
-   ~ParallelFileMerger()
+   ~ParallelFileMerger() override
    {
       // Destructor.
 
@@ -208,13 +208,13 @@ struct ParallelFileMerger : public TObject
       }
    }
 
-   ULong_t  Hash() const
+   ULong_t  Hash() const override
    {
       // Return hash value for this object.
       return fFilename.Hash();
    }
 
-   const char *GetName() const
+   const char *GetName() const override
    {
       // Return the name of the object which is the name of the output file.
       return fFilename;
@@ -274,7 +274,7 @@ struct ParallelFileMerger : public TObject
    {
       // Return true, if enough client have reported
 
-      if (fClients.size()==0) {
+      if (fClients.empty()) {
          return kFALSE;
       }
 
@@ -315,7 +315,7 @@ struct ParallelFileMerger : public TObject
       fClients[clientId].Set(file);
    }
 
-   ClassDef(ParallelFileMerger,0);
+   ClassDefOverride(ParallelFileMerger,0);
 };
 
 void parallelMergeServer(bool cache = false) {
@@ -344,7 +344,7 @@ void parallelMergeServer(bool cache = false) {
    };
 
    printf("fastMergeServerHist ready to accept connections\n");
-   while (1) {
+   while (true) {
       TMessage *mess;
       TSocket  *s;
 
@@ -371,7 +371,7 @@ void parallelMergeServer(bool cache = false) {
 
       s->Recv(mess);
 
-      if (mess==0) {
+      if (mess==nullptr) {
          Error("fastMergeServer","The client did not send a message\n");
       } else if (mess->What() == kMESS_STRING) {
          char str[64];
@@ -417,7 +417,7 @@ void parallelMergeServer(bool cache = false) {
             Info("fastMergeServerHist","Merging input from %ld clients (%d)",info->fClients.size(),clientId);
             info->Merge();
          }
-         transient = 0;
+         transient = nullptr;
       } else if (mess->What() == kMESS_OBJECT) {
          printf("got object of class: %s\n", mess->GetClass()->GetName());
       } else {

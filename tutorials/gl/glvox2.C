@@ -99,7 +99,7 @@ void glvox2()
       lf->Add(tf);
    }
 
-   gStyle->SetCanvasPreferGL(1);
+   gStyle->SetCanvasPreferGL(true);
 
    hist->Draw("glcol");
 }

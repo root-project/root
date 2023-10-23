@@ -52,7 +52,7 @@ double func( double x){
 }
 
 // TF1 requires the function to have the ( )( double *, double *) signature
-double func2(const double *x, const double * = 0){
+double func2(const double *x, const double * = nullptr){
    nc++;
    return TMath::BreitWigner(x[0]);
 }
@@ -161,7 +161,7 @@ void  DrawCumulative(double x1, double x2, int n = 100){
 
    cum0->SetLineColor(kBlack);
    cum0->SetTitle("BreitWigner - the cumulative");
-   cum0->SetStats(0);
+   cum0->SetStats(false);
    cum1->SetLineStyle(2);
    cum2->SetLineStyle(3);
    cum1->SetLineColor(kBlue);
@@ -174,7 +174,7 @@ void  DrawCumulative(double x1, double x2, int n = 100){
 
    c1->cd(2);
    cum10->SetTitle("Difference");
-   cum10->SetStats(0);
+   cum10->SetStats(false);
    cum10->SetLineColor(kBlue);
    cum10->Draw("e0");
    cum20->SetLineColor(kRed);

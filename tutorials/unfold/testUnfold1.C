@@ -107,11 +107,11 @@
 
 using namespace std;
 
-TRandom *rnd=0;
+TRandom *rnd=nullptr;
 
 TH2 *gHistInvEMatrix;
 
-TVirtualFitter *gFitter=0;
+TVirtualFitter *gFitter=nullptr;
 
 void chisquare_corr(Int_t &npar, Double_t * /*gin */, Double_t &f, Double_t *u, Int_t /*flag */) {
   //  Minimization function for H1s using a Chisquare method
@@ -430,8 +430,8 @@ int testUnfold1()
   // default: include all bins
   // here: exclude underflow and overflow bins
   TH1 *histRhoi=unfold.GetRhoItotal("rho_I",
-                                    0, // use default title
-                                    0, // all distributions
+                                    nullptr, // use default title
+                                    nullptr, // all distributions
                                     "*[UO]", // discard underflow and overflow bins on all axes
                                     kTRUE, // use original binning
                                     &gHistInvEMatrix // store inverse of error matrix

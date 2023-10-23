@@ -20,9 +20,9 @@ public:
                         RooAbsReal& _L,
                         RooAbsReal& _E,
                         RooAbsReal& _deltaMSq);
-  NuMuToNuE_Oscillation(const NuMuToNuE_Oscillation& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new NuMuToNuE_Oscillation(*this,newname); }
-  inline virtual ~NuMuToNuE_Oscillation() { }
+  NuMuToNuE_Oscillation(const NuMuToNuE_Oscillation& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new NuMuToNuE_Oscillation(*this,newname); }
+  inline ~NuMuToNuE_Oscillation() override { }
 
 
 protected:
@@ -31,12 +31,12 @@ protected:
   RooRealProxy E ;
   RooRealProxy deltaMSq ;
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
 #if !defined(__CINT__) || defined(__MAKECINT__)
-  ClassDef(NuMuToNuE_Oscillation,1) // Your description goes here...
+  ClassDefOverride(NuMuToNuE_Oscillation,1) // Your description goes here...
 #endif
 };
 

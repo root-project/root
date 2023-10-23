@@ -33,7 +33,7 @@ void tank()
 //------------------Create TOP volume----------------------------
    TGeoVolume *top = geom->MakeBox("top",Air,100,100,100);
    geom->SetTopVolume(top);
-   geom->SetTopVisible(0);
+   geom->SetTopVisible(false);
    // If you want to see the boundary, please input the number, 1 instead of 0.
    // Like this, geom->SetTopVisible(1);
 
@@ -574,7 +574,7 @@ void tank()
 
    top->AddNodeOverlap(sp,1,new TGeoCombiTrans(-209,120,-149,new TGeoRotation("sp",0,90,90)));//sp!
    top->AddNodeOverlap(sp,1,new TGeoCombiTrans(209,120,-149,new TGeoRotation("sp1",180,90,90)));//sp!
-   top->SetVisibility(0);
+   top->SetVisibility(false);
    geom->CloseGeometry();
 
 

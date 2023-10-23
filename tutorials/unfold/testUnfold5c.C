@@ -177,7 +177,7 @@ void testUnfold5c()
   dataTree->SetBranchAddress("etagen",&etaGen);
   dataTree->SetBranchAddress("ptgen",&ptGen);
   dataTree->SetBranchAddress("issignal",&issignal);
-  dataTree->SetBranchStatus("*",1);
+  dataTree->SetBranchStatus("*",true);
 
 
   cout<<"loop over data events\n";
@@ -228,7 +228,7 @@ void testUnfold5c()
   signalTree->SetBranchAddress("istriggered",&istriggered);
   signalTree->SetBranchAddress("etagen",&etaGen);
   signalTree->SetBranchAddress("ptgen",&ptGen);
-  signalTree->SetBranchStatus("*",1);
+  signalTree->SetBranchStatus("*",true);
 
   cout<<"loop over MC signal events\n";
 
@@ -262,7 +262,7 @@ void testUnfold5c()
   bgrTree->SetBranchAddress("ptrec",&ptRec);
   bgrTree->SetBranchAddress("discr",&discr);
   bgrTree->SetBranchAddress("istriggered",&istriggered);
-  bgrTree->SetBranchStatus("*",1);
+  bgrTree->SetBranchStatus("*",true);
 
   cout<<"loop over MC background events\n";
 

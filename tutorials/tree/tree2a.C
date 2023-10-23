@@ -50,9 +50,9 @@ public:
   Float_t  gekrat;    //! not persistent
   Float_t  upwght;    //! not persistent
 
-  Gctrak() {lmec=0; namec=0;}
+  Gctrak() {lmec=nullptr; namec=nullptr;}
 
-  ClassDef(Gctrak,1)
+  ClassDefOverride(Gctrak,1)
 };
 
 
@@ -169,7 +169,7 @@ void tree2ar()
    //this function.
    TFile *f = new TFile("tree2.root");
    TTree *t2 = (TTree*)f->Get("t2");
-   Gctrak *gstep = 0;
+   Gctrak *gstep = nullptr;
    t2->SetBranchAddress("track",&gstep);
    TBranch *b_destep = t2->GetBranch("destep");
 

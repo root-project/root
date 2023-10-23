@@ -57,8 +57,8 @@ public:
    enum EHist { kHist, kSparse, kNumHist };
    enum ETime { kReal, kCPU, kNumTime };
    TTimeHists(Int_t dim, Int_t bins, Long_t num):
-      fValue(0), fDim(dim), fBins(bins), fNum(num),
-      fSparse(0), fHist(0), fHn(0) {}
+      fValue(nullptr), fDim(dim), fBins(bins), fNum(num),
+      fSparse(nullptr), fHist(nullptr), fHn(nullptr) {}
    ~TTimeHists();
    bool Run();
    Double_t GetTime(EHist hist, ETime time) const {
@@ -375,7 +375,7 @@ void sparsehist() {
    TCanvas* canv= new TCanvas("c","c");
    canv->Divide(3,3);
 
-   gStyle->SetPalette(8,0);
+   gStyle->SetPalette(8,nullptr);
    gStyle->SetPaintTextFormat(".2g");
    gStyle->SetOptStat(0);
    const char* opt = "TEXT COL";

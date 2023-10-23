@@ -44,7 +44,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
    // to suppress messages when pdf goes to zero
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-   RooArgSet *nuisPar = 0;
+   RooArgSet *nuisPar = nullptr;
    if (useBkg)
       nuisPar = &nuisanceParameters;
    // if (!useBkg) ((RooRealVar *)w->var("b"))->setVal(0);

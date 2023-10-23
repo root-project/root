@@ -26,7 +26,7 @@ int ScanNode(TXMLEngine &xml, XMLNodePointer_t node)
       XMLNodePointer_t info = xml.NewChild(node, xml.GetNS(child), "info");
 
       // set name and num attributes of info node
-      xml.NewAttr(info, 0, "name", xml.GetNodeName(child));
+      xml.NewAttr(info, nullptr, "name", xml.GetNodeName(child));
       if (numsub > 0) xml.NewIntAttr(info, "num", numsub);
 
       // move it after current node

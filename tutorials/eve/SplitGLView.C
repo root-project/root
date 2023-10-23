@@ -66,12 +66,12 @@
 const char *filetypes[] = {
    "ROOT files",    "*.root",
    "All files",     "*",
-   0,               0
+   nullptr,         nullptr
 };
 
 const char *rcfiletypes[] = {
    "All files",     "*",
-   0,               0
+   nullptr,         nullptr
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,13 +89,13 @@ protected:
    TH1                  *fHist;     // user histogram
    TString               fText;     // info (as tool tip) text
 
-   virtual void          DoRedraw() {}
+   void                  DoRedraw() override {}
 
 public:
    TGShapedToolTip(const char *picname, Int_t cx=0, Int_t cy=0, Int_t cw=0,
                    Int_t ch=0, Int_t tx=0, Int_t ty=0, Int_t th=0,
                    const char *col="#ffffff");
-   virtual ~TGShapedToolTip();
+   ~TGShapedToolTip() override;
 
    virtual void   CloseWindow();
    void           CreateCanvas(Int_t cx, Int_t cy, Int_t cw, Int_t ch);
@@ -106,10 +106,10 @@ public:
    void           SetHisto(TH1 *hist);
    void           SetText(const char *text);
    void           SetTextColor(const char *col);
-   void           SetTextAttributes(Int_t tx, Int_t ty, Int_t th, const char *col=0);
-   void           Show(Int_t x, Int_t y, const char *text = 0, TH1 *hist = 0);
+   void           SetTextAttributes(Int_t tx, Int_t ty, Int_t th, const char *col=nullptr);
+   void           Show(Int_t x, Int_t y, const char *text = nullptr, TH1 *hist = nullptr);
 
-   ClassDef(TGShapedToolTip, 0) // Shaped composite frame
+   ClassDefOverride(TGShapedToolTip, 0) // Shaped composite frame
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,13 +132,13 @@ public:                     // make them public for shorter code
 
 public:
    HtmlObjTable(const char *name, Int_t nfields, Int_t nvals, Bool_t exp=kTRUE);
-   virtual ~HtmlObjTable();
+   ~HtmlObjTable() override;
 
    void     SetLabel(Int_t col, const char *label) { fLabels[col] = label; }
    void     SetValue(Int_t col, Int_t row, Float_t val) { fValues[col].SetAt(val, row); }
    TString  Html() const { return fHtml; }
 
-   ClassDef(HtmlObjTable, 0);
+   ClassDefOverride(HtmlObjTable, 0);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,8 +203,8 @@ private:
    TEveProjectionManager *fRhoZMgr;
 
 public:
-   SplitGLView(const TGWindow *p=0, UInt_t w=800, UInt_t h=600, Bool_t embed=kFALSE);
-   virtual ~SplitGLView();
+   SplitGLView(const TGWindow *p=nullptr, UInt_t w=800, UInt_t h=600, Bool_t embed=kFALSE);
+   ~SplitGLView() override;
 
    void           ItemClicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y);
    void           HandleMenu(Int_t id);
@@ -224,26 +224,26 @@ public:
    TEveProjectionManager *GetRPhiMgr() const { return fRPhiMgr; }
    TEveProjectionManager *GetRhoZMgr() const { return fRhoZMgr; }
 
-   ClassDef(SplitGLView, 0)
+   ClassDefOverride(SplitGLView, 0)
 };
 
-TEveProjectionManager *gRPhiMgr = 0;
-TEveProjectionManager *gRhoZMgr = 0;
+TEveProjectionManager *gRPhiMgr = nullptr;
+TEveProjectionManager *gRhoZMgr = nullptr;
 
 ClassImp(TGShapedToolTip)
 ClassImp(HtmlObjTable)
 ClassImp(HtmlSummary)
 ClassImp(SplitGLView)
 
-HtmlSummary *SplitGLView::fgHtmlSummary = 0;
-TGHtml *SplitGLView::fgHtml = 0;
+HtmlSummary *SplitGLView::fgHtmlSummary = nullptr;
+TGHtml *SplitGLView::fgHtml = nullptr;
 
 //______________________________________________________________________________
 TGShapedToolTip::TGShapedToolTip(const char *pname, Int_t cx, Int_t cy, Int_t cw,
                              Int_t ch, Int_t tx, Int_t ty, Int_t th,
                              const char *col) :
    TGShapedFrame(pname, gClient->GetDefaultRoot(), 400, 300, kTempFrame |
-                 kHorizontalFrame), fEc(0), fHist(0)
+                 kHorizontalFrame), fEc(nullptr), fHist(nullptr)
 {
    // Shaped window constructor
 
@@ -297,7 +297,7 @@ void TGShapedToolTip::Refresh()
    char *s = strtok((char *)string, "\n");
    TImage *img = (TImage*)fImage->Clone("img");
    img->DrawText(fTextX, fTextY+(nlines*size), s, size, fTextCol, ar);
-   while ((s = strtok(0, "\n"))) {
+   while ((s = strtok(nullptr, "\n"))) {
       nlines++;
       img->DrawText(fTextX, fTextY+(nlines*size), s, size, fTextCol, ar);
    }
@@ -577,7 +577,7 @@ void HtmlSummary::Reset(Option_t *)
 {
    // Reset (delete) the table list;
 
-   delete fObjTables; fObjTables = 0;
+   delete fObjTables; fObjTables = nullptr;
    fNTables = 0;
 }
 
@@ -623,12 +623,12 @@ void HtmlSummary::MakeFooter()
 
 //______________________________________________________________________________
 SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
-   TGMainFrame(p, w, h), fActViewer(0), fShapedToolTip(0), fIsEmbedded(embed)
+   TGMainFrame(p, w, h), fActViewer(nullptr), fShapedToolTip(nullptr), fIsEmbedded(embed)
 {
    // Main frame constructor.
 
    TGSplitFrame *frm;
-   TEveScene *s = 0;
+   TEveScene *s = nullptr;
    TGHorizontalFrame *hfrm;
    TGDockableFrame *dfrm;
    TGPictureButton *button;
@@ -1063,15 +1063,15 @@ void SplitGLView::OnMouseIdle(TGLPhysicalShape *shape, UInt_t posx, UInt_t posy)
    Window_t wtarget;
    Int_t    x = 0, y = 0;
 
-   static TH1F *h1f = 0;
+   static TH1F *h1f = nullptr;
    TFormula *form1 = new TFormula("form1","abs(sin(x)/x)");
    TF1 *sqroot = new TF1("sqroot","x*gaus(0) + [3]*form1",0,10);
    sqroot->SetParameters(10,4,1,20);
-   if (h1f == 0)
+   if (h1f == nullptr)
       h1f = new TH1F("h1f","",50,0,10);
    h1f->Reset();
    h1f->SetFillColor(45);
-   h1f->SetStats(0);
+   h1f->SetStats(false);
    h1f->FillRandom("sqroot",200);
 
    if (fShapedToolTip) {
@@ -1123,7 +1123,7 @@ void SplitGLView::OnViewerActivated()
    // fActViewer = (TGLEmbeddedViewer *)gTQSender;
    fActViewer = dynamic_cast<TGLEmbeddedViewer*>((TQObject*)gTQSender);
 
-   if (fActViewer == 0) {
+   if (fActViewer == nullptr) {
       printf ("dyncast failed ...\n");
       return;
    }
@@ -1166,7 +1166,7 @@ void SplitGLView::OpenFile(const char *fname)
       return;
    }
    // check if the root file contains a geometry
-   if (TGeoManager::Import(fname) == 0) {
+   if (TGeoManager::Import(fname) == nullptr) {
       new TGMsgBox(gClient->GetRoot(), this, "OpenFile",
                    Form("The file \"%s\" does't contain a geometry", fname),
                    kMBIconExclamation, kMBOk);
@@ -1224,7 +1224,7 @@ void SplitGLView::ItemClicked(TGListTreeItem *item, Int_t, Int_t, Int_t)
 
    static const TEveException eh("SplitGLView::ItemClicked ");
    TEveElement* re = (TEveElement*)item->GetUserData();
-   if(re == 0) return;
+   if(re == nullptr) return;
    TObject* obj = re->GetObject(eh);
    if (obj->InheritsFrom("TEveViewer")) {
       TGLViewer *v = ((TEveViewer *)obj)->GetGLViewer();
@@ -1333,10 +1333,10 @@ void SplitGLView::SwapToMainView(TGLViewerBase *viewer)
 {
    // Swap frame embedded in a splitframe to the main view (slot method).
 
-   TGCompositeFrame *parent = 0;
+   TGCompositeFrame *parent = nullptr;
    if (!fSplitFrame->GetFirst()->GetFrame())
       return;
-   if (viewer == 0) {
+   if (viewer == nullptr) {
       TGPictureButton *src = (TGPictureButton*)gTQSender;
       parent = (TGCompositeFrame *)src->GetParent();
       while (parent && !parent->InheritsFrom("TGSplitFrame")) {
@@ -1378,7 +1378,7 @@ void SplitGLView::UpdateSummary()
    Int_t k;
    TEveElement *el;
    HtmlObjTable *table;
-   TEveEventManager *mgr = gEve ? gEve->GetCurrentEvent() : 0;
+   TEveEventManager *mgr = gEve ? gEve->GetCurrentEvent() : nullptr;
    if (mgr) {
       fgHtmlSummary->Clear("D");
       for (i=mgr->BeginChildren(); i!=mgr->EndChildren(); ++i) {

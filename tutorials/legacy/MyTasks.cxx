@@ -15,10 +15,10 @@ class MyRun : public TTask {
 public:
    MyRun() {;}
    MyRun(const char *name, const char *title);
-   virtual ~MyRun() {;}
-   void Exec(Option_t *option="");
+   ~MyRun() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRun,1)   // Run Reconstruction task
+   ClassDefOverride(MyRun,1)   // Run Reconstruction task
 };
 
 class MyEvent : public TTask {
@@ -26,10 +26,10 @@ class MyEvent : public TTask {
 public:
    MyEvent() {;}
    MyEvent(const char *name, const char *title);
-   virtual ~MyEvent() {;}
-   void Exec(Option_t *option="");
+   ~MyEvent() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyEvent,1)   // Event Reconstruction task
+   ClassDefOverride(MyEvent,1)   // Event Reconstruction task
 };
 
 class MyGeomInit : public TTask {
@@ -37,10 +37,10 @@ class MyGeomInit : public TTask {
 public:
    MyGeomInit() {;}
    MyGeomInit(const char *name, const char *title);
-   virtual ~MyGeomInit() {;}
-   void Exec(Option_t *option="");
+   ~MyGeomInit() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyGeomInit,1)   // Geometry initialisation task
+   ClassDefOverride(MyGeomInit,1)   // Geometry initialisation task
 };
 
 class MyMaterialInit : public TTask {
@@ -48,10 +48,10 @@ class MyMaterialInit : public TTask {
 public:
    MyMaterialInit() {;}
    MyMaterialInit(const char *name, const char *title);
-   virtual ~MyMaterialInit() {;}
-   void Exec(Option_t *option="");
+   ~MyMaterialInit() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyMaterialInit,1)   // Materials initialisation task
+   ClassDefOverride(MyMaterialInit,1)   // Materials initialisation task
 };
 
 class MyTracker : public TTask {
@@ -59,10 +59,10 @@ class MyTracker : public TTask {
 public:
    MyTracker() {;}
    MyTracker(const char *name, const char *title);
-   virtual ~MyTracker() {;}
-   void Exec(Option_t *option="");
+   ~MyTracker() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyTracker,1)   // Main Reconstruction task
+   ClassDefOverride(MyTracker,1)   // Main Reconstruction task
 };
 
 class MyRecTPC : public TTask {
@@ -70,10 +70,10 @@ class MyRecTPC : public TTask {
 public:
    MyRecTPC() {;}
    MyRecTPC(const char *name, const char *title);
-   virtual ~MyRecTPC() {;}
-   void Exec(Option_t *option="");
+   ~MyRecTPC() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRecTPC,1)   // TPC Reconstruction
+   ClassDefOverride(MyRecTPC,1)   // TPC Reconstruction
 };
 
 
@@ -82,10 +82,10 @@ class MyRecITS : public TTask {
 public:
    MyRecITS() {;}
    MyRecITS(const char *name, const char *title);
-   virtual ~MyRecITS() {;}
-   void Exec(Option_t *option="");
+   ~MyRecITS() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRecITS,1)   // ITS Reconstruction
+   ClassDefOverride(MyRecITS,1)   // ITS Reconstruction
 };
 
 
@@ -94,10 +94,10 @@ class MyRecMUON : public TTask {
 public:
    MyRecMUON() {;}
    MyRecMUON(const char *name, const char *title);
-   virtual ~MyRecMUON() {;}
-   void Exec(Option_t *option="");
+   ~MyRecMUON() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRecMUON,1)   // MUON Reconstruction
+   ClassDefOverride(MyRecMUON,1)   // MUON Reconstruction
 };
 
 
@@ -106,10 +106,10 @@ class MyRecPHOS : public TTask {
 public:
    MyRecPHOS() {;}
    MyRecPHOS(const char *name, const char *title);
-   virtual ~MyRecPHOS() {;}
-   void Exec(Option_t *option="");
+   ~MyRecPHOS() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRecPHOS,1)   // PHOS Reconstruction
+   ClassDefOverride(MyRecPHOS,1)   // PHOS Reconstruction
 };
 
 
@@ -118,10 +118,10 @@ class MyRecRICH : public TTask {
 public:
    MyRecRICH() {;}
    MyRecRICH(const char *name, const char *title);
-   virtual ~MyRecRICH() {;}
-   void Exec(Option_t *option="");
+   ~MyRecRICH() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRecRICH,1)   // RICH Reconstruction
+   ClassDefOverride(MyRecRICH,1)   // RICH Reconstruction
 };
 
 
@@ -130,10 +130,10 @@ class MyRecTRD : public TTask {
 public:
    MyRecTRD() {;}
    MyRecTRD(const char *name, const char *title);
-   virtual ~MyRecTRD() {;}
-   void Exec(Option_t *option="");
+   ~MyRecTRD() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRecTRD,1)   // TRD Reconstruction
+   ClassDefOverride(MyRecTRD,1)   // TRD Reconstruction
 };
 
 
@@ -142,10 +142,10 @@ class MyRecGlobal : public TTask {
 public:
    MyRecGlobal() {;}
    MyRecGlobal(const char *name, const char *title);
-   virtual ~MyRecGlobal() {;}
-   void Exec(Option_t *option="");
+   ~MyRecGlobal() override {;}
+   void Exec(Option_t *option="") override;
 
-   ClassDef(MyRecGlobal,1)   // Global Reconstruction
+   ClassDefOverride(MyRecGlobal,1)   // Global Reconstruction
 };
 
 

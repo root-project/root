@@ -22,9 +22,9 @@ public:
 
 public:
    Hit() { }
-   virtual ~Hit() { }
+   ~Hit() override { }
 
-   ClassDef(Hit,1)  //A track hit
+   ClassDefOverride(Hit,1)  //A track hit
 };
 
 class Track : public TObject {
@@ -38,11 +38,11 @@ public:
 
 public:
    Track() { }
-   virtual ~Track() { }
+   ~Track() override { }
    Int_t         GetNhit() const { return fNhit; }
    TRefArray   &GetHits()  {return fHits; }
 
-   ClassDef(Track,1)  //A track segment
+   ClassDefOverride(Track,1)  //A track segment
 };
 
 
@@ -55,10 +55,10 @@ public:
 
 public:
    Jet() { }
-   virtual ~Jet(){ }
+   ~Jet() override{ }
    TRefArray   &GetTracks() {return fTracks; }
 
-   ClassDef(Jet,1)  //Jet class
+   ClassDefOverride(Jet,1)  //Jet class
 };
 
 class JetEvent : public TObject {
@@ -81,9 +81,9 @@ private:
 
 public:
    JetEvent();
-   virtual ~JetEvent();
+   ~JetEvent() override;
    void          Build(Int_t jetm=3, Int_t trackm=10, Int_t hitam=100, Int_t hitbm=10);
-   void          Clear(Option_t *option ="");
+   void          Clear(Option_t *option ="") override;
    void          Reset(Option_t *option ="");
    Int_t         GetNjet()   const { return fNjet; }
    Int_t         GetNtrack() const { return fNtrack; }
@@ -95,7 +95,7 @@ public:
    Hit          *AddHitB();
    TClonesArray *GetJets() const { return fJets; }
 
-   ClassDef(JetEvent,1)  //Event structure
+   ClassDefOverride(JetEvent,1)  //Event structure
 };
 
 #endif

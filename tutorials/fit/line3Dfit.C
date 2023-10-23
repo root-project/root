@@ -66,7 +66,7 @@ struct SumDistance2 {
 
    // implementation of the function to be minimized
    double operator() (const double *par) {
-      assert(fGraph != 0);
+      assert(fGraph != nullptr);
       double * x = fGraph->GetX();
       double * y = fGraph->GetY();
       double * z = fGraph->GetZ();

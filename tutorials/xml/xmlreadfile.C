@@ -10,7 +10,7 @@
 /// \author Sergey Linev
 
 #include "TXMLEngine.h"
-#include <stdio.h>
+#include <cstdio>
 
 void DisplayNode(TXMLEngine &xml, XMLNodePointer_t node, Int_t level)
 {
@@ -20,24 +20,24 @@ void DisplayNode(TXMLEngine &xml, XMLNodePointer_t node, Int_t level)
 
    // display namespace
    XMLNsPointer_t ns = xml.GetNS(node);
-   if (ns != 0)
+   if (ns != nullptr)
       printf("%*c namespace: %s refer: %s\n", level + 2, ' ', xml.GetNSName(ns), xml.GetNSReference(ns));
 
    // display attributes
    XMLAttrPointer_t attr = xml.GetFirstAttr(node);
-   while (attr != 0) {
+   while (attr != nullptr) {
       printf("%*c attr: %s value: %s\n", level + 2, ' ', xml.GetAttrName(attr), xml.GetAttrValue(attr));
       attr = xml.GetNextAttr(attr);
    }
 
    // display content (if exists)
    const char *content = xml.GetNodeContent(node);
-   if (content != 0)
+   if (content != nullptr)
       printf("%*c cont: %s\n", level + 2, ' ', content);
 
    // display all child nodes
    XMLNodePointer_t child = xml.GetChild(node);
-   while (child != 0) {
+   while (child != nullptr) {
       DisplayNode(xml, child, level + 2);
       child = xml.GetNext(child);
    }

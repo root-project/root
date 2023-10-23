@@ -31,12 +31,12 @@ ProofSimpleFile::ProofSimpleFile()
    // Constructor
 
    fNhist = 16;
-   fHistTop = 0;
-   fHistDir = 0;
-   fRandom = 0;
-   fFile = 0;
-   fProofFile = 0;
-   fFileDir = 0;
+   fHistTop = nullptr;
+   fHistDir = nullptr;
+   fRandom = nullptr;
+   fFile = nullptr;
+   fProofFile = nullptr;
+   fFileDir = nullptr;
 }
 
 //_____________________________________________________________________________
@@ -196,7 +196,7 @@ void ProofSimpleFile::SlaveTerminate()
       for (Int_t i=0; i < fNhist; i++) {
          if (fHistTop[i] && fHistTop[i]->GetEntries() > 0) {
             fHistTop[i]->Write();
-            fHistTop[i]->SetDirectory(0);
+            fHistTop[i]->SetDirectory(nullptr);
             cleanup = kFALSE;
          }
       }
@@ -205,7 +205,7 @@ void ProofSimpleFile::SlaveTerminate()
       for (Int_t i=0; i < fNhist; i++) {
          if (fHistDir[i] && fHistDir[i]->GetEntries() > 0) {
             fHistDir[i]->Write();
-            fHistDir[i]->SetDirectory(0);
+            fHistDir[i]->SetDirectory(nullptr);
             cleanup = kFALSE;
          }
       }

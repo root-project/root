@@ -254,7 +254,7 @@ public:
       fDeltaTime = ms;
    }
 
-   virtual ~EventManager() {}
+   ~EventManager() override {}
 
    void NextEvent()
    {
@@ -345,7 +345,7 @@ void event_demo()
    makeGeometryScene();
    makeEventScene();
 
-   if (1) {
+   if (true) {
       createProjectionStuff();
       projectScenes(true, true);
    }

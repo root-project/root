@@ -24,19 +24,19 @@ public :
    TH1I            *fStat;
 
    ProofTests();
-   virtual ~ProofTests();
-   virtual Int_t   Version() const { return 2; }
-   virtual void    Begin(TTree *tree);
-   virtual void    SlaveBegin(TTree *tree);
-   virtual Bool_t  Process(Long64_t entry);
-   virtual void    SetOption(const char *option) { fOption = option; }
-   virtual void    SetObject(TObject *obj) { fObject = obj; }
-   virtual void    SetInputList(TList *input) { fInput = input; }
-   virtual TList  *GetOutputList() const { return fOutput; }
-   virtual void    SlaveTerminate();
-   virtual void    Terminate();
+   ~ProofTests() override;
+   Int_t   Version() const override { return 2; }
+   void    Begin(TTree *tree) override;
+   void    SlaveBegin(TTree *tree) override;
+   Bool_t  Process(Long64_t entry) override;
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override { fInput = input; }
+   TList  *GetOutputList() const override { return fOutput; }
+   void    SlaveTerminate() override;
+   void    Terminate() override;
 
-   ClassDef(ProofTests,0);
+   ClassDefOverride(ProofTests,0);
 };
 
 #endif

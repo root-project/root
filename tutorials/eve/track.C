@@ -38,17 +38,17 @@
 
 #include <iostream>
 
-TEveTrackPropagator* g_prop = 0;
+TEveTrackPropagator* g_prop = nullptr;
 
 class GappedField : public TEveMagField
 {
 public:
    GappedField():TEveMagField(){}
-   ~GappedField(){};
+   ~GappedField() override{};
 
    virtual Double_t    GetMaxFieldMagD() { return 4; }
 
-   virtual TEveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t z) const
+   TEveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t z) const override
    {
       if (TMath::Abs(z) < 300) return TEveVectorD(0, 0, -4);
       if (TMath::Abs(z) < 600) return TEveVectorD(0, 0, 0);
@@ -70,7 +70,7 @@ public:
       m_reverse(false),
       m_simpleModel(true){}
 
-   virtual ~CmsMagField(){}
+   ~CmsMagField() override{}
 
    void setMagnetState( bool state )
    {
@@ -90,9 +90,9 @@ public:
    void setSimpleModel(bool simpleModel) { m_simpleModel = simpleModel; }
    bool isSimpleModel() const            { return m_simpleModel;}
 
-   virtual Double_t    GetMaxFieldMagD() const { return m_magnetIsOn ? 3.8 : 0.0; }
+   Double_t GetMaxFieldMagD() const override { return m_magnetIsOn ? 3.8 : 0.0; }
 
-   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t z) const
+   TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t z) const override
    {
       double R = sqrt(x*x+y*y);
       double field = m_reverse ? -GetMaxFieldMagD() : GetMaxFieldMagD();
@@ -184,7 +184,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
       list->SetName("Heix Propagator");
    }
 
-   TEveTrack *track = 0;
+   TEveTrack *track = nullptr;
    switch (mode)
    {
       case 0:
@@ -367,7 +367,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
 
    TEveViewer *ev = gEve->GetDefaultViewer();
    TGLViewer  *gv = ev->GetGLViewer();
-   gv->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
+   gv->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, nullptr);
 
    gEve->Redraw3D(kTRUE);
    gSystem->ProcessEvents();
