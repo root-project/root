@@ -418,6 +418,38 @@ void Minuit2Minimizer::SetHessianFunction(std::function<bool(const std::vector<d
    fcn->SetHessianFunction(hfunc);
 }
 
+namespace {
+
+ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::Math::MinimizerOptions const &options)
+{
+   ROOT::Minuit2::MnStrategy st{strategyLevel};
+   // set strategy and add extra options if needed
+   const ROOT::Math::IOptions *minuit2Opt = options.ExtraOptions();
+   if (!minuit2Opt) {
+      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   }
+   if (!minuit2Opt) {
+      return st;
+   }
+   auto customize = [&minuit2Opt](const char *name, auto val) {
+      minuit2Opt->GetValue(name, val);
+      return val;
+   };
+   // set extra  options
+   st.SetGradientNCycles(customize("GradientNCycles", int(st.GradientNCycles())));
+   st.SetHessianNCycles(customize("HessianNCycles", int(st.HessianNCycles())));
+   st.SetHessianGradientNCycles(customize("HessianGradientNCycles", int(st.HessianGradientNCycles())));
+
+   st.SetGradientTolerance(customize("GradientTolerance", st.GradientTolerance()));
+   st.SetGradientStepTolerance(customize("GradientStepTolerance", st.GradientStepTolerance()));
+   st.SetHessianStepTolerance(customize("HessianStepTolerance", st.HessianStepTolerance()));
+   st.SetHessianG2Tolerance(customize("HessianG2Tolerance", st.HessianG2Tolerance()));
+
+   return st;
+}
+
+} // namespace
+
 bool Minuit2Minimizer::Minimize()
 {
    // perform the minimization
@@ -465,41 +497,13 @@ bool Minuit2Minimizer::Minimize()
    if (Precision() > 0)
       fState.SetPrecision(Precision());
 
-   // set strategy and add extra options if needed
-   ROOT::Minuit2::MnStrategy strategy(strategyLevel);
+   // add extra options if needed
    const ROOT::Math::IOptions *minuit2Opt = fOptions.ExtraOptions();
    if (!minuit2Opt) {
       minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
    }
    if (minuit2Opt) {
       // set extra  options
-      int nGradCycles = strategy.GradientNCycles();
-      int nHessCycles = strategy.HessianNCycles();
-      int nHessGradCycles = strategy.HessianGradientNCycles();
-
-      double gradTol = strategy.GradientTolerance();
-      double gradStepTol = strategy.GradientStepTolerance();
-      double hessStepTol = strategy.HessianStepTolerance();
-      double hessG2Tol = strategy.HessianG2Tolerance();
-
-      minuit2Opt->GetValue("GradientNCycles", nGradCycles);
-      minuit2Opt->GetValue("HessianNCycles", nHessCycles);
-      minuit2Opt->GetValue("HessianGradientNCycles", nHessGradCycles);
-
-      minuit2Opt->GetValue("GradientTolerance", gradTol);
-      minuit2Opt->GetValue("GradientStepTolerance", gradStepTol);
-      minuit2Opt->GetValue("HessianStepTolerance", hessStepTol);
-      minuit2Opt->GetValue("HessianG2Tolerance", hessG2Tol);
-
-      strategy.SetGradientNCycles(nGradCycles);
-      strategy.SetHessianNCycles(nHessCycles);
-      strategy.SetHessianGradientNCycles(nHessGradCycles);
-
-      strategy.SetGradientTolerance(gradTol);
-      strategy.SetGradientStepTolerance(gradStepTol);
-      strategy.SetHessianStepTolerance(hessStepTol);
-      strategy.SetHessianG2Tolerance(hessG2Tol);
-
       int storageLevel = 1;
       bool ret = minuit2Opt->GetValue("StorageLevel", storageLevel);
       if (ret)
@@ -542,6 +546,8 @@ bool Minuit2Minimizer::Minimize()
       traceObj->Init(fState);
       SetTraceObject(*traceObj);
    }
+
+   const ROOT::Minuit2::MnStrategy strategy = customizedStrategy(strategyLevel, fOptions);
 
    const ROOT::Minuit2::FCNGradientBase *gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>(fMinuitFCN);
    if (gradFCN != nullptr) {
@@ -1205,43 +1211,6 @@ bool Minuit2Minimizer::Hesse()
       return false;
    }
 
-
-   // set strategy and add extra options if needed
-   ROOT::Minuit2::MnStrategy strategy(Strategy());
-   const ROOT::Math::IOptions *minuit2Opt = fOptions.ExtraOptions();
-   if (!minuit2Opt) {
-      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
-   }
-   if (minuit2Opt) {
-      // set extra  options
-      int nGradCycles = strategy.GradientNCycles();
-      int nHessCycles = strategy.HessianNCycles();
-      int nHessGradCycles = strategy.HessianGradientNCycles();
-
-      double gradTol = strategy.GradientTolerance();
-      double gradStepTol = strategy.GradientStepTolerance();
-      double hessStepTol = strategy.HessianStepTolerance();
-      double hessG2Tol = strategy.HessianG2Tolerance();
-
-      minuit2Opt->GetValue("GradientNCycles", nGradCycles);
-      minuit2Opt->GetValue("HessianNCycles", nHessCycles);
-      minuit2Opt->GetValue("HessianGradientNCycles", nHessGradCycles);
-
-      minuit2Opt->GetValue("GradientTolerance", gradTol);
-      minuit2Opt->GetValue("GradientStepTolerance", gradStepTol);
-      minuit2Opt->GetValue("HessianStepTolerance", hessStepTol);
-      minuit2Opt->GetValue("HessianG2Tolerance", hessG2Tol);
-
-      strategy.SetGradientNCycles(nGradCycles);
-      strategy.SetHessianNCycles(nHessCycles);
-      strategy.SetHessianGradientNCycles(nHessGradCycles);
-
-      strategy.SetGradientTolerance(gradTol);
-      strategy.SetGradientStepTolerance(gradStepTol);
-      strategy.SetHessianStepTolerance(hessStepTol);
-      strategy.SetHessianG2Tolerance(hessG2Tol);
-   }
-
    const int maxfcn = MaxFunctionCalls();
    print.Info("Using max-calls", maxfcn);
 
@@ -1253,7 +1222,7 @@ bool Minuit2Minimizer::Hesse()
    if (Precision() > 0)
       fState.SetPrecision(Precision());
 
-   ROOT::Minuit2::MnHesse hesse(strategy);
+   ROOT::Minuit2::MnHesse hesse(customizedStrategy(Strategy(), fOptions));
 
    // case when function minimum exists
    if (fMinimum) {
@@ -1352,17 +1321,15 @@ int Minuit2Minimizer::CovMatrixStatus() const
 void Minuit2Minimizer::SetTraceObject(MnTraceObject &obj)
 {
    // set trace object
-   if (!fMinimizer)
-      return;
-   fMinimizer->Builder().SetTraceObject(obj);
+   if (fMinimizer)
+      fMinimizer->Builder().SetTraceObject(obj);
 }
 
 void Minuit2Minimizer::SetStorageLevel(int level)
 {
    // set storage level
-   if (!fMinimizer)
-      return;
-   fMinimizer->Builder().SetStorageLevel(level);
+   if (fMinimizer)
+      fMinimizer->Builder().SetStorageLevel(level);
 }
 
 } // end namespace Minuit2
