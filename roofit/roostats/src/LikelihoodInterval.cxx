@@ -338,10 +338,6 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    double elow = 0;
    double eup = 0;
    ret = fMinimizer->GetMinosError(ivarX, elow, eup );
-   if (!ret)  {
-      ccoutE(Minimization) << "Error  running Minos for parameter " << param.GetName() << std::endl;
-      return false;
-   }
 
    // WHEN error is zero normally is at limit
    if (elow == 0) {

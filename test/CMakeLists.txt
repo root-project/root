@@ -278,6 +278,7 @@ if(ROOT_roofit_FOUND)
   endif()
   if (ROOT_minuit2_FOUND)
     ROOT_ADD_TEST(test-stressroostats-minuit2 COMMAND stressRooStats -minim Minuit2 -b legacy  FAILREGEX "FAILED|Error in" LABELS longtest)
+    ROOT_ADD_TEST(test-stressroostats-batchmode-cpu-minuit2 COMMAND stressRooStats -minim Minuit2 -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
   endif()
 
 endif()
