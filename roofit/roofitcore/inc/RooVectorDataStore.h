@@ -194,13 +194,12 @@ public:
   class RealVector {
   public:
 
-    RealVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
-      _nativeReal(nullptr), _real(nullptr), _buf(nullptr), _nativeBuf(nullptr), _tracker(nullptr), _nset(nullptr) {
+    RealVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) {
       _vec.reserve(initialCapacity);
     }
 
     RealVector(RooAbsReal* arg, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
-      _nativeReal(arg), _real(nullptr), _buf(nullptr), _nativeBuf(nullptr), _tracker(nullptr), _nset(nullptr) {
+      _nativeReal(arg) {
       _vec.reserve(initialCapacity);
     }
 
@@ -210,7 +209,7 @@ public:
     }
 
     RealVector(const RealVector& other, RooAbsReal* real=nullptr) :
-      _vec(other._vec), _nativeReal(real?real:other._nativeReal), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf), _nset(nullptr) {
+      _vec(other._vec), _nativeReal(real?real:other._nativeReal), _real(real?real:other._real), _buf(other._buf), _nativeBuf(other._nativeBuf) {
       if (other._tracker) {
         _tracker = new RooChangeTracker(Form("track_%s",_nativeReal->GetName()),"tracker",other._tracker->parameters()) ;
       } else {
@@ -328,12 +327,12 @@ public:
 
   private:
     friend class RooVectorDataStore ;
-    RooAbsReal* _nativeReal ; ///< Instance which our data belongs to. This is the variable in the dataset.
-    RooAbsReal* _real ; ///< Instance where we should write data into when load() is called.
-    double* _buf ; ///<!
-    double* _nativeBuf ; ///<!
-    RooChangeTracker* _tracker ;
-    RooArgSet* _nset ; ///<!
+    RooAbsReal* _nativeReal = nullptr; ///< Instance which our data belongs to. This is the variable in the dataset.
+    RooAbsReal* _real = nullptr; ///< Instance where we should write data into when load() is called.
+    double* _buf = nullptr; ///<!
+    double* _nativeBuf = nullptr; ///<!
+    RooChangeTracker* _tracker = nullptr;
+    RooArgSet* _nset = nullptr; ///<!
     ClassDef(RealVector,1) // STL-vector-based Data Storage class
   } ;
 
@@ -430,14 +429,13 @@ public:
 
   class CatVector {
   public:
-    CatVector(UInt_t initialCapacity = VECTOR_BUFFER_SIZE) :
-      _cat(nullptr), _buf(nullptr), _nativeBuf(nullptr)
+    CatVector(UInt_t initialCapacity = VECTOR_BUFFER_SIZE)
     {
       _vec.reserve(initialCapacity);
     }
 
     CatVector(RooAbsCategory* cat, UInt_t initialCapacity = VECTOR_BUFFER_SIZE) :
-      _cat(cat), _buf(nullptr), _nativeBuf(nullptr)
+      _cat(cat)
     {
       _vec.reserve(initialCapacity);
     }
@@ -532,9 +530,9 @@ public:
 
   private:
     friend class RooVectorDataStore ;
-    RooAbsCategory* _cat;
-    RooAbsCategory::value_type* _buf;  ///<!
-    RooAbsCategory::value_type* _nativeBuf;  ///<!
+    RooAbsCategory* _cat = nullptr;
+    RooAbsCategory::value_type* _buf = nullptr;  ///<!
+    RooAbsCategory::value_type* _nativeBuf = nullptr;  ///<!
     std::vector<RooAbsCategory::value_type> _vec;
     ClassDef(CatVector,2) // STL-vector-based Data Storage class
   } ;

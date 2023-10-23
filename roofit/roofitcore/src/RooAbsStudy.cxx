@@ -33,27 +33,23 @@ RooAbsStudy is an abstract base class for RooStudyManager modules
 using namespace std ;
 
 ClassImp(RooAbsStudy);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(false), _summaryData(nullptr), _detailData(nullptr), _ownDetailData(true)
-{
-}
-
-
+RooAbsStudy::RooAbsStudy(const char *name, const char *title) : TNamed(name, title) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsStudy::RooAbsStudy(const RooAbsStudy& other) : TNamed(other), _storeDetails(other._storeDetails), _summaryData(other._summaryData),
-                       _detailData(nullptr), _ownDetailData(other._ownDetailData)
+RooAbsStudy::RooAbsStudy(const RooAbsStudy &other)
+   : TNamed(other),
+     _storeDetails(other._storeDetails),
+     _summaryData(other._summaryData),
+     _ownDetailData(other._ownDetailData)
 {
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor

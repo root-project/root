@@ -76,10 +76,10 @@ protected:
                throw std::runtime_error(std::string("waitpid, errno ") + std::to_string(errno));
             }
          }
-         pusher.reset(nullptr);
+         pusher.reset();
          zmqSvc().close_context();
       } else { // child
-         puller.reset(nullptr);
+         puller.reset();
          zmqSvc().close_context();
          _Exit(0);
       }

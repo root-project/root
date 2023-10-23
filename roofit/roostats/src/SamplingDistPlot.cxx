@@ -32,10 +32,7 @@ objects.
 
 #include "RooMsgService.h"
 
-#include <limits>
-#define NaN std::numeric_limits<float>::quiet_NaN()
 #include "TMath.h"
-#define IsNaN(a) TMath::IsNaN(a)
 
 ClassImp(RooStats::SamplingDistPlot);
 
@@ -45,45 +42,14 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistPlot default constructor with bin size
 
-SamplingDistPlot::SamplingDistPlot(Int_t nbins) :
-   fHist(nullptr),
-   fLegend(nullptr),
-   fItems(),
-   fOtherItems(),
-   fRooPlot(nullptr),
-   fLogXaxis(false),
-   fLogYaxis(false),
-   fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
-   fApplyStyle(true),
-   fFillStyle(3004)
-{
-  fIsWeighted = false;
-  fBins = nbins;
-  fMarkerType = 20;
-  fColor = 1;
-}
+SamplingDistPlot::SamplingDistPlot(Int_t nbins) : fBins{nbins} {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistPlot constructor with bin size, min and max
 
-SamplingDistPlot::SamplingDistPlot(Int_t nbins, double min, double max) :
-   fHist(nullptr),
-   fLegend(nullptr),
-   fItems(),
-   fOtherItems(),
-   fRooPlot(nullptr),
-   fLogXaxis(false),
-   fLogYaxis(false),
-   fXMin(NaN), fXMax(NaN), fYMin(NaN), fYMax(NaN),
-   fApplyStyle(true),
-   fFillStyle(3004)
+SamplingDistPlot::SamplingDistPlot(Int_t nbins, double min, double max) : fBins{nbins}
 {
-  fIsWeighted = false;
-  fBins = nbins;
-  fMarkerType = 20;
-  fColor = 1;
-
-  SetXRange( min, max );
+   SetXRange(min, max);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,8 +99,8 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
    double binWidth = (xmax-xmin)/(fBins);
    double xlow = xmin - 1.5*binWidth;
    double xup  = xmax + 1.5*binWidth;
-   if( !IsNaN(fXMin) ) xlow = fXMin;
-   if( !IsNaN(fXMax) ) xup = fXMax;
+   if( !TMath::IsNaN(fXMin) ) xlow = fXMin;
+   if( !TMath::IsNaN(fXMax) ) xup = fXMax;
 
    fHist = new TH1F(samplingDist->GetName(), samplingDist->GetTitle(), fBins, xlow, xup);
    fHist->SetDirectory(nullptr);  // make the object managed by this class
@@ -296,12 +262,12 @@ void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 void SamplingDistPlot::Draw(Option_t * /*options */) {
    ApplyDefaultStyle();
 
-   double theMin(0.), theMax(0.), theYMin(NaN), theYMax(0.);
+   double theMin(0.), theMax(0.), theYMin(std::numeric_limits<float>::quiet_NaN()), theYMax(0.);
    GetAbsoluteInterval(theMin, theMax, theYMax);
-   if( !IsNaN(fXMin) ) theMin = fXMin;
-   if( !IsNaN(fXMax) ) theMax = fXMax;
-   if( !IsNaN(fYMin) ) theYMin = fYMin;
-   if( !IsNaN(fYMax) ) theYMax = fYMax;
+   if( !TMath::IsNaN(fXMin) ) theMin = fXMin;
+   if( !TMath::IsNaN(fXMax) ) theMax = fXMax;
+   if( !TMath::IsNaN(fYMin) ) theYMin = fYMin;
+   if( !TMath::IsNaN(fYMax) ) theYMax = fYMax;
 
    RooRealVar xaxis("xaxis", fVarName.Data(), theMin, theMax);
 
@@ -318,11 +284,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
      return;
    }
    fRooPlot->SetTitle("");
-   if( !IsNaN(theYMax) ) {
+   if( !TMath::IsNaN(theYMax) ) {
       //coutI(InputArguments) << "Setting maximum to " << theYMax << endl;
       fRooPlot->SetMaximum(theYMax);
    }
-   if( !IsNaN(theYMin) ) {
+   if( !TMath::IsNaN(theYMin) ) {
       //coutI(InputArguments) << "Setting minimum to " << theYMin << endl;
       fRooPlot->SetMinimum(theYMin);
    }
@@ -331,11 +297,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
       //obj->Draw(fIterator->GetOption());
       // add cloned objects to avoid mem leaks
       TH1 * cloneObj = (TH1*)obj->Clone();
-      if( !IsNaN(theYMax) ) {
+      if( !TMath::IsNaN(theYMax) ) {
          //coutI(InputArguments) << "Setting maximum of TH1 to " << theYMax << endl;
          cloneObj->SetMaximum(theYMax);
       }
-      if( !IsNaN(theYMin) ) {
+      if( !TMath::IsNaN(theYMin) ) {
          //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << endl;
          cloneObj->SetMinimum(theYMin);
       }
