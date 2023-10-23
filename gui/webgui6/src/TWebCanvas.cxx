@@ -32,6 +32,7 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TH1K.h"
 #include "TH2.h"
 #include "THStack.h"
@@ -39,6 +40,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
+#include "TGraph2D.h"
 #include "TGaxis.h"
 #include "TScatter.h"
 #include "TCutG.h"
@@ -463,6 +465,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             if (!has_histo && (strlen(obj->GetTitle()) > 0))
                need_title = obj->GetTitle();
          }
+      } else if (obj->InheritsFrom(TGraph2D::Class())) {
+         if (!has_histo && (strlen(obj->GetTitle()) > 0))
+            need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TScatter::Class())) {
          need_frame = need_palette = true;
          if (strlen(obj->GetTitle()) > 0)
@@ -647,7 +652,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TGraph::Class())) {
          flush_master();
 
-         TGraph *gr = (TGraph *)obj;
+         TGraph *gr = static_cast<TGraph *>(obj);
          auto funcs = gr->GetListOfFunctions();
 
          TIter fiter(funcs);
@@ -677,6 +682,24 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          if (funcs)
             fPrimitivesLists.Add(funcs);
+         first_obj = false;
+      } else if (obj->InheritsFrom(TGraph2D::Class())) {
+         flush_master();
+
+         TGraph2D *gr2d = static_cast<TGraph2D *>(obj);
+
+         // ensure correct range of histogram
+         if (!IsReadOnly() && first_obj) {
+            auto hist = gr2d->GetHistogram("empty");
+            TString gropt = iter.GetOption(), hopt = "lego2";
+            gropt.ToUpper();
+            if (gropt.Contains("TRI1") || gropt.Contains("TRI2") || gropt.Contains("COL"))
+               hopt.Append("z");
+            if (title) hopt.Append(";;use_pad_title");
+            paddata.NewPrimitive(gr2d, hopt.Data(), "#hist").SetSnapshot(TWebSnapshot::kObject, hist);
+         }
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
          first_obj = false;
       } else if (obj->InheritsFrom(TScatter::Class())) {
          flush_master();
@@ -2302,6 +2325,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
 
       TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
       TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
+      TGraph2D *gr2d = obj->InheritsFrom(TGraph2D::Class()) ? static_cast<TGraph2D *>(obj) : nullptr;
       TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
       TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
       THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
@@ -2315,6 +2339,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             return h1;
          if (gr)
             return getHistogram(gr);
+         if (gr2d)
+            return getHistogram(gr2d);
          if (scatter)
             return getHistogram(scatter);
          if (mg && opt.Contains("A"))
@@ -2345,6 +2371,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                obj = h1 = getHistogram(scatter);
             else if (f1)
                obj = h1 = getHistogram(f1);
+            else if (gr2d)
+               obj = h1 = getHistogram(gr2d);
 
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
