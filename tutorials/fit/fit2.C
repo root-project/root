@@ -56,5 +56,4 @@ void fit2() {
    f2params[10] *= ratio;
    f2->SetParameters(f2params);
    h2->Fit("f2");
-   f2->Draw("cont1 same");
 }
