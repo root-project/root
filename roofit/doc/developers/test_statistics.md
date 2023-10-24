@@ -4,7 +4,7 @@
 \author Patrick Bos
 \brief Notes on the new `RooFit::TestStatistics` classes
 
-# `RooFit::TestStatistics` usage notes
+# RooFit::TestStatistics usage notes
 
 The `RooFit::TestStatistics` namespace contains a major refactoring of the `RooAbsTestStatistic`-`RooAbsOptTestStatistic`-`RooNLLVar` inheritance tree into:
 
@@ -31,7 +31,7 @@ However, we do provide the `RooRealL` class, which holds a `RooAbsL` object, but
 
 ### Usage example: Create an unbinned likelihood object
 It is possible to directly create `RooAbsL` based likelihood objects from a pdf and dataset, in this example a `RooUnbinnedL` type:
-```c++
+``` {.cpp}
 RooAbsPdf *pdf;
 RooDataSet *data;
 std::tie(pdf, data) = generate_some_unbinned_pdf_and_dataset(with, some, parameters);
@@ -41,7 +41,7 @@ RooFit::TestStatistics::RooUnbinnedL likelihood(pdf, data);
 
 However, most of the time, the user will not need **or want** such direct control over the type, but rather just let RooFit figure out what exact likelihood type (`RooAbsL` derived class) is best.
 For this situation, the `buildLikelihood` function was created that can be used (for instance) as:
-```c++
+``` {.cpp}
 std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
 ```
 `buildLikelihood` actually returns a `unique_ptr`; storing the result in a `shared_ptr` as done here is just one possible use-case.
@@ -57,7 +57,7 @@ In `TestStatistics::buildLikelihood`, we have implemented 4 of these options as 
 
 Using these parameters, creating a likelihood of a simultaneous pdf (i.e. a `RooSimultaneous`) with constrained terms and global observables can be done with:
 
-```c++
+``` {.cpp}
 auto likelihood = RooFit::TestStatistics::buildLikelihood(
   simultaneous_pdf, data,
   RooFit::TestStatistics::ConstrainedParameters(RooArgSet(/*YOUR CONSTRAINED PARAMETERS*/)),
@@ -99,7 +99,7 @@ The main selling point of using `RooFit::TestStatistics` from a performance poin
 To use it, one should create a `RooMinimizer` using the new constructor that takes a `RooAbsL`-based likelihood instead of a `RooAbsReal`.
 
 Taking any of the above created `likelihood` objects (as long as they are in a `std::shared_ptr`), we can create a `RooMinimizer` with parallel gradient calculation using:
-```c++
+``` {.cpp}
 std::shared_ptr<RooAbsL> likelihood = /* see examples above */;
 RooMinimizer m(likelihood);
 ```
@@ -109,13 +109,13 @@ To change the number of workers, call `RooFit::MultiProcess::Config::setDefaultN
 
 As noted above, offsetting is purely a function of the `RooMinimizer` when using `TestStatistics` classes.
 Whereas with `fitTo` we can pass in a `RooFit::Offset(true)` optional `RooCmdArg` argument to activate offsetting, here we must do it on the minimizer as follows:
-```c++
+``` {.cpp}
 m.setOffsetting(true);
 ```
 
 All existing functionality of the `RooMinimizer` can be used on `TestStatistics` likelihoods as well.
 For instance, running a `migrad` fit:
-```c++
+``` {.cpp}
 m.migrad()
 ```
 
@@ -131,7 +131,7 @@ This class does essentially the same as `constOptimizeTestStatistic` did on a `R
 ### Usage example: apply constant term optimization on pdf and dataset inside a likelihood
 Applying the default `ConstantTermsOptimizer` optimization routines on the pdf and dataset inside a `RooAbsL` likelihood is as simple as:
 
-```c++
+``` {.cpp}
 likelihood.constOptimizeTestStatistic();
 ```
 This applies constant term optimization to the cloned pdf and dataset inside the likelihood object.
@@ -139,12 +139,12 @@ It will not modify anything outside of the likelihood.
 
 Optimization can also be activated through the minimizer, which may be more familiar to most users.
 Given the `RooMinimizer` object `m` as defined in the example above, we can do:
-```c++
+``` {.cpp}
 m.optimizeConst(2);
 ```
 
 For the adventurous user, it is also possible to apply constant term optimization to a pdf and dataset directly without needing a likelihood object, e.g. given some `RooArgSet` set of observables `normSet`:
-```c++
+``` {.cpp}
 bool applyTrackingOpt = true;
 ConstantTermsOptimizer::enableConstantTermsOptimization(&pdf, &normSet, dataset, applyTrackingOpt);
 ```

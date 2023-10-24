@@ -81,7 +81,7 @@ For the importer, an entry in the
 [factory expressions](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsfactoryexpressions.json)
 needs to be added as follows:
 
-```json
+``` {.json}
     "<json-key>": {
         "class": "<C++ class name>",
         "arguments": [
@@ -96,7 +96,7 @@ Similarly, for the exporter, an entry in the
 [export keys](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsexportkeys.json)
 needs to be added as follows:
 
-```json
+``` {.json}
     "<C++ class name>": {
         "type": "<json-key>",
         "proxies": {
@@ -131,7 +131,7 @@ in `ROOT`.
 
 Any importer should take the following form:
 
-```C++
+``` {.cpp}
     class MyClassFactory : public RooFit::JSONIO::Importer {
     public:
        bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -162,7 +162,7 @@ than from `RooAbsReal`, you should define `importPdf` instead of
 
 Once your importer implementation exists, you need to register it with the tool using a line like the following:
 
-```C++
+``` {.cpp}
     RooFit::JSONIO::registerImporter("<json key>", new MyClassFactory(), true);
 ```
 
@@ -173,7 +173,7 @@ added at the top of the priority list (`true`) or at the bottom
 
 The implementation of an exporter works in a very similar fashion:
 
-```C++
+``` {.cpp}
     class MyClassStreamer : public RooFit::JSONIO::Exporter {
     public:
        std::string const &key() const override
@@ -199,7 +199,7 @@ The implementation of an exporter works in a very similar fashion:
 
 Also this needs to be registered with the tool
 
-```C++
+``` {.cpp}
     RooFit::JSONIO::registerExporter(MyClass::Class(), new MyClassStreamer(), true);
 ```
 
