@@ -145,7 +145,7 @@ public:
          fValue.Read(entry);
          fLastEntry = entry;
       }
-      return fValue.Get<void>();
+      return fValue.GetAs<void>();
    }
 };
 

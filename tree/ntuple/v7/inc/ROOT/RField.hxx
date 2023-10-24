@@ -192,7 +192,7 @@ public:
       }
 
       template <typename T>
-      T *Get() const
+      T *GetAs() const
       {
          return static_cast<T *>(fObjPtr);
       }

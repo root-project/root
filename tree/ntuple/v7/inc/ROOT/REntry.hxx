@@ -105,11 +105,11 @@ public:
             continue;
 
          if constexpr (std::is_void_v<T>)
-            return v.Get<void>();
+            return v.GetAs<void>();
 
          if (v.GetField().GetType() != RField<T>::TypeName())
             throw RException(R__FAIL("type mismatch in REntry::GetValueAs()"));
-         return v.Get<T>();
+         return v.GetAs<T>();
       }
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }

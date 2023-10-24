@@ -375,7 +375,7 @@ ROOT::Experimental::RNTupleModel::CreateEntryImpl(bool isBare, REntry *linkedEnt
             if (f->Compare(v.GetField()) != 0)
                continue;
 
-            entry->AddValue(f->BindValue(v.Get<void>()));
+            entry->AddValue(f->BindValue(v.GetAs<void>()));
             isLinked = true;
             break;
          }
