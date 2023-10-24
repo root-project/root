@@ -27,9 +27,9 @@ f_conv.SetNofPointsFFT(1000)
 f = ROOT.TF1("f", f_conv, 0.0, 5.0, f_conv.GetNpar())
 f.SetParameters(1.0, -0.3, 0.0, 1.0)
 
-# Fit.
-c1 = ROOT.TCanvas("c", "c", 800, 1000)
+c1 = ROOT.TCanvas("c1", "c1", 800, 1000)
+
+# Fit and draw result of the fit
 h_ExpGauss.Fit("f")
-h_ExpGauss.Draw()
 
 c1.SaveAs("fitConvolution.png")
