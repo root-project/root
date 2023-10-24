@@ -63,23 +63,23 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 
    print.Debug("Run Minos to find first 4 contour points. Current minimum is : ",valx,valy);
 
-   MinosError mex = minos.Minos(px);
-   nfcn += mex.NFcn();
-   if (!mex.IsValid()) {
+   MinosError mnex = minos.Minos(px);
+   nfcn += mnex.NFcn();
+   if (!mnex.IsValid()) {
       print.Error("unable to find first two points");
-      return ContoursError(px, py, result, mex, mex, nfcn);
+      return ContoursError(px, py, result, mnex, mnex, nfcn);
    }
-   std::pair<double, double> ex = mex();
+   std::pair<double, double> ex = mnex();
 
    print.Debug("Minos error for p0:  ",ex.first,ex.second);
 
-   MinosError mey = minos.Minos(py);
-   nfcn += mey.NFcn();
-   if (!mey.IsValid()) {
+   MinosError mney = minos.Minos(py);
+   nfcn += mney.NFcn();
+   if (!mney.IsValid()) {
       print.Error("unable to find second two points");
-      return ContoursError(px, py, result, mex, mey, nfcn);
+      return ContoursError(px, py, result, mnex, mney, nfcn);
    }
-   std::pair<double, double> ey = mey();
+   std::pair<double, double> ey = mney();
 
    print.Debug("Minos error for p0:  ",ey.first,ey.second);
 
@@ -94,7 +94,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    nfcn += exy_lo.NFcn();
    if (!exy_lo.IsValid()) {
       print.Error("unable to find Lower y Value for x Parameter", px);
-      return ContoursError(px, py, result, mex, mey, nfcn);
+      return ContoursError(px, py, result, mnex, mney, nfcn);
    }
 
    print.Debug("Minimum p1 found for p0 set to ",migrad0.Value(px)," is ",exy_lo.UserState().Value(py),"fcn = ",exy_lo.Fval());
@@ -104,7 +104,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    nfcn += exy_up.NFcn();
    if (!exy_up.IsValid()) {
       print.Error("unable to find Upper y Value for x Parameter", px);
-      return ContoursError(px, py, result, mex, mey, nfcn);
+      return ContoursError(px, py, result, mnex, mney, nfcn);
    }
    print.Debug("Minimum p1 found for p0 set to ",migrad0.Value(px)," is ",exy_up.UserState().Value(py),"fcn = ",exy_up.Fval());
 
@@ -116,7 +116,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    nfcn += eyx_up.NFcn();
    if (!eyx_up.IsValid()) {
       print.Error("unable to find Upper x Value for y Parameter", py);
-      return ContoursError(px, py, result, mex, mey, nfcn);
+      return ContoursError(px, py, result, mnex, mney, nfcn);
    }
    print.Debug("Minimum p0 found for p1 set to ",migrad1.Value(py)," is ",eyx_up.UserState().Value(px),"fcn = ",eyx_up.Fval());
 
@@ -125,7 +125,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    nfcn += eyx_lo.NFcn();
    if (!eyx_lo.IsValid()) {
       print.Error("unable to find Lower x Value for y Parameter", py);
-      return ContoursError(px, py, result, mex, mey, nfcn);
+      return ContoursError(px, py, result, mnex, mney, nfcn);
    }
 
    print.Debug("Minimum p0 found for p1 set to ",migrad1.Value(py)," is ",eyx_lo.UserState().Value(px),"fcn = ",eyx_lo.Fval());
@@ -181,7 +181,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 
       if (nfcn > maxcalls) {
          print.Error("maximum number of function calls exhausted");
-         return ContoursError(px, py, result, mex, mey, nfcn);
+         return ContoursError(px, py, result, mnex, mney, nfcn);
       }
 
       print.Debug("Find new contour point between points with max sep:  (",idist1->first,", ",idist1->second,") and (",
@@ -212,7 +212,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
          // should we try again closer to P2 (e.g. a1=0.25, a2 = 0.75) if failing?
          //if (sca < 0.) {
             print.Error("unable to find point on Contour", i + 1, '\n', "found only", i, "points");
-            return ContoursError(px, py, result, mex, mey, nfcn);
+            return ContoursError(px, py, result, mnex, mney, nfcn);
          }
          a1 = 0.75;
          a2 = 0.25;
@@ -239,7 +239,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    for (size_t i = 0; i < result.size(); i++)
       print.Debug("point ",i,result[i]);
 
-   return ContoursError(px, py, result, mex, mey, nfcn);
+   return ContoursError(px, py, result, mnex, mney, nfcn);
 }
 
 } // namespace Minuit2
