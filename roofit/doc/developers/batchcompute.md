@@ -1,3 +1,9 @@
+\defgroup roofit_dev_docs_batchcompute RooBatchCompute library guide
+\ingroup roofit_dev_docs
+\date September 2021
+\author Emmanouil Michalainas
+\brief Overview of the RooBatchCompute library
+
 ## RooBatchCompute Library
 _Contains optimized computation functions for PDFs that enable significantly faster fittings._
 #### Note: This library is still at an experimental stage. Tests are being conducted continuously to ensure correctness of the results, but the interfaces and the instructions on how to use might change.

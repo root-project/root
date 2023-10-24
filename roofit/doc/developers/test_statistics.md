@@ -1,3 +1,9 @@
+\defgroup roofit_dev_docs_test_statistics New RooFit TestStatistics usage notes
+\ingroup roofit_dev_docs
+\date December 2021
+\author Patrick Bos
+\brief Notes on the new `RooFit::TestStatistics` classes
+
 # `RooFit::TestStatistics` usage notes
 
 The `RooFit::TestStatistics` namespace contains a major refactoring of the `RooAbsTestStatistic`-`RooAbsOptTestStatistic`-`RooNLLVar` inheritance tree into:
