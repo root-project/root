@@ -213,6 +213,12 @@ public:
    ~RNTupleReader();
 
    const RNTupleModel *GetModel();
+   // TODO(jblomer): return as shared ptr
+   template <typename T>
+   T *GetDefaultValueAs(std::string_view fieldName)
+   {
+      return GetModel()->GetDefaultEntry().lock()->GetRaw<T>(fieldName);
+   }
    NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call

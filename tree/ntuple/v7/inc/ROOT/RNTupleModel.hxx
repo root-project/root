@@ -334,6 +334,7 @@ public:
    RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
                                    std::function<std::string(const std::string &)> mapping);
 
+   // TODO(jblomer): return shared ptr
    template <typename T>
    T *Get(std::string_view fieldName) const
    {
