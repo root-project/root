@@ -99,6 +99,7 @@ TEST(RNTuple, WriteRead)
    wrKlass->s = "abc";
 
    auto modelRead = modelWrite->Clone();
+   modelRead->Freeze();
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
@@ -106,13 +107,15 @@ TEST(RNTuple, WriteRead)
       ntuple.Fill();
    }
 
-   auto rdSignal = modelRead->Get<bool>("signal");
-   auto rdPt = modelRead->Get<float>("pt");
-   auto rdEnergy = modelRead->Get<float>("energy");
-   auto rdTag = modelRead->Get<std::string>("tag");
-   auto rdJets = modelRead->Get<std::vector<float>>("jets");
-   auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
-   auto rdKlass = modelRead->Get<CustomStruct>("klass");
+   auto entry = modelRead->GetDefaultEntry().lock();
+   auto rdSignal = entry->GetRaw<bool>("signal");
+   auto rdPt = entry->GetRaw<float>("pt");
+   auto rdEnergy = entry->GetRaw<float>("energy");
+   auto rdTag = entry->GetRaw<std::string>("tag");
+   auto rdJets = entry->GetRaw<std::vector<float>>("jets");
+   auto rdNnlo = entry->GetRaw<std::vector<std::vector<float>>>("nnlo");
+   auto rdKlass = entry->GetRaw<CustomStruct>("klass");
+   entry = nullptr;
 
    RNTupleReader ntuple(std::move(modelRead),
       std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
@@ -197,6 +200,7 @@ TEST(RNTuple, Clusters)
    wrFourVec->at(3) = 3.0;
 
    auto modelRead = modelWrite->Clone();
+   modelRead->Freeze();
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
@@ -215,10 +219,12 @@ TEST(RNTuple, Clusters)
       ntuple.Fill();
    }
 
-   auto rdPt = modelRead->Get<float>("pt");
-   auto rdTag = modelRead->Get<std::string>("tag");
-   auto rdNnlo = modelRead->Get<std::vector<std::vector<float>>>("nnlo");
-   auto rdFourVec = modelRead->Get<std::array<float, 4>>("fourVec");
+   auto entry = modelRead->GetDefaultEntry().lock();
+   auto rdPt = entry->GetRaw<float>("pt");
+   auto rdTag = entry->GetRaw<std::string>("tag");
+   auto rdNnlo = entry->GetRaw<std::vector<std::vector<float>>>("nnlo");
+   auto rdFourVec = entry->GetRaw<std::array<float, 4>>("fourVec");
+   entry = nullptr;
 
    RNTupleReader ntuple(std::move(modelRead),
       std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));

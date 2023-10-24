@@ -292,20 +292,17 @@ TEST(RNTuple, BoolVector)
    wrBoolRVec->push_back(true);
    wrBoolRVec->push_back(false);
 
-   auto modelRead = modelWrite->Clone();
-
    {
       RNTupleWriter ntuple(std::move(modelWrite),
          std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
    }
 
-   auto rdBoolStdVec = modelRead->Get<std::vector<bool>>("boolStdVec");
-   auto rdBoolRVec = modelRead->Get<ROOT::RVec<bool>>("boolRVec");
-   RNTupleReader ntuple(std::move(modelRead),
-      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   EXPECT_EQ(1U, ntuple.GetNEntries());
-   ntuple.LoadEntry(0);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   auto rdBoolStdVec = reader->GetDefaultValueAs<std::vector<bool>>("boolStdVec");
+   auto rdBoolRVec = reader->GetDefaultValueAs<ROOT::RVec<bool>>("boolRVec");
+   reader->LoadEntry(0);
 
    EXPECT_EQ(4U, rdBoolStdVec->size());
    EXPECT_TRUE((*rdBoolStdVec)[0]);
