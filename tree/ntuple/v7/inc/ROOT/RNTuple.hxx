@@ -107,7 +107,7 @@ private:
 
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Needs to be destructed before fSource
-   std::unique_ptr<RNTupleModel> fModel;
+   std::shared_ptr<RNTupleModel> fModel;
    /// Caches fModel's default entry if it is not bare
    std::shared_ptr<REntry> fDefaultEntry;
    /// We use a dedicated on-demand reader for Show() and Scan(). Printing data uses all the fields
@@ -212,12 +212,15 @@ public:
    std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
-   const RNTupleModel *GetModel();
+   std::weak_ptr<const RNTupleModel> GetModel();
    // TODO(jblomer): return as shared ptr
    template <typename T>
    T *GetDefaultValueAs(std::string_view fieldName)
    {
-      return GetModel()->GetDefaultEntry().lock()->GetRaw<T>(fieldName);
+      EnsureModel();
+      if (!fDefaultEntry)
+         throw RException(R__FAIL("invalid attempt to get default value of a reader with a bare model"));
+      return fDefaultEntry->GetRaw<T>(fieldName);
    }
    NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
 
@@ -274,6 +277,18 @@ public:
    {
       EnsureModel();
       return fModel->GenerateBulk(fieldName);
+   }
+
+   std::weak_ptr<REntry> CreateEntry(REntry *linkedEntry = nullptr)
+   {
+      EnsureModel();
+      return fModel->CreateEntry(linkedEntry);
+   }
+
+   std::weak_ptr<REntry> CreateBareEntry(REntry *linkedEntry = nullptr)
+   {
+      EnsureModel();
+      return fModel->CreateBareEntry(linkedEntry);
    }
 
    /// Returns an iterator over the entry indices of the RNTuple.

@@ -108,7 +108,8 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    fModel->Freeze();
    InitPageSource();
    ConnectModel(*fModel);
-   fDefaultEntry = fModel->GetDefaultEntry().lock();
+   if (!fModel->IsBare())
+      fDefaultEntry = fModel->GetDefaultEntry().lock();
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
@@ -152,10 +153,10 @@ ROOT::Experimental::RNTupleReader::OpenFriends(std::span<ROpenSpec> ntuples)
    return std::make_unique<RNTupleReader>(std::make_unique<Detail::RPageSourceFriends>("_friends", sources));
 }
 
-const ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
+std::weak_ptr<const ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleReader::GetModel()
 {
    EnsureModel();
-   return fModel.get();
+   return fModel;
 }
 
 void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
@@ -232,7 +233,7 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &output)
 {
    auto reader = GetDisplayReader();
-   auto entry = reader->GetModel()->GetDefaultEntry().lock();
+   auto entry = reader->GetModel().lock()->GetDefaultEntry().lock();
 
    reader->LoadEntry(index);
    output << "{";

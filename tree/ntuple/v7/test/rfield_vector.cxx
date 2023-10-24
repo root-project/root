@@ -233,7 +233,7 @@ TEST(RNTuple, RVecTypeErased)
 
    // read back RVec with type-erased API
    auto r = RNTupleReader::Open("r", fileGuard.GetPath());
-   auto v = r->GetModel()->Get<ROOT::RVec<int>>("v");
+   auto v = r->GetDefaultValueAs<ROOT::RVec<int>>("v");
 
    r->LoadEntry(0);
    EXPECT_EQ(v->size(), 3);

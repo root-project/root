@@ -713,7 +713,7 @@ TEST(RNTuple, Bitset)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel()->GetField("f1").GetType());
+   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel().lock()->GetField("f1").GetType());
    auto bs1 = reader->GetDefaultValueAs<std::bitset<66>>("f1");
    auto bs2 = reader->GetDefaultValueAs<std::bitset<8>>("f2");
    reader->LoadEntry(0);
@@ -828,14 +828,14 @@ TYPED_TEST(UniquePtr, Basics)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   auto model = reader->GetModel();
+   auto model = reader->GetModel().lock();
    EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool").GetType());
    EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct").GetType());
    EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor").GetType());
    EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString").GetType());
    EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray").GetType());
 
-   auto entry = reader->GetModel()->GetDefaultEntry().lock();
+   auto entry = model->GetDefaultEntry().lock();
    auto pBool = entry->GetRaw<std::unique_ptr<bool>>("PBool");
    auto pCustomStruct = entry->GetRaw<std::unique_ptr<CustomStruct>>("PCustomStruct");
    auto pIOConstructor = entry->GetRaw<std::unique_ptr<IOConstructor>>("PIOConstructor");
@@ -992,10 +992,10 @@ TEST(RNTuple, Double32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kReal32, reader->GetModel()->GetField("d1").GetColumnRepresentative()[0]);
-   EXPECT_EQ("", reader->GetModel()->GetField("d1").GetTypeAlias());
-   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel()->GetField("d2").GetColumnRepresentative()[0]);
-   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("d2").GetTypeAlias());
+   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().lock()->GetField("d1").GetColumnRepresentative()[0]);
+   EXPECT_EQ("", reader->GetModel().lock()->GetField("d1").GetTypeAlias());
+   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().lock()->GetField("d2").GetColumnRepresentative()[0]);
+   EXPECT_EQ("Double32_t", reader->GetModel().lock()->GetField("d2").GetTypeAlias());
    auto d1 = reader->GetDefaultValueAs<double>("d1");
    auto d2 = reader->GetDefaultValueAs<double>("d2");
    reader->LoadEntry(0);
@@ -1049,8 +1049,9 @@ TEST(RNTuple, Double32Extended)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto obj = reader->GetDefaultValueAs<LowPrecisionFloats>("obj");
-   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj").GetSubFields()[1]->GetTypeAlias());
-   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
+   EXPECT_EQ("Double32_t", reader->GetModel().lock()->GetField("obj").GetSubFields()[1]->GetTypeAlias());
+   EXPECT_EQ("Double32_t",
+             reader->GetModel().lock()->GetField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
    EXPECT_DOUBLE_EQ(0.0, obj->a);
    EXPECT_DOUBLE_EQ(1.0, obj->b);
    EXPECT_DOUBLE_EQ(2.0, obj->c[0]);
@@ -1220,7 +1221,7 @@ TEST(RNTuple, TClassTemplateBased)
 
    auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
 
-   EXPECT_EQ("EdmWrapper<CustomStruct>", reader->GetModel()->GetField("klass").GetType());
+   EXPECT_EQ("EdmWrapper<CustomStruct>", reader->GetModel().lock()->GetField("klass").GetType());
    auto object = reader->GetDefaultValueAs<EdmWrapper<CustomStruct>>("klass");
    reader->LoadEntry(0);
    EXPECT_TRUE(object->fIsPresent);

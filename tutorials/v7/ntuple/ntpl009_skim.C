@@ -72,7 +72,7 @@ void ntpl009_skim()
    Write();
 
    auto reader = RNTupleReader::Open(kNTupleInputName, kNTupleInputFileName);
-   const auto inputModel = reader->GetModel();
+   auto inputModel = reader->GetModel().lock();
    auto inputEntry = inputModel->GetDefaultEntry().lock();
 
    auto skimModel = inputModel->Clone();
