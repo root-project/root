@@ -571,8 +571,12 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                stats = dynamic_cast<TPaveStats *> (fobj);
             else if (fobj->InheritsFrom("TPaletteAxis"))
                palette = fobj;
-            else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw) && (paddata.IsBatchMode() || fTF1UseSave))
-               (static_cast<TF1 *>(fobj))->Save(0, 0, 0, 0, 0, 0);
+            else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw) && (paddata.IsBatchMode() || fTF1UseSave)) {
+               auto f1 = static_cast<TF1 *>(fobj);
+               Double_t xmin, ymin, zmin, xmax, ymax, zmax;
+               f1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
+               f1->Save(xmin, xmax, ymin, ymax, zmin, zmax);
+            }
          }
 
          TString hopt = iter.GetOption();
@@ -748,8 +752,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString f1opt = iter.GetOption();
 
          if (f1->IsA() == TF1::Class() || f1->IsA() == TF2::Class()) {
-            if (paddata.IsBatchMode() || fTF1UseSave)
-               f1->Save(0, 0, 0, 0, 0, 0);
+            if (paddata.IsBatchMode() || fTF1UseSave) {
+               Double_t xmin, ymin, zmin, xmax, ymax, zmax;
+               f1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
+               f1->Save(xmin, xmax, ymin, ymax, zmin, zmax);
+            }
             if (fTF1UseSave)
                f1opt.Append(";force_saved");
          }
