@@ -631,7 +631,7 @@ TEST(RNTuple, BareEntry)
    FileRaii fileGuard("test_ntuple_bare_entry.root");
    {
       auto writer = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
-      const auto model = writer->GetModel();
+      auto model = writer->GetModel().lock();
       try {
          model->GetDefaultEntry();
          FAIL() << "accessing default entry of bare model should throw";
@@ -639,10 +639,11 @@ TEST(RNTuple, BareEntry)
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
       try {
-         model->Get<float>("pt");
+         writer->GetDefaultValueAs<float>("pt");
          FAIL() << "accessing default entry of bare model should throw";
       } catch (const RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
+         EXPECT_THAT(err.what(),
+                     testing::HasSubstr("invalid attempt to get default value of a writer with a bare model"));
       }
 
       auto e1 = writer->CreateEntry().lock();

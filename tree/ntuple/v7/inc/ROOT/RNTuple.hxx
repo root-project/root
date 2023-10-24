@@ -397,7 +397,7 @@ private:
    std::unique_ptr<Detail::RPageStorage::RTaskScheduler> fZipTasks;
    std::unique_ptr<Detail::RPageSink> fSink;
    /// Needs to be destructed before fSink
-   std::unique_ptr<RNTupleModel> fModel;
+   std::shared_ptr<RNTupleModel> fModel;
    /// Caches a shared pointer of fModel's default entry if it is not bare
    std::shared_ptr<REntry> fDefaultEntry;
    std::shared_ptr<Detail::RNTupleMetrics> fMetrics;
@@ -462,7 +462,15 @@ public:
    void EnableMetrics() { fMetrics->Enable(); }
    std::shared_ptr<const Detail::RNTupleMetrics> GetMetrics() const { return fMetrics; }
 
-   const RNTupleModel *GetModel() const { return fModel.get(); }
+   std::weak_ptr<const RNTupleModel> GetModel() const { return fModel; }
+   // TODO(jblomer): return as shared ptr
+   template <typename T>
+   T *GetDefaultValueAs(std::string_view fieldName)
+   {
+      if (!fDefaultEntry)
+         throw RException(R__FAIL("invalid attempt to get default value of a writer with a bare model"));
+      return fDefaultEntry->GetRaw<T>(fieldName);
+   }
 
    /// Get a `RNTupleModel::RUpdater` that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.

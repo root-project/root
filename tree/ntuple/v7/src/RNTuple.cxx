@@ -285,7 +285,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
       fSink->SetTaskScheduler(fZipTasks.get());
    }
 #endif
-   fSink->Create(*fModel.get());
+   fSink->Create(*fModel);
    fMetrics->ObserveMetrics(fSink->GetMetrics());
 
    const auto &writeOpts = fSink->GetWriteOptions();
