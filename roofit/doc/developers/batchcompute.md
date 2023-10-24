@@ -15,7 +15,7 @@ As of ROOT v6.26, RooBatchComputes also provides multithread and [CUDA](https://
 
 ### How to use
 This library is an internal component of RooFit, so users are not supposed to actively interact with it. Instead, they can benefit from significantly faster times for fitting by calling `fitTo()` and providing a `BatchMode("cpu")` or a `BatchMode("cuda")` option.
-```c++
+``` {.cpp}
   // fit using the most efficient library that the computer's CPU can support
   RooMyPDF.fitTo(data, BatchMode("cpu"));
 
@@ -28,7 +28,7 @@ If `"cuda"` is selected, RooFit will launch CUDA kernels for computing likelihoo
 
 #### Multithread computations
 The CPU instance of the computing library can furthermore execute multithread computations. This also applies for computations handled by the CPU in the `"cuda"` mode. To use them, one needs to set the desired number of parallel tasks before calling `fitTo()` as shown below:
-```c++
+``` {.cpp}
   ROOT::EnableImplicitMT(nThreads);
   RooMyPDF.fitTo(data, BatchMode("cuda")); // can also use "cuda"
 ```
@@ -38,12 +38,12 @@ The easiest and most efficient way of accelerating your PDFs is to request their
 
 While your code is integrated, you are able to significantly improve the speed of fitting (but not take full advantage of the RooBatchCompute library), at least by using the batch evaluation feature.
 To make use of it, one should override `RooAbsReal::computeBatch()`
-```c++
+``` {.cpp}
   void RooMyPDF::computeBatch(RooBatchCompute::RooBatchComputeInterface*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 ```
 This method must be implemented so that it fills the `output` array with the **normalized** probabilities computed for `nEvents` events, the data of which can be retrieved from `dataMap`. `dataMap` is a simple `std::map<RooRealVar*, std::span<const double>>`. Note that it is not necessary to evaluate any of the objects that the PDF relies to, because they have already been evaluated by the RooFitDriver, so that their updated results are always present in `dataMap`. The `RooBatchCompute::RooBatchComputeInterface` pointer should be ignored.
 
-```c++
+``` {.cpp}
 void RooMyPDF::computeBatch(RooBatchCompute::RooBatchComputeInterface*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   // Retrieve `std::span`s for each parameter of the PDF
