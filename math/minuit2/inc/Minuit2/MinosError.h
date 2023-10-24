@@ -59,10 +59,9 @@ public:
          // Minos error is   value - error - aopt * error  where aopt is MnCross.Value()
          // If value - error is below the limit, error must be truncated at limit
          double err = LowerState().Error(Parameter());
-         double lowLimit = LowerState().Parameter(Parameter()).LowerLimit();
-         // error is in this case truncated
-         if (fMinParValue - err < lowLimit)
-            err = fMinParValue - lowLimit;
+         // error is truncated if over the limit
+         if (LowerState().Parameter(Parameter()).HasLowerLimit())
+            err = std::min(err, fMinParValue - LowerState().Parameter(Parameter()).LowerLimit());
          return -1. * err * (1. + fLower.Value());
       }
       // return Hessian Error in case is invalid
@@ -76,10 +75,8 @@ public:
          // Minos error is   value + error + aopt * error  where aopt is MnCross.Value()
          // If value + error is over the limit,  err must be truncated at limit
          double err = UpperState().Error(Parameter());
-         double upLimit = UpperState().Parameter(Parameter()).UpperLimit();
-         // error is in this case truncated
-         if (fMinParValue + err > upLimit)
-            err = upLimit - fMinParValue;
+         if (UpperState().Parameter(Parameter()).HasUpperLimit())
+            err = std::min(err, UpperState().Parameter(Parameter()).UpperLimit() - fMinParValue);
          return err * (1. + fUpper.Value());
       }
       // return Hessian Error in case is invalid
