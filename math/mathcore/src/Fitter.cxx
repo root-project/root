@@ -144,7 +144,7 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
       MATH_ERROR_MSG("Fitter::SetFCN","FCN function has zero parameters ");
       return false;
    }
-   if (params != nullptr )
+   if (params != nullptr || fConfig.ParamsSettings().size() == 0)
       fConfig.SetParamsSettings(npar, params);
    else {
       if ( fConfig.ParamsSettings().size() != npar) {
@@ -244,7 +244,7 @@ bool Fitter::FitFCN(const ROOT::Math::FitMethodGradFunction &fcn, const double *
 bool Fitter::SetFCN(MinuitFCN_t fcn, int npar, const double *params, unsigned int dataSize, bool chi2fit)
 {
    // set TMinuit style FCN type (global function pointer)
-   // create corresponfing objective function from that function
+   // create corresponding objective function from that function
 
    if (npar == 0) {
       npar = fConfig.ParamsSettings().size();
