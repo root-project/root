@@ -281,8 +281,7 @@ TEST(RNTupleShow, Objects)
                       std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "AnotherString1", std::byte{0}},
          CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f},
                       std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2", std::byte{0}}};
-      *derivedAfield = DerivedA{0.0f, std::vector<float>{},
-                      std::vector<std::vector<float>>{}, "", std::byte{0}, std::vector<float>{}, ""};
+      *derivedAfield = DerivedA();
       ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
@@ -394,8 +393,7 @@ TEST(RNTupleShow, RVec)
 
       *fieldIntVec = ROOT::RVec<int>{1, 2, 3};
       *fieldFloatVecVec = ROOT::RVec<ROOT::RVec<float>>{ROOT::RVec<float>{0.1, 0.2}, ROOT::RVec<float>{1.1, 1.2}};
-      *fieldCustomStructVec = ROOT::RVec<CustomStruct>{{0.0f, std::vector<float>{}, std::vector<std::vector<float>>{}, "", std::byte{0}},
-                                                       {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
+      *fieldCustomStructVec = ROOT::RVec<CustomStruct>{CustomStruct(), {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
       ntuple->Fill();
 
       fieldIntVec->emplace_back(4);
@@ -454,8 +452,7 @@ TEST(RNTupleShow, RVecTypeErased)
 
       ROOT::RVec<int> intVec = {1, 2, 3};
       ROOT::RVec<ROOT::RVec<float>> floatVecVec{ROOT::RVec<float>{0.1, 0.2}, ROOT::RVec<float>{1.1, 1.2}};
-      ROOT::RVec<CustomStruct> customStructVec{{0.0f, std::vector<float>{}, std::vector<std::vector<float>>{}, "", std::byte{0}},
-                                               {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
+      ROOT::RVec<CustomStruct> customStructVec{CustomStruct(), {1.f, {2.f, 3.f}, {{4.f}, {5.f}}, "foo", std::byte{0}}};
 
       m->Freeze();
       m->GetDefaultEntry()->CaptureValueUnsafe("intVec", &intVec);
