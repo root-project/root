@@ -473,7 +473,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
     throw hf_exc();
   }
 
-  auto hist = dynamic_cast<TH1*>(key->ReadObj());
+  auto hist = key->ReadObject<TH1>();
   if( !hist ) {
     cxcoutEHF << "Histogram '" << HistoName
         << "' wasn't found in file '" << InputFile

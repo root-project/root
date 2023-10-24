@@ -741,7 +741,7 @@ void TRootSniffer::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObjec
 {
    if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
       if (rec.fLevel == 0) {
-         TDirectory *dir = dynamic_cast<TDirectory *>(key->ReadObj());
+         auto dir = key->ReadObject<TDirectory>();
          if (dir) {
             obj = dir;
             obj_class = dir->IsA();
