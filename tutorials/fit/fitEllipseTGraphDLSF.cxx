@@ -247,9 +247,8 @@ TVectorD ConicToParametric(const TVectorD &conic)
 //
 // creates a test TGraph with an ellipse
 //
-TGraph *TestGraphDLSF(bool randomize = false) {
-  int i;
-
+TGraph *TestGraphDLSF(bool randomize = false)
+{
   // define the test ellipse
   double x0 = 4; // ellipse's "x" center
   double y0 = 3; // ellipse's "y" center
@@ -271,7 +270,7 @@ TGraph *TestGraphDLSF(bool randomize = false) {
   double dt = TMath::TwoPi() / double(n);
   double tmp;
   theta *= TMath::PiOver2() / 90.0; // degrees -> radians
-  for (i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     x[i] = a * (std::cos(dt * double(i)) + 0.1 * gRandom->Rndm() - 0.05);
     y[i] = b * (std::sin(dt * double(i)) + 0.1 * gRandom->Rndm() - 0.05);
     // rotate the axes
@@ -284,7 +283,7 @@ TGraph *TestGraphDLSF(bool randomize = false) {
   }
 
   // create the test TGraph
-  TGraph *g = ((TGraph *)(gROOT->FindObject("g")));
+  TGraph *g = static_cast<TGraph *>(gROOT->FindObject("g"));
   if (g) delete g;
   g = new TGraph(n, x, y);
   g->SetNameTitle("g", "test ellipse");
@@ -295,7 +294,7 @@ TGraph *TestGraphDLSF(bool randomize = false) {
 //
 // "ROOT Script" entry point (the same name as the "filename's base")
 //
-void fitEllipseTGraphDLSF(TGraph *g = ((TGraph *)nullptr))
+void fitEllipseTGraphDLSF(TGraph *g = nullptr)
 {
   if (!g) g = TestGraphDLSF(true); // create a "random" ellipse
 
@@ -303,7 +302,6 @@ void fitEllipseTGraphDLSF(TGraph *g = ((TGraph *)nullptr))
   TVectorD conic = fit_ellipse(g);
   TVectorD ellipse = ConicToParametric(conic);
 
-#if 1 /* 0 or 1 */
   if ( ellipse.GetNrows() == 5 ) {
     std::cout << std::endl;
     std::cout << "x0 = " << ellipse[0] << std::endl;
@@ -313,26 +311,21 @@ void fitEllipseTGraphDLSF(TGraph *g = ((TGraph *)nullptr))
     std::cout << "theta = " << ellipse[4] << std::endl;
     std::cout << std::endl;
   }
-#endif /* 0 or 1 */
 
-#if 1 /* 0 or 1 */
   // draw everything
-  TCanvas *c = ((TCanvas *)(gROOT->GetListOfCanvases()->FindObject("c")));
-  if (c) { c->Clear(); } else { c = new TCanvas("c", "c"); }
-  c->SetGrid(1, 1);
+  auto c1 = new TCanvas("c1","c1", 1000, 800);
+  c1->SetGrid(1, 1);
   g->Draw("A*");
   if ( ellipse.GetNrows() == 5 ) {
-    TEllipse *e = new TEllipse(ellipse[0], ellipse[1], // "x0", "y0"
-                               ellipse[2], ellipse[3], // "a", "b"
-                               0, 360,
-                               ellipse[4]); // "theta" (in degrees)
-    e->SetFillStyle(0); // hollow
-    e->Draw();
+     TEllipse *e = new TEllipse(ellipse[0], ellipse[1], // "x0", "y0"
+                                ellipse[2], ellipse[3], // "a", "b"
+                                0, 360,
+                                ellipse[4]); // "theta" (in degrees)
+     e->SetFillStyle(0); // hollow
+     e->Draw();
   }
-  c->Modified(); c->Update(); // make sure it's really drawn
-#endif /* 0 or 1 */
-
-  return;
+  c1->Modified();
+  c1->Update(); // make sure it's really drawn
 }
 
 // end of file fitEllipseTGraphDLSF.cxx by Silesius Anonymus
