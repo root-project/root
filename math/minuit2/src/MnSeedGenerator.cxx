@@ -70,7 +70,7 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    } else {
       for (unsigned int i = 0; i < n; i++)
         // if G2 is small better using an arbitrary value (e.g. 1)
-         mat(i, i) = std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) : 1.0;
+         mat(i, i) = std::fabs(dgrad.G2()(i)) > prec.Eps() ? 1. / dgrad.G2()(i) : 1.0;
    }
    MinimumError err(mat, dcovar);
 
@@ -187,7 +187,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
       } else {
          for (unsigned int i = 0; i < n; i++) {
             // if G2 is very small, better using an arbitrary value (e.g. 1.)
-            mat(i, i) = std::fabs(grad.G2()(i)) > prec.Eps2() ? 1. / grad.G2()(i)
+            mat(i, i) = std::fabs(grad.G2()(i)) > prec.Eps() ? 1. / grad.G2()(i)
                         : 1.0;
          }
          dcovar = 1.;

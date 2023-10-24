@@ -121,7 +121,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
    print.Debug("Approximate new covariance after NegativeG2LS using only G2");
    MnAlgebraicSymMatrix mat(n);
    for (unsigned int i = 0; i < n; i++) {
-      mat(i, i) = std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) :
+      mat(i, i) = std::fabs(dgrad.G2()(i)) > prec.Eps() ? 1. / dgrad.G2()(i) :
                   1; // use an arbitrary value (e.g. 1)
    }
 
