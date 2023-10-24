@@ -23,19 +23,19 @@ TEST(RNTuple, ReconstructModel)
 
    auto modelReconstructed = source.GetSharedDescriptorGuard()->GenerateModel();
    try {
-      modelReconstructed->GetDefaultEntry().lock()->GetRaw<float>("xyz");
+      modelReconstructed->GetDefaultEntry().lock()->GetValueAs<float>("xyz");
       FAIL() << "invalid field name should throw";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
    }
-   auto vecPtr = modelReconstructed->GetDefaultEntry().lock()->GetRaw<std::vector<std::vector<float>>>("nnlo");
+   auto vecPtr = modelReconstructed->GetDefaultEntry().lock()->GetValueAs<std::vector<std::vector<float>>>("nnlo");
    EXPECT_TRUE(vecPtr != nullptr);
    // Don't crash
    vecPtr->push_back(std::vector<float>{1.0});
-   auto array = modelReconstructed->GetDefaultEntry().lock()->GetRaw<std::array<double, 2>>("array");
+   auto array = modelReconstructed->GetDefaultEntry().lock()->GetValueAs<std::array<double, 2>>("array");
    EXPECT_TRUE(array != nullptr);
    auto variant =
-      modelReconstructed->GetDefaultEntry().lock()->GetRaw<std::variant<double, std::variant<std::string, double>>>(
+      modelReconstructed->GetDefaultEntry().lock()->GetValueAs<std::variant<double, std::variant<std::string, double>>>(
          "variant");
    EXPECT_TRUE(variant != nullptr);
 }
@@ -108,13 +108,13 @@ TEST(RNTuple, WriteRead)
    }
 
    auto entry = modelRead->GetDefaultEntry().lock();
-   auto rdSignal = entry->GetRaw<bool>("signal");
-   auto rdPt = entry->GetRaw<float>("pt");
-   auto rdEnergy = entry->GetRaw<float>("energy");
-   auto rdTag = entry->GetRaw<std::string>("tag");
-   auto rdJets = entry->GetRaw<std::vector<float>>("jets");
-   auto rdNnlo = entry->GetRaw<std::vector<std::vector<float>>>("nnlo");
-   auto rdKlass = entry->GetRaw<CustomStruct>("klass");
+   auto rdSignal = entry->GetValueAs<bool>("signal");
+   auto rdPt = entry->GetValueAs<float>("pt");
+   auto rdEnergy = entry->GetValueAs<float>("energy");
+   auto rdTag = entry->GetValueAs<std::string>("tag");
+   auto rdJets = entry->GetValueAs<std::vector<float>>("jets");
+   auto rdNnlo = entry->GetValueAs<std::vector<std::vector<float>>>("nnlo");
+   auto rdKlass = entry->GetValueAs<CustomStruct>("klass");
    entry = nullptr;
 
    RNTupleReader ntuple(std::move(modelRead),
@@ -220,10 +220,10 @@ TEST(RNTuple, Clusters)
    }
 
    auto entry = modelRead->GetDefaultEntry().lock();
-   auto rdPt = entry->GetRaw<float>("pt");
-   auto rdTag = entry->GetRaw<std::string>("tag");
-   auto rdNnlo = entry->GetRaw<std::vector<std::vector<float>>>("nnlo");
-   auto rdFourVec = entry->GetRaw<std::array<float, 4>>("fourVec");
+   auto rdPt = entry->GetValueAs<float>("pt");
+   auto rdTag = entry->GetValueAs<std::string>("tag");
+   auto rdNnlo = entry->GetValueAs<std::vector<std::vector<float>>>("nnlo");
+   auto rdFourVec = entry->GetValueAs<std::array<float, 4>>("fourVec");
    entry = nullptr;
 
    RNTupleReader ntuple(std::move(modelRead),
@@ -653,10 +653,10 @@ TEST(RNTuple, BareEntry)
       }
 
       auto e1 = writer->CreateEntry().lock();
-      ASSERT_NE(nullptr, e1->GetRaw<float>("pt"));
-      *(e1->GetRaw<float>("pt")) = 1.0;
+      ASSERT_NE(nullptr, e1->GetValueAs<float>("pt"));
+      *(e1->GetValueAs<float>("pt")) = 1.0;
       auto e2 = writer->CreateBareEntry().lock();
-      EXPECT_EQ(nullptr, e2->GetRaw<float>("pt"));
+      EXPECT_EQ(nullptr, e2->GetValueAs<float>("pt"));
       float pt = 2.0;
       e2->BindRaw("pt", &pt);
 

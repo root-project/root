@@ -418,10 +418,10 @@ TEST(RNTuple, Int64)
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       auto e = writer->CreateEntry().lock();
-      *e->GetRaw<std::int64_t>("i1") = std::numeric_limits<std::int64_t>::max() - 137;
-      *e->GetRaw<std::int64_t>("i2") = std::numeric_limits<std::int64_t>::max() - 138;
-      *e->GetRaw<std::uint64_t>("i3") = std::numeric_limits<std::uint64_t>::max() - 42;
-      *e->GetRaw<std::uint64_t>("i4") = std::numeric_limits<std::uint64_t>::max() - 43;
+      *e->GetValueAs<std::int64_t>("i1") = std::numeric_limits<std::int64_t>::max() - 137;
+      *e->GetValueAs<std::int64_t>("i2") = std::numeric_limits<std::int64_t>::max() - 138;
+      *e->GetValueAs<std::uint64_t>("i3") = std::numeric_limits<std::uint64_t>::max() - 42;
+      *e->GetValueAs<std::uint64_t>("i4") = std::numeric_limits<std::uint64_t>::max() - 43;
       writer->Fill(*e);
    }
 
@@ -470,10 +470,10 @@ TEST(RNTuple, Int32)
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       auto e = writer->CreateEntry().lock();
-      *e->GetRaw<std::int32_t>("i1") = std::numeric_limits<std::int32_t>::max() - 137;
-      *e->GetRaw<std::int32_t>("i2") = std::numeric_limits<std::int32_t>::max() - 138;
-      *e->GetRaw<std::uint32_t>("i3") = std::numeric_limits<std::uint32_t>::max() - 42;
-      *e->GetRaw<std::uint32_t>("i4") = std::numeric_limits<std::uint32_t>::max() - 43;
+      *e->GetValueAs<std::int32_t>("i1") = std::numeric_limits<std::int32_t>::max() - 137;
+      *e->GetValueAs<std::int32_t>("i2") = std::numeric_limits<std::int32_t>::max() - 138;
+      *e->GetValueAs<std::uint32_t>("i3") = std::numeric_limits<std::uint32_t>::max() - 42;
+      *e->GetValueAs<std::uint32_t>("i4") = std::numeric_limits<std::uint32_t>::max() - 43;
       writer->Fill(*e);
    }
 
@@ -524,10 +524,10 @@ TEST(RNTuple, Int16)
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       auto e = writer->CreateEntry().lock();
-      *e->GetRaw<std::int16_t>("i1") = std::numeric_limits<std::int16_t>::max() - 137;
-      *e->GetRaw<std::int16_t>("i2") = std::numeric_limits<std::int16_t>::max() - 138;
-      *e->GetRaw<std::uint16_t>("i3") = std::numeric_limits<std::uint16_t>::max() - 42;
-      *e->GetRaw<std::uint16_t>("i4") = std::numeric_limits<std::uint16_t>::max() - 43;
+      *e->GetValueAs<std::int16_t>("i1") = std::numeric_limits<std::int16_t>::max() - 137;
+      *e->GetValueAs<std::int16_t>("i2") = std::numeric_limits<std::int16_t>::max() - 138;
+      *e->GetValueAs<std::uint16_t>("i3") = std::numeric_limits<std::uint16_t>::max() - 42;
+      *e->GetValueAs<std::uint16_t>("i4") = std::numeric_limits<std::uint16_t>::max() - 43;
       writer->Fill(*e);
    }
 
@@ -602,8 +602,8 @@ TEST(RNTuple, Double)
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       auto e = writer->CreateEntry().lock();
-      *e->GetRaw<double>("d1") = 1.0;
-      *e->GetRaw<double>("d2") = 2.0;
+      *e->GetValueAs<double>("d1") = 1.0;
+      *e->GetValueAs<double>("d2") = 2.0;
       writer->Fill(*e);
    }
 
@@ -635,8 +635,8 @@ TEST(RNTuple, Float)
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
       auto e = writer->CreateEntry().lock();
-      *e->GetRaw<float>("f1") = 1.0;
-      *e->GetRaw<float>("f2") = 2.0;
+      *e->GetValueAs<float>("f1") = 1.0;
+      *e->GetValueAs<float>("f2") = 2.0;
       writer->Fill(*e);
    }
 
@@ -833,11 +833,11 @@ TYPED_TEST(UniquePtr, Basics)
    EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray").GetType());
 
    auto entry = model->GetDefaultEntry().lock();
-   auto pBool = entry->GetRaw<std::unique_ptr<bool>>("PBool");
-   auto pCustomStruct = entry->GetRaw<std::unique_ptr<CustomStruct>>("PCustomStruct");
-   auto pIOConstructor = entry->GetRaw<std::unique_ptr<IOConstructor>>("PIOConstructor");
-   auto ppString = entry->GetRaw<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
-   auto pArray = entry->GetRaw<std::unique_ptr<std::array<char, 2>>>("PArray");
+   auto pBool = entry->GetValueAs<std::unique_ptr<bool>>("PBool");
+   auto pCustomStruct = entry->GetValueAs<std::unique_ptr<CustomStruct>>("PCustomStruct");
+   auto pIOConstructor = entry->GetValueAs<std::unique_ptr<IOConstructor>>("PIOConstructor");
+   auto ppString = entry->GetValueAs<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
+   auto pArray = entry->GetValueAs<std::unique_ptr<std::array<char, 2>>>("PArray");
 
    reader->LoadEntry(0);
    EXPECT_TRUE(*(pBool->get()));

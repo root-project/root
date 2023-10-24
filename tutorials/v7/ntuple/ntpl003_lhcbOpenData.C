@@ -83,7 +83,7 @@ void Convert() {
       auto l = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
       // We connect the model's default entry's memory location for the new field to the branch, so that we can
       // fill the ntuple with the data read from the TTree
-      void *fieldDataPtr = entry->GetRaw<void>(l->GetName());
+      void *fieldDataPtr = entry->GetValueAs<void>(l->GetName());
       tree->SetBranchAddress(b->GetName(), fieldDataPtr);
    }
 

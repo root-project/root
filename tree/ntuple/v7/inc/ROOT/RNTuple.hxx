@@ -220,7 +220,7 @@ public:
       EnsureModel();
       if (!fDefaultEntry)
          throw RException(R__FAIL("invalid attempt to get default value of a reader with a bare model"));
-      return fDefaultEntry->GetRaw<T>(fieldName);
+      return fDefaultEntry->GetValueAs<T>(fieldName);
    }
    NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
 
@@ -469,7 +469,7 @@ public:
    {
       if (!fDefaultEntry)
          throw RException(R__FAIL("invalid attempt to get default value of a writer with a bare model"));
-      return fDefaultEntry->GetRaw<T>(fieldName);
+      return fDefaultEntry->GetValueAs<T>(fieldName);
    }
 
    /// Get a `RNTupleModel::RUpdater` that provides limited support for incremental updates to the underlying

@@ -98,20 +98,7 @@ public:
    void BindRaw(std::string_view fieldName, void *where);
 
    template <typename T>
-   std::shared_ptr<T> GetShared(std::string_view fieldName) const
-   {
-      for (std::size_t i = 0; i < fValues.size(); ++i) {
-         if (fValues[i].GetField().GetName() != fieldName)
-            continue;
-         if (!fValuePtrs[i])
-            throw RException(R__FAIL("invalid attempt to get shared pointer of raw value: " + std::string(fieldName)));
-         return static_cast<std::shared_ptr<T>>(fValuePtrs[i]);
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
-   }
-
-   template <typename T>
-   T *GetRaw(std::string_view fieldName) const
+   T *GetValueAs(std::string_view fieldName) const
    {
       for (auto& v : fValues) {
          if (v.GetField().GetName() != fieldName)
@@ -121,7 +108,7 @@ public:
             return v.Get<void>();
 
          if (v.GetField().GetType() != RField<T>::TypeName())
-            throw RException(R__FAIL("type mismatch in REntry::GetRaw()"));
+            throw RException(R__FAIL("type mismatch in REntry::GetValueAs()"));
          return v.Get<T>();
       }
       throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));

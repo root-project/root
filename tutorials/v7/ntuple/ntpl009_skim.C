@@ -82,8 +82,8 @@ void ntpl009_skim()
    auto writer = RNTupleWriter::Recreate(std::move(skimModel), kNTupleOutputName, kNTupleOutputFileName);
    auto skimEntry = writer->CreateEntry(inputEntry.get()).lock();
 
-   auto pRand = inputEntry->GetRaw<float>("rand");
-   auto pSkip = skimEntry->GetRaw<std::uint16_t>("skip");
+   auto pRand = inputEntry->GetValueAs<float>("rand");
+   auto pSkip = skimEntry->GetValueAs<std::uint16_t>("skip");
    for (unsigned int i = 0; i < reader->GetNEntries(); ++i) {
 
       reader->LoadEntry(i);
