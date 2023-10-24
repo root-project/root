@@ -89,12 +89,14 @@ void ROOT::Experimental::RNTupleReader::InitPageSource()
    }
 #endif
    fSource->Attach();
-   fMetrics.ObserveMetrics(fSource->GetMetrics());
+   fMetrics->ObserveMetrics(fSource->GetMetrics());
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
                                                  std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
+   : fSource(std::move(source)),
+     fModel(std::move(model)),
+     fMetrics(std::make_shared<Detail::RNTupleMetrics>("RNTupleReader"))
 {
    if (!fSource) {
       throw RException(R__FAIL("null source"));
@@ -113,7 +115,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader")
+   : fSource(std::move(source)), fModel(nullptr), fMetrics(std::make_shared<Detail::RNTupleMetrics>("RNTupleReader"))
 {
    if (!fSource) {
       throw RException(R__FAIL("null source"));
@@ -216,7 +218,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       break;
    }
    case ENTupleInfo::kStorageDetails: fSource->GetSharedDescriptorGuard()->PrintInfo(output); break;
-   case ENTupleInfo::kMetrics: fMetrics.Print(output); break;
+   case ENTupleInfo::kMetrics: fMetrics->Print(output); break;
    default:
       // Unhandled case, internal error
       R__ASSERT(false);
@@ -264,7 +266,9 @@ std::shared_ptr<const ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental:
 
 ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
                                                  std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
-   : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleWriter")
+   : fSink(std::move(sink)),
+     fModel(std::move(model)),
+     fMetrics(std::make_shared<Detail::RNTupleMetrics>("RNTupleWriter"))
 {
    if (!fModel) {
       throw RException(R__FAIL("null model"));
@@ -282,7 +286,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
    }
 #endif
    fSink->Create(*fModel.get());
-   fMetrics.ObserveMetrics(fSink->GetMetrics());
+   fMetrics->ObserveMetrics(fSink->GetMetrics());
 
    const auto &writeOpts = fSink->GetWriteOptions();
    fMaxUnzippedClusterSize = writeOpts.GetMaxUnzippedClusterSize();

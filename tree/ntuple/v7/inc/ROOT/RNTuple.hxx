@@ -120,7 +120,7 @@ private:
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
    std::shared_ptr<RNTupleDescriptor> fCachedDescriptor;
-   Detail::RNTupleMetrics fMetrics;
+   std::shared_ptr<Detail::RNTupleMetrics> fMetrics;
 
    void ConnectModel(RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
@@ -372,8 +372,8 @@ public:
    /// }
    /// ntuple->PrintInfo(ENTupleInfo::kMetrics);
    /// ~~~
-   void EnableMetrics() { fMetrics.Enable(); }
-   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+   void EnableMetrics() { fMetrics->Enable(); }
+   std::shared_ptr<const Detail::RNTupleMetrics> GetMetrics() const { return fMetrics; }
 };
 
 // clang-format off
@@ -400,7 +400,7 @@ private:
    std::unique_ptr<RNTupleModel> fModel;
    /// Caches a shared pointer of fModel's default entry if it is not bare
    std::shared_ptr<REntry> fDefaultEntry;
-   Detail::RNTupleMetrics fMetrics;
+   std::shared_ptr<Detail::RNTupleMetrics> fMetrics;
    NTupleSize_t fLastCommitted = 0;
    NTupleSize_t fLastCommittedClusterGroup = 0;
    NTupleSize_t fNEntries = 0;
@@ -459,8 +459,8 @@ public:
    std::weak_ptr<REntry> CreateEntry(REntry *linkedEntry = nullptr) { return fModel->CreateEntry(linkedEntry); }
    std::weak_ptr<REntry> CreateBareEntry(REntry *linkedEntry = nullptr) { return fModel->CreateBareEntry(linkedEntry); }
 
-   void EnableMetrics() { fMetrics.Enable(); }
-   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+   void EnableMetrics() { fMetrics->Enable(); }
+   std::shared_ptr<const Detail::RNTupleMetrics> GetMetrics() const { return fMetrics; }
 
    const RNTupleModel *GetModel() const { return fModel.get(); }
 

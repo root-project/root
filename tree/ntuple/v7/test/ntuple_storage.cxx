@@ -318,8 +318,7 @@ TEST(RPageSinkBuf, Basics)
          if (i && i % 30000 == 0) {
             ntupleBuf->CommitCluster();
             ntuple->CommitCluster();
-            auto *parallel_zip = ntupleBuf->GetMetrics().GetCounter(
-               "RNTupleWriter.RPageSinkBuf.ParallelZip");
+            auto *parallel_zip = ntupleBuf->GetMetrics()->GetCounter("RNTupleWriter.RPageSinkBuf.ParallelZip");
             ASSERT_FALSE(parallel_zip == nullptr);
             EXPECT_EQ(0, parallel_zip->GetValueAsInt());
          }
@@ -398,8 +397,7 @@ TEST(RPageSinkBuf, ParallelZip) {
          ntuple->Fill();
          if (i && i % 15000 == 0) {
             ntuple->CommitCluster();
-            auto *parallel_zip = ntuple->GetMetrics().GetCounter(
-               "RNTupleWriter.RPageSinkBuf.ParallelZip");
+            auto *parallel_zip = ntuple->GetMetrics()->GetCounter("RNTupleWriter.RPageSinkBuf.ParallelZip");
             ASSERT_FALSE(parallel_zip == nullptr);
 #ifdef R__USE_IMT
             EXPECT_EQ(1, parallel_zip->GetValueAsInt());

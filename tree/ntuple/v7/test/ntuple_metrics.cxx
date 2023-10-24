@@ -99,15 +99,14 @@ TEST(Metrics, RNTupleWriter)
    auto int_field = model->MakeField<int>("ints");
    auto float_field = model->MakeField<float>("floats");
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", rootFileName);
-   EXPECT_FALSE(ntuple->GetMetrics().IsEnabled());
+   EXPECT_FALSE(ntuple->GetMetrics()->IsEnabled());
    ntuple->EnableMetrics();
-   EXPECT_TRUE(ntuple->GetMetrics().IsEnabled());
+   EXPECT_TRUE(ntuple->GetMetrics()->IsEnabled());
    *int_field = 0;
    *float_field = 10.0;
    ntuple->Fill();
    ntuple->CommitCluster();
-   auto* page_counter = ntuple->GetMetrics().GetCounter(
-      "RNTupleWriter.RPageSinkBuf.RPageSinkFile.nPageCommitted");
+   auto *page_counter = ntuple->GetMetrics()->GetCounter("RNTupleWriter.RPageSinkBuf.RPageSinkFile.nPageCommitted");
    ASSERT_FALSE(page_counter == nullptr);
    // one page for the int field, one for the float field
    EXPECT_EQ(2, page_counter->GetValueAsInt());
