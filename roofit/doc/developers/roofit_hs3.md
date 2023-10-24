@@ -1,3 +1,9 @@
+\defgroup roofit_dev_docs_hs3 Implement JSON I/O for a RooFit class with RooFit HS3
+\ingroup roofit_dev_docs
+\date March 2023
+\author Carsten Burgard
+\brief Guide on how to add JSON IO for you RooFit classes.
+
 ## RooFitHS3 Library
 _Contains facilities to serialize and deserialize RooWorkspaces to and from JSON and YML._
 #### Note: This library is still at an experimental stage.
