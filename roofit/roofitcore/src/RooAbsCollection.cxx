@@ -19,7 +19,7 @@
 \class RooAbsCollection
 \ingroup Roofitcore
 
-RooAbsCollection is an abstract container object that can hold
+Abstract container object that can hold
 multiple RooAbsArg objects.  Collections are ordered and can
 contain multiple objects of the same name, (but a derived
 implementation can enforce unique names). The storage of objects is

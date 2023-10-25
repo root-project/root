@@ -18,7 +18,7 @@
 /** \class RooAddPdf
     \ingroup Roofitcore
 
-RooAddPdf is an efficient implementation of a sum of PDFs of the form
+Efficient implementation of a sum of PDFs of the form
 
 \f[
  \sum_{i=1}^{n} c_i \cdot \mathrm{PDF}_i

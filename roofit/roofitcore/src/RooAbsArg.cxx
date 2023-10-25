@@ -18,7 +18,7 @@
 /**  \class RooAbsArg
      \ingroup Roofitcore
 
-RooAbsArg is the common abstract base class for objects that
+Common abstract base class for objects that
 represent a value and a "shape" in RooFit. Values or shapes usually depend on values
 or shapes of other RooAbsArg instances. Connecting several RooAbsArg in
 a computation graph models an expression tree that can be evaluated.

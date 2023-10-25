@@ -19,8 +19,7 @@
 \class RooSimultaneous
 \ingroup Roofitcore
 
-RooSimultaneous facilitates simultaneous fitting of multiple PDFs
-to subsets of a given dataset.
+Facilitates simultaneous fitting of multiple PDFs to subsets of a given dataset.
 The class takes an index category, which is used as a selector
 for PDFs, and a list of PDFs, each associated
 with a state of the index category. RooSimultaneous always returns
