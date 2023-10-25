@@ -19,7 +19,7 @@
 \class RooSuperCategory
 \ingroup Roofitcore
 
-The RooSuperCategory can join several RooAbsCategoryLValue objects into
+Joins several RooAbsCategoryLValue objects into
 a single category. For this, it uses a RooMultiCategory, which takes care
 of enumerating all the permutations of possible states.
 In addition, the super category derives from RooAbsCategoryLValue, *i.e.*, it allows for
