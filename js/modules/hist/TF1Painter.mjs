@@ -39,29 +39,27 @@ function proivdeEvalPar(obj) {
       _func = _func.replaceAll(entry.fName, entry.fTitle);
    });
 
-   _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs')
-                .replace(/\b(TMath::Exp)/g, 'Math.exp')
-                .replace(/\b(TMath::Abs)/g, 'Math.abs')
-                .replace(/xygaus\(/g, 'this._math.gausxy(this, x, y, ')
-                .replace(/gaus\(/g, 'this._math.gaus(this, x, ')
-                .replace(/gausn\(/g, 'this._math.gausn(this, x, ')
-                .replace(/expo\(/g, 'this._math.expo(this, x, ')
-                .replace(/landau\(/g, 'this._math.landau(this, x, ')
-                .replace(/landaun\(/g, 'this._math.landaun(this, x, ')
-                .replace(/TMath::/g, 'this._math.')
-                .replace(/ROOT::Math::/g, 'this._math.');
+   _func = _func.replace(/\b(sin|SIN)\b/g, 'Math.sin')
+                .replace(/\b(cos|COS)\b/g, 'Math.cos')
+                .replace(/\b(tan|TAN)\b/g, 'Math.tan')
+                .replace(/\b(exp|EXP|TMath::Exp)\b/g, 'Math.exp')
+                .replace(/\b(log|LOG)\b/g, 'Math.log')
+                .replace(/\b(log10|LOG10)\b/g, 'Math.log10')
+                .replace(/\b(pow|POW)\b/g, 'Math.pow')
+                .replace(/\b(pi|PI)\b/g, 'Math.PI')
+                .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
+                .replace(/\bxygaus\(/g, 'this._math.gausxy(this, x, y, ')
+                .replace(/\bgaus\(/g, 'this._math.gaus(this, x, ')
+                .replace(/\bgausn\(/g, 'this._math.gausn(this, x, ')
+                .replace(/\bexpo\(/g, 'this._math.expo(this, x, ')
+                .replace(/\blandau\(/g, 'this._math.landau(this, x, ')
+                .replace(/\blandaun\(/g, 'this._math.landaun(this, x, ')
+                .replace(/\bTMath::/g, 'this._math.')
+                .replace(/\bROOT::Math::/g, 'this._math.');
 
    for (let i = 0; i < obj.fNpar; ++i)
       _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
 
-   _func = _func.replace(/\b(sin)\b/gi, 'Math.sin')
-                .replace(/\b(cos)\b/gi, 'Math.cos')
-                .replace(/\b(tan)\b/gi, 'Math.tan')
-                .replace(/\b(exp)\b/gi, 'Math.exp')
-                .replace(/\b(log)\b/gi, 'Math.log')
-                .replace(/\b(log10)\b/gi, 'Math.log10')
-                .replace(/\b(pow)\b/gi, 'Math.pow')
-                .replace(/pi/g, 'Math.PI');
    for (let n = 2; n < 10; ++n)
       _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
 
@@ -119,7 +117,7 @@ class TF1Painter extends TH1Painter {
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
 
-   /** @summary Update histogram */
+   /** @summary Update function */
    updateObject(obj /*, opt */) {
       if (!obj || (this.getClassName() !== obj._typename)) return false;
       delete obj.evalPar;
@@ -225,6 +223,14 @@ class TF1Painter extends TH1Painter {
                custom_xaxis = mp?.getHisto()?.fXaxis;
             else
                console.error('Very special stored values, see TF1::Save, in TF1.cxx:3183', xmin, xmax);
+         } else {
+            const epsilon = 1e-10, dx = (tf1.fXmax - tf1.fXmin) / Math.max(1, tf1.fNpx),
+                  bad_save_buffer = (Math.abs(xmin - tf1.fXmin - 0.5*dx) < epsilon) && (Math.abs(tf1.fXmax - 0.5*dx - xmax) < epsilon);
+
+            // last point in saved buffer never used for bin content
+            // in case of buggy data also one more point has to be excluded
+            if (np >= tf1.fNpx)
+               np = bad_save_buffer ? tf1.fNpx - 1 : tf1.fNpx;
          }
 
          ensureBins(np);
@@ -233,10 +239,8 @@ class TF1Painter extends TH1Painter {
          if (custom_xaxis)
             Object.assign(hist.fXaxis, custom_xaxis);
          else {
-            const dx = (xmax - xmin) / (np - 2); // np-2 due to arithmetic in the TF1 class
-            // extend range while saved values are for bin center
-            hist.fXaxis.fXmin = xmin - dx/2;
-            hist.fXaxis.fXmax = xmax + dx/2;
+            hist.fXaxis.fXmin = xmin;
+            hist.fXaxis.fXmax = xmax;
          }
 
          for (let n = 0; n < np; ++n) {
@@ -266,11 +270,8 @@ class TF1Painter extends TH1Painter {
       const func = this.$func, nsave = func?.fSave.length ?? 0;
 
       if (nsave > 3 && this._use_saved_points) {
-         const np = nsave - 2,
-             dx = (func.fSave[np+1] - func.fSave[np]) / (np - 2);
-
-         this.xmin = Math.min(this.xmin, func.fSave[np] - dx/2);
-         this.xmax = Math.max(this.xmax, func.fSave[np+1] + dx/2);
+         this.xmin = Math.min(this.xmin, func.fSave[nsave - 2]);
+         this.xmax = Math.max(this.xmax, func.fSave[nsave - 1]);
       }
       if (func) {
          this.xmin = Math.min(this.xmin, func.fXmin);

@@ -336,7 +336,7 @@ class TH3Painter extends THistPainter {
       }
 
       return pnts.createPoints({ color: this.getColor(histo.fMarkerColor) }).then(mesh => {
-         main.toplevel.add(mesh);
+         main.add3DMesh(mesh);
 
          mesh.bins = bins;
          mesh.painter = this;
@@ -676,7 +676,7 @@ class TH3Painter extends THistPainter {
             return tip;
          };
 
-         main.toplevel.add(combined_bins);
+         main.add3DMesh(combined_bins);
 
          if (helper_kind[nseq] > 0) {
             const helper_material = new LineBasicMaterial({ color: this.getColor(histo.fLineColor) }),
@@ -685,7 +685,7 @@ class TH3Painter extends THistPainter {
                    ? createLineSegments(bin_verts[nseq], helper_material, helper_indexes[nseq])
                    : createLineSegments(helper_positions[nseq], helper_material);
 
-            main.toplevel.add(lines);
+            main.add3DMesh(lines);
          }
       }
 

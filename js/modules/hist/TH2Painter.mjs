@@ -170,7 +170,7 @@ function drawTH2PolyLego(painter) {
       const material = new MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false })),
             mesh = new Mesh(geometry, material);
 
-      pmain.toplevel.add(mesh);
+      pmain.add3DMesh(mesh);
 
       mesh.painter = painter;
       mesh.bins_index = i;
