@@ -2491,6 +2491,14 @@ private:
       return {std::make_unique<RField<Ty1>>("_0"), std::make_unique<RField<Ty2>>("_1")};
    }
 
+   static std::array<std::size_t, 2> BuildItemOffsets()
+   {
+      auto pair = ContainerT();
+      auto offsetFirst = reinterpret_cast<std::uintptr_t>(&(pair.first)) - reinterpret_cast<std::uintptr_t>(&pair);
+      auto offsetSecond = reinterpret_cast<std::uintptr_t>(&(pair.second)) - reinterpret_cast<std::uintptr_t>(&pair);
+      return {offsetFirst, offsetSecond};
+   }
+
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2511,7 +2519,7 @@ public:
       return "std::pair<" + RField<T1>::TypeName() + "," + RField<T2>::TypeName() + ">";
    }
    explicit RField(std::string_view name, std::array<std::unique_ptr<Detail::RFieldBase>, 2> &&itemFields)
-      : RPairField(name, std::move(itemFields), {offsetof(ContainerT, first), offsetof(ContainerT, second)})
+      : RPairField(name, std::move(itemFields), BuildItemOffsets())
    {
       fMaxAlignment = std::max(alignof(T1), alignof(T2));
       fSize = sizeof(ContainerT);
