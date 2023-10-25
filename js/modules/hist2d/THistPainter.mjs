@@ -432,9 +432,11 @@ class THistDrawOptions {
           (((this.Surf > 0) || this.Error) && (hdim === 2))) this.Mode3D = true;
 
       // default draw options for TF1 is line and fill
-      if (painter.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve) {
+      if (painter.isTF1() && (hdim === 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve && !this.Mark) {
          this.Hist = false;
-         this.Curve = this.Fill = true;
+         this.Curve = settings.FuncAsCurve;
+         this.Line = !this.Curve;
+         this.Fill = true;
       }
 
       if ((this.Surf === 15) && (this.System === kPOLAR || this.System === kCARTESIAN))
@@ -844,9 +846,9 @@ class THistPainter extends ObjectPainter {
 
       this.getPadPainter().forEachPainterInPad(objp => {
          if (objp.isSecondaryPainter(this)) {
-            const obj = objp.getObject();
-            if (obj?.fName)
-               objp.snapid = `${snapid}#func_${obj.fName}`;
+            const objname = objp.getObjectName();
+            if (objname)
+               objp.snapid = `${snapid}#func_${objname}`;
             else if (objp.child_painter_indx !== undefined)
                objp.snapid = `${snapid}#indx_${objp.child_painter_indx}`;
          }

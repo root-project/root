@@ -78,6 +78,21 @@ function getEarthProjectionFunc(id) {
    }
 }
 
+/** @summary Unzoom preselected range for main histogram painter
+  * @desc Used with TGraph where Y zooming selected with fMinimum/fMaximum but histogram
+  * axis range can be wider. Or for normal histogram drawing when preselected range smaller than histogram range
+  * @private */
+function unzoomHistogramYRange(main) {
+    if (!isFunc(main?.getDimension) || main.getDimension() !== 1) return;
+
+    const ymin = main.draw_content ? main.hmin : main.ymin,
+          ymax = main.draw_content ? main.hmax : main.ymax;
+
+    if ((main.zoom_ymin !== main.zoom_ymax) && (ymin !== ymax) &&
+        (ymin <= main.zoom_ymin) && (main.zoom_ymax <= ymax))
+       main.zoom_ymin = main.zoom_ymax = 0;
+}
+
 // global, allow single drag at once
 let drag_rect = null, drag_kind = '', drag_painter = null;
 
@@ -2789,7 +2804,10 @@ class TFramePainter extends ObjectPainter {
             this.zoom_xmin = this.zoom_xmax = 0;
          }
          if (unzoom_y) {
-            if (this.zoom_ymin !== this.zoom_ymax) changed = true;
+            if (this.zoom_ymin !== this.zoom_ymax) {
+               changed = true;
+               unzoomHistogramYRange(this.getMainPainter());
+            }
             this.zoom_ymin = this.zoom_ymax = 0;
          }
          if (unzoom_z) {
@@ -2846,7 +2864,10 @@ class TFramePainter extends ObjectPainter {
 
       // and process unzoom, if any
       if (unzoom_v) {
-         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) changed = true;
+         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) {
+            changed = true;
+            if (name === 'y') unzoomHistogramYRange(this.getMainPainter());
+         }
          this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
       }
 

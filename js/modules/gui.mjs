@@ -46,6 +46,12 @@ function readStyleFromURL(url) {
    if (d.has('prefer_saved_points'))
       settings.PreferSavedPoints = true;
 
+   const tf1_style = d.get('tf1');
+   if (tf1_style === 'curve')
+      settings.FuncAsCurve = true;
+   else if (tf1_style === 'line')
+      settings.FuncAsCurve = false;
+
    if (d.has('with_credentials'))
       settings.WithCredentials = true;
 
