@@ -216,22 +216,25 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
 /// Interpolate between input distributions for all values of the observable in `evalData`.
 /// \param[in,out] evalData Struct holding spans pointing to input data. The results of this function will be stored here.
 /// \param[in] normSet Arguments to normalise over.
-void PiecewiseInterpolation::computeBatch(double* sum, size_t /*size*/, RooFit::Detail::DataMap const& dataMap) const {
-  auto nominal = dataMap.at(_nominal);
+void PiecewiseInterpolation::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> sum = ctx.output();
+
+  auto nominal = ctx.at(_nominal);
   for(unsigned int j=0; j < nominal.size(); ++j) {
     sum[j] = nominal[j];
   }
 
   for (unsigned int i=0; i < _paramSet.size(); ++i) {
     const double param = static_cast<RooAbsReal*>(_paramSet.at(i))->getVal();
-    auto low   = dataMap.at(_lowSet.at(i));
-    auto high  = dataMap.at(_highSet.at(i));
+    auto low   = ctx.at(_lowSet.at(i));
+    auto high  = ctx.at(_highSet.at(i));
     const int icode = _interpCode[i];
 
     if (icode < 0 || icode > 5) {
-      coutE(InputArguments) << "PiecewiseInterpolation::computeBatch(): " << _paramSet[i].GetName()
+      coutE(InputArguments) << "PiecewiseInterpolation::doEval(): " << _paramSet[i].GetName()
                        << " with unknown interpolation code" << icode << std::endl;
-      throw std::invalid_argument("PiecewiseInterpolation::computeBatch() got invalid interpolation code " + std::to_string(icode));
+      throw std::invalid_argument("PiecewiseInterpolation::doEval() got invalid interpolation code " + std::to_string(icode));
     }
 
     for (unsigned int j=0; j < nominal.size(); ++j) {

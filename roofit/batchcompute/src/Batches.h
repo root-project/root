@@ -46,7 +46,7 @@ public:
    std::size_t nEvents = 0;
    std::size_t nBatches = 0;
    std::size_t nExtra = 0;
-   RestrictArr output = nullptr;
+   double *__restrict output = nullptr;
 };
 
 } // end namespace RooBatchCompute

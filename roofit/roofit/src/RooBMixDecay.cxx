@@ -119,11 +119,11 @@ double RooBMixDecay::coefficient(Int_t basisIndex) const
   return 0 ;
 }
 
-void RooBMixDecay::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooBMixDecay::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::BMixDecay, output, nEvents,
-                            {dataMap.at(&_convSet[0]), dataMap.at(&_convSet[1]), dataMap.at(_tagFlav),
-                             dataMap.at(_delMistag), dataMap.at(_mixState), dataMap.at(_mistag)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::BMixDecay, ctx.output(),
+                            {ctx.at(&_convSet[0]), ctx.at(&_convSet[1]), ctx.at(_tagFlav),
+                             ctx.at(_delMistag), ctx.at(_mixState), ctx.at(_mistag)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

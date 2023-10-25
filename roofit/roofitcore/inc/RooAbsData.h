@@ -22,7 +22,7 @@
 #include "RooArgList.h"
 #include "RooNameReg.h"
 #include "RooFit/UniqueId.h"
-#include "RooFit/Detail/DataMap.h"
+#include "RooFit/EvalContext.h"
 
 #include <ROOT/RSpan.hxx>
 

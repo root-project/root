@@ -63,10 +63,10 @@ double RooGaussian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gaussian distribution.
-void RooGaussian::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooGaussian::doEval(RooFit::EvalContext & ctx) const
 {
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Gaussian, output, nEvents,
-          {dataMap.at(x), dataMap.at(mean), dataMap.at(sigma)});
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Gaussian, ctx.output(),
+          {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

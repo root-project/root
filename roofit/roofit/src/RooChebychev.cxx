@@ -104,7 +104,7 @@ void RooChebychev::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Chebychev.
-void RooChebychev::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooChebychev::doEval(RooFit::EvalContext &ctx) const
 {
    std::vector<double> extraArgs;
    extraArgs.reserve(_coefList.size() + 2);
@@ -113,8 +113,7 @@ void RooChebychev::computeBatch(double *output, size_t nEvents, RooFit::Detail::
    }
    extraArgs.push_back(_x.min(_refRangeName ? _refRangeName->GetName() : nullptr));
    extraArgs.push_back(_x.max(_refRangeName ? _refRangeName->GetName() : nullptr));
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Chebychev, output, nEvents, {dataMap.at(_x)},
-                            extraArgs);
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Chebychev, ctx.output(), {ctx.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
