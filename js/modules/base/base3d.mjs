@@ -1053,7 +1053,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       if (this.control_active && evnt.buttons && (evnt.buttons & 2))
          this.block_ctxt = true; // if right button in control was active, block next context menu
 
-      if (this.control_active || this.block_mousemove || !this.processMouseMove) return;
+      if (this.control_active || this.block_mousemove || !isFunc(this.processMouseMove)) return;
 
       if (this.mouse_zoom_mesh) {
          // when working with zoom mesh, need special handling

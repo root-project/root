@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '20/10/2023',
+version_date = '25/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -284,7 +284,9 @@ settings = {
    /** @summary Angle in degree for axis labels tilt when available space is not enough */
    AxisTiltAngle: 25,
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
-   StripAxisLabels: true
+   StripAxisLabels: true,
+   /** @summary Draw TF1 by default as curve or line */
+   FuncAsCurve: false
 },
 
 /** @namespace

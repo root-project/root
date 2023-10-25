@@ -829,6 +829,47 @@ class TGraphDelaunay {
 
 }
 
+   /** @summary Function handles tooltips in the mesh */
+function graph2DTooltip(intersect) {
+   let indx = Math.floor(intersect.index / this.nvertex);
+   if ((indx < 0) || (indx >= this.index.length)) return null;
+   const sqr = v => v*v;
+
+   indx = this.index[indx];
+
+   const fp = this.fp, gr = this.graph;
+   let grx = fp.grx(gr.fX[indx]),
+       gry = fp.gry(gr.fY[indx]),
+       grz = fp.grz(gr.fZ[indx]);
+
+   if (this.check_next && indx+1<gr.fX.length) {
+      const d = intersect.point,
+          grx1 = fp.grx(gr.fX[indx+1]),
+          gry1 = fp.gry(gr.fY[indx+1]),
+          grz1 = fp.grz(gr.fZ[indx+1]);
+      if (sqr(d.x-grx1)+sqr(d.y-gry1)+sqr(d.z-grz1) < sqr(d.x-grx)+sqr(d.y-gry)+sqr(d.z-grz)) {
+         grx = grx1; gry = gry1; grz = grz1; indx++;
+      }
+   }
+
+   return {
+      x1: grx - this.scale0,
+      x2: grx + this.scale0,
+      y1: gry - this.scale0,
+      y2: gry + this.scale0,
+      z1: grz - this.scale0,
+      z2: grz + this.scale0,
+      color: this.tip_color,
+      lines: [this.tip_name,
+               'pnt: ' + indx,
+               'x: ' + fp.axisAsText('x', gr.fX[indx]),
+               'y: ' + fp.axisAsText('y', gr.fY[indx]),
+               'z: ' + fp.axisAsText('z', gr.fZ[indx])
+             ]
+   };
+}
+
+
 
 /**
  * @summary Painter for TGraph2D classes
@@ -846,6 +887,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       const res = this.options;
 
+      d.check('SAME');
       if (d.check('TRI1'))
          res.Triangles = 11; // wireframe and colors
       else if (d.check('TRI2'))
@@ -875,6 +917,9 @@ class TGraph2DPainter extends ObjectPainter {
 
       if (res.Color || res.Triangles >= 10)
          res.Zscale = d.check('Z');
+
+      res.Axis = 'lego2';
+      if (res.Zscale) res.Axis += 'z';
 
       this.storeDrawOpt(opt);
    }
@@ -907,10 +952,13 @@ class TGraph2DPainter extends ObjectPainter {
          }
       }
 
-      if (xmin >= xmax) xmax = xmin+1;
-      if (ymin >= ymax) ymax = ymin+1;
-      if (zmin >= zmax) zmax = zmin+1;
-      const dx = (xmax-xmin)*0.02, dy = (ymax-ymin)*0.02, dz = (zmax-zmin)*0.02;
+      function calc_delta(min, max, margin) {
+         if (min < max) return margin * (max - min);
+         return Math.abs(min) < 1e5 ? 0.02 : 0.02 * Math.abs(min);
+      }
+      const dx = calc_delta(xmin, xmax, gr.fMargin),
+            dy = calc_delta(ymin, ymax, gr.fMargin),
+            dz = calc_delta(zmin, zmax, 0);
       let uxmin = xmin - dx, uxmax = xmax + dx,
           uymin = ymin - dy, uymax = ymax + dy,
           uzmin = zmin - dz, uzmax = zmax + dz;
@@ -929,6 +977,8 @@ class TGraph2DPainter extends ObjectPainter {
       if (graph.fMinimum !== kNoZoom) uzmin = graph.fMinimum;
       if (graph.fMaximum !== kNoZoom) uzmax = graph.fMaximum;
 
+      this._own_histogram = true; // when histogram created on client side
+
       const histo = createHistogram(clTH2I, 10, 10);
       histo.fName = graph.fName + '_h';
       setHistogramTitle(histo, graph.fTitle);
@@ -942,46 +992,6 @@ class TGraph2DPainter extends ObjectPainter {
       histo.fMaximum = uzmax;
       histo.fBits |= kNoStats;
       return histo;
-   }
-
-   /** @summary Function handles tooltips in the mesh */
-   graph2DTooltip(intersect) {
-      let indx = Math.floor(intersect.index / this.nvertex);
-      if ((indx < 0) || (indx >= this.index.length)) return null;
-      const sqr = v => v*v;
-
-      indx = this.index[indx];
-
-      const p = this.painter, gr = this.graph;
-      let grx = p.grx(gr.fX[indx]),
-          gry = p.gry(gr.fY[indx]),
-          grz = p.grz(gr.fZ[indx]);
-
-      if (this.check_next && indx+1<gr.fX.length) {
-         const d = intersect.point,
-             grx1 = p.grx(gr.fX[indx+1]),
-             gry1 = p.gry(gr.fY[indx+1]),
-             grz1 = p.grz(gr.fZ[indx+1]);
-         if (sqr(d.x-grx1)+sqr(d.y-gry1)+sqr(d.z-grz1) < sqr(d.x-grx)+sqr(d.y-gry)+sqr(d.z-grz)) {
-            grx = grx1; gry = gry1; grz = grz1; indx++;
-         }
-      }
-
-      return {
-         x1: grx - this.scale0,
-         x2: grx + this.scale0,
-         y1: gry - this.scale0,
-         y2: gry + this.scale0,
-         z1: grz - this.scale0,
-         z2: grz + this.scale0,
-         color: this.tip_color,
-         lines: [this.tip_name,
-                  'pnt: ' + indx,
-                  'x: ' + p.axisAsText('x', gr.fX[indx]),
-                  'y: ' + p.axisAsText('y', gr.fY[indx]),
-                  'z: ' + p.axisAsText('z', gr.fZ[indx])
-                ]
-      };
    }
 
    drawTriangles(fp, graph, levels, palette) {
@@ -1030,26 +1040,63 @@ class TGraph2DPainter extends ObjectPainter {
 
           mesh = new Mesh(geometry, material);
 
-         fp.toplevel.add(mesh);
+         fp.add3DMesh(mesh, this);
 
          mesh.painter = this; // to let use it with context menu
-      }, (isgrid, lpos) => {
+      }, (_isgrid, lpos) => {
          const lcolor = this.getColor(graph.fLineColor),
               material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
               linemesh = createLineSegments(convertLegoBuf(this.getMainPainter(), lpos, 100, 100), material);
-         fp.toplevel.add(linemesh);
+         fp.add3DMesh(linemesh, this);
       });
+   }
+
+   /** @summary Update TGraph2D object */
+   updateObject(obj, opt) {
+      if (!this.matchObjectType(obj)) return false;
+
+      if (opt && (opt !== this.options.original))
+         this.decodeOptions(opt, obj);
+
+      Object.assign(this.getObject(), obj);
+
+      delete this.$redraw_hist;
+
+      // if our own histogram was used as axis drawing, we need update histogram as well
+      if (this.axes_draw) {
+         const hist_painter = this.getMainPainter();
+         hist_painter?.updateObject(this.createHistogram(), this.options.Axis);
+         this.$redraw_hist = hist_painter;
+      }
+
+      return true;
+   }
+
+   /** @summary Redraw TGraph2D object
+     * @desc Update histogram drawing if necessary
+     * @return {Promise} for drawing ready */
+   async redraw() {
+      let promise = Promise.resolve(true);
+
+      if (this.$redraw_hist) {
+         promise = this.$redraw_hist.redraw();
+         delete this.$redraw_hist;
+      }
+
+      return promise.then(() => this.drawGraph2D());
    }
 
    /** @summary Actual drawing of TGraph2D object
      * @return {Promise} for drawing ready */
-   async redraw() {
+   async drawGraph2D() {
       const main = this.getMainPainter(),
             fp = this.getFramePainter(),
             graph = this.getObject();
 
       if (!graph || !main || !fp || !fp.mode3d)
          return this;
+
+      fp.remove3DMeshes(this);
 
       const countSelected = (zmin, zmax) => {
          let cnt = 0;
@@ -1082,9 +1129,11 @@ class TGraph2DPainter extends ObjectPainter {
           scale = fp.size_x3d / 100 * markeratt.getFullSize();
 
       if (this.options.Circles)
-         scale = 0.06*fp.size_x3d;
+         scale = 0.06 * fp.size_x3d;
 
       if (fp.usesvg) scale *= 0.3;
+
+      scale *= 10 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
       if (this.options.Color || this.options.Triangles) {
          levels = main.getContourLevels(true);
@@ -1174,55 +1223,55 @@ class TGraph2DPainter extends ObjectPainter {
 
          if (line && (iline > 3) && (line.length === iline)) {
             const lcolor = this.getColor(graph.fLineColor),
-                material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
-                linemesh = createLineSegments(line, material);
-            fp.toplevel.add(linemesh);
+                  material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
+                  linemesh = createLineSegments(line, material);
+            fp.add3DMesh(linemesh, this);
 
             linemesh.graph = graph;
             linemesh.index = index;
-            linemesh.painter = fp;
+            linemesh.fp = fp;
             linemesh.scale0 = 0.7*scale;
             linemesh.tip_name = this.getObjectHint();
             linemesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             linemesh.nvertex = 2;
             linemesh.check_next = true;
 
-            linemesh.tooltip = this.graph2DTooltip;
+            linemesh.tooltip = graph2DTooltip;
          }
 
          if (err) {
             const lcolor = this.getColor(graph.fLineColor),
-                material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
-                errmesh = createLineSegments(err, material);
-            fp.toplevel.add(errmesh);
+                  material = new LineBasicMaterial({ color: new Color(lcolor), linewidth: graph.fLineWidth }),
+                  errmesh = createLineSegments(err, material);
+            fp.add3DMesh(errmesh, this);
 
             errmesh.graph = graph;
             errmesh.index = index;
-            errmesh.painter = fp;
+            errmesh.fp = fp;
             errmesh.scale0 = 0.7*scale;
             errmesh.tip_name = this.getObjectHint();
             errmesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             errmesh.nvertex = 6;
 
-            errmesh.tooltip = this.graph2DTooltip;
+            errmesh.tooltip = graph2DTooltip;
          }
 
          if (pnts) {
-            let fcolor = 'blue';
+            let color = 'blue';
 
             if (!this.options.Circles || this.options.Color)
-               fcolor = palette ? palette.calcColor(lvl, levels.length) : this.getColor(graph.fMarkerColor);
+               color = palette?.calcColor(lvl, levels.length) ?? this.getColor(graph.fMarkerColor);
 
-            const pr = pnts.createPoints({ color: fcolor, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
+            const pr = pnts.createPoints({ color, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
                mesh.graph = graph;
-               mesh.painter = fp;
+               mesh.fp = fp;
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
                mesh.scale0 = 0.3*scale;
                mesh.index = index;
 
                mesh.tip_name = this.getObjectHint();
-               mesh.tooltip = this.graph2DTooltip;
-               fp.toplevel.add(mesh);
+               mesh.tooltip = graph2DTooltip;
+               fp.add3DMesh(mesh, this);
             });
 
             promises.push(pr);
@@ -1230,7 +1279,7 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       return Promise.all(promises).then(() => {
-         if (this.options.Zscale && this.ownhisto) {
+         if (this.options.Zscale && this.axes_draw) {
             const pal = this.getMainPainter()?.findFunction(clTPaletteAxis),
                   pal_painter = this.getPadPainter()?.findPainterFor(pal);
             return pal_painter?.drawPave();
@@ -1249,16 +1298,14 @@ class TGraph2DPainter extends ObjectPainter {
       let promise = Promise.resolve(null);
 
       if (!painter.getMainPainter()) {
-         if (!gr.fHistogram)
-            gr.fHistogram = painter.createHistogram();
-
-         promise = TH2Painter.draw(dom, gr.fHistogram, painter.options.Zscale ? 'lego2z' : 'lego2');
-         painter.ownhisto = true;
+         // histogram is not preserved in TGraph2D
+         promise = TH2Painter.draw(dom, painter.createHistogram(), painter.options.Axis);
+         painter.axes_draw = true;
       }
 
       return promise.then(() => {
          painter.addToPadPrimitives();
-         return painter.redraw();
+         return painter.drawGraph2D();
       });
    }
 

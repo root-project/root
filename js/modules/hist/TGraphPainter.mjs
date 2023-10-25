@@ -36,7 +36,7 @@ class TGraphPainter extends TGraphPainter2D {
 
       const lines = createLineSegments(pnts, create3DLineMaterial(this, graph));
 
-      fp.toplevel.add(lines);
+      fp.add3DMesh(lines, this, true);
 
       fp.render3D(100);
    }
