@@ -19,7 +19,7 @@
 \class RooRealMPFE
 \ingroup Roofitcore
 
-RooRealMPFE is the multi-processor front-end for parallel calculation
+Multi-processor front-end for parallel calculation
 of RooAbsReal objects. Each RooRealMPFE forks a process that calculates
 the value of the proxies RooAbsReal object. The (re)calculation of
 the proxied object is started asynchronously with the calculate() option.

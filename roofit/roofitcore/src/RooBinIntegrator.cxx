@@ -19,8 +19,7 @@
 \class RooBinIntegrator
 \ingroup Roofitcore
 
-RooBinIntegrator computes the integral over a binned distribution by summing the bin
-contents of all bins.
+Computes the integral over a binned distribution by summing the bin contents of all bins.
 **/
 
 #include "RooBinIntegrator.h"

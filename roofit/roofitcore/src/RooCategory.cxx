@@ -18,7 +18,7 @@
 \class RooCategory
 \ingroup Roofitcore
 
-RooCategory is an object to represent discrete states.
+Object to represent discrete states.
 States have names and index numbers, and the index numbers can be written into datasets and
 used in calculations.
 A category is "fundamental", i.e., its value doesn't depend on the value of other objects.

@@ -19,8 +19,8 @@
 \class Roo1DTable
 \ingroup Roofitcore
 
-Roo1DTable implements a one-dimensional table. A table is the category
-equivalent of a plot. To create a table use the RooDataSet::table method.
+One-dimensional table. A table is the category
+equivalent of a plot. To create a table use the RooDataSet::table() method.
 **/
 
 #include "Roo1DTable.h"

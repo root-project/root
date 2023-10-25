@@ -19,7 +19,7 @@
 \class RooTrace
 \ingroup Roofitcore
 
-Class RooTrace controls the memory tracing hooks in all RooFit
+Controls the memory tracing hooks in all RooFit
 objects. When tracing is active, a table of live RooFit objects
 is kept that can be queried at any time. In verbose mode, messages
 are printed in addition at the construction and destruction of

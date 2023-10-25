@@ -18,7 +18,7 @@
 \class RooWorkspace
 \ingroup Roofitcore
 
-The RooWorkspace is a persistable container for RooFit projects. A workspace
+Persistable container for RooFit projects. A workspace
 can contain and own variables, p.d.f.s, functions and datasets. All objects
 that live in the workspace are owned by the workspace. The `import()` method
 enforces consistency of objects upon insertion into the workspace (e.g. no

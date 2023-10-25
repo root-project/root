@@ -19,7 +19,7 @@
 \class RooAbsData
 \ingroup Roofitcore
 
-RooAbsData is the common abstract base class for binned and unbinned
+Abstract base class for binned and unbinned
 datasets. The abstract interface defines plotting and tabulating entry
 points for its contents and provides an iterator over its elements
 (bins for binned data sets, data points for unbinned datasets).

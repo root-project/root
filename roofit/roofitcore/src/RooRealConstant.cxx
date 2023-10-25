@@ -19,7 +19,7 @@
 \class RooRealConstant
 \ingroup Roofitcore
 
-RooRealConstant provides static functions to create and keep track
+Provides static functions to create and keep track
 of RooRealVar constants. Instead of creating such constants by
 hand (e.g. RooRealVar one("one","one",1)), simply use
 ~~~{.cpp}

@@ -20,14 +20,22 @@
 #include "RooAbsCategory.h"
 #include "RooPrintable.h"
 
+/**
+\class RooTable
+\ingroup Roofitcore
+
+Abstract interface for table objects.
+Table objects are the category equivalent of RooPlot objects
+(which are used for real-valued objects)
+**/
+
 class RooTable : public TNamed, public RooPrintable {
 public:
 
   // Constructors, cloning and assignment
-  RooTable() {} ;
-  ~RooTable() override ;
-  RooTable(const char *name, const char *title);
-  RooTable(const RooTable& other) ;
+  RooTable() {}
+  RooTable(const char *name, const char *title) : TNamed{name, title} {}
+  RooTable(const RooTable& other) = default;
 
   virtual void fill(RooAbsCategory& cat, double weight=1.0) = 0 ;
 

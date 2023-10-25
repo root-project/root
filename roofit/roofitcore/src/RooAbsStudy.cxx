@@ -19,7 +19,7 @@
 \class RooAbsStudy
 \ingroup Roofitcore
 
-RooAbsStudy is an abstract base class for RooStudyManager modules
+Abstract base class for RooStudyManager modules
 
 **/
 

@@ -19,7 +19,7 @@
 \class RooClassFactory
 \ingroup Roofitcore
 
-RooClassFactory is a clase like TTree::MakeClass() that generates
+Similar to TTree::MakeClass(), generates
 skeleton code for RooAbsPdf and RooAbsReal functions given
 a list of input parameter names. The factory can also compile
 the generated code on the fly, and on request also immediate

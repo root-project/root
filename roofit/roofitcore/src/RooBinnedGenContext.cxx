@@ -19,8 +19,7 @@
 \class RooBinnedGenContext
 \ingroup Roofitcore
 
-RooBinnedGenContext is an efficient implementation of the
-generator context specific for binned pdfs.
+Efficient implementation of the generator context specific for binned pdfs.
 **/
 
 #include "Riostream.h"

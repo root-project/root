@@ -19,7 +19,7 @@
 \class RooRatio
 \ingroup Roofitcore
 
-A RooRatio represents the ratio of two given RooAbsReal objects.
+Represents the ratio of two RooAbsReal objects.
 
 **/
 

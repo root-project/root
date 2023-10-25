@@ -382,7 +382,7 @@ public:
 // Perform a hypothesis test using the ProfileLikelihoodCalculator on the
 // on/off model. Reference values and test values are both computed with the
 // ProfileLikelihoodCalculator. As such, this test can only confirm if the
-// ProfileLikelihoodCalculator has the same behaviour accross different
+// ProfileLikelihoodCalculator has the same behaviour across different
 // computing platforms or RooStats revisions.
 //
 // ModelConfig (explicit) : Poisson On / Off Model

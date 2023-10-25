@@ -19,7 +19,7 @@
 \class RooAbsHiddenReal
 \ingroup Roofitcore
 
-RooAbsHiddenReal is a base class for objects that want to hide
+Base class for objects that want to hide
 their return value from interactive use, e.g. for implementations
 of parameter unblinding functions. This class overrides all
 printing methods with versions that do not reveal the objects value

@@ -19,7 +19,7 @@
 \class RooAbsGenContext
 \ingroup Roofitcore
 
-RooAbsGenContext is the abstract base class for generator contexts of
+Abstract base class for generator contexts of
 RooAbsPdf objects. A generator context is an object that controls
 the generation of events from a given p.d.f in one or more sessions.
 This class defines the common interface for all such contexts and organizes

@@ -25,7 +25,7 @@ using namespace std ;
 \class RooArgProxy
 \ingroup Roofitcore
 
-RooArgProxy is the abstract interface for RooAbsArg proxy classes.
+Abstract interface for RooAbsArg proxy classes.
 A RooArgProxy is the general mechanism to store references
 to other RooAbsArgs inside a RooAbsArg.
 
@@ -38,7 +38,6 @@ points to gets redirected (e.g. in a copy or clone operation).
 
 
 ClassImp(RooArgProxy);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////

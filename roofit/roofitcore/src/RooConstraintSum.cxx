@@ -19,7 +19,7 @@
 \class RooConstraintSum
 \ingroup Roofitcore
 
-RooConstraintSum calculates the sum of the -(log) likelihoods of
+Calculates the sum of the -(log) likelihoods of
 a set of RooAbsPfs that represent constraint functions. This class
 is used to calculate the composite -log(L) of constraints to be
 added to the regular -log(L) in RooAbsPdf::fitTo() with Constrain(..)

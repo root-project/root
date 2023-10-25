@@ -17,7 +17,7 @@
 \class RooEffGenContext
 \ingroup Roofitcore
 
-RooEffGenContext is a specialized generator context for p.d.fs represented
+Specialized generator context for p.d.fs represented
 by class RooEffProd, which are p.d.fs multiplied with an efficiency function.
 This generator context generates events from such products by first
 generating events from a dedicated generator context of the input p.d.f.

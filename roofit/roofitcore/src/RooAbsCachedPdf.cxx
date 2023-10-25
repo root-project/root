@@ -14,7 +14,7 @@
 \class RooAbsCachedPdf
 \ingroup Roofitcore
 
-RooAbsCachedPdf is the abstract base class for p.d.f.s that need or
+Abstract base class for p.d.f.s that need or
 want to cache their evaluate() output in a RooHistPdf defined in
 terms of the used observables. This base class manages the creation
 and storage of all RooHistPdf cache p.d.fs and the RooDataHists

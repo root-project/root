@@ -19,7 +19,7 @@
 \class RooProdPdf
 \ingroup Roofitcore
 
-RooProdPdf is an efficient implementation of a product of PDFs of the form
+Efficient implementation of a product of PDFs of the form
 \f[ \prod_{i=1}^{N} \mathrm{PDF}_i (x, \ldots) \f]
 
 PDFs may share observables. If that is the case any irreducible subset

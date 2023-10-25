@@ -447,7 +447,7 @@ private:
 
       std::unique_ptr<RooFitResult> r1{
          rPDF1.fitTo(rTestData, Save(), PrintLevel(-1), Minimizer(minimizerType.c_str()))};
-      // L.M:  for minuit we need ot rest otherwise fit could fail
+      // L.M:  for minuit we need to rest otherwise fit could fail
       if (minimizerType == "Minuit") {
          if (gMinuit) {
             delete gMinuit;

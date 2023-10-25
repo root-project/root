@@ -19,7 +19,7 @@
 \class RooAbsTestStatistic
 \ingroup Roofitcore
 
-RooAbsTestStatistic is the abstract base class for all test
+Abstract base class for all test
 statistics. Test statistics that evaluate the PDF at each data
 point should inherit from the RooAbsOptTestStatistic class which
 implements several generic optimizations that can be done for such
