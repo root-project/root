@@ -56,7 +56,7 @@ namespace HistFactory{
     const std::vector<double>& low() const { return _low; }
     const std::vector<double>& high() const { return _high; }
 
-    void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+    void doEval(RooFit::EvalContext &) const override;
 
     void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 

@@ -135,9 +135,9 @@ double RooGenericPdf::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void RooGenericPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooGenericPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  formula().computeBatch(output, nEvents, dataMap);
+  formula().doEval(ctx);
 }
 
 

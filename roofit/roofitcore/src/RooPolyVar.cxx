@@ -125,10 +125,10 @@ void RooPolyVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
                  ctx.buildCall("RooFit::Detail::EvaluateFuncs::polynomialEvaluate", _coefList, sz, _lowestOrder, _x));
 }
 
-void RooPolyVar::computeBatchImpl(RooAbsArg const* caller, double *output, size_t nEvents,
-                                  RooFit::Detail::DataMap const &dataMap, RooAbsReal const &x, RooArgList const &coefs,
-                                  int lowestOrder)
+void RooPolyVar::doEvalImpl(RooAbsArg const *caller, RooFit::EvalContext &ctx, RooAbsReal const &x,
+                            RooArgList const &coefs, int lowestOrder)
 {
+   std::span<double> output = ctx.output();
    if (coefs.empty()) {
       output[0] = lowestOrder ? 1.0 : 0.0;
       return;
@@ -151,18 +151,17 @@ void RooPolyVar::computeBatchImpl(RooAbsArg const* caller, double *output, size_
    }
 
    for (RooAbsArg *coef : coefs) {
-      vars.push_back(dataMap.at(coef));
+      vars.push_back(ctx.at(coef));
    }
-   vars.push_back(dataMap.at(&x));
+   vars.push_back(ctx.at(&x));
    std::array<double, 1> extraArgs{double(vars.size() - 1)};
-   RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Polynomial, output, nEvents, vars, extraArgs);
+   RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::Polynomial, ctx.output(), vars, extraArgs);
 }
 
 /// Compute multiple values of Polynomial.
-void RooPolyVar::computeBatch(double *output, size_t nEvents,
-                              RooFit::Detail::DataMap const &dataMap) const
+void RooPolyVar::doEval(RooFit::EvalContext &ctx) const
 {
-   computeBatchImpl(this, output, nEvents, dataMap, _x.arg(), _coefList, _lowestOrder);
+   doEvalImpl(this, ctx, _x.arg(), _coefList, _lowestOrder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

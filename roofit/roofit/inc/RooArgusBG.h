@@ -45,7 +45,7 @@ protected:
   RooRealProxy p ;
 
   double evaluate() const override ;
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 

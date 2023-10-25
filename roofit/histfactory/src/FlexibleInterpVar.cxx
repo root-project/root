@@ -245,7 +245,7 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
    ctx.addResult(this, resName);
 }
 
-void FlexibleInterpVar::computeBatch(double *output, size_t /*nEvents*/, RooFit::Detail::DataMap const &dataMap) const
+void FlexibleInterpVar::doEval(RooFit::EvalContext &ctx) const
 {
    double total(_nominal);
 
@@ -260,14 +260,14 @@ void FlexibleInterpVar::computeBatch(double *output, size_t /*nEvents*/, RooFit:
          code = 5;
       }
       total += RooFit::Detail::EvaluateFuncs::flexibleInterp(code, _low[i], _high[i], _interpBoundary, _nominal,
-                                                             dataMap.at(&_paramList[i])[0], total);
+                                                             ctx.at(&_paramList[i])[0], total);
    }
 
    if (total <= 0) {
       total = TMath::Limits<double>::Min();
    }
 
-   output[0] = total;
+   ctx.output()[0] = total;
 }
 
 void FlexibleInterpVar::printMultiline(std::ostream& os, Int_t contents,

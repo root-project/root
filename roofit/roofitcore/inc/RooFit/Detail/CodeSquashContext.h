@@ -15,7 +15,7 @@
 #define RooFit_Detail_CodeSquashContext_h
 
 #include <RooAbsCollection.h>
-#include <RooFit/Detail/DataMap.h>
+#include <RooFit/EvalContext.h>
 #include <RooNumber.h>
 
 #include <ROOT/RSpan.hxx>

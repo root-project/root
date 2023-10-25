@@ -90,11 +90,11 @@ void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.
-void RooLognormal::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooLognormal::doEval(RooFit::EvalContext &ctx) const
 {
    auto computer = _useStandardParametrization ? RooBatchCompute::LognormalStandard : RooBatchCompute::Lognormal;
-   RooBatchCompute::compute(dataMap.config(this), computer, output, nEvents,
-                            {dataMap.at(x), dataMap.at(m0), dataMap.at(k)});
+   RooBatchCompute::compute(ctx.config(this), computer, ctx.output(),
+                            {ctx.at(x), ctx.at(m0), ctx.at(k)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

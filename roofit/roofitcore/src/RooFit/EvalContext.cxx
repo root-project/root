@@ -11,7 +11,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/Detail/DataMap.h>
+#include <RooFit/EvalContext.h>
 
 #include <RooBatchCompute.h>
 #include <RooRealVar.h>
@@ -30,9 +30,8 @@ void assignSpan(std::span<T> &to, std::span<T> const &from)
 } // namespace
 
 namespace RooFit {
-namespace Detail {
 
-std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*caller*/)
+std::span<const double> EvalContext::at(RooAbsArg const *arg, RooAbsArg const * /*caller*/)
 {
    std::span<const double> out;
 
@@ -41,7 +40,7 @@ std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*ca
       assignSpan(out, {&var->_value, 1});
    } else {
       std::size_t idx = arg->dataToken();
-      out = _dataMap[idx];
+      out = _ctx[idx];
    }
 
    if (!_enableVectorBuffers || out.size() != 1) {
@@ -62,7 +61,7 @@ std::span<const double> DataMap::at(RooAbsArg const *arg, RooAbsArg const * /*ca
    return out;
 }
 
-void DataMap::setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config)
+void EvalContext::setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config)
 {
    if (!arg->hasDataToken())
       return;
@@ -70,7 +69,7 @@ void DataMap::setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &con
    _cfgs[idx] = config;
 }
 
-RooBatchCompute::Config DataMap::config(RooAbsArg const *arg) const
+RooBatchCompute::Config EvalContext::config(RooAbsArg const *arg) const
 {
    if (!arg->hasDataToken()) {
       return {};
@@ -79,11 +78,10 @@ RooBatchCompute::Config DataMap::config(RooAbsArg const *arg) const
    return _cfgs[idx];
 }
 
-void DataMap::resize(std::size_t n)
+void EvalContext::resize(std::size_t n)
 {
    _cfgs.resize(n);
-   _dataMap.resize(n);
+   _ctx.resize(n);
 }
 
-} // namespace Detail
 } // namespace RooFit

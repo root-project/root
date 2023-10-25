@@ -80,10 +80,10 @@ double RooDstD0BG::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of D*-D0 mass difference distribution.
-void RooDstD0BG::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooDstD0BG::doEval(RooFit::EvalContext & ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::DstD0BG, output, nEvents,
-                            {dataMap.at(dm), dataMap.at(dm0), dataMap.at(C), dataMap.at(A), dataMap.at(B)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::DstD0BG, ctx.output(),
+          {ctx.at(dm), ctx.at(dm0), ctx.at(C), ctx.at(A), ctx.at(B)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

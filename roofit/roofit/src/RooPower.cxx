@@ -83,22 +83,22 @@ RooPower::RooPower(const RooPower &other, const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Compute multiple values of Power distribution.
-void RooPower::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooPower::doEval(RooFit::EvalContext &ctx) const
 {
     std::vector<std::span<const double>> vars;
     vars.reserve(2 *  _coefList.size() + 1);
-    vars.push_back(dataMap.at(_x));
+    vars.push_back(ctx.at(_x));
 
     assert(_coefList.size() == _expList.size());
 
    for (std::size_t i = 0; i < _coefList.size(); ++i) {
-     vars.push_back(dataMap.at(&_coefList[i]));
-     vars.push_back(dataMap.at(&_expList[i]));
+     vars.push_back(ctx.at(&_coefList[i]));
+     vars.push_back(ctx.at(&_expList[i]));
    }
 
    std::array<double, 1> args{static_cast<double>(_coefList.size())};
 
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Power, output, nEvents, vars, args);
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Power, ctx.output(), vars, args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

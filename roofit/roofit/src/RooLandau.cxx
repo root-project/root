@@ -68,10 +68,10 @@ void RooLandau::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Landau distribution.
-void RooLandau::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooLandau::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Landau, output, nEvents,
-                            {dataMap.at(x), dataMap.at(mean), dataMap.at(sigma)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Landau, ctx.output(),
+                            {ctx.at(x), ctx.at(mean), ctx.at(sigma)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -87,7 +87,7 @@ public:
 
   protected:
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
   PdfCacheElem* getCache(const RooArgSet* nset, bool recalculate=true) const ;
 

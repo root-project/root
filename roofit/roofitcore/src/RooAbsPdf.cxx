@@ -127,11 +127,11 @@ the proxy holds a function, and will trigger an assert.
 ### Batched function evaluations (Advanced usage)
 
 To speed up computations with large numbers of data events in unbinned fits,
-it is beneficial to override `computeBatch()`. Like this, large spans of
+it is beneficial to override `doEval()`. Like this, large spans of
 computations can be done, without having to call `evaluate()` for each single data event.
-`computeBatch()` should execute the same computation as `evaluate()`, but it
+`doEval()` should execute the same computation as `evaluate()`, but it
 may choose an implementation that is capable of SIMD computations.
-If computeBatch is not implemented, the classic and slower `evaluate()` will be
+If doEval is not implemented, the classic and slower `evaluate()` will be
 called for each data event.
 */
 

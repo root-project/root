@@ -35,7 +35,7 @@ public:
   double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
   bool forceAnalyticalInt(const RooAbsArg& arg) const override { return arg.isFundamental() ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;

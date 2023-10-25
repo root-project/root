@@ -38,7 +38,7 @@ private:
   RooRealProxy _ndof;
 
   double evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooChiSquarePdf,1) // Chi Square distribution (eg. the PDF )

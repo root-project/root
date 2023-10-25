@@ -132,9 +132,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/Detail/AnalyticalIntegrals.h
     RooFit/Detail/BatchModeDataHelpers.h
     RooFit/Detail/CodeSquashContext.h
-    RooFit/Detail/DataMap.h
     RooFit/Detail/EvaluateFuncs.h
     RooFit/Detail/NormalizationHelpers.h
+    RooFit/EvalContext.h
     RooFit/Evaluator.h
     RooFit/Floats.h
     RooFit/ModelConfig.h
@@ -339,7 +339,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFactoryWSTool.cxx
     src/RooFirstMoment.cxx
     src/RooFit/Detail/CodeSquashContext.cxx
-    src/RooFit/Detail/DataMap.cxx
+    src/RooFit/EvalContext.cxx
     src/RooFit/Evaluator.cxx
     src/RooFitImplHelpers.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx

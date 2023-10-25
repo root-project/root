@@ -41,7 +41,7 @@ public:
     return setData(static_cast<RooAbsData const&>(data), cloneData);
   }
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 

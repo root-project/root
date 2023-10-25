@@ -14,7 +14,7 @@
 #include "RooPrintable.h"
 #include "RooArgList.h"
 #include "RooArgSet.h"
-#include "RooFit/Detail/DataMap.h"
+#include "RooFit/EvalContext.h"
 
 #include "TFormula.h"
 
@@ -50,7 +50,7 @@ public:
    bool ok() const { return _tFormula != nullptr; }
    /// Evaluate all parameters/observables, and then evaluate formula.
    double eval(const RooArgSet *nset = nullptr) const;
-   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const;
+   void doEval(RooFit::EvalContext &) const;
 
    /// DEBUG: Dump state information
    void dump() const;

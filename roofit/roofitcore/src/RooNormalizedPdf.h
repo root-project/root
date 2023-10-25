@@ -70,7 +70,7 @@ public:
    bool canComputeBatchWithCuda() const override { return true; }
 
 protected:
-   void computeBatch(double *output, size_t size, RooFit::Detail::DataMap const &) const override;
+   void doEval(RooFit::EvalContext &) const override;
    double evaluate() const override
    {
       // Evaluate() should not be called in the BatchMode, but we still need it

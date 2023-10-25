@@ -371,15 +371,18 @@ double RooProduct::evaluate() const
 }
 
 
-void RooProduct::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooProduct::doEval(RooFit::EvalContext & ctx) const
 {
+  std::span<double> output = ctx.output();
+  std::size_t nEvents = output.size();
+
   for (unsigned int i = 0; i < nEvents; ++i) {
     output[i] = 1.;
   }
 
   for (const auto item : _compRSet) {
     auto rcomp = static_cast<const RooAbsReal*>(item);
-    auto componentValues = dataMap.at(rcomp);
+    auto componentValues = ctx.at(rcomp);
 
     for (unsigned int i = 0; i < nEvents; ++i) {
       output[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];

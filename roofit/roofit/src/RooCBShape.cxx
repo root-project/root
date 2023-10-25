@@ -89,10 +89,10 @@ double RooCBShape::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Crystal ball Shape distribution.
-void RooCBShape::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooCBShape::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::CBShape, output, nEvents,
-                            {dataMap.at(m), dataMap.at(m0), dataMap.at(sigma), dataMap.at(alpha), dataMap.at(n)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::CBShape, ctx.output(),
+                            {ctx.at(m), ctx.at(m0), ctx.at(sigma), ctx.at(alpha), ctx.at(n)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

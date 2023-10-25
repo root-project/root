@@ -58,6 +58,13 @@ namespace RooFit {
 
 namespace {
 
+// To avoid deleted move assignment.
+template <class T>
+void assignSpan(std::span<T> &to, std::span<T> const &from)
+{
+   to = from;
+}
+
 void logArchitectureInfo(bool useGPU)
 {
    // We have to exit early if the message stream is not active. Otherwise it's
@@ -131,8 +138,8 @@ struct NodeInfo {
    std::unique_ptr<RooFit::Detail::CudaInterface::CudaEvent> event;
    std::unique_ptr<RooFit::Detail::CudaInterface::CudaStream> stream;
 
-   /// Check the servers of a node that has been computed and release it's resources
-   /// if they are no longer needed.
+   /// Check the servers of a node that has been computed and release its
+   /// resources if they are no longer needed.
    void decrementRemainingClients()
    {
       if (--remClients == 0 && !fromArrayInput) {
@@ -165,9 +172,9 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    RooArgSet serverSet;
    ::RooHelpers::getSortedComputationGraph(_topNode, serverSet);
 
-   _dataMapCPU.resize(serverSet.size());
+   _evalContextCPU.resize(serverSet.size());
 #ifdef ROOFIT_CUDA
-   _dataMapCUDA.resize(serverSet.size());
+   _evalContextCUDA.resize(serverSet.size());
 #endif
 
    std::map<RooFit::Detail::DataKey, NodeInfo *> nodeInfos;
@@ -217,7 +224,7 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
          info.stream = std::make_unique<CudaInterface::CudaStream>();
          RooBatchCompute::Config cfg;
          cfg.setCudaStream(info.stream.get());
-         _dataMapCUDA.setConfig(info.absArg, cfg);
+         _evalContextCUDA.setConfig(info.absArg, cfg);
       }
    }
 #endif
@@ -260,34 +267,32 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
          info.fromArrayInput = true;
          info.absArg->setDataToken(iNode);
          info.outputSize = inputArray.size();
-         if (_useGPU) {
+         if (_useGPU && info.outputSize <= 1) {
 #ifdef ROOFIT_CUDA
-            if (info.outputSize <= 1) {
-               // Empty or scalar observables from the data don't need to be
-               // copied to the GPU.
-               _dataMapCPU.set(info.absArg, inputArray);
-               _dataMapCUDA.set(info.absArg, inputArray);
+            // Empty or scalar observables from the data don't need to be
+            // copied to the GPU.
+            _evalContextCPU.set(info.absArg, inputArray);
+            _evalContextCUDA.set(info.absArg, inputArray);
+         } else if (_useGPU && info.outputSize > 1) {
+            // For simplicity, we put the data on both host and device for
+            // now. This could be optimized by inspecting the clients of the
+            // variable.
+            if (isOnDevice) {
+               _evalContextCUDA.set(info.absArg, inputArray);
+               auto gpuSpan = _evalContextCUDA.at(info.absArg);
+               info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
+               CudaInterface::copyDeviceToHost(gpuSpan.data(), info.buffer->cpuWritePtr(), gpuSpan.size());
+               _evalContextCPU.set(info.absArg, {info.buffer->cpuReadPtr(), gpuSpan.size()});
             } else {
-               // For simplicity, we put the data on both host and device for
-               // now. This could be optimized by inspecting the clients of the
-               // variable.
-               if (isOnDevice) {
-                  _dataMapCUDA.set(info.absArg, inputArray);
-                  auto gpuSpan = _dataMapCUDA.at(info.absArg);
-                  info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
-                  CudaInterface::copyDeviceToHost(gpuSpan.data(), info.buffer->cpuWritePtr(), gpuSpan.size());
-                  _dataMapCPU.set(info.absArg, {info.buffer->cpuReadPtr(), gpuSpan.size()});
-               } else {
-                  _dataMapCPU.set(info.absArg, inputArray);
-                  auto cpuSpan = _dataMapCPU.at(info.absArg);
-                  info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
-                  CudaInterface::copyHostToDevice(cpuSpan.data(), info.buffer->gpuWritePtr(), cpuSpan.size());
-                  _dataMapCUDA.set(info.absArg, {info.buffer->gpuReadPtr(), cpuSpan.size()});
-               }
+               _evalContextCPU.set(info.absArg, inputArray);
+               auto cpuSpan = _evalContextCPU.at(info.absArg);
+               info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
+               CudaInterface::copyHostToDevice(cpuSpan.data(), info.buffer->gpuWritePtr(), cpuSpan.size());
+               _evalContextCUDA.set(info.absArg, {info.buffer->gpuReadPtr(), cpuSpan.size()});
             }
 #endif
          } else {
-            _dataMapCPU.set(info.absArg, inputArray);
+            _evalContextCPU.set(info.absArg, inputArray);
          }
       }
       info.isDirty = !info.fromArrayInput;
@@ -359,7 +364,7 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       buffer = &info.scalarBuffer;
 #ifdef ROOFIT_CUDA
       if (_useGPU) {
-         _dataMapCUDA.set(node, {buffer, nOut});
+         _evalContextCUDA.set(node, {buffer, nOut});
       }
 #endif
    } else {
@@ -383,16 +388,17 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       }
       buffer = info.buffer->cpuWritePtr();
    }
-   _dataMapCPU.set(node, {buffer, nOut});
+   assignSpan(_evalContextCPU._currentOutput, {buffer, nOut});
+   _evalContextCPU.set(node, {buffer, nOut});
    if (nOut > 1) {
-      _dataMapCPU.enableVectorBuffers(true);
+      _evalContextCPU.enableVectorBuffers(true);
    }
-   nodeAbsReal->computeBatch(buffer, nOut, _dataMapCPU);
-   _dataMapCPU.resetVectorBuffers();
-   _dataMapCPU.enableVectorBuffers(false);
+   nodeAbsReal->doEval(_evalContextCPU);
+   _evalContextCPU.resetVectorBuffers();
+   _evalContextCPU.enableVectorBuffers(false);
 #ifdef ROOFIT_CUDA
    if (info.copyAfterEvaluation) {
-      _dataMapCUDA.set(node, {info.buffer->gpuReadPtr(), nOut});
+      _evalContextCUDA.set(node, {info.buffer->gpuReadPtr(), nOut});
       if (info.event) {
          CudaInterface::cudaEventRecord(*info.event, *info.stream);
       }
@@ -454,7 +460,7 @@ std::span<const double> Evaluator::run()
    }
 
    // return the final output
-   return _dataMapCPU.at(&_topNode);
+   return _evalContextCPU.at(&_topNode);
 }
 
 /// Returns the value of the top node in the computation graph
@@ -529,7 +535,7 @@ std::span<const double> Evaluator::getValHeterogeneous()
    }
 
    // return the final value
-   return _dataMapCUDA.at(&_topNode);
+   return _evalContextCUDA.at(&_topNode);
 #else
    // Doesn't matter what we do here, because it's a private function that's
    // not called when RooFit is not built with CUDA support.
@@ -559,17 +565,18 @@ void Evaluator::assignToGPU(NodeInfo &info)
    double *buffer = nullptr;
    if (nOut == 1) {
       buffer = &info.scalarBuffer;
-      _dataMapCPU.set(node, {buffer, nOut});
+      _evalContextCPU.set(node, {buffer, nOut});
    } else {
       info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream.get())
                                              : _bufferManager->makeGpuBuffer(nOut);
       buffer = info.buffer->gpuWritePtr();
    }
-   _dataMapCUDA.set(node, {buffer, nOut});
-   node->computeBatch(buffer, nOut, _dataMapCUDA);
+   _evalContextCUDA._currentOutput = std::span<double>{buffer, nOut};
+   _evalContextCUDA.set(node, _evalContextCUDA._currentOutput);
+   node->doEval(_evalContextCUDA);
    CudaInterface::cudaEventRecord(*info.event, *info.stream);
    if (info.copyAfterEvaluation) {
-      _dataMapCPU.set(node, {info.buffer->cpuReadPtr(), nOut});
+      _evalContextCPU.set(node, {info.buffer->cpuReadPtr(), nOut});
    }
 #endif // ROOFIT_CUDA
 }
@@ -602,7 +609,7 @@ void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
    }
 }
 
-void Evaluator::print(std::ostream &os) const
+void Evaluator::print(std::ostream &os)
 {
    std::cout << "--- RooFit BatchMode evaluation ---\n";
 
@@ -642,7 +649,7 @@ void Evaluator::print(std::ostream &os) const
       auto &nodeInfo = _nodes[iNode];
       RooAbsArg *node = nodeInfo.absArg;
 
-      auto span = _dataMapCPU.at(node);
+      auto span = _evalContextCPU.at(node);
 
       os << "|";
       printElement(0, iNode);

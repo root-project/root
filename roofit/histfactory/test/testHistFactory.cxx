@@ -649,7 +649,7 @@ TEST_P(HFFixtureFit, Fit)
    auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
-   // This tests both correct pre-caching of constant terms and (if false) that all computeBatch() are correct.
+   // This tests both correct pre-caching of constant terms and (if false) that all doEval() are correct.
    for (bool constTermOptimization : {true, false}) {
 
       // constTermOptimization makes only sense in the legacy backend

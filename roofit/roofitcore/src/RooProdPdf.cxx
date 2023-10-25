@@ -410,23 +410,21 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of PDFs in batch mode.
-void RooProdPdf::calculateBatch(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, double *output,
-                                size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooProdPdf::doEvalImpl(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, RooFit::EvalContext &ctx) const
 {
    if (cache._isRearranged) {
-      auto numerator = dataMap.at(cache._rearrangedNum.get());
-      auto denominator = dataMap.at(cache._rearrangedDen.get());
-      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Ratio, output, nEvents,
-                               {numerator, denominator});
+      auto numerator = ctx.at(cache._rearrangedNum.get());
+      auto denominator = ctx.at(cache._rearrangedDen.get());
+      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::Ratio, ctx.output(), {numerator, denominator});
    } else {
       std::vector<std::span<const double>> factors;
       factors.reserve(cache._partList.size());
       for (const RooAbsArg *i : cache._partList) {
-         auto span = dataMap.at(i);
+         auto span = ctx.at(i);
          factors.push_back(span);
       }
       std::array<double, 1> special{static_cast<double>(factors.size())};
-      RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::ProdPdf, output, nEvents, factors, special);
+      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::ProdPdf, ctx.output(), factors, special);
    }
 }
 
@@ -2366,10 +2364,9 @@ public:
 
    inline bool canComputeBatchWithCuda() const override { return true; }
 
-   void computeBatch(double *output, size_t nEvents,
-                     RooFit::Detail::DataMap const &dataMap) const override
+   void doEval(RooFit::EvalContext &ctx) const override
    {
-      _prodPdf->calculateBatch(this, *_cache, output, nEvents, dataMap);
+      _prodPdf->doEvalImpl(this, *_cache, ctx);
    }
 
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }

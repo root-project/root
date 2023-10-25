@@ -118,10 +118,10 @@ double RooRatio::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate in batch mode.
-void RooRatio::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooRatio::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Ratio, output, nEvents,
-                            {dataMap.at(_numerator), dataMap.at(_denominator)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Ratio, ctx.output(),
+                            {ctx.at(_numerator), ctx.at(_denominator)});
 }
 
 void RooRatio::translate(RooFit::Detail::CodeSquashContext &ctx) const

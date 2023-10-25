@@ -16,7 +16,7 @@
 #define RooFit_RooEvaluatorWrapper_h
 
 #include <RooAbsData.h>
-#include "RooFit/Detail/DataMap.h"
+#include <RooFit/EvalContext.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooRealProxy.h>

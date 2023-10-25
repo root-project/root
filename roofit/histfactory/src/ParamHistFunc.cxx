@@ -580,7 +580,10 @@ void ParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 /// the associated parameters.
 /// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
-void ParamHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+void ParamHistFunc::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> output = ctx.output();
+  std::size_t size = output.size();
 
   auto const& n = _numBinsPerDim;
   // check if _numBins needs to be filled
@@ -596,14 +599,14 @@ void ParamHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::Da
   // As a working buffer for the bin indices, we use the tail of the output
   // buffer. We can't use the same starting pointer, otherwise we would
   // overwrite the later bin indices as we fill the output.
-  auto indexBuffer = reinterpret_cast<int*>(output + size) - size;
+  auto indexBuffer = reinterpret_cast<int*>(output.data() + size) - size;
   std::fill(indexBuffer, indexBuffer + size, 0); // output buffer for bin indices needs to be zero-initialized
 
   // Use the vectorized RooAbsBinning::binNumbers() to update the total bin
   // index for each dimension, using the `coef` parameter to multiply with the
   // right index multiplication factor for each dimension.
   for (std::size_t iVar = 0; iVar < _dataVars.size(); ++iVar) {
-    _dataSet.getBinnings()[iVar]->binNumbers(dataMap.at(&_dataVars[iVar]).data(), indexBuffer, size, idxMult[iVar]);
+    _dataSet.getBinnings()[iVar]->binNumbers(ctx.at(&_dataVars[iVar]).data(), indexBuffer, size, idxMult[iVar]);
   }
 
   // Finally, look up the parameters and get their values to fill the output buffer

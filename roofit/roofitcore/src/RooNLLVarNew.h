@@ -40,7 +40,7 @@ public:
    /// Return default level for MINUIT error analysis.
    double defaultErrorLevel() const override { return 0.5; }
 
-   void computeBatch(double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
+   void doEval(RooFit::EvalContext &) const override;
    bool canComputeBatchWithCuda() const override { return !_binnedL; }
    bool isReducerNode() const override { return true; }
 
@@ -61,7 +61,7 @@ private:
    void resetWeightVarNames();
    double finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const;
    void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables);
-   double computeBatchBinnedL(std::span<const double> preds, std::span<const double> weights) const;
+   double doEvalBinnedL(std::span<const double> preds, std::span<const double> weights) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooTemplateProxy<RooAbsReal> _weightVar;

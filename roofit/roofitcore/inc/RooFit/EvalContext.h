@@ -3,15 +3,15 @@
  * Authors:
  *   Jonas Rembser, CERN  12/2021
  *
- * Copyright (c) 2022, CERN
+ * Copyright (c) 2023, CERN
  *
  * Redistribution and use in source and binary forms,
  * with or without modification, are permitted according to the terms
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_Detail_DataMap_h
-#define RooFit_Detail_DataMap_h
+#ifndef RooFit_Detail_EvalContext_h
+#define RooFit_Detail_EvalContext_h
 
 #include <RooAbsArg.h>
 
@@ -78,11 +78,10 @@ struct hash<RooFit::Detail::DataKey> {
 } // namespace std
 
 namespace RooFit {
-namespace Detail {
 
-class DataMap {
+class EvalContext {
 public:
-   auto size() const { return _dataMap.size(); }
+   auto size() const { return _ctx.size(); }
    void resize(std::size_t n);
 
    inline void set(RooAbsArg const *arg, std::span<const double> const &span)
@@ -90,17 +89,12 @@ public:
       if (!arg->hasDataToken())
          return;
       std::size_t idx = arg->dataToken();
-      _dataMap[idx] = span;
+      _ctx[idx] = span;
    }
 
    void setConfig(RooAbsArg const *arg, RooBatchCompute::Config const &config);
 
    std::span<const double> at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr);
-
-   inline std::span<const double> at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr) const
-   {
-      return const_cast<DataMap *>(this)->at(arg, caller);
-   }
 
    template <class T>
    inline std::span<const double> at(RooTemplateProxy<T> const &proxy)
@@ -108,26 +102,23 @@ public:
       return at(&proxy.arg(), proxy.owner());
    }
 
-   template <class T>
-   inline std::span<const double> at(RooTemplateProxy<T> const &proxy) const
-   {
-      return at(&proxy.arg(), proxy.owner());
-   }
-
    RooBatchCompute::Config config(RooAbsArg const *arg) const;
-
    void enableVectorBuffers(bool enable) { _enableVectorBuffers = enable; }
    void resetVectorBuffers() { _bufferIdx = 0; }
+   std::span<double> output() { return _currentOutput; }
 
 private:
-   std::vector<std::span<const double>> _dataMap;
+
+   friend class Evaluator;
+
+   std::span<double> _currentOutput;
+   std::vector<std::span<const double>> _ctx;
    bool _enableVectorBuffers = false;
    std::vector<std::vector<double>> _buffers;
    std::size_t _bufferIdx = 0;
    std::vector<RooBatchCompute::Config> _cfgs;
 };
 
-} // namespace Detail
 } // namespace RooFit
 
 #endif

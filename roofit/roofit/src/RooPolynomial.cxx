@@ -125,19 +125,16 @@ void RooPolynomial::translate(RooFit::Detail::CodeSquashContext &ctx) const
 }
 
 /// Compute multiple values of Polynomial.
-void RooPolynomial::computeBatch(double *output, size_t nEvents,
-                                 RooFit::Detail::DataMap const &dataMap) const
+void RooPolynomial::doEval(RooFit::EvalContext &ctx) const
 {
-   return RooPolyVar::computeBatchImpl(this, output, nEvents, dataMap, _x.arg(), _coefList, _lowestOrder);
+   return RooPolyVar::doEvalImpl(this, ctx, _x.arg(), _coefList, _lowestOrder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise to RooFit that this function can be analytically integrated.
 Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-   if (matchArgs(allVars, analVars, _x))
-      return 1;
-   return 0;
+   return matchArgs(allVars, analVars, _x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

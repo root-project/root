@@ -45,7 +45,7 @@ public:
   void initGenerator(Int_t code) override ;
   void generateEvent(Int_t code) override;
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 protected:

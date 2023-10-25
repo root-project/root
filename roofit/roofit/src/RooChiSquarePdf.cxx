@@ -63,11 +63,10 @@ double RooChiSquarePdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of ChiSquare distribution.
-void RooChiSquarePdf::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooChiSquarePdf::doEval(RooFit::EvalContext &ctx) const
 {
    std::array<double, 1> extraArgs{_ndof};
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ChiSquare, output, nEvents, {dataMap.at(_x)},
-                            extraArgs);
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::ChiSquare, ctx.output(), {ctx.at(_x)}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
