@@ -74,10 +74,10 @@ double RooArgusBG::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooArgusBG::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooArgusBG::doEval(RooFit::EvalContext & ctx) const
 {
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ArgusBG, output, nEvents,
-          {dataMap.at(m), dataMap.at(m0), dataMap.at(c), dataMap.at(p)});
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::ArgusBG, ctx.output(),
+          {ctx.at(m), ctx.at(m0), ctx.at(c), ctx.at(p)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

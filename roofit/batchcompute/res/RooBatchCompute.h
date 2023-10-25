@@ -30,7 +30,7 @@
  * Namespace for dispatching RooFit computations to various backends.
  *
  * This namespace contains an interface for providing high-performance computation functions for use in
- * RooAbsReal::computeBatch(), see RooBatchComputeInterface.
+ * RooAbsReal::doEval(), see RooBatchComputeInterface.
  *
  * Furthermore, several implementations of this interface can be created, which reside in RooBatchCompute::RF_ARCH,
  * where RF_ARCH may be replaced by the architecture that this implementation targets, e.g. SSE, AVX, etc.
@@ -42,7 +42,6 @@ namespace RooBatchCompute {
 
 typedef std::span<const std::span<const double>> VarSpan;
 typedef std::span<double> ArgSpan;
-typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
 
 constexpr std::size_t bufferSize = 64;
@@ -121,7 +120,7 @@ struct ReduceNLLOutput {
  * \class RooBatchComputeInterface
  * \ingroup Roobatchcompute
  * \brief The interface which should be implemented to provide optimised computation functions for implementations of
- * RooAbsReal::computeBatch().
+ * RooAbsReal::doEval().
  *
  * The class RooBatchComputeInterface provides the mechanism for external modules (like RooFit) to call
  * functions from the library. The power lies in the virtual functions that can resolve to different
@@ -140,7 +139,7 @@ struct ReduceNLLOutput {
 class RooBatchComputeInterface {
 public:
    virtual ~RooBatchComputeInterface() = default;
-   virtual void compute(Config const &cfg, Computer, RestrictArr, size_t, VarSpan, ArgSpan) = 0;
+   virtual void compute(Config const &cfg, Computer, std::span<double> output, VarSpan, ArgSpan) = 0;
 
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
    virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weights,
@@ -177,20 +176,20 @@ inline bool hasCuda()
    return dispatchCUDA;
 }
 
-inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size, VarSpan vars, ArgSpan extraArgs = {})
+inline void compute(Config cfg, Computer comp, std::span<double> output, VarSpan vars, ArgSpan extraArgs = {})
 {
    init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
-   dispatch->compute(cfg, comp, output, size, vars, extraArgs);
+   dispatch->compute(cfg, comp, output, vars, extraArgs);
 }
 
 /// It is not possible to construct a std::span directly from an initializer
 /// list (probably it will be with C++26). That's why we need an explicit
 /// overload for this.
-inline void compute(Config cfg, Computer comp, RestrictArr output, size_t size,
+inline void compute(Config cfg, Computer comp, std::span<double> output,
                     std::initializer_list<std::span<const double>> vars, ArgSpan extraArgs = {})
 {
-   compute(cfg, comp, output, size, VarSpan{vars.begin(), vars.end()}, extraArgs);
+   compute(cfg, comp, output, VarSpan{vars.begin(), vars.end()}, extraArgs);
 }
 
 inline double reduceSum(Config cfg, InputArr input, size_t n)

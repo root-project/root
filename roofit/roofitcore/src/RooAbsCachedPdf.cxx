@@ -400,10 +400,9 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
 }
 
 
-void RooAbsCachedPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAbsCachedPdf::doEval(RooFit::EvalContext &ctx) const
 {
-  auto * cachePdf = getCachePdf(_normSet);
-  cachePdf->computeBatch(output, nEvents, dataMap);
+   getCachePdf(_normSet)->doEval(ctx);
 }
 
 

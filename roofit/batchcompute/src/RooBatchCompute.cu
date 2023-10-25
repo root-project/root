@@ -40,7 +40,7 @@ constexpr int blockSize = 512;
 
 namespace {
 
-void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, std::size_t nExtraArgs)
+void fillBatches(Batches &batches, double *output, size_t nEvents, std::size_t nBatches, std::size_t nExtraArgs)
 {
    batches.nEvents = nEvents;
    batches.nBatches = nBatches;
@@ -115,13 +115,14 @@ public:
    The compute function is launched as a cuda kernel.
    \param computer An enum specifying the compute function to be used.
    \param output The array where the computation results are stored.
-   \param nEvents The number of events to be processed.
    \param vars A std::span containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
-   void compute(RooBatchCompute::Config const &cfg, Computer computer, RestrictArr output, size_t nEvents, VarSpan vars,
+   void compute(RooBatchCompute::Config const &cfg, Computer computer, std::span<double> output, VarSpan vars,
                 ArgSpan extraArgs) override
    {
       using namespace RooFit::Detail::CudaInterface;
+
+      std::size_t nEvents = output.size();
 
       const std::size_t memSize = sizeof(Batches) + vars.size() * sizeof(Batch) + vars.size() * sizeof(double) +
                                   extraArgs.size() * sizeof(double);
@@ -138,7 +139,7 @@ public:
       auto scalarBufferDevice = reinterpret_cast<double *>(arraysDevice + vars.size());
       auto extraArgsDevice = reinterpret_cast<double *>(scalarBufferDevice + vars.size());
 
-      fillBatches(*batches, output, nEvents, vars.size(), extraArgs.size());
+      fillBatches(*batches, output.data(), nEvents, vars.size(), extraArgs.size());
       fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice, nEvents);
       batches->args = arraysDevice;
 
