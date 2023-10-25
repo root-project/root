@@ -832,9 +832,9 @@ class THistPainter extends ObjectPainter {
 
       this.getPadPainter().forEachPainterInPad(objp => {
          if (objp.isSecondaryPainter(this)) {
-            const obj = objp.getObject();
-            if (obj?.fName)
-               objp.snapid = `${snapid}#func_${obj.fName}`;
+            const objname = objp.getObjectName();
+            if (objname)
+               objp.snapid = `${snapid}#func_${objname}`;
             else if (objp.child_painter_indx !== undefined)
                objp.snapid = `${snapid}#indx_${objp.child_painter_indx}`;
          }

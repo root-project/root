@@ -1412,15 +1412,16 @@ class RPadPainter extends RObjectPainter {
             if (this.painters?.length) {
                menu.add('separator');
                const shown = [];
-               for (let n = 0; n < this.painters.length; ++n) {
-                  const obj = this.painters[n]?.getObject();
-                  if (!obj || (shown.indexOf(obj) >= 0)) continue;
-
-                  let name = obj._typename ? obj._typename + '::' : '';
-                  if (obj.fName) name += obj.fName;
-                  if (!name) name = 'item' + n;
-                  menu.add(name, n, this.itemContextMenu);
-               }
+               this.painters.forEach((pp, indx) => {
+                  const obj = pp?.getObject();
+                  if (!obj || (shown.indexOf(obj) >= 0)) return;
+                  if (pp.$secondary) return;
+                  let name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
+                  if (name) name += '::';
+                  name += isFunc(pp.getObjectName) ? pp.getObjectName() : (obj.fName || `item${indx}`);
+                  menu.add(name, indx, this.itemContextMenu);
+                  shown.push(obj);
+               });
             }
 
             menu.show();

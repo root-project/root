@@ -1476,7 +1476,7 @@ class TGraphPainter extends ObjectPainter {
 
       stat.clearPave();
 
-      stat.fillFunctionStat(func, dofit);
+      stat.fillFunctionStat(func, dofit, 1);
 
       return true;
    }

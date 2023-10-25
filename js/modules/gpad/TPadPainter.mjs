@@ -2169,17 +2169,18 @@ class TPadPainter extends ObjectPainter {
                   menu.add('Z axis', 'zaxis', this.itemContextMenu);
             }
 
-            if (this.painters && (this.painters.length > 0)) {
+            if (this.painters?.length) {
                menu.add('separator');
                const shown = [];
                this.painters.forEach((pp, indx) => {
                   const obj = pp?.getObject();
                   if (!obj || (shown.indexOf(obj) >= 0)) return;
                   if (pp.$secondary) return;
-                  let name = ('_typename' in obj) ? (obj._typename + '::') : '';
-                  if ('fName' in obj) name += obj.fName;
-                  if (!name.length) name = 'item' + indx;
+                  let name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
+                  if (name) name += '::';
+                  name += isFunc(pp.getObjectName) ? pp.getObjectName() : (obj.fName || `item${indx}`);
                   menu.add(name, indx, this.itemContextMenu);
+                  shown.push(obj);
                });
             }
 
