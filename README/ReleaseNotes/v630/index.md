@@ -46,6 +46,7 @@ The following people have contributed to this new version:
  Garima Singh, CERN/EP-SFT and Princeton,\
  Enric Tejedor Saavedra, CERN/EP-SFT,\
  Matevz Tadel, UCSD/CMS,\
+ [QuillPusher](https://github.com/QuillPusher), [Compiler Research Group](https://compiler-research.org/team/),\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,
 
