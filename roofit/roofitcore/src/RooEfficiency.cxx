@@ -19,7 +19,7 @@
 \class RooEfficiency
 \ingroup Roofitcore
 
-RooEfficiency is a PDF helper class to fit efficiencies parameterized
+A PDF helper class to fit efficiencies parameterized
 by a supplied function F.
 
 Given a dataset with a category C that determines if a given

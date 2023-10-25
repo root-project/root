@@ -81,20 +81,7 @@
 
 using namespace RooFit;
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #101
-//
 // Fitting, plotting, toy data generation on one-dimensional p.d.f
-//
-// pdf = gauss(x,m,s)
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
-// Elementary operations on a gaussian PDF
 class TestBasic101 : public RooUnitTest {
 public:
    TestBasic101(TFile *refFile, bool writeRef, int verbose)
@@ -154,18 +141,7 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #102
-//
 // Importing data from ROOT TTrees and THx histograms
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic102 : public RooUnitTest {
 public:
    TestBasic102(TFile *refFile, bool writeRef, int verbose)
@@ -296,18 +272,7 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #103
-//
 // Interpreted functions and p.d.f.s
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic103 : public RooUnitTest {
 public:
    TestBasic103(TFile *refFile, bool writeRef, int verbose)
@@ -326,7 +291,7 @@ public:
       // -------------------------------------------------------------------------------------------------
 
       // To construct a proper p.d.f, the formula expression is explicitly normalized internally by dividing
-      // it by a numeric integral of the expresssion over x in the range [-20,20]
+      // it by a numeric integral of the expression over x in the range [-20,20]
       //
       RooRealVar alpha("alpha", "alpha", 5, 0.1, 10);
       RooGenericPdf genpdf("genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*alpha+0.1))))", RooArgSet(x, alpha));
@@ -390,17 +355,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #105
-//
-//  Demonstration of binding ROOT Math functions as RooFit functions
-//  and pdfs
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+//  Demonstration of binding ROOT Math functions as RooFit functions
 class TestBasic105 : public RooUnitTest {
 public:
    TestBasic105(TFile *refFile, bool writeRef, int verbose)
@@ -462,17 +418,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #108
-//
-// Plotting unbinned data with alternate and variable binnings
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Plotting unbinned data with alternate and variable binnings
 class TestBasic108 : public RooUnitTest {
 public:
    TestBasic108(TFile *refFile, bool writeRef, int verbose)
@@ -572,19 +519,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #109
-//
-// Calculating chi^2 from histograms and curves in RooPlots,
-// making histogram of residual and pull distributions
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Calculating chi^2 from histograms and curves in RooPlots, making histogram of residual and pull distributions
 class TestBasic109 : public RooUnitTest {
 public:
    TestBasic109(TFile *refFile, bool writeRef, int verbose)
@@ -654,19 +590,9 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #110
-//
-// Examples on normalization of p.d.f.s,
-// integration of p.d.fs, construction
-// of cumulative distribution functions from p.d.f.s
-// in one dimension
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Examples on normalization of p.d.f.s, integration of p.d.fs, construction of
+// cumulative distribution functions from p.d.f.s in one dimension.
 class TestBasic110 : public RooUnitTest {
 public:
    TestBasic110(TFile *refFile, bool writeRef, int verbose)
@@ -727,19 +653,9 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'BASIC FUNCTIONALITY' RooFit tutorial macro #111
-//
-// Configuration and customization of how numeric (partial) integrals
-// are executed
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Configuration and customization of how numeric (partial) integrals
+// are executed.
 class TestBasic111 : public RooUnitTest {
 public:
    TestBasic111(TFile *refFile, bool writeRef, int verbose)
@@ -807,19 +723,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #201
-//
-// Composite p.d.f with signal and background component
-//
-// pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Composite p.d.f with signal and background component.
 class TestBasic201 : public RooUnitTest {
 public:
    TestBasic201(TFile *refFile, bool writeRef, int verbose)
@@ -912,18 +817,7 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #202
-//
-// Setting up an extended maximum likelihood fit
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// Setting up an extended maximum likelihood fit.
 class TestBasic202 : public RooUnitTest {
 public:
    TestBasic202(TFile *refFile, bool writeRef, int verbose)
@@ -1011,17 +905,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #203
-//
-// Fitting and plotting in sub ranges
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Fitting and plotting in sub ranges.
 class TestBasic203 : public RooUnitTest {
 public:
    TestBasic203(TFile *refFile, bool writeRef, int verbose)
@@ -1080,19 +965,9 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
-//
+
 // Extended maximum likelihood fit with alternate range definition
 // for observed number of events.
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic204 : public RooUnitTest {
 public:
    TestBasic204(TFile *refFile, bool writeRef, int verbose)
@@ -1155,18 +1030,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #205
-//
-// Options for plotting components of composite p.d.f.s.
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Options for plotting components of composite p.d.f.s.
 class TestBasic205 : public RooUnitTest {
 public:
    TestBasic205(TFile *refFile, bool writeRef, int verbose)
@@ -1257,20 +1122,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
-//
-// One-dimensional numeric convolution
-// (require ROOT to be compiled with --enable-fftw3)
-//
-// pdf = landau(t) (x) gauss(t)
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// One-dimensional numeric convolution (require ROOT to be compiled with --enable-fftw3).
 class TestBasic208 : public RooUnitTest {
 public:
    TestBasic208(TFile *refFile, bool writeRef, int verbose)
@@ -1349,23 +1202,14 @@ public:
    }
 };
 
-/////////////////////////////////////////////////////////////////////////
-//
-// 'ADDITION AND CONVOLUTION' RooFit tutorial macro #209
-//
 // Decay function p.d.fs with optional B physics
 // effects (mixing and CP violation) that can be
 // analytically convolved with e.g. Gaussian resolution
-// functions
+// functions.
 //
 // pdf1 = decay(t,tau) (x) delta(t)
 // pdf2 = decay(t,tau) (x) gauss(t,m,s)
 // pdf3 = decay(t,tau) (x) (f*gauss1(t,m1,s1) + (1-f)*gauss2(t,m1,s1))
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic209 : public RooUnitTest {
 public:
    TestBasic209(TFile *refFile, bool writeRef, int verbose)
@@ -1427,20 +1271,11 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #301
-//
+
 // Multi-dimensional p.d.f.s through composition, e.g. substituting a
 // p.d.f parameter with a function that depends on other observables
 //
 // pdf = gauss(x,f(y),s) with f(y) = a0 + a1*y
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic301 : public RooUnitTest {
 public:
    TestBasic301(TFile *refFile, bool writeRef, int verbose)
@@ -1492,18 +1327,8 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #302
-//
-//  Utility functions classes available for use in tailoring
-//  of composite (multidimensional) pdfs
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// Utility functions classes available for use in tailoring
+// of composite (multidimensional) pdfs
 class TestBasic302 : public RooUnitTest {
 public:
    TestBasic302(TFile *refFile, bool writeRef, int verbose)
@@ -1580,19 +1405,10 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
-//
+
 // Use of tailored p.d.f as conditional p.d.fs.s
 //
 // pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic303 : public RooUnitTest {
 public:
    RooDataSet *makeFakeDataXY()
@@ -1677,19 +1493,9 @@ public:
    }
 };
 
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #304
-//
 // Simple uncorrelated multi-dimensional p.d.f.s
 //
 // pdf = gauss(x,mx,sx) * gauss(y,my,sy)
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic304 : public RooUnitTest {
 public:
    TestBasic304(TFile *refFile, bool writeRef, int verbose)
@@ -1741,19 +1547,9 @@ public:
    }
 };
 
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #305
-//
 // Multi-dimensional p.d.f.s with conditional p.d.fs in product
 //
 // pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic305 : public RooUnitTest {
 public:
    TestBasic305(TFile *refFile, bool writeRef, int verbose)
@@ -1817,18 +1613,7 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #306
-//
-// Complete example with use of conditional p.d.f. with per-event errors
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// Complete example with use of conditional p.d.f. with per-event errors.
 class TestBasic306 : public RooUnitTest {
 public:
    TestBasic306(TFile *refFile, bool writeRef, int verbose)
@@ -1904,18 +1689,7 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #307
-//
-// Complete example with use of full p.d.f. with per-event errors
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// Complete example with use of full p.d.f. with per-event errors.
 class TestBasic307 : public RooUnitTest {
 public:
    TestBasic307(TFile *refFile, bool writeRef, int verbose)
@@ -1985,19 +1759,9 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #308
-//
-// Examples on normalization of p.d.f.s,
-// integration of p.d.fs, construction
-// of cumulative distribution functions from p.d.f.s
-// in two dimensions
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Examples on normalization of p.d.f.s, integration of p.d.fs, construction of
+// cumulative distribution functions from p.d.f.s in two dimensions.
 class TestBasic308 : public RooUnitTest {
 public:
    TestBasic308(TFile *refFile, bool writeRef, int verbose)
@@ -2073,18 +1837,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #309
-//
-// Projecting p.d.f and data slices in discrete observables
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Projecting p.d.f and data slices in discrete observables.
 class TestBasic310 : public RooUnitTest {
 public:
    TestBasic310(TFile *refFile, bool writeRef, int verbose)
@@ -2158,18 +1912,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #310
-//
-// Projecting p.d.f and data ranges in continuous observables
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Projecting p.d.f and data ranges in continuous observables.
 class TestBasic311 : public RooUnitTest {
 public:
    TestBasic311(TFile *refFile, bool writeRef, int verbose)
@@ -2235,18 +1979,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #312
-//
-// Performing fits in multiple (disjoint) ranges in one or more dimensions
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Performing fits in multiple (disjoint) ranges in one or more dimensions.
 class TestBasic312 : public RooUnitTest {
 public:
    TestBasic312(TFile *refFile, bool writeRef, int verbose)
@@ -2336,19 +2070,9 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #313
-//
-// Working with parameterized ranges to define non-rectangular regions
-// for fitting and integration
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Working with parameterized ranges to define non-rectangular regions
+// for fitting and integration.
 class TestBasic313 : public RooUnitTest {
 public:
    TestBasic313(TFile *refFile, bool writeRef, int verbose)
@@ -2392,7 +2116,7 @@ public:
       // ----------------------------------------------------------------------------------
 
       {
-         // To remove the INFO:NumericIntegration ouput from the stressRooFit output,
+         // To remove the INFO:NumericIntegration output from the stressRooFit output,
          // change the message level locally.
          RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::INFO, 0u, RooFit::NumIntegration, false};
 
@@ -2409,21 +2133,13 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
-//
+
 // Working with parameterized ranges in a fit. This an example of a
 // fit with an acceptance that changes per-event
 //
 //  pdf = exp(-t/tau) with t[tmin,5]
 //
 //  where t and tmin are both observables in the dataset
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic314 : public RooUnitTest {
 public:
    TestBasic314(TFile *refFile, bool writeRef, int verbose)
@@ -2479,18 +2195,7 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #315
-//
-// Marginizalization of multi-dimensional p.d.f.s through integration
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// Marginizalization of multi-dimensional p.d.f.s through integration.
 class TestBasic315 : public RooUnitTest {
 public:
    TestBasic315(TFile *refFile, bool writeRef, int verbose)
@@ -2551,19 +2256,8 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
-//
-// Using the likelihood ratio techique to construct a signal enhanced
+// Using the likelihood ratio technique to construct a signal enhanced
 // one-dimensional projection of a multi-dimensional p.d.f.
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic316 : public RooUnitTest {
 public:
    TestBasic316(TFile *refFile, bool writeRef, int verbose)
@@ -2651,18 +2345,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #402
-//
-// Tools for manipulation of (un)binned datasets
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Tools for manipulation of (un)binned datasets
 class TestBasic402 : public RooUnitTest {
 public:
    TestBasic402(TFile *refFile, bool writeRef, int verbose)
@@ -2718,7 +2402,7 @@ public:
       // The merge() function adds two data set column-wise
       static_cast<RooDataSet &>(*d1).merge(static_cast<RooDataSet *>(d2.get()));
 
-      // The append() function addes two datasets row-wise
+      // The append() function adds two datasets row-wise
       static_cast<RooDataSet &>(*d1).append(static_cast<RooDataSet &>(*d3));
 
       regValue(d1->numEntries(), "rf403_nd1");
@@ -2753,18 +2437,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #403
-//
-// Using weights in unbinned datasets
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Using weights in unbinned datasets.
 class TestBasic403 : public RooUnitTest {
 public:
    TestBasic403(TFile *refFile, bool writeRef, int verbose)
@@ -2880,18 +2554,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #404
-//
-// Working with RooCategory objects to describe discrete variables
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Working with RooCategory objects to describe discrete variables.
 class TestBasic404 : public RooUnitTest {
 public:
    TestBasic404(TFile *refFile, bool writeRef, int verbose)
@@ -2967,18 +2631,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #405
-//
-// Demonstration of real-->discrete mapping functions
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Demonstration of real-->discrete mapping functions.
 class TestBasic405 : public RooUnitTest {
 public:
    TestBasic405(TFile *refFile, bool writeRef, int verbose)
@@ -3064,18 +2718,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'DATA AND CATEGORIES' RooFit tutorial macro #406
-//
-// Demonstration of discrete-->discrete (invertable) functions
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Demonstration of discrete-->discrete (invertable) functions.
 class TestBasic406 : public RooUnitTest {
 public:
    TestBasic406(TFile *refFile, bool writeRef, int verbose)
@@ -3115,7 +2759,7 @@ public:
       tcatType.map("Lepton", "Cut based");
       tcatType.map("Kaon", "Cut based");
 
-      // Enter a wilcard expression mapping
+      // Enter a wildcard expression mapping
       tcatType.map("NetTagger*", "Neural Network");
 
       // Make a table of the mapped category state multiplicit in data
@@ -3148,19 +2792,9 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #501
-//
-// Using simultaneous p.d.f.s to describe simultaneous fits to multiple
-// datasets
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Using simultaneous p.d.f.s to describe simultaneous fits to multiple
+// datasets.
 class TestBasic501 : public RooUnitTest {
 public:
    TestBasic501(TFile *refFile, bool writeRef, int verbose)
@@ -3270,19 +2904,9 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #501
-//
-// Using simultaneous p.d.f.s to describe simultaneous fits to multiple
-// datasets
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Using simultaneous p.d.f.s to describe simultaneous fits to multiple
+// datasets.
 class TestBasic599 : public RooUnitTest {
 public:
    TestBasic599(TFile *refFile, bool writeRef, int verbose)
@@ -3485,17 +3109,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #601
-//
-// Interactive minimization with MINUIT
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Interactive minimization with MINUIT.
 class TestBasic601 : public RooUnitTest {
 public:
    TestBasic601(TFile *refFile, bool writeRef, int verbose)
@@ -3577,18 +3192,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #602
-//
-// Setting up a binning chi^2 fit
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Setting up a binning chi^2 fit.
 class TestBasic602 : public RooUnitTest {
 public:
    TestBasic602(TFile *refFile, bool writeRef, int verbose)
@@ -3646,17 +3251,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #604
-//
-// Fitting with constraints
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Fitting with constraints.
 class TestBasic604 : public RooUnitTest {
 public:
    TestBasic604(TFile *refFile, bool writeRef, int verbose)
@@ -3721,18 +3317,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #605
-//
-// Working with the profile likelihood estimator
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Working with the profile likelihood estimator.
 class TestBasic605 : public RooUnitTest {
 public:
    TestBasic605(TFile *refFile, bool writeRef, int verbose)
@@ -3813,18 +3399,7 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #606
-//
-// Understanding and customizing error handling in likelihood evaluations
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// Understanding and customizing error handling in likelihood evaluations.
 class TestBasic606 : public RooUnitTest {
 public:
    TestBasic606(TFile *refFile, bool writeRef, int verbose)
@@ -3883,18 +3458,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #607
-//
-// Demonstration of options of the RooFitResult class
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Demonstration of options of the RooFitResult class.
 class TestBasic607 : public RooUnitTest {
 public:
    TestBasic607(TFile *refFile, bool writeRef, int verbose)
@@ -3964,19 +3529,8 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #609
-//
 // Setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
-// values (and optionally err(X) values)
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// values (and optionally err(X) values).
 class TestBasic609 : public RooUnitTest {
 public:
    TestBasic609(TFile *refFile, bool writeRef, int verbose)
@@ -4044,18 +3598,9 @@ public:
    }
 };
 
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #701
-//
 // Unbinned maximum likelihood fit of an efficiency eff(x) function to
 // a dataset D(x,cut), where cut is a category encoding a selection, of which
-// the efficiency as function of x should be described by eff(x)
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
+// the efficiency as function of x should be described by eff(x).
 class TestBasic701 : public RooUnitTest {
 public:
    TestBasic701(TFile *refFile, bool writeRef, int verbose)
@@ -4122,17 +3667,10 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #702
-//
+
 // Unbinned maximum likelihood fit of an efficiency eff(x) function to
 // a dataset D(x,cut), where cut is a category encoding a selection whose
-// efficiency as function of x should be described by eff(x)
-//
-//
-/////////////////////////////////////////////////////////////////////////
-
+// efficiency as function of x should be described by eff(x).
 class TestBasic702 : public RooUnitTest {
 public:
    TestBasic702(TFile *refFile, bool writeRef, int verbose)
@@ -4213,18 +3751,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #703
-//
-// Using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
 class TestBasic703 : public RooUnitTest {
 public:
    TestBasic703(TFile *refFile, bool writeRef, int verbose)
@@ -4287,18 +3815,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #704
-//
-// Using a p.d.f defined by a sum of real-valued amplitude components
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Using a p.d.f defined by a sum of real-valued amplitude components.
 class TestBasic704 : public RooUnitTest {
 public:
    TestBasic704(TFile *refFile, bool writeRef, int verbose)
@@ -4375,18 +3893,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #705
-//
-// Linear interpolation between p.d.f shapes using the 'Alex Read' algorithm
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Linear interpolation between p.d.f shapes using the 'Alex Read' algorithm.
 class TestBasic705 : public RooUnitTest {
 public:
    double ctol() { return 5e-2; } // very conservative, this is a numerically difficult test
@@ -4501,18 +4009,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #706
-//
-// Histogram based p.d.f.s and functions
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Histogram based p.d.f.s and functions.
 class TestBasic706 : public RooUnitTest {
 public:
    TestBasic706(TFile *refFile, bool writeRef, int verbose)
@@ -4568,18 +4066,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #707
-//
-// Using non-parametric (multi-dimensional) kernel estimation p.d.f.s
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Using non-parametric (multi-dimensional) kernel estimation p.d.f.s
 class TestBasic707 : public RooUnitTest {
 public:
    TestBasic707(TFile *refFile, bool writeRef, int verbose)
@@ -4660,18 +4148,8 @@ public:
       return true;
    }
 };
-//////////////////////////////////////////////////////////////////////////
-//
-// 'SPECIAL PDFS' RooFit tutorial macro #708
-//
-// Special decay pdf for B physics with mixing and/or CP violation
-//
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// Special decay pdf for B physics with mixing and/or CP violation.
 class TestBasic708 : public RooUnitTest {
 public:
    TestBasic708(TFile *refFile, bool writeRef, int verbose)
@@ -4843,16 +4321,9 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #801
-//
-// A Toy Monte Carlo study that perform cycles of
-// event generation and fittting
-//
-//
-/////////////////////////////////////////////////////////////////////////
 
+// A Toy Monte Carlo study that perform cycles of event generation and
+// fittting.
 class TestBasic801 : public RooUnitTest {
 public:
    TestBasic801(TFile *refFile, bool writeRef, int verbose)
@@ -4934,17 +4405,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #802
-//
-// RooMCStudy: using separate fit and generator models, using the chi^2 calculator model
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// RooMCStudy: using separate fit and generator models, using the chi^2 calculator model
 class TestBasic802 : public RooUnitTest {
 public:
    TestBasic802(TFile *refFile, bool writeRef, int verbose)
@@ -5027,17 +4489,8 @@ public:
       return true;
    }
 };
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #803
-//
-// RooMCStudy: Using the randomizer and profile likelihood add-on models
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
 
+// RooMCStudy: Using the randomizer and profile likelihood add-on models.
 class TestBasic803 : public RooUnitTest {
 public:
    TestBasic803(TFile *refFile, bool writeRef, int verbose)
@@ -5132,17 +4585,7 @@ public:
    }
 };
 
-/////////////////////////////////////////////////////////////////////////
-//
-// 'VALIDATION AND MC STUDIES' RooFit tutorial macro #804
-//
 // Using RooMCStudy on models with constrains
-//
-//
-// 07/2008 - Wouter Verkerke
-//
-/////////////////////////////////////////////////////////////////////////
-
 class TestBasic804 : public RooUnitTest {
 public:
    TestBasic804(TFile *refFile, bool writeRef, int verbose)

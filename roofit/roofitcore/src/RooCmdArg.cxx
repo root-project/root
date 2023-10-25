@@ -20,7 +20,7 @@
 \class RooCmdArg
 \ingroup Roofitcore
 
-RooCmdArg is a named container for two doubles, two integers
+Named container for two doubles, two integers
 two object points and three string pointers that can be passed
 as generic named arguments to a variety of RooFit end user
 methods. To achieved the named syntax, RooCmdArg objects are
