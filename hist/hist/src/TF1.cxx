@@ -2950,21 +2950,19 @@ void TF1::Print(Option_t *option) const
 /// histogram is painted.
 /// The painted histogram can be retrieved calling afterwards the method TF1::GetHistogram()
 
-void TF1::Paint(Option_t *choptin)
+void TF1::Paint(Option_t *option)
 {
    fgCurrent = this;
 
-   char option[32];
-   strlcpy(option,choptin,32);
-
-   TString opt = option;
+   TString opt0 = option, opt = option, optSAME;
    opt.ToLower();
 
-   Bool_t optSAME = kFALSE;
-   if (opt.Contains("same")) {
-      opt.ReplaceAll("same","");
-      optSAME = kTRUE;
-   }
+   if (opt.Contains("sames"))
+      optSAME = "sames";
+   else if (opt.Contains("same"))
+      optSAME = "same";
+   if (optSAME.Length())
+      opt.ReplaceAll(optSAME, "");
    opt.ReplaceAll(' ', "");
 
    Double_t xmin = fXmin, xmax = fXmax, pmin = fXmin, pmax = fXmax;
@@ -2972,7 +2970,7 @@ void TF1::Paint(Option_t *choptin)
       pmin = gPad->PadtoX(gPad->GetUxmin());
       pmax = gPad->PadtoX(gPad->GetUxmax());
    }
-   if (optSAME) {
+   if (optSAME.Length()) {
       // Completely outside
       if (xmax < pmin) return;
       if (xmin > pmax) return;
@@ -2981,14 +2979,14 @@ void TF1::Paint(Option_t *choptin)
    // create an histogram using the function content (re-use it if already existing)
    fHistogram = DoCreateHistogram(xmin, xmax, kFALSE);
 
-   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
-   char *l2 = strstr(option,"PLC"); // Automatic Line Color
-   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
-   if (l1 || l2 || l3) {
+   auto is_pfc = opt0.Index("PFC"); // Automatic Fill Color
+   auto is_plc = opt0.Index("PLC"); // Automatic Line Color
+   auto is_pmc = opt0.Index("PMC"); // Automatic Marker Color
+   if (is_pfc != kNPOS || is_plc != kNPOS || is_pmc != kNPOS) {
       Int_t i = gPad->NextPaletteColor();
-      if (l1) {memcpy(l1,"   ",3); fHistogram->SetFillColor(i);}
-      if (l2) {memcpy(l2,"   ",3); fHistogram->SetLineColor(i);}
-      if (l3) {memcpy(l3,"   ",3); fHistogram->SetMarkerColor(i);}
+      if (is_pfc != kNPOS) { opt0.Replace(is_pfc, 3, " "); fHistogram->SetFillColor(i); }
+      if (is_plc != kNPOS) { opt0.Replace(is_plc, 3, " "); fHistogram->SetLineColor(i); }
+      if (is_pmc != kNPOS) { opt0.Replace(is_pmc, 3, " "); fHistogram->SetMarkerColor(i); }
    }
 
    // set the optimal minimum and maximum
@@ -3006,12 +3004,12 @@ void TF1::Paint(Option_t *choptin)
          // function oscillate around a constant value
          if (minimum == -1111) {
             Double_t hmin;
-            if (optSAME && gPad) hmin = gPad->GetUymin();
+            if (optSAME.Length() && gPad) hmin = gPad->GetUymin();
             else         hmin = fHistogram->GetMinimum();
             if (hmin > 0) {
                Double_t hmax;
                Double_t hminpos = hmin;
-               if (optSAME && gPad) hmax = gPad->GetUymax();
+               if (optSAME.Length() && gPad) hmax = gPad->GetUymax();
                else         hmax = fHistogram->GetMaximum();
                hmin -= 0.05 * (hmax - hmin);
                if (hmin < 0) hmin = 0;
@@ -3031,14 +3029,13 @@ void TF1::Paint(Option_t *choptin)
       fHistogram->SetMaximum(maximum);
    }
 
-
    // Draw the histogram.
    if (!gPad) return;
    if (opt.Length() == 0) {
-      if (optSAME) fHistogram->Paint("lfsame");
-      else         fHistogram->Paint("lf");
+      optSAME.Prepend("lf");
+      fHistogram->Paint(optSAME.Data());
    } else {
-      fHistogram->Paint(option);
+      fHistogram->Paint(opt0.Data());
    }
 }
 
