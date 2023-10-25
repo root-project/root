@@ -1,4 +1,5 @@
 import os
+import platform
 import pytest
 
 import DistRDF
@@ -185,6 +186,8 @@ class TestChangeAttribute:
 class TestPropagateExceptions:
     """Tests that the C++ exceptions are properly propagated."""
 
+    @pytest.mark.skipif(platform.system() == "Darwin" and platform.machine() == "arm64",
+                        reason="cannot catch exceptions on macOS arm64")
     def test_runtime_error_is_propagated(self, connection):
         """The test creates a TGraph with mixed scalar and vector columns."""
         df = Dask.RDataFrame(100, daskclient=connection)
