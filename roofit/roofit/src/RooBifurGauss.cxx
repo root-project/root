@@ -70,10 +70,10 @@ void RooBifurGauss::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BifurGauss distribution.
-void RooBifurGauss::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooBifurGauss::doEval(RooFit::EvalContext & ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::BifurGauss, output, nEvents,
-                            {dataMap.at(x), dataMap.at(mean), dataMap.at(sigmaL), dataMap.at(sigmaR)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::BifurGauss, ctx.output(),
+          {ctx.at(x),ctx.at(mean),ctx.at(sigmaL),ctx.at(sigmaR)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

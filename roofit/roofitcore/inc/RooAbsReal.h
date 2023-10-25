@@ -17,13 +17,13 @@
 #define ROO_ABS_REAL
 
 #include "RooAbsArg.h"
+#include "RooArgList.h"
+#include "RooArgSet.h"
 #include "RooCmdArg.h"
 #include "RooCurve.h"
-#include "RooArgSet.h"
-#include "RooArgList.h"
-#include "RooGlobalFunc.h"
-#include "RooFit/Detail/DataMap.h"
 #include "RooFit/Detail/CodeSquashContext.h"
+#include "RooFit/EvalContext.h"
+#include "RooGlobalFunc.h"
 
 #include <ROOT/RSpan.hxx>
 
@@ -389,7 +389,7 @@ public:
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
                      RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
-  virtual void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const;
+  virtual void doEval(RooFit::EvalContext &) const;
 
   virtual bool hasGradient() const { return false; }
   virtual void gradient(double *) const {
@@ -412,7 +412,7 @@ protected:
   friend class RooAddPdf;
   friend class RooAddModel;
   friend class AddCacheElem;
-  friend class RooFit::Detail::DataMap;
+  friend class RooFit::EvalContext;
 
   // Hook for objects with normalization-dependent parameters interpretation
   virtual void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) ;
