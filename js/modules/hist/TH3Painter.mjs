@@ -161,7 +161,7 @@ class TH3Painter extends THistPainter {
          stat.addText('Integral = ' + stat.format(data.integral, 'entries'));
 
 
-      if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit, 3);
 
       return true;
    }

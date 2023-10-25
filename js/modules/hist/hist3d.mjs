@@ -387,9 +387,10 @@ function create3DControl(fp) {
 
    fp.control.processMouseMove = function(intersects) {
       let tip = null, mesh = null, zoom_mesh = null;
+      const handle_tooltip = frame_painter.isTooltipAllowed();
 
       for (let i = 0; i < intersects.length; ++i) {
-         if (isFunc(intersects[i].object?.tooltip)) {
+         if (handle_tooltip && isFunc(intersects[i].object?.tooltip)) {
             tip = intersects[i].object.tooltip(intersects[i]);
             if (tip) { mesh = intersects[i].object; break; }
          } else if (intersects[i].object?.zoom && !zoom_mesh)

@@ -1,5 +1,11 @@
 # JSROOT changelog
 
+## Change in 7.5.x
+1. Fix - proper fit pars display in stats, proper #chi^{2}
+2. Fix - several bugs in TFormula parsing
+3. Fix - correctly use saved buffer in TF1/TF2
+
+
 ## Changes in 7.5.1
 1. Fix - expand item in hierarchy painter
 2. Fix - correctly use saved TF1 values for non-equidistant bins #270

@@ -1104,7 +1104,7 @@ class TH2Painter extends THistPainter {
          stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit, 2);
 
       return true;
    }
