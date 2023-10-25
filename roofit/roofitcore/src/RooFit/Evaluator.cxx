@@ -16,7 +16,7 @@
 \class Evaluator
 \ingroup Roofitcore
 
-This class can evaluate a RooAbsReal object in other ways than recursive graph
+Evaluates a RooAbsReal object in other ways than recursive graph
 traversal. Currently, it is being used for evaluating a RooAbsReal object and
 supplying the value to the minimizer, during a fit. The class scans the
 dependencies and schedules the computations in a secure and efficient way. The
@@ -529,7 +529,7 @@ std::span<const double> Evaluator::getValHeterogeneous()
    // return the final value
    return _dataMapCUDA.at(&_topNode);
 #else
-   // Doens't matter what we do here, because it's a private function that's
+   // Doesn't matter what we do here, because it's a private function that's
    // not called when RooFit is not built with CUDA support.
    return {};
 #endif // ROOFIT_CUDA

@@ -19,7 +19,7 @@
 \class RooAbsCategoryLValue
 \ingroup Roofitcore
 
-RooAbsCategoryLValue is the common abstract base class for objects that represent a
+Abstract base class for objects that represent a
 discrete value that can be set from the outside, i.e. that may appear on the left
 hand side of an assignment ("*lvalue*").
 

@@ -17,11 +17,12 @@
 //////////////////////////////////////////////////////////////////////////////
 /** \class RooAbsPdf
     \ingroup Roofitcore
+    \brief Abstract interface for all probability density functions.
 
 ## RooAbsPdf, the base class of all PDFs
 
-RooAbsPdf is the abstract interface for all probability density
-functions. The class provides hybrid analytical/numerical
+RooAbsPdf is the base class for all probability density
+functions (PDFs). The class provides hybrid analytical/numerical
 normalization for its implementations, error tracing, and a Monte Carlo
 generator interface.
 

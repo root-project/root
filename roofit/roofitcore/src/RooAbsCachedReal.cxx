@@ -14,7 +14,7 @@
 \class RooAbsCachedReal
 \ingroup Roofitcore
 
-RooAbsCachedReal is the abstract base class for functions that need or
+Abstract base class for functions that need or
 want to cache their evaluate() output in a RooHistFunc defined in
 terms of the used observables. This base class manages the creation
 and storage of all RooHistFunc cache p.d.fs and the RooDataHists

@@ -19,7 +19,7 @@
 \class RooAbsCacheElement
 \ingroup Roofitcore
 
-RooAbsCacheElement is the abstract base class for objects to be stored
+Abstract base class for objects to be stored
 in RooAbsCache cache manager objects. Each storage element has an
 interface to pass on calls for server redirection, operation mode
 change calls and constant term optimization management calls
