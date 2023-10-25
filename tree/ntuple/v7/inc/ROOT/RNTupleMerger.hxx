@@ -22,15 +22,9 @@
 #include <ROOT/RPageStorage.hxx>
 
 #include <memory>
-#include <mutex>
-#include <stdio.h>
 #include <string>
 #include <vector>
 #include <unordered_map>
-
-using RPageSink = ROOT::Experimental::Detail::RPageSink;
-using RPageSource = ROOT::Experimental::Detail::RPageSource;
-using RPageStorage = ROOT::Experimental::Detail::RPageStorage;
 
 namespace ROOT {
 namespace Experimental {
@@ -60,19 +54,14 @@ public:
 // clang-format on
 class RNTupleMerger {
 
-public:
-   /// Merge a given set of sources into the destination
-   void Merge(std::vector<std::unique_ptr<RPageSource>> &sources, std::unique_ptr<RPageSink> &destination);
-
 private:
    // Struct to hold column and field descriptors
    struct RColumnInfo {
-      const RColumnDescriptor &fColumnDesc;
-      const RFieldDescriptor &fFieldDesc;
-      const std::uint64_t fIndex;
+      const DescriptorId_t fColumnInputId;
+      const DescriptorId_t fColumnOutputId;
 
-      RColumnInfo(const RColumnDescriptor &columnDesc, const RFieldDescriptor &fieldDesc, const std::uint64_t &index)
-         : fColumnDesc(columnDesc), fFieldDesc(fieldDesc), fIndex(index)
+      RColumnInfo(const DescriptorId_t &inputId, const DescriptorId_t &outputId)
+         : fColumnInputId(inputId), fColumnOutputId(outputId)
       {
       }
    };
@@ -84,26 +73,31 @@ private:
       for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
          for (const auto &column : desc.GetColumnIterable(field)) {
             const std::string name = field.GetFieldName() + "." + std::to_string(column.GetIndex());
-            if (!m_indexMap.count(name)) { // contains as of C++20
-               m_indexMap[name] = m_indexMap.size();
+            if (!fNameToOutputIdMap.count(name)) { // contains as of C++20
+               fNameToOutputIdMap[name] = fNameToOutputIdMap.size();
             }
-            vec.emplace_back(column, field, m_indexMap.at(name));
+            vec.emplace_back(column.GetPhysicalId(), fNameToOutputIdMap.at(name));
          }
          AddColumnsFromField(vec, desc, field);
       }
    }
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const std::unique_ptr<RPageSource> &source)
+   std::vector<RColumnInfo> CollectColumns(const std::unique_ptr<Detail::RPageSource> &source)
    {
       auto desc = source->GetSharedDescriptorGuard();
       std::vector<RColumnInfo> columns;
-      AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldDescriptor(desc->GetFieldZeroId()));
+      AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldZero());
       return columns;
    }
 
-   // Internal map that holds column name : index information
-   std::unordered_map<std::string, std::uint64_t> m_indexMap;
+   // Internal map that holds column name : output ID information
+   std::unordered_map<std::string, DescriptorId_t> fNameToOutputIdMap;
+
+public:
+   /// Merge a given set of sources into the destination
+   void
+   Merge(std::vector<std::unique_ptr<Detail::RPageSource>> &sources, std::unique_ptr<Detail::RPageSink> &destination);
 
 }; // end of class RNTupleMerger
 

@@ -19,6 +19,8 @@
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <mutex> // std::call_once/once_flag
+
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 {
    if (inputs == nullptr || mergeInfo == nullptr) {
@@ -38,8 +40,8 @@ ROOT::Experimental::RFieldMerger::Merge(const ROOT::Experimental::RFieldDescript
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<RPageSource>> &sources,
-                                              std::unique_ptr<RPageSink> &destination)
+void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<Detail::RPageSource>> &sources,
+                                              std::unique_ptr<Detail::RPageSink> &destination)
 {
 
    // Flag for creating the destination sink only once
@@ -82,7 +84,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<RPageS
 
             // See if this cluster contains this column
             // if not, there is nothing to read/do...
-            auto columnId = column.fColumnDesc.GetPhysicalId();
+            auto columnId = column.fColumnInputId;
             if (!cluster.ContainsColumn(columnId)) {
                continue;
             }
@@ -98,7 +100,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<RPageS
                // LoadSealedPage reads packed/compressed bytes of a page into
                // a memory buffer provided by a sealed page
                RClusterIndex clusterIndex(clusterId, idx);
-               RPageStorage::RSealedPage sealedPage;
+               Detail::RPageStorage::RSealedPage sealedPage;
                source->LoadSealedPage(columnId, clusterIndex, sealedPage);
 
                // The way LoadSealedPage works might require a double call
@@ -109,7 +111,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<RPageS
 
                // Now commit this page to the output
                // Can we do this w/ a CommitSealedPageV
-               destination->CommitSealedPage(column.fIndex, sealedPage);
+               destination->CommitSealedPage(column.fColumnOutputId, sealedPage);
 
                // Move on to the next index
                idx += pageInfo.fNElements;
