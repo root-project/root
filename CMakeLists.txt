@@ -724,7 +724,7 @@ if(testing)
       execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
                       remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
     endif()
-    string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
+    string(REGEX REPLACE "/root(\.git)?$" "" originprefix "${originurl}")
     relatedrepo_GetClosestMatch(REPO_NAME roottest
                                 ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
                                 FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
