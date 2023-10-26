@@ -43,15 +43,15 @@ namespace Experimental {
 \ingroup NTuple
 \brief Converts a TTree into an RNTuple
 
-Example usage:
+Example usage (see the ntpl008_import.C tutorial for a full example):
 
 ~~~ {.cpp}
 #include <ROOT/RNTupleImporter.hxx>
 using ROOT::Experimental::RNTupleImporter;
 
-auto importer = RNTupleImporter::Create("data.root", "TreeName", "output.root").Unwrap();
+auto importer = RNTupleImporter::Create("data.root", "TreeName", "output.root");
 // As required: importer->SetNTupleName(), importer->SetWriteOptions(), ...
-importer->Import().ThrowOnError();
+importer->Import();
 ~~~
 
 The output file is created if it does not exist, otherwise the ntuple is added to the existing file.
@@ -90,7 +90,9 @@ Most RNTuple fields have a type identical to the corresponding TTree input branc
 Current limitations of the importer:
   - No support for trees containing TObject (or derived classes) or TClonesArray collections
   - Due to RNTuple currently storing data fully split, "don't split" markers are ignored
-  - Some types are not (yet) available in RNTuple, such as pointers, Double32_t or std::map
+  - Some types are not (yet) available in RNTuple, such as raw pointers. Please refer to the
+    [RNTuple specification](https://github.com/root-project/root/blob/master/tree/ntuple/v7/doc/specifications.md) for
+    an overview of all types currently supported.
 */
 // clang-format on
 class RNTupleImporter {
