@@ -37,7 +37,10 @@ if(MYSQL_CONFIG_EXECUTABLE)
   string( REPLACE "-I" "" MYSQL_INCLUDE_DIRS "${MYSQL_INCLUDE_DIRS}")
   find_path(MYSQL_INCLUDE_DIR mysql.h PATHS ${MYSQL_INCLUDE_DIRS} NO_DEFAULT_PATH)
   execute_process(COMMAND ${MYSQL_CONFIG_EXECUTABLE} --libs OUTPUT_VARIABLE MYSQL_LIBRARIES OUTPUT_STRIP_TRAILING_WHITESPACE)
-else()
+endif()
+
+# If not yet found the includes, try again without using mysql_config (mariadb_config is a binary not relocatable)
+if (NOT MYSQL_CONFIG_EXECUTABLE OR NOT MYSQL_INCLUDE_DIR)
   find_path(MYSQL_INCLUDE_DIR mysql.h
     PATH_SUFFIXES include/mysql include/mariadb
     HINTS ${MYSQL_DIR} $ENV{MYSQL_DIR}
