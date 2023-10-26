@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '25/10/2023',
+version_date = '26/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -69213,9 +69213,22 @@ class TPavePainter extends ObjectPainter {
                // we take statistic from main painter
                if (main.fillStatistic(this, dostat, dofit)) {
                   // adjust the size of the stats box with the number of lines
-                  const nlines = pt.fLines?.arr.length || 0;
-                  if ((nlines > 0) && !this.moved_interactive && ((gStyle.fStatFontSize <= 0) || (gStyle.fStatFont % 10 === 3)))
-                     pt.fY1NDC = Math.max(0.02, pt.fY2NDC - ((nlines < 8) ? nlines * 0.25 * gStyle.fStatH : nlines * 0.025));
+                  let nlines = pt.fLines?.arr.length || 0;
+                  if ((nlines > 0) && !this.moved_interactive) {
+                     // in ROOT TH2 and TH3 always add full statsh for fit parameters
+                     const extrah = this._has_fit && (this._fit_dim > 1) ? gStyle.fStatH : 0;
+                     // but fit parameters not used in full size calculations
+                     if (extrah) nlines -= this._fit_cnt;
+                     let stath = gStyle.fStatH, statw = gStyle.fStatW;
+                     if (this._has_fit)
+                        statw = 1.8 * gStyle.fStatW;
+                     if ((gStyle.fStatFontSize <= 0) || (gStyle.fStatFont % 10 === 3))
+                        stath = nlines * 0.25 * gStyle.fStatH;
+                     else if (gStyle.fStatFontSize < 1)
+                        stath = nlines * gStyle.fStatFontSize;
+                     pt.fX1NDC = Math.max(0.02, pt.fX2NDC - statw);
+                     pt.fY1NDC = Math.max(0.02, pt.fY2NDC - stath - extrah);
+                  }
                }
             }
          }
@@ -70196,17 +70209,27 @@ class TPavePainter extends ObjectPainter {
 
    /** @summary Fill function parameters */
    fillFunctionStat(f1, dofit, ndim = 1) {
+      this._has_fit = false;
+
       if (!dofit || !f1) return false;
+
+      this._has_fit = true;
+      this._fit_dim = ndim;
+      this._fit_cnt = 0;
 
       const print_fval = (ndim === 1) ? dofit % 10 : 1,
             print_ferrors = (ndim === 1) ? Math.floor(dofit/10) % 10 : 1,
             print_fchi2 = (ndim === 1) ? Math.floor(dofit/100) % 10 : 1,
             print_fprob = (ndim === 1) ? Math.floor(dofit/1000) % 10 : 0;
 
-      if (print_fchi2)
+      if (print_fchi2) {
          this.addText('#chi^{2} / ndf = ' + this.format(f1.fChisquare, 'fit') + ' / ' + f1.fNDF);
-      if (print_fprob)
+         this._fit_cnt++;
+      }
+      if (print_fprob) {
          this.addText('Prob = ' + this.format(Prob(f1.fChisquare, f1.fNDF)));
+         this._fit_cnt++;
+      }
       if (print_fval) {
          for (let n = 0; n < f1.GetNumPars(); ++n) {
             const parname = f1.GetParName(n);
@@ -70223,8 +70246,10 @@ class TPavePainter extends ObjectPainter {
                this.addText(`${parname} = ${parvalue} #pm ${parerr}`);
             else
                this.addText(`${parname} = ${parvalue}`);
+            this._fit_cnt++;
          }
       }
+
 
       return true;
    }

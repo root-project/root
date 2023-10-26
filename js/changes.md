@@ -9,6 +9,7 @@
 6. Fix - fit pars in stats box, correct #chi^{2} symbol
 7. Fix - several bugs in TFormula parsing
 8. Fix - correctly use saved buffer in TF1/TF2
+9. Fix - properly adjust size of stats box
 
 
 ## Changes in 7.5.1
