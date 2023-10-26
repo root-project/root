@@ -703,12 +703,17 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          // ensure correct range of histogram
          if (!IsReadOnly() && first_obj) {
-            auto hist = gr2d->GetHistogram("empty");
-            TString gropt = iter.GetOption(), hopt = "lego2";
+            TString gropt = iter.GetOption();
             gropt.ToUpper();
-            if (gropt.Contains("TRI1") || gropt.Contains("TRI2") || gropt.Contains("COL"))
-               hopt.Append("z");
+            Bool_t zscale = gropt.Contains("TRI1") || gropt.Contains("TRI2") || gropt.Contains("COL");
+            Bool_t real_draw = gropt.Contains("TRI") || gropt.Contains("LINE") || gropt.Contains("ERR") || gropt.Contains("P0");
+
+            TString hopt = !real_draw ? iter.GetOption() : (zscale ? "lego2z" : "lego2");
             if (title) hopt.Append(";;use_pad_title");
+
+            // if gr2d not draw - let create histogram with correspondent content
+            auto hist = gr2d->GetHistogram(real_draw ? "empty" : "");
+
             paddata.NewPrimitive(gr2d, hopt.Data(), "#hist").SetSnapshot(TWebSnapshot::kObject, hist);
          }
 
