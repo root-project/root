@@ -448,6 +448,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             TVirtualPad::TContext ctxt(kFALSE);
             mg->GetHistogram(); // force creation of histogram without any drawings
             has_histo = true;
+            if (strlen(obj->GetTitle()) > 0)
+               need_title = obj->GetTitle();
          }
       } else if (obj->InheritsFrom(TFrame::Class())) {
          if (!frame)
@@ -2444,10 +2446,18 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          return obj;
       }
 
-      if (h1 || gr || scatter) {
-         TIter fiter(h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions()));
-         TObject *fobj = nullptr;
-         while ((fobj = fiter()) != nullptr)
+      if (h1 || gr || mg || scatter) {
+         TList *funcs = nullptr;
+         if (h1)
+            funcs = h1->GetListOfFunctions();
+         else if (gr)
+            funcs = gr->GetListOfFunctions();
+         else if (mg)
+            funcs = mg->GetListOfFunctions();
+         else if (scatter && scatter->GetGraph())
+            funcs = scatter->GetGraph()->GetListOfFunctions();
+         TIter fiter(funcs);
+         while (auto fobj = fiter())
             if (TString::Hash(&fobj, sizeof(fobj)) == id) {
                if (objpad)
                   *objpad = pad;
