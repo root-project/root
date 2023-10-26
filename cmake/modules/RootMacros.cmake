@@ -1278,8 +1278,8 @@ endmacro()
 #                                 [NO_SOURCES]                 : don't glob to fill SOURCES variable
 #                                 [OBJECT_LIBRARY]             : use ROOT_OBJECT_LIBRARY to generate object files
 #                                                                and then use those for linking.
-#                                 LIBRARIES lib1 lib2          : linking flags such as dl, readline
-#                                 DEPENDENCIES lib1 lib2       : dependencies such as Core, MathCore
+#                                 LIBRARIES lib1 lib2          : private arguments for target_link_library()
+#                                 DEPENDENCIES lib1 lib2       : PUBLIC arguments for target_link_library() such as Core, MathCore
 #                                 BUILTINS builtin1 builtin2   : builtins like AFTERIMAGE
 #                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
