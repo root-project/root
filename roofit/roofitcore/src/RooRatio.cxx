@@ -121,3 +121,10 @@ void RooRatio::computeBatch(double *output, size_t nEvents, RooFit::Detail::Data
    RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Ratio, output, nEvents,
                             {dataMap.at(_numerator), dataMap.at(_denominator)});
 }
+
+void RooRatio::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::stringstream code;
+   code << ctx.getResult(_numerator) << "/" << ctx.getResult(_denominator) << std::endl;
+   ctx.addResult(this, code.str());
+}

@@ -36,6 +36,8 @@ protected:
    void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
    inline bool canComputeBatchWithCuda() const override { return true; }
 
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
    RooRealProxy _numerator;
    RooRealProxy _denominator;
 
