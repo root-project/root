@@ -223,3 +223,56 @@ TEST(TF1, Constructors)
    for (auto tf1 : vtf1)
       EXPECT_EQ(tf1(&x, &p), 2);
 }
+
+TEST(TF1, Save)
+{
+   TF1 linear("linear", "x", -10., 10.);
+   linear.SetNpx(20);
+
+   Double_t args[1];
+
+   // save with explicit range
+   linear.Save(-10, 10, 0, 0, 0, 0);
+
+   // test at position of saved bins
+   for (Double_t x = -10.; x <= 10.; x += 1.) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test linear approximation
+   for (Double_t x = -10.; x <= 10.; x += 0.77) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test outside range
+   args[0] = -11;
+   EXPECT_EQ(0., linear.GetSave(args));
+
+   args[0] = 11;
+   EXPECT_EQ(0., linear.GetSave(args));
+
+
+   // now test saved at middle of bins
+   linear.Save(0, 0, 0, 0, 0, 0);
+
+   // test at position of saved bins
+   for (Double_t x = -9.5; x <= 9.5; x += 1.) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test linear approximation
+   for (Double_t x = -9.5; x <= 9.5; x += 0.77) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test outside range
+   args[0] = -11;
+   EXPECT_EQ(0., linear.GetSave(args));
+
+   args[0] = 11;
+   EXPECT_EQ(0., linear.GetSave(args));
+}
