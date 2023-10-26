@@ -16,15 +16,11 @@
 /// Systematic uncertainties for those scale factors are evaluated and the Vary function of RDataFrame is used to
 /// propagate the variations to the final four leptons mass distribution.
 ///
-///
 /// \macro_code
 /// \macro_image
-/// \date March 2020
-/// \author Stefan Wunsch (KIT, CERN)
-/// \date August 2022
-/// \author Julia Mathe (CERN)
-/// \date August 2023
-/// \author Marta Czurylo (CERN)
+///
+/// \date March 2020, August 2022, August 2023
+/// \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)
 
 #include <Math/Vector4D.h>
 #include <Math/Interpolator.h>

@@ -16,12 +16,8 @@
 ## \macro_code
 ## \macro_output
 ##
-## \date March 2020
-## \author Stefan Wunsch (KIT, CERN)
-## \date July 2022
-## \author Julia Mathe (CERN)
-## \date August 2023
-## \author Marta Czurylo (CERN)
+## \date March 2020, August 2022, August 2023
+## \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)
 
 import ROOT
 import os
@@ -164,11 +160,11 @@ for sample_category in ["data", "higgs", "zz", "other"]:
 
 # Create a VaryHelper to interpolate the available data.
 ROOT.gInterpreter.Declare(
-    """   
+    """
 using namespace ROOT::VecOps;
 using namespace ROOT::Math;
 
-class VaryHelper 
+class VaryHelper
 {
     std::vector<double> x = {5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2};
     std::vector<double> y = {0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0., 0.};
@@ -178,9 +174,9 @@ public:
 
     RVec<double> operator()(const double &w, const RVecF &pt, const RVec<unsigned int> &type)
     {
-        const auto v = Mean(Map(pt[type == 11], [this](auto p) 
+        const auto v = Mean(Map(pt[type == 11], [this](auto p)
         {return this->inter.Eval(p); })
-        );                                                                                              
+        );
         return RVec<double>{(1 + v) * w, (1 - v) * w};
     }
 };
