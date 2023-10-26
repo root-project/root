@@ -4,7 +4,7 @@ const version_id = '7.5.x',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '25/10/2023',
+version_date = '26/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
