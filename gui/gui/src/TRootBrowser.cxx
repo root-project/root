@@ -572,14 +572,24 @@ Longptr_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
       p = new TBrowserPlugin(pname.Data(), command.Data(), pos, subpos);
    }
    else return 0;
-   if (IsWebGUI() && command.Contains("new TCanvas"))
+
+   Bool_t new_canvas = command.Contains("new TCanvas");
+   Bool_t is_web_canvas = strcmp(gEnv->GetValue("Canvas.Name", ""), "TWebCanvas") == 0;
+
+   if (IsWebGUI() && new_canvas && is_web_canvas)
       return gROOT->ProcessLine(command.Data());
+
+   if (new_canvas && is_web_canvas)
+      gEnv->SetValue("Canvas.Name", "TRootCanvas");
+
    StartEmbedding(pos, subpos);
    fPlugins.Add(p);
    retval = gROOT->ProcessLine(command.Data());
-   if (command.Contains("new TCanvas")) {
+   if (new_canvas) {
       pname = gPad->GetName();
       p->SetName(pname.Data());
+      if (is_web_canvas)
+         gEnv->SetValue("Canvas.Name", "TWebCanvas");
    }
    SetTabTitle(pname.Data(), pos, subpos);
    StopEmbedding();
@@ -781,10 +791,7 @@ void TRootBrowser::HandleMenu(Int_t id)
          ExecPlugin(Form("Editor %d", eNr), "", cmd.Data(), 1);
          break;
       case kNewCanvas:
-         if (IsWebGUI())
-            gROOT->ProcessLine("new TCanvas()");
-         else
-            ExecPlugin("", "", "new TCanvas()", 1);
+         ExecPlugin("", "", "new TCanvas()", 1);
          break;
       case kNewHtml:
          cmd.Form("new TGHtmlBrowser(\"%s\", gClient->GetRoot())",
@@ -881,7 +888,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
       }
 
       // Canvas plugin...
-      if ((opt[i] == 'C') && !IsWebGUI()) {
+      if (opt[i] == 'C') {
          cmd.Form("new TCanvas();");
          ExecPlugin("c1", 0, cmd.Data(), 1);
          ++fNbInitPlugins;
