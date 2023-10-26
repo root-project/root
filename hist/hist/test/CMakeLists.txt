@@ -24,6 +24,7 @@ if(fftw3)
 endif()
 
 ROOT_ADD_GTEST(testTF2 test_tf2.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testTF3 test_tf3.cxx LIBRARIES Hist)
 
 if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
