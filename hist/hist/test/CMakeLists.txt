@@ -23,6 +23,8 @@ if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
 endif()
 
+ROOT_ADD_GTEST(testTF2 test_tf2.cxx LIBRARIES Hist)
+
 if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
   ROOT_ADD_GTEST(TFormulaHessianTests TFormulaHessianTests.cxx LIBRARIES Core MathCore Hist)
