@@ -38,7 +38,7 @@ The following people have contributed to this new version:
  Ole Morud, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
- Vincenzo Padulano, CERN/EP-SFT,\
+ Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
@@ -50,6 +50,8 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas,
 
 ## Deprecation and Removal
+- The minimum C++ standard supported by ROOT is now C++17.
+- Support for Python 2 is now deprecated and it will be removed in next release 6.32.
 - `ROOT::RDF::RResultHandle::GetResultPtr` has been deprecated. Please use `RResultPtr` directly instead and only cast to `RResultHandle` in order to call `ROOT::RDF::RunGraphs`.
 - The RDataFrame factory functions `MakeCsvDataFrame`, `MakeArrowDataFrame`, `MakeNTupleDataFrame` and `MakeSqliteDataFrame` that were deprecated in v6.28 have been removed. Use `FromCSV`, `FromArrow`, `FromRNTuple` or `FromSqlite` instead.
 - The TStorage reallocation routine without a size (`TStorage::ReAlloc(void *ovp, size_t size`) and heap related routines (`TStorage::AddToHeap`, `TStorage::IsOnHeap`, `TStorage::GetHeapBegin`, `TStorage::GetHeapEnd`) that were deprecated in v6.02/00 have been removed.
@@ -65,13 +67,26 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+- Increase thread-safety in parts of core libraries (TCling, TClingMethodInfo, TClingTypeInfo, TFunction) to allow for parallel workflows using RDataFrame in multiple C++ `std::thread`s.
 
 ## I/O Libraries
+
+- Improve parsing of input argument to `TChain::Add`. Now it supports the case of globbing files while also using the `?#` token to specify the tree name.
 
 ## RDataFrame
 - instead of returning nothing, `ROOT::RDF::RunGraphs` now returns the number of separate computation graphs that have been run.
 
 - Introduce [`ProgressBar`](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#progressbar) feature that can be added to any RDataFrame program.
+
+- The `RDatasetSpec` class and its users now employ the concept of 'sample' rather than the original naming 'group' for groups of files with associated metadata.
+
+### Distributed RDataFrame
+
+- Vastly improve runtime performance when using an RDataFrame with simulated dataset, i.e. `RDataFrame(nentries)`, by removing usage of `Range` operation to define the per-task entry range.
+
+- Explicitly error out when trying to process a TTree with a TTreeIndex in distributed mode. The feature is currently not supported.
+
+- JITting the RDataFrame computation graph now only happens once per worker process, not once per task. This greatly reduces memory usage and runtime overhead at of each task.
 
 ## TTree Libraries
 
@@ -348,4 +363,3 @@ This logic has been improved and is now as follows:
 _(i)_ If the current head is a well-known branch, e.g. `master` or `v6-28-00-patches`, use the matching branch upstream;
 _(ii)_ otherwise, try a branch that matches the name of the current head in the forked repository, if it exists; else try using the closest upstream head/tag below `HEAD`'s parent commit;
 _(iii)_ as a last resort, if there is no preferred candidate, checkout the remote's default head.
-
