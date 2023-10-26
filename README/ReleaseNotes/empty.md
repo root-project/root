@@ -28,7 +28,7 @@ The following people have contributed to this new version:
  Lorenzo Moneta, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
- Vincenzo Padulano, CERN/EP-SFT,\
+ Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
