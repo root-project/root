@@ -518,6 +518,16 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       masterps.CreatePainting(); // create for next operations
    };
 
+   auto save_tf1 = [&](TObject *fobj) {
+      if (!paddata.IsBatchMode() && !fTF1UseSave)
+         return;
+
+      auto f1 = static_cast<TF1 *>(fobj);
+      Double_t xmin, ymin, zmin, xmax, ymax, zmax;
+      f1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
+      f1->Save(xmin, xmax, ymin, ymax, zmin, zmax);
+   };
+
    iter.Reset();
 
    bool first_obj = true;
@@ -558,7 +568,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
-         TH1 *hist = (TH1 *)obj;
+         TH1 *hist = static_cast<TH1 *>(obj);
          TIter fiter(hist->GetListOfFunctions());
          TObject *fobj = nullptr;
          TPaveStats *stats = nullptr;
@@ -571,12 +581,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                stats = dynamic_cast<TPaveStats *> (fobj);
             else if (fobj->InheritsFrom("TPaletteAxis"))
                palette = fobj;
-            else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw) && (paddata.IsBatchMode() || fTF1UseSave)) {
-               auto f1 = static_cast<TF1 *>(fobj);
-               Double_t xmin, ymin, zmin, xmax, ymax, zmax;
-               f1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
-               f1->Save(xmin, xmax, ymin, ymax, zmin, zmax);
-            }
+            else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw))
+               save_tf1(fobj);
          }
 
          TString hopt = iter.GetOption();
@@ -660,12 +666,13 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          auto funcs = gr->GetListOfFunctions();
 
          TIter fiter(funcs);
-         TObject *fobj = nullptr;
          TPaveStats *stats = nullptr;
 
-         while ((fobj = fiter()) != nullptr) {
+         while (auto fobj = fiter()) {
            if (fobj->InheritsFrom(TPaveStats::Class()))
                stats = dynamic_cast<TPaveStats *> (fobj);
+           else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw))
+              save_tf1(fobj);
          }
 
          TString gropt = iter.GetOption();
@@ -681,7 +688,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          paddata.NewPrimitive(obj, gropt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          fiter.Reset();
-         while ((fobj = fiter()) != nullptr)
+         while (auto fobj = fiter())
             CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
          if (funcs)
@@ -704,6 +711,28 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          }
 
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+         first_obj = false;
+      } else if (obj->InheritsFrom(TMultiGraph::Class())) {
+         flush_master();
+
+         TMultiGraph *mgr = static_cast<TMultiGraph *>(obj);
+         auto funcs = mgr->GetListOfFunctions();
+
+         TIter fiter(funcs);
+         while (auto fobj = fiter()) {
+            if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw))
+               save_tf1(fobj);
+         }
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         fiter.Reset();
+         while (auto fobj = fiter())
+            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
+
+         if (funcs)
+            fPrimitivesLists.Add(funcs);
+
          first_obj = false;
       } else if (obj->InheritsFrom(TScatter::Class())) {
          flush_master();
@@ -752,11 +781,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString f1opt = iter.GetOption();
 
          if (f1->IsA() == TF1::Class() || f1->IsA() == TF2::Class()) {
-            if (paddata.IsBatchMode() || fTF1UseSave) {
-               Double_t xmin, ymin, zmin, xmax, ymax, zmax;
-               f1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
-               f1->Save(xmin, xmax, ymin, ymax, zmin, zmax);
-            }
+            save_tf1(obj);
             if (fTF1UseSave)
                f1opt.Append(";force_saved");
          }
