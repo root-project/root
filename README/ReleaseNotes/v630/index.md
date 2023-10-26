@@ -51,8 +51,33 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas,
 
 ## Deprecation and Removal
+
 - The minimum C++ standard supported by ROOT is now C++17.
 - Support for Python 2 is now deprecated and it will be removed in next release 6.32.
+
+### Deprecated and removed ROOT modules
+The following previously deprecated build options have been removed:
+- gfal
+- gsl_shared
+- jemalloc
+- monalisa
+- pyroot_legacy
+- tcmalloc
+- xproofd
+
+The following build options have now been deprecated and will be removed in the future v6.32:
+- cxxmodules
+- exceptions
+- oracle
+- pythia6
+- pythia6_nolink
+- pyroot-python2
+
+Please let us know at [rootdev@cern.ch](mailto:rootdev@cern.ch) if their planned removal would cause problems for you!
+
+
+### Deprecated and removed interfaces
+
 - `ROOT::RDF::RResultHandle::GetResultPtr` has been deprecated. Please use `RResultPtr` directly instead and only cast to `RResultHandle` in order to call `ROOT::RDF::RunGraphs`.
 - The RDataFrame factory functions `MakeCsvDataFrame`, `MakeArrowDataFrame`, `MakeNTupleDataFrame` and `MakeSqliteDataFrame` that were deprecated in v6.28 have been removed. Use `FromCSV`, `FromArrow`, `FromRNTuple` or `FromSqlite` instead.
 - The TStorage reallocation routine without a size (`TStorage::ReAlloc(void *ovp, size_t size`) and heap related routines (`TStorage::AddToHeap`, `TStorage::IsOnHeap`, `TStorage::GetHeapBegin`, `TStorage::GetHeapEnd`) that were deprecated in v6.02/00 have been removed.
