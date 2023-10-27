@@ -80,7 +80,7 @@ TEST(RFieldMerger, Merge)
    EXPECT_FALSE(mergeResult);
 }
 
-TEST(RNTupleMerger, Merge)
+TEST(RNTupleMerger, MergeSymmetric)
 {
    // Write two test ntuples to be merged
    // These files are practically identical except that filed indices are interchanged
@@ -125,7 +125,7 @@ TEST(RNTupleMerger, Merge)
 
       // Now Merge the inputs
       RNTupleMerger merger;
-      merger.Merge(sources, destination);
+      EXPECT_NO_THROW(merger.Merge(sources, destination));
    }
 
    // Now check some information
@@ -169,5 +169,147 @@ TEST(RNTupleMerger, Merge)
       ntuple3->LoadEntry(19);
       ASSERT_EQ(*foo2, *foo3);
       ASSERT_EQ(*bar2, *bar3);
+   }
+}
+
+TEST(RNTupleMerger, MergeAsymmetric1)
+{
+   // Write two test ntuples to be merged
+   // These files are practically identical except that filed indices are interchanged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i*123;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldBar = i*765;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+
+      // Create the output
+      RNTupleWriteOptions writeOpts;
+      writeOpts.SetUseBufferedWrite(false);
+      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+
+      // Now Merge the inputs
+      // We expect this to fail since the fields between the sources do NOT match
+      RNTupleMerger merger;
+      EXPECT_THROW(merger.Merge(sources, destination), ROOT::Experimental::RException);
+   }
+}
+
+TEST(RNTupleMerger, MergeAsymmetric2)
+{
+   // Write two test ntuples to be merged
+   // These files are practically identical except that filed indices are interchanged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i*123;
+         *fieldBar = i*321;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldBar = i*765;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+
+      // Create the output
+      RNTupleWriteOptions writeOpts;
+      writeOpts.SetUseBufferedWrite(false);
+      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+
+      // Now Merge the inputs
+      // We expect this to fail since the fields between the sources do NOT match
+      RNTupleMerger merger;
+      EXPECT_THROW(merger.Merge(sources, destination), ROOT::Experimental::RException);
+   }
+}
+
+TEST(RNTupleMerger, MergeAsymmetric3)
+{
+   // Write two test ntuples to be merged
+   // These files are practically identical except that filed indices are interchanged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i*123;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo", 0);
+      auto fieldBar = model->MakeField<int>("bar", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i*567;
+         *fieldBar = i*765;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+
+      // Create the output
+      RNTupleWriteOptions writeOpts;
+      writeOpts.SetUseBufferedWrite(false);
+      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+
+      // Now Merge the inputs
+      // We expect this to fail since the fields between the sources do NOT match
+      RNTupleMerger merger;
+      EXPECT_THROW(merger.Merge(sources, destination), ROOT::Experimental::RException);
    }
 }
