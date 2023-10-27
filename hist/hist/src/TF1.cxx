@@ -3160,6 +3160,9 @@ void TF1::ReleaseParameter(Int_t ipar)
 
 void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Double_t)
 {
+   if (!fSave.empty())
+      fSave.clear();
+
    Double_t *parameters = GetParameters();
    //if (fSave != 0) {delete [] fSave; fSave = 0;}
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
@@ -3168,9 +3171,8 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
          TH1 *h = (TH1 *)fParent;
          Int_t bin1 = h->GetXaxis()->FindBin(xmin);
          Int_t bin2 = h->GetXaxis()->FindBin(xmax);
-         int fNsave = bin2 - bin1 + 4;
-         //fSave  = new Double_t[fNsave];
-         fSave.resize(fNsave);
+         int nsave = bin2 - bin1 + 4;
+         fSave.resize(nsave);
          Double_t xv[1];
 
          InitArgs(xv, parameters);
@@ -3178,33 +3180,35 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
             xv[0]    = h->GetXaxis()->GetBinCenter(i);
             fSave[i - bin1] = EvalPar(xv, parameters);
          }
-         fSave[fNsave - 3] = xmin;
-         fSave[fNsave - 2] = xmax;
-         fSave[fNsave - 1] = xmax;
+         fSave[nsave - 3] = xmin;
+         fSave[nsave - 2] = xmax;
+         fSave[nsave - 1] = xmax;
          return;
       }
    }
-   int fNsave = fNpx + 3;
-   if (fNsave <= 3) {
+
+   Int_t npx = fNpx;
+   if (npx <= 0)
       return;
-   }
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
+
    Double_t dx = (xmax - xmin) / fNpx;
    if (dx <= 0) {
       dx = (fXmax - fXmin) / fNpx;
-      fNsave--;
+      npx--;
       xmin = fXmin + 0.5 * dx;
       xmax = fXmax - 0.5 * dx;
    }
+   if (npx <= 0)
+      return;
+   fSave.resize(npx + 3);
    Double_t xv[1];
    InitArgs(xv, parameters);
-   for (Int_t i = 0; i <= fNpx; i++) {
+   for (Int_t i = 0; i <= npx; i++) {
       xv[0]    = xmin + dx * i;
       fSave[i] = EvalPar(xv, parameters);
    }
-   fSave[fNpx + 1] = xmin;
-   fSave[fNpx + 2] = xmax;
+   fSave[npx + 1] = xmin;
+   fSave[npx + 2] = xmax;
 }
 
 
