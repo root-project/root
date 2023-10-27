@@ -83,10 +83,11 @@ public:
 \ingroup NTuple
 \brief An RNTuple that is used to read data from storage
 
-An input ntuple provides data from storage as C++ objects. The ntuple model can be created from the data on storage
-or it can be imposed by the user. The latter case allows users to read into a specialized ntuple model that covers
-only a subset of the fields in the ntuple. The ntuple model is used when reading complete entries.
-Individual fields can be read as well by instantiating a tree view.
+The reader provides an API for iterating through an RNTuple data set. The ntuple model can be created from the data on
+storage or it can be imposed by the user. The latter case allows users to read into a specialized ntuple model that
+covers only a subset of the fields in the ntuple.
+
+The model is used when reading complete entries; individual fields can be read as well by instantiating a view.
 
 ~~~ {.cpp}
 #include <ROOT/RNTuple.hxx>
@@ -382,10 +383,9 @@ public:
 \ingroup NTuple
 \brief An RNTuple that gets filled with entries (data) and writes them to storage
 
-An output ntuple can be filled with entries. The caller has to make sure that the data that gets filled into an ntuple
-is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
-writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception is thrown.
+A writer can fill entries into an ntuple. The fill call serializes the C++ object into the column format and
+writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and scheduled
+internally.  The written data are committed when the writer is destructed.  On I/O errors, an exception is thrown.
 */
 // clang-format on
 class RNTupleWriter {

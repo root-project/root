@@ -46,7 +46,7 @@ class REntry {
    friend class RNTupleReader;
    friend class RNTupleWriter;
 
-   /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
+   /// The entry must be linked to a specific model, identified by a model ID
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
    std::vector<Detail::RFieldBase::RValue> fValues;
@@ -95,6 +95,7 @@ public:
    REntry &operator=(REntry &&other) = default;
    ~REntry() = default;
 
+   /// For use with frameworks, sets an unmanaged, raw pointer address for a field
    void BindRaw(std::string_view fieldName, void *where);
 
    template <typename T>

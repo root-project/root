@@ -71,8 +71,12 @@ struct RNTupleModelChangeset {
 \brief The RNTupleModel encapulates the schema of an ntuple.
 
 The ntuple model comprises a collection of hierarchically organized fields. From a model, "entries"
-can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
-that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
+can be extracted. For convenience, the model provides a default entry unless it is created as a "bare model".
+Models have a unique model identifier that faciliates checking whether entries are compatible with it
+(i.e.: have been extracted from that model).
+
+A model is subject to a state transition during its lifetime: it starts in a building state, in which fields can be
+added and modified.  Once the schema is finalized, the model gets frozen.  Only frozen models can create entries.
 */
 // clang-format on
 class RNTupleModel {
@@ -191,7 +195,7 @@ private:
    std::unique_ptr<RFieldZero> fFieldZero;
    /// Entries handed out by CreateEntry or CreateBareEntry are owned and tracked by the model.
    /// Callers retrieve a weak pointer to the corresponding entry.  This ensures that entries
-   /// get destructed while the model is still alive (the entry's values may use the model's fields to
+   /// get destructed while the model is still alive (the entry's values may use the model's fields
    /// for destruction).
    std::vector<std::shared_ptr<REntry>> fCreatedEntries;
    /// A model that is not bare contains a default entry, whose values can be used during the construction phase.
@@ -206,7 +210,7 @@ private:
    /// Upon freezing, every model has a unique ID to distingusish it from other models.
    /// Entries are linked to models via the ID.  Unfreezing and re-freezing will update the model id and
    /// thus invalidate existing entries. Cloning will also update the model id because the cloned model
-   /// as new fields so that existing entries cannot be used with the clone.
+   /// has new fields so that existing entries cannot be used with the clone.
    std::uint64_t fModelId = 0;
 
    /// Returns a new, unique ID
@@ -352,8 +356,8 @@ public:
    /// is destructed, there must be no remaining shared pointers to any of its entries.
    /// An entry can only be returned from a frozen model. Unfreezing and refreezing invalidates existing entries.
    ///
-   /// If a linked entry is given, create entry will use the memory location of the linked
-   /// entries for identical fields.  Fields that don't mach any of the linked entry ones
+   /// If a linked entry is given, CreateEntry will use the memory location of the linked
+   /// entry's values for identical fields.  Fields that don't mach any of the linked entry ones
    /// are handled as if no linked entry was given.  If the linked entry contains a field
    /// with the same name than this entry but a different type, the linked entry's field
    /// is ignored.
