@@ -20,6 +20,7 @@ The following people have contributed to this new version:
  Will Buttinger, Rutherford Appleton Lab,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/EP-SFT,\
+ Marta Czurylo, CERN/EP-SFT,\
  Mattias Ellert, Uppsala Uni,\
  Edward Finkelstein, JGU Mainz,\
  Gerri Ganis, CERN/EP-SFT,\
