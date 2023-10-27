@@ -107,7 +107,7 @@ private:
    }
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const std::unique_ptr<Detail::RPageSource> &source, bool firstSource)
+   std::vector<RColumnInfo> CollectColumns(const Detail::RPageSource* source, bool firstSource)
    {
       auto desc = source->GetSharedDescriptorGuard();
       std::vector<RColumnInfo> columns;
@@ -129,7 +129,7 @@ private:
 public:
    /// Merge a given set of sources into the destination
    void
-   Merge(std::vector<std::unique_ptr<Detail::RPageSource>> &sources, std::unique_ptr<Detail::RPageSink> &destination);
+   Merge(std::span<Detail::RPageSource*> sources, Detail::RPageSink &destination);
 
 }; // end of class RNTupleMerger
 

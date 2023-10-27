@@ -38,8 +38,8 @@ ROOT::Experimental::RFieldMerger::Merge(const ROOT::Experimental::RFieldDescript
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<Detail::RPageSource>> &sources,
-                                              std::unique_ptr<Detail::RPageSink> &destination)
+void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource*> sources,
+                                              Detail::RPageSink &destination)
 {
 
    // Total entries written
@@ -62,7 +62,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<Detail
       // Create sink from the input model of the very first input file
       if(firstSource) {
          auto model = descriptor->GenerateModel();
-         destination->Create(*model.get());
+         destination.Create(*model.get());
          firstSource = false;
       }
 
@@ -109,7 +109,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<Detail
 
                // Now commit this page to the output
                // Can we do this w/ a CommitSealedPageV
-               destination->CommitSealedPage(column.fColumnOutputId, sealedPage);
+               destination.CommitSealedPage(column.fColumnOutputId, sealedPage);
 
                // Move on to the next index
                idx += pageInfo.fNElements;
@@ -120,7 +120,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<Detail
 
          // Commit the clusters
          nEntries += cluster.GetNEntries();
-         destination->CommitCluster(nEntries);
+         destination.CommitCluster(nEntries);
 
          // Go to the next cluster
          clusterId = descriptor->FindNextClusterId(clusterId);
@@ -128,10 +128,10 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<Detail
       } // end of loop over clusters
 
       // Commit all clusters for this input
-      destination->CommitClusterGroup();
+      destination.CommitClusterGroup();
 
    } // end of loop over sources
 
    // Commit the output
-   destination->CommitDataset();
+   destination.CommitDataset();
 }
