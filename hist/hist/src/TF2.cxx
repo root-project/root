@@ -640,8 +640,8 @@ Double_t TF2::GetSave(const Double_t *xx)
    if (dy <= 0) return 0;
 
    //we make a bilinear interpolation using the 4 points surrounding x,y
-   Int_t ibin    = Int_t((x-xmin)/dx);
-   Int_t jbin    = Int_t((y-ymin)/dy);
+   Int_t ibin    = TMath::Min(npx-1, Int_t((x-xmin)/dx));
+   Int_t jbin    = TMath::Min(npy-1, Int_t((y-ymin)/dy));
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t t    = (x-xlow)/dx;
@@ -798,7 +798,7 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
    if (!fSave.empty())
       fSave.clear();
    Int_t npx = fNpx, npy = fNpy;
-   if ((npx <= 0) || (npy <= 0))
+   if ((npx < 2) || (npy < 2))
       return;
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
@@ -814,9 +814,6 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
       ymin = fYmin + 0.5*dy;
       ymax = fYmax - 0.5*dy;
    }
-
-   if ((npx <= 0) || (npy <= 0))
-      return;
 
    Int_t nsave = (npx + 1) * (npy + 1);
    fSave.resize(nsave + 6);
