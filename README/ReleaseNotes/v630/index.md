@@ -20,6 +20,7 @@ The following people have contributed to this new version:
  Will Buttinger, Rutherford Appleton Lab,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/EP-SFT,\
+ Marta Czurylo, CERN/EP-SFT,\
  Mattias Ellert, Uppsala Uni,\
  Edward Finkelstein, JGU Mainz,\
  Gerri Ganis, CERN/EP-SFT,\
@@ -105,6 +106,8 @@ Please let us know at [rootdev@cern.ch](mailto:rootdev@cern.ch) if their planned
 - Introduce [`ProgressBar`](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#progressbar) feature that can be added to any RDataFrame program.
 
 - The `RDatasetSpec` class and its users now employ the concept of 'sample' rather than the original naming 'group' for groups of files with associated metadata.
+
+- `df106_HiggsToFourLeptons` tutorials (both python and C++) now showcase the `ProgressBar`. They now use `FromSpec` to define multiple samples and `Vary` for systematic variations.
 
 ### Distributed RDataFrame
 
