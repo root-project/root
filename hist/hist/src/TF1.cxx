@@ -2384,7 +2384,7 @@ Double_t TF1::GetSave(const Double_t *xx)
    if (TMath::IsNaN(x)) return x;
    if (dx <= 0) return 0;
 
-   Int_t bin     = Int_t((x - xmin) / dx);
+   Int_t bin = TMath::Min(np - 1, Int_t((x - xmin) / dx));
    xlow = xmin + bin * dx;
    xup  = xlow + dx;
    ylow = fSave[bin];
