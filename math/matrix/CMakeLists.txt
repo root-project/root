@@ -81,3 +81,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Matrix
  DICTIONARY_OPTIONS
    -writeEmptyRootPCM
 )
+
+add_subdirectory(test)
