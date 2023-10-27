@@ -82,7 +82,7 @@ The following people have contributed to this new version:
 
 - The `RDatasetSpec` class and its users now employ the concept of 'sample' rather than the original naming 'group' for groups of files with associated metadata.
 
-- `df106_HiggsToFourLeptons` tutorials (both python and C++) now showcase addition of the ProgressBar, usage of the FromSpec function in order to define multiple samples and usage of the systematic variations with Vary function.
+- `df106_HiggsToFourLeptons` tutorials (both python and C++) now showcase the `ProgressBar`. They now use `FromSpec` to define multiple samples and `Vary` for systematic variations.
 
 ### Distributed RDataFrame
 
