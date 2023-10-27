@@ -81,6 +81,8 @@ The following people have contributed to this new version:
 
 - The `RDatasetSpec` class and its users now employ the concept of 'sample' rather than the original naming 'group' for groups of files with associated metadata.
 
+- `df106_HiggsToFourLeptons` tutorials (both python and C++) now showcase addition of the ProgressBar, usage of the FromSpec function in order to define multiple samples and usage of the systematic variations with Vary function.
+
 ### Distributed RDataFrame
 
 - Vastly improve runtime performance when using an RDataFrame with simulated dataset, i.e. `RDataFrame(nentries)`, by removing usage of `Range` operation to define the per-task entry range.
