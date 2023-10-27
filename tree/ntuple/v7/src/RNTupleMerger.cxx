@@ -19,8 +19,6 @@
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
-#include <mutex> // std::call_once/once_flag
-
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 {
    if (inputs == nullptr || mergeInfo == nullptr) {
@@ -44,29 +42,29 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::vector<std::unique_ptr<Detail
                                               std::unique_ptr<Detail::RPageSink> &destination)
 {
 
-   // Flag for creating the destination sink only once
-   std::once_flag onceFlag;
-
    // Total entries written
    std::uint64_t nEntries{0};
 
    // Loop over all input sources
+   bool firstSource = true;
    for (const auto &source : sources) {
 
       // Attach the current source
       source->Attach();
 
       // Collect all the columns
-      auto columns = CollectColumns(source);
+      // The column name : output column id map is only built once
+      auto columns = CollectColumns(source, firstSource);
 
       // Get a handle on the descriptor (metadata)
       auto descriptor = source->GetSharedDescriptorGuard();
 
       // Create sink from the input model of the very first input file
-      std::call_once(onceFlag, [&]() {
+      if(firstSource) {
          auto model = descriptor->GenerateModel();
          destination->Create(*model.get());
-      });
+         firstSource = false;
+      }
 
       // Now loop over all clusters in this file
       // descriptor->GetClusterIterable() doesn't guarantee any specific order...
