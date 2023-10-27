@@ -38,8 +38,7 @@ ROOT::Experimental::RFieldMerger::Merge(const ROOT::Experimental::RFieldDescript
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource*> sources,
-                                              Detail::RPageSink &destination)
+void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource *> sources, Detail::RPageSink &destination)
 {
 
    // Total entries written
@@ -60,7 +59,7 @@ void ROOT::Experimental::RNTupleMerger::Merge(std::span<Detail::RPageSource*> so
       auto descriptor = source->GetSharedDescriptorGuard();
 
       // Create sink from the input model of the very first input file
-      if(firstSource) {
+      if (firstSource) {
          auto model = descriptor->GenerateModel();
          destination.Create(*model.get());
          firstSource = false;

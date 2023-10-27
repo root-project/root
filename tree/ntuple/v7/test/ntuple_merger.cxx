@@ -49,7 +49,7 @@ TEST(RPageStorage, ReadSealedPages)
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.fNElements);
    ASSERT_EQ(4U, sealedPage.fSize);
-   auto buffer = std::make_unique<unsigned char []>(sealedPage.fSize);
+   auto buffer = std::make_unique<unsigned char[]>(sealedPage.fSize);
    sealedPage.fBuffer = buffer.get();
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.fNElements);
@@ -64,7 +64,7 @@ TEST(RPageStorage, ReadSealedPages)
    EXPECT_GT(pageRange.fPageInfos.size(), 1U);
    std::uint32_t firstElementInPage = 0;
    for (const auto &pi : pageRange.fPageInfos) {
-      buffer = std::make_unique<unsigned char []>(pi.fLocator.fBytesOnStorage);
+      buffer = std::make_unique<unsigned char[]>(pi.fLocator.fBytesOnStorage);
       sealedPage.fBuffer = buffer.get();
       source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
       ASSERT_GE(sealedPage.fSize, 4U);
@@ -72,7 +72,6 @@ TEST(RPageStorage, ReadSealedPages)
       firstElementInPage += pi.fNElements;
    }
 }
-
 
 TEST(RFieldMerger, Merge)
 {
@@ -91,8 +90,8 @@ TEST(RNTupleMerger, MergeSymmetric)
       auto fieldBar = model->MakeField<int>("bar", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldFoo = i*123;
-         *fieldBar = i*321;
+         *fieldFoo = i * 123;
+         *fieldBar = i * 321;
          ntuple->Fill();
       }
    }
@@ -104,8 +103,8 @@ TEST(RNTupleMerger, MergeSymmetric)
       auto fieldFoo = model->MakeField<int>("foo", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldFoo = i*567;
-         *fieldBar = i*765;
+         *fieldFoo = i * 567;
+         *fieldBar = i * 765;
          ntuple->Fill();
       }
    }
@@ -117,8 +116,10 @@ TEST(RNTupleMerger, MergeSymmetric)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
-      std::vector<RPageSource*> sourcePtrs;
-      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
 
       // Create the output
       RNTupleWriteOptions writeOpts;
@@ -184,7 +185,7 @@ TEST(RNTupleMerger, MergeAsymmetric1)
       auto fieldFoo = model->MakeField<int>("foo", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldFoo = i*123;
+         *fieldFoo = i * 123;
          ntuple->Fill();
       }
    }
@@ -195,7 +196,7 @@ TEST(RNTupleMerger, MergeAsymmetric1)
       auto fieldBar = model->MakeField<int>("bar", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldBar = i*765;
+         *fieldBar = i * 765;
          ntuple->Fill();
       }
    }
@@ -207,8 +208,10 @@ TEST(RNTupleMerger, MergeAsymmetric1)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
-      std::vector<RPageSource*> sourcePtrs;
-      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
 
       // Create the output
       RNTupleWriteOptions writeOpts;
@@ -233,8 +236,8 @@ TEST(RNTupleMerger, MergeAsymmetric2)
       auto fieldBar = model->MakeField<int>("bar", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldFoo = i*123;
-         *fieldBar = i*321;
+         *fieldFoo = i * 123;
+         *fieldBar = i * 321;
          ntuple->Fill();
       }
    }
@@ -245,7 +248,7 @@ TEST(RNTupleMerger, MergeAsymmetric2)
       auto fieldBar = model->MakeField<int>("bar", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldBar = i*765;
+         *fieldBar = i * 765;
          ntuple->Fill();
       }
    }
@@ -257,8 +260,10 @@ TEST(RNTupleMerger, MergeAsymmetric2)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
-      std::vector<RPageSource*> sourcePtrs;
-      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
 
       // Create the output
       RNTupleWriteOptions writeOpts;
@@ -282,7 +287,7 @@ TEST(RNTupleMerger, MergeAsymmetric3)
       auto fieldFoo = model->MakeField<int>("foo", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldFoo = i*123;
+         *fieldFoo = i * 123;
          ntuple->Fill();
       }
    }
@@ -294,8 +299,8 @@ TEST(RNTupleMerger, MergeAsymmetric3)
       auto fieldBar = model->MakeField<int>("bar", 0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       for (size_t i = 0; i < 10; ++i) {
-         *fieldFoo = i*567;
-         *fieldBar = i*765;
+         *fieldFoo = i * 567;
+         *fieldBar = i * 765;
          ntuple->Fill();
       }
    }
@@ -307,8 +312,10 @@ TEST(RNTupleMerger, MergeAsymmetric3)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
-      std::vector<RPageSource*> sourcePtrs;
-      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
 
       // Create the output
       RNTupleWriteOptions writeOpts;

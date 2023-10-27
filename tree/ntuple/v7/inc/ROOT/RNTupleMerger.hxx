@@ -69,8 +69,9 @@ private:
 
    /// Build the internal column id map from the first source
    /// This is where we assign the output ids for the first source
-   void BuildColumnIdMap(std::vector<RColumnInfo> &columns) {
-      for(auto& column : columns) {
+   void BuildColumnIdMap(std::vector<RColumnInfo> &columns)
+   {
+      for (auto &column : columns) {
          column.fColumnOutputId = fNameToOutputIdMap.size();
          fNameToOutputIdMap[column.fColumnName] = column.fColumnOutputId;
       }
@@ -78,24 +79,25 @@ private:
 
    /// Validate the columns against the internal map that is built from the first source
    /// This is where we assign the output ids for the remaining sources
-   void ValidateColumns(std::vector<RColumnInfo> &columns) {
+   void ValidateColumns(std::vector<RColumnInfo> &columns)
+   {
       // First ensure that we have the same number of columns
       if (fNameToOutputIdMap.size() != columns.size()) {
-           throw RException(R__FAIL("Columns between sources do NOT match"));
+         throw RException(R__FAIL("Columns between sources do NOT match"));
       }
       // Then ensure that we have the same names of columns and assign the ids
-      for(auto& column : columns) {
+      for (auto &column : columns) {
          try {
             column.fColumnOutputId = fNameToOutputIdMap.at(column.fColumnName);
-         } catch (const std::out_of_range&) {
+         } catch (const std::out_of_range &) {
             throw RException(R__FAIL("Column NOT found in the first source: " + column.fColumnName));
          }
       }
    }
 
    /// Recursively add columns from a given filed
-   void
-   AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc, const RFieldDescriptor &fieldDesc)
+   void AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
+                            const RFieldDescriptor &fieldDesc)
    {
       for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
          for (const auto &column : desc.GetColumnIterable(field)) {
@@ -107,7 +109,7 @@ private:
    }
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const Detail::RPageSource* source, bool firstSource)
+   std::vector<RColumnInfo> CollectColumns(const Detail::RPageSource *source, bool firstSource)
    {
       auto desc = source->GetSharedDescriptorGuard();
       std::vector<RColumnInfo> columns;
@@ -115,10 +117,10 @@ private:
       AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldZero());
       // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
       // In either case, we also assign the output ids here
-      if(firstSource) {
-        BuildColumnIdMap(columns);
+      if (firstSource) {
+         BuildColumnIdMap(columns);
       } else {
-        ValidateColumns(columns);
+         ValidateColumns(columns);
       }
       return columns;
    }
@@ -128,8 +130,7 @@ private:
 
 public:
    /// Merge a given set of sources into the destination
-   void
-   Merge(std::span<Detail::RPageSource*> sources, Detail::RPageSink &destination);
+   void Merge(std::span<Detail::RPageSource *> sources, Detail::RPageSink &destination);
 
 }; // end of class RNTupleMerger
 
