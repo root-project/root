@@ -117,6 +117,8 @@ TEST(RNTupleMerger, MergeSymmetric)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource*> sourcePtrs;
+      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
 
       // Create the output
       RNTupleWriteOptions writeOpts;
@@ -125,7 +127,7 @@ TEST(RNTupleMerger, MergeSymmetric)
 
       // Now Merge the inputs
       RNTupleMerger merger;
-      EXPECT_NO_THROW(merger.Merge(sources, destination));
+      EXPECT_NO_THROW(merger.Merge(sourcePtrs, *destination));
    }
 
    // Now check some information
@@ -205,6 +207,8 @@ TEST(RNTupleMerger, MergeAsymmetric1)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource*> sourcePtrs;
+      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
 
       // Create the output
       RNTupleWriteOptions writeOpts;
@@ -214,7 +218,7 @@ TEST(RNTupleMerger, MergeAsymmetric1)
       // Now Merge the inputs
       // We expect this to fail since the fields between the sources do NOT match
       RNTupleMerger merger;
-      EXPECT_THROW(merger.Merge(sources, destination), ROOT::Experimental::RException);
+      EXPECT_THROW(merger.Merge(sourcePtrs, *destination), ROOT::Experimental::RException);
    }
 }
 
@@ -253,6 +257,8 @@ TEST(RNTupleMerger, MergeAsymmetric2)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource*> sourcePtrs;
+      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
 
       // Create the output
       RNTupleWriteOptions writeOpts;
@@ -262,7 +268,7 @@ TEST(RNTupleMerger, MergeAsymmetric2)
       // Now Merge the inputs
       // We expect this to fail since the fields between the sources do NOT match
       RNTupleMerger merger;
-      EXPECT_THROW(merger.Merge(sources, destination), ROOT::Experimental::RException);
+      EXPECT_THROW(merger.Merge(sourcePtrs, *destination), ROOT::Experimental::RException);
    }
 }
 
@@ -301,6 +307,8 @@ TEST(RNTupleMerger, MergeAsymmetric3)
       std::vector<std::unique_ptr<RPageSource>> sources;
       sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
       sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource*> sourcePtrs;
+      for(const auto& s : sources) { sourcePtrs.push_back(s.get()); }
 
       // Create the output
       RNTupleWriteOptions writeOpts;
@@ -310,6 +318,6 @@ TEST(RNTupleMerger, MergeAsymmetric3)
       // Now Merge the inputs
       // We expect this to fail since the fields between the sources do NOT match
       RNTupleMerger merger;
-      EXPECT_THROW(merger.Merge(sources, destination), ROOT::Experimental::RException);
+      EXPECT_THROW(merger.Merge(sourcePtrs, *destination), ROOT::Experimental::RException);
    }
 }
