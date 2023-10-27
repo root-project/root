@@ -622,16 +622,14 @@ void TF2::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF2::GetSave(const Double_t *xx)
 {
-   //if (fNsave <= 0) return 0;
-   if (fSave.empty()) return 0;
-   Int_t fNsave = fSave.size();
-   Int_t np = fNsave - 6;
-   Double_t xmin = Double_t(fSave[np+0]);
-   Double_t xmax = Double_t(fSave[np+1]);
-   Double_t ymin = Double_t(fSave[np+2]);
-   Double_t ymax = Double_t(fSave[np+3]);
-   Int_t npx     = Int_t(fSave[np+4]);
-   Int_t npy     = Int_t(fSave[np+5]);
+   if (fSave.size() < 6) return 0;
+   Int_t nsave = fSave.size() - 6;
+   Double_t xmin = fSave[nsave+0];
+   Double_t xmax = fSave[nsave+1];
+   Double_t ymin = fSave[nsave+2];
+   Double_t ymax = fSave[nsave+3];
+   Int_t npx     = Int_t(fSave[nsave+4]);
+   Int_t npy     = Int_t(fSave[nsave+5]);
    Double_t x    = Double_t(xx[0]);
    Double_t dx   = (xmax-xmin)/npx;
    if (x < xmin || x > xmax) return 0;
@@ -797,43 +795,47 @@ void TF2::Paint(Option_t *option)
 
 void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t, Double_t)
 {
-   if (!fSave.empty()) fSave.clear();
-   //if (fSave != 0) {delete [] fSave; fSave = 0;}
-   Int_t nsave = (fNpx+1)*(fNpy+1);
-   Int_t fNsave = nsave+6;
-   if (fNsave <= 6) {fNsave=0; return;}
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
-   Int_t i,j,k=0;
+   if (!fSave.empty())
+      fSave.clear();
+   Int_t npx = fNpx, npy = fNpy;
+   if ((npx <= 0) || (npy <= 0))
+      return;
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNpx;
-      xmin = fXmin +0.5*dx;
-      xmax = fXmax -0.5*dx;
+      npx--;
+      xmin = fXmin + 0.5*dx;
+      xmax = fXmax - 0.5*dx;
    }
    if (dy <= 0) {
       dy = (fYmax-fYmin)/fNpy;
-      ymin = fYmin +0.5*dy;
-      ymax = fYmax -0.5*dy;
+      npy--;
+      ymin = fYmin + 0.5*dy;
+      ymax = fYmax - 0.5*dy;
    }
+
+   if ((npx <= 0) || (npy <= 0))
+      return;
+
+   Int_t nsave = (npx + 1) * (npy + 1);
+   fSave.resize(nsave + 6);
    Double_t xv[2];
    Double_t *parameters = GetParameters();
-   InitArgs(xv,parameters);
-   for (j=0;j<=fNpy;j++) {
+   InitArgs(xv, parameters);
+   for (Int_t j = 0, k = 0; j <= npy; j++) {
       xv[1]    = ymin + dy*j;
-      for (i=0;i<=fNpx;i++) {
+      for (Int_t i = 0; i <= npx; i++) {
          xv[0]    = xmin + dx*i;
-         fSave[k] = EvalPar(xv,parameters);
-         k++;
+         fSave[k++] = EvalPar(xv, parameters);
       }
    }
    fSave[nsave+0] = xmin;
    fSave[nsave+1] = xmax;
    fSave[nsave+2] = ymin;
    fSave[nsave+3] = ymax;
-   fSave[nsave+4] = fNpx;
-   fSave[nsave+5] = fNpy;
+   fSave[nsave+4] = npx;
+   fSave[nsave+5] = npy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
