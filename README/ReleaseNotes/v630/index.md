@@ -51,6 +51,11 @@ The following people have contributed to this new version:
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,
 
+## Platform support
+
+- GCC 12 is now supported.
+- macOS 14 is now suppoorted.
+
 ## Deprecation and Removal
 
 - The minimum C++ standard supported by ROOT is now C++17.
@@ -123,6 +128,8 @@ Please let us know at [rootdev@cern.ch](mailto:rootdev@cern.ch) if their planned
 
 ## TTree Libraries
 
+Many bug fixes, improvements for multi-threaded usage, and optimizations.
+
 ## RNTuple
 ROOT's experimental successor of TTree has seen a large number of updates during the last few months. Specifically, v6.30 includes the following changes:
 
@@ -192,6 +199,7 @@ Thus, we appreciate feedback and suggestions for improvement.
 
 ## Histogram Libraries
 
+The new class `TScatter` has been added. More info to come!
 
 ## Math Libraries
 
@@ -356,38 +364,27 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
   In case of normal canvas just canvas->Update() is performed.
 
 
-## 3D Graphics Libraries
-
-
-## Geometry Libraries
-
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
 ## Language Bindings
 
+- Add support for Python 3.12.
+- Speedup inclusion of ROOT module.
+- Improve numba support for PyROOT, see `tutorials/pyroot/pyroot004_NumbaDeclare.py`.
 
 ## JavaScript ROOT
 
+- Many improvements to ROOT's' JavaScript plotting / graphics facilities.
 
 ## Tutorials
+
+- `dataframe/df106_HiggsToFourLeptons.C` now demonstrates `Vary()`, `RDatasetSpec` (`FromSpec()`), and `AddProgressBar()`.
+- New tutorials for `RBatchGenerator`: `tutorials/tmva/RBatchGenerator_PyTorch.py`, `tutorials/tmva/RBatchGenerator_NumPy.py`, `tutorials/tmva/RBatchGenerator_TensorFlow.py`, `tutorials/tmva/RBatchGenerator_filters_vectors.py`.
+- Showcase new `TScatter` class in `tutorials/graphs/scatter.C`.
+- Demonstrate the use of `SOFIE` for fast inference in `tutorials/tmva/TMVA_SOFIE_RSofieReader.C`.
 
 
 ## Class Reference Guide
 
+- Doxygen 1.9.8 is now supported, including its support for dark mode.
 
 ## Build, Configuration and Testing Infrastructure
 
