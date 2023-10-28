@@ -58,6 +58,8 @@ The following people have contributed to this new version:
 
 ### Deprecated and removed ROOT modules
 The following previously deprecated build options have been removed:
+
+- alien
 - gfal
 - gsl_shared
 - jemalloc
@@ -67,6 +69,7 @@ The following previously deprecated build options have been removed:
 - xproofd
 
 The following build options have now been deprecated and will be removed in the future v6.32:
+
 - cxxmodules
 - exceptions
 - oracle
@@ -95,13 +98,14 @@ Please let us know at [rootdev@cern.ch](mailto:rootdev@cern.ch) if their planned
 ## Core Libraries
 
 - Increase thread-safety in parts of core libraries (TCling, TClingMethodInfo, TClingTypeInfo, TFunction) to allow for parallel workflows using RDataFrame in multiple C++ `std::thread`s.
+- The maximum number of threads used by ROOT's thread pools can now be limited by the environment variable `ROOT_MAX_THREADS`.
 
 ## I/O Libraries
 
 - Improve parsing of input argument to `TChain::Add`. Now it supports the case of globbing files while also using the `?#` token to specify the tree name.
 
 ## RDataFrame
-- instead of returning nothing, `ROOT::RDF::RunGraphs` now returns the number of separate computation graphs that have been run.
+- Instead of returning nothing, `ROOT::RDF::RunGraphs` now returns the number of separate computation graphs that have been run.
 
 - Introduce [`ProgressBar`](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#progressbar) feature that can be added to any RDataFrame program.
 
@@ -133,7 +137,7 @@ Note that associative collections are not yet supported.
 New top-level fields can be created at any time during the writing process.
 On read-back, zero-initialized values are read for entries before the field was first seen.
 The example below illustrates the use of this feature.
-```
+```c++
 auto model = RNTupleModel::Create();
 auto fieldPt = model->MakeField<float>("pt", 42.0);
 auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "out.ntuple");
@@ -154,7 +158,7 @@ Alternatively, users can pick a different column representation for a field by c
 
 - RNTuple now defaults to 64bit offset columns, which allow for representing large collections.
 RNTuple can still use 32bit offset columns, e.g.
-```
+```c++
 RNTupleWriteOptions options;
 options.SetHasSmallClusters(true);
 auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "out.ntuple");
@@ -162,7 +166,7 @@ auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "out.ntuple"
 
 - Support for projected fields, i.e. exposing other fields' data as a different (compatible) C++ type.
 Users should provide a mapping function that maps each projected subfield in the tree to theunderlying real field, e.g.
-```
+```c++
 auto model = RNTupleModel::Create();
 auto fvec = model->MakeField<std::vector<float>>("vec");
 
@@ -387,8 +391,9 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
 
 ## Build, Configuration and Testing Infrastructure
 
-- If `-Droottest=ON` is specified, the ROOT build system used to clone a matching branch of the `roottest` repository.
+If `-Droottest=ON` is specified, the ROOT build system used to clone a matching branch of the `roottest` repository.
 This logic has been improved and is now as follows:
-_(i)_ If the current head is a well-known branch, e.g. `master` or `v6-28-00-patches`, use the matching branch upstream;
-_(ii)_ otherwise, try a branch that matches the name of the current head in the forked repository, if it exists; else try using the closest upstream head/tag below `HEAD`'s parent commit;
-_(iii)_ as a last resort, if there is no preferred candidate, checkout the remote's default head.
+
+_- If the current head is a well-known branch, e.g. `master` or `v6-28-00-patches`, use the matching branch upstream;
+ - otherwise, try a branch that matches the name of the current head in the forked repository, if it exists; else try using the closest upstream head/tag below `HEAD`'s parent commit;
+_- as a last resort, if there is no preferred candidate, checkout the remote's default head.
