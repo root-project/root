@@ -1168,7 +1168,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       fMinimum->SetErrorDef(ErrorDef());
    }
 
-   print.Info("Computing contours -", ErrorDef());
+   print.Info("Computing contours at level -", ErrorDef());
 
    // switch off Minuit2 printing (for level of  0,1)
    const int prev_level = (PrintLevel() <= 1) ? TurnOffPrintInfoLevel() : -2;
@@ -1196,6 +1196,14 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       x[i] = result[i].first;
       y[i] = result[i].second;
    }
+   print.Info([&](std::ostream &os) {
+                  os << " Computed " << npoints << " points at level " << ErrorDef();
+                  for (unsigned int i = 0; i < npoints; i++) {
+                     if (i %5 == 0) os << std::endl;
+                     os << "( " << x[i] << ", " << y[i] << ") ";
+                  }
+                  os << std::endl << std::endl;
+               });
 
    return true;
 }
