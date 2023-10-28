@@ -224,8 +224,8 @@ static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
 // of a class that's not a base class of pyclass
     if (CustomInstanceMethod_GET_SELF(meth)
 #if PY_VERSION_HEX < 0x03000000
-         || (CustomInstanceMetho_GET_CLASS(meth) &&
-             !PyObject_IsSubclass(pyclass, CustomInstanceMetho_GET_CLASS(meth)))
+         || (CustomInstanceMethod_GET_CLASS(meth) &&
+             !PyObject_IsSubclass(pyclass, CustomInstanceMethod_GET_CLASS(meth)))
 #endif
             ) {
         Py_INCREF(meth);
