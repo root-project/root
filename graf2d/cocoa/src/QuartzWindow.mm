@@ -2397,7 +2397,20 @@ void print_mask_info(ULong_t mask)
    assert(area.fWidth && area.fHeight && "-readColorBits:, area to copy is empty");
 
    //int, not unsigned or something - to keep it simple.
-   const NSRect visRect = [self visibleRect];
+   NSRect visRect = [self visibleRect];
+   // 'Sanitize' visible rect, which is different starting from macOS 14 -
+   // in that it's considered to be visible even in a hidden part which has
+   // no 'color bits' at all an result in reading arbitrary colored 'pixels',
+   // probably black ones:
+   if (visRect.origin.y < 0) {
+      visRect.size.height += visRect.origin.y;
+      visRect.origin.y = 0.;
+   }
+   if (visRect.origin.x < 0) {
+      visRect.size.width += visRect.origin.x;
+      visRect.origin.x = 0.;
+   }
+
    const X11::Rectangle srcRect(int(visRect.origin.x), int(visRect.origin.y),
                                 unsigned(visRect.size.width), unsigned(visRect.size.height));
 
