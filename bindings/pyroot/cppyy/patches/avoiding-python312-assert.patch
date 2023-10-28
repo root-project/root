@@ -88,8 +88,8 @@ index ed41b1637c6..88f50d91616 100644
  #if PY_VERSION_HEX < 0x03000000
 -         || (PyMethod_GET_CLASS(meth) &&
 -             !PyObject_IsSubclass(pyclass, PyMethod_GET_CLASS(meth)))
-+         || (CustomInstanceMetho_GET_CLASS(meth) &&
-+             !PyObject_IsSubclass(pyclass, CustomInstanceMetho_GET_CLASS(meth)))
++         || (CustomInstanceMethod_GET_CLASS(meth) &&
++             !PyObject_IsSubclass(pyclass, CustomInstanceMethod_GET_CLASS(meth)))
  #endif
              ) {
          Py_INCREF(meth);
