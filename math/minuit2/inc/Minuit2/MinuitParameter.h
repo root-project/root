@@ -96,7 +96,7 @@ public:
    unsigned int Number() const { return fNum; }
    // new API returning a string
    const std::string &GetName() const { return fName; }
-   // return const char * for maintaining backward compatibility
+   // return const char * for mantaining backward compatibility
    const char *Name() const { return fName.c_str(); }
 
    double Value() const { return fValue; }
@@ -105,7 +105,11 @@ public:
    // interaction
    void SetName(const std::string &name) { fName = name; }
 
-   void SetValue(double val) { fValue = val; }
+   void SetValue(double val) {
+      fValue = val;
+      if (fLoLimValid && val < fLoLimit) fValue = fLoLimit;
+      if (fUpLimValid && val > fUpLimit) fValue = fUpLimit;
+   }
    void SetError(double err) { fError = err; }
    void SetLimits(double low, double up)
    {
