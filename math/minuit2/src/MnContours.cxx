@@ -104,12 +104,13 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
       return (status) ?  vmid[0] + crossResult.Value() * vdir[0] : 0;
    };
 
-   // function to find teh contour points at the border of p1 after the minimization in p2
+   // function to find the contour points at the border of p1 after the minimization in p2
    auto findContourPointsAtBorder = [&](unsigned int p1, unsigned int p2, double p1Limit, FunctionMinimum & minp2, bool order) {
       // we are at the limit in p1
       ustate.SetValue(p1, p1Limit);
       ustate.Fix(p1);
-      bool ret1, ret2  = false;
+      bool ret1 = false;
+      bool ret2  = false;
       double deltaFCN = fMinimum.Fval() + fFCN.Up()- minp2.UserState().Fval();
       double pmid =  minp2.UserState().Value(p2);    // starting point for search
       double pdir =  minp2.UserState().Error(p2) * deltaFCN/fFCN.Up(); // direction for the search
@@ -125,19 +126,20 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
       } else if (!ret1 && ret2) {
           yvalues.push_back(y2);
       } else {
-         // otherwise use both points:
-         yvalues.push_back(y1);
          // if points are not the same use both
          if (std::abs(y1-y2) > 0.0001 * fMinimum.UserState().Error(p2)) {
             // order them in increasing/decreasing y depending on order flag
             int orderDir = (order) ? 1 : -1;
-            if (orderDir*(y2-y1) > 0)
+            if (orderDir*(y2-y1) > 0) {
+               yvalues.push_back(y1);
                yvalues.push_back(y2);
-            else {
+            } else {
                yvalues.push_back(y2);
                yvalues.push_back(y1);
             }
          }
+         else
+           yvalues.push_back(y1);
       }
       print.Debug("Found contour point at the border: ",ustate.Value(p1)," , ",yvalues[0]);
       if (yvalues.size() > 1) print.Debug("Found additional point at : ",ustate.Value(p1)," , ",yvalues[1]);
@@ -297,68 +299,74 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
       double a2 = 0.5;
       double sca = 1.;
 
-   L300:
+      bool validPoint = false;
 
-      if (nfcn > maxcalls) {
-         print.Error("maximum number of function calls exhausted");
-         return ContoursError(px, py, result, mnex, mney, nfcn);
-      }
+      do {
 
-      print.Debug("Find new contour point between points with max sep:  (",idist1->first,", ",idist1->second,") and (",
-                                                                           idist2->first,", ",idist2->second,")  with weights ",a1,a2);
-      // find next point between the found 2 with max separation
-      // start from point situated at the middle (a1,a2=0.5)
-      // and direction
-      double xmidcr = a1 * idist1->first + a2 * (idist2)->first;
-      double ymidcr = a1 * idist1->second + a2 * (idist2)->second;
-      // direction is the perpendicular one
-      double xdir = (idist2)->second - idist1->second;
-      double ydir = idist1->first - (idist2)->first;
-      double scalfac = sca * std::max(std::fabs(xdir * scalx), std::fabs(ydir * scaly));
-      double xdircr = xdir / scalfac;
-      double ydircr = ydir / scalfac;
-      std::vector<double> pmid(2);
-      pmid[0] = xmidcr;
-      pmid[1] = ymidcr;
-      std::vector<double> pdir(2);
-      pdir[0] = xdircr;
-      pdir[1] = ydircr;
-
-      print.Debug("calling MnCross with pmid: ",pmid[0],pmid[1], "and  pdir ",pdir[0],pdir[1]);
-      MnCross opt = cross(par, pmid, pdir, toler, maxcalls);
-      nfcn += opt.NFcn();
-      if (!opt.IsValid() || opt.AtLimit()) {
-         // Exclude also case where we are at limits since point is not in that case
-         // on teh contour. If we are at limit maybe we should try more?
-         if(a1 > 0.5) {
-            a1 = 0.25;
-            a2 = 0.75;
-            print.Debug("Unable to find point, try closer to p2 with weight values",a1,a2);
-            goto L300;
-         }
-         if (a1 < 0.3) {
-            print.Info("Unable to find point on Contour", i + 1, '\n', "found only", i, "points");
+         if (nfcn > maxcalls) {
+            print.Error("maximum number of function calls exhausted");
             return ContoursError(px, py, result, mnex, mney, nfcn);
          }
-         a1 = 0.75;
-         a2 = 0.25;
-         print.Debug("Unable to find point, try closer to p1 with weight values",a1,a2);
-         //std::cout<<"*****switch direction"<<std::endl;
-         //sca = -1.;
-         goto L300;
-      }
-      double aopt = opt.Value();
-      int pos = result.size();
-      if (idist2 == result.begin()) {
-         result.emplace_back(xmidcr + (aopt)*xdircr, ymidcr + (aopt)*ydircr);
-         print.Info(result.back());
-      } else {
-         print.Info(*idist2);
-         auto itr = result.insert(idist2, {xmidcr + (aopt)*xdircr, ymidcr + (aopt)*ydircr});
-         pos = std::distance(result.begin(),itr);
-      }
-      print.Info("Found new point - pos: ",pos,result[pos], "fcn = ",opt.State().Fval());
-   }
+
+         print.Debug("Find new contour point between points with max sep:  (",idist1->first,", ",idist1->second,") and (",
+                                                                              idist2->first,", ",idist2->second,")  with weights ",a1,a2);
+         // find next point between the found 2 with max separation
+         // start from point situated at the middle (a1,a2=0.5)
+         // and direction
+         double xmidcr = a1 * idist1->first + a2 * (idist2)->first;
+         double ymidcr = a1 * idist1->second + a2 * (idist2)->second;
+         // direction is the perpendicular one
+         double xdir = (idist2)->second - idist1->second;
+         double ydir = idist1->first - (idist2)->first;
+         double scalfac = sca * std::max(std::fabs(xdir * scalx), std::fabs(ydir * scaly));
+         double xdircr = xdir / scalfac;
+         double ydircr = ydir / scalfac;
+         std::vector<double> pmid(2);
+         pmid[0] = xmidcr;
+         pmid[1] = ymidcr;
+         std::vector<double> pdir(2);
+         pdir[0] = xdircr;
+         pdir[1] = ydircr;
+
+         print.Debug("calling MnCross with pmid: ",pmid[0],pmid[1], "and  pdir ",pdir[0],pdir[1]);
+         MnCross opt = cross(par, pmid, pdir, toler, maxcalls);
+         nfcn += opt.NFcn();
+         if (!opt.IsValid() || opt.AtLimit()) {
+            // Exclude also case where we are at limits since point is not in that case
+            // on the contour. If we are at limit maybe we should try more?
+            if (a1 < 0.3) {
+               // here when having tried with a1=0.5, a1 = 0.75 and a1=0.25
+               print.Info("Unable to find point on Contour", i + 1, '\n', "found only", i, "points");
+               return ContoursError(px, py, result, mnex, mney, nfcn);
+            } else if (a1 > 0.5) {
+               a1 = 0.25;
+               a2 = 0.75;
+               print.Debug("Unable to find point, try closer to p2 with weight values",a1,a2);
+            } else {
+               a1 = 0.75;
+               a2 = 0.25;
+               print.Debug("Unable to find point, try closer to p1 with weight values",a1,a2);
+               //std::cout<<"*****switch direction"<<std::endl;
+               //sca = -1.;
+            }
+         } else {
+            // a point is found
+            double aopt = opt.Value();
+            int pos = result.size();
+            if (idist2 == result.begin()) {
+               result.emplace_back(xmidcr + (aopt)*xdircr, ymidcr + (aopt)*ydircr);
+               print.Info(result.back());
+            } else {
+               print.Info(*idist2);
+               auto itr = result.insert(idist2, {xmidcr + (aopt)*xdircr, ymidcr + (aopt)*ydircr});
+               pos = std::distance(result.begin(),itr);
+            }
+            print.Info("Found new point - pos: ",pos,result[pos], "fcn = ",opt.State().Fval());
+            validPoint = true;
+         }
+      // loop until a valid point has been found
+      } while (!validPoint);
+   }  // end loop on points
 
    print.Info("Number of contour points =", result.size());
 
