@@ -1,9 +1,12 @@
 // Bindings
 #include "CPyCppyy.h"
 #include "structmember.h"    // from Python
-#if PY_VERSION_HEX >= 0x02050000
+#if PY_VERSION_HEX >= 0x030B0000
+// from version 3.11 code.h is (only) in cpython subdir and is not needed to include
+;
+#elif PY_VERSION_HEX >= 0x02050000
 #include "code.h"            // from Python
-#else
+#else   // PY_VERSION_HEX < 0x02050000
 #include "compile.h"         // from Python
 #endif
 #ifndef CO_NOFREE
