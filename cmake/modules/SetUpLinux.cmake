@@ -73,6 +73,13 @@ if(dev)
     set(LLVM_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=${SUPERIOR_LINKER} ${GDBINDEX}")
     set(LLVM_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=${SUPERIOR_LINKER} ${GDBINDEX}")
   endif()
+
+  # Turn on stdlib checking
+  if (libcxx)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LIBCPP_ENABLE_ASSERTIONS=1")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")
+  endif()
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
