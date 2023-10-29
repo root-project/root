@@ -93,7 +93,7 @@ jobs:
         include:
           - platform: mac14
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "dev=On", "CMAKE_CXX_STANDARD=20"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -327,7 +327,7 @@ jobs:
           - image: fedora39
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           - image: fedora38
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "dev=On", "CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
           - image: fedora37
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma8
