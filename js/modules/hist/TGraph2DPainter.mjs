@@ -1,5 +1,5 @@
 import { settings, createHistogram, setHistogramTitle, kNoZoom,
-         clTH2I, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
+         clTH2F, clTGraph2DErrors, clTGraph2DAsymmErrors, clTPaletteAxis, kNoStats } from '../core.mjs';
 import { Color, DoubleSide, LineBasicMaterial, MeshBasicMaterial, Mesh } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -879,7 +879,7 @@ function graph2DTooltip(intersect) {
 class TGraph2DPainter extends ObjectPainter {
 
    /** @summary Decode options string  */
-   decodeOptions(opt, gr) {
+   decodeOptions(opt, _gr) {
       const d = new DrawOptions(opt);
 
       if (!this.options)
@@ -907,19 +907,20 @@ class TGraph2DPainter extends ObjectPainter {
          res.Markers = d.check('P');
       }
 
-      if (!res.Markers && !res.Error && !res.Circles && !res.Line && !res.Triangles) {
-         if ((gr.fMarkerSize === 1) && (gr.fMarkerStyle === 1))
-            res.Circles = true;
-         else
-            res.Markers = true;
-      }
       if (!res.Markers) res.Color = false;
 
       if (res.Color || res.Triangles >= 10)
          res.Zscale = d.check('Z');
 
-      res.Axis = 'lego2';
-      if (res.Zscale) res.Axis += 'z';
+      res.isAny = function() {
+         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles;
+      };
+
+      if (res.isAny()) {
+         res.Axis = 'lego2';
+         if (res.Zscale) res.Axis += 'z';
+      } else
+         res.Axis = opt;
 
       this.storeDrawOpt(opt);
    }
@@ -979,7 +980,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       this._own_histogram = true; // when histogram created on client side
 
-      const histo = createHistogram(clTH2I, 10, 10);
+      const histo = createHistogram(clTH2F, graph.fNpx, graph.fNpy);
       histo.fName = graph.fName + '_h';
       setHistogramTitle(histo, graph.fTitle);
       histo.fXaxis.fXmin = uxmin;
@@ -991,13 +992,37 @@ class TGraph2DPainter extends ObjectPainter {
       histo.fMinimum = uzmin;
       histo.fMaximum = uzmax;
       histo.fBits |= kNoStats;
+
+      if (!this.options.isAny()) {
+         const dulaunay = this.buildDelaunay(graph);
+         if (dulaunay) {
+            for (let i = 0; i < graph.fNpx; ++i) {
+               const xx = uxmin + (i + 0.5) / graph.fNpx * (uxmax - uxmin);
+               for (let j = 0; j < graph.fNpy; ++j) {
+                  const yy = uymin + (j + 0.5) / graph.fNpy * (uymax - uymin),
+                        zz = dulaunay.ComputeZ(xx, yy);
+                  histo.fArray[histo.getBin(i+1, j+1)] = zz;
+               }
+            }
+         }
+      }
+
       return histo;
    }
 
+   buildDelaunay(graph) {
+      if (!this._delaunay) {
+         this._delaunay = new TGraphDelaunay(graph);
+         this._delaunay.FindAllTriangles();
+         if (!this._delaunay.fNdt)
+            delete this._delaunay;
+      }
+      return this._delaunay;
+   }
+
    drawTriangles(fp, graph, levels, palette) {
-      const dulaunay = new TGraphDelaunay(graph);
-      dulaunay.FindAllTriangles();
-      if (!dulaunay.fNdt) return;
+      const dulaunay = this.buildDelaunay(graph);
+      if (!dulaunay) return;
 
       const main_grz = !fp.logz ? fp.grz : value => (value < fp.scale_zmin) ? -0.1 : fp.grz(value),
             do_faces = this.options.Triangles >= 10,
@@ -1060,6 +1085,8 @@ class TGraph2DPainter extends ObjectPainter {
 
       Object.assign(this.getObject(), obj);
 
+      delete this._delaunay; // rebuild triangles
+
       delete this.$redraw_hist;
 
       // if our own histogram was used as axis drawing, we need update histogram as well
@@ -1098,6 +1125,16 @@ class TGraph2DPainter extends ObjectPainter {
 
       fp.remove3DMeshes(this);
 
+      if (!this.options.isAny()) {
+         // no need to draw somthing if histogram content was drawn
+         if (main.draw_content)
+            return this;
+         if ((graph.fMarkerSize === 1) && (graph.fMarkerStyle === 1))
+            this.options.Circles = true;
+         else
+            this.options.Markers = true;
+      }
+
       const countSelected = (zmin, zmax) => {
          let cnt = 0;
          for (let i = 0; i < graph.fNpoints; ++i) {
@@ -1133,7 +1170,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       if (fp.usesvg) scale *= 0.3;
 
-      scale *= 10 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
+      scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
       if (this.options.Color || this.options.Triangles) {
          levels = main.getContourLevels(true);

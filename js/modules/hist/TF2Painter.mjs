@@ -54,11 +54,11 @@ class TF2Painter extends TH2Painter {
    /** @summary Create histogram for TF2 drawing
      * @private */
    createTF2Histogram(func, hist = undefined) {
-      let nsave = func.fSave.length;
-      if ((nsave > 6) && (nsave !== (func.fSave[nsave-2]+1)*(func.fSave[nsave-1]+1) + 6))
+      let nsave = func.fSave.length - 6;
+      if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
          nsave = 0;
 
-      this._use_saved_points = (nsave > 6) && (settings.PreferSavedPoints || this.force_saved);
+      this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || this.force_saved);
 
       const fp = this.getFramePainter(),
             pad = this.getPadPainter()?.getRootPad(true),
@@ -135,29 +135,42 @@ class TF2Painter extends TH2Painter {
       }
 
       if (this._use_saved_points) {
-         const npx = Math.round(func.fSave[nsave-2]),
-               npy = Math.round(func.fSave[nsave-1]),
-               xmin = func.fSave[nsave-6], xmax = func.fSave[nsave-5],
-               ymin = func.fSave[nsave-4], ymax = func.fSave[nsave-3],
-               epsilon = 1e-10,
-               dx = (func.fXmax - func.fXmin) / Math.max(1, func.fNpx),
-               dy = (func.fYmax - func.fYmin) / Math.max(1, func.fNpy),
-               bad_save_buffer = (Math.abs(xmin - func.fXmin - 0.5*dx) < epsilon) && (Math.abs(func.fXmax - 0.5*dx - xmax) < epsilon) &&
-                                 (Math.abs(ymin - func.fYmin - 0.5*dy) < epsilon) && (Math.abs(func.fYmax - 0.5*dy - ymax) < epsilon),
-               nbinsx = bad_save_buffer ? npx - 1 : npx,
-               nbinsy = bad_save_buffer ? npy - 1 : npy;
+         const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
+               ymin = func.fSave[nsave+2], ymax = func.fSave[nsave+3],
+               npx = Math.round(func.fSave[nsave+4]),
+               npy = Math.round(func.fSave[nsave+5]),
+               dx = (xmax - xmin) / npx,
+               dy = (ymax - ymin) / npy;
+          function getSave(x, y) {
+            if (x < xmin || x > xmax) return 0;
+            if (dx <= 0) return 0;
+            if (y < ymin || y > ymax) return 0;
+            if (dy <= 0) return 0;
+            const ibin = Math.min(npx-1, Math.floor((x-xmin)/dx)),
+                  jbin = Math.min(npy-1, Math.floor((y-ymin)/dy)),
+                  xlow = xmin + ibin*dx,
+                  ylow = ymin + jbin*dy,
+                  t = (x-xlow)/dx,
+                  u = (y-ylow)/dy,
+                  k1 = jbin*(npx+1) + ibin,
+                  k2 = jbin*(npx+1) + ibin +1,
+                  k3 = (jbin+1)*(npx+1) + ibin +1,
+                  k4 = (jbin+1)*(npx+1) + ibin;
+            return (1-t)*(1-u)*func.fSave[k1] +t*(1-u)*func.fSave[k2] +t*u*func.fSave[k3] + (1-t)*u*func.fSave[k4];
+         }
 
-         ensureBins(nbinsx, nbinsy);
-         hist.fXaxis.fXmin = xmin;
-         hist.fXaxis.fXmax = xmax;
-         hist.fYaxis.fXmin = ymin;
-         hist.fYaxis.fXmax = ymax;
+         ensureBins(func.fNpx, func.fNpy);
+         hist.fXaxis.fXmin = func.fXmin;
+         hist.fXaxis.fXmax = func.fXmax;
+         hist.fYaxis.fXmin = func.fYmin;
+         hist.fYaxis.fXmax = func.fYmax;
 
-         for (let k = 0, j = 0; j <= npy; ++j) {
-            for (let i = 0; i <= npx; ++i) {
-               const z = func.fSave[k++];
-               if ((j < nbinsy) && (i < nbinsx))
-                  hist.setBinContent(hist.getBin(i+1, j+1), Number.isFinite(z) ? z : 0);
+         for (let j = 0; j < func.fNpy; ++j) {
+            const y = hist.fYaxis.GetBinCenter(j + 1);
+            for (let i = 0; i < func.fNpx; ++i) {
+               const x = hist.fXaxis.GetBinCenter(i + 1),
+                     z = getSave(x, y);
+               hist.setBinContent(hist.getBin(i+1, j+1), Number.isFinite(z) ? z : 0);
             }
          }
       }
