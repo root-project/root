@@ -2345,15 +2345,15 @@ Double_t TF1::GetSave(const Double_t *xx)
 {
    if (fSave.empty()) return 0;
    //if (fSave == 0) return 0;
-   int fNsave = fSave.size();
+   int nsave = fSave.size();
    Double_t x    = Double_t(xx[0]);
    Double_t y, dx, xmin, xmax, xlow, xup, ylow, yup;
    if (fParent && fParent->InheritsFrom(TH1::Class())) {
       //if parent is a histogram the function had been saved at the center of the bins
       //we make a linear interpolation between the saved values
-      xmin = fSave[fNsave - 3];
-      xmax = fSave[fNsave - 2];
-      if (fSave[fNsave - 1] == xmax) {
+      xmin = fSave[nsave - 3];
+      xmax = fSave[nsave - 2];
+      if (fSave[nsave - 1] == xmax) {
          TH1 *h = (TH1 *)fParent;
          TAxis *xaxis = h->GetXaxis();
          Int_t bin1  = xaxis->FindBin(xmin);
@@ -2375,9 +2375,9 @@ Double_t TF1::GetSave(const Double_t *xx)
          return y;
       }
    }
-   Int_t np = fNsave - 3;
-   xmin = Double_t(fSave[np + 1]);
-   xmax = Double_t(fSave[np + 2]);
+   Int_t np = nsave - 3;
+   xmin = fSave[np + 1];
+   xmax = fSave[np + 2];
    dx   = (xmax - xmin) / np;
    if (x < xmin || x > xmax) return 0;
    // return a Nan in case of x=nan, otherwise will crash later
