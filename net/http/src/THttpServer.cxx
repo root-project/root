@@ -709,12 +709,19 @@ Int_t THttpServer::ProcessRequests()
       fMainThrdId = id;
    }
 
+   Bool_t recursion = kFALSE;
+
    if (fProcessingThrdId) {
-      Error("ProcessRequests", "Processing already running from %ld thread", (long) fProcessingThrdId);
-      return 0;
+      if (fProcessingThrdId == id) {
+         recursion = kTRUE;
+      } else {
+         Error("ProcessRequests", "Processing already running from %ld thread", (long) fProcessingThrdId);
+         return 0;
+      }
    }
 
-   fProcessingThrdId = id;
+   if (!recursion)
+      fProcessingThrdId = id;
 
    Int_t cnt = 0;
 
@@ -739,14 +746,14 @@ Int_t THttpServer::ProcessRequests()
          continue;
       }
 
-      fSniffer->SetCurrentCallArg(arg.get());
+      auto prev = fSniffer->SetCurrentCallArg(arg.get());
 
       try {
          cnt++;
          ProcessRequest(arg);
-         fSniffer->SetCurrentCallArg(nullptr);
+         fSniffer->SetCurrentCallArg(prev);
       } catch (...) {
-         fSniffer->SetCurrentCallArg(nullptr);
+         fSniffer->SetCurrentCallArg(prev);
       }
 
       arg->NotifyCondition();
@@ -754,14 +761,14 @@ Int_t THttpServer::ProcessRequests()
 
    // regularly call Process() method of engine to let perform actions in ROOT context
    TIter iter(&fEngines);
-   THttpEngine *engine = nullptr;
-   while ((engine = (THttpEngine *)iter()) != nullptr) {
+   while (auto engine = static_cast<THttpEngine *>(iter())) {
       if (fTerminated)
          engine->Terminate();
       engine->Process();
    }
 
-   fProcessingThrdId = 0;
+   if (!recursion)
+      fProcessingThrdId = 0;
 
    return cnt;
 }
