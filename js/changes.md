@@ -5,6 +5,8 @@
 2. Fix - several bugs in TFormula parsing
 3. Fix - correctly use saved buffer in TF1/TF2
 4. Fix - properly adjust size of stats box
+5. Fix - support pol0..pol9 functions
+6. Fix - TGraph bar width should be at least 1 pixel
 
 
 ## Changes in 7.5.1
