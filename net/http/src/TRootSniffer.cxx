@@ -430,12 +430,15 @@ TRootSniffer::~TRootSniffer()
 /// For instance, if user authorized with some user name,
 /// depending from restrictions some objects will be invisible
 /// or user get full access to the element
+/// Returns previous argument which was set before
 
-void TRootSniffer::SetCurrentCallArg(THttpCallArg *arg)
+THttpCallArg *TRootSniffer::SetCurrentCallArg(THttpCallArg *arg)
 {
+   auto res = fCurrentArg;
    fCurrentArg = arg;
    fCurrentRestrict = 0;
    fCurrentAllowedMethods = "";
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
