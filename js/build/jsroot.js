@@ -11,7 +11,7 @@ const version_id = '7.5.x',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '26/10/2023',
+version_date = '30/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -57194,6 +57194,12 @@ function Prob(chi2, ndf) {
    return chisquared_cdf_c(chi2,ndf,0);
 }
 
+/** @summary Square function
+  * @memberof Math */
+function Sq(x) {
+   return x * x;
+}
+
 /** @summary Gaus function
   * @memberof Math */
 function Gaus(x, mean, sigma, norm) {
@@ -57663,6 +57669,7 @@ LogNormal: LogNormal,
 Polynomial1eval: Polynomial1eval,
 Polynomialeval: Polynomialeval,
 Prob: Prob,
+Sq: Sq,
 Student: Student,
 StudentI: StudentI,
 beta: beta,
@@ -69238,17 +69245,18 @@ class TPavePainter extends ObjectPainter {
             if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy) && !noborder) {
                const scol = this.getColor(pt.fShadowColor);
                let spath = '';
-               if (this.fillatt.empty()) {
-                  if ((dx < 0) && (dy < 0))
-                     spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}`;
-                  else // ((dx < 0) && (dy > 0))
-                     spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}`;
-               } else {
-                  // when main is filled, one also can use fill for shadow to avoid complexity
-                  spath = `M${dx*brd},${dy*brd}v${height}h${width}v${-height}`;
-               }
+
+               if ((dx < 0) && (dy < 0))
+                  spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}z`;
+               else if ((dx < 0) && (dy > 0))
+                  spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}z`;
+               else if ((dx > 0) && (dy < 0))
+                  spath = `M${brd},0v${-brd}h${width}v${height}h${-brd}v${brd-height}z`;
+               else
+                  spath = `M${width},${brd}h${brd}v${height}h${-width}v${-brd}h${width-brd}z`;
+
                this.draw_g.append('svg:path')
-                          .attr('d', spath + 'z')
+                          .attr('d', spath)
                           .style('fill', scol)
                           .style('stroke', scol)
                           .style('stroke-width', '1px');
@@ -105912,7 +105920,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
          if (main_block) {
             const fp = this.getFramePainter(),
-                fpcol = fp?.fillatt && !fp?.fillatt.empty() ? fp.fillatt.getFillColor() : -1;
+                  fpcol = !fp?.fillatt?.empty() ? fp.fillatt.getFillColor() : -1;
+
             if (fpcol === fillatt.getFillColor())
                usefill = new TAttFillHandler({ color: fpcol === 'white' ? 1 : 0, pattern: 1001 });
          }
@@ -105920,8 +105929,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          nodes.append('svg:path')
               .attr('d', d => {
                  d.bar = true; // element drawn as bar
-                 const dx = Math.round(-d.width/2),
-                       dw = Math.round(d.width),
+                 const dx = d.width > 1 ? Math.round(-d.width/2) : 0,
+                       dw = d.width > 1 ? Math.round(d.width) : 1,
                        dy = (options.Bar !== 1) ? 0 : ((d.gry1 > yy0) ? yy0-d.gry1 : 0),
                        dh = (options.Bar !== 1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
                  return `M${dx},${dy}h${dw}v${dh}h${-dw}z`;
@@ -109952,6 +109961,12 @@ function proivdeEvalPar(obj) {
                 .replace(/\blandaun\(/g, 'this._math.landaun(this, x, ')
                 .replace(/\bTMath::/g, 'this._math.')
                 .replace(/\bROOT::Math::/g, 'this._math.');
+
+   if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
+      _func = '[0]';
+      for (let k = 1; k < obj.fNpar; ++k)
+         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
+   }
 
    for (let i = 0; i < obj.fNpar; ++i)
       _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);

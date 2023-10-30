@@ -262,17 +262,18 @@ class TPavePainter extends ObjectPainter {
             if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy) && !noborder) {
                const scol = this.getColor(pt.fShadowColor);
                let spath = '';
-               if (this.fillatt.empty()) {
-                  if ((dx < 0) && (dy < 0))
-                     spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}`;
-                  else // ((dx < 0) && (dy > 0))
-                     spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}`;
-               } else {
-                  // when main is filled, one also can use fill for shadow to avoid complexity
-                  spath = `M${dx*brd},${dy*brd}v${height}h${width}v${-height}`;
-               }
+
+               if ((dx < 0) && (dy < 0))
+                  spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}z`;
+               else if ((dx < 0) && (dy > 0))
+                  spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}z`;
+               else if ((dx > 0) && (dy < 0))
+                  spath = `M${brd},0v${-brd}h${width}v${height}h${-brd}v${brd-height}z`;
+               else
+                  spath = `M${width},${brd}h${brd}v${height}h${-width}v${-brd}h${width-brd}z`;
+
                this.draw_g.append('svg:path')
-                          .attr('d', spath + 'z')
+                          .attr('d', spath)
                           .style('fill', scol)
                           .style('stroke', scol)
                           .style('stroke-width', '1px');

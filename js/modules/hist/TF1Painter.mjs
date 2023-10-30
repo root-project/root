@@ -57,6 +57,12 @@ function proivdeEvalPar(obj) {
                 .replace(/\bTMath::/g, 'this._math.')
                 .replace(/\bROOT::Math::/g, 'this._math.');
 
+   if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
+      _func = '[0]';
+      for (let k = 1; k < obj.fNpar; ++k)
+         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
+   }
+
    for (let i = 0; i < obj.fNpar; ++i)
       _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
 
