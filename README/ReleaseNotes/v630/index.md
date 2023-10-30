@@ -54,7 +54,7 @@ The following people have contributed to this new version:
 ## Platform support
 
 - GCC 12 is now supported.
-- macOS 14 is now suppoorted.
+- macOS 14 is now supported.
 
 ## Deprecation and Removal
 
@@ -172,7 +172,7 @@ auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "out.ntuple"
 ```
 
 - Support for projected fields, i.e. exposing other fields' data as a different (compatible) C++ type.
-Users should provide a mapping function that maps each projected subfield in the tree to theunderlying real field, e.g.
+Users should provide a mapping function that maps each projected subfield in the tree to the underlying real field, e.g.
 ```c++
 auto model = RNTupleModel::Create();
 auto fvec = model->MakeField<std::vector<float>>("vec");
@@ -193,13 +193,19 @@ Note that not all of the C++ types supported in TTree are currently supported in
 
 - Many bug fixes and performance improvements
 
-Please, report any issues regarding the abovementioned features should you encounter them.
+Please, report any issues regarding the above mentioned features should you encounter them.
 RNTuple is still experimental and is scheduled to become production grade by end of 2024.
 Thus, we appreciate feedback and suggestions for improvement.
 
 ## Histogram Libraries
 
-The new class `TScatter` has been added. More info to come!
+2D Scatter plots are a very popular way to represent scientific data. Many scientific plotting
+packages have this functionality. For many years ROOT itself as offered this kind of
+visualization dedicated drawing options for TGraph or TTree. But there was no simple way
+to produced 4D scatter plots from data stored in simple vectors. To fulfil these requirements
+the new class, TScatter, has been implemented. It is able to draw a four variables scatter
+plot on a single plot. A [detailed description](https://root.cern/blog/new-class-tscatter/)
+was given on the website as a blog-post.
 
 ## Math Libraries
 
@@ -296,7 +302,7 @@ only that one inherited from `RooAbsPdf` and the other from `RooAbsReal`.
 
 Thanks to the `RooWrapperPdf`, this code duplication in the RooFit implementation can now be avoided.
 Instead of using the removed `RooMomentMorphND` (which is the pdf), you now need to use the `RooMomentMorphFuncND`,
-change its behavior to exactly match the formter `RooMomentMorphND`, and then wrap it into a pdf object:
+change its behavior to exactly match the former `RooMomentMorphND`, and then wrap it into a pdf object:
 
 ```C++
 RooMomentMorphFuncND func{<constructor args you previously passed to RooMomentMorphFunc>};
