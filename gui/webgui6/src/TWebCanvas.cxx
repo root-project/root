@@ -128,7 +128,7 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 1);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
-   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 0) > 0;
+   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 1) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
 
    fWebConn.emplace_back(0); // add special connection which only used to perform updates
@@ -541,14 +541,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       }
    };
 
-   auto save_tf1 = [&](TObject *fobj) {
+   auto check_save_tf1 = [&](TObject *fobj, bool ignore_nodraw = false) {
       if (!paddata.IsBatchMode() && !fTF1UseSave)
+         return;
+      if (!ignore_nodraw && fobj->TestBit(TF1::kNotDraw))
          return;
 
       auto f1 = static_cast<TF1 *>(fobj);
-      Double_t xmin, ymin, zmin, xmax, ymax, zmax;
-      f1->GetRange(xmin, ymin, zmin, xmax, ymax, zmax);
-      f1->Save(xmin, xmax, ymin, ymax, zmin, zmax);
+      f1->Save(0, 0, 0, 0, 0, 0);
    };
 
    iter.Reset();
@@ -604,8 +604,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                stats = dynamic_cast<TPaveStats *> (fobj);
             else if (fobj->InheritsFrom("TPaletteAxis"))
                palette = fobj;
-            else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw))
-               save_tf1(fobj);
+            else if (fobj->InheritsFrom(TF1::Class()))
+               check_save_tf1(fobj);
          }
 
          TString hopt = iter.GetOption();
@@ -682,8 +682,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          while (auto fobj = fiter()) {
            if (fobj->InheritsFrom(TPaveStats::Class()))
                stats = dynamic_cast<TPaveStats *> (fobj);
-           else if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw))
-              save_tf1(fobj);
+           else if (fobj->InheritsFrom(TF1::Class()))
+              check_save_tf1(fobj);
          }
 
          TString gropt = iter.GetOption();
@@ -736,8 +736,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          TIter fiter(funcs);
          while (auto fobj = fiter()) {
-            if (fobj->InheritsFrom(TF1::Class()) && !fobj->TestBit(TF1::kNotDraw))
-               save_tf1(fobj);
+            if (fobj->InheritsFrom(TF1::Class()))
+               check_save_tf1(fobj);
          }
 
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
@@ -796,11 +796,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          TString f1opt = iter.GetOption();
 
-         if (f1->IsA() == TF1::Class() || f1->IsA() == TF2::Class()) {
-            save_tf1(obj);
-            if (fTF1UseSave)
-               f1opt.Append(";force_saved");
-         }
+         check_save_tf1(obj, true);
+         // if (fTF1UseSave)
+         //   f1opt.Append(";force_saved");
 
          if (first_obj) {
             auto hist = f1->GetHistogram();
