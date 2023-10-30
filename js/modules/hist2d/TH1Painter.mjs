@@ -255,6 +255,7 @@ class TH1Painter extends THistPainter {
       if (this.isIgnoreStatsFill()) return false;
 
       if (dostat === 1) dostat = 1111;
+      if (dofit === 1) dofit = 111;
 
       const histo = this.getHisto(),
             print_name = dostat % 10,

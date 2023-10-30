@@ -12,6 +12,9 @@ import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redra
 import { BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout, getHPainter, setHPainter } from './display.mjs';
 import { showProgress, ToolbarIcons, registerForResize, injectStyle } from './utils.mjs';
 
+
+const kTopFolder = 'TopFolder';
+
 function injectHStyle(node) {
    function img(name, sz, fmt, code) {
       return `.jsroot .img_${name} { display: inline-block; height: ${sz}px; width: ${sz}px; background-image: url("data:image/${fmt};base64,${code}"); }`;
@@ -78,6 +81,18 @@ ${img('member', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJL
 ${img('tf1', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8/SMz///+Cf5VqAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4QHgSCla+2AAAAL0lEQVQI12MQYAACrAQXiFBoABINCgwMQgwcDAwSDEwMDKmhodMYJjAwaKDrAAEAoRAEjHDJ/uQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMTEtMTRUMTc6Mjk6MjErMDE6MDDxcSccAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTExLTE0VDE3OjI5OjA1KzAxOjAwNka8zgAAAABJRU5ErkJggg==')}
 ${img('tf2', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8A/wD////pL6WoAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4PNgzGaW1jAAAARUlEQVQI12NgEGDQZAASKkBigQKQ6GhgYBDiYgASIiAigIGBS8iBgUFhEpCnoAEkUkNDQxkagUIMrUDMMAVETAARQI0MAD5GCJ7tAr1aAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTExLTE0VDE2OjUxOjUzKzAxOjAwi1Gz3gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0xMS0xNFQxNjo1MTozNiswMTowMG5bLUIAAAAASUVORK5CYII=')}
 `, node, 'jsroot_hstyle');
+}
+
+/** @summary Return size as string with suffix like MB or KB
+  * @private */
+function getSizeStr(sz) {
+   if (sz < 10000)
+      return sz.toFixed(0) + 'B';
+   if (sz < 1e6)
+      return (sz/1e3).toFixed(2) + 'KiB';
+   if (sz < 1e9)
+      return (sz/1e6).toFixed(2) + 'MiB';
+   return (sz/1e9).toFixed(2) + 'GiB';
 }
 
 /** @summary draw list content
@@ -259,14 +274,11 @@ function keysHierarchy(folder, keys, file, dirname) {
          _name: key.fName + ';' + key.fCycle,
          _cycle: key.fCycle,
          _kind: prROOT + key.fClassName,
-         _title: key.fTitle,
+         _title: key.fTitle + ` (size: ${getSizeStr(key.fObjlen)})`,
          _keyname: key.fName,
          _readobj: null,
          _parent: folder
       };
-
-      if (key.fObjlen > 1e5)
-         item._title += ' (size: ' + (key.fObjlen/1e6).toFixed(1) + 'MB)';
 
       if (key.fRealName)
          item._realname = key.fRealName + ';' + key.fCycle;
@@ -772,7 +784,7 @@ class HierarchyPainter extends BasePainter {
 
        folder = {
          _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path ' : '') + file.fFullURL,
+         _title: (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`,
          _kind: kindTFile,
          _file: file,
          _fullurl: file.fFullURL,
@@ -866,7 +878,7 @@ class HierarchyPainter extends BasePainter {
 
          let pos = fullname.length;
 
-         if (!top._parent && (top._kind !== 'TopFolder') && (fullname.indexOf(top._name) === 0)) {
+         if (!top._parent && (top._kind !== kTopFolder) && (fullname.indexOf(top._name) === 0)) {
             // it is allowed to provide item name, which includes top-parent like file.root/folder/item
             // but one could skip top-item name, if there are no other items
             if (fullname === top._name) return top;
@@ -899,7 +911,7 @@ class HierarchyPainter extends BasePainter {
                }
 
                // if first child online, check its elements
-               if ((top._kind === 'TopFolder') && (top._childs[0]._online !== undefined)) {
+               if ((top._kind === kTopFolder) && (top._childs[0]._online !== undefined)) {
                   for (let i = 0; i < top._childs[0]._childs.length; ++i) {
                      if (top._childs[0]._childs[i]._name === localname)
                         return process_child(top._childs[0]._childs[i], true);
@@ -971,7 +983,7 @@ class HierarchyPainter extends BasePainter {
      * @return {string} produced name
      * @private */
    itemFullName(node, uptoparent, compact) {
-      if (node && node._kind === 'TopFolder') return '__top_folder__';
+      if (node && node._kind === kTopFolder) return '__top_folder__';
 
       let res = '';
 
@@ -979,7 +991,7 @@ class HierarchyPainter extends BasePainter {
          // online items never includes top-level folder
          if ((node._online !== undefined) && !uptoparent) return res;
 
-         if ((node === uptoparent) || (node._kind === 'TopFolder')) break;
+         if ((node === uptoparent) || (node._kind === kTopFolder)) break;
          if (compact && !node._parent) break; // in compact form top-parent is not included
          if (res) res = '/' + res;
          res = node._name + res;
@@ -2619,11 +2631,11 @@ class HierarchyPainter extends BasePainter {
          };
          if (!this.h)
             this.h = h1;
-         else if (this.h._kind === 'TopFolder')
+         else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
          else {
             const h0 = this.h, topname = ('_jsonfile' in h0) ? 'Files' : 'Items';
-            this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1] };
+            this.h = { _name: topname, _kind: kTopFolder, _childs: [h0, h1] };
          }
 
          return this.refreshHtml();
@@ -2664,11 +2676,11 @@ class HierarchyPainter extends BasePainter {
          if (!this.h) {
             this.h = h1;
             if (this._topname) h1._name = this._topname;
-         } else if (this.h._kind === 'TopFolder')
+         } else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
            else {
             const h0 = this.h, topname = (h0._kind === kindTFile) ? 'Files' : 'Items';
-            this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1], _isopen: true };
+            this.h = { _name: topname, _kind: kTopFolder, _childs: [h0, h1], _isopen: true };
          }
 
          return this.refreshHtml();
@@ -2842,9 +2854,10 @@ class HierarchyPainter extends BasePainter {
      * @param {string} server_address - URL to server like 'http://localhost:8090/'
      * @return {Promise} when ready */
    async openOnline(server_address) {
-      const AdoptHierarchy = result => {
+      const adoptHierarchy = async result => {
          this.h = result;
-         if (!result) return Promise.resolve(null);
+         if (!result)
+            return Promise.resolve(null);
 
          if (this.h?._title && (typeof document !== 'undefined'))
             document.title = this.h._title;
@@ -2854,9 +2867,7 @@ class HierarchyPainter extends BasePainter {
          // mark top hierarchy as online data and
          this.h._online = server_address;
 
-         this.h._get = (item, itemname, option) => {
-            return this.getOnlineItem(item, itemname, option);
-         };
+         this.h._get = (item, itemname, option) => this.getOnlineItem(item, itemname, option);
 
          this.h._expand = onlineHierarchy;
 
@@ -2903,10 +2914,10 @@ class HierarchyPainter extends BasePainter {
       if (isObject(server_address)) {
          const h = server_address;
          server_address = '';
-         return AdoptHierarchy(h);
+         return adoptHierarchy(h);
       }
 
-      return httpRequest(server_address + 'h.json?compact=3', 'object').then(hh => AdoptHierarchy(hh));
+      return httpRequest(server_address + 'h.json?compact=3', 'object').then(hh => adoptHierarchy(hh));
    }
 
    /** @summary Get properties for online item  - server name and relative name

@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '26/10/2023',
+version_date = '30/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -57477,7 +57477,7 @@ function ChebyshevN(n, x, c) {
 
 /** @summary Chebyshev0 function
   * @memberof Math */
-function Chebyshev0(x, c0) {
+function Chebyshev0(_x, c0) {
    return c0;
 }
 
@@ -57682,6 +57682,45 @@ function getTEfficiencyBoundaryFunc(option, isbayessian) {
    return eff_ClopperPearson;
 }
 
+/** @summary Square function
+  * @memberof Math */
+function Sq(x) {
+   return x * x;
+}
+
+/** @summary Pi function
+  * @memberof Math */
+function Pi() {
+   return Math.PI;
+}
+
+/** @summary TwoPi function
+  * @memberof Math */
+function TwoPi() {
+   return 2 * Math.PI;
+}
+
+/** @summary PiOver2 function
+  * @memberof Math */
+function PiOver2()
+{
+   return Math.PI / 2;
+}
+
+/** @summary PiOver4 function
+  * @memberof Math */
+function PiOver4()
+{
+   return Math.PI / 4;
+}
+
+/** @summary InvPi function
+  * @memberof Math */
+function InvPi()
+{
+   return 1 / Math.PI;
+}
+
 var jsroot_math = /*#__PURE__*/Object.freeze({
 __proto__: null,
 Beta: Beta,
@@ -57706,15 +57745,21 @@ FDistI: fdistribution_cdf,
 Gamma: gamma,
 GammaDist: GammaDist,
 Gaus: Gaus,
+InvPi: InvPi,
 Landau: Landau,
 LaplaceDist: LaplaceDist,
 LaplaceDistI: LaplaceDistI,
 LogNormal: LogNormal,
+Pi: Pi,
+PiOver2: PiOver2,
+PiOver4: PiOver4,
 Polynomial1eval: Polynomial1eval,
 Polynomialeval: Polynomialeval,
 Prob: Prob,
+Sq: Sq,
 Student: Student,
 StudentI: StudentI,
+TwoPi: TwoPi,
 beta: beta,
 beta_cdf_c: beta_cdf_c,
 beta_pdf: beta_pdf,
@@ -69279,17 +69324,18 @@ class TPavePainter extends ObjectPainter {
             if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy) && !noborder) {
                const scol = this.getColor(pt.fShadowColor);
                let spath = '';
-               if (this.fillatt.empty()) {
-                  if ((dx < 0) && (dy < 0))
-                     spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}`;
-                  else // ((dx < 0) && (dy > 0))
-                     spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}`;
-               } else {
-                  // when main is filled, one also can use fill for shadow to avoid complexity
-                  spath = `M${dx*brd},${dy*brd}v${height}h${width}v${-height}`;
-               }
+
+               if ((dx < 0) && (dy < 0))
+                  spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}z`;
+               else if ((dx < 0) && (dy > 0))
+                  spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}z`;
+               else if ((dx > 0) && (dy < 0))
+                  spath = `M${brd},0v${-brd}h${width}v${height}h${-brd}v${brd-height}z`;
+               else
+                  spath = `M${width},${brd}h${brd}v${height}h${-width}v${-brd}h${width-brd}z`;
+
                this.draw_g.append('svg:path')
-                          .attr('d', spath + 'z')
+                          .attr('d', spath)
                           .style('fill', scol)
                           .style('stroke', scol)
                           .style('stroke-width', '1px');
@@ -78395,6 +78441,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       if (this.isIgnoreStatsFill()) return false;
 
       if (dostat === 1) dostat = 1111;
+      if (dofit === 1) dofit = 111;
 
       const histo = this.getHisto(),
             print_name = dostat % 10,
@@ -79913,10 +79960,8 @@ class TH3Painter extends THistPainter {
             print_skew = Math.floor(dostat / 10000000) % 10,
             print_kurt = Math.floor(dostat / 100000000) % 10,
             data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
-
             // print_under = Math.floor(dostat / 10000) % 10,
-            // print_over = Math.floor(dostat / 100000) % 10,
-            // ;
+            // print_over = Math.floor(dostat / 100000) % 10;
 
       stat.clearPave();
 
@@ -100983,6 +101028,8 @@ async function drawRooPlot(dom, plot) {
    });
 }
 
+const kTopFolder = 'TopFolder';
+
 function injectHStyle(node) {
    function img(name, sz, fmt, code) {
       return `.jsroot .img_${name} { display: inline-block; height: ${sz}px; width: ${sz}px; background-image: url("data:image/${fmt};base64,${code}"); }`;
@@ -101049,6 +101096,18 @@ ${img('member', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJL
 ${img('tf1', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8/SMz///+Cf5VqAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4QHgSCla+2AAAAL0lEQVQI12MQYAACrAQXiFBoABINCgwMQgwcDAwSDEwMDKmhodMYJjAwaKDrAAEAoRAEjHDJ/uQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMTEtMTRUMTc6Mjk6MjErMDE6MDDxcSccAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTExLTE0VDE3OjI5OjA1KzAxOjAwNka8zgAAAABJRU5ErkJggg==')}
 ${img('tf2', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8A/wD////pL6WoAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4PNgzGaW1jAAAARUlEQVQI12NgEGDQZAASKkBigQKQ6GhgYBDiYgASIiAigIGBS8iBgUFhEpCnoAEkUkNDQxkagUIMrUDMMAVETAARQI0MAD5GCJ7tAr1aAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTExLTE0VDE2OjUxOjUzKzAxOjAwi1Gz3gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0xMS0xNFQxNjo1MTozNiswMTowMG5bLUIAAAAASUVORK5CYII=')}
 `, node, 'jsroot_hstyle');
+}
+
+/** @summary Return size as string with suffix like MB or KB
+  * @private */
+function getSizeStr(sz) {
+   if (sz < 10000)
+      return sz.toFixed(0) + 'B';
+   if (sz < 1e6)
+      return (sz/1e3).toFixed(2) + 'KiB';
+   if (sz < 1e9)
+      return (sz/1e6).toFixed(2) + 'MiB';
+   return (sz/1e9).toFixed(2) + 'GiB';
 }
 
 /** @summary draw list content
@@ -101230,14 +101289,11 @@ function keysHierarchy(folder, keys, file, dirname) {
          _name: key.fName + ';' + key.fCycle,
          _cycle: key.fCycle,
          _kind: prROOT + key.fClassName,
-         _title: key.fTitle,
+         _title: key.fTitle + ` (size: ${getSizeStr(key.fObjlen)})`,
          _keyname: key.fName,
          _readobj: null,
          _parent: folder
       };
-
-      if (key.fObjlen > 1e5)
-         item._title += ' (size: ' + (key.fObjlen/1e6).toFixed(1) + 'MB)';
 
       if (key.fRealName)
          item._realname = key.fRealName + ';' + key.fCycle;
@@ -101743,7 +101799,7 @@ class HierarchyPainter extends BasePainter {
 
        folder = {
          _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path ' : '') + file.fFullURL,
+         _title: (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}`,
          _kind: kindTFile,
          _file: file,
          _fullurl: file.fFullURL,
@@ -101837,7 +101893,7 @@ class HierarchyPainter extends BasePainter {
 
          let pos = fullname.length;
 
-         if (!top._parent && (top._kind !== 'TopFolder') && (fullname.indexOf(top._name) === 0)) {
+         if (!top._parent && (top._kind !== kTopFolder) && (fullname.indexOf(top._name) === 0)) {
             // it is allowed to provide item name, which includes top-parent like file.root/folder/item
             // but one could skip top-item name, if there are no other items
             if (fullname === top._name) return top;
@@ -101870,7 +101926,7 @@ class HierarchyPainter extends BasePainter {
                }
 
                // if first child online, check its elements
-               if ((top._kind === 'TopFolder') && (top._childs[0]._online !== undefined)) {
+               if ((top._kind === kTopFolder) && (top._childs[0]._online !== undefined)) {
                   for (let i = 0; i < top._childs[0]._childs.length; ++i) {
                      if (top._childs[0]._childs[i]._name === localname)
                         return process_child(top._childs[0]._childs[i], true);
@@ -101942,7 +101998,7 @@ class HierarchyPainter extends BasePainter {
      * @return {string} produced name
      * @private */
    itemFullName(node, uptoparent, compact) {
-      if (node && node._kind === 'TopFolder') return '__top_folder__';
+      if (node && node._kind === kTopFolder) return '__top_folder__';
 
       let res = '';
 
@@ -101950,7 +102006,7 @@ class HierarchyPainter extends BasePainter {
          // online items never includes top-level folder
          if ((node._online !== undefined) && !uptoparent) return res;
 
-         if ((node === uptoparent) || (node._kind === 'TopFolder')) break;
+         if ((node === uptoparent) || (node._kind === kTopFolder)) break;
          if (compact && !node._parent) break; // in compact form top-parent is not included
          if (res) res = '/' + res;
          res = node._name + res;
@@ -103588,11 +103644,11 @@ class HierarchyPainter extends BasePainter {
          };
          if (!this.h)
             this.h = h1;
-         else if (this.h._kind === 'TopFolder')
+         else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
          else {
             const h0 = this.h, topname = ('_jsonfile' in h0) ? 'Files' : 'Items';
-            this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1] };
+            this.h = { _name: topname, _kind: kTopFolder, _childs: [h0, h1] };
          }
 
          return this.refreshHtml();
@@ -103633,11 +103689,11 @@ class HierarchyPainter extends BasePainter {
          if (!this.h) {
             this.h = h1;
             if (this._topname) h1._name = this._topname;
-         } else if (this.h._kind === 'TopFolder')
+         } else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
            else {
             const h0 = this.h, topname = (h0._kind === kindTFile) ? 'Files' : 'Items';
-            this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1], _isopen: true };
+            this.h = { _name: topname, _kind: kTopFolder, _childs: [h0, h1], _isopen: true };
          }
 
          return this.refreshHtml();
@@ -103811,9 +103867,10 @@ class HierarchyPainter extends BasePainter {
      * @param {string} server_address - URL to server like 'http://localhost:8090/'
      * @return {Promise} when ready */
    async openOnline(server_address) {
-      const AdoptHierarchy = result => {
+      const adoptHierarchy = async result => {
          this.h = result;
-         if (!result) return Promise.resolve(null);
+         if (!result)
+            return Promise.resolve(null);
 
          if (this.h?._title && (typeof document !== 'undefined'))
             document.title = this.h._title;
@@ -103823,9 +103880,7 @@ class HierarchyPainter extends BasePainter {
          // mark top hierarchy as online data and
          this.h._online = server_address;
 
-         this.h._get = (item, itemname, option) => {
-            return this.getOnlineItem(item, itemname, option);
-         };
+         this.h._get = (item, itemname, option) => this.getOnlineItem(item, itemname, option);
 
          this.h._expand = onlineHierarchy;
 
@@ -103872,10 +103927,10 @@ class HierarchyPainter extends BasePainter {
       if (isObject(server_address)) {
          const h = server_address;
          server_address = '';
-         return AdoptHierarchy(h);
+         return adoptHierarchy(h);
       }
 
-      return httpRequest(server_address + 'h.json?compact=3', 'object').then(hh => AdoptHierarchy(hh));
+      return httpRequest(server_address + 'h.json?compact=3', 'object').then(hh => adoptHierarchy(hh));
    }
 
    /** @summary Get properties for online item  - server name and relative name
@@ -106221,7 +106276,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
          if (main_block) {
             const fp = this.getFramePainter(),
-                fpcol = fp?.fillatt && !fp?.fillatt.empty() ? fp.fillatt.getFillColor() : -1;
+                  fpcol = !fp?.fillatt?.empty() ? fp.fillatt.getFillColor() : -1;
+
             if (fpcol === fillatt.getFillColor())
                usefill = new TAttFillHandler({ color: fpcol === 'white' ? 1 : 0, pattern: 1001 });
          }
@@ -106229,8 +106285,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          nodes.append('svg:path')
               .attr('d', d => {
                  d.bar = true; // element drawn as bar
-                 const dx = Math.round(-d.width/2),
-                       dw = Math.round(d.width),
+                 const dx = d.width > 1 ? Math.round(-d.width/2) : 0,
+                       dw = d.width > 1 ? Math.round(d.width) : 1,
                        dy = (options.Bar !== 1) ? 0 : ((d.gry1 > yy0) ? yy0-d.gry1 : 0),
                        dh = (options.Bar !== 1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
                  return `M${dx},${dy}h${dw}v${dh}h${-dw}z`;
@@ -109285,7 +109341,7 @@ function graph2DTooltip(intersect) {
 class TGraph2DPainter extends ObjectPainter {
 
    /** @summary Decode options string  */
-   decodeOptions(opt, gr) {
+   decodeOptions(opt, _gr) {
       const d = new DrawOptions(opt);
 
       if (!this.options)
@@ -109313,19 +109369,20 @@ class TGraph2DPainter extends ObjectPainter {
          res.Markers = d.check('P');
       }
 
-      if (!res.Markers && !res.Error && !res.Circles && !res.Line && !res.Triangles) {
-         if ((gr.fMarkerSize === 1) && (gr.fMarkerStyle === 1))
-            res.Circles = true;
-         else
-            res.Markers = true;
-      }
       if (!res.Markers) res.Color = false;
 
       if (res.Color || res.Triangles >= 10)
          res.Zscale = d.check('Z');
 
-      res.Axis = 'lego2';
-      if (res.Zscale) res.Axis += 'z';
+      res.isAny = function() {
+         return this.Markers || this.Error || this.Circles || this.Line || this.Triangles;
+      };
+
+      if (res.isAny()) {
+         res.Axis = 'lego2';
+         if (res.Zscale) res.Axis += 'z';
+      } else
+         res.Axis = opt;
 
       this.storeDrawOpt(opt);
    }
@@ -109385,7 +109442,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       this._own_histogram = true; // when histogram created on client side
 
-      const histo = createHistogram(clTH2I, 10, 10);
+      const histo = createHistogram(clTH2F, graph.fNpx, graph.fNpy);
       histo.fName = graph.fName + '_h';
       setHistogramTitle(histo, graph.fTitle);
       histo.fXaxis.fXmin = uxmin;
@@ -109397,13 +109454,37 @@ class TGraph2DPainter extends ObjectPainter {
       histo.fMinimum = uzmin;
       histo.fMaximum = uzmax;
       histo.fBits |= kNoStats;
+
+      if (!this.options.isAny()) {
+         const dulaunay = this.buildDelaunay(graph);
+         if (dulaunay) {
+            for (let i = 0; i < graph.fNpx; ++i) {
+               const xx = uxmin + (i + 0.5) / graph.fNpx * (uxmax - uxmin);
+               for (let j = 0; j < graph.fNpy; ++j) {
+                  const yy = uymin + (j + 0.5) / graph.fNpy * (uymax - uymin),
+                        zz = dulaunay.ComputeZ(xx, yy);
+                  histo.fArray[histo.getBin(i+1, j+1)] = zz;
+               }
+            }
+         }
+      }
+
       return histo;
    }
 
+   buildDelaunay(graph) {
+      if (!this._delaunay) {
+         this._delaunay = new TGraphDelaunay(graph);
+         this._delaunay.FindAllTriangles();
+         if (!this._delaunay.fNdt)
+            delete this._delaunay;
+      }
+      return this._delaunay;
+   }
+
    drawTriangles(fp, graph, levels, palette) {
-      const dulaunay = new TGraphDelaunay(graph);
-      dulaunay.FindAllTriangles();
-      if (!dulaunay.fNdt) return;
+      const dulaunay = this.buildDelaunay(graph);
+      if (!dulaunay) return;
 
       const main_grz = !fp.logz ? fp.grz : value => (value < fp.scale_zmin) ? -0.1 : fp.grz(value),
             do_faces = this.options.Triangles >= 10,
@@ -109466,6 +109547,8 @@ class TGraph2DPainter extends ObjectPainter {
 
       Object.assign(this.getObject(), obj);
 
+      delete this._delaunay; // rebuild triangles
+
       delete this.$redraw_hist;
 
       // if our own histogram was used as axis drawing, we need update histogram as well
@@ -109504,6 +109587,16 @@ class TGraph2DPainter extends ObjectPainter {
 
       fp.remove3DMeshes(this);
 
+      if (!this.options.isAny()) {
+         // no need to draw somthing if histogram content was drawn
+         if (main.draw_content)
+            return this;
+         if ((graph.fMarkerSize === 1) && (graph.fMarkerStyle === 1))
+            this.options.Circles = true;
+         else
+            this.options.Markers = true;
+      }
+
       const countSelected = (zmin, zmax) => {
          let cnt = 0;
          for (let i = 0; i < graph.fNpoints; ++i) {
@@ -109539,7 +109632,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       if (fp.usesvg) scale *= 0.3;
 
-      scale *= 10 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
+      scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
       if (this.options.Color || this.options.Triangles) {
          levels = main.getContourLevels(true);
@@ -110290,13 +110383,23 @@ function proivdeEvalPar(obj) {
       _func = _func.replaceAll(entry.fName, entry.fTitle);
    });
 
-   _func = _func.replace(/\b(sin|SIN)\b/g, 'Math.sin')
-                .replace(/\b(cos|COS)\b/g, 'Math.cos')
-                .replace(/\b(tan|TAN)\b/g, 'Math.tan')
+   _func = _func.replace(/\b(TMath::SinH)\b/g, 'Math.sinh')
+                .replace(/\b(TMath::CosH)\b/g, 'Math.cosh')
+                .replace(/\b(TMath::TanH)\b/g, 'Math.tanh')
+                .replace(/\b(TMath::ASinH)\b/g, 'Math.asinh')
+                .replace(/\b(TMath::ACosH)\b/g, 'Math.acosh')
+                .replace(/\b(TMath::ATanH)\b/g, 'Math.atanh')
+                .replace(/\b(TMath::ASin)\b/g, 'Math.asin')
+                .replace(/\b(TMath::ACos)\b/g, 'Math.acos')
+                .replace(/\b(TMath::Atan)\b/g, 'Math.atan')
+                .replace(/\b(TMath::ATan2)\b/g, 'Math.atan2')
+                .replace(/\b(sin|SIN|TMath::Sin)\b/g, 'Math.sin')
+                .replace(/\b(cos|COS|TMath::Cos)\b/g, 'Math.cos')
+                .replace(/\b(tan|TAN|TMath::Tan)\b/g, 'Math.tan')
                 .replace(/\b(exp|EXP|TMath::Exp)\b/g, 'Math.exp')
-                .replace(/\b(log|LOG)\b/g, 'Math.log')
-                .replace(/\b(log10|LOG10)\b/g, 'Math.log10')
-                .replace(/\b(pow|POW)\b/g, 'Math.pow')
+                .replace(/\b(log|LOG|TMath::Log)\b/g, 'Math.log')
+                .replace(/\b(log10|LOG10|TMath::Log10)\b/g, 'Math.log10')
+                .replace(/\b(pow|POW|TMath::Power)\b/g, 'Math.pow')
                 .replace(/\b(pi|PI)\b/g, 'Math.PI')
                 .replace(/\b(abs|ABS|TMath::Abs)\b/g, 'Math.abs')
                 .replace(/\bxygaus\(/g, 'this._math.gausxy(this, x, y, ')
@@ -110307,6 +110410,19 @@ function proivdeEvalPar(obj) {
                 .replace(/\blandaun\(/g, 'this._math.landaun(this, x, ')
                 .replace(/\bTMath::/g, 'this._math.')
                 .replace(/\bROOT::Math::/g, 'this._math.');
+
+   if (_func.match(/^pol[0-9]$/) && (parseInt(_func[3]) === obj.fNpar - 1)) {
+      _func = '[0]';
+      for (let k = 1; k < obj.fNpar; ++k)
+         _func += ` + [${k}] * `+ ((k === 1) ? 'x' : `Math.pow(x,${k})`);
+   }
+
+   if (_func.match(/^chebyshev[0-9]$/) && (parseInt(_func[9]) === obj.fNpar - 1)) {
+      _func = `this._math.ChebyshevN(${obj.fNpar-1}, x, `;
+      for (let k = 0; k < obj.fNpar; ++k)
+         _func += (k === 0 ? '[' : ', ') + `[${k}]`;
+      _func += '])';
+   }
 
    for (let i = 0; i < obj.fNpar; ++i)
       _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
@@ -110424,6 +110540,8 @@ class TF1Painter extends TH1Painter$2 {
 
       delete this._fail_eval;
 
+      // this._use_saved_points = true;
+
       if (!this._use_saved_points) {
          const np = Math.max(tf1.fNpx, 100);
          let iserror = false;
@@ -110463,40 +110581,63 @@ class TF1Painter extends TH1Painter$2 {
       // in the case there were points have saved and we cannot calculate function
       // if we don't have the user's function
       if (this._use_saved_points) {
-         let np = tf1.fSave.length - 2, custom_xaxis = null;
-         xmin = tf1.fSave[np];
-         xmax = tf1.fSave[np + 1];
+         const np = tf1.fSave.length - 3;
+         let custom_xaxis = null;
+         xmin = tf1.fSave[np + 1];
+         xmax = tf1.fSave[np + 2];
 
          if (xmin === xmax) {
-            xmin = tf1.fSave[--np];
+            xmin = tf1.fSave[np];
             const mp = this.getMainPainter();
             if (isFunc(mp?.getHisto))
                custom_xaxis = mp?.getHisto()?.fXaxis;
-            else
-               console.error('Very special stored values, see TF1::Save, in TF1.cxx:3183', xmin, xmax);
-         } else {
-            const epsilon = 1e-10, dx = (tf1.fXmax - tf1.fXmin) / Math.max(1, tf1.fNpx),
-                  bad_save_buffer = (Math.abs(xmin - tf1.fXmin - 0.5*dx) < epsilon) && (Math.abs(tf1.fXmax - 0.5*dx - xmax) < epsilon);
-
-            // last point in saved buffer never used for bin content
-            // in case of buggy data also one more point has to be excluded
-            if (np >= tf1.fNpx)
-               np = bad_save_buffer ? tf1.fNpx - 1 : tf1.fNpx;
+            if (!custom_xaxis) {
+               xmin = tf1.fXmin;
+               xmax = tf1.fXmax;
+            }
          }
 
-         ensureBins(np);
-
-         // TODO: try to detect such situation, should not happen with TWebCanvas
-         if (custom_xaxis)
+         if (custom_xaxis) {
+            ensureBins(hist.fXaxis.fNbins);
             Object.assign(hist.fXaxis, custom_xaxis);
-         else {
-            hist.fXaxis.fXmin = xmin;
-            hist.fXaxis.fXmax = xmax;
-         }
+            // TODO: find first bin
 
-         for (let n = 0; n < np; ++n) {
-            const y = tf1.fSave[n];
-            hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+            for (let n = 0; n < np; ++n) {
+               const y = tf1.fSave[n];
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+            }
+         } else {
+            const dx = (xmax - xmin) / np;
+            function getSave(x) {
+               if (x < xmin)
+                  return tf1.fSave[0];
+               if (x > xmax)
+                  return tf1.fSave[np];
+
+               const bin = Math.min(np - 1, Math.floor((x - xmin) / dx));
+               let xlow = xmin + bin * dx,
+                   xup = xlow + dx,
+                   ylow = tf1.fSave[bin],
+                   yup = tf1.fSave[bin + 1];
+
+               if (!Number.isFinite(ylow) && (bin < np - 1)) {
+                  xlow += dx; xup += dx;
+                  ylow = yup; yup = tf1.fSave[bin + 2];
+               } else if (!Number.isFinite(yup) && (bin > 0)) {
+                  xup -= dx; xlow -= dx;
+                  yup = ylow; ylow = tf1.fSave[bin - 1];
+               }
+               return ((xup * ylow - xlow * yup) + x * (yup - ylow)) / dx;
+            }
+
+            ensureBins(tf1.fNpx);
+            hist.fXaxis.fXmin = tf1.fXmin;
+            hist.fXaxis.fXmax = tf1.fXmax;
+
+            for (let n = 0; n < tf1.fNpx; ++n) {
+               const y = getSave(hist.fXaxis.GetBinCenter(n + 1));
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+            }
          }
       }
 
@@ -111804,11 +111945,11 @@ class TF2Painter extends TH2Painter {
    /** @summary Create histogram for TF2 drawing
      * @private */
    createTF2Histogram(func, hist = undefined) {
-      let nsave = func.fSave.length;
-      if ((nsave > 6) && (nsave !== (func.fSave[nsave-2]+1)*(func.fSave[nsave-1]+1) + 6))
+      let nsave = func.fSave.length - 6;
+      if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
          nsave = 0;
 
-      this._use_saved_points = (nsave > 6) && (settings.PreferSavedPoints || this.force_saved);
+      this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || this.force_saved);
 
       const fp = this.getFramePainter(),
             pad = this.getPadPainter()?.getRootPad(true),
@@ -111885,29 +112026,42 @@ class TF2Painter extends TH2Painter {
       }
 
       if (this._use_saved_points) {
-         const npx = Math.round(func.fSave[nsave-2]),
-               npy = Math.round(func.fSave[nsave-1]),
-               xmin = func.fSave[nsave-6], xmax = func.fSave[nsave-5],
-               ymin = func.fSave[nsave-4], ymax = func.fSave[nsave-3],
-               epsilon = 1e-10,
-               dx = (func.fXmax - func.fXmin) / Math.max(1, func.fNpx),
-               dy = (func.fYmax - func.fYmin) / Math.max(1, func.fNpy),
-               bad_save_buffer = (Math.abs(xmin - func.fXmin - 0.5*dx) < epsilon) && (Math.abs(func.fXmax - 0.5*dx - xmax) < epsilon) &&
-                                 (Math.abs(ymin - func.fYmin - 0.5*dy) < epsilon) && (Math.abs(func.fYmax - 0.5*dy - ymax) < epsilon),
-               nbinsx = bad_save_buffer ? npx - 1 : npx,
-               nbinsy = bad_save_buffer ? npy - 1 : npy;
+         const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
+               ymin = func.fSave[nsave+2], ymax = func.fSave[nsave+3],
+               npx = Math.round(func.fSave[nsave+4]),
+               npy = Math.round(func.fSave[nsave+5]),
+               dx = (xmax - xmin) / npx,
+               dy = (ymax - ymin) / npy;
+          function getSave(x, y) {
+            if (x < xmin || x > xmax) return 0;
+            if (dx <= 0) return 0;
+            if (y < ymin || y > ymax) return 0;
+            if (dy <= 0) return 0;
+            const ibin = Math.min(npx-1, Math.floor((x-xmin)/dx)),
+                  jbin = Math.min(npy-1, Math.floor((y-ymin)/dy)),
+                  xlow = xmin + ibin*dx,
+                  ylow = ymin + jbin*dy,
+                  t = (x-xlow)/dx,
+                  u = (y-ylow)/dy,
+                  k1 = jbin*(npx+1) + ibin,
+                  k2 = jbin*(npx+1) + ibin +1,
+                  k3 = (jbin+1)*(npx+1) + ibin +1,
+                  k4 = (jbin+1)*(npx+1) + ibin;
+            return (1-t)*(1-u)*func.fSave[k1] +t*(1-u)*func.fSave[k2] +t*u*func.fSave[k3] + (1-t)*u*func.fSave[k4];
+         }
 
-         ensureBins(nbinsx, nbinsy);
-         hist.fXaxis.fXmin = xmin;
-         hist.fXaxis.fXmax = xmax;
-         hist.fYaxis.fXmin = ymin;
-         hist.fYaxis.fXmax = ymax;
+         ensureBins(func.fNpx, func.fNpy);
+         hist.fXaxis.fXmin = func.fXmin;
+         hist.fXaxis.fXmax = func.fXmax;
+         hist.fYaxis.fXmin = func.fYmin;
+         hist.fYaxis.fXmax = func.fYmax;
 
-         for (let k = 0, j = 0; j <= npy; ++j) {
-            for (let i = 0; i <= npx; ++i) {
-               const z = func.fSave[k++];
-               if ((j < nbinsy) && (i < nbinsx))
-                  hist.setBinContent(hist.getBin(i+1, j+1), Number.isFinite(z) ? z : 0);
+         for (let j = 0; j < func.fNpy; ++j) {
+            const y = hist.fYaxis.GetBinCenter(j + 1);
+            for (let i = 0; i < func.fNpx; ++i) {
+               const x = hist.fXaxis.GetBinCenter(i + 1),
+                     z = getSave(x, y);
+               hist.setBinContent(hist.getBin(i+1, j+1), Number.isFinite(z) ? z : 0);
             }
          }
       }

@@ -195,10 +195,8 @@ class TH3Painter extends THistPainter {
             print_skew = Math.floor(dostat / 10000000) % 10,
             print_kurt = Math.floor(dostat / 100000000) % 10,
             data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
-
             // print_under = Math.floor(dostat / 10000) % 10,
-            // print_over = Math.floor(dostat / 100000) % 10,
-            // ;
+            // print_over = Math.floor(dostat / 100000) % 10;
 
       stat.clearPave();
 

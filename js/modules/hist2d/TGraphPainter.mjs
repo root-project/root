@@ -669,7 +669,8 @@ class TGraphPainter extends ObjectPainter {
 
          if (main_block) {
             const fp = this.getFramePainter(),
-                fpcol = fp?.fillatt && !fp?.fillatt.empty() ? fp.fillatt.getFillColor() : -1;
+                  fpcol = !fp?.fillatt?.empty() ? fp.fillatt.getFillColor() : -1;
+
             if (fpcol === fillatt.getFillColor())
                usefill = new TAttFillHandler({ color: fpcol === 'white' ? 1 : 0, pattern: 1001 });
          }
@@ -677,8 +678,8 @@ class TGraphPainter extends ObjectPainter {
          nodes.append('svg:path')
               .attr('d', d => {
                  d.bar = true; // element drawn as bar
-                 const dx = Math.round(-d.width/2),
-                       dw = Math.round(d.width),
+                 const dx = d.width > 1 ? Math.round(-d.width/2) : 0,
+                       dw = d.width > 1 ? Math.round(d.width) : 1,
                        dy = (options.Bar !== 1) ? 0 : ((d.gry1 > yy0) ? yy0-d.gry1 : 0),
                        dh = (options.Bar !== 1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
                  return `M${dx},${dy}h${dw}v${dh}h${-dw}z`;
