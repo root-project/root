@@ -97,7 +97,7 @@ private:
 
    /// Recursively add columns from a given filed
    void AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
-                            const RFieldDescriptor &fieldDesc, std::string suffix = "")
+                            const RFieldDescriptor &fieldDesc, const std::string &suffix = "")
    {
       for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
          std::string name = suffix + field.GetFieldName();
