@@ -39,3 +39,17 @@ if(dataframe AND NOT pyroot_legacy)
     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
   endif()
 endif()
+
+#--stressTMVA--------------------------------------------------------------------------------------
+
+ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
+
+if(tmva-gpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
+endif()
+
+if(tmva-cpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCPU)
+endif()
+
+ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
