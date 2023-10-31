@@ -34,7 +34,7 @@ ClassImp(TGLManip);
 /// physical shape.
 
 TGLManip::TGLManip() :
-   fShape(0),
+   fShape(nullptr),
    fSelectedWidget(0), fActive(kFALSE),
    fFirstMouse(0, 0),
    fLastMouse(0, 0)

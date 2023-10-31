@@ -27,10 +27,10 @@ ClassImp(TEveLineEditor);
 TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
                                UInt_t options, Pixel_t back) :
    TGedFrame  (p, width, height, options | kVerticalFrame, back),
-   fM         (0),
-   fRnrLine   (0),
-   fRnrPoints (0),
-   fSmooth    (0)
+   fM         (nullptr),
+   fRnrLine   (nullptr),
+   fRnrPoints (nullptr),
+   fSmooth    (nullptr)
 {
    fPriority = 20;
    {

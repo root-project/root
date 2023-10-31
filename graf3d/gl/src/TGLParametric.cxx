@@ -124,7 +124,7 @@ TGLParametricEquation::TGLParametricEquation(const TString &name, const TString 
                              const TString &zFun, Double_t uMin, Double_t uMax,
                              Double_t vMin, Double_t vMax)
                   : TNamed(name, name),
-                    fEquation(0),
+                    fEquation(nullptr),
                     fURange(uMin, uMax),
                     fVRange(vMin, vMax),
                     fConstrained(kFALSE),
@@ -363,7 +363,7 @@ Bool_t TGLParametricPlot::InitGeometry()
       }
 
       TH3F hist("tmp", "tmp", 2, -1., 1., 2, -1., 1., 2, -1., 1.);
-      hist.SetDirectory(0);
+      hist.SetDirectory(nullptr);
       //TAxis has a lot of attributes, defaults, set by ctor,
       //are not enough to be correctly painted by TGaxis object.
       //To simplify their initialization - I use temporary histogram.

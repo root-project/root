@@ -92,20 +92,20 @@ REveDigitSet::REveDigitSet(const char* n, const char* t) :
    fAntiFlick      (kTRUE),
    fDetIdsAsSecondaryIndices         (kFALSE),
    fPlex           (),
-   fLastDigit      (0),
+   fLastDigit      (nullptr),
    fLastIdx        (-1),
 
    fColor          (kWhite),
-   fFrame          (0),
-   fPalette        (0),
+   fFrame          (nullptr),
+   fPalette        (nullptr),
    fRenderMode     (kRM_AsIs),
    fSelectViaFrame (kFALSE),
    fHighlightFrame (kFALSE),
    fDisableLighting(kTRUE),
    fHistoButtons   (kTRUE),
    fEmitSignals    (kFALSE),
-   fCallbackFoo    (0),
-   fTooltipCBFoo   (0)
+   fCallbackFoo    (nullptr),
+   fTooltipCBFoo   (nullptr)
 {
    // Constructor.
 
@@ -121,8 +121,8 @@ REveDigitSet::REveDigitSet(const char* n, const char* t) :
 
 REveDigitSet::~REveDigitSet()
 {
-   SetFrame(0);
-   SetPalette(0);
+   SetFrame(nullptr);
+   SetPalette(nullptr);
    if (fDetIdsAsSecondaryIndices)
       ReleaseIds();
 }
@@ -345,7 +345,7 @@ void REveDigitSet::DigitId(Int_t n, TObject* id)
 
 TObject* REveDigitSet::GetId(Int_t n) const
 {
-   return fDigitIds ? fDigitIds->At(n) : 0;
+   return fDigitIds ? fDigitIds->At(n) : nullptr;
 }
 
 /*
@@ -429,7 +429,7 @@ void REveDigitSet::SetPalette(REveRGBAPalette* p)
 
 REveRGBAPalette* REveDigitSet::AssertPalette()
 {
-   if (fPalette == 0) {
+   if (fPalette == nullptr) {
       fPalette = new REveRGBAPalette;
       if (!fValueIsColor) {
          Int_t min, max;

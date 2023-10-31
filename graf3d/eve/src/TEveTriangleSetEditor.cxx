@@ -28,8 +28,8 @@ ClassImp(TEveTriangleSetEditor);
 TEveTriangleSetEditor::TEveTriangleSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM    (0),
-   fInfo (0)
+   fM    (nullptr),
+   fInfo (nullptr)
 {
    MakeTitle("TEveTriangleSet");
 

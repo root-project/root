@@ -648,7 +648,7 @@ X axis is used for eta and Y axis for phi.
 REveCaloDataHist::REveCaloDataHist():
    REveCaloData(),
 
-   fHStack(0)
+   fHStack(nullptr)
 {
    fHStack = new THStack();
    fEps    = 1e-5;

@@ -218,7 +218,7 @@ void TEveBoxSet::ComputeBBox()
 {
    static const TEveException eH("TEveBoxSet::ComputeBBox ");
 
-   if (fFrame != 0)
+   if (fFrame != nullptr)
    {
       BBoxInit();
       Int_t    n    = fFrame->GetFrameSize() / 3;

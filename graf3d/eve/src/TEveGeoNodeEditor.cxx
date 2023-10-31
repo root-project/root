@@ -30,12 +30,12 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
                                      UInt_t options, Pixel_t back) :
    TGedFrame(p,width, height, options | kVerticalFrame, back),
 
-   fNodeRE (0),
+   fNodeRE (nullptr),
 
-   fVizNode(0),
-   fVizNodeDaughters(0),
-   fVizVolume(0),
-   fVizVolumeDaughters(0)
+   fVizNode(nullptr),
+   fVizNodeDaughters(nullptr),
+   fVizVolume(nullptr),
+   fVizVolumeDaughters(nullptr)
 {
    MakeTitle("GeoNode");
 
@@ -132,10 +132,10 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
                                            UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
 
-   fTopNodeRE   (0),
-   fVisOption   (0),
-   fVisLevel    (0),
-   fMaxVisNodes (0)
+   fTopNodeRE   (nullptr),
+   fVisOption   (nullptr),
+   fVisLevel    (nullptr),
+   fMaxVisNodes (nullptr)
 {
    MakeTitle("GeoTopNode");
 

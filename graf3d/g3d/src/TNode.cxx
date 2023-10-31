@@ -60,10 +60,10 @@ A node can be drawn.
 
 TNode::TNode()
 {
-   fMatrix = 0;
-   fParent = 0;
-   fShape  = 0;
-   fNodes  = 0;
+   fMatrix = nullptr;
+   fParent = nullptr;
+   fShape  = nullptr;
+   fNodes  = nullptr;
    fVisibility = 1;
    fX = fY = fZ = 0;
 }
@@ -90,7 +90,7 @@ TNode::TNode(const char *name, const char *title, const char *shapename, Double_
    fX      = x;
    fY      = y;
    fZ      = z;
-   fNodes  = 0;
+   fNodes  = nullptr;
    fShape  = gGeometry->GetShape(shapename);
    fParent = gGeometry->GetCurrentNode();
    fOption = option;
@@ -141,7 +141,7 @@ TNode::TNode(const char *name, const char *title, TShape *shape, Double_t x, Dou
    fX      = x;
    fY      = y;
    fZ      = z;
-   fNodes  = 0;
+   fNodes  = nullptr;
    fShape  = shape;
    fMatrix = matrix;
    fOption = option;
@@ -217,9 +217,9 @@ TNode::~TNode()
    if (fParent)     fParent->GetListOfNodes()->Remove(this);
    else    {if (gGeometry) gGeometry->GetListOfNodes()->Remove(this);}
    if (fNodes) fNodes->Delete();
-   if (gGeometry && gGeometry->GetCurrentNode() == this) gGeometry->SetCurrentNode(0);
+   if (gGeometry && gGeometry->GetCurrentNode() == this) gGeometry->SetCurrentNode(nullptr);
    delete fNodes;
-   fNodes = 0;
+   fNodes = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +340,7 @@ void TNode::Draw(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = TView::CreateView(11,0,0);
+      view = TView::CreateView(11,nullptr,nullptr);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       if (view) view->SetAutoRange(kTRUE);
@@ -378,7 +378,7 @@ TNode *TNode::GetNode(const char *name) const
 {
    if (!strcmp(name, GetName())) return (TNode*)this;
    TNode *node, *nodefound;
-   if (!fNodes) return 0;
+   if (!fNodes) return nullptr;
    TObjLink *lnk = fNodes->FirstLink();
    while (lnk) {
       node = (TNode *)lnk->GetObject();
@@ -388,7 +388,7 @@ TNode *TNode::GetNode(const char *name) const
       }
       lnk = lnk->Next();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

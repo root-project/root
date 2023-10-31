@@ -27,7 +27,7 @@ ClassImp(TEvePlot3DGL);
 /// Constructor.
 
 TEvePlot3DGL::TEvePlot3DGL() :
-   TGLObject(), fM(0), fPlotLogical(0)
+   TGLObject(), fM(nullptr), fPlotLogical(nullptr)
 {
    fDLCache = kFALSE; // Disable display list.
 }

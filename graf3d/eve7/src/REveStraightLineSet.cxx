@@ -33,7 +33,7 @@ REveStraightLineSet::REveStraightLineSet(const std::string& n, const std::string
    fRnrMarkers    (kTRUE),
    fRnrLines      (kTRUE),
    fDepthTest     (kTRUE),
-   fLastLine      (0)
+   fLastLine      (nullptr)
 {
    InitMainTrans();
    fPickable = kTRUE;

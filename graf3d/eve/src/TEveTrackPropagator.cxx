@@ -263,7 +263,7 @@ TEveTrackPropagator::TEveTrackPropagator(const char* n, const char* t,
    fPTBAtt.SetMarkerStyle(4);
    fPTBAtt.SetMarkerSize(0.8);
 
-   if (fMagFieldObj == 0) {
+   if (fMagFieldObj == nullptr) {
       fMagFieldObj = new TEveMagFieldConst(0., 0., fgDefMagField);
       fOwnMagFiledObj = kTRUE;
    }

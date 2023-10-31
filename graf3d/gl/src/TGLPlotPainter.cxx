@@ -49,8 +49,8 @@ ClassImp(TGLPlotPainter);
 
 TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord,
                                Bool_t xoy, Bool_t xoz, Bool_t yoz)
-                  : fPadColor(0),
-                    fPhysicalShapeColor(0),
+                  : fPadColor(nullptr),
+                    fPhysicalShapeColor(nullptr),
                     fPadPhi(45.),
                     fPadTheta(0.),
                     fHist(hist),
@@ -82,11 +82,11 @@ TGLPlotPainter::TGLPlotPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordina
 ///TGLPlotPainter's ctor.
 
 TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlotCoordinates *coord)
-                  : fPadColor(0),
-                    fPhysicalShapeColor(0),
+                  : fPadColor(nullptr),
+                    fPhysicalShapeColor(nullptr),
                     fPadPhi(45.),
                     fPadTheta(0.),
-                    fHist(0),
+                    fHist(nullptr),
                     fXAxis(data->GetXAxis()),
                     fYAxis(data->GetYAxis()),
                     fZAxis(data->GetZAxis()),
@@ -115,15 +115,15 @@ TGLPlotPainter::TGLPlotPainter(TGL5DDataSet *data, TGLPlotCamera *camera, TGLPlo
 ///TGLPlotPainter's ctor.
 
 TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera)
-                  : fPadColor(0),
-                    fPhysicalShapeColor(0),
+                  : fPadColor(nullptr),
+                    fPhysicalShapeColor(nullptr),
                     fPadPhi(45.),
                     fPadTheta(0.),
-                    fHist(0),
-                    fXAxis(0),
-                    fYAxis(0),
-                    fZAxis(0),
-                    fCoord(0),
+                    fHist(nullptr),
+                    fXAxis(nullptr),
+                    fYAxis(nullptr),
+                    fZAxis(nullptr),
+                    fCoord(nullptr),
                     fCamera(camera),
                     fUpdateSelection(kTRUE),
                     fSelectionPass(kFALSE),
@@ -255,10 +255,10 @@ void TGLPlotPainter::PrintPlot()const
 
    while (state == GL2PS_OVERFLOW) {
       buffsize += 1024*1024;
-      gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+      gl2psBeginPage ("ROOT Scene Graph", "ROOT", nullptr,
                       gl2psFormat, gl2psSort, gl2psoption,
-                      GL_RGBA, 0, NULL,0, 0, 0,
-                      buffsize, output, NULL);
+                      GL_RGBA, 0, nullptr,0, 0, 0,
+                      buffsize, output, nullptr);
       DrawPlot();
       state = gl2psEndPage();
    }
@@ -1703,12 +1703,12 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TGLPlotCoor
                          const TGLPlotBox *box, ESliceAxis axis)
                : TNamed(name, name),
                  fAxisType(axis),
-                 fAxis(0),
+                 fAxis(nullptr),
                  fCoord(coord),
                  fBox(box),
                  fSliceWidth(1),
                  fHist(hist),
-                 fF3(0)
+                 fF3(nullptr)
 {
    fAxis = fAxisType == kXOZ ? fHist->GetYaxis() : fAxisType == kYOZ ? fHist->GetXaxis() : fHist->GetZaxis();
 }
@@ -1720,7 +1720,7 @@ TGLTH3Slice::TGLTH3Slice(const TString &name, const TH3 *hist, const TF3 *fun, c
                          const TGLPlotBox *box, ESliceAxis axis)
                : TNamed(name, name),
                  fAxisType(axis),
-                 fAxis(0),
+                 fAxis(nullptr),
                  fCoord(coord),
                  fBox(box),
                  fSliceWidth(1),

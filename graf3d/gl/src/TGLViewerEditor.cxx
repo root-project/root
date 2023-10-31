@@ -48,44 +48,44 @@ ClassImp(TGLViewerEditor);
 
 TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back) :
    TGedFrame(p,  width, height, options | kVerticalFrame, back),
-   fGuidesFrame(0),
-   fClipFrame(0),
-   fClearColor(0),
-   fIgnoreSizesOnUpdate(0),
-   fResetCamerasOnUpdate(0),
-   fUpdateScene(0),
-   fCameraHome(0),
-   fMaxSceneDrawTimeHQ(0),
-   fMaxSceneDrawTimeLQ(0),
-   fPointSizeScale(0),  fLineWidthScale(0),
-   fPointSmooth(0),     fLineSmooth(0),
-   fWFLineWidth(0),     fOLLineWidth(0),
+   fGuidesFrame(nullptr),
+   fClipFrame(nullptr),
+   fClearColor(nullptr),
+   fIgnoreSizesOnUpdate(nullptr),
+   fResetCamerasOnUpdate(nullptr),
+   fUpdateScene(nullptr),
+   fCameraHome(nullptr),
+   fMaxSceneDrawTimeHQ(nullptr),
+   fMaxSceneDrawTimeLQ(nullptr),
+   fPointSizeScale(nullptr),  fLineWidthScale(nullptr),
+   fPointSmooth(nullptr),     fLineSmooth(nullptr),
+   fWFLineWidth(nullptr),     fOLLineWidth(nullptr),
 
-   fCameraCenterExt(0),
-   fCaptureCenter(0),
-   fCameraCenterX(0),
-   fCameraCenterY(0),
-   fCameraCenterZ(0),
+   fCameraCenterExt(nullptr),
+   fCaptureCenter(nullptr),
+   fCameraCenterX(nullptr),
+   fCameraCenterY(nullptr),
+   fCameraCenterZ(nullptr),
    fCaptureAnnotate(),
    fAxesType(0),
-   fAxesContainer(0),
-   fAxesNone(0),
-   fAxesEdge(0),
-   fAxesOrigin(0),
-   fAxesDepthTest(0),
-   fRefContainer(0),
-   fReferenceOn(0),
-   fReferencePosX(0),
-   fReferencePosY(0),
-   fReferencePosZ(0),
-   fCamContainer(0),
-   fCamMode(0),
-   fCamOverlayOn(0),
-   fClipSet(0),
-   fARotDt(0), fARotWPhi(0), fARotATheta(0), fARotWTheta(0), fARotADolly(0), fARotWDolly(0),
-   fASavImageGUIBaseName(0), fASavImageGUIOutMode(0),
-   fStereoZeroParallax(0), fStereoEyeOffsetFac(0), fStereoFrustumAsymFac(0),
-   fViewer(0),
+   fAxesContainer(nullptr),
+   fAxesNone(nullptr),
+   fAxesEdge(nullptr),
+   fAxesOrigin(nullptr),
+   fAxesDepthTest(nullptr),
+   fRefContainer(nullptr),
+   fReferenceOn(nullptr),
+   fReferencePosX(nullptr),
+   fReferencePosY(nullptr),
+   fReferencePosZ(nullptr),
+   fCamContainer(nullptr),
+   fCamMode(nullptr),
+   fCamOverlayOn(nullptr),
+   fClipSet(nullptr),
+   fARotDt(nullptr), fARotWPhi(nullptr), fARotATheta(nullptr), fARotWTheta(nullptr), fARotADolly(nullptr), fARotWDolly(nullptr),
+   fASavImageGUIBaseName(nullptr), fASavImageGUIOutMode(nullptr),
+   fStereoZeroParallax(nullptr), fStereoEyeOffsetFac(nullptr), fStereoFrustumAsymFac(nullptr),
+   fViewer(nullptr),
    fIsInPad(kTRUE)
 {
   //  Constructor.
@@ -181,7 +181,7 @@ void TGLViewerEditor::ViewerRedraw()
 
 void TGLViewerEditor::SetModel(TObject* obj)
 {
-   fViewer = 0;
+   fViewer = nullptr;
 
    fViewer = static_cast<TGLViewer *>(obj);
    fIsInPad = (fViewer->GetDev() != -1);
@@ -592,7 +592,7 @@ void TGLViewerEditor::CreateExtrasTab()
 {
    Int_t labw = 80;
 
-   TGCompositeFrame *tab = CreateEditorTabSubFrame("Extras"), *p = 0;
+   TGCompositeFrame *tab = CreateEditorTabSubFrame("Extras"), *p = nullptr;
 
    // ----- Auto rotator -----
 
@@ -907,10 +907,10 @@ TGLabel *FindLabelForNEntry(TGNumberEntry *entry)
    if (!entry) {
       //I would prefer an assert here.
       ::Error("FindLabelForNEntry", "parameter 'entry' is null");
-      return 0;
+      return nullptr;
    }
 
-   TGLabel *label = 0;
+   TGLabel *label = nullptr;
 
    if (const TGHorizontalFrame * const grandpa = dynamic_cast<const TGHorizontalFrame *>(entry->GetParent())) {
       if (TList * const parents = grandpa->GetList()) {

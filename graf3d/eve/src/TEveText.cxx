@@ -78,7 +78,7 @@ void TEveText::SetFontFile(const char* name)
    TIter  next_base(fa);
    TObjString* os;
    Int_t idx = 0;
-   while ((os = (TObjString*) next_base()) != 0) {
+   while ((os = (TObjString*) next_base()) != nullptr) {
       if (os->GetString() == name) {
          SetFontFile(idx);
          return;

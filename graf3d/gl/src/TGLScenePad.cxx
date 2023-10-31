@@ -57,7 +57,7 @@ TGLScenePad::TGLScenePad(TVirtualPad* pad) :
    fNextInternalPID   (1), // 0 reserved
    fLastPID           (0), // 0 reserved
    fAcceptedPhysicals (0),
-   fComposite         (0),
+   fComposite         (nullptr),
    fCSLevel           (0),
    fSmartRefresh      (kFALSE)
 {
@@ -139,7 +139,7 @@ Bool_t HasPolymarkerAndFrame(const TList *lst)
    Bool_t gotEmptyTH3 = kFALSE;
    Bool_t gotMarker = kFALSE;
 
-   TObjOptLink *lnk = lst ? (TObjOptLink*)lst->FirstLink() : 0;
+   TObjOptLink *lnk = lst ? (TObjOptLink*)lst->FirstLink() : nullptr;
    for (; lnk; lnk = (TObjOptLink*)lnk->Next()) {
       const TObject *obj = lnk->GetObject();
       if (const TH3 *th3 = dynamic_cast<const TH3*>(obj)) {
@@ -171,7 +171,7 @@ void TGLScenePad::SubPadPaint(TVirtualPad* pad)
    if (HasPolymarkerAndFrame(prims)) {
       ComposePolymarker(prims);
    } else {
-      TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : 0;
+      TObjOptLink *lnk   = (prims) ? (TObjOptLink*)prims->FirstLink() : nullptr;
       for (; lnk; lnk = (TObjOptLink*)lnk->Next())
          ObjectPaint(lnk->GetObject(), lnk->GetOption());
    }
@@ -388,7 +388,7 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t*
 
    // TODO: Could be a data member - save possible double lookup?
    TGLPhysicalShape *physical = FindPhysical(physicalID);
-   TGLLogicalShape  *logical  = 0;
+   TGLLogicalShape  *logical  = nullptr;
 
    // If we have a valid (non-zero) ID, see if the logical is already cached.
    // If it is not, try to create a direct renderer object.
@@ -420,7 +420,7 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t*
       }
 
       // Need any extra sections in buffer?
-      Bool_t includeRaw    = (logical == 0);
+      Bool_t includeRaw    = (logical == nullptr);
       Int_t  extraSections = ValidateObjectBuffer(buffer, includeRaw);
       if (extraSections != TBuffer3D::kNone)
          return extraSections;
@@ -516,7 +516,7 @@ void TGLScenePad::CloseComposite()
       delete resultMesh;
       for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
       fCSTokens.clear();
-      fComposite = 0;
+      fComposite = nullptr;
    }
 }
 
@@ -527,7 +527,7 @@ void TGLScenePad::CloseComposite()
 
 void TGLScenePad::AddCompositeOp(UInt_t operation)
 {
-   fCSTokens.push_back(std::make_pair(operation, (RootCsg::TBaseMesh *)0));
+   fCSTokens.push_back(std::make_pair(operation, (RootCsg::TBaseMesh *)nullptr));
 }
 
 
@@ -615,7 +615,7 @@ Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeR
 
 TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
 {
-   TGLLogicalShape * newLogical = 0;
+   TGLLogicalShape * newLogical = nullptr;
 
    if (buffer.fColor == 1) // black -> light-brown; std behaviour for geom
       const_cast<TBuffer3D&>(buffer).fColor = 42;
@@ -708,8 +708,8 @@ TGLScenePad::CreateNewPhysical(UInt_t ID, const TBuffer3D& buffer,
 
 void TGLScenePad::ComposePolymarker(const TList *lst)
 {
-   TPolyMarker3D *pm = 0;
-   TH3 *th3 = 0;
+   TPolyMarker3D *pm = nullptr;
+   TH3 *th3 = nullptr;
    TObjOptLink *lnk = (TObjOptLink*)lst->FirstLink();
    for (; lnk; lnk = (TObjOptLink*)lnk->Next()) {
       TObject *obj = lnk->GetObject();
@@ -737,8 +737,8 @@ void TGLScenePad::ComposePolymarker(const TList *lst)
             AddHistoPhysical(log);
 
          //Composition was added into gl-viewer.
-         pm = 0;
-         th3 = 0;
+         pm = nullptr;
+         th3 = nullptr;
       }
    }
 }
@@ -765,7 +765,7 @@ RootCsg::TBaseMesh* TGLScenePad::BuildComposite()
          return RootCsg::BuildDifference(left, right);
       default:
          Error("BuildComposite", "Wrong operation code %d\n", opCode);
-         return 0;
+         return nullptr;
       }
    } else return fCSTokens[fCSLevel++].second;
 }
@@ -778,8 +778,8 @@ RootCsg::TBaseMesh* TGLScenePad::BuildComposite()
 TGLLogicalShape* TGLScenePad::AttemptDirectRenderer(TObject* id)
 {
    TClass* cls = TGLObject::GetGLRenderer(id->IsA());
-   if (cls == 0)
-      return 0;
+   if (cls == nullptr)
+      return nullptr;
 
    TGLObject* rnr = reinterpret_cast<TGLObject*>(cls->New());
    if (rnr) {
@@ -796,7 +796,7 @@ TGLLogicalShape* TGLScenePad::AttemptDirectRenderer(TObject* id)
       {
          Warning("TGLScenePad::AttemptDirectRenderer", "failed initializing direct rendering.");
          delete rnr;
-         return 0;
+         return nullptr;
       }
       rnr->SetBBox();
       AdoptLogical(*rnr);

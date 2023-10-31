@@ -27,7 +27,7 @@ ClassImp(TGLVoxelPainter);
 
 TGLVoxelPainter::TGLVoxelPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, cam, coord, kFALSE, kFALSE, kFALSE),
-                    fTransferFunc(0)
+                    fTransferFunc(nullptr)
 {
    fDrawPalette = kTRUE;
 }

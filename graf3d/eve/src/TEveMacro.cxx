@@ -63,7 +63,7 @@ Longptr_t TEveMacro::Exec(const char* params, Int_t* error)
 {
    Longptr_t retval = -1;
 
-   if (gROOT->GetGlobalFunction(fName, 0, kTRUE) != 0)
+   if (gROOT->GetGlobalFunction(fName, nullptr, kTRUE) != nullptr)
    {
       gROOT->SetExecutingMacro(kTRUE);
       gROOT->SetExecutingMacro(kFALSE);

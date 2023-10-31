@@ -52,9 +52,9 @@ ClassImp(TGLViewerBase);
 ////////////////////////////////////////////////////////////////////////////////
 
 TGLViewerBase::TGLViewerBase() :
-   fRnrCtx    (0),
-   fCamera    (0),
-   fClip      (0),
+   fRnrCtx    (nullptr),
+   fCamera    (nullptr),
+   fClip      (nullptr),
    fLOD       (TGLRnrCtx::kLODHigh),
    fStyle     (TGLRnrCtx::kFill),
    fWFLineW   (1),
@@ -125,7 +125,7 @@ TGLSceneInfo* TGLViewerBase::AddScene(TGLSceneBase* scene)
    } else {
       Warning("TGLViewerBase::AddScene", "scene '%s' already in the list.",
               scene->GetName());
-      return 0;
+      return nullptr;
    }
 }
 
@@ -187,7 +187,7 @@ TGLSceneInfo* TGLViewerBase::GetSceneInfo(TGLSceneBase* scene)
    if (i != fScenes.end())
       return *i;
    else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +202,7 @@ TGLLogicalShape* TGLViewerBase::FindLogicalInScenes(TObject* id)
       if (lshp)
          return lshp;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ void TGLViewerBase::SetupClipObject()
 void TGLViewerBase::PreRender()
 {
    TGLContextIdentity* cid = TGLContextIdentity::GetCurrent();
-   if (cid == 0)
+   if (cid == nullptr)
    {
       // Assume derived class set it up for us.
       // This happens due to complex implementation
@@ -323,7 +323,7 @@ void TGLViewerBase::PreRender()
    {
       if (cid != fRnrCtx->GetGLCtxIdentity())
       {
-         if (fRnrCtx->GetGLCtxIdentity() != 0)
+         if (fRnrCtx->GetGLCtxIdentity() != nullptr)
             Warning("TGLViewerBase::PreRender", "Switching to another GL context; maybe you should use context-sharing.");
          fRnrCtx->SetGLCtxIdentity(cid);
       }
@@ -386,7 +386,7 @@ void TGLViewerBase::PreRender()
             sinfo->GetScene()->PostDraw(*fRnrCtx);
             sinfo->GetScene()->ReleaseLock(kDrawLock);
          }
-         fRnrCtx->SetSceneInfo(0);
+         fRnrCtx->SetSceneInfo(nullptr);
       } else {
          sinfo->GetScene()->ReleaseLock(kDrawLock);
       }
@@ -411,7 +411,7 @@ void TGLViewerBase::SubRenderScenes(SubRender_foo render_foo)
       (scene->*render_foo)(*fRnrCtx);
       scene->PostRender(*fRnrCtx);
       glPopName();
-      fRnrCtx->SetSceneInfo(0);
+      fRnrCtx->SetSceneInfo(nullptr);
    }
 }
 
@@ -551,7 +551,7 @@ void TGLViewerBase::PostRender()
       TGLSceneInfo* sinfo = *i;
       fRnrCtx->SetSceneInfo(sinfo);
       sinfo->GetScene()->PostDraw(*fRnrCtx);
-      fRnrCtx->SetSceneInfo(0);
+      fRnrCtx->SetSceneInfo(nullptr);
       sinfo->GetScene()->ReleaseLock(kDrawLock);
    }
    fChanged = kFALSE;

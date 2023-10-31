@@ -68,15 +68,15 @@ public:
 
 TStructViewer::TStructViewer(void* ptr, const char * clname)
 {
-   fPointer = NULL;
-   fPointerClass = NULL;
-   fTopNode = NULL;
+   fPointer = nullptr;
+   fPointerClass = nullptr;
+   fTopNode = nullptr;
 
    // add default color
    fColors.Add(new TStructNodeProperty("+", 17));
 
    // creating GUI
-   fGUI = new TStructViewerGUI(this, NULL, &fColors);
+   fGUI = new TStructViewerGUI(this, nullptr, &fColors);
 
    SetPointer(ptr, clname);
 }
@@ -140,7 +140,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
       }
 
 
-      void* ptr = NULL;
+      void* ptr = nullptr;
 
       if(dm->IsaPointer()) {
          TString trueTypeName = dm->GetTrueTypeName();
@@ -418,7 +418,7 @@ void TStructViewer::Prepare()
    if (fPointerClass->IsTObject()) {
       name = ((TObject*) fPointer)->GetName();
    }
-   fTopNode = new TStructNode(name, fPointerClass->GetName(), fPointer, NULL, size, kClass);
+   fTopNode = new TStructNode(name, fPointerClass->GetName(), fPointer, nullptr, size, kClass);
    AddNode(fTopNode, size);
    CountMembers(fPointerClass, fTopNode, fPointer);
 }
@@ -441,7 +441,7 @@ void TStructViewer::Reset()
    fPointers.Clear();
    fLevelArray.Clear();
 
-   fTopNode = NULL;
+   fTopNode = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

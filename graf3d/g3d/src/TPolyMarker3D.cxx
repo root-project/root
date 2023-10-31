@@ -417,7 +417,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       gPad->Range(-1,-1,1,1);
-      view = TView::CreateView(1,0,0);
+      view = TView::CreateView(1,nullptr,nullptr);
       if (!view) return;
    }
    view->SetRange(xaxis->GetBinLowEdge(xaxis->GetFirst()),

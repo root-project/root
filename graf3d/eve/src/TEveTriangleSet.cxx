@@ -35,15 +35,15 @@ ClassImp(TEveTriangleSet);
 
 TEveTriangleSet::TEveTriangleSet(Int_t nv, Int_t nt, Bool_t norms, Bool_t cols) :
    TEveElementList("TEveTriangleSet", "", kTRUE),
-   fNVerts  (nv), fVerts(0),
-   fNTrings (nt), fTrings(0), fTringNorms(0), fTringCols(0)
+   fNVerts  (nv), fVerts(nullptr),
+   fNTrings (nt), fTrings(nullptr), fTringNorms(nullptr), fTringCols(nullptr)
 {
    InitMainTrans();
 
    fVerts  = new Float_t[3*fNVerts];
    fTrings = new Int_t  [3*fNTrings];
-   fTringNorms = (norms) ? new Float_t[3*fNTrings] : 0;
-   fTringCols  = (cols)  ? new UChar_t[3*fNTrings] : 0;
+   fTringNorms = (norms) ? new Float_t[3*fNTrings] : nullptr;
+   fTringCols  = (cols)  ? new UChar_t[3*fNTrings] : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +62,7 @@ TEveTriangleSet::~TEveTriangleSet()
 
 void TEveTriangleSet::GenerateTriangleNormals()
 {
-   if (fTringNorms == 0)  fTringNorms = new Float_t[3*fNTrings];
+   if (fTringNorms == nullptr)  fTringNorms = new Float_t[3*fNTrings];
 
    TVector3 e1, e2, n;
    Float_t *norm = fTringNorms;
@@ -85,7 +85,7 @@ void TEveTriangleSet::GenerateTriangleNormals()
 
 void TEveTriangleSet::GenerateRandomColors()
 {
-   if (fTringCols == 0)  fTringCols = new UChar_t[3*fNTrings];
+   if (fTringCols == nullptr)  fTringCols = new UChar_t[3*fNTrings];
 
    TRandom r;
    r.SetSeed(0);
@@ -105,8 +105,8 @@ void TEveTriangleSet::GenerateRandomColors()
 void TEveTriangleSet::GenerateZNormalColors(Float_t fac, Int_t min, Int_t max,
                                             Bool_t interp, Bool_t wrap)
 {
-   if (fTringCols  == 0)  fTringCols = new UChar_t[3*fNTrings];
-   if (fTringNorms == 0)  GenerateTriangleNormals();
+   if (fTringCols  == nullptr)  fTringCols = new UChar_t[3*fNTrings];
+   if (fTringNorms == nullptr)  GenerateTriangleNormals();
 
    TEveRGBAPalette pal(min, max, interp, wrap);
    UChar_t *col = fTringCols;
@@ -152,9 +152,9 @@ TEveTriangleSet* TEveTriangleSet::ReadTrivialFile(const char* file)
    static const TEveException kEH("TEveTriangleSet::ReadTrivialFile ");
 
    FILE* f = fopen(file, "r");
-   if (f == 0) {
+   if (f == nullptr) {
       ::Error(kEH, "file '%s' not found.", file);
-      return 0;
+      return nullptr;
    }
 
    Int_t nv, nt;

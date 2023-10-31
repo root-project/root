@@ -198,28 +198,28 @@ const char *gGLSaveAsTypes[] = {"Encapsulated PostScript", "*.eps",
                                 "Animated GIF",            "*.gif+",
                                 "JPEG",                    "*.jpg",
                                 "PNG",                     "*.png",
-                                0, 0};
+                                nullptr, nullptr};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a standalone viewer, bound to supplied 'pad'.
 
 TGLSAViewer::TGLSAViewer(TVirtualPad *pad, TGLFormat* format) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
-   fFrame(0),
+   fFrame(nullptr),
    fFormat(format),
-   fFileMenu(0),
-   fFileSaveMenu(0),
-   fCameraMenu(0),
-   fHelpMenu(0),
-   fLeftVerticalFrame(0),
-   fRightVerticalFrame(0),
+   fFileMenu(nullptr),
+   fFileSaveMenu(nullptr),
+   fCameraMenu(nullptr),
+   fHelpMenu(nullptr),
+   fLeftVerticalFrame(nullptr),
+   fRightVerticalFrame(nullptr),
    fDirName("."),
    fTypeIdx(0),
    fOverwrite(kFALSE),
-   fMenuBar(0),
-   fMenuBut(0),
+   fMenuBar(nullptr),
+   fMenuBut(nullptr),
    fHideMenuBar(kFALSE),
-   fMenuHidingTimer(0),
+   fMenuHidingTimer(nullptr),
    fMenuHidingShowMenu(kTRUE),
    fDeleteMenuBar(kFALSE)
 {
@@ -259,18 +259,18 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad, TGLFormat* format) :
 TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged,
                          TGLFormat* format) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
-   fFrame(0),
+   fFrame(nullptr),
    fFormat(format),
-   fFileMenu(0),
-   fCameraMenu(0),
-   fHelpMenu(0),
-   fLeftVerticalFrame(0),
-   fRightVerticalFrame(0),
+   fFileMenu(nullptr),
+   fCameraMenu(nullptr),
+   fHelpMenu(nullptr),
+   fLeftVerticalFrame(nullptr),
+   fRightVerticalFrame(nullptr),
    fTypeIdx(0),
-   fMenuBar(0),
-   fMenuBut(0),
+   fMenuBar(nullptr),
+   fMenuBut(nullptr),
    fHideMenuBar(kFALSE),
-   fMenuHidingTimer(0),
+   fMenuHidingTimer(nullptr),
    fMenuHidingShowMenu(kTRUE),
    fDeleteMenuBar(kFALSE)
 {
@@ -316,7 +316,7 @@ TGLSAViewer::~TGLSAViewer()
    }
    delete fFormat;
    delete fFrame;
-   fGLWidget = 0;
+   fGLWidget = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,10 +338,10 @@ void TGLSAViewer::CreateGLWidget()
       return;
    }
 
-   if (fFormat == 0)
+   if (fFormat == nullptr)
       fFormat = new TGLFormat;
 
-   fGLWidget = TGLWidget::Create(*fFormat, fRightVerticalFrame, kTRUE, kTRUE, 0, 10, 10);
+   fGLWidget = TGLWidget::Create(*fFormat, fRightVerticalFrame, kTRUE, kTRUE, nullptr, 10, 10);
    fGLWidget->SetEventHandler(fEventHandler);
 
    fRightVerticalFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
@@ -356,17 +356,17 @@ void TGLSAViewer::CreateGLWidget()
 
 void TGLSAViewer::DestroyGLWidget()
 {
-   if (fGLWidget == 0) {
+   if (fGLWidget == nullptr) {
       Error("DestroyGLWidget", "Widget does not exist.");
       return;
    }
 
    fGLWidget->UnmapWindow();
-   fGLWidget->SetEventHandler(0);
+   fGLWidget->SetEventHandler(nullptr);
 
    fRightVerticalFrame->RemoveFrame(fGLWidget);
    fGLWidget->DeleteWindow();
-   fGLWidget = 0;
+   fGLWidget = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -440,7 +440,7 @@ void TGLSAViewer::CreateMenus()
 void TGLSAViewer::CreateFrames()
 {
    TGCompositeFrame* compositeFrame = fFrame;
-   if (fGedEditor == 0)
+   if (fGedEditor == nullptr)
    {
       compositeFrame = new TGCompositeFrame(fFrame, 100, 100, kHorizontalFrame | kRaisedFrame);
       fFrame->AddFrame(compositeFrame, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
@@ -470,7 +470,7 @@ void TGLSAViewer::CreateFrames()
    fRightVerticalFrame = new TGVerticalFrame(compositeFrame, 10, 10);
    compositeFrame->AddFrame(fRightVerticalFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY));
 
-   fEventHandler = new TGLEventHandler(0, this);
+   fEventHandler = new TGLEventHandler(nullptr, this);
    CreateGLWidget();
 }
 
@@ -489,7 +489,7 @@ void TGLSAViewer::SelectionChanged()
       else
          fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
    } else {
-      fPShapeWrap->fPShape = 0;
+      fPShapeWrap->fPShape = nullptr;
       fGedEditor->SetModel(fPad, this, kButton1Down);
    }
 }
@@ -572,7 +572,7 @@ void TGLSAViewer::DisableMenuBarHiding()
 
    fMenuHidingTimer->TurnOff();
    delete fMenuHidingTimer;
-   fMenuHidingTimer = 0;
+   fMenuHidingTimer = nullptr;
 
    fFileMenu->UnCheckEntry(kGLHideMenus);
 }
@@ -597,7 +597,7 @@ void TGLSAViewer::HandleMenuBarHiding(Event_t* ev)
           (ev->fX < 0 || ev->fX >= (Int_t) f->GetWidth() ||
            ev->fY < 0 || ev->fY >= (Int_t) f->GetHeight()))
       {
-         if (fMenuBar->GetCurrent() == 0)
+         if (fMenuBar->GetCurrent() == nullptr)
             ResetMenuHidingTimer(kFALSE);
          else
             fMenuBar->GetCurrent()->Connect("ProcessedEvent(Event_t*)", "TGLSAViewer", this, "HandleMenuBarHiding(Event_t*)");
@@ -620,7 +620,7 @@ void TGLSAViewer::HandleMenuBarHiding(Event_t* ev)
 void TGLSAViewer::ResetMenuHidingTimer(Bool_t show_menu)
 {
    // This happens, mysteriously.
-   if (fMenuHidingTimer == 0)
+   if (fMenuHidingTimer == nullptr)
       return;
 
    fMenuHidingTimer->TurnOff();
@@ -766,7 +766,7 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
                TString file = fi.fFilename;
                Bool_t  match = kFALSE;
                const char** fin = gGLSaveAsTypes; ++fin;
-               while (*fin != 0)
+               while (*fin != nullptr)
                {
                   if (file.EndsWith(*fin + 1))
                   {

@@ -63,44 +63,44 @@ TGL5DDataSetEditor::TGL5DDataSetEditor(const TGWindow *p,  Int_t width, Int_t he
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p,  width, height, options | kVerticalFrame, back),
    //"Grid" tab.
-   fNCellsXEntry(0),
-   fNCellsYEntry(0),
-   fNCellsZEntry(0),
-   fXRangeSlider(0),
-   fXRangeSliderMin(0),
-   fXRangeSliderMax(0),
-   fYRangeSlider(0),
-   fYRangeSliderMin(0),
-   fYRangeSliderMax(0),
-   fZRangeSlider(0),
-   fZRangeSliderMin(0),
-   fZRangeSliderMax(0),
-   fCancelGridBtn(0),
-   fOkGridBtn(0),
+   fNCellsXEntry(nullptr),
+   fNCellsYEntry(nullptr),
+   fNCellsZEntry(nullptr),
+   fXRangeSlider(nullptr),
+   fXRangeSliderMin(nullptr),
+   fXRangeSliderMax(nullptr),
+   fYRangeSlider(nullptr),
+   fYRangeSliderMin(nullptr),
+   fYRangeSliderMax(nullptr),
+   fZRangeSlider(nullptr),
+   fZRangeSliderMin(nullptr),
+   fZRangeSliderMax(nullptr),
+   fCancelGridBtn(nullptr),
+   fOkGridBtn(nullptr),
    //"Surfaces" tab.
-   fV4MinEntry(0),
-   fV4MaxEntry(0),
-   fHighlightCheck(0),
-   fIsoList(0),
-   fVisibleCheck(0),
-   fShowCloud(0),
-   fSurfColorSelect(0),
-   fSurfAlphaSlider(0),
-   fSurfRemoveBtn(0),
-   fNewIsoEntry(0),
-   fAddNewIsoBtn(0),
+   fV4MinEntry(nullptr),
+   fV4MaxEntry(nullptr),
+   fHighlightCheck(nullptr),
+   fIsoList(nullptr),
+   fVisibleCheck(nullptr),
+   fShowCloud(nullptr),
+   fSurfColorSelect(nullptr),
+   fSurfAlphaSlider(nullptr),
+   fSurfRemoveBtn(nullptr),
+   fNewIsoEntry(nullptr),
+   fAddNewIsoBtn(nullptr),
    //"Style" tab's widgets.
    fShowBoxCut(),
-   fNumberOfPlanes(0),
-   fAlpha(0),
-   fLogScale(0),
-   fSlideRange(0),
-   fApplyAlpha(0),
-   fApplyPlanes(0),
+   fNumberOfPlanes(nullptr),
+   fAlpha(nullptr),
+   fLogScale(nullptr),
+   fSlideRange(nullptr),
+   fApplyAlpha(nullptr),
+   fApplyPlanes(nullptr),
    //Model.
-   fDataSet(0),
-   fPainter(0),
-   fHidden(0),
+   fDataSet(nullptr),
+   fPainter(nullptr),
+   fHidden(nullptr),
    fSelectedSurface(-1)
 {
    //Constructor.
@@ -407,7 +407,7 @@ void TGL5DDataSetEditor::CreateIsoTab()
 
 void TGL5DDataSetEditor::SetModel(TObject* obj)
 {
-   fPainter = 0;
+   fPainter = nullptr;
    Bool_t needUpdate = fSelectedSurface != -1;
 
    if ((fDataSet = dynamic_cast<TGL5DDataSet *>(obj))) {

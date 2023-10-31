@@ -492,8 +492,8 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
 
 void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 {
-   assert(x != 0 && "DrawFillArea, parameter 'x' is null");
-   assert(y != 0 && "DrawFillArea, parameter 'y' is null");
+   assert(x != nullptr && "DrawFillArea, parameter 'x' is null");
+   assert(y != nullptr && "DrawFillArea, parameter 'y' is null");
 
    if (fLocked)
       return;
@@ -1104,10 +1104,10 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
 void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Double_t *y)
 {
    assert(n > 2 && "DrawPolygonWithGradient, invalid number of points");
-   assert(x != 0 && "DrawPolygonWithGradient, parameter 'x' is null");
-   assert(y != 0 && "DrawPolygonWithGradient, parameter 'y' is null");
+   assert(x != nullptr && "DrawPolygonWithGradient, parameter 'x' is null");
+   assert(y != nullptr && "DrawPolygonWithGradient, parameter 'y' is null");
 
-   assert(dynamic_cast<TColorGradient *>(gROOT->GetColor(gVirtualX->GetFillColor())) != 0 &&
+   assert(dynamic_cast<TColorGradient *>(gROOT->GetColor(gVirtualX->GetFillColor())) != nullptr &&
           "DrawPolygonWithGradient, the current fill color is not a gradient fill");
    const TColorGradient * const grad =
          dynamic_cast<TColorGradient *>(gROOT->GetColor(gVirtualX->GetFillColor()));
@@ -1148,7 +1148,7 @@ void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Do
       DrawGradient(rGrad, n, x, y);
    else {
       const TLinearGradient * const lGrad = dynamic_cast<const TLinearGradient *>(grad);
-      assert(lGrad != 0 && "DrawPolygonWithGradient, unknown gradient type");
+      assert(lGrad != nullptr && "DrawPolygonWithGradient, unknown gradient type");
       DrawGradient(lGrad, n, x, y);
    }
 }
@@ -1158,10 +1158,10 @@ void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Do
 void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
                                  const Double_t *xs, const Double_t *ys)
 {
-   assert(grad != 0 && "DrawGradient, parameter 'grad' is null");
+   assert(grad != nullptr && "DrawGradient, parameter 'grad' is null");
    assert(nPoints > 2 && "DrawGradient, invalid number of points");
-   assert(xs != 0 && "DrawGradient, parameter 'xs' is null");
-   assert(ys != 0 && "DrawGradient, parameter 'ys' is null");
+   assert(xs != nullptr && "DrawGradient, parameter 'xs' is null");
+   assert(ys != nullptr && "DrawGradient, parameter 'ys' is null");
 
    if (grad->GetGradientType() != TRadialGradient::kSimple) {
       ::Warning("TGLPadPainter::DrawGradient",
@@ -1337,10 +1337,10 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
 void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
                                  const Double_t *x, const Double_t *y)
 {
-   assert(grad != 0 && "DrawGradient, parameter 'grad' is null");
+   assert(grad != nullptr && "DrawGradient, parameter 'grad' is null");
    assert(n > 2 && "DrawGradient, invalid number of points");
-   assert(x != 0 && "DrawGradient, parameter 'x' is null");
-   assert(y != 0 && "DrawGradient, parameter 'y' is null");
+   assert(x != nullptr && "DrawGradient, parameter 'x' is null");
+   assert(y != nullptr && "DrawGradient, parameter 'y' is null");
 
    //Now we fill the whole scene with one big rectangle
    //(group of rectangles) with a gradient fill using
@@ -1458,8 +1458,8 @@ void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
 void TGLPadPainter::DrawTesselation(Int_t n, const Double_t *x, const Double_t *y)
 {
    assert(n > 2 && "DrawTesselation, invalid number of points");
-   assert(x != 0 && "DrawTesselation, parameter 'x' is null");
-   assert(y != 0 && "DrawTesselation, parameter 'y' is null");
+   assert(x != nullptr && "DrawTesselation, parameter 'x' is null");
+   assert(y != nullptr && "DrawTesselation, parameter 'y' is null");
 
    //Data for a tesselator:
    fVs.resize(n * 3);
