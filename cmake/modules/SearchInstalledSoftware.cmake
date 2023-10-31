@@ -1723,7 +1723,6 @@ if (cudnn)
   endif()
 endif(cudnn)
 
-#
 #---TMVA and its dependencies------------------------------------------------------------
 if (tmva AND NOT mlp)
   message(FATAL_ERROR "The 'tmva' option requires 'mlp', please enable mlp with -Dmlp=ON")
@@ -1742,8 +1741,14 @@ if(tmva)
   else()
     set(tmva-cpu OFF CACHE BOOL "Disabled because 'imt' is disabled (${tmva-cpu_description})" FORCE)
   endif()
-  if(tmva-gpu AND NOT CUDA_FOUND)
+  if(tmva-gpu AND NOT CMAKE_CUDA_COMPILER)
     set(tmva-gpu OFF CACHE BOOL "Disabled because cuda not found" FORCE)
+  endif()
+  if(tmva-gpu)
+    # So far, TMVA is the only package that uses the CUDA toolkit. RooFit is
+    # just compiling libraries with the NVidia compiler itself. If more ROOT
+    # components depend on the CUDA toolkit, this should be moved.
+    find_package(CUDAToolkit REQUIRED)
   endif()
   if(tmva-pymva)
     if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND)))
@@ -1766,7 +1771,7 @@ else()
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
   set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
   set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
-endif()
+endif(tmva)
 
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
