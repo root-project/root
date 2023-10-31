@@ -439,7 +439,7 @@ JSROOT.define([], () => {
      * @private */
    WebWindowHandle.prototype.createChannel = function() {
       if (this.master)
-         return master.createChannel();
+         return this.master.createChannel();
 
       let channel = new WebWindowHandle("channel", this.credits);
       channel.wait_first_recv = true; // first received message via the channel is confirmation of established connection
