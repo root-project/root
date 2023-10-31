@@ -178,7 +178,6 @@ TEST(RNTupleMerger, MergeSymmetric)
 TEST(RNTupleMerger, MergeAsymmetric1)
 {
    // Write two test ntuples to be merged
-   // These files are practically identical except that filed indices are interchanged
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
@@ -228,7 +227,6 @@ TEST(RNTupleMerger, MergeAsymmetric1)
 TEST(RNTupleMerger, MergeAsymmetric2)
 {
    // Write two test ntuples to be merged
-   // These files are practically identical except that filed indices are interchanged
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
@@ -280,7 +278,6 @@ TEST(RNTupleMerger, MergeAsymmetric2)
 TEST(RNTupleMerger, MergeAsymmetric3)
 {
    // Write two test ntuples to be merged
-   // These files are practically identical except that filed indices are interchanged
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
    {
       auto model = RNTupleModel::Create();
@@ -326,5 +323,110 @@ TEST(RNTupleMerger, MergeAsymmetric3)
       // We expect this to fail since the fields between the sources do NOT match
       RNTupleMerger merger;
       EXPECT_THROW(merger.Merge(sourcePtrs, *destination), ROOT::Experimental::RException);
+   }
+}
+
+TEST(RNTupleMerger, MergeVector)
+{
+   // Write two test ntuples to be merged
+   // These files are practically identical except that filed indices are interchanged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<std::vector<int>>("foo");
+      auto fieldBar = model->MakeField<std::vector<int>>("bar");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         fieldFoo->clear();
+         fieldBar->clear();
+         fieldFoo->push_back(i * 123);
+         fieldFoo->push_back(i * 456);
+         fieldBar->push_back(i * 789);
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<std::vector<int>>("bar");
+      auto fieldFoo = model->MakeField<std::vector<int>>("foo");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         fieldFoo->clear();
+         fieldBar->clear();
+         fieldFoo->push_back(i * 321);
+         fieldBar->push_back(i * 654);
+         fieldBar->push_back(i * 987);
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Create the output
+      RNTupleWriteOptions writeOpts;
+      writeOpts.SetUseBufferedWrite(false);
+      auto destination = RPageSink::Create("ntuple", fileGuard3.GetPath(), writeOpts);
+
+      // Now Merge the inputs
+      RNTupleMerger merger;
+      EXPECT_NO_THROW(merger.Merge(sourcePtrs, *destination));
+   }
+
+   // Now check some information
+   // ntuple1 has 10 entries
+   // ntuple2 has 10 entries
+   // ntuple3 has 20 entries, first 10 identical w/ ntuple1, second 10 identical w/ ntuple2
+   {
+      auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
+      auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard2.GetPath());
+      auto ntuple3 = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
+      ASSERT_EQ(ntuple1->GetNEntries() + ntuple2->GetNEntries(), ntuple3->GetNEntries());
+
+      auto foo1 = ntuple1->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("foo");
+      auto foo2 = ntuple2->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("foo");
+      auto foo3 = ntuple3->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("foo");
+
+      auto bar1 = ntuple1->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("bar");
+      auto bar2 = ntuple2->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("bar");
+      auto bar3 = ntuple3->GetModel()->GetDefaultEntry()->Get<std::vector<int>>("bar");
+
+      ntuple1->LoadEntry(1);
+      ntuple2->LoadEntry(1);
+      ntuple3->LoadEntry(1);
+      ASSERT_NE(foo1->size(), foo2->size());
+      ASSERT_EQ(foo1->size(), foo3->size());
+      ASSERT_NE(bar1->size(), bar2->size());
+      ASSERT_EQ(bar1->size(), bar3->size());
+      ASSERT_EQ(foo1->at(0), foo3->at(0));
+      ASSERT_EQ(foo1->at(1), foo3->at(1));
+      ASSERT_NE(foo1->at(0), foo2->at(0));
+      ASSERT_EQ(bar1->at(0), bar3->at(0));
+      ASSERT_NE(bar1->at(0), bar2->at(0));
+      ASSERT_NE(bar2->at(0), bar3->at(0));
+
+      ntuple3->LoadEntry(11);
+      ASSERT_NE(foo1->size(), foo3->size());
+      ASSERT_EQ(foo2->size(), foo3->size());
+      ASSERT_NE(bar1->size(), bar3->size());
+      ASSERT_EQ(bar2->size(), bar3->size());
+      ASSERT_NE(foo1->at(0), foo2->at(0));
+      ASSERT_NE(foo1->at(0), foo3->at(0));
+      ASSERT_EQ(foo2->at(0), foo3->at(0));
+      ASSERT_NE(bar1->at(0), bar2->at(0));
+      ASSERT_NE(bar1->at(0), bar3->at(0));
+      ASSERT_EQ(bar2->at(0), bar3->at(0));
+      ASSERT_EQ(bar2->at(1), bar3->at(1));
    }
 }
