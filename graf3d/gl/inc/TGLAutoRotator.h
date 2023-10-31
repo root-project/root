@@ -23,9 +23,9 @@ class TStopwatch;
 class TGLAutoRotator : public TObject
 {
 private:
-   TGLAutoRotator(const TGLAutoRotator&);            // Not implemented
-   TGLAutoRotator& operator=(const TGLAutoRotator&); // Not implemented
- 
+   TGLAutoRotator(const TGLAutoRotator&) = delete;
+   TGLAutoRotator& operator=(const TGLAutoRotator&) = delete;
+
 protected:
    TGLViewer  *fViewer;
    TGLCamera  *fCamera;
