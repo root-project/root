@@ -1151,9 +1151,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       for (let n = drawbins.length-1; n >= 0; --n) {
          let bin = drawbins[n];
          let dlen = Math.sqrt(bin.dgrx*bin.dgrx + bin.dgry*bin.dgry);
-         // shift point, using
-         bin.grx += excl_width*bin.dgry/dlen;
-         bin.gry -= excl_width*bin.dgrx/dlen;
+         // shift point
+         if (dlen > 1e-10) {
+            bin.grx += excl_width*bin.dgry/dlen;
+            bin.gry -= excl_width*bin.dgrx/dlen;
+         }
          extrabins.push(bin);
       }
 
@@ -1178,6 +1180,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
           graph = this.getObject(),
           excl_width = 0,
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
+
+      if (!graph.fNpoints) return;
 
       this.createG(!pmain.pad_layer);
 
