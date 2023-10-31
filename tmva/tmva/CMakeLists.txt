@@ -8,23 +8,8 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-if (tmva-cpu)
-  set(TMVA_CPU_HEADERS
-      TMVA/DNN/Architectures/Cpu/Blas.h
-  )
-#else()
-#  set(installoptions ${installoptions} FILTER "Cpu")
-endif()
 
-if(tmva-gpu)
-  set(TMVA_GPU_HEADERS
-       TMVA/DNN/Architectures/Cuda.h
-       #  TMVA/DNN/Architectures/Cuda/CudaBuffers.h
-       #  TMVA/DNN/Architectures/Cuda/CudaMatrix.h
-       #  TMVA/DNN/Architectures/Cuda/CudaTensor.h
-  )
-
-else()
+if(NOT tmva-gpu)
   set(installoptions ${installoptions} FILTER "Cuda")
 endif()
 
@@ -229,8 +214,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     #  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
     #  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
     #  TMVA/DNN/Architectures/Cpu/CpuTensor.h
-    #  ${TMVA_CPU_HEADERS}
-    #  ${TMVA_GPU_HEADERS}
     ${TMVA_EXTRA_HEADERS}
   SOURCES
     src/BDTEventWrapper.cxx
@@ -449,28 +432,23 @@ if(tmva-cpu)
 endif()
 
 if(tmva-gpu)
-  if (tmva-cudnn)
+  target_sources(TMVA PRIVATE
+                 src/DNN/Architectures/Cuda.cu
+                 src/DNN/Architectures/Cuda/CudaBuffers.cxx
+                 src/DNN/Architectures/Cuda/CudaMatrix.cu
+                 src/DNN/Architectures/Cuda/CudaTensor.cu )
+  target_link_libraries(TMVA PRIVATE CUDA::cuda_driver CUDA::cublas)
+  if(tmva-cudnn)
     message(STATUS "Using Cuda+cuDNN for TMVA Deep Learning on GPU")
     target_sources(TMVA PRIVATE
-                   src/DNN/Architectures/Cuda.cu
-                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
-                   src/DNN/Architectures/Cuda/CudaMatrix.cu
-                   src/DNN/Architectures/Cuda/CudaTensor.cu
                    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
                    src/DNN/Architectures/Cudnn.cu)
-    target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS} )
-    target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+    target_include_directories(TMVA PRIVATE ${CUDNN_INCLUDE_DIRS} )
+    target_link_libraries(TMVA PRIVATE ${CUDNN_LIBRARIES})
   else()
     message(STATUS "cuDNN not found or disabled - use only Cuda+Cublas for TMVA Deep Learning on GPU")
-    target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
-    target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
-    target_sources(TMVA PRIVATE
-                   src/DNN/Architectures/Cuda.cu
-                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
-                   src/DNN/Architectures/Cuda/CudaMatrix.cu
-                   src/DNN/Architectures/Cuda/CudaTensor.cu )
-   endif()
-endif()
+  endif()
+endif(tmva-gpu)
 
 if(dataframe)
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils

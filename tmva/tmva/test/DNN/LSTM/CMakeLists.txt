@@ -20,24 +20,25 @@ set(Libraries TMVA)
 
 
 #--- CUDA tests. ---------------------------
-if (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
+if (tmva-gpu AND tmva-cudnn)
+   list(APPEND Libraries CUDA::cuda_driver CUDA::cudart)
 
    set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
 
-   CUDA_ADD_EXECUTABLE(testLSTMForwardPassCudnn TestLSTMForwardPassCudnn.cxx)
+   add_executable(testLSTMForwardPassCudnn TestLSTMForwardPassCudnn.cxx)
    target_link_libraries(testLSTMForwardPassCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-LSTM-Forwaed-Cudnn COMMAND testLSTMForwardPassCudnn)
 
-   CUDA_ADD_EXECUTABLE(testLSTMBackpropagationCudnn TestLSTMBackpropagationCudnn.cxx)
+   add_executable(testLSTMBackpropagationCudnn TestLSTMBackpropagationCudnn.cxx)
    target_link_libraries(testLSTMBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCudnn COMMAND testLSTMBackpropagationCudnn)
 
    # LSTM - Full Test GPU
-   CUDA_ADD_EXECUTABLE(testFullLSTMCudnn TestFullLSTMCudnn.cxx)
+   add_executable(testFullLSTMCudnn TestFullLSTMCudnn.cxx)
    target_link_libraries(testFullLSTMCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-LSTM-Full-Cudnn COMMAND testFullLSTMCudnn)
 
-endif (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
+endif (tmva-gpu AND tmva-cudnn)
 
 #--- CPU tests. ----------------------------
 if (BLAS_FOUND AND imt)
