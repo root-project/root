@@ -22,7 +22,7 @@
 using namespace ROOT::Experimental;
 
 
-REveDataProxyBuilderBase::Product::Product(std::string iViewType, const REveViewContext* c) : m_viewType(iViewType), m_viewContext(c), m_elements(0)
+REveDataProxyBuilderBase::Product::Product(std::string iViewType, const REveViewContext* c) : m_viewType(iViewType), m_viewContext(c), m_elements(nullptr)
 {
    m_elements = new REveCompound("ProxyProduct", "", false);
    m_elements->IncDenyDestroy();

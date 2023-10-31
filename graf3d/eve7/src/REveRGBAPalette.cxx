@@ -51,7 +51,7 @@ REveRGBAPalette::REveRGBAPalette() :
    fUnderColor  (-1),
    fOverColor   (-1),
 
-   fNBins(0), fCAMin(0), fCAMax(0), fColorArray(0)
+   fNBins(0), fCAMin(0), fCAMax(0), fColorArray(nullptr)
 {
    SetLimits(0, 1024);
    SetMinMax(0,  512);
@@ -83,7 +83,7 @@ REveRGBAPalette::REveRGBAPalette(Int_t min, Int_t max, Bool_t interp,
    fUnderColor  (-1),
    fOverColor   (-1),
 
-   fNBins(0), fCAMin(0), fCAMax(0), fColorArray(0)
+   fNBins(0), fCAMin(0), fCAMax(0), fColorArray(nullptr)
 {
    SetLimits(min, max);
    SetMinMax(min, max);
@@ -154,7 +154,7 @@ void REveRGBAPalette::ClearColorArray()
 {
    if (fColorArray) {
       delete [] fColorArray;
-      fColorArray = 0;
+      fColorArray = nullptr;
       fNBins = fCAMin = fCAMax = 0;
    }
 }

@@ -199,7 +199,7 @@ inline void Matrix4dMulRotationScale(Double_t *NewObj, Double_t scale)
 
 void Matrix4dSetRotationFromMatrix3d(Double_t *NewObj, const Double_t *m1)
 {
-   Double_t scale = Matrix4fSVD(NewObj, 0, 0);
+   Double_t scale = Matrix4fSVD(NewObj, nullptr, nullptr);
    Matrix4dSetRotationScaleFromMatrix3d(NewObj, m1);
    Matrix4dMulRotationScale(NewObj, scale);
 }

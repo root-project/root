@@ -74,7 +74,7 @@ TGLWidget* TGLWidget::CreateDummy()
 {
    TGLFormat format(Rgl::kNone);
 
-   return Create(format, gClient->GetDefaultRoot(), kFALSE, kFALSE, 0, 1, 1);
+   return Create(format, gClient->GetDefaultRoot(), kFALSE, kFALSE, nullptr, 1, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +121,7 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
    {
       glw->SetFormat();
       glw->fGLContext = new TGLContext
-         (glw, shareDefault, shareDevice && !shareDefault ? shareDevice->GetContext() : 0);
+         (glw, shareDefault, shareDevice && !shareDefault ? shareDevice->GetContext() : nullptr);
    }
    catch (const std::exception &)
    {
@@ -139,11 +139,11 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
 
 TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
    : TGFrame(gClient, glw, p),
-     fGLContext(0),
+     fGLContext(nullptr),
      fWindowIndex(-1),
      fGLFormat(Rgl::kNone),
      fFromInit(kTRUE),
-     fEventHandler(0)
+     fEventHandler(nullptr)
 {
    if (selectInput)
    {

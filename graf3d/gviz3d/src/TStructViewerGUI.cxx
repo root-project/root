@@ -63,7 +63,7 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fMaxSlices = 10;
    fMouseX = 0;
    fMouseY = 0;
-   fSelectedObject = NULL;
+   fSelectedObject = nullptr;
    fMaxRatio = 0;
    fColors = colors;
 
@@ -665,12 +665,12 @@ void TStructViewerGUI::LevelDistValueSetSlot(Long_t /* dist */)
 void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
 {
    fToolTip->Hide();
-   fSelectedObject = NULL;
+   fSelectedObject = nullptr;
    if (shape && shape->GetLogical()) {
       fSelectedObject =  (TStructNode*)(shape->GetLogical()->ID());
       if (fSelectedObject) {
          if (fSelectedObject->IsA()->InheritsFrom(TPolyLine3D::Class())) {
-            fSelectedObject = NULL;
+            fSelectedObject = nullptr;
             return;
          }
          Longptr_t shapeID  = (Longptr_t)(shape->GetLogical()->ID());

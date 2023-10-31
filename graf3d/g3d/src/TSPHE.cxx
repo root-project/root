@@ -49,9 +49,9 @@ TSPHE::TSPHE()
    fThemax     = 0;
    fPhimin     = 0;
    fPhimax     = 0;
-   fSiTab      = 0;
-   fCoTab      = 0;
-   fCoThetaTab = 0;
+   fSiTab      = nullptr;
+   fCoTab      = nullptr;
+   fCoThetaTab = nullptr;
    fNdiv       = 0;
    fAspectRatio=1.0;
    faX = faY = faZ = 1.0;      // Coeff along Ox
@@ -72,9 +72,9 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
    fPhimin = phimin;
    fPhimax = phimax;
 
-   fSiTab      = 0;
-   fCoTab      = 0;
-   fCoThetaTab = 0;
+   fSiTab      = nullptr;
+   fCoTab      = nullptr;
+   fCoThetaTab = nullptr;
    fNdiv       = 0;
 
    fAspectRatio=1.0;
@@ -96,9 +96,9 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
    fPhimin = 0;
    fPhimax = 360;
 
-   fSiTab      = 0;
-   fCoTab      = 0;
-   fCoThetaTab = 0;
+   fSiTab      = nullptr;
+   fCoTab      = nullptr;
+   fCoThetaTab = nullptr;
    fNdiv       = 0;
 
    fAspectRatio=1.0;
@@ -116,9 +116,9 @@ TSPHE::~TSPHE()
    if (fSiTab) delete [] fSiTab;
    if (fCoTab) delete [] fCoTab;
 
-   fCoTab = 0;
-   fSiTab = 0;
-   fCoThetaTab=0;
+   fCoTab = nullptr;
+   fSiTab = nullptr;
+   fCoThetaTab=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
