@@ -37,7 +37,7 @@ protected:
 
 public:
    REveSceneInfo(REveViewer *viewer, REveScene *scene);
-   virtual ~REveSceneInfo() {}
+   ~REveSceneInfo() override {}
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 

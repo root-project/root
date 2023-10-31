@@ -1641,8 +1641,8 @@ namespace RootCsg {
       }
 
    private:
-      TPolygonGeometry(const TPolygonGeometry &);
-      TPolygonGeometry& operator = (TPolygonGeometry &);
+      TPolygonGeometry(const TPolygonGeometry &) = delete;
+      TPolygonGeometry& operator = (TPolygonGeometry &) = delete;
    };
 
    template <class TPolygon, class TVertex>
@@ -2397,7 +2397,7 @@ namespace RootCsg {
       UInt_t i;
       Double_t onEpsilon(1e-4);
       for (i = 0; i < table.size(); i++) {
-         if (table[i].size()) {
+         if (!table[i].empty()) {
             PIndexList_t fragments;
             fragments.push_back(i);
             UInt_t j;

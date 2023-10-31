@@ -55,7 +55,7 @@ public:
    REveVector fPDecay; // Decay momentum
 
    REveMCTrack() = default;
-   virtual ~REveMCTrack() {}
+   ~REveMCTrack() override {}
 
    REveMCTrack &operator=(const TParticle &p)
    {

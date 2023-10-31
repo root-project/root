@@ -87,14 +87,14 @@ protected:
 
 public:
    REveDigitSet(const char* n="REveDigitSet", const char* t="");
-   virtual ~REveDigitSet();
+   ~REveDigitSet() override;
 
    void   UseSingleColor();
 
    Bool_t GetAntiFlick() const   { return fAntiFlick; }
    void   SetAntiFlick(Bool_t f) { fAntiFlick = f; }
 
-   virtual void SetMainColor(Color_t color) override;
+   void SetMainColor(Color_t color) override;
 
    /*
    virtual void UnSelected();

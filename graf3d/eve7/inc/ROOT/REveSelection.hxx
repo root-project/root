@@ -116,7 +116,7 @@ protected:
 public:
    REveSelection(const std::string &n = "REveSelection", const std::string &t = "",
                  Color_t col_visible = kViolet, Color_t col_hidden = kPink);
-   virtual ~REveSelection();
+   ~REveSelection() override;
 
    void   SetVisibleEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);
    void   SetHiddenEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);

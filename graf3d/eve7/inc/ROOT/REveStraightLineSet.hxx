@@ -86,7 +86,7 @@ protected:
 
 public:
    REveStraightLineSet(const std::string &n="StraightLineSet", const std::string &t="");
-   virtual ~REveStraightLineSet() {}
+   ~REveStraightLineSet() override {}
 
    void SetLineColor(Color_t col) override { SetMainColor(col); }
 
@@ -139,7 +139,7 @@ protected:
 
 public:
    REveStraightLineSetProjected();
-   virtual ~REveStraightLineSetProjected() {}
+   ~REveStraightLineSetProjected() override {}
 
    void SetProjection(REveProjectionManager* mng, REveProjectable* model) override;
    void UpdateProjection() override;

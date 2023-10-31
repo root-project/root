@@ -11,8 +11,8 @@
 
 #include <deque>
 #include <map>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "TVirtualViewer3D.h"
 #include "TVirtualX.h"
@@ -75,8 +75,8 @@ namespace {
       void Stop(){fPix = 0;}
 
    private:
-      TX11PixGuard(const TX11PixGuard &);
-      TX11PixGuard &operator = (const TX11PixGuard &);
+      TX11PixGuard(const TX11PixGuard &) = delete;
+      TX11PixGuard &operator = (const TX11PixGuard &) = delete;
    };
 
    //RAII class for GLXContext
@@ -91,8 +91,8 @@ namespace {
       void Stop(){fCtx = nullptr;}
 
    private:
-      TGLXCtxGuard(const TGLXCtxGuard &);
-      TGLXCtxGuard &operator = (const TGLXCtxGuard &);
+      TGLXCtxGuard(const TGLXCtxGuard &) = delete;
+      TGLXCtxGuard &operator = (const TGLXCtxGuard &) = delete;
    };
 
    // RAII class for XImage.
@@ -100,8 +100,8 @@ namespace {
    private:
       XImage *fImage;
 
-      TXImageGuard(const TXImageGuard &);
-      TXImageGuard &operator = (const TXImageGuard &);
+      TXImageGuard(const TXImageGuard &) = delete;
+      TXImageGuard &operator = (const TXImageGuard &) = delete;
 
    public:
       explicit TXImageGuard(XImage *im) : fImage(im) {}
@@ -138,8 +138,8 @@ public:
    TGLContext_t     *fNextFreeContext;
 
 private:
-   TX11GLImpl(const TX11GLImpl &);
-   TX11GLImpl &operator = (const TX11GLImpl &);
+   TX11GLImpl(const TX11GLImpl &) = delete;
+   TX11GLImpl &operator = (const TX11GLImpl &) = delete;
 };
 
 ClassImp(TX11GLManager);

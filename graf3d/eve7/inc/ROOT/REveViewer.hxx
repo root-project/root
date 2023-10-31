@@ -43,7 +43,7 @@ private:
 
 public:
    REveViewer(const std::string &n="REveViewer", const std::string &t="");
-   virtual ~REveViewer();
+   ~REveViewer() override;
 
    void Redraw(Bool_t resetCameras=kFALSE);
 
@@ -89,7 +89,7 @@ protected:
 
 public:
    REveViewerList(const std::string &n="REveViewerList", const std::string &t="");
-   virtual ~REveViewerList();
+   ~REveViewerList() override;
 
    void AddElement(REveElement* el) override;
    void RemoveElementLocal(REveElement* el) override;

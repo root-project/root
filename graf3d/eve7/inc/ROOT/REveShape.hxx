@@ -47,7 +47,7 @@ protected:
 
 public:
    REveShape(const std::string &n = "REveShape", const std::string &t = "");
-   virtual ~REveShape();
+   ~REveShape() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 

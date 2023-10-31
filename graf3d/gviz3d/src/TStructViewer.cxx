@@ -251,7 +251,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
             int loc;
             TClassEdit::GetSplit(dm->GetTypeName(), parts, loc);
             std::vector<std::string>::const_iterator iPart = parts.begin();
-            while (iPart != parts.end() && *iPart == "")
+            while (iPart != parts.end() && (*iPart).empty())
                ++iPart;
             if (iPart != parts.end() && *iPart != dm->GetTypeName()) {
                for (std::vector<std::string>::const_iterator iP = iPart,

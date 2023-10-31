@@ -301,7 +301,7 @@ REveElement *REveCollectionCompound::GetSelectionMaster()
    fCollection->GetItemList()->RefSelectedSet().clear();
    try {
 
-      std::size_t found = fName.find_last_of(" ");
+      std::size_t found = fName.find_last_of(' ');
       if (found == std::string::npos)
       {
          throw(eh + TString::Format("Can't retrive item index from %s", fName.c_str()));

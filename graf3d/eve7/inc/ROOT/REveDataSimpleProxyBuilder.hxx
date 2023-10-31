@@ -27,8 +27,8 @@ private:
    REveDataCollection *fCollection{nullptr};   
 public:
    REveCollectionCompound(REveDataCollection *c);
-   virtual ~REveCollectionCompound();
-   virtual REveElement *GetSelectionMaster() override;
+   ~REveCollectionCompound() override;
+   REveElement *GetSelectionMaster() override;
 
    bool fUsed{false};
 };
@@ -41,7 +41,7 @@ class REveDataSimpleProxyBuilder : public REveDataProxyBuilderBase
 
 public:
    REveDataSimpleProxyBuilder();
-   virtual ~REveDataSimpleProxyBuilder();
+   ~REveDataSimpleProxyBuilder() override;
 
    struct SPBProduct {
       std::map<int, REveCollectionCompound*> map;
@@ -49,7 +49,7 @@ public:
    
    typedef  std::map<REveElement*, std::unique_ptr<SPBProduct*> > EProductMap_t;
 
-   virtual REveElement* CreateProduct(const std::string& viewType, const REveViewContext*) override;
+   REveElement* CreateProduct(const std::string& viewType, const REveViewContext*) override;
 
 protected:
    void BuildProduct(const REveDataCollection* iCollection, REveElement* product, const REveViewContext*) override;

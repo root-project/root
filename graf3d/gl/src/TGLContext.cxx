@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <memory>
 #include <stdexcept>
 #include <algorithm>
 #include <memory>
@@ -333,7 +334,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
       return;
    }
 
-   fPimpl.reset(new TGLContextPrivate);
+   fPimpl = std::make_unique<TGLContextPrivate>();
    Display *dpy = static_cast<Display *>(widget->GetInnerData().first);
    XVisualInfo *visInfo = static_cast<XVisualInfo *>(widget->GetInnerData().second);
 

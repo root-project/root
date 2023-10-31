@@ -787,7 +787,7 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
          TGeoManager::LockGeometry();
       }
 
-      gGeoManager->GetTopVolume()->VisibleDaughters(1);
+      gGeoManager->GetTopVolume()->VisibleDaughters(true);
 
       // Import colors exported by Gled, if they exist.
       {

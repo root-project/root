@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <memory>
 #include <stdexcept>
 #include <cstring>
 
@@ -218,7 +219,7 @@ TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
                      fStack(nullptr),
                      fPlotType(kGLParametricPlot)//THistPainter
 {
-   fGLPainter.reset(new TGLParametricPlot(equation, &fCamera));
+   fGLPainter = std::make_unique<TGLParametricPlot>(equation, &fCamera);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,7 +232,7 @@ TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
                      fStack(nullptr),
                      fPlotType(kGL5D)//THistPainter
 {
-   fGLPainter.reset(new TGL5DPainter(data, &fCamera, &fCoord));
+   fGLPainter = std::make_unique<TGL5DPainter>(data, &fCamera, &fCoord);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,7 +245,7 @@ TGLHistPainter::TGLHistPainter(TGLTH3Composition *data)
                      fStack(nullptr),
                      fPlotType(kGLTH3Composition)
 {
-   fGLPainter.reset(new TGLTH3CompositionPainter(data, &fCamera, &fCoord));
+   fGLPainter = std::make_unique<TGLTH3CompositionPainter>(data, &fCamera, &fCoord);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -706,25 +707,25 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    if (option.fPlotType == kGLLegoPlot) {
       if (!fGLPainter.get()) {
          if (dynamic_cast<TH2Poly*>(fHist))
-            fGLPainter.reset(new TGLH2PolyPainter(fHist, &fCamera, &fCoord));
+            fGLPainter = std::make_unique<TGLH2PolyPainter>(fHist, &fCamera, &fCoord);
          else
-            fGLPainter.reset(new TGLLegoPainter(fHist, &fCamera, &fCoord));
+            fGLPainter = std::make_unique<TGLLegoPainter>(fHist, &fCamera, &fCoord);
       }
    } else if (option.fPlotType == kGLSurfacePlot) {
       if (!fGLPainter.get())
-         fGLPainter.reset(new TGLSurfacePainter(fHist, &fCamera, &fCoord));
+         fGLPainter = std::make_unique<TGLSurfacePainter>(fHist, &fCamera, &fCoord);
    } else if (option.fPlotType == kGLBoxPlot) {
       if (!fGLPainter.get())
-         fGLPainter.reset(new TGLBoxPainter(fHist, &fCamera, &fCoord));
+         fGLPainter = std::make_unique<TGLBoxPainter>(fHist, &fCamera, &fCoord);
    } else if (option.fPlotType == kGLTF3Plot) {
       if (!fGLPainter.get())
-         fGLPainter.reset(new TGLTF3Painter(fF3, fHist, &fCamera, &fCoord));
+         fGLPainter = std::make_unique<TGLTF3Painter>(fF3, fHist, &fCamera, &fCoord);
    } else if (option.fPlotType == kGLIsoPlot) {
       if (!fGLPainter.get())
-         fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
+         fGLPainter = std::make_unique<TGLIsoPainter>(fHist, &fCamera, &fCoord);
    } else if (option.fPlotType == kGLVoxel) {
       if (!fGLPainter.get())
-         fGLPainter.reset(new TGLVoxelPainter(fHist, &fCamera, &fCoord));
+         fGLPainter = std::make_unique<TGLVoxelPainter>(fHist, &fCamera, &fCoord);
    }
 
    if (fGLPainter.get()) {

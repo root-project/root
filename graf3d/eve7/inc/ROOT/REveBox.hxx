@@ -33,7 +33,7 @@ protected:
 
 public:
    REveBox(const char* n="REveBox", const char* t="");
-   virtual ~REveBox();
+   ~REveBox() override;
 
    void SetVertex(Int_t i, Float_t x, Float_t y, Float_t z);
    void SetVertex(Int_t i, const Float_t* v);
@@ -42,12 +42,12 @@ public:
    const Float_t* GetVertex(Int_t i) const { return fVertices[i]; }
 
    // For TAttBBox:
-   virtual void ComputeBBox() override;
+   void ComputeBBox() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
    // Projectable:
-   virtual TClass* ProjectedClass(const REveProjection* p) const override;
+   TClass* ProjectedClass(const REveProjection* p) const override;
 };
 
 
@@ -69,11 +69,11 @@ protected:
 
    Bool_t       fDebugCornerPoints;
 
-   virtual void SetDepthLocal(Float_t d) override;
+   void SetDepthLocal(Float_t d) override;
 
 public:
    REveBoxProjected(const char* n="REveBoxProjected", const char* t="");
-   virtual ~REveBoxProjected();
+   ~REveBoxProjected() override;
 
    void BuildRenderData() override;
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;

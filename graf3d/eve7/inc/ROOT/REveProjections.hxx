@@ -159,7 +159,7 @@ private:
 
 public:
    REveRhoZProjection();
-   virtual ~REveRhoZProjection() {}
+   ~REveRhoZProjection() override {}
 
    Bool_t Is2D() const override { return kTRUE; }
    Bool_t Is3D() const override { return kFALSE; }
@@ -184,7 +184,7 @@ public:
 class REveRPhiProjection : public REveProjection {
 public:
    REveRPhiProjection();
-   virtual ~REveRPhiProjection() {}
+   ~REveRPhiProjection() override {}
 
    Bool_t Is2D() const override { return kTRUE; }
    Bool_t Is3D() const override { return kFALSE; }
@@ -203,7 +203,7 @@ private:
 
 public:
    REveXZProjection();
-   virtual ~REveXZProjection() {}
+   ~REveXZProjection() override {}
 
    Bool_t Is2D() const override { return kTRUE;  }
    Bool_t Is3D() const override { return kFALSE; }
@@ -227,7 +227,7 @@ private:
 
 public:
    REveYZProjection();
-   virtual ~REveYZProjection() {}
+   ~REveYZProjection() override {}
 
    Bool_t Is2D() const override { return kTRUE;  }
    Bool_t Is3D() const override { return kFALSE; }
@@ -251,7 +251,7 @@ private:
 
 public:
    REveZXProjection();
-   virtual ~REveZXProjection() {}
+   ~REveZXProjection() override {}
 
    Bool_t Is2D() const override { return kTRUE;  }
    Bool_t Is3D() const override { return kFALSE; }
@@ -275,7 +275,7 @@ private:
 
 public:
    REveZYProjection();
-   virtual ~REveZYProjection() {}
+   ~REveZYProjection() override {}
 
    Bool_t Is2D() const override { return kTRUE;  }
    Bool_t Is3D() const override { return kFALSE; }
@@ -296,7 +296,7 @@ public:
 class REve3DProjection : public REveProjection {
 public:
    REve3DProjection();
-   virtual ~REve3DProjection() {}
+   ~REve3DProjection() override {}
 
    Bool_t Is2D() const override { return kFALSE; }
    Bool_t Is3D() const override { return kTRUE; }

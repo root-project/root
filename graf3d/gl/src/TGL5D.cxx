@@ -7,6 +7,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+#include <memory>
 #include <stdexcept>
 
 #include "TTreeFormula.h"
@@ -92,7 +93,7 @@ TGL5DDataSet::TGL5DDataSet(TTree *tree)
    fYAxis.Set(kDefaultNB, fV2MinMax.first, fV2MinMax.second);
    fZAxis.Set(kDefaultNB, fV3MinMax.first, fV3MinMax.second);
 
-   fPainter.reset(new TGLHistPainter(this));
+   fPainter = std::make_unique<TGLHistPainter>(this);
    SetBit(kCanDelete);//TPad will delete this object when closed.
 }
 

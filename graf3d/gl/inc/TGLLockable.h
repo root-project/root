@@ -35,8 +35,8 @@ protected:
    class TUnlocker
    {
    private:
-      TUnlocker(const TUnlocker&);            // Not implemented
-      TUnlocker& operator=(const TUnlocker&); // Not implemented
+      TUnlocker(const TUnlocker&) = delete;            // Not implemented
+      TUnlocker& operator=(const TUnlocker&) = delete; // Not implemented
 
       const TGLLockable *fLockable;
 

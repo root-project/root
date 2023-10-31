@@ -41,7 +41,7 @@ protected:
 public:
    REveLine(const std::string &name = "", const std::string &title = "", Int_t n_points = 0);
    REveLine(const REveLine &l);
-   virtual ~REveLine() {}
+   ~REveLine() override {}
 
    void SetMarkerColor(Color_t col) override;
 
@@ -88,7 +88,7 @@ protected:
 
 public:
    REveLineProjected();
-   virtual ~REveLineProjected() {}
+   ~REveLineProjected() override {}
 
    void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
    void UpdateProjection() override;

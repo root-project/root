@@ -12,7 +12,7 @@
 #include "TGLSelectRecord.h"
 #include <TObject.h>
 
-#include <string.h>
+#include <cstring>
 
 /** \class TGLSelectRecordBase
 \ingroup opengl TGLSelectRecordBase

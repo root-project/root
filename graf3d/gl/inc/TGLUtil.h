@@ -1269,7 +1269,7 @@ class TGuardBase {
 private:
    mutable Bool_t fActive;
 
-   TGuardBase &operator = (const TGuardBase &rhs);
+   TGuardBase &operator = (const TGuardBase &rhs) = delete;
 protected:
    TGuardBase()
       : fActive(kTRUE)

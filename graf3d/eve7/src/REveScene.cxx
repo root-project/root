@@ -145,7 +145,7 @@ void REveScene::StreamElements()
    jhdr["content"]  = "REveScene::StreamElements";
    jhdr["fSceneId"] = fElementId;
 
-   if (fCommands.size() > 0) {
+   if (!fCommands.empty()) {
       jhdr["commands"] = nlohmann::json::array();
       for (auto &&cmd : fCommands) {
          nlohmann::json jcmd = {};
@@ -322,7 +322,7 @@ void REveScene::StreamRepresentationChanges()
 void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
-      if (fOutputJson.size()) {
+      if (!fOutputJson.empty()) {
          if (gDebug > 0)
             printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
          client->fWebWindow->Send(client->fId, fOutputJson);

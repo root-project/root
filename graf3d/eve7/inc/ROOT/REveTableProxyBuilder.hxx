@@ -30,15 +30,15 @@ protected:
 
 public:
    REveTableProxyBuilder();
-   virtual ~REveTableProxyBuilder();
+   ~REveTableProxyBuilder() override;
 
    virtual bool WillHandleInteraction() const { return true; }
 
    using REveDataProxyBuilderBase::ModelChanges;
-   virtual void ModelChanges(const REveDataCollection::Ids_t&, REveDataProxyBuilderBase::Product* p) override;
+   void ModelChanges(const REveDataCollection::Ids_t&, REveDataProxyBuilderBase::Product* p) override;
 
    using REveDataProxyBuilderBase::Build;
-   virtual void Build() override;
+   void Build() override;
 
    void SetCollection(REveDataCollection*) override;
    void ConfigChanged();

@@ -138,14 +138,14 @@ void TGLAxisPainter::SetTextFormat(Double_t min, Double_t max, Double_t bw1)
       Int_t clog = Int_t(af) + 1;
 
       if (clog > fMaxDigits) {
-         while (1) {
+         while (true) {
             fExp++;
             absMax    /= 10;
             if (fExp % 3 == 0 && absMax <= TMath::Power(10, fMaxDigits - 1)) break;
          }
       } else if (clog < -fMaxDigits) {
          Double_t rne   = 1 / TMath::Power(10, fMaxDigits - 2);
-         while (1) {
+         while (true) {
             fExp--;
             absMax  *= 10;
             if (fExp % 3 == 0 && absMax >= rne) break;
