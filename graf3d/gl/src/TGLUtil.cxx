@@ -2902,7 +2902,7 @@ void ObjectIDToColor(Int_t objectID, Bool_t highColor)
    if (!highColor)
       glColor3ub(objectID & 0xff, (objectID & 0xff00) >> 8, (objectID & 0xff0000) >> 16);
    else {
-      if (!gObjectIDToColor.size()) {
+      if (gObjectIDToColor.empty()) {
       //Initialize lookup tables.
          for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
             gObjectIDToColor[id] = gColorTriplets[i];
@@ -2928,7 +2928,7 @@ Int_t ColorToObjectID(const UChar_t *pixel, Bool_t highColor)
    if (!highColor)
       return pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
    else {
-      if (!gObjectIDToColor.size())
+      if (gObjectIDToColor.empty())
          return 0;
 
       RGB_t triplet = {{pixel[0], pixel[1], pixel[2]}};

@@ -482,7 +482,7 @@ void REveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 
 void REveViewerList::SetColorBrightness(Float_t b)
 {
-   REveUtil::SetColorBrightness(b, 1);
+   REveUtil::SetColorBrightness(b, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

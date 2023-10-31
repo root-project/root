@@ -649,7 +649,7 @@ void TEveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 
 void TEveViewerList::SetColorBrightness(Float_t b)
 {
-   TEveUtil::SetColorBrightness(b, 1);
+   TEveUtil::SetColorBrightness(b, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

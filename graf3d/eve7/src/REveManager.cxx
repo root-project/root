@@ -40,6 +40,7 @@
 #include "TApplication.h"
 
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <iostream>
 #include <regex>
@@ -550,7 +551,7 @@ TGeoManager *REveManager::GetGeometry(const TString &filename)
          TGeoManager::LockGeometry();
       }
 
-      gGeoManager->GetTopVolume()->VisibleDaughters(1);
+      gGeoManager->GetTopVolume()->VisibleDaughters(true);
 
       // Import colors exported by Gled, if they exist.
       {
@@ -637,7 +638,7 @@ void REveManager::AddLocation(const std::string &locationName, const std::string
 //
 void REveManager::SetDefaultHtmlPage(const std::string &path)
 {
-   fWebWindow->SetDefaultPage(path.c_str());
+   fWebWindow->SetDefaultPage(path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -872,7 +873,7 @@ void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std:
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
    fServerStatus.fTLastMir = std::time(nullptr);
-   fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype, connid)));
+   fMIRqueue.push(std::make_shared<MIR>(cmd, id, ctype, connid));
 
    if (fMIRqueue.size() > 5)
       std::cout  << "Warning, REveManager::ScheduleMIR(). queue size " << fMIRqueue.size() << std::endl;

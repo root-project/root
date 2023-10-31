@@ -47,7 +47,7 @@ protected:
 
 public:
    REveJetCone(const Text_t *n = "REveJetCone", const Text_t *t = "");
-   virtual ~REveJetCone() {}
+   ~REveJetCone() override {}
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
@@ -91,7 +91,7 @@ protected:
 
 public:
    REveJetConeProjected(const std::string &n = "REveJetConeProjected", const std::string& t = "");
-   virtual ~REveJetConeProjected();
+   ~REveJetConeProjected() override;
 
    void BuildRenderData() override;
 

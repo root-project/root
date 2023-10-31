@@ -846,7 +846,7 @@ void REveCalo2D::BuildCellIdCache()
          {
             clv = new REveCaloData::vCellId_t();
             fData->GetCellList(GetEta(), GetEtaRng(), axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), *clv);
-            if (!clv->size()) {
+            if (clv->empty()) {
                delete clv; clv = nullptr;
             }
          }
@@ -865,7 +865,7 @@ void REveCalo2D::BuildCellIdCache()
          {
             clv = new REveCaloData::vCellId_t();
             fData->GetCellList(axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), fPhi, GetPhiRng(), *clv);
-            if (!clv->size()) {
+            if (clv->empty()) {
                delete clv; clv = nullptr;
             }
          }

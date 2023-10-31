@@ -75,7 +75,7 @@ public:
    REveRGBAPalette();
    REveRGBAPalette(Int_t min, Int_t max, Bool_t interp=kTRUE,
                    Bool_t showdef=kTRUE, Bool_t fixcolrng=kFALSE);
-   virtual ~REveRGBAPalette();
+   ~REveRGBAPalette() override;
 
    void SetupColorArray() const;
    void ClearColorArray();

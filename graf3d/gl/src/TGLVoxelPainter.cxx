@@ -400,7 +400,7 @@ void TGLVoxelPainter::PreparePalette()const
             fLevels.push_back(level);
          }
          //sort levels
-         if (fLevels.size()) {
+         if (!fLevels.empty()) {
             std::sort(fLevels.begin(), fLevels.end());
             fLevels.push_back(fMinMaxVal.second);
             fLevels.insert(fLevels.begin(), fMinMaxVal.first);
