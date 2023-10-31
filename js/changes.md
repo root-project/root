@@ -1,12 +1,13 @@
 # JSROOT changelog
 
-## Change in 7.5.x
+## Change in 7.5.2
 1. Fix - proper fit pars display in stats, proper #chi^{2}
 2. Fix - several bugs in TFormula parsing
 3. Fix - correctly use saved buffer in TF1/TF2
 4. Fix - properly adjust size of stats box
 5. Fix - support pol0..pol9 functions
 6. Fix - TGraph bar width should be at least 1 pixel
+7. Fix - prevent drawing of empty TGraph
 
 
 ## Changes in 7.5.1

@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.5.x',
+const version_id = '7.5.2',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '30/10/2023',
+version_date = '31/10/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -105753,6 +105753,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
      * @desc Can be called several times */
    drawBins(funcs, options, draw_g, w, h, lineatt, fillatt, main_block) {
       const graph = this.getGraph();
+      if (!graph?.fNpoints) return;
+
       let excl_width = 0, drawbins = null;
 
       if (main_block && lineatt.excl_side) {
