@@ -50,13 +50,6 @@ constexpr const char *RooNLLVarNew::weightVarNameSumW2;
 
 namespace {
 
-RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
-{
-   RooArgSet out;
-   arg.getObservables(&observables, out);
-   return out;
-}
-
 // Use RooConstVar for dummies such that they don't get included in getParameters().
 RooConstVar *dummyVar(const char *name)
 {
@@ -134,7 +127,8 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
      _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
      _binnedL{pdf.getAttribute("BinnedLikelihoodActive")}
 {
-   RooArgSet obs{getObs(pdf, observables)};
+   RooArgSet obs;
+   pdf.getObservables(&observables, obs);
 
    // In the "BinnedLikelihoodActiveYields" mode, the pdf values can directly
    // be interpreted as yields and don't need to be multiplied by the bin
@@ -156,8 +150,10 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
    enableOffsetting(offsetMode == RooFit::OffsetMode::Initial);
    enableBinOffsetting(offsetMode == RooFit::OffsetMode::Bin);
 
-   if (_doBinOffset) {
-      auto offsetPdf = std::make_unique<RooOffsetPdf>("_offset_pdf", "_offset_pdf", observables, *_weightVar);
+   // In the binned likelihood code path, we directly use that data weights for
+   // the offsetting.
+   if (!_binnedL && _doBinOffset) {
+      auto offsetPdf = std::make_unique<RooOffsetPdf>("_offset_pdf", "_offset_pdf", obs, *_weightVar);
       _offsetPdf = std::make_unique<RooTemplateProxy<RooAbsPdf>>("offsetPdf", "offsetPdf", this, *offsetPdf);
       addOwnedComponents(std::move(offsetPdf));
    }
@@ -322,7 +318,7 @@ void RooNLLVarNew::resetWeightVarNames()
    _weightVar->SetName((_prefix + weightVarName).c_str());
    _weightSquaredVar->SetName((_prefix + weightVarNameSumW2).c_str());
    if (_offsetPdf) {
-      _offsetPdf->SetName((_prefix + "_offset_pdf").c_str());
+      (*_offsetPdf)->SetName((_prefix + "_offset_pdf").c_str());
    }
 }
 
@@ -343,7 +339,8 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
 {
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
-   if (_simCount > 1) {
+   // If we do bin-by bin offsetting, we don't do this because it cancels out
+   if (!_doBinOffset && _simCount > 1) {
       result += weightSum * std::log(static_cast<double>(_simCount));
    }
 

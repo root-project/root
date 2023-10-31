@@ -288,7 +288,8 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
   // If part of simultaneous PDF normalize probability over
   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
-  if (_simCount>1) {
+  // If we do bin-by bin offsetting, we don't do this because it cancels out
+  if (!_doBinOffset && _simCount>1) {
     result += sumWeight * std::log(static_cast<double>(_simCount));
   }
 
