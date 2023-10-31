@@ -93,7 +93,7 @@ public:
 private:
    void RegisterColor(Color_t colorIndex);
 
-   ClassDefOverride(TColorGradient, 0); //Gradient fill.
+   ClassDefOverride(TColorGradient, 1); //Gradient fill.
 };
 
 class TLinearGradient : public TColorGradient {
@@ -114,7 +114,7 @@ private:
    Point fStart;
    Point fEnd;
 
-   ClassDefOverride(TLinearGradient, 0); //Linear gradient fill.
+   ClassDefOverride(TLinearGradient, 1); //Linear gradient fill.
 };
 
 //
@@ -166,7 +166,7 @@ private:
 
    EGradientType fType = kSimple;
 
-   ClassDefOverride(TRadialGradient, 0); //Radial gradient fill.
+   ClassDefOverride(TRadialGradient, 1); //Radial gradient fill.
 };
 
 
