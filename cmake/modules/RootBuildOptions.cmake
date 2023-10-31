@@ -127,7 +127,7 @@ ROOT_BUILD_OPTION(test_distrdf_dask OFF "Enable distributed RDataFrame tests tha
 ROOT_BUILD_OPTION(davix ON "Enable support for Davix (HTTP/WebDAV access)")
 ROOT_BUILD_OPTION(dcache OFF "Enable support for dCache (requires libdcap from DESY)")
 ROOT_BUILD_OPTION(dev OFF "Enable recommended developer compilation flags, reduce exposed includes")
-ROOT_BUILD_OPTION(exceptions ON "Enable compiler exception handling (deprecated)")
+ROOT_BUILD_OPTION(exceptions IGNORE "Enable compiler exception handling (flag is deprecated, exceptions are always enabled)")
 ROOT_BUILD_OPTION(fftw3 OFF "Enable support for FFTW3 [GPL]")
 ROOT_BUILD_OPTION(fitsio ON "Enable support for reading FITS images")
 ROOT_BUILD_OPTION(fortran OFF "Build Fortran components of ROOT")
