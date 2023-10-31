@@ -1599,10 +1599,20 @@ function Prob(chi2, ndf) {
    return chisquared_cdf_c(chi2,ndf,0);
 }
 
+/** @summary Square function
+  * @memberof Math */
+function Sq(x) {
+   return x * x;
+}
+
 /** @summary Gaus function
   * @memberof Math */
-function Gaus(x, mean, sigma) {
-   return Math.exp(-0.5 * Math.pow((x-mean) / sigma, 2));
+function Gaus(x, mean, sigma, norm) {
+   if (!sigma) return 1e30;
+   let arg = (x - mean) / sigma;
+   if (arg < -39 || arg > 39) return 0;
+   let res = Math.exp(-0.5*arg*arg);
+   return norm ? res/(2.50662827463100024*sigma) : res; //sqrt(2*Pi)=2.50662827463100024
 }
 
 /** @summary BreitWigner function
@@ -1827,6 +1837,12 @@ function ChebyshevN(n, x, c) {
    return x * d1 - d2 + c[0];
 }
 
+/** @summary Chebyshev0 function
+  * @memberof Math */
+function Chebyshev0(x, c0) {
+   return c0;
+}
+
 /** @summary Chebyshev1 function
   * @memberof Math */
 function Chebyshev1(x, c0, c1) {
@@ -2048,10 +2064,10 @@ export {
    tdistribution_cdf_c, tdistribution_cdf, tdistribution_pdf, exponential_cdf_c, exponential_cdf, chisquared_pdf,
    Beta, GammaDist, LaplaceDist, LaplaceDistI, LogNormal, Student, StudentI,
    gaus, gausn, gausxy, expo,
-   Prob, Gaus, BreitWigner, BetaDist, BetaDistI, landau, landaun,
+   Prob, Sq, Gaus, BreitWigner, BetaDist, BetaDistI, landau, landaun,
 
-   ChebyshevN, Chebyshev1, Chebyshev2, Chebyshev3, Chebyshev4, Chebyshev5,
-   Chebyshev6, Chebyshev7, Chebyshev8, Chebyshev9, Chebyshev10,
+   ChebyshevN, Chebyshev0, Chebyshev1, Chebyshev2, Chebyshev3, Chebyshev4,
+   Chebyshev5, Chebyshev6, Chebyshev7, Chebyshev8, Chebyshev9, Chebyshev10,
 
    getTEfficiencyBoundaryFunc
 };

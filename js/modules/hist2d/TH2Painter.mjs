@@ -586,7 +586,7 @@ class TH2Painter extends THistPainter {
             if (can_merge) {
                y2 = handle.gry[j+1];
             } else {
-               y2 = Math.round(handle.gry[j+1] + dy*handle.ybar2);
+               y2 = Math.round(handle.gry[j] - dy*handle.ybar2);
                dy = Math.round(dy*(handle.ybar2 - handle.ybar1)) || 1;
             }
 

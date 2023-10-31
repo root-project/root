@@ -440,8 +440,8 @@ class RH3Painter extends RHistPainter {
       }
 
       let binx, grx, biny, gry, binz, grz;
-      xaxis = this.getAxis('x'),
-      yaxis = this.getAxis('y'),
+      xaxis = this.getAxis('x');
+      yaxis = this.getAxis('y');
       zaxis = this.getAxis('z');
 
       for (i = i1; i < i2; i += di) {

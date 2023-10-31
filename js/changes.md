@@ -1,6 +1,27 @@
 # JSROOT changelog
 
 ## Changes in 7.3.x
+1. Fix - correctly set visibility level for geo drawing
+2. Fix - use more factor for number of nodes in geo drawing
+3. Fix - add missing Chebyshev0 function
+4. Fix - provide Gaus with normalization
+5. Fix - call 3D rendering after adding TPolyLine3D
+6. Fix - properly add interactive resize elements
+7. Fix - drop handling on tabs layout
+8. Fix - member-wise streaming of std::map   #262
+9. Fix - typo in expandItem
+10. Fix - add missing import in RPavePainter
+11. Fix - prevent drawing of empty TGraph
+12. Fix - use semicolon in RH3
+13. Fix - prevent zero division when drawing TGraph exclusion
+14. Fix - draw th2 col bins with configured y bar
+15. Fix - let handle derived classes from TH1/TH2 #269
+16. Fix - add support of #mp symbol
+17. Fix - support TMath::Sq() function
+18. Fix - prevent drawing of empty TGraph
+
+
+## Changes in 7.3.4
 1. Fix - do not allow move float browser too far left/top
 
 
