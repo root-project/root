@@ -50,7 +50,7 @@ public:
    REveTrans(const REveTrans &t);
    REveTrans(const Double_t arr[16]);
    REveTrans(const Float_t arr[16]);
-   virtual ~REveTrans() {}
+   ~REveTrans() override {}
 
    // General operations
 

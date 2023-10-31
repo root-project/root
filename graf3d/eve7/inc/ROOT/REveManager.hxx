@@ -52,9 +52,9 @@ public:
    class RExceptionHandler : public TStdExceptionHandler {
    public:
       RExceptionHandler() : TStdExceptionHandler() { Add(); }
-      virtual ~RExceptionHandler()                 { Remove(); }
+      ~RExceptionHandler() override                 { Remove(); }
 
-      virtual EStatus Handle(std::exception& exc);
+      EStatus Handle(std::exception& exc) override;
    };
 
    class ChangeGuard {

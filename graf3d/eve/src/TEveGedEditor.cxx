@@ -348,7 +348,7 @@ Bool_t TEveGedNameTextButton::HandleButton(Event_t* event)
       if (el)
          TEveGedEditor::GetContextMenu()->Popup(event->fXRoot, event->fYRoot,
                                                 el->GetObject(eh));
-      return 1;
+      return true;
    }
    else if (event->fCode == kButton1)
    {
@@ -356,6 +356,6 @@ Bool_t TEveGedNameTextButton::HandleButton(Event_t* event)
    }
    else
    {
-      return 0;
+      return false;
    }
 }

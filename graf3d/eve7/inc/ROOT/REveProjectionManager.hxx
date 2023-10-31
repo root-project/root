@@ -48,7 +48,7 @@ protected:
 
 public:
    REveProjectionManager(REveProjection::EPType_e type = REveProjection::kPT_Unknown);
-   virtual ~REveProjectionManager();
+   ~REveProjectionManager() override;
 
    void AddDependent(REveElement *el);
    void RemoveDependent(REveElement *el);
