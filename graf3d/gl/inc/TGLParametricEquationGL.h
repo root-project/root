@@ -22,8 +22,8 @@ class TH2;
 class TGLParametricEquationGL : public TGLPlot3D
 {
 private:
-   TGLParametricEquationGL(const TGLParametricEquationGL&);            // Not implemented
-   TGLParametricEquationGL& operator=(const TGLParametricEquationGL&); // Not implemented
+   TGLParametricEquationGL(const TGLParametricEquationGL&) = delete;
+   TGLParametricEquationGL& operator=(const TGLParametricEquationGL&) = delete;
 
 protected:
    TGLParametricEquation  *fM;

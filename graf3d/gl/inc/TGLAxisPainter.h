@@ -38,8 +38,8 @@ public:
    typedef std::vector<TM_t>                TMVec_t; // vector od tick lines
 
 private:
-   TGLAxisPainter(const TGLAxisPainter&);            // Not implemented
-   TGLAxisPainter& operator=(const TGLAxisPainter&); // Not implemented
+   TGLAxisPainter(const TGLAxisPainter&) = delete;
+   TGLAxisPainter& operator=(const TGLAxisPainter&) = delete;
 
    // Print format derived from attributers.
    Int_t fExp;

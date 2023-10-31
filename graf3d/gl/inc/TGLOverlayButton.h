@@ -24,8 +24,8 @@ class TGLOverlayButton : public TGLOverlayElement,
 {
 
 private:
-   TGLOverlayButton(const TGLOverlayButton&);            // Not implemented
-   TGLOverlayButton& operator=(const TGLOverlayButton&); // Not implemented
+   TGLOverlayButton(const TGLOverlayButton&) = delete;
+   TGLOverlayButton& operator=(const TGLOverlayButton&) = delete;
 
 protected:
 

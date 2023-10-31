@@ -28,8 +28,8 @@ public:
                  kAllVisible = kDisabled | kActive };
 
 private:
-   TGLOverlayElement(const TGLOverlayElement&);            // Not implemented
-   TGLOverlayElement& operator=(const TGLOverlayElement&); // Not implemented
+   TGLOverlayElement(const TGLOverlayElement&) = delete;
+   TGLOverlayElement& operator=(const TGLOverlayElement&) = delete;
 
 protected:
    ERole   fRole;
@@ -65,8 +65,8 @@ public:
 class TGLOverlayList
 {
 private:
-   TGLOverlayList(const TGLOverlayList&);            // Not implemented
-   TGLOverlayList& operator=(const TGLOverlayList&); // Not implemented
+   TGLOverlayList(const TGLOverlayList&) = delete;
+   TGLOverlayList& operator=(const TGLOverlayList&) = delete;
 
 protected:
    std::list<TGLOverlayElement*> fElements;

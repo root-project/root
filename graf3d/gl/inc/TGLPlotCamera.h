@@ -21,8 +21,8 @@ class TGLPaintDevice;
 class TGLPlotCamera
 {
 private:
-   TGLPlotCamera(const TGLPlotCamera&);            // Not implemented
-   TGLPlotCamera& operator=(const TGLPlotCamera&); // Not implemented
+   TGLPlotCamera(const TGLPlotCamera&) = delete;
+   TGLPlotCamera& operator=(const TGLPlotCamera&) = delete;
 
 protected:
    TGLRect        fViewport;

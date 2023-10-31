@@ -20,8 +20,8 @@ class TGLPShapeRef
 {
    friend class TGLPhysicalShape;
 private:
-   TGLPShapeRef(const TGLPShapeRef&);            // Not implemented
-   TGLPShapeRef& operator=(const TGLPShapeRef&); // Not implemented
+   TGLPShapeRef(const TGLPShapeRef&) = delete;
+   TGLPShapeRef& operator=(const TGLPShapeRef&) = delete;
 
    TGLPShapeRef * fNextPSRef;  // Internal pointer to the next reference (used by TGLPhysicalShape directly).
 

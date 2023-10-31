@@ -26,8 +26,8 @@ class TGButtonGroup;
 class TGLClipSetSubEditor : public TGVerticalFrame
 {
 private:
-   TGLClipSetSubEditor(const TGLClipSetSubEditor&);            // Not implemented
-   TGLClipSetSubEditor& operator=(const TGLClipSetSubEditor&); // Not implemented
+   TGLClipSetSubEditor(const TGLClipSetSubEditor&) = delete;
+   TGLClipSetSubEditor& operator=(const TGLClipSetSubEditor&) = delete;
 
 protected:
    TGLClipSet       *fM;
@@ -68,8 +68,8 @@ public:
 class TGLClipSetEditor : public TGedFrame {
 
 private:
-   TGLClipSetEditor(const TGLClipSetEditor&);            // Not implemented
-   TGLClipSetEditor& operator=(const TGLClipSetEditor&); // Not implemented
+   TGLClipSetEditor(const TGLClipSetEditor&) = delete;
+   TGLClipSetEditor& operator=(const TGLClipSetEditor&) = delete;
 
 protected:
    TGLClipSet           *fM;  // fModel dynamic-casted to TGLClipSet

@@ -25,8 +25,8 @@ class TGMainFrame;
 class TGLAnnotation : public TGLOverlayElement
 {
 private:
-   TGLAnnotation(const TGLAnnotation&);            // Not implemented
-   TGLAnnotation& operator=(const TGLAnnotation&); // Not implemented
+   TGLAnnotation(const TGLAnnotation&) = delete;
+   TGLAnnotation& operator=(const TGLAnnotation&) = delete;
 
 protected:
    enum EDrag        { kMove, kResize, kNone };

@@ -33,8 +33,8 @@ class TGLPhysicalShape
    friend class TGLLogicalShape; // for replica-list management
 
 private:
-   TGLPhysicalShape(const TGLPhysicalShape&);            // Not implemented
-   TGLPhysicalShape& operator=(const TGLPhysicalShape&); // Not implemented
+   TGLPhysicalShape(const TGLPhysicalShape&) = delete;
+   TGLPhysicalShape& operator=(const TGLPhysicalShape&) = delete;
 
 public:
    // Flags for permitted manipulation of object

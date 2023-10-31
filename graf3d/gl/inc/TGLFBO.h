@@ -17,8 +17,8 @@
 class TGLFBO
 {
 private:
-   TGLFBO(const TGLFBO&);            // Not implemented
-   TGLFBO& operator=(const TGLFBO&); // Not implemented
+   TGLFBO(const TGLFBO&) = delete;
+   TGLFBO& operator=(const TGLFBO&) = delete;
 
 protected:
    UInt_t  fFrameBuffer;

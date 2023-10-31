@@ -21,8 +21,8 @@ class TGLText;
 
 class TGLAxis : public TAttLine, public TAttText {
 private:
-   TGLAxis(const TGLAxis&);            // Not implemented
-   TGLAxis& operator=(const TGLAxis&); // Not implemented
+   TGLAxis(const TGLAxis&) = delete;
+   TGLAxis& operator=(const TGLAxis&) = delete;
 
    Int_t     fNDiv;
    Int_t     fNDiv1;

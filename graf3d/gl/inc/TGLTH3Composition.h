@@ -51,8 +51,8 @@ private:
    std::vector<TH3Pair_t>        fHists;
    std::unique_ptr<TGLHistPainter> fPainter;
 
-   TGLTH3Composition(const TGLTH3Composition &rhs);
-   TGLTH3Composition &operator = (const TGLTH3Composition &);
+   TGLTH3Composition(const TGLTH3Composition &) = delete;
+   TGLTH3Composition &operator = (const TGLTH3Composition &) = delete;
 
    ClassDefOverride(TGLTH3Composition, 0)//Composition of TH3 objects.
 };
@@ -81,9 +81,9 @@ private:
    void       DrawPlot()const override;
 
    //Empty overriders.
-   void       DrawSectionXOZ()const override{}
-   void       DrawSectionYOZ()const override{}
-   void       DrawSectionXOY()const override{}
+   void       DrawSectionXOZ()const override {}
+   void       DrawSectionYOZ()const override {}
+   void       DrawSectionXOY()const override {}
 
    void       SetColor(Int_t color)const;
 
@@ -92,8 +92,8 @@ private:
 
    mutable TGLQuadric            fQuadric;
 
-   TGLTH3CompositionPainter(const TGLTH3CompositionPainter &rhs);
-   TGLTH3CompositionPainter &operator = (const TGLTH3CompositionPainter &rhs);
+   TGLTH3CompositionPainter(const TGLTH3CompositionPainter &) = delete;
+   TGLTH3CompositionPainter &operator = (const TGLTH3CompositionPainter &)  = delete;
 
    ClassDefOverride(TGLTH3CompositionPainter, 0)//Painter to draw several TH3.
 };
