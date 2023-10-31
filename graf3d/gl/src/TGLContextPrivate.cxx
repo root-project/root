@@ -79,7 +79,7 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
    if (it != fgContexts.end())
       return it->second;
 
-   return 0;
+   return nullptr;
 }
 
 #endif

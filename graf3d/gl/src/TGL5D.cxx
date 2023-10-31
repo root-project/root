@@ -37,7 +37,7 @@ void FindRange(Long64_t size, const Double_t *src, Rgl::Range_t &range);
 TGL5DDataSet::TGL5DDataSet(TTree *tree)
                : TNamed("TGL5DataSet", "TGL5DataSet"),
                  fNP(0),
-                 fV1(0), fV2(0), fV3(0), fV4(0), fV5(0),
+                 fV1(nullptr), fV2(nullptr), fV3(nullptr), fV4(nullptr), fV5(nullptr),
                  fV1Range(1.), fV2Range(1.), fV3Range(1.),
                  fV4IsString(kFALSE)
 {

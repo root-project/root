@@ -94,7 +94,7 @@ void REveProjectionManager::SetProjection(REveProjection::EPType_e type)
 {
    static const REveException eH("REveProjectionManager::SetProjection ");
 
-   if (fProjections[type] == 0)
+   if (fProjections[type] == nullptr)
    {
       switch (type)
       {

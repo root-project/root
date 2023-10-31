@@ -99,13 +99,13 @@ TGeometry::TGeometry()
    fMatrices        = new THashList(100,3);
    fShapes          = new THashList(500,3);
    fNodes           = new TList;
-   fCurrentNode     = 0;
-   fMaterialPointer = 0;
-   fMatrixPointer   = 0;
-   fShapePointer    = 0;
+   fCurrentNode     = nullptr;
+   fMaterialPointer = nullptr;
+   fMatrixPointer   = nullptr;
+   fShapePointer    = nullptr;
    gGeometry = this;
    fBomb            = 1;
-   fMatrix          = 0;
+   fMatrix          = nullptr;
    fX=fY=fZ         =0.0;
    fGeomLevel       =0;
    fIsReflection[fGeomLevel] = kFALSE;
@@ -120,13 +120,13 @@ TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
    fMatrices        = new THashList(1000,3);
    fShapes          = new THashList(5000,3);
    fNodes           = new TList;
-   fCurrentNode     = 0;
-   fMaterialPointer = 0;
-   fMatrixPointer   = 0;
-   fShapePointer    = 0;
+   fCurrentNode     = nullptr;
+   fMaterialPointer = nullptr;
+   fMatrixPointer   = nullptr;
+   fShapePointer    = nullptr;
    gGeometry = this;
    fBomb            = 1;
-   fMatrix          = 0;
+   fMatrix          = nullptr;
    fX=fY=fZ         =0.0;
    gROOT->GetListOfGeometries()->Add(this);
    fGeomLevel       =0;
@@ -211,13 +211,13 @@ TGeometry::~TGeometry()
    delete [] fMaterialPointer;
    delete [] fMatrixPointer;
    delete [] fShapePointer;
-   fMaterials       = 0;
-   fMatrices        = 0;
-   fShapes          = 0;
-   fNodes           = 0;
-   fMaterialPointer = 0;
-   fMatrixPointer   = 0;
-   fShapePointer    = 0;
+   fMaterials       = nullptr;
+   fMatrices        = nullptr;
+   fShapes          = nullptr;
+   fNodes           = nullptr;
+   fMaterialPointer = nullptr;
+   fMatrixPointer   = nullptr;
+   fShapePointer    = nullptr;
 
    if (gGeometry == this) {
       gGeometry = (TGeometry*) gROOT->GetListOfGeometries()->First();
@@ -264,7 +264,7 @@ void TGeometry::Draw(Option_t *option)
 TObject *TGeometry::FindObject(const TObject *) const
 {
    Error("FindObject","Not yet implemented");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -274,7 +274,7 @@ TObject *TGeometry::FindObject(const char *name) const
 {
    TObjArray *loc = TGeometry::Get(name);
    if (loc) return loc->At(0);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,11 +284,11 @@ TObject *TGeometry::FindObject(const char *name) const
 
 TObjArray *TGeometry::Get(const char *name)
 {
-   static TObjArray *locs = 0;
+   static TObjArray *locs = nullptr;
    if (!locs) locs = new TObjArray(2);
    TObjArray &loc = *locs;
-   loc[0] = 0;
-   loc[1] = 0;
+   loc[0] = nullptr;
+   loc[1] = nullptr;
 
    if (!gGeometry) return &loc;
 
@@ -330,13 +330,13 @@ TMaterial *TGeometry::GetMaterial(const char *name) const
 TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
 {
    TMaterial *mat;
-   if (number < 0 || number >= fMaterials->GetSize()) return 0;
+   if (number < 0 || number >= fMaterials->GetSize()) return nullptr;
    if (fMaterialPointer)  return fMaterialPointer[number];
    TIter next(fMaterials);
    while ((mat = (TMaterial*) next())) {
       if (mat->GetNumber() == number) return mat;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -345,9 +345,9 @@ TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
 TNode *TGeometry::GetNode(const char *name) const
 {
    TNode *node= (TNode*)GetListOfNodes()->First();
-   if (!node) return 0;
+   if (!node) return nullptr;
    if (!ROOT::Detail::HasBeenDeleted(node))  return node->GetNode(name);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,13 +364,13 @@ TRotMatrix *TGeometry::GetRotMatrix(const char *name) const
 TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
 {
    TRotMatrix *matrix;
-   if (number < 0 || number >= fMatrices->GetSize()) return 0;
+   if (number < 0 || number >= fMatrices->GetSize()) return nullptr;
    if (fMatrixPointer)  return fMatrixPointer[number];
    TIter next(fMatrices);
    while ((matrix = (TRotMatrix*) next())) {
       if (matrix->GetNumber() == number) return matrix;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -387,13 +387,13 @@ TShape *TGeometry::GetShape(const char *name) const
 TShape *TGeometry::GetShapeByNumber(Int_t number) const
 {
    TShape *shape;
-   if (number < 0 || number >= fShapes->GetSize()) return 0;
+   if (number < 0 || number >= fShapes->GetSize()) return nullptr;
    if (fShapePointer)  return fShapePointer[number];
    TIter next(fShapes);
    while ((shape = (TShape*) next())) {
       if (shape->GetNumber() == number) return shape;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -660,7 +660,7 @@ void TGeometry::UpdateMatrix(TNode *node)
 
 void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, TRotMatrix *rotMatrix)
 {
-   Double_t *matrix = 0;
+   Double_t *matrix = nullptr;
    Bool_t isReflection = kFALSE;
    if (rotMatrix && rotMatrix->GetType()) {
       matrix = rotMatrix->GetMatrix();

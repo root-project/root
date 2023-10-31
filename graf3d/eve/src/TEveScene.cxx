@@ -40,8 +40,8 @@ ClassImp(TEveScene);
 
 TEveScene::TEveScene(const char* n, const char* t) :
    TEveElementList(n, t),
-   fPad    (0),
-   fGLScene(0),
+   fPad    (nullptr),
+   fGLScene(nullptr),
    fChanged      (kFALSE),
    fSmartRefresh (kTRUE),
    fHierarchical (kFALSE)
@@ -59,7 +59,7 @@ TEveScene::TEveScene(const char* n, const char* t) :
 
 TEveScene::TEveScene(TGLScenePad* gl_scene, const char* n, const char* t) :
    TEveElementList(n, t),
-   fPad    (0),
+   fPad    (nullptr),
    fGLScene(gl_scene),
    fChanged      (kFALSE),
    fSmartRefresh (kTRUE),
@@ -158,7 +158,7 @@ void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& t
 
    if (el->GetRnrSelf() && el != this)
    {
-      fGLScene->UpdatePhysioLogical(el->GetRenderObject(eh), t.Array(), 0);
+      fGLScene->UpdatePhysioLogical(el->GetRenderObject(eh), t.Array(), nullptr);
    }
 
    if (el->GetRnrChildren())

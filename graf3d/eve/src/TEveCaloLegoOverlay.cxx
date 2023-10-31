@@ -44,7 +44,7 @@ ClassImp(TEveCaloLegoOverlay);
 TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
    TGLCameraOverlay(),
 
-   fCalo(0),
+   fCalo(nullptr),
 
    fShowScales(kTRUE),
    fScaleColor(-1), fScaleTransparency(0),
@@ -59,7 +59,7 @@ TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
 
    fHeaderSelected(kFALSE),
 
-   fPlaneAxis(0), fAxisPlaneColor(kGray),
+   fPlaneAxis(nullptr), fAxisPlaneColor(kGray),
    fShowPlane(kFALSE),
 
    fMenuW(0.08),
@@ -268,7 +268,7 @@ void TEveCaloLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
    {
       TGLUtil::Color(fHeaderSelected ? fActiveCol : fCalo->GetFontColor());
       glRasterPos2i(0, 0);
-      glBitmap(0, 0, 0, 0, x, y, 0);
+      glBitmap(0, 0, 0, 0, x, y, nullptr);
       font.Render(fHeaderTxt.Data());
    }
    font.PostRender();
@@ -597,7 +597,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 {
    // Draw calorimeter scale info and plane interface.
 
-   if ( fCalo == 0 || fCalo->GetData()->Empty()) return;
+   if ( fCalo == nullptr || fCalo->GetData()->Empty()) return;
 
    Float_t old_depth_range[2];
    glGetFloatv(GL_DEPTH_RANGE, old_depth_range);

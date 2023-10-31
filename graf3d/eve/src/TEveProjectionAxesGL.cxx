@@ -33,8 +33,8 @@ ClassImp(TEveProjectionAxesGL);
 
 TEveProjectionAxesGL::TEveProjectionAxesGL() :
    TGLObject(),
-   fM(0),
-   fProjection(0)
+   fM(nullptr),
+   fProjection(nullptr)
 {
    fDLCache    = kFALSE; // Disable display list.
 }
@@ -317,7 +317,7 @@ void TEveProjectionAxesGL::Draw(TGLRnrCtx& rnrCtx) const
 
 void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
-   if (rnrCtx.Selection() || rnrCtx.Highlight() || fM->fManager->GetBBox() == 0) return;
+   if (rnrCtx.Selection() || rnrCtx.Highlight() || fM->fManager->GetBBox() == nullptr) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
 

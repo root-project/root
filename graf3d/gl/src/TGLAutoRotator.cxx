@@ -43,7 +43,7 @@ ClassImp(TGLAutoRotator);
 /// Constructor.
 
 TGLAutoRotator::TGLAutoRotator(TGLViewer* v) :
-   fViewer(v), fCamera(0),
+   fViewer(v), fCamera(nullptr),
    fTimer(new TTimer), fWatch(new TStopwatch),
    fRotateScene(kFALSE),
    fDeltaPhi(0.005),
@@ -291,7 +291,7 @@ void TGLAutoRotator::RotateScene()
    for (; sceneIter != scenes.end(); ++sceneIter) {
      TGLScene::TSceneInfo *sceneInfo = dynamic_cast<TGLScene::TSceneInfo *>(*sceneIter);
       if (sceneInfo) {
-         TGLPhysicalShape *axisShape = 0;
+         TGLPhysicalShape *axisShape = nullptr;
          TGLScene::ShapeVec_i shapeIter = sceneInfo->fShapesOfInterest.begin();
          for (; shapeIter != sceneInfo->fShapesOfInterest.end(); ++shapeIter) {
             TGLPhysicalShape * const testShape = const_cast<TGLPhysicalShape *>(*shapeIter);

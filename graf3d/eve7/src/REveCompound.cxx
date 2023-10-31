@@ -116,7 +116,7 @@ void REveCompound::AddElement(REveElement* el)
 void REveCompound::RemoveElementLocal(REveElement* el)
 {
    if (el->GetCompound() == this)
-      el->SetCompound(0);
+      el->SetCompound(nullptr);
 
    REveElement::RemoveElementLocal(el);
 }
