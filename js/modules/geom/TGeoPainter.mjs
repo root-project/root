@@ -1927,7 +1927,9 @@ class TGeoPainter extends ObjectPainter {
          let job = {
             collect: this._current_face_limit,   // indicator for the command
             flags: this._clones.getVisibleFlags(),
-            matrix: matrix ? matrix.elements : null
+            matrix: matrix ? matrix.elements : null,
+            vislevel: this._clones.getVisLevel(),
+            maxvisnodes: this._clones.getMaxVisNodes()
          };
 
          this.submitToWorker(job);
@@ -3519,7 +3521,7 @@ class TGeoPainter extends ObjectPainter {
                maxnodes = this.geo_manager.fMaxVisNodes;
          }
          this._clones.setVisLevel(lvl);
-         this._clones.setMaxVisNodes(maxnodes);
+         this._clones.setMaxVisNodes(maxnodes, this.ctrl.more);
 
          this._clones.name_prefix = name_prefix;
 
@@ -4709,7 +4711,7 @@ class TGeoPainter extends ObjectPainter {
          painter._main_painter._slave_painters.push(painter);
       }
 
-      if (is_eve && !painter.ctrl.vislevel || (painter.ctrl.vislevel < 9))
+      if (is_eve && (!painter.ctrl.vislevel || (painter.ctrl.vislevel < 9)))
          painter.ctrl.vislevel = 9;
 
       if (extras) {

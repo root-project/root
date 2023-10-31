@@ -145,7 +145,8 @@ class RH1Painter extends RHistPainter {
    /** @summary Fill statistic */
    fillStatistic(stat, dostat/*, dofit*/) {
 
-      let data = this.countStat(),
+      let histo = this.getHisto(),
+          data = this.countStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,

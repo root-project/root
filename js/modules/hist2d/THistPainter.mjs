@@ -523,7 +523,7 @@ class THistDrawOptions {
 
       // flag identifies 3D drawing mode for histogram
       if ((this.Lego > 0) || (hdim == 3) ||
-          ((this.Surf > 0) || this.Error && (hdim == 2))) this.Mode3D = true;
+          (((this.Surf > 0) || this.Error) && (hdim == 2))) this.Mode3D = true;
 
       //if (this.Surf == 15)
       //   if (this.System == CoordSystem.kPOLAR || this.System == CoordSystem.kCARTESIAN)

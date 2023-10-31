@@ -60,6 +60,8 @@ async function drawPolyLine3D() {
 
    fp.toplevel.add(lines);
 
+   fp.render3D(100);
+
    return true;
 }
 

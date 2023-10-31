@@ -454,9 +454,11 @@ class TGraphPainter extends ObjectPainter {
       for (let n = drawbins.length-1; n >= 0; --n) {
          let bin = drawbins[n],
              dlen = Math.sqrt(bin.dgrx**2 + bin.dgry**2);
-         // shift point
-         bin.grx += excl_width*bin.dgry/dlen;
-         bin.gry -= excl_width*bin.dgrx/dlen;
+         if (dlen > 1e-10) {
+            // shift point
+            bin.grx += excl_width*bin.dgry/dlen;
+            bin.gry -= excl_width*bin.dgrx/dlen;
+         }
          extrabins.push(bin);
       }
 
@@ -473,6 +475,8 @@ class TGraphPainter extends ObjectPainter {
    drawBins(funcs, options, draw_g, w, h, lineatt, fillatt, main_block) {
       let graph = this.getObject(),
           excl_width = 0, drawbins = null;
+
+      if (!graph?.fNpoints) return;
 
       if (main_block && lineatt.excl_side) {
          excl_width = lineatt.excl_width;

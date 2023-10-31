@@ -2012,7 +2012,7 @@ class HierarchyPainter extends BasePainter {
       }).on('drop', function(ev) {
          d3_select(this).classed('jsroot_drag_area', false);
          let itemname = ev.dataTransfer.getData('item');
-         if (itemname) h.dropItem(itemname, this.getAttribute('id'));
+         if (itemname) h.dropItem(itemname, this);
       });
    }
 
@@ -2392,7 +2392,7 @@ class HierarchyPainter extends BasePainter {
       async function doExpandItem(_item, _obj){
 
          if (isStr(_item._expand))
-            _item._expand = findFunction(item._expand);
+            _item._expand = findFunction(_item._expand);
 
          if (!isFunc(_item._expand)) {
             let handle = getDrawHandle(_item._kind, '::expand');
