@@ -92,7 +92,6 @@ foreach(val RANGE ${how_many_pythons})
 
   target_include_directories(${libname}
      PRIVATE
-        ${CMAKE_SOURCE_DIR}/core/foundation/inc   # needed for string_view backport
         ${CMAKE_BINARY_DIR}/ginclude
      PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>

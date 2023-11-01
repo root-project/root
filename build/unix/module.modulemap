@@ -33,12 +33,6 @@ module ROOT_Rtypes {
 // They are mainly needed for ROOT stage1 build.
 module ROOT_Foundation_Stage1_NoRTTI  {
   module "ESTLType.h" { header "ESTLType.h" export * }
-  module "ROOT/RStringView.hxx" {
-    // RWrap_libcpp_string_view.h is meant to be included only by ROOT/RStringView.hxx
-    textual header "ROOT/RWrap_libcpp_string_view.h"
-    header "ROOT/RStringView.hxx"
-    export *
-  }
   // Varargs contains a lot of macros for supporting the obsolete va_args.
   // FIXME: We may want to drop this when we reimplement all uses to use variadic
   // templates.

@@ -154,12 +154,6 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
 
 }
 
-template <typename T>
-EFromHumanReadableSize FromHumanReadableSize(ROOT::Internal::TStringView str, T &value)
-{
-   return FromHumanReadableSize(std::string_view(str),value);
-}
-
 } // namespace ROOT.
 
 #endif // ROOT_StringConv
