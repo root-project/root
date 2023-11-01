@@ -1,6 +1,13 @@
-##################################################
-# Example of getting NumPy batches from the RBatchGenerator
-##################################################
+### \file
+### \ingroup tutorial_tmva
+### \notebook -nodraw
+###
+### Example of getting batches of events from a ROOT dataset as Python
+### generators of numpy arrays.
+###
+### \macro_code
+### \macro_output
+### \author Dante Niewenhuis
 
 import ROOT
 
