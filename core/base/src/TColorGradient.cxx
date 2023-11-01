@@ -2,7 +2,7 @@
 // Author: Timur Pocheptsov   20/3/2012
 
 /*************************************************************************
- * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -33,14 +33,6 @@ without re-writing all the graphics code.
 #include "TROOT.h"
 
 ClassImp(TColorGradient);
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TColorGradient::TColorGradient()
-                   : fCoordinateMode(kObjectBoundingMode)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// There is no way to validate parameters here, so it's up to user
@@ -125,7 +117,26 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points,
 
    SetRGB(sum[0] / nPoints, sum[1] / nPoints, sum[2] / nPoints);
    SetAlpha(sum[3] / nPoints);
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change alpha parameter of the color
+
+void TColorGradient::SetColorAlpha(UInt_t indx, Double_t alpha)
+{
+   if (indx*4 + 3 < fColors.size())
+      fColors[indx*4 + 3] = alpha;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return alpha parameter of selected color
+
+Double_t TColorGradient::GetColorAlpha(UInt_t indx) const
+{
+   if (indx*4 + 3 < fColors.size())
+      return fColors[indx*4 + 3];
+
+   return 1.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +168,7 @@ TColorGradient::SizeType_t TColorGradient::GetNumberOfSteps()const
 
 const Double_t *TColorGradient::GetColorPositions()const
 {
-   return &fColorPositions[0];
+   return fColorPositions.data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +176,7 @@ const Double_t *TColorGradient::GetColorPositions()const
 
 const Double_t *TColorGradient::GetColors()const
 {
-   return &fColors[0];
+   return fColors.data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,34 +200,6 @@ void TColorGradient::RegisterColor(Color_t colorIndex)
          return;
       }
    }
-}
-
-ClassImp(TLinearGradient);
-
-/** \class TLinearGradient
-Define a linear color gradient.
-*/
-
-TLinearGradient::TLinearGradient()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                                 const Color_t *colorIndices, ECoordinateMode mode)
-                   : TColorGradient(newColor, nPoints, points, colorIndices, mode)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                                 const Double_t *colors, ECoordinateMode mode)
-                   : TColorGradient(newColor, nPoints, points, colors, mode)
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,33 +227,6 @@ const TColorGradient::Point &TLinearGradient::GetEnd()const
    return fEnd;
 }
 
-ClassImp(TRadialGradient);
-
-/** \class TRadialGradient
-Define a radial color gradient
-*/
-
-TRadialGradient::TRadialGradient()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                                 const Color_t *colorIndices, ECoordinateMode mode)
-                   : TColorGradient(newColor, nPoints, points, colorIndices, mode)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                                 const Double_t *colors, ECoordinateMode mode)
-                   : TColorGradient(newColor, nPoints, points, colors, mode)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get gradient type.

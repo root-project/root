@@ -2,7 +2,7 @@
 //Author: Timur Pocheptsov   20/03/2012
 
 /*************************************************************************
- * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -27,10 +27,7 @@
 
 #include <vector>
 
-#include "Rtypes.h"
-
 #include "TColor.h"
-
 
 class TColorGradient : public TColor {
 public:
@@ -42,7 +39,7 @@ public:
    //We can use either pad's rectangle as a coordinate system
    //or an object's bounding rect.
    enum ECoordinateMode {
-      kPadMode,//NDC, in a pad's rectangle (pad is 0,0 - 1,1).
+      kPadMode, //NDC, in a pad's rectangle (pad is 0,0 - 1,1).
       kObjectBoundingMode //NDC in an object's bounding rect (this rect is 0,0 - 1, 1).
    };
 
@@ -67,21 +64,21 @@ private:
    std::vector<Double_t> fColors;//RGBA values.
 
    //'default value' is kObjectBoundingMode.
-   ECoordinateMode fCoordinateMode;
+   ECoordinateMode fCoordinateMode = kObjectBoundingMode;
 
-protected:
-   TColorGradient();
-
+public:
    TColorGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                   const Color_t *colorIndices, ECoordinateMode mode = kObjectBoundingMode);
    TColorGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                   const Double_t *colors, ECoordinateMode mode = kObjectBoundingMode);
 
-public:
    void ResetColor(UInt_t nPoints, const Double_t *points,
                    const Color_t *colorIndices);
    void ResetColor(UInt_t nPoints, const Double_t *points,
                    const Double_t *colorIndices);
+
+   void SetColorAlpha(UInt_t indx, Double_t alpha);
+   Double_t GetColorAlpha(UInt_t indx) const;
 
    void SetCoordinateMode(ECoordinateMode mode);
    ECoordinateMode GetCoordinateMode() const;
@@ -99,11 +96,7 @@ private:
 class TLinearGradient : public TColorGradient {
 public:
    //With C++11 we'll use inherited constructors!!!
-   TLinearGradient();
-   TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                   const Color_t *colorIndices, ECoordinateMode mode = kObjectBoundingMode);
-   TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                   const Double_t *colors, ECoordinateMode mode = kObjectBoundingMode);
+   using TColorGradient::TColorGradient;
 
    //points are always in NDC (and also affected by fCoordinateMode).
    void SetStartEnd(const Point &p1, const Point &p2);
@@ -132,17 +125,10 @@ public:
       kExtended
    };
 
-
    //With C++11 we'll use inherited constructors!!!
-   TRadialGradient();
-   TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                   const Color_t *colorIndices, ECoordinateMode mode = kObjectBoundingMode);
-   TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
-                   const Double_t *colors, ECoordinateMode mode = kObjectBoundingMode);
-
+   using TColorGradient::TColorGradient;
 
    EGradientType GetGradientType()const;
-
 
    //Extended gradient.
    void SetStartEndR1R2(const Point &p1, Double_t r1,
