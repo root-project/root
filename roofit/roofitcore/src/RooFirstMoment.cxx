@@ -24,39 +24,23 @@ of any RooAbsReal as calculated (numerically) by the MathCore Richardson
 derivator class.
 **/
 
+#include <RooFirstMoment.h>
+#include <RooAbsReal.h>
+#include <RooAbsPdf.h>
+#include <RooArgSet.h>
+#include <RooMsgService.h>
+#include <RooRealVar.h>
+#include <RooGlobalFunc.h>
+#include <RooRealIntegral.h>
+#include <RooNumIntConfig.h>
+#include <RooProduct.h>
 
-#include "Riostream.h"
+#include <Riostream.h>
+
 #include <cmath>
-
-#include "RooFirstMoment.h"
-#include "RooAbsReal.h"
-#include "RooAbsPdf.h"
-#include "RooErrorHandler.h"
-#include "RooArgSet.h"
-#include "RooMsgService.h"
-#include "RooRealVar.h"
-#include "RooFunctor.h"
-#include "RooGlobalFunc.h"
-#include "RooConstVar.h"
-#include "RooRealIntegral.h"
-#include "RooNumIntConfig.h"
-#include "RooProduct.h"
 #include <string>
-using namespace std;
-
 
 ClassImp(RooFirstMoment);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooFirstMoment::RooFirstMoment()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -143,17 +127,6 @@ RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFirstMoment::~RooFirstMoment()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
@@ -163,5 +136,3 @@ double RooFirstMoment::evaluate() const
   //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << endl ;
   return ratio ;
 }
-
-

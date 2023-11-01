@@ -26,26 +26,6 @@
  given fit bin, regardless of the type of value.
 **/
 
-#include "RooAbsLValue.h"
-
-using namespace std;
+#include <RooAbsLValue.h>
 
 ClassImp(RooAbsLValue);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooAbsLValue::RooAbsLValue()
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsLValue::~RooAbsLValue()
-{
-}

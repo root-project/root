@@ -37,7 +37,6 @@ A RooProduct represents the product of a given set of RooAbsReal objects.
 using namespace std ;
 
 ClassImp(RooProduct);
-;
 
 class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;
 

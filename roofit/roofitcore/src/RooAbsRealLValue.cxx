@@ -19,7 +19,7 @@
 \class RooAbsRealLValue
 \ingroup Roofitcore
 
-RooAbsRealLValue is the common abstract base class for objects that represent a
+Abstract base class for objects that represent a
 real value that may appear on the left hand side of an equation ('lvalue').
 Each implementation must provide a setVal() member to allow direct modification
 of the value. RooAbsRealLValue may be derived, but its functional relation

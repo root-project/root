@@ -58,13 +58,13 @@ public:
 
 protected:
 
-  mutable double* _array ; //! do not persist
-  mutable RooAbsReal* _xlo ; //!
-  mutable RooAbsReal* _xhi ; //!
-  Int_t    _nbins ;
-  double _binw ;
-  mutable RooListProxy* _lp ; //
-  mutable RooAbsArg* _owner ; //
+  mutable double* _array = nullptr; //! do not persist
+  mutable RooAbsReal* _xlo = nullptr; //!
+  mutable RooAbsReal* _xhi = nullptr; //!
+  Int_t    _nbins = 100;
+  double _binw = 0;
+  mutable RooListProxy* _lp = nullptr; //
+  mutable RooAbsArg* _owner = nullptr; //
 
   RooAbsReal* xlo() const { return _lp ? ((RooAbsReal*)_lp->at(0)) : _xlo ; }
   RooAbsReal* xhi() const { return _lp ? ((RooAbsReal*)_lp->at(1)) : _xhi ; }

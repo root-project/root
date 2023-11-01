@@ -32,9 +32,6 @@ namespace RooStats {
     /// constructor from name, the Parameter of interest and lower/upper bound values
     SimpleInterval(const char* name, const RooRealVar & var, double lower, double upper, double cl);
 
-    /// destructor
-    ~SimpleInterval() override;
-
     /// check if parameter is in the interval
     bool IsInInterval(const RooArgSet&) const override;
 

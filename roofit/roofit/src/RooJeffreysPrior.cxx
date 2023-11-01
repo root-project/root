@@ -84,14 +84,6 @@ RooJeffreysPrior::RooJeffreysPrior(const RooJeffreysPrior& other, const char* na
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooJeffreysPrior::~RooJeffreysPrior()
-{
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return current value of self
 
 double RooJeffreysPrior::evaluate() const
