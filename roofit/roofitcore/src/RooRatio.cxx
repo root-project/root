@@ -36,12 +36,12 @@ Represents the ratio of two RooAbsReal objects.
 
 ClassImp(RooRatio);
 
-RooRatio::RooRatio(){TRACE_CREATE}
+RooRatio::RooRatio(){TRACE_CREATE;}
 
 RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr,
                    RooAbsReal &dr)
     : RooAbsReal(name, title), _numerator("numerator", "numerator", this, nr),
-      _denominator("denominator", "denominator", this, dr){TRACE_CREATE}
+      _denominator("denominator", "denominator", this, dr){TRACE_CREATE;}
 
       RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr,
                          double dr)
@@ -50,7 +50,7 @@ RooRatio::RooRatio(const char *name, const char *title, RooAbsReal &nr,
   auto drvar = new RooRealVar(Form("%s_dr", name), Form("%s_dr", name), dr);
   _denominator.setArg(*drvar);
   addOwnedComponents(RooArgSet(*drvar));
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title, double nr,
@@ -60,7 +60,7 @@ RooRatio::RooRatio(const char *name, const char *title, double nr,
   auto nrvar = new RooRealVar(Form("%s_nr", name), Form("%s_nr", name), nr);
   _numerator.setArg(*nrvar);
   addOwnedComponents(RooArgSet(*nrvar));
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title, double nr,
@@ -72,7 +72,7 @@ RooRatio::RooRatio(const char *name, const char *title, double nr,
   _numerator.setArg(*nrvar);
   _denominator.setArg(*drvar);
   addOwnedComponents(RooArgSet(*nrvar, *drvar));
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 RooRatio::RooRatio(const char *name, const char *title,
@@ -86,14 +86,14 @@ RooRatio::RooRatio(const char *name, const char *title,
   _numerator.setArg(*nrprod);
   _denominator.setArg(*drprod);
   addOwnedComponents(RooArgSet(*nrprod, *drprod));
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
-RooRatio::~RooRatio(){TRACE_DESTROY}
+RooRatio::~RooRatio(){TRACE_DESTROY;}
 
 RooRatio::RooRatio(const RooRatio &other, const char *name)
     : RooAbsReal(other, name), _numerator("numerator", this, other._numerator),
-      _denominator("denominator", this, other._denominator){TRACE_CREATE}
+      _denominator("denominator", this, other._denominator){TRACE_CREATE;}
 
       double RooRatio::evaluate() const {
 

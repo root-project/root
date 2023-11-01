@@ -83,7 +83,7 @@ RooProdPdf::RooProdPdf() :
   _cacheMgr(this,10)
 {
   // Default constructor
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -132,7 +132,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
       _extendedIndex=_pdfList.index(&pdf2) ;
     }
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -161,7 +161,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
   _pdfList("!pdfs","List of PDFs",this)
 {
   addPdfs(inPdfList);
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -215,7 +215,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
 
   initializeFromCmdArgList(fullPdfSet,l) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -239,7 +239,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
 
   initializeFromCmdArgList(RooArgSet(),l) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -253,7 +253,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
   _pdfList("!pdfs","List of PDFs",this)
 {
   initializeFromCmdArgList(fullPdfSet, cmdArgList) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -278,7 +278,7 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
     _pdfNSetList.emplace_back(std::make_unique<RooArgSet>(nset->GetName()));
     nset->snapshot(*_pdfNSetList.back());
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -348,7 +348,7 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
 
 RooProdPdf::~RooProdPdf()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 

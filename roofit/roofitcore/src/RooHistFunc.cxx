@@ -77,7 +77,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
     }
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -117,7 +117,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
     }
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -150,7 +150,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   _totVolume(other._totVolume),
   _unitNorm(other._unitNorm)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 
   _histObsList.addClone(other._histObsList) ;
 }
@@ -161,7 +161,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 
 RooHistFunc::~RooHistFunc()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 

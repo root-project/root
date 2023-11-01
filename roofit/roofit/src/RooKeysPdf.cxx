@@ -81,7 +81,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 
   // form the lookup table
   LoadDataSet(data);
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title,
 
   // form the lookup table
   LoadDataSet(data);
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ RooKeysPdf::RooKeysPdf(const RooKeysPdf& other, const char* name):
   for (Int_t i= 0; i<_nPoints+1; i++)
     _lookupTable[i]= other._lookupTable[i];
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +144,7 @@ RooKeysPdf::~RooKeysPdf() {
   delete[] _dataWgts;
   delete[] _weights;
 
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

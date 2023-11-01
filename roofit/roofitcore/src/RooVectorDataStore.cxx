@@ -58,7 +58,7 @@ ClassImp(RooVectorDataStore::RealFullVector);
 
 RooVectorDataStore::RooVectorDataStore()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -75,7 +75,7 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
   }
 
   setAllBuffersNative() ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -163,7 +163,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
 
   setAllBuffersNative() ;
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -187,7 +187,7 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
     _varsww.assign(other._varsww) ;
     fill() ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 
 }
 
@@ -241,7 +241,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
 
   setAllBuffersNative() ;
 
-  TRACE_CREATE
+  TRACE_CREATE;
 
 }
 
@@ -289,7 +289,7 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
 
   loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -315,7 +315,7 @@ RooVectorDataStore::~RooVectorDataStore()
   }
 
   delete _cache ;
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 

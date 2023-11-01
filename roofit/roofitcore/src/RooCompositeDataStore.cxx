@@ -48,7 +48,7 @@ ClassImp(RooCompositeDataStore);
 
 RooCompositeDataStore::RooCompositeDataStore()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -65,7 +65,7 @@ RooCompositeDataStore::RooCompositeDataStore(
     const RooAbsCategory::value_type idx = indexCat.lookupIndex(iter.first);
     _dataMap[idx] = iter.second;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -79,7 +79,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = item.second->clone() ;
     _dataMap[item.first] = clonedata ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -99,7 +99,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = item.second->clone(vars) ;
     _dataMap[item.first] = clonedata ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -115,7 +115,7 @@ RooCompositeDataStore::~RooCompositeDataStore()
       delete item.second;
     }
   }
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
