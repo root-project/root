@@ -66,7 +66,15 @@ void Convert() {
       TLeaf *l = static_cast<TLeaf*>(b->GetListOfLeaves()->First());
 
       // Create an ntuple field with the same name and type than the tree branch
-      auto field = RFieldBase::Create(l->GetName(), l->GetTypeName()).Unwrap();
+      std::unique_ptr<RFieldBase> field{nullptr};
+      if (l->GetLen() == 1) {
+        field = Detail::RFieldBase::Create(l->GetName(), l->GetTypeName()).Unwrap();
+      } else if (l->GetLen() > 1) {
+        field = Detail::RFieldBase::Create(l->GetName(), std::string(l->GetTypeName()) + "[" + std::to_string(l->GetLen()) + "]").Unwrap();
+      } else {
+        // This is the VLA case. Not sure how to handle it yet.
+        field = Detail::RFieldBase::Create(l->GetName(), std::string(l->GetTypeName())).Unwrap();
+      }
       std::cout << "Convert leaf " << l->GetName() << " [" << l->GetTypeName() << "]"
                 << " --> " << "field " << field->GetName() << " [" << field->GetType() << "]" << std::endl;
 
