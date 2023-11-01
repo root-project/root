@@ -2,8 +2,8 @@ import { gStyle, settings, constants, browser, internals, btoa_func, BIT,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, postponePromise,
          isObject, isFunc, isStr,
          clTObjArray, clTPaveText, clTColor, clTPad, clTStyle, clTLegend, clTLegendEntry } from '../core.mjs';
-import { color as d3_color, select as d3_select, rgb as d3_rgb } from '../d3.mjs';
-import { ColorPalette, adoptRootColors, getGrayColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
+import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
+import { ColorPalette, adoptRootColors, getGrayColors, extendRootColors, getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -1429,6 +1429,43 @@ class TPadPainter extends ObjectPainter {
       }
    }
 
+   /** @summary Process special snaps like colors or style objects
+     * @return {Promise} index where processing should start
+     * @private */
+   processSpecialSnaps(lst) {
+      while (lst?.length) {
+         const snap = lst[0];
+
+         // gStyle object
+         if (snap.fKind === webSnapIds.kStyle) {
+            lst.shift();
+            Object.assign(gStyle, snap.fSnapshot);
+         } else if (snap.fKind === webSnapIds.kColors) {
+            lst.shift();
+            const ListOfColors = decodeWebCanvasColors(snap.fSnapshot.fOper);
+
+            // set global list of colors
+            if (!this.options || this.options.GlobalColors)
+               adoptRootColors(ListOfColors);
+
+            const colors = extendRootColors(null, ListOfColors, this.pad?.TestBit(kIsGrayscale));
+
+            // copy existing colors and extend with new values
+            this._custom_colors = this.options?.LocalColors ? colors : null;
+
+            // set palette
+            if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
+               const palette = [];
+               for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
+                  palette[n] = colors[Math.round(snap.fSnapshot.fBuf[n])];
+
+               this.custom_palette = new ColorPalette(palette);
+            }
+         } else
+            break;
+      }
+   }
+
    /** @summary Function called when drawing next snapshot from the list
      * @return {Promise} for drawing of the snap
      * @private */
@@ -1456,17 +1493,7 @@ class TPadPainter extends ObjectPainter {
 
       // list of colors
       if (snap.fKind === webSnapIds.kColors) {
-         const ListOfColors = [], arr = snap.fSnapshot.fOper.split(';');
-         for (let n = 0; n < arr.length; ++n) {
-            const name = arr[n];
-            let p = name.indexOf(':');
-            if (p > 0)
-               ListOfColors[parseInt(name.slice(0, p))] = d3_color(`rgb(${name.slice(p+1)})`).formatHex();
-             else {
-               p = name.indexOf('=');
-               ListOfColors[parseInt(name.slice(0, p))] = d3_color(`rgba(${name.slice(p+1)})`).formatHex8();
-            }
-         }
+         const ListOfColors = decodeWebCanvasColors(snap.fSnapshot.fOper);
 
          // set global list of colors
          if (!this.options || this.options.GlobalColors)
@@ -1532,6 +1559,8 @@ class TPadPainter extends ObjectPainter {
          padpainter._readonly = snap.fReadOnly ?? false; // readonly flag
          padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
          padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
+
+         padpainter.processSpecialSnaps(snap.fPrimitives); // need to process style and colors before creating graph elements
 
          padpainter.createPadSvg();
 
@@ -1627,6 +1656,8 @@ class TPadPainter extends ObjectPainter {
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
             registerForResize(this.brlayout);
          }
+
+         this.processSpecialSnaps(snap.fPrimitives);
 
          this.createCanvasSvg(0);
 

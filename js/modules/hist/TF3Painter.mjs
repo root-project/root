@@ -1,4 +1,4 @@
-import { createHistogram, setHistogramTitle, kNoStats, settings, gStyle, clTF2, clTH2F, isStr, isFunc } from '../core.mjs';
+import { createHistogram, setHistogramTitle, kNoStats, settings, gStyle, clTF3, clTH2F, isStr, isFunc } from '../core.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar, produceTAxisLogScale } from '../hist/TF1Painter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
@@ -6,19 +6,33 @@ import { DrawOptions, floatToString } from '../base/BasePainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 
 
+function findZValue(arrz, arrv, cross = 0) {
+   for (let i = arrz.length - 2; i >= 0; --i) {
+      const v1 = arrv[i], v2 = arrv[i + 1],
+            z1 = arrz[i], z2 = arrz[i + 1];
+      if (v1 === cross) return z1;
+      if (v2 === cross) return z2;
+      if ((v1 < cross) !== (v2 < cross))
+         return z1 + (cross - v1) / (v2 - v1) * (z2 - z1);
+   }
+
+   return arrz[0] - 1;
+}
+
+
 /**
-  * @summary Painter for TF2 object
+  * @summary Painter for TF3 object
   *
   * @private
   */
 
-class TF2Painter extends TH2Painter {
+class TF3Painter extends TH2Painter {
 
    /** @summary Returns drawn object name */
    getObjectName() { return this.$func?.fName ?? 'func'; }
 
    /** @summary Returns drawn object class name */
-   getClassName() { return this.$func?._typename ?? clTF2; }
+   getClassName() { return this.$func?._typename ?? clTF3; }
 
    /** @summary Returns true while function is drawn */
    isTF1() { return true; }
@@ -35,7 +49,7 @@ class TF2Painter extends TH2Painter {
       }
 
       this.$func = obj;
-      this.createTF2Histogram(obj, histo);
+      this.createTF3Histogram(obj, histo);
       this.scanContent();
       return true;
    }
@@ -43,8 +57,8 @@ class TF2Painter extends TH2Painter {
    /** @summary Redraw TF2
      * @private */
    redraw(reason) {
-      if (!this._use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'zoom')) {
-         this.createTF2Histogram(this.$func, this.getHisto());
+      if (!this._use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'logy' || reason === 'zoom')) {
+         this.createTF3Histogram(this.$func, this.getHisto());
          this.scanContent();
       }
 
@@ -53,10 +67,8 @@ class TF2Painter extends TH2Painter {
 
    /** @summary Create histogram for TF2 drawing
      * @private */
-   createTF2Histogram(func, hist = undefined) {
-      let nsave = func.fSave.length - 6;
-      if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
-         nsave = 0;
+   createTF3Histogram(func, hist = undefined) {
+      const nsave = func.fSave.length - 9;
 
       this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || this.force_saved);
 
@@ -65,7 +77,8 @@ class TF2Painter extends TH2Painter {
             logx = pad?.fLogx, logy = pad?.fLogy,
             gr = fp?.getGrFuncs(this.second_x, this.second_y);
       let xmin = func.fXmin, xmax = func.fXmax,
-          ymin = func.fYmin, ymax = func.fYmax;
+          ymin = func.fYmin, ymax = func.fYmax,
+          zmin = func.fZmin, zmax = func.fZmax;
 
      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
          xmin = Math.min(xmin, gr.zoom_xmin);
@@ -75,6 +88,11 @@ class TF2Painter extends TH2Painter {
      if (gr?.zoom_ymin !== gr?.zoom_ymax) {
          ymin = Math.min(ymin, gr.zoom_ymin);
          ymax = Math.max(ymax, gr.zoom_ymax);
+      }
+
+     if (gr?.zoom_zmin !== gr?.zoom_zmax) {
+         zmin = Math.min(zmin, gr.zoom_zmin);
+         zmax = Math.max(zmax, gr.zoom_zmax);
       }
 
       const ensureBins = (nx, ny) => {
@@ -87,28 +105,35 @@ class TF2Painter extends TH2Painter {
          hist.fXaxis.fXbins = [];
          hist.fYaxis.fNbins = ny;
          hist.fYaxis.fXbins = [];
+         hist.fXaxis.fXmin = xmin;
+         hist.fXaxis.fXmax = xmax;
+         hist.fYaxis.fXmin = ymin;
+         hist.fYaxis.fXmax = ymax;
+         hist.fMinimum = zmin;
+         hist.fMaximum = zmax;
       };
 
       delete this._fail_eval;
 
       if (!this._use_saved_points) {
          const npx = Math.max(func.fNpx, 20),
-               npy = Math.max(func.fNpy, 20);
+               npy = Math.max(func.fNpy, 20),
+               npz = Math.max(func.fNpz, 20);
          let iserror = false;
 
          if (!func.evalPar && !proivdeEvalPar(func))
             iserror = true;
 
          ensureBins(npx, npy);
-         hist.fXaxis.fXmin = xmin;
-         hist.fXaxis.fXmax = xmax;
-         hist.fYaxis.fXmin = ymin;
-         hist.fYaxis.fXmax = ymax;
 
          if (logx)
             produceTAxisLogScale(hist.fXaxis, npx, xmin, xmax);
          if (logy)
             produceTAxisLogScale(hist.fYaxis, npy, ymin, ymax);
+
+         const arrv = new Array(npz), arrz = new Array(npz);
+         for (let k = 0; k < npz; ++k)
+            arrz[k] = zmin + k / (npz - 1) * (zmax - zmin);
 
          for (let j = 0; (j < npy) && !iserror; ++j) {
             for (let i = 0; (i < npx) && !iserror; ++i) {
@@ -117,7 +142,10 @@ class TF2Painter extends TH2Painter {
                let z = 0;
 
                try {
-                  z = func.evalPar(x, y);
+                  for (let k = 0; k < npz; ++k)
+                     arrv[k] = func.evalPar(x, y, arrz[k]);
+
+                  z = findZValue(arrz, arrv);
                } catch {
                   iserror = true;
                }
@@ -130,55 +158,43 @@ class TF2Painter extends TH2Painter {
          if (iserror)
             this._fail_eval = true;
 
-         if (iserror && (nsave > 6))
+         if (iserror && (nsave > 0))
             this._use_saved_points = true;
       }
 
       if (this._use_saved_points) {
-         const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
-               ymin = func.fSave[nsave+2], ymax = func.fSave[nsave+3],
-               npx = Math.round(func.fSave[nsave+4]),
-               npy = Math.round(func.fSave[nsave+5]),
-               dx = (xmax - xmin) / npx,
-               dy = (ymax - ymin) / npy;
-          function getSave(x, y) {
-            if (x < xmin || x > xmax) return 0;
-            if (dx <= 0) return 0;
-            if (y < ymin || y > ymax) return 0;
-            if (dy <= 0) return 0;
-            const ibin = Math.min(npx-1, Math.floor((x-xmin)/dx)),
-                  jbin = Math.min(npy-1, Math.floor((y-ymin)/dy)),
-                  xlow = xmin + ibin*dx,
-                  ylow = ymin + jbin*dy,
-                  t = (x-xlow)/dx,
-                  u = (y-ylow)/dy,
-                  k1 = jbin*(npx+1) + ibin,
-                  k2 = jbin*(npx+1) + ibin +1,
-                  k3 = (jbin+1)*(npx+1) + ibin +1,
-                  k4 = (jbin+1)*(npx+1) + ibin;
-            return (1-t)*(1-u)*func.fSave[k1] +t*(1-u)*func.fSave[k2] +t*u*func.fSave[k3] + (1-t)*u*func.fSave[k4];
-         }
+         xmin = func.fSave[nsave]; xmax = func.fSave[nsave+1];
+         ymin = func.fSave[nsave+2]; ymax = func.fSave[nsave+3];
+         zmin = func.fSave[nsave+4]; zmax = func.fSave[nsave+5];
+         const npx = Math.round(func.fSave[nsave+6]),
+               npy = Math.round(func.fSave[nsave+7]),
+               npz = Math.round(func.fSave[nsave+8]),
+               // dx = (xmax - xmin) / npx,
+               // dy = (ymax - ymin) / npy,
+               dz = (zmax - zmin) / npz;
 
-         ensureBins(func.fNpx, func.fNpy);
-         hist.fXaxis.fXmin = func.fXmin;
-         hist.fXaxis.fXmax = func.fXmax;
-         hist.fYaxis.fXmin = func.fYmin;
-         hist.fYaxis.fXmax = func.fYmax;
+         ensureBins(npx + 1, npy + 1);
 
-         for (let j = 0; j < func.fNpy; ++j) {
-            const y = hist.fYaxis.GetBinCenter(j + 1);
-            for (let i = 0; i < func.fNpx; ++i) {
-               const x = hist.fXaxis.GetBinCenter(i + 1),
-                     z = getSave(x, y);
-               hist.setBinContent(hist.getBin(i+1, j+1), Number.isFinite(z) ? z : 0);
+         const arrv = new Array(npz + 1), arrz = new Array(npz + 1);
+         for (let k = 0; k <= npz; k++)
+            arrz[k] = zmin + k*dz;
+
+         for (let i = 0; i <= npx; ++i) {
+            for (let j = 0; j <= npy; ++j) {
+               for (let k = 0; k <= npz; k++)
+                  arrv[k] = func.fSave[i + (npx + 1)*(j + (npy + 1)*k)];
+               const z = findZValue(arrz, arrv);
+               hist.setBinContent(hist.getBin(i + 1, j + 1), Number.isFinite(z) ? z : 0);
             }
          }
       }
 
       hist.fName = 'Func';
       setHistogramTitle(hist, func.fTitle);
-      hist.fMinimum = func.fMinimum;
-      hist.fMaximum = func.fMaximum;
+
+
+      // hist.fMinimum = func.fMinimum;
+      // hist.fMaximum = func.fMaximum;
       // fHistogram->SetContour(fContour.fN, levels);
       hist.fLineColor = func.fLineColor;
       hist.fLineStyle = func.fLineStyle;
@@ -198,22 +214,26 @@ class TF2Painter extends TH2Painter {
 
       const func = this.$func, nsave = func?.fSave.length ?? 0;
 
-      if (nsave > 6 && this._use_saved_points) {
-         this.xmin = Math.min(this.xmin, func.fSave[nsave-6]);
-         this.xmax = Math.max(this.xmax, func.fSave[nsave-5]);
-         this.ymin = Math.min(this.ymin, func.fSave[nsave-4]);
-         this.ymax = Math.max(this.ymax, func.fSave[nsave-3]);
+      if (nsave > 9 && this._use_saved_points) {
+         this.xmin = Math.min(this.xmin, func.fSave[nsave-9]);
+         this.xmax = Math.max(this.xmax, func.fSave[nsave-8]);
+         this.ymin = Math.min(this.ymin, func.fSave[nsave-7]);
+         this.ymax = Math.max(this.ymax, func.fSave[nsave-6]);
+         this.zmin = Math.min(this.zmin, func.fSave[nsave-5]);
+         this.zmax = Math.max(this.zmax, func.fSave[nsave-4]);
       }
       if (func) {
          this.xmin = Math.min(this.xmin, func.fXmin);
          this.xmax = Math.max(this.xmax, func.fXmax);
          this.ymin = Math.min(this.ymin, func.fYmin);
          this.ymax = Math.max(this.ymax, func.fYmax);
+         this.zmin = Math.min(this.zmin, func.fZmin);
+         this.zmax = Math.max(this.zmax, func.fZmax);
       }
    }
 
    /** @summary retrurn tooltips for TF2 */
-   getTF2Tooltips(pnt) {
+   getTF3Tooltips(pnt) {
       const lines = [this.getObjectHint()],
             funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
 
@@ -254,7 +274,7 @@ class TF2Painter extends TH2Painter {
                   x: pnt.x, y: pnt.y,
                   color1: this.lineatt?.color ?? 'green',
                   color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                  lines: this.getTF2Tooltips(pnt), exact: true, menu: true };
+                  lines: this.getTF3Tooltips(pnt), exact: true, menu: true };
 
       if (ttrect.empty()) {
          ttrect = this.draw_g.append('svg:circle')
@@ -278,8 +298,8 @@ class TF2Painter extends TH2Painter {
       opt.fcust = this._fail_eval ? 'func_fail' : '';
    }
 
-   /** @summary draw TF2 object */
-   static async draw(dom, tf2, opt) {
+   /** @summary draw TF3 object */
+   static async draw(dom, tf3, opt) {
       if (!isStr(opt)) opt = '';
       let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
       if (p >= 0) {
@@ -293,15 +313,10 @@ class TF2Painter extends TH2Painter {
       }
 
       const d = new DrawOptions(opt);
-      if (d.empty())
-         opt = 'cont3';
+      if (d.empty() || (opt === 'gl'))
+         opt = 'surf1';
       else if (d.opt === 'SAME')
-         opt = 'cont2 same';
-
-      // workaround for old waves.C
-      const o2 = isStr(opt) ? opt.toUpperCase() : '';
-      if (o2 === 'SAMECOLORZ' || o2 === 'SAMECOLOR' || o2 === 'SAMECOLZ')
-         opt = 'samecol';
+         opt = 'surf1 same';
 
       if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
          if (!getElementMainPainter(dom))
@@ -320,15 +335,15 @@ class TF2Painter extends TH2Painter {
          hist.fBits |= kNoStats;
       }
 
-      const painter = new TF2Painter(dom, hist);
+      const painter = new TF3Painter(dom, hist);
 
-      painter.$func = tf2;
+      painter.$func = tf3;
       painter.webcanv_hist = webcanv_hist;
       painter.force_saved = force_saved;
-      painter.createTF2Histogram(tf2, hist);
+      painter.createTF3Histogram(tf3, hist);
       return THistPainter._drawHist(painter, opt);
    }
 
-} // class TF2Painter
+} // class TF3Painter
 
-export { TF2Painter };
+export { TF3Painter };

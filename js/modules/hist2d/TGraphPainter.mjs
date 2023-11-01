@@ -502,6 +502,8 @@ class TGraphPainter extends ObjectPainter {
      * @desc Can be called several times */
    drawBins(funcs, options, draw_g, w, h, lineatt, fillatt, main_block) {
       const graph = this.getGraph();
+      if (!graph?.fNpoints) return;
+
       let excl_width = 0, drawbins = null;
 
       if (main_block && lineatt.excl_side) {
