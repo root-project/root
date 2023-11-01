@@ -156,26 +156,25 @@ for sample_category in ["data", "higgs", "zz", "other"]:
 # kinematics such as pT or pseudorapidity.
 # Muons uncertainties are negligible, as stated in https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/MUON-2018-03/.
 # Electrons uncertainties are evaluated based on the plots available in https://doi.org/10.48550/arXiv.1908.00005.
-# The uncertainties are linearly interpolated to cover a range of pT values covered by the analysis.
+# The uncertainties are linearly interpolated, using the `TGraph::Eval()` method, to cover a range of pT values covered by the analysis.
 
 # Create a VaryHelper to interpolate the available data.
 ROOT.gInterpreter.Declare(
     """
 using namespace ROOT::VecOps;
-using namespace ROOT::Math;
 
 class VaryHelper
 {
-    std::vector<double> x = {5.50 * 10e2, 5.52 * 10e2, 12.54 * 10e2, 17.43 * 10e2, 22.40 * 10e2, 27.48 * 10e2, 30 * 10e2, 10000 * 10e2};
-    std::vector<double> y = {0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0., 0.};
-    Interpolator inter;
+    const std::vector<double> x{5.50e3, 5.52e3, 12.54e3, 17.43e3, 22.40e3, 27.48e3, 30e3, 10000e3};
+    const std::vector<double> y{0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
+    TGraph graph;
+    
 public:
-    VaryHelper() : inter(x, y, Interpolation::kLINEAR) {}
-
+    VaryHelper() : graph(x.size(), x.data(), y.data()) {}
     RVec<double> operator()(const double &w, const RVecF &pt, const RVec<unsigned int> &type)
     {
         const auto v = Mean(Map(pt[type == 11], [this](auto p)
-        {return this->inter.Eval(p); })
+        {return this->graph.Eval(p); })
         );
         return RVec<double>{(1 + v) * w, (1 - v) * w};
     }
