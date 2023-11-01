@@ -1842,14 +1842,9 @@ Int_t TColor::GetColor(const char *hexcolor)
 /// with as name "#rrggbb" with rr, gg and bb in hex between
 /// [0,FF].
 
-Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
+Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b, Float_t a)
 {
-   Int_t rr, gg, bb;
-   rr = Int_t(r * 255);
-   gg = Int_t(g * 255);
-   bb = Int_t(b * 255);
-
-   return GetColor(rr, gg, bb);
+   return GetColor(Int_t(r * 255), Int_t(g * 255), Int_t(b * 255), a);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1907,24 +1902,35 @@ void TColor::SetColorThreshold(Float_t t)
 ///
 /// The color retrieval is done using a threshold defined by SetColorThreshold.
 
-
-Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
+Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
 {
    TColor::InitializeColors();
-   if (r < 0) r = 0;
-   if (g < 0) g = 0;
-   if (b < 0) b = 0;
-   if (r > 255) r = 255;
-   if (g > 255) g = 255;
-   if (b > 255) b = 255;
+   if (r < 0)
+      r = 0;
+   else if (r > 255)
+      r = 255;
+   if (g < 0)
+      g = 0;
+   else if (g > 255)
+      g = 255;
+   if (b < 0)
+      b = 0;
+   else if (b > 255)
+      b = 255;
+   if (a > 1.)
+      a = 1.;
+   else if (a < 0.)
+      a = 0.;
 
    // Get list of all defined colors
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
 
-   TColor *color = nullptr;
+   TString name = TString::Format("#%02x%02x%02x", r, g, b);
+   if (a != 1.)
+      name.Append(TString::Format("%02x", Int_t(a*255)));
 
    // Look for color by name
-   if ((color = (TColor*) colors->FindObject(TString::Format("#%02x%02x%02x", r, g, b).Data())))
+   if (auto color = static_cast<TColor *>(colors->FindObject(name.Data())))
       // We found the color by name, so we use that right away
       return color->GetNumber();
 
@@ -1946,10 +1952,11 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    }
 
    // Loop over all defined colors
-   while ((color = (TColor*)next())) {
+   while (auto color = static_cast<TColor *>(next())) {
       if (TMath::Abs(color->GetRed() - rr) > thres)   continue;
       if (TMath::Abs(color->GetGreen() - gg) > thres) continue;
       if (TMath::Abs(color->GetBlue() - bb) > thres)  continue;
+      if (TMath::Abs(color->GetAlpha() - a) > thres)  continue;
       // We found a matching color in the color table
       return color->GetNumber();
    }
@@ -1957,8 +1964,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    // We didn't find a matching color in the color table, so we
    // add it. Note name is of the form "#rrggbb" where rr, etc. are
    // hexadecimal numbers.
-   color = new TColor(colors->GetLast()+1, rr, gg, bb,
-                      TString::Format("#%02x%02x%02x", r, g, b).Data());
+   auto color = new TColor(colors->GetLast()+1, rr, gg, bb, name.Data(), a);
 
    return color->GetNumber();
 }
