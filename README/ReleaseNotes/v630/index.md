@@ -369,6 +369,15 @@ the behavior consistent with `RooAbsPdf::fitTo()`. Same applies to
   Have to be used if called from other web-based widget to avoid logical dead-locks.
   In case of normal canvas just canvas->Update() is performed.
 
+## Machine Learning integration
+
+- ROOT now offers functionality to extract batches of events out of a dataset for use in common ML training workflows. For example, one can generate PyTorch tensors from a TTree. The functionality is available through the `RBatchGenerator` class and can be seamlessly integrated in user code, for example:
+   ```python
+   # Returns two generators that return training and validation batches as PyTorch tensors.
+   gen_train, gen_validation = ROOT.TMVA.Experimental.CreatePyTorchGenerators(
+      tree_name, file_name, batch_size, chunk_size, target=target, validation_split=0.3)
+   ```
+   The functionality is also available for TensorFlow datasets and Python generators of numpy arrays. See more in the `RBatchGenerator*` tutorials under the TMVA folder.
 
 ## Language Bindings
 
