@@ -83,28 +83,27 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points, const Co
    assert(points != nullptr && "ResetColor, points parameter is null");
    assert(colorIndices != nullptr && "ResetColor, colorIndices parameter is null");
 
-   fColorPositions.assign(points, points + nPoints);
-   fColors.resize(nPoints * 4);//4 == rgba.
+   std::vector<Double_t> colors(nPoints * 4);
 
-   Float_t rgba[4];
    for (UInt_t i = 0, pos = 0; i < nPoints; ++i, pos += 4) {
       const TColor *clearColor = gROOT->GetColor(colorIndices[i]);
-      if (!clearColor || dynamic_cast<const TColorGradient *>(clearColor)) {
-         //TColorGradient can not be a step in TColorGradient.
+      if (!clearColor) {
          Error("ResetColor", "Bad color for index %d, set to opaque black", colorIndices[i]);
-         fColors[pos] = 0.;
-         fColors[pos + 1] = 0.;
-         fColors[pos + 2] = 0.;
-         fColors[pos + 3] = 1.;//Alpha.
+         colors[pos] = 0.;
+         colors[pos + 1] = 0.;
+         colors[pos + 2] = 0.;
+         colors[pos + 3] = 1.; //Alpha.
       } else {
-         clearColor->GetRGB(rgba[0], rgba[1], rgba[2]);
-         rgba[3] = clearColor->GetAlpha();
-         fColors[pos] = rgba[0];
-         fColors[pos + 1] = rgba[1];
-         fColors[pos + 2] = rgba[2];
-         fColors[pos + 3] = rgba[3];
+         if (dynamic_cast<const TColorGradient *>(clearColor))
+            Warning("ResetColor", "Gradient color index %d used as base for other gradient color", colorIndices[i]);
+         colors[pos] = clearColor->GetRed();
+         colors[pos + 1] = clearColor->GetGreen();
+         colors[pos + 2] = clearColor->GetBlue();
+         colors[pos + 3] = clearColor->GetAlpha();
       }
    }
+
+   ResetColor(nPoints, points, colors.data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +118,14 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points,
 
    fColorPositions.assign(points, points + nPoints);
    fColors.assign(colors, colors + nPoints * 4);
+
+   Double_t sum[4] = { 0., 0., 0., 0. };
+   for (unsigned n = 0; n < fColors.size(); ++n)
+      sum[n % 4] += fColors[n];
+
+   SetRGB(sum[0] / nPoints, sum[1] / nPoints, sum[2] / nPoints);
+   SetAlpha(sum[3] / nPoints);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
