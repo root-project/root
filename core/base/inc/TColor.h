@@ -14,6 +14,8 @@
 
 #include "TNamed.h"
 
+#include <vector>
+
 class TArrayI;
 
 class TColor : public TNamed {
@@ -88,6 +90,7 @@ public:
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
    static Int_t   GetFreeColorIndex();
    static const TArrayI& GetPalette();
+   static Int_t   GetLinearGradient(Bool_t vertical, const std::vector<Int_t> &colors, const std::vector<Double_t> &alfas = {});
    static ULong_t Number2Pixel(Int_t ci);
    static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
    static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
