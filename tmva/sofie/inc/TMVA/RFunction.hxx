@@ -76,6 +76,7 @@ public:
         return fReducer;
     }
     std::string Generate(std::size_t num_features, const std::vector<std::string>& inputTensors);
+    std::string Generate(std::size_t num_features, const std::string & inputTensors);
 
 };
 
