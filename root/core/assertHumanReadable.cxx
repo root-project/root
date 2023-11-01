@@ -46,11 +46,6 @@ int checkParsing(std::string_view input, Long64_t expected)
    }
 }
 
-int checkParsing(ROOT::Internal::TStringView input, Long64_t expected)
-{
-   return checkParsing(std::string_view(input),expected);
-}
-
 int checkParsingSet(const char *unit, Long64_t exp)
 {
    TString value;
