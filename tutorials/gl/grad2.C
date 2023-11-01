@@ -8,7 +8,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
-/// \author  Timur Pocheptsov
+/// \authors  Timur Pocheptsov, Sergey Linev
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
@@ -18,71 +18,36 @@
 #include "TStyle.h"
 #include "TH1F.h"
 
-//Aux. functions for tutorials/gl.
-#include "customcolorgl.h"
-
-void grad2()
+void grad2(bool gl = true)
 {
-   //1. 'Allocate' four indices for our custom colors.
-   //We can use hard-coded indices like 1001, 1002, 1003 ... but
-   //I prefer to find free indices in the ROOT's color table
-   //to avoid possible conflicts with other tutorials.
-   Color_t freeIndices[4] = {};
-   if (ROOT::GLTutorials::FindFreeCustomColorIndices(freeIndices) != 4) {
-      ::Error("grad2", "can not allocate new custom colors");
-      return;
-   }
-
-   //'Aliases' (instead of freeIndices[someIndex])
-   const Color_t customRed = freeIndices[0], grad1 = freeIndices[1];
-   const Color_t customGreen = freeIndices[2], grad2 = freeIndices[3];
-
    //Make sure canvas supports OpenGL.
-   gStyle->SetCanvasPreferGL(kTRUE);
+   gStyle->SetCanvasPreferGL(gl);
 
    //2. Check that we have a canvas with an OpenGL support.
-   TCanvas * const cnv = new TCanvas("gradiend demo 2", "gradient demo 2", 100, 100, 800, 600);
-   if (!cnv->UseGL()) {
-      ::Error("grad2", "This macro requires OpenGL");
-      delete cnv;
-      return;
-   }
+   auto cnv = new TCanvas("grad2", "gradient demo 2", 100, 100, 800, 600);
+   if (!cnv->UseGL() && !cnv->IsWeb())
+      ::Warning("grad2", "This macro requires either OpenGL or Web canvas to correctly handle gradient colors");
 
    //3. Custom colors:
    //   a) Custom semi-transparent red.
-   new TColor(customRed, 1., 0., 0., "red", 0.5);
+   auto customRed = TColor::GetColor((Float_t) 1., 0., 0., 0.5);
 
+   //  Custom semi-transparent green.
+   auto customGreen = TColor::GetColor((Float_t) 0., 1., 0., 0.5);
 
-
+   // 4. Linear gradient colors
    //   b) Gradient (from our semi-transparent red to ROOT's kOrange).
-   //      Linear gradient is defined by: 1) colors (to interpolate between them),
-   //      2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
-   //      3) Start and end points for a gradient, you specify them in some NDC rect ([0,0 - 1,1]),
-   //         and this rect is either: bounding rect of your polygon/object to fill
-   //         (gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
-   //         or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
-   //         kObjectBoundingMode is the default one.
+   //      Linear gradient is defined by: 1) angle in grad
+   //      2) colors (to interpolate between them),
+   //  If necessary, TLinearGradient object can be retrieved and modified later
 
-   const Double_t locations[] = {0., 1.};
-   const Color_t idx1[] = {customRed, kOrange};
-   TLinearGradient * const gradFill1 = new TLinearGradient(grad1, 2, locations, idx1);
+   auto grad1 = TColor::GetLinearGradient(90., {customRed, kOrange});
 
-   typedef TColorGradient::Point Point;
-   //Starting and ending points for a gradient fill (it's a vertical gradient):
-   gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1.));
-
-   //   c) Custom semi-transparent green.
-   new TColor(customGreen, 0., 1., 0., "green", 0.5);
-
-   //   d) Gradient from ROOT's kBlue to our custom green.
-   const Color_t idx2[] = {customGreen, kBlue};
-
-   TLinearGradient * const gradFill2 = new TLinearGradient(grad2, 2, locations, idx2);
    //Vertical gradient fill.
-   gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1.));
+   auto grad2 = TColor::GetLinearGradient(90., {customGreen, kBlue});
 
-   TH1F * const hist = new TH1F("a2", "b2", 10, -2., 3.);
-   TH1F * const hist2 = new TH1F("c3", "d3", 10, -3., 3.);
+   auto hist = new TH1F("a2", "b2", 10, -2., 3.);
+   auto hist2 = new TH1F("c3", "d3", 10, -3., 3.);
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 
