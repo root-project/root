@@ -14,7 +14,7 @@
 #ifndef ROOT_StringUtils
 #define ROOT_StringUtils
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #include <string>
 #include <vector>

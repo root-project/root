@@ -16,7 +16,7 @@
 #ifndef ROOT7_RDaos
 #define ROOT7_RDaos
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/TypeTraits.hxx>
 #include <ROOT/RSpan.hxx>
 

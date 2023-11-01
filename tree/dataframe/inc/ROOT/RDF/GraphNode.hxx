@@ -14,7 +14,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #include <iostream>
 

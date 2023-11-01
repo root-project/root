@@ -14,7 +14,7 @@
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx" // TypeName2TypeID
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "RtypesCore.h"
 
 #include <memory>

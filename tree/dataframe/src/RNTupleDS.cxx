@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <TError.h>
 

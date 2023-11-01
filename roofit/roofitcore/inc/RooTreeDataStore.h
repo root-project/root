@@ -18,7 +18,7 @@
 
 #include "RooAbsDataStore.h"
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #include <vector>
 #include <list>

@@ -15,7 +15,7 @@
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "TChain.h"
 #include "TDirectory.h"
 #include "RtypesCore.h" // for ULong64_t

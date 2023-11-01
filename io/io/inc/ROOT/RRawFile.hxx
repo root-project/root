@@ -12,7 +12,7 @@
 #ifndef ROOT_RRawFile
 #define ROOT_RRawFile
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cstddef>
 #include <cstdint>

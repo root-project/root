@@ -19,7 +19,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RSpan.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <memory>
 #include <vector>

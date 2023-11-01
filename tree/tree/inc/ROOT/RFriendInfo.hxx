@@ -18,7 +18,7 @@
 #ifndef ROOT_RFRIENDINFO_H
 #define ROOT_RFRIENDINFO_H
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <TVirtualIndex.h>
 
 #include <cstdint> // std::int64_t

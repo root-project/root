@@ -19,7 +19,7 @@
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDF/RNodeBase.hxx>
 #include <ROOT/RDF/Utils.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <TBranch.h>
 #include <TClass.h>
 #include <TClassEdit.h>

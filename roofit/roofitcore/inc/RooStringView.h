@@ -13,7 +13,7 @@
 #ifndef roofit_roofitcore_RooStringView_h
 #define roofit_roofitcore_RooStringView_h
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <TString.h>
 
 #include <string>

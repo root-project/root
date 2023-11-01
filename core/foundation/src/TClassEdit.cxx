@@ -24,7 +24,7 @@
 #include <stack>
 // for shared_ptr
 #include <memory>
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include <algorithm>
 
 #include "TSpinLockGuard.h"

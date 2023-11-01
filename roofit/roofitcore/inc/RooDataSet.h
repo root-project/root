@@ -26,7 +26,7 @@ class TDirectory;
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #include <list>
 

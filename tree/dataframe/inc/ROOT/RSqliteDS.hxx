@@ -13,7 +13,7 @@
 
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #include <memory>
 #include <string>

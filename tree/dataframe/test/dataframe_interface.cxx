@@ -3,7 +3,7 @@
 
 #include "ROOT/RCsvDS.hxx"
 #include "ROOT/RDataFrame.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/RTrivialDS.hxx"
 #include "TMemFile.h"
 #include "TSystem.h"

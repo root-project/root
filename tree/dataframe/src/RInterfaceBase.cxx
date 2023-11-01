@@ -13,7 +13,7 @@
 #include <ROOT/RDF/RInterfaceBase.hxx>
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RDF/RVariationsDescription.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <TTree.h>
 
 #include <algorithm> // std::for_each

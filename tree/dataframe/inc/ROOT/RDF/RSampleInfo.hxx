@@ -12,7 +12,7 @@
 #define ROOT_RDF_RSAMPLEINFO
 
 #include <ROOT/RDF/RSample.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <Rtypes.h>
 
 #include <functional>

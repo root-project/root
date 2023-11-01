@@ -26,7 +26,7 @@
 #include "Rtypes.h"
 
 #include "TMathBase.h"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/TypeTraits.hxx"
 #include "snprintf.h"
 

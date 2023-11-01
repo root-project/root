@@ -1,7 +1,7 @@
 #ifndef JSONIOUtils_h
 #define JSONIOUtils_h
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <RooFit/Detail/JSONInterface.h>
 
 bool startsWith(std::string_view str, std::string_view prefix);

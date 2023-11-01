@@ -24,7 +24,7 @@
 #include <ROOT/RDF/RJittedFilter.hxx>
 #include <ROOT/RDF/RJittedVariation.hxx>
 #include <ROOT/RDF/RLoopManager.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/RDF/RVariation.hxx>
 #include <ROOT/TypeTraits.hxx>
 #include <TError.h> // gErrorIgnoreLevel

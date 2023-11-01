@@ -21,7 +21,7 @@
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TypeTraits.hxx>
 

@@ -20,7 +20,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cstdint>
 #include <memory>

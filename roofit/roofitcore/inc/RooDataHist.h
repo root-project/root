@@ -20,7 +20,7 @@
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "Rtypes.h"
 
 #include <map>

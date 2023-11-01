@@ -16,7 +16,7 @@
 #ifndef ROOT7_RColumnModel
 #define ROOT7_RColumnModel
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <string>
 

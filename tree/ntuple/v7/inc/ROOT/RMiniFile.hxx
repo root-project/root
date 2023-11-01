@@ -18,7 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleOptions.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cstdint>
 #include <cstdio>

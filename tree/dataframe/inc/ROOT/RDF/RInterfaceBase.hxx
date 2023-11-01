@@ -18,7 +18,7 @@
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RResultPtr.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <TError.h> // R__ASSERT
 
 #include <memory>

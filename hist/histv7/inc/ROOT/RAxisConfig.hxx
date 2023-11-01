@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 namespace ROOT {
 namespace Experimental {
