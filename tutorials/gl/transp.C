@@ -5,7 +5,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
-/// \author Timur Pocheptsov
+/// \authors Timur Pocheptsov, Sergey Linev
 
 //Includes for ACLiC (cling does not need them).
 #include "TCanvas.h"
@@ -14,32 +14,16 @@
 #include "TStyle.h"
 #include "TH1F.h"
 
-//Aux. functions for tutorials/gl.
-#include "customcolorgl.h"
-
-void transp()
+void transp(bool gl = true)
 {
-   //1. Try to find free indices for our custom colors.
-   //We can use hard-coded indices like 1001, 1002, 1003, ... but
-   //I prefer to find free indices in a ROOT's color table
-   //to avoid possible conflicts with other tutorials.
-   Int_t indices[2] = {};
-   if (ROOT::GLTutorials::FindFreeCustomColorIndices(indices) != 2) {
-      ::Error("transp", "failed to create new custom colors");
-      return;
-   }
-
-   //2. Now that we have indices, create our custom colors.
-   const Int_t redIndex = indices[0], greeIndex = indices[1];
-
-   new TColor(redIndex, 1., 0., 0., "red", 0.85);
-   new TColor(greeIndex, 0., 1., 0., "green", 0.5);
+   auto redIndex = TColor::GetColor((Float_t) 1., 0., 0., 0.85);
+   auto greeIndex = TColor::GetColor((Float_t) 0., 1., 0., 0.5);
 
    gStyle->SetCanvasPreferGL(kTRUE);
-   TCanvas * const cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
+   auto cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
 
-   TH1F * const hist = new TH1F("a5", "b5", 10, -2., 3.);
-   TH1F * const hist2 = new TH1F("c6", "d6", 10, -3., 3.);
+   auto hist = new TH1F("a5", "b5", 10, -2., 3.);
+   auto hist2 = new TH1F("c6", "d6", 10, -3., 3.);
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 
