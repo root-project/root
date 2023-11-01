@@ -2068,11 +2068,13 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the linear gradient color number corresponding to specified parameters.
-/// First parameter set direction, then list of colors and optional alfa parameter for these colors
+/// First parameter set direction as angle in grad. Value 0 is horizontal direction, 90 - vertical
+/// List of colors defines interpolation colors for the gradient
+/// Optional positions can define relative color positions and must be sorted array of values between 0 and 1.
 /// If such gradient not exists - it will be created new
-/// Returns -1 if wrong parameter where specified
+/// Returns -1 if wrong parameters where specified
 
-Int_t TColor::GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &alphas, const std::vector<Double_t> &positions)
+Int_t TColor::GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions)
 {
    if (colors.size() < 2) {
       ::Error("TColor::GetLinearGradient", "number of specified colors %d not enough to create gradients", (int) colors.size());
@@ -2090,7 +2092,7 @@ Int_t TColor::GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors
       raw_colors[indx*4] = color->GetRed();
       raw_colors[indx*4+1] = color->GetGreen();
       raw_colors[indx*4+2] = color->GetBlue();
-      raw_colors[indx*4+3] = indx < alphas.size() ? alphas[indx] : color->GetAlpha();
+      raw_colors[indx*4+3] = color->GetAlpha();
 
       raw_positions[indx] = indx < positions.size() ? positions[indx] : indx / (colors.size() - 1.);
    }
@@ -2143,11 +2145,13 @@ Int_t TColor::GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the radial gradient color number corresponding to specified parameters.
-/// First parameter set radius of gradient (normally 0.5), then list of colors and optional alfa parameter for these colors
+/// First parameter set direction as angle in grad. Value 0 is horizontal direction, 90 - vertical
+/// List of colors defines interpolation colors for the gradient
+/// Optional positions can define relative color positions and must be sorted array of values between 0 and 1.
 /// If such gradient not exists - it will be created new
 /// Returns -1 if wrong parameter where specified
 
-Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &colors, const std::vector<Double_t> &alphas, const std::vector<Double_t> &positions)
+Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions)
 {
    if (colors.size() < 2) {
       ::Error("TColor::GetRadialGradient", "number of specified colors %d not enough to create gradients", (int) colors.size());
@@ -2165,7 +2169,7 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
       raw_colors[indx*4] = color->GetRed();
       raw_colors[indx*4+1] = color->GetGreen();
       raw_colors[indx*4+2] = color->GetBlue();
-      raw_colors[indx*4+3] = indx < alphas.size() ? alphas[indx] : color->GetAlpha();
+      raw_colors[indx*4+3] = color->GetAlpha();
 
       raw_positions[indx] = indx < positions.size() ? positions[indx] : indx / (colors.size() - 1.);
    }
