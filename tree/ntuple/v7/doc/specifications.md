@@ -893,7 +893,7 @@ This section summarizes key design limits of RNTuple data sets.
 
 | Limit                                          | Value                        | Reason / Comment                                     |
 |------------------------------------------------|------------------------------|------------------------------------------------------|
-| Maximum volume                                 | 10 EB (theoretically more)   | Assuming 10k cluster groups of 10k clusters of 100MB |
+| Maximum volume                                 | 10 PB (theoretically more)   | Assuming 10k cluster groups of 10k clusters of 100MB |
 | Maximum number of elements, entries            | 2^64                         | Using default (Split)Index64, otherwise 2^32         |
 | Maximum cluster & entry size                   | 8TB (depends on pagination)  | Assuming limit of 4B pages of 4kB each               |
 | Maximum page size                              | 2B elements, 256MB-2GB       | #elements * element size, 2GB limit from locator     |
