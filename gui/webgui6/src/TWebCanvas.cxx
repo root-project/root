@@ -368,8 +368,7 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 
    auto *listofcols = new TWebPainting;
    for (Int_t n = 0; n <= colors->GetLast(); ++n)
-      if (colors->At(n))
-         listofcols->AddColor(n, (TColor *)colors->At(n));
+      listofcols->AddColor(n, (TColor *)colors->At(n));
 
    // store palette in the buffer
    auto *tgt = listofcols->Reserve(pal.GetSize());
