@@ -8,12 +8,18 @@
 5. Implement "[cutg]" draw option for TH2/TF2 surface plots
 6. Implement `TMath::Sq()` function and several others like SinH, ASinH, ...
 7. Implement histogram drawing build from TGraph2D using Delaunay interpolation
-8. Fix - fit pars in stats box, correct #chi^{2} symbol
-9. Fix - several bugs in TFormula parsing
-10. Fix - correctly use saved buffer in TF1/TF2
-11. Fix - properly adjust size of stats box
-12. Fix - support pol0..pol9 functions
-13. Fix - TGraph bar width should be at least 1 pixel
+8. Provide preliminary `TF3` support
+9. Support `TLinearGradient` and `TRadialGradient` colors
+
+
+## Changes in 7.5.2
+1. Fix - proper fit pars display in stats, proper #chi^{2}
+2. Fix - several bugs in TFormula parsing
+3. Fix - correctly use saved buffer in TF1/TF2
+4. Fix - properly adjust size of stats box
+5. Fix - support pol0..pol9 functions
+6. Fix - TGraph bar width should be at least 1 pixel
+7. Fix - prevent drawing of empty TGraph
 
 
 ## Changes in 7.5.1

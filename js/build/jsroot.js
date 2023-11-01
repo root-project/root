@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '30/10/2023',
+version_date = '1/11/2023',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1038,7 +1038,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
-      clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
+      clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
       kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
@@ -1880,6 +1880,7 @@ clTCutG: clTCutG,
 clTDiamond: clTDiamond,
 clTF1: clTF1,
 clTF2: clTF2,
+clTF3: clTF3,
 clTFile: clTFile,
 clTGaxis: clTGaxis,
 clTGeoNode: clTGeoNode,
@@ -10192,10 +10193,12 @@ async function typesetMathjax(node) {
    return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
 }
 
+const clTLinearGradient = 'TLinearGradient', clTRadialGradient = 'TRadialGradient';
+
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
-function toHex(num, scale) {
-   const s = Math.round(num*(scale || 255)).toString(16);
+function toHex(num, scale = 255) {
+   const s = Math.round(num * scale).toString(16);
    return s.length === 1 ? '0'+s : s;
 }
 
@@ -10294,7 +10297,14 @@ function extendRootColors(jsarr, objarr, grayscale) {
       rgb_array = [];
       for (let n = 0; n < objarr.arr.length; ++n) {
          const col = objarr.arr[n];
-         if (col?._typename !== clTColor) continue;
+         if ((col?._typename === clTLinearGradient) || (col?._typename === clTRadialGradient)) {
+            rgb_array[col.fNumber] = col;
+            col.toString = () => 'white';
+            continue;
+         }
+
+         if (col?._typename !== clTColor)
+            continue;
 
          if ((col.fNumber >= 0) && (col.fNumber <= 10000))
             rgb_array[col.fNumber] = getRGBfromTColor(col);
@@ -10569,6 +10579,50 @@ function getColorPalette(id, grayscale) {
 
     return new ColorPalette(palette, grayscale);
 }
+
+
+/** @summary Decode list of ROOT colors coded by TWebCanvas
+  * @private */
+function decodeWebCanvasColors(oper) {
+   const colors = [], arr = oper.split(';');
+   for (let n = 0; n < arr.length; ++n) {
+      const name = arr[n];
+      let p = name.indexOf(':');
+      if (p > 0) {
+         colors[parseInt(name.slice(0, p))] = color(`rgb(${name.slice(p+1)})`).formatHex();
+         continue;
+      }
+      p = name.indexOf('=');
+      if (p > 0) {
+         colors[parseInt(name.slice(0, p))] = color(`rgba(${name.slice(p+1)})`).formatHex8();
+         continue;
+      }
+      p = name.indexOf('#');
+      if (p < 0) continue;
+
+      const colindx = parseInt(name.slice(0, p)),
+            data = JSON.parse(name.slice(p+1)),
+            grad = { _typename: data[0] === 10 ? clTLinearGradient : clTRadialGradient, fNumber: colindx, fType: data[0] };
+
+      let cnt = 1;
+
+      grad.fCoordinateMode = Math.round(data[cnt++]);
+      const nsteps = Math.round(data[cnt++]);
+      grad.fColorPositions = data.slice(cnt, cnt + nsteps); cnt += nsteps;
+      grad.fColors = data.slice(cnt, cnt + 4*nsteps); cnt += 4*nsteps;
+      grad.fStart = { fX: data[cnt++], fY: data[cnt++] };
+      grad.fEnd = { fX: data[cnt++], fY: data[cnt++] };
+      if (grad._typename === clTRadialGradient && cnt < data.length) {
+         grad.fR1 = data[cnt++];
+         grad.fR2 = data[cnt++];
+      }
+
+      colors[colindx] = grad;
+   }
+
+   return colors;
+}
+
 
 createRootColors();
 
@@ -10958,7 +11012,7 @@ class TAttFillHandler {
    /** @summary Check if solid fill is used, also color can be checked
      * @param {string} [solid_color] - when specified, checks if fill color matches */
    isSolid(solid_color) {
-      if (this.pattern !== 1001) return false;
+      if ((this.pattern !== 1001) || this.gradient) return false;
       return !solid_color || (solid_color === this.color);
    }
 
@@ -10981,6 +11035,7 @@ class TAttFillHandler {
      * @param {object} [painter] - when specified, used to extract color by index */
    change(color$1, pattern, svg, color_as_svg, painter) {
       delete this.pattern_url;
+      delete this.gradient;
       this.changed = true;
 
       if ((color$1 !== undefined) && Number.isInteger(parseInt(color$1)) && !color_as_svg)
@@ -11018,221 +11073,234 @@ class TAttFillHandler {
       } else
          this.color = painter ? painter.getColor(indx) : getColor(indx);
 
-      if (!isStr(this.color)) this.color = 'none';
+      if (!isStr(this.color)) {
+         if (isObject(this.color) && (this.color?._typename === clTLinearGradient || this.color?._typename === clTRadialGradient))
+            this.gradient = this.color;
+         this.color = 'none';
+      }
 
       if (this.isSolid()) return true;
 
-      if ((this.pattern >= 4000) && (this.pattern <= 4100)) {
-         // special transparent colors (use for subpads)
-         this.opacity = (this.pattern - 4000) / 100;
-         return true;
-      }
-
-      if (!svg || svg.empty() || (this.pattern < 3000) || (this.color === 'none')) return false;
-
-      let id = `pat_${this.pattern}_${indx}`,
-          lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
-
-      switch (this.pattern) {
-         case 3001: w = h = 2; fills = 'M0,0h1v1h-1zM1,1h1v1h-1z'; break;
-         case 3002: w = 4; h = 2; fills = 'M1,0h1v1h-1zM3,1h1v1h-1z'; break;
-         case 3003: w = h = 4; fills = 'M2,1h1v1h-1zM0,3h1v1h-1z'; break;
-         case 3004: w = h = 8; lines = 'M8,0L0,8'; break;
-         case 3005: w = h = 8; lines = 'M0,0L8,8'; break;
-         case 3006: w = h = 4; lines = 'M1,0v4'; break;
-         case 3007: w = h = 4; lines = 'M0,1h4'; break;
-         case 3008:
-            w = h = 10;
-            fills = 'M0,3v-3h3ZM7,0h3v3ZM0,7v3h3ZM7,10h3v-3ZM5,2l3,3l-3,3l-3,-3Z';
-            lines = 'M0,3l5,5M3,10l5,-5M10,7l-5,-5M7,0l-5,5';
-            break;
-         case 3009: w = 12; h = 12; lines = 'M0,0A6,6,0,0,0,12,0M6,6A6,6,0,0,0,12,12M6,6A6,6,0,0,1,0,12'; lfill = 'none'; break;
-         case 3010: w = h = 10; lines = 'M0,2h10M0,7h10M2,0v2M7,2v5M2,7v3'; break; // bricks
-         case 3011: w = 9; h = 18; lines = 'M5,0v8M2,1l6,6M8,1l-6,6M9,9v8M6,10l3,3l-3,3M0,9v8M3,10l-3,3l3,3'; lfill = 'none'; break;
-         case 3012: w = 10; h = 20; lines = 'M5,1A4,4,0,0,0,5,9A4,4,0,0,0,5,1M0,11A4,4,0,0,1,0,19M10,11A4,4,0,0,0,10,19'; lfill = 'none'; break;
-         case 3013: w = h = 7; lines = 'M0,0L7,7M7,0L0,7'; lfill = 'none'; break;
-         case 3014: w = h = 16; lines = 'M0,0h16v16h-16v-16M0,12h16M12,0v16M4,0v8M4,4h8M0,8h8M8,4v8'; lfill = 'none'; break;
-         case 3015: w = 6; h = 12; lines = 'M2,1A2,2,0,0,0,2,5A2,2,0,0,0,2,1M0,7A2,2,0,0,1,0,11M6,7A2,2,0,0,0,6,11'; lfill = 'none'; break;
-         case 3016: w = 12; h = 7; lines = 'M0,1A3,2,0,0,1,3,3A3,2,0,0,0,9,3A3,2,0,0,1,12,1'; lfill = 'none'; break;
-         case 3017: w = h = 4; lines = 'M3,1l-2,2'; break;
-         case 3018: w = h = 4; lines = 'M1,1l2,2'; break;
-         case 3019:
-            w = h = 12;
-            lines = 'M1,6A5,5,0,0,0,11,6A5,5,0,0,0,1,6h-1h1A5,5,0,0,1,6,11v1v-1A5,5,0,0,1,11,6h1h-1A5,5,0,0,1,6,1v-1v1A5,5,0,0,1,1,6';
-            lfill = 'none';
-            break;
-         case 3020: w = 7; h = 12; lines = 'M1,0A2,3,0,0,0,3,3A2,3,0,0,1,3,9A2,3,0,0,0,1,12'; lfill = 'none'; break;
-         case 3021: w = h = 8; lines = 'M8,2h-2v4h-4v2M2,0v2h-2'; lfill = 'none'; break; // left stairs
-         case 3022: w = h = 8; lines = 'M0,2h2v4h4v2M6,0v2h2'; lfill = 'none'; break; // right stairs
-         case 3023: w = h = 8; fills = 'M4,0h4v4zM8,4v4h-4z'; fills2 = 'M4,0L0,4L4,8L8,4Z'; break;
-         case 3024: w = h = 16; fills = 'M0,8v8h2v-8zM8,0v8h2v-8M4,14v2h12v-2z'; fills2 = 'M0,2h8v6h4v-6h4v12h-12v-6h-4z'; break;
-         case 3025: w = h = 18; fills = 'M5,13v-8h8ZM18,0v18h-18l5,-5h8v-8Z'; break;
-         default: {
-            if ((this.pattern > 3025) && (this.pattern < 3100)) {
-               // same as 3002, see TGX11.cxx, line 2234
-               w = 4; h = 2; fills = 'M1,0h1v1h-1zM3,1h1v1h-1z'; break;
-            }
-
-            const code = this.pattern % 1000,
-                  k = code % 10,
-                  j = ((code - k) % 100) / 10,
-                  i = (code - j * 10 - k) / 100;
-            if (!i) break;
-
-            // use flexible hatches only possible when single pattern is used,
-            // otherwise it is not possible to adjust pattern dimension that both hatches match with each other
-            const use_new = (j === k) || (j === 0) || (j === 5) || (j === 9) || (k === 0) || (k === 5) || (k === 9),
-                  pp = painter?.getPadPainter(),
-                  scale_size = pp ? Math.max(pp.getPadWidth(), pp.getPadHeight()) : 600,
-                  spacing_original = Math.max(0.1, gStyle.fHatchesSpacing * scale_size * 0.001),
-                  hatches_spacing = Math.max(1, Math.round(spacing_original)) * 6,
-                  sz = i * hatches_spacing; // axis distance between lines
-
-            id += use_new ? `_hn${Math.round(spacing_original*100)}` : `_ho${hatches_spacing}`;
-
-            w = h = 6 * sz; // we use at least 6 steps
-
-            const produce_old = (dy, swap) => {
-               const pos = [];
-               let step = sz, y1 = 0, max = h, y2, x1, x2;
-
-               // reduce step for smaller angles to keep normal distance approx same
-               if (Math.abs(dy) < 3)
-                  step = Math.round(sz / 12 * 9);
-               if (dy === 0) {
-                  step = Math.round(sz / 12 * 8);
-                  y1 = step / 2;
-               } else if (dy > 0)
-                  max -= step;
-               else
-                  y1 = step;
-
-               while (y1 <= max) {
-                  y2 = y1 + dy * step;
-                  if (y2 < 0) {
-                     x2 = Math.round(y1 / (y1 - y2) * w);
-                     pos.push(0, y1, x2, 0);
-                     pos.push(w, h - y1, w - x2, h);
-                  } else if (y2 > h) {
-                     x2 = Math.round((h - y1) / (y2 - y1) * w);
-                     pos.push(0, y1, x2, h);
-                     pos.push(w, h - y1, w - x2, 0);
-                  } else
-                     pos.push(0, y1, w, y2);
-                  y1 += step;
-               }
-               for (let k = 0; k < pos.length; k += 4) {
-                  if (swap) {
-                     x1 = pos[k+1];
-                     y1 = pos[k];
-                     x2 = pos[k+3];
-                     y2 = pos[k+2];
-                  } else {
-                     x1 = pos[k];
-                     y1 = pos[k+1];
-                     x2 = pos[k+2];
-                     y2 = pos[k+3];
-                  }
-                  lines += `M${x1},${y1}`;
-                  if (y2 === y1)
-                     lines += `h${x2-x1}`;
-                  else if (x2 === x1)
-                     lines += `v${y2-y1}`;
-                  else
-                     lines += `L${x2},${y2}`;
-               }
-            },
-
-            produce_new = (_aa, _bb, angle, swapx) => {
-               if ((angle === 0) || (angle === 90)) {
-                  const dy = i*spacing_original*3,
-                        nsteps = Math.round(h / dy),
-                        dyreal = h / nsteps;
-                  let yy = dyreal/2;
-
-                  while (yy < h) {
-                     if (angle === 0)
-                        lines += `M0,${Math.round(yy)}h${w}`;
-                     else
-                        lines += `M${Math.round(yy)},0v${h}`;
-                     yy += dyreal;
-                  }
-
-                  return;
-               }
-
-               const a = angle/180*Math.PI,
-                     dy = i*spacing_original*3/Math.cos(a),
-                     hside = Math.tan(a) * w,
-                     hside_steps = Math.round(hside / dy),
-                     dyreal = hside / hside_steps,
-                     nsteps = Math.floor(h / dyreal);
-
-               h = Math.round(nsteps * dyreal);
-
-               let yy = nsteps * dyreal;
-
-               while (Math.abs(yy-h) < 0.1) yy -= dyreal;
-
-               while (yy + hside > 0) {
-                  let x1 = 0, y1 = yy, x2 = w, y2 = yy + hside;
-
-                  if (y1 < -0.00001) {
-                     // cut at the begin
-                     x1 = -y1 / hside * w;
-                     y1 = 0;
-                  } else if (y2 > h) {
-                     // cut at the end
-                     x2 = (h - y1) / hside * w;
-                     y2 = h;
-                  }
-
-                  if (swapx) {
-                     x1 = w - x1;
-                     x2 = w - x2;
-                  }
-
-                  lines += `M${Math.round(x1)},${Math.round(y1)}L${Math.round(x2)},${Math.round(y2)}`;
-                  yy -= dyreal;
-               }
-            },
-
-            func = use_new ? produce_new : produce_old;
-
-            let horiz = false, vertical = false;
-
-            switch (j) {
-               case 0: horiz = true; break;
-               case 1: func(1, false, 10); break;
-               case 2: func(2, false, 20); break;
-               case 3: func(3, false, 30); break;
-               case 4: func(6, false, 45); break;
-               case 6: func(3, true, 60); break;
-               case 7: func(2, true, 70); break;
-               case 8: func(1, true, 80); break;
-               case 9: vertical = true; break;
-            }
-
-            switch (k) {
-               case 0: horiz = true; break;
-               case 1: func(-1, false, 10, true); break;
-               case 2: func(-2, false, 20, true); break;
-               case 3: func(-3, false, 30, true); break;
-               case 4: func(-6, false, 45, true); break;
-               case 6: func(-3, true, 60, true); break;
-               case 7: func(-2, true, 70, true); break;
-               case 8: func(-1, true, 80, true); break;
-               case 9: vertical = true; break;
-            }
-
-            if (horiz) func(0, false, 0);
-            if (vertical) func(0, true, 90);
-
-            break;
+      if (!this.gradient) {
+         if ((this.pattern >= 4000) && (this.pattern <= 4100)) {
+            // special transparent colors (use for subpads)
+            this.opacity = (this.pattern - 4000) / 100;
+            return true;
          }
+         if ((this.pattern < 3000) || (this.color === 'none'))
+            return false;
       }
 
-      if (!fills && !lines) return false;
+      if (!svg || svg.empty()) return false;
+
+      let id = '', lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
+
+      if (this.gradient)
+         id = `grad_${this.gradient.fNumber}`;
+      else {
+         id = `pat_${this.pattern}_${indx}`;
+
+         switch (this.pattern) {
+            case 3001: w = h = 2; fills = 'M0,0h1v1h-1zM1,1h1v1h-1z'; break;
+            case 3002: w = 4; h = 2; fills = 'M1,0h1v1h-1zM3,1h1v1h-1z'; break;
+            case 3003: w = h = 4; fills = 'M2,1h1v1h-1zM0,3h1v1h-1z'; break;
+            case 3004: w = h = 8; lines = 'M8,0L0,8'; break;
+            case 3005: w = h = 8; lines = 'M0,0L8,8'; break;
+            case 3006: w = h = 4; lines = 'M1,0v4'; break;
+            case 3007: w = h = 4; lines = 'M0,1h4'; break;
+            case 3008:
+               w = h = 10;
+               fills = 'M0,3v-3h3ZM7,0h3v3ZM0,7v3h3ZM7,10h3v-3ZM5,2l3,3l-3,3l-3,-3Z';
+               lines = 'M0,3l5,5M3,10l5,-5M10,7l-5,-5M7,0l-5,5';
+               break;
+            case 3009: w = 12; h = 12; lines = 'M0,0A6,6,0,0,0,12,0M6,6A6,6,0,0,0,12,12M6,6A6,6,0,0,1,0,12'; lfill = 'none'; break;
+            case 3010: w = h = 10; lines = 'M0,2h10M0,7h10M2,0v2M7,2v5M2,7v3'; break; // bricks
+            case 3011: w = 9; h = 18; lines = 'M5,0v8M2,1l6,6M8,1l-6,6M9,9v8M6,10l3,3l-3,3M0,9v8M3,10l-3,3l3,3'; lfill = 'none'; break;
+            case 3012: w = 10; h = 20; lines = 'M5,1A4,4,0,0,0,5,9A4,4,0,0,0,5,1M0,11A4,4,0,0,1,0,19M10,11A4,4,0,0,0,10,19'; lfill = 'none'; break;
+            case 3013: w = h = 7; lines = 'M0,0L7,7M7,0L0,7'; lfill = 'none'; break;
+            case 3014: w = h = 16; lines = 'M0,0h16v16h-16v-16M0,12h16M12,0v16M4,0v8M4,4h8M0,8h8M8,4v8'; lfill = 'none'; break;
+            case 3015: w = 6; h = 12; lines = 'M2,1A2,2,0,0,0,2,5A2,2,0,0,0,2,1M0,7A2,2,0,0,1,0,11M6,7A2,2,0,0,0,6,11'; lfill = 'none'; break;
+            case 3016: w = 12; h = 7; lines = 'M0,1A3,2,0,0,1,3,3A3,2,0,0,0,9,3A3,2,0,0,1,12,1'; lfill = 'none'; break;
+            case 3017: w = h = 4; lines = 'M3,1l-2,2'; break;
+            case 3018: w = h = 4; lines = 'M1,1l2,2'; break;
+            case 3019:
+               w = h = 12;
+               lines = 'M1,6A5,5,0,0,0,11,6A5,5,0,0,0,1,6h-1h1A5,5,0,0,1,6,11v1v-1A5,5,0,0,1,11,6h1h-1A5,5,0,0,1,6,1v-1v1A5,5,0,0,1,1,6';
+               lfill = 'none';
+               break;
+            case 3020: w = 7; h = 12; lines = 'M1,0A2,3,0,0,0,3,3A2,3,0,0,1,3,9A2,3,0,0,0,1,12'; lfill = 'none'; break;
+            case 3021: w = h = 8; lines = 'M8,2h-2v4h-4v2M2,0v2h-2'; lfill = 'none'; break; // left stairs
+            case 3022: w = h = 8; lines = 'M0,2h2v4h4v2M6,0v2h2'; lfill = 'none'; break; // right stairs
+            case 3023: w = h = 8; fills = 'M4,0h4v4zM8,4v4h-4z'; fills2 = 'M4,0L0,4L4,8L8,4Z'; break;
+            case 3024: w = h = 16; fills = 'M0,8v8h2v-8zM8,0v8h2v-8M4,14v2h12v-2z'; fills2 = 'M0,2h8v6h4v-6h4v12h-12v-6h-4z'; break;
+            case 3025: w = h = 18; fills = 'M5,13v-8h8ZM18,0v18h-18l5,-5h8v-8Z'; break;
+            default: {
+               if ((this.pattern > 3025) && (this.pattern < 3100)) {
+                  // same as 3002, see TGX11.cxx, line 2234
+                  w = 4; h = 2; fills = 'M1,0h1v1h-1zM3,1h1v1h-1z'; break;
+               }
+
+               const code = this.pattern % 1000,
+                     k = code % 10,
+                     j = ((code - k) % 100) / 10,
+                     i = (code - j * 10 - k) / 100;
+               if (!i) break;
+
+               // use flexible hatches only possible when single pattern is used,
+               // otherwise it is not possible to adjust pattern dimension that both hatches match with each other
+               const use_new = (j === k) || (j === 0) || (j === 5) || (j === 9) || (k === 0) || (k === 5) || (k === 9),
+                     pp = painter?.getPadPainter(),
+                     scale_size = pp ? Math.max(pp.getPadWidth(), pp.getPadHeight()) : 600,
+                     spacing_original = Math.max(0.1, gStyle.fHatchesSpacing * scale_size * 0.001),
+                     hatches_spacing = Math.max(1, Math.round(spacing_original)) * 6,
+                     sz = i * hatches_spacing; // axis distance between lines
+
+               id += use_new ? `_hn${Math.round(spacing_original*100)}` : `_ho${hatches_spacing}`;
+
+               w = h = 6 * sz; // we use at least 6 steps
+
+               const produce_old = (dy, swap) => {
+                  const pos = [];
+                  let step = sz, y1 = 0, max = h, y2, x1, x2;
+
+                  // reduce step for smaller angles to keep normal distance approx same
+                  if (Math.abs(dy) < 3)
+                     step = Math.round(sz / 12 * 9);
+                  if (dy === 0) {
+                     step = Math.round(sz / 12 * 8);
+                     y1 = step / 2;
+                  } else if (dy > 0)
+                     max -= step;
+                  else
+                     y1 = step;
+
+                  while (y1 <= max) {
+                     y2 = y1 + dy * step;
+                     if (y2 < 0) {
+                        x2 = Math.round(y1 / (y1 - y2) * w);
+                        pos.push(0, y1, x2, 0);
+                        pos.push(w, h - y1, w - x2, h);
+                     } else if (y2 > h) {
+                        x2 = Math.round((h - y1) / (y2 - y1) * w);
+                        pos.push(0, y1, x2, h);
+                        pos.push(w, h - y1, w - x2, 0);
+                     } else
+                        pos.push(0, y1, w, y2);
+                     y1 += step;
+                  }
+                  for (let k = 0; k < pos.length; k += 4) {
+                     if (swap) {
+                        x1 = pos[k+1];
+                        y1 = pos[k];
+                        x2 = pos[k+3];
+                        y2 = pos[k+2];
+                     } else {
+                        x1 = pos[k];
+                        y1 = pos[k+1];
+                        x2 = pos[k+2];
+                        y2 = pos[k+3];
+                     }
+                     lines += `M${x1},${y1}`;
+                     if (y2 === y1)
+                        lines += `h${x2-x1}`;
+                     else if (x2 === x1)
+                        lines += `v${y2-y1}`;
+                     else
+                        lines += `L${x2},${y2}`;
+                  }
+               },
+
+               produce_new = (_aa, _bb, angle, swapx) => {
+                  if ((angle === 0) || (angle === 90)) {
+                     const dy = i*spacing_original*3,
+                           nsteps = Math.round(h / dy),
+                           dyreal = h / nsteps;
+                     let yy = dyreal/2;
+
+                     while (yy < h) {
+                        if (angle === 0)
+                           lines += `M0,${Math.round(yy)}h${w}`;
+                        else
+                           lines += `M${Math.round(yy)},0v${h}`;
+                        yy += dyreal;
+                     }
+
+                     return;
+                  }
+
+                  const a = angle/180*Math.PI,
+                        dy = i*spacing_original*3/Math.cos(a),
+                        hside = Math.tan(a) * w,
+                        hside_steps = Math.round(hside / dy),
+                        dyreal = hside / hside_steps,
+                        nsteps = Math.floor(h / dyreal);
+
+                  h = Math.round(nsteps * dyreal);
+
+                  let yy = nsteps * dyreal;
+
+                  while (Math.abs(yy-h) < 0.1) yy -= dyreal;
+
+                  while (yy + hside > 0) {
+                     let x1 = 0, y1 = yy, x2 = w, y2 = yy + hside;
+
+                     if (y1 < -0.00001) {
+                        // cut at the begin
+                        x1 = -y1 / hside * w;
+                        y1 = 0;
+                     } else if (y2 > h) {
+                        // cut at the end
+                        x2 = (h - y1) / hside * w;
+                        y2 = h;
+                     }
+
+                     if (swapx) {
+                        x1 = w - x1;
+                        x2 = w - x2;
+                     }
+
+                     lines += `M${Math.round(x1)},${Math.round(y1)}L${Math.round(x2)},${Math.round(y2)}`;
+                     yy -= dyreal;
+                  }
+               },
+
+               func = use_new ? produce_new : produce_old;
+
+               let horiz = false, vertical = false;
+
+               switch (j) {
+                  case 0: horiz = true; break;
+                  case 1: func(1, false, 10); break;
+                  case 2: func(2, false, 20); break;
+                  case 3: func(3, false, 30); break;
+                  case 4: func(6, false, 45); break;
+                  case 6: func(3, true, 60); break;
+                  case 7: func(2, true, 70); break;
+                  case 8: func(1, true, 80); break;
+                  case 9: vertical = true; break;
+               }
+
+               switch (k) {
+                  case 0: horiz = true; break;
+                  case 1: func(-1, false, 10, true); break;
+                  case 2: func(-2, false, 20, true); break;
+                  case 3: func(-3, false, 30, true); break;
+                  case 4: func(-6, false, 45, true); break;
+                  case 6: func(-3, true, 60, true); break;
+                  case 7: func(-2, true, 70, true); break;
+                  case 8: func(-1, true, 80, true); break;
+                  case 9: vertical = true; break;
+               }
+
+               if (horiz) func(0, false, 0);
+               if (vertical) func(0, true, 90);
+
+               break;
+            }
+         }
+
+         if (!fills && !lines) return false;
+      }
 
       this.pattern_url = `url(#${id})`;
       this.antialias = false;
@@ -11242,17 +11310,41 @@ class TAttFillHandler {
          defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
       if (defs.selectChild('.' + id).empty()) {
-         const patt = defs.append('svg:pattern')
-                          .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
-                          .attr('width', w).attr('height', h);
+         if (this.gradient) {
+            const is_linear = this.gradient._typename === clTLinearGradient,
+                  grad = defs.append(is_linear ? 'svg:linearGradient' : 'svg:radialGradient')
+                             .attr('id', id).attr('class', id),
+                  conv = v => { return v === Math.round(v) ? v.toFixed(0) : v.toFixed(2); };
+            if (is_linear) {
+               grad.attr('x1', conv(this.gradient.fStart.fX))
+                   .attr('y1', conv(1 - this.gradient.fStart.fY))
+                   .attr('x2', conv(this.gradient.fEnd.fX))
+                   .attr('y2', conv(1 - this.gradient.fEnd.fY));
+            } else {
+               grad.attr('cx', conv(this.gradient.fStart.fX))
+                   .attr('cy', conv(1 - this.gradient.fStart.fY))
+                   .attr('cr', conv(this.gradient.fR1));
+            }
+            for (let n = 0; n < this.gradient.fColorPositions.length; ++n) {
+               const pos = this.gradient.fColorPositions[n],
+                     col = '#' + toHex(this.gradient.fColors[n*4]) + toHex(this.gradient.fColors[n*4+1]) + toHex(this.gradient.fColors[n*4+2]);
+               grad.append('svg:stop').attr('offset', `${Math.round(pos*100)}%`)
+                                      .attr('stop-color', col)
+                                      .attr('stop-opacity', `${Math.round(this.gradient.fColors[n*4+3]*100)}%`);
+            }
+         } else {
+            const patt = defs.append('svg:pattern')
+                             .attr('id', id).attr('class', id).attr('patternUnits', 'userSpaceOnUse')
+                             .attr('width', w).attr('height', h);
 
-         if (fills2) {
-            const col = rgb(this.color);
-            col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
-            patt.append('svg:path').attr('d', fills2).style('fill', col);
+            if (fills2) {
+               const col = rgb(this.color);
+               col.r = Math.round((col.r + 255) / 2); col.g = Math.round((col.g + 255) / 2); col.b = Math.round((col.b + 255) / 2);
+               patt.append('svg:path').attr('d', fills2).style('fill', col);
+            }
+            if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
+            if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth || 1).style('fill', lfill);
          }
-         if (fills) patt.append('svg:path').attr('d', fills).style('fill', this.color);
-         if (lines) patt.append('svg:path').attr('d', lines).style('stroke', this.color).style('stroke-width', gStyle.fHatchesLineWidth || 1).style('fill', lfill);
       }
 
       return true;
@@ -67297,6 +67389,43 @@ class TPadPainter extends ObjectPainter {
       }
    }
 
+   /** @summary Process special snaps like colors or style objects
+     * @return {Promise} index where processing should start
+     * @private */
+   processSpecialSnaps(lst) {
+      while (lst?.length) {
+         const snap = lst[0];
+
+         // gStyle object
+         if (snap.fKind === webSnapIds.kStyle) {
+            lst.shift();
+            Object.assign(gStyle, snap.fSnapshot);
+         } else if (snap.fKind === webSnapIds.kColors) {
+            lst.shift();
+            const ListOfColors = decodeWebCanvasColors(snap.fSnapshot.fOper);
+
+            // set global list of colors
+            if (!this.options || this.options.GlobalColors)
+               adoptRootColors(ListOfColors);
+
+            const colors = extendRootColors(null, ListOfColors, this.pad?.TestBit(kIsGrayscale));
+
+            // copy existing colors and extend with new values
+            this._custom_colors = this.options?.LocalColors ? colors : null;
+
+            // set palette
+            if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
+               const palette = [];
+               for (let n = 0; n < snap.fSnapshot.fBuf.length; ++n)
+                  palette[n] = colors[Math.round(snap.fSnapshot.fBuf[n])];
+
+               this.custom_palette = new ColorPalette(palette);
+            }
+         } else
+            break;
+      }
+   }
+
    /** @summary Function called when drawing next snapshot from the list
      * @return {Promise} for drawing of the snap
      * @private */
@@ -67324,17 +67453,7 @@ class TPadPainter extends ObjectPainter {
 
       // list of colors
       if (snap.fKind === webSnapIds.kColors) {
-         const ListOfColors = [], arr = snap.fSnapshot.fOper.split(';');
-         for (let n = 0; n < arr.length; ++n) {
-            const name = arr[n];
-            let p = name.indexOf(':');
-            if (p > 0)
-               ListOfColors[parseInt(name.slice(0, p))] = color(`rgb(${name.slice(p+1)})`).formatHex();
-             else {
-               p = name.indexOf('=');
-               ListOfColors[parseInt(name.slice(0, p))] = color(`rgba(${name.slice(p+1)})`).formatHex8();
-            }
-         }
+         const ListOfColors = decodeWebCanvasColors(snap.fSnapshot.fOper);
 
          // set global list of colors
          if (!this.options || this.options.GlobalColors)
@@ -67400,6 +67519,8 @@ class TPadPainter extends ObjectPainter {
          padpainter._readonly = snap.fReadOnly ?? false; // readonly flag
          padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
          padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
+
+         padpainter.processSpecialSnaps(snap.fPrimitives); // need to process style and colors before creating graph elements
 
          padpainter.createPadSvg();
 
@@ -67495,6 +67616,8 @@ class TPadPainter extends ObjectPainter {
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
             registerForResize(this.brlayout);
          }
+
+         this.processSpecialSnaps(snap.fPrimitives);
 
          this.createCanvasSvg(0);
 
@@ -70741,6 +70864,11 @@ class THistDrawOptions {
       if (d.check('R3D_', true))
          this.Render3D = constants$1.Render3D.fromString(d.part.toLowerCase());
 
+      if (d.check('POL')) this.System = kPOLAR;
+      if (d.check('CYL')) this.System = kCYLINDRICAL;
+      if (d.check('SPH')) this.System = kSPHERICAL;
+      if (d.check('PSR')) this.System = kRAPIDITY;
+
       if (d.check('SURF', true)) {
          this.Surf = d.partAsInt(10, 1);
          check3dbox = d.part;
@@ -70813,10 +70941,6 @@ class THistDrawOptions {
       }
 
       if (d.check('SCAT')) this.Scat = true;
-      if (d.check('POL')) this.System = kPOLAR;
-      if (d.check('CYL')) this.System = kCYLINDRICAL;
-      if (d.check('SPH')) this.System = kSPHERICAL;
-      if (d.check('PSR')) this.System = kRAPIDITY;
 
       if (d.check('TRI', true)) {
          this.Color = false;
@@ -80007,7 +80131,7 @@ class TH3Painter extends THistPainter {
       }
 
 
-      if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit, 3);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF3), dofit, 3);
 
       return true;
    }
@@ -100392,7 +100516,7 @@ drawFuncs = { lst: [
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
    { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
    { name: clTProfile2D, sameas: clTH2 },
-   { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions },
+   { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions, for_derived: true },
    { name: clTProfile3D, sameas: clTH3 },
    { name: clTHStack, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return THStackPainter$1; }).then(h => h.THStackPainter), expand_item: 'fHists', opt: 'NOSTACK;HIST;E;PFC;PLC' },
    { name: clTPolyMarker3D, icon: 'img_histo3d', draw: () => Promise.resolve().then(function () { return draw3d; }).then(h => h.drawPolyMarker3D), direct: true, frame: '3d' },
@@ -100423,6 +100547,7 @@ drawFuncs = { lst: [
    { name: clTObjString, icon: 'img_text', func: drawRawText },
    { name: clTF1, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TF1Painter$1; }).then(h => h.TF1Painter) },
    { name: clTF2, icon: 'img_tf2', class: () => Promise.resolve().then(function () { return TF2Painter$1; }).then(h => h.TF2Painter), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
+   { name: clTF3, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TF3Painter$1; }).then(h => h.TF3Painter), opt: ';SURF' },
    { name: clTSpline3, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TSplinePainter$1; }).then(h => h.TSplinePainter) },
    { name: 'TSpline5', sameas: clTSpline3 },
    { name: clTEllipse, icon: 'img_graph', draw: () => import_more().then(h => h.drawEllipse), direct: true },
@@ -106109,6 +106234,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
      * @desc Can be called several times */
    drawBins(funcs, options, draw_g, w, h, lineatt, fillatt, main_block) {
       const graph = this.getGraph();
+      if (!graph?.fNpoints) return;
+
       let excl_width = 0, drawbins = null;
 
       if (main_block && lineatt.excl_side) {
@@ -110432,12 +110559,18 @@ function proivdeEvalPar(obj) {
 
    if (isformula) {
       _func = _func.replace(/x\[0\]/g, 'x');
-      if (obj._typename === clTF2) {
+      if (obj._typename === clTF3) {
+         _func = _func.replace(/x\[1\]/g, 'y');
+         _func = _func.replace(/x\[2\]/g, 'z');
+         obj.evalPar = new Function('x', 'y', 'z', _func).bind(obj);
+      } else if (obj._typename === clTF2) {
          _func = _func.replace(/x\[1\]/g, 'y');
          obj.evalPar = new Function('x', 'y', _func).bind(obj);
       } else
          obj.evalPar = new Function('x', _func).bind(obj);
-   } else if (obj._typename === clTF2)
+   } else if (obj._typename === clTF3)
+      obj.evalPar = new Function('x', 'y', 'z', 'return ' + _func).bind(obj);
+   else if (obj._typename === clTF2)
       obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
    else
       obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
@@ -110532,8 +110665,8 @@ class TF1Painter extends TH1Painter$2 {
          if (hist.fNcells !== num + 2) {
             hist.fNcells = num + 2;
             hist.fArray = new Float32Array(hist.fNcells);
-            hist.fArray.fill(0);
          }
+         hist.fArray.fill(0);
          hist.fXaxis.fNbins = num;
          hist.fXaxis.fXbins = [];
       };
@@ -111972,8 +112105,8 @@ class TF2Painter extends TH2Painter {
          if (hist.fNcells !== (nx + 2) * (ny + 2)) {
             hist.fNcells = (nx + 2) * (ny + 2);
             hist.fArray = new Float32Array(hist.fNcells);
-            hist.fArray.fill(0);
          }
+         hist.fArray.fill(0);
          hist.fXaxis.fNbins = nx;
          hist.fXaxis.fXbins = [];
          hist.fYaxis.fNbins = ny;
@@ -112225,6 +112358,351 @@ class TF2Painter extends TH2Painter {
 var TF2Painter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TF2Painter: TF2Painter
+});
+
+function findZValue(arrz, arrv, cross = 0) {
+   for (let i = arrz.length - 2; i >= 0; --i) {
+      const v1 = arrv[i], v2 = arrv[i + 1],
+            z1 = arrz[i], z2 = arrz[i + 1];
+      if (v1 === cross) return z1;
+      if (v2 === cross) return z2;
+      if ((v1 < cross) !== (v2 < cross))
+         return z1 + (cross - v1) / (v2 - v1) * (z2 - z1);
+   }
+
+   return arrz[0] - 1;
+}
+
+
+/**
+  * @summary Painter for TF3 object
+  *
+  * @private
+  */
+
+class TF3Painter extends TH2Painter {
+
+   /** @summary Returns drawn object name */
+   getObjectName() { return this.$func?.fName ?? 'func'; }
+
+   /** @summary Returns drawn object class name */
+   getClassName() { return this.$func?._typename ?? clTF3; }
+
+   /** @summary Returns true while function is drawn */
+   isTF1() { return true; }
+
+   /** @summary Update histogram */
+   updateObject(obj /*, opt */) {
+      if (!obj || (this.getClassName() !== obj._typename)) return false;
+      delete obj.evalPar;
+      const histo = this.getHisto();
+
+      if (this.webcanv_hist) {
+         const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH2F);
+         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
+      }
+
+      this.$func = obj;
+      this.createTF3Histogram(obj, histo);
+      this.scanContent();
+      return true;
+   }
+
+   /** @summary Redraw TF2
+     * @private */
+   redraw(reason) {
+      if (!this._use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'logy' || reason === 'zoom')) {
+         this.createTF3Histogram(this.$func, this.getHisto());
+         this.scanContent();
+      }
+
+      return super.redraw(reason);
+   }
+
+   /** @summary Create histogram for TF2 drawing
+     * @private */
+   createTF3Histogram(func, hist = undefined) {
+      const nsave = func.fSave.length - 9;
+
+      this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || this.force_saved);
+
+      const fp = this.getFramePainter(),
+            pad = this.getPadPainter()?.getRootPad(true),
+            logx = pad?.fLogx, logy = pad?.fLogy,
+            gr = fp?.getGrFuncs(this.second_x, this.second_y);
+      let xmin = func.fXmin, xmax = func.fXmax,
+          ymin = func.fYmin, ymax = func.fYmax,
+          zmin = func.fZmin, zmax = func.fZmax;
+
+     if (gr?.zoom_xmin !== gr?.zoom_xmax) {
+         xmin = Math.min(xmin, gr.zoom_xmin);
+         xmax = Math.max(xmax, gr.zoom_xmax);
+      }
+
+     if (gr?.zoom_ymin !== gr?.zoom_ymax) {
+         ymin = Math.min(ymin, gr.zoom_ymin);
+         ymax = Math.max(ymax, gr.zoom_ymax);
+      }
+
+     if (gr?.zoom_zmin !== gr?.zoom_zmax) {
+         zmin = Math.min(zmin, gr.zoom_zmin);
+         zmax = Math.max(zmax, gr.zoom_zmax);
+      }
+
+      const ensureBins = (nx, ny) => {
+         if (hist.fNcells !== (nx + 2) * (ny + 2)) {
+            hist.fNcells = (nx + 2) * (ny + 2);
+            hist.fArray = new Float32Array(hist.fNcells);
+         }
+         hist.fArray.fill(0);
+         hist.fXaxis.fNbins = nx;
+         hist.fXaxis.fXbins = [];
+         hist.fYaxis.fNbins = ny;
+         hist.fYaxis.fXbins = [];
+         hist.fXaxis.fXmin = xmin;
+         hist.fXaxis.fXmax = xmax;
+         hist.fYaxis.fXmin = ymin;
+         hist.fYaxis.fXmax = ymax;
+         hist.fMinimum = zmin;
+         hist.fMaximum = zmax;
+      };
+
+      delete this._fail_eval;
+
+      if (!this._use_saved_points) {
+         const npx = Math.max(func.fNpx, 20),
+               npy = Math.max(func.fNpy, 20),
+               npz = Math.max(func.fNpz, 20);
+         let iserror = false;
+
+         if (!func.evalPar && !proivdeEvalPar(func))
+            iserror = true;
+
+         ensureBins(npx, npy);
+
+         if (logx)
+            produceTAxisLogScale(hist.fXaxis, npx, xmin, xmax);
+         if (logy)
+            produceTAxisLogScale(hist.fYaxis, npy, ymin, ymax);
+
+         const arrv = new Array(npz), arrz = new Array(npz);
+         for (let k = 0; k < npz; ++k)
+            arrz[k] = zmin + k / (npz - 1) * (zmax - zmin);
+
+         for (let j = 0; (j < npy) && !iserror; ++j) {
+            for (let i = 0; (i < npx) && !iserror; ++i) {
+               const x = hist.fXaxis.GetBinCenter(i+1),
+                     y = hist.fYaxis.GetBinCenter(j+1);
+               let z = 0;
+
+               try {
+                  for (let k = 0; k < npz; ++k)
+                     arrv[k] = func.evalPar(x, y, arrz[k]);
+
+                  z = findZValue(arrz, arrv);
+               } catch {
+                  iserror = true;
+               }
+
+               if (!iserror)
+                  hist.setBinContent(hist.getBin(i + 1, j + 1), Number.isFinite(z) ? z : 0);
+            }
+         }
+
+         if (iserror)
+            this._fail_eval = true;
+
+         if (iserror && (nsave > 0))
+            this._use_saved_points = true;
+      }
+
+      if (this._use_saved_points) {
+         xmin = func.fSave[nsave]; xmax = func.fSave[nsave+1];
+         ymin = func.fSave[nsave+2]; ymax = func.fSave[nsave+3];
+         zmin = func.fSave[nsave+4]; zmax = func.fSave[nsave+5];
+         const npx = Math.round(func.fSave[nsave+6]),
+               npy = Math.round(func.fSave[nsave+7]),
+               npz = Math.round(func.fSave[nsave+8]),
+               // dx = (xmax - xmin) / npx,
+               // dy = (ymax - ymin) / npy,
+               dz = (zmax - zmin) / npz;
+
+         ensureBins(npx + 1, npy + 1);
+
+         const arrv = new Array(npz + 1), arrz = new Array(npz + 1);
+         for (let k = 0; k <= npz; k++)
+            arrz[k] = zmin + k*dz;
+
+         for (let i = 0; i <= npx; ++i) {
+            for (let j = 0; j <= npy; ++j) {
+               for (let k = 0; k <= npz; k++)
+                  arrv[k] = func.fSave[i + (npx + 1)*(j + (npy + 1)*k)];
+               const z = findZValue(arrz, arrv);
+               hist.setBinContent(hist.getBin(i + 1, j + 1), Number.isFinite(z) ? z : 0);
+            }
+         }
+      }
+
+      hist.fName = 'Func';
+      setHistogramTitle(hist, func.fTitle);
+
+
+      // hist.fMinimum = func.fMinimum;
+      // hist.fMaximum = func.fMaximum;
+      // fHistogram->SetContour(fContour.fN, levels);
+      hist.fLineColor = func.fLineColor;
+      hist.fLineStyle = func.fLineStyle;
+      hist.fLineWidth = func.fLineWidth;
+      hist.fFillColor = func.fFillColor;
+      hist.fFillStyle = func.fFillStyle;
+      hist.fMarkerColor = func.fMarkerColor;
+      hist.fMarkerStyle = func.fMarkerStyle;
+      hist.fMarkerSize = func.fMarkerSize;
+      hist.fBits |= kNoStats;
+
+      return hist;
+   }
+
+   extractAxesProperties(ndim) {
+      super.extractAxesProperties(ndim);
+
+      const func = this.$func, nsave = func?.fSave.length ?? 0;
+
+      if (nsave > 9 && this._use_saved_points) {
+         this.xmin = Math.min(this.xmin, func.fSave[nsave-9]);
+         this.xmax = Math.max(this.xmax, func.fSave[nsave-8]);
+         this.ymin = Math.min(this.ymin, func.fSave[nsave-7]);
+         this.ymax = Math.max(this.ymax, func.fSave[nsave-6]);
+         this.zmin = Math.min(this.zmin, func.fSave[nsave-5]);
+         this.zmax = Math.max(this.zmax, func.fSave[nsave-4]);
+      }
+      if (func) {
+         this.xmin = Math.min(this.xmin, func.fXmin);
+         this.xmax = Math.max(this.xmax, func.fXmax);
+         this.ymin = Math.min(this.ymin, func.fYmin);
+         this.ymax = Math.max(this.ymax, func.fYmax);
+         this.zmin = Math.min(this.zmin, func.fZmin);
+         this.zmax = Math.max(this.zmax, func.fZmax);
+      }
+   }
+
+   /** @summary retrurn tooltips for TF2 */
+   getTF3Tooltips(pnt) {
+      const lines = [this.getObjectHint()],
+            funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
+
+      if (!funcs || !isFunc(this.$func?.evalPar)) {
+         lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
+         return lines;
+      }
+
+      const x = funcs.revertAxis('x', pnt.x),
+            y = funcs.revertAxis('y', pnt.y);
+      let z = 0, iserror = false;
+
+       try {
+          z = this.$func.evalPar(x, y);
+       } catch {
+          iserror = true;
+       }
+
+      lines.push('x = ' + funcs.axisAsText('x', x),
+                 'y = ' + funcs.axisAsText('y', y),
+                 'value = ' + (iserror ? '<fail>' : floatToString(z, gStyle.fStatFormat)));
+      return lines;
+   }
+
+   /** @summary process tooltip event for TF2 object */
+   processTooltipEvent(pnt) {
+      if (this._use_saved_points)
+         return super.processTooltipEvent(pnt);
+
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!this.draw_g || !pnt) {
+         ttrect?.remove();
+         return null;
+      }
+
+      const res = { name: this.$func?.fName, title: this.$func?.fTitle,
+                  x: pnt.x, y: pnt.y,
+                  color1: this.lineatt?.color ?? 'green',
+                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+                  lines: this.getTF3Tooltips(pnt), exact: true, menu: true };
+
+      if (ttrect.empty()) {
+         ttrect = this.draw_g.append('svg:circle')
+                             .attr('class', 'tooltip_bin')
+                             .style('pointer-events', 'none')
+                             .style('fill', 'none')
+                             .attr('r', (this.lineatt?.width ?? 1) + 4);
+      }
+
+      ttrect.attr('cx', pnt.x)
+            .attr('cy', pnt.y)
+            .call(this.lineatt?.func);
+
+      return res;
+   }
+
+   /** @summary fill information for TWebCanvas
+     * @private */
+   fillWebObjectOptions(opt) {
+      // mark that saved points are used or evaluation failed
+      opt.fcust = this._fail_eval ? 'func_fail' : '';
+   }
+
+   /** @summary draw TF3 object */
+   static async draw(dom, tf3, opt) {
+      if (!isStr(opt)) opt = '';
+      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
+      if (p >= 0) {
+         webcanv_hist = true;
+         opt = opt.slice(0, p);
+      }
+      p = opt.indexOf(';force_saved');
+      if (p >= 0) {
+         force_saved = true;
+         opt = opt.slice(0, p);
+      }
+
+      const d = new DrawOptions(opt);
+      if (d.empty() || (opt === 'gl'))
+         opt = 'surf1';
+      else if (d.opt === 'SAME')
+         opt = 'surf1 same';
+
+      if ((opt.indexOf('same') === 0) || (opt.indexOf('SAME') === 0)) {
+         if (!getElementMainPainter(dom))
+            opt = 'A_ADJUST_FRAME_' + opt.slice(4);
+      }
+
+      let hist;
+
+      if (webcanv_hist) {
+         const dummy = new ObjectPainter(dom);
+         hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH2F);
+      }
+
+      if (!hist) {
+         hist = createHistogram(clTH2F, 20, 20);
+         hist.fBits |= kNoStats;
+      }
+
+      const painter = new TF3Painter(dom, hist);
+
+      painter.$func = tf3;
+      painter.webcanv_hist = webcanv_hist;
+      painter.force_saved = force_saved;
+      painter.createTF3Histogram(tf3, hist);
+      return THistPainter._drawHist(painter, opt);
+   }
+
+} // class TF3Painter
+
+var TF3Painter$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
+TF3Painter: TF3Painter
 });
 
 /**
@@ -123865,6 +124343,7 @@ exports.clTCutG = clTCutG;
 exports.clTDiamond = clTDiamond;
 exports.clTF1 = clTF1;
 exports.clTF2 = clTF2;
+exports.clTF3 = clTF3;
 exports.clTFile = clTFile;
 exports.clTGaxis = clTGaxis;
 exports.clTGeoNode = clTGeoNode;

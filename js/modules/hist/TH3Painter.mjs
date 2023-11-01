@@ -1,4 +1,4 @@
-import { gStyle, settings, kInspect, clTProfile3D, isFunc } from '../core.mjs';
+import { gStyle, settings, kInspect, clTF3, clTProfile3D, isFunc } from '../core.mjs';
 import { Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
@@ -242,7 +242,7 @@ class TH3Painter extends THistPainter {
       }
 
 
-      if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit, 3);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF3), dofit, 3);
 
       return true;
    }

@@ -1,4 +1,4 @@
-import { settings, gStyle, isStr, isFunc, clTH1D, createHistogram, setHistogramTitle, clTF1, clTF2, kNoStats } from '../core.mjs';
+import { settings, gStyle, isStr, isFunc, clTH1D, createHistogram, setHistogramTitle, clTF1, clTF2, clTF3, kNoStats } from '../core.mjs';
 import { floatToString } from '../base/BasePainter.mjs';
 import { getElementMainPainter, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
@@ -88,12 +88,18 @@ function proivdeEvalPar(obj) {
 
    if (isformula) {
       _func = _func.replace(/x\[0\]/g, 'x');
-      if (obj._typename === clTF2) {
+      if (obj._typename === clTF3) {
+         _func = _func.replace(/x\[1\]/g, 'y');
+         _func = _func.replace(/x\[2\]/g, 'z');
+         obj.evalPar = new Function('x', 'y', 'z', _func).bind(obj);
+      } else if (obj._typename === clTF2) {
          _func = _func.replace(/x\[1\]/g, 'y');
          obj.evalPar = new Function('x', 'y', _func).bind(obj);
       } else
          obj.evalPar = new Function('x', _func).bind(obj);
-   } else if (obj._typename === clTF2)
+   } else if (obj._typename === clTF3)
+      obj.evalPar = new Function('x', 'y', 'z', 'return ' + _func).bind(obj);
+   else if (obj._typename === clTF2)
       obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
    else
       obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
@@ -188,8 +194,8 @@ class TF1Painter extends TH1Painter {
          if (hist.fNcells !== num + 2) {
             hist.fNcells = num + 2;
             hist.fArray = new Float32Array(hist.fNcells);
-            hist.fArray.fill(0);
          }
+         hist.fArray.fill(0);
          hist.fXaxis.fNbins = num;
          hist.fXaxis.fXbins = [];
       };
