@@ -12,7 +12,7 @@
 #define ROOT_RJITTEDVARIATION
 
 #include "ROOT/RDF/RVariationBase.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 #include <memory>
 

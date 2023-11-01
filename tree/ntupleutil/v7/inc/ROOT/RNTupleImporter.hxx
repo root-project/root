@@ -22,7 +22,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <TFile.h>
 #include <TTree.h>
