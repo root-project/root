@@ -495,31 +495,6 @@ else()
   set(hasuring undef)
 endif()
 
-# clear cache to allow reconfiguring
-# with a different CMAKE_CXX_STANDARD
-unset(found_stdindexsequence CACHE)
-unset(found_stdinvoke CACHE)
-
-CHECK_CXX_SOURCE_COMPILES("#include <functional>
-int main() { return std::invoke([](int i){return i;}, 0); }" found_stdinvoke)
-if(found_stdinvoke)
-  set(hasstdinvoke define)
-else()
-  set(hasstdinvoke undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <utility>
-#include <type_traits>
-int main() {
-  static_assert(std::is_same<std::integer_sequence<std::size_t, 0, 1, 2>, std::make_index_sequence<3>>::value, \"\");
-  return 0;
-}" found_stdindexsequence)
-if(found_stdindexsequence)
-  set(hasstdindexsequence define)
-else()
-  set(hasstdindexsequence undef)
-endif()
-
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
 int main() { return TestBit(0); }" found_attribute_always_inline)
