@@ -19,8 +19,7 @@
 \class RooAbsDataStore
 \ingroup Roofitcore
 
-RooAbsDataStore is the abstract base class for data collection that
-use a TTree as internal storage mechanism
+Abstract base class for a data collection.
 **/
 
 #include "RooAbsDataStore.h"

@@ -26,7 +26,7 @@ class RooCategory ;
 class RooUnblindPrecision : public RooAbsHiddenReal {
 public:
   // Constructors, assignment etc
-  RooUnblindPrecision() ;
+  RooUnblindPrecision() = default;
   RooUnblindPrecision(const char *name, const char *title,
             const char *blindString, double centralValue, double scale, RooAbsReal& blindValue, bool sin2betaMode=false);
   RooUnblindPrecision(const char *name, const char *title,
@@ -34,7 +34,6 @@ public:
             RooAbsReal& blindValue, RooAbsCategory& blindState, bool sin2betaMode=false);
   RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooUnblindPrecision(*this,newname); }
-  ~RooUnblindPrecision() override;
 
 protected:
 

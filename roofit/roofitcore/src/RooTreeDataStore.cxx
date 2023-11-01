@@ -19,7 +19,7 @@
 \class RooTreeDataStore
 \ingroup Roofitcore
 
-RooTreeDataStore is a TTree-backed data storage. When a file is opened before
+TTree-backed data storage. When a file is opened before
 creating the data storage, the storage will be file-backed. This reduces memory
 pressure because it allows storing the data in the file and reading it on demand.
 For a completely memory-backed storage, which is faster than the file-backed storage,

@@ -19,7 +19,7 @@
 \class RooRombergIntegrator
 \ingroup Roofitcore
 
-RooRombergIntegrator implements an adaptive numerical integration algorithm.
+Adaptive numerical integration algorithm.
 
 It uses Romberg's method with trapezoids or midpoints.
 The integrand is approximated by \f$ 1, 2, 4, 8, \ldots, 2^n \f$ trapezoids, and

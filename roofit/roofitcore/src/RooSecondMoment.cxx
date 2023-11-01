@@ -48,17 +48,6 @@ using namespace std;
 
 ClassImp(RooSecondMoment);
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooSecondMoment::RooSecondMoment()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, bool centr, bool takeRoot) :
@@ -175,17 +164,6 @@ RooSecondMoment::RooSecondMoment(const RooSecondMoment& other, const char* name)
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooSecondMoment::~RooSecondMoment()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
@@ -200,5 +178,3 @@ double RooSecondMoment::evaluate() const
   double ret =  _takeRoot ? sqrt(ratio) : ratio ;
   return ret ;
 }
-
-

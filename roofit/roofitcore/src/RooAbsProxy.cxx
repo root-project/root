@@ -23,7 +23,7 @@
 \class RooAbsProxy
 \ingroup Roofitcore
 
-RooAbsProxy is the abstract interface for proxy classes.
+Abstract interface for proxy classes.
 Proxy classes hold pointers to other Roofit objects
 and process serverRedirect changes so that the proxied
 pointers are updated accordingly on a clone or copy of

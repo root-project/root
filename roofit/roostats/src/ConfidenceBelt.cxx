@@ -44,18 +44,10 @@ using namespace RooStats;
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-ConfidenceBelt::ConfidenceBelt() :
-   TNamed(), fParameterPoints(nullptr)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name) :
-  TNamed(name,name), fParameterPoints(nullptr)
+  TNamed(name,name)
 {
 }
 
@@ -63,7 +55,7 @@ ConfidenceBelt::ConfidenceBelt(const char* name) :
 /// Alternate constructor
 
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title) :
-   TNamed(name,title), fParameterPoints(nullptr)
+   TNamed(name,title)
 {
 }
 
@@ -80,13 +72,6 @@ ConfidenceBelt::ConfidenceBelt(const char* name, RooAbsData& data) :
 
 ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooAbsData& data) :
    TNamed(name,title), fParameterPoints((RooAbsData*)data.Clone("PointsToTestForBelt"))
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-ConfidenceBelt::~ConfidenceBelt()
 {
 }
 

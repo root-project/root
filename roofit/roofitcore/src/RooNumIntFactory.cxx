@@ -19,7 +19,7 @@
 \class RooNumIntFactory
 \ingroup Roofitcore
 
-RooNumIntFactory is a factory to instantiate numeric integrators
+Factory to instantiate numeric integrators
 from a given function binding and a given configuration. The factory
 searches for a numeric integrator registered with the factory that
 has the ability to perform the numeric integration. The choice of
@@ -46,11 +46,7 @@ the preference of the caller as encoded in the configuration object.
 
 #include "RooMsgService.h"
 
-using namespace std ;
-
 ClassImp(RooNumIntFactory)
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register all known integrators by calling
@@ -85,7 +81,7 @@ void RooNumIntFactory::init() {
 
 RooNumIntFactory& RooNumIntFactory::instance()
 {
-  static unique_ptr<RooNumIntFactory> instance;
+  static std::unique_ptr<RooNumIntFactory> instance;
 
   if (!instance) {
     // This is needed to break a deadlock. During init(),
@@ -111,7 +107,7 @@ bool RooNumIntFactory::registerPlugin(std::string const &name, Creator const &cr
                                     bool canIntegrateOpenEnded, const char *depName)
 {
   if (_map.find(name) != _map.end()) {
-    //cout << "RooNumIntFactory::storeIntegrator() ERROR: integrator '" << name << "' already registered" << endl ;
+    //cout << "RooNumIntFactory::storeIntegrator() ERROR: integrator '" << name << "' already registered" << std::endl ;
     return true ;
   }
 
@@ -178,7 +174,7 @@ std::unique_ptr<RooAbsIntegrator> RooNumIntFactory::createIntegrator(RooAbsFunc&
   // Check that a method was defined for this case
   if (!method.CompareTo("N/A")) {
     oocoutE(nullptr,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for "
-                 << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << endl ;
+                 << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << std::endl ;
     return nullptr ;
   }
 

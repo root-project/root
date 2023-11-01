@@ -46,7 +46,6 @@ public:
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ;
   RooGaussModel(const RooGaussModel& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooGaussModel(*this,newname) ; }
-  ~RooGaussModel() override;
 
   Int_t basisCode(const char* name) const override ;
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;

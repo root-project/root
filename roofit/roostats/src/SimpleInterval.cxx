@@ -90,13 +90,6 @@ SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, double 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-SimpleInterval::~SimpleInterval()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Method to determine if a parameter point is in the interval
 
 bool SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const

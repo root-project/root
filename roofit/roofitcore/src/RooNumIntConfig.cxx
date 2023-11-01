@@ -19,7 +19,7 @@
 \class RooNumIntConfig
 \ingroup Roofitcore
 
-RooNumIntConfig holds the configuration parameters of the various
+Holds the configuration parameters of the various
 numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 use this class in the (normalization) integral configuration interface
 **/

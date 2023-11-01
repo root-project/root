@@ -19,7 +19,7 @@
 \class RooSimGenContext
 \ingroup Roofitcore
 
-RooSimGenContext is an efficient implementation of the generator context
+Efficient implementation of the generator context
 specific for RooSimultaneous PDFs when generating more than one of the
 component pdfs.
 It runs in two modes:
@@ -40,16 +40,10 @@ that an event originates from a certain category.
 #include "RooRandom.h"
 #include "RooGlobalFunc.h"
 
-using namespace RooFit;
-
 #include <iostream>
 #include <string>
 
-using namespace std;
-
 ClassImp(RooSimGenContext);
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of specialized generator context for RooSimultaneous p.d.f.s. This
@@ -72,7 +66,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
   if(catsAmongAllVars.size() != model.flattenedCatList().size()) {
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
-                << " generate all components of the index category" << endl ;
+                << " generate all components of the index category" << std::endl ;
       _isValid = false ;
       _numPdf = 0 ;
       _haveIdxProto = false ;
@@ -85,7 +79,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   _idxCatName = idxCat.GetName() ;
   if (!_haveIdxProto && !model.canBeExtended()) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
-              << " or prototype data to calculate number of events per category" << endl ;
+              << " or prototype data to calculate number of events per category" << std::endl ;
     _isValid = false ;
     _numPdf = 0 ;
     return ;
@@ -126,7 +120,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   _idxCatSet = new RooArgSet;
   RooArgSet(model.indexCat()).snapshot(*_idxCatSet, true);
   if (!_idxCatSet) {
-    oocoutE(_pdf,Generation) << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
+    oocoutE(_pdf,Generation) << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << std::endl ;
     throw std::string("RooSimGenContext::RooSimGenContext() Couldn't deep-clone index category, abort") ;
   }
 
@@ -142,8 +136,8 @@ RooSimGenContext::~RooSimGenContext()
 {
   delete[] _fracThresh ;
   delete _idxCatSet ;
-  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    delete (*iter) ;
+  for(RooAbsGenContext *item : _gcList) {
+    delete item;
   }
   if (_protoData) delete _protoData ;
 }
@@ -160,8 +154,8 @@ void RooSimGenContext::attach(const RooArgSet& args)
   }
 
   // Forward initGenerator call to all components
-  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->attach(args) ;
+  for(RooAbsGenContext *item : _gcList) {
+    item->attach(args) ;
   }
 
 }
@@ -183,8 +177,8 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
   updateFractions() ;
 
   // Forward initGenerator call to all components
-  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->initGenerator(theEvent) ;
+  for(RooAbsGenContext *item : _gcList) {
+    item->initGenerator(theEvent) ;
   }
 
 }
@@ -202,7 +196,7 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
   }
 
   if (!_protoData) {
-    map<string,RooAbsData*> dmap ;
+    std::map<std::string,RooAbsData*> dmap ;
     for (const auto& nameIdx : *_idxCat) {
       RooAbsPdf* slicePdf = _pdf->getPdf(nameIdx.first.c_str());
       std::unique_ptr<RooArgSet> sliceObs{slicePdf->getObservables(obs)};
@@ -210,6 +204,7 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
       std::string sliceTitle = Form("%s (index slice %s)", title, nameIdx.first.c_str());
       dmap[nameIdx.first] = new RooDataSet(sliceName,sliceTitle,*sliceObs);
     }
+    using namespace RooFit;
     _protoData = new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;
   }
 
@@ -240,7 +235,7 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     if (cx) {
       cx->generateEvent(theEvent,remaining) ;
     } else {
-      oocoutW(_pdf,Generation) << "RooSimGenContext::generateEvent: WARNING, no PDF to generate event of type " << cidx << endl ;
+      oocoutW(_pdf,Generation) << "RooSimGenContext::generateEvent: WARNING, no PDF to generate event of type " << cidx << std::endl ;
     }
 
 
@@ -300,8 +295,8 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 {
   RooAbsGenContext::setProtoDataOrder(lut) ;
 
-  for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->setProtoDataOrder(lut) ;
+  for (RooAbsGenContext *item : _gcList) {
+    item->setProtoDataOrder(lut) ;
   }
 }
 
@@ -309,18 +304,18 @@ void RooSimGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
 
-void RooSimGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
+void RooSimGenContext::printMultiline(std::ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
-  os << indent << "--- RooSimGenContext ---" << endl ;
+  os << indent << "--- RooSimGenContext ---" << std::endl ;
   os << indent << "Using PDF ";
   _pdf->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
-  os << indent << "List of component generators" << endl ;
+  os << indent << "List of component generators" << std::endl ;
 
   TString indent2(indent) ;
   indent2.Append("    ") ;
 
-  for (vector<RooAbsGenContext*>::const_iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
-    (*iter)->printMultiline(os,content,verbose,indent2);
+  for (RooAbsGenContext *item : _gcList) {
+    item->printMultiline(os,content,verbose,indent2);
   }
 }

@@ -75,13 +75,6 @@ RooMultiBinomial::RooMultiBinomial(const RooMultiBinomial& other, const char* na
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMultiBinomial::~RooMultiBinomial()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Calculate the raw value of the function which is the effFunc
 /// value if cat==1 and it is (1-effFunc) if cat==0
 

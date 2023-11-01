@@ -22,16 +22,14 @@
 
 
 class RooRealVar;
-class RooArgList ;
 
 class RooMoment : public RooAbsMoment {
 public:
 
-  RooMoment() ;
+  RooMoment() = default;
   RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, bool central=false, bool takeRoot=false) ;
   RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t order=1, bool central=false, bool takeRoot=false,
        bool intNSet=false) ;
-  ~RooMoment() override ;
 
   RooMoment(const RooMoment& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooMoment(*this, newname); }

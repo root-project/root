@@ -65,7 +65,6 @@ public:
 
   RooGExpModel(const RooGExpModel& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooGExpModel(*this,newname) ; }
-  ~RooGExpModel() override;
 
   Int_t basisCode(const char* name) const override ;
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;

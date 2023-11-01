@@ -19,7 +19,7 @@
 \class RooParamBinning
 \ingroup Roofitcore
 
-Class RooParamBinning is an implementation of RooAbsBinning that constructs
+Implementation of RooAbsBinning that constructs
 a binning with a range definition that depends on external RooAbsReal objects.
 The external RooAbsReal definitions are explicitly allowed to depend on other
 observables and parameters, and make it possible to define non-rectangular
@@ -36,17 +36,14 @@ by the RooRealVar::setRange() that takes RooAbsReal references as arguments
 using namespace std;
 
 ClassImp(RooParamBinning);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
-///   cout << "RooParamBinning(" << this << ") default ctor" << endl ;
 
 RooParamBinning::RooParamBinning(const char* name) :
-  RooAbsBinning(name), _xlo(nullptr), _xhi(nullptr), _nbins(100), _binw(0), _lp(nullptr), _owner(nullptr)
+  RooAbsBinning(name)
 {
-  _array = nullptr ;
 }
 
 
@@ -56,13 +53,9 @@ RooParamBinning::RooParamBinning(const char* name) :
 
 RooParamBinning::RooParamBinning(RooAbsReal& xloIn, RooAbsReal& xhiIn, Int_t nBins, const char* name) :
   RooAbsBinning(name),
-  _array(nullptr),
   _xlo(&xloIn),
   _xhi(&xhiIn),
-  _nbins(nBins),
-  _binw(0),
-  _lp(nullptr),
-  _owner(nullptr)
+  _nbins(nBins)
 {
 }
 
@@ -299,5 +292,3 @@ void RooParamBinning::printMultiline(ostream &os, Int_t /*content*/, bool /*verb
     xhi()->Print("t") ;
   }
 }
-
-
