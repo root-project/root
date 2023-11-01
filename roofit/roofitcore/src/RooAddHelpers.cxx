@@ -13,10 +13,11 @@
 #include <RooAbsPdf.h>
 #include <RooArgSet.h>
 #include <RooNaNPacker.h>
+#include <RooProduct.h>
+#include <RooRatio.h>
 #include <RooRealConstant.h>
 #include <RooRealIntegral.h>
 #include <RooRealVar.h>
-#include <RooRatio.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooAddPdf cache element for a given normalization set and

@@ -111,14 +111,7 @@ RooRatio::RooRatio(const RooRatio &other, const char *name)
 
 double RooRatio::evaluate() const
 {
-
-   if (_denominator == 0.0) {
-      if (_numerator == 0.0)
-         return std::numeric_limits<double>::quiet_NaN();
-      else
-         return (_numerator > 0.0) ? RooNumber::infinity() : -1.0 * RooNumber::infinity();
-   } else
-      return _numerator / _denominator;
+   return _numerator / _denominator;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
