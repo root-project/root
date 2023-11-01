@@ -2062,10 +2062,11 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the linear gradient color number corresponding to specified parameters.
+/// First parameter set direction, then list of colors and optional alfa parameter for these colors
 /// If such gradient not exists - it will be created new
 /// Returns -1 if wrong parameter where specified
 
-Int_t TColor::GetLinearGradient(Bool_t vertical, const std::vector<Int_t> &colors, const std::vector<Double_t> &alfas)
+Int_t TColor::GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &alphas, const std::vector<Double_t> &positions)
 {
    if (colors.size() < 2) {
       ::Error("TColor::GetLinearGradient", "number of specified colors %d not enough to create gradients", (int) colors.size());
@@ -2073,7 +2074,7 @@ Int_t TColor::GetLinearGradient(Bool_t vertical, const std::vector<Int_t> &color
    }
 
    std::vector<Double_t> raw_colors(colors.size()*4);
-   std::vector<Double_t> positions(colors.size());
+   std::vector<Double_t> raw_positions(colors.size());
    for (unsigned indx = 0; indx < colors.size(); indx++) {
       TColor *color = gROOT->GetColor(colors[indx]);
       if (!color) {
@@ -2083,12 +2084,16 @@ Int_t TColor::GetLinearGradient(Bool_t vertical, const std::vector<Int_t> &color
       raw_colors[indx*4] = color->GetRed();
       raw_colors[indx*4+1] = color->GetGreen();
       raw_colors[indx*4+2] = color->GetBlue();
-      raw_colors[indx*4+3] = alfas.size() > indx ? alfas[indx] : color->GetAlpha();
+      raw_colors[indx*4+3] = indx < alphas.size() ? alphas[indx] : color->GetAlpha();
 
-      positions[indx] = indx / (colors.size() - 1.);
+      raw_positions[indx] = indx < positions.size() ? positions[indx] : indx / (colors.size() - 1.);
    }
 
-   TLinearGradient::Point start(0., 0.), end(vertical ? 0 : 1., vertical ? 1 : 0.);
+   Double_t _cos = std::cos(angle / 180. * 3.1415), _sin = std::sin(angle / 180. * 3.1415);
+   Double_t x0 = (_cos >= 0. ? 0. : 1.), y0 = (_sin >= 0. ? 0. : 1.);
+   Double_t scale = TMath::Max(TMath::Abs(_cos), TMath::Abs(_sin));
+
+   TLinearGradient::Point start(x0, y0), end(x0 + _cos/scale, y0 + _sin/scale);
 
 
    TObjArray *root_colors = (TObjArray*) gROOT->GetListOfColors();
@@ -2109,8 +2114,8 @@ Int_t TColor::GetLinearGradient(Bool_t vertical, const std::vector<Int_t> &color
          if (TMath::Abs(raw_colors[n] - grad->GetColors()[n]) > 1e-3)
             match = kFALSE;
 
-      for (unsigned n = 0; n < positions.size(); ++n)
-         if (TMath::Abs(positions[n] - grad->GetColorPositions()[n]) > 1e-2)
+      for (unsigned n = 0; n < raw_positions.size(); ++n)
+         if (TMath::Abs(raw_positions[n] - grad->GetColorPositions()[n]) > 1e-2)
             match = kFALSE;
 
       if (TMath::Abs(grad->GetStart().fX - start.fX) > 1e-2 ||
@@ -2123,9 +2128,81 @@ Int_t TColor::GetLinearGradient(Bool_t vertical, const std::vector<Int_t> &color
          return col->GetNumber();
    }
 
-   auto grad = new TLinearGradient(root_colors->GetLast() + 1, colors.size(), positions.data(), raw_colors.data());
+   auto grad = new TLinearGradient(root_colors->GetLast() + 1, colors.size(), raw_positions.data(), raw_colors.data());
 
    grad->SetStartEnd(start, end);
+
+   return grad->GetNumber();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: Returns the radial gradient color number corresponding to specified parameters.
+/// First parameter set radius of gradient (normally 0.5), then list of colors and optional alfa parameter for these colors
+/// If such gradient not exists - it will be created new
+/// Returns -1 if wrong parameter where specified
+
+Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &colors, const std::vector<Double_t> &alphas, const std::vector<Double_t> &positions)
+{
+   if (colors.size() < 2) {
+      ::Error("TColor::GetRadialGradient", "number of specified colors %d not enough to create gradients", (int) colors.size());
+      return -1;
+   }
+
+   std::vector<Double_t> raw_colors(colors.size()*4);
+   std::vector<Double_t> raw_positions(colors.size());
+   for (unsigned indx = 0; indx < colors.size(); indx++) {
+      TColor *color = gROOT->GetColor(colors[indx]);
+      if (!color) {
+         ::Error("TColor::GetRadialGradient", "Not able to get %d color", (int) colors.size());
+         return -1;
+      }
+      raw_colors[indx*4] = color->GetRed();
+      raw_colors[indx*4+1] = color->GetGreen();
+      raw_colors[indx*4+2] = color->GetBlue();
+      raw_colors[indx*4+3] = indx < alphas.size() ? alphas[indx] : color->GetAlpha();
+
+      raw_positions[indx] = indx < positions.size() ? positions[indx] : indx / (colors.size() - 1.);
+   }
+
+   TRadialGradient::Point start(0.5, 0.5);
+
+   TObjArray *root_colors = (TObjArray*) gROOT->GetListOfColors();
+
+   TIter iter(root_colors);
+
+   while (auto col = static_cast<TColor *>(iter())) {
+      if (col->IsA() != TRadialGradient::Class())
+         continue;
+
+      auto grad = static_cast<TRadialGradient *>(col);
+
+      if (grad->GetNumberOfSteps() != colors.size())
+         continue;
+
+      if (grad->GetGradientType() != TRadialGradient::kSimple)
+         continue;
+
+      Bool_t match = kTRUE;
+      for (unsigned n = 0; n < raw_colors.size(); ++n)
+         if (TMath::Abs(raw_colors[n] - grad->GetColors()[n]) > 1e-3)
+            match = kFALSE;
+
+      for (unsigned n = 0; n < raw_positions.size(); ++n)
+         if (TMath::Abs(raw_positions[n] - grad->GetColorPositions()[n]) > 1e-2)
+            match = kFALSE;
+
+      if (TMath::Abs(grad->GetStart().fX - start.fX) > 1e-2 ||
+          TMath::Abs(grad->GetStart().fY - start.fY) > 1e-2 ||
+          TMath::Abs(grad->GetR1() - radius) > 1e-2)
+         match = kFALSE;
+
+      if (match)
+         return col->GetNumber();
+   }
+
+   auto grad = new TRadialGradient(root_colors->GetLast() + 1, colors.size(), raw_positions.data(), raw_colors.data());
+
+   grad->SetRadialGradient(start, radius);
 
    return grad->GetNumber();
 }
