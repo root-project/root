@@ -184,10 +184,8 @@ if(roofit)
 endif()
 
 if (dataframe)
-    if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
-        # std::string_view backport in CPyCppyy
-        ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
-    endif()
+    # std::string_view in CPyCppyy
+    ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
     if(NOT MSVC OR win_broken_tests)
         if(NOT (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND NOT
             (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))

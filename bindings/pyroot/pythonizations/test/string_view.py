@@ -2,14 +2,14 @@ import unittest
 import ROOT
 
 
-class StringViewBackport(unittest.TestCase):
+class StringView(unittest.TestCase):
     """
-    Test the availability of std::string_view since ROOT has a backport to C++11
+    Test the availability of std::string_view
     """
 
     def test_interpreter(self):
-        ROOT.gInterpreter.Declare("std::string TestStringViewBackport(std::string_view x) { return std::string(x); }")
-        x = ROOT.TestStringViewBackport("foo")
+        ROOT.gInterpreter.Declare("std::string TestStringView(std::string_view x) { return std::string(x); }")
+        x = ROOT.TestStringView("foo")
         self.assertEqual(str(x), "foo")
 
     def test_rdataframe(self):
