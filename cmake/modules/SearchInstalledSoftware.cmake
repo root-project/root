@@ -1831,9 +1831,9 @@ if (roofit_multiprocess)
     set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
     if(fail-on-missing)
-      find_package(ZeroMQ REQUIRED)
+      find_package(ZeroMQ 4.3.5 REQUIRED)
     else()
-      find_package(ZeroMQ)
+      find_package(ZeroMQ 4.3.5)
       if(NOT ZeroMQ_FOUND)
         message(STATUS "ZeroMQ not found. Switching on builtin_zeromq option")
         set(builtin_zeromq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_zeromq_description})" FORCE)
@@ -1877,12 +1877,6 @@ if (roofit_multiprocess)
     list(APPEND ROOT_BUILTINS cppzmq)
     add_subdirectory(builtins/zeromq/cppzmq)
   endif()
-
-  # zmq_ppoll is still in the draft API, so enable that transitively
-  target_compile_definitions(libzmq INTERFACE ZMQ_BUILD_DRAFT_API)
-  target_compile_definitions(libzmq INTERFACE ZMQ_NO_EXPORT)
-  target_compile_definitions(cppzmq INTERFACE ZMQ_BUILD_DRAFT_API)
-  target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
 endif (roofit_multiprocess)
 
 #---Check for googletest---------------------------------------------------------------
