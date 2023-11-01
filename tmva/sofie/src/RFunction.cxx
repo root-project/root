@@ -73,7 +73,7 @@ std::string RFunction_Update::Generate(const std::vector<std::string>& inputPtrs
     return inferFunc;
 }
 
-
+// passing as input a vector of strings for each input tensor
 std::string RFunction_Aggregate::Generate(std::size_t num_features, const std::vector<std::string>& inputTensors) {
     std::string inferFunc = fFuncName+"("+std::to_string(num_features)+",{";
     for(auto&it : inputTensors) {
@@ -82,6 +82,12 @@ std::string RFunction_Aggregate::Generate(std::size_t num_features, const std::v
     }
     inferFunc.pop_back();
     inferFunc+="});";
+    return inferFunc;
+}
+
+// here passing directly the name of the vector containing the input tensor
+std::string RFunction_Aggregate::Generate(std::size_t num_features, const std::string & inputTensors) {
+    std::string inferFunc = fFuncName + "(" +std::to_string(num_features) + "," + inputTensors + ")";
     return inferFunc;
 }
 

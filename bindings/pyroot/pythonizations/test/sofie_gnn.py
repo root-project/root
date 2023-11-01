@@ -147,6 +147,8 @@ class SOFIE_GNN(unittest.TestCase):
         input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['nodes'])
         input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['edges'])
         input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['globals'])
+        input_data.receivers = GraphData['receivers']
+        input_data.senders = GraphData['senders']
 
         session = ROOT.TMVA_SOFIE_gnn_network.Session()
         session.infer(input_data)
@@ -182,7 +184,7 @@ class SOFIE_GNN(unittest.TestCase):
         model = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(GraphModule, GraphData)
         model.Generate()
         model.OutputGenerated()
-        
+
         ret = ROOT.gInterpreter.Declare('#include "graph_independent_network.hxx"')
 
         input_data = ROOT.TMVA.Experimental.SOFIE.GNN_Data()
@@ -190,6 +192,8 @@ class SOFIE_GNN(unittest.TestCase):
         input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['nodes'])
         input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['edges'])
         input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(GraphData['globals'])
+        input_data.receivers = GraphData['receivers']
+        input_data.senders = GraphData['senders']
 
         session = ROOT.TMVA_SOFIE_graph_independent_network.Session()
         session.infer(input_data)
@@ -269,6 +273,11 @@ class SOFIE_GNN(unittest.TestCase):
         input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['nodes'])
         input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['edges'])
         input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(InputGraphData['globals'])
+        input_data.receivers = InputGraphData['receivers']
+        input_data.senders = InputGraphData['senders']
+
+        print ("input receivers",input_data.receivers)
+        print ("input senders",input_data.senders)
 
         output_gn = ep_model(input_graphs, 2)
 
@@ -306,9 +315,9 @@ class SOFIE_GNN(unittest.TestCase):
           os.remove(fname + '.hxx')
           os.remove(fname + '.dat')
 
-    
+
 
 
 if __name__ == '__main__':
     unittest.main()
-  
+

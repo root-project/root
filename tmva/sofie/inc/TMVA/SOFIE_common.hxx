@@ -428,7 +428,12 @@ struct GNN_Data {
       RTensor<float> edge_data;
       RTensor<float> global_data;
 
-      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})){}
+      std::vector<int> receivers;
+      std::vector<int> senders;
+
+      // need to have default constructor since RTensor has not one
+      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})) {}
+
 };
 
 template<typename T>
@@ -470,6 +475,11 @@ inline GNN_Data Concatenate(GNN_Data & data1, GNN_Data & data2, int axis = 0) {
    out.node_data = Concatenate(data1.node_data,data2.node_data, axis);
    out.edge_data = Concatenate(data1.edge_data,data2.edge_data, axis);
    out.global_data = Concatenate<float>(data1.global_data,data2.global_data, axis-1);
+   // assume sender/receivers of data1 and data2 are the same
+   if (data1.receivers != data2.receivers || data1.senders != data2.senders)
+       throw std::runtime_error("GNN_Data Concatenate: data1 and data2 have different net structures");
+   out.receivers = data1.receivers;
+   out.senders = data1.senders;
    return out;
 }
 
@@ -481,6 +491,8 @@ inline GNN_Data Copy(const GNN_Data & data) {
    std::copy(data.node_data.GetData(), data.node_data.GetData()+ data.node_data.GetSize(), out.node_data.GetData());
    std::copy(data.edge_data.GetData(), data.edge_data.GetData()+ data.edge_data.GetSize(), out.edge_data.GetData());
    std::copy(data.global_data.GetData(), data.global_data.GetData()+ data.global_data.GetSize(), out.global_data.GetData());
+   out.receivers = data.receivers;
+   out.senders = data.senders;
    return out;
 }
 
