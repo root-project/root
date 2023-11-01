@@ -1,9 +1,5 @@
 /// \file
 /// \ingroup tutorial_gl
-/// This macro requires OpenGL, you can:
-///  1. call gStyle->SetCanvasPreferGL(kTRUE) before a canvas is created or
-///  2. set OpenGL.CanvasPreferGL to 1 in a $ROOTSYS/etc/system.rootrc.
-///
 /// Features:
 ///  1. Radial and linear gradients
 ///  2. Transparent/semitransparent colours.
@@ -11,7 +7,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
-/// \author  Timur Pocheptsov
+/// \authors  Timur Pocheptsov, Sergey Linev
 
 //Includes for ACLiC:
 #include "TColorGradient.h"
@@ -21,36 +17,20 @@
 #include "TText.h"
 #include "TPie.h"
 
-//Cocoa aux. functions.
-#include "customcolorgl.h"
 
-void gradients()
+void gradients(bool gl = true)
 {
    //Find free colour indices in the ROOT's palette for:
    //1. A radial gradient for TPie;
    //2. A linear gradient for TCanvas
    //3. A fully transparent fill color for a nested pad.
 
-   Color_t colorIndices[3] = {};
-   if (ROOT::GLTutorials::FindFreeCustomColorIndices(colorIndices) != 3) {
-      ::Error("gradients", "failed to create new custom colors");
-      return;
-   }
+   gStyle->SetCanvasPreferGL(gl);
 
-   //Better names:
-   const Color_t &radialFill = colorIndices[0];
-   const Color_t &linearFill = colorIndices[1];
-   const Color_t &transparentFill = colorIndices[2];
-
-   gStyle->SetCanvasPreferGL(kTRUE);
-
-   TCanvas * const c = new TCanvas("cpie","Gradient colours demo", 700, 700);
+   auto c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
-   if (!c->UseGL()) {
-      ::Error("gradients", "This macro requires OpenGL");
-      delete c;
-      return;
-   }
+   if (!c->UseGL() && !c->IsWeb())
+      ::Warning("gradients", "This macro requires either OpenGL or Web canvas to correctly handle gradient colors");
 
    //Linear gradient is defined by: 1) colors (to interpolate between them),
    //2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
@@ -61,31 +41,18 @@ void gradients()
    //kObjectBoundingMode is the default one.
 
 
-   //Colour positions in the gradient's palette (here I place colors at the
-   //ends of 0-1):
-   const Double_t locations[] = {0., 1.};
-
-   //Linear gradient fill (with an axis angle == 45):
-   const Double_t rgbaData1[] = {0.2, 0.2, 0.2, 1.,/*gray*/
-                                 0.8, 1., 0.9, 1.  /*pale green*/};
-   TLinearGradient * const gradientFill1 = new TLinearGradient(linearFill, 2, locations, rgbaData1);
-   //45 degrees:
-   gradientFill1->SetStartEnd(TColorGradient::Point(0., 0.), TColorGradient::Point(1., 1.));
-   //Set as a background color in the canvas:
-   c->SetFillColor(linearFill);
-
    //Draw a text in the canvas (the object above the text will be
    //semi-transparent):
-   TText * const t = new TText(0.05, 0.7, "Can you see the text?");
+   auto t = new TText(0.05, 0.7, "Can you see the text?");
    t->Draw();
 
    //We create a nested pad on top to render a TPie in,
    //this way we still have a text (below) + TPie with
    //a fancy colour on top.
-   TPad * const pad = new TPad("p", "p", 0., 0., 1., 1.);
+   auto pad = new TPad("p", "p", 0., 0., 1., 1.);
 
    //TPad itself is fully transparent:
-   new TColor(transparentFill, 1., 1., 1., "transparent_fill_color", 0.);
+   auto transparentFill = TColor::GetColor((Float_t) 1., 1., 1., 0.);
    pad->SetFillColor(transparentFill);
    //Add our pad into the canvas:
    pad->Draw();
@@ -93,18 +60,20 @@ void gradients()
 
 
    //Radial gradient fill for a TPie object:
-   const Double_t rgbaData2[] = {/*opaque orange at the start:*/1., 0.8, 0., 1.,
-                                 /*transparent red at the end:*/1., 0.2, 0., 0.65};
+   auto col3 = TColor::GetColor((Float_t) 1., 0.8, 0., 1.); /*opaque orange at the start:*/
+   auto col4 = TColor::GetColor((Float_t) 1., 0.2, 0., 0.65); /*transparent red at the end:*/
 
-   TRadialGradient * const gradientFill2 = new TRadialGradient(radialFill, 2,
-                                                               locations, rgbaData2);
-   //Parameters for a gradient fill:
-   //the gradient is 'pad-related' - we calculate everything in a pad's
-   //space and consider it as a NDC (so pad's rect is (0,0), (1,1)).
-   gradientFill2->SetCoordinateMode(TColorGradient::kPadMode);
+   //'Simple' radial gradient with radius 0.4
+   auto radialFill = TColor::GetRadialGradient(0.4, {col3, col4});
 
-   //'Simple' radial gradient (center and radius):
-   gradientFill2->SetRadialGradient(TColorGradient::Point(0.5, 0.5), 0.4);
+
+   //Linear gradient fill (with an axis angle == 45):
+   auto col1 = TColor::GetColor((Float_t) 0.2, 0.2, 0.2); /*gray*/
+   auto col2 = TColor::GetColor((Float_t) 0.8, 1., 0.9); /*pale green*/
+   auto linearFill = TColor::GetLinearGradient(45., {col1, col2}); //45 degrees:
+
+   //Set as a background color in the canvas:
+   c->SetFillColor(linearFill);
 
 
    const UInt_t nSlices = 5;
