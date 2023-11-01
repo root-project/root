@@ -18,6 +18,7 @@
 #include "TError.h"
 #include "TMathBase.h"
 #include "TApplication.h"
+#include "TColorGradient.h"
 #include "snprintf.h"
 #include <algorithm>
 #include <cmath>
@@ -2058,6 +2059,77 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
       return -1;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: Returns the linear gradient color number corresponding to specified parameters.
+/// If such gradient not exists - it will be created new
+/// Returns -1 if wrong parameter where specified
+
+Int_t TColor::GetLinearGradient(Bool_t vertical, const std::vector<Int_t> &colors, const std::vector<Double_t> &alfas)
+{
+   if (colors.size() < 2) {
+      ::Error("TColor::GetLinearGradient", "number of specified colors %d not enough to create gradients", (int) colors.size());
+      return -1;
+   }
+
+   std::vector<Double_t> raw_colors(colors.size()*4);
+   std::vector<Double_t> positions(colors.size());
+   for (unsigned indx = 0; indx < colors.size(); indx++) {
+      TColor *color = gROOT->GetColor(colors[indx]);
+      if (!color) {
+         ::Error("TColor::GetLinearGradient", "Not able to get %d color", (int) colors.size());
+         return -1;
+      }
+      raw_colors[indx*4] = color->GetRed();
+      raw_colors[indx*4+1] = color->GetGreen();
+      raw_colors[indx*4+2] = color->GetBlue();
+      raw_colors[indx*4+3] = alfas.size() > indx ? alfas[indx] : color->GetAlpha();
+
+      positions[indx] = indx / (colors.size() - 1.);
+   }
+
+   TLinearGradient::Point start(0., 0.), end(vertical ? 0 : 1., vertical ? 1 : 0.);
+
+
+   TObjArray *root_colors = (TObjArray*) gROOT->GetListOfColors();
+
+   TIter iter(root_colors);
+
+   while (auto col = static_cast<TColor *>(iter())) {
+      if (col->IsA() != TLinearGradient::Class())
+         continue;
+
+      auto grad = static_cast<TLinearGradient *>(col);
+
+      if (grad->GetNumberOfSteps() != colors.size())
+         continue;
+
+      Bool_t match = kTRUE;
+      for (unsigned n = 0; n < raw_colors.size(); ++n)
+         if (TMath::Abs(raw_colors[n] - grad->GetColors()[n]) > 1e-3)
+            match = kFALSE;
+
+      for (unsigned n = 0; n < positions.size(); ++n)
+         if (TMath::Abs(positions[n] - grad->GetColorPositions()[n]) > 1e-2)
+            match = kFALSE;
+
+      if (TMath::Abs(grad->GetStart().fX - start.fX) > 1e-2 ||
+          TMath::Abs(grad->GetStart().fY - start.fY) > 1e-2 ||
+          TMath::Abs(grad->GetEnd().fX - end.fX) > 1e-2 ||
+          TMath::Abs(grad->GetEnd().fY - end.fY) > 1e-2)
+         match = kFALSE;
+
+      if (match)
+         return col->GetNumber();
+   }
+
+   auto grad = new TLinearGradient(root_colors->GetLast() + 1, colors.size(), positions.data(), raw_colors.data());
+
+   grad->SetStartEnd(start, end);
+
+   return grad->GetNumber();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns a free color index which can be used to define
