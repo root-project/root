@@ -16,4 +16,9 @@ target_include_directories(RooFitZMQ
         PRIVATE ${RooFitZMQ_INCLUDE_DIR}
         INTERFACE $<BUILD_INTERFACE:${RooFitZMQ_INCLUDE_DIR}>)
 
+# zmq_ppoll is still in the draft API, and RooFitZMQ relies on it
+target_compile_definitions(RooFitZMQ PUBLIC ZMQ_BUILD_DRAFT_API)
+# to avoid leaking symbols
+target_compile_definitions(RooFitZMQ PUBLIC ZMQ_NO_EXPORT)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
