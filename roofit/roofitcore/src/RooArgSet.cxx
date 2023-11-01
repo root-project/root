@@ -153,7 +153,7 @@ void RooArgSet::operator delete (void* ptr)
 RooArgSet::RooArgSet() :
   RooAbsCollection()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -165,7 +165,7 @@ RooArgSet::RooArgSet(const RooAbsCollection& coll) :
   RooAbsCollection(coll.GetName())
 {
   add(coll,true) ; // verbose to catch duplicate errors
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -184,7 +184,7 @@ RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) 
     add(*var1,true) ;
   }
   add(collection,true) ; // verbose to catch duplicate errors
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -193,7 +193,7 @@ RooArgSet::RooArgSet(const RooAbsCollection& collection, const RooAbsArg* var1) 
 RooArgSet::RooArgSet(const char *name) :
   RooAbsCollection(name)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -204,7 +204,7 @@ RooArgSet::RooArgSet(const RooArgSet& set1, const RooArgSet& set2, const char *n
 {
   add(set1) ;
   add(set2) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -224,7 +224,7 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
     }
     add(*(RooAbsArg*)obj) ;
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -235,7 +235,7 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
 RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
   : RooAbsCollection(other,name)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -244,7 +244,7 @@ RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
 
 RooArgSet::~RooArgSet()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
