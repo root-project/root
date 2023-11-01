@@ -155,17 +155,16 @@ namespace RooStats {
   private:
     SamplingSummaryLookup fSamplingSummaryLookup;
     std::vector<SamplingSummary> fSamplingSummaries; // composite of several AcceptanceRegions
-    RooAbsData* fParameterPoints;  // either a histogram (RooDataHist) or a tree (RooDataSet)
+    RooAbsData* fParameterPoints = nullptr;  // either a histogram (RooDataHist) or a tree (RooDataSet)
 
 
   public:
     // constructors,destructors
-    ConfidenceBelt();
+    ConfidenceBelt() = default;
     ConfidenceBelt(const char* name);
     ConfidenceBelt(const char* name, const char* title);
     ConfidenceBelt(const char* name, RooAbsData&);
     ConfidenceBelt(const char* name, const char* title, RooAbsData&);
-    ~ConfidenceBelt() override;
 
     /// add after creating a region
     void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, double cl=-1., double leftside=-1.);

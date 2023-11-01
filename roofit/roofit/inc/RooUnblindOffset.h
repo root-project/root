@@ -23,7 +23,7 @@
 class RooUnblindOffset : public RooAbsHiddenReal {
 public:
   // Constructors, assignment etc
-  RooUnblindOffset() ;
+  RooUnblindOffset() = default;
   RooUnblindOffset(const char *name, const char *title,
          const char *blindString, double scale, RooAbsReal& blindValue);
   RooUnblindOffset(const char *name, const char *title,
@@ -31,7 +31,6 @@ public:
          RooAbsCategory& blindState);
   RooUnblindOffset(const RooUnblindOffset& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooUnblindOffset(*this,newname); }
-  ~RooUnblindOffset() override;
 
 protected:
 

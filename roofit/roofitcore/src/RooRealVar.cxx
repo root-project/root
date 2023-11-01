@@ -19,7 +19,7 @@
 \class RooRealVar
 \ingroup Roofitcore
 
-RooRealVar represents a variable that can be changed from the outside.
+Variable that can be changed from the outside.
 For example by the user or a fitter.
 
 It can be written into datasets, can hold a (possibly asymmetric) error, and

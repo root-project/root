@@ -47,8 +47,6 @@ use a RooAcceptReject sampling technique.
 using namespace std;
 
 ClassImp(RooGenContext);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +63,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
               const RooDataSet *prototype, const RooArgSet* auxProto,
               bool verbose, const RooArgSet* forceDirect) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
-  _pdfClone(nullptr), _generator(nullptr),
   _maxVar(nullptr), _updateFMaxPerEvent(0)
 {
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName()

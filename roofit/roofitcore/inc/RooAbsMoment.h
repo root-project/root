@@ -27,10 +27,9 @@ class RooArgList ;
 class RooAbsMoment : public RooAbsReal {
 public:
 
-  RooAbsMoment() ;
+  RooAbsMoment() = default;
   RooAbsMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, bool takeRoot=false) ;
   RooAbsMoment(const RooAbsMoment& other, const char* name = nullptr);
-  ~RooAbsMoment() override ;
 
   Int_t order() const { return _order ; }
   bool central() const { return _mean.absArg() ? true : false ; }
@@ -39,8 +38,8 @@ public:
 
 protected:
 
-  Int_t _order ;                         ///< Moment order
-  Int_t _takeRoot ;                      ///< Return n-order root of moment
+  Int_t _order = 1;                      ///< Moment order
+  Int_t _takeRoot = false;               ///< Return n-order root of moment
   RooSetProxy  _nset ;                   ///< Normalization set (optional)
   RooRealProxy _func ;                   ///< Input function
   RooRealProxy _x     ;                  ///< Observable

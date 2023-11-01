@@ -27,10 +27,9 @@ class RooArgList ;
 class RooSecondMoment : public RooAbsMoment {
 public:
 
-  RooSecondMoment() ;
+  RooSecondMoment() = default;
   RooSecondMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, bool central=false, bool takeRoot=false) ;
   RooSecondMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, bool central=false, bool takeRoot=false, bool intNSet=false) ;
-  ~RooSecondMoment() override ;
 
   RooSecondMoment(const RooSecondMoment& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooSecondMoment(*this, newname); }
