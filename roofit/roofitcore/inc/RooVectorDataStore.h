@@ -22,7 +22,7 @@
 #include "RooChangeTracker.h"
 #include "RooRealVar.h"
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "Rtypes.h"
 
 #include <list>

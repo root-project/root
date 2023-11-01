@@ -63,7 +63,7 @@ namespace ROOT {
       class TNormalizedCtxt;
    }
 }
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 // TClassEdit is used to manipulate class and type names.
 //

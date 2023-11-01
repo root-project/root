@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <TBranch.h>
 #include <TChain.h>

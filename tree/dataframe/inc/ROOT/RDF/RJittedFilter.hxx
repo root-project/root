@@ -14,7 +14,7 @@
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "RtypesCore.h"
 
 #include <memory>

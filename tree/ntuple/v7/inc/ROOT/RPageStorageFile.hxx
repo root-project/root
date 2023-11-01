@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <array>
 #include <cstdio>
