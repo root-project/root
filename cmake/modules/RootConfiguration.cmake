@@ -497,17 +497,8 @@ endif()
 
 # clear cache to allow reconfiguring
 # with a different CMAKE_CXX_STANDARD
-unset(found_stdapply CACHE)
 unset(found_stdindexsequence CACHE)
 unset(found_stdinvoke CACHE)
-
-CHECK_CXX_SOURCE_COMPILES("#include <tuple>
-int main() { std::apply([](int, int){}, std::make_tuple(1,2)); return 0;}" found_stdapply)
-if(found_stdapply)
-  set(hasstdapply define)
-else()
-  set(hasstdapply undef)
-endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <functional>
 int main() { return std::invoke([](int i){return i;}, 0); }" found_stdinvoke)
