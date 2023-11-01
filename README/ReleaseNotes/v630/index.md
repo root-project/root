@@ -45,7 +45,7 @@ The following people have contributed to this new version:
  Ole Morud, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
- Dante Niewenhuis, CERN/EP-SFT,\
+ Dante Niewenhuis, UvA and CERN/EP-SFT,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Ioanna Maria Panagou, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
@@ -57,6 +57,7 @@ The following people have contributed to this new version:
  Garima Singh, CERN/EP-SFT and Princeton,\
  Yash Solanki, GSoC,\
  Uri Stern, CERN/EP-SFT,\
+ Silia Taider, CPE Lyon and CERN EP-SFT,\
  Enric Tejedor Saavedra, CERN/IT,\
  Matevz Tadel, UCSD/CMS,\
  [QuillPusher](https://github.com/QuillPusher), [Compiler Research Group](https://compiler-research.org/team/),\
