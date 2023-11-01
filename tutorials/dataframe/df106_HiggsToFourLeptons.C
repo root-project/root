@@ -23,11 +23,11 @@
 /// \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)
 
 #include <Math/Vector4D.h>
-#include <Math/Interpolator.h>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>
 #include <TCanvas.h>
+#include <TGraph.h>
 #include <TH1D.h>
 #include <THStack.h>
 #include <TLatex.h>
@@ -153,12 +153,11 @@ void df106_HiggsToFourLeptons()
    // kinematics such as pT or pseudorapidity.
    // Muons uncertainties are negligible, as stated in https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/MUON
    // Electrons uncertainties are evaluated based on the plots available in https://doi.org/10.48550/arXiv.1908.0
-   // The uncertainties are linearly interpolated to cover a range of pT values covered by the analysis.
+   // The uncertainties are linearly interpolated, using the `TGraph::Eval()` method, to cover a range of pT values
+   // covered by the analysis.
    const std::vector<double> x{5.50e3, 5.52e3, 12.54e3, 17.43e3, 22.40e3, 27.48e3, 30e3, 10000e3};
    const std::vector<double> y{0.06628, 0.06395, 0.06396, 0.03372, 0.02441, 0.01403, 0, 0};
-   unsigned int N = x.size();
-   ROOT::Math::Interpolator inter(N, ROOT::Math::Interpolation::kLINEAR);
-   inter.SetData(x, y);
+   TGraph graph(x.size(), x.data(), y.data());
 
    //  Use the Vary method to add the systematic variations to the total MC scale factor ("weight") of the analysis
    //  The input consists of the input column to be varied and the lambda function to compute the systematic variations.
@@ -166,8 +165,8 @@ void df106_HiggsToFourLeptons()
    auto df_with_variations_mc =
       df_mc
          .Vary("weight",
-               [&inter](double x, const RVecF &pt, const RVec<unsigned int> &type) {
-                  const auto v = Mean(Map(pt[type == 11], [&inter](auto p) { return inter.Eval(p); }));
+               [&graph](double x, const RVecF &pt, const RVec<unsigned int> &type) {
+                  const auto v = Mean(Map(pt[type == 11], [&graph](auto p) { return graph.Eval(p); }));
                   return RVec<double>{(1 + v) * x, (1 - v) * x};
                },
                {"weight", "goodlep_pt", "goodlep_type"}, {"up", "down"})
@@ -228,7 +227,7 @@ void df106_HiggsToFourLeptons()
    histos_mc["weight:up"].SetStats(false);
    histos_mc["weight:up"].DrawClone("HIST sames");
    histos_mc["weight:down"].SetLineColor(kBlue + 2);
-   histos_mc["weight:down"].SetStats();
+   histos_mc["weight:down"].SetStats(false);
    histos_mc["weight:down"].DrawClone("HIST sames");
 
    // Draw data histogram
