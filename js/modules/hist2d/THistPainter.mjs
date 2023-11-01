@@ -266,6 +266,11 @@ class THistDrawOptions {
       if (d.check('R3D_', true))
          this.Render3D = constants.Render3D.fromString(d.part.toLowerCase());
 
+      if (d.check('POL')) this.System = kPOLAR;
+      if (d.check('CYL')) this.System = kCYLINDRICAL;
+      if (d.check('SPH')) this.System = kSPHERICAL;
+      if (d.check('PSR')) this.System = kRAPIDITY;
+
       if (d.check('SURF', true)) {
          this.Surf = d.partAsInt(10, 1);
          check3dbox = d.part;
@@ -338,10 +343,6 @@ class THistDrawOptions {
       }
 
       if (d.check('SCAT')) this.Scat = true;
-      if (d.check('POL')) this.System = kPOLAR;
-      if (d.check('CYL')) this.System = kCYLINDRICAL;
-      if (d.check('SPH')) this.System = kSPHERICAL;
-      if (d.check('PSR')) this.System = kRAPIDITY;
 
       if (d.check('TRI', true)) {
          this.Color = false;
