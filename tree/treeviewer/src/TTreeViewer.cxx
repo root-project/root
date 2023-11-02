@@ -316,9 +316,9 @@ ClassImp(TTreeViewer);
 
 TTreeViewer::TTreeViewer(const char* treeName) :
    TGMainFrame(nullptr,10,10,kVerticalFrame),
-   fDimension(0), fVarDraw(0), fScanMode(0),
+   fDimension(0), fVarDraw(false), fScanMode(false),
    fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0),
-   fCounting(0), fStopMapping(0), fEnableCut(0),fNexpressions(0)
+   fCounting(false), fStopMapping(false), fEnableCut(false),fNexpressions(0)
 {
    fTree = nullptr;
    if (!gClient) return;
@@ -344,9 +344,9 @@ TTreeViewer::TTreeViewer(const char* treeName) :
 
 TTreeViewer::TTreeViewer(const TTree *tree) :
    TGMainFrame(nullptr, 10, 10, kVerticalFrame),
-   fDimension(0), fVarDraw(0), fScanMode(0),
+   fDimension(0), fVarDraw(false), fScanMode(false),
    fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0),
-   fCounting(0), fStopMapping(0), fEnableCut(0),fNexpressions(0)
+   fCounting(false), fStopMapping(false), fEnableCut(false),fNexpressions(0)
 
 {
    // TTreeViewer constructor with a pointer to a Tree
@@ -1989,7 +1989,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                      gROOT->MakeDefCanvas();
                      break;
                   case kFileBrowse:
-                     if (1) {
+                     if (true) {
                         static TString dir(".");
                         TGFileInfo info;
                         info.fFileTypes = gOpenTypes;
@@ -2007,7 +2007,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                      break;
                   case kFileLoadLibrary:
                      fBarCommand->SetText("gSystem->Load(\"\");");
-                     if (1) {
+                     if (true) {
                         Event_t event;
                         event.fType = kButtonPress;
                         event.fCode = kButton1;
@@ -2017,7 +2017,7 @@ Bool_t TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t par
                      fBarCommand->SetCursorPosition(15);
                      break;
                   case kFileOpenSession:
-                     if (1) {
+                     if (true) {
                         static TString dir(".");
                         TGFileInfo info;
                         info.fFileTypes = gMacroTypes;

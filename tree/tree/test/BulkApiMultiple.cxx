@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include "TBranch.h"
 #include "TBufferFile.h"

@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -177,7 +179,7 @@ TEST_F(TOffsetGeneration, primitiveTest)
    auto br = tree->GetBranch("sample");
    ASSERT_TRUE(br->GetTotalSize() < fEventCount * 14);
 
-   file.reset(new TFile("TOffsetGeneration2.root"));
+   file = std::make_unique<TFile>("TOffsetGeneration2.root");
    tree = static_cast<TTree *>(file->Get("tree"));
    br = tree->GetBranch("sample");
    ASSERT_TRUE(br->GetTotalSize() > fEventCount * 14);
@@ -190,7 +192,7 @@ TEST_F(TOffsetGeneration, elementsTest)
    auto br = tree->GetBranch("d");
    ASSERT_TRUE(br->GetTotalSize() > fEventCount * 10);
 
-   file.reset(new TFile("TOffsetGeneration4.root"));
+   file = std::make_unique<TFile>("TOffsetGeneration4.root");
    tree = static_cast<TTree *>(file->Get("tree2"));
    br = tree->GetBranch("d");
    TClass *expectedClass = nullptr;

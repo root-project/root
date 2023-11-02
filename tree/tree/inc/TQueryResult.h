@@ -106,7 +106,7 @@ protected:
    void            SetNumMergers(Int_t nmergers) { fNumMergers = nmergers; }
 
 public:
-   TQueryResult() : fSeqNum(-1), fDraw(0), fStatus(kSubmitted), fUsedCPU(0.),
+   TQueryResult() : fSeqNum(-1), fDraw(false), fStatus(kSubmitted), fUsedCPU(0.),
                     fInputList(nullptr), fEntries(-1), fFirst(-1), fBytes(0),
                     fLogFile(nullptr), fSelecHdr(nullptr), fSelecImp(nullptr),
                     fLibList("-"), fOutputList(nullptr),

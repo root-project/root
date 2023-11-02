@@ -73,6 +73,7 @@ TEST(TreeProcessorMT, ManyFiles)
    const auto nFiles = 100u;
    const std::string treename = "t";
    std::vector<std::string> filenames;
+   filenames.reserve(nFiles);
    for (auto i = 0u; i < nFiles; ++i)
       filenames.emplace_back("treeprocmt_manyfiles" + std::to_string(i) + ".root");
 
@@ -94,6 +95,7 @@ TEST(TreeProcessorMT, ManyFiles)
 
    // TTreeProcMT requires a vector<string_view>
    std::vector<std::string_view> fnames;
+   fnames.reserve(filenames.size());
    for (const auto &f : filenames)
       fnames.emplace_back(f);
 
@@ -163,6 +165,7 @@ TEST(TreeProcessorMT, TreesWithDifferentNamesVecCtor)
 
    // TTreeProcMT requires a vector<string_view>
    std::vector<std::string_view> fnames;
+   fnames.reserve(filenames.size());
    for (const auto &f : filenames)
       fnames.emplace_back(f);
 

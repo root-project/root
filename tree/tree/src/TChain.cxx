@@ -2425,9 +2425,9 @@ Long64_t TChain::Scan(const char* varexp, const char* selection, Option_t* optio
 void TChain::SetAutoDelete(Bool_t autodelete)
 {
    if (autodelete) {
-      SetBit(kAutoDelete, 1);
+      SetBit(kAutoDelete, true);
    } else {
-      SetBit(kAutoDelete, 0);
+      SetBit(kAutoDelete, false);
    }
 }
 

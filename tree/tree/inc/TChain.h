@@ -157,7 +157,7 @@ public:
    }
 #endif
 
-   void      SetBranchStatus(const char *bname, Bool_t status = 1, UInt_t *found = nullptr) override;
+   void      SetBranchStatus(const char *bname, Bool_t status = true, UInt_t *found = nullptr) override;
    Int_t     SetCacheSize(Long64_t cacheSize = -1) override;
    void      SetDirectory(TDirectory *dir) override;
    void      SetEntryList(TEntryList *elist, Option_t *opt="") override;

@@ -648,7 +648,7 @@ Int_t TTreeCacheUnzip::CreateTasks()
       pool.Foreach(unzipFunction, basketIndices);
    };
 
-   fUnzipTaskGroup.reset(new ROOT::Experimental::TTaskGroup());
+   fUnzipTaskGroup = std::make_unique<ROOT::Experimental::TTaskGroup>();
    fUnzipTaskGroup->Run(mapFunction);
 
    return 0;
@@ -895,7 +895,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
       Int_t nout = 0;
       Int_t noutot = 0;
 
-      while (1) {
+      while (true) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
          if (hc != 0) break;
          if (gDebug > 2)

@@ -606,7 +606,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       Int_t nout = 0, noutot = 0, nintot = 0;
 
       // Unzip all the compressed objects in the compressed object buffer.
-      while (1) {
+      while (true) {
          // Check the header for errors.
          if (R__unlikely(R__unzip_header(&nin, rawCompressedObjectBuffer, &nbuf) != 0)) {
             Error("ReadBasketBuffers", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);

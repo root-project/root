@@ -198,7 +198,7 @@ TChainIndex::~TChainIndex()
 std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Long64_t minor) const
 {
    using namespace std;
-   if (fEntries.size() == 0) {
+   if (fEntries.empty()) {
       Warning("GetSubTreeIndex", "No subindices in the chain. The chain is probably empty");
       return make_pair(static_cast<TVirtualIndex*>(nullptr), 0);
    }

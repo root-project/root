@@ -1032,7 +1032,7 @@ namespace Internal {
                                                              type,
                                                              branchName.Data(),
                                                              true, false, true ),
-                                 0 );
+                                 false );
       } else {
          AddDescriptor( new TBranchProxyDescriptor( dataMemberName.Data(),
                                                     type,
@@ -1082,7 +1082,7 @@ namespace Internal {
             topdesc->AddDescriptor(  new TBranchProxyDescriptor( dataMemberName.Data(),
                                                                  type,
                                                                  branchName.Data() ),
-                                    0 );
+                                    false );
          } else {
             // leafname.Prepend(prefix);
             AddDescriptor( new TBranchProxyDescriptor( dataMemberName.Data(),

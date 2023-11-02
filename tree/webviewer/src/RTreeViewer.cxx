@@ -417,7 +417,7 @@ void RTreeViewer::InvokeTreeDraw()
    std::string canv_name;
 
    if (gPad) {
-      if ((expr.find("\\") != std::string::npos) || (expr.find("#") != std::string::npos)) {
+      if ((expr.find('\\') != std::string::npos) || (expr.find('#') != std::string::npos)) {
          auto FixTitle = [](TNamed *obj) {
             if (!obj) return;
             TString title = obj->GetTitle();
