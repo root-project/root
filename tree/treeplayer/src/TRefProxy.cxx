@@ -39,7 +39,7 @@ Bool_t TRefProxy::Update()
 TClass* TRefProxy::GetValueClass(void* data) const
 {
    TObject* obj = (TObject*)data;
-   return ( obj ) ? obj->IsA() : 0;
+   return ( obj ) ? obj->IsA() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,21 +63,21 @@ void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)
             table->SetUID(uid, ref->GetPID());
             ((TBranch*)table->GetOwner())->GetEntry(ent);
             TBranch *b = (TBranch*)table->GetParent(uid, ref->GetPID());
-            if ( 0 == b ) {
+            if ( nullptr == b ) {
                ((TBranch*)table->GetOwner())->GetEntry(ent);
                b = (TBranch*)table->GetParent(uid, ref->GetPID());
             }
-            if ( 0 != b )  {
+            if ( nullptr != b )  {
                TBranch* br = b->GetMother();
                if ( br ) br->GetEntry(ent);
             }
             obj = ref->GetObject();
             if ( obj )   {
-               (*ref) = 0;
+               (*ref) = nullptr;
                return obj;
             }
          }
       }
    }
-   return 0;
+   return nullptr;
 }

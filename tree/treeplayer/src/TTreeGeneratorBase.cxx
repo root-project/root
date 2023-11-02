@@ -42,7 +42,7 @@ namespace Internal {
 
    void TTreeGeneratorBase::AddHeader(TClass *cl)
    {
-      if (cl==0) return;
+      if (cl==nullptr) return;
 
       // Check if already included
       TObject *obj = fListOfHeaders.FindObject(cl->GetName());
@@ -175,7 +175,7 @@ namespace Internal {
          // TClass *clm = TClass::GetClass(GetClassName());
          Int_t lOffset = 0; // offset in the local streamerInfo.
          if (clparent) {
-            const char *ename = 0;
+            const char *ename = nullptr;
             if (element) {
                ename = element->GetName();
                lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
@@ -210,7 +210,7 @@ namespace Internal {
          TVirtualStreamerInfo *info = base->GetBaseStreamerInfo();
          if (info) return info;
       }
-      return 0;
+      return nullptr;
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -220,8 +220,8 @@ namespace Internal {
 
    TVirtualStreamerInfo *TTreeGeneratorBase::GetStreamerInfo(TBranch *branch, TIter current, TClass *cl)
    {
-      TVirtualStreamerInfo *objInfo = 0;
-      TBranchElement *b = 0;
+      TVirtualStreamerInfo *objInfo = nullptr;
+      TBranchElement *b = nullptr;
       TString cname = cl->GetName();
 
       while( ( b = (TBranchElement*)current() ) ) {
@@ -230,7 +230,7 @@ namespace Internal {
             break;
          }
       }
-      if (objInfo == 0 && branch->GetTree()->GetDirectory()->GetFile()) {
+      if (objInfo == nullptr && branch->GetTree()->GetDirectory()->GetFile()) {
          const TList *infolist = branch->GetTree()->GetDirectory()->GetFile()->GetStreamerInfoCache();
          if (infolist) {
             TVirtualStreamerInfo *i = (TVirtualStreamerInfo *)infolist->FindObject(cname);
@@ -240,7 +240,7 @@ namespace Internal {
             }
          }
       }
-      if (objInfo == 0) {
+      if (objInfo == nullptr) {
          // We still haven't found it ... this is likely to be an STL collection .. anyway, use the current StreamerInfo.
          objInfo = cl->GetStreamerInfo();
       }

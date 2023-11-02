@@ -355,9 +355,9 @@ Int_t TParallelCoordVar::GetEntryWeight(Long64_t evtidx)
 TH1F* TParallelCoordVar::GetHistogram()
 {
    if (fHistogram) delete fHistogram;
-   fHistogram = NULL;
+   fHistogram = nullptr;
    fHistogram = new TH1F("hpa", "hpa", fNbins, fMinCurrent, fMaxCurrent+0.0001*(fMaxCurrent-fMinCurrent));
-   fHistogram->SetDirectory(0);
+   fHistogram->SetDirectory(nullptr);
    Long64_t first = fParallel->GetCurrentFirst();
    Long64_t nentries = fParallel->GetCurrentN();
    for(Long64_t li=first; li<first+nentries;++li) {
@@ -522,7 +522,7 @@ void TParallelCoordVar::Init()
    fY1         = 0;
    fY2         = 0;
    fId         = 0;
-   fVal        = NULL;
+   fVal        = nullptr;
    fMean       = 0;
    fMinInit    = 0;
    fMinCurrent = 0;
@@ -532,12 +532,12 @@ void TParallelCoordVar::Init()
    fQua1       = 0;
    fQua3       = 0;
    fNentries   = 0;
-   fParallel   = NULL;
-   fHistogram  = NULL;
+   fParallel   = nullptr;
+   fHistogram  = nullptr;
    fNbins      = 100;
    fHistoLW    = 2;
    fHistoHeight     = 0.5;
-   fRanges     = NULL;
+   fRanges     = nullptr;
    SetBit(kLogScale,kFALSE);
    SetBit(kShowBox,kFALSE);
    SetBit(kShowBarHisto,kTRUE);
@@ -646,7 +646,7 @@ void TParallelCoordVar::PaintBoxPlot()
       Double_t mean;
       if (TestBit(kLogScale)) mean = TMath::Log10(fMean);
       else mean = fMean;
-      TMarker *mark = NULL;
+      TMarker *mark = nullptr;
       if(fX1==fX2) mark = new TMarker(fX1,fY1 + ((mean-a)/b)*(fY2-fY1),24);
       else         mark = new TMarker(fX1 + ((mean-a)/b)*(fX2-fX1),fY1,24);
       mark->Paint();
@@ -930,7 +930,7 @@ void TParallelCoordVar::SetCurrentLimits(Double_t min, Double_t max)
    fMaxCurrent = max;
 
    delete fHistogram;
-   fHistogram = NULL;
+   fHistogram = nullptr;
    GetHistogram();
 
    if (fParallel->TestBit(TParallelCoord::kGlobalScale)) {

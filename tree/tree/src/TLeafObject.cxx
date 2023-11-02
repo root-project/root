@@ -29,8 +29,8 @@ ClassImp(TLeafObject);
 
 TLeafObject::TLeafObject(): TLeaf()
 {
-   fClass      = 0;
-   fObjAddress = 0;
+   fClass      = nullptr;
+   fObjAddress = nullptr;
    fVirtual    = kTRUE;
 }
 
@@ -42,7 +42,7 @@ TLeafObject::TLeafObject(TBranch *parent, const char *name, const char *type)
 {
    SetTitle(type);
    fClass      = TClass::GetClass(type);
-   fObjAddress = 0;
+   fObjAddress = nullptr;
    fVirtual    = kTRUE;
 }
 
@@ -102,7 +102,7 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
    if (m->GetMethod()) return m;
    Error("GetMethodCall","Unknown method:%s",name);
    delete m;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,11 +171,11 @@ void TLeafObject::ReadBasket(TBuffer &b)
       if (object->TestBit(kInvalidObject)) {
          if (object->GetUniqueID() == 123456789) {
             fClass->Destructor(object);
-            object = 0;
+            object = nullptr;
          }
       }
       *fObjAddress = object;
-   } else GetBranch()->SetAddress(0);
+   } else GetBranch()->SetAddress(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +197,7 @@ void TLeafObject::Streamer(TBuffer &b)
       if (R__v > 3 || R__v == 2) {
          b.ReadClassBuffer(TLeafObject::Class(), this, R__v, R__s, R__c);
          if (R__v == 2) fVirtual = kTRUE;
-         fObjAddress = 0;
+         fObjAddress = nullptr;
          fClass  = TClass::GetClass(fTitle.Data());
          if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
 
@@ -209,7 +209,7 @@ void TLeafObject::Streamer(TBuffer &b)
       }
       //====process old versions before automatic schema evolution
       TLeaf::Streamer(b);
-      fObjAddress = 0;
+      fObjAddress = nullptr;
       fClass  = TClass::GetClass(fTitle.Data());
       if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
       if (R__v  < 1) fVirtual = kFALSE;

@@ -191,7 +191,7 @@ void TMPWorkerTreeFunc<F>::Process(UInt_t code, MPCodeBufPair &msg)
 
    Long64_t start = 0;
    Long64_t finish = 0;
-   TEntryList *enl = 0;
+   TEntryList *enl = nullptr;
    std::string reply, errmsg, sn = "[S" + std::to_string(GetNWorker()) + "]: ";
    if (LoadTree(code, msg, start, finish, &enl, errmsg) != 0) {
       reply = sn + errmsg;
