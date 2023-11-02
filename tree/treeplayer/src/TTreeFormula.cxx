@@ -132,7 +132,7 @@ TTreeFormula::TTreeFormula(): ROOT::v5::TFormula(), fQuickLoad(kFALSE), fNeedLoa
    fNindex       = 0;
    fNcodes       = 0;
    fAxis         = nullptr;
-   fHasCast      = 0;
+   fHasCast      = false;
    fManager      = nullptr;
    fMultiplicity = 0;
    fConstLD      = nullptr;
@@ -184,7 +184,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
    fNcodes       = 0;
    fMultiplicity = 0;
    fAxis         = nullptr;
-   fHasCast      = 0;
+   fHasCast      = false;
    fConstLD      = nullptr;
    Int_t i,j,k;
    fManager      = new TTreeFormulaManager;
@@ -2359,7 +2359,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             strlcpy(first,work,kMaxLen);
 
             std::string treename(first);
-            if (treename.size() && treename[treename.size()-1]=='.') {
+            if (!treename.empty() && treename[treename.size()-1]=='.') {
                treename.erase(treename.size()-1);
             }
             if (treename== "This" /* || treename == fTree->GetName() */ ) {

@@ -1039,7 +1039,7 @@ TBranch* TBranch::FindBranch(const char* name)
    longnm.reserve(fName.Length()+strlen(name)+3);
    longnm = fName.Data();
    if (longnm[longnm.length()-1]==']') {
-      std::size_t dim = longnm.find_first_of("[");
+      std::size_t dim = longnm.find_first_of('[');
       if (dim != std::string::npos) {
          longnm.erase(dim);
       }
@@ -2716,9 +2716,9 @@ void TBranch::SetAddress(void* addr)
 void TBranch::SetAutoDelete(Bool_t autodel)
 {
    if (autodel) {
-      SetBit(kAutoDelete, 1);
+      SetBit(kAutoDelete, true);
    } else {
-      SetBit(kAutoDelete, 0);
+      SetBit(kAutoDelete, false);
    }
 }
 

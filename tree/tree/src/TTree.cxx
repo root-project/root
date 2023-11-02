@@ -511,7 +511,7 @@ TTree::TFriendLock::TFriendLock(TTree* tree, UInt_t methodbit)
       fPrevious = fTree->fFriendLockStatus & fMethodBit;
       fTree->fFriendLockStatus |= fMethodBit;
    } else {
-      fPrevious = 0;
+      fPrevious = false;
    }
 }
 
@@ -3428,7 +3428,7 @@ namespace {
 
    enum EOnIndexError { kDrop, kKeep, kBuild };
 
-   static Bool_t R__HandleIndex(EOnIndexError onIndexError, TTree *newtree, TTree *oldtree)
+   Bool_t R__HandleIndex(EOnIndexError onIndexError, TTree *newtree, TTree *oldtree)
    {
       // Return true if we should continue to handle indices, false otherwise.
 
@@ -5381,7 +5381,7 @@ Bool_t TTree::GetBranchStatus(const char* branchname) const
    if (br) {
       return br->TestBit(kDoNotProcess) == 0;
    }
-   return 0;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6218,7 +6218,7 @@ TLeaf* TTree::GetLeaf(const char *name)
       return nullptr;
 
    std::string path(name);
-   const auto sep = path.find_last_of("/");
+   const auto sep = path.find_last_of('/');
    if (sep != std::string::npos)
       return GetLeafImpl(path.substr(0, sep).c_str(), name+sep+1);
 
@@ -7587,7 +7587,7 @@ char TTree::GetNewlineValue(std::istream &inputStream)
 {
    Long_t inPos = inputStream.tellg();
    char newline = '\n';
-   while(1) {
+   while(true) {
       char c = 0;
       inputStream.get(c);
       if(!inputStream.good()) {

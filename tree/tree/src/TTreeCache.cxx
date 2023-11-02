@@ -299,7 +299,9 @@ myTreeOrChain.GetTree()->PrintCacheStats();
 #include "TMath.h"
 #include "TBranchCacheInfo.h"
 #include "TVirtualPerfStats.h"
-#include <limits.h>
+#include <climits>
+
+#include <memory>
 
 Int_t TTreeCache::fgLearnEntries = 100;
 
@@ -699,7 +701,7 @@ void TTreeCache::ResetMissCache()
    fFirstMiss = -1;
 
    if (!fMissCache) {
-      fMissCache.reset(new MissCache());
+      fMissCache = std::make_unique<MissCache>();
    }
    fMissCache->clear();
 }
@@ -816,7 +818,7 @@ TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
          // Note that we continue to iterate; fills up the rest of the entries in the cache.
       }
       // At this point, we are ready to push back a new offset
-      fMissCache->fEntries.emplace_back(std::move(iopos));
+      fMissCache->fEntries.emplace_back(iopos);
 
       if (R__unlikely(perfStats)) {
          Int_t blistsize = b->GetWriteBasket();
@@ -1995,7 +1997,7 @@ Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len)
    // try to prefetch a couple of times and if request is still not satisfied then
    // fall back to normal reading without prefetching for the current request
    Int_t counter = 0;
-   while (1) {
+   while (true) {
       if(TFileCacheRead::ReadBuffer(buf, pos, len)) {
          break;
       }

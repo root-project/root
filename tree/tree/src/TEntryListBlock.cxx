@@ -57,7 +57,7 @@ TEntryListBlock::TEntryListBlock()
    fN = kBlockSize;
    fNPassed = 0;
    fType = -1;
-   fPassing = 1;
+   fPassing = true;
    fCurrent = 0;
    fLastIndexReturned = -1;
    fLastIndexQueried = -1;
@@ -129,7 +129,7 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
 {
    if (entry > kBlockSize*16) {
       Error("Enter", "illegal entry value!");
-      return 0;
+      return false;
    }
    if (!fIndices){
       fIndices = new UShort_t[kBlockSize] ;
@@ -144,17 +144,17 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
       if ((fIndices[i] & (1<<j))==0){
          fIndices[i] |= 1<<j;
          fNPassed++;
-         return 1;
+         return true;
       } else {
-         return 0;
+         return false;
       }
    }
    //list
    //change to bits
    UShort_t *bits = new UShort_t[kBlockSize];
-   Transform(1, bits);
+   Transform(true, bits);
    Enter(entry);
-   return 0;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +167,7 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
 {
    if (entry > kBlockSize*16) {
       Error("Remove", "Illegal entry value!\n");
-      return 0;
+      return false;
    }
    if (fType==0){
       Int_t i = entry>>4;
@@ -175,15 +175,15 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
       if ((fIndices[i] & (1<<j))!=0){
          fIndices[i] &= (0xFFFF^(1<<j));
          fNPassed--;
-         return 1;
+         return true;
       } else {
-         return 0;
+         return false;
       }
    }
    //list
    //change to bits
    UShort_t *bits = new UShort_t[kBlockSize];
-   Transform(1, bits);
+   Transform(true, bits);
    return Remove(entry);
    //return 0;
 }
@@ -294,7 +294,7 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
       if (GetNPassed() + block->GetNPassed() > kBlockSize){
          //change to bits
          UShort_t *bits = new UShort_t[kBlockSize];
-         Transform(1, bits);
+         Transform(true, bits);
          Merge(block);
       } else {
          //this is only possible if fPassing=1 in both blocks
@@ -548,11 +548,11 @@ void TEntryListBlock::OptimizeStorage()
 {
    if (fType!=0) return;
    if (fNPassed > kBlockSize*15)
-      fPassing = 0;
+      fPassing = false;
    if (fNPassed<kBlockSize || !fPassing){
       //less than 4000 entries passing, makes sense to change from bits to list
       UShort_t *indexnew = new UShort_t[fNPassed];
-      Transform(0, indexnew);
+      Transform(false, indexnew);
    }
 }
 
@@ -615,6 +615,6 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
    fIndices = indexnew;
    fType = 0;
    fN = kBlockSize;
-   fPassing = 1;
+   fPassing = true;
    return;
 }

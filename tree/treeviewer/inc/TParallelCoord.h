@@ -111,7 +111,7 @@ public:
    void           SetAxisHistogramHeight(Double_t h=0.5); // *MENU*
    void           SetAxisHistogramLineWidth(Int_t lw=2); // *MENU*
    void           SetCandleChart(Bool_t can); // *TOGGLE* *GETTER=GetCandleChart
-   virtual void   SetCurveDisplay(Bool_t curve=1) {SetBit(kCurveDisplay,curve);} // *TOGGLE* *GETTER=GetCurveDisplay
+   virtual void   SetCurveDisplay(Bool_t curve=true) {SetBit(kCurveDisplay,curve);} // *TOGGLE* *GETTER=GetCurveDisplay
    void           SetCurrentEntries(TEntryList* entries) {fCurrentEntries = entries;}
    void           SetCurrentFirst(Long64_t);
    void           SetCurrentN(Long64_t);

@@ -332,7 +332,7 @@ TBranch *ROOT::Internal::TTreeReaderValueBase::SearchBranchWithCompositeName(TLe
          TObjArray *myObjArray = myBranchElement->GetInfo()->GetElements();
          TVirtualStreamerInfo *myInfo = myBranchElement->GetInfo();
 
-         while (nameStack.size() && found){
+         while (!nameStack.empty() && found){
             found = false;
 
             for (int i = 0; i < myObjArray->GetEntries(); ++i){

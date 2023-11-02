@@ -121,7 +121,7 @@ TTree *TMPWorkerTree::RetrieveTree(TFile *fp)
    //retrieve the TTree with the specified name from file
    //we are not the owner of the TTree object, the file is!
    TTree *tree = nullptr;
-   if(fTreeName == "") {
+   if(fTreeName.empty()) {
       // retrieve the first TTree
       // (re-adapted from TEventIter.cxx)
       if (fp->GetListOfKeys()) {

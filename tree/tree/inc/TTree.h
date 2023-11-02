@@ -601,7 +601,7 @@ public:
       return SetBranchAddress(bname,add,ptr,cl,type,false);
    }
 #endif
-   virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = nullptr);
+   virtual void            SetBranchStatus(const char* bname, Bool_t status = true, UInt_t* found = nullptr);
    static  void            SetBranchStyle(Int_t style = 1);  //style=0 for old branch, =1 for new branch style
    virtual Int_t           SetCacheSize(Long64_t cachesize = -1);
    virtual Int_t           SetCacheEntryRange(Long64_t first, Long64_t last);
