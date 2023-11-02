@@ -2241,6 +2241,8 @@ void TCanvas::Streamer(TBuffer &b)
       //restore the colors
       auto colors = dynamic_cast<TObjArray *>(fPrimitives->FindObject("ListOfColors"));
       if (colors) {
+         auto root_colors = dynamic_cast<TObjArray *>(gROOT->GetListOfColors());
+
          TIter next(colors);
          while (auto colold = static_cast<TColor *>(next())) {
             Int_t cn = colold->GetNumber();
@@ -2251,11 +2253,11 @@ void TCanvas::Streamer(TBuffer &b)
                colcur->SetAlpha(colold->GetAlpha());
             } else {
                if (colcur) {
-                  gROOT->GetListOfColors()->Remove(colcur);
+                  if (root_colors) root_colors->Remove(colcur);
                   delete colcur;
                }
-               gROOT->GetListOfColors()->Add(colold);
                colors->Remove(colold);
+               if (root_colors) root_colors->AddAtAndExpand(colold, cn);
             }
          }
          //restore the palette if needed
