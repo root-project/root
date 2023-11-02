@@ -70,7 +70,7 @@ namespace {
 /// Used on big-endian architectures for packing/unpacking elements whose column type requires
 /// a little-endian on-disk representation.
 template <std::size_t N>
-static void CopyBswap(void *destination, const void *source, std::size_t count)
+void CopyBswap(void *destination, const void *source, std::size_t count)
 {
    auto dst = reinterpret_cast<typename RByteSwap<N>::value_type *>(destination);
    auto src = reinterpret_cast<const typename RByteSwap<N>::value_type *>(source);

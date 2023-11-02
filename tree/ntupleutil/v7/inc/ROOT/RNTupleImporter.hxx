@@ -190,7 +190,7 @@ private:
    /// Transform a NULL terminated C string branch into an std::string field
    struct RCStringTransformation : public RImportTransformation {
       RCStringTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
-      virtual ~RCStringTransformation() = default;
+      ~RCStringTransformation() override = default;
       RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
       void ResetEntry() final {}
    };
@@ -201,7 +201,7 @@ private:
    struct RLeafArrayTransformation : public RImportTransformation {
       std::int64_t fNum = 0;
       RLeafArrayTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
-      virtual ~RLeafArrayTransformation() = default;
+      ~RLeafArrayTransformation() override = default;
       RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
       void ResetEntry() final { fNum = 0; }
    };

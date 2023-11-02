@@ -369,7 +369,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(DescriptorId_t clusterId,
 
             fReadQueue.emplace_back(std::move(readItem));
          }
-         if (fReadQueue.size() > 0)
+         if (!fReadQueue.empty())
             fCvHasReadWork.notify_one();
       }
    } // work queue lock guard
