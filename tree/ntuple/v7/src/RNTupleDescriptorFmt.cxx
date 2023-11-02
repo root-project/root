@@ -62,7 +62,7 @@ struct ColumnInfo {
    }
 };
 
-static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
+std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
@@ -71,7 +71,7 @@ static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
 }
 
-static std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
+std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);

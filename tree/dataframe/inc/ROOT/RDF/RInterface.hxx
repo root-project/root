@@ -2925,8 +2925,8 @@ private:
                                             const std::vector<std::string> &variationTags,
                                             std::string_view variationName, bool isSingleColumn)
    {
-      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
-      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationTags.empty() && "Must have at least one variation.");
+      R__ASSERT(!colNames.empty() && "Must have at least one varied column.");
       R__ASSERT(!variationName.empty() && "Must provide a variation name.");
 
       for (auto &colName : colNames) {

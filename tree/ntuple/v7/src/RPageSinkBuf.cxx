@@ -21,6 +21,7 @@
 #include <ROOT/RPageSinkBuf.hxx>
 
 #include <algorithm>
+#include <memory>
 
 void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
@@ -38,7 +39,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
    , fMetrics("RPageSinkBuf")
    , fInnerSink(std::move(inner))
 {
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTuplePlainCounter*>("ParallelZip", "",
          "compressing pages in parallel")
    });

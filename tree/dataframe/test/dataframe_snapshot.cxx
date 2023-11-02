@@ -1049,7 +1049,7 @@ TEST(RDFSnapshotMore, ManyTasksPerThread)
 
    // test multi-thread Snapshotting from many tasks per worker thread
    const auto outputFile = "snapshot_manytasks_out.root";
-   ROOT::RDataFrame tdf("t", (inputFilePrefix + "*.root").c_str());
+   ROOT::RDataFrame tdf("t", inputFilePrefix + "*.root");
    tdf.Snapshot<int>("t", outputFile, {"x"});
 
    // check output contents

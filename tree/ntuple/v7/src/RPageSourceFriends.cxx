@@ -119,6 +119,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
 ROOT::Experimental::Detail::RPageSourceFriends::Clone() const
 {
    std::vector<std::unique_ptr<RPageSource>> cloneSources;
+   cloneSources.reserve(fSources.size());
    for (const auto &f : fSources)
       cloneSources.emplace_back(f->Clone());
    return std::make_unique<RPageSourceFriends>(fNTupleName, cloneSources);

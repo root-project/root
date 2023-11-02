@@ -46,13 +46,14 @@
 #include <cstring> // for memset
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <new> // hardware_destructive_interference_size
 #include <type_traits>
 #include <unordered_map>
 
 namespace {
 
-static const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
+const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"Bool_t",   "bool"},
    {"Float_t",  "float"},
    {"Double_t", "double"},
@@ -133,7 +134,7 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
    // Only parse outer array definition, i.e. the right `]` should be at the end of the type name
    while (typeName.back() == ']') {
       auto posRBrace = typeName.size() - 1;
-      auto posLBrace = typeName.find_last_of("[", posRBrace);
+      auto posLBrace = typeName.find_last_of('[', posRBrace);
       if (posLBrace == std::string_view::npos)
          return {};
 
@@ -505,9 +506,9 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::Detail::RFieldBase::EnsureValidFieldName(std::string_view fieldName)
 {
-   if (fieldName == "") {
+   if (fieldName.empty()) {
       return R__FAIL("name cannot be empty string \"\"");
-   } else if (fieldName.find(".") != std::string::npos) {
+   } else if (fieldName.find('.') != std::string::npos) {
       return R__FAIL("name '" + std::string(fieldName) + "' cannot contain dot characters '.'");
    }
    return RResult<void>::Success();
@@ -610,6 +611,7 @@ ROOT::Experimental::Detail::RFieldBase::EntryToColumnElementIndex(ROOT::Experime
 std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {
    std::vector<RFieldBase *> result;
+   result.reserve(fSubFields.size());
    for (const auto &f : fSubFields) {
       result.emplace_back(f.get());
    }
@@ -1767,6 +1769,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
 {
    std::vector<std::unique_ptr<Detail::RFieldBase>> cloneItems;
+   cloneItems.reserve(fSubFields.size());
    for (auto &item : fSubFields)
       cloneItems.emplace_back(item->Clone(item->GetName()));
    return std::unique_ptr<RRecordField>(new RRecordField(newName, std::move(cloneItems), fOffsets, GetType()));
@@ -2196,6 +2199,7 @@ ROOT::Experimental::RRVecField::SplitValue(const RValue &value) const
 
    std::vector<RValue> result;
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   result.reserve(*sizePtr);
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
       result.emplace_back(fSubFields[0]->BindValue(begin + i * fItemSize));
    }
@@ -2643,7 +2647,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::unique_ptr<RSetField>(new RSetField(newName, GetType(), std::move(newItemField)));
+   return std::make_unique<RSetField>(newName, GetType(), std::move(newItemField));
 }
 
 //------------------------------------------------------------------------------
@@ -2913,6 +2917,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
 {
    std::vector<std::unique_ptr<Detail::RFieldBase>> items;
+   items.reserve(fSubFields.size());
    for (const auto &item : fSubFields)
       items.push_back(item->Clone(item->GetName()));
 

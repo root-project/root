@@ -115,58 +115,58 @@ public:
    void SetEntry(ULong64_t entry) { fCurrentEntry = entry; }
 
    /// Check if we are asking the same entry as before.
-   virtual arrow::Status Visit(arrow::Int32Array const &array) final
+   arrow::Status Visit(arrow::Int32Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::Int64Array const &array) final
+   arrow::Status Visit(arrow::Int64Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
    /// Check if we are asking the same entry as before.
-   virtual arrow::Status Visit(arrow::UInt32Array const &array) final
+   arrow::Status Visit(arrow::UInt32Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::UInt64Array const &array) final
+   arrow::Status Visit(arrow::UInt64Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::FloatArray const &array) final
+   arrow::Status Visit(arrow::FloatArray const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::DoubleArray const &array) final
+   arrow::Status Visit(arrow::DoubleArray const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::BooleanArray const &array) final
+   arrow::Status Visit(arrow::BooleanArray const &array) final
    {
       fCachedBool = array.Value(fCurrentEntry);
       *fResult = reinterpret_cast<void *>(&fCachedBool);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::StringArray const &array) final
+   arrow::Status Visit(arrow::StringArray const &array) final
    {
       fCachedString = array.GetString(fCurrentEntry);
       *fResult = reinterpret_cast<void *>(&fCachedString);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::ListArray const &array) final
+   arrow::Status Visit(arrow::ListArray const &array) final
    {
       switch (array.value_type()->id()) {
       case arrow::Type::FLOAT: {
@@ -367,15 +367,15 @@ public:
 class VerifyValidColumnType : public ::arrow::TypeVisitor {
 private:
 public:
-   virtual arrow::Status Visit(const arrow::Int64Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::UInt64Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::Int32Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::UInt32Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::FloatType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::DoubleType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::StringType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::BooleanType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::ListType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::Int64Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::UInt64Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::Int32Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::UInt32Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::FloatType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::DoubleType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::StringType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::BooleanType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::ListType &) override { return arrow::Status::OK(); }
 
    using ::arrow::TypeVisitor::Visit;
 };

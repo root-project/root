@@ -23,6 +23,7 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <memory>
 #include <string_view>
 #ifdef R__ENABLE_DAOS
 # include <ROOT/RPageStorageDaos.hxx>
@@ -202,7 +203,7 @@ void ROOT::Experimental::Detail::RPageSource::PrepareLoadCluster(
 void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nReadV", "", "number of vector read requests"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nRead", "", "number of byte ranges read"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadPayload", "B", "volume read from storage (required)"),
@@ -572,7 +573,7 @@ ROOT::Experimental::Detail::RPageSink::SealPage(
 void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::string &prefix)
 {
    fMetrics = RNTupleMetrics(prefix);
-   fCounters = std::unique_ptr<RCounters>(new RCounters{
+   fCounters = std::make_unique<RCounters>(RCounters{
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
       *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),

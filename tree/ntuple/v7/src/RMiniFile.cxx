@@ -934,9 +934,9 @@ struct RBareFileHeader {
 #pragma pack(pop)
 
 /// The artifical class name shown for opaque RNTuple keys (see TBasket)
-static constexpr char const *kBlobClassName = "RBlob";
+constexpr char const *kBlobClassName = "RBlob";
 /// The class name of the RNTuple anchor
-static constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
+constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
 
 /// The RKeyBlob writes an invisible key into a TFile.  That is, a key that is not indexed in the list of keys,
 /// like a TBasket.

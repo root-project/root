@@ -275,7 +275,7 @@ std::unique_ptr<TH1D>
 ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental::ENTupleInspectorHist histKind,
                                                               std::string_view histName, std::string_view histTitle)
 {
-   if (histName == "") {
+   if (histName.empty()) {
       switch (histKind) {
       case ENTupleInspectorHist::kCount: histName = "colTypeCountHist"; break;
       case ENTupleInspectorHist::kNElems: histName = "colTypeElemCountHist"; break;
@@ -285,7 +285,7 @@ ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental
       }
    }
 
-   if (histTitle == "") {
+   if (histTitle.empty()) {
       switch (histKind) {
       case ENTupleInspectorHist::kCount: histTitle = "Column count by type"; break;
       case ENTupleInspectorHist::kNElems: histTitle = "Number of elements by column type"; break;

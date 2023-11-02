@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <iostream>
 #include <set>
-#include <stdio.h>
+#include <cstdio>
 
 // TODO, this function should be part of core libraries
 #include <numeric>
@@ -355,7 +355,7 @@ public:
    // dummy implementation of PartialUpdate
    int &PartialUpdate(unsigned int) { return *fDummyResult; }
 
-   ROOT::RDF::SampleCallback_t GetSampleCallback()
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
    {
       return [this](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
          this->fHelper->registerNewSample(slot, id);

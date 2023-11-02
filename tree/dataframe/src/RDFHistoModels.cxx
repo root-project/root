@@ -12,7 +12,7 @@
 #include <ROOT/TSeq.hxx>
 #include <TProfile.h>
 #include <TProfile2D.h>
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 
 #include "TAxis.h"
@@ -268,7 +268,7 @@ std::shared_ptr<::THnD> THnDModel::GetHistogram() const
 {
    bool varbinning = false;
    for (const auto &bins : fBinEdges) {
-      if (bins.size()) {
+      if (!bins.empty()) {
          varbinning = true;
          break;
       }

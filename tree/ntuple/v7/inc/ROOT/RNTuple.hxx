@@ -26,6 +26,7 @@
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RSpan.hxx>
+#include <memory>
 #include <string_view>
 
 #include <TClassRef.h>
@@ -452,7 +453,7 @@ public:
    /// ~~~
    std::unique_ptr<RNTupleModel::RUpdater> CreateModelUpdater()
    {
-      return std::unique_ptr<RNTupleModel::RUpdater>(new RNTupleModel::RUpdater(*this));
+      return std::make_unique<RNTupleModel::RUpdater>(*this);
    }
 };
 
