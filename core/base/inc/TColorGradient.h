@@ -67,6 +67,7 @@ private:
    ECoordinateMode fCoordinateMode = kObjectBoundingMode;
 
 public:
+   TColorGradient() {}
    TColorGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                   const Color_t *colorIndices, ECoordinateMode mode = kObjectBoundingMode);
    TColorGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
@@ -98,6 +99,8 @@ public:
    //With C++11 we'll use inherited constructors!!!
    using TColorGradient::TColorGradient;
 
+   TLinearGradient() {}
+
    //points are always in NDC (and also affected by fCoordinateMode).
    void SetStartEnd(const Point &p1, const Point &p2);
    const Point &GetStart() const;
@@ -127,6 +130,8 @@ public:
 
    //With C++11 we'll use inherited constructors!!!
    using TColorGradient::TColorGradient;
+
+   TRadialGradient() {}
 
    EGradientType GetGradientType()const;
 
