@@ -41,7 +41,7 @@ protected:
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
    }
-   ~RDFSimpleTests()
+   ~RDFSimpleTests() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -637,6 +637,7 @@ public:
    void GenerateNumbers(int n)
    {
       std::vector<double> numbers;
+      numbers.reserve(n);
       for (int i = 0; i < n; ++i)
          numbers.push_back(fDistribution(fGenerator));
       samples = numbers;

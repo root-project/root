@@ -1469,7 +1469,7 @@ protected:
 public:
    RCardinalityField(RCardinalityField &&other) = default;
    RCardinalityField &operator=(RCardinalityField &&other) = default;
-   ~RCardinalityField() = default;
+   ~RCardinalityField() override = default;
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
@@ -1545,7 +1545,7 @@ public:
    explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
-   ~RField() = default;
+   ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }

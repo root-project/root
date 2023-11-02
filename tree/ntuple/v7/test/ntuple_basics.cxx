@@ -654,7 +654,7 @@ struct RFieldCallbackInjector {
 };
 } // namespace ROOT::Experimental::Internal
 namespace {
-static unsigned gNCallReadCallback = 0;
+unsigned gNCallReadCallback = 0;
 }
 
 TEST(RNTuple, ReadCallback)

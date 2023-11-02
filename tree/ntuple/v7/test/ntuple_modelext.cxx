@@ -28,7 +28,7 @@ struct RFieldBaseTest : public ROOT::Experimental::Detail::RFieldBase {
    }
 };
 
-static std::size_t GetFirstEntry(const RFieldBase *f)
+std::size_t GetFirstEntry(const RFieldBase *f)
 {
    return static_cast<const RFieldBaseTest *>(f)->GetFirstEntry();
 }

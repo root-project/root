@@ -357,7 +357,7 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    std::string colTypeStr;
    while (std::getline(csvOutput, line)) {
       ++nLines;
-      colTypeStr = line.substr(0, line.find(","));
+      colTypeStr = line.substr(0, line.find(','));
 
       if (colTypeStr != "SplitIndex64" && colTypeStr != "SplitInt64" && colTypeStr != "SplitReal32")
          FAIL() << "Unexpected column type: " << colTypeStr;
@@ -376,7 +376,7 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    nLines = 0;
    while (std::getline(tableOutput, line)) {
       ++nLines;
-      colTypeStr = line.substr(0, line.find("|"));
+      colTypeStr = line.substr(0, line.find('|'));
       colTypeStr.erase(remove_if(colTypeStr.begin(), colTypeStr.end(), isspace), colTypeStr.end());
 
       if (colTypeStr != "SplitIndex64" && colTypeStr != "SplitInt64" && colTypeStr != "SplitReal32")
