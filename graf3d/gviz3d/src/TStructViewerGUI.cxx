@@ -47,7 +47,7 @@ ClassImp(TStructViewerGUI);
 //
 //////////////////////////////////////////////////////////////////////////
 
-TGeoMedium* TStructViewerGUI::fgMedium = NULL;
+TGeoMedium* TStructViewerGUI::fgMedium = nullptr;
 UInt_t      TStructViewerGUI::fgCounter = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -813,18 +813,24 @@ void TStructViewerGUI::UnCheckMaxObjects()
 
 void TStructViewerGUI::Update(Bool_t resetCamera)
 {
-   if (!fNodePtr) {
+   if (!fNodePtr)
       return;
-   }
 
-   fCanvas->GetListOfPrimitives()->Clear();
-   fTopVolume->ClearNodes();
+   if (fCanvas && fCanvas->GetListOfPrimitives())
+      fCanvas->GetListOfPrimitives()->Clear();
+
+   if (fTopVolume)
+      fTopVolume->ClearNodes();
+
    Draw();
-   fCanvas->GetListOfPrimitives()->Add(fTopVolume);
-   fGLViewer->UpdateScene();
 
-   if(resetCamera) {
-      fGLViewer->ResetCurrentCamera();
+   if (fCanvas && fCanvas->GetListOfPrimitives())
+      fCanvas->GetListOfPrimitives()->Add(fTopVolume);
+
+   if (fGLViewer) {
+      fGLViewer->UpdateScene();
+      if(resetCamera)
+         fGLViewer->ResetCurrentCamera();
    }
 }
 
