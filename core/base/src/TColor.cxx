@@ -1474,12 +1474,23 @@ Int_t TColor::GetNumberOfColors()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function returning kTRUE if some new colors have been defined after
+/// Static method returning kTRUE if some new colors have been defined after
 /// initialisation or since the last call to this method. This allows to avoid
 /// the colors and palette streaming in TCanvas::Streamer if not needed.
+/// If method called once with set_always_on = 1, all next canvases will be
+//  saved with color palette - disregard if new colors created or not.
+/// To reset such mode, just call methoid once with set_always_on = -1
 
-Bool_t TColor::DefinedColors()
+Bool_t TColor::DefinedColors(Int_t set_always_on)
 {
+   if (set_always_on > 0)
+      gLastDefinedColors = -1;
+   else if (set_always_on < 0)
+      gLastDefinedColors = gDefinedColors;
+
+   if (gLastDefinedColors < 0)
+      return kTRUE;
+
    // After initialization gDefinedColors == 649. If it is bigger it means some new
    // colors have been defined
    Bool_t hasChanged = (gDefinedColors - gLastDefinedColors) > 50;

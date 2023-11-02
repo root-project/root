@@ -100,7 +100,7 @@ public:
    static const char *PixelAsHexString(ULong_t pixel);
    static Bool_t  SaveColor(std::ostream &out, Int_t ci);
    static void    SetColorThreshold(Float_t t);
-   static Bool_t  DefinedColors();
+   static Bool_t  DefinedColors(Int_t set_always_on = 0);
    static void    InvertPalette();
    static Bool_t  IsGrayscale();
    static void    SetGrayscale(Bool_t set = kTRUE);
