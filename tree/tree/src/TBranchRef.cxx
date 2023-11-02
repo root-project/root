@@ -43,7 +43,7 @@ ClassImp(TBranchRef);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TBranchRef::TBranchRef(): TBranch(), fRequestedEntry(-1), fRefTable(0)
+TBranchRef::TBranchRef(): TBranch(), fRequestedEntry(-1), fRefTable(nullptr)
 {
    fReadLeaves = (ReadLeaves_t)&TBranchRef::ReadLeavesImpl;
    fFillLeaves = (FillLeaves_t)&TBranchRef::FillLeavesImpl;
@@ -53,7 +53,7 @@ TBranchRef::TBranchRef(): TBranch(), fRequestedEntry(-1), fRefTable(0)
 /// Main constructor called by TTree::BranchRef.
 
 TBranchRef::TBranchRef(TTree *tree)
-    : TBranch(), fRequestedEntry(-1), fRefTable(0)
+    : TBranch(), fRequestedEntry(-1), fRefTable(nullptr)
 {
    if (!tree) return;
    SetName("TRefTable");
@@ -62,7 +62,7 @@ TBranchRef::TBranchRef(TTree *tree)
 
    fCompress       = 1;
    fBasketSize     = 32000;
-   fAddress        = 0;
+   fAddress        = nullptr;
    fBasketBytes    = new Int_t[fMaxBaskets];
    fBasketEntry    = new Long64_t[fMaxBaskets];
    fBasketSeek     = new Long64_t[fMaxBaskets];
