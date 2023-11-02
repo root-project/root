@@ -28,7 +28,7 @@
 #include "TMath.h"
 #include "TCanvas.h"
 #include "TArc.h"
-#include "float.h"
+#include <cfloat>
 #include "TEnv.h"
 
 ClassImp(TSpider);

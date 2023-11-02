@@ -598,7 +598,7 @@ void TTreePerfStats::PrintBasketInfo(Option_t *option) const
       const char *branchname = branches->At(i)->GetName();
 
       printf("  br=%zu %s read not cached: ", i, branchname);
-      if (fBasketsInfo[i].size() == 0) {
+      if (fBasketsInfo[i].empty()) {
          printf("none");
       } else
          for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {

@@ -1,5 +1,5 @@
 #include <memory>
-#include <string.h>
+#include <cstring>
 
 #include "TEntryList.h"
 #include "TFile.h"

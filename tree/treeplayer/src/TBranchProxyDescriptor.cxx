@@ -24,7 +24,7 @@
 
 #include "TTreeFormula.h"
 #include "TFormLeafInfo.h"
-#include <ctype.h>
+#include <cctype>
 
 ClassImp(ROOT::Internal::TBranchProxyDescriptor);
 

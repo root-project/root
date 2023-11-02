@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include "Bytes.h"
 #include "TBranch.h"

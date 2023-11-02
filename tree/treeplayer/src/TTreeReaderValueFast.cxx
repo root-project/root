@@ -46,7 +46,7 @@ ROOT::Experimental::Internal::TTreeReaderValueFastBase::~TTreeReaderValueFastBas
 void ROOT::Experimental::Internal::TTreeReaderValueFastBase::CreateProxy() {
    fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
    fSetupStatus = ROOT::Internal::TTreeReaderValueBase::kSetupMissingBranch;
-   if (fLeafName.size() > 0){
+   if (!fLeafName.empty()){
 
       Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
 

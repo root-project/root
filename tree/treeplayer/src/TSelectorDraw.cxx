@@ -1318,7 +1318,7 @@ void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
                Int_t nbits = bits->GetNbits();
 
                Int_t nextbit = -1;
-               while (1) {
+               while (true) {
                   nextbit = bits->FirstSetBit(nextbit + 1);
                   if (nextbit >= nbits) break;
                   fVal[0][fNfill] = nextbit;

@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 #include "ROOT/TestSupport.hxx"
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
 
 #include "RErrorIgnoreRAII.hxx"

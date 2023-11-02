@@ -211,7 +211,7 @@ public:
            Bool_t           IsBranchFolder() const { return TestBit(kBranchFolder); }
            Bool_t           IsFolder() const override;
    virtual Bool_t           IsObjectOwner() const { return TestBit(kDeleteObject); }
-           Bool_t           Notify() override { if (fAddress) { ResetAddress(); } return 1; }
+           Bool_t           Notify() override { if (fAddress) { ResetAddress(); } return true; }
            void             Print(Option_t* option = "") const override;
            void             PrintValue(Int_t i) const;
            void             Reset(Option_t* option = "") override;

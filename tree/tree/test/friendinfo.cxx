@@ -50,17 +50,17 @@ void FillTree(const std::string &fileName, const std::string &treeName, int nEnt
    f.Close();
 }
 
-constexpr static std::size_t nEntriesInMainTree{20};
-constexpr static std::size_t nEntriesInFriendTree{5};
-const static std::string mainTreeName{"rfriendinfo_test_main"};
-const static std::string mainFileName{"rfriendinfo_test_main.root"};
-const static std::vector<std::string> friendTreeNames{
+constexpr std::size_t nEntriesInMainTree{20};
+constexpr std::size_t nEntriesInFriendTree{5};
+const std::string mainTreeName{"rfriendinfo_test_main"};
+const std::string mainFileName{"rfriendinfo_test_main.root"};
+const std::vector<std::string> friendTreeNames{
    "rfriendinfo_test_friend_0",
    "rfriendinfo_test_friend_1",
    "rfriendinfo_test_friend_2",
    "rfriendinfo_test_friend_3",
 };
-const static std::vector<std::string> friendFileNames{
+const std::vector<std::string> friendFileNames{
    "rfriendinfo_test_friend_0.root",
    "rfriendinfo_test_friend_1.root",
    "rfriendinfo_test_friend_2.root",
@@ -256,6 +256,7 @@ TEST_P(RFriendInfoTest, MakeFriendsFromAddFriendOverload3)
    ROOT::TreeUtils::RFriendInfo friendInfo;
    auto retrieveEntries = GetParam();
    std::vector<std::pair<std::string, std::string>> treeAndFileNames;
+   treeAndFileNames.reserve(friendTreeNames.size());
    for (std::size_t i = 0ul; i < friendTreeNames.size(); i++) {
       treeAndFileNames.emplace_back(friendTreeNames[i], friendFileNames[i]);
    }

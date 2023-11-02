@@ -634,7 +634,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
          if (nblock >= fNBlocks) {
             if (fNBlocks>0){
                block = (TEntryListBlock*)fBlocks->UncheckedAt(fNBlocks-1);
-               if (!block) return 0;
+               if (!block) return false;
                block->OptimizeStorage();
             }
             for (Int_t i=fNBlocks; i<=nblock; i++){
@@ -646,7 +646,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
          block = (TEntryListBlock*)fBlocks->UncheckedAt(nblock);
          if (block->Enter(entry-nblock*kBlockSize)) {
             fN++;
-            return 1;
+            return true;
          }
       } else {
          //the entry in the current entry list
@@ -654,7 +654,7 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
          if (fCurrent->Enter(entry)) {
             if (fLists)
                fN++;
-            return 1;
+            return true;
          }
       }
    } else {
@@ -664,11 +664,11 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
          if (fCurrent->Enter(localentry)) {
             if (fLists)
                fN++;
-            return 1;
+            return true;
          }
       }
    }
-   return 0;
+   return false;
 
 }
 
@@ -679,10 +679,10 @@ Bool_t TEntryList::Enter(Long64_t localentry, const char *treename, const char *
       if (fCurrent->Enter(localentry)) {
          if (fLists)
             fN++;
-         return 1;
+         return true;
       }
    }
-   return 0;
+   return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -716,22 +716,22 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
      return kFALSE;
    if (!tree) {
       if (!fLists) {
-         if (!fBlocks) return 0;
+         if (!fBlocks) return false;
          TEntryListBlock *block = nullptr;
          Long64_t nblock = entry/kBlockSize;
          block = (TEntryListBlock*)fBlocks->UncheckedAt(nblock);
-         if (!block) return 0;
+         if (!block) return false;
          Long64_t blockindex = entry - nblock*kBlockSize;
          if (block->Remove(blockindex)){
             fN--;
-            return 1;
+            return true;
          }
       } else {
          if (!fCurrent) fCurrent = (TEntryList*)fLists->First();
          if (fCurrent->Remove(entry)){
             if (fLists)
                fN--;
-            return 1;
+            return true;
          }
       }
    } else {
@@ -741,11 +741,11 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
          if (fCurrent->Remove(localentry)) {
             if (fLists)
                fN--;
-            return 1;
+            return true;
          }
       }
    }
-   return 0;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -11,7 +11,7 @@
 
 #include "TTreeReaderGenerator.h"
 #include <algorithm>
-#include <stdio.h>
+#include <cstdio>
 #include <fstream>
 
 #include "TBranchElement.h"

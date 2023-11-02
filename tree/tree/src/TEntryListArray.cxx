@@ -343,7 +343,7 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
    //add only the given subentry, creating a TEntryListArray to hold the subentries for the given entry
    //Return true only if the entry is new (not the subentry)
 
-   Bool_t result = 0;
+   Bool_t result = false;
 
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
@@ -384,7 +384,7 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
 
 Bool_t TEntryListArray::Enter(Long64_t localentry, const char *treename, const char *filename, Long64_t subentry)
 {
-   Bool_t result = 0;
+   Bool_t result = false;
    SetTree(treename, filename);
    TEntryListArray *currentArray = dynamic_cast<TEntryListArray *>(fCurrent);
    if (currentArray) {

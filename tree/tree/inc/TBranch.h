@@ -283,7 +283,7 @@ public:
            void      SetIOFeatures(TIOFeatures &features) {fIOFeatures = features;}
    virtual Bool_t    SetMakeClass(Bool_t decomposeObj = kTRUE);
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
-   virtual void      SetStatus(Bool_t status=1);
+   virtual void      SetStatus(Bool_t status=true);
    virtual void      SetTree(TTree *tree) { fTree = tree; }
    virtual void      SetupAddresses();
            Bool_t    SupportsBulkRead() const;
