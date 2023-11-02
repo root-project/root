@@ -2239,38 +2239,37 @@ void TCanvas::Streamer(TBuffer &b)
       TPad::Streamer(b);
       gPad    = this;
       //restore the colors
-      TObjArray *colors = (TObjArray*)fPrimitives->FindObject("ListOfColors");
+      auto colors = dynamic_cast<TObjArray *>(fPrimitives->FindObject("ListOfColors"));
       if (colors) {
          TIter next(colors);
-         TColor *colold;
-         while ((colold = (TColor*)next())) {
-            if (colold) {
-               Int_t cn = 0;
-               if (colold) cn = colold->GetNumber();
-               TColor *colcur = gROOT->GetColor(cn);
+         while (auto colold = static_cast<TColor *>(next())) {
+            Int_t cn = colold->GetNumber();
+            TColor *colcur = gROOT->GetColor(cn);
+            if (colcur && (colcur->IsA() == TColor::Class()) && (colold->IsA() == TColor::Class())) {
+               colcur->SetName(colold->GetName());
+               colcur->SetRGB(colold->GetRed(), colold->GetGreen(), colold->GetBlue());
+               colcur->SetAlpha(colold->GetAlpha());
+            } else {
                if (colcur) {
-                  colcur->SetRGB(colold->GetRed(),colold->GetGreen(),colold->GetBlue());
-               } else {
-                  colcur = new TColor(cn,colold->GetRed(),
-                                        colold->GetGreen(),
-                                        colold->GetBlue(),
-                                        colold->GetName());
-                  if (!colcur) return;
+                  gROOT->GetListOfColors()->Remove(colcur);
+                  delete colcur;
                }
+               gROOT->GetListOfColors()->Add(colold);
+               colors->Remove(colold);
             }
          }
          //restore the palette if needed
-         TObjArray *currentpalette = (TObjArray*)fPrimitives->FindObject("CurrentColorPalette");
-         if (currentpalette) {
-           TIter nextpal(currentpalette);
-           Int_t n = currentpalette->GetEntries();
-           TArrayI palcolors(n);
-           TColor *col = nullptr;
-           Int_t i = 0;
-           while ((col = (TColor*)nextpal())) palcolors[i++] = col->GetNumber();
-           gStyle->SetPalette(n,palcolors.GetArray());
-           fPrimitives->Remove(currentpalette);
-           delete currentpalette;
+         auto palette = dynamic_cast<TObjArray *>(fPrimitives->FindObject("CurrentColorPalette"));
+         if (palette) {
+            TIter nextcol(palette);
+            Int_t number = palette->GetEntries();
+            TArrayI palcolors(number);
+            Int_t i = 0;
+            while (auto col = static_cast<TColor *>(nextcol()))
+               palcolors[i++] = col->GetNumber();
+            gStyle->SetPalette(number, palcolors.GetArray());
+            fPrimitives->Remove(palette);
+            delete palette;
          }
          fPrimitives->Remove(colors);
          colors->Delete();
