@@ -31,8 +31,8 @@ TLeafL::TLeafL(): TLeaf()
    fLenType = sizeof(Long64_t);
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,8 +44,8 @@ TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
    fLenType = sizeof(Long64_t);
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
 
 TLeafL::~TLeafL()
 {
-   if (ResetAddress(0,kTRUE)) delete [] fValue;
+   if (ResetAddress(nullptr,kTRUE)) delete [] fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,7 +255,7 @@ void TLeafL::SetAddress(void *add)
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) ||
-             ncountmax > fNdata || *fPointer == 0) {
+             ncountmax > fNdata || *fPointer == nullptr) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Long64_t[fNdata];

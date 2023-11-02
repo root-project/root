@@ -90,8 +90,8 @@ TSelector::TSelector() : TObject()
 {
    fStatus = 0;
    fAbort  = kContinue;
-   fObject = 0;
-   fInput  = 0;
+   fObject = nullptr;
+   fInput  = nullptr;
    fOutput = new TSelectorList;
    fOutput->SetOwner();
 }
@@ -144,7 +144,7 @@ TSelector *TSelector::GetSelector(const char *filename)
    // If the filename does not contain "." assume class is compiled in
    TString localname;
    Bool_t fromFile = kFALSE;
-   if (strchr(filename, '.') != 0) {
+   if (strchr(filename, '.') != nullptr) {
       //Interpret/compile filename via CINT
       localname  = ".L ";
       localname += filename;
@@ -157,7 +157,7 @@ TSelector *TSelector::GetSelector(const char *filename)
    const char *basename = gSystem->BaseName(filename);
    if (!basename) {
       ::Error("TSelector::GetSelector","unable to determine the classname for file %s", filename);
-      return 0;
+      return nullptr;
    }
    TString aclicmode,args,io;
    localname = gSystem->SplitAclicMode(basename,aclicmode,args,io);
@@ -186,7 +186,7 @@ TSelector *TSelector::GetSelector(const char *filename)
          else
             ::Error("TSelector::GetSelector",
                     "class %s does not exist or does not derive from TSelector", filename);
-         return 0;
+         return nullptr;
       }
       char *result = (char*)selCl->New();
       // By adding offset, we support the case where TSelector is not the
@@ -220,7 +220,7 @@ TSelector *TSelector::GetSelector(const char *filename)
                        "class %s does not exist or does not derive from TSelector", filename);
          }
          gCling->ClassInfo_Delete(cl);
-         return 0;
+         return nullptr;
       }
 
       // we can now create an instance of the class

@@ -64,7 +64,7 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBufferSQL::TBufferSQL() : TBufferFile(), fColumnVec(0),fInsertQuery(0),fRowPtr(0)
+TBufferSQL::TBufferSQL() : TBufferFile(), fColumnVec(nullptr),fInsertQuery(nullptr),fRowPtr(nullptr)
 {
 }
 

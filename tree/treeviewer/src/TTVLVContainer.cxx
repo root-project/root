@@ -32,7 +32,7 @@ Empty object used as context menu support for TGLVTreeEntries.
 
 TGItemContext::TGItemContext()
 {
-   fItem = 0;
+   fItem = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +103,7 @@ TTVLVEntry::TTVLVEntry(const TGWindow *p,
    // both alias and true name are initialized to name
    fContainer = (TTVLVContainer *) p;
 
-   fTip = 0;
+   fTip = nullptr;
    fIsCut = kFALSE;
    fTrueName = name->GetString();
    fContext = new TGItemContext();
@@ -276,7 +276,7 @@ void TTVLVEntry::SetToolTipText(const char *text, Long_t delayms)
 {
    if (fTip) {
       delete fTip;
-      fTip = 0;
+      fTip = nullptr;
    }
 
    if (text && strlen(text))
@@ -291,7 +291,7 @@ void TTVLVEntry::SetSmallPic(const TGPicture *spic)
    fSmallPic = spic;
    fCurrent = fSmallPic;
    if (fSelPic) delete fSelPic;
-   fSelPic = 0;
+   fSelPic = nullptr;
    if (fActive) {
       fSelPic = new TGSelectedPicture(fClient, fCurrent);
    }
@@ -312,8 +312,8 @@ It is a TGLVContainer with item dragging capabilities for the TTVLVEntry objects
 TTVLVContainer::TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
           :TGLVContainer(p, w, h,options | kSunkenFrame)
 {
-   fListView = 0;
-   fViewer = 0;
+   fListView = nullptr;
+   fViewer = nullptr;
    fExpressionList = new TList;
    fCursor = gVirtualX->CreateCursor(kMove);
    fDefaultCursor = gVirtualX->CreateCursor(kPointer);
@@ -337,9 +337,9 @@ const char* TTVLVContainer::Cut()
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (f) return f->ConvertAliases();
-      return 0;
+      return nullptr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +352,7 @@ TTVLVEntry * TTVLVContainer::ExpressionItem(Int_t index)
       TTVLVEntry *item = (TTVLVEntry *) el->fFrame;
       return item;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,9 +383,9 @@ const char* TTVLVContainer::Ex()
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (f) return f->ConvertAliases();
-      return 0;
+      return nullptr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,9 +397,9 @@ const char* TTVLVContainer::Ey()
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (f) return f->ConvertAliases();
-      return 0;
+      return nullptr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -411,9 +411,9 @@ const char* TTVLVContainer::Ez()
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (f) return f->ConvertAliases();
-      return 0;
+      return nullptr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -425,9 +425,9 @@ const char* TTVLVContainer::ScanList()
    if (el) {
       TTVLVEntry *f = (TTVLVEntry *) el->fFrame;
       if (f) return f->GetTrueName();
-      return 0;
+      return nullptr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -442,7 +442,7 @@ Bool_t TTVLVContainer::HandleButton(Event_t *event)
       fYp = event->fY;
       if (fLastActive) {
          fLastActive->Activate(kFALSE);
-         fLastActive = 0;
+         fLastActive = nullptr;
       }
       total = selected = 0;
 
@@ -617,7 +617,7 @@ void TTVLVContainer::RemoveNonStatic()
          RemoveItem(f);
       }
    }
-   fLastActive = 0;
+   fLastActive = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -627,7 +627,7 @@ void TTVLVContainer::SelectItem(const char* name)
 {
    if (fLastActive) {
       fLastActive->Activate(kFALSE);
-      fLastActive = 0;
+      fLastActive = nullptr;
    }
    TGFrameElement *el;
    fSelected = 0;
@@ -656,7 +656,7 @@ enum ETransientFrameCommands {
    kTFCancel
 };
 
-TGSelectBox* TGSelectBox::fgInstance = 0;
+TGSelectBox* TGSelectBox::fgInstance = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGSelectBox constructor
@@ -669,7 +669,7 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
       fgInstance = this;
       fViewer = (TTreeViewer *)fMain;
       if (!fViewer) Error("TGSelectBox", "Must be started from viewer");
-      fEntry = 0;
+      fEntry = nullptr;
       fLayout = new TGLayoutHints(kLHintsTop | kLHintsCenterY | kLHintsExpandX, 0, 0, 0, 2);
       fBLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 2, 2, 2);
       fBLayout1= new TGLayoutHints(kLHintsTop | kLHintsRight, 2, 0, 2, 2);
@@ -719,7 +719,7 @@ TGSelectBox::TGSelectBox(const TGWindow *p, const TGWindow *main,
 
 TGSelectBox::~TGSelectBox()
 {
-   fgInstance = 0;
+   fgInstance = nullptr;
    delete fLabel;
    delete fTe;
    delete fLabelAlias;

@@ -91,7 +91,7 @@ namespace Internal {
       fSplitLevel(0),
       fBranchName(branchname),
       fSubBranchPrefix(branchname),
-      fInfo(0),
+      fInfo(nullptr),
       fMaxDatamemberType(3)
    {
       NameToSymbol();

@@ -353,13 +353,13 @@ public:
    typedef std::deque<token_t> token_list_t;
    typedef std::deque<token_t>::iterator token_list_itr_t;
 
-   generator() : base_itr_(0), s_itr_(0), s_end_(0) { clear(); }
+   generator() : base_itr_(nullptr), s_itr_(nullptr), s_end_(nullptr) { clear(); }
 
    inline void clear()
    {
-      base_itr_ = 0;
-      s_itr_ = 0;
-      s_end_ = 0;
+      base_itr_ = nullptr;
+      s_itr_ = nullptr;
+      s_end_ = nullptr;
       token_list_.clear();
       token_itr_ = token_list_.end();
       store_token_itr_ = token_list_.end();

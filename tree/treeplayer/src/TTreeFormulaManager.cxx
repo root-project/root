@@ -35,12 +35,12 @@ TTreeFormulaManager::TTreeFormulaManager() : TObject()
    fNdata = 1;
 
    for (Int_t i = 0; i < kMAXFORMDIM + 1; i++) {
-      fVarDims[i] = 0;
+      fVarDims[i] = nullptr;
       fCumulUsedSizes[i] = 1;
       fUsedSizes[i] = 1;
       fVirtUsedSizes[i] = 1;
    }
-   fCumulUsedVarDims = 0;
+   fCumulUsedVarDims = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ TTreeFormulaManager::~TTreeFormulaManager()
 {
    for (int l = 0; l < kMAXFORMDIM; l++) {
       if (fVarDims[l]) delete fVarDims[l];
-      fVarDims[l] = 0;
+      fVarDims[l] = nullptr;
    }
    if (fCumulUsedVarDims) delete fCumulUsedVarDims;
 }
@@ -146,7 +146,7 @@ Int_t TTreeFormulaManager::GetNdata(Bool_t forceLoadDim)
       }
    }
 
-   TTreeFormula *current = 0;
+   TTreeFormula *current = nullptr;
 
    Int_t size = fFormulas.GetLast() + 1;
 
@@ -220,7 +220,7 @@ Bool_t TTreeFormulaManager::Sync()
 {
    if (!fNeedSync) return true;
 
-   TTreeFormula *current = 0;
+   TTreeFormula *current = nullptr;
    Bool_t hasCast = kFALSE;
 
    fMultiplicity = 0;

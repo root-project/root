@@ -99,7 +99,7 @@ namespace Internal {
       if (gPad && optSame) {
          TListIter np(gPad->GetListOfPrimitives());
          TObject *op;
-         TH1 *oldhtemp = 0;
+         TH1 *oldhtemp = nullptr;
          while ((op = np()) && !oldhtemp) {
             if (op->InheritsFrom(TH1::Class())) oldhtemp = (TH1 *)op;
          }
@@ -128,7 +128,7 @@ namespace Internal {
       if (canExtend) hist->SetCanExtend(TH1::kAllAxes);
       hist->GetXaxis()->SetTitle("var");
       hist->SetBit(kCanDelete);
-      hist->SetDirectory(0);
+      hist->SetDirectory(nullptr);
 
       if (opt.Length() && opt.Contains("e")) hist->Sumw2();
       return hist;

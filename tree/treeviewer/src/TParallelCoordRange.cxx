@@ -38,8 +38,8 @@ TParallelCoordRange::TParallelCoordRange()
 {
    fMin = 0;
    fMax = 0;
-   fVar = NULL;
-   fSelect = NULL;
+   fVar = nullptr;
+   fSelect = nullptr;
    SetBit(kShowOnPad,kTRUE);
    SetBit(kLiveUpdate,kFALSE);
 }
@@ -65,7 +65,7 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, D
    fMax = max;
 
    fVar = var;
-   fSelect = NULL;
+   fSelect = nullptr;
 
    if (!sel) {
       TParallelCoordSelect* s = var->GetParallel()->GetCurrentSelection();
@@ -168,7 +168,7 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
    gPad->SetCursor(kPointer);
    gVirtualX->SetLineColor(-1);
    gVirtualX->SetLineWidth(1);
-   TPoint *p = NULL;
+   TPoint *p = nullptr;
    switch (entry) {
       case kButton1Down:
          fVar->GetParallel()->SetCurrentSelection(fSelect);

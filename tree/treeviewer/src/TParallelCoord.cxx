@@ -180,7 +180,7 @@ TParallelCoord::TParallelCoord(TTree* tree, Long64_t nentries)
 
 TParallelCoord::~TParallelCoord()
 {
-   if (fInitEntries != fCurrentEntries && fCurrentEntries != 0) delete fCurrentEntries;
+   if (fInitEntries != fCurrentEntries && fCurrentEntries != nullptr) delete fCurrentEntries;
    if (fVarList) {
       fVarList->Delete();
       delete fVarList;
@@ -254,7 +254,7 @@ void  TParallelCoord::ApplySelectionToTree()
    if(!fTree) return;
    if(fSelectList) {
       if(fSelectList->GetSize() == 0) return;
-      if(fCurrentSelection == 0) fCurrentSelection = (TParallelCoordSelect*)fSelectList->First();
+      if(fCurrentSelection == nullptr) fCurrentSelection = (TParallelCoordSelect*)fSelectList->First();
    }
    fCurrentEntries = GetEntryList();
    fNentries = fCurrentEntries->GetN();
@@ -276,7 +276,7 @@ void  TParallelCoord::ApplySelectionToTree()
    }
    if (fSelectList) {           // FIXME It would be better to update the selections by deleting
       fSelectList->Delete();    // the meaningless ranges (selecting everything or nothing for example)
-      fCurrentSelection = 0;    // after applying a new entrylist to the tree.
+      fCurrentSelection = nullptr;    // after applying a new entrylist to the tree.
    }
    gPad->Modified();
    gPad->Update();
@@ -326,7 +326,7 @@ void TParallelCoord::DeleteSelection(TParallelCoordSelect * sel)
 {
    fSelectList->Remove(sel);
    delete sel;
-   if(fSelectList->GetSize() == 0) fCurrentSelection = 0;
+   if(fSelectList->GetSize() == 0) fCurrentSelection = nullptr;
    else fCurrentSelection = (TParallelCoordSelect*)fSelectList->At(0);
 }
 
@@ -379,7 +379,7 @@ void TParallelCoord::Draw(Option_t* option)
    TView *view = gPad->GetView();
    if(view){
       delete view;
-      gPad->SetView(0);
+      gPad->SetView(nullptr);
    }
    gPad->Clear();
    if (!optcandle) {
@@ -437,7 +437,7 @@ void TParallelCoord::ExecuteEvent(Int_t /*entry*/, Int_t /*px*/, Int_t /*py*/)
 
 TParallelCoordSelect* TParallelCoord::GetCurrentSelection()
 {
-   if (!fSelectList) return 0;
+   if (!fSelectList) return nullptr;
    if (!fCurrentSelection) {
       fCurrentSelection = (TParallelCoordSelect*)fSelectList->First();
    }
@@ -524,20 +524,20 @@ TTree* TParallelCoord::GetTree()
    if (fTree) return fTree;
    if (fTreeFileName=="" || fTreeName=="") {
       Error("GetTree","Cannot load the tree: no tree defined!");
-      return 0;
+      return nullptr;
    }
    TFile *f = TFile::Open(fTreeFileName.Data());
    if (!f) {
       Error("GetTree","Tree file name : \"%s\" does not exist (Are you in the correct directory?).",fTreeFileName.Data());
-      return 0;
+      return nullptr;
    } else if (f->IsZombie()) {
       Error("GetTree","while opening \"%s\".",fTreeFileName.Data());
-      return 0;
+      return nullptr;
    } else {
       fTree = (TTree*)f->Get(fTreeName.Data());
       if (!fTree) {
          Error("GetTree","\"%s\" not found in \"%s\".", fTreeName.Data(), fTreeFileName.Data());
-         return 0;
+         return nullptr;
       } else {
          fTree->SetEntryList(fCurrentEntries);
          TString varexp = "";
@@ -564,9 +564,9 @@ TTree* TParallelCoord::GetTree()
 Double_t* TParallelCoord::GetVariable(const char* vartitle)
 {
    TIter next(fVarList);
-   TParallelCoordVar* var = 0;
-   while(((var = (TParallelCoordVar*)next()) != 0) && (var->GetTitle() != vartitle)) { }
-   if(!var) return 0;
+   TParallelCoordVar* var = nullptr;
+   while(((var = (TParallelCoordVar*)next()) != nullptr) && (var->GetTitle() != vartitle)) { }
+   if(!var) return nullptr;
    else     return var->GetValues();
 }
 
@@ -575,7 +575,7 @@ Double_t* TParallelCoord::GetVariable(const char* vartitle)
 
 Double_t* TParallelCoord::GetVariable(Int_t i)
 {
-   if(i<0 || (UInt_t)i>fNvar) return 0;
+   if(i<0 || (UInt_t)i>fNvar) return nullptr;
    else return ((TParallelCoordVar*)fVarList->At(i))->GetValues();
 }
 
@@ -585,8 +585,8 @@ Double_t* TParallelCoord::GetVariable(Int_t i)
 void TParallelCoord::Init()
 {
    fNentries = 0;
-   fVarList = 0;
-   fSelectList = 0;
+   fVarList = nullptr;
+   fSelectList = nullptr;
    SetBit(kVertDisplay,kTRUE);
    SetBit(kCurveDisplay,kFALSE);
    SetBit(kPaintEntries,kTRUE);
@@ -594,15 +594,15 @@ void TParallelCoord::Init()
    SetBit(kGlobalScale,kFALSE);
    SetBit(kCandleChart,kFALSE);
    SetBit(kGlobalLogScale,kFALSE);
-   fTree = 0;
-   fCurrentEntries = 0;
-   fInitEntries = 0;
-   fCurrentSelection = 0;
+   fTree = nullptr;
+   fCurrentEntries = nullptr;
+   fInitEntries = nullptr;
+   fCurrentSelection = nullptr;
    fNvar = 0;
    fDotsSpacing = 0;
    fCurrentFirst = 0;
    fCurrentN = 0;
-   fCandleAxis = 0;
+   fCandleAxis = nullptr;
    fWeightCut = 0;
    fLineWidth = 1;
    fLineColor = kGreen-8;
@@ -621,7 +621,7 @@ void TParallelCoord::Paint(Option_t* /*option*/)
    frame->SetLineColor(gPad->GetFillColor());
    SetAxesPosition();
    if(TestBit(kPaintEntries)){
-      PaintEntries(0);
+      PaintEntries(nullptr);
       TIter next(fSelectList);
       TParallelCoordSelect* sel;
       while((sel = (TParallelCoordSelect*)next())) {
@@ -633,7 +633,7 @@ void TParallelCoord::Paint(Option_t* /*option*/)
    gPad->RangeAxis(0,0,1,1);
 
    TIter nextVar(fVarList);
-   TParallelCoordVar* var=0;
+   TParallelCoordVar* var=nullptr;
    while((var = (TParallelCoordVar*)nextVar())) {
       var->Paint();
    }
@@ -651,9 +651,9 @@ void TParallelCoord::PaintEntries(TParallelCoordSelect* sel)
    Double_t *x = new Double_t[fNvar];
    Double_t *y = new Double_t[fNvar];
 
-   TGraph    *gr     = 0;
-   TPolyLine *pl     = 0;
-   TAttLine  *evline = 0;
+   TGraph    *gr     = nullptr;
+   TPolyLine *pl     = nullptr;
+   TAttLine  *evline = nullptr;
 
    if (TestBit (kCurveDisplay)) {gr = new TGraph(fNvar); evline = (TAttLine*)gr;}
    else                       {pl = new TPolyLine(fNvar); evline = (TAttLine*)pl;}
@@ -739,7 +739,7 @@ void TParallelCoord::RemoveVariable(TParallelCoordVar *var)
 Bool_t TParallelCoord::RemoveVariable(const char* vartitle)
 {
    TIter next(fVarList);
-   TParallelCoordVar* var=0;
+   TParallelCoordVar* var=nullptr;
    while((var = (TParallelCoordVar*)next())) {
       if (!strcmp(var->GetTitle(),vartitle)) break;
    }
@@ -779,7 +779,7 @@ void TParallelCoord::ResetTree()
    }
    if (fSelectList) {           // FIXME It would be better to update the selections by deleting
       fSelectList->Delete();    // the meaningless ranges (selecting everything or nothing for example)
-      fCurrentSelection = 0;    // after applying a new entrylist to the tree.
+      fCurrentSelection = nullptr;    // after applying a new entrylist to the tree.
    }
    gPad->Modified();
    gPad->Update();
@@ -986,7 +986,7 @@ void TParallelCoord::SetGlobalScale(Bool_t gl)
    SetBit(kGlobalScale,gl);
    if (fCandleAxis) {
       delete fCandleAxis;
-      fCandleAxis = 0;
+      fCandleAxis = nullptr;
    }
    if (gl) {
       Double_t min,max;
@@ -1035,7 +1035,7 @@ void TParallelCoord::SetCandleChart(Bool_t can)
       var->SetHistogramLineWidth(0);
    }
    if (fCandleAxis) delete fCandleAxis;
-   fCandleAxis = 0;
+   fCandleAxis = nullptr;
    SetBit(kPaintEntries,!can);
    if (can) {
       if (TestBit(kVertDisplay)) fCandleAxis = new TGaxis(0.05,0.1,0.05,0.9,GetGlobalMin(),GetGlobalMax());
@@ -1044,7 +1044,7 @@ void TParallelCoord::SetCandleChart(Bool_t can)
    } else {
       if (fCandleAxis) {
          delete fCandleAxis;
-         fCandleAxis = 0;
+         fCandleAxis = nullptr;
       }
    }
    gPad->Modified();

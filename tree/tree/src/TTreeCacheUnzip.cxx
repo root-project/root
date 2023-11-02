@@ -311,7 +311,7 @@ Bool_t TTreeCacheUnzip::FillBuffer()
    //store baskets
    for (Int_t i = 0; i < fNbranches; i++) {
       TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
-      if (b->GetDirectory() == 0) continue;
+      if (b->GetDirectory() == nullptr) continue;
       if (b->GetDirectory()->GetFile() != fFile) continue;
       Int_t nb = b->GetMaxBaskets();
       Int_t *lbaskets   = b->GetBasketBytes();
@@ -550,7 +550,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t index)
    }
 
    // Prepare a memory buffer of adequate size
-   char* locbuff = 0;
+   char* locbuff = nullptr;
    if (rdlen > 16384) {
       locbuff = new char[rdlen];
    } else if (rdlen * 3 < 16384) {
@@ -929,7 +929,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
                nbytes,keylen,objlen, noutot,nout,nin,nbuf);
          uzlen = -1;
          if(alloc) delete [] *dest;
-         *dest = 0;
+         *dest = nullptr;
          return uzlen;
       }
       uzlen += objlen;

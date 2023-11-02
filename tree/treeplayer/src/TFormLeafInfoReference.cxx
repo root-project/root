@@ -24,7 +24,7 @@ of reference objects stored in a TTree
 /// Constructor.
 
 TFormLeafInfoReference::TFormLeafInfoReference(TClass* cl, TStreamerElement* e, int off)
-: TFormLeafInfo(cl,off,e), fProxy(0), fBranch(0)
+: TFormLeafInfo(cl,off,e), fProxy(nullptr), fBranch(nullptr)
 {
    TVirtualRefProxy* p = cl->GetReferenceProxy();
    if ( !p )  {
@@ -38,7 +38,7 @@ TFormLeafInfoReference::TFormLeafInfoReference(TClass* cl, TStreamerElement* e, 
 /// Copy constructor.
 
 TFormLeafInfoReference::TFormLeafInfoReference(const TFormLeafInfoReference& org)
-: TFormLeafInfo(org), fProxy(0), fBranch(org.fBranch)
+: TFormLeafInfo(org), fProxy(nullptr), fBranch(org.fBranch)
 {
    TVirtualRefProxy* p = org.fProxy;
    if ( !p )  {
@@ -89,7 +89,7 @@ TFormLeafInfo* TFormLeafInfoReference::DeepCopy() const
 
 TClass* TFormLeafInfoReference::GetClass() const
 {
-   return fNext ? fNext->GetClass() : 0;
+   return fNext ? fNext->GetClass() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,7 @@ Bool_t TFormLeafInfoReference::HasCounter() const
 {
    Bool_t result = fProxy ? fProxy->HasCounter() : false;
    if (fNext) result |= fNext->HasCounter();
-   return fCounter!=0 || result;
+   return fCounter!=nullptr || result;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the size of the underlying array for the current entry in the TTree.
@@ -123,7 +123,7 @@ Int_t TFormLeafInfoReference::ReadCounterValue(char *where)
 
 Int_t TFormLeafInfoReference::GetCounterValue(TLeaf* leaf)  {
    if ( HasCounter() )  {
-      char *thisobj = 0;
+      char *thisobj = nullptr;
       Int_t instance = 0;
       if (leaf->InheritsFrom(TLeafObject::Class()) ) {
          thisobj = (char*)((TLeafObject*)leaf)->GetObject();
@@ -148,7 +148,7 @@ TClass* TFormLeafInfoReference::GetValueClass(TLeaf* leaf)
 
 TClass* TFormLeafInfoReference::GetValueClass(void* obj)
 {
-   return fProxy ? fProxy->GetValueClass(obj) : 0;
+   return fProxy ? fProxy->GetValueClass(obj) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ void *TFormLeafInfoReference::GetLocalValuePointer(char *where, Int_t instance)
       }
    }
    gInterpreter->ClearStack();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

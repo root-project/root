@@ -52,16 +52,16 @@ ClassImp(TTreeSQL);
 TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
    TTree(table.Data(), "Database read from table: " + table, 0), fDB(DB),
    fTable(table.Data()),
-   fResult(0), fRow(0),
+   fResult(nullptr), fRow(nullptr),
    fServer(server),
    fBranchChecked(kFALSE),
-   fTableInfo(0)
+   fTableInfo(nullptr)
 {
    fCurrentEntry = -1;
    fQuery = TString("Select * from " + fTable);
    fEntries = 0;
 
-   if (fServer==0) {
+   if (fServer==nullptr) {
       Error("TTreeSQL","No TSQLServer specified");
       return;
    }
@@ -78,7 +78,7 @@ TBranch* TTreeSQL::BranchImp(const char *, const char *,
                              Int_t )
 {
    Fatal("BranchImp","Not implemented yet");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +88,7 @@ TBranch* TTreeSQL::BranchImp(const char *, TClass *,
                              void *, Int_t , Int_t )
 {
    Fatal("BranchImp","Not implemented yet");
-   return 0;
+   return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Not implemented yet
@@ -126,7 +126,7 @@ TBranch* TTreeSQL::Bronch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
    Fatal("Bronch","Not implemented yet");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ TBranch* TTreeSQL::BranchOld(const char *, const char *,
                              void *, Int_t, Int_t)
 {
    Fatal("BranchOld","Not implemented yet");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,7 +146,7 @@ TBranch *TTreeSQL::Branch(const char *, const char *, void *,
                           Int_t, Int_t)
 {
    Fatal("Branch","Not implemented yet");
-   return 0;
+   return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -188,15 +188,15 @@ void TTreeSQL::CheckBasket(TBranch *branch)
 {
    TBasketSQL* basket = (TBasketSQL *)branch->GetBasket(0);
 
-   if (basket==0) {
+   if (basket==nullptr) {
       basket = (TBasketSQL*)CreateBasket(branch);
-      if (basket==0) return;
+      if (basket==nullptr) return;
       //++(branch->fNBaskets);
       branch->GetListOfBaskets()->AddAtAndExpand(basket,0);
    }
    TBuffer * buffer = basket->GetBufferRef();
 
-   if(buffer == 0){
+   if(buffer == nullptr){
       std::vector<Int_t> *columns = GetColumnIndice(branch);
       if (columns) basket->CreateBuffer(branch->GetName(),"A", columns, branch, &fResult);
    }
@@ -214,7 +214,7 @@ void TTreeSQL::CheckBasket(TBranch *branch)
 
 Bool_t TTreeSQL::CheckBranch(TBranch * tb)
 {
-   if (fServer==0) {
+   if (fServer==nullptr) {
       return kFALSE;
    }
    TString leafName;
@@ -262,10 +262,10 @@ Bool_t TTreeSQL::CheckBranch(TBranch * tb)
 
 Bool_t TTreeSQL::CheckTable(const TString &table) const
 {
-   if (fServer==0) return kFALSE;
+   if (fServer==nullptr) return kFALSE;
    TSQLResult * tables = fServer->GetTables(fDB.Data(),table);
    if (!tables) return kFALSE;
-   TSQLRow * row = 0;
+   TSQLRow * row = nullptr;
    while( (row = tables->Next()) ) {
       if(table.CompareTo(row->GetField(0),TString::kIgnoreCase)==0){
          return kTRUE;
@@ -350,16 +350,16 @@ TString TTreeSQL::ConvertTypeName(const TString& typeName )
 
 TBasket * TTreeSQL::CreateBasket(TBranch * tb)
 {
-   if (fServer==0) {
+   if (fServer==nullptr) {
       Error("CreateBasket","No TSQLServer specified");
-      return 0;
+      return nullptr;
    }
    std::vector<Int_t> *columnVec = GetColumnIndice(tb);
    if (columnVec) {
       return new TBasketSQL(tb->GetName(), tb->GetName(), tb,
                             &fResult, &fInsertQuery, columnVec, &fRow);
    } else {
-      return 0;
+      return nullptr;
    }
 }
 
@@ -368,7 +368,7 @@ TBasket * TTreeSQL::CreateBasket(TBranch * tb)
 
 void TTreeSQL::CreateBranch(const TString &branchName, const TString &typeName)
 {
-   if (fServer==0) {
+   if (fServer==nullptr) {
       Error("CreateBranch","No TSQLServer specified");
       return;
    }
@@ -398,7 +398,7 @@ void TTreeSQL::CreateBranches()
    TString branchName;
    TString type;
    TString leafName;
-   TBranch * br = 0;
+   TBranch * br = nullptr;
    TSQLColumnInfo * info;
    while ( (info = ((TSQLColumnInfo*) next()) ))
    {
@@ -420,7 +420,7 @@ void TTreeSQL::CreateBranches()
       double d;
       float f;
 
-      br = 0;
+      br = nullptr;
 
       if(type.CompareTo("varchar",TString::kIgnoreCase)==0 ||
          type.CompareTo("varchar2",TString::kIgnoreCase)==0 ||
@@ -465,7 +465,7 @@ void TTreeSQL::CreateBranches()
          br = TTree::Branch(leafName,&d);
       }
 
-      if (br == 0)
+      if (br == nullptr)
       {
          Error("CreateBranches", "Skipped %s", branchName.Data());
          continue;
@@ -487,7 +487,7 @@ void TTreeSQL::CreateBranches()
 
 Bool_t TTreeSQL::CreateTable(const TString &table)
 {
-   if (fServer==0) {
+   if (fServer==nullptr) {
       Error("CreateTable","No TSQLServer specified");
       return false;
    }
@@ -541,7 +541,7 @@ Bool_t TTreeSQL::CreateTable(const TString &table)
    // retrieve table to initialize fResult
    delete fResult;
    fResult = fServer->Query(fQuery.Data());
-   return (fResult!=0);
+   return (fResult!=nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,7 +573,7 @@ Int_t TTreeSQL::Fill()
    TString typeName;
    TBranch *branch;
 
-   if (fServer==0) return 0;
+   if (fServer==nullptr) return 0;
 
    if(!CheckTable(fTable.Data())) {
       if (!CreateTable(fTable.Data())) {
@@ -604,7 +604,7 @@ Int_t TTreeSQL::Fill()
    if (fInsertQuery[fInsertQuery.Length()-1]!='(') {
       fInsertQuery.Remove(fInsertQuery.Length()-1);
       fInsertQuery += ")";
-      TSQLResult *res = fServer?fServer->Query(fInsertQuery):0;
+      TSQLResult *res = fServer?fServer->Query(fInsertQuery):nullptr;
 
       if (res) {
          return res->GetRowCount();
@@ -621,7 +621,7 @@ Int_t TTreeSQL::Fill()
 
 std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
 {
-   if (!CheckTable(fTable)) return 0;
+   if (!CheckTable(fTable)) return nullptr;
 
    std::vector<Int_t> *columns = new std::vector<Int_t>;
 
@@ -630,9 +630,9 @@ std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
    std::vector<TString> names;
 
    TList *col_list = fTableInfo->GetColumns();
-   if (col_list==0) {
+   if (col_list==nullptr) {
       delete columns;
-      return 0;
+      return nullptr;
    }
 
    std::pair<TString,Int_t> value;
@@ -677,7 +677,7 @@ std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
    }
    if (columns->empty()) {
       delete columns;
-      return 0;
+      return nullptr;
    } else
       return columns;
 }
@@ -687,7 +687,7 @@ std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
 
 Long64_t  TTreeSQL::GetEntries() const
 {
-   if (fServer==0) return GetEntriesFast();
+   if (fServer==nullptr) return GetEntriesFast();
    if (!CheckTable(fTable.Data())) return 0;
 
    TTreeSQL* thisvar = const_cast<TTreeSQL*>(this);
@@ -698,7 +698,7 @@ Long64_t  TTreeSQL::GetEntries() const
    TString counting = "select count(*) from " + fTable;
    TSQLResult *count = fServer->Query(counting);
 
-   if (count==0) {
+   if (count==nullptr) {
       thisvar->fEntries = 0;
    } else {
       TSQLRow * row = count->Next();
@@ -746,12 +746,12 @@ Long64_t TTreeSQL::LoadTree(Long64_t entry)
 
 Long64_t TTreeSQL::PrepEntry(Long64_t entry)
 {
-   if (entry < 0 || entry >= fEntries || fServer==0) return 0;
+   if (entry < 0 || entry >= fEntries || fServer==nullptr) return 0;
    fReadEntry = entry;
 
    if(entry == fCurrentEntry) return entry;
 
-   if(entry < fCurrentEntry || fResult==0){
+   if(entry < fCurrentEntry || fResult==nullptr){
       delete fResult;
       fResult = fServer->Query(fQuery.Data());
       fCurrentEntry = -1;
@@ -762,14 +762,14 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
       ++fCurrentEntry;
       delete fRow;
       fRow = fResult->Next();
-      if (fRow==0 && !reset) {
+      if (fRow==nullptr && !reset) {
          delete fResult;
          fResult = fServer->Query(fQuery.Data());
          fCurrentEntry = -1;
          reset = true;
       }
    }
-   if (fRow==0) return -1;
+   if (fRow==nullptr) return -1;
    return entry;
 }
 
@@ -798,8 +798,8 @@ void TTreeSQL::Refresh()
    // Note : something to be done?
    GetEntries(); // Re-load the number of entries
    fCurrentEntry = -1;
-   delete fResult; fResult = 0;
-   delete fRow; fRow = 0;
+   delete fResult; fResult = nullptr;
+   delete fRow; fRow = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

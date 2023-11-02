@@ -53,7 +53,7 @@ ClassImp(TEntryListBlock);
 
 TEntryListBlock::TEntryListBlock()
 {
-   fIndices = 0;
+   fIndices = nullptr;
    fN = kBlockSize;
    fNPassed = 0;
    fType = -1;
@@ -74,7 +74,7 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
       for (Int_t i=0; i<fN; i++)
          fIndices[i] = eblock.fIndices[i];
    } else {
-      fIndices = 0;
+      fIndices = nullptr;
    }
    fNPassed = eblock.fNPassed;
    fType = eblock.fType;
@@ -91,7 +91,7 @@ TEntryListBlock::~TEntryListBlock()
 {
    if (fIndices)
       delete [] fIndices;
-   fIndices = 0;
+   fIndices = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +108,7 @@ TEntryListBlock &TEntryListBlock::operator=(const TEntryListBlock &eblock)
          for (Int_t i=0; i<fN; i++)
             fIndices[i] = eblock.fIndices[i];
       } else {
-         fIndices = 0;
+         fIndices = nullptr;
       }
       fNPassed = eblock.fNPassed;
       fType = eblock.fType;

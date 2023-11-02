@@ -128,7 +128,7 @@ public:
    {}
 
    TTreeReaderFast(TTree* tree);
-   TTreeReaderFast(const char* keyname, TDirectory* dir = NULL );
+   TTreeReaderFast(const char* keyname, TDirectory* dir = nullptr );
 
    ~TTreeReaderFast() override;
 
